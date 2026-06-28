@@ -1,0 +1,15 @@
+# dependências (cada ambiente instala o seu)
+/backend/vendor
+/frontend/node_modules
+/frontend/dist
+/frontend/.pnpm-store
+
+# Ambiente / segredos
+/backend/.env
+/frontend/.env
+
+# Chaves e storage gerado
+/backend/storage/*.key
+
+# Docker / sistema
+.DS_Store
