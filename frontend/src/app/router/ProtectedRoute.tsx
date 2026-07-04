@@ -9,5 +9,6 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   if (status !== 'authenticated') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
+  
   return <>{children}</>
 }

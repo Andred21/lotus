@@ -25,7 +25,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm mx-auto text-center">
       <div>
         <h1 className="text-2xl font-bold">Iniciar sesión</h1>
         <p className="text-gray-500">Ingresa con tus credenciales</p>
