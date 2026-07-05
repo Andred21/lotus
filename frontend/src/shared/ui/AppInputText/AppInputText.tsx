@@ -15,9 +15,9 @@ export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
       return <InputText ref={ref} {...props} />
     }
     return (
-      <IconField iconPosition="left" className="w-full">
+      <IconField iconPosition="left" >
         <InputIcon className={leftIcon} />
-        <InputText ref={ref} {...props} />
+        <InputText ref={ref} {...props} className="w-full" />
       </IconField>
     )
   },

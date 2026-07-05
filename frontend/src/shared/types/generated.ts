@@ -5,6 +5,8 @@ name: string,
 email: string,
 type: string,
 is_active: boolean,
+roles: string[],
+permissions: string[],
 };
 
 export type UserData = {
