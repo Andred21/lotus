@@ -2,7 +2,7 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
-use App\Data\SessionUserData;
+use App\Domains\Identity\Data\SessionUserData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,7 +41,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return SessionUserData::from($user);
+        return SessionUserData::fromUser($user);
     }
 
     public function logout(Request $request): JsonResponse
@@ -55,6 +55,6 @@ class AuthController extends Controller
 
     public function me(Request $request): SessionUserData
     {
-        return SessionUserData::from($request->user());
+        return SessionUserData::fromUser($request->user());
     }
 }

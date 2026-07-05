@@ -11,12 +11,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use OwenIt\Auditing\Auditable as AuditableTrait;
-use OwenIt\Auditing\Contracts\Auditable; 
+use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements Auditable
 {
     /** @use HasFactory<UserFactory> */
-    use  HasApiTokens, HasFactory, Notifiable, SoftDeletes, AuditableTrait;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes, AuditableTrait;
 
     protected $fillable = [
         'uuid',
