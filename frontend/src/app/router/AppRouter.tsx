@@ -18,6 +18,9 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
 
+        {/* Filtro de permissão do Sidebar é só de exibição (RBAC visual); a API é a
+            fronteira de acesso autoritativa. Guard de rota por módulo é follow-up
+            quando páginas reais substituírem os ModulePlaceholder. */}
         <Route
           element={
             <ProtectedRoute>

@@ -1,8 +1,7 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Menu } from 'primereact/menu'
-import type { MenuItem } from 'primereact/menuitem'
 import { AppAvatar, AppMenu } from '@shared/ui'
+import type { AppMenuRef, MenuItem } from '@shared/ui'
 import { useSessionStore } from '@features/identity/stores/sessionStore'
 import { useLogout } from '@features/identity/api/useLogout'
 
@@ -18,7 +17,7 @@ export function UserMenu() {
   const user = useSessionStore((s) => s.user)
   const logout = useLogout()
   const navigate = useNavigate()
-  const menuRef = useRef<Menu>(null)
+  const menuRef = useRef<AppMenuRef>(null)
 
   if (!user) return null
 
