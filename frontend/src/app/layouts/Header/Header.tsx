@@ -1,17 +1,19 @@
 import { useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AppButton, AppDivider, AppHeader, Clock, LanguageMenu } from '@shared/ui'
 import { useUiStore } from '@app/providers/uiStore'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { UserMenu } from './UserMenu'
 
-const EXTRA_TITLES: Record<string, string> = { '/perfil': 'Mi perfil' }
+const EXTRA_TITLES: Record<string, string> = { '/perfil': 'userMenu.profile' }
 
-function pageTitle(pathname: string): string {
-  return NAV_MODULES.find((m) => m.path === pathname)?.label ?? EXTRA_TITLES[pathname] ?? 'Dashboard'
+/** Chave i18n do título conforme a rota. */
+function pageTitleKey(pathname: string): string {
+  return NAV_MODULES.find((m) => m.path === pathname)?.labelKey ?? EXTRA_TITLES[pathname] ?? 'nav.dashboard'
 }
 
 export function Header() {
-
+  const { t } = useTranslation()
   const theme = useUiStore((s) => s.theme)
   const toggleTheme = useUiStore((s) => s.toggleTheme)
   const { pathname } = useLocation()
@@ -20,7 +22,7 @@ export function Header() {
 
     <AppHeader className="border-slate-400 bg-gray-200 dark:border-slate-800 dark:bg-slate-900">
       <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-        {pageTitle(pathname)}
+        {t(pageTitleKey(pathname))}
       </h1>
 
       <div className="flex items-center gap-4">

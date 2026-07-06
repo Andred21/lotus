@@ -1,16 +1,15 @@
-// Derivação de exibição de roles. Puro, sem dependência de UI.
+// Derivação de exibição de roles. Retorna CHAVES i18n (traduzidas no ponto de
+// uso via t()), mantendo a função pura e sem dependência de UI.
 
-/** Label da seção lateral conforme a role predominante. */
+/** Chave i18n do label da seção lateral conforme a role predominante. '' = sem role. */
 export function roleSectionLabel(roles: string[]): string {
-  if (roles.includes('superadmin') || roles.includes('admin')) return 'ADMINISTRADOR'
-  if (roles.includes('redator')) return 'REDACTOR'
+  if (roles.includes('superadmin') || roles.includes('admin')) return 'roleSection.admin'
+  if (roles.includes('redator')) return 'roleSection.redator'
   return ''
 }
 
-/** Nome de exibição da role primária (ex.: superadmin → SuperAdmin). */
+/** Chave i18n do nome da role primária (ex.: "roleName.superadmin"). '' = sem role. */
 export function displayRole(roles: string[]): string {
   const r = roles[0]
-  if (!r) return ''
-  if (r === 'superadmin') return 'SuperAdmin'
-  return r.charAt(0).toUpperCase() + r.slice(1)
+  return r ? `roleName.${r}` : ''
 }

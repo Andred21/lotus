@@ -29,13 +29,13 @@ export function AppRouter() {
           }
         >
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/comercial" element={<ModulePlaceholder title="Comercial" />} />
-          <Route path="/operacion" element={<ModulePlaceholder title="Operación" />} />
-          <Route path="/cursos" element={<ModulePlaceholder title="Cursos" />} />
-          <Route path="/certificados" element={<ModulePlaceholder title="Certificados" />} />
-          <Route path="/personas" element={<ModulePlaceholder title="Personas" />} />
-          <Route path="/administracion" element={<ModulePlaceholder title="Administración" />} />
-          <Route path="/perfil" element={<ModulePlaceholder title="Mi perfil" />} />
+          <Route path="/comercial" element={<ModulePlaceholder titleKey="nav.comercial" />} />
+          <Route path="/operacion" element={<ModulePlaceholder titleKey="nav.operacion" />} />
+          <Route path="/cursos" element={<ModulePlaceholder titleKey="nav.cursos" />} />
+          <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
+          <Route path="/personas" element={<ModulePlaceholder titleKey="nav.personas" />} />
+          <Route path="/administracion" element={<ModulePlaceholder titleKey="nav.administracion" />} />
+          <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

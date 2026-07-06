@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useUiStore } from '@app/providers/uiStore'
 import { usePermissions } from '@features/identity/hooks/usePermissions'
 import { NAV_MODULES } from '@shared/config/navigation'
@@ -8,11 +9,13 @@ import { SidebarItem } from './SidebarItem'
 import logo from '@/assets/Logo.png'
 
 export function Sidebar() {
+  const { t } = useTranslation()
   const collapsed = useUiStore((s) => s.sidebarCollapsed)
   const toggle = useUiStore((s) => s.toggleSidebar)
   const { can, roles } = usePermissions()
 
   const modules = NAV_MODULES.filter((m) => !m.permission || can(m.permission))
+  const roleKey = roleSectionLabel(roles)
 
   return (
     <AppSidebar
@@ -25,9 +28,9 @@ export function Sidebar() {
         </AppButton>
       </div>
 
-      {!collapsed && (
+      {!collapsed && roleKey && (
         <p className="px-4 pb-2 text-xs font-semibold tracking-wider text-slate-400">
-          {roleSectionLabel(roles)}
+          {t(roleKey)}
         </p>
       )}
 

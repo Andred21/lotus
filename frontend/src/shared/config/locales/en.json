@@ -14,5 +14,34 @@
   },
   "common": {
     "language": "Language"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "comercial": "Commercial",
+    "operacion": "Operations",
+    "cursos": "Courses",
+    "certificados": "Certificates",
+    "personas": "People",
+    "administracion": "Administration"
+  },
+  "roleSection": {
+    "admin": "ADMINISTRATOR",
+    "redator": "EDITOR"
+  },
+  "roleName": {
+    "superadmin": "SuperAdmin",
+    "admin": "Administrator",
+    "redator": "Editor"
+  },
+  "userMenu": {
+    "profile": "My profile",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "subtitle": "Dashboard under construction."
+  },
+  "placeholder": {
+    "module": "Module under construction."
   }
 }
