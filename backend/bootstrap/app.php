@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Localização por request: Accept-Language -> locale (i18n front↔back, ADR-15).
+        $middleware->api(append: [
+            \App\Shared\Http\Middleware\SetLocale::class,
+        ]);
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {

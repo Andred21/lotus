@@ -1,4 +1,5 @@
 import axios, {AxiosError} from "axios";
+import i18n from "@shared/config/i18n";
 
 // Envolope RFC 7807 que o backend retorna quando ocorre um erro
 export interface ProblemDetails {
@@ -18,6 +19,14 @@ export const api = axios.create({
         Accept: "application/json",
         "Content-Type": "application/json",
     },
+});
+
+// Envia o idioma atual (i18n) ao backend via Accept-Language, para as mensagens
+// do servidor (validação, auth) voltarem localizadas no envelope RFC 7807.
+// O middleware SetLocale (Laravel) mapeia o header para o locale da app.
+api.interceptors.request.use((config) => {
+    config.headers.set("Accept-Language", i18n.language);
+    return config;
 });
 
 // Interceptor de resposta, normalizando o erro RFC 7807 para o formato ProblemDetails
