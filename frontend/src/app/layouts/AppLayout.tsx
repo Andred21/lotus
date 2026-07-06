@@ -1,17 +1,9 @@
-import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar/Sidebar'
 import { Header } from './Header/Header'
-import { useUiStore } from '@app/providers/uiStore'
 
 export function AppLayout() {
-  const theme = useUiStore((s) => s.theme)
-
-  // Aplica o tema no <html> — Tailwind dark: e (futuro) tema PrimeReact leem daqui.
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-  }, [theme])
-
+  // O tema é aplicado globalmente nos providers (useApplyTheme).
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       <Sidebar />
