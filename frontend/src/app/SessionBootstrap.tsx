@@ -1,18 +1,13 @@
-import { useEffect, type ReactNode } from 'react'
-import { useMe } from '@features/identity/api/useMe'
-import { useSessionStore } from '@features/identity/stores/sessionStore'
+import type { ReactNode } from 'react'
+import { useSessionBootstrap } from '@features/identity/hooks/useSessionBootstrap'
 
+/**
+ * Casca de boot: delega a resolução da sessão ao hook da feature identity e
+ * só decide o que renderizar. app/ não manipula o store direto — a regra de
+ * sessão vive na feature.
+ */
 export function SessionBootstrap({ children }: { children: ReactNode }) {
-  
-  const { data, isError, isSuccess } = useMe()
-  const setUser = useSessionStore((s) => s.setUser)
-  const clear = useSessionStore((s) => s.clear)
-  const status = useSessionStore((s) => s.status)
-
-  useEffect(() => {
-    if (isSuccess && data) setUser(data)
-    else if (isError) clear()
-  }, [isSuccess, isError, data, setUser, clear])
+  const status = useSessionBootstrap()
 
   if (status === 'loading') {
     return (
@@ -21,5 +16,6 @@ export function SessionBootstrap({ children }: { children: ReactNode }) {
       </div>
     )
   }
+
   return <>{children}</>
 }
