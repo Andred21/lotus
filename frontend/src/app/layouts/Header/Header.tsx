@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AppButton, AppDivider } from '@shared/ui'
-import { useUiStore } from '@app/stores/uiStore'
+import { useUiStore } from '@app/providers/uiStore'
 import { NAV_MODULES } from '@/shared/config/navigation'
 import { UserMenu } from './UserMenu'
 

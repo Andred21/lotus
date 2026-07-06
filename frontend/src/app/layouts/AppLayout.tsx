@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar/Sidebar'
 import { Header } from './Header/Header'
-import { useUiStore } from '@app/stores/uiStore'
+import { useUiStore } from '@app/providers/uiStore'
 
 export function AppLayout() {
   const theme = useUiStore((s) => s.theme)

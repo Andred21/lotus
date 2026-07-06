@@ -12,9 +12,9 @@ interface UiState {
 }
 
 /**
- * Estado de UI do shell (colapso da sidebar + tema). Persistido em
- * localStorage para sobreviver a reloads. NÃO guarda dados de sessão
- * (isso é do sessionStore).
+ * Zustand root de estado de UI do shell (colapso da sidebar + tema),
+ * persistido em localStorage. NÃO guarda dados de sessão (isso é do
+ * sessionStore, na feature identity).
  */
 export const useUiStore = create<UiState>()(
   persist(
