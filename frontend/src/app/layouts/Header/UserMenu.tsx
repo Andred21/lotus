@@ -1,17 +1,10 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AppAvatar, AppMenu } from '@shared/ui'
+import { AppAvatar, AppButton, AppMenu } from '@shared/ui'
 import type { AppMenuRef, MenuItem } from '@shared/ui'
 import { useSessionStore } from '@features/identity/stores/sessionStore'
 import { useLogout } from '@features/identity/api/useLogout'
-
-/** Capitaliza a primeira role para exibição (ex.: superadmin → SuperAdmin). */
-function displayRole(roles: string[]): string {
-  const r = roles[0]
-  if (!r) return ''
-  if (r === 'superadmin') return 'SuperAdmin'
-  return r.charAt(0).toUpperCase() + r.slice(1)
-}
+import { displayRole } from '@shared/lib'
 
 export function UserMenu() {
   const user = useSessionStore((s) => s.user)
@@ -41,13 +34,14 @@ export function UserMenu() {
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</p>
         <p className="text-xs text-[#25A5E4]">{displayRole(user.roles)}</p>
       </div>
-      <button
-        onClick={(e) => menuRef.current?.toggle(e)}
+      <AppButton
+        text
+        rounded
         aria-label="Abrir menu do usuário"
-        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+        onClick={(e) => menuRef.current?.toggle(e)}
       >
         <i className="pi pi-angle-down" />
-      </button>
+      </AppButton>
       <AppMenu ref={menuRef} model={items} />
     </div>
   )
