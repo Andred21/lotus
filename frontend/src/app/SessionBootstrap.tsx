@@ -3,6 +3,7 @@ import { useMe } from '@features/identity/api/useMe'
 import { useSessionStore } from '@features/identity/stores/sessionStore'
 
 export function SessionBootstrap({ children }: { children: ReactNode }) {
+  
   const { data, isError, isSuccess } = useMe()
   const setUser = useSessionStore((s) => s.setUser)
   const clear = useSessionStore((s) => s.clear)
