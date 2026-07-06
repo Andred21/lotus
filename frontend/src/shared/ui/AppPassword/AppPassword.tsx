@@ -5,6 +5,11 @@ import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 
+// Estilo dark do input (tema PrimeReact é layout-only — ver ADR-16). Borda base
+// não usa `!`, para o estado inválido (.p-invalid) continuar vencendo em vermelho.
+const darkInput =
+  'dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500'
+
 export interface AppPasswordProps extends PasswordProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
   leftIcon?: string
@@ -20,17 +25,25 @@ export interface AppPasswordProps extends PasswordProps {
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, ...props }, ref) => {
     if (!leftIcon) {
-      return <Password inputRef={ref} toggleMask feedback={false} {...props} />
-    }
-    return (
-      <IconField iconPosition="left">
-        <InputIcon className={`${leftIcon} z-10`} />
+      return (
         <Password
           inputRef={ref}
           toggleMask
           feedback={false}
-          className="w-full "
-          inputClassName="w-96 pl-10"
+          inputClassName={darkInput}
+          {...props}
+        />
+      )
+    }
+    return (
+      <IconField iconPosition="left">
+        <InputIcon className={`${leftIcon} z-10 dark:text-slate-400`} />
+        <Password
+          inputRef={ref}
+          toggleMask
+          feedback={false}
+          className="w-full dark:text-slate-400"
+          inputClassName={`w-96 pl-10 ${darkInput}`}
           {...props}
         />
       </IconField>

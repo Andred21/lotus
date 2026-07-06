@@ -14,26 +14,28 @@ export function LoginForm() {
   } = useLoginForm();
 
   return (
+
+    
     <form
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
-      className="flex flex-col gap-4 w-full max-w-sm mx-auto text-center"
+      className="flex flex-col gap-4 w-full max-w-sm mx-auto text-left"
     >
       <div>
-        <h1 className="text-2xl font-bold">Iniciar sesión</h1>
-        <p className="text-gray-500">Ingresa con tus credenciales</p>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Iniciar sesión</h1>
+        <p className="text-gray-500 dark:text-slate-400">Ingresa con tus credenciales</p>
       </div>
 
       {generalError && (
-        <div role="alert" className="text-red-600 text-sm">
+        <div role="alert" className="text-red-600 dark:text-red-400 text-sm">
           {generalError}
         </div>
       )}
 
       <label className="flex flex-col gap-1">
-        <span className="text-md font-medium">Correo electrónico</span>
+        <span className="text-md font-medium dark:text-slate-200">Correo electrónico</span>
         <AppInputText
           leftIcon="pi pi-envelope"
           type="email"
@@ -43,12 +45,12 @@ export function LoginForm() {
           invalid={!!fieldErrors?.email}
         />
         {fieldErrors?.email && (
-          <small className="text-red-600">{fieldErrors.email[0]}</small>
+          <small className="text-red-600 dark:text-red-400">{fieldErrors.email[0]}</small>
         )}
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-md font-medium">Contraseña</span>
+        <span className="text-md font-medium dark:text-slate-200">Contraseña</span>
         <AppPassword
           leftIcon="pi pi-lock"
           value={password}
@@ -56,14 +58,14 @@ export function LoginForm() {
           invalid={!!fieldErrors?.password}
         />
         {fieldErrors?.password && (
-          <small className="text-red-600">{fieldErrors.password[0]}</small>
+          <small className="text-red-600 dark:text-red-400">{fieldErrors.password[0]}</small>
         )}
       </label>
 
       <AppButton type="submit" label="Iniciar sesión" loading={isSubmitting} />
 
       {/* stub: fluxo de senha (task futura, sem endpoint) */}
-      <a className="text-center text-sm text-gray-400 cursor-default">
+      <a className="text-center text-sm text-gray-400 dark:text-slate-500 cursor-default">
         ¿Olvidaste tu contraseña?
       </a>
     </form>
