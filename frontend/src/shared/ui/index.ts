@@ -1,3 +1,7 @@
 export { AppButton } from './AppButton/AppButton'
 export * from './AppInputText'
 export * from './AppPassword'
+export { AppAvatar } from './AppAvatar/AppAvatar'
+export type { AppAvatarProps } from './AppAvatar/AppAvatar'
+export { AppMenu } from './AppMenu/AppMenu'
+export { AppDivider } from './AppDivider/AppDivider'
