@@ -1,0 +1,18 @@
+{
+  "login": {
+    "title": "Entrar",
+    "subtitle": "Acesse com suas credenciais",
+    "email": "E-mail",
+    "emailPlaceholder": "email@empresa.cl",
+    "password": "Senha",
+    "submit": "Entrar",
+    "forgot": "Esqueceu sua senha?"
+  },
+  "brand": {
+    "tagline": "Plataforma de capacitação profissional",
+    "sector": "Setor elétrico de alta tensão"
+  },
+  "common": {
+    "language": "Idioma"
+  }
+}

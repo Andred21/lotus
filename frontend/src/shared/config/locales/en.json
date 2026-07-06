@@ -1,0 +1,18 @@
+{
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Enter your credentials",
+    "email": "Email",
+    "emailPlaceholder": "email@company.cl",
+    "password": "Password",
+    "submit": "Sign in",
+    "forgot": "Forgot your password?"
+  },
+  "brand": {
+    "tagline": "Professional training platform",
+    "sector": "High-voltage electrical sector"
+  },
+  "common": {
+    "language": "Language"
+  }
+}

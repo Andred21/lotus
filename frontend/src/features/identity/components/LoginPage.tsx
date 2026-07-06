@@ -1,10 +1,12 @@
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/Logo.png";
 import { BRAND_COLOR, APP_VERSION } from "@shared/config/brand";
 import { LoginForm } from "./LoginForm";
-import { AppButton } from "@/shared/ui";
+import { AppButton, LanguageMenu } from "@/shared/ui";
 import { useUiStore } from "@/app/providers/uiStore";
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
   return (
@@ -18,9 +20,9 @@ export function LoginPage() {
       >
         <img src={logo} alt="Lotus" className="w-40" />
         <p className="text-center opacity-90">
-          Plataforma de capacitación profesional
+          {t("brand.tagline")}
           <br />
-          Sector eléctrico de alta tensión
+          {t("brand.sector")}
         </p>
         <span className="absolute bottom-4 text-xs opacity-70">
           {APP_VERSION}
@@ -31,11 +33,9 @@ export function LoginPage() {
 
       <main className="relative flex items-center justify-center p-8 md:w-1/2 dark:bg-slate-900">
       
-        {/* stubs visuais: idioma (ADR-15) e dark mode (ADR-16) — sem ação */}
+        {/* idioma (ADR-15) + dark mode (ADR-16) */}
         <div className="absolute top-4 right-4 flex gap-2 text-gray-400 text-sm select-none">
-          <AppButton variant="brandLabel" title="Idioma (em breve)">
-            <i className="pi pi-globe" /> EN
-          </AppButton>
+          <LanguageMenu />
           <AppButton
             variant="brandIcon"
             onClick={toggleTheme}
