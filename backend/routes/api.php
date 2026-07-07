@@ -1,16 +1,14 @@
 <?php
 
-use App\Domains\Identity\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::get('/user', fn (Request $request) => $request->user())
+    ->middleware('auth:sanctum');
 
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
-});
+// Cada domínio declara suas próprias rotas em app/Domains/<Dominio>/routes.php.
+// RouteServiceProvider planejado (estrutura-monolito.md) ainda não existe;
+// agregamos por glob aqui — routes/api.php fica só como esqueleto.
+foreach (glob(app_path('Domains/*/routes.php')) as $routeFile) {
+    require $routeFile;
+}
