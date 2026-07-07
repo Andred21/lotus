@@ -3,36 +3,35 @@
 namespace App\Domains\Commercial\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class ClientAddress extends Model implements Auditable
-{   
-    use SoftDeletes, AuditableTrait;
-    
-    protected $table = 'client_addresses';
+{
+    use AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'client_id',
-        'street',
-        'street_complement',
+        'line1',
+        'line2',
         'number',
-        'neighborhood',
+        'commune',
         'city',
-        'state',
+        'region',
         'zip_code',
         'is_primary',
     ];
 
     protected $auditInclude = [
         'client_id',
-        'street',
-        'street_complement',
+        'line1',
+        'line2',
         'number',
-        'neighborhood',
+        'commune',
         'city',
-        'state',
+        'region',
         'zip_code',
         'is_primary',
     ];
@@ -41,9 +40,8 @@ class ClientAddress extends Model implements Auditable
         'is_primary' => 'boolean',
     ];
 
-    public function client()
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'client_id');
+        return $this->belongsTo(Client::class);
     }
-
 }
