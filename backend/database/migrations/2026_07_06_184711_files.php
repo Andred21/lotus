@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('valid_until')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['fileable_type', 'fileable_id']);
         });
     }
 
