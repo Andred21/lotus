@@ -2,9 +2,11 @@
 
 namespace App\Domains\Identity\Models;
 
+use App\Domains\Commercial\Models\Client;
 use Database\Factories\UserFactory;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -65,6 +67,16 @@ class User extends Authenticatable implements Auditable
                 $user->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    public function client(): HasOne
+    {
+        return $this->hasOne(Client::class);
+    }
+
+    public function redator(): HasOne
+    {
+        return $this->hasOne(Redator::class);
     }
 
     /**
