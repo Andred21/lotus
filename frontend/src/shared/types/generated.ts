@@ -43,6 +43,9 @@ workload_hours: number,
 templates: CertificateTemplateData[],
 redator_ids: number[],
 };
+export type CourseRedatorData = {
+redator_ids: number[],
+};
 export type RedatorData = {
 id: undefined | number,
 name: string,

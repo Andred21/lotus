@@ -3,9 +3,9 @@
 namespace App\Domains\Catalog\Http\Controllers;
 
 use App\Domains\Catalog\Data\CourseData;
+use App\Domains\Catalog\Data\CourseRedatorData;
 use App\Domains\Catalog\Models\Course;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Habilitação (idoneidade) redator↔curso pelo lado do curso: define quais
@@ -13,14 +13,9 @@ use Illuminate\Http\Request;
  */
 class CourseRedatorController extends Controller
 {
-    public function update(Request $request, Course $course): CourseData
+    public function update(CourseRedatorData $data, Course $course): CourseData
     {
-        $validated = $request->validate([
-            'redator_ids' => ['present', 'array'],
-            'redator_ids.*' => ['integer', 'exists:redatores,id'],
-        ]);
-
-        $course->redatores()->sync($validated['redator_ids']);
+        $course->redatores()->sync($data->redator_ids);
 
         return CourseData::fromModel($course->load(['certificateTemplates', 'redatores']));
     }
