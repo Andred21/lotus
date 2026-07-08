@@ -13,7 +13,7 @@ export function AppHeader({
   className?: string
 }) {
   return (
-    <header className={`flex items-center justify-between border-b px-6 py-3 ${className}`}>
+    <header className={`flex items-center justify-between border-b px-6  ${className}`}>
       {children}
     </header>
   )

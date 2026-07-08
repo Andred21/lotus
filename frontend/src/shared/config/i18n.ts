@@ -10,7 +10,7 @@ import en from './locales/en.json'
  * chileno. `flag` = código ISO usado pelo flag-icons (`fi fi-<flag>`).
  */
 export const SUPPORTED_LANGUAGES = [
-  { code: 'es-CL', label: 'ES', flag: 'es' },
+  { code: 'es-CL', label: 'ES', flag: 'cl' },
   { code: 'pt-BR', label: 'PT', flag: 'br' },
   { code: 'en', label: 'EN', flag: 'us' },
 ] as const

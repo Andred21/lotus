@@ -10,6 +10,7 @@ export function LoginPage() {
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
   return (
+    
     <div className="min-h-screen flex flex-col md:flex-row dark:bg-slate-900">
       {/* Painel esquerdo (marca) */}
       <aside

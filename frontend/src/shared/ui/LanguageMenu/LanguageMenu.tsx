@@ -35,7 +35,8 @@ export function LanguageMenu() {
       >
         <span className={`fi fi-${current.flag}`} /> {current.label}
       </AppButton>
-      <AppMenu ref={menuRef} model={items} />
+      <AppMenu ref={menuRef} model={items} className="items-center w-auto mr-10" popupAlignment='right' />
+
     </>
   )
 }
