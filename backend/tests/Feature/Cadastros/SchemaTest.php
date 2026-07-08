@@ -31,5 +31,18 @@ class SchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('files', [
             'fileable_type', 'fileable_id', 'type', 'path', 'original_name', 'mime', 'size', 'valid_until',
         ]));
+
+        $this->assertTrue(Schema::hasTable('courses'));
+        $this->assertTrue(Schema::hasColumns('courses', [
+            'name', 'technical_name', 'description', 'workload_hours', 'deleted_at',
+        ]));
+
+        $this->assertTrue(Schema::hasColumns('course_certificate_templates', [
+            'course_id', 'version', 'layout_config', 'validity_months', 'deleted_at',
+        ]));
+
+        $this->assertTrue(Schema::hasColumns('course_redator', [
+            'course_id', 'redator_id',
+        ]));
     }
 }
