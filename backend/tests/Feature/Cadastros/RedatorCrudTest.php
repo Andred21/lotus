@@ -24,9 +24,9 @@ class RedatorCrudTest extends TestCase
         $this->actingAdmin();
 
         $response = $this->postJson('/api/redatores', [
-            'name'      => 'Magallanes Acuña',
-            'rut'       => '20.347.878-K',
-            'email'     => 'mao@lotus.cl',
+            'name' => 'Magallanes Acuña',
+            'rut' => '20.347.878-K',
+            'email' => 'mao@lotus.cl',
             'documents' => [UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
         ]);
 
@@ -43,8 +43,8 @@ class RedatorCrudTest extends TestCase
         User::factory()->create(['rut' => '20.347.878-K']);
 
         $this->postJson('/api/redatores', [
-            'name'  => 'Outro',
-            'rut'   => '20.347.878-K',
+            'name' => 'Outro',
+            'rut' => '20.347.878-K',
             'email' => 'outro@lotus.cl',
         ])->assertStatus(422)->assertJsonValidationErrors('rut');
     }
@@ -72,34 +72,32 @@ class RedatorCrudTest extends TestCase
         $id = $this->postJson('/api/redatores', [
             'name' => 'Fabián Cifuentes', 'rut' => '12.345.678-5', 'email' => 'fc@lotus.cl',
         ])->json('id');
-        $userId = Redator::find($id)->user_id;
 
+        // destroy cascateia soft-delete até o User; recriar com o mesmo RUT
+        // deve dar 422 (checagem withTrashed), não 500 do índice único.
         $this->deleteJson("/api/redatores/{$id}")->assertNoContent();
-
-        // destroy do Redator não cascateia (ainda) para o User — soft-deletamos
-        // o User diretamente para reproduzir a condição real do bug: RUT
-        // "livre" na query com scope padrão, mas ainda preso ao índice único.
-        User::find($userId)->delete();
 
         $this->postJson('/api/redatores', [
             'name' => 'Outro Redator', 'rut' => '12.345.678-5', 'email' => 'outro@lotus.cl',
         ])->assertStatus(422)->assertJsonValidationErrors('rut');
     }
 
-    public function test_remove_cascateia_para_documentos(): void
+    public function test_remove_cascateia_para_documentos_e_user(): void
     {
         Storage::fake('s3');
         $this->actingAdmin();
 
         $id = $this->postJson('/api/redatores', [
-            'name'      => 'Magallanes Acuña',
-            'rut'       => '20.347.878-K',
-            'email'     => 'mao@lotus.cl',
+            'name' => 'Magallanes Acuña',
+            'rut' => '20.347.878-K',
+            'email' => 'mao@lotus.cl',
             'documents' => [UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
         ])->json('id');
+        $userId = Redator::find($id)->user_id;
 
         $this->deleteJson("/api/redatores/{$id}")->assertNoContent();
 
         $this->assertSoftDeleted('files', ['fileable_type' => 'redator', 'fileable_id' => $id]);
+        $this->assertSoftDeleted('users', ['id' => $userId]);
     }
 }

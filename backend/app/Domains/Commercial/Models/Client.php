@@ -38,6 +38,7 @@ class Client extends Model implements Auditable
             if (! $client->isForceDeleting()) {
                 $client->addresses()->delete();
                 $client->contacts()->delete();
+                $client->user?->delete();
             }
         });
     }

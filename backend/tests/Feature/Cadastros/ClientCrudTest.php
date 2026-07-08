@@ -22,14 +22,14 @@ class ClientCrudTest extends TestCase
     private function payload(array $override = []): array
     {
         return array_merge([
-            'name'              => 'Switch Chile',
-            'rut'               => '12.345.678-5',
-            'email'             => 'info@switch.cl',
-            'legal_name'        => 'Switch Chile Ltda',
-            'type'              => 'client',
+            'name' => 'Switch Chile',
+            'rut' => '12.345.678-5',
+            'email' => 'info@switch.cl',
+            'legal_name' => 'Switch Chile Ltda',
+            'type' => 'client',
             'business_activity' => 'Instalaciones Eléctricas',
-            'addresses'         => [['commune' => 'Providencia', 'city' => 'Santiago', 'region' => 'RM', 'is_primary' => true]],
-            'contacts'          => [['name' => 'Parris Barrios', 'email' => 'p@switch.cl', 'is_primary' => true]],
+            'addresses' => [['commune' => 'Providencia', 'city' => 'Santiago', 'region' => 'RM', 'is_primary' => true]],
+            'contacts' => [['name' => 'Parris Barrios', 'email' => 'p@switch.cl', 'is_primary' => true]],
         ], $override);
     }
 
@@ -92,29 +92,28 @@ class ClientCrudTest extends TestCase
         $this->actingAdmin();
 
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
-        $userId = Client::find($id)->user_id;
 
+        // destroy cascateia soft-delete até o User; o RUT continua preso ao
+        // índice único de users.rut, então recriar com o mesmo RUT deve dar
+        // 422 (a checagem usa withTrashed), não 500 do banco.
         $this->deleteJson("/api/clients/{$id}")->assertNoContent();
-
-        // destroy do Client não cascateia (ainda) para o User — soft-deletamos
-        // o User diretamente para reproduzir a condição real do bug: RUT
-        // "livre" na query com scope padrão, mas ainda preso ao índice único.
-        User::find($userId)->delete();
 
         $this->postJson('/api/clients', $this->payload(['email' => 'outro@switch.cl']))
             ->assertStatus(422)
             ->assertJsonValidationErrors('rut');
     }
 
-    public function test_remove_cascateia_para_enderecos_e_contatos(): void
+    public function test_remove_cascateia_para_enderecos_contatos_e_user(): void
     {
         $this->actingAdmin();
 
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
+        $userId = Client::find($id)->user_id;
 
         $this->deleteJson("/api/clients/{$id}")->assertNoContent();
 
         $this->assertSoftDeleted('client_addresses', ['client_id' => $id]);
         $this->assertSoftDeleted('client_contacts', ['client_id' => $id]);
+        $this->assertSoftDeleted('users', ['id' => $userId]);
     }
 }

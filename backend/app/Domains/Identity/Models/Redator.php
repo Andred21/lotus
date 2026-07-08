@@ -29,6 +29,7 @@ class Redator extends Model implements Auditable
         static::deleting(function (Redator $redator) {
             if (! $redator->isForceDeleting()) {
                 $redator->documents()->delete();
+                $redator->user?->delete();
             }
         });
     }
