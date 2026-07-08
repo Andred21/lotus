@@ -47,7 +47,7 @@ class UserProvisioner
      * (provision) e updates dos atores chamam este método.
      *
      * @param  int|null  $exceptUserId  id do próprio user, ignorado na checagem (update)
-     * @return string  o RUT já formatado, pronto para persistir
+     * @return string o RUT já formatado, pronto para persistir
      */
     public function ensureRutAvailable(string $rut, ?int $exceptUserId = null): string
     {
