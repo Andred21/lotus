@@ -1,3 +1,9 @@
+export type CertificateTemplateData = {
+id: undefined | number,
+version: number,
+layout_config: Record<string, any>,
+validity_months: undefined | number | null,
+};
 export type ClientAddressData = {
 id: undefined | number,
 line1: undefined | string | null,
@@ -28,12 +34,22 @@ business_activity: undefined | string | null,
 addresses: ClientAddressData[],
 contacts: ClientContactData[],
 };
+export type CourseData = {
+id: undefined | number,
+name: string,
+technical_name: undefined | string | null,
+description: undefined | string | null,
+workload_hours: number,
+templates: CertificateTemplateData[],
+redator_ids: number[],
+};
 export type RedatorData = {
 id: undefined | number,
 name: string,
 rut: string,
 email: string,
 phone: undefined | string | null,
+course_ids: number[],
 };
 export type SessionUserData = {
 id: number,
