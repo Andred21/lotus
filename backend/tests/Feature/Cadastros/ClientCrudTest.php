@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Cadastros;
 
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -71,6 +72,12 @@ class ClientCrudTest extends TestCase
             ->assertOk()
             ->assertJsonPath('legal_name', 'Switch Chile SpA');
 
+        // conta só linhas ativas (não soft-deletadas): o replace soft-deleta as antigas
+        // e cria novas, então a contagem bruta da tabela cresceria a cada update.
+        $client = Client::find($id);
+        $this->assertCount(1, $client->addresses);
+        $this->assertCount(1, $client->contacts);
+
         $this->deleteJson("/api/clients/{$id}")->assertNoContent();
         $this->assertSoftDeleted('clients', ['id' => $id]);
     }
@@ -78,5 +85,36 @@ class ClientCrudTest extends TestCase
     public function test_exige_autenticacao(): void
     {
         $this->postJson('/api/clients', $this->payload())->assertStatus(401);
+    }
+
+    public function test_rut_de_cliente_soft_deletado_e_rejeitado_ao_recriar(): void
+    {
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/clients', $this->payload())->json('id');
+        $userId = Client::find($id)->user_id;
+
+        $this->deleteJson("/api/clients/{$id}")->assertNoContent();
+
+        // destroy do Client não cascateia (ainda) para o User — soft-deletamos
+        // o User diretamente para reproduzir a condição real do bug: RUT
+        // "livre" na query com scope padrão, mas ainda preso ao índice único.
+        User::find($userId)->delete();
+
+        $this->postJson('/api/clients', $this->payload(['email' => 'outro@switch.cl']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('rut');
+    }
+
+    public function test_remove_cascateia_para_enderecos_e_contatos(): void
+    {
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/clients', $this->payload())->json('id');
+
+        $this->deleteJson("/api/clients/{$id}")->assertNoContent();
+
+        $this->assertSoftDeleted('client_addresses', ['client_id' => $id]);
+        $this->assertSoftDeleted('client_contacts', ['client_id' => $id]);
     }
 }

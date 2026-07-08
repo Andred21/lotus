@@ -32,6 +32,16 @@ class Client extends Model implements Auditable
         'business_activity',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Client $client) {
+            if (! $client->isForceDeleting()) {
+                $client->addresses()->delete();
+                $client->contacts()->delete();
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

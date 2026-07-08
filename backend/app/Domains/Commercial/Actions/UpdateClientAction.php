@@ -20,7 +20,8 @@ class UpdateClientAction
     {
         $rut = Rut::parse($data->rut)->format();
 
-        $duplicate = User::where('rut', $rut)
+        $duplicate = User::withTrashed()
+            ->where('rut', $rut)
             ->where('id', '!=', $client->user_id)
             ->exists();
 
@@ -30,15 +31,15 @@ class UpdateClientAction
 
         return DB::transaction(function () use ($client, $data, $rut) {
             $client->user->update([
-                'name'  => $data->name,
-                'rut'   => $rut,
+                'name' => $data->name,
+                'rut' => $rut,
                 'email' => $data->email,
                 'phone' => $data->phone instanceof Optional ? null : $data->phone,
             ]);
 
             $client->update([
-                'legal_name'        => $data->legal_name,
-                'type'              => $data->type,
+                'legal_name' => $data->legal_name,
+                'type' => $data->type,
                 'business_activity' => $data->business_activity instanceof Optional ? null : $data->business_activity,
             ]);
 

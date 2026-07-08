@@ -24,6 +24,15 @@ class Redator extends Model implements Auditable
 
     protected $auditInclude = ['user_id'];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Redator $redator) {
+            if (! $redator->isForceDeleting()) {
+                $redator->documents()->delete();
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

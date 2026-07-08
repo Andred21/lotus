@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Cadastros;
 
+use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -61,5 +62,44 @@ class RedatorCrudTest extends TestCase
         $this->getJson("/api/redatores/{$id}")->assertOk()->assertJsonPath('id', $id);
         $this->deleteJson("/api/redatores/{$id}")->assertNoContent();
         $this->assertSoftDeleted('redatores', ['id' => $id]);
+    }
+
+    public function test_rut_de_redator_soft_deletado_e_rejeitado_ao_recriar(): void
+    {
+        Storage::fake('s3');
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Fabián Cifuentes', 'rut' => '12.345.678-5', 'email' => 'fc@lotus.cl',
+        ])->json('id');
+        $userId = Redator::find($id)->user_id;
+
+        $this->deleteJson("/api/redatores/{$id}")->assertNoContent();
+
+        // destroy do Redator não cascateia (ainda) para o User — soft-deletamos
+        // o User diretamente para reproduzir a condição real do bug: RUT
+        // "livre" na query com scope padrão, mas ainda preso ao índice único.
+        User::find($userId)->delete();
+
+        $this->postJson('/api/redatores', [
+            'name' => 'Outro Redator', 'rut' => '12.345.678-5', 'email' => 'outro@lotus.cl',
+        ])->assertStatus(422)->assertJsonValidationErrors('rut');
+    }
+
+    public function test_remove_cascateia_para_documentos(): void
+    {
+        Storage::fake('s3');
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name'      => 'Magallanes Acuña',
+            'rut'       => '20.347.878-K',
+            'email'     => 'mao@lotus.cl',
+            'documents' => [UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
+        ])->json('id');
+
+        $this->deleteJson("/api/redatores/{$id}")->assertNoContent();
+
+        $this->assertSoftDeleted('files', ['fileable_type' => 'redator', 'fileable_id' => $id]);
     }
 }

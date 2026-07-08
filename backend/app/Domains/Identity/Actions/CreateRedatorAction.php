@@ -26,18 +26,18 @@ class CreateRedatorAction
     {
         $rut = Rut::parse($data->rut)->format();
 
-        if (User::where('rut', $rut)->exists()) {
+        if (User::withTrashed()->where('rut', $rut)->exists()) {
             throw ValidationException::withMessages(['rut' => 'Este RUT já está cadastrado.']);
         }
 
         return DB::transaction(function () use ($data, $rut, $documents) {
             $user = User::create([
-                'name'      => $data->name,
-                'rut'       => $rut,
-                'email'     => $data->email,
-                'phone'     => $data->phone instanceof Optional ? null : $data->phone,
-                'password'  => bin2hex(random_bytes(16)), // placeholder até ativação
-                'type'      => 'redator',
+                'name' => $data->name,
+                'rut' => $rut,
+                'email' => $data->email,
+                'phone' => $data->phone instanceof Optional ? null : $data->phone,
+                'password' => bin2hex(random_bytes(16)), // placeholder até ativação
+                'type' => 'redator',
                 'is_active' => false,
             ]);
 
