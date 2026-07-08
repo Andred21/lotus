@@ -11,43 +11,22 @@ use Illuminate\Http\Response;
 
 class RedatorController extends Controller
 {
+    /** @return array<RedatorData> */
     public function index(): array
     {
         return Redator::with('user')->get()
-            ->map(fn (Redator $r) => RedatorData::from([
-                'id'    => $r->id,
-                'name'  => $r->user->name,
-                'rut'   => $r->user->rut,
-                'email' => $r->user->email,
-                'phone' => $r->user->phone,
-            ]))
+            ->map(fn (Redator $r) => RedatorData::fromModel($r))
             ->all();
     }
 
     public function store(RedatorData $data, Request $request, CreateRedatorAction $action): RedatorData
     {
-        $redator = $action->execute($data, $request->file('documents', []));
-
-        return RedatorData::from([
-            'id'    => $redator->id,
-            'name'  => $redator->user->name,
-            'rut'   => $redator->user->rut,
-            'email' => $redator->user->email,
-            'phone' => $redator->user->phone,
-        ]);
+        return RedatorData::fromModel($action->execute($data, $request->file('documents', [])));
     }
 
     public function show(Redator $redator): RedatorData
     {
-        $redator->load('user');
-
-        return RedatorData::from([
-            'id'    => $redator->id,
-            'name'  => $redator->user->name,
-            'rut'   => $redator->user->rut,
-            'email' => $redator->user->email,
-            'phone' => $redator->user->phone,
-        ]);
+        return RedatorData::fromModel($redator->load('user'));
     }
 
     public function destroy(Redator $redator): Response

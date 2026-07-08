@@ -60,6 +60,17 @@ Domínios (espelhados 1:1 pelas `features/` do front):
 
 **Migrations são globais** (`database/migrations/`), NÃO por domínio — cronológicas, e FK cruza domínios (ex: `turmas.quote_id` → Commercial). Seeders: `RoleSeeder`, `PermissionSeeder` (ADR-07).
 
+### Padrão de entidade (CRUD) — DRY entre domínios
+
+Toda entidade segue a **MESMA forma**, independente do domínio. Não se coda cliente diferente de redator diferente de curso — é padronizado. Diferenciar a estrutura por entidade é dívida a corrigir, não estilo pessoal.
+
+- **Controller = fino.** Só orquestra: injeta a Action (escritas) e recebe o model por route binding (leituras). Retorna sempre `XData::fromModel($model)`. NUNCA monta o payload à mão — `XData::from([...])` inline no controller é proibido — nem carrega regra de negócio.
+- **Data (`XData`, spatie/laravel-data) = contrato único.** Concentra validação (`rules()` com `ValidRut` etc.), o `#[TypeScript]`, e a hidratação canônica `public static function fromModel(X $m): self` que achata as relações (ex.: campos do `user` no topo). É o único lugar que sabe montar o DTO a partir do model.
+- **Action = regra de escrita.** Uma por operação (`CreateXAction`, `UpdateXAction`), dentro de `DB::transaction`. CRUD sem regra (list/show/destroy) vai direto ao Eloquent no controller (ADR-02).
+- **Domain Service (`Domains/<X>/Services/`) = regra entre agregados / lógica compartilhada entre entidades.** Quando duas entidades precisam da mesma regra, ela vira Service e as Actions o chamam — não se duplica. Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar RUT, unicidade incl. soft-deletados, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`, chamado por `CreateClientAction` e `CreateRedatorAction`.
+
+Referência viva do padrão: os pares `ClientController`/`RedatorController` (estrutura idêntica), `ClientData`/`RedatorData` (ambos com `fromModel`) e `UserProvisioner`. Entidade de cadastro nova copia essa forma.
+
 ### Auth (detalhe)
 `bootstrap/app.php` habilita `statefulApi()`. Fluxo: front chama `GET /sanctum/csrf-cookie`, depois `POST /api/login`. `AuthController` (`Domains/Identity/Http/Controllers`) regenera a sessão no login (anti session-fixation) e rejeita usuário inativo pós-auth. Env: `SANCTUM_STATEFUL_DOMAINS`, `FRONTEND_URL`, `SESSION_*`. CORS (`config/cors.php`) escopado a `api/*`, `sanctum/csrf-cookie`, `login`, `logout`, com `supports_credentials: true`. O `User` gera `uuid` no create, faz soft-delete e é `Auditable` (campos em `$auditInclude`, `config/audit.php`). `type` é enum (`admin`, `redator`, `aluno`, `cliente`); `is_active` libera o login. **Só admin e redator autenticam** (RN-01).
 

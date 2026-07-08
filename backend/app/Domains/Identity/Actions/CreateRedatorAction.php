@@ -4,42 +4,36 @@ namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Files\Actions\UploadFileAction;
-use App\Shared\Support\Rut;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
  * Cria o redator (usuário-redator + redator + documentos) numa transação.
- * is_active=false até ativação (definição de senha é fluxo à parte).
+ * O provisionamento do User é delegado ao UserProvisioner (compartilhado entre
+ * atores). is_active=false até o fluxo de ativação.
  *
  * @param  array<UploadedFile>  $documents
  */
 class CreateRedatorAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(
+        private UserProvisioner $users,
+        private UploadFileAction $uploads,
+    ) {}
 
     public function execute(RedatorData $data, array $documents = []): Redator
     {
-        $rut = Rut::parse($data->rut)->format();
-
-        if (User::withTrashed()->where('rut', $rut)->exists()) {
-            throw ValidationException::withMessages(['rut' => 'Este RUT já está cadastrado.']);
-        }
-
-        return DB::transaction(function () use ($data, $rut, $documents) {
-            $user = User::create([
-                'name' => $data->name,
-                'rut' => $rut,
-                'email' => $data->email,
-                'phone' => $data->phone instanceof Optional ? null : $data->phone,
-                'password' => bin2hex(random_bytes(16)), // placeholder até ativação
-                'type' => 'redator',
-                'is_active' => false,
-            ]);
+        return DB::transaction(function () use ($data, $documents) {
+            $user = $this->users->provision(
+                type: 'redator',
+                name: $data->name,
+                rut: $data->rut,
+                email: $data->email,
+                phone: $data->phone instanceof Optional ? null : $data->phone,
+            );
 
             $redator = $user->redator()->create([]);
 

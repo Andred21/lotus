@@ -26,7 +26,7 @@ Laravel 13 (PHP 8.3) API · React 19 + TypeScript (Vite) · MySQL 8 (RDS em prod
 
 Vêm dos ADRs. Se uma tarefa parecer pedir que você quebre uma destas, **PARE e confirme com o João Victor**.
 
-1. **DDD-lite, SEM Repository sobre Eloquent.** Regra de negócio → Actions (`execute()`/`__invoke()`) e Domain Services. Consulta complexa → Custom Query Builders. CRUD sem regra → Controller direto ao Eloquent. Testes: integração contra sqlite `:memory:`, não mock. (ADR-02)
+1. **DDD-lite, SEM Repository sobre Eloquent.** Regra de negócio → Actions (`execute()`/`__invoke()`) e Domain Services. Consulta complexa → Custom Query Builders. CRUD sem regra → Controller direto ao Eloquent. Testes: integração contra sqlite `:memory:`, não mock. (ADR-02) **Toda entidade de cadastro segue a MESMA forma, sem diferenciar por entidade (DRY):** Controller fino → `Data::fromModel` → Action; regra compartilhada entre entidades num Domain Service (ex.: `Identity/Services/UserProvisioner`, usado por cliente e redator). Detalhe: "Padrão de entidade (CRUD)" em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md).
 2. **Auditoria só na aplicação, nunca em trigger de banco** — trigger não enxerga o usuário autenticado. (ADR-08)
 3. **Tipos TS são gerados do backend.** Fonte = DTO `spatie/laravel-data` em `app/Data/` com `#[TypeScript]`. `shared/types/generated.ts` NÃO se edita à mão. Tipo à mão no front = dívida temporária marcada. (ADR-04)
 4. **Auth é cookie de sessão Sanctum + CSRF.** Nunca token/localStorage. `initCsrf()` antes da primeira mutação. Controllers deixam exceções subirem (handler global formata) — não montar erro à mão. (ADR-06 / ADR-03)

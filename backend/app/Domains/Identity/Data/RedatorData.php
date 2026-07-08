@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Data;
 
+use App\Domains\Identity\Models\Redator;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Required;
@@ -32,5 +33,20 @@ class RedatorData extends Data
         return [
             'rut' => ['required', 'string', new ValidRut],
         ];
+    }
+
+    /**
+     * Hidrata o DTO do model, achatando os campos do user (name/rut/email/
+     * phone) para o topo. Usado nas respostas do RedatorController.
+     */
+    public static function fromModel(Redator $redator): self
+    {
+        return new self(
+            id: $redator->id,
+            name: $redator->user->name,
+            rut: $redator->user->rut,
+            email: $redator->user->email,
+            phone: $redator->user->phone,
+        );
     }
 }
