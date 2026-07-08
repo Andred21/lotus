@@ -4,10 +4,8 @@ namespace App\Domains\Commercial\Actions;
 
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
-use App\Domains\Identity\Models\User;
-use App\Shared\Support\Rut;
+use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -16,18 +14,11 @@ use Spatie\LaravelData\Optional;
  */
 class UpdateClientAction
 {
+    public function __construct(private UserProvisioner $users) {}
+
     public function execute(Client $client, ClientData $data): Client
     {
-        $rut = Rut::parse($data->rut)->format();
-
-        $duplicate = User::withTrashed()
-            ->where('rut', $rut)
-            ->where('id', '!=', $client->user_id)
-            ->exists();
-
-        if ($duplicate) {
-            throw ValidationException::withMessages(['rut' => 'Este RUT já está cadastrado.']);
-        }
+        $rut = $this->users->ensureRutAvailable($data->rut, $client->user_id);
 
         return DB::transaction(function () use ($client, $data, $rut) {
             $client->user->update([

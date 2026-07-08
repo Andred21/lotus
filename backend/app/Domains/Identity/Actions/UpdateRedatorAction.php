@@ -4,12 +4,10 @@ namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Files\Actions\UploadFileAction;
-use App\Shared\Support\Rut;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -21,20 +19,14 @@ use Spatie\LaravelData\Optional;
  */
 class UpdateRedatorAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(
+        private UserProvisioner $users,
+        private UploadFileAction $uploads,
+    ) {}
 
     public function execute(Redator $redator, RedatorData $data, array $documents = []): Redator
     {
-        $rut = Rut::parse($data->rut)->format();
-
-        $duplicate = User::withTrashed()
-            ->where('rut', $rut)
-            ->where('id', '!=', $redator->user_id)
-            ->exists();
-
-        if ($duplicate) {
-            throw ValidationException::withMessages(['rut' => 'Este RUT já está cadastrado.']);
-        }
+        $rut = $this->users->ensureRutAvailable($data->rut, $redator->user_id);
 
         return DB::transaction(function () use ($redator, $data, $rut, $documents) {
             $redator->user->update([
