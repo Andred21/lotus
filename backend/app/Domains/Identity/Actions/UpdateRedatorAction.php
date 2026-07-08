@@ -44,7 +44,9 @@ class UpdateRedatorAction
                 'phone' => $data->phone instanceof Optional ? null : $data->phone,
             ]);
 
-            $redator->courses()->sync($data->course_ids);
+            if (! $data->course_ids instanceof Optional) {
+                $redator->courses()->sync($data->course_ids);
+            }
 
             foreach ($documents as $document) {
                 $this->uploads->execute($redator, $document, 'documento');

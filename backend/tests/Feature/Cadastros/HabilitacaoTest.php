@@ -87,4 +87,36 @@ class HabilitacaoTest extends TestCase
         $this->assertDatabaseHas('course_redator', ['redator_id' => $redator->id, 'course_id' => $c1->id]);
         $this->assertDatabaseHas('course_redator', ['redator_id' => $redator->id, 'course_id' => $c2->id]);
     }
+
+    public function test_update_sem_course_ids_preserva_habilitacao(): void
+    {
+        $this->actingAdmin();
+        $course = Course::create(['name' => 'C1', 'workload_hours' => 8]);
+        $redator = $this->redator();
+        $redator->courses()->attach($course->id);
+
+        // update parcial (só nome) sem course_ids NÃO pode apagar a habilitação.
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => 'Nome Novo',
+            'rut' => $redator->user->rut,
+            'email' => $redator->user->email,
+        ])->assertOk()->assertJsonPath('course_ids.0', $course->id);
+
+        $this->assertDatabaseHas('course_redator', [
+            'redator_id' => $redator->id, 'course_id' => $course->id,
+        ]);
+    }
+
+    public function test_course_id_inexistente_no_update_rejeitado(): void
+    {
+        $this->actingAdmin();
+        $redator = $this->redator();
+
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => $redator->user->name,
+            'rut' => $redator->user->rut,
+            'email' => $redator->user->email,
+            'course_ids' => [99999],
+        ])->assertStatus(422)->assertJsonValidationErrors('course_ids.0');
+    }
 }

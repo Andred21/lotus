@@ -26,14 +26,22 @@ class RedatorData extends Data
         #[Required, Email]
         public string $email,
         public string|Optional|null $phone,
-        /** @var array<int> Cursos que o redator está habilitado a ministrar. */
-        public array $course_ids = [],
+        /**
+         * Cursos que o redator está habilitado a ministrar. Optional: se
+         * ausente no request, a habilitação NÃO é tocada (evita apagar o que
+         * foi setado pelo lado-curso). No fromModel vem sempre preenchido.
+         *
+         * @var array<int>
+         */
+        public array|Optional $course_ids,
     ) {}
 
     public static function rules(): array
     {
         return [
             'rut' => ['required', 'string', new ValidRut],
+            'course_ids' => ['sometimes', 'array'],
+            'course_ids.*' => ['integer', 'exists:courses,id'],
         ];
     }
 
