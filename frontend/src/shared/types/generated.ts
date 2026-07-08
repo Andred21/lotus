@@ -61,8 +61,3 @@ is_active: boolean,
 roles: string[],
 permissions: string[],
 };
-export type UserData = {
-id: number,
-name: string,
-email: string,
-};
