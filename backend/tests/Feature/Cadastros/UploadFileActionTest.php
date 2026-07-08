@@ -16,14 +16,15 @@ class UploadFileActionTest extends TestCase
 
     public function test_upload_grava_no_disco_e_registra_em_files(): void
     {
-        Storage::fake('s3');
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
 
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
         $upload = UploadedFile::fake()->create('cv.pdf', 500, 'application/pdf');
 
         $file = app(UploadFileAction::class)->execute($redator, $upload, 'cv', 's3');
 
-        Storage::disk('s3')->assertExists($file->path);
+        $storage->assertExists($file->path);
         $this->assertDatabaseHas('files', [
             'fileable_type' => 'redator',
             'fileable_id'   => $redator->id,

@@ -35,7 +35,7 @@ class Client extends Model implements Auditable
     protected static function booted(): void
     {
         static::deleting(function (Client $client) {
-            if (! $client->isForceDeleting()) {
+            if (!$client->isForceDeleting()) {
                 $client->addresses()->delete();
                 $client->contacts()->delete();
                 $client->user?->delete();

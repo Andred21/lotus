@@ -39,6 +39,9 @@ class UploadFileAction
     {
         $disk ??= config('filesystems.default');
 
-        return Storage::disk($disk)->temporaryUrl($file->path, now()->addMinutes($minutes));
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk($disk);
+
+        return $storage->temporaryUrl($file->path, now()->addMinutes($minutes));
     }
 }
