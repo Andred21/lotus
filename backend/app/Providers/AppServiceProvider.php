@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
             'client_contact'  => \App\Domains\Commercial\Models\ClientContact::class,
             'redator'         => \App\Domains\Identity\Models\Redator::class,
             'course'          => \App\Domains\Catalog\Models\Course::class,
+            'course_certificate_template' => \App\Domains\Catalog\Models\CourseCertificateTemplate::class,
             'turma'           => \App\Domains\Operation\Models\Turma::class,
             'budget'          => \App\Domains\Commercial\Models\Budget::class,
             'quote'           => \App\Domains\Commercial\Models\Quote::class,

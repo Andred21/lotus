@@ -2,9 +2,11 @@
 
 namespace App\Domains\Identity\Models;
 
+use App\Domains\Catalog\Models\Course;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable as AuditableTrait;
@@ -27,7 +29,7 @@ class Redator extends Model implements Auditable
     protected static function booted(): void
     {
         static::deleting(function (Redator $redator) {
-            if (! $redator->isForceDeleting()) {
+            if (!$redator->isForceDeleting()) {
                 $redator->documents()->delete();
                 $redator->user?->delete();
             }
@@ -42,5 +44,11 @@ class Redator extends Model implements Auditable
     public function documents(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /** Cursos que este redator está habilitado a ministrar (idoneidade). */
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_redator')->withTimestamps();
     }
 }
