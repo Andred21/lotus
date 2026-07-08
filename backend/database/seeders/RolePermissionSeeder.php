@@ -56,6 +56,10 @@ class RolePermissionSeeder extends Seeder
             'identity.access.manage'=> 'Gerir roles e permissões de outros usuários (sensível)',
 
             // ---- Commercial ----
+            'commercial.client.view'   => 'Ver clientes (empresas contratantes)',
+            'commercial.client.create' => 'Criar clientes',
+            'commercial.client.update' => 'Editar clientes, endereços e contatos',
+            'commercial.client.delete' => 'Remover clientes',
             'commercial.budget.view'   => 'Ver orçamentos',
             'commercial.budget.create' => 'Criar orçamentos',
             'commercial.budget.update' => 'Editar orçamentos',

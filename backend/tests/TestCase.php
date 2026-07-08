@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Domains\Identity\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -14,5 +16,20 @@ abstract class TestCase extends BaseTestCase
         // Origin/Referer bater com sanctum.stateful. Sem isso, StartSession
         // nunca roda e $request->session() explode em qualquer rota autenticada.
         $this->withHeader('Referer', env('FRONTEND_URL', 'http://localhost:5173'));
+    }
+
+    /**
+     * Autentica como admin com o RBAC semeado (role 'admin' = todas as
+     * permissões de cadastro). Uso nos testes de CRUD atrás de permission:.
+     */
+    protected function actingAsAdmin(): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole('admin');
+        $this->actingAs($user, 'web');
+
+        return $user;
     }
 }

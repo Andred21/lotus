@@ -8,9 +8,21 @@ use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ClientController extends Controller
+class ClientController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:commercial.client.view', only: ['index', 'show']),
+            new Middleware('permission:commercial.client.create', only: ['store']),
+            new Middleware('permission:commercial.client.update', only: ['update']),
+            new Middleware('permission:commercial.client.delete', only: ['destroy']),
+        ];
+    }
+
     /** @return array<ClientData> */
     public function index(): array
     {

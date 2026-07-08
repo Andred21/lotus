@@ -10,11 +10,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('courses', CourseController::class);
 
-    // Nested: gerenciar templates de certificado de um curso individualmente.
-    Route::post('courses/{course}/templates', [CourseTemplateController::class, 'store']);
-    Route::put('templates/{template}', [CourseTemplateController::class, 'update']);
-    Route::delete('templates/{template}', [CourseTemplateController::class, 'destroy']);
+    // Templates e habilitação = editar o curso → catalog.course.update.
+    Route::middleware('permission:catalog.course.update')->group(function () {
+        // Nested: gerenciar templates de certificado de um curso individualmente.
+        Route::post('courses/{course}/templates', [CourseTemplateController::class, 'store']);
+        Route::put('templates/{template}', [CourseTemplateController::class, 'update']);
+        Route::delete('templates/{template}', [CourseTemplateController::class, 'destroy']);
 
-    // Habilitação redator↔curso pelo lado do curso (sync).
-    Route::put('courses/{course}/redatores', [CourseRedatorController::class, 'update']);
+        // Habilitação redator↔curso pelo lado do curso (sync).
+        Route::put('courses/{course}/redatores', [CourseRedatorController::class, 'update']);
+    });
 });

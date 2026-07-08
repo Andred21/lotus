@@ -13,12 +13,12 @@ class ClientNestedTest extends TestCase
 
     private function makeClient(): Client
     {
-        $this->actingAs(User::factory()->create(['type' => 'admin', 'is_active' => true]));
+        $this->actingAsAdmin();
         $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
 
         return $user->client()->create([
             'legal_name' => 'ACME Ltda',
-            'type'       => 'client',
+            'type' => 'client',
         ]);
     }
 

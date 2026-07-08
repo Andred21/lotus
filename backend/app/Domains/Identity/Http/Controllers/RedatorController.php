@@ -9,9 +9,21 @@ use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class RedatorController extends Controller
+class RedatorController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:identity.user.view', only: ['index', 'show']),
+            new Middleware('permission:identity.user.create', only: ['store']),
+            new Middleware('permission:identity.user.update', only: ['update']),
+            new Middleware('permission:identity.user.delete', only: ['destroy']),
+        ];
+    }
+
     /** @return array<RedatorData> */
     public function index(): array
     {

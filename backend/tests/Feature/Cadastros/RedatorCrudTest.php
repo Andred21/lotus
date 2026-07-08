@@ -15,7 +15,7 @@ class RedatorCrudTest extends TestCase
 
     private function actingAdmin(): void
     {
-        $this->actingAs(User::factory()->create(['type' => 'admin', 'is_active' => true]));
+        $this->actingAsAdmin();
     }
 
     public function test_cria_redator_com_documento(): void

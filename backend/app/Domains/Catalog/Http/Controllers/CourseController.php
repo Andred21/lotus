@@ -8,9 +8,21 @@ use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class CourseController extends Controller
+class CourseController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:catalog.course.view', only: ['index', 'show']),
+            new Middleware('permission:catalog.course.create', only: ['store']),
+            new Middleware('permission:catalog.course.update', only: ['update']),
+            new Middleware('permission:catalog.course.delete', only: ['destroy']),
+        ];
+    }
+
     /** @return array<CourseData> */
     public function index(): array
     {

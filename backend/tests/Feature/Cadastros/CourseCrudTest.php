@@ -3,7 +3,6 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,7 +12,7 @@ class CourseCrudTest extends TestCase
 
     private function actingAdmin(): void
     {
-        $this->actingAs(User::factory()->create(['type' => 'admin', 'is_active' => true]));
+        $this->actingAsAdmin();
     }
 
     public function test_cria_curso_com_template(): void

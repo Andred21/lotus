@@ -13,10 +13,7 @@ class ClientCrudTest extends TestCase
 
     private function actingAdmin(): User
     {
-        $admin = User::factory()->create(['type' => 'admin', 'is_active' => true]);
-        $this->actingAs($admin);
-
-        return $admin;
+        return $this->actingAsAdmin();
     }
 
     private function payload(array $override = []): array

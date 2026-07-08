@@ -14,7 +14,7 @@ class HabilitacaoTest extends TestCase
 
     private function actingAdmin(): void
     {
-        $this->actingAs(User::factory()->create(['type' => 'admin', 'is_active' => true]));
+        $this->actingAsAdmin();
     }
 
     private function redator(string $rut = '12.345.678-5'): Redator
