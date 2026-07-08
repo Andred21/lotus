@@ -41,7 +41,7 @@ class CreateRedatorAction
                 $this->uploads->execute($redator, $document, 'documento');
             }
 
-            return $redator->load(['user', 'documents']);
+            return $redator->load(['user', 'documents', 'courses']);
         });
     }
 }

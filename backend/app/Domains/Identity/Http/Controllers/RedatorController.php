@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\CreateRedatorAction;
+use App\Domains\Identity\Actions\UpdateRedatorAction;
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
@@ -14,7 +15,7 @@ class RedatorController extends Controller
     /** @return array<RedatorData> */
     public function index(): array
     {
-        return Redator::with('user')->get()
+        return Redator::with(['user', 'courses'])->get()
             ->map(fn (Redator $r) => RedatorData::fromModel($r))
             ->all();
     }
@@ -26,7 +27,12 @@ class RedatorController extends Controller
 
     public function show(Redator $redator): RedatorData
     {
-        return RedatorData::fromModel($redator->load('user'));
+        return RedatorData::fromModel($redator->load(['user', 'courses']));
+    }
+
+    public function update(RedatorData $data, Redator $redator, Request $request, UpdateRedatorAction $action): RedatorData
+    {
+        return RedatorData::fromModel($action->execute($redator, $data, $request->file('documents', [])));
     }
 
     public function destroy(Redator $redator): Response

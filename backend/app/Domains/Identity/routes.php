@@ -17,5 +17,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // de rota para casar com a assinatura `show(Redator $redator)`.
     Route::apiResource('redatores', RedatorController::class)
         ->parameters(['redatores' => 'redator'])
-        ->only(['index', 'store', 'show', 'destroy']);
+        ->only(['index', 'store', 'show', 'update', 'destroy']);
 });

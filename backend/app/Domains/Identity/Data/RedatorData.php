@@ -26,6 +26,8 @@ class RedatorData extends Data
         #[Required, Email]
         public string $email,
         public string|Optional|null $phone,
+        /** @var array<int> Cursos que o redator está habilitado a ministrar. */
+        public array $course_ids = [],
     ) {}
 
     public static function rules(): array
@@ -47,6 +49,7 @@ class RedatorData extends Data
             rut: $redator->user->rut,
             email: $redator->user->email,
             phone: $redator->user->phone,
+            course_ids: $redator->courses->pluck('id')->all(),
         );
     }
 }
