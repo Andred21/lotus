@@ -1,0 +1,47 @@
+{
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Enter your credentials",
+    "email": "Email",
+    "emailPlaceholder": "email@company.cl",
+    "password": "Password",
+    "submit": "Sign in",
+    "forgot": "Forgot your password?"
+  },
+  "brand": {
+    "tagline": "Professional training platform",
+    "sector": "High-voltage electrical sector"
+  },
+  "common": {
+    "language": "Language"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "comercial": "Commercial",
+    "operacion": "Operations",
+    "cursos": "Courses",
+    "certificados": "Certificates",
+    "personas": "People",
+    "administracion": "Administration"
+  },
+  "roleSection": {
+    "admin": "ADMINISTRATOR",
+    "redator": "EDITOR"
+  },
+  "roleName": {
+    "superadmin": "SuperAdmin",
+    "admin": "Administrator",
+    "redator": "Editor"
+  },
+  "userMenu": {
+    "profile": "My profile",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "subtitle": "Dashboard under construction."
+  },
+  "placeholder": {
+    "module": "Module under construction."
+  }
+}

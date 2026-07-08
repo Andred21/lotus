@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Relation::enforceMorphMap([
+            'user'            => \App\Domains\Identity\Models\User::class,
+            'client'          => \App\Domains\Commercial\Models\Client::class,
+            'client_address'  => \App\Domains\Commercial\Models\ClientAddress::class,
+            'client_contact'  => \App\Domains\Commercial\Models\ClientContact::class,
+            'redator'         => \App\Domains\Identity\Models\Redator::class,
+            'course'          => \App\Domains\Catalog\Models\Course::class,
+            'course_certificate_template' => \App\Domains\Catalog\Models\CourseCertificateTemplate::class,
+            'turma'           => \App\Domains\Operation\Models\Turma::class,
+            'budget'          => \App\Domains\Commercial\Models\Budget::class,
+            'quote'           => \App\Domains\Commercial\Models\Quote::class,
+        ]);
     }
 }

@@ -1,0 +1,47 @@
+{
+  "login": {
+    "title": "Entrar",
+    "subtitle": "Acesse com suas credenciais",
+    "email": "E-mail",
+    "emailPlaceholder": "email@empresa.cl",
+    "password": "Senha",
+    "submit": "Entrar",
+    "forgot": "Esqueceu sua senha?"
+  },
+  "brand": {
+    "tagline": "Plataforma de capacitação profissional",
+    "sector": "Setor elétrico de alta tensão"
+  },
+  "common": {
+    "language": "Idioma"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "comercial": "Comercial",
+    "operacion": "Operação",
+    "cursos": "Cursos",
+    "certificados": "Certificados",
+    "personas": "Pessoas",
+    "administracion": "Administração"
+  },
+  "roleSection": {
+    "admin": "ADMINISTRADOR",
+    "redator": "REDATOR"
+  },
+  "roleName": {
+    "superadmin": "SuperAdmin",
+    "admin": "Administrador",
+    "redator": "Redator"
+  },
+  "userMenu": {
+    "profile": "Meu perfil",
+    "logout": "Sair"
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo, {{name}}",
+    "subtitle": "Painel em construção."
+  },
+  "placeholder": {
+    "module": "Módulo em construção."
+  }
+}
