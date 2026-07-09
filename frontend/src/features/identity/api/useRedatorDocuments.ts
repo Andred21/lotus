@@ -17,7 +17,7 @@ export function useUploadDocument() {
       fd.append('type', type)
       fd.append('file', file)
       if (valid_until) fd.append('valid_until', valid_until)
-      return api.post<RedatorDocumentData>(`/redatores/${redatorId}/documents`, fd).then((r) => r.data)
+      return api.post<RedatorDocumentData>(`/api/redatores/${redatorId}/documents`, fd).then((r) => r.data)
     },
     onSuccess: invalidate,
   })
@@ -27,7 +27,7 @@ export function useRemoveDocument() {
   const invalidate = useInvalidate()
   return useMutation<void, ProblemDetails, { redatorId: number; fileId: number }>({
     mutationFn: ({ redatorId, fileId }) =>
-      api.delete(`/redatores/${redatorId}/documents/${fileId}`).then(() => undefined),
+      api.delete(`/api/redatores/${redatorId}/documents/${fileId}`).then(() => undefined),
     onSuccess: invalidate,
   })
 }
