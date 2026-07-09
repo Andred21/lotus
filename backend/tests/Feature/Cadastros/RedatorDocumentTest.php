@@ -84,9 +84,32 @@ class RedatorDocumentTest extends TestCase
         ])->json('id');
         $file = File::where('fileable_id', $id)->first();
 
-        $this->deleteJson("/api/documents/{$file->id}")->assertNoContent();
+        $this->deleteJson("/api/redatores/{$id}/documents/{$file->id}")->assertNoContent();
 
         $this->assertSoftDeleted('files', ['id' => $file->id]);
         $storage->assertExists($file->path); // arquivo permanece no bucket
+    }
+
+    public function test_remove_documento_de_outro_redator_da_404_e_nao_apaga(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $redatorAId = $this->postJson('/api/redatores', [
+            'name' => 'Juan', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv-a.pdf', 100, 'application/pdf')],
+        ])->json('id');
+
+        $redatorBId = $this->postJson('/api/redatores', [
+            'name' => 'Pedro', 'rut' => '12.345.678-5', 'email' => 'pedro@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv-b.pdf', 100, 'application/pdf')],
+        ])->json('id');
+
+        $fileB = File::where('fileable_id', $redatorBId)->first();
+
+        // tenta apagar o documento do redator B usando a URL do redator A
+        $this->deleteJson("/api/redatores/{$redatorAId}/documents/{$fileB->id}")->assertNotFound();
+
+        $this->assertDatabaseHas('files', ['id' => $fileB->id, 'deleted_at' => null]);
     }
 }

@@ -33,8 +33,13 @@ class RedatorDocumentController extends Controller
         return RedatorDocumentData::fromModel($file);
     }
 
-    public function destroy(File $document): Response
+    public function destroy(Redator $redator, File $document): Response
     {
+        abort_unless(
+            $document->fileable_type === 'redator' && $document->fileable_id === $redator->id,
+            404,
+        );
+
         $document->delete();
 
         return response()->noContent();
