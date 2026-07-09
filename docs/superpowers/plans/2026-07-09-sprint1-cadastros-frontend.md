@@ -652,12 +652,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Create: `frontend/src/shared/ui/AppDialog/AppDialog.tsx` (+ `index.ts`)
 - Create: `frontend/src/shared/ui/AppDropdown/AppDropdown.tsx` (+ `index.ts`)
 - Create: `frontend/src/shared/ui/AppTag/AppTag.tsx` (+ `index.ts`)
+- Create: `frontend/src/shared/ui/AppFileUpload/AppFileUpload.tsx` (+ `index.ts`)
 - Create: `frontend/src/shared/ui/PageHeader/PageHeader.tsx` (+ `index.ts`)
 - Create: `frontend/src/shared/ui/AppTabView/AppTabView.tsx` (+ `index.ts`)
 - Modify: `frontend/src/shared/ui/index.ts` (barrel)
 
 **Interfaces:**
-- Produces: `AppDataTable` (reexporta `Column` do Prime como `AppColumn`), `AppDialog` (props herdam `DialogProps`, default `maximizable`), `AppDropdown`, `AppTag`, `PageHeader` (`{ title, description?, actions? }`), `AppTabView` (reexporta `TabPanel` como `AppTabPanel`).
+- Produces: `AppDataTable` (reexporta `Column` do Prime como `AppColumn`), `AppDialog` (props herdam `DialogProps`, default `maximizable`), `AppDropdown`, `AppTag`, `AppFileUpload` (wrapper do `FileUpload` do PrimeReact, default `mode="basic" auto customUpload`), `PageHeader` (`{ title, description?, actions? }`), `AppTabView` (reexporta `TabPanel` como `AppTabPanel`).
 
 - [ ] **Step 1: `AppDataTable`**
 
@@ -768,6 +769,28 @@ export function AppTag(props: TagProps) {
 export { AppTag } from './AppTag'
 ```
 
+- [ ] **Step 4b: `AppFileUpload`**
+
+`frontend/src/shared/ui/AppFileUpload/AppFileUpload.tsx`:
+
+```tsx
+import { FileUpload } from 'primereact/fileupload'
+import type { FileUploadProps } from 'primereact/fileupload'
+
+/** Wrapper do FileUpload do PrimeReact. Default: modo básico, upload
+ * automático via customUpload (o chamador trata em `uploadHandler`, subindo
+ * pela API própria em vez do endpoint embutido do Prime). */
+export function AppFileUpload(props: FileUploadProps) {
+  return <FileUpload mode="basic" auto customUpload {...props} />
+}
+```
+
+`frontend/src/shared/ui/AppFileUpload/index.ts`:
+
+```ts
+export { AppFileUpload } from './AppFileUpload'
+```
+
 - [ ] **Step 5: `PageHeader`**
 
 `frontend/src/shared/ui/PageHeader/PageHeader.tsx`:
@@ -834,6 +857,7 @@ export * from './AppDataTable'
 export * from './AppDialog'
 export * from './AppDropdown'
 export * from './AppTag'
+export * from './AppFileUpload'
 export * from './PageHeader'
 export * from './AppTabView'
 ```
@@ -1525,8 +1549,8 @@ export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogM
 `frontend/src/features/identity/components/RedatorDialog.tsx`:
 
 ```tsx
-import { useRef, useState } from 'react'
-import { AppDialog, AppButton, AppInputText, AppTag } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@shared/ui'
+import type { FileUploadHandlerEvent } from 'primereact/fileupload'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '../api/coursesApi'
 import { useUploadDocument, useRemoveDocument } from '../api/useRedatorDocuments'
@@ -1559,23 +1583,17 @@ export function RedatorDialog({
   const courses = coursesApi.useList()
   const upload = useUploadDocument()
   const removeDoc = useRemoveDocument()
-  const fileInput = useRef<HTMLInputElement>(null)
-  const [pendingType, setPendingType] = useState<string | null>(null)
 
   const title = mode === 'create' ? 'Nuevo redactor' : form.name
   const existing = form.documents ?? []
   const courseIds = form.course_ids as number[]
 
-  function pickFile(type: string) {
-    setPendingType(type)
-    fileInput.current?.click()
-  }
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file && pendingType && redator?.id) {
-      upload.mutate({ redatorId: redator.id, type: pendingType, file })
+  function handleUpload(type: string, e: FileUploadHandlerEvent) {
+    const file = e.files[0]
+    if (file && redator?.id) {
+      upload.mutate({ redatorId: redator.id, type, file })
     }
-    e.target.value = ''
+    e.options.clear()
   }
 
   const footer = readOnly ? null : (
@@ -1615,7 +1633,6 @@ export function RedatorDialog({
         {mode !== 'create' && (
           <>
             <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">Documentos</h3>
-            <input ref={fileInput} type="file" hidden onChange={onFile} />
             {DOC_TYPES.map((dt) => {
               const doc = existing.find((d) => d.type === dt.type)
               const st = doc ? STATUS_TAG[docStatus(doc.valid_until)] : null
@@ -1628,7 +1645,12 @@ export function RedatorDialog({
                   <div className="flex items-center gap-2">
                     {st && <AppTag value={st.value} severity={st.severity} />}
                     {doc && <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>}
-                    <AppButton icon="pi pi-upload" text rounded onClick={() => pickFile(dt.type)} loading={upload.isPending} />
+                    <AppFileUpload
+                      chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
+                      chooseLabel=""
+                      disabled={upload.isPending}
+                      uploadHandler={(e) => handleUpload(dt.type, e)}
+                    />
                     {doc && <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => removeDoc.mutate(doc.id)} />}
                   </div>
                 </div>
@@ -1840,4 +1862,4 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Idoneidade é visual/provisória; policy que bloqueia designação a turma = futuro (RN-09).
 - Sem test runner de front — verificação por build/lint/manual.
 - i18n: strings inline em ES nesta entrega (protótipo é `es-CL`); mover para os locales quando o ADR-15 fechar (follow-up).
-- Desvio do spec §4.2: o wrapper `AppFileUpload` foi dispensado — a linha de documento usa `<input type="file">` nativo + `AppButton` (não importa PrimeReact cru, respeita ADR-05). Simplicidade/YAGNI: não há uso genérico de upload fora do redator ainda.
+- Upload de documento usa o wrapper `AppFileUpload` (FileUpload do PrimeReact, `mode="basic" customUpload`) — o binário sobe pela API própria no `uploadHandler`, não pelo endpoint embutido do Prime.
