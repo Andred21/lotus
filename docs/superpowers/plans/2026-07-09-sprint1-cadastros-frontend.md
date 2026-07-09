@@ -1433,7 +1433,7 @@ export function useUploadDocument() {
       fd.append('type', type)
       fd.append('file', file)
       if (valid_until) fd.append('valid_until', valid_until)
-      return api.post(`/redatores/${redatorId}/documents`, fd).then((r) => r.data)
+      return api.post<RedatorDocumentData>(`/redatores/${redatorId}/documents`, fd).then((r) => r.data)
     },
     onSuccess: invalidate,
   })
