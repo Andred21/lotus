@@ -11,13 +11,18 @@ export interface ProblemDetails {
     errors?: Record<string, string[]>
 }
 
+// NÃO fixe "Content-Type" aqui. O axios já o deriva do payload: objeto simples
+// vira application/json, FormData vira multipart com boundary. Um default de
+// application/json faz o transformRequest serializar o FormData como JSON
+// (axios/lib/defaults/index.js: `isFormData ? hasJSONContentType ?
+// JSON.stringify(formDataToJSON(data)) : data`) — cada File vira `{}` e o
+// upload chega vazio ao backend, com 201 e sem erro nenhum.
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     withCredentials: true,   // envia/recebe cookies (Sactum SPA)
-    withXSRFToken: true,     // lê o cookie XSRF-TOKEN e envia no header X-XSRF-TOKEN 
+    withXSRFToken: true,     // lê o cookie XSRF-TOKEN e envia no header X-XSRF-TOKEN
     headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
     },
 });
 
