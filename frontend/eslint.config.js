@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
+  // à mão — lintá-lo só produz erro que não se pode corrigir na fonte certa.
+  globalIgnores(['dist', 'src/shared/types/generated.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
