@@ -1,3 +1,4 @@
 export * from './datetime'
 export * from './roles'
 export * from './name'
+export { CHILE_REGIONS } from './chileRegions'
