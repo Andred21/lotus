@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Cadastros;
 
+use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,6 +36,37 @@ class RedatorCrudTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'mao@lotus.cl', 'type' => 'redator']);
         $this->assertDatabaseHas('redatores', ['user_id' => User::where('email', 'mao@lotus.cl')->first()->id]);
         $this->assertDatabaseHas('files', ['fileable_type' => 'redator', 'type' => 'CV']);
+    }
+
+    public function test_cria_redator_com_curso_sincroniza_habilitacao(): void
+    {
+        $this->actingAdmin();
+        $course = Course::create(['name' => 'Alta Tensão I', 'workload_hours' => 40]);
+
+        $response = $this->postJson('/api/redatores', [
+            'name' => 'Fabián Cifuentes',
+            'rut' => '12.345.678-5',
+            'email' => 'fc@lotus.cl',
+            'course_ids' => [$course->id],
+        ]);
+
+        $id = $response->assertCreated()->json('id');
+        $response->assertJsonPath('course_ids', [$course->id]);
+
+        $this->assertDatabaseHas('course_redator', ['course_id' => $course->id, 'redator_id' => $id]);
+    }
+
+    public function test_cria_redator_sem_course_ids_nao_habilita_nem_erra(): void
+    {
+        $this->actingAdmin();
+
+        $response = $this->postJson('/api/redatores', [
+            'name' => 'Fabián Cifuentes',
+            'rut' => '12.345.678-5',
+            'email' => 'fc@lotus.cl',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('course_ids', []);
     }
 
     public function test_rut_duplicado_rejeitado(): void
