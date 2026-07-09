@@ -1,6 +1,8 @@
 import { Dialog } from 'primereact/dialog'
 import type { DialogProps } from 'primereact/dialog'
 
+export type { DialogProps as AppDialogProps } from 'primereact/dialog'
+
 /** Wrapper do Dialog: maximizable por default, largo/alto. Usado para os
  * dialogs unificados de cadastro/visualização/edição. */
 export function AppDialog(props: DialogProps) {

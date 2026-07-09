@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { RedatorData } from '@shared/types/generated'
 import { redatoresApi } from '../api/redatoresApi'
-import type { ClientDialogMode } from '@features/commercial/hooks/useClientForm'
+import type { DialogMode } from '@shared/lib'
 
-export type RedatorDialogMode = ClientDialogMode
+export type RedatorDialogMode = DialogMode
 
 const EMPTY: RedatorData = {
   id: undefined, name: '', rut: '', email: '', phone: null, course_ids: [], documents: [],

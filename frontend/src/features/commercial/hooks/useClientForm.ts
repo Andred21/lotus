@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { ClientData } from '@shared/types/generated'
+import type { DialogMode } from '@shared/lib'
 import { clientsApi } from '../api/clientsApi'
 
-export type ClientDialogMode = 'view' | 'edit' | 'create'
+export type ClientDialogMode = DialogMode
 
 const EMPTY: ClientData = {
   id: undefined, name: '', rut: '', email: '', phone: null,
@@ -35,5 +36,14 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
     mutation.mutate(vars as never, { onSuccess: onDone })
   }
 
-  return { form, set, setForm, readOnly, submit, pending: create.isPending || update.isPending, error: (create.error ?? update.error) }
+  // 422 traz erros por campo; outros status trazem só a mensagem geral.
+  const mutationError = create.error ?? update.error
+  const fieldErrors = mutationError?.errors
+  const generalError = mutationError && !mutationError.errors ? mutationError.detail : null
+
+  return {
+    form, set, setForm, readOnly, submit,
+    pending: create.isPending || update.isPending,
+    fieldErrors, generalError,
+  }
 }

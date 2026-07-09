@@ -2,6 +2,7 @@ import { FileUpload } from 'primereact/fileupload'
 import type { FileUploadProps } from 'primereact/fileupload'
 
 export type { FileUploadHandlerEvent } from 'primereact/fileupload'
+export type { FileUploadProps as AppFileUploadProps } from 'primereact/fileupload'
 
 /** Wrapper do FileUpload do PrimeReact. Default: modo básico, upload
  * automático via customUpload (o chamador trata em `uploadHandler`, subindo

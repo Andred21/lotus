@@ -22,8 +22,8 @@ export function createCrudResource<T>(resource: string) {
     return useQuery<T, ProblemDetails>({
       queryKey: keys.detail(id ?? 'none'),
       queryFn: () => endpoints.get(id as number | string),
-      enabled: id != null,
       ...options,
+      enabled: id != null,
     })
   }
 
