@@ -11,15 +11,22 @@ const TYPES = [
 ]
 
 export function ClientDialog({
-  visible, mode, client, onHide,
+  visible, mode, client, onHide, onEdit,
 }: {
   visible: boolean
   mode: ClientDialogMode
   client: ClientData | null
   onHide: () => void
+  onEdit?: () => void
 }) {
   const { form, set, setForm, readOnly, submit, pending } = useClientForm(client, mode, onHide)
   const title = mode === 'create' ? 'Nuevo cliente' : form.legal_name || form.name
+  const header = (
+    <div className="flex items-center justify-between gap-4 pr-6">
+      <span>{title}</span>
+      {readOnly && onEdit && <AppButton label="Editar" icon="pi pi-pencil" outlined onClick={onEdit} />}
+    </div>
+  )
 
   const addr = form.addresses[0]
   const setAddr = (patch: Partial<typeof addr>) =>
@@ -33,7 +40,7 @@ export function ClientDialog({
   )
 
   return (
-    <AppDialog header={title} visible={visible} onHide={onHide} footer={footer}>
+    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">Datos generales</h3>
         <Field label="Razón social">

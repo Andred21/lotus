@@ -5,6 +5,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { AppLayout } from '@app/layouts/AppLayout'
 import { DashboardPage } from '@app/pages/DashboardPage'
 import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
+import { CommercialPage } from '@features/commercial/components/CommercialPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -29,7 +30,7 @@ export function AppRouter() {
           }
         >
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/comercial" element={<ModulePlaceholder titleKey="nav.comercial" />} />
+          <Route path="/comercial" element={<CommercialPage />} />
           <Route path="/operacion" element={<ModulePlaceholder titleKey="nav.operacion" />} />
           <Route path="/cursos" element={<ModulePlaceholder titleKey="nav.cursos" />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
