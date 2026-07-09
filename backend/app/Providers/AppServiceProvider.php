@@ -31,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
             'turma'           => \App\Domains\Operation\Models\Turma::class,
             'budget'          => \App\Domains\Commercial\Models\Budget::class,
             'quote'           => \App\Domains\Commercial\Models\Quote::class,
+            'file'            => \App\Shared\Files\Models\File::class,
         ]);
     }
 }
