@@ -121,12 +121,8 @@ Lógica (estado do dialog, seleção, submit, filtro) vai num hook da feature (e
 - **Documentos (coluna)** = agregado do pior status entre os docs.
 - **Idoneidad** (RN-09, provisório/visual): idóneo se sem doc vencido e ≥1 curso habilitado; por vencer se algum doc por vencer; no idóneo caso contrário. Marcado como provisório — a regra canônica e o gate por policy são follow-up.
 
-## 5.5 Divergência aberta — `Tipo` do cliente (protótipo × backend)
-O print mostra `Tipo: Empresa` (dropdown Empresa/Persona = natureza jurídica). O backend entregou `clients.type = enum('client','provider','other')` (relação comercial: cliente/fornecedor) — **eixos diferentes**. Precisa de decisão do João Victor antes de codar o dropdown de `Tipo`:
-- **(a)** O dropdown é `client/provider/other` (backend manda; rótulos i18n "Cliente/Proveedor/Otro"); "Empresa" no print era só ilustrativo.
-- **(b)** O eixo real é Empresa/Persona → muda o enum do backend (`type = empresa/persona`) e o `ClientData`. Reabre backend.
-- **(c)** São dois campos distintos (relação + natureza jurídica) → nova coluna. Maior escopo.
-Até decidir, o dropdown de `Tipo` fica pendente; o resto do cliente segue.
+## 5.5 `Tipo` do cliente — resolvido
+Divergência protótipo × backend (print dizia "Empresa"; backend entregou `enum(client/provider/other)`). **Decisão do João Victor (2026-07-09): manter o backend.** Dropdown de `Tipo` = `client/provider/other` com rótulos i18n **Cliente/Proveedor/Otro**. "Empresa" no print era ilustrativo. Sem mudança de backend.
 
 ## 6. i18n
 Strings novas em `pt-BR`, `es-CL`, `en` (ADR-15 pendente, mas o padrão já existe nos locales). Protótipo é em espanhol (cliente chileno) — `es-CL` é a referência de rótulo.
