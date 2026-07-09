@@ -1381,7 +1381,9 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `createCrudResource` (B1), `api`, tipos `RedatorData`/`CourseData`/`RedatorDocumentData`.
-- Produces: `redatoresApi`, `coursesApi` (read-only na feature identity — só `useList`), `useUploadDocument()` (`{ redatorId, type, file, valid_until? }` → multipart), `useRemoveDocument()` (`fileId`). Invalidam `redatoresApi.keys.all`.
+- Produces: `redatoresApi`, `coursesApi` (read-only na feature identity — só `useList`), `useUploadDocument()` (`{ redatorId, type, file, valid_until? }` → multipart), `useRemoveDocument()` (`{ redatorId, fileId }`). Invalidam `redatoresApi.keys.all`.
+
+> **Contrato do DELETE (decidido na Task A3):** a rota é aninhada — `DELETE /redatores/{redator}/documents/{document}` — e o backend valida a posse do documento (404 se o doc não for daquele redator). Por isso `useRemoveDocument` precisa do `redatorId`, não só do `fileId`.
 
 > A feature identity instancia `coursesApi` com a fábrica compartilhada e o tipo `CourseData` de `shared/types` — **não** importa a feature `catalog` (respeita ADR-05).
 
@@ -1439,8 +1441,9 @@ export function useUploadDocument() {
 
 export function useRemoveDocument() {
   const invalidate = useInvalidate()
-  return useMutation<void, ProblemDetails, number>({
-    mutationFn: (fileId) => api.delete(`/documents/${fileId}`).then(() => undefined),
+  return useMutation<void, ProblemDetails, { redatorId: number; fileId: number }>({
+    mutationFn: ({ redatorId, fileId }) =>
+      api.delete(`/redatores/${redatorId}/documents/${fileId}`).then(() => undefined),
     onSuccess: invalidate,
   })
 }
@@ -1651,7 +1654,7 @@ export function RedatorDialog({
                       disabled={upload.isPending}
                       uploadHandler={(e) => handleUpload(dt.type, e)}
                     />
-                    {doc && <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => removeDoc.mutate(doc.id)} />}
+                    {doc && redator?.id && <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => removeDoc.mutate({ redatorId: redator.id!, fileId: doc.id })} />}
                   </div>
                 </div>
               )
