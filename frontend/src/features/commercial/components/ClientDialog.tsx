@@ -54,10 +54,10 @@ export function ClientDialog({
       )}
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">Datos generales</h3>
-        <Field label="Nombre" error={fieldErrors?.name?.[0]}>
-          <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
-        </Field>
-        <Field label="Razón social" error={fieldErrors?.legal_name?.[0]}>
+        {/* Empresa não tem "nome" separado da razón social — `name` (exigido
+            pelo backend) é derivado de `legal_name` no submit. Erro de `name`
+            aparece aqui pois foi este campo que o gerou. */}
+        <Field label="Razón social" error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
           <AppInputText value={form.legal_name} disabled={readOnly} onChange={(e) => set('legal_name', e.target.value)} className="w-full" />
         </Field>
         <div className="grid grid-cols-2 gap-4">

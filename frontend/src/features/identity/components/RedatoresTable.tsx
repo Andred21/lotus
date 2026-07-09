@@ -29,7 +29,7 @@ export function RedatoresTable({
           </div>
         )} />
         <AppColumn field="rut" header="RUT" />
-        <AppColumn header="Cursos habilitados" body={(r: RedatorData) => (r.course_ids as number[]).length} />
+        <AppColumn header="Cursos habilitados" body={(r: RedatorData) => r.course_ids.length} />
         <AppColumn header="Idoneidad" body={(r: RedatorData) => {
           const t = IDON_TAG[idoneidade(r)]
           return <AppTag value={t.value} severity={t.severity} />

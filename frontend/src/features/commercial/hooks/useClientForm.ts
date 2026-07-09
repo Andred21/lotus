@@ -31,8 +31,12 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
   const set = <K extends keyof ClientData>(k: K, v: ClientData[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   function submit() {
+    // Empresa não tem nome separado da razón social: `name` (exigido pelo
+    // backend para o `users.name` do login provisionado) é sempre igual a
+    // `legal_name`, copiado aqui no submit em vez de um campo de UI dedicado.
+    const payload = { ...form, name: form.legal_name }
     const mutation = mode === 'create' ? create : update
-    const vars = mode === 'create' ? form : { id: client!.id!, payload: form }
+    const vars = mode === 'create' ? payload : { id: client!.id!, payload }
     mutation.mutate(vars as never, { onSuccess: onDone })
   }
 
