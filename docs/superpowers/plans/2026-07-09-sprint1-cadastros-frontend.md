@@ -1097,12 +1097,14 @@ const TYPES = [
 ]
 
 export function ClientDialog({
-  visible, mode, client, onHide,
+  visible, mode, client, onHide, onEdit,
 }: {
   visible: boolean
   mode: ClientDialogMode
   client: ClientData | null
   onHide: () => void
+  /** Presente só em `view`: alterna o dialog para `edit` (botão "Editar"). */
+  onEdit?: () => void
 }) {
   const { form, set, setForm, readOnly, submit, pending } = useClientForm(client, mode, onHide)
   const title = mode === 'create' ? 'Nuevo cliente' : form.legal_name || form.name
@@ -1118,8 +1120,15 @@ export function ClientDialog({
     </div>
   )
 
+  const header = (
+    <div className="flex items-center justify-between gap-4">
+      <span>{title}</span>
+      {readOnly && onEdit && <AppButton label="Editar" icon="pi pi-pencil" outlined onClick={onEdit} />}
+    </div>
+  )
+
   return (
-    <AppDialog header={title} visible={visible} onHide={onHide} footer={footer}>
+    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">Datos generales</h3>
         <Field label="Razón social">
@@ -1241,6 +1250,8 @@ export function useClientsPage() {
     dialog,
     openCreate: () => setDialog({ mode: 'create', client: null }),
     openView: (client: ClientData) => setDialog({ mode: 'view', client }),
+    /** view -> edit, preservando o cliente aberto. Nunca entra em edit sem cliente. */
+    startEdit: () => setDialog((d) => (d && d.client ? { ...d, mode: 'edit' } : d)),
     close: () => setDialog(null),
   }
 }
@@ -1332,6 +1343,7 @@ export function CommercialPage() {
           mode={page.dialog.mode}
           client={page.dialog.client}
           onHide={page.close}
+          onEdit={page.startEdit}
         />
       )}
     </div>
@@ -1575,12 +1587,14 @@ const STATUS_TAG: Record<string, { value: string; severity: 'success' | 'warning
 }
 
 export function RedatorDialog({
-  visible, mode, redator, onHide,
+  visible, mode, redator, onHide, onEdit,
 }: {
   visible: boolean
   mode: RedatorDialogMode
   redator: RedatorData | null
   onHide: () => void
+  /** Presente só em `view`: alterna para `edit` (botão "Editar datos"). */
+  onEdit?: () => void
 }) {
   const { form, set, toggleCourse, readOnly, submit, pending } = useRedatorForm(redator, mode, onHide)
   const courses = coursesApi.useList()
@@ -1606,8 +1620,15 @@ export function RedatorDialog({
     </div>
   )
 
+  const header = (
+    <div className="flex items-center justify-between gap-4">
+      <span>{title}</span>
+      {readOnly && onEdit && <AppButton label="Editar datos" icon="pi pi-pencil" outlined onClick={onEdit} />}
+    </div>
+  )
+
   return (
-    <AppDialog header={title} visible={visible} onHide={onHide} footer={footer}>
+    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
       {mode !== 'create' && (
         <div className="mb-4">
           <AppTag value={`Idoneidad: ${idoneidade(form)}`} severity={idoneidade(form) === 'idoneo' ? 'success' : idoneidade(form) === 'por_vencer' ? 'warning' : 'danger'} />
@@ -1735,6 +1756,8 @@ export function useRedatoresPage() {
     dialog,
     openCreate: () => setDialog({ mode: 'create', redator: null }),
     openView: (redator: RedatorData) => setDialog({ mode: 'view', redator }),
+    /** view -> edit, preservando o redator aberto. Nunca entra em edit sem redator. */
+    startEdit: () => setDialog((d) => (d && d.redator ? { ...d, mode: 'edit' } : d)),
     close: () => setDialog(null),
   }
 }
@@ -1819,7 +1842,13 @@ export function PersonasPage() {
       </AppTabView>
 
       {page.dialog && (
-        <RedatorDialog visible mode={page.dialog.mode} redator={page.dialog.redator} onHide={page.close} />
+        <RedatorDialog
+          visible
+          mode={page.dialog.mode}
+          redator={page.dialog.redator}
+          onHide={page.close}
+          onEdit={page.startEdit}
+        />
       )}
     </div>
   )
