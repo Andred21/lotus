@@ -3,7 +3,9 @@
 namespace App\Shared\Files\Actions;
 
 use App\Shared\Files\Models\File;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class UploadFileAction
 {
-    public function execute(Model $owner, UploadedFile $file, string $type, ?string $disk = null): File
+    public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
     {
         $disk ??= config('filesystems.default');
 
@@ -22,11 +24,12 @@ class UploadFileAction
         $path = $file->store("{$morphType}/{$owner->getKey()}", $disk);
 
         return $owner->morphMany(File::class, 'fileable')->create([
-            'type'          => $type,
-            'path'          => $path,
+            'type' => $type,
+            'path' => $path,
             'original_name' => $file->getClientOriginalName(),
-            'mime'          => $file->getClientMimeType(),
-            'size'          => $file->getSize(),
+            'mime' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'valid_until' => $validUntil,
         ]);
     }
 
@@ -39,7 +42,7 @@ class UploadFileAction
     {
         $disk ??= config('filesystems.default');
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        /** @var FilesystemAdapter $storage */
         $storage = Storage::disk($disk);
 
         return $storage->temporaryUrl($file->path, now()->addMinutes($minutes));

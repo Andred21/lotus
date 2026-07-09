@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\CreateRedatorAction;
 use App\Domains\Identity\Actions\UpdateRedatorAction;
 use App\Domains\Identity\Data\RedatorData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class RedatorController extends Controller implements HasMiddleware
 
     public function store(RedatorData $data, Request $request, CreateRedatorAction $action): RedatorData
     {
-        return RedatorData::fromModel($action->execute($data, $request->file('documents', [])));
+        return RedatorData::fromModel($action->execute($data, $this->documentsFromRequest($request)));
     }
 
     public function show(Redator $redator): RedatorData
@@ -44,7 +45,7 @@ class RedatorController extends Controller implements HasMiddleware
 
     public function update(RedatorData $data, Redator $redator, Request $request, UpdateRedatorAction $action): RedatorData
     {
-        return RedatorData::fromModel($action->execute($redator, $data, $request->file('documents', [])));
+        return RedatorData::fromModel($action->execute($redator, $data, $this->documentsFromRequest($request)));
     }
 
     public function destroy(Redator $redator): Response
@@ -52,5 +53,17 @@ class RedatorController extends Controller implements HasMiddleware
         $redator->delete();
 
         return response()->noContent();
+    }
+
+    private function documentsFromRequest(Request $request): array
+    {
+        $files = $request->file('documents', []);
+        foreach (array_keys($files) as $type) {
+            if (RedatorDocumentType::tryFrom((string) $type) === null) {
+                abort(422, "Tipo de documento inválido: {$type}");
+            }
+        }
+
+        return $files;
     }
 }

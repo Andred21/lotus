@@ -15,7 +15,7 @@ use Spatie\LaravelData\Optional;
  * O provisionamento do User é delegado ao UserProvisioner (compartilhado entre
  * atores). is_active=false até o fluxo de ativação.
  *
- * @param  array<UploadedFile>  $documents
+ * @param  array<string,UploadedFile>  $documents
  */
 class CreateRedatorAction
 {
@@ -37,8 +37,8 @@ class CreateRedatorAction
 
             $redator = $user->redator()->create([]);
 
-            foreach ($documents as $document) {
-                $this->uploads->execute($redator, $document, 'documento');
+            foreach ($documents as $type => $document) {
+                $this->uploads->execute($redator, $document, $type);
             }
 
             return $redator->load(['user', 'documents', 'courses']);

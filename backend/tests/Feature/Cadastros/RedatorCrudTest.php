@@ -27,14 +27,14 @@ class RedatorCrudTest extends TestCase
             'name' => 'Magallanes Acuña',
             'rut' => '20.347.878-K',
             'email' => 'mao@lotus.cl',
-            'documents' => [UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
+            'documents' => ['CV' => UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
         ]);
 
         $response->assertCreated()->assertJsonPath('name', 'Magallanes Acuña');
 
         $this->assertDatabaseHas('users', ['email' => 'mao@lotus.cl', 'type' => 'redator']);
         $this->assertDatabaseHas('redatores', ['user_id' => User::where('email', 'mao@lotus.cl')->first()->id]);
-        $this->assertDatabaseHas('files', ['fileable_type' => 'redator', 'type' => 'documento']);
+        $this->assertDatabaseHas('files', ['fileable_type' => 'redator', 'type' => 'CV']);
     }
 
     public function test_rut_duplicado_rejeitado(): void
@@ -91,7 +91,7 @@ class RedatorCrudTest extends TestCase
             'name' => 'Magallanes Acuña',
             'rut' => '20.347.878-K',
             'email' => 'mao@lotus.cl',
-            'documents' => [UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
+            'documents' => ['CV' => UploadedFile::fake()->create('cv.pdf', 400, 'application/pdf')],
         ])->json('id');
         $userId = Redator::find($id)->user_id;
 

@@ -15,7 +15,7 @@ use Spatie\LaravelData\Optional;
  * documentos. Documentos existentes NÃO são removidos (append-only, evita
  * apagar arquivos do S3). Espelha o UpdateClientAction.
  *
- * @param  array<UploadedFile>  $documents
+ * @param  array<string,UploadedFile>  $documents
  */
 class UpdateRedatorAction
 {
@@ -40,8 +40,8 @@ class UpdateRedatorAction
                 $redator->courses()->sync($data->course_ids);
             }
 
-            foreach ($documents as $document) {
-                $this->uploads->execute($redator, $document, 'documento');
+            foreach ($documents as $type => $document) {
+                $this->uploads->execute($redator, $document, $type);
             }
 
             return $redator->fresh()->load(['user', 'documents', 'courses']);
