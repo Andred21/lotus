@@ -1553,7 +1553,7 @@ export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogM
 
 ```tsx
 import { AppDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@shared/ui'
-import type { FileUploadHandlerEvent } from 'primereact/fileupload'
+import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '../api/coursesApi'
 import { useUploadDocument, useRemoveDocument } from '../api/useRedatorDocuments'
