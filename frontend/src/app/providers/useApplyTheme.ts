@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { applyPrimeTheme } from '@shared/config/primeTheme'
-import { useUiStore } from './uiStore'
+import { useUiStore } from '@shared/stores/uiStore'
 
 /**
  * Aplica o tema globalmente: alterna a classe `dark` no <html> (Tailwind) e

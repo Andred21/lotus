@@ -3,12 +3,14 @@ import logo from "@/assets/Logo.png";
 import { BRAND_COLOR, APP_VERSION } from "@shared/config/brand";
 import { LoginForm } from "./LoginForm";
 import { AppButton, LanguageMenu } from "@/shared/ui";
-import { useUiStore } from "@/app/providers/uiStore";
+import { useUiStore } from "@/shared/stores/uiStore";
 
 export function LoginPage() {
+  
   const { t } = useTranslation();
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
+
   return (
     
     <div className="min-h-screen flex flex-col md:flex-row dark:bg-slate-900">

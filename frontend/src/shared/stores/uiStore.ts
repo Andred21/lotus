@@ -12,9 +12,10 @@ interface UiState {
 }
 
 /**
- * Zustand root de estado de UI do shell (colapso da sidebar + tema),
- * persistido em localStorage. NÃO guarda dados de sessão (isso é do
- * sessionStore, na feature identity).
+ * Zustand de estado de UI do shell (colapso da sidebar + tema), persistido em
+ * localStorage. Vive em `shared` porque é consumido por `app` (Header, Sidebar)
+ * e por `shared/ui` (AppearanceControls) — nenhum dos dois pode importar do outro.
+ * NÃO guarda dados de sessão (isso é do sessionStore).
  */
 export const useUiStore = create<UiState>()(
   persist(

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useUiStore } from '@app/providers/uiStore'
+import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions } from '@features/identity/hooks/usePermissions'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'

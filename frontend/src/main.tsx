@@ -7,7 +7,7 @@ import "flag-icons/css/flag-icons.min.css"; // bandeiras do seletor de idioma
 import "./index.css";
 import "./shared/config/i18n"; // inicializa i18next (side-effect)
 import { applyPrimeTheme } from "./shared/config/primeTheme";
-import { useUiStore } from "./app/providers/uiStore";
+import { useUiStore } from "./shared/stores/uiStore";
 
 // A folha do tema Prime não é mais um import estático (ADR-16): ela é escolhida
 // pelo tema persistido, antes do primeiro paint, para não haver flash de tema.
