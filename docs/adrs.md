@@ -1,6 +1,6 @@
 # ADRs — Decisões de Arquitetura · Lotus
 
-> Snapshot de 2026-07-04. Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
+> Snapshot de 2026-07-04 (atualizado 2026-07-10). Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
 > Princípio diretor de TODAS as decisões: **máxima senioridade, mínima complexidade desnecessária (anti over-engineering), proporcional a ~10 usuários internos.**
 >
 > Formato adaptado para agente: cada ADR traz a **regra acionável** (o que fazer/não fazer no código) e o **porquê** (contexto + trade-off). As decisões estão fechadas — se uma tarefa contrariar um ADR, sinalize antes de prosseguir.
@@ -26,7 +26,7 @@
 ## ADR-04 — Sincronização de tipos: spatie/laravel-data + typescript-transformer
 **Regra:**
 - DTOs com `spatie/laravel-data` são a **fonte da verdade** dos tipos.
-- `spatie/laravel-typescript-transformer` gera os tipos TS automaticamente (plugin Vite → `frontend/src/types/generated.ts`).
+- `spatie/laravel-typescript-transformer` gera os tipos TS automaticamente (artisan `typescript:transform` → `frontend/src/shared/types/generated.ts`).
 - Tipo TS escrito à mão no front é **dívida temporária** — marque com comentário e substitua pelo gerado quando o DTO existir.
 
 **Porquê:** erro de contrato aparece em tempo de compilação do TS, não em runtime. Consolida validação + resource + DTO numa classe. Funciona em SPA REST (não exige Inertia — NÃO usamos Inertia).
@@ -93,15 +93,6 @@
 ## ADR-15 — i18n: PT-BR / EN-US / ES-CL
 **Regra:** localização do Laravel como fonte; compartilhar dicionários com React (compilar traduções PHP → JSON via Vite). Locale ativo injetado no bootstrap; lazy-load se o volume crescer. **Porquê:** evita duplicar dicionário entre back e front (mesmas chaves). ES-CL é requisito real (cliente chileno). Nota: filtrar recomendações de i18n que pressupõem Inertia (não usamos). Biblioteca exata `[A CONFIRMAR NA FASE 2]`.
 
----
-
-## Pendências abertas (não decidir sem o João Victor)
-- Biblioteca exata de i18n (ADR-15).
-- Estratégia fina de pruning da auditoria (ADR-08).
-
-## Regras de negócio herdadas (referência)
-Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); um redator por turma; só admin e redator autenticam (RN-01).
-
 ## ADR-16 — Tailwind como layout; tema do PrimeReact trocado em runtime
 
 **Contexto.** Tailwind v4 está instalado e em uso desde o shell. PrimeReact traz temas
@@ -111,7 +102,8 @@ apenas `lara-light-blue`.
 
 **Decisão.**
 1. As duas folhas do tema Prime (`lara-light-blue`, `lara-dark-blue`) são carregadas por
-   um `<link id="prime-theme">` cujo `href` troca junto com o `uiStore.theme`.
+   um `<link id="prime-theme">` cujo `href` troca junto com o `uiStore.theme`. `applyPrimeTheme()`
+   roda ANTES de `createRoot().render()` (folha pendente no `<head>` bloqueia o primeiro paint).
 2. Tailwind é camada de **layout** (grid, espaçamento, tipografia dos nossos elementos).
 3. Customizar um componente PrimeReact acontece **no wrapper** `shared/ui`, via `className`
    na raiz ou `pt` (passthrough) nas partes internas. Nunca `dark:` cru no call-site sobre
@@ -122,7 +114,37 @@ apenas `lara-light-blue`.
 
 **Consequência.** Os `dark:` espalhados nos wrappers viram redundantes e são removidos.
 O `<link>` do tema é injetado no topo do `<head>` para que as utilities do Tailwind
-continuem vencendo por ordem de cascata.
+continuem vencendo por ordem de cascata. Utility não vence a especificidade do tema — ao
+depurar estilo, cheque o seletor COMPLETO que o markup gera, não a classe isolada.
 
 **Rejeitado.** PrimeReact `unstyled` + `pt` global com Tailwind: controle total, mas
 reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estágio do projeto.
+
+> **Nota de sync:** o ADR-16 nasceu no desenvolvimento (repo) e ainda **não foi espelhado
+> para o canônico do Drive** (`decisao-stack.md`) — follow-up de write externo.
+
+## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
+
+**Regra:**
+- `budgets.codigo` (varchar, `UNIQUE`, **imutável**) gerado na Action de criação a partir do
+  próprio `id` (`'Scap ' . id`) — **sem** tabela de sequência dedicada.
+- `quotes.seq_in_budget` (smallint) = contador atômico por orçamento via `lockForUpdate()` em
+  transação; índice `UNIQUE(budget_id, seq_in_budget)` como defesa extra.
+- O código composto (`Scap 100 - Cot 2`) é **calculado** (accessor/DTO), nunca persistido como string.
+- Geração na **aplicação**, não em trigger (coerente com ADR-08). `id` bigint continua sendo a FK
+  em todo relacionamento — `codigo` nunca vira FK.
+
+**Porquê:** separa a natural key (rastreio legível que o cliente pede por telefone/e-mail) da
+surrogate key (`id`). Evita reaproveitamento de número após soft-delete. Trade-off: lock
+transacional na criação de cotação — custo desprezível a ~10 usuários. Descartados: segundo
+`AUTO_INCREMENT` (InnoDB só permite um por tabela); `COUNT(*)` de cotações (race condition +
+reaproveitamento de número). *Tabelas `budgets`/`quotes` ainda não implementadas — decisão fechada no Drive.*
+
+---
+
+## Pendências abertas (não decidir sem o João Victor)
+- Biblioteca exata de i18n (ADR-15).
+- Estratégia fina de pruning da auditoria (ADR-08).
+
+## Regras de negócio herdadas (referência)
+Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); um redator por turma; só admin e redator autenticam (RN-01).

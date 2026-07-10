@@ -1,111 +1,129 @@
 # CLAUDE.md — Lotus Platform
 
-Guia operacional para o Claude Code neste repositório. Leia por completo antes de qualquer tarefa.
-
-Este arquivo é o **essencial de toda sessão**: o que é o projeto, as regras que nunca se quebra, a disciplina de como escrever código, e os comandos. O detalhe de arquitetura (backend, frontend, auth, tipos) está em **[`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md)** — consulte-o antes de implementar em profundidade. O contexto de planejamento (ADRs, DER, estrutura) está em `/docs` (índice no fim daquele arquivo).
-
-> Planejamento canônico vive no Google Drive; tasks no Notion — não neste repo. Os `/docs` são snapshots datados; se divergirem do Drive, o Drive vence.
-
----
+Guia operacional do Claude Code neste repositório. Leia por completo antes de qualquer tarefa.
+Este arquivo é o **mapa da sessão**: o que é o projeto, como achar contexto, as leis invioláveis,
+o fluxo de trabalho e os comandos. **Padrões técnicos e mecânica de código NÃO vivem aqui** —
+estão em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md). O planejamento datado, em `/docs`.
 
 ## 1. O que é o Lotus
 
-Plataforma corporativa de gestão de capacitação profissional para a **Lotus** (cliente chileno, setor elétrico de alta tensão regulado). Ciclo: cotação → curso → turma → matrícula → certificado com validação por QR. **Certificados têm peso legal** — correção e rastreabilidade não são negociáveis.
-
-Refatoração completa (**v2, greenfield**). A v1 é referência de domínio, não base de código — documenta *o quê*, nunca *como*. ~10 usuários internos, baixa concorrência: escolhas proporcionais, sem superdimensionar.
+Plataforma corporativa de gestão de capacitação profissional para a **Lotus** (cliente chileno,
+setor elétrico de alta tensão regulado). Ciclo: cotação → curso → turma → matrícula → certificado
+com validação por QR. **Certificados e documentos têm peso legal** — correção, auditoria e
+rastreabilidade não são negociáveis. Refatoração v2 greenfield; a v1 documenta *o quê*, nunca
+*como*. ~10 usuários internos, baixa concorrência: escolhas proporcionais, sem superdimensionar.
 
 ## 2. Stack
 
-Laravel 13 (PHP 8.3) API · React 19 + TypeScript (Vite) · MySQL 8 (RDS em prod) · Sanctum SPA cookie/CSRF · spatie/laravel-permission (RBAC) · owen-it/laravel-auditing · spatie/laravel-data + typescript-transformer · TanStack Query + Zustand · PrimeReact (via wrappers) + Tailwind v4 · RFC 7807 · Gotenberg (PDF) · S3 · Docker Compose + EC2 + RDS.
+Laravel 13 (PHP 8.3) API · React 19 + TS (Vite) · MySQL 8 · Sanctum SPA cookie/CSRF ·
+spatie/laravel-permission (RBAC) · owen-it/laravel-auditing · spatie/laravel-data +
+typescript-transformer · TanStack Query + Zustand · PrimeReact (via `shared/ui`) + Tailwind v4
+(layout) · RFC 7807 · Gotenberg (PDF) · S3/MinIO · Docker Compose + EC2 + RDS.
 
-> Tailwind formalizado no **ADR-16** (layout; tema do PrimeReact trocado em runtime). Use como camada de *layout*; NUNCA para reestilizar por dentro um componente PrimeReact — customização de componente vai no wrapper `shared/ui`.
+## 3. Como consultar contexto (consulte — não assuma)
 
----
+Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida não estiver coberta,
+**pergunte ao João Victor — alucinar arquitetura é pior que perguntar.**
 
-## 3. Regras invioláveis
+**Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
+- **SEMPRE:** `.superpowers/sdd/progress.md` — índice vivo (o que já foi construído, provado e
+  decidido). É barato e ancora a sessão.
+- **SE a task implementa/mexe numa feature:** o plano e o spec mais recentes dela em
+  `docs/superpowers/plans/` e `docs/superpowers/specs/`.
+- **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.
+- **Para padrão de código:** `INSTRUÇÕES-DO-PROJETO.md` (a mecânica mora lá, não aqui).
 
-Vêm dos ADRs. Se uma tarefa parecer pedir que você quebre uma destas, **PARE e confirme com o João Victor**.
+| Doc | Consulte antes de |
+|---|---|
+| `docs/adrs.md` (17 ADRs) | qualquer decisão de stack, padrão, estrutura ou infra |
+| `docs/der-fisico.md` (24 tabelas) | criar migration/model ou mexer em schema |
+| `docs/estrutura-monolito.md` | criar arquivo novo — para saber ONDE ele vai |
+| `docs/README.md` (lições) | iniciar feature — não repetir erro já mapeado |
 
-1. **DDD-lite, SEM Repository sobre Eloquent.** Regra de negócio → Actions (`execute()`/`__invoke()`) e Domain Services. Consulta complexa → Custom Query Builders. CRUD sem regra → Controller direto ao Eloquent. Testes: integração contra sqlite `:memory:`, não mock. (ADR-02) **Toda entidade de cadastro segue a MESMA forma, sem diferenciar por entidade (DRY):** Controller fino → `Data::fromModel` → Action; regra compartilhada entre entidades num Domain Service (ex.: `Identity/Services/UserProvisioner`, usado por cliente e redator). Detalhe: "Padrão de entidade (CRUD)" em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md).
-2. **Auditoria só na aplicação, nunca em trigger de banco** — trigger não enxerga o usuário autenticado. (ADR-08)
-3. **Tipos TS são gerados do backend.** Fonte = DTO `spatie/laravel-data` em `app/Data/` com `#[TypeScript]`. `shared/types/generated.ts` NÃO se edita à mão. Tipo à mão no front = dívida temporária marcada. (ADR-04)
-4. **Auth é cookie de sessão Sanctum + CSRF.** Nunca token/localStorage. `initCsrf()` antes da primeira mutação. Controllers deixam exceções subirem (handler global formata) — não montar erro à mão. (ADR-06 / ADR-03)
-5. **Só admin e redator autenticam.** Cliente e aluno NÃO logam (RN-01). `students`/`clients` são entidades, não usuários que logam.
-6. **Features não importam PrimeReact direto** (só via `shared/ui`) **nem outra feature.** Dependência aponta só para baixo: features → shared, nunca o inverso. (ADR-05)
+> Planejamento canônico vive no Google Drive; tasks no Notion. Os `/docs` são snapshots datados;
+> se divergirem do Drive, o Drive vence.
+
+## 4. Fluxo de trabalho (superpowers, subagent-driven)
+
+O desenvolvimento é disparado por skills superpowers: `brainstorming` → `writing-plans` →
+`subagent-driven-development` / `executing-plans`. Planos e specs em `docs/superpowers/`;
+progresso, reviews e reports em `.superpowers/sdd/`.
+
+- **Execute em silêncio dentro do definido.** Quando plano+spec+escopo já cobrem a task,
+  implemente sem narrar o padrão escolhido. **Explique o "porquê"/trade-off SÓ quando:**
+  (a) a task desvia do definido em docs/spec/escopo, ou (b) o João pergunta.
+- **Desvio de padrão = justifique e registre.** Convenção/padrão de código pode ser desviado
+  desde que o motivo fique no `.superpowers/sdd/progress.md` (as regras são o default, não a
+  prisão — ver "Cláusulas de exceção" em INSTRUÇÕES). Já as **leis invioláveis (§5)** não se
+  desviam sozinho: **PARE e confirme com o João Victor.**
+- **Antes de tocar em arquivo, `git status`; antes de editar arquivo SUJO, `git diff <arquivo>`.**
+  O João edita o working tree AO VIVO durante a execução (padrão recorrente). WIP dele é
+  **intocável**: não faça stage/revert/edit fora dos caminhos exatos da task; `git add` só os
+  caminhos da task; em conflito, o working tree vence. (Nenhum comando git enxerga buffer não-salvo
+  do editor — a garantia real é **Read fresco do arquivo imediatamente antes de editar** + escopo
+  cirúrgico.)
+- **DoD = comportamento provado end-to-end contra a API real**, não build/lint/test verde. Bugs de
+  peso legal (upload vazio, 422 silencioso) só a verificação real pegou.
+
+## 5. Leis invioláveis
+
+Vêm dos ADRs — a mecânica de cada uma está em INSTRUÇÕES. Se uma task parecer pedir que você quebre
+uma destas, **PARE e confirme com o João Victor.**
+
+1. **DDD-lite, SEM Repository sobre Eloquent.** Regra de negócio → Actions + Domain Services;
+   consulta complexa → Query Builders; CRUD sem regra → Controller direto ao Eloquent. Testes:
+   integração sqlite `:memory:`, não mock. Toda entidade de cadastro segue a MESMA forma (DRY). (ADR-02)
+2. **Auditoria só na aplicação, nunca em trigger de banco.** Model Auditable+SoftDeletes muda via
+   `$model->delete()` (dispara eventos); delete no query builder não audita. (ADR-08)
+3. **Tipos TS são gerados do backend.** Fonte = DTO em `app/Data` com `#[TypeScript]`.
+   `shared/types/generated.ts` NÃO se edita à mão — corrige-se o DTO e regenera. (ADR-04)
+4. **Auth = cookie de sessão Sanctum + CSRF.** Nunca token/localStorage. `initCsrf()` antes da 1ª
+   mutação. Controllers deixam exceções subirem (handler global RFC 7807); validação =
+   `ValidationException::withMessages([...])`, nunca `abort(422)` nem erro à mão. (ADR-06/03)
+5. **Só admin e redator autenticam.** Cliente e aluno NÃO logam (RN-01) — são entidades, criadas
+   com `is_active=false`.
+6. **Features não importam PrimeReact direto** (só via `shared/ui`) **nem outra feature — nem para
+   tipo.** Dependência aponta só para baixo: features → shared. (ADR-05)
 7. **Financeiro nunca bloqueia ação** — é registro histórico, não gate.
-8. **Definition of done = critério de aceite PROVADO, não pacote instalado.** Infra só fecha quando o comportamento é comprovado (tabela existe e grava).
+8. **Definition of done = critério de aceite PROVADO, não pacote instalado.**
 
----
+## 6. Disciplina de execução
 
-## 4. Disciplina de execução (como escrever código aqui)
+- **Pensar antes de codar:** declare premissas; múltiplas interpretações → apresente, não escolha
+  em silêncio; confuso → pare e pergunte.
+- **Simplicidade primeiro:** código mínimo que resolve. Sem feature além do pedido, sem abstração
+  de uso único, sem tratar erro impossível. Teste: "um sênior diria que está complicado demais?"
+- **Mudanças cirúrgicas:** toque só o necessário; não "melhore" código adjacente; siga o estilo.
+  Dead code alheio: mencione, não delete. Remova só órfãos que SUA mudança criou.
 
-Reduz os erros mais comuns de LLM em código. Viés para cautela sobre velocidade; para tarefa trivial, use julgamento.
+## 7. Postura e parceria
 
-**Pensar antes de codar.** Não assuma, não esconda confusão, exponha trade-offs. Declare premissas; se há múltiplas interpretações, apresente-as em vez de escolher em silêncio; se existe caminho mais simples, diga; se algo está confuso, **pare e pergunte — alucinar arquitetura é pior que perguntar.**
+O João Victor busca nível sênior e usa este projeto para chegar lá.
 
-**Simplicidade primeiro.** Código mínimo que resolve o problema, nada especulativo. Sem feature além do pedido, sem abstração para uso único, sem "flexibilidade" não solicitada, sem tratar erro impossível. Teste: "um sênior diria que isto está complicado demais?" Se sim, simplifique.
-
-**Mudanças cirúrgicas.** Toque só no necessário. Não "melhore" código adjacente, não refatore o que não está quebrado, siga o estilo existente. Dead code não relacionado: **mencione, não delete.** Remova só os órfãos que SUA mudança criou. Toda linha alterada rastreia direto ao que foi pedido.
-
-**Execução orientada a objetivo.** Transforme a tarefa em critério verificável ("corrigir o bug" → "escrever teste que o reproduz, depois fazer passar"). Tarefa multi-passo: declare um plano curto (passo → verificação). Critério forte permite iterar sozinho; critério fraco gera retrabalho.
-
----
-
-## 5. Postura e parceria
-
-O João Victor busca **nível sênior** e usa este projeto para chegar lá.
-
-- **Explique o "porquê", não só o "como."** Toda decisão vem com razão e trade-off; a decisão final é dele.
+- **Explique o "porquê" (quando for explicar — ver §4):** decisão vem com razão e trade-off; a
+  decisão final é dele.
 - **Honestidade técnica:** não validar ideia fraca para agradar — apontar erro é parte do trabalho.
-- **Pragmatismo sênior:** a melhor solução considera o estágio do projeto; evite over-engineering.
-- **Passo a passo antes de automação:** ele prefere entender manualmente antes de delegar em bloco.
+- **Pragmatismo sênior:** solução proporcional ao estágio; evite over-engineering.
+- **Resposta a ideias (Caso A/B/C):** confirmar e refinar quando ideal (A); reconhecer e melhorar
+  quando parcial (B); corrigir com a solução ideal quando equivocada (C).
+- **Fora de escopo:** metodologia de planejamento/workflow é outro projeto — registre e volte ao Lotus.
 
-**Padrão de resposta a ideias** (Caso A/B/C): confirmar e refinar quando ideal (A); reconhecer e melhorar quando parcial (B); corrigir com a solução ideal quando equivocada (C).
+## 8. Comandos
 
-**Fora de escopo:** metodologia de planejamento/workflow é outro projeto. Se surgir, registre e volte ao Lotus.
-
----
-
-## 6. Rodando a stack
-
-Requer WSL2 + Docker + Git.
-
+Backend roda **no container** `app` (host WSL não tem mbstring):
 ```bash
-cp backend/.env.example backend/.env
 docker compose up -d
-docker compose run --rm app php artisan key:generate
-docker compose run --rm app php artisan migrate
+docker compose exec -T app php artisan test                    # suíte (sqlite :memory:)
+docker compose exec -T app php artisan test --filter=NomeTest   # teste único
+docker compose exec -T app php artisan typescript:transform     # regenera generated.ts
+docker compose exec -T app php artisan migrate && ... db:seed
+./vendor/bin/pint <arquivos>   # NUNCA sem argumento — reformata o repo inteiro
 ```
-
-Backend (via nginx): http://localhost:8080 · Frontend (Vite, rodado à parte no WSL): http://localhost:5173
-Serviços do compose: `app` (PHP-FPM Alpine, `appuser` casando UID/GID do host), `nginx`, `mysql` (host :3307), `gotenberg` (PDF). Frontend roda nativo no WSL (Node 22/pnpm), não em container.
-
-## 7. Comandos comuns
-
-Backend (dentro do container `app` ou PHP 8.3 local — de `backend/`):
-```bash
-composer dev                        # serve + queue:listen + pail + vite, concorrentes
-php artisan test                    # suíte completa (sqlite :memory:)
-php artisan test --filter=TestName  # teste único
-./vendor/bin/pint                   # code style
-php artisan migrate && php artisan db:seed
-```
-
-Frontend (de `frontend/`):
+Frontend (de `frontend/`, nativo no WSL — Node 22/pnpm, sem test runner ainda):
 ```bash
 pnpm dev      # Vite dev server
 pnpm build    # tsc -b && vite build (type-check antes de bundlar)
 pnpm lint     # eslint .
 ```
-Ainda não há test runner de frontend.
-
----
-
-## 8. Onde buscar mais contexto
-
-Antes de decidir arquitetura, padrão ou schema, **consulte — não assuma.** Se a dúvida não estiver coberta, **pergunte ao João Victor, não invente.**
-
-- **[`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md)** — arquitetura detalhada (backend DDD, frontend feature-sliced, auth, contratos de tipo, estado atual) + o índice dos `/docs`.
-- **`/docs`** — snapshots do planejamento: `adrs.md` (as 15 decisões), `der-fisico.md` (24 tabelas), `estrutura-monolito.md` (onde cada arquivo vai), `README.md` (índice + lições).
-
-Pendências abertas (não decidir sozinho): biblioteca de i18n (ADR-15); pruning da auditoria (ADR-08).
+Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`
+(PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev).

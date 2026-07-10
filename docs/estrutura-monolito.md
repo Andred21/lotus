@@ -1,6 +1,6 @@
 # Estrutura do Monólito — Lotus
 
-> Snapshot de 2026-07-04. Fonte: planejamento (camada avançada) + estado real do repo.
+> Snapshot de 2026-07-04 (atualizado 2026-07-10). Fonte: planejamento (camada avançada) + estado real do repo.
 > Backend por DOMÍNIO (DDD-lite · ADR-02). Frontend em 3 camadas por ALCANCE (feature-based · ADR-05).
 > **Consulte antes de criar qualquer arquivo — para saber ONDE ele vai e que regra de importação segue.**
 
@@ -32,9 +32,11 @@ backend/app/
 │   (cada domínio: mesma estrutura interna, conforme necessidade)
 │
 ├── Shared/                     # transversal. NÃO é domínio. Usado por todos.
-│   ├── Concerns/               # traits (ex: auditoria owen-it, ADR-08)
-│   ├── Casts/  Data/  Support/ # casts, DTOs base, helpers/value objects (Rut, UF)
-│   └── Files/                  # upload polimórfico S3 (ADR-10/11) - transversal
+│   ├── Exceptions/             # ProblemDetails (RFC 7807, ADR-03) — ligado no bootstrap/app.php
+│   ├── Files/                  # upload polimórfico S3/MinIO: File (model) + UploadFileAction (ADR-10/11)
+│   ├── Rules/                  # ValidRut (regra de validação reusável)
+│   ├── Support/                # value objects / helpers puros (Rut, ...)
+│   └── Http/Middleware/        # SetLocale (i18n, ADR-15)
 │
 ├── Providers/
 │   ├── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
@@ -126,8 +128,8 @@ frontend/tsconfig.json          # paths: @shared, @features, @app
 Pequenos pontos onde o repo real difere do planejamento original — ambos aceitáveis, registrados para não confundir:
 
 1. **Wrappers `shared/ui`:** o planejamento escreveu `AppButton.tsx` (arquivo); o repo adotou **pasta-por-componente** (`AppButton/AppButton.tsx` + `index.ts`). Padrão vigente = pasta. Manter uniforme: todo wrapper é pasta.
-2. **`App.tsx`:** planejamento coloca em `app/App.tsx`; o repo tem em `src/App.tsx` (default Vite). Mover para `app/` fica para a task 2.4.1 (shell) — não mover isoladamente agora.
-3. **Features criadas antecipadamente:** `commercial` e `identity` estão em desenvolvimento (com código real); `catalog/operation/certification/feedback` seguem vazias. A regra "criar só quando entra em desenvolvimento" vale para as que ainda não têm código — completar ou enxugar quando entrarem. Não é bloqueante.
+2. **`App.tsx`:** resolvido — o shell (task 2.4.1) foi entregue; o entrypoint e os providers vivem em `app/`. `main.tsx` na raiz de `src/` segue como ponto de montagem.
+3. **Features com código real:** `identity`, `commercial` e `catalog` estão em desenvolvimento (código real). `operation/certification/feedback` seguem vazias (no backend, pastas de scaffold já existem sob `Domains/`, sem classes). A regra "criar só quando entra em desenvolvimento" vale para as vazias — completar ou enxugar quando entrarem. Não é bloqueante.
 
 ---
 

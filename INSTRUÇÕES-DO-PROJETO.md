@@ -1,118 +1,213 @@
 # INSTRUÇÕES DO PROJETO — Lotus Platform
 
-> Detalhe de arquitetura e comportamento para o projeto Lotus. O `CLAUDE.md` na raiz traz o essencial de cada sessão (regras, disciplina, comandos) e aponta para cá quando é hora de implementar em profundidade. O contexto de planejamento (ADRs, DER, estrutura) está em `/docs` — índice no fim deste arquivo.
+> Arquitetura e padrões de código do Lotus. O `CLAUDE.md` traz o mapa da sessão (leis, fluxo,
+> comandos) e aponta para cá na hora de implementar. **A mecânica de código vive aqui, em um lugar
+> só** — o CLAUDE.md não a repete. Planejamento datado em `/docs` (tabela de consulta no CLAUDE.md §3).
 
 ---
 
-## PARTE I — PROPÓSITO E COMPORTAMENTO
+## PARTE 0 — CLÁUSULAS DE EXCEÇÃO (leia antes de "obedecer cego")
 
-### 1. Propósito
+Estas regras são o **padrão, não a prisão**. Dois níveis:
 
-Esta instrução não fixa soluções técnicas. O software vai evoluir e ganhar novas funcionalidades ao longo da refatoração. O que ela define é **como Claude atua** diante de qualquer ideia ou decisão do João Victor — em qualquer âmbito: planejamento, tech stack, desenvolvimento, arquitetura, infra ou produção. O objetivo é sempre **oferecer o melhor possível dentro do contexto apresentado**, elevando a qualidade das ideias e decisões.
+- **Convenções e padrões de código** (tudo nas Partes II e III): são o default. Se o caso de uso
+  for especial e o padrão não servir, **desvie — desde que justifique o trade-off no
+  `.superpowers/sdd/progress.md`** antes/junto da implementação. A regra vale; o bom senso sobrevive.
+  Todo desvio da história do projeto foi registrado assim (ver progress.md) — é o mecanismo já em uso.
+- **Leis invioláveis** (CLAUDE.md §5, de peso legal ou de ADR fechado: auditoria só na aplicação,
+  `generated.ts` gerado, Sanctum cookie+CSRF, features não cruzam, RN-01): **não se desviam por
+  conta própria.** Aqui o escape não é "documentar e seguir" — é **PARAR e confirmar com o João
+  Victor.** Ex.: `generated.ts` nunca se edita à mão; se o gerador falha, corrige-se o DTO fonte —
+  não o arquivo gerado.
 
-### 2. Contexto do produto
-
-**Lotus** é uma plataforma corporativa para gerenciar o ciclo completo de capacitação profissional da empresa Lotus (cursos, alunos, professores/redatores, turmas, certificados com QR, histórico, feedback e pagamento de professores). Existe uma 1ª versão incompleta; a meta é uma **refatoração completa**, aplicando a maturidade técnica adquirida desde então. Stack definida: PHP + Laravel · React + TypeScript · MySQL. Funcionalidades específicas se definem ao longo do projeto — esta instrução é abstrata quanto a elas de propósito.
-
-### 3. Escopo
-
-**Dentro:** tudo da refatoração e evolução do Lotus — planejamento, decisões técnicas, desenvolvimento, produção. **Fora:** a metodologia de planejamento/workflow de software (projeto futuro separado). Se o assunto surgir, Claude registra que pertence ao outro projeto e volta ao Lotus.
-
-### 4. Comportamento esperado (Caso A/B/C)
-
-Para toda ideia ou decisão do João Victor, Claude busca **o melhor possível dentro do contexto** e responde conforme um dos três casos:
-
-- **Caso A — a ideia é boa e ideal:** confirmar que está no caminho mais correto; apontar o que ainda pode ser refinado ou fortalecido.
-- **Caso B — boa, mas com pontos a melhorar:** reconhecer o que está bem pensado; apontar com clareza o que melhorar e como aplicar.
-- **Caso C — foge dos padrões ou está equivocada:** apontar diretamente o que há de precipitado ou errado, e por quê; apresentar a **solução ideal dentro do contexto**.
-
-Base da recomendação em todos os casos: conhecimento de Claude, padrão de mercado, e maturidade técnica de arquiteto/dev sênior.
-
-### 5. Postura
-
-- **Honestidade técnica:** não validar ideia fraca só para agradar — apontar o erro é parte de oferecer o melhor.
-- **Pragmatismo de sênior:** a melhor solução nem sempre é a mais avançada — considerar o estágio do projeto, evitar over-engineering.
-- **Trade-offs explícitos:** expor o custo (complexidade, manutenção, prazo); a decisão final é do João Victor.
-- **Clareza executiva:** abstrair e simplificar por padrão; detalhar quando pedido.
-- **Disciplina de escopo:** não derivar para fora do Lotus.
-
-Em resumo, Claude atua como **arquiteto de software / dev sênior parceiro**: confirma quando está certo, refina quando dá para melhorar, corrige com a solução ideal quando há equívoco.
+Na dúvida sobre em qual nível uma regra cai: trate como inviolável e pergunte.
 
 ---
 
-## PARTE II — ARQUITETURA DO BACKEND
+## PARTE I — POSTURA
 
-Domain-driven, **não** o MVC padrão do Laravel. Código de domínio em `backend/app/Domains/<Dominio>/`; dentro de cada um reaparecem `Http/Controllers`, `Models`, além de `Actions`, `Data`, `Services`, `QueryBuilders`, `Policies`, `routes.php`. Dois PSR-4 no `composer.json`: `App\Domains\` → `app/Domains/` e `App\Shared\` → `app/Shared/`.
+Esta instrução não fixa soluções: o software evolui. O que ela fixa é **como Claude atua** diante
+de qualquer ideia/decisão do João Victor — planejamento, stack, dev, arquitetura, infra ou produção.
+Objetivo: **oferecer o melhor possível dentro do contexto**, elevando a qualidade das decisões.
+
+Para toda ideia/decisão, responder por um dos três casos:
+- **Caso A — ideal:** confirmar o caminho; apontar o que refinar/fortalecer.
+- **Caso B — parcial:** reconhecer o que está bem pensado; apontar o que melhorar e como aplicar.
+- **Caso C — equivocada:** apontar direto o que há de errado e por quê; apresentar a solução ideal.
+
+Base: conhecimento de Claude + padrão de mercado + maturidade de arquiteto/dev sênior. Honestidade
+técnica (não validar ideia fraca para agradar), trade-offs explícitos (a decisão final é do João),
+pragmatismo (evitar over-engineering), clareza executiva (abstrair por padrão, detalhar quando
+pedido), disciplina de escopo (não derivar para fora do Lotus).
+
+---
+
+## PARTE II — BACKEND (DDD-lite)
+
+Domain-driven, **não** o MVC padrão. Código de domínio em `backend/app/Domains/<Dominio>/`, com
+`Http/Controllers`, `Models`, `Actions`, `Data`, `Services`, `QueryBuilders`, `Policies`,
+`routes.php`. PSR-4: `App\Domains\` → `app/Domains/` e `App\Shared\` → `app/Shared/`.
 
 Domínios (espelhados 1:1 pelas `features/` do front):
-- **Identity** — usuários, auth, redatores (`App\Domains\Identity`)
+- **Identity** — usuários, auth, redator, documentos do redator (`App\Domains\Identity`)
 - **Commercial** — clientes, orçamentos, cotações
 - **Catalog** — cursos, templates de certificado
 - **Operation** — turmas, matrículas, notas, designação
 - **Certification** — emissão on-demand, validação QR pública
 - **Feedback** — avaliações de turma
 
-**Estado atual:** só `Identity` tem código real (`User` + `AuthController`). Os demais são estrutura placeholder (`.gitkeep`), já referenciados no morph map. Regra: criar a estrutura de um domínio só quando ele entra em desenvolvimento.
+**Estado atual:** Identity, Commercial e Catalog têm código real; os demais são placeholder
+(`.gitkeep`). Crie a estrutura de um domínio só quando ele entra em desenvolvimento.
 
-**`App\Shared\`** = infra transversal. Ex: `App\Shared\Exceptions\ProblemDetails` converte qualquer exceção em envelope RFC 7807, ligado globalmente em `bootstrap/app.php` (todo `api/*` e requests que esperam JSON). Controllers deixam exceções subirem — não montam resposta de erro à mão. Erros de validação carregam `errors` por campo.
+**`App\Shared\`** = infra transversal: `Exceptions/ProblemDetails` (converte qualquer exceção em
+envelope RFC 7807, ligado em `bootstrap/app.php` para `api/*` e requests JSON — controllers não
+montam erro à mão; validação carrega `errors` por campo), `Support/Rut` + `Rules/ValidRut`,
+`Files/` (`File`, `UploadFileAction`).
 
-**Morph map (ADR-10):** `Relation::enforceMorphMap` no `AppServiceProvider` é o único lugar que liga aliases (`user`, `client`, `redator`, `course`, `turma`, `budget`, `quote`) às classes. Atualize sempre que adicionar um model auditável/polimórfico.
+**Morph map (ADR-10):** `Relation::enforceMorphMap` no `AppServiceProvider` é o **único** lugar que
+liga aliases a classes. Registre alias só de classe que existe na sprint; todo model
+Auditable/polimórfico precisa do seu alias.
 
-**Migrations são globais** (`database/migrations/`), NÃO por domínio — cronológicas, e FK cruza domínios (ex: `turmas.quote_id` → Commercial). Seeders: `RoleSeeder`, `PermissionSeeder` (ADR-07).
+**Migrations** globais e cronológicas em `database/migrations/` (FK cruza domínios, ex.
+`turmas.quote_id` → Commercial). **Rotas** por domínio em `Domains/*/routes.php`, carregadas no
+`bootstrap/app.php`, sob `auth:sanctum`. Seeders: `RoleSeeder`, `PermissionSeeder` (ADR-07).
 
 ### Padrão de entidade (CRUD) — DRY entre domínios
 
-Toda entidade segue a **MESMA forma**, independente do domínio. Não se coda cliente diferente de redator diferente de curso — é padronizado. Diferenciar a estrutura por entidade é dívida a corrigir, não estilo pessoal.
+Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a estrutura por entidade
+é dívida a corrigir, não estilo pessoal.
 
-- **Controller = fino.** Só orquestra: injeta a Action (escritas) e recebe o model por route binding (leituras). Retorna sempre `XData::fromModel($model)`. NUNCA monta o payload à mão — `XData::from([...])` inline no controller é proibido — nem carrega regra de negócio.
-- **Data (`XData`, spatie/laravel-data) = contrato único.** Concentra validação (`rules()` com `ValidRut` etc.), o `#[TypeScript]`, e a hidratação canônica `public static function fromModel(X $m): self` que achata as relações (ex.: campos do `user` no topo). É o único lugar que sabe montar o DTO a partir do model.
-- **Action = regra de escrita.** Uma por operação (`CreateXAction`, `UpdateXAction`), dentro de `DB::transaction`. CRUD sem regra (list/show/destroy) vai direto ao Eloquent no controller (ADR-02).
-- **Domain Service (`Domains/<X>/Services/`) = regra entre agregados / lógica compartilhada entre entidades.** Quando duas entidades precisam da mesma regra, ela vira Service e as Actions o chamam — não se duplica. Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar RUT, unicidade incl. soft-deletados, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`, chamado por `CreateClientAction` e `CreateRedatorAction`.
+- **Controller = fino.** Route-model-binding (leituras) + injeta a Action (escritas). Retorna sempre
+  `XData::fromModel($model)`. Proibido `XData::from([...])` inline ou regra de negócio no controller.
+- **Data (`XData`, spatie/laravel-data) = contrato único.** Concentra validação (`rules()` com
+  `ValidRut` etc.), o `#[TypeScript]`, e a hidratação `fromModel(X $m): self` que achata relações
+  (ex.: campos do `user` no topo). É o único lugar que sabe montar o DTO a partir do model.
+- **Action = regra de escrita.** Uma por operação (`CreateX`/`UpdateX`), dentro de `DB::transaction`.
+  **`CreateX` sincroniza TUDO que `UpdateX` sincroniza** (ex.: `course_ids` — esquecer no create já
+  descartou dados em silêncio). List/show/destroy sem regra vão direto ao Eloquent (ADR-02).
+- **Domain Service (`Domains/<X>/Services/`) = regra compartilhada entre entidades.** Não se duplica.
+  Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar
+  RUT, unicidade com `withTrashed`, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`,
+  chamado por `CreateClientAction` e `CreateRedatorAction`.
 
-Referência viva do padrão: os pares `ClientController`/`RedatorController` (estrutura idêntica), `ClientData`/`RedatorData` (ambos com `fromModel`) e `UserProvisioner`. Entidade de cadastro nova copia essa forma.
+Referência viva: pares `ClientController`/`RedatorController`, `ClientData`/`RedatorData` (ambos com
+`fromModel`), `UserProvisioner`. Entidade de cadastro nova copia essa forma.
+
+### Convenções de schema e domínio (decididas — não re-decidir sozinho)
+
+- **Schema em inglês** (colunas descritivas). Exceção: **`redator` é nome próprio do domínio** (como
+  "RUT") — tabela `redatores`, model `Redator`, FK `redator_id` ficam em PT (casam com morph map,
+  pasta Identity, Notion). *Divergência aberta: o `docs/der-fisico.md` ainda está em PT/ES — ver Parte IV.*
+- **Extensão 1:1 de User** (Client, Redator): `extends Model` + `belongsTo(User)`, `user_id`
+  **unique** FK cascade. NÃO `extends User`.
+- **RUT vive em `users.rut`** (já `unique`) — sem coluna duplicada nas extensões. Validação =
+  `ValidRut` (dígito verificador, módulo 11) **separada** da unicidade (`unique:users,rut`, checada
+  com `withTrashed` — RUT soft-deletado senão colide e retorna 500 no lugar de 422).
+- **Enums carregam `other`** (ex.: `clients.type = enum('client','provider','other') default 'client'`).
+- **Soft-delete de Client/Redator cascateia** até o User + nested (evento `deleting`, guard
+  `isForceDeleting`). Padrão para toda tabela futura com `client_id`/`redator_id`.
+- **Documentos:** enum por domínio (`RedatorDocumentType`), não global; `files` fica polimórfica
+  genérica (`type` string). Delete de doc = soft-delete do metadado; **o arquivo permanece no bucket**
+  (rastreável — peso legal). `File` é `Auditable`. Upload polimórfico: valide cada **folha** com
+  `instanceof UploadedFile` (não só o nível de cima), senão `documents[CV][]` vira TypeError/500.
+- **RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Policy
+  fica para data-scoping (Turma: "redator só vê as suas"). Toda permissão nova entra no seeder.
 
 ### Auth (detalhe)
-`bootstrap/app.php` habilita `statefulApi()`. Fluxo: front chama `GET /sanctum/csrf-cookie`, depois `POST /api/login`. `AuthController` (`Domains/Identity/Http/Controllers`) regenera a sessão no login (anti session-fixation) e rejeita usuário inativo pós-auth. Env: `SANCTUM_STATEFUL_DOMAINS`, `FRONTEND_URL`, `SESSION_*`. CORS (`config/cors.php`) escopado a `api/*`, `sanctum/csrf-cookie`, `login`, `logout`, com `supports_credentials: true`. O `User` gera `uuid` no create, faz soft-delete e é `Auditable` (campos em `$auditInclude`, `config/audit.php`). `type` é enum (`admin`, `redator`, `aluno`, `cliente`); `is_active` libera o login. **Só admin e redator autenticam** (RN-01).
+
+`bootstrap/app.php` habilita `statefulApi()`. Front: `GET /sanctum/csrf-cookie` → `POST /api/login`.
+`AuthController` (`Domains/Identity/Http/Controllers`) regenera a sessão no login (anti
+session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `FRONTEND_URL`,
+`SESSION_*`. CORS (`config/cors.php`) escopado a `api/*`, `sanctum/csrf-cookie`, `login`, `logout`,
+`supports_credentials: true`. `User` gera `uuid` no create, soft-delete, `Auditable`; `type` enum
+(`admin`/`redator`/`aluno`/`cliente`), `is_active` libera login. **Só admin e redator autenticam** (RN-01).
 
 ### Contratos de tipo (backend → frontend)
-DTOs em `app/Data/` com `#[TypeScript]`; o transformer (`TypeScriptTransformerServiceProvider`) varre `app/Data` e escreve um módulo flat em `frontend/src/shared/types/generated.ts`. Ao adicionar/mudar a forma de uma resposta: crie/atualize a classe `Data` — não retorne array ad-hoc — e regenere os tipos (comando artisan do typescript-transformer) para o front ficar em sync.
+
+DTOs em `app/Data` com `#[TypeScript]`; o transformer varre `app/Data` e escreve um módulo flat em
+`frontend/src/shared/types/generated.ts`. Mudou a forma de uma resposta → crie/atualize a classe
+`Data` (nunca array ad-hoc) e regenere (`php artisan typescript:transform`). Nunca editar `generated.ts`
+à mão (ADR-04).
 
 ---
 
-## PARTE III — ARQUITETURA DO FRONTEND
+## PARTE III — FRONTEND (feature-sliced)
 
-Feature-sliced em `frontend/src/`, 3 camadas por alcance:
-- **`app/`** — shell: `router/` (rotas + guards por role), `layouts/`, `providers/` (QueryClient, tema, i18n), `App.tsx`
-- **`features/<dominio>/`** — uma por domínio do backend (`identity` cobre auth **e** redator, `commercial`, `catalog`, `operation`, `certification`, `feedback`), cada uma com `api/` (hooks TanStack Query), `components/` (sub-pasta por entidade quando passa de ~3 arquivos: `Login/`, `Redator/`, `Client/`), `hooks/`, `lib/`. Estado transversal (tema, sessão) NÃO é local — foi para `shared/stores`.
-- **`shared/`** — `api/` (axios + csrf + `createCrudResource`), `stores/` (Zustand transversal: `uiStore` tema/idioma, `sessionStore` usuário), `types/` (GERADO), `ui/` (wrappers PrimeReact + moldes `ModulePage`/`CrudDialog` + barrel), `hooks/` (`useCrudPage`, `useEntityForm`, `usePermissions`, `useClock`), `config/` (tema PrimeReact trocado em runtime — ADR-16, i18n — ADR-15), `lib/`
+`frontend/src/` em 3 camadas por alcance:
+- **`app/`** — shell: `router/` (rotas + guards por role), `layouts/`, `providers/` (QueryClient,
+  tema, i18n, stores raiz), `App.tsx`.
+- **`features/<dominio>/`** — 1:1 com o backend (`identity` cobre auth **e** redator/pessoas;
+  `commercial`; `catalog`; etc.). Cada uma: `api/` (hooks TanStack Query), `components/` (sub-pasta
+  por entidade quando passa de ~3 arquivos: `Login/`, `Redator/`, `Client/`), `hooks/`, `lib/`.
+- **`shared/`** — `api/` (axios + csrf + `createCrudResource`), `stores/` (Zustand transversal:
+  `uiStore` tema/idioma, `sessionStore` usuário), `types/` (GERADO), `ui/` (wrappers PrimeReact +
+  moldes `ModulePage`/`CrudDialog` + barrel), `hooks/` (`useCrudPage`, `useEntityForm`,
+  `usePermissions`, `useClock`), `lib/` (`CHILE_REGIONS`, datetime, roles, `DialogMode`), `config/`
+  (tema em runtime — ADR-16, i18n — ADR-15).
 
-Aliases (`@`, `@app`, `@features`, `@shared`) em `vite.config.ts` **e** `tsconfig.app.json` — mantenha sincronizados.
+Aliases (`@`, `@app`, `@features`, `@shared`) em `vite.config.ts` **e** `tsconfig.app.json` —
+sincronizados.
 
-**Regra de dependência:** só aponta para baixo — feature usa shared, shared NUNCA usa feature; feature NÃO importa outra feature (composição na camada `app`/rota, ou via API). Evita o espaguete do feature-based ingênuo.
+**Regra de dependência:** só aponta para baixo. Feature usa shared; shared NUNCA usa feature;
+feature NÃO importa outra feature — **nem para tipo** (union compartilhado vai para `shared/lib`).
+Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi` read-only em
+`shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é rota Laravel
+(domínio Certification), fora desta SPA — não criar `public/validate/` no front.
 
-**`shared/api/axios.ts`** exporta a instância `api` (`withCredentials`, `withXSRFToken`) + a interface `ProblemDetails`; o interceptor normaliza todo erro (inclusive falha de rede) para esse formato — o chamador sempre pode esperar rejeição no formato `ProblemDetails`. **`shared/api/csrf.ts`** expõe `initCsrf()` (roda uma vez antes da primeira mutação autenticada).
+**server vs client state (ADR-05):** dado de servidor → `features/<x>/api` (TanStack Query).
+UI/sessão/wizard → Zustand. Não misturar.
 
-**Wrappers `shared/ui` (CRÍTICO):** features importam `AppButton`, nunca `Button` do pacote. Padrão pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), `forwardRef`, herda a API do Prime e fecha a fronteira de tipo (a feature importa `AppButtonProps`, nunca `ButtonProps`). Barrel raiz `shared/ui/index.ts` é a única porta. Customização de componente vive aqui, não com Tailwind na feature.
+### Padrões de código (crystalizados — ver Parte 0 para desviar)
 
-**server state vs client state (ADR-05):** dado do servidor → `features/<x>/api` (TanStack Query). UI/sessão/wizard → Zustand. Não misturar. **Validação QR pública** é rota Laravel (domínio Certification), fora desta SPA — não criar `public/validate/` na SPA.
-
-**Lógica fora da renderização (componentes de feature):** todo componente de feature (tudo fora de `shared/ui`) separa lógica de apresentação. Estado, mutations/queries, navegação e derivação de dados vão para um hook da feature (`features/<x>/hooks/useAlgo.ts`); o componente só consome o hook e renderiza JSX. Wrappers `shared/ui` são a exceção — são puramente apresentacionais. Conforme o código cresce, lógica comum entre entidades vira hooks reutilizáveis aplicados onde são usados (ex.: `useLoginForm` para o `LoginForm`). O scaffold de cadastro já compartilhado: `useCrudPage` (estado da página derivado da lista viva), `useEntityForm` (form + reset por prop + erros de mutação), e os moldes `ModulePage`/`CrudDialog` em `shared/ui` — a página de módulo e o diálogo view/edit/create são o mesmo componente entre entidades.
-
-**Estado atual:** Sprint 0 (scaffolding). `App.tsx` ainda tem template Vite + chamada de login hardcoded para smoke-test do auth — será substituído.
-
-
+- **Fábrica CRUD:** `createCrudResource<T>(resource)` = os 5 verbos REST (`api.post<T>` etc.,
+  **sempre com generic**, senão `r.data` vira `any`). Sub-recursos nested (contatos, endereços,
+  documentos, sync de cursos) = hooks pequenos por feature, **fora** da fábrica, invalidando a key
+  do pai.
+- **Axios (`shared/api/axios.ts`):** a instância **não** fixa `Content-Type` (exporta `api` com
+  `withCredentials`/`withXSRFToken`; interceptor normaliza todo erro para `ProblemDetails`). Deixe o
+  axios derivar: objeto → JSON; `FormData` → multipart+boundary. Fixar json faz todo `FormData`
+  virar JSON e cada `File` virar `{}` — upload chega vazio, 201 silencioso (peso legal). `initCsrf()`
+  (`shared/api/csrf.ts`) roda uma vez antes da 1ª mutação.
+- **Wrappers `shared/ui`:** features importam `AppButton`, nunca `Button` do pacote.
+  Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), `forwardRef`, reexporta `AppXProps`
+  (fecha a fronteira de tipo — a feature importa `AppButtonProps`, nunca `ButtonProps`). Barrel raiz
+  `shared/ui/index.ts` é a única porta. Customização de componente Prime vive aqui, nunca com Tailwind
+  na feature. Em wrappers com handler embutido (upload), **pine o override após o spread**
+  (`customUpload` não pode ser desligado pelo caller).
+- **Tailwind = layout** (grid/espaçamento); cor via variável CSS do tema (ADR-16). Utility não vence
+  a especificidade do tema — ao depurar estilo, cheque o **seletor completo do markup**, não a classe
+  isolada.
+- **Componente de feature = declarativo.** Estado, mutations/queries, navegação e derivação vão para
+  um hook da feature (`features/<x>/hooks/useAlgo.ts`, ex. `useLoginForm`); o componente só consome e
+  renderiza JSX. Wrappers `shared/ui` são a exceção (puro apresentacional).
+- **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
+  condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
+  Referência: `useClientForm`.
+- **Página CRUD:** `useCrudPage` guarda o ID e deriva a entidade da **lista viva** (não congela
+  objeto); `useEntityForm` cuida de form + reset por prop + erros de mutação; moldes
+  `ModulePage`/`CrudDialog`. Dialog unificado view=edit=create (campos vazios = cadastro); prop
+  `onEdit` abre a edição a partir do view.
+- **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
+  no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
+  Sem documento obrigatório → `no_idoneo`.
+- **i18n:** 3 locales (`pt-BR`, `es-CL`, `en`) com chaves **idênticas**; `es-CL` é a referência de
+  rótulo (cliente chileno). `generated.ts` fica no `globalIgnores` do eslint.
 
 ---
 
 ## PARTE IV — ÍNDICE DE CONTEXTO (`/docs`)
 
-Snapshots datados do planejamento. **Fonte canônica é o Google Drive** (`V2/Planejamento/`); se um doc divergir, o Drive vence — sinalize. Consulte o doc relevante antes de assumir; se a dúvida não estiver coberta, pergunte ao João Victor.
+Snapshots datados. **Fonte canônica é o Google Drive** (`V2/Planejamento/`); se um doc divergir, o
+Drive vence — sinalize. Consulte o doc relevante antes de assumir; dúvida não coberta → pergunte.
 
 | Arquivo | O que é | Consulte quando |
 |---|---|---|
-| `docs/adrs.md` | As 15 decisões de arquitetura (ADRs) com regra acionável + porquê | Antes de QUALQUER decisão de stack, padrão, estrutura ou infra |
+| `docs/adrs.md` | As 17 decisões de arquitetura (ADRs) com regra acionável + porquê | Antes de QUALQUER decisão de stack, padrão, estrutura ou infra |
 | `docs/der-fisico.md` | DER físico MySQL — 24 tabelas, PK/FK, relações | Antes de criar migration, model ou mexer em schema |
-| `docs/estrutura-monolito.md` | Esqueleto back+front detalhado, regras de dependência, divergências reais | Antes de criar arquivo novo — para saber ONDE ele vai |
+| `docs/estrutura-monolito.md` | Esqueleto back+front, regras de dependência, divergências reais | Antes de criar arquivo novo — para saber ONDE ele vai |
 | `docs/README.md` | Índice + lições institucionalizadas (erros que já custaram caro) | Para localizar contexto e não repetir erro conhecido |
 
-**Pendências abertas (não decidir sozinho):** ADR-16 formal do Tailwind; biblioteca exata de i18n (ADR-15); estratégia de pruning da auditoria (ADR-08).
+**Divergências abertas (não resolver sozinho):**
+- `docs/der-fisico.md` está em PT/ES; o schema implementado está em inglês (decisão do João) —
+  alinhar o DER + o canônico do Drive é follow-up pendente de autorização (write externo).
+- ADR-15 (biblioteca exata de i18n) e ADR-08 (estratégia de pruning da auditoria) seguem abertos.

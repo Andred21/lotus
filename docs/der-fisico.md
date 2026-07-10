@@ -1,49 +1,40 @@
 # DER Físico (MySQL) — Lotus
 
-> Snapshot de 2026-07-04. Fonte canônica: `Drive/V2/Planejamento/3-avancado/modelo-fisico-e-diagramas.md`.
+> Snapshot de 2026-07-04 (atualizado 2026-07-10). Fonte canônica: `Drive/V2/Planejamento/3-avancado/modelo-fisico-e-diagramas.md`.
 > DER FÍSICO: com tipos MySQL, PK/FK, índices. Difere do modelo conceitual (camada intermediária, sem tipos).
 > **Consulte antes de criar migration, model ou mexer em schema.** Os nomes aqui são a referência — não invente nomes divergentes.
 >
 > Correções da dívida da v1 aplicadas: AUTO_INCREMENT, tamanho de password/token, timestamps padrão, soft delete, ENUMs sem typo, política de FK.
 
+> **⚠️ Divergência de idioma (em aberto).** O schema **implementado** está em **inglês** (decisão do João Victor — spec `2026-07-07-sprint1-cadastros-backend-design.md` §2.1); o canônico do Drive segue em **PT/ES**. Neste doc:
+> - **Tabelas implementadas** = documentadas em inglês, batendo 1:1 com as migrations reais (fato verificável).
+> - **Tabelas planejadas** = mantidas em PT/ES (rascunho do Drive) e marcadas como tais; serão implementadas em inglês.
+> - **Exceção de nome próprio:** `redator`/`redatores`/`redator_id` ficam em PT (nome de domínio, casam com o morph map).
+> - Alinhar o **Drive canônico** ao inglês é follow-up pendente de autorização (write externo). Se o Drive divergir, o Drive vence — sinalize.
+>
+> **Divergências code↔canônico confirmadas no cross-ref de 2026-07-10** (o Drive foi atualizado no mesmo dia e ainda carrega o estado antigo): o `lotus_modelo_fisico.sql` canônico mantém `clients.rut_empresa NOT NULL UNIQUE` e `clients.tipo ENUM('cliente','proveedor')` (2 valores, PT). O código **intencionalmente** dropou `rut_empresa` (RUT vive em `users.rut`, spec §2.3) e usa `type ENUM('client','provider','other')`. Ao sincronizar o Drive, refletir essas duas mudanças.
+
 ---
 
-## Tabelas por domínio
+## Tabelas IMPLEMENTADAS (inglês — refletem as migrations)
 
 ### Identity
-- **users** — `id PK`, `uuid UK`, `name`, `rut UK`, `email UK`, `password`, `type` (enum), `is_active` (tinyint), `deleted_at`. Só admin/redator autenticam (RN-01).
-- **clients** — `id PK`, `user_id FK`, `razao_social`, `tipo` (enum), `rut_empresa UK`. 1:1 com users.
-- **client_addresses** — `id PK`, `client_id FK`, `comuna`, `ciudad`, `region`.
-- **client_contacts** — `id PK`, `client_id FK`, `name`, `email`.
-- **redatores** — `id PK`, `user_id FK`. 1:1 com users.
-- **students** — `id PK`, `user_id FK`, `current_client_id FK`. 1:1 com users.
+- **users** — `id PK`, `uuid UK`, `name`, `rut UK` (nullable, 20), `email UK`, `phone` (nullable, 30), `photo_path` (nullable), `password`, `type` enum(`admin`,`redator`,`aluno`,`cliente`), `is_active` (bool, default false), `remember_token`, `deleted_at`. Índices: `type`, (`type`,`is_active`). Só admin/redator autenticam (RN-01).
+- **clients** — `id PK`, `user_id FK,UK` → users cascade, `legal_name` (razón social), `type` enum(`client`,`provider`,`other`) default `client`, `business_activity` (nullable, giro), `deleted_at`. Extensão 1:1 de users. **RUT do cliente vive em `users.rut`** (sem coluna própria).
+- **client_addresses** — `id PK`, `client_id FK` → clients cascade, `line1`, `line2`, `number`, `commune`, `city`, `region`, `zip_code` (todos nullable), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
+- **client_contacts** — `id PK`, `client_id FK` → clients cascade, `name`, `email` (nullable), `phone` (nullable, 30), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
+- **redatores** — `id PK`, `user_id FK,UK` → users cascade, `deleted_at`. Extensão 1:1 de users. (Nome em PT — ver banner.)
 
 ### Catalog
-- **courses** — `id PK`, `name`, `carga_horaria` (smallint).
-- **course_certificate_templates** — `id PK`, `course_id FK`, `version` (int), `layout_config` (json), `vigencia_meses` (smallint).
-- **course_redator** — `id PK`, `course_id FK`, `redator_id FK`. (Idoneidade: quais redatores podem ministrar cada curso.)
-
-### Commercial
-- **budgets** (orçamentos) — `id PK`, `client_id FK`, `valor_total_uf` (decimal), `status` (enum). Agrupa N cotações.
-- **quotes** (cotações) — `id PK`, `budget_id FK`, `client_id FK`, `course_id FK`, `qtd_alunos` (int), `valor_uf` (decimal), `status` (enum).
-
-### Operation
-- **student_client_logs** — `id PK`, `student_id FK`, `client_id FK`, `data_inicio` (date), `data_fim` (date), `active_student_id` (bigint, generated). Histórico de vínculo aluno↔cliente.
-- **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum). Uma turma nasce de uma cotação (1:1). Um redator por turma.
-- **enrollments** (matrículas) — `id PK`, `student_id FK`, `turma_id FK`, `notas` (json), `presenca_pct` (decimal), `status_aprovacao` (enum).
-
-### Certification
-- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK,UK`, `course_id FK`, `codigo UK`, `valido_ate` (date), `qr_code_hash UK`, `status` (enum). Gerado sob demanda; metadata armazenada, PDF não.
-- **certificate_sequences** — `id PK`, `year UK` (smallint), `last_seq` (int). Sequência de numeração por ano.
-
-### Feedback
-- **feedbacks** — `id PK`, `turma_id FK`, `origem` (enum).
+- **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
+- **course_certificate_templates** — `id PK`, `course_id FK` → courses cascade, `version` (int), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`.
+- **course_redator** — `id PK`, `course_id FK`, `redator_id FK` → redatores cascade, `unique(course_id, redator_id)`. Pivô N:N puro (idoneidade: quais redatores podem ministrar cada curso), **sem soft-delete**.
 
 ### Transversal
-- **files** — `id PK`, `fileable_type` (varchar), `fileable_id` (bigint), `tipo`, `path`, `valido_ate` (date). Polimórfica — usar enforceMorphMap (ADR-10).
-- **audits** — `id PK`, `user_id FK`, `event`, `auditable_type`, `auditable_id`, `old_values` (text), `new_values` (text). owen-it (ADR-08).
+- **files** — `id PK`, `fileable_type`, `fileable_id`, `type` (80), `path`, `original_name`, `mime` (100, nullable), `size` (bigint), `valid_until` (date, nullable), `deleted_at`. Índice: (`fileable_type`,`fileable_id`). Polimórfica — `enforceMorphMap` (ADR-10). `type` = string genérica; o enum vive no domínio (ex.: `RedatorDocumentType`).
+- **audits** — `id PK`, `user_id FK`, `event`, `auditable_type`, `auditable_id`, `old_values`, `new_values`, IP, user-agent. owen-it (ADR-08).
 
-### RBAC (Spatie — não criar à mão, vêm do pacote)
+### RBAC (Spatie — vêm do pacote, não criar à mão)
 - **roles** — `id PK`, `name`, `guard_name`.
 - **permissions** — `id PK`, `name`, `guard_name`.
 - **model_has_roles** — `role_id FK`, `model_type`, `model_id`.
@@ -51,25 +42,48 @@
 
 ---
 
+## Tabelas PLANEJADAS (ainda no papel — nomes PT/ES do Drive; serão implementadas em inglês)
+
+> Não existem como migration ainda. Os nomes de coluna abaixo são o rascunho conceitual do Drive; ao implementar, traduzir para inglês (como foi feito com clients/courses) e atualizar a seção acima.
+
+### Identity
+- **students** — `id PK`, `user_id FK`, `current_client_id FK`. 1:1 com users.
+
+### Commercial
+- **budgets** (orçamentos) — `id PK`, `client_id FK`, `codigo` (varchar UK, imutável, `'Scap '.id` gerado na Action — ADR-17), `valor_total_uf` (decimal), `status` (enum). Agrupa N cotações.
+- **quotes** (cotações) — `id PK`, `budget_id FK`, `client_id FK`, `course_id FK`, `qtd_alunos` (int), `valor_uf` (decimal), `seq_in_budget` (smallint, contador atômico por orçamento — `UNIQUE(budget_id, seq_in_budget)`, ADR-17), `status` (enum). Código composto (`Scap 100 - Cot 2`) é calculado, não persistido.
+
+### Operation
+- **student_client_logs** — `id PK`, `student_id FK`, `client_id FK`, `data_inicio` (date), `data_fim` (date), `active_student_id` (generated). Histórico de vínculo aluno↔cliente.
+- **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum). Nasce de uma cotação (1:1). Um redator por turma.
+- **enrollments** (matrículas) — `id PK`, `student_id FK`, `turma_id FK`, `notas` (json), `presenca_pct` (decimal), `status_aprovacao` (enum).
+
+### Certification
+- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK,UK`, `course_id FK`, `codigo UK`, `valido_ate` (date), `qr_code_hash UK`, `status` (enum). Gerado sob demanda; metadata armazenada, PDF não.
+- **certificate_sequences** — `id PK`, `year UK` (smallint), `last_seq` (int). Numeração por ano.
+
+### Feedback
+- **feedbacks** — `id PK`, `turma_id FK`, `origem` (enum).
+
+---
+
 ## Relações-chave
 
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
-- `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
-- `students` N:1 → `clients` (vínculo atual `current`); histórico em `student_client_logs`.
-- `courses` 1:N → `quotes`, `course_certificate_templates`, `course_redator`, `turmas`, `certificates`.
-- `redatores` 1:N → `course_redator` (idoneidade), `turmas` (ministra).
-- `budgets` 1:N → `quotes` ("agrupa").
-- `quotes` 1:1 → `turmas` ("vira").
-- `turmas` 1:N → `enrollments`, `feedbacks`.
-- `students` 1:N → `enrollments`.
-- `enrollments` 1:1 → `certificates`.
+- `clients` 1:N → `client_addresses`, `client_contacts`, `budgets` (planejada).
+- `students` (planejada) N:1 → `clients`; histórico em `student_client_logs`.
+- `courses` 1:N → `course_certificate_templates`, `course_redator`, e (planejadas) `quotes`, `turmas`, `certificates`.
+- `redatores` 1:N → `course_redator` (idoneidade), e (planejada) `turmas` (ministra).
+- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` · `turmas` 1:N → `enrollments`, `feedbacks` (todas planejadas).
+- `enrollments` 1:1 → `certificates` (planejadas).
 - `users` 1:N → `model_has_roles`, `audits`.
+- **Soft-delete cascateia:** deletar `clients`/`redatores` cascateia até o `users` e os nested (evento `deleting`, guard `isForceDeleting`). Padrão para toda tabela futura com `client_id`/`redator_id`.
 
 ---
 
 ## Notas de implementação (ligação com ADRs)
-- **`files` e `audits` são polimórficas** → `enforceMorphMap` obrigatório (ADR-10).
-- **`certificates`**: não há arquivo por aluno; só metadata. PDF gerado sob demanda via Gotenberg (ADR-12).
+- **`files` e `audits` são polimórficas** → `enforceMorphMap` obrigatório (ADR-10). Registrar alias só de classe que existe.
+- **`certificates`** (planejada): sem arquivo por aluno; só metadata. PDF sob demanda via Gotenberg (ADR-12).
 - **Soft delete** nas entidades de negócio (`deleted_at`).
-- **RUT único** em `users.rut` e `clients.rut_empresa`.
-- **Contexto total:** 24 tabelas (18 de domínio + 6 RBAC/transversal).
+- **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
+- **Contexto total (alvo):** 24 tabelas (18 de domínio + 6 RBAC/transversal). Implementadas até 2026-07-10: users, clients, client_addresses, client_contacts, redatores, courses, course_certificate_templates, course_redator, files, audits + as 4 de RBAC.
