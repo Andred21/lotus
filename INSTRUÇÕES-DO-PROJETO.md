@@ -83,8 +83,8 @@ DTOs em `app/Data/` com `#[TypeScript]`; o transformer (`TypeScriptTransformerSe
 
 Feature-sliced em `frontend/src/`, 3 camadas por alcance:
 - **`app/`** — shell: `router/` (rotas + guards por role), `layouts/`, `providers/` (QueryClient, tema, i18n), `App.tsx`
-- **`features/<dominio>/`** — uma por domínio do backend (`identity`, `commercial`, `catalog`, `operation`, `certification`, `feedback`), cada uma com `api/` (hooks TanStack Query), `components/`, `hooks/`, `stores/` (Zustand local), `types.ts` (tipos locais de UI)
-- **`shared/`** — `api/` (axios + csrf), `types/` (GERADO), `ui/` (wrappers PrimeReact + barrel), `hooks/`, `config/`, `lib/`
+- **`features/<dominio>/`** — uma por domínio do backend (`identity` cobre auth **e** redator, `commercial`, `catalog`, `operation`, `certification`, `feedback`), cada uma com `api/` (hooks TanStack Query), `components/` (sub-pasta por entidade quando passa de ~3 arquivos: `Login/`, `Redator/`, `Client/`), `hooks/`, `lib/`. Estado transversal (tema, sessão) NÃO é local — foi para `shared/stores`.
+- **`shared/`** — `api/` (axios + csrf + `createCrudResource`), `stores/` (Zustand transversal: `uiStore` tema/idioma, `sessionStore` usuário), `types/` (GERADO), `ui/` (wrappers PrimeReact + moldes `ModulePage`/`CrudDialog` + barrel), `hooks/` (`useCrudPage`, `useEntityForm`, `usePermissions`, `useClock`), `config/` (tema PrimeReact trocado em runtime — ADR-16, i18n — ADR-15), `lib/`
 
 Aliases (`@`, `@app`, `@features`, `@shared`) em `vite.config.ts` **e** `tsconfig.app.json` — mantenha sincronizados.
 
@@ -96,7 +96,7 @@ Aliases (`@`, `@app`, `@features`, `@shared`) em `vite.config.ts` **e** `tsconfi
 
 **server state vs client state (ADR-05):** dado do servidor → `features/<x>/api` (TanStack Query). UI/sessão/wizard → Zustand. Não misturar. **Validação QR pública** é rota Laravel (domínio Certification), fora desta SPA — não criar `public/validate/` na SPA.
 
-**Lógica fora da renderização (componentes de feature):** todo componente de feature (tudo fora de `shared/ui`) separa lógica de apresentação. Estado, mutations/queries, navegação e derivação de dados vão para um hook da feature (`features/<x>/hooks/useAlgo.ts`); o componente só consome o hook e renderiza JSX. Wrappers `shared/ui` são a exceção — são puramente apresentacionais. Conforme o código cresce, lógica comum entre entidades vira hooks reutilizáveis aplicados onde são usados (ex.: `useLoginForm` para o `LoginForm`).
+**Lógica fora da renderização (componentes de feature):** todo componente de feature (tudo fora de `shared/ui`) separa lógica de apresentação. Estado, mutations/queries, navegação e derivação de dados vão para um hook da feature (`features/<x>/hooks/useAlgo.ts`); o componente só consome o hook e renderiza JSX. Wrappers `shared/ui` são a exceção — são puramente apresentacionais. Conforme o código cresce, lógica comum entre entidades vira hooks reutilizáveis aplicados onde são usados (ex.: `useLoginForm` para o `LoginForm`). O scaffold de cadastro já compartilhado: `useCrudPage` (estado da página derivado da lista viva), `useEntityForm` (form + reset por prop + erros de mutação), e os moldes `ModulePage`/`CrudDialog` em `shared/ui` — a página de módulo e o diálogo view/edit/create são o mesmo componente entre entidades.
 
 **Estado atual:** Sprint 0 (scaffolding). `App.tsx` ainda tem template Vite + chamada de login hardcoded para smoke-test do auth — será substituído.
 

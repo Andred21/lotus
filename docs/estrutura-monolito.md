@@ -70,27 +70,35 @@ frontend/src/
 │
 ├── shared/                     # COMPARTILHADA. Não pertence a domínio.
 │   ├── ui/                     # WRAPPERS PrimeReact — features NUNCA importam primereact direto
-│   │   ├── AppButton/          # (padrão adotado: pasta-por-componente + index.ts interno)
-│   │   ├── AppInput/           #  cada wrapper: forwardRef, herda API do Prime, fecha fronteira de tipo
-│   │   ├── AppTable/  ...       #  (AppDialog etc. conforme necessidade)
-│   │   └── index.ts            # barrel raiz: features importam SÓ daqui
+│   │   ├── AppButton/ AppDataTable/ AppDialog/ AppDropdown/ AppInputText/ …  # pasta-por-componente + index.ts
+│   │   ├── ModulePage/ CrudDialog/ PageHeader/   # moldes reusáveis de página de módulo e diálogo de cadastro
+│   │   ├── AppearanceControls/ LanguageMenu/ Clock/ AppLogo/  # chrome: tema (ADR-16), idioma (ADR-15)
+│   │   ├── <Wrapper>/style.ts  # passthrough/variante nomeada SÓ quando há customização (senão nem existe)
+│   │   └── index.ts            # barrel raiz: um `export * from './X'` por pasta; features importam SÓ daqui
 │   ├── api/
 │   │   ├── axios.ts            # cliente + interceptor RFC 7807 (ADR-03) · exporta ProblemDetails
 │   │   ├── csrf.ts             # initCsrf() isolado (chamado antes de mutar)
-│   │   └── queryKeys.ts        # convenção central de chaves TanStack (criar quando houver 1ª query)
+│   │   ├── crud.ts  createCrudResource.ts  # fábrica genérica de recurso CRUD (list/get/create/update/delete)
+│   │   └── coursesApi.ts       # recurso compartilhado (mais de uma feature usa; feature não importa feature)
+│   ├── stores/                 # Zustand TRANSVERSAL, não domínio: uiStore (tema/idioma), sessionStore (usuário)
+│   ├── hooks/                  # useClock, useCrudPage, useEntityForm, usePermissions (can() é infra de UI)
 │   ├── lib/                    # helpers puros (Rut, UF, datas)
-│   ├── hooks/                  # hooks genéricos (useDebounce, useDisclosure)
 │   ├── types/                  # tipos TS GERADOS do backend (ADR-04) — NÃO editar à mão
-│   └── config/                 # constantes, env, setup i18n (ADR-15)
+│   └── config/                 # brand, navigation, primeTheme (ADR-16), i18n + locales (ADR-15)
 │
 ├── features/                   # DOMÍNIO. Espelha os Domains do backend.
-│   ├── identity/               # login, perfil, gestão de roles
-│   │   ├── api/                # hooks TanStack Query (useLogin, useProfile)
-│   │   ├── components/         # telas/componentes só desta feature
-│   │   ├── hooks/  stores/     # hooks locais; Zustand local (ex: session store)
-│   │   └── types.ts            # tipos locais de UI (contrato vem de shared/types)
-│   ├── commercial/ catalog/ operation/ certification/ feedback/
-│   (mesma estrutura interna)
+│   ├── identity/               # auth (login) E redator — espelha Domains/Identity do backend
+│   │   ├── api/                # authApi (login/logout/me num arquivo), redator, documentos
+│   │   ├── components/         # sub-pasta por entidade quando passa de ~3 arquivos:
+│   │   │   ├── Login/          #   LoginPage, LoginForm
+│   │   │   ├── Redator/        #   RedatorDialog, RedatoresTable
+│   │   │   └── PeoplePage.tsx  #   página do módulo (rota /personas)
+│   │   ├── hooks/              # hooks locais (useRedatorForm, useRedatoresPage…)
+│   │   └── lib/                # helpers de UI locais (redatorStatus devolve CHAVE de status, não texto)
+│   ├── commercial/             # cliente + orçamento — components/Client/ (ClientDialog, ClientsTable)
+│   │   └── (mesma estrutura interna: api/ components/ hooks/)
+│   ├── catalog/ operation/ certification/ feedback/   # (criadas quando entrarem em desenvolvimento)
+│   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui
 
 frontend/vite.config.ts         # plugin typescript-transformer (ADR-04) + i18n
@@ -104,6 +112,12 @@ frontend/tsconfig.json          # paths: @shared, @features, @app
 - **`shared/types` é gerado, não escrito à mão.** Editar quebra o sync. Tipo local de UI fica no `types.ts` da feature. Tipo à mão temporário = dívida marcada (ver ADR-04).
 - **server state vs client state:** dado do servidor → `features/<x>/api` (TanStack Query). Estado de UI (tema, wizard, modais, sessão) → Zustand. Não misturar.
 - **Validação QR pública** é rota Laravel pública (domínio Certification), **fora** desta SPA autenticada. Não criar `public/validate/` na SPA.
+- **`style.ts` no wrapper quando houver variante nomeada ou customização de tema.** Não é cerimônia: wrapper sem customização não ganha `style.ts`.
+- **Cor que acompanha o tema usa CSS var do Lara** (`--surface-section`, `--surface-card`, `--surface-border`), não par `bg-white dark:bg-slate-800` (ADR-16).
+- **Um `export * from './X'` por pasta** no barrel `shared/ui/index.ts`. Nunca caminho fundo.
+- **Sub-pasta por entidade** em `components/` quando a entidade passa de ~3 arquivos.
+- **Vocabulário de domínio é o do backend.** `Redator`, não `Writer`. Nome de tela pode ser em inglês (`PeoplePage`); a rota fica em espanhol (`/personas`), é interface de usuário.
+- **`can()` é conveniência de interface, não segurança.** A autorização é da API (ADR-07).
 
 ---
 
@@ -113,7 +127,7 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 
 1. **Wrappers `shared/ui`:** o planejamento escreveu `AppButton.tsx` (arquivo); o repo adotou **pasta-por-componente** (`AppButton/AppButton.tsx` + `index.ts`). Padrão vigente = pasta. Manter uniforme: todo wrapper é pasta.
 2. **`App.tsx`:** planejamento coloca em `app/App.tsx`; o repo tem em `src/App.tsx` (default Vite). Mover para `app/` fica para a task 2.4.1 (shell) — não mover isoladamente agora.
-3. **Features criadas antecipadamente:** o repo tem `commercial/catalog/operation/certification` como pastas vazias (`.gitkeep`), contra a regra "criar só quando entra em desenvolvimento". Decisão em aberto (completar com `feedback` ou enxugar). Não é bloqueante.
+3. **Features criadas antecipadamente:** `commercial` e `identity` estão em desenvolvimento (com código real); `catalog/operation/certification/feedback` seguem vazias. A regra "criar só quando entra em desenvolvimento" vale para as que ainda não têm código — completar ou enxugar quando entrarem. Não é bloqueante.
 
 ---
 
