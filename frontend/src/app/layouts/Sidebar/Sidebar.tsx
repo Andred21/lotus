@@ -3,10 +3,9 @@ import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions } from '@shared/hooks/usePermissions'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'
-import { AppButton, AppSidebar } from '@shared/ui'
+import { AppButton, AppSidebar, AppLogo } from '@shared/ui'
 import { roleSectionLabel } from '@shared/lib'
 import { SidebarItem } from './SidebarItem'
-import logo from '@/assets/Logo.png'
 
 export function Sidebar() {
 
@@ -23,10 +22,15 @@ export function Sidebar() {
       className={`${collapsed ? 'w-20' : 'w-64'} border-slate-400 bg-gray-200 transition-all dark:border-slate-800 dark:bg-slate-900`}
     >
       <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        {!collapsed && <img src={logo} alt="Lotus" className="ml-4 h-20 w-auto" />}
+
+        {!collapsed && (
+          <AppLogo className="ml-15 h-30 w-auto" />
+        )}
+
         <AppButton variant="brandIcon" onClick={toggle} aria-label="Alternar menu">
           <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
         </AppButton>
+
       </div>
 
       {!collapsed && roleKey && (
