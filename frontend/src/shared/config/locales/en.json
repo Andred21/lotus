@@ -81,6 +81,26 @@
     "contactName": "Name",
     "contacts": "Contacts"
   },
+  "course": {
+    "module": "Courses",
+    "moduleDescription": "Course catalog and their enabled writers.",
+    "new": "New course",
+    "create": "Create course",
+    "tabCourses": "Courses",
+    "name": "Name",
+    "technicalName": "Technical name",
+    "description": "Description",
+    "workloadHours": "Workload (h)",
+    "sectionGeneral": "Course data",
+    "sectionRedatores": "Enabled writers",
+    "enabledRedatores": "Enabled writers",
+    "redatoresReadonlyNote": "Enabling is edited in the writer profile (People).",
+    "noRedatores": "No enabled writers.",
+    "searchPlaceholder": "Search course...",
+    "empty": "No courses.",
+    "count": "{{count}} course(s)",
+    "redatorCount": "Writers"
+  },
   "clientType": {
     "client": "Client",
     "provider": "Provider",
