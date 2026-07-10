@@ -170,8 +170,13 @@ function NestedField({ error, children }: { error?: string; children: ReactNode 
 }
 
 function UnmappedErrors({ errors, mapped }: { errors: Record<string, string[]>; mapped: string[] }) {
+  // `contacts.*` é excluído porque cada um já aparece no seu NestedField.
+  // `addresses.*` NÃO é excluído: os inputs de endereço ainda não recebem prop
+  // `error`, então filtrá-los aqui faria o 422 desaparecer da tela. Hoje o
+  // backend não valida endereço, mas o dia em que validar não pode ser o dia em
+  // que o botão de salvar volta a parecer morto.
   const leftover = Object.entries(errors).filter(
-    ([key]) => !mapped.includes(key) && !key.startsWith('contacts.') && !key.startsWith('addresses.'),
+    ([key]) => !mapped.includes(key) && !key.startsWith('contacts.'),
   )
   if (leftover.length === 0) return null
   return (
