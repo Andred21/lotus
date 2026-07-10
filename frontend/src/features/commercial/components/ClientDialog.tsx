@@ -1,5 +1,5 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { AppDialog, AppButton, AppInputText, AppDropdown } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppDropdown } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../hooks/useClientForm'
@@ -24,13 +24,6 @@ export function ClientDialog({
   onEdit?: () => void
 }) {
   const { form, set, setForm, readOnly, submit, pending, fieldErrors, generalError } = useClientForm(client, mode, onHide)
-  const title = mode === 'create' ? 'Nuevo cliente' : form.legal_name || form.name
-  const header = (
-    <div className="flex items-center justify-between gap-4 pr-6">
-      <span>{title}</span>
-      {readOnly && onEdit && <AppButton variant='brandIcon' label="Editar" icon="pi pi-pencil" outlined onClick={onEdit} />}
-    </div>
-  )
 
   // Cliente criado fora da UI (seed/API) pode não ter endereço nenhum — cai
   // para um endereço vazio em vez de quebrar ao ler `addr.region`.
@@ -46,15 +39,17 @@ export function ClientDialog({
       return { ...f, addresses: [first, ...rest] }
     })
 
-  const footer = readOnly ? null : (
-    <div className="flex justify-end gap-2">
-      <AppButton  label="Cancelar" text onClick={onHide} />
-      <AppButton  variant='brandIcon' label={mode === 'create' ? 'Registrar cliente' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
-    </div>
-  )
-
   return (
-    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
+    <CrudDialog
+      visible={visible}
+      mode={mode}
+      title={mode === 'create' ? 'Nuevo cliente' : (form.legal_name || form.name)}
+      onHide={onHide}
+      onEdit={onEdit}
+      onSubmit={submit}
+      pending={pending}
+      submitLabel={mode === 'create' ? 'Registrar cliente' : undefined}
+    >
       {generalError && (
         <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
           {generalError}
@@ -135,7 +130,7 @@ export function ClientDialog({
           />
         )}
       </section>
-    </AppDialog>
+    </CrudDialog>
   )
 }
 

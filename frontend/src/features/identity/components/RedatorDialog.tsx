@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { AppDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '../api/coursesApi'
@@ -39,7 +39,6 @@ export function RedatorDialog({
   const upload = useUploadDocument()
   const removeDoc = useRemoveDocument()
 
-  const title = mode === 'create' ? 'Nuevo redactor' : form.name
   // Documentos vêm da entidade viva (derivada da lista), não do estado do form:
   // são geridos por mutações próprias e devem refletir o servidor na hora.
   const existing = redator?.documents ?? []
@@ -59,32 +58,29 @@ export function RedatorDialog({
     e.options.clear()
   }
 
-  const footer = readOnly ? null : (
-    <div className="flex justify-end gap-2">
-      <AppButton label="Cancelar" text onClick={onHide} />
-      <AppButton  variant='brandIcon' label={mode === 'create' ? 'Registrar redactor' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
-    </div>
-  )
-
-  const header = (
-    <div className="flex items-center justify-between gap-4">
-      <span>{title}</span>
-      {readOnly && onEdit && <AppButton  variant='brandIcon' label="Editar datos" icon="pi pi-pencil" outlined onClick={onEdit} />}
-    </div>
-  )
-
   return (
-    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
+    <CrudDialog
+      visible={visible}
+      mode={mode}
+      title={mode === 'create' ? 'Nuevo redactor' : form.name}
+      onHide={onHide}
+      onEdit={onEdit}
+      onSubmit={submit}
+      pending={pending}
+      submitLabel={mode === 'create' ? 'Registrar redactor' : undefined}
+      headerExtra={
+        mode !== 'create' && redator ? (
+          <AppTag
+            value={`Idoneidad: ${idoneidade(redator)}`}
+            severity={idoneidade(redator) === 'idoneo' ? 'success' : idoneidade(redator) === 'por_vencer' ? 'warning' : 'danger'}
+          />
+        ) : null
+      }
+    >
       {generalError && (
         <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
           {generalError}
         </p>
-      )}
-
-      {mode !== 'create' && redator && (
-        <div className="mb-4">
-          <AppTag value={`Idoneidad: ${idoneidade(redator)}`} severity={idoneidade(redator) === 'idoneo' ? 'success' : idoneidade(redator) === 'por_vencer' ? 'warning' : 'danger'} />
-        </div>
       )}
 
       <section className="space-y-4">
@@ -177,7 +173,7 @@ export function RedatorDialog({
           ))}
         </div>
       </section>
-    </AppDialog>
+    </CrudDialog>
   )
 }
 
