@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { ClientData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { clientsApi } from '../api/clientsApi'
@@ -13,40 +13,24 @@ const EMPTY: ClientData = {
 }
 
 export function useClientForm(client: ClientData | null, mode: ClientDialogMode, onDone: () => void) {
-  const [form, setForm] = useState<ClientData>(() => (client ? structuredClone(client) : structuredClone(EMPTY)))
-  const [prev, setPrev] = useState({ id: client?.id ?? null, mode })
+  const { form, setForm, set, readOnly } = useEntityForm(client, mode, EMPTY)
   const create = clientsApi.useCreate()
   const update = clientsApi.useUpdate()
-
-  // Reseta quando muda a ENTIDADE (id) ou o modo, não quando muda a identidade
-  // do objeto: o cliente aberto é derivado da lista viva, então cada refetch
-  // produz um objeto novo com o mesmo id, e resetar ali apagaria o que o
-  // usuário digitou e ainda não salvou. Ajuste de estado durante o render —
-  // sem useEffect — segue o padrão recomendado pelo React para "resetar estado
-  // quando uma prop muda" (evita o setState síncrono em efeito).
-  const currentId = client?.id ?? null
-  if (currentId !== prev.id || mode !== prev.mode) {
-    setPrev({ id: currentId, mode })
-    setForm(client ? structuredClone(client) : structuredClone(EMPTY))
-  }
-
-  const readOnly = mode === 'view'
-  const set = <K extends keyof ClientData>(k: K, v: ClientData[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   function submit() {
     // Empresa não tem nome separado da razón social: `name` (exigido pelo
     // backend para o `users.name` do login provisionado) é sempre igual a
     // `legal_name`, copiado aqui no submit em vez de um campo de UI dedicado.
     const payload = { ...form, name: form.legal_name }
-    const mutation = mode === 'create' ? create : update
-    const vars = mode === 'create' ? payload : { id: client!.id!, payload }
-    mutation.mutate(vars as never, { onSuccess: onDone })
+
+    if (mode === 'create') {
+      create.mutate(payload, { onSuccess: onDone })
+      return
+    }
+    update.mutate({ id: client!.id!, payload }, { onSuccess: onDone })
   }
 
-  // 422 traz erros por campo; outros status trazem só a mensagem geral.
-  const mutationError = create.error ?? update.error
-  const fieldErrors = mutationError?.errors
-  const generalError = mutationError && !mutationError.errors ? mutationError.detail : null
+  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
 
   return {
     form, set, setForm, readOnly, submit,
