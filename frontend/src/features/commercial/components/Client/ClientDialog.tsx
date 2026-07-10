@@ -1,14 +1,11 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppButton, AppInputText, AppDropdown } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
 
-const TYPES = [
-  { label: 'Cliente', value: 'client' },
-  { label: 'Proveedor', value: 'provider' },
-  { label: 'Otro', value: 'other' },
-]
+const TYPE_VALUES = ['client', 'provider', 'other'] as const
 
 const EMPTY_ADDRESS: ClientAddressData = {
   id: undefined, line1: null, line2: null, number: null, commune: null, city: null, region: null, zip_code: null, is_primary: true,
@@ -23,7 +20,9 @@ export function ClientDialog({
   onHide: () => void
   onEdit?: () => void
 }) {
+  const { t } = useTranslation()
   const { form, set, setForm, readOnly, submit, pending, fieldErrors, generalError } = useClientForm(client, mode, onHide)
+  const types = TYPE_VALUES.map((value) => ({ value, label: t(`clientType.${value}`) }))
 
   // Cliente criado fora da UI (seed/API) pode não ter endereço nenhum — cai
   // para um endereço vazio em vez de quebrar ao ler `addr.region`.
@@ -43,12 +42,12 @@ export function ClientDialog({
     <CrudDialog
       visible={visible}
       mode={mode}
-      title={mode === 'create' ? 'Nuevo cliente' : (form.legal_name || form.name)}
+      title={mode === 'create' ? t('client.new') : (form.legal_name || form.name)}
       onHide={onHide}
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
-      submitLabel={mode === 'create' ? 'Registrar cliente' : undefined}
+      submitLabel={mode === 'create' ? t('client.create') : undefined}
     >
       {generalError && (
         <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
@@ -64,66 +63,66 @@ export function ClientDialog({
         />
       )}
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">Datos generales</h3>
+        <h3 className="text-xs font-semibold uppercase text-slate-500">{t('client.sectionGeneral')}</h3>
         {/* Empresa não tem "nome" separado da razón social — `name` (exigido
             pelo backend) é derivado de `legal_name` no submit. Erro de `name`
             aparece aqui pois foi este campo que o gerou. */}
-        <Field label="Razón social" error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
+        <Field label={t('client.legalName')} error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
           <AppInputText value={form.legal_name} disabled={readOnly} onChange={(e) => set('legal_name', e.target.value)} className="w-full" />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="RUT" error={fieldErrors?.rut?.[0]}>
+          <Field label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
           </Field>
-          <Field label="Email" error={fieldErrors?.email?.[0]}>
+          <Field label={t('common.email')} error={fieldErrors?.email?.[0]}>
             <AppInputText value={form.email} disabled={readOnly} onChange={(e) => set('email', e.target.value)} className="w-full" />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Tipo">
-            <AppDropdown value={form.type} options={TYPES} disabled={readOnly} onChange={(e) => set('type', e.value)} />
+          <Field label={t('client.type')}>
+            <AppDropdown value={form.type} options={types} disabled={readOnly} onChange={(e) => set('type', e.value)} />
           </Field>
-          <Field label="Giro">
+          <Field label={t('client.businessActivity')}>
             <AppInputText value={form.business_activity ?? ''} disabled={readOnly} onChange={(e) => set('business_activity', e.target.value)} className="w-full" />
           </Field>
         </div>
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">Dirección</h3>
+        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionAddress')}</h3>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Región">
+          <Field label={t('client.region')}>
             <AppDropdown value={addr.region} options={CHILE_REGIONS} disabled={readOnly} onChange={(e) => setAddr({ region: e.value })} />
           </Field>
-          <Field label="Comuna">
+          <Field label={t('client.commune')}>
             <AppInputText value={addr.commune ?? ''} disabled={readOnly} onChange={(e) => setAddr({ commune: e.target.value })} className="w-full" />
           </Field>
-          <Field label="Ciudad">
+          <Field label={t('client.city')}>
             <AppInputText value={addr.city ?? ''} disabled={readOnly} onChange={(e) => setAddr({ city: e.target.value })} className="w-full" />
           </Field>
-          <Field label="Calle">
+          <Field label={t('client.street')}>
             <AppInputText value={addr.line1 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line1: e.target.value })} className="w-full" />
           </Field>
-          <Field label="Número">
+          <Field label={t('client.number')}>
             <AppInputText value={addr.number ?? ''} disabled={readOnly} onChange={(e) => setAddr({ number: e.target.value })} className="w-full" />
           </Field>
         </div>
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">Personas de contacto</h3>
+        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
         {form.contacts.map((c, i) => (
           <div key={i} className="grid grid-cols-3 gap-2">
             <NestedField error={fieldErrors?.[`contacts.${i}.name`]?.[0]}>
-              <AppInputText placeholder="Nombre" value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
+              <AppInputText placeholder={t('client.contactName')} value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.email`]?.[0]}>
-              <AppInputText placeholder="Email" value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
+              <AppInputText placeholder={t('common.email')} value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.phone`]?.[0]}>
-              <AppInputText placeholder="Teléfono" value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { phone: e.target.value })} />
+              <AppInputText placeholder={t('common.phone')} value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { phone: e.target.value })} />
             </NestedField>
           </div>
         ))}
         {!readOnly && (
           <AppButton
-            label="Agregar contacto"
+            label={t('client.addContact')}
             icon="pi pi-user-plus"
             text
             onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { id: undefined, name: '', email: null, phone: null, is_primary: false }] }))}

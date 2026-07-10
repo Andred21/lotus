@@ -1,25 +1,27 @@
+import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
 import { RedatoresTable } from './Redator/RedatoresTable'
 import { RedatorDialog } from './Redator/RedatorDialog'
 
 export function PeoplePage() {
+  const { t } = useTranslation()
   const page = useRedatoresPage()
 
   return (
     <ModulePage
-      title="Personas"
-      description="Registro canónico de alumnos y redactores"
-      actions={<AppButton variant="brandIcon" label="Nuevo redactor" icon="pi pi-user-plus" onClick={page.openCreate} />}
+      title={t('redator.module')}
+      description={t('redator.moduleDescription')}
+      actions={<AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />}
     >
       <ModuleTabs>
-        
-        <ModuleTab header="Redactores">
+
+        <ModuleTab header={t('redator.tabRedatores')}>
           <RedatoresTable redatores={page.items} loading={page.loading} onView={page.openView} />
         </ModuleTab>
 
-        <ModuleTab header="Alumnos">
-          <p className="p-4 text-sm text-slate-500">Módulo de alumnos — próxima sprint.</p>
+        <ModuleTab header={t('redator.tabStudents')}>
+          <p className="p-4 text-sm text-slate-500">{t('redator.studentsPlaceholder')}</p>
         </ModuleTab>
       </ModuleTabs>
 
