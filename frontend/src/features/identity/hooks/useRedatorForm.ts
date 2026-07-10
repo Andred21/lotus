@@ -22,7 +22,7 @@ const toFields = (r: RedatorFormFields): RedatorFormFields => {
 }
 
 export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogMode, onDone: () => void) {
-  const { form, set, readOnly, didReset } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
+  const { form, set, setForm, readOnly, didReset } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
 
   // Documentos escolhidos no `create`: ficam no estado local até o submit (não
   // há `redator.id` ainda para subir pelo endpoint aninhado). Limpo junto com
@@ -34,10 +34,16 @@ export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogM
   const create = redatoresApi.useCreate()
   const update = redatoresApi.useUpdate()
 
+  // Updater funcional: dois toggles no mesmo tick (um "marcar todos" futuro, ou
+  // dois cliques batched) precisam ver o array já atualizado pelo anterior. Ler
+  // `form.course_ids` do closure perderia a primeira das duas atualizações.
   const toggleCourse = (id: number) =>
-    set('course_ids', form.course_ids.includes(id)
-      ? form.course_ids.filter((x) => x !== id)
-      : [...form.course_ids, id])
+    setForm((f) => ({
+      ...f,
+      course_ids: f.course_ids.includes(id)
+        ? f.course_ids.filter((x) => x !== id)
+        : [...f.course_ids, id],
+    }))
 
   const stageDoc = (type: string, file: File) => setStagedDocs((s) => ({ ...s, [type]: file }))
   const unstageDoc = (type: string) =>
