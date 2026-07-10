@@ -15,7 +15,7 @@ export function PersonasPage() {
       />
       <AppTabView>
         <AppTabPanel header="Redactores">
-          <RedatoresTable redatores={page.redatores} loading={page.loading} onView={page.openView} />
+          <RedatoresTable redatores={page.items} loading={page.loading} onView={page.openView} />
         </AppTabPanel>
         <AppTabPanel header="Alumnos">
           <p className="p-4 text-sm text-slate-500">Módulo de alumnos — próxima sprint.</p>
@@ -26,7 +26,7 @@ export function PersonasPage() {
         <RedatorDialog
           visible
           mode={page.dialog.mode}
-          redator={page.dialog.redator}
+          redator={page.dialog.entity}
           onHide={page.close}
           onEdit={page.startEdit}
         />

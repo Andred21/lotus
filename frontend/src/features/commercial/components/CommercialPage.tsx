@@ -15,7 +15,7 @@ export function CommercialPage() {
       />
       <AppTabView>
         <AppTabPanel header="Clientes">
-          <ClientsTable clients={page.clients} loading={page.loading} onView={page.openView} />
+          <ClientsTable clients={page.items} loading={page.loading} onView={page.openView} />
         </AppTabPanel>
         <AppTabPanel header="Presupuestos">
           <p className="p-4 text-sm text-slate-500">Módulo de presupuestos — próxima sprint.</p>
@@ -26,7 +26,7 @@ export function CommercialPage() {
         <ClientDialog
           visible
           mode={page.dialog.mode}
-          client={page.dialog.client}
+          client={page.dialog.entity}
           onHide={page.close}
           onEdit={page.startEdit}
         />
