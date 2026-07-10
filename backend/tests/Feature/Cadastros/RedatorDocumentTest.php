@@ -112,4 +112,49 @@ class RedatorDocumentTest extends TestCase
 
         $this->assertDatabaseHas('files', ['id' => $fileB->id, 'deleted_at' => null]);
     }
+
+    public function test_replace_de_documento_registra_auditoria_do_soft_delete(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Juan', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv1.pdf', 100, 'application/pdf')],
+        ])->json('id');
+
+        $antigo = File::where('fileable_id', $id)->where('type', 'CV')->firstOrFail();
+
+        $this->postJson("/api/redatores/{$id}/documents", [
+            'type' => 'CV',
+            'file' => UploadedFile::fake()->create('cv2.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+
+        // O binário fica no bucket; o rastro do soft-delete vive na auditoria.
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'file',
+            'auditable_id' => $antigo->id,
+            'event' => 'deleted',
+        ]);
+    }
+
+    public function test_delete_direto_de_documento_registra_auditoria(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Juan', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv.pdf', 100, 'application/pdf')],
+        ])->json('id');
+        $file = File::where('fileable_id', $id)->firstOrFail();
+
+        $this->deleteJson("/api/redatores/{$id}/documents/{$file->id}")->assertNoContent();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'file',
+            'auditable_id' => $file->id,
+            'event' => 'deleted',
+        ]);
+    }
 }

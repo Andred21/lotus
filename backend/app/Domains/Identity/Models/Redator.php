@@ -29,8 +29,9 @@ class Redator extends Model implements Auditable
     protected static function booted(): void
     {
         static::deleting(function (Redator $redator) {
-            if (!$redator->isForceDeleting()) {
-                $redator->documents()->delete();
+            if (! $redator->isForceDeleting()) {
+                // Instância a instância: soft-delete pelo builder não audita.
+                $redator->documents()->get()->each(fn (File $f) => $f->delete());
                 $redator->user?->delete();
             }
         });

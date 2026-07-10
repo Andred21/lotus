@@ -4,6 +4,8 @@ namespace App\Domains\Commercial\Actions;
 
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Models\ClientAddress;
+use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
@@ -34,12 +36,14 @@ class UpdateClientAction
                 'business_activity' => $data->business_activity instanceof Optional ? null : $data->business_activity,
             ]);
 
-            $client->addresses()->delete();
+            // Replace dos nested. Soft-delete por instância para a auditoria
+            // registrar o que saiu (o builder emitiria UPDATE sem eventos).
+            $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
             foreach ($data->addresses as $address) {
                 $client->addresses()->create($address->toArray());
             }
 
-            $client->contacts()->delete();
+            $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
             foreach ($data->contacts as $contact) {
                 $client->contacts()->create($contact->toArray());
             }

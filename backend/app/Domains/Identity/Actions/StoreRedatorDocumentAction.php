@@ -22,7 +22,12 @@ class StoreRedatorDocumentAction
     public function execute(Redator $redator, RedatorDocumentType $type, UploadedFile $file, ?CarbonInterface $validUntil = null): File
     {
         return DB::transaction(function () use ($redator, $type, $file, $validUntil) {
-            $redator->documents()->where('type', $type->value)->delete();
+            // Soft-delete por instância, não pelo query builder: `->delete()` no
+            // builder emite um UPDATE direto, sem eventos de model — e sem
+            // eventos o owen-it não grava a linha em `audits`. A rastreabilidade
+            // do documento removido é requisito (o binário fica no bucket).
+            $redator->documents()->where('type', $type->value)->get()
+                ->each(fn (File $antigo) => $antigo->delete());
 
             return $this->uploads->execute($redator, $file, $type->value, $validUntil);
         });
