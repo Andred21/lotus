@@ -183,4 +183,41 @@ class RedatorDocumentTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath('errors.documents.0', 'Tipo de documento inválido: DIPLOMA');
     }
+
+    public function test_documents_com_tipo_valido_mas_array_de_arquivos_devolve_422_com_erro_de_campo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $this->post('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => [
+                'CV' => [
+                    UploadedFile::fake()->create('cv1.pdf', 10, 'application/pdf'),
+                    UploadedFile::fake()->create('cv2.pdf', 10, 'application/pdf'),
+                ],
+            ],
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+    }
+
+    public function test_documents_escalar_no_update_devolve_422_com_erro_de_campo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+        ])->json('id');
+
+        // multipart com _method=PUT (form-data não suporta PUT nativo)
+        $this->post("/api/redatores/{$id}", [
+            '_method' => 'PUT',
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+    }
 }

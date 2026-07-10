@@ -74,10 +74,20 @@ class RedatorController extends Controller implements HasMiddleware
             ]);
         }
 
-        foreach (array_keys($files) as $type) {
+        foreach ($files as $type => $file) {
             if (RedatorDocumentType::tryFrom((string) $type) === null) {
                 throw ValidationException::withMessages([
                     'documents' => "Tipo de documento inválido: {$type}",
+                ]);
+            }
+
+            // Cada folha tem que ser UM arquivo. `documents[CV][]` passa pelo guard
+            // externo e pela checagem de tipo, mas estoura TypeError no
+            // StoreRedatorDocumentAction (parâmetro tipado UploadedFile) — 500 vazando
+            // a mensagem da exceção no `detail` do RFC 7807.
+            if (! $file instanceof UploadedFile) {
+                throw ValidationException::withMessages([
+                    'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
                 ]);
             }
         }
