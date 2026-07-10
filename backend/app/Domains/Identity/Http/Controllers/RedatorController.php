@@ -10,8 +10,10 @@ use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 
 class RedatorController extends Controller implements HasMiddleware
 {
@@ -55,12 +57,28 @@ class RedatorController extends Controller implements HasMiddleware
         return response()->noContent();
     }
 
+    /**
+     * Lê os documentos tipados do multipart: `documents[<TIPO>] = arquivo`.
+     * Entrada malformada é erro do cliente (422 com `errors.documents`), não 500 —
+     * `$request->file('documents')` devolve um UploadedFile se o campo vier escalar.
+     *
+     * @return array<string,UploadedFile>
+     */
     private function documentsFromRequest(Request $request): array
     {
         $files = $request->file('documents', []);
+
+        if (! is_array($files)) {
+            throw ValidationException::withMessages([
+                'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
+            ]);
+        }
+
         foreach (array_keys($files) as $type) {
             if (RedatorDocumentType::tryFrom((string) $type) === null) {
-                abort(422, "Tipo de documento inválido: {$type}");
+                throw ValidationException::withMessages([
+                    'documents' => "Tipo de documento inválido: {$type}",
+                ]);
             }
         }
 

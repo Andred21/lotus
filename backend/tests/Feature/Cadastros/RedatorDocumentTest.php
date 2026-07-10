@@ -157,4 +157,30 @@ class RedatorDocumentTest extends TestCase
             'event' => 'deleted',
         ]);
     }
+
+    public function test_documents_escalar_devolve_422_com_erro_de_campo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $this->post('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+    }
+
+    public function test_tipo_de_documento_invalido_devolve_422_com_erro_de_campo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $this->post('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => ['DIPLOMA' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')],
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', 'Tipo de documento inválido: DIPLOMA');
+    }
 }
