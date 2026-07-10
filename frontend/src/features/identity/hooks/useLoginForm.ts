@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useLogin } from "../api/useLogin";
+import { useLogin } from "../api/authApi";
 
 /**
  * Lógica do formulário de login: estado dos campos, mutation de login,

@@ -13,7 +13,18 @@
     "sector": "High-voltage electrical sector"
   },
   "common": {
-    "language": "Language"
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "rut": "RUT",
+    "email": "Email",
+    "phone": "Phone",
+    "search": "Search...",
+    "notLoaded": "Not uploaded",
+    "download": "Download",
+    "delete": "Delete"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -43,5 +54,71 @@
   },
   "placeholder": {
     "module": "Module under construction."
+  },
+  "client": {
+    "module": "Commercial",
+    "moduleDescription": "Client and training quote management",
+    "new": "New client",
+    "create": "Register client",
+    "tabClients": "Clients",
+    "tabBudgets": "Budgets",
+    "budgetsPlaceholder": "Budgets module — next sprint.",
+    "empty": "No clients",
+    "count": "{{count}} clients",
+    "searchPlaceholder": "Search by legal name or RUT...",
+    "legalName": "Legal name",
+    "type": "Type",
+    "businessActivity": "Business activity",
+    "sectionGeneral": "General information",
+    "sectionAddress": "Address",
+    "sectionContacts": "Contact persons",
+    "addContact": "Add contact",
+    "region": "Region",
+    "commune": "Commune",
+    "city": "City",
+    "street": "Street",
+    "number": "Number",
+    "contactName": "Name",
+    "contacts": "Contacts"
+  },
+  "clientType": {
+    "client": "Client",
+    "provider": "Provider",
+    "other": "Other"
+  },
+  "redator": {
+    "module": "People",
+    "moduleDescription": "Canonical registry of students and instructors",
+    "new": "New instructor",
+    "create": "Register instructor",
+    "tabRedatores": "Instructors",
+    "tabStudents": "Students",
+    "studentsPlaceholder": "Students module — next sprint.",
+    "empty": "No instructors",
+    "count": "{{count}} instructors",
+    "searchPlaceholder": "Search by name or RUT...",
+    "name": "Full name",
+    "sectionUser": "User information",
+    "sectionDocuments": "Documents",
+    "sectionCourses": "Enabled courses",
+    "enabledCourses": "Enabled courses",
+    "suitability": "Suitability"
+  },
+  "documentType": {
+    "CV": "Résumé (CV)",
+    "REUF": "REUF certificate",
+    "TITULO": "University degree",
+    "POSTGRADO": "Postgraduate degree"
+  },
+  "documentStatus": {
+    "sin_venc": "No expiry",
+    "vigente": "Valid",
+    "por_vencer": "Expiring",
+    "vencido": "Expired"
+  },
+  "suitability": {
+    "idoneo": "Suitable",
+    "por_vencer": "Expiring",
+    "no_idoneo": "Not suitable"
   }
 }

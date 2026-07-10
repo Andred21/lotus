@@ -37,7 +37,8 @@ class Course extends Model implements Auditable
     {
         static::deleting(function (Course $course) {
             if (! $course->isForceDeleting()) {
-                $course->certificateTemplates()->delete();
+                // Instância a instância: soft-delete pelo builder não audita.
+                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
             }
         });
     }

@@ -3,7 +3,9 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Models\File;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -56,6 +58,27 @@ class CadastroAuthorizationTest extends TestCase
         $this->postJson("/api/clients/{$client->id}/addresses", [])->assertForbidden();
         $this->postJson("/api/courses/{$course->id}/templates", [])->assertForbidden();
         $this->putJson("/api/courses/{$course->id}/redatores", ['redator_ids' => []])->assertForbidden();
+    }
+
+    public function test_redator_nao_gerencia_documentos_de_redator(): void
+    {
+        // Entidades reais para o route-model-binding resolver (senão 404 antes
+        // do permission middleware). A autorização é que precisa negar (403).
+        $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
+        $document = File::create([
+            'fileable_type' => 'redator',
+            'fileable_id' => $redator->id,
+            'type' => 'CV',
+            'path' => 'docs/dummy.pdf',
+            'original_name' => 'dummy.pdf',
+            'mime' => 'application/pdf',
+            'size' => 1,
+        ]);
+
+        $this->actingAsRedator();
+
+        $this->postJson("/api/redatores/{$redator->id}/documents", [])->assertForbidden();
+        $this->deleteJson("/api/redatores/{$redator->id}/documents/{$document->id}")->assertForbidden();
     }
 
     public function test_admin_acessa_cadastros(): void

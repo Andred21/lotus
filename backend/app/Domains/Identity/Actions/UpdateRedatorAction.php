@@ -3,25 +3,26 @@
 namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\RedatorData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
-use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
 /**
- * Atualiza usuário-redator + habilitação de cursos (sync) + anexa novos
- * documentos. Documentos existentes NÃO são removidos (append-only, evita
- * apagar arquivos do S3). Espelha o UpdateClientAction.
+ * Atualiza usuário-redator + habilitação de cursos (sync) + documentos.
+ * Documento chegando pelo multipart SUBSTITUI o do mesmo tipo (soft-delete do
+ * anterior, binário fica no bucket) — a regra vive em StoreRedatorDocumentAction,
+ * fonte única compartilhada com o create e com a rota aninhada.
  *
- * @param  array<UploadedFile>  $documents
+ * @param  array<string,UploadedFile>  $documents
  */
 class UpdateRedatorAction
 {
     public function __construct(
         private UserProvisioner $users,
-        private UploadFileAction $uploads,
+        private StoreRedatorDocumentAction $documents,
     ) {}
 
     public function execute(Redator $redator, RedatorData $data, array $documents = []): Redator
@@ -40,8 +41,8 @@ class UpdateRedatorAction
                 $redator->courses()->sync($data->course_ids);
             }
 
-            foreach ($documents as $document) {
-                $this->uploads->execute($redator, $document, 'documento');
+            foreach ($documents as $type => $document) {
+                $this->documents->execute($redator, RedatorDocumentType::from($type), $document);
             }
 
             return $redator->fresh()->load(['user', 'documents', 'courses']);

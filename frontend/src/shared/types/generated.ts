@@ -53,7 +53,16 @@ rut: string,
 email: string,
 phone: undefined | string | null,
 course_ids: number[],
+documents: RedatorDocumentData[],
 };
+export type RedatorDocumentData = {
+id: number,
+type: string,
+original_name: string,
+valid_until: string | null,
+download_url: string,
+};
+export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
 export type SessionUserData = {
 id: number,
 uuid: string,

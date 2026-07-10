@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useSessionStore } from '@features/identity/stores/sessionStore'
-import { LoginPage } from '@features/identity/components/LoginPage'
+import { useSessionStore } from '@shared/stores/sessionStore'
+import { LoginPage } from '@features/identity/components/Login/LoginPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AppLayout } from '@app/layouts/AppLayout'
 import { DashboardPage } from '@app/pages/DashboardPage'
 import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
+import { CommercialPage } from '@features/commercial/components/CommercialPage'
+import { PeoplePage } from '@features/identity/components/PeoplePage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -29,11 +31,11 @@ export function AppRouter() {
           }
         >
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/comercial" element={<ModulePlaceholder titleKey="nav.comercial" />} />
+          <Route path="/comercial" element={<CommercialPage />} />
           <Route path="/operacion" element={<ModulePlaceholder titleKey="nav.operacion" />} />
           <Route path="/cursos" element={<ModulePlaceholder titleKey="nav.cursos" />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
-          <Route path="/personas" element={<ModulePlaceholder titleKey="nav.personas" />} />
+          <Route path="/personas" element={<PeoplePage />} />
           <Route path="/administracion" element={<ModulePlaceholder titleKey="nav.administracion" />} />
           <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />
         </Route>

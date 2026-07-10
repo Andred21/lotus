@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useSessionStore } from '@features/identity/stores/sessionStore'
+import { useSessionStore } from '@shared/stores/sessionStore'
 
 /** Placeholder da dashboard (conteúdo real é task futura). O logout saiu
  * daqui e foi para o UserMenu do header. */

@@ -5,12 +5,15 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\CreateRedatorAction;
 use App\Domains\Identity\Actions\UpdateRedatorAction;
 use App\Domains\Identity\Data\RedatorData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 
 class RedatorController extends Controller implements HasMiddleware
 {
@@ -27,24 +30,24 @@ class RedatorController extends Controller implements HasMiddleware
     /** @return array<RedatorData> */
     public function index(): array
     {
-        return Redator::with(['user', 'courses'])->get()
+        return Redator::with(['user', 'courses', 'documents'])->get()
             ->map(fn (Redator $r) => RedatorData::fromModel($r))
             ->all();
     }
 
     public function store(RedatorData $data, Request $request, CreateRedatorAction $action): RedatorData
     {
-        return RedatorData::fromModel($action->execute($data, $request->file('documents', [])));
+        return RedatorData::fromModel($action->execute($data, $this->documentsFromRequest($request)));
     }
 
     public function show(Redator $redator): RedatorData
     {
-        return RedatorData::fromModel($redator->load(['user', 'courses']));
+        return RedatorData::fromModel($redator->load(['user', 'courses', 'documents']));
     }
 
     public function update(RedatorData $data, Redator $redator, Request $request, UpdateRedatorAction $action): RedatorData
     {
-        return RedatorData::fromModel($action->execute($redator, $data, $request->file('documents', [])));
+        return RedatorData::fromModel($action->execute($redator, $data, $this->documentsFromRequest($request)));
     }
 
     public function destroy(Redator $redator): Response
@@ -52,5 +55,43 @@ class RedatorController extends Controller implements HasMiddleware
         $redator->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Lê os documentos tipados do multipart: `documents[<TIPO>] = arquivo`.
+     * Entrada malformada é erro do cliente (422 com `errors.documents`), não 500 —
+     * `$request->file('documents')` devolve um UploadedFile se o campo vier escalar.
+     *
+     * @return array<string,UploadedFile>
+     */
+    private function documentsFromRequest(Request $request): array
+    {
+        $files = $request->file('documents', []);
+
+        if (! is_array($files)) {
+            throw ValidationException::withMessages([
+                'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
+            ]);
+        }
+
+        foreach ($files as $type => $file) {
+            if (RedatorDocumentType::tryFrom((string) $type) === null) {
+                throw ValidationException::withMessages([
+                    'documents' => "Tipo de documento inválido: {$type}",
+                ]);
+            }
+
+            // Cada folha tem que ser UM arquivo. `documents[CV][]` passa pelo guard
+            // externo e pela checagem de tipo, mas estoura TypeError no
+            // StoreRedatorDocumentAction (parâmetro tipado UploadedFile) — 500 vazando
+            // a mensagem da exceção no `detail` do RFC 7807.
+            if (! $file instanceof UploadedFile) {
+                throw ValidationException::withMessages([
+                    'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
+                ]);
+            }
+        }
+
+        return $files;
     }
 }

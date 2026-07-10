@@ -18,7 +18,7 @@ Refatoração completa (**v2, greenfield**). A v1 é referência de domínio, n�
 
 Laravel 13 (PHP 8.3) API · React 19 + TypeScript (Vite) · MySQL 8 (RDS em prod) · Sanctum SPA cookie/CSRF · spatie/laravel-permission (RBAC) · owen-it/laravel-auditing · spatie/laravel-data + typescript-transformer · TanStack Query + Zustand · PrimeReact (via wrappers) + Tailwind v4 · RFC 7807 · Gotenberg (PDF) · S3 · Docker Compose + EC2 + RDS.
 
-> Tailwind está instalado e em uso, mas **sem ADR formal** (falta ADR-16). Use como camada de *layout*; NUNCA para reestilizar por dentro um componente PrimeReact — customização de componente vai no wrapper `shared/ui`.
+> Tailwind formalizado no **ADR-16** (layout; tema do PrimeReact trocado em runtime). Use como camada de *layout*; NUNCA para reestilizar por dentro um componente PrimeReact — customização de componente vai no wrapper `shared/ui`.
 
 ---
 
@@ -108,4 +108,4 @@ Antes de decidir arquitetura, padrão ou schema, **consulte — não assuma.** S
 - **[`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md)** — arquitetura detalhada (backend DDD, frontend feature-sliced, auth, contratos de tipo, estado atual) + o índice dos `/docs`.
 - **`/docs`** — snapshots do planejamento: `adrs.md` (as 15 decisões), `der-fisico.md` (24 tabelas), `estrutura-monolito.md` (onde cada arquivo vai), `README.md` (índice + lições).
 
-Pendências abertas (não decidir sozinho): ADR-16 do Tailwind; biblioteca de i18n (ADR-15); pruning da auditoria (ADR-08).
+Pendências abertas (não decidir sozinho): biblioteca de i18n (ADR-15); pruning da auditoria (ADR-08).

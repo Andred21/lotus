@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -112,5 +113,27 @@ class ClientCrudTest extends TestCase
         $this->assertSoftDeleted('client_addresses', ['client_id' => $id]);
         $this->assertSoftDeleted('client_contacts', ['client_id' => $id]);
         $this->assertSoftDeleted('users', ['id' => $userId]);
+    }
+
+    public function test_delete_de_cliente_audita_o_soft_delete_dos_nested(): void
+    {
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/clients', [
+            'name' => 'ACME SA', 'rut' => '13.456.789-9', 'email' => 'acme@lotus.cl',
+            'legal_name' => 'ACME SA', 'type' => 'client',
+            'addresses' => [['commune' => 'Providencia', 'is_primary' => true]],
+            'contacts' => [['name' => 'Ana', 'is_primary' => true]],
+        ])->json('id');
+
+        $address = ClientAddress::where('client_id', $id)->firstOrFail();
+
+        $this->deleteJson("/api/clients/{$id}")->assertNoContent();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'client_address',
+            'auditable_id' => $address->id,
+            'event' => 'deleted',
+        ]);
     }
 }

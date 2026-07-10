@@ -35,9 +35,10 @@ class Client extends Model implements Auditable
     protected static function booted(): void
     {
         static::deleting(function (Client $client) {
-            if (!$client->isForceDeleting()) {
-                $client->addresses()->delete();
-                $client->contacts()->delete();
+            if (! $client->isForceDeleting()) {
+                // Instância a instância: soft-delete pelo builder não audita.
+                $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
+                $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
                 $client->user?->delete();
             }
         });

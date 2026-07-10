@@ -13,7 +13,18 @@
     "sector": "Sector eléctrico de alta tensión"
   },
   "common": {
-    "language": "Idioma"
+    "language": "Idioma",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "edit": "Editar",
+    "rut": "RUT",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "search": "Buscar...",
+    "notLoaded": "No cargado",
+    "download": "Descargar",
+    "delete": "Eliminar"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -43,5 +54,71 @@
   },
   "placeholder": {
     "module": "Módulo en construcción."
+  },
+  "client": {
+    "module": "Comercial",
+    "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
+    "new": "Nuevo cliente",
+    "create": "Registrar cliente",
+    "tabClients": "Clientes",
+    "tabBudgets": "Presupuestos",
+    "budgetsPlaceholder": "Módulo de presupuestos — próxima sprint.",
+    "empty": "Sin clientes",
+    "count": "{{count}} clientes",
+    "searchPlaceholder": "Buscar por razón social o RUT...",
+    "legalName": "Razón social",
+    "type": "Tipo",
+    "businessActivity": "Giro",
+    "sectionGeneral": "Datos generales",
+    "sectionAddress": "Dirección",
+    "sectionContacts": "Personas de contacto",
+    "addContact": "Agregar contacto",
+    "region": "Región",
+    "commune": "Comuna",
+    "city": "Ciudad",
+    "street": "Calle",
+    "number": "Número",
+    "contactName": "Nombre",
+    "contacts": "Contactos"
+  },
+  "clientType": {
+    "client": "Cliente",
+    "provider": "Proveedor",
+    "other": "Otro"
+  },
+  "redator": {
+    "module": "Personas",
+    "moduleDescription": "Registro canónico de alumnos y redactores",
+    "new": "Nuevo redactor",
+    "create": "Registrar redactor",
+    "tabRedatores": "Redactores",
+    "tabStudents": "Alumnos",
+    "studentsPlaceholder": "Módulo de alumnos — próxima sprint.",
+    "empty": "Sin redactores",
+    "count": "{{count}} redactores",
+    "searchPlaceholder": "Buscar por nombre o RUT...",
+    "name": "Nombre completo",
+    "sectionUser": "Datos de usuario",
+    "sectionDocuments": "Documentos",
+    "sectionCourses": "Cursos habilitados",
+    "enabledCourses": "Cursos habilitados",
+    "suitability": "Idoneidad"
+  },
+  "documentType": {
+    "CV": "Currículum (CV)",
+    "REUF": "Certificado REUF",
+    "TITULO": "Título universitario",
+    "POSTGRADO": "Post-Grado"
+  },
+  "documentStatus": {
+    "sin_venc": "Sin vencimiento",
+    "vigente": "Vigente",
+    "por_vencer": "Por vencer",
+    "vencido": "Vencido"
+  },
+  "suitability": {
+    "idoneo": "Idóneo",
+    "por_vencer": "Por vencer",
+    "no_idoneo": "No idóneo"
   }
 }

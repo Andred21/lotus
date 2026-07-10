@@ -4,6 +4,7 @@ namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Redator;
 use App\Shared\Rules\ValidRut;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Data;
@@ -34,6 +35,9 @@ class RedatorData extends Data
          * @var array<int>
          */
         public array|Optional $course_ids,
+        /** @var array<RedatorDocumentData> */
+        #[Computed]
+        public array $documents = [],
     ) {}
 
     public static function rules(): array
@@ -43,6 +47,22 @@ class RedatorData extends Data
             'course_ids' => ['sometimes', 'array'],
             'course_ids.*' => ['integer', 'exists:courses,id'],
         ];
+    }
+
+    /**
+     * O payload de escrita usa o campo multipart `documents` (arquivos, lidos
+     * pelo controller via $request->file('documents')) — mesmo nome da
+     * propriedade #[Computed] de leitura, que espera RedatorDocumentData[].
+     * #[Computed] sozinho não impede o CastPropertiesDataPipe de tentar
+     * transformar os UploadedFile em RedatorDocumentData (ele não checa
+     * `computed`); por isso o valor bruto é descartado aqui, antes de
+     * qualquer pipe rodar, e a propriedade fica no default [].
+     */
+    public static function prepareForPipeline(array $properties): array
+    {
+        unset($properties['documents']);
+
+        return $properties;
     }
 
     /**
@@ -58,6 +78,9 @@ class RedatorData extends Data
             email: $redator->user->email,
             phone: $redator->user->phone,
             course_ids: $redator->courses->pluck('id')->all(),
+            documents: $redator->documents->map(
+                fn ($f) => RedatorDocumentData::fromModel($f)
+            )->all(),
         );
     }
 }
