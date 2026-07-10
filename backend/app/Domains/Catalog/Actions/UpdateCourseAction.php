@@ -4,6 +4,7 @@ namespace App\Domains\Catalog\Actions;
 
 use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
@@ -23,7 +24,9 @@ class UpdateCourseAction
                 'workload_hours' => $data->workload_hours,
             ]);
 
-            $course->certificateTemplates()->delete();
+            // Replace dos nested. Soft-delete por instância para a auditoria
+            // registrar o que saiu (o builder emitiria UPDATE sem eventos).
+            $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
             foreach ($data->templates as $template) {
                 $course->certificateTemplates()->create($template->toArray());
             }
