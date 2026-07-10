@@ -11,7 +11,7 @@ export function PersonasPage() {
       <PageHeader
         title="Personas"
         description="Registro canónico de alumnos y redactores"
-        actions={<AppButton label="Nuevo redactor" icon="pi pi-user-plus" onClick={page.openCreate} />}
+        actions={<AppButton variant='brandIcon' label="Nuevo redactor" icon="pi pi-user-plus" onClick={page.openCreate} />}
       />
       <AppTabView>
         <AppTabPanel header="Alumnos">

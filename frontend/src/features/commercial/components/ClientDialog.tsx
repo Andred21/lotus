@@ -28,7 +28,7 @@ export function ClientDialog({
   const header = (
     <div className="flex items-center justify-between gap-4 pr-6">
       <span>{title}</span>
-      {readOnly && onEdit && <AppButton label="Editar" icon="pi pi-pencil" outlined onClick={onEdit} />}
+      {readOnly && onEdit && <AppButton variant='brandIcon' label="Editar" icon="pi pi-pencil" outlined onClick={onEdit} />}
     </div>
   )
 
@@ -40,8 +40,8 @@ export function ClientDialog({
 
   const footer = readOnly ? null : (
     <div className="flex justify-end gap-2">
-      <AppButton label="Cancelar" text onClick={onHide} />
-      <AppButton label={mode === 'create' ? 'Registrar cliente' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
+      <AppButton  label="Cancelar" text onClick={onHide} />
+      <AppButton  variant='brandIcon' label={mode === 'create' ? 'Registrar cliente' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
     </div>
   )
 

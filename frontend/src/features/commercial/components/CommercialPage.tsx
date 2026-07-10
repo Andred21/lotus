@@ -11,7 +11,7 @@ export function CommercialPage() {
       <PageHeader
         title="Comercial"
         description="Gestión de clientes y presupuestos de capacitación"
-        actions={<AppButton label="Nuevo cliente" icon="pi pi-user-plus" onClick={page.openCreate} />}
+        actions={<AppButton  variant='brandIcon'label="Nuevo cliente" icon="pi pi-user-plus" onClick={page.openCreate} />}
       />
       <AppTabView>
         <AppTabPanel header="Clientes">

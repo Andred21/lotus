@@ -60,14 +60,14 @@ export function RedatorDialog({
   const footer = readOnly ? null : (
     <div className="flex justify-end gap-2">
       <AppButton label="Cancelar" text onClick={onHide} />
-      <AppButton label={mode === 'create' ? 'Registrar redactor' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
+      <AppButton  variant='brandIcon' label={mode === 'create' ? 'Registrar redactor' : 'Guardar'} icon="pi pi-check" loading={pending} onClick={submit} />
     </div>
   )
 
   const header = (
     <div className="flex items-center justify-between gap-4">
       <span>{title}</span>
-      {readOnly && onEdit && <AppButton label="Editar datos" icon="pi pi-pencil" outlined onClick={onEdit} />}
+      {readOnly && onEdit && <AppButton  variant='brandIcon' label="Editar datos" icon="pi pi-pencil" outlined onClick={onEdit} />}
     </div>
   )
 
