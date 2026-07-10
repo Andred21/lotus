@@ -17,6 +17,7 @@ class UpdateCourseAction
     public function execute(Course $course, CourseData $data): Course
     {
         return DB::transaction(function () use ($course, $data) {
+            
             $course->update([
                 'name' => $data->name,
                 'technical_name' => $data->technical_name instanceof Optional ? null : $data->technical_name,

@@ -6,7 +6,7 @@ export function ModulePlaceholder({ titleKey }: { titleKey: string }) {
   const { t } = useTranslation()
   return (
     <div>
-      <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{t(titleKey)}</h2>
+      <h2 className="text-2xl font-bold text text-slate-800 dark:text-slate-100">{t(titleKey)}</h2>
       <p className="mt-1 text-sm text-slate-500">{t('placeholder.module')}</p>
     </div>
   )

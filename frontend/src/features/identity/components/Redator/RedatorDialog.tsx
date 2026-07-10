@@ -78,6 +78,7 @@ export function RedatorDialog({
       )}
 
       <section className="space-y-4">
+        
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('redator.sectionUser')}</h3>
         <Field label={t('redator.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
