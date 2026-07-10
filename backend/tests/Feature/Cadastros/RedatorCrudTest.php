@@ -5,6 +5,7 @@ namespace Tests\Feature\Cadastros;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -131,5 +132,28 @@ class RedatorCrudTest extends TestCase
 
         $this->assertSoftDeleted('files', ['fileable_type' => 'redator', 'fileable_id' => $id]);
         $this->assertSoftDeleted('users', ['id' => $userId]);
+    }
+
+    public function test_update_multipart_substitui_documento_do_mesmo_tipo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Juan', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv1.pdf', 10, 'application/pdf')],
+        ])->json('id');
+
+        // multipart com _method=PUT (form-data não suporta PUT nativo)
+        $this->post("/api/redatores/{$id}", [
+            '_method' => 'PUT',
+            'name' => 'Juan', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv2.pdf', 10, 'application/pdf')],
+        ])->assertOk();
+
+        $ativos = File::where('fileable_id', $id)->where('type', 'CV')->get();
+
+        $this->assertCount(1, $ativos, 'O documento do mesmo tipo deve ser substituído, não duplicado.');
+        $this->assertSame('cv2.pdf', $ativos->first()->original_name);
     }
 }
