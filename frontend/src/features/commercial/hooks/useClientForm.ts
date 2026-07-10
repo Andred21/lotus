@@ -1,7 +1,7 @@
 import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { ClientData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
-import { clientsApi } from '../api/clientsApi'
+import { clientsApi } from '@shared/api/clientsApi'
 
 export type ClientDialogMode = DialogMode
 

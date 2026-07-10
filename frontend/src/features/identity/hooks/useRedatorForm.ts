@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
-import { redatoresApi } from '../api/redatoresApi'
+import { redatoresApi } from '@shared/api/redatoresApi'
 
 export type RedatorDialogMode = DialogMode
 

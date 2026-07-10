@@ -1,5 +1,5 @@
 import { useCrudPage } from '@shared/hooks'
-import { redatoresApi } from '../api/redatoresApi'
+import { redatoresApi } from '@shared/api/redatoresApi'
 
 export function useRedatoresPage() {
   return useCrudPage(redatoresApi)

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { RedatorDocumentData } from '@shared/types/generated'
-import { redatoresApi } from './redatoresApi'
+import { redatoresApi } from '@shared/api/redatoresApi'
 
 function useInvalidate() {
   const qc = useQueryClient()
