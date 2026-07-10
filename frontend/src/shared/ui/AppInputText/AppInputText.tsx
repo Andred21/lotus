@@ -10,7 +10,9 @@ export interface AppInputTextProps extends InputTextProps {
 }
 
 /** Wrapper do InputText. Cores vêm da folha de tema do Prime (ADR-16) — não
- * empilhe `dark:` aqui: o estado inválido (.p-invalid) precisa vencer. */
+ * empilhe `dark:` aqui: o estado inválido (.p-invalid) precisa vencer.
+ * O ícone também não precisa de cor: `.p-icon-field-left > .p-input-icon` já é
+ * pintado pelas duas folhas do Lara, com especificidade que vence utility. */
 export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
   ({ leftIcon, ...props }, ref) => {
     if (!leftIcon) {
@@ -18,7 +20,7 @@ export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
     }
     return (
       <IconField iconPosition="left">
-        <InputIcon className={`${leftIcon} text-[var(--text-color-secondary)]`} />
+        <InputIcon className={leftIcon} />
         <InputText ref={ref} {...props} className={`w-full ${props.className ?? ''}`} />
       </IconField>
     )
