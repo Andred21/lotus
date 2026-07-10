@@ -98,7 +98,31 @@
 ## Pendências abertas (não decidir sem o João Victor)
 - Biblioteca exata de i18n (ADR-15).
 - Estratégia fina de pruning da auditoria (ADR-08).
-- **Tailwind CSS:** NÃO há ADR cobrindo. Se surgir a necessidade, é decisão nova — vira ADR-16 formal ou descarte consciente. Não adotar informalmente.
 
 ## Regras de negócio herdadas (referência)
 Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); um redator por turma; só admin e redator autenticam (RN-01).
+
+## ADR-16 — Tailwind como layout; tema do PrimeReact trocado em runtime
+
+**Contexto.** Tailwind v4 está instalado e em uso desde o shell. PrimeReact traz temas
+CSS completos. Sem decisão, o dark mode ficou pela metade: a classe `dark` no `<html>`
+move o Tailwind, mas não alcança o interior dos componentes Prime — `main.tsx` carregava
+apenas `lara-light-blue`.
+
+**Decisão.**
+1. As duas folhas do tema Prime (`lara-light-blue`, `lara-dark-blue`) são carregadas por
+   um `<link id="prime-theme">` cujo `href` troca junto com o `uiStore.theme`.
+2. Tailwind é camada de **layout** (grid, espaçamento, tipografia dos nossos elementos).
+3. Customizar um componente PrimeReact acontece **no wrapper** `shared/ui`, via `className`
+   na raiz ou `pt` (passthrough) nas partes internas. Nunca `dark:` cru no call-site sobre
+   um componente Prime.
+4. Cores que precisam acompanhar o tema usam as CSS vars do Lara
+   (`--surface-section`, `--surface-card`, `--surface-border`, `--text-color`),
+   não pares `bg-white dark:bg-slate-800`.
+
+**Consequência.** Os `dark:` espalhados nos wrappers viram redundantes e são removidos.
+O `<link>` do tema é injetado no topo do `<head>` para que as utilities do Tailwind
+continuem vencendo por ordem de cascata.
+
+**Rejeitado.** PrimeReact `unstyled` + `pt` global com Tailwind: controle total, mas
+reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estágio do projeto.
