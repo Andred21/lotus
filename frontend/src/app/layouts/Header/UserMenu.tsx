@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppMenu } from '@shared/ui'
 import type { AppMenuRef, MenuItem } from '@shared/ui'
-import { useSessionStore } from '@features/identity/stores/sessionStore'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import { useLogout } from '@features/identity/api/useLogout'
 import { displayRole } from '@shared/lib'
 

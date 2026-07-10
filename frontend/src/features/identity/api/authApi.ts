@@ -1,6 +1,6 @@
 import { api } from '@shared/api/axios'
 import { initCsrf } from '@shared/api/csrf'
-import type { SessionUser } from '../types'
+import type { SessionUser } from '@shared/stores/sessionStore'
 
 export async function login(email: string, password: string): Promise<SessionUser> {
   await initCsrf()

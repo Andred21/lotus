@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
-import { useSessionStore } from '../stores/sessionStore'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import { login } from './authApi'
 
 interface LoginVars {

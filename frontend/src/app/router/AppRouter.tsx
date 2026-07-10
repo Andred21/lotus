@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useSessionStore } from '@features/identity/stores/sessionStore'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import { LoginPage } from '@features/identity/components/LoginPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AppLayout } from '@app/layouts/AppLayout'

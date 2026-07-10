@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useMe } from '../api/useMe'
-import { useSessionStore } from '../stores/sessionStore'
-import type { SessionStatus } from '../stores/sessionStore'
+import { useSessionStore } from '@shared/stores/sessionStore'
+import type { SessionStatus } from '@shared/stores/sessionStore'
 
 /**
  * Resolve a sessão no boot: consulta GET /me e popula o sessionStore
