@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useMe } from '../api/useMe'
+import { useMe } from '../api/authApi'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import type { SessionStatus } from '@shared/stores/sessionStore'
 

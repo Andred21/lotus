@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppMenu } from '@shared/ui'
 import type { AppMenuRef, MenuItem } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
-import { useLogout } from '@features/identity/api/useLogout'
+import { useLogout } from '@features/identity/api/authApi'
 import { displayRole } from '@shared/lib'
 
 export function UserMenu() {
