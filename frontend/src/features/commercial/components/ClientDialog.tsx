@@ -35,8 +35,16 @@ export function ClientDialog({
   // Cliente criado fora da UI (seed/API) pode não ter endereço nenhum — cai
   // para um endereço vazio em vez de quebrar ao ler `addr.region`.
   const addr = form.addresses[0] ?? EMPTY_ADDRESS
+
+  // Só o primeiro endereço é editável nesta tela; os demais são preservados.
+  // (Antes o array era reconstruído com um único elemento e o update do backend,
+  // que apaga-e-recria os nested, descartava os outros endereços em silêncio.)
   const setAddr = (patch: Partial<ClientAddressData>) =>
-    setForm((f) => ({ ...f, addresses: [{ ...(f.addresses[0] ?? EMPTY_ADDRESS), ...patch }] }))
+    setForm((f) => {
+      const rest = f.addresses.slice(1)
+      const first = { ...(f.addresses[0] ?? EMPTY_ADDRESS), ...patch }
+      return { ...f, addresses: [first, ...rest] }
+    })
 
   const footer = readOnly ? null : (
     <div className="flex justify-end gap-2">
@@ -51,6 +59,14 @@ export function ClientDialog({
         <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
           {generalError}
         </p>
+      )}
+      {/* Um 422 cujo campo não tem input nesta tela ficaria invisível e o botão
+          pareceria inerte. Lista o que sobrou, para nunca falhar em silêncio. */}
+      {fieldErrors && (
+        <UnmappedErrors
+          errors={fieldErrors}
+          mapped={['legal_name', 'name', 'rut', 'email', 'type', 'business_activity']}
+        />
       )}
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">Datos generales</h3>
@@ -99,9 +115,15 @@ export function ClientDialog({
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">Personas de contacto</h3>
         {form.contacts.map((c, i) => (
           <div key={i} className="grid grid-cols-3 gap-2">
-            <AppInputText placeholder="Nombre" value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
-            <AppInputText placeholder="Email" value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
-            <AppInputText placeholder="Teléfono" value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { phone: e.target.value })} />
+            <NestedField error={fieldErrors?.[`contacts.${i}.name`]?.[0]}>
+              <AppInputText placeholder="Nombre" value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
+            </NestedField>
+            <NestedField error={fieldErrors?.[`contacts.${i}.email`]?.[0]}>
+              <AppInputText placeholder="Email" value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
+            </NestedField>
+            <NestedField error={fieldErrors?.[`contacts.${i}.phone`]?.[0]}>
+              <AppInputText placeholder="Teléfono" value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { phone: e.target.value })} />
+            </NestedField>
           </div>
         ))}
         {!readOnly && (
@@ -133,4 +155,30 @@ function patchContact(
   patch: Partial<ClientData['contacts'][number]>,
 ) {
   setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
+}
+
+/** Campo aninhado (contatos/endereços): sem label própria, mas com o erro do
+ * backend visível. Sem isso, um 422 em `contacts.0.name` deixa o botão de
+ * salvar aparentemente inerte. */
+function NestedField({ error, children }: { error?: string; children: ReactNode }) {
+  return (
+    <div>
+      {children}
+      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
+    </div>
+  )
+}
+
+function UnmappedErrors({ errors, mapped }: { errors: Record<string, string[]>; mapped: string[] }) {
+  const leftover = Object.entries(errors).filter(
+    ([key]) => !mapped.includes(key) && !key.startsWith('contacts.') && !key.startsWith('addresses.'),
+  )
+  if (leftover.length === 0) return null
+  return (
+    <ul className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+      {leftover.map(([key, msgs]) => (
+        <li key={key}>{msgs[0]}</li>
+      ))}
+    </ul>
+  )
 }
