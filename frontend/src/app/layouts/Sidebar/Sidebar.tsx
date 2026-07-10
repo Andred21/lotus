@@ -9,6 +9,7 @@ import { SidebarItem } from './SidebarItem'
 import logo from '@/assets/Logo.png'
 
 export function Sidebar() {
+
   const { t } = useTranslation()
   const collapsed = useUiStore((s) => s.sidebarCollapsed)
   const toggle = useUiStore((s) => s.toggleSidebar)
@@ -34,13 +35,13 @@ export function Sidebar() {
         </p>
       )}
 
-      <nav className="flex flex-1 flex-col gap-1 px-3">
+      <nav className="flex flex-1 flex-col gap-4 px-3">
         {modules.map((m) => (
           <SidebarItem key={m.key} module={m} collapsed={collapsed} />
         ))}
       </nav>
 
-      {!collapsed && <div className="px-4 py-3 text-xs text-slate-400">{APP_VERSION}</div>}
+      {!collapsed && <div className="px-4 py-3 text-sm text-slate-400 text-center">{APP_VERSION}</div>}
     </AppSidebar>
   )
 }
