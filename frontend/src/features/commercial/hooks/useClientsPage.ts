@@ -5,16 +5,21 @@ import type { ClientDialogMode } from './useClientForm'
 
 export function useClientsPage() {
   const query = clientsApi.useList()
-  const [dialog, setDialog] = useState<{ mode: ClientDialogMode; client: ClientData | null } | null>(null)
+  const [dialog, setDialog] = useState<{ mode: ClientDialogMode; id: number | null } | null>(null)
+
+  const clients = query.data ?? []
+
+  // Ver nota em useRedatoresPage: derivar da lista, não congelar o objeto.
+  const selected = dialog?.id != null ? (clients.find((c) => c.id === dialog.id) ?? null) : null
 
   return {
-    clients: query.data ?? [],
+    clients,
     loading: query.isLoading,
-    dialog,
-    openCreate: () => setDialog({ mode: 'create', client: null }),
-    openView: (client: ClientData) => setDialog({ mode: 'view', client }),
+    dialog: dialog ? { mode: dialog.mode, client: selected } : null,
+    openCreate: () => setDialog({ mode: 'create', id: null }),
+    openView: (client: ClientData) => setDialog({ mode: 'view', id: client.id ?? null }),
     /** view -> edit, preservando o cliente aberto. Nunca entra em edit sem cliente. */
-    startEdit: () => setDialog((d) => (d && d.client ? { ...d, mode: 'edit' } : d)),
+    startEdit: () => setDialog((d) => (d && d.id != null ? { ...d, mode: 'edit' } : d)),
     close: () => setDialog(null),
   }
 }

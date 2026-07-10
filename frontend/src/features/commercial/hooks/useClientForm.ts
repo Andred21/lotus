@@ -14,16 +14,19 @@ const EMPTY: ClientData = {
 
 export function useClientForm(client: ClientData | null, mode: ClientDialogMode, onDone: () => void) {
   const [form, setForm] = useState<ClientData>(() => (client ? structuredClone(client) : structuredClone(EMPTY)))
-  const [prev, setPrev] = useState({ client, mode })
+  const [prev, setPrev] = useState({ id: client?.id ?? null, mode })
   const create = clientsApi.useCreate()
   const update = clientsApi.useUpdate()
 
-  // Reseta o form quando `client`/`mode` mudam (troca de linha selecionada ou
-  // reabertura em outro modo). Ajuste de estado durante o render — sem
-  // useEffect — segue o padrão recomendado pelo React para "resetar estado
+  // Reseta quando muda a ENTIDADE (id) ou o modo, não quando muda a identidade
+  // do objeto: o cliente aberto é derivado da lista viva, então cada refetch
+  // produz um objeto novo com o mesmo id, e resetar ali apagaria o que o
+  // usuário digitou e ainda não salvou. Ajuste de estado durante o render —
+  // sem useEffect — segue o padrão recomendado pelo React para "resetar estado
   // quando uma prop muda" (evita o setState síncrono em efeito).
-  if (client !== prev.client || mode !== prev.mode) {
-    setPrev({ client, mode })
+  const currentId = client?.id ?? null
+  if (currentId !== prev.id || mode !== prev.mode) {
+    setPrev({ id: currentId, mode })
     setForm(client ? structuredClone(client) : structuredClone(EMPTY))
   }
 

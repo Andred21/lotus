@@ -40,7 +40,9 @@ export function RedatorDialog({
   const removeDoc = useRemoveDocument()
 
   const title = mode === 'create' ? 'Nuevo redactor' : form.name
-  const existing = form.documents ?? []
+  // Documentos vêm da entidade viva (derivada da lista), não do estado do form:
+  // são geridos por mutações próprias e devem refletir o servidor na hora.
+  const existing = redator?.documents ?? []
   const courseIds = form.course_ids
 
   function handleUpload(type: string, e: FileUploadHandlerEvent) {
@@ -79,9 +81,9 @@ export function RedatorDialog({
         </p>
       )}
 
-      {mode !== 'create' && (
+      {mode !== 'create' && redator && (
         <div className="mb-4">
-          <AppTag value={`Idoneidad: ${idoneidade(form)}`} severity={idoneidade(form) === 'idoneo' ? 'success' : idoneidade(form) === 'por_vencer' ? 'warning' : 'danger'} />
+          <AppTag value={`Idoneidad: ${idoneidade(redator)}`} severity={idoneidade(redator) === 'idoneo' ? 'success' : idoneidade(redator) === 'por_vencer' ? 'warning' : 'danger'} />
         </div>
       )}
 
