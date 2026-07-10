@@ -14,11 +14,11 @@ export function PersonasPage() {
         actions={<AppButton variant='brandIcon' label="Nuevo redactor" icon="pi pi-user-plus" onClick={page.openCreate} />}
       />
       <AppTabView>
-        <AppTabPanel header="Alumnos">
-          <p className="p-4 text-sm text-slate-500">Módulo de alumnos — próxima sprint.</p>
-        </AppTabPanel>
         <AppTabPanel header="Redactores">
           <RedatoresTable redatores={page.redatores} loading={page.loading} onView={page.openView} />
+        </AppTabPanel>
+        <AppTabPanel header="Alumnos">
+          <p className="p-4 text-sm text-slate-500">Módulo de alumnos — próxima sprint.</p>
         </AppTabPanel>
       </AppTabView>
 
