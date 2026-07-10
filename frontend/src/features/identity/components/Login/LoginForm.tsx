@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { AppInputText, AppPassword, AppButton } from "@shared/ui";
-import { useLoginForm } from "../hooks/useLoginForm";
+import { useLoginForm } from "../../hooks/useLoginForm";
 
 export function LoginForm() {
   const { t } = useTranslation();

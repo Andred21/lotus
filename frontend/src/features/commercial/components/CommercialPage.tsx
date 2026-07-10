@@ -1,7 +1,7 @@
 import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
 import { useClientsPage } from '../hooks/useClientsPage'
-import { ClientsTable } from './ClientsTable'
-import { ClientDialog } from './ClientDialog'
+import { ClientsTable } from './Client/ClientsTable'
+import { ClientDialog } from './Client/ClientDialog'
 
 export function CommercialPage() {
   const page = useClientsPage()

@@ -2,7 +2,7 @@ import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { CrudDialog, AppButton, AppInputText, AppDropdown } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
-import { useClientForm, type ClientDialogMode } from '../hooks/useClientForm'
+import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
 
 const TYPES = [
   { label: 'Cliente', value: 'client' },

@@ -1,9 +1,9 @@
 import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
-import { RedatoresTable } from './RedatoresTable'
-import { RedatorDialog } from './RedatorDialog'
+import { RedatoresTable } from './Redator/RedatoresTable'
+import { RedatorDialog } from './Redator/RedatorDialog'
 
-export function PersonasPage() {
+export function PeoplePage() {
   const page = useRedatoresPage()
 
   return (
@@ -13,9 +13,11 @@ export function PersonasPage() {
       actions={<AppButton variant="brandIcon" label="Nuevo redactor" icon="pi pi-user-plus" onClick={page.openCreate} />}
     >
       <ModuleTabs>
+        
         <ModuleTab header="Redactores">
           <RedatoresTable redatores={page.items} loading={page.loading} onView={page.openView} />
         </ModuleTab>
+
         <ModuleTab header="Alumnos">
           <p className="p-4 text-sm text-slate-500">Módulo de alumnos — próxima sprint.</p>
         </ModuleTab>

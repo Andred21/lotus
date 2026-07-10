@@ -3,9 +3,9 @@ import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@sha
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
-import { useUploadDocument, useRemoveDocument } from '../api/useRedatorDocuments'
-import { useRedatorForm, type RedatorDialogMode } from '../hooks/useRedatorForm'
-import { docStatus, idoneidade } from '../lib/redatorStatus'
+import { useUploadDocument, useRemoveDocument } from '../../api/useRedatorDocuments'
+import { useRedatorForm, type RedatorDialogMode } from '../../hooks/useRedatorForm'
+import { docStatus, idoneidade } from '../../lib/redatorStatus'
 
 const DOC_TYPES = [
   { type: 'CV', label: 'Currículum (CV)' },

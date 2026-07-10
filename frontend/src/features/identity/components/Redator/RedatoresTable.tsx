@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AppDataTable, AppColumn, AppTag, AppInputText, AppButton } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade } from '../lib/redatorStatus'
+import { idoneidade } from '../../lib/redatorStatus'
 
 const IDON_TAG: Record<string, { value: string; severity: 'success' | 'warning' | 'danger' }> = {
   idoneo: { value: 'Idóneo', severity: 'success' },
