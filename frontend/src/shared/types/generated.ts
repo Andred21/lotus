@@ -1,3 +1,13 @@
+export type BudgetData = {
+id: undefined | number,
+client_id: number,
+code: undefined | string,
+status: QuoteStatus | undefined,
+total_value_uf: undefined | number,
+total_students: undefined | number,
+quotes: QuoteData[],
+payment_terms: undefined | string | null,
+};
 export type CertificateTemplateData = {
 id: undefined | number,
 version: number,
@@ -46,6 +56,21 @@ redator_ids: number[],
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type QuoteData = {
+id: undefined | number,
+budget_id: undefined | number,
+seq_in_budget: undefined | number,
+course_id: number,
+student_count: number,
+value_uf: number,
+status: QuoteStatus | undefined,
+approved_at: undefined | string | null,
+code: undefined | string,
+purchase_order: undefined | string | null,
+planned_start_date: undefined | string | null,
+planned_end_date: undefined | string | null,
+};
+export type QuoteStatus = 'pending' | 'approved' | 'rejected';
 export type RedatorData = {
 id: undefined | number,
 name: string,
