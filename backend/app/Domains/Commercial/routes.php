@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Commercial\Http\Controllers\BudgetController;
 use App\Domains\Commercial\Http\Controllers\ClientAddressController;
 use App\Domains\Commercial\Http\Controllers\ClientContactController;
 use App\Domains\Commercial\Http\Controllers\ClientController;
@@ -7,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('budgets', BudgetController::class);
 
     // Nested: gerenciar endereços/contatos de um cliente individualmente.
     // Editar dados do cliente = commercial.client.update.
