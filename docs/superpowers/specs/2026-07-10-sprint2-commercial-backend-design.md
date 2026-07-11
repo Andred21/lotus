@@ -47,7 +47,8 @@ Operação (turma) num ciclo futuro. Hoje o domínio `Commercial` só tem `Clien
 - `payment_terms` varchar(255) nullable — forma de pagamento, **texto livre** (não enum).
 - `deleted_at` + timestamps.
 - **Sem** `status`, **sem** `valor_total` (derivados — ver Decisão 2).
-- Índice: `client_id`.
+- Sem índice explícito em `client_id`: o InnoDB já cria um para sustentar a FK
+  (padrão das migrations da Sprint 1 — nenhuma indexa coluna de FK à mão).
 
 ### `quotes`
 - `id` PK

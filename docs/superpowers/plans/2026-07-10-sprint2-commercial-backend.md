@@ -131,8 +131,8 @@ return new class extends Migration
             $table->string('payment_terms')->nullable();   // forma de pagamento (texto livre)
             $table->timestamps();
             $table->softDeletes();
-
-            $table->index('client_id');
+            // Sem index explícito em client_id: o InnoDB já cria um p/ sustentar
+            // a FK (padrão das migrations da Sprint 1).
         });
 
         Schema::create('quotes', function (Blueprint $table) {

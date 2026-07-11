@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('payment_terms')->nullable();   // forma de pagamento (texto livre)
             $table->timestamps();
             $table->softDeletes();
-
-            $table->index('client_id');
         });
 
         Schema::create('quotes', function (Blueprint $table) {
