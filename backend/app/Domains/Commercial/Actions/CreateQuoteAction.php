@@ -19,7 +19,8 @@ class CreateQuoteAction
     public function execute(Budget $budget, QuoteData $data): Quote
     {
         return DB::transaction(function () use ($budget, $data) {
-            $seq = (int) Quote::where('budget_id', $budget->id)
+            $seq = (int) Quote::withTrashed()
+                ->where('budget_id', $budget->id)
                 ->lockForUpdate()
                 ->max('seq_in_budget') + 1;
 

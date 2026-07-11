@@ -14,6 +14,7 @@ class QuoteCrudTest extends TestCase
     use RefreshDatabase;
 
     private int $budgetId;
+
     private int $courseId;
 
     private function setUpBudget(): void
@@ -89,5 +90,21 @@ class QuoteCrudTest extends TestCase
         $this->getJson("/api/budgets/{$this->budgetId}/quotes")->assertOk()->assertJsonCount(1);
         $this->deleteJson("/api/quotes/{$id}")->assertNoContent();
         $this->assertSoftDeleted('quotes', ['id' => $id]);
+    }
+
+    public function test_seq_nao_reusa_apos_soft_delete(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUpBudget();
+
+        $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload())
+            ->assertCreated()->assertJsonPath('seq_in_budget', 1);
+        $id2 = $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload())
+            ->assertCreated()->assertJsonPath('seq_in_budget', 2)->json('id');
+
+        $this->deleteJson("/api/quotes/{$id2}")->assertNoContent();
+
+        $r3 = $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload());
+        $r3->assertCreated()->assertJsonPath('seq_in_budget', 3);
     }
 }
