@@ -7,6 +7,7 @@ import { DashboardPage } from '@app/pages/DashboardPage'
 import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
 import { CommercialPage } from '@features/commercial/components/CommercialPage'
 import { PeoplePage } from '@features/identity/components/PeoplePage'
+import { CatalogPage } from '@features/catalog/components/CatalogPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -33,7 +34,7 @@ export function AppRouter() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/comercial" element={<CommercialPage />} />
           <Route path="/operacion" element={<ModulePlaceholder titleKey="nav.operacion" />} />
-          <Route path="/cursos" element={<ModulePlaceholder titleKey="nav.cursos" />} />
+          <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
           <Route path="/personas" element={<PeoplePage />} />
           <Route path="/administracion" element={<ModulePlaceholder titleKey="nav.administracion" />} />
