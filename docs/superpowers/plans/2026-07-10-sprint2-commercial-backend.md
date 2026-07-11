@@ -1187,7 +1187,12 @@ class CreateQuoteAction
     public function execute(Budget $budget, QuoteData $data): Quote
     {
         return DB::transaction(function () use ($budget, $data) {
-            $seq = (int) Quote::where('budget_id', $budget->id)
+            // withTrashed() é OBRIGATÓRIO: o SoftDeletingScope tiraria as cotações
+            // deletadas do MAX, mas o UNIQUE(budget_id, seq_in_budget) NÃO ignora
+            // soft-deletadas => reaproveitar o número colide (500). ADR-17 existe
+            // justamente p/ evitar reuso de número após soft-delete.
+            $seq = (int) Quote::withTrashed()
+                ->where('budget_id', $budget->id)
                 ->lockForUpdate()
                 ->max('seq_in_budget') + 1;
 
