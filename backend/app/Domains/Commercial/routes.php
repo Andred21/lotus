@@ -1,10 +1,12 @@
 <?php
 
 use App\Domains\Commercial\Http\Controllers\BudgetController;
+use App\Domains\Commercial\Http\Controllers\BudgetFileController;
 use App\Domains\Commercial\Http\Controllers\ClientAddressController;
 use App\Domains\Commercial\Http\Controllers\ClientContactController;
 use App\Domains\Commercial\Http\Controllers\ClientController;
 use App\Domains\Commercial\Http\Controllers\QuoteController;
+use App\Domains\Commercial\Http\Controllers\QuoteFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -27,5 +29,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('clients/{client}/contacts', [ClientContactController::class, 'store']);
         Route::put('contacts/{contact}', [ClientContactController::class, 'update']);
         Route::delete('contacts/{contact}', [ClientContactController::class, 'destroy']);
+    });
+
+    Route::middleware('permission:commercial.budget.update')->group(function () {
+        Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store']);
+        Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy']);
+    });
+
+    Route::middleware('permission:commercial.quote.update')->group(function () {
+        Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store']);
+        Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy']);
     });
 });

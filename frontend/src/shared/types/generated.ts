@@ -56,6 +56,13 @@ redator_ids: number[],
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type FileData = {
+id: number,
+type: string,
+original_name: string,
+mime: string | null,
+size: number,
+};
 export type QuoteData = {
 id: undefined | number,
 budget_id: undefined | number,
