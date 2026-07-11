@@ -93,7 +93,6 @@
     "workloadHours": "Workload (h)",
     "sectionGeneral": "Course data",
     "sectionRedatores": "Enabled writers",
-    "enabledRedatores": "Enabled writers",
     "redatoresReadonlyNote": "Enabling is edited in the writer profile (People).",
     "noRedatores": "No enabled writers.",
     "searchPlaceholder": "Search course...",

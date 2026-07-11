@@ -93,7 +93,6 @@
     "workloadHours": "Carga horária (h)",
     "sectionGeneral": "Dados do curso",
     "sectionRedatores": "Redatores habilitados",
-    "enabledRedatores": "Redatores habilitados",
     "redatoresReadonlyNote": "A habilitação é editada no perfil do redator (Pessoas).",
     "noRedatores": "Sem redatores habilitados.",
     "searchPlaceholder": "Buscar curso...",

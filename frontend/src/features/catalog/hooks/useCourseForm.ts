@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { CourseData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
@@ -31,6 +32,11 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
   const update = coursesApi.useUpdate()
   const sync = useSyncCourseRedatores()
 
+  // Se o curso já foi criado numa tentativa anterior (o sync de redatores falhou),
+  // um resubmit NÃO pode recriá-lo — curso é registro de peso legal. Guarda o id e
+  // re-tenta só a habilitação. O ref zera sozinho: o dialog desmonta ao fechar.
+  const createdIdRef = useRef<number | null>(null)
+
   // Updater funcional: dois toggles no mesmo tick precisam ver o array já
   // atualizado pelo anterior (mesmo motivo do toggleCourse no redator).
   const toggleRedator = (id: number) =>
@@ -51,10 +57,15 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
     }
 
     if (mode === 'create') {
+      // Curso já criado numa tentativa anterior: só re-sincroniza a habilitação.
+      if (createdIdRef.current !== null) {
+        sync.mutate({ courseId: createdIdRef.current, redator_ids: form.redator_ids }, { onSuccess: onDone })
+        return
+      }
       create.mutate(payload, {
         onSuccess: (created) => {
-          // Exceção do produto: habilitação permitida no create. Sem redatores
-          // escolhidos, não dispara a 2ª chamada à toa.
+          createdIdRef.current = created.id!
+          // Sem redatores escolhidos, não dispara a 2ª chamada à toa.
           if (form.redator_ids.length === 0) {
             onDone()
             return
