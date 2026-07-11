@@ -14,6 +14,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('budgets/{budget}/quotes', [QuoteController::class, 'index']);
     Route::post('budgets/{budget}/quotes', [QuoteController::class, 'store']);
     Route::apiResource('quotes', QuoteController::class)->only(['show', 'update', 'destroy']);
+    Route::post('quotes/{quote}/approve', [QuoteController::class, 'approve']);
+    Route::post('quotes/{quote}/reject', [QuoteController::class, 'reject']);
 
     // Nested: gerenciar endereços/contatos de um cliente individualmente.
     // Editar dados do cliente = commercial.client.update.

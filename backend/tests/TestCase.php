@@ -32,4 +32,19 @@ abstract class TestCase extends BaseTestCase
 
         return $user;
     }
+
+    /**
+     * Autentica como superadmin (role com TODAS as permissões, inclui
+     * commercial.quote.approve). Uso nos testes de aprovação (Fluxo 2).
+     */
+    protected function actingAsSuperadmin(): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole('superadmin');
+        $this->actingAs($user, 'web');
+
+        return $user;
+    }
 }
