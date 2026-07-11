@@ -81,6 +81,25 @@
     "contactName": "Nome",
     "contacts": "Contatos"
   },
+  "course": {
+    "module": "Cursos",
+    "moduleDescription": "Catálogo de cursos e seus redatores habilitados.",
+    "new": "Novo curso",
+    "create": "Criar curso",
+    "tabCourses": "Cursos",
+    "name": "Nome",
+    "technicalName": "Nome técnico",
+    "description": "Descrição",
+    "workloadHours": "Carga horária (h)",
+    "sectionGeneral": "Dados do curso",
+    "sectionRedatores": "Redatores habilitados",
+    "redatoresReadonlyNote": "A habilitação é editada no perfil do redator (Pessoas).",
+    "noRedatores": "Sem redatores habilitados.",
+    "searchPlaceholder": "Buscar curso...",
+    "empty": "Nenhum curso.",
+    "count": "{{count}} curso(s)",
+    "redatorCount": "Redatores"
+  },
   "clientType": {
     "client": "Cliente",
     "provider": "Fornecedor",

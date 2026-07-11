@@ -140,6 +140,25 @@ transacional na criação de cotação — custo desprezível a ~10 usuários. D
 `AUTO_INCREMENT` (InnoDB só permite um por tabela); `COUNT(*)` de cotações (race condition +
 reaproveitamento de número). *Tabelas `budgets`/`quotes` ainda não implementadas — decisão fechada no Drive.*
 
+## ADR-18 — Frontend: clientes REST (`createCrudResource`) na camada `shared/api`
+
+**Regra:**
+- Todo cliente REST de recurso (`createCrudResource<T>('resource')`) vive em `shared/api/*Api.ts`,
+  nunca dentro de uma feature.
+- Feature fica com UI, hooks de tela e regra de negócio (`useXForm`, dialogs, mutações de
+  sub-recurso acopladas a uma tela — ex.: `useCourseRedatores`, `useRedatorDocuments`).
+
+**Porquê:** o cliente gerado por `createCrudResource` é glue burro e tipado sobre uma rota REST
+pública do backend — mesma categoria dos tipos gerados, que já vivem todos em
+`shared/types/generated.ts` (ADR-04). Não encapsula regra, então não pertence à feature; o que
+encapsula (formulário, composição de tela) permanece nela. Como feature não importa feature
+(ADR-05), qualquer recurso referenciado por mais de uma feature (relações cross-domínio:
+redator↔curso, cotação→cliente) precisaria ser promovido — em vez de decidir caso a caso, o
+cliente **sempre** nasce em `shared/api`. Mantém `shared/api` como manifesto da superfície REST do
+app. Descartado: lookup fino em `shared` + CRUD na feature — duplica query keys e cria stale de
+cache na invalidação (feature invalida `keys.all`, lookup usa outra key), complexidade sem retorno
+a ~10 usuários.
+
 ---
 
 ## Pendências abertas (não decidir sem o João Victor)
