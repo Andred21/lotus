@@ -1,11 +1,17 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag } from '@shared/ui'
+import { AppTag, AppButton } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
 
-export function QuotesList({ quotes }: { quotes: QuoteData[] }) {
+export function QuotesList({
+  quotes, onEdit, onRemove,
+}: {
+  quotes: QuoteData[]
+  onEdit?: (q: QuoteData) => void
+  onRemove?: (q: QuoteData) => void
+}) {
   const { t } = useTranslation()
   const courses = coursesApi.useList()
 
@@ -33,6 +39,15 @@ export function QuotesList({ quotes }: { quotes: QuoteData[] }) {
           </div>
 
           <span className="font-semibold">{formatUf(q.value_uf)} UF</span>
+
+          <div className="flex items-center gap-1">
+            {q.status !== 'approved' && onEdit && (
+              <AppButton icon="pi pi-pencil" text rounded onClick={() => onEdit(q)} />
+            )}
+            {q.status !== 'approved' && onRemove && (
+              <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => onRemove(q)} />
+            )}
+          </div>
         </div>
       ))}
     </div>

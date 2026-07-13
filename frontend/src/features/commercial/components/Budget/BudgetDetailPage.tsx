@@ -4,10 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AppButton, AppTag } from '@shared/ui'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
+import type { QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
+import { useRemoveQuote } from '../../api/useQuotes'
 import { QuotesList } from './QuotesList'
 import { BudgetDialog } from './BudgetDialog'
+import { QuoteWizard } from './QuoteWizard'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -21,6 +24,9 @@ export function BudgetDetailPage() {
 
   // Declarado ANTES dos early returns: hook não pode ficar atrás de return condicional.
   const [editing, setEditing] = useState(false)
+  // null = fechado; { quote: null } = criar; { quote } = editar.
+  const [wizard, setWizard] = useState<{ quote: QuoteData | null } | null>(null)
+  const removeQuote = useRemoveQuote()
 
   if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
@@ -53,6 +59,12 @@ export function BudgetDetailPage() {
           {/* Único caminho de edição do orçamento: o backend só deixa payment_terms
               mudar (cliente e código são imutáveis). */}
           <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={() => setEditing(true)} />
+          <AppButton
+            variant="brandIcon"
+            label={t('budget.addQuote')}
+            icon="pi pi-file"
+            onClick={() => setWizard({ quote: null })}
+          />
         </div>
       </header>
 
@@ -69,13 +81,21 @@ export function BudgetDetailPage() {
             {t('budget.quotes')} <span className="text-slate-500">({budget.quotes.length})</span>
           </h3>
         </header>
-        <QuotesList quotes={budget.quotes} />
+        <QuotesList
+          quotes={budget.quotes}
+          onEdit={(q) => setWizard({ quote: q })}
+          onRemove={(q) => removeQuote.mutate(q.id!)}
+        />
       </section>
 
       {/* Reusa o dialog da Task 4 em modo edit — em `edit` ele trava cliente e
           código e só deixa a forma de pagamento mudar. */}
       {editing && (
         <BudgetDialog visible mode="edit" budget={budget} onHide={() => setEditing(false)} />
+      )}
+
+      {wizard && (
+        <QuoteWizard visible budgetId={budgetId} quote={wizard.quote} onHide={() => setWizard(null)} />
       )}
     </div>
   )
