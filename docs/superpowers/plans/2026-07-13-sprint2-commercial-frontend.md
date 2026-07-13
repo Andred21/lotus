@@ -953,8 +953,10 @@ git commit -m "feat(comercial): aba de orçamentos com lista, filtro e dialog de
 - Modify: `frontend/src/app/router/AppRouter.tsx`
 
 **Interfaces:**
-- Consumes: `budgetsApi.useOne(id)` (Task 2), `formatUf`/`quoteStatusSeverity` (Task 2), chaves `budget.*`/`quote.*`/`quoteStatus.*` (Task 3), `coursesApi` (`@shared/api/coursesApi`), `clientsApi`.
+- Consumes: `budgetsApi.useOne(id)` (Task 2), `formatUf`/`quoteStatusSeverity` (Task 2), chaves `budget.*`/`quote.*`/`quoteStatus.*` (Task 3), `coursesApi` (`@shared/api/coursesApi`), `clientsApi`, `BudgetDialog` (Task 4).
 - Produces: rota `/comercial/presupuestos/:id`; `BudgetDetailPage`; `QuotesList` com a prop `quotes: QuoteData[]` (as ações por linha entram nas Tasks 6 e 7 — nesta task é leitura).
+
+> **Correção do plano (achado do review da Task 4):** o `BudgetDialog` da Task 4 tem modo `edit`, mas nenhuma tela o abria — `payment_terms` ficaria ineditável, contra o spec. O botão "Editar" do detalhe (Step 2 abaixo) fecha esse buraco. É o mesmo lugar onde o protótipo põe a edição.
 
 - [ ] **Step 1: `QuotesList.tsx` (só leitura, por enquanto)**
 
@@ -1004,7 +1006,7 @@ export function QuotesList({ quotes }: { quotes: QuoteData[] }) {
 - [ ] **Step 2: `BudgetDetailPage.tsx`**
 
 ```tsx
-import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppButton, AppTag } from '@shared/ui'
@@ -1013,6 +1015,7 @@ import { clientsApi } from '@shared/api/clientsApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
 import { QuotesList } from './QuotesList'
+import { BudgetDialog } from './BudgetDialog'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -1023,6 +1026,9 @@ export function BudgetDetailPage() {
   const query = budgetsApi.useOne(budgetId)
   const clients = clientsApi.useList()
   const budget = query.data
+
+  // Declarado ANTES dos early returns: hook não pode ficar atrás de return condicional.
+  const [editing, setEditing] = useState(false)
 
   if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
@@ -1052,6 +1058,9 @@ export function BudgetDetailPage() {
           {budget.status && (
             <AppTag value={t(`quoteStatus.${budget.status}`)} severity={quoteStatusSeverity(budget.status)} />
           )}
+          {/* Único caminho de edição do orçamento: o backend só deixa payment_terms
+              mudar (cliente e código são imutáveis). */}
+          <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={() => setEditing(true)} />
         </div>
       </header>
 
@@ -1070,6 +1079,12 @@ export function BudgetDetailPage() {
         </header>
         <QuotesList quotes={budget.quotes} />
       </section>
+
+      {/* Reusa o dialog da Task 4 em modo edit — em `edit` ele trava cliente e
+          código e só deixa a forma de pagamento mudar. */}
+      {editing && (
+        <BudgetDialog visible mode="edit" budget={budget} onHide={() => setEditing(false)} />
+      )}
     </div>
   )
 }
@@ -1086,7 +1101,7 @@ function TotalCard({ label, value, tone }: { label: string; value?: string; tone
 }
 ```
 
-Nota para quem implementa: `ReactNode` está importado mas pode não ser usado — se o lint reclamar de import não usado, **remover o import**, não silenciar a regra.
+Nota para quem implementa: o `BudgetDialog` (Task 4) já existe e recebe `{ visible, mode, budget, onHide }` — não o reescreva, só o consuma. `common.edit` já existe nos 3 locales.
 
 - [ ] **Step 3: Rota no `AppRouter.tsx`**
 
