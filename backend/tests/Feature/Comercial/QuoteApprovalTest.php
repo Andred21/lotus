@@ -85,4 +85,32 @@ class QuoteApprovalTest extends TestCase
 
         $this->assertSoftDeleted('quotes', ['id' => $quote->id]);
     }
+
+    public function test_admin_tenta_apagar_budget_com_cotacao_aprovada_da_422_e_ambos_continuam_vivos(): void
+    {
+        $quote = $this->quote();
+        $this->actingAsSuperadmin();
+        $this->postJson("/api/quotes/{$quote->id}/approve")->assertOk()->assertJsonPath('status', 'approved');
+
+        $this->actingAsAdmin();
+        $this->deleteJson("/api/budgets/{$quote->budget_id}")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+
+        $this->assertDatabaseHas('budgets', ['id' => $quote->budget_id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('quotes', ['id' => $quote->id, 'deleted_at' => null]);
+    }
+
+    public function test_admin_apaga_budget_apos_cotacao_recusada(): void
+    {
+        $quote = $this->quote();
+        $this->actingAsSuperadmin();
+        $this->postJson("/api/quotes/{$quote->id}/reject")->assertOk()->assertJsonPath('status', 'rejected');
+
+        $this->actingAsAdmin();
+        $this->deleteJson("/api/budgets/{$quote->budget_id}")->assertNoContent();
+
+        $this->assertSoftDeleted('budgets', ['id' => $quote->budget_id]);
+        $this->assertSoftDeleted('quotes', ['id' => $quote->id]);
+    }
 }
