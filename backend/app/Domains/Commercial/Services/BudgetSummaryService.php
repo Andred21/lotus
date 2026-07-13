@@ -28,9 +28,17 @@ class BudgetSummaryService
         return QuoteStatus::Pending;
     }
 
-    public function totalValueUf(Budget $budget): float
+    /**
+     * Soma em decimal (bcmath), nunca em float: dinheiro de peso legal não pode
+     * herdar o erro de representação do float64 (0.1 + 0.2 = 0.30000000000000004).
+     * Devolve string com as mesmas 4 casas do decimal(12,4) da coluna.
+     */
+    public function totalValueUf(Budget $budget): string
     {
-        return (float) $budget->quotes->sum(fn (Quote $q) => $q->value_uf);
+        return $budget->quotes->reduce(
+            fn (string $total, Quote $q) => bcadd($total, (string) $q->value_uf, 4),
+            '0.0000',
+        );
     }
 
     public function totalStudents(Budget $budget): int

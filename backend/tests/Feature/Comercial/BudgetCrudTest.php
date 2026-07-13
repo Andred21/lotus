@@ -28,7 +28,7 @@ class BudgetCrudTest extends TestCase
 
         $id = $response->assertCreated()
             ->assertJsonPath('status', 'pending')       // derivado: sem cotações
-            ->assertJsonPath('total_value_uf', 0)
+            ->assertJsonPath('total_value_uf', '0.0000')   // string decimal, não float
             ->json('id');
 
         $this->assertSame("Scap {$id}", $response->json('code'));
