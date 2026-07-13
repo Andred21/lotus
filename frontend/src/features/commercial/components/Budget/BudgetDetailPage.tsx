@@ -40,6 +40,14 @@ export function BudgetDetailPage() {
   const [fileType, setFileType] = useState<BudgetFileType>('invoice')
   const uploadFile = useUploadBudgetFile()
   const removeFile = useRemoveBudgetFile()
+  // O upload de documentos não tem campo dedicado por chave (é um único input de
+  // arquivo) — por isso, além do generalError, cai para a primeira mensagem de
+  // fieldErrors (ex.: 422 de "file"/"type") em vez de deixá-la sem exibição.
+  const { fieldErrors: fileFieldErrors, generalError: fileGeneralError } = useMutationErrors([
+    uploadFile.error,
+    removeFile.error,
+  ])
+  const fileError = fileGeneralError ?? Object.values(fileFieldErrors ?? {})[0]?.[0] ?? null
 
   // e.options.clear() devolve o AppFileUpload ao estado vazio depois do envio
   // (mesmo padrão dos documentos do redator).
@@ -133,6 +141,11 @@ export function BudgetDetailPage() {
             />
           </div>
         </header>
+        {fileError && (
+          <p className="mx-4 mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+            {fileError}
+          </p>
+        )}
         <FileList files={budget.files ?? []} onRemove={(fileId) => removeFile.mutate({ budgetId, fileId })} />
       </section>
 

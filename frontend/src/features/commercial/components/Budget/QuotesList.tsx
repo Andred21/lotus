@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
+import { useMutationErrors } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
@@ -21,6 +22,14 @@ export function QuotesList({
   const courses = coursesApi.useList()
   const uploadFile = useUploadQuoteFile()
   const removeFile = useRemoveQuoteFile()
+  // Sem campo dedicado por chave (upload é um único input de arquivo por linha) —
+  // além do generalError, cai para a primeira mensagem de fieldErrors (ex.: 422
+  // de "file"/"type") em vez de deixá-la sem exibição.
+  const { fieldErrors: fileFieldErrors, generalError: fileGeneralError } = useMutationErrors([
+    uploadFile.error,
+    removeFile.error,
+  ])
+  const fileError = fileGeneralError ?? Object.values(fileFieldErrors ?? {})[0]?.[0] ?? null
 
   const courseName = (id: number) => courses.data?.find((c) => c.id === id)?.name ?? '—'
 
@@ -36,6 +45,11 @@ export function QuotesList({
 
   return (
     <div className="divide-y divide-slate-200 dark:divide-slate-700">
+      {fileError && (
+        <p className="m-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+          {fileError}
+        </p>
+      )}
       {quotes.map((q) => (
         <div key={q.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
           <div className="min-w-64 flex-1">
@@ -77,7 +91,7 @@ export function QuotesList({
               <AppFileUpload
                 chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                 chooseLabel=""
-                disabled={uploadFile.isPending}
+                disabled={uploadFile.isPending && uploadFile.variables?.quoteId === q.id}
                 uploadHandler={(e) => handleUpload(q.id!, e)}
               />
             </div>
