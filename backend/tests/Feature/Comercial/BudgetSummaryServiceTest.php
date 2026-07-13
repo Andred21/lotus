@@ -107,4 +107,32 @@ class BudgetSummaryServiceTest extends TestCase
         $this->assertSame('100.0000', $this->service->totalValueUf($budget));
         $this->assertSame(10, $this->service->totalStudents($budget));
     }
+
+    public function test_totais_por_status_somam_so_as_cotacoes_daquele_status(): void
+    {
+        // budgetWith cria cada cotação com 100 UF
+        $budget = $this->budgetWith(['pending', 'approved', 'approved', 'rejected']);
+
+        $this->assertSame('400.0000', $this->service->totalValueUf($budget));
+        $this->assertSame('200.0000', $this->service->totalApprovedUf($budget));
+        $this->assertSame('100.0000', $this->service->totalRejectedUf($budget));
+    }
+
+    public function test_totais_por_status_ignoram_cotacao_soft_deletada(): void
+    {
+        $budget = $this->budgetWith(['approved', 'approved', 'rejected']);
+        $budget->quotes->firstWhere('status', QuoteStatus::Approved)->delete();
+        $budget->refresh();
+
+        $this->assertSame('100.0000', $this->service->totalApprovedUf($budget));
+        $this->assertSame('100.0000', $this->service->totalRejectedUf($budget));
+    }
+
+    public function test_totais_por_status_sao_zero_sem_cotacao(): void
+    {
+        $budget = $this->budgetWith([]);
+
+        $this->assertSame('0.0000', $this->service->totalApprovedUf($budget));
+        $this->assertSame('0.0000', $this->service->totalRejectedUf($budget));
+    }
 }

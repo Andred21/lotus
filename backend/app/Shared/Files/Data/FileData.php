@@ -22,6 +22,7 @@ class FileData extends Data
         public ?string $mime,
         public int $size,
         public string $download_url,
+        public ?string $created_at,
     ) {}
 
     public static function fromModel(File $file): self
@@ -33,6 +34,7 @@ class FileData extends Data
             mime: $file->mime,
             size: $file->size,
             download_url: app(UploadFileAction::class)->temporaryUrl($file),
+            created_at: $file->created_at?->toIso8601String(),
         );
     }
 }
