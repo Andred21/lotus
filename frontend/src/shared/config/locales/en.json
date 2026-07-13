@@ -105,6 +105,7 @@
     "tab": "Budgets",
     "new": "New budget",
     "create": "Create budget",
+    "createHint": "Quotes and documents are added on the budget page, after you create it.",
     "searchPlaceholder": "Search by code or client...",
     "filterAll": "All",
     "code": "Code",

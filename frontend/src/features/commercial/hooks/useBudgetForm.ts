@@ -14,16 +14,31 @@ const EMPTY: BudgetFormFields = { id: undefined, client_id: 0, payment_terms: nu
 const toFields = (b: BudgetFormFields): BudgetFormFields =>
   structuredClone({ id: b.id, client_id: b.client_id, payment_terms: b.payment_terms })
 
-export function useBudgetForm(budget: BudgetData | null, mode: BudgetDialogMode, onDone: () => void) {
+export function useBudgetForm(
+  budget: BudgetData | null,
+  mode: BudgetDialogMode,
+  onDone: () => void,
+  onCreated?: (created: BudgetData) => void,
+) {
   const { form, set, readOnly } = useEntityForm<BudgetFormFields>(budget, mode, EMPTY, toFields)
   const create = budgetsApi.useCreate()
   const update = budgetsApi.useUpdate()
 
   function submit() {
     if (mode === 'create') {
+      // O orçamento nasce vazio (só cliente e forma de pagamento): cotação e
+      // documento são POSTs sob /budgets/{id}, então precisam do id que só
+      // existe depois deste create. Por isso `onCreated` entrega o orçamento a
+      // quem abriu o dialog — quem leva o usuário à página de detalhe, onde o
+      // cadastro de fato continua.
       create.mutate(
         { client_id: form.client_id, payment_terms: form.payment_terms },
-        { onSuccess: onDone },
+        {
+          onSuccess: (created) => {
+            onDone()
+            onCreated?.(created)
+          },
+        },
       )
       return
     }

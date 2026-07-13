@@ -105,6 +105,7 @@
     "tab": "Presupuestos",
     "new": "Nuevo presupuesto",
     "create": "Crear presupuesto",
+    "createHint": "Las cotizaciones y los documentos se agregan en la página del presupuesto, al crearlo.",
     "searchPlaceholder": "Buscar por código o cliente...",
     "filterAll": "Todos",
     "code": "Código",

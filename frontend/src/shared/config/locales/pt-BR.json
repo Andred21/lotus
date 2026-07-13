@@ -105,6 +105,7 @@
     "tab": "Orçamentos",
     "new": "Novo orçamento",
     "create": "Criar orçamento",
+    "createHint": "Cotações e documentos são cadastrados na página do orçamento, após criá-lo.",
     "searchPlaceholder": "Buscar por código ou cliente...",
     "filterAll": "Todos",
     "code": "Código",

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
 import { useClientsPage } from '../hooks/useClientsPage'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
@@ -10,6 +11,7 @@ import { BudgetDialog } from './Budget/BudgetDialog'
 
 export function CommercialPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const clients = useClientsPage()
   const budgets = useBudgetsPage()
   const [tab, setTab] = useState(0)
@@ -48,7 +50,13 @@ export function CommercialPage() {
       )}
 
       {budgets.dialog && (
-        <BudgetDialog visible mode={budgets.dialog.mode} budget={budgets.dialog.entity} onHide={budgets.close} />
+        <BudgetDialog
+          visible
+          mode={budgets.dialog.mode}
+          budget={budgets.dialog.entity}
+          onHide={budgets.close}
+          onCreated={(created) => navigate(`/comercial/presupuestos/${created.id}`)}
+        />
       )}
     </ModulePage>
   )
