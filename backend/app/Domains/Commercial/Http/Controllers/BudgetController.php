@@ -26,7 +26,7 @@ class BudgetController extends Controller implements HasMiddleware
     /** @return array<BudgetData> */
     public function index(): array
     {
-        return Budget::with('quotes')
+        return Budget::with(['quotes.files', 'files'])
             ->get()
             ->map(fn (Budget $b) => BudgetData::fromModel($b))
             ->all();
@@ -34,12 +34,12 @@ class BudgetController extends Controller implements HasMiddleware
 
     public function store(BudgetData $data, CreateBudgetAction $action): BudgetData
     {
-        return BudgetData::fromModel($action->execute($data));
+        return BudgetData::fromModel($action->execute($data)->load(['quotes.files', 'files']));
     }
 
     public function show(Budget $budget): BudgetData
     {
-        return BudgetData::fromModel($budget->load('quotes'));
+        return BudgetData::fromModel($budget->load(['quotes.files', 'files']));
     }
 
     public function update(BudgetData $data, Budget $budget): BudgetData
@@ -49,7 +49,7 @@ class BudgetController extends Controller implements HasMiddleware
             'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms,
         ]);
 
-        return BudgetData::fromModel($budget->load('quotes'));
+        return BudgetData::fromModel($budget->load(['quotes.files', 'files']));
     }
 
     public function destroy(Budget $budget): Response

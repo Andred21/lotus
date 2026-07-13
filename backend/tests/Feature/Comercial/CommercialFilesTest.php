@@ -92,4 +92,67 @@ class CommercialFilesTest extends TestCase
         // pelo dono → 204
         $this->deleteJson("/api/budgets/{$b1->id}/files/{$fileId}")->assertNoContent();
     }
+
+    public function test_delete_cross_tipo_arquivo_de_budget_pela_rota_de_quote_404(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $quote = Quote::create([
+            'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
+        ]);
+
+        $fileId = $this->postJson("/api/budgets/{$budget->id}/files", [
+            'type' => 'invoice',
+            'file' => UploadedFile::fake()->create('f.pdf', 1, 'application/pdf'),
+        ])->json('id');
+
+        // arquivo pertence ao budget (fileable_type='budget'); a rota de quote
+        // deve dar 404 pelo TIPO, não só pela posse (mesmo id do arquivo).
+        $this->deleteJson("/api/quotes/{$quote->id}/files/{$fileId}")->assertNotFound();
+        $this->assertDatabaseHas('files', ['id' => $fileId, 'deleted_at' => null]);
+    }
+
+    public function test_upload_no_budget_aparece_no_get(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $this->postJson("/api/budgets/{$budget->id}/files", [
+            'type' => 'invoice',
+            'file' => UploadedFile::fake()->create('fatura.pdf', 20, 'application/pdf'),
+        ])->assertCreated();
+
+        $response = $this->getJson("/api/budgets/{$budget->id}")->assertOk();
+        $response->assertJsonPath('files.0.type', 'invoice')
+            ->assertJsonPath('files.0.original_name', 'fatura.pdf');
+        $this->assertNotEmpty($response->json('files.0.id'));
+        $this->assertStringContainsString('http', $response->json('files.0.download_url'));
+    }
+
+    public function test_upload_na_cotacao_aparece_no_get(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $quote = Quote::create([
+            'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
+        ]);
+
+        $this->postJson("/api/quotes/{$quote->id}/files", [
+            'type' => 'quote_document',
+            'file' => UploadedFile::fake()->create('aceite.pdf', 10, 'application/pdf'),
+        ])->assertCreated();
+
+        $response = $this->getJson("/api/quotes/{$quote->id}")->assertOk();
+        $response->assertJsonPath('files.0.type', 'quote_document')
+            ->assertJsonPath('files.0.original_name', 'aceite.pdf');
+        $this->assertNotEmpty($response->json('files.0.id'));
+        $this->assertStringContainsString('http', $response->json('files.0.download_url'));
+    }
 }

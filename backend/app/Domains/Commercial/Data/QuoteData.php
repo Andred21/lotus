@@ -4,6 +4,7 @@ namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
+use App\Shared\Files\Data\FileData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -29,6 +30,8 @@ class QuoteData extends Data
         public string|Optional|null $purchase_order = null,
         public string|Optional|null $planned_start_date = null,
         public string|Optional|null $planned_end_date = null,
+        /** @var FileData[] */
+        public array|Optional $files = [],
     ) {}
 
     public static function rules(): array
@@ -58,6 +61,7 @@ class QuoteData extends Data
             purchase_order: $quote->purchase_order,
             planned_start_date: $quote->planned_start_date?->toDateString(),
             planned_end_date: $quote->planned_end_date?->toDateString(),
+            files: $quote->files->map(fn ($f) => FileData::fromModel($f))->all(),
         );
     }
 }

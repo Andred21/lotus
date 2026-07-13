@@ -7,6 +7,7 @@ total_value_uf: undefined | number,
 total_students: undefined | number,
 quotes: QuoteData[],
 payment_terms: undefined | string | null,
+files: FileData[],
 };
 export type CertificateTemplateData = {
 id: undefined | number,
@@ -62,6 +63,7 @@ type: string,
 original_name: string,
 mime: string | null,
 size: number,
+download_url: string,
 };
 export type QuoteData = {
 id: undefined | number,
@@ -76,6 +78,7 @@ code: undefined | string,
 purchase_order: undefined | string | null,
 planned_start_date: undefined | string | null,
 planned_end_date: undefined | string | null,
+files: FileData[],
 };
 export type QuoteStatus = 'pending' | 'approved' | 'rejected';
 export type RedatorData = {

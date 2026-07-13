@@ -2,6 +2,7 @@
 
 namespace App\Shared\Files\Data;
 
+use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -20,6 +21,7 @@ class FileData extends Data
         public string $original_name,
         public ?string $mime,
         public int $size,
+        public string $download_url,
     ) {}
 
     public static function fromModel(File $file): self
@@ -30,6 +32,7 @@ class FileData extends Data
             original_name: $file->original_name,
             mime: $file->mime,
             size: $file->size,
+            download_url: app(UploadFileAction::class)->temporaryUrl($file),
         );
     }
 }

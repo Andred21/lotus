@@ -5,6 +5,7 @@ namespace App\Domains\Commercial\Data;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Services\BudgetSummaryService;
+use App\Shared\Files\Data\FileData;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -29,6 +30,8 @@ class BudgetData extends Data
         #[DataCollectionOf(QuoteData::class)]
         public array $quotes = [],
         public string|Optional|null $payment_terms = null,
+        /** @var FileData[] */
+        public array|Optional $files = [],
     ) {}
 
     public static function rules(): array
@@ -52,6 +55,7 @@ class BudgetData extends Data
             total_students: $summary->totalStudents($budget),
             quotes: QuoteData::collect($budget->quotes->all()),
             payment_terms: $budget->payment_terms,
+            files: $budget->files->map(fn ($f) => FileData::fromModel($f))->all(),
         );
     }
 }
