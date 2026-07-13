@@ -45,4 +45,26 @@ class BudgetSummaryService
     {
         return (int) $budget->quotes->sum('student_count');
     }
+
+    /** Soma decimal (bcmath) das cotações aprovadas. Mesmo motivo do totalValueUf. */
+    public function totalApprovedUf(Budget $budget): string
+    {
+        return $this->totalByStatus($budget, QuoteStatus::Approved);
+    }
+
+    /** Soma decimal (bcmath) das cotações recusadas. */
+    public function totalRejectedUf(Budget $budget): string
+    {
+        return $this->totalByStatus($budget, QuoteStatus::Rejected);
+    }
+
+    private function totalByStatus(Budget $budget, QuoteStatus $status): string
+    {
+        return $budget->quotes
+            ->filter(fn (Quote $q) => $q->status === $status)
+            ->reduce(
+                fn (string $total, Quote $q) => bcadd($total, (string) $q->value_uf, 4),
+                '0.0000',
+            );
+    }
 }

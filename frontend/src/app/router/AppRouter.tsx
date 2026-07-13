@@ -6,6 +6,7 @@ import { AppLayout } from '@app/layouts/AppLayout'
 import { DashboardPage } from '@app/pages/DashboardPage'
 import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
 import { CommercialPage } from '@features/commercial/components/CommercialPage'
+import { BudgetDetailPage } from '@features/commercial/components/Budget/BudgetDetailPage'
 import { PeoplePage } from '@features/identity/components/PeoplePage'
 import { CatalogPage } from '@features/catalog/components/CatalogPage'
 
@@ -33,6 +34,7 @@ export function AppRouter() {
         >
           <Route path="/" element={<DashboardPage />} />
           <Route path="/comercial" element={<CommercialPage />} />
+          <Route path="/comercial/presupuestos/:id" element={<BudgetDetailPage />} />
           <Route path="/operacion" element={<ModulePlaceholder titleKey="nav.operacion" />} />
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />

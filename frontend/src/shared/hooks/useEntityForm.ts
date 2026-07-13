@@ -44,12 +44,21 @@ export function useEntityForm<T extends { id?: number }>(
 /**
  * Normaliza os erros de uma ou mais mutações: 422 traz erros por campo; outros
  * status trazem só a mensagem geral.
+ *
+ * `message` existe para quem NÃO tem um input por campo onde pendurar o erro
+ * (um dialog de confirmação, um botão de upload). Sem ele, um 422 cujo mapa
+ * `errors` não casa com nenhum campo da tela — como o `errors.status` de
+ * "cotação aprovada não pode ser excluída" — zerava `generalError` e sumia
+ * da tela. Formulários com campos continuam usando `fieldErrors`/`generalError`.
  */
 export function useMutationErrors(errors: Array<ProblemDetails | null | undefined>) {
   const first = errors.find(Boolean) ?? null
+  const fieldErrors = first?.errors
+  const generalError = first && !first.errors ? first.detail : null
 
   return {
-    fieldErrors: first?.errors,
-    generalError: first && !first.errors ? first.detail : null,
+    fieldErrors,
+    generalError,
+    message: generalError ?? Object.values(fieldErrors ?? {})[0]?.[0] ?? null,
   }
 }

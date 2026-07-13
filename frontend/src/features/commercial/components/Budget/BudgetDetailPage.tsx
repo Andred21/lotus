@@ -1,0 +1,237 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate, useParams } from 'react-router-dom'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown } from '@shared/ui'
+import type { FileUploadHandlerEvent } from '@shared/ui'
+import { usePermissions, useMutationErrors } from '@shared/hooks'
+import { budgetsApi } from '@shared/api/budgetsApi'
+import { clientsApi } from '@shared/api/clientsApi'
+import type { QuoteData } from '@shared/types/generated'
+import { quoteStatusSeverity } from '../../lib/quoteStatus'
+import { formatUf } from '../../lib/uf'
+import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../../api/useQuotes'
+import { useUploadBudgetFile, useRemoveBudgetFile, type BudgetFileType } from '../../api/useCommercialFiles'
+import { QuotesList } from './QuotesList'
+import { BudgetDialog } from './BudgetDialog'
+import { QuoteWizard } from './QuoteWizard'
+import { FileList } from './FileList'
+
+export function BudgetDetailPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const budgetId = Number(id)
+
+  const query = budgetsApi.useOne(budgetId)
+  const clients = clientsApi.useList()
+  const budget = query.data
+
+  // Declarado ANTES dos early returns: hook não pode ficar atrás de return condicional.
+  const [editing, setEditing] = useState(false)
+  // null = fechado; { quote: null } = criar; { quote } = editar.
+  const [wizard, setWizard] = useState<{ quote: QuoteData | null } | null>(null)
+  const removeQuote = useRemoveQuote()
+  const { can } = usePermissions()
+  const canApprove = can('commercial.quote.approve')
+  const approve = useApproveQuote()
+  const reject = useRejectQuote()
+  const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject' | 'remove'; quote: QuoteData } | null>(null)
+  // As três mutações de cotação (aprovar/recusar/excluir) compartilham este
+  // dialog: 422 (cotação aprovada) e 403 chegam pelo mesmo `error`, nunca em
+  // silêncio.
+  // `message` (não `generalError`): os 422 daqui vêm por campo (errors.status =
+  // "cotação aprovada não pode ser excluída"), e essas telas não têm input onde
+  // pendurá-los — com generalError puro, o erro sumia.
+  const { message: confirmError } = useMutationErrors([approve.error, reject.error, removeQuote.error])
+  const removeBudget = budgetsApi.useRemove()
+  const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
+  const { message: removeBudgetError } = useMutationErrors([removeBudget.error])
+  const [fileType, setFileType] = useState<BudgetFileType>('invoice')
+  const uploadFile = useUploadBudgetFile()
+  const removeFile = useRemoveBudgetFile()
+  const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
+
+  // e.options.clear() devolve o AppFileUpload ao estado vazio depois do envio
+  // (mesmo padrão dos documentos do redator).
+  const handleUpload = (e: FileUploadHandlerEvent) => {
+    const file = e.files[0]
+    if (!file) return
+    uploadFile.mutate({ budgetId, type: fileType, file }, { onSuccess: () => e.options.clear() })
+  }
+
+  if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
+  if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
+
+  const client = clients.data?.find((c) => c.id === budget.client_id)
+
+  return (
+    <div className="space-y-6">
+      <button
+        type="button"
+        className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+        onClick={() => navigate('/comercial')}
+      >
+        <i className="pi pi-arrow-left" aria-hidden="true" />
+        {t('budget.back')}
+      </button>
+
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold">{budget.code}</h2>
+          <p className="text-sm text-slate-500">
+            {client?.legal_name ?? '—'}
+            {client?.rut && ` · RUT ${client.rut}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {budget.status && (
+            <AppTag value={t(`quoteStatus.${budget.status}`)} severity={quoteStatusSeverity(budget.status)} />
+          )}
+          {/* Único caminho de edição do orçamento: o backend só deixa payment_terms
+              mudar (cliente e código são imutáveis). */}
+          <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={() => setEditing(true)} />
+          <AppButton
+            label={t('common.delete')}
+            icon="pi pi-trash"
+            outlined
+            severity="danger"
+            onClick={() => setConfirmDeleteBudget(true)}
+          />
+          <AppButton
+            variant="brandIcon"
+            label={t('budget.addQuote')}
+            icon="pi pi-file"
+            onClick={() => setWizard({ quote: null })}
+          />
+        </div>
+      </header>
+
+      {/* Os três totais vêm SOMADOS do backend (bcmath). A UI nunca soma UF. */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <TotalCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
+        <TotalCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
+        <TotalCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
+      </div>
+
+      <section className="rounded-lg border border-slate-200 dark:border-slate-700">
+        <header className="flex items-center justify-between p-4">
+          <h3 className="font-medium">
+            {t('budget.quotes')} <span className="text-slate-500">({budget.quotes.length})</span>
+          </h3>
+        </header>
+        <QuotesList
+          quotes={budget.quotes}
+          onEdit={(q) => setWizard({ quote: q })}
+          onRemove={(q) => setConfirm({ action: 'remove', quote: q })}
+          onApprove={canApprove ? (q) => setConfirm({ action: 'approve', quote: q }) : undefined}
+          onReject={canApprove ? (q) => setConfirm({ action: 'reject', quote: q }) : undefined}
+        />
+      </section>
+
+      <section className="rounded-lg border border-slate-200 dark:border-slate-700">
+        <header className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <h3 className="font-medium">{t('budget.documents')}</h3>
+          <div className="flex items-center gap-2">
+            <div className="w-44">
+              <AppDropdown
+                value={fileType}
+                options={[
+                  { label: t('budget.fileTypeInvoice'), value: 'invoice' },
+                  { label: t('budget.fileTypeReceipt'), value: 'receipt' },
+                ]}
+                onChange={(e) => setFileType(e.value as BudgetFileType)}
+              />
+            </div>
+            <AppFileUpload
+              chooseOptions={{ icon: 'pi pi-upload' }}
+              chooseLabel={t('budget.uploadDocument')}
+              disabled={uploadFile.isPending}
+              uploadHandler={handleUpload}
+            />
+          </div>
+        </header>
+        {fileError && (
+          <p className="mx-4 mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+            {fileError}
+          </p>
+        )}
+        <FileList files={budget.files ?? []} onRemove={(fileId) => removeFile.mutate({ budgetId, fileId })} />
+      </section>
+
+      {/* Reusa o dialog da Task 4 em modo edit — em `edit` ele trava cliente e
+          código e só deixa a forma de pagamento mudar. */}
+      {editing && (
+        <BudgetDialog visible mode="edit" budget={budget} onHide={() => setEditing(false)} />
+      )}
+
+      {wizard && (
+        <QuoteWizard visible budgetId={budgetId} quote={wizard.quote} onHide={() => setWizard(null)} />
+      )}
+
+      {confirm && (
+        <ConfirmDialog
+          visible
+          title={t(CONFIRM_COPY[confirm.action].title)}
+          message={t(CONFIRM_COPY[confirm.action].body)}
+          confirmLabel={t(CONFIRM_COPY[confirm.action].label)}
+          severity={confirm.action === 'approve' ? undefined : 'danger'}
+          pending={approve.isPending || reject.isPending || removeQuote.isPending}
+          error={confirmError}
+          onCancel={() => {
+            // Reseta o erro da tentativa anterior: sem isso, reabrir o dialog
+            // para outra cotação mostraria um erro fantasma de uma tentativa
+            // que nunca ocorreu para ela (approve/reject/removeQuote vivem no
+            // pai, não são remontados a cada abertura do dialog).
+            approve.reset()
+            reject.reset()
+            removeQuote.reset()
+            setConfirm(null)
+          }}
+          onConfirm={() => {
+            const mutation =
+              confirm.action === 'approve' ? approve : confirm.action === 'reject' ? reject : removeQuote
+            mutation.mutate(confirm.quote.id!, { onSuccess: () => setConfirm(null) })
+          }}
+        />
+      )}
+
+      {confirmDeleteBudget && (
+        <ConfirmDialog
+          visible
+          title={t('budget.confirmDeleteTitle')}
+          message={t('budget.confirmDeleteBody')}
+          confirmLabel={t('common.delete')}
+          severity="danger"
+          pending={removeBudget.isPending}
+          error={removeBudgetError}
+          onCancel={() => {
+            removeBudget.reset()
+            setConfirmDeleteBudget(false)
+          }}
+          onConfirm={() => {
+            // Sucesso navega para fora da página do orçamento excluído — não
+            // há para onde voltar aqui.
+            removeBudget.mutate(budgetId, { onSuccess: () => navigate('/comercial') })
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+const CONFIRM_COPY = {
+  approve: { title: 'quote.confirmApproveTitle', body: 'quote.confirmApproveBody', label: 'quote.approve' },
+  reject: { title: 'quote.confirmRejectTitle', body: 'quote.confirmRejectBody', label: 'quote.reject' },
+  remove: { title: 'quote.confirmDeleteTitle', body: 'quote.confirmDeleteBody', label: 'common.delete' },
+} as const
+
+function TotalCard({ label, value, tone }: { label: string; value?: string; tone?: 'success' | 'danger' }) {
+  const color =
+    tone === 'success' ? 'text-emerald-600' : tone === 'danger' ? 'text-red-600' : 'text-slate-900 dark:text-slate-100'
+  return (
+    <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+      <p className={`text-2xl font-semibold ${color}`}>{formatUf(value ?? '0')} UF</p>
+      <p className="mt-1 text-sm text-slate-500">{label}</p>
+    </div>
+  )
+}
