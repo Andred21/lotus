@@ -128,7 +128,9 @@
     "uploadDocument": "Upload document",
     "noDocuments": "No documents",
     "fileTypeInvoice": "Invoice",
-    "fileTypeReceipt": "Receipt"
+    "fileTypeReceipt": "Receipt",
+    "confirmDeleteTitle": "Delete budget?",
+    "confirmDeleteBody": "Its quotes will be deleted as well. This action cannot be undone."
   },
   "quote": {
     "new": "New quote",
@@ -152,6 +154,8 @@
     "confirmApproveBody": "Approving unlocks class creation in Operations. You can revert it by rejecting the quote.",
     "confirmRejectTitle": "Reject quote?",
     "confirmRejectBody": "Rejecting undoes the approval and unlocks editing.",
+    "confirmDeleteTitle": "Delete quote?",
+    "confirmDeleteBody": "This action cannot be undone.",
     "documents": "Documents",
     "studentsShort": "{{count}} students"
   },

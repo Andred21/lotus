@@ -128,7 +128,9 @@
     "uploadDocument": "Enviar documento",
     "noDocuments": "Sem documentos",
     "fileTypeInvoice": "Fatura",
-    "fileTypeReceipt": "Comprovante"
+    "fileTypeReceipt": "Comprovante",
+    "confirmDeleteTitle": "Excluir orçamento?",
+    "confirmDeleteBody": "As cotações dele também serão excluídas. Esta ação não pode ser desfeita."
   },
   "quote": {
     "new": "Nova cotação",
@@ -152,6 +154,8 @@
     "confirmApproveBody": "Aprovar libera a geração de turma na Operação. Pode ser revertido recusando a cotação.",
     "confirmRejectTitle": "Recusar cotação?",
     "confirmRejectBody": "Recusar desfaz a aprovação e libera a edição da cotação.",
+    "confirmDeleteTitle": "Excluir cotação?",
+    "confirmDeleteBody": "Esta ação não pode ser desfeita.",
     "documents": "Documentos",
     "studentsShort": "{{count}} alunos"
   },

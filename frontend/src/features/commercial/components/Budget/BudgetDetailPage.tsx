@@ -35,8 +35,14 @@ export function BudgetDetailPage() {
   const canApprove = can('commercial.quote.approve')
   const approve = useApproveQuote()
   const reject = useRejectQuote()
-  const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject'; quote: QuoteData } | null>(null)
-  const { generalError: confirmError } = useMutationErrors([approve.error, reject.error])
+  const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject' | 'remove'; quote: QuoteData } | null>(null)
+  // As três mutações de cotação (aprovar/recusar/excluir) compartilham este
+  // dialog: 422 (cotação aprovada) e 403 chegam pelo mesmo `error`, nunca em
+  // silêncio.
+  const { generalError: confirmError } = useMutationErrors([approve.error, reject.error, removeQuote.error])
+  const removeBudget = budgetsApi.useRemove()
+  const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
+  const { generalError: removeBudgetError } = useMutationErrors([removeBudget.error])
   const [fileType, setFileType] = useState<BudgetFileType>('invoice')
   const uploadFile = useUploadBudgetFile()
   const removeFile = useRemoveBudgetFile()
@@ -89,6 +95,13 @@ export function BudgetDetailPage() {
               mudar (cliente e código são imutáveis). */}
           <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={() => setEditing(true)} />
           <AppButton
+            label={t('common.delete')}
+            icon="pi pi-trash"
+            outlined
+            severity="danger"
+            onClick={() => setConfirmDeleteBudget(true)}
+          />
+          <AppButton
             variant="brandIcon"
             label={t('budget.addQuote')}
             icon="pi pi-file"
@@ -113,7 +126,7 @@ export function BudgetDetailPage() {
         <QuotesList
           quotes={budget.quotes}
           onEdit={(q) => setWizard({ quote: q })}
-          onRemove={(q) => removeQuote.mutate(q.id!)}
+          onRemove={(q) => setConfirm({ action: 'remove', quote: q })}
           onApprove={canApprove ? (q) => setConfirm({ action: 'approve', quote: q }) : undefined}
           onReject={canApprove ? (q) => setConfirm({ action: 'reject', quote: q }) : undefined}
         />
@@ -162,30 +175,59 @@ export function BudgetDetailPage() {
       {confirm && (
         <ConfirmDialog
           visible
-          title={t(confirm.action === 'approve' ? 'quote.confirmApproveTitle' : 'quote.confirmRejectTitle')}
-          message={t(confirm.action === 'approve' ? 'quote.confirmApproveBody' : 'quote.confirmRejectBody')}
-          confirmLabel={t(confirm.action === 'approve' ? 'quote.approve' : 'quote.reject')}
-          severity={confirm.action === 'reject' ? 'danger' : undefined}
-          pending={approve.isPending || reject.isPending}
+          title={t(CONFIRM_COPY[confirm.action].title)}
+          message={t(CONFIRM_COPY[confirm.action].body)}
+          confirmLabel={t(CONFIRM_COPY[confirm.action].label)}
+          severity={confirm.action === 'approve' ? undefined : 'danger'}
+          pending={approve.isPending || reject.isPending || removeQuote.isPending}
           error={confirmError}
           onCancel={() => {
             // Reseta o erro da tentativa anterior: sem isso, reabrir o dialog
             // para outra cotação mostraria um erro fantasma de uma tentativa
-            // que nunca ocorreu para ela (approve/reject vivem no pai, não
-            // são remontados a cada abertura do dialog).
+            // que nunca ocorreu para ela (approve/reject/removeQuote vivem no
+            // pai, não são remontados a cada abertura do dialog).
             approve.reset()
             reject.reset()
+            removeQuote.reset()
             setConfirm(null)
           }}
           onConfirm={() => {
-            const mutation = confirm.action === 'approve' ? approve : reject
+            const mutation =
+              confirm.action === 'approve' ? approve : confirm.action === 'reject' ? reject : removeQuote
             mutation.mutate(confirm.quote.id!, { onSuccess: () => setConfirm(null) })
+          }}
+        />
+      )}
+
+      {confirmDeleteBudget && (
+        <ConfirmDialog
+          visible
+          title={t('budget.confirmDeleteTitle')}
+          message={t('budget.confirmDeleteBody')}
+          confirmLabel={t('common.delete')}
+          severity="danger"
+          pending={removeBudget.isPending}
+          error={removeBudgetError}
+          onCancel={() => {
+            removeBudget.reset()
+            setConfirmDeleteBudget(false)
+          }}
+          onConfirm={() => {
+            // Sucesso navega para fora da página do orçamento excluído — não
+            // há para onde voltar aqui.
+            removeBudget.mutate(budgetId, { onSuccess: () => navigate('/comercial') })
           }}
         />
       )}
     </div>
   )
 }
+
+const CONFIRM_COPY = {
+  approve: { title: 'quote.confirmApproveTitle', body: 'quote.confirmApproveBody', label: 'quote.approve' },
+  reject: { title: 'quote.confirmRejectTitle', body: 'quote.confirmRejectBody', label: 'quote.reject' },
+  remove: { title: 'quote.confirmDeleteTitle', body: 'quote.confirmDeleteBody', label: 'common.delete' },
+} as const
 
 function TotalCard({ label, value, tone }: { label: string; value?: string; tone?: 'success' | 'danger' }) {
   const color =

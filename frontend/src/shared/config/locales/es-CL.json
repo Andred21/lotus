@@ -128,7 +128,9 @@
     "uploadDocument": "Subir documento",
     "noDocuments": "Sin documentos",
     "fileTypeInvoice": "Factura",
-    "fileTypeReceipt": "Comprobante"
+    "fileTypeReceipt": "Comprobante",
+    "confirmDeleteTitle": "¿Eliminar presupuesto?",
+    "confirmDeleteBody": "Se eliminarán también sus cotizaciones. Esta acción no se puede deshacer."
   },
   "quote": {
     "new": "Nueva cotización",
@@ -152,6 +154,8 @@
     "confirmApproveBody": "Aprobar libera la generación de turma en Operación. Puedes revertirlo rechazando la cotización.",
     "confirmRejectTitle": "¿Rechazar cotización?",
     "confirmRejectBody": "Rechazar deshace la aprobación y libera la edición de la cotización.",
+    "confirmDeleteTitle": "¿Eliminar cotización?",
+    "confirmDeleteBody": "Esta acción no se puede deshacer.",
     "documents": "Documentos",
     "studentsShort": "{{count}} alumnos"
   },
