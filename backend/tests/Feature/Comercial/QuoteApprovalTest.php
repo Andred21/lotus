@@ -62,4 +62,27 @@ class QuoteApprovalTest extends TestCase
         $this->postJson("/api/quotes/{$quote->id}/approve")->assertForbidden();
         $this->postJson("/api/quotes/{$quote->id}/reject")->assertForbidden();
     }
+
+    public function test_admin_tenta_apagar_cotacao_aprovada_da_422_e_ela_continua_viva(): void
+    {
+        $quote = $this->quote('approved');
+        $this->actingAsAdmin();
+
+        $this->deleteJson("/api/quotes/{$quote->id}")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+
+        $this->assertDatabaseHas('quotes', ['id' => $quote->id, 'deleted_at' => null]);
+    }
+
+    public function test_superadmin_recusa_cotacao_aprovada_e_entao_apaga(): void
+    {
+        $quote = $this->quote('approved');
+        $this->actingAsSuperadmin();
+
+        $this->postJson("/api/quotes/{$quote->id}/reject")->assertOk()->assertJsonPath('status', 'rejected');
+        $this->deleteJson("/api/quotes/{$quote->id}")->assertNoContent();
+
+        $this->assertSoftDeleted('quotes', ['id' => $quote->id]);
+    }
 }
