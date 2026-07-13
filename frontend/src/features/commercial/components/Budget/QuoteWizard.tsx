@@ -114,13 +114,15 @@ export function QuoteWizard({
             </Field>
 
             {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
-                (a UI mostra UF em formato chileno) e normaliza para ponto —
-                troca de caractere, não aritmética. Sem isso, digitar "450,5"
-                (a vírgula descartada em vez de tratada como separador) gravava
-                "4505" — dez vezes o valor, sem erro nenhum. */}
+                e normaliza para ponto — troca de caractere, não aritmética.
+                O estado é canônico (ponto), mas a EXIBIÇÃO é sempre es-CL
+                (vírgula): "1.250" é ambíguo (mil duzentos e cinquenta, ou
+                1,25?) e nenhuma heurística resolve isso sem errar outro caso.
+                Mostrando de volta "1,250", o usuário VÊ que o valor virou
+                decimal — o caso ambíguo falha à vista, não em silêncio. */}
             <Field label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
               <AppInputText
-                value={form.value_uf}
+                value={form.value_uf.replace('.', ',')}
                 onChange={(e) => set('value_uf', parseUfInput(e.target.value))}
                 className="w-full"
               />
