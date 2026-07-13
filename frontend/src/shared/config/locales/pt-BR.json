@@ -23,6 +23,7 @@
     "phone": "Telefone",
     "search": "Buscar...",
     "notLoaded": "Não enviado",
+    "loading": "Carregando...",
     "download": "Baixar",
     "delete": "Excluir"
   },
@@ -61,8 +62,6 @@
     "new": "Novo cliente",
     "create": "Cadastrar cliente",
     "tabClients": "Clientes",
-    "tabBudgets": "Orçamentos",
-    "budgetsPlaceholder": "Módulo de orçamentos — próxima sprint.",
     "empty": "Sem clientes",
     "count": "{{count}} clientes",
     "searchPlaceholder": "Buscar por razão social ou RUT...",

@@ -57,7 +57,7 @@ export function BudgetDetailPage() {
     uploadFile.mutate({ budgetId, type: fileType, file }, { onSuccess: () => e.options.clear() })
   }
 
-  if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
+  if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
 
   const client = clients.data?.find((c) => c.id === budget.client_id)

@@ -23,6 +23,7 @@
     "phone": "Phone",
     "search": "Search...",
     "notLoaded": "Not uploaded",
+    "loading": "Loading...",
     "download": "Download",
     "delete": "Delete"
   },
@@ -61,8 +62,6 @@
     "new": "New client",
     "create": "Register client",
     "tabClients": "Clients",
-    "tabBudgets": "Budgets",
-    "budgetsPlaceholder": "Budgets module — next sprint.",
     "empty": "No clients",
     "count": "{{count}} clients",
     "searchPlaceholder": "Search by legal name or RUT...",
