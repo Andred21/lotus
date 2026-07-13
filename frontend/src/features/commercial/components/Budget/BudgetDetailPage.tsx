@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppButton, AppTag, ConfirmDialog } from '@shared/ui'
-import { usePermissions } from '@shared/hooks'
+import { usePermissions, useMutationErrors } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
 import type { QuoteData } from '@shared/types/generated'
@@ -33,6 +33,7 @@ export function BudgetDetailPage() {
   const approve = useApproveQuote()
   const reject = useRejectQuote()
   const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject'; quote: QuoteData } | null>(null)
+  const { generalError: confirmError } = useMutationErrors([approve.error, reject.error])
 
   if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
@@ -114,7 +115,16 @@ export function BudgetDetailPage() {
           confirmLabel={t(confirm.action === 'approve' ? 'quote.approve' : 'quote.reject')}
           severity={confirm.action === 'reject' ? 'danger' : undefined}
           pending={approve.isPending || reject.isPending}
-          onCancel={() => setConfirm(null)}
+          error={confirmError}
+          onCancel={() => {
+            // Reseta o erro da tentativa anterior: sem isso, reabrir o dialog
+            // para outra cotação mostraria um erro fantasma de uma tentativa
+            // que nunca ocorreu para ela (approve/reject vivem no pai, não
+            // são remontados a cada abertura do dialog).
+            approve.reset()
+            reject.reset()
+            setConfirm(null)
+          }}
           onConfirm={() => {
             const mutation = confirm.action === 'approve' ? approve : reject
             mutation.mutate(confirm.quote.id!, { onSuccess: () => setConfirm(null) })
