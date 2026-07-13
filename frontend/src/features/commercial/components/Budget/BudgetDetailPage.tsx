@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AppButton, AppTag } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
 import type { QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
-import { useRemoveQuote } from '../../api/useQuotes'
+import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../../api/useQuotes'
 import { QuotesList } from './QuotesList'
 import { BudgetDialog } from './BudgetDialog'
 import { QuoteWizard } from './QuoteWizard'
@@ -27,6 +28,11 @@ export function BudgetDetailPage() {
   // null = fechado; { quote: null } = criar; { quote } = editar.
   const [wizard, setWizard] = useState<{ quote: QuoteData | null } | null>(null)
   const removeQuote = useRemoveQuote()
+  const { can } = usePermissions()
+  const canApprove = can('commercial.quote.approve')
+  const approve = useApproveQuote()
+  const reject = useRejectQuote()
+  const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject'; quote: QuoteData } | null>(null)
 
   if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
@@ -85,6 +91,8 @@ export function BudgetDetailPage() {
           quotes={budget.quotes}
           onEdit={(q) => setWizard({ quote: q })}
           onRemove={(q) => removeQuote.mutate(q.id!)}
+          onApprove={canApprove ? (q) => setConfirm({ action: 'approve', quote: q }) : undefined}
+          onReject={canApprove ? (q) => setConfirm({ action: 'reject', quote: q }) : undefined}
         />
       </section>
 
@@ -96,6 +104,22 @@ export function BudgetDetailPage() {
 
       {wizard && (
         <QuoteWizard visible budgetId={budgetId} quote={wizard.quote} onHide={() => setWizard(null)} />
+      )}
+
+      {confirm && (
+        <ConfirmDialog
+          visible
+          title={t(confirm.action === 'approve' ? 'quote.confirmApproveTitle' : 'quote.confirmRejectTitle')}
+          message={t(confirm.action === 'approve' ? 'quote.confirmApproveBody' : 'quote.confirmRejectBody')}
+          confirmLabel={t(confirm.action === 'approve' ? 'quote.approve' : 'quote.reject')}
+          severity={confirm.action === 'reject' ? 'danger' : undefined}
+          pending={approve.isPending || reject.isPending}
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            const mutation = confirm.action === 'approve' ? approve : reject
+            mutation.mutate(confirm.quote.id!, { onSuccess: () => setConfirm(null) })
+          }}
+        />
       )}
     </div>
   )

@@ -6,11 +6,13 @@ import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
 
 export function QuotesList({
-  quotes, onEdit, onRemove,
+  quotes, onEdit, onRemove, onApprove, onReject,
 }: {
   quotes: QuoteData[]
   onEdit?: (q: QuoteData) => void
   onRemove?: (q: QuoteData) => void
+  onApprove?: (q: QuoteData) => void
+  onReject?: (q: QuoteData) => void
 }) {
   const { t } = useTranslation()
   const courses = coursesApi.useList()
@@ -39,6 +41,15 @@ export function QuotesList({
           </div>
 
           <span className="font-semibold">{formatUf(q.value_uf)} UF</span>
+
+          <div className="flex items-center gap-2">
+            {onReject && q.status !== 'rejected' && (
+              <AppButton label={t('quote.reject')} severity="danger" outlined onClick={() => onReject(q)} />
+            )}
+            {onApprove && q.status !== 'approved' && (
+              <AppButton variant="brandLabel" label={t('quote.approve')} onClick={() => onApprove(q)} />
+            )}
+          </div>
 
           <div className="flex items-center gap-1">
             {q.status !== 'approved' && onEdit && (
