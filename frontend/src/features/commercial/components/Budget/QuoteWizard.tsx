@@ -5,6 +5,7 @@ import { AppDialog, AppButton, AppInputText } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
+import { parseUfInput } from '../../lib/uf'
 
 export function QuoteWizard({
   visible, budgetId, quote, onHide,
@@ -112,11 +113,15 @@ export function QuoteWizard({
               />
             </Field>
 
-            {/* value_uf NUNCA vira Number: só sanitiza os caracteres e envia string. */}
+            {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
+                (a UI mostra UF em formato chileno) e normaliza para ponto —
+                troca de caractere, não aritmética. Sem isso, digitar "450,5"
+                (a vírgula descartada em vez de tratada como separador) gravava
+                "4505" — dez vezes o valor, sem erro nenhum. */}
             <Field label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
               <AppInputText
                 value={form.value_uf}
-                onChange={(e) => set('value_uf', e.target.value.replace(/[^\d.]/g, ''))}
+                onChange={(e) => set('value_uf', parseUfInput(e.target.value))}
                 className="w-full"
               />
             </Field>
