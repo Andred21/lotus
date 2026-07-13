@@ -67,4 +67,16 @@ class BudgetSummaryServiceTest extends TestCase
         $this->assertSame(300.0, $this->service->totalValueUf($budget));
         $this->assertSame(30, $this->service->totalStudents($budget));
     }
+
+    public function test_cotacao_soft_deletada_fica_fora_das_somas_e_do_status(): void
+    {
+        $budget = $this->budgetWith(['approved', 'pending']);
+        $budget->quotes->firstWhere('status', QuoteStatus::Approved)->delete();
+        $budget->refresh();
+
+        // sem a aprovada (soft-deletada), só resta a pendente
+        $this->assertSame(QuoteStatus::Pending, $this->service->status($budget));
+        $this->assertSame(100.0, $this->service->totalValueUf($budget));
+        $this->assertSame(10, $this->service->totalStudents($budget));
+    }
 }

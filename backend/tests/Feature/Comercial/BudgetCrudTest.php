@@ -54,11 +54,20 @@ class BudgetCrudTest extends TestCase
         $this->getJson('/api/budgets')->assertOk()->assertJsonCount(1);
         $this->getJson("/api/budgets/{$id}")->assertOk()->assertJsonPath('id', $id);
 
-        // update: payment_terms muda; code NÃO muda (imutável)
-        $this->putJson("/api/budgets/{$id}", ['client_id' => $clientId, 'payment_terms' => 'à vista'])
+        // update: payment_terms muda; code e client_id são imutáveis MESMO se
+        // o payload mandar valores forjados diferentes dos reais.
+        $forgedClientId = $this->clientId();
+        $this->putJson("/api/budgets/{$id}", [
+            'client_id' => $forgedClientId,
+            'code' => 'Scap 999',
+            'payment_terms' => 'à vista',
+        ])
             ->assertOk()
             ->assertJsonPath('payment_terms', 'à vista')
-            ->assertJsonPath('code', "Scap {$id}");
+            ->assertJsonPath('code', "Scap {$id}")
+            ->assertJsonPath('client_id', $clientId);
+
+        $this->assertDatabaseHas('budgets', ['id' => $id, 'client_id' => $clientId, 'code' => "Scap {$id}"]);
 
         $this->deleteJson("/api/budgets/{$id}")->assertNoContent();
         $this->assertSoftDeleted('budgets', ['id' => $id]);

@@ -30,7 +30,7 @@ class BudgetSummaryService
 
     public function totalValueUf(Budget $budget): float
     {
-        return (float) $budget->quotes->sum(fn (Quote $q) => (float) $q->value_uf);
+        return (float) $budget->quotes->sum(fn (Quote $q) => $q->value_uf);
     }
 
     public function totalStudents(Budget $budget): int
