@@ -33,7 +33,17 @@ export function ConfirmDialog({
   )
 
   return (
-    <AppDialog header={title} visible={visible} onHide={onCancel} footer={footer}>
+    // Com a requisição em voo, ESC e o X do header ficam travados junto com o
+    // Cancelar: fechar aqui solta o observer da mutação e a resposta (403/422)
+    // chegaria sem ninguém para exibi-la.
+    <AppDialog
+      header={title}
+      visible={visible}
+      onHide={onCancel}
+      footer={footer}
+      closable={!pending}
+      closeOnEscape={!pending}
+    >
       {error && (
         <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
           {error}
