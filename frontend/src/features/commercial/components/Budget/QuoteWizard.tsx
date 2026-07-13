@@ -63,6 +63,13 @@ export function QuoteWizard({
         />
       )}
 
+      {/* Fora do passo: o campo do curso só existe no passo 1, mas o 422 de
+          course_id (curso removido entre a escolha e o submit) chega com o
+          wizard no passo 2 — dentro do passo 1 ele ficaria invisível. */}
+      {fieldErrors?.course_id?.[0] && (
+        <p className="mb-4 text-sm text-red-600">{fieldErrors.course_id[0]}</p>
+      )}
+
       {step === 1 ? (
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase text-slate-500">{t('quote.stepCourse')}</h3>
@@ -72,7 +79,6 @@ export function QuoteWizard({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          {fieldErrors?.course_id?.[0] && <p className="text-sm text-red-600">{fieldErrors.course_id[0]}</p>}
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {list.map((c) => (
               <label
