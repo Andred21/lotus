@@ -39,21 +39,17 @@ export function BudgetDetailPage() {
   // As três mutações de cotação (aprovar/recusar/excluir) compartilham este
   // dialog: 422 (cotação aprovada) e 403 chegam pelo mesmo `error`, nunca em
   // silêncio.
-  const { generalError: confirmError } = useMutationErrors([approve.error, reject.error, removeQuote.error])
+  // `message` (não `generalError`): os 422 daqui vêm por campo (errors.status =
+  // "cotação aprovada não pode ser excluída"), e essas telas não têm input onde
+  // pendurá-los — com generalError puro, o erro sumia.
+  const { message: confirmError } = useMutationErrors([approve.error, reject.error, removeQuote.error])
   const removeBudget = budgetsApi.useRemove()
   const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
-  const { generalError: removeBudgetError } = useMutationErrors([removeBudget.error])
+  const { message: removeBudgetError } = useMutationErrors([removeBudget.error])
   const [fileType, setFileType] = useState<BudgetFileType>('invoice')
   const uploadFile = useUploadBudgetFile()
   const removeFile = useRemoveBudgetFile()
-  // O upload de documentos não tem campo dedicado por chave (é um único input de
-  // arquivo) — por isso, além do generalError, cai para a primeira mensagem de
-  // fieldErrors (ex.: 422 de "file"/"type") em vez de deixá-la sem exibição.
-  const { fieldErrors: fileFieldErrors, generalError: fileGeneralError } = useMutationErrors([
-    uploadFile.error,
-    removeFile.error,
-  ])
-  const fileError = fileGeneralError ?? Object.values(fileFieldErrors ?? {})[0]?.[0] ?? null
+  const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
 
   // e.options.clear() devolve o AppFileUpload ao estado vazio depois do envio
   // (mesmo padrão dos documentos do redator).

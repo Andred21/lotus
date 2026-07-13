@@ -10,23 +10,24 @@ export function formatUf(value: string): string {
 
 /** Normaliza o que o usuário digita (ou o que o campo pré-preenche em modo
  * edição, via `formatUf`) para o formato canônico que o backend espera:
- * dígitos e UM ponto decimal, como string. A UI mostra UF em formato chileno
- * (vírgula), então aceita vírgula OU ponto como separador — mas só o
- * PRIMEIRO separador digitado sobrevive; qualquer caractere depois disso que
- * não seja dígito (inclusive um segundo separador) é descartado. Nunca passa
- * por Number()/parseFloat(): a troca de caractere aqui é textual, não
- * aritmética — é exatamente o texto que evita o erro de representação de
- * ponto flutuante que o decimal(12,4) do backend existe para prevenir. */
+ * dígitos e UM ponto decimal, como string.
+ *
+ * O ÚLTIMO separador é o decimal; os anteriores são agrupamento de milhar e
+ * caem fora. É a convenção es-CL ("1.250,75" = mil duzentos e cinquenta vírgula
+ * setenta e cinco). Tratar o primeiro como decimal e colar o resto dos dígitos
+ * transformava "1.250,75" em "1.25075" — um número que o backend ACEITA e grava
+ * errado (1,2508 UF), sem 422 nenhum. Valor rejeitado é aceitável; valor
+ * silenciosamente errado, não — dinheiro aqui tem peso legal.
+ *
+ * Nunca passa por Number()/parseFloat(): tudo aqui é troca de caractere, não
+ * aritmética — é o que evita o erro de representação de ponto flutuante que o
+ * decimal(12,4) do backend existe para prevenir. */
 export function parseUfInput(raw: string): string {
-  let seenSeparator = false
-  let result = ''
-  for (const char of raw) {
-    if (char >= '0' && char <= '9') {
-      result += char
-    } else if ((char === '.' || char === ',') && !seenSeparator) {
-      result += '.'
-      seenSeparator = true
-    }
-  }
-  return result
+  const cleaned = raw.replace(/[^\d.,]/g, '')
+  const lastSeparator = Math.max(cleaned.lastIndexOf('.'), cleaned.lastIndexOf(','))
+  if (lastSeparator === -1) return cleaned
+
+  const integer = cleaned.slice(0, lastSeparator).replace(/[.,]/g, '')
+  const fraction = cleaned.slice(lastSeparator + 1).replace(/[.,]/g, '')
+  return `${integer}.${fraction}`
 }

@@ -22,14 +22,9 @@ export function QuotesList({
   const courses = coursesApi.useList()
   const uploadFile = useUploadQuoteFile()
   const removeFile = useRemoveQuoteFile()
-  // Sem campo dedicado por chave (upload é um único input de arquivo por linha) —
-  // além do generalError, cai para a primeira mensagem de fieldErrors (ex.: 422
-  // de "file"/"type") em vez de deixá-la sem exibição.
-  const { fieldErrors: fileFieldErrors, generalError: fileGeneralError } = useMutationErrors([
-    uploadFile.error,
-    removeFile.error,
-  ])
-  const fileError = fileGeneralError ?? Object.values(fileFieldErrors ?? {})[0]?.[0] ?? null
+  // `message`: o upload é um único input por linha, sem campo onde pendurar o
+  // 422 de "file"/"type" — o hook já resolve o fallback.
+  const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
 
   const courseName = (id: number) => courses.data?.find((c) => c.id === id)?.name ?? '—'
 
