@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown } from '@shared/ui'
+import type { FileUploadHandlerEvent } from '@shared/ui'
 import { usePermissions, useMutationErrors } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
@@ -9,9 +10,11 @@ import type { QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../../api/useQuotes'
+import { useUploadBudgetFile, useRemoveBudgetFile, type BudgetFileType } from '../../api/useCommercialFiles'
 import { QuotesList } from './QuotesList'
 import { BudgetDialog } from './BudgetDialog'
 import { QuoteWizard } from './QuoteWizard'
+import { FileList } from './FileList'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -34,6 +37,17 @@ export function BudgetDetailPage() {
   const reject = useRejectQuote()
   const [confirm, setConfirm] = useState<{ action: 'approve' | 'reject'; quote: QuoteData } | null>(null)
   const { generalError: confirmError } = useMutationErrors([approve.error, reject.error])
+  const [fileType, setFileType] = useState<BudgetFileType>('invoice')
+  const uploadFile = useUploadBudgetFile()
+  const removeFile = useRemoveBudgetFile()
+
+  // e.options.clear() devolve o AppFileUpload ao estado vazio depois do envio
+  // (mesmo padrão dos documentos do redator).
+  const handleUpload = (e: FileUploadHandlerEvent) => {
+    const file = e.files[0]
+    if (!file) return
+    uploadFile.mutate({ budgetId, type: fileType, file }, { onSuccess: () => e.options.clear() })
+  }
 
   if (query.isLoading) return <p className="p-4 text-sm text-slate-500">{t('common.notLoaded')}</p>
   if (!budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
@@ -95,6 +109,31 @@ export function BudgetDetailPage() {
           onApprove={canApprove ? (q) => setConfirm({ action: 'approve', quote: q }) : undefined}
           onReject={canApprove ? (q) => setConfirm({ action: 'reject', quote: q }) : undefined}
         />
+      </section>
+
+      <section className="rounded-lg border border-slate-200 dark:border-slate-700">
+        <header className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <h3 className="font-medium">{t('budget.documents')}</h3>
+          <div className="flex items-center gap-2">
+            <div className="w-44">
+              <AppDropdown
+                value={fileType}
+                options={[
+                  { label: t('budget.fileTypeInvoice'), value: 'invoice' },
+                  { label: t('budget.fileTypeReceipt'), value: 'receipt' },
+                ]}
+                onChange={(e) => setFileType(e.value as BudgetFileType)}
+              />
+            </div>
+            <AppFileUpload
+              chooseOptions={{ icon: 'pi pi-upload' }}
+              chooseLabel={t('budget.uploadDocument')}
+              disabled={uploadFile.isPending}
+              uploadHandler={handleUpload}
+            />
+          </div>
+        </header>
+        <FileList files={budget.files ?? []} onRemove={(fileId) => removeFile.mutate({ budgetId, fileId })} />
       </section>
 
       {/* Reusa o dialog da Task 4 em modo edit — em `edit` ele trava cliente e

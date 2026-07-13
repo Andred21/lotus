@@ -1,9 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag, AppButton } from '@shared/ui'
+import { AppTag, AppButton, AppFileUpload } from '@shared/ui'
+import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
+import { useUploadQuoteFile, useRemoveQuoteFile } from '../../api/useCommercialFiles'
+import { FileList } from './FileList'
 
 export function QuotesList({
   quotes, onEdit, onRemove, onApprove, onReject,
@@ -16,8 +19,16 @@ export function QuotesList({
 }) {
   const { t } = useTranslation()
   const courses = coursesApi.useList()
+  const uploadFile = useUploadQuoteFile()
+  const removeFile = useRemoveQuoteFile()
 
   const courseName = (id: number) => courses.data?.find((c) => c.id === id)?.name ?? '—'
+
+  const handleUpload = (quoteId: number, e: FileUploadHandlerEvent) => {
+    const file = e.files[0]
+    if (!file) return
+    uploadFile.mutate({ quoteId, file }, { onSuccess: () => e.options.clear() })
+  }
 
   if (quotes.length === 0) {
     return <p className="p-4 text-sm text-slate-500">{t('budget.noQuotes')}</p>
@@ -58,6 +69,19 @@ export function QuotesList({
             {q.status !== 'approved' && onRemove && (
               <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => onRemove(q)} />
             )}
+          </div>
+
+          <div className="w-full">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase text-slate-500">{t('quote.documents')}</span>
+              <AppFileUpload
+                chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
+                chooseLabel=""
+                disabled={uploadFile.isPending}
+                uploadHandler={(e) => handleUpload(q.id!, e)}
+              />
+            </div>
+            <FileList files={q.files ?? []} onRemove={(fileId) => removeFile.mutate({ quoteId: q.id!, fileId })} />
           </div>
         </div>
       ))}
