@@ -36,7 +36,9 @@ class QuoteCrudTest extends TestCase
         $this->setUpBudget();
 
         $r1 = $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload());
-        $r1->assertCreated()->assertJsonPath('seq_in_budget', 1)->assertJsonPath('status', 'pending');
+        $r1->assertCreated()->assertJsonPath('seq_in_budget', 1)->assertJsonPath('status', 'pending')
+            // entra número no JSON (80.5), sai string decimal com as 4 casas da coluna
+            ->assertJsonPath('value_uf', '80.5000');
 
         $r2 = $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload());
         $r2->assertCreated()->assertJsonPath('seq_in_budget', 2)

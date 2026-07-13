@@ -37,6 +37,7 @@ class DtoTest extends TestCase
 
         $this->assertSame("Scap {$quote->budget_id} - Cot 2", $data->code);
         $this->assertSame(QuoteStatus::Approved, $data->status);
+        $this->assertSame('120.0000', $data->value_uf);   // string, com as 4 casas do decimal(12,4)
     }
 
     public function test_budget_data_derives_status_and_totals(): void
@@ -44,7 +45,7 @@ class DtoTest extends TestCase
         $data = BudgetData::fromModel($this->seedBudget());
 
         $this->assertSame(QuoteStatus::Approved, $data->status);   // ≥1 aprovada
-        $this->assertSame(120.0, $data->total_value_uf);
+        $this->assertSame('120.0000', $data->total_value_uf);
         $this->assertSame(15, $data->total_students);
         $this->assertCount(1, $data->quotes);
     }

@@ -24,7 +24,9 @@ class BudgetData extends Data
         public int $client_id,
         public string|Optional $code,
         public QuoteStatus|Optional $status,
-        public float|Optional $total_value_uf,
+        // String pelo mesmo motivo do QuoteData::$value_uf: a soma vem do
+        // BudgetSummaryService em decimal (bcmath), não em float.
+        public string|Optional $total_value_uf,
         public int|Optional $total_students,
         /** @var array<QuoteData> */
         #[DataCollectionOf(QuoteData::class)]

@@ -23,7 +23,9 @@ class QuoteData extends Data
         public int|Optional $seq_in_budget,
         public int $course_id,
         public int $student_count,
-        public float $value_uf,
+        // String, não float: o cast decimal:4 do Eloquent já devolve string de
+        // propósito — dinheiro não trafega por float (ADR-04 / critério 6.1.3).
+        public string $value_uf,
         public QuoteStatus|Optional $status,
         public string|Optional|null $approved_at,
         public string|Optional $code,
@@ -54,7 +56,7 @@ class QuoteData extends Data
             seq_in_budget: $quote->seq_in_budget,
             course_id: $quote->course_id,
             student_count: $quote->student_count,
-            value_uf: (float) $quote->value_uf,
+            value_uf: (string) $quote->value_uf,
             status: $quote->status,
             approved_at: $quote->approved_at?->toIso8601String(),
             code: "Scap {$quote->budget_id} - Cot {$quote->seq_in_budget}",
