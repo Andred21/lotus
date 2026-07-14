@@ -19,7 +19,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-10 | Sprint 1 · Catálogo frontend | Entregue | `/cursos`: listagem + form com habilitação de redatores (fecha Sprint 1) | `plans/archive/2026-07-10-sprint1-catalog-frontend.md` | `specs/archive/2026-07-10-sprint1-catalog-frontend-design.md` |
 | 2026-07-10 | Sprint 2 · Comercial backend | Entregue | Budget agrupa Quotes independentes; status/totais derivados (bcmath); aprovação superadmin; anexos polimórficos. ADR-17 (seq atômica) nasceu aqui | `plans/archive/2026-07-10-sprint2-commercial-backend.md` | `specs/archive/2026-07-10-sprint2-commercial-backend-design.md` |
 | 2026-07-13 | Sprint 2 · Comercial frontend | Entregue | Lista de orçamentos, detalhe com cotações, wizard de cotação (passo em useState), aprovação/recusa, anexos | `plans/archive/2026-07-13-sprint2-commercial-frontend.md` | `specs/archive/2026-07-13-sprint2-commercial-frontend-design.md` |
-| 2026-07-14 | Bloco 0 · Sync de docs pós-Sprint 2 | Entregue | DER com `budgets`/`quotes` reais (sem status/total/client_id), ADR-17 fechado, estrutura-monolito + ressalva ADR-18 | — | — |
+| 2026-07-14 | Bloco 0 · Sync de docs pós-Sprint 2 | Entregue | Docs voltam a bater com o código: `budgets` **sem** status/total (derivados no `BudgetSummaryService`) e `quotes` **sem** `client_id` — não recriar essas colunas na Sprint 3. ADR-17 fechado; ressalva do ADR-18 (cliente REST em `shared/api`). Morph map mantém o alias `turma` antes do model — intencional, não remover | — (docs-only, sem plano) | — |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
