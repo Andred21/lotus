@@ -154,8 +154,10 @@ Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi`
 `shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é rota Laravel
 (domínio Certification), fora desta SPA — não criar `public/validate/` no front.
 
-**server vs client state (ADR-05):** dado de servidor → `features/<x>/api` (TanStack Query).
-UI/sessão → Zustand. Não misturar. Estado que **cruza componentes** (tema, sessão, wizard
+**server vs client state (ADR-05):** dado de servidor → TanStack Query; UI/sessão → Zustand.
+Não misturar. **Onde mora o dado de servidor (ADR-18):** o cliente REST (`createCrudResource`)
+nasce SEMPRE em `shared/api`; `features/<x>/api/` fica só com hooks de sub-recurso acoplados a uma
+tela (`useQuotes`, `useCommercialFiles`, `useRedatorDocuments`). Estado que **cruza componentes** (tema, sessão, wizard
 multi-tela compartilhado) → Zustand; estado local de um form/passo que vive num só componente
 fica em `useState` (ref.: passo do `QuoteWizard` em `useQuoteForm`). Não promover a Zustand o
 que não cruza fronteira — é over-engineering.

@@ -17,18 +17,20 @@ backend/app/
 │   ├── Identity/               # usuários, auth, RBAC, redator/aluno/cliente como users
 │   │   ├── Actions/            # regra de negócio single-action (ADR-02)
 │   │   ├── Data/               # DTOs spatie/laravel-data (ADR-04) → geram tipos TS
+│   │   ├── Enums/              # enums do domínio (QuoteStatus, RedatorDocumentType…)
 │   │   ├── Models/             # User, ... Eloquent (ADR-10 enforceMorphMap)
 │   │   ├── Services/           # Domain Services (regra entre agregados)
 │   │   ├── QueryBuilders/      # Custom Query Builders (consultas complexas)
 │   │   ├── Policies/           # autorização por modelo (casa com Spatie, ADR-07)
+│   │   ├── Exceptions/         # exceção própria do domínio (só quando houver)
 │   │   ├── Http/Controllers/   # CRUD simples mora aqui direto (ADR-02)
 │   │   ├── Http/Requests/      # FormRequest, se não validar via Data
 │   │   └── routes.php          # rotas do domínio (agregadas pelo RouteServiceProvider)
-│   ├── Commercial/             # orçamento, cotação, aprovação, cliente-contato
+│   ├── Commercial/             # cliente/endereço/contato, orçamento, cotação, aprovação, anexos
 │   ├── Catalog/                # cursos, templates de certificado, habilitação redator-curso
-│   ├── Operation/              # turma, matrícula, designação redator, conclusão
-│   ├── Certification/          # emissão on-demand, validação QR pública
-│   └── Feedback/               # avaliações, pré-condição de conclusão
+│   ├── Operation/              # turma, matrícula, designação redator, conclusão  [scaffold vazio]
+│   ├── Certification/          # emissão on-demand, validação QR pública          [scaffold vazio]
+│   └── Feedback/               # avaliações, pré-condição de conclusão            [não existe ainda]
 │   (cada domínio: mesma estrutura interna, conforme necessidade)
 │
 ├── Shared/                     # transversal. NÃO é domínio. Usado por todos.
@@ -81,10 +83,10 @@ frontend/src/
 │   │   ├── axios.ts            # cliente + interceptor RFC 7807 (ADR-03) · exporta ProblemDetails
 │   │   ├── csrf.ts             # initCsrf() isolado (chamado antes de mutar)
 │   │   ├── crud.ts  createCrudResource.ts  # fábrica genérica de recurso CRUD (list/get/create/update/delete)
-│   │   └── coursesApi.ts       # recurso compartilhado (mais de uma feature usa; feature não importa feature)
+│   │   └── clientsApi.ts  coursesApi.ts  redatoresApi.ts  budgetsApi.ts  # TODO cliente REST nasce aqui (ADR-18)
 │   ├── stores/                 # Zustand TRANSVERSAL, não domínio: uiStore (tema/idioma), sessionStore (usuário)
 │   ├── hooks/                  # useClock, useCrudPage, useEntityForm, usePermissions (can() é infra de UI)
-│   ├── lib/                    # helpers puros (Rut, UF, datas)
+│   ├── lib/                    # helpers puros: chileRegions, datetime, dialogMode, name, roles
 │   ├── types/                  # tipos TS GERADOS do backend (ADR-04) — NÃO editar à mão
 │   └── config/                 # brand, navigation, primeTheme (ADR-16), i18n + locales (ADR-15)
 │
@@ -97,9 +99,17 @@ frontend/src/
 │   │   │   └── PeoplePage.tsx  #   página do módulo (rota /personas)
 │   │   ├── hooks/              # hooks locais (useRedatorForm, useRedatoresPage…)
 │   │   └── lib/                # helpers de UI locais (redatorStatus devolve CHAVE de status, não texto)
-│   ├── commercial/             # cliente + orçamento — components/Client/ (ClientDialog, ClientsTable)
-│   │   └── (mesma estrutura interna: api/ components/ hooks/)
-│   ├── catalog/ operation/ certification/ feedback/   # (criadas quando entrarem em desenvolvimento)
+│   ├── commercial/             # cliente + orçamento/cotação
+│   │   ├── api/                # SÓ hooks de sub-recurso (useQuotes, useCommercialFiles) — o
+│   │   │                       #   cliente REST (budgetsApi/clientsApi) vive em shared/api (ADR-18)
+│   │   ├── components/         # Client/ (ClientDialog, ClientsTable) · Budget/ (BudgetsTable,
+│   │   │                       #   BudgetDetailPage, BudgetDialog, QuoteWizard, QuotesList, FileList)
+│   │   ├── hooks/              # useClientForm, useBudgetForm, useQuoteForm, useXPage
+│   │   └── lib/                # helpers de UI locais (quoteStatusSeverity → severidade da AppTag;
+│   │                           #   uf → formato chileno 1.234,5678)
+│   ├── catalog/                # cursos + habilitação de redatores (código real)
+│   ├── operation/ certification/   # scaffold vazio (.gitkeep) — entram nas Sprints 3 e 4
+│   │   (feedback/ ainda não existe)
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui
 
@@ -129,7 +139,8 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 
 1. **Wrappers `shared/ui`:** o planejamento escreveu `AppButton.tsx` (arquivo); o repo adotou **pasta-por-componente** (`AppButton/AppButton.tsx` + `index.ts`). Padrão vigente = pasta. Manter uniforme: todo wrapper é pasta.
 2. **`App.tsx`:** resolvido — o shell (task 2.4.1) foi entregue; o entrypoint e os providers vivem em `app/`. `main.tsx` na raiz de `src/` segue como ponto de montagem.
-3. **Features com código real:** `identity`, `commercial` e `catalog` estão em desenvolvimento (código real). `operation/certification/feedback` seguem vazias (no backend, pastas de scaffold já existem sob `Domains/`, sem classes). A regra "criar só quando entra em desenvolvimento" vale para as vazias — completar ou enxugar quando entrarem. Não é bloqueante.
+3. **Features com código real:** `identity`, `commercial` e `catalog` estão em desenvolvimento (código real). `operation` e `certification` existem como **scaffold vazio** dos dois lados — no backend, pastas sob `Domains/` sem classes; no front, pastas com `.gitkeep`. **`feedback` não existe** em nenhum dos dois (só na árvore-alvo acima). O scaffold vazio contraria a regra "não criar pastas vazias especulativas" (dívida consciente, herdada do bootstrap do repo): quando a Sprint 3 abrir `operation`, ou se preenche, ou se enxuga. Não é bloqueante.
+4. **Cliente REST em `shared/api`, não na feature (ADR-18):** a árvore original insinuava `features/<x>/api/` como casa do CRUD. Vigente: `createCrudResource` sempre em `shared/api`; `features/<x>/api/` guarda só hooks de sub-recurso (nested/upload) que invalidam a key do pai.
 
 ---
 

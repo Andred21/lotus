@@ -126,8 +126,9 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 ## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
 
 **Regra:**
-- `budgets.codigo` (varchar, `UNIQUE`, **imutável**) gerado na Action de criação a partir do
-  próprio `id` (`'Scap ' . id`) — **sem** tabela de sequência dedicada.
+- `budgets.code` (varchar, `UNIQUE`, **imutável**) gerado na Action de criação a partir do
+  próprio `id` (`'Scap ' . id`) — **sem** tabela de sequência dedicada. Nullable no schema porque
+  o `id` só existe depois do insert; a Action preenche na mesma transação.
 - `quotes.seq_in_budget` (smallint) = contador atômico por orçamento via `lockForUpdate()` em
   transação; índice `UNIQUE(budget_id, seq_in_budget)` como defesa extra.
 - O código composto (`Scap 100 - Cot 2`) é **calculado** (accessor/DTO), nunca persistido como string.
@@ -138,7 +139,10 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 surrogate key (`id`). Evita reaproveitamento de número após soft-delete. Trade-off: lock
 transacional na criação de cotação — custo desprezível a ~10 usuários. Descartados: segundo
 `AUTO_INCREMENT` (InnoDB só permite um por tabela); `COUNT(*)` de cotações (race condition +
-reaproveitamento de número). *Tabelas `budgets`/`quotes` ainda não implementadas — decisão fechada no Drive.*
+reaproveitamento de número).
+
+**Estado:** implementado na Sprint 2 (`CreateBudgetAction`, `CreateQuoteAction`) — ver
+`docs/der-fisico.md` para o schema real.
 
 ## ADR-18 — Frontend: clientes REST (`createCrudResource`) na camada `shared/api`
 
