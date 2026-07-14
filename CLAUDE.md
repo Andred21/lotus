@@ -10,8 +10,8 @@ estão em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md). O planej
 Plataforma corporativa de gestão de capacitação profissional para a **Lotus** (cliente chileno,
 setor elétrico de alta tensão regulado). Ciclo: cotação → curso → turma → matrícula → certificado
 com validação por QR. **Certificados e documentos têm peso legal** — correção, auditoria e
-rastreabilidade não são negociáveis. Refatoração v2 greenfield; a v1 documenta *o quê*, nunca
-*como*. ~10 usuários internos, baixa concorrência: escolhas proporcionais, sem superdimensionar.
+rastreabilidade não são negociáveis. Refatoração v2 greenfield; a v1 documenta _o quê_, nunca
+_como_. ~10 usuários internos, baixa concorrência: escolhas proporcionais, sem superdimensionar.
 
 ## 2. Stack
 
@@ -26,19 +26,23 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 **pergunte ao João Victor — alucinar arquitetura é pior que perguntar.**
 
 **Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
-- **SEMPRE:** `.superpowers/sdd/progress.md` — índice vivo (o que já foi construído, provado e
-  decidido). É barato e ancora a sessão.
+- **SEMPRE:** `docs/superpowers/progress.md` — índice vivo versionado (1 linha por feature:
+o que foi construído, o desfecho, e onde estão plano/spec). É barato e ancora a sessão.
+Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
+- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local de execução
+  task-a-task do superpowers (não versionado). Consulte só se precisar do detalhe fino de
+  execução; a âncora canônica é o versionado acima.
 - **SE a task implementa/mexe numa feature:** o plano e o spec mais recentes dela em
   `docs/superpowers/plans/` e `docs/superpowers/specs/`.
-- **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.
+- **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **Para padrão de código:** `INSTRUÇÕES-DO-PROJETO.md` (a mecânica mora lá, não aqui).
 
-| Doc | Consulte antes de |
-|---|---|
-| `docs/adrs.md` (17 ADRs) | qualquer decisão de stack, padrão, estrutura ou infra |
-| `docs/der-fisico.md` (24 tabelas) | criar migration/model ou mexer em schema |
-| `docs/estrutura-monolito.md` | criar arquivo novo — para saber ONDE ele vai |
-| `docs/README.md` (lições) | iniciar feature — não repetir erro já mapeado |
+| Doc                               | Consulte antes de                                     |
+| --------------------------------- | ----------------------------------------------------- |
+| `docs/adrs.md`                    | qualquer decisão de stack, padrão, estrutura ou infra |
+| `docs/der-fisico.md`              | criar migration/model ou mexer em schema              |
+| `docs/estrutura-monolito.md`      | criar arquivo novo — para saber ONDE ele vai          |
+| `docs/README.md` (lições)         | iniciar feature — não repetir erro já mapeado         |
 
 > Planejamento canônico vive no Google Drive; tasks no Notion. Os `/docs` são snapshots datados;
 > se divergirem do Drive, o Drive vence.
@@ -46,8 +50,13 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 ## 4. Fluxo de trabalho (superpowers, subagent-driven)
 
 O desenvolvimento é disparado por skills superpowers: `brainstorming` → `writing-plans` →
-`subagent-driven-development` / `executing-plans`. Planos e specs em `docs/superpowers/`;
-progresso, reviews e reports em `.superpowers/sdd/`.
+`subagent-driven-development` / `executing-plans`. Planos e specs ativos em `docs/superpowers/`;
+concluídos em `plans/archive/` e `specs/archive/`. O ledger de execução fica em `.superpowers/sdd/`
+(local); o índice de reconstrução de contexto é `docs/superpowers/progress.md` (versionado — ver §3).
+
+**Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
+de executá-lo. O roadmap adiante vive como títulos no backlog do `progress.md`, não como planos
+prontos que envelhecem.
 
 - **Execute em silêncio dentro do definido.** Quando plano+spec+escopo já cobrem a task,
   implemente sem narrar o padrão escolhido. **Explique o "porquê"/trade-off SÓ quando:**
@@ -111,6 +120,7 @@ O João Victor busca nível sênior e usa este projeto para chegar lá.
 ## 8. Comandos
 
 Backend roda **no container** `app` (host WSL não tem mbstring):
+
 ```bash
 docker compose up -d
 docker compose exec -T app php artisan test                    # suíte (sqlite :memory:)
@@ -119,11 +129,14 @@ docker compose exec -T app php artisan typescript:transform     # regenera gener
 docker compose exec -T app php artisan migrate && ... db:seed
 ./vendor/bin/pint <arquivos>   # NUNCA sem argumento — reformata o repo inteiro
 ```
+
 Frontend (de `frontend/`, nativo no WSL — Node 22/pnpm, sem test runner ainda):
+
 ```bash
 pnpm dev      # Vite dev server
 pnpm build    # tsc -b && vite build (type-check antes de bundlar)
 pnpm lint     # eslint .
 ```
+
 Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`
 (PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev).

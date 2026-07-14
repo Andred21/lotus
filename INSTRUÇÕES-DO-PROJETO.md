@@ -155,7 +155,10 @@ Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi`
 (domínio Certification), fora desta SPA — não criar `public/validate/` no front.
 
 **server vs client state (ADR-05):** dado de servidor → `features/<x>/api` (TanStack Query).
-UI/sessão/wizard → Zustand. Não misturar.
+UI/sessão → Zustand. Não misturar. Estado que **cruza componentes** (tema, sessão, wizard
+multi-tela compartilhado) → Zustand; estado local de um form/passo que vive num só componente
+fica em `useState` (ref.: passo do `QuoteWizard` em `useQuoteForm`). Não promover a Zustand o
+que não cruza fronteira — é over-engineering.
 
 ### Padrões de código (crystalizados — ver Parte 0 para desviar)
 
@@ -202,12 +205,16 @@ Drive vence — sinalize. Consulte o doc relevante antes de assumir; dúvida nã
 
 | Arquivo | O que é | Consulte quando |
 |---|---|---|
-| `docs/adrs.md` | As 17 decisões de arquitetura (ADRs) com regra acionável + porquê | Antes de QUALQUER decisão de stack, padrão, estrutura ou infra |
-| `docs/der-fisico.md` | DER físico MySQL — 24 tabelas, PK/FK, relações | Antes de criar migration, model ou mexer em schema |
+| `docs/adrs.md` | As decisões de arquitetura (ADRs) com regra acionável + porquê | Antes de QUALQUER decisão de stack, padrão, estrutura ou infra |
+| `docs/der-fisico.md` | DER físico MySQL — tabelas, PK/FK, relações | Antes de criar migration, model ou mexer em schema |
 | `docs/estrutura-monolito.md` | Esqueleto back+front, regras de dependência, divergências reais | Antes de criar arquivo novo — para saber ONDE ele vai |
 | `docs/README.md` | Índice + lições institucionalizadas (erros que já custaram caro) | Para localizar contexto e não repetir erro conhecido |
 
 **Divergências abertas (não resolver sozinho):**
 - `docs/der-fisico.md` está em PT/ES; o schema implementado está em inglês (decisão do João) —
   alinhar o DER + o canônico do Drive é follow-up pendente de autorização (write externo).
-- ADR-15 (biblioteca exata de i18n) e ADR-08 (estratégia de pruning da auditoria) seguem abertos.
+- ADR-15 decidido: i18n = **i18next + react-i18next** (com `i18next-browser-languagedetector`),
+  config em `shared/config/i18n.ts`, locales em `shared/config/locales`. Falta só formalizar o
+  texto do ADR em `docs/adrs.md` (follow-up).
+- ADR-08 (estratégia de pruning/poda da auditoria — volume de registros do `laravel-auditing`)
+  segue **aberto**: definir política de retenção antes que a tabela `audits` cresça demais.
