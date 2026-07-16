@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Cadastros;
 
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
+use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -101,5 +103,52 @@ class PrimaryContactTest extends TestCase
             'auditable_id' => $a->id,
             'event' => 'updated',
         ]);
+    }
+
+    private function makeClientWithPrimary(): Client
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
+        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
+
+        return $client;
+    }
+
+    public function test_rota_nested_marcar_novo_principal_desmarca_o_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+
+        $this->postJson("/api/clients/{$client->id}/contacts", [
+            'name' => 'Contato B', 'is_primary' => true,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
+    }
+
+    public function test_rota_nested_update_marcando_principal_desmarca_o_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+        $b = $client->contacts()->create(['name' => 'Contato B', 'is_primary' => false]);
+
+        $this->putJson("/api/contacts/{$b->id}", [
+            'name' => 'Contato B', 'is_primary' => true,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
+    }
+
+    public function test_rota_nested_contato_novo_nao_principal_nao_mexe_no_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+
+        $this->postJson("/api/clients/{$client->id}/contacts", [
+            'name' => 'Contato B', 'is_primary' => false,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => true]);
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => false]);
     }
 }
