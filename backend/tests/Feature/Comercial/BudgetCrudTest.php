@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Comercial;
 
+use App\Domains\Catalog\Models\Course;
+use App\Domains\Commercial\Models\Budget;
+use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -71,5 +74,21 @@ class BudgetCrudTest extends TestCase
 
         $this->deleteJson("/api/budgets/{$id}")->assertNoContent();
         $this->assertSoftDeleted('budgets', ['id' => $id]);
+    }
+
+    public function test_destroy_com_cotacao_aprovada_bloqueado(): void
+    {
+        $this->actingAsAdmin();
+        $budget = Budget::create(['client_id' => $this->clientId(), 'code' => 'Scap 1']);
+        Quote::create([
+            'budget_id' => $budget->id,
+            'course_id' => Course::create(['name' => 'C', 'workload_hours' => 8])->id,
+            'seq_in_budget' => 1, 'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
+        ]);
+
+        $this->deleteJson("/api/budgets/{$budget->id}")
+            ->assertStatus(422)->assertJsonValidationErrors('status');
+
+        $this->assertDatabaseHas('budgets', ['id' => $budget->id, 'deleted_at' => null]);
     }
 }
