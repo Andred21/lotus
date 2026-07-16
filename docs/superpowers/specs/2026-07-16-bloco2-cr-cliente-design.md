@@ -35,18 +35,20 @@
    gera payload inconsistente; o serviço é a rede de segurança da API.
 4. **`client_addresses.is_primary` fica fora deste bloco.** Tem o mesmo gap, mas o contratante não
    pediu e a tela só edita o 1º endereço (não há UI que gere 2º principal). Gap conhecido → backlog.
-5. **A coluna entra na migration original** (`2026_07_06_141820_clients.php`), não em migration nova.
-   Greenfield, nada em produção, nenhum ADR trava migration como imutável, e o `down()` do arquivo já
-   dropa as 3 tabelas juntas. **Custo aceito:** quem já rodou a migration não ganha a coluna com
-   `migrate` — precisa `migrate:fresh --seed` (vale para o DB local do João **e do Andred21**).
-   Testes não sofrem: sqlite `:memory:` sempre nasce limpo.
+5. **A coluna entra em migration nova**, não editando a original (`2026_07_06_141820_clients.php`).
+   Editar in-place foi considerado (greenfield, nada em produção) e **descartado**: quem já rodou a
+   migration não ganharia a coluna com `migrate` — Laravel não re-executa migration registrada —
+   exigindo `migrate:fresh --seed` em cada DB local (João **e** Andred21), com divergência silenciosa
+   até alguém perceber. Migration nova é `migrate` normal para todo mundo.
+   **Follow-up do João (fora deste bloco):** antes de subir para produção, task dedicada consolida as
+   migrations "adicionais" nas originais, para o folder não inchar.
 
 ## Backend
 
 ### Schema e contrato (CR.1.1)
 
-- `database/migrations/2026_07_06_141820_clients.php`: `$table->string('job_title')->nullable();` no
-  `Schema::create('client_contacts', ...)`, depois de `phone`.
+- Migration nova (`..._add_job_title_to_client_contacts.php`): `$table->string('job_title')->nullable()
+  ->after('phone');` em `Schema::table('client_contacts', ...)`. `down()` dropa a coluna.
 - `ClientContact`: `job_title` em `$fillable` **e** em `$auditInclude`.
 - `ClientContactData`: `public string|Optional|null $job_title` — mesma forma de `email`/`phone`.
 - `php artisan typescript:transform` regenera `frontend/src/shared/types/generated.ts`
@@ -125,7 +127,7 @@ importa daqui, **nunca** `RadioButton` do PrimeReact (lei §5.6).
 
 Comportamento provado **end-to-end contra a API real**, não build/lint/test verde:
 
-1. `migrate:fresh --seed`.
+1. `php artisan migrate` (migration nova — não precisa de `fresh`).
 2. Criar cliente pela tela com 2 contatos, cada um com cargo.
 3. Marcar o 2º como principal, salvar.
 4. Reabrir o cliente: o 1º contato desmarcou, o 2º é o principal, os cargos persistiram.
@@ -136,5 +138,6 @@ Comportamento provado **end-to-end contra a API real**, não build/lint/test ver
 ## Fora de escopo
 
 - Unicidade de `client_addresses.is_primary` (decisão 4) — vai para o backlog.
+- Consolidar migrations "adicionais" nas originais (decisão 5) — task do João, pré-produção.
 - Deletar o `ClientContactController`/rotas nested órfãs — mencionado, não removido (CLAUDE.md §6).
 - Blocos 3–4 (`course_modules`, `AppTextarea`) — outras CRs.
