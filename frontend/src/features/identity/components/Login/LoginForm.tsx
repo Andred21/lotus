@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AppInputText, AppPassword, AppButton } from "@shared/ui";
+import { AppInputText, AppPassword, AppButton, FormErrorBanner } from "@shared/ui";
 import { useLoginForm } from "../../hooks/useLoginForm";
 
 export function LoginForm() {
@@ -29,11 +29,7 @@ export function LoginForm() {
         <p className="text-gray-500 dark:text-slate-400">{t("login.subtitle")}</p>
       </div>
 
-      {generalError && (
-        <div role="alert" className="text-red-600 dark:text-red-400 text-sm">
-          {generalError}
-        </div>
-      )}
+      <FormErrorBanner message={generalError} variant="inline" />
 
       <label className="flex flex-col gap-1">
         <span className="text-md font-medium dark:text-slate-200">{t("login.email")}</span>

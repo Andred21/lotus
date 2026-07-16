@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, FormField, FormErrorBanner } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -71,29 +70,25 @@ export function RedatorDialog({
         ) : null
       }
     >
-      {generalError && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-          {generalError}
-        </p>
-      )}
+      <FormErrorBanner message={generalError} />
 
       <section className="space-y-4">
         
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('redator.sectionUser')}</h3>
-        <Field label={t('redator.name')} error={fieldErrors?.name?.[0]}>
+        <FormField label={t('redator.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
-        </Field>
+        </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <Field label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
+          <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
-          </Field>
-          <Field label={t('common.email')} error={fieldErrors?.email?.[0]}>
+          </FormField>
+          <FormField label={t('common.email')} error={fieldErrors?.email?.[0]}>
             <AppInputText value={form.email} disabled={readOnly} onChange={(e) => set('email', e.target.value)} className="w-full" />
-          </Field>
+          </FormField>
         </div>
-        <Field label={t('common.phone')}>
+        <FormField label={t('common.phone')}>
           <AppInputText value={form.phone ?? ''} disabled={readOnly} onChange={(e) => set('phone', e.target.value)} className="w-full" />
-        </Field>
+        </FormField>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('redator.sectionDocuments')}</h3>
         {upload.error && (
@@ -169,15 +164,5 @@ export function RedatorDialog({
         </div>
       </section>
     </CrudDialog>
-  )
-}
-
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-slate-600 dark:text-slate-300">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </label>
   )
 }
