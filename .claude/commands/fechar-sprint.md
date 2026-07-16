@@ -17,6 +17,12 @@ allowed-tools: Bash(git status:*), Bash(git log:*)
 
 Execute o checklist. Reporte cada item como ✅/❌ e **PARE no primeiro ❌ que exija decisão minha.**
 
+0. **Prove o critério de aceite DESTE bloco** (não só a higiene genérica): rode a
+   verificação própria do bloco e mostre o resultado. Se o bloco corrigiu docs →
+   rode a análise do `/sync-docs` e reporte quantas divergências restaram. Se tocou
+   código → prove o comportamento end-to-end contra a API real. Testes verdes de
+   suíte NÃO provam o critério de aceite do bloco.
+
 1. **Testes:** `docker compose exec -T app php artisan test` (suíte completa, sqlite `:memory:`).
 2. **Front:** de `frontend/` → `pnpm lint` e `pnpm build`.
 3. **Pint:** `./vendor/bin/pint <arquivos da sprint>` — NUNCA sem argumento.

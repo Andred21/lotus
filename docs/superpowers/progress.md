@@ -25,7 +25,11 @@ para reconstruir contexto antes de qualquer plano/spec.
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 
-- Refino de código Sprint 2 (kit de form em shared/ui; DeleteBudget/DeleteQuote Action) — Notion 6.4.x
+- Bloco 1 ·Refino de código Sprint 2 (kit de form em shared/ui; DeleteBudget/DeleteQuote Action) — Notion 6.4.x
+- Bloco 2 · CR Cliente: cargo do contato, principal único, complemento na tela — Notion CR.1.1–CR.1.3
+- Bloco 3 · CR Curso: entidade course_modules 1:N (backend) — Notion CR.2.2
+- Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis com soma de horas (frontend) — Notion CR.2.1, CR.2.3
+- ADR-19 · bcmath/decimal para dinheiro (padrão de fato sem ADR — peso legal) — antes da Sprint 3
 - Módulo Administração (Usuários, Roles/Permissões) — Notion 4.x
 - Sprint 3 · Turmas / Operação
 - Sprint 4 · Certificação (templates, PDF, endpoint público QR)
