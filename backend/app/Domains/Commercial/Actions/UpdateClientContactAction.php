@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Atualiza um contato pela rota nested, mantendo a invariante de principal
- * único. Se o payload desmarcou este contato, o serviço ignora o `winner`
- * (ele não está mais entre os principais) e resolve pelo último marcado.
+ * único. Se o payload desmarcou este contato, sobram 0 ou 1 principais e o
+ * serviço faz early-return (no-op) — ninguém é promovido.
  */
 class UpdateClientContactAction
 {

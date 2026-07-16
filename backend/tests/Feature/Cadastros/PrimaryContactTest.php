@@ -140,6 +140,22 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
     }
 
+    public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
+    {
+        $client = $this->makeClientWithPrimary();
+        $a = $client->contacts()->firstOrFail();
+
+        $this->putJson("/api/contacts/{$a->id}", [
+            'name' => 'Contato A', 'is_primary' => false,
+        ])->assertOk();
+
+        // 0 principais é estado válido: desmarcar o único principal não pode
+        // promover ninguém (ensureSingle faz early-return com primaries.count() == 0).
+        $this->assertSame(0, ClientContact::where('client_id', $client->id)
+            ->where('is_primary', true)
+            ->count());
+    }
+
     public function test_rota_nested_contato_novo_nao_principal_nao_mexe_no_anterior(): void
     {
         $client = $this->makeClientWithPrimary();
