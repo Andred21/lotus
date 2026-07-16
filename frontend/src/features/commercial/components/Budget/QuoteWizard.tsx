@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
@@ -52,17 +51,11 @@ export function QuoteWizard({
       onHide={onHide}
       footer={footer}
     >
-      {generalError && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-          {generalError}
-        </p>
-      )}
-      {fieldErrors && (
-        <UnmappedErrors
-          errors={fieldErrors}
-          mapped={['course_id', 'student_count', 'value_uf', 'purchase_order', 'planned_start_date', 'planned_end_date']}
-        />
-      )}
+      <FormErrorBanner message={generalError} />
+      <FormErrorSummary
+        errors={fieldErrors}
+        mapped={['course_id', 'student_count', 'value_uf', 'purchase_order', 'planned_start_date', 'planned_end_date']}
+      />
 
       {/* Fora do passo: o campo do curso só existe no passo 1, mas o 422 de
           course_id (curso removido entre a escolha e o submit) chega com o
@@ -105,13 +98,13 @@ export function QuoteWizard({
           <h3 className="text-xs font-semibold uppercase text-slate-500">{t('quote.stepData')}</h3>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>
+            <FormField label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>
               <AppInputText
                 value={String(form.student_count)}
                 onChange={(e) => set('student_count', Number(e.target.value.replace(/\D/g, '')) || 0)}
                 className="w-full"
               />
-            </Field>
+            </FormField>
 
             {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
                 e normaliza para ponto — troca de caractere, não aritmética.
@@ -120,65 +113,43 @@ export function QuoteWizard({
                 1,25?) e nenhuma heurística resolve isso sem errar outro caso.
                 Mostrando de volta "1,250", o usuário VÊ que o valor virou
                 decimal — o caso ambíguo falha à vista, não em silêncio. */}
-            <Field label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
+            <FormField label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
               <AppInputText
                 value={form.value_uf.replace('.', ',')}
                 onChange={(e) => set('value_uf', parseUfInput(e.target.value))}
                 className="w-full"
               />
-            </Field>
+            </FormField>
           </div>
 
-          <Field label={t('quote.purchaseOrder')} error={fieldErrors?.purchase_order?.[0]}>
+          <FormField label={t('quote.purchaseOrder')} error={fieldErrors?.purchase_order?.[0]}>
             <AppInputText
               value={form.purchase_order ?? ''}
               onChange={(e) => set('purchase_order', e.target.value || null)}
               className="w-full"
             />
-          </Field>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
+            <FormField label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
               <input
                 type="date"
                 className="w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800"
                 value={form.planned_start_date ?? ''}
                 onChange={(e) => set('planned_start_date', e.target.value || null)}
               />
-            </Field>
-            <Field label={t('quote.plannedEnd')} error={fieldErrors?.planned_end_date?.[0]}>
+            </FormField>
+            <FormField label={t('quote.plannedEnd')} error={fieldErrors?.planned_end_date?.[0]}>
               <input
                 type="date"
                 className="w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800"
                 value={form.planned_end_date ?? ''}
                 onChange={(e) => set('planned_end_date', e.target.value || null)}
               />
-            </Field>
+            </FormField>
           </div>
         </section>
       )}
     </AppDialog>
-  )
-}
-
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-slate-600 dark:text-slate-300">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </label>
-  )
-}
-
-function UnmappedErrors({ errors, mapped }: { errors: Record<string, string[]>; mapped: string[] }) {
-  const leftover = Object.entries(errors).filter(([key]) => !mapped.includes(key))
-  if (leftover.length === 0) return null
-  return (
-    <ul className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-      {leftover.map(([key, msgs]) => (
-        <li key={key}>{msgs[0]}</li>
-      ))}
-    </ul>
   )
 }
