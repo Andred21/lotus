@@ -14,6 +14,7 @@ class ClientContactData extends Data
         public string $name,
         public string|Optional|null $email,
         public string|Optional|null $phone,
+        public string|Optional|null $job_title,
         public bool $is_primary = false,
     ) {}
 }

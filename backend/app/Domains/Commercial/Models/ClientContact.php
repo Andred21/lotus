@@ -17,6 +17,7 @@ class ClientContact extends Model implements Auditable
         'name',
         'email',
         'phone',
+        'job_title',
         'is_primary',
     ];
 
@@ -25,6 +26,7 @@ class ClientContact extends Model implements Auditable
         'name',
         'email',
         'phone',
+        'job_title',
         'is_primary',
     ];
 
