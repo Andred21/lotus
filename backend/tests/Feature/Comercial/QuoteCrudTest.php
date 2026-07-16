@@ -83,6 +83,21 @@ class QuoteCrudTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('status');
     }
 
+    public function test_destroy_de_cotacao_aprovada_bloqueado(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUpBudget();
+        $quote = Quote::create([
+            'budget_id' => $this->budgetId, 'course_id' => $this->courseId, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
+        ]);
+
+        $this->deleteJson("/api/quotes/{$quote->id}")
+            ->assertStatus(422)->assertJsonValidationErrors('status');
+
+        $this->assertDatabaseHas('quotes', ['id' => $quote->id, 'deleted_at' => null]);
+    }
+
     public function test_lista_nested_e_remove(): void
     {
         $this->actingAsAdmin();

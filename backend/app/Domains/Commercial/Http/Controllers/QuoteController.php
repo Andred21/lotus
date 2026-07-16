@@ -4,10 +4,10 @@ namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\ApproveQuoteAction;
 use App\Domains\Commercial\Actions\CreateQuoteAction;
+use App\Domains\Commercial\Actions\DeleteQuoteAction;
 use App\Domains\Commercial\Actions\RejectQuoteAction;
 use App\Domains\Commercial\Actions\UpdateQuoteAction;
 use App\Domains\Commercial\Data\QuoteData;
-use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
@@ -15,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Validation\ValidationException;
 
 class QuoteController extends Controller implements HasMiddleware
 {
@@ -53,15 +52,9 @@ class QuoteController extends Controller implements HasMiddleware
         return QuoteData::fromModel($action->execute($quote, $data)->load('files'));
     }
 
-    public function destroy(Quote $quote): Response
+    public function destroy(Quote $quote, DeleteQuoteAction $action): Response
     {
-        if ($quote->status === QuoteStatus::Approved) {
-            throw ValidationException::withMessages([
-                'status' => 'Cotação aprovada não pode ser excluída. Recuse-a antes.',
-            ]);
-        }
-
-        $quote->delete();
+        $action->execute($quote);
 
         return response()->noContent();
     }

@@ -78,13 +78,14 @@ Action (ADR-02), como `CreateBudgetAction`/`UpdateQuoteAction` já são.
   1. Guarda: se existe quote com `status = Approved` → `ValidationException::withMessages(['status' => '...'])`.
   2. `$budget->delete()` — dispara o `deleting` hook do model (cascade soft-delete das quotes,
      instância a instância, auditado — ADR-08). Mensagem PT movida **verbatim** do controller.
-- **`DeleteQuoteAction::execute(Quote $quote): void`** — em `DB::transaction`:
+- **`DeleteQuoteAction::execute(Quote $quote): void`** — sem transação:
   1. Guarda: se `status === Approved` → `ValidationException` (422). Mensagem verbatim.
   2. `$quote->delete()`.
 - **Controllers:** `destroy` passa a injetar a Action, chamar `execute`, retornar `noContent()`.
   Nenhuma regra remanescente no controller.
-- **`DB::transaction`** justificado: Budget cascateia N deletes (atomicidade); Quote é 1 delete,
-  mas mantém o padrão uniforme das Actions.
+- **`DB::transaction` só no Budget:** cascateia N deletes (atomicidade). Quote é escrita única
+  (auto-audita) e segue o padrão do `UpdateQuoteAction`, que também não usa transação — não
+  envolver 1 delete em transação só por simetria.
 
 ### Escopo travado
 

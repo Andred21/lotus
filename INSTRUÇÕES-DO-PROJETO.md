@@ -93,6 +93,17 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
 Referência viva: pares `ClientController`/`RedatorController`, `ClientData`/`RedatorData` (ambos com
 `fromModel`), `UserProvisioner`. Entidade de cadastro nova copia essa forma.
 
+**`from()` vs `fromModel()` (convenção dos DTOs — os dois sentidos do mesmo `XData`):**
+- **`from()` (spatie, embutido) = ENTRADA.** Request→DTO: o controller recebe `store(XData $data)`
+  e o pacote hidrata + valida por `rules()`. Campos que só existem na saída ficam `Optional`
+  (ausentes na entrada) — é o que deixa UMA classe servir os dois sentidos.
+- **`fromModel(X $m): self` (nosso, custom) = SAÍDA.** Model→DTO: o ÚNICO lugar que projeta o
+  model — achata relações (campos do `user` no topo), coleta nested (`XData::collect(...)`) e
+  deriva campos (ex.: `BudgetData` puxa `status`/totais do `BudgetSummaryService`). Controller
+  SEMPRE retorna `XData::fromModel($m)`.
+- **Proibido `XData::from([...])` para montar resposta** — vaza a forma do model pro controller e
+  escapa da projeção única.
+
 ### Convenções de schema e domínio (decididas — não re-decidir sozinho)
 
 - **Schema em inglês** (colunas descritivas). Exceção: **`redator` é nome próprio do domínio** (como
