@@ -1,6 +1,6 @@
-import type { Dispatch, ReactNode, SetStateAction } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppDropdown } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppDropdown, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
@@ -49,61 +49,57 @@ export function ClientDialog({
       pending={pending}
       submitLabel={mode === 'create' ? t('client.create') : undefined}
     >
-      {generalError && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-          {generalError}
-        </p>
-      )}
-      {/* Um 422 cujo campo não tem input nesta tela ficaria invisível e o botão
-          pareceria inerte. Lista o que sobrou, para nunca falhar em silêncio. */}
-      {fieldErrors && (
-        <UnmappedErrors
-          errors={fieldErrors}
-          mapped={['legal_name', 'name', 'rut', 'email', 'type', 'business_activity']}
-        />
-      )}
+      <FormErrorBanner message={generalError} />
+      {/* `contacts.*` sai do resumo (cada contato mostra o próprio erro no
+          NestedField); `addresses.*` NÃO — hoje o backend não valida endereço,
+          mas quando validar o 422 não pode sumir da tela. */}
+      <FormErrorSummary
+        errors={fieldErrors}
+        mapped={['legal_name', 'name', 'rut', 'email', 'type', 'business_activity']}
+        excludePrefixes={['contacts.']}
+      />
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('client.sectionGeneral')}</h3>
         {/* Empresa não tem "nome" separado da razón social — `name` (exigido
             pelo backend) é derivado de `legal_name` no submit. Erro de `name`
             aparece aqui pois foi este campo que o gerou. */}
-        <Field label={t('client.legalName')} error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
+        <FormField label={t('client.legalName')} error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
           <AppInputText value={form.legal_name} disabled={readOnly} onChange={(e) => set('legal_name', e.target.value)} className="w-full" />
-        </Field>
+        </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <Field label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
+          <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
-          </Field>
-          <Field label={t('common.email')} error={fieldErrors?.email?.[0]}>
+          </FormField>
+          <FormField label={t('common.email')} error={fieldErrors?.email?.[0]}>
             <AppInputText value={form.email} disabled={readOnly} onChange={(e) => set('email', e.target.value)} className="w-full" />
-          </Field>
+          </FormField>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Field label={t('client.type')}>
+          <FormField label={t('client.type')}>
             <AppDropdown value={form.type} options={types} disabled={readOnly} onChange={(e) => set('type', e.value)} />
-          </Field>
-          <Field label={t('client.businessActivity')}>
+          </FormField>
+          <FormField label={t('client.businessActivity')}>
             <AppInputText value={form.business_activity ?? ''} disabled={readOnly} onChange={(e) => set('business_activity', e.target.value)} className="w-full" />
-          </Field>
+          </FormField>
         </div>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionAddress')}</h3>
         <div className="grid grid-cols-2 gap-4">
-          <Field label={t('client.region')}>
+          <FormField label={t('client.region')}>
             <AppDropdown value={addr.region} options={CHILE_REGIONS} disabled={readOnly} onChange={(e) => setAddr({ region: e.value })} />
-          </Field>
-          <Field label={t('client.commune')}>
+          </FormField>
+          <FormField label={t('client.commune')}>
             <AppInputText value={addr.commune ?? ''} disabled={readOnly} onChange={(e) => setAddr({ commune: e.target.value })} className="w-full" />
-          </Field>
-          <Field label={t('client.city')}>
+          </FormField>
+          <FormField label={t('client.city')}>
             <AppInputText value={addr.city ?? ''} disabled={readOnly} onChange={(e) => setAddr({ city: e.target.value })} className="w-full" />
-          </Field>
-          <Field label={t('client.street')}>
+          </FormField>
+          <FormField label={t('client.street')}>
             <AppInputText value={addr.line1 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line1: e.target.value })} className="w-full" />
-          </Field>
-          <Field label={t('client.number')}>
+          </FormField>
+          <FormField label={t('client.number')}>
             <AppInputText value={addr.number ?? ''} disabled={readOnly} onChange={(e) => setAddr({ number: e.target.value })} className="w-full" />
-          </Field>
+          </FormField>
         </div>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
@@ -133,51 +129,10 @@ export function ClientDialog({
   )
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-slate-600 dark:text-slate-300">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </label>
-  )
-}
-
 function patchContact(
   setForm: Dispatch<SetStateAction<ClientData>>,
   i: number,
   patch: Partial<ClientData['contacts'][number]>,
 ) {
   setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
-}
-
-/** Campo aninhado (contatos/endereços): sem label própria, mas com o erro do
- * backend visível. Sem isso, um 422 em `contacts.0.name` deixa o botão de
- * salvar aparentemente inerte. */
-function NestedField({ error, children }: { error?: string; children: ReactNode }) {
-  return (
-    <div>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </div>
-  )
-}
-
-function UnmappedErrors({ errors, mapped }: { errors: Record<string, string[]>; mapped: string[] }) {
-  // `contacts.*` é excluído porque cada um já aparece no seu NestedField.
-  // `addresses.*` NÃO é excluído: os inputs de endereço ainda não recebem prop
-  // `error`, então filtrá-los aqui faria o 422 desaparecer da tela. Hoje o
-  // backend não valida endereço, mas o dia em que validar não pode ser o dia em
-  // que o botão de salvar volta a parecer morto.
-  const leftover = Object.entries(errors).filter(
-    ([key]) => !mapped.includes(key) && !key.startsWith('contacts.'),
-  )
-  if (leftover.length === 0) return null
-  return (
-    <ul className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-      {leftover.map(([key, msgs]) => (
-        <li key={key}>{msgs[0]}</li>
-      ))}
-    </ul>
-  )
 }

@@ -3,14 +3,13 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\CreateBudgetAction;
+use App\Domains\Commercial\Actions\DeleteBudgetAction;
 use App\Domains\Commercial\Data\BudgetData;
-use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 class BudgetController extends Controller implements HasMiddleware
@@ -54,15 +53,9 @@ class BudgetController extends Controller implements HasMiddleware
         return BudgetData::fromModel($budget->load(['quotes.files', 'files']));
     }
 
-    public function destroy(Budget $budget): Response
+    public function destroy(Budget $budget, DeleteBudgetAction $action): Response
     {
-        if ($budget->quotes()->where('status', QuoteStatus::Approved)->exists()) {
-            throw ValidationException::withMessages([
-                'status' => 'Orçamento com cotação aprovada não pode ser excluído. Recuse-a antes.',
-            ]);
-        }
-
-        $budget->delete();
+        $action->execute($budget);
 
         return response()->noContent();
     }

@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText } from '@shared/ui'
+import { CrudDialog, AppInputText, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { redatoresApi } from '@shared/api/redatoresApi'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
@@ -35,42 +34,33 @@ export function CourseDialog({
       pending={pending}
       submitLabel={isCreate ? t('course.create') : undefined}
     >
-      {generalError && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-          {generalError}
-        </p>
-      )}
-      {fieldErrors && (
-        <UnmappedErrors
-          errors={fieldErrors}
-          mapped={['name', 'technical_name', 'description', 'workload_hours']}
-        />
-      )}
+      <FormErrorBanner message={generalError} />
+      <FormErrorSummary errors={fieldErrors} mapped={['name', 'technical_name', 'description', 'workload_hours']} />
 
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('course.sectionGeneral')}</h3>
 
-        <Field label={t('course.name')} error={fieldErrors?.name?.[0]}>
+        <FormField label={t('course.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
-        </Field>
+        </FormField>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label={t('course.technicalName')} error={fieldErrors?.technical_name?.[0]}>
+          <FormField label={t('course.technicalName')} error={fieldErrors?.technical_name?.[0]}>
             <AppInputText value={form.technical_name ?? ''} disabled={readOnly} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
-          </Field>
-          <Field label={t('course.workloadHours')} error={fieldErrors?.workload_hours?.[0]}>
+          </FormField>
+          <FormField label={t('course.workloadHours')} error={fieldErrors?.workload_hours?.[0]}>
             <AppInputText
               value={String(form.workload_hours)}
               disabled={readOnly}
               onChange={(e) => set('workload_hours', Number(e.target.value.replace(/\D/g, '')) || 0)}
               className="w-full"
             />
-          </Field>
+          </FormField>
         </div>
 
-        <Field label={t('course.description')} error={fieldErrors?.description?.[0]}>
+        <FormField label={t('course.description')} error={fieldErrors?.description?.[0]}>
           <AppInputText value={form.description ?? ''} disabled={readOnly} onChange={(e) => set('description', e.target.value)} className="w-full" />
-        </Field>
+        </FormField>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('course.sectionRedatores')}</h3>
 
@@ -103,29 +93,5 @@ export function CourseDialog({
         )}
       </section>
     </CrudDialog>
-  )
-}
-
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-slate-600 dark:text-slate-300">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </label>
-  )
-}
-
-/** Um 422 cujo campo não tem input nesta tela ficaria invisível e o botão de
- * salvar pareceria inerte. Lista o que sobrou, para nunca falhar em silêncio. */
-function UnmappedErrors({ errors, mapped }: { errors: Record<string, string[]>; mapped: string[] }) {
-  const leftover = Object.entries(errors).filter(([key]) => !mapped.includes(key))
-  if (leftover.length === 0) return null
-  return (
-    <ul className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-      {leftover.map(([key, msgs]) => (
-        <li key={key}>{msgs[0]}</li>
-      ))}
-    </ul>
   )
 }
