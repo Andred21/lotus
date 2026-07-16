@@ -20,12 +20,12 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-10 | Sprint 2 · Comercial backend | Entregue | Budget agrupa Quotes independentes; status/totais derivados (bcmath); aprovação superadmin; anexos polimórficos. ADR-17 (seq atômica) nasceu aqui | `plans/archive/2026-07-10-sprint2-commercial-backend.md` | `specs/archive/2026-07-10-sprint2-commercial-backend-design.md` |
 | 2026-07-13 | Sprint 2 · Comercial frontend | Entregue | Lista de orçamentos, detalhe com cotações, wizard de cotação (passo em useState), aprovação/recusa, anexos | `plans/archive/2026-07-13-sprint2-commercial-frontend.md` | `specs/archive/2026-07-13-sprint2-commercial-frontend-design.md` |
 | 2026-07-14 | Bloco 0 · Sync de docs pós-Sprint 2 | Entregue | Docs voltam a bater com o código: `budgets` **sem** status/total (derivados no `BudgetSummaryService`) e `quotes` **sem** `client_id` — não recriar essas colunas na Sprint 3. ADR-17 fechado; ressalva do ADR-18 (cliente REST em `shared/api`). Morph map mantém o alias `turma` antes do model — intencional, não remover | — (docs-only, sem plano) | — |
+| 2026-07-16 | Bloco 1 · Refino de código Sprint 2 | Entregue | Kit de form em `shared/ui/FormField/` (`FormField`/`NestedField`/`FormErrorSummary`/`FormErrorBanner`) mata a duplicação nos 6 diálogos — **não reintroduzir `Field`/`UnmappedErrors` local; `NestedField` é pré-req de `course_modules` (blocos 2-4)**. `Delete{Budget,Quote}Action` tiram a guarda de peso legal ("aprovada não exclui") do controller — que **não tinha teste no path de delete**, agora tem. **DeleteQuote sem transação** (escrita única, padrão `UpdateQuoteAction`); só Budget usa transação (cascade N quotes). Convenção `from()` (entrada) vs `fromModel()` (saída, projeção única) documentada em INSTRUÇÕES | `plans/archive/2026-07-16-bloco1-refino-sprint2.md` | `specs/archive/2026-07-16-bloco1-refino-sprint2-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 
-- Bloco 1 ·Refino de código Sprint 2 (kit de form em shared/ui; DeleteBudget/DeleteQuote Action) — Notion 6.4.x
 - Bloco 2 · CR Cliente: cargo do contato, principal único, complemento na tela — Notion CR.1.1–CR.1.3
 - Bloco 3 · CR Curso: entidade course_modules 1:N (backend) — Notion CR.2.2
 - Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis com soma de horas (frontend) — Notion CR.2.1, CR.2.3
