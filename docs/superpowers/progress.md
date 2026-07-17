@@ -31,7 +31,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 
-- Bloco 5.2 · Módulo Administração (Usuários, Roles/Permissões) — Notion 4.x
+- Bloco 5.2 · Módulo Administração (Usuários, Roles/Permissões) — Notion 2.6.x
 - Bloco 6 · Sprint 3 · Turmas / Operação
 - Bloco 7 · Sprint 4 · Certificação (templates, PDF, endpoint público QR)
 - Hardening (ownership em rotas nested, política de retenção de docs)
