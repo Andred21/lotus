@@ -104,6 +104,24 @@
     "count": "{{count}} curso(s)",
     "redatorCount": "Redactores"
   },
+  "courseModule": {
+    "section": "Módulos",
+    "itemLabel": "Módulo {{n}}",
+    "add": "Agregar módulo",
+    "remove": "Eliminar módulo",
+    "moveUp": "Mover hacia arriba",
+    "moveDown": "Mover hacia abajo",
+    "name": "Nombre del módulo",
+    "namePlaceholder": "ej.: Introducción a los Riesgos Eléctricos",
+    "learnings": "Aprendizajes",
+    "contents": "Contenidos",
+    "theoryHours": "Horas teóricas",
+    "practiceHours": "Horas prácticas",
+    "total": "Total: {{hours}} h",
+    "modulesTotal": "Total de los módulos: {{hours}} h",
+    "hoursMismatch": "La suma de los módulos ({{modules}} h) difiere de la carga horaria del curso ({{workload}} h). Puedes guardar de todas formas.",
+    "empty": "Sin módulos registrados."
+  },
   "budget": {
     "module": "Comercial",
     "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
