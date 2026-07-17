@@ -50,4 +50,33 @@ class CourseModelTest extends TestCase
         $this->assertSoftDeleted('courses', ['id' => $course->id]);
         $this->assertSoftDeleted('course_certificate_templates', ['id' => $template->id]);
     }
+
+    public function test_modules_vem_ordenado_por_sort_order(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+
+        // Inseridos fora de ordem de propósito: a relação é que ordena.
+        $course->modules()->create(['sort_order' => 2, 'name' => 'Segundo', 'theory_hours' => 3, 'practice_hours' => 1]);
+        $course->modules()->create(['sort_order' => 1, 'name' => 'Primeiro', 'theory_hours' => 2, 'practice_hours' => 2]);
+
+        $this->assertSame(['Primeiro', 'Segundo'], $course->modules()->pluck('name')->all());
+    }
+
+    public function test_soft_delete_do_curso_cascateia_para_modules_e_audita(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
+
+        $course->delete();
+
+        $this->assertSoftDeleted('courses', ['id' => $course->id]);
+        $this->assertSoftDeleted('course_modules', ['id' => $module->id]);
+
+        // A prova de que a cascata não passou pelo query builder (ADR-08).
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'course_module',
+            'auditable_id' => $module->id,
+            'event' => 'deleted',
+        ]);
+    }
 }
