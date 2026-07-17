@@ -63,7 +63,7 @@ anterior.
 
 1. Em `/cursos`, clicar em **Novo curso**.
 2. Preencher **Nome**: `GATE B4`.
-3. Preencher **Carga horária**: `40`.
+3. Preencher **Carga horária (h)**: `40`.
 4. Clicar em **Adicionar módulo** (1ª vez) e preencher o Módulo 1:
    - Nome do módulo: `Riscos`
    - Horas teóricas: `8`
@@ -82,14 +82,14 @@ anterior.
    - Horas práticas: `8`
    - (deixar aprendizagens e conteúdos em branco)
 6. Sem fechar o formulário, observar a tela.
-7. Clicar em **Salvar**.
+7. Clicar em **Criar curso**.
 
 **Resultado esperado:**
 - Antes de salvar (passo 6): o card do Módulo 1 (`Riscos`) mostra `Total: 8 h`; o card do Módulo 2
   (`Terreno`) mostra `Total: 12 h`; abaixo dos módulos aparece `Total dos módulos: 20 h`; e aparece
   um aviso em fundo âmbar dizendo que a soma dos módulos (20 h) difere da carga horária do curso
   (40 h). O aviso **não** impede nada — é só um alerta visual.
-- Ao clicar em **Salvar** (passo 7): o curso é salvo sem erro **com o aviso âmbar ainda visível na
+- Ao clicar em **Criar curso** (passo 7): o curso é salvo sem erro **com o aviso âmbar ainda visível na
   tela**, e o diálogo fecha. Este é o único cenário do roteiro em que se salva com o aviso
   presente — é a prova de que o aviso nunca bloqueia o salvar (no Cenário 4 a carga horária é
   corrigida antes de qualquer salvar, então o aviso já não estará mais na tela).
