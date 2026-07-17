@@ -27,10 +27,16 @@ class CourseModuleCrudTest extends TestCase
             ->assertJsonPath('modules.0.name', 'Introducción a los Riesgos Eléctricos')
             ->assertJsonPath('modules.0.sort_order', 1)
             ->assertJsonPath('modules.0.total_hours', 8)
+            ->assertJsonPath('modules.0.learnings', 'Identificar riscos')
+            ->assertJsonPath('modules.0.contents', "1.1 Riscos\n1.2 EPP")
             ->assertJsonPath('modules.1.sort_order', 2)
             ->assertJsonPath('modules.1.total_hours', 12)
             ->assertJsonPath('modules_total_hours', 20);
 
+        $this->assertDatabaseHas('course_modules', [
+            'name' => 'Introducción a los Riesgos Eléctricos', 'sort_order' => 1,
+            'learnings' => 'Identificar riscos', 'contents' => "1.1 Riscos\n1.2 EPP",
+        ]);
         $this->assertDatabaseHas('course_modules', [
             'name' => 'Maniobras en Terreno', 'sort_order' => 2, 'theory_hours' => 4, 'practice_hours' => 8,
         ]);
