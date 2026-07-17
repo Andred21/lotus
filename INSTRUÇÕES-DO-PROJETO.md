@@ -135,7 +135,10 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 
 ### Contratos de tipo (backend → frontend)
 
-DTOs em `app/Data` com `#[TypeScript]`; o transformer varre `app/Data` e escreve um módulo flat em
+DTOs vivem **no domínio dono do contrato**: `app/Domains/<Dominio>/Data/XData.php` (ex.:
+`Domains/Catalog/Data/CourseData.php`). Contrato transversal fica sob `app/Shared/` — hoje só
+`Shared/Files/Data/FileData.php`. **Não existe `app/Data`** (o transformer varre `app/` inteiro, sem
+config publicada). Marque a classe com `#[TypeScript]` e ela entra no módulo flat
 `frontend/src/shared/types/generated.ts`. Mudou a forma de uma resposta → crie/atualize a classe
 `Data` (nunca array ad-hoc) e regenere (`php artisan typescript:transform`). Nunca editar `generated.ts`
 à mão (ADR-04).
@@ -185,11 +188,17 @@ que não cruza fronteira — é over-engineering.
   virar JSON e cada `File` virar `{}` — upload chega vazio, 201 silencioso (peso legal). `initCsrf()`
   (`shared/api/csrf.ts`) roda uma vez antes da 1ª mutação.
 - **Wrappers `shared/ui`:** features importam `AppButton`, nunca `Button` do pacote.
-  Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), `forwardRef`, reexporta `AppXProps`
+  Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), reexporta `AppXProps`
   (fecha a fronteira de tipo — a feature importa `AppButtonProps`, nunca `ButtonProps`). Barrel raiz
   `shared/ui/index.ts` é a única porta. Customização de componente Prime vive aqui, nunca com Tailwind
   na feature. Em wrappers com handler embutido (upload), **pine o override após o spread**
   (`customUpload` não pode ser desligado pelo caller).
+- **`forwardRef` no wrapper é condicional, não cerimônia.** Leva quem embrulha componente de função
+  com ref de DOM útil — foco, seleção, medida: `AppInputText`, `AppPassword`, `AppTextarea`,
+  `AppMenu`. **Não leva** quem embrulha *class component* do Prime (`RadioButton`, `Dropdown` — o
+  ref não é DOM e `forwardRef` só mente sobre o tipo) nem wrapper apresentacional sem ref
+  (`AppButton`, `AppTag`, `AppDivider`). Hoje: 5 de 25 wrappers. Na dúvida, siga o vizinho da mesma
+  categoria (`AppRadioButton` segue o `AppDropdown`, não o `AppInputText`).
 - **Tailwind = layout** (grid/espaçamento); cor via variável CSS do tema (ADR-16). Utility não vence
   a especificidade do tema — ao depurar estilo, cheque o **seletor completo do markup**, não a classe
   isolada.
