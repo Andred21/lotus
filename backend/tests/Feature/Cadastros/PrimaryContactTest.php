@@ -56,6 +56,27 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true, 'deleted_at' => null]);
     }
 
+    public function test_update_com_dois_principais_mantem_apenas_o_ultimo(): void
+    {
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/clients', $this->payload([
+            ['name' => 'Contato A', 'is_primary' => true],
+            ['name' => 'Contato B', 'is_primary' => false],
+        ]))->assertCreated()->json('id');
+
+        $this->putJson("/api/clients/{$id}", $this->payload([
+            ['name' => 'Contato A', 'is_primary' => true],
+            ['name' => 'Contato B', 'is_primary' => true],
+        ]))->assertOk();
+
+        $this->assertSame(1, ClientContact::where('client_id', $id)
+            ->where('is_primary', true)
+            ->count());
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false, 'deleted_at' => null]);
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true, 'deleted_at' => null]);
+    }
+
     public function test_cliente_sem_principal_e_valido(): void
     {
         $this->actingAsAdmin();
@@ -154,6 +175,26 @@ class PrimaryContactTest extends TestCase
         $this->assertSame(0, ClientContact::where('client_id', $client->id)
             ->where('is_primary', true)
             ->count());
+    }
+
+    public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void
+    {
+        // A (id menor, não principal) e B (id maior, principal). Ao promover A
+        // explicitamente, o $winner do ensureSingle deve prevalecer sobre o
+        // "último por id" (que seria B) — senão o serviço desmarcaria o contato
+        // que o caller acabou de pedir para promover.
+        $this->actingAsAdmin();
+        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
+        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $a = $client->contacts()->create(['name' => 'Contato A', 'is_primary' => false]);
+        $b = $client->contacts()->create(['name' => 'Contato B', 'is_primary' => true]);
+
+        $this->putJson("/api/contacts/{$a->id}", [
+            'name' => 'Contato A', 'is_primary' => true,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('client_contacts', ['id' => $a->id, 'is_primary' => true]);
+        $this->assertDatabaseHas('client_contacts', ['id' => $b->id, 'is_primary' => false]);
     }
 
     public function test_rota_nested_contato_novo_nao_principal_nao_mexe_no_anterior(): void
