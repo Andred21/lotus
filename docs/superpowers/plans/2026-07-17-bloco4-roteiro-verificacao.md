@@ -47,6 +47,13 @@ para nunca deixar passar despercebido de novo.
    (são os únicos perfis que autenticam neste sistema).
 5. Ir para a tela **Cursos** (`/cursos`).
 
+> **Como editar um curso (mecanismo usado em vários cenários abaixo):** a tabela de cursos só tem
+> o ícone de olho (👁) em cada linha — não existe atalho de edição direto na lista. Para editar,
+> clique no ícone de olho para abrir o curso em modo **visualizar** e, no rodapé do diálogo,
+> clique no botão **Editar** (ícone de lápis). O diálogo não fecha e reabre — ele troca de modo no
+> lugar, com os mesmos dados já carregados. Sempre que um cenário abaixo disser "abrir em modo
+> editar", é esse o caminho: **visualizar → Editar**.
+
 Com isso feito, execute os 6 cenários abaixo, em ordem — cada um depende do estado deixado pelo
 anterior.
 
@@ -75,15 +82,17 @@ anterior.
    - Horas práticas: `8`
    - (deixar aprendizagens e conteúdos em branco)
 6. Sem fechar o formulário, observar a tela.
+7. Clicar em **Salvar**.
 
 **Resultado esperado:**
-- O card do Módulo 1 (`Riscos`) mostra `Total: 8 h`.
-- O card do Módulo 2 (`Terreno`) mostra `Total: 12 h`.
-- Abaixo dos módulos aparece `Total dos módulos: 20 h`.
-- Aparece um aviso em fundo âmbar dizendo que a soma dos módulos (20 h) difere da carga horária
-  do curso (40 h). O aviso **não** impede nada — é só um alerta visual.
-- O botão de salvar está habilitado e funciona: ao clicar, o curso é salvo sem erro e o
-  formulário fecha (ou mostra sucesso).
+- Antes de salvar (passo 6): o card do Módulo 1 (`Riscos`) mostra `Total: 8 h`; o card do Módulo 2
+  (`Terreno`) mostra `Total: 12 h`; abaixo dos módulos aparece `Total dos módulos: 20 h`; e aparece
+  um aviso em fundo âmbar dizendo que a soma dos módulos (20 h) difere da carga horária do curso
+  (40 h). O aviso **não** impede nada — é só um alerta visual.
+- Ao clicar em **Salvar** (passo 7): o curso é salvo sem erro **com o aviso âmbar ainda visível na
+  tela**, e o diálogo fecha. Este é o único cenário do roteiro em que se salva com o aviso
+  presente — é a prova de que o aviso nunca bloqueia o salvar (no Cenário 4 a carga horária é
+  corrigida antes de qualquer salvar, então o aviso já não estará mais na tela).
 
 ---
 
@@ -106,10 +115,11 @@ anterior.
 
 ## Cenário 3 — Reordenar os módulos
 
-1. Fechar a visualização e abrir `GATE B4` em modo **editar**.
+1. Abrir `GATE B4` em modo editar (visualizar → Editar, ver nota em "Antes de começar").
 2. No card do módulo `Riscos`, clicar na seta **↓** (mover para baixo).
 3. Salvar.
-4. Reabrir o curso (visualizar ou editar, tanto faz).
+4. Reabrir o curso em modo **editar** — assim dá para checar a ordem e o estado das setas na
+   mesma abertura (as setas de mover só aparecem em modo editar, não em modo visualizar).
 
 **Resultado esperado:**
 - A ordem agora é: `Terreno` em 1º lugar, `Riscos` em 2º lugar.
@@ -120,9 +130,11 @@ anterior.
 
 ## Cenário 4 — Divergência resolvida (e módulo 100% teórico não gera aviso à toa)
 
-1. Abrir `GATE B4` em modo editar.
+1. Abrir `GATE B4` em modo editar (visualizar → Editar, ver nota em "Antes de começar").
 2. Trocar a **Carga horária** de `40` para `20`.
 3. Observar a tela, sem mexer em mais nada.
+4. **Não salvar.** Clicar em **Cancelar** para fechar o diálogo, descartando o `20` digitado —
+   este cenário só observa a tela; a carga horária salva do curso continua `40` para o Cenário 5.
 
 **Resultado esperado:**
 - O aviso âmbar de divergência de horas **desaparece** (a soma dos módulos, 20 h, agora bate com
@@ -139,7 +151,8 @@ Este é o teste que prova que o bug do Bloco 3 está fechado. **Antes deste bloc
 apagava todos os módulos do curso sem nenhum erro na tela — o formulário salvava "com sucesso" e
 os módulos simplesmente sumiam.
 
-1. Abrir `GATE B4` em modo editar.
+1. Com o diálogo fechado (o Cenário 4 terminou sem salvar — a carga horária do curso continua
+   `40`), abrir `GATE B4` em modo editar (visualizar → Editar).
 2. Mudar **só** o campo **Nome**, de `GATE B4` para `GATE B4 renomeado`. **Não tocar em nenhum
    outro campo** — não mexer nos módulos, não mexer na carga horária.
 3. Salvar.
@@ -156,7 +169,7 @@ os módulos simplesmente sumiam.
 
 ## Cenário 6 — Remover um módulo
 
-1. Abrir `GATE B4 renomeado` em modo editar.
+1. Abrir `GATE B4 renomeado` em modo editar (visualizar → Editar).
 2. No módulo `Riscos`, clicar no botão de remover.
 3. Salvar.
 4. Reabrir o curso.
