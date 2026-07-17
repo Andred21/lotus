@@ -12,7 +12,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 /**
  * Contrato do cadastro de curso. Curso NÃO tem valor (preço vive na cotação).
  * `redator_ids` é read-only (exibe habilitação); a edição da habilitação é por
- * endpoint dedicado, não por este DTO.
+ * endpoint dedicado, não por este DTO. `modules` é nested read-write (entrada
+ * e saída); `modules_total_hours` é derivado em runtime — não existe coluna,
+ * e é independente de `workload_hours` (contratado, não se ajusta à soma).
  */
 #[TypeScript]
 class CourseData extends Data
@@ -28,8 +30,12 @@ class CourseData extends Data
         /** @var array<CertificateTemplateData> */
         #[DataCollectionOf(CertificateTemplateData::class)]
         public array $templates = [],
+        /** @var array<CourseModuleData> */
+        #[DataCollectionOf(CourseModuleData::class)]
+        public array $modules = [],
         /** @var array<int> */
         public array $redator_ids = [],
+        public int|Optional $modules_total_hours = new Optional,
     ) {}
 
     /**
@@ -44,7 +50,11 @@ class CourseData extends Data
             description: $course->description,
             workload_hours: $course->workload_hours,
             templates: CertificateTemplateData::collect($course->certificateTemplates->all()),
+            modules: CourseModuleData::collect($course->modules->all()),
             redator_ids: $course->redatores->pluck('id')->all(),
+            modules_total_hours: $course->modules->sum(
+                fn ($m) => $m->theory_hours + $m->practice_hours
+            ),
         );
     }
 }
