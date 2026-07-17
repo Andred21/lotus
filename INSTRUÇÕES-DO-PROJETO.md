@@ -85,6 +85,14 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
 - **Action = regra de escrita.** Uma por operação (`CreateX`/`UpdateX`), dentro de `DB::transaction`.
   **`CreateX` sincroniza TUDO que `UpdateX` sincroniza** (ex.: `course_ids` — esquecer no create já
   descartou dados em silêncio). List/show/destroy sem regra vão direto ao Eloquent (ADR-02).
+- **Coleção nested read-write nasce `Optional` no DTO** (`array|Optional = new Optional`), e a Action
+  pula o replace quando `Optional`. **Ausente = não mexe; `[]` = apaga.** Default `array = []` faz o
+  replace-total apagar a coleção de quem só omitiu o campo — em silêncio, com peso legal. Ref.:
+  `CourseData::$templates`/`$modules`.
+- **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
+  pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
+  fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —
+  não voltar a escrever contato direto no Eloquent.
 - **Domain Service (`Domains/<X>/Services/`) = regra compartilhada entre entidades.** Não se duplica.
   Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar
   RUT, unicidade com `withTrashed`, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`,
@@ -208,6 +216,17 @@ que não cruza fronteira — é over-engineering.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.
+- **Kit de form em `shared/ui/FormField/`:** `FormField` (campo + label + erro), `NestedField`
+  (campo de item de coleção), `FormErrorSummary`/`FormErrorBanner` (erros sem campo onde pendurar).
+  Todo diálogo usa o kit — **não reintroduzir `Field`/`UnmappedErrors` local** (era a duplicação nos
+  6 diálogos que o Bloco 1 matou).
+- **Lista de coleção nested com replace-total usa `key={i}`, nunca `key={item.id}`.** O replace
+  recria as linhas a cada save, então o `id` **muda** — keyar por ele remonta a lista inteira e
+  derruba foco/estado. O índice É a identidade estável aqui (a ordem do array é o `sort_order`).
+  Ref.: lista de módulos do `CourseDialog`.
+- **Manipulação de array nested vive no hook, não solta no JSX:** o hook expõe `add/remove/patch/move`
+  (ref.: `useCourseForm`). Não vazar `setForm` para o componente via helper solto — o
+  `patchContact(setForm, i, ...)` do `ClientDialog` é o contra-exemplo, não o molde.
 - **Página CRUD:** `useCrudPage` guarda o ID e deriva a entidade da **lista viva** (não congela
   objeto); `useEntityForm` cuida de form + reset por prop + erros de mutação; moldes
   `ModulePage`/`CrudDialog`. Dialog unificado view=edit=create (campos vazios = cadastro); prop
