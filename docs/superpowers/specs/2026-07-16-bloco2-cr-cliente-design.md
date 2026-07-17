@@ -96,8 +96,10 @@ public function ensureSingle(Client $client, ?ClientContact $winner = null): voi
 ### `AppRadioButton` — wrapper novo em `shared/ui`
 
 Não existe wrapper de radio. Pasta-por-componente (`AppRadioButton/AppRadioButton.tsx` + `index.ts`),
-`forwardRef`, reexporta `AppRadioButtonProps`, entra no barrel raiz `shared/ui/index.ts`. A feature
-importa daqui, **nunca** `RadioButton` do PrimeReact (lei §5.6).
+sem `forwardRef` — `RadioButton` do PrimeReact é class component, então `forwardRef<HTMLInputElement>`
+não tiparia o ref real; segue a forma do `AppDropdown` já existente. Reexporta `AppRadioButtonProps`,
+entra no barrel raiz `shared/ui/index.ts`. A feature importa daqui, **nunca** `RadioButton` do
+PrimeReact (lei §5.6).
 
 ### `ClientDialog`
 
