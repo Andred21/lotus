@@ -215,13 +215,13 @@ observado na tela — especialmente se divergir do esperado.
 
 | Cenário | Resultado (✅/❌) | O que foi observado |
 | --- | --- | --- |
-| 1. Criar curso com 2 módulos | | |
-| 2. Reabrir em view | | |
-| 3. Reordenar | | |
-| 4. Divergência resolvida | | |
-| 5. REGRESSÃO DO GATE | | |
-| 6. Remover | | |
-| 7. 422 em campo de módulo | | |
+| 1. Criar curso com 2 módulos |✅ | |
+| 2. Reabrir em view |✅ | |
+| 3. Reordenar | ✅| |
+| 4. Divergência resolvida |✅ | |
+| 5. REGRESSÃO DO GATE | ✅| |
+| 6. Remover | ✅| |
+| 7. 422 em campo de módulo | ✅| |
 
 **Conclusão geral do bloco:** _(preencher após rodar os 7 cenários — o bloco só pode ser marcado
 como "Entregue" em `docs/superpowers/progress.md` depois que esta tabela estiver preenchida e,
