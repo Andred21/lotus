@@ -91,6 +91,8 @@
     "tabCourses": "Courses",
     "name": "Name",
     "technicalName": "Technical name",
+    "namePlaceholder": "e.g.: Electrical Hazards",
+    "technicalNamePlaceholder": "e.g.: High Voltage Electrical Hazard Prevention",
     "description": "Description",
     "workloadHours": "Workload (h)",
     "sectionGeneral": "Course data",

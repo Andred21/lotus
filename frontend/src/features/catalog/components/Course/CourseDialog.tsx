@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppTextarea, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { redatoresApi } from '@shared/api/redatoresApi'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
@@ -41,12 +41,12 @@ export function CourseDialog({
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('course.sectionGeneral')}</h3>
 
         <FormField label={t('course.name')} error={fieldErrors?.name?.[0]}>
-          <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
+          <AppInputText value={form.name} disabled={readOnly} placeholder={t('course.namePlaceholder')} onChange={(e) => set('name', e.target.value)} className="w-full" />
         </FormField>
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label={t('course.technicalName')} error={fieldErrors?.technical_name?.[0]}>
-            <AppInputText value={form.technical_name ?? ''} disabled={readOnly} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
+            <AppInputText value={form.technical_name ?? ''} disabled={readOnly} placeholder={t('course.technicalNamePlaceholder')} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
           </FormField>
           <FormField label={t('course.workloadHours')} error={fieldErrors?.workload_hours?.[0]}>
             <AppInputText
@@ -59,7 +59,7 @@ export function CourseDialog({
         </div>
 
         <FormField label={t('course.description')} error={fieldErrors?.description?.[0]}>
-          <AppInputText value={form.description ?? ''} disabled={readOnly} onChange={(e) => set('description', e.target.value)} className="w-full" />
+          <AppTextarea value={form.description ?? ''} disabled={readOnly} rows={3} onChange={(e) => set('description', e.target.value)} className="w-full" />
         </FormField>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('course.sectionRedatores')}</h3>

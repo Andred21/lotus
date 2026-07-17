@@ -91,6 +91,8 @@
     "tabCourses": "Cursos",
     "name": "Nombre",
     "technicalName": "Nombre técnico",
+    "namePlaceholder": "ej.: Riesgos Eléctricos",
+    "technicalNamePlaceholder": "ej.: Prevención de Riesgos Eléctricos en Alta Tensión",
     "description": "Descripción",
     "workloadHours": "Carga horaria (h)",
     "sectionGeneral": "Datos del curso",
