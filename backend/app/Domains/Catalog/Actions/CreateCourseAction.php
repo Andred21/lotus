@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
 /**
- * Cria o curso + templates de certificado (nested) numa transação. Habilitação
- * redator↔curso NÃO é tratada aqui — é por endpoint dedicado.
+ * Cria o curso + templates de certificado e módulos (nested) numa transação.
+ * Habilitação redator↔curso NÃO é tratada aqui — é por endpoint dedicado.
  */
 class CreateCourseAction
 {
@@ -27,7 +27,16 @@ class CreateCourseAction
                 $course->certificateTemplates()->create($template->toArray());
             }
 
-            return $course->load(['certificateTemplates', 'redatores']);
+            // sort_order é derivado do índice: reordenar = mandar o array na ordem
+            // nova. O sort_order que venha no payload é ignorado de propósito.
+            foreach (array_values($data->modules) as $i => $module) {
+                $course->modules()->create([
+                    ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
+                    'sort_order' => $i + 1,
+                ]);
+            }
+
+            return $course->load(['certificateTemplates', 'redatores', 'modules']);
         });
     }
 }

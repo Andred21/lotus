@@ -26,7 +26,7 @@ class CourseController extends Controller implements HasMiddleware
     /** @return array<CourseData> */
     public function index(): array
     {
-        return Course::with(['certificateTemplates', 'redatores'])
+        return Course::with(['certificateTemplates', 'redatores', 'modules'])
             ->get()
             ->map(fn (Course $c) => CourseData::fromModel($c))
             ->all();
@@ -39,7 +39,7 @@ class CourseController extends Controller implements HasMiddleware
 
     public function show(Course $course): CourseData
     {
-        return CourseData::fromModel($course->load(['certificateTemplates', 'redatores']));
+        return CourseData::fromModel($course->load(['certificateTemplates', 'redatores', 'modules']));
     }
 
     public function update(CourseData $data, Course $course, UpdateCourseAction $action): CourseData

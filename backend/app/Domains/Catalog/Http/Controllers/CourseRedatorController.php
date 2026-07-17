@@ -17,6 +17,6 @@ class CourseRedatorController extends Controller
     {
         $course->redatores()->sync($data->redator_ids);
 
-        return CourseData::fromModel($course->load(['certificateTemplates', 'redatores']));
+        return CourseData::fromModel($course->load(['certificateTemplates', 'redatores', 'modules']));
     }
 }
