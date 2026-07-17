@@ -23,17 +23,23 @@ class CreateCourseAction
                 'workload_hours' => $data->workload_hours,
             ]);
 
-            foreach ($data->templates as $template) {
-                $course->certificateTemplates()->create($template->toArray());
+            // Coleção ausente (Optional) = curso nasce sem ela. Mesma leitura do
+            // UpdateCourseAction — `CreateX` sincroniza o que `UpdateX` sincroniza.
+            if (! $data->templates instanceof Optional) {
+                foreach ($data->templates as $template) {
+                    $course->certificateTemplates()->create($template->toArray());
+                }
             }
 
             // sort_order é derivado do índice: reordenar = mandar o array na ordem
             // nova. O sort_order que venha no payload é ignorado de propósito.
-            foreach (array_values($data->modules) as $i => $module) {
-                $course->modules()->create([
-                    ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
-                    'sort_order' => $i + 1,
-                ]);
+            if (! $data->modules instanceof Optional) {
+                foreach (array_values($data->modules) as $i => $module) {
+                    $course->modules()->create([
+                        ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
+                        'sort_order' => $i + 1,
+                    ]);
+                }
             }
 
             return $course->load(['certificateTemplates', 'redatores', 'modules']);

@@ -166,4 +166,46 @@ class CourseModuleCrudTest extends TestCase
             ->assertJsonPath('modules', [])
             ->assertJsonPath('modules_total_hours', 0);
     }
+
+    public function test_update_sem_o_campo_modules_preserva_os_modulos(): void
+    {
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/courses', [
+            'name' => 'Curso X', 'workload_hours' => 8,
+            'modules' => [['name' => 'Módulo A', 'theory_hours' => 4, 'practice_hours' => 4]],
+        ])->json('id');
+
+        $module = Course::find($id)->modules()->firstOrFail();
+
+        // Consumidor que só renomeia o curso não pode perder o quadro de módulos.
+        $this->putJson("/api/courses/{$id}", ['name' => 'Curso Y', 'workload_hours' => 8])
+            ->assertOk()
+            ->assertJsonPath('name', 'Curso Y')
+            ->assertJsonPath('modules.0.id', $module->id)
+            ->assertJsonPath('modules.0.name', 'Módulo A')
+            ->assertJsonPath('modules_total_hours', 8);
+
+        $this->assertDatabaseHas('course_modules', ['id' => $module->id, 'deleted_at' => null]);
+    }
+
+    public function test_update_com_modules_vazio_apaga_explicitamente(): void
+    {
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/courses', [
+            'name' => 'Curso X', 'workload_hours' => 8,
+            'modules' => [['name' => 'Módulo A', 'theory_hours' => 4, 'practice_hours' => 4]],
+        ])->json('id');
+
+        $module = Course::find($id)->modules()->firstOrFail();
+
+        $this->putJson("/api/courses/{$id}", [
+            'name' => 'Curso X', 'workload_hours' => 8, 'modules' => [],
+        ])->assertOk()
+            ->assertJsonCount(0, 'modules')
+            ->assertJsonPath('modules_total_hours', 0);
+
+        $this->assertSoftDeleted('course_modules', ['id' => $module->id]);
+    }
 }
