@@ -55,7 +55,19 @@ technical_name: undefined | string | null,
 description: undefined | string | null,
 workload_hours: number,
 templates: CertificateTemplateData[],
+modules: CourseModuleData[],
 redator_ids: number[],
+modules_total_hours: undefined | number,
+};
+export type CourseModuleData = {
+id: undefined | number,
+name: string,
+learnings: undefined | string | null,
+contents: undefined | string | null,
+theory_hours: number,
+practice_hours: number,
+sort_order: undefined | number,
+total_hours: undefined | number,
 };
 export type CourseRedatorData = {
 redator_ids: number[],

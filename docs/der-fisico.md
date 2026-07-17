@@ -31,6 +31,7 @@
 - **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
 - **course_certificate_templates** — `id PK`, `course_id FK` → courses cascade, `version` (int), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`.
 - **course_redator** — `id PK`, `course_id FK`, `redator_id FK` → redatores cascade, `unique(course_id, redator_id)`. Pivô N:N puro (idoneidade: quais redatores podem ministrar cada curso), **sem soft-delete**.
+- **course_modules** — `id PK`, `course_id FK` → courses cascade, `sort_order` (smallint, o "Item" 1..N — derivado do índice do array na Action, nunca do payload), `name`, `learnings` (text, nullable), `contents` (text, nullable, tópicos 1.1/1.2 em texto livre), `theory_hours` / `practice_hours` (smallint, default 0), `deleted_at`. Índice: `(course_id, sort_order)`. **Sem coluna de total** — horas do módulo e soma do curso são derivadas em runtime (`CourseModuleData`/`CourseData`); `courses.workload_hours` é a carga contratada, independente da soma (divergência é aviso de tela, não gate).
 
 ### Commercial
 - **budgets** (orçamentos) — `id PK`, `client_id FK` → clients cascade, `code` (varchar UK, nullable no schema, imutável — `'Scap '.id` gerado na Action na mesma transação, ADR-17), `payment_terms` (nullable, forma de pagamento em texto livre), `deleted_at`. Agrupa N cotações. **Sem coluna de status nem de total:** ambos são **derivados** das cotações (`BudgetSummaryService`, bcmath) — não persistir.
@@ -74,7 +75,7 @@
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
 - `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
 - `students` (planejada) N:1 → `clients`; histórico em `student_client_logs`.
-- `courses` 1:N → `course_certificate_templates`, `course_redator`, `quotes`, e (planejadas) `turmas`, `certificates`.
+- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, e (planejadas) `turmas`, `certificates`.
 - `redatores` 1:N → `course_redator` (idoneidade), e (planejada) `turmas` (ministra).
 - `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (planejada) · `turmas` 1:N → `enrollments`, `feedbacks` (planejadas).
 - `budgets` / `quotes` 1:N → `files` (anexos polimórficos).
@@ -90,4 +91,4 @@
 - **Soft delete** nas entidades de negócio (`deleted_at`).
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
-- **Contexto total (alvo):** 24 tabelas (18 de domínio + 6 RBAC/transversal). Implementadas até 2026-07-13: users, clients, client_addresses, client_contacts, redatores, courses, course_certificate_templates, course_redator, budgets, quotes, files, audits + as 4 de RBAC.
+- **Contexto total (alvo):** 24 tabelas (18 de domínio + 6 RBAC/transversal). Implementadas até 2026-07-16: users, clients, client_addresses, client_contacts, redatores, courses, course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits + as 4 de RBAC.
