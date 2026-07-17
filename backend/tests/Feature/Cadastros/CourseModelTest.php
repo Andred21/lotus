@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CourseModelTest extends TestCase
@@ -49,5 +50,48 @@ class CourseModelTest extends TestCase
 
         $this->assertSoftDeleted('courses', ['id' => $course->id]);
         $this->assertSoftDeleted('course_certificate_templates', ['id' => $template->id]);
+    }
+
+    public function test_modules_vem_ordenado_por_sort_order(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+
+        // Inseridos fora de ordem de propósito: a relação é que ordena.
+        $course->modules()->create(['sort_order' => 2, 'name' => 'Segundo', 'theory_hours' => 3, 'practice_hours' => 1]);
+        $course->modules()->create(['sort_order' => 1, 'name' => 'Primeiro', 'theory_hours' => 2, 'practice_hours' => 2]);
+
+        $this->assertSame(['Primeiro', 'Segundo'], $course->modules()->pluck('name')->all());
+    }
+
+    public function test_soft_delete_do_curso_cascateia_para_modules_e_audita(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
+
+        $course->delete();
+
+        $this->assertSoftDeleted('courses', ['id' => $course->id]);
+        $this->assertSoftDeleted('course_modules', ['id' => $module->id]);
+
+        // A prova de que a cascata não passou pelo query builder (ADR-08).
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'course_module',
+            'auditable_id' => $module->id,
+            'event' => 'deleted',
+        ]);
+    }
+
+    public function test_criacao_do_modulo_audita_o_course_id(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
+
+        $audit = DB::table('audits')
+            ->where('auditable_type', 'course_module')
+            ->where('auditable_id', $module->id)
+            ->where('event', 'created')
+            ->firstOrFail();
+
+        $this->assertSame($course->id, json_decode($audit->new_values, true)['course_id']);
     }
 }

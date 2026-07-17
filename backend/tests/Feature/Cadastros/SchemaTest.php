@@ -44,5 +44,11 @@ class SchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('course_redator', [
             'course_id', 'redator_id',
         ]));
+
+        $this->assertTrue(Schema::hasTable('course_modules'));
+        $this->assertTrue(Schema::hasColumns('course_modules', [
+            'course_id', 'sort_order', 'name', 'learnings', 'contents',
+            'theory_hours', 'practice_hours', 'deleted_at',
+        ]));
     }
 }

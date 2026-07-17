@@ -5,19 +5,21 @@ namespace App\Domains\Catalog\Actions;
 use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
+use App\Domains\Catalog\Models\CourseModule;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
 /**
- * Atualiza o curso + templates (nested). Templates são substituídos (replace) —
- * simples e previsível para ~10 usuários internos. Habilitação fica de fora.
+ * Atualiza o curso + templates e módulos (nested). Ambos são substituídos
+ * (replace) — simples e previsível para ~10 usuários internos. Habilitação
+ * fica de fora.
  */
 class UpdateCourseAction
 {
     public function execute(Course $course, CourseData $data): Course
     {
         return DB::transaction(function () use ($course, $data) {
-            
+
             $course->update([
                 'name' => $data->name,
                 'technical_name' => $data->technical_name instanceof Optional ? null : $data->technical_name,
@@ -32,7 +34,17 @@ class UpdateCourseAction
                 $course->certificateTemplates()->create($template->toArray());
             }
 
-            return $course->fresh()->load(['certificateTemplates', 'redatores']);
+            // sort_order é derivado do índice: reordenar = mandar o array na ordem
+            // nova. O sort_order que venha no payload é ignorado de propósito.
+            $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
+            foreach (array_values($data->modules) as $i => $module) {
+                $course->modules()->create([
+                    ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
+                    'sort_order' => $i + 1,
+                ]);
+            }
+
+            return $course->fresh()->load(['certificateTemplates', 'redatores', 'modules']);
         });
     }
 }

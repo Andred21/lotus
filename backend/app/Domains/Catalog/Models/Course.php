@@ -39,6 +39,7 @@ class Course extends Model implements Auditable
             if (! $course->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
                 $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
+                $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
             }
         });
     }
@@ -46,6 +47,11 @@ class Course extends Model implements Auditable
     public function certificateTemplates(): HasMany
     {
         return $this->hasMany(CourseCertificateTemplate::class);
+    }
+
+    public function modules(): HasMany
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('sort_order');
     }
 
     public function redatores(): BelongsToMany
