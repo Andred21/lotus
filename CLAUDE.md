@@ -84,8 +84,9 @@ uma destas, **PARE e confirme com o João Victor.**
    integração sqlite `:memory:`, não mock. Toda entidade de cadastro segue a MESMA forma (DRY). (ADR-02)
 2. **Auditoria só na aplicação, nunca em trigger de banco.** Model Auditable+SoftDeletes muda via
    `$model->delete()` (dispara eventos); delete no query builder não audita. (ADR-08)
-3. **Tipos TS são gerados do backend.** Fonte = DTO em `app/Data` com `#[TypeScript]`.
-   `shared/types/generated.ts` NÃO se edita à mão — corrige-se o DTO e regenera. (ADR-04)
+3. **Tipos TS são gerados do backend.** Fonte = DTO em `app/Domains/<X>/Data/` (ou `app/Shared/`,
+   se transversal) com `#[TypeScript]`. `shared/types/generated.ts` NÃO se edita à mão — corrige-se
+   o DTO e regenera. (ADR-04)
 4. **Auth = cookie de sessão Sanctum + CSRF.** Nunca token/localStorage. `initCsrf()` antes da 1ª
    mutação. Controllers deixam exceções subirem (handler global RFC 7807); validação =
    `ValidationException::withMessages([...])`, nunca `abort(422)` nem erro à mão. (ADR-06/03)

@@ -70,6 +70,8 @@ frontend/src/
 │   ├── router/                 # rotas + guards por role (ADR-07)
 │   ├── providers/              # QueryClientProvider, tema, i18n, Zustand root
 │   ├── layouts/                # AppLayout (sidebar admin / interface redator)
+│   ├── pages/                  # página que NÃO é de domínio: DashboardPage, ModulePlaceholder
+│   ├── SessionBootstrap.tsx    # hidrata a sessão antes de liberar as rotas
 │   └── App.tsx
 │
 ├── shared/                     # COMPARTILHADA. Não pertence a domínio.
@@ -113,7 +115,10 @@ frontend/src/
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui
 
-frontend/vite.config.ts         # plugin typescript-transformer (ADR-04) + i18n
+frontend/vite.config.ts         # react + tailwind + aliases (@, @app, @shared, @features).
+                                #   NÃO tem plugin de i18n nem de typescript-transformer: os tipos
+                                #   são gerados por `php artisan typescript:transform` (ADR-04) e o
+                                #   i18n é runtime (i18next em shared/config/i18n.ts, ADR-15).
 frontend/tsconfig.json          # paths: @shared, @features, @app
 ```
 
@@ -146,5 +151,9 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 
 ## `[A CONFIRMAR FASE 2]`
 - `app/Domains/` vs `src/Domains/` (cosmético).
-- File-based routing (TanStack Router) vs `pages/` manual.
 - Separar Auth de UserManagement se Identity crescer muito (só se doer).
+
+**Resolvido:** *file-based routing (TanStack Router) vs `pages/` manual* — venceu o `pages/` manual.
+`app/router/AppRouter.tsx` declara as rotas à mão; `app/pages/` guarda as páginas sem domínio e cada
+feature expõe a sua (`PeoplePage`, `BudgetDetailPage`). Sem plugin de rota no build. Reabrir só se a
+contagem de rotas passar a doer.

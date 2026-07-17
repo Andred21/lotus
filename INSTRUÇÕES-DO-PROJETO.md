@@ -85,6 +85,14 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
 - **Action = regra de escrita.** Uma por operação (`CreateX`/`UpdateX`), dentro de `DB::transaction`.
   **`CreateX` sincroniza TUDO que `UpdateX` sincroniza** (ex.: `course_ids` — esquecer no create já
   descartou dados em silêncio). List/show/destroy sem regra vão direto ao Eloquent (ADR-02).
+- **Coleção nested read-write nasce `Optional` no DTO** (`array|Optional = new Optional`), e a Action
+  pula o replace quando `Optional`. **Ausente = não mexe; `[]` = apaga.** Default `array = []` faz o
+  replace-total apagar a coleção de quem só omitiu o campo — em silêncio, com peso legal. Ref.:
+  `CourseData::$templates`/`$modules`.
+- **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
+  pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
+  fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —
+  não voltar a escrever contato direto no Eloquent.
 - **Domain Service (`Domains/<X>/Services/`) = regra compartilhada entre entidades.** Não se duplica.
   Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar
   RUT, unicidade com `withTrashed`, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`,
@@ -135,7 +143,10 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 
 ### Contratos de tipo (backend → frontend)
 
-DTOs em `app/Data` com `#[TypeScript]`; o transformer varre `app/Data` e escreve um módulo flat em
+DTOs vivem **no domínio dono do contrato**: `app/Domains/<Dominio>/Data/XData.php` (ex.:
+`Domains/Catalog/Data/CourseData.php`). Contrato transversal fica sob `app/Shared/` — hoje só
+`Shared/Files/Data/FileData.php`. **Não existe `app/Data`** (o transformer varre `app/` inteiro, sem
+config publicada). Marque a classe com `#[TypeScript]` e ela entra no módulo flat
 `frontend/src/shared/types/generated.ts`. Mudou a forma de uma resposta → crie/atualize a classe
 `Data` (nunca array ad-hoc) e regenere (`php artisan typescript:transform`). Nunca editar `generated.ts`
 à mão (ADR-04).
@@ -185,11 +196,17 @@ que não cruza fronteira — é over-engineering.
   virar JSON e cada `File` virar `{}` — upload chega vazio, 201 silencioso (peso legal). `initCsrf()`
   (`shared/api/csrf.ts`) roda uma vez antes da 1ª mutação.
 - **Wrappers `shared/ui`:** features importam `AppButton`, nunca `Button` do pacote.
-  Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), `forwardRef`, reexporta `AppXProps`
+  Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), reexporta `AppXProps`
   (fecha a fronteira de tipo — a feature importa `AppButtonProps`, nunca `ButtonProps`). Barrel raiz
   `shared/ui/index.ts` é a única porta. Customização de componente Prime vive aqui, nunca com Tailwind
   na feature. Em wrappers com handler embutido (upload), **pine o override após o spread**
   (`customUpload` não pode ser desligado pelo caller).
+- **`forwardRef` no wrapper é condicional, não cerimônia.** Leva quem embrulha componente de função
+  com ref de DOM útil — foco, seleção, medida: `AppInputText`, `AppPassword`, `AppTextarea`,
+  `AppMenu`. **Não leva** quem embrulha *class component* do Prime (`RadioButton`, `Dropdown` — o
+  ref não é DOM e `forwardRef` só mente sobre o tipo) nem wrapper apresentacional sem ref
+  (`AppButton`, `AppTag`, `AppDivider`). Hoje: 5 de 25 wrappers. Na dúvida, siga o vizinho da mesma
+  categoria (`AppRadioButton` segue o `AppDropdown`, não o `AppInputText`).
 - **Tailwind = layout** (grid/espaçamento); cor via variável CSS do tema (ADR-16). Utility não vence
   a especificidade do tema — ao depurar estilo, cheque o **seletor completo do markup**, não a classe
   isolada.
@@ -199,6 +216,17 @@ que não cruza fronteira — é over-engineering.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.
+- **Kit de form em `shared/ui/FormField/`:** `FormField` (campo + label + erro), `NestedField`
+  (campo de item de coleção), `FormErrorSummary`/`FormErrorBanner` (erros sem campo onde pendurar).
+  Todo diálogo usa o kit — **não reintroduzir `Field`/`UnmappedErrors` local** (era a duplicação nos
+  6 diálogos que o Bloco 1 matou).
+- **Lista de coleção nested com replace-total usa `key={i}`, nunca `key={item.id}`.** O replace
+  recria as linhas a cada save, então o `id` **muda** — keyar por ele remonta a lista inteira e
+  derruba foco/estado. O índice É a identidade estável aqui (a ordem do array é o `sort_order`).
+  Ref.: lista de módulos do `CourseDialog`.
+- **Manipulação de array nested vive no hook, não solta no JSX:** o hook expõe `add/remove/patch/move`
+  (ref.: `useCourseForm`). Não vazar `setForm` para o componente via helper solto — o
+  `patchContact(setForm, i, ...)` do `ClientDialog` é o contra-exemplo, não o molde.
 - **Página CRUD:** `useCrudPage` guarda o ID e deriva a entidade da **lista viva** (não congela
   objeto); `useEntityForm` cuida de form + reset por prop + erros de mutação; moldes
   `ModulePage`/`CrudDialog`. Dialog unificado view=edit=create (campos vazios = cadastro); prop

@@ -45,7 +45,16 @@
 - **roles** — `id PK`, `name`, `guard_name`.
 - **permissions** — `id PK`, `name`, `guard_name`.
 - **model_has_roles** — `role_id FK`, `model_type`, `model_id`.
+- **model_has_permissions** — `permission_id FK`, `model_type`, `model_id`. Permissão direta a
+  usuário, **sem uso**: a autorização é sempre por role (ADR-07). Vem do pacote; não é ponto de
+  extensão.
 - **role_has_permissions** — `permission_id FK`, `role_id FK`.
+
+### Framework (vêm do Laravel/Sanctum — não são modelo de domínio)
+- **sessions** — sustenta o cookie de sessão do Sanctum SPA (ADR-06). `SESSION_DRIVER=database`.
+- **password_reset_tokens**, **cache**, **jobs** — padrão do Laravel.
+- **personal_access_tokens** — migration default do Sanctum, **morta**: o projeto usa cookie de
+  sessão, nunca token (ADR-06). Não usar como saída para "autenticar um serviço".
 
 ---
 
@@ -91,4 +100,12 @@
 - **Soft delete** nas entidades de negócio (`deleted_at`).
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
-- **Contexto total (alvo):** 24 tabelas (18 de domínio + 6 RBAC/transversal). Implementadas até 2026-07-16: users, clients, client_addresses, client_contacts, redatores, courses, course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits + as 4 de RBAC.
+- **Coleção nested no DTO é `Optional`, não `array = []`** (ADR-04/lição do Bloco 5): em
+  `CourseData`, `templates`/`modules` ausentes do payload significam "não mexe"; `[]` apaga. Um
+  default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
+  silêncio. Toda coleção nested read-write futura nasce `Optional`.
+- **Contexto total (alvo):** 25 tabelas (18 de domínio + 7 RBAC/transversal). Implementadas até
+  2026-07-17: users, clients, client_addresses, client_contacts, redatores, courses,
+  course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits + as
+  5 de RBAC. As de framework (sessions, cache, jobs, password_reset_tokens,
+  personal_access_tokens) ficam fora da contagem de domínio.

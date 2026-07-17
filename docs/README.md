@@ -4,7 +4,7 @@
 > Os arquivos aqui são snapshots datados, adaptados para consumo por agente de código.
 > Se um doc divergir do Drive, o Drive vence — sinalize a divergência ao João Victor.
 
-**Snapshot gerado em:** 2026-07-04 · **Atualizado em:** 2026-07-10
+**Snapshot gerado em:** 2026-07-04 · **Atualizado em:** 2026-07-17
 
 ---
 
@@ -17,12 +17,12 @@ O `CLAUDE.md` na raiz é o mapa e as regras. Esta pasta é o detalhe sob demanda
 ## Documentos
 
 ### `adrs.md` — Architecture Decision Records
-As 17 decisões de arquitetura fechadas do projeto, cada uma com contexto, decisão, justificativa e trade-off. **Consulte antes de qualquer decisão de stack, padrão, estrutura ou infra.** Estas decisões já foram tomadas e ponderadas — não as reabra sem motivo; se uma tarefa parecer contrariar um ADR, sinalize antes de prosseguir.
+As 19 decisões de arquitetura fechadas do projeto, cada uma com contexto, decisão, justificativa e trade-off. **Consulte antes de qualquer decisão de stack, padrão, estrutura ou infra.** Estas decisões já foram tomadas e ponderadas — não as reabra sem motivo; se uma tarefa parecer contrariar um ADR, sinalize antes de prosseguir.
 
 Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
 
 ### `der-fisico.md` — Modelo físico de dados
-DER físico MySQL com 24 tabelas (18 de domínio + 6 de RBAC/auditoria), tipos de coluna, PK/FK, relações. **Consulte antes de criar migration, model ou mexer em schema.** Os nomes de tabela e coluna aqui são a referência — não invente nomes divergentes.
+DER físico MySQL com 25 tabelas-alvo (18 de domínio + 7 de RBAC/auditoria), tipos de coluna, PK/FK, relações. **Consulte antes de criar migration, model ou mexer em schema.** Os nomes de tabela e coluna aqui são a referência — não invente nomes divergentes.
 
 > **Divergência de idioma (em aberto):** o schema **implementado** está em inglês (decisão do João Victor, spec `2026-07-07-sprint1-cadastros-backend-design.md` §2.1); o canônico do Drive segue em PT/ES. As tabelas já construídas estão documentadas em inglês; as ainda no papel ficam em PT/ES até serem implementadas (também em inglês). Alinhar o Drive canônico é follow-up pendente de autorização (write externo).
 
@@ -55,7 +55,33 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
 
 9. **Tooling e git com escopo cirúrgico.** `./vendor/bin/pint` **sem argumento** reformata o repo inteiro (44 arquivos numa ocorrência, incluindo `use` de classes inexistentes) — passe só os arquivos tocados. `git add` só os caminhos exatos da task. Rode `git status` no início e `git diff <arquivo>` antes de editar arquivo sujo: o João edita o working tree **ao vivo** durante a execução (padrão recorrente) e o WIP dele é intocável.
 
-> **Histórico vivo do desenvolvimento:** `.superpowers/sdd/progress.md` é o índice do que já foi construído, provado e decidido (com os desvios validados). Os planos e specs aprovados ficam em `docs/superpowers/plans/` e `docs/superpowers/specs/`. Consulte-os no início de uma feature para alinhar com o que já existe — não repita erro já mapeado aqui.
+10. **Teste que nunca viu o bug é cobertura fantasma.** Um teste de regressão só vale depois de você
+    o ver **reprovar contra o código antigo** (`git stash` no fix, rode, `git stash pop`). Dois casos
+    reais: `learnings`/`contents` "passavam" gravando `null` (Bloco 3); e os testes de "coleção
+    preservada" passariam com o bug presente se afirmassem a coisa errada (Bloco 5.0). Teste que
+    passa nos dois estados prova nada.
+
+11. **Task que roda `typescript:transform` ajusta os consumidores no MESMO commit.** Regenerar muda
+    a forma dos tipos (`job_title` virou chave obrigatória; `modules` virou `| undefined`) e quebra
+    os literais TS existentes na hora. Ou a task já corrige os consumidores, ou o plano não pode
+    pedir "build verde" na task seguinte.
+
+12. **Prova e2e via curl precisa de `-H 'Origin: <FRONTEND_URL>'` E `-H 'Accept: application/json'`.**
+    Sem `Origin`, o Sanctum não trata a request como stateful e o login dá 500. Sem `Accept`, o
+    middleware de auth tenta redirecionar para uma rota `login` inexistente e dá 500. Os dois 500 são
+    do curl, não do código — não saia caçando bug que não existe.
+
+13. **Doc que descreve intenção não-construída é pior que doc ausente.** O ADR-15 mandou por dois
+    anos-luz de arquitetura que nunca existiu ("compilar PHP → JSON via Vite") e as leis invioláveis
+    mandavam por DTO em `app/Data`, pasta que nunca existiu — ambos sobreviveram porque ninguém
+    confere doc contra código. Doc afirma o que **é**; o que se pretende vai marcado como pendência.
+
+> **Índice vivo do desenvolvimento:** `docs/superpowers/progress.md` (versionado) é o índice do que
+> foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
+> mora no ADR, de schema no `der-fisico`, de padrão de código no `INSTRUÇÕES`, e o passo-a-passo nos
+> planos/specs em `docs/superpowers/plans|specs/` (concluídos em `archive/`). O ledger fino de
+> execução é `.superpowers/sdd/progress.md` (local, não versionado). Consulte no início de uma
+> feature para alinhar com o que já existe — não repita erro já mapeado aqui.
 
 ---
 

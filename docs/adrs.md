@@ -90,8 +90,32 @@
 
 **Itens `[FASE 2]` a resolver:** TLS automático (Let's Encrypt + Certbot no Nginx); deploy reproduzível (script git pull → rebuild → restart; GitHub Actions quando incomodar — não montar pipeline no dia 1); backup do banco (snapshot RDS); monitoramento básico (healthcheck + alerta CloudWatch).
 
-## ADR-15 — i18n: PT-BR / EN-US / ES-CL
-**Regra:** localização do Laravel como fonte; compartilhar dicionários com React (compilar traduções PHP → JSON via Vite). Locale ativo injetado no bootstrap; lazy-load se o volume crescer. **Porquê:** evita duplicar dicionário entre back e front (mesmas chaves). ES-CL é requisito real (cliente chileno). Nota: filtrar recomendações de i18n que pressupõem Inertia (não usamos). Biblioteca exata `[A CONFIRMAR NA FASE 2]`.
+## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
+
+**Regra:**
+1. **Front:** `i18next` + `react-i18next` + `i18next-browser-languagedetector`, configurados em
+   `shared/config/i18n.ts`. Dicionários são JSON em `shared/config/locales/` (`es-CL`, `pt-BR`,
+   `en`), importados no bundle. **`es-CL` é o fallback e a referência de rótulo** — o produto é
+   para o cliente chileno; as 3 chaves são idênticas entre os locales.
+2. **Back:** `lang/` do Laravel cobre **só as mensagens que a API emite** (validação, auth) dentro
+   do envelope RFC 7807 (ADR-03). O front manda `Accept-Language`; o middleware `SetLocale`
+   (`Shared/Http/Middleware`) normaliza (`es-CL` → `es_CL`) e ajusta o locale da app.
+3. **Os dois dicionários são independentes** — nenhuma chave é compartilhada, nada é compilado de
+   um lado para o outro.
+
+**Porquê:** o front é uma SPA que consome JSON, não um app Blade — não há bootstrap do servidor
+onde injetar o dicionário, e o rótulo de tela nunca precisa existir em PHP. Cada camada traduz o
+que ela mesma emite: rótulo/tela é do front, mensagem de erro da API é do back. `i18next` é o
+padrão de fato do ecossistema React e resolve detecção/fallback/interpolação sem código nosso.
+
+**Revisão (2026-07-17).** A versão original deste ADR mandava "localização do Laravel como fonte;
+compilar traduções PHP → JSON via Vite" para não duplicar dicionário, e deixava a biblioteca
+`[A CONFIRMAR NA FASE 2]`. **Nada disso foi construído** e a decisão real foi outra: não existe
+plugin de compilação no `vite.config.ts`, e os dois dicionários vivem separados desde a fundação da
+UI. O texto acima descreve o que existe. A premissa "evita duplicar dicionário" não se sustentou:
+não há duplicação a evitar, porque os conjuntos de mensagem não se sobrepõem.
+
+**Nota:** filtrar recomendações de i18n que pressupõem Inertia (não usamos).
 
 ## ADR-16 — Tailwind como layout; tema do PrimeReact trocado em runtime
 
@@ -163,10 +187,43 @@ app. Descartado: lookup fino em `shared` + CRUD na feature — duplica query key
 cache na invalidação (feature invalida `keys.all`, lookup usa outra key), complexidade sem retorno
 a ~10 usuários.
 
+## ADR-19 — Dinheiro em decimal + bcmath, nunca float
+
+**Contexto.** Valores em UF (cotação, orçamento) são registro de peso legal: entram em proposta
+comercial assinada e viram base de faturamento. `float`/`double` não representam decimais exatos
+(`0.1 + 0.2 = 0.30000000000000004`); somar N cotações em float acumula erro que aparece como
+centavo faltando no total exibido ao cliente. O padrão já existia no código desde a Sprint 2 — este
+ADR o formaliza, não o inaugura.
+
+**Regra:**
+1. **Coluna** de dinheiro é `decimal(12,4)` (`quotes.value_uf`). Nunca `float`/`double`.
+2. **Cast** do Eloquent é `'decimal:4'` — o model devolve string, não float.
+3. **Aritmética** de dinheiro usa **bcmath** (`bcadd`/`bcsub`/`bcmul`/`bccomp`), sempre com a escala
+   explícita (`4`) e operandos em string. Nunca `+`, `array_sum()` ou `Collection::sum()` sobre
+   valor monetário. Referência: `BudgetSummaryService::totalValueUf()`.
+4. **DTO** expõe o valor como `string` (`BudgetData::$total_value_uf`), não `int|float` — o tipo TS
+   gerado é `string` e o front formata (`uf` em `features/commercial/lib`), sem reconverter.
+5. A extensão `bcmath` está no `docker/php/Dockerfile` — é dependência de execução, não opcional.
+
+**Escopo.** Dinheiro e UF. **Não** se aplica a contador inteiro (`student_count` soma com
+`Collection::sum()` — inteiro não tem erro de representação) nem a horas (`theory_hours`,
+`practice_hours`, `workload_hours` são `smallint`).
+
+**Porquê:** correção exata pelo mesmo motivo do resto do projeto — certificado e proposta têm peso
+legal, e "quase certo" em dinheiro é errado. Trade-off aceito: bcmath é verboso (string entra,
+string sai) e ~ordem de grandeza mais lento que float — irrelevante a ~10 usuários somando dezenas
+de cotações.
+
+**Descartados:** *float com `round()` na borda* — empurra o erro para a última casa e falha em
+comparação (`0.1+0.2 == 0.3` é `false`); *inteiro de centavos* (armazenar `value_uf * 10000`) —
+funciona, mas força conversão em toda leitura/escrita e no front, e `decimal` + bcmath já resolve
+com o schema legível; *`brick/math` ou value object `Money`* — abstração de uso único no estágio
+atual, o `BudgetSummaryService` é o único lugar que soma dinheiro. Se um segundo agregado precisar
+somar valor, reconsiderar o value object.
+
 ---
 
 ## Pendências abertas (não decidir sem o João Victor)
-- Biblioteca exata de i18n (ADR-15).
 - Estratégia fina de pruning da auditoria (ADR-08).
 
 ## Regras de negócio herdadas (referência)
