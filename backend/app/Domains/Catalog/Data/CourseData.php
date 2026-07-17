@@ -15,6 +15,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * endpoint dedicado, não por este DTO. `modules` é nested read-write (entrada
  * e saída); `modules_total_hours` é derivado em runtime — não existe coluna,
  * e é independente de `workload_hours` (contratado, não se ajusta à soma).
+ *
+ * `templates` e `modules` são `Optional` na ENTRADA: ausente = não mexe na
+ * coleção; `[]` = apaga tudo (explícito). Sem o `Optional`, um payload que
+ * apenas omite a coleção apagava todos os registros dela em silêncio — peso
+ * legal. A saída (`fromModel`) sempre preenche as duas.
  */
 #[TypeScript]
 class CourseData extends Data
@@ -27,12 +32,12 @@ class CourseData extends Data
         public string|Optional|null $description = null,
         #[Required]
         public int $workload_hours = 0,
-        /** @var array<CertificateTemplateData> */
+        /** @var array<CertificateTemplateData>|Optional */
         #[DataCollectionOf(CertificateTemplateData::class)]
-        public array $templates = [],
-        /** @var array<CourseModuleData> */
+        public array|Optional $templates = new Optional,
+        /** @var array<CourseModuleData>|Optional */
         #[DataCollectionOf(CourseModuleData::class)]
-        public array $modules = [],
+        public array|Optional $modules = new Optional,
         /** @var array<int> */
         public array $redator_ids = [],
         public int|Optional $modules_total_hours = new Optional,

@@ -63,6 +63,49 @@ class CourseTemplateTest extends TestCase
         ]);
     }
 
+    public function test_update_sem_o_campo_templates_preserva_os_templates(): void
+    {
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/courses', [
+            'name' => 'Curso X', 'workload_hours' => 8,
+            'templates' => [['version' => 1, 'layout_config' => ['orientation' => 'portrait']]],
+        ])->json('id');
+
+        $template = Course::find($id)->certificateTemplates()->firstOrFail();
+
+        // Payload da tela de curso: não manda `templates`. Não pedir para mexer
+        // na coleção não pode apagá-la (peso legal).
+        $this->putJson("/api/courses/{$id}", ['name' => 'Curso Y', 'workload_hours' => 8])
+            ->assertOk()
+            ->assertJsonPath('name', 'Curso Y')
+            ->assertJsonPath('templates.0.id', $template->id)
+            ->assertJsonPath('templates.0.version', 1);
+
+        $this->assertDatabaseHas('course_certificate_templates', [
+            'id' => $template->id, 'deleted_at' => null,
+        ]);
+    }
+
+    public function test_update_com_templates_vazio_apaga_explicitamente(): void
+    {
+        $this->actingAdmin();
+
+        $id = $this->postJson('/api/courses', [
+            'name' => 'Curso X', 'workload_hours' => 8,
+            'templates' => [['version' => 1, 'layout_config' => ['orientation' => 'portrait']]],
+        ])->json('id');
+
+        $template = Course::find($id)->certificateTemplates()->firstOrFail();
+
+        // `[]` é ordem explícita de esvaziar — segue apagando.
+        $this->putJson("/api/courses/{$id}", [
+            'name' => 'Curso X', 'workload_hours' => 8, 'templates' => [],
+        ])->assertOk()->assertJsonCount(0, 'templates');
+
+        $this->assertSoftDeleted('course_certificate_templates', ['id' => $template->id]);
+    }
+
     public function test_delete_de_curso_audita_o_soft_delete_dos_templates(): void
     {
         $this->actingAdmin();

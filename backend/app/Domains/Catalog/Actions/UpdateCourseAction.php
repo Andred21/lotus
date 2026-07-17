@@ -13,6 +13,9 @@ use Spatie\LaravelData\Optional;
  * Atualiza o curso + templates e módulos (nested). Ambos são substituídos
  * (replace) — simples e previsível para ~10 usuários internos. Habilitação
  * fica de fora.
+ *
+ * Coleção `Optional` (ausente do payload) NÃO entra no replace: quem não
+ * mandou a coleção não pediu para apagá-la. `[]` explícito apaga.
  */
 class UpdateCourseAction
 {
@@ -29,19 +32,23 @@ class UpdateCourseAction
 
             // Replace dos nested. Soft-delete por instância para a auditoria
             // registrar o que saiu (o builder emitiria UPDATE sem eventos).
-            $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
-            foreach ($data->templates as $template) {
-                $course->certificateTemplates()->create($template->toArray());
+            if (! $data->templates instanceof Optional) {
+                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
+                foreach ($data->templates as $template) {
+                    $course->certificateTemplates()->create($template->toArray());
+                }
             }
 
             // sort_order é derivado do índice: reordenar = mandar o array na ordem
             // nova. O sort_order que venha no payload é ignorado de propósito.
-            $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
-            foreach (array_values($data->modules) as $i => $module) {
-                $course->modules()->create([
-                    ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
-                    'sort_order' => $i + 1,
-                ]);
+            if (! $data->modules instanceof Optional) {
+                $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
+                foreach (array_values($data->modules) as $i => $module) {
+                    $course->modules()->create([
+                        ...$module->except('id', 'sort_order', 'total_hours')->toArray(),
+                        'sort_order' => $i + 1,
+                    ]);
+                }
             }
 
             return $course->fresh()->load(['certificateTemplates', 'redatores', 'modules']);

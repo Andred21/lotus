@@ -10,14 +10,16 @@ export type CourseDialogMode = DialogMode
 /**
  * Só os campos que o formulário edita. `redator_ids` fica aqui para o multiselect
  * do create, mas NÃO vai no payload do curso (o backend ignora na escrita): é
- * sincronizado pelo endpoint dedicado. `templates` fica de fora (config à parte).
- * `modules` PRECISA estar aqui: o backend faz replace-total, então um payload sem
- * o campo apaga todos os módulos do curso.
+ * sincronizado pelo endpoint dedicado. `templates` fica de fora (config à parte)
+ * — e agora omiti-lo preserva os templates, em vez de apagá-los.
+ *
+ * `modules` é `Optional` no contrato (ausente = não mexe), mas aqui é array
+ * sempre: esta tela é a dona do quadro de módulos e manda a coleção inteira.
  */
 export type CourseFormFields = Pick<
   CourseData,
-  'id' | 'name' | 'technical_name' | 'description' | 'workload_hours' | 'redator_ids' | 'modules'
->
+  'id' | 'name' | 'technical_name' | 'description' | 'workload_hours' | 'redator_ids'
+> & { modules: CourseModuleData[] }
 
 /** Módulo novo do formulário. `sort_order`/`total_hours` ficam undefined: o
  * backend os deriva (do índice do array e da soma) e ignora o que vier. */
@@ -37,7 +39,10 @@ const toFields = (c: CourseFormFields): CourseFormFields => {
 }
 
 export function useCourseForm(course: CourseData | null, mode: CourseDialogMode, onDone: () => void) {
-  const { form, set, setForm, readOnly } = useEntityForm<CourseFormFields>(course, mode, EMPTY, toFields)
+  // A resposta da API sempre traz `modules`; o `| undefined` do tipo é do lado da
+  // ENTRADA (Optional). Normaliza aqui para o form não carregar o undefined.
+  const entity: CourseFormFields | null = course ? { ...course, modules: course.modules ?? [] } : null
+  const { form, set, setForm, readOnly } = useEntityForm<CourseFormFields>(entity, mode, EMPTY, toFields)
   const create = coursesApi.useCreate()
   const update = coursesApi.useUpdate()
   const sync = useSyncCourseRedatores()
