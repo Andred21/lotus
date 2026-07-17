@@ -76,8 +76,11 @@
     "commune": "Comuna",
     "city": "Cidade",
     "street": "Rua",
+    "complement": "Complemento",
     "number": "Número",
     "contactName": "Nome",
+    "contactJobTitle": "Cargo",
+    "contactPrimary": "Contato principal",
     "contacts": "Contatos"
   },
   "course": {

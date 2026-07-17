@@ -76,8 +76,11 @@
     "commune": "Commune",
     "city": "City",
     "street": "Street",
+    "complement": "Unit / Office",
     "number": "Number",
     "contactName": "Name",
+    "contactJobTitle": "Job title",
+    "contactPrimary": "Primary contact",
     "contacts": "Contacts"
   },
   "course": {

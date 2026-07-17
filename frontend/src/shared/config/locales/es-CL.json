@@ -76,8 +76,11 @@
     "commune": "Comuna",
     "city": "Ciudad",
     "street": "Calle",
+    "complement": "Depto. / Oficina",
     "number": "Número",
     "contactName": "Nombre",
+    "contactJobTitle": "Cargo",
+    "contactPrimary": "Contacto principal",
     "contacts": "Contactos"
   },
   "course": {
