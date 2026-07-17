@@ -91,6 +91,8 @@
     "tabCourses": "Courses",
     "name": "Name",
     "technicalName": "Technical name",
+    "namePlaceholder": "e.g.: Electrical Hazards",
+    "technicalNamePlaceholder": "e.g.: High Voltage Electrical Hazard Prevention",
     "description": "Description",
     "workloadHours": "Workload (h)",
     "sectionGeneral": "Course data",
@@ -101,6 +103,24 @@
     "empty": "No courses.",
     "count": "{{count}} course(s)",
     "redatorCount": "Writers"
+  },
+  "courseModule": {
+    "section": "Modules",
+    "itemLabel": "Module {{n}}",
+    "add": "Add module",
+    "remove": "Remove module",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "name": "Module name",
+    "namePlaceholder": "e.g.: Introduction to Electrical Hazards",
+    "learnings": "Learnings",
+    "contents": "Contents",
+    "theoryHours": "Theory hours",
+    "practiceHours": "Practice hours",
+    "total": "Total: {{hours}} h",
+    "modulesTotal": "Modules total: {{hours}} h",
+    "hoursMismatch": "The modules sum ({{modules}} h) differs from the course workload ({{workload}} h). You can save anyway.",
+    "empty": "No modules registered."
   },
   "budget": {
     "module": "Commercial",
