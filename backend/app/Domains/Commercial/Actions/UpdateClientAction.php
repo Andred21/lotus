@@ -6,6 +6,7 @@ use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Commercial\Models\ClientContact;
+use App\Domains\Commercial\Services\PrimaryContactService;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
@@ -16,7 +17,10 @@ use Spatie\LaravelData\Optional;
  */
 class UpdateClientAction
 {
-    public function __construct(private UserProvisioner $users) {}
+    public function __construct(
+        private UserProvisioner $users,
+        private PrimaryContactService $primaryContacts,
+    ) {}
 
     public function execute(Client $client, ClientData $data): Client
     {
@@ -47,6 +51,8 @@ class UpdateClientAction
             foreach ($data->contacts as $contact) {
                 $client->contacts()->create($contact->toArray());
             }
+
+            $this->primaryContacts->ensureSingle($client);
 
             return $client->fresh()->load(['user', 'addresses', 'contacts']);
         });

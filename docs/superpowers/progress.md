@@ -21,12 +21,12 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-13 | Sprint 2 · Comercial frontend | Entregue | Lista de orçamentos, detalhe com cotações, wizard de cotação (passo em useState), aprovação/recusa, anexos | `plans/archive/2026-07-13-sprint2-commercial-frontend.md` | `specs/archive/2026-07-13-sprint2-commercial-frontend-design.md` |
 | 2026-07-14 | Bloco 0 · Sync de docs pós-Sprint 2 | Entregue | Docs voltam a bater com o código: `budgets` **sem** status/total (derivados no `BudgetSummaryService`) e `quotes` **sem** `client_id` — não recriar essas colunas na Sprint 3. ADR-17 fechado; ressalva do ADR-18 (cliente REST em `shared/api`). Morph map mantém o alias `turma` antes do model — intencional, não remover | — (docs-only, sem plano) | — |
 | 2026-07-16 | Bloco 1 · Refino de código Sprint 2 | Entregue | Kit de form em `shared/ui/FormField/` (`FormField`/`NestedField`/`FormErrorSummary`/`FormErrorBanner`) mata a duplicação nos 6 diálogos — **não reintroduzir `Field`/`UnmappedErrors` local; `NestedField` é pré-req de `course_modules` (blocos 2-4)**. `Delete{Budget,Quote}Action` tiram a guarda de peso legal ("aprovada não exclui") do controller — que **não tinha teste no path de delete**, agora tem. **DeleteQuote sem transação** (escrita única, padrão `UpdateQuoteAction`); só Budget usa transação (cascade N quotes). Convenção `from()` (entrada) vs `fromModel()` (saída, projeção única) documentada em INSTRUÇÕES | `plans/archive/2026-07-16-bloco1-refino-sprint2.md` | `specs/archive/2026-07-16-bloco1-refino-sprint2-design.md` |
+| 2026-07-16 | Bloco 2 · CR Cliente (cargo, principal único, complemento) | Entregue | Coluna é **`job_title`, não `role`** (o card do Notion pedia `role`; `role` já é RBAC/spatie aqui) — entrou no `$fillable` **e** no `$auditInclude`. `PrimaryContactService::ensureSingle()` fecha "no máximo 1 principal" nos **2 caminhos de escrita**: Client Actions (replace-total, o da tela) **e** as rotas nested via `Create/UpdateClientContactAction` — **não voltar a escrever contato direto no Eloquent**. **Cliente sem principal é estado VÁLIDO** (não auto-promover). O unmark usa `$model->update()` por instância — pelo query builder não audita (peso legal). `AppRadioButton` em `shared/ui` **sem `forwardRef`** (o `RadioButton` do Prime é class component; segue a forma do `AppDropdown`, não a do `AppInputText`). **Lição de plano:** task que roda `typescript:transform` quebra os literais TS no mesmo commit (`job_title` gera chave obrigatória, sem `?`) — ou ela já ajusta os consumidores, ou o plano não pode pedir "build verde" na task seguinte | `plans/archive/2026-07-16-bloco2-cr-cliente.md` | `specs/archive/2026-07-16-bloco2-cr-cliente-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 
-- Bloco 2 · CR Cliente: cargo do contato, principal único, complemento na tela — Notion CR.1.1–CR.1.3
 - Bloco 3 · CR Curso: entidade course_modules 1:N (backend) — Notion CR.2.2
 - Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis com soma de horas (frontend) — Notion CR.2.1, CR.2.3
 - ADR-19 · bcmath/decimal para dinheiro (padrão de fato sem ADR — peso legal) — antes da Sprint 3
@@ -34,3 +34,12 @@ _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em e
 - Sprint 3 · Turmas / Operação
 - Sprint 4 · Certificação (templates, PDF, endpoint público QR)
 - Hardening (ownership em rotas nested, política de retenção de docs)
+- Unicidade de `client_addresses.is_primary` — mesmo gap que o Bloco 2 fechou nos contatos; ficou de
+  fora porque o contratante não pediu e a tela só edita o 1º endereço. `PrimaryContactService` é o molde.
+- `ClientContactData.is_primary` tem default `false` **não-`Optional`** — `PUT /api/contacts/{id}` sem o
+  campo rebaixa o principal em silêncio. Pré-existente; rota sem consumidor no front (achado do review
+  final do Bloco 2).
+- Decidir: a UI não consegue voltar a **zero** principais (radio não desmarca), mas o backend aceita 0 —
+  assimetria entre as camadas, nunca decidida explicitamente (achado do review final do Bloco 2).
+- Consolidar as migrations "adicionais" nas originais — antes de subir para produção (decisão do João
+  no Bloco 2, para o folder de migrations não inchar).

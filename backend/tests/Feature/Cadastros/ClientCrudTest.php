@@ -136,4 +136,41 @@ class ClientCrudTest extends TestCase
             'event' => 'deleted',
         ]);
     }
+
+    public function test_cargo_do_contato_persiste_no_create_e_volta_na_resposta(): void
+    {
+        $this->actingAdmin();
+
+        $this->postJson('/api/clients', $this->payload([
+            'contacts' => [['name' => 'Parris Barrios', 'email' => 'p@switch.cl', 'job_title' => 'Jefe de Operaciones', 'is_primary' => true]],
+        ]))
+            ->assertCreated()
+            ->assertJsonPath('contacts.0.job_title', 'Jefe de Operaciones');
+
+        $this->assertDatabaseHas('client_contacts', [
+            'name' => 'Parris Barrios',
+            'job_title' => 'Jefe de Operaciones',
+        ]);
+    }
+
+    public function test_cargo_do_contato_persiste_no_update(): void
+    {
+        $this->actingAdmin();
+        $id = $this->postJson('/api/clients', $this->payload())->json('id');
+
+        $this->putJson("/api/clients/{$id}", $this->payload([
+            'contacts' => [['name' => 'Parris Barrios', 'job_title' => 'Gerente Técnico', 'is_primary' => true]],
+        ]))
+            ->assertOk()
+            ->assertJsonPath('contacts.0.job_title', 'Gerente Técnico');
+    }
+
+    public function test_cargo_do_contato_e_opcional(): void
+    {
+        $this->actingAdmin();
+
+        $this->postJson('/api/clients', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('contacts.0.job_title', null);
+    }
 }

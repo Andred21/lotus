@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppDropdown, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppDropdown, AppRadioButton, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
@@ -97,6 +97,9 @@ export function ClientDialog({
           <FormField label={t('client.street')}>
             <AppInputText value={addr.line1 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line1: e.target.value })} className="w-full" />
           </FormField>
+          <FormField label={t('client.complement')}>
+            <AppInputText value={addr.line2 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line2: e.target.value })} className="w-full" />
+          </FormField>
           <FormField label={t('client.number')}>
             <AppInputText value={addr.number ?? ''} disabled={readOnly} onChange={(e) => setAddr({ number: e.target.value })} className="w-full" />
           </FormField>
@@ -104,9 +107,21 @@ export function ClientDialog({
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
         {form.contacts.map((c, i) => (
-          <div key={i} className="grid grid-cols-3 gap-2">
+          <div key={i} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] items-start gap-2">
+            <div className="flex h-10.5 items-center" title={t('client.contactPrimary')}>
+              <AppRadioButton
+                name="primaryContact"
+                checked={c.is_primary}
+                disabled={readOnly}
+                aria-label={t('client.contactPrimary')}
+                onChange={() => setPrimaryContact(setForm, i)}
+              />
+            </div>
             <NestedField error={fieldErrors?.[`contacts.${i}.name`]?.[0]}>
               <AppInputText placeholder={t('client.contactName')} value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
+            </NestedField>
+            <NestedField error={fieldErrors?.[`contacts.${i}.job_title`]?.[0]}>
+              <AppInputText placeholder={t('client.contactJobTitle')} value={c.job_title ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { job_title: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.email`]?.[0]}>
               <AppInputText placeholder={t('common.email')} value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
@@ -121,7 +136,7 @@ export function ClientDialog({
             label={t('client.addContact')}
             icon="pi pi-user-plus"
             text
-            onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { id: undefined, name: '', email: null, phone: null, is_primary: false }] }))}
+            onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { id: undefined, name: '', job_title: null, email: null, phone: null, is_primary: false }] }))}
           />
         )}
       </section>
@@ -135,4 +150,11 @@ function patchContact(
   patch: Partial<ClientData['contacts'][number]>,
 ) {
   setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
+}
+
+function setPrimaryContact(setForm: Dispatch<SetStateAction<ClientData>>, i: number) {
+  setForm((f) => ({
+    ...f,
+    contacts: f.contacts.map((c, idx) => ({ ...c, is_primary: idx === i })),
+  }))
 }

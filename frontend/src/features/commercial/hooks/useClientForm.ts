@@ -9,7 +9,7 @@ const EMPTY: ClientData = {
   id: undefined, name: '', rut: '', email: '', phone: null,
   legal_name: '', type: 'client', business_activity: null,
   addresses: [{ id: undefined, line1: null, line2: null, number: null, commune: null, city: null, region: null, zip_code: null, is_primary: true }],
-  contacts: [{ id: undefined, name: '', email: null, phone: null, is_primary: true }],
+  contacts: [{ id: undefined, name: '', job_title: null, email: null, phone: null, is_primary: true }],
 }
 
 export function useClientForm(client: ClientData | null, mode: ClientDialogMode, onDone: () => void) {

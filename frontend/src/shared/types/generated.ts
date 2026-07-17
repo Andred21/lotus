@@ -33,6 +33,7 @@ id: undefined | number,
 name: string,
 email: undefined | string | null,
 phone: undefined | string | null,
+job_title: undefined | string | null,
 is_primary: boolean,
 };
 export type ClientData = {

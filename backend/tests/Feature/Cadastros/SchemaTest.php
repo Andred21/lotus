@@ -22,7 +22,7 @@ class SchemaTest extends TestCase
         ]));
 
         $this->assertTrue(Schema::hasColumns('client_contacts', [
-            'client_id', 'name', 'email', 'phone', 'is_primary',
+            'client_id', 'name', 'email', 'phone', 'is_primary', 'job_title',
         ]));
 
         $this->assertTrue(Schema::hasTable('redatores'));
