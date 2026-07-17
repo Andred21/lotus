@@ -86,13 +86,16 @@ export function CourseDialog({
             <div className="flex items-start gap-2">
               <span className="mt-2.5 text-xs font-semibold text-slate-500">{t('courseModule.itemLabel', { n: i + 1 })}</span>
               <NestedField error={fieldErrors?.[`modules.${i}.name`]?.[0]}>
-                <AppInputText
-                  placeholder={t('courseModule.namePlaceholder')}
-                  value={m.name}
-                  disabled={readOnly}
-                  onChange={(e) => patchModule(i, { name: e.target.value })}
-                  className="w-full"
-                />
+                <div className="flex-1">
+                  <AppInputText
+                    placeholder={t('courseModule.namePlaceholder')}
+                    aria-label={t('courseModule.name')}
+                    value={m.name}
+                    disabled={readOnly}
+                    onChange={(e) => patchModule(i, { name: e.target.value })}
+                    className="w-full"
+                  />
+                </div>
               </NestedField>
               {!readOnly && (
                 <div className="flex gap-1">
@@ -107,6 +110,7 @@ export function CourseDialog({
               <NestedField error={fieldErrors?.[`modules.${i}.theory_hours`]?.[0]}>
                 <span className="mb-1 block text-xs text-slate-500">{t('courseModule.theoryHours')}</span>
                 <AppInputText
+                  aria-label={t('courseModule.theoryHours')}
                   value={String(m.theory_hours)}
                   disabled={readOnly}
                   onChange={(e) => patchModule(i, { theory_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
@@ -116,6 +120,7 @@ export function CourseDialog({
               <NestedField error={fieldErrors?.[`modules.${i}.practice_hours`]?.[0]}>
                 <span className="mb-1 block text-xs text-slate-500">{t('courseModule.practiceHours')}</span>
                 <AppInputText
+                  aria-label={t('courseModule.practiceHours')}
                   value={String(m.practice_hours)}
                   disabled={readOnly}
                   onChange={(e) => patchModule(i, { practice_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
@@ -130,6 +135,7 @@ export function CourseDialog({
             <NestedField error={fieldErrors?.[`modules.${i}.learnings`]?.[0]}>
               <span className="mb-1 block text-xs text-slate-500">{t('courseModule.learnings')}</span>
               <AppTextarea
+                aria-label={t('courseModule.learnings')}
                 value={m.learnings ?? ''}
                 disabled={readOnly}
                 rows={2}
@@ -141,6 +147,7 @@ export function CourseDialog({
             <NestedField error={fieldErrors?.[`modules.${i}.contents`]?.[0]}>
               <span className="mb-1 block text-xs text-slate-500">{t('courseModule.contents')}</span>
               <AppTextarea
+                aria-label={t('courseModule.contents')}
                 value={m.contents ?? ''}
                 disabled={readOnly}
                 rows={3}
