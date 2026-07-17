@@ -54,7 +54,7 @@ para nunca deixar passar despercebido de novo.
 > lugar, com os mesmos dados já carregados. Sempre que um cenário abaixo disser "abrir em modo
 > editar", é esse o caminho: **visualizar → Editar**.
 
-Com isso feito, execute os 6 cenários abaixo, em ordem — cada um depende do estado deixado pelo
+Com isso feito, execute os 7 cenários abaixo, em ordem — cada um depende do estado deixado pelo
 anterior.
 
 ---
@@ -181,6 +181,33 @@ os módulos simplesmente sumiam.
 
 ---
 
+## Cenário 7 — 422 em campo de módulo aparece sob o campo, não some
+
+**Por que este cenário existe:** o `CourseDialog` passa `excludePrefixes={['modules.']}` ao
+`FormErrorSummary` — o resumo de erros do topo do formulário explicitamente ignora erros de
+módulo, contando com o `NestedField` de cada campo para mostrar o erro localmente. Se a chave que
+o `NestedField` lê (`modules.{i}.name`, por exemplo) não bater com a que o backend manda num 422,
+o erro não aparece em lugar nenhum — nem no resumo (excluído de propósito) nem sob o campo (chave
+não bateu) — e o formulário parece travado sem explicação nenhuma. Este cenário é a única prova de
+que um 422 de campo aninhado chega à tela.
+
+1. Abrir `GATE B4 renomeado` em modo editar (visualizar → Editar, ver nota em "Antes de começar").
+2. Clicar em **Adicionar módulo** e preencher o novo módulo:
+   - Nome do módulo: **deixar em branco**
+   - Horas teóricas: `2`
+   - Horas práticas: `2`
+3. Clicar em **Salvar**.
+
+**Resultado esperado:**
+- O backend responde com erro de validação (o nome do módulo é obrigatório) e o diálogo **não**
+  fecha.
+- Aparece uma mensagem de erro **logo abaixo do campo de nome** desse módulo — não só no topo do
+  formulário, e não em lugar nenhum.
+- O resumo de erros do topo do formulário (se visível) não precisa listar esse erro — a prova está
+  em o erro aparecer sob o campo do módulo.
+
+---
+
 ## Registro do resultado (preencher durante a execução)
 
 Para cada cenário, marcar `✅` (passou como esperado) ou `❌` (não passou) e descrever o que foi
@@ -194,7 +221,8 @@ observado na tela — especialmente se divergir do esperado.
 | 4. Divergência resolvida | | |
 | 5. REGRESSÃO DO GATE | | |
 | 6. Remover | | |
+| 7. 422 em campo de módulo | | |
 
-**Conclusão geral do bloco:** _(preencher após rodar os 6 cenários — o bloco só pode ser marcado
+**Conclusão geral do bloco:** _(preencher após rodar os 7 cenários — o bloco só pode ser marcado
 como "Entregue" em `docs/superpowers/progress.md` depois que esta tabela estiver preenchida e,
 idealmente, todos os cenários em ✅)_
