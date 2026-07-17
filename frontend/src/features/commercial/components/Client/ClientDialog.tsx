@@ -108,7 +108,7 @@ export function ClientDialog({
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
         {form.contacts.map((c, i) => (
           <div key={i} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] items-start gap-2">
-            <div className="flex h-[42px] items-center" title={t('client.contactPrimary')}>
+            <div className="flex h-10.5 items-center" title={t('client.contactPrimary')}>
               <AppRadioButton
                 name="primaryContact"
                 checked={c.is_primary}
