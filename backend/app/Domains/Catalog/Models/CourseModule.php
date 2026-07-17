@@ -27,6 +27,7 @@ class CourseModule extends Model implements Auditable
     ];
 
     protected $auditInclude = [
+        'course_id',
         'sort_order',
         'name',
         'learnings',

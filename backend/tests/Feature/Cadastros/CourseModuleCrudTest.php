@@ -147,6 +147,16 @@ class CourseModuleCrudTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('modules.0.name');
     }
 
+    public function test_theory_hours_negativo_e_invalido(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/courses', [
+            'name' => 'Curso X', 'workload_hours' => 8,
+            'modules' => [['name' => 'A', 'theory_hours' => -1]],
+        ])->assertStatus(422)->assertJsonValidationErrors('modules.0.theory_hours');
+    }
+
     public function test_curso_sem_modulos_continua_valido(): void
     {
         $this->actingAsAdmin();

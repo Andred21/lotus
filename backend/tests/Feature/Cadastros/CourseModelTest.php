@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CourseModelTest extends TestCase
@@ -78,5 +79,19 @@ class CourseModelTest extends TestCase
             'auditable_id' => $module->id,
             'event' => 'deleted',
         ]);
+    }
+
+    public function test_criacao_do_modulo_audita_o_course_id(): void
+    {
+        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
+
+        $audit = DB::table('audits')
+            ->where('auditable_type', 'course_module')
+            ->where('auditable_id', $module->id)
+            ->where('event', 'created')
+            ->firstOrFail();
+
+        $this->assertSame($course->id, json_decode($audit->new_values, true)['course_id']);
     }
 }
