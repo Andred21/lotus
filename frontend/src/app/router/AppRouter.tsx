@@ -8,6 +8,7 @@ import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
 import { CommercialPage } from '@features/commercial/components/CommercialPage'
 import { BudgetDetailPage } from '@features/commercial/components/Budget/BudgetDetailPage'
 import { PeoplePage } from '@features/identity/components/PeoplePage'
+import { AdministracionPage } from '@features/identity/components/AdministracionPage'
 import { CatalogPage } from '@features/catalog/components/CatalogPage'
 
 function LoginRoute() {
@@ -39,7 +40,7 @@ export function AppRouter() {
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
           <Route path="/personas" element={<PeoplePage />} />
-          <Route path="/administracion" element={<ModulePlaceholder titleKey="nav.administracion" />} />
+          <Route path="/administracion" element={<AdministracionPage />} />
           <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />
         </Route>
 
