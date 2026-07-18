@@ -64,4 +64,21 @@ class UserProvisioner
 
         return $rut;
     }
+
+    /**
+     * Garante unicidade de e-mail — inclusive contra soft-deletados (o índice
+     * único de users.email não distingue deleted_at; senão a colisão vira 500 em
+     * vez de 422). Fonte única: as Actions de staff chamam antes de persistir.
+     */
+    public function ensureEmailAvailable(string $email, ?int $exceptUserId = null): void
+    {
+        $exists = User::withTrashed()
+            ->where('email', $email)
+            ->when($exceptUserId !== null, fn ($q) => $q->where('id', '!=', $exceptUserId))
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages(['email' => 'Este e-mail já está cadastrado.']);
+        }
+    }
 }

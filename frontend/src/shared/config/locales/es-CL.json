@@ -25,7 +25,26 @@
     "notLoaded": "No cargado",
     "loading": "Cargando...",
     "download": "Descargar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "password": "Contraseña",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "admin": {
+    "module": "Administración",
+    "moduleDescription": "Usuarios internos, roles y permisos",
+    "tabUsers": "Usuarios",
+    "new": "Nuevo usuario",
+    "create": "Crear",
+    "empty": "Sin usuarios",
+    "count": "{{count}} usuario(s)",
+    "searchPlaceholder": "Buscar por nombre o correo...",
+    "name": "Nombre",
+    "role": "Rol",
+    "state": "Estado",
+    "type": "Tipo",
+    "typeAdmin": "Admin",
+    "sectionUser": "Datos del usuario"
   },
   "nav": {
     "dashboard": "Dashboard",

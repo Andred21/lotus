@@ -34,13 +34,16 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-17 | Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis (frontend) | Entregue | Tela de módulos com reordenação, totais derivados no render e aviso âmbar de divergência de carga (nunca bloqueia); `AppTextarea` em `shared/ui` | — | `plans/archive/2026-07-17-bloco4-course-modules-frontend.md` (+ roteiro) | `specs/archive/2026-07-17-bloco4-course-modules-frontend-design.md` |
 | 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
+| 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Ativo | Plano escrito, **não executado**: CRUD de staff-user (`type=admin` + role), `SuperadminGuard` (último superadmin), tela Usuarios em `/administracion` | `adrs.md` (ADR-06/07), `der-fisico` (users/roles/permissions), o plano+spec deste bloco, `RolePermissionSeeder` (catálogo de permissões) e as peças existentes `UserProvisioner`/`SystemRoleGuard`/`Role`, pendência P-03 (backend no main tree) | `plans/2026-07-17-bloco5.2a-usuarios.md` | `specs/2026-07-17-bloco5.2a-usuarios-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 _Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o bloco ser planejado._
 
-- Bloco 5.2 · Módulo Administração (Usuários, Roles/Permissões) — Notion 2.6.x
+- Bloco 5.2b · Administração: aba Roles y Permisos (ver roles de sistema read-only + criar role
+  customizada de subconjunto do catálogo) — Notion 2.6.3. Contexto: plano/spec do 5.2a (molde
+  `UserData`/`RoleData`, `RoleController@index`), `RolePermissionSeeder`, `SystemRoleGuard`, ADR-07
 - Bloco 6 · Sprint 3 · Turmas / Operação — Contexto: `adrs.md` (ADR-02/10), `der-fisico` (turmas,
   matrículas), `estrutura-monolito` (domínio Operation é scaffold vazio), plano do Bloco 5.2
   (molde de Action+DTO), pendência P-03 (worktree/backend)

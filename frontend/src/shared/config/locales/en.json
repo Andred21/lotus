@@ -25,7 +25,26 @@
     "notLoaded": "Not uploaded",
     "loading": "Loading...",
     "download": "Download",
-    "delete": "Delete"
+    "delete": "Delete",
+    "password": "Password",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "admin": {
+    "module": "Administration",
+    "moduleDescription": "Internal users, roles and permissions",
+    "tabUsers": "Users",
+    "new": "New user",
+    "create": "Create",
+    "empty": "No users",
+    "count": "{{count}} user(s)",
+    "searchPlaceholder": "Search by name or email...",
+    "name": "Name",
+    "role": "Role",
+    "state": "State",
+    "type": "Type",
+    "typeAdmin": "Admin",
+    "sectionUser": "User data"
   },
   "nav": {
     "dashboard": "Dashboard",

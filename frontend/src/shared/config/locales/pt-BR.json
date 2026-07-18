@@ -25,7 +25,26 @@
     "notLoaded": "Não enviado",
     "loading": "Carregando...",
     "download": "Baixar",
-    "delete": "Excluir"
+    "delete": "Excluir",
+    "password": "Senha",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "admin": {
+    "module": "Administração",
+    "moduleDescription": "Usuários internos, papéis e permissões",
+    "tabUsers": "Usuários",
+    "new": "Novo usuário",
+    "create": "Criar",
+    "empty": "Sem usuários",
+    "count": "{{count}} usuário(s)",
+    "searchPlaceholder": "Buscar por nome ou e-mail...",
+    "name": "Nome",
+    "role": "Papel",
+    "state": "Estado",
+    "type": "Tipo",
+    "typeAdmin": "Admin",
+    "sectionUser": "Dados do usuário"
   },
   "nav": {
     "dashboard": "Painel",
