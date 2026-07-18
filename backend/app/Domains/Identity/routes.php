@@ -3,6 +3,8 @@
 use App\Domains\Identity\Http\Controllers\AuthController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
+use App\Domains\Identity\Http\Controllers\RoleController;
+use App\Domains\Identity\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Identity. Já entram sob prefixo `api/` e middleware `api`
@@ -19,6 +21,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('redatores', RedatorController::class)
         ->parameters(['redatores' => 'redator'])
         ->only(['index', 'store', 'show', 'update', 'destroy']);
+
+    Route::apiResource('users', UserController::class)
+        ->only(['index', 'store', 'show', 'update', 'destroy']);
+
+    Route::get('roles', [RoleController::class, 'index']);
 
     Route::middleware('permission:identity.user.update')->group(function () {
         Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store']);
