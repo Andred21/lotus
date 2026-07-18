@@ -3,6 +3,7 @@
 namespace Tests\Feature\Identity;
 
 use App\Domains\Identity\Actions\CreateStaffUserAction;
+use App\Domains\Identity\Actions\UpdateStaffUserAction;
 use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -102,5 +103,62 @@ class StaffUserActionTest extends TestCase
             'name' => 'X', 'email' => 'x@lotus.cl',
             'password' => 'secret123', 'role' => 'redator',
         ]);
+    }
+
+    public function test_update_sem_senha_mantem_a_atual(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('original1')]);
+        $user->assignRole('admin');
+
+        $data = UserData::from([
+            'name' => 'Novo Nome', 'email' => $user->email, 'role' => 'admin', 'is_active' => true,
+        ]);
+        app(UpdateStaffUserAction::class)->execute($user, $data);
+
+        $this->assertTrue(Hash::check('original1', $user->fresh()->password));
+        $this->assertSame('Novo Nome', $user->fresh()->name);
+    }
+
+    public function test_update_com_senha_troca(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('original1')]);
+        $user->assignRole('admin');
+
+        $data = UserData::from([
+            'name' => $user->name, 'email' => $user->email,
+            'password' => 'trocada9', 'role' => 'admin', 'is_active' => true,
+        ]);
+        app(UpdateStaffUserAction::class)->execute($user, $data);
+
+        $this->assertTrue(Hash::check('trocada9', $user->fresh()->password));
+    }
+
+    public function test_rebaixar_ultimo_superadmin_e_bloqueado(): void
+    {
+        $sa = User::factory()->create();
+        $sa->assignRole('superadmin');
+
+        $data = UserData::from([
+            'name' => $sa->name, 'email' => $sa->email, 'role' => 'admin', 'is_active' => true,
+        ]);
+
+        $this->expectException(ValidationException::class);
+        app(UpdateStaffUserAction::class)->execute($sa, $data);
+    }
+
+    public function test_rebaixar_superadmin_com_outro_existente_passa(): void
+    {
+        $sa1 = User::factory()->create();
+        $sa1->assignRole('superadmin');
+        $sa2 = User::factory()->create();
+        $sa2->assignRole('superadmin');
+
+        $data = UserData::from([
+            'name' => $sa1->name, 'email' => $sa1->email, 'role' => 'admin', 'is_active' => true,
+        ]);
+        app(UpdateStaffUserAction::class)->execute($sa1, $data);
+
+        $this->assertTrue($sa1->fresh()->hasRole('admin'));
+        $this->assertFalse($sa1->fresh()->hasRole('superadmin'));
     }
 }
