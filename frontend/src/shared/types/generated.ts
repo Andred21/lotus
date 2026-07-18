@@ -114,6 +114,11 @@ valid_until: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RoleData = {
+id: number,
+name: string,
+is_system: boolean,
+};
 export type SessionUserData = {
 id: number,
 uuid: string,
@@ -123,4 +128,17 @@ type: string,
 is_active: boolean,
 roles: string[],
 permissions: string[],
+};
+export type UserData = {
+id: undefined | number,
+uuid: undefined | string,
+name: string,
+email: string,
+rut: undefined | string | null,
+phone: undefined | string | null,
+role: string,
+is_active: boolean,
+password: undefined | string,
+type: undefined | string,
+roles: string[],
 };
