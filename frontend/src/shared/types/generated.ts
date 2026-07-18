@@ -81,6 +81,12 @@ size: number,
 download_url: string,
 created_at: string | null,
 };
+export type PermissionData = {
+name: string,
+description: string,
+group: string,
+segregated: boolean,
+};
 export type QuoteData = {
 id: undefined | number,
 budget_id: undefined | number,
@@ -115,9 +121,10 @@ download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
 export type RoleData = {
-id: number,
 name: string,
-is_system: boolean,
+permissions: string[],
+id: undefined | number,
+is_system: undefined | boolean,
 };
 export type SessionUserData = {
 id: number,
