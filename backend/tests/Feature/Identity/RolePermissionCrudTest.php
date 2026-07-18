@@ -60,12 +60,17 @@ class RolePermissionCrudTest extends TestCase
         ])->assertStatus(403);
     }
 
-    public function test_catalogo_de_permissoes_so_para_superadmin(): void
+    public function test_admin_comum_nao_ve_catalogo_de_permissoes(): void
     {
         $this->actingAsAdmin();
-        $this->getJson('/api/permissions')->assertForbidden();
 
+        $this->getJson('/api/permissions')->assertForbidden();
+    }
+
+    public function test_superadmin_ve_catalogo_de_permissoes(): void
+    {
         $this->actingAsSuperadmin();
+
         $this->getJson('/api/permissions')->assertOk()
             ->assertJsonFragment(['name' => 'identity.access.manage', 'segregated' => true]);
     }
