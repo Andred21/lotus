@@ -34,7 +34,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-17 | Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis (frontend) | Entregue | Tela de módulos com reordenação, totais derivados no render e aviso âmbar de divergência de carga (nunca bloqueia); `AppTextarea` em `shared/ui` | — | `plans/archive/2026-07-17-bloco4-course-modules-frontend.md` (+ roteiro) | `specs/archive/2026-07-17-bloco4-course-modules-frontend-design.md` |
 | 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
-| 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Ativo | Plano escrito, **não executado**: CRUD de staff-user (`type=admin` + role), `SuperadminGuard` (último superadmin), tela Usuarios em `/administracion` | `adrs.md` (ADR-06/07), `der-fisico` (users/roles/permissions), o plano+spec deste bloco, `RolePermissionSeeder` (catálogo de permissões) e as peças existentes `UserProvisioner`/`SystemRoleGuard`/`Role`, pendência P-03 (backend no main tree) | `plans/2026-07-17-bloco5.2a-usuarios.md` | `specs/2026-07-17-bloco5.2a-usuarios-design.md` |
+| 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Entregue | CRUD de staff-user (`type=admin` + role Spatie) em `/administracion`; `SuperadminGuard` bloqueia (422) tirar o último superadmin ativo; `AuthController::login()` virou guard-explícito (`Auth::guard('web')`) — request `auth:sanctum` no mesmo processo trocava o guard default e dava 500 no login encadeado | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
@@ -60,3 +60,8 @@ _Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o
   assimetria entre as camadas, nunca decidida explicitamente (achado do review final do Bloco 2).
 - Consolidar as migrations "adicionais" nas originais — antes de subir para produção (decisão do João
   no Bloco 2, para o folder de migrations não inchar).
+- Bloco 5.2a (Minors do review final, nenhum afeta correção) — `SuperadminGuard` sem teste do caso
+  superadmin **inativo** (guard é no-op ali); `UserData::fromModel` chama `getRoleNames()` 2×;
+  unicidade rut/email do `UpdateStaffUserAction` roda **fora** da transação (o `Create` roda dentro);
+  auto-colisão de rut/email no update (mesmo valor, mesmo id) sem teste; teste do 422 de `redator`
+  não afirma a chave `role`. Molde: `SuperadminGuard`/`UserData`/`UpdateStaffUserAction`.

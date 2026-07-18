@@ -20,4 +20,4 @@
 
 | ID | Pendência | Como fechou |
 |---|---|---|
-| P-00 | ADR-15 (i18n) descrevia arquitetura inexistente ("compilar PHP → JSON via Vite") | Bloco 5.1 reescreveu o ADR contra a realidade (i18next, dicionários separados por camada) |
+| _(nenhuma no momento)_ | — | P-00 saiu no fechamento do Bloco 5.2a após 1 sprint de rastro |
