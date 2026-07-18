@@ -9,6 +9,7 @@ use App\Domains\Identity\Exceptions\ImmutableSystemRoleException;
 use App\Domains\Identity\Models\Role;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class UpdateRoleActionTest extends TestCase
@@ -57,5 +58,22 @@ class UpdateRoleActionTest extends TestCase
         );
 
         $this->assertSame('coordinador_regional', $updated->name);
+    }
+
+    public function test_rejeita_colisao_de_nome_com_outra_role(): void
+    {
+        $coordinador = app(CreateRoleAction::class)->execute(
+            RoleData::from(['name' => 'coordinador', 'permissions' => []]),
+        );
+
+        $supervisor = app(CreateRoleAction::class)->execute(
+            RoleData::from(['name' => 'supervisor', 'permissions' => []]),
+        );
+
+        $this->expectException(ValidationException::class);
+        app(UpdateRoleAction::class)->execute(
+            $supervisor,
+            RoleData::from(['name' => 'coordinador', 'permissions' => []]),
+        );
     }
 }
