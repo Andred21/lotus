@@ -1,9 +1,11 @@
 # CLAUDE.md — Lotus Platform
 
-Guia operacional do Claude Code neste repositório. Leia por completo antes de qualquer tarefa.
-Este arquivo é o **mapa da sessão**: o que é o projeto, como achar contexto, as leis invioláveis,
-o fluxo de trabalho e os comandos. **Padrões técnicos e mecânica de código NÃO vivem aqui** —
-estão em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md). O planejamento datado, em `/docs`.
+> Guia operacional do Claude Code neste repositório. Leia por completo antes de qualquer tarefa.
+> Este arquivo é o **mapa da sessão**: o que é o projeto, como achar contexto, as leis invioláveis, o fluxo de trabalho e os comandos. 
+> **Padrões técnicos e mecânica de código NÃO vivem aqui** — moram em `.claude/rules/` e **carregam sozinhos** quando você toca os arquivos 
+  que eles cobrem (não os leia "por precaução"). 
+> Postura e cláusulas de exceção: estão em [`INSTRUÇÕES-DO-PROJETO.md`](./INSTRUÇÕES-DO-PROJETO.md). 
+> O planejamento datado, em `/docs`.
 
 ## 1. O que é o Lotus
 
@@ -27,53 +29,82 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 
 **Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
 - **SEMPRE:** `docs/superpowers/progress.md` — índice vivo versionado (1 linha por feature:
-o que foi construído, o desfecho, e onde estão plano/spec). É barato e ancora a sessão.
-Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
-- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local de execução
-  task-a-task do superpowers (não versionado). Consulte só se precisar do detalhe fino de
-  execução; a âncora canônica é o versionado acima.
+  o que foi construído, o desfecho, o contexto que ele exige e onde estão plano/spec). É barato e ancora a sessão.
+  Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
+- **SE a task implementa/mexe numa feature:** o plano e o spec dela (caminho está no `progress.md`)
+  e o que a coluna **Contexto** daquela linha listar — só isso.
 - **SE a task implementa/mexe numa feature:** o plano e o spec mais recentes dela em
   `docs/superpowers/plans/` e `docs/superpowers/specs/`.
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
-- **Para padrão de código:** `INSTRUÇÕES-DO-PROJETO.md` (a mecânica mora lá, não aqui).
+- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local de execução task-a-task
+  (não versionado). Só para detalhe fino; a âncora canônica é o versionado acima.
 
-| Doc                               | Consulte antes de                                     |
-| --------------------------------- | ----------------------------------------------------- |
-| `docs/adrs.md`                    | qualquer decisão de stack, padrão, estrutura ou infra |
-| `docs/der-fisico.md`              | criar migration/model ou mexer em schema              |
-| `docs/estrutura-monolito.md`      | criar arquivo novo — para saber ONDE ele vai          |
-| `docs/README.md` (lições)         | iniciar feature — não repetir erro já mapeado         |
 
-> Planejamento canônico vive no Google Drive; tasks no Notion. Os `/docs` são snapshots datados;
-> se divergirem do Drive, o Drive vence.
+| Doc                               | Consulte antes de                                               |
+| --------------------------------- | ----------------------------------------------------------------|
+| `docs/adrs.md`                    | qualquer decisão de stack, padrão, estrutura ou infra           |
+| `docs/der-fisico.md`              | criar migration/model ou mexer em schema                        |
+| `docs/estrutura-monolito.md`      | criar arquivo novo — para saber ONDE ele vai                    |
+| `docs/README.md` (lições)         | iniciar feature — não repetir erro já mapeado                   |
+| `docs/pendencias.md`              | antes de reportar divergência de doc — pode já estar registrada |
 
-## 4. Fluxo de trabalho (superpowers, subagent-driven)
+> Planejamento canônico vive no Google Drive -> (Viagem Chile/Projetos/Lotus.cl/V2); 
+> Tasks no Notion -> Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2. 
+> Os `/docs` são snapshots datados;
+> Se divergirem do Drive, o Drive vence.
 
-O desenvolvimento é disparado por skills superpowers: `brainstorming` → `writing-plans` →
-`subagent-driven-development` / `executing-plans`. Planos e specs ativos em `docs/superpowers/`;
-concluídos em `plans/archive/` e `specs/archive/`. O ledger de execução fica em `.superpowers/sdd/`
-(local); o índice de reconstrução de contexto é `docs/superpowers/progress.md` (versionado — ver §3).
+## 4. Fluxo de trabalho (superpowers)
+
+**O dono do fluxo é a skill `using-superpowers`.** Não reproduza a sequência de cabeça, não pule
+etapa, não reinicie etapa concluída — pergunte a ela qual é a próxima. O ciclo canônico:
+
+`brainstorming` → `using-git-worktrees` → `writing-plans` → `subagent-driven-development` /
+`executing-plans` → `test-driven-development` → `requesting-code-review` →
+`finishing-a-development-branch`.
+
+Comandos do projeto: `/planejar-bloco` (entrada) · `/executar-bloco` (execução) · `/revisar-sprint`
+(review) · `/fechar-sprint` (gate). Planos e specs ativos em `docs/superpowers/`; concluídos em
+`plans/archive/` e `specs/archive/`. Ledger local em `.superpowers/sdd/`; índice versionado em
+`docs/superpowers/progress.md` (§3).
 
 **Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
 de executá-lo. O roadmap adiante vive como títulos no backlog do `progress.md`, não como planos
 prontos que envelhecem.
 
-- **Execute em silêncio dentro do definido.** Quando plano+spec+escopo já cobrem a task,
-  implemente sem narrar o padrão escolhido. **Explique o "porquê"/trade-off SÓ quando:**
-  (a) a task desvia do definido em docs/spec/escopo, ou (b) o João pergunta.
-- **Desvio de padrão = justifique e registre.** Convenção/padrão de código pode ser desviado
-  desde que o motivo fique no `.superpowers/sdd/progress.md` (as regras são o default, não a
-  prisão — ver "Cláusulas de exceção" em INSTRUÇÕES). Já as **leis invioláveis (§5)** não se
-  desviam sozinho: **PARE e confirme com o João Victor.**
-- **Antes de tocar em arquivo, `git status`; antes de editar arquivo SUJO, `git diff <arquivo>`.**
-  O João edita o working tree AO VIVO durante a execução (padrão recorrente). WIP dele é
-  **intocável**: não faça stage/revert/edit fora dos caminhos exatos da task; `git add` só os
-  caminhos da task; em conflito, o working tree vence. (Nenhum comando git enxerga buffer não-salvo
-  do editor — a garantia real é **Read fresco do arquivo imediatamente antes de editar** + escopo
-  cirúrgico.)
+**Exceção inline — os 5 critérios.** Pode executar sem `brainstorming`/`writing-plans` quando TODOS
+forem verdade:
+1. envolve **um** arquivo;
+2. não altera regra de negócio;
+3. não exige reconstrução significativa de contexto;
+4. é validável localmente sem impactar outras camadas;
+5. **não toca superfície de lei inviolável** (§5) — migration, `generated.ts`, auth/Sanctum,
+   auditoria, RBAC.
+
+Declare a classificação em 1 linha ("trivial: 1 arquivo, sem regra, sem lei → inline") e siga.
+Qualquer critério falhou → fluxo completo. **Na dúvida, não é trivial.**
+
+**Worktree — gate honesto (estado atual):**
+- Bloco **frontend-only** → `using-git-worktrees` normalmente (roda nativo no WSL).
+- Bloco que **toca backend** → **main tree**, com a disciplina git abaixo. O `docker-compose.yml`
+  monta o path do main tree; um worktree não é servido pelo stack e os testes rodariam contra o
+  código errado — **verde mentiroso**. Compose por worktree é pendência aberta (`docs/pendencias.md`).
+
+**Disciplina git (obrigatória enquanto o bloco rodar no main tree):** antes de tocar em arquivo,
+`git status`; antes de editar arquivo SUJO, `git diff <arquivo>`. O João edita o working tree AO VIVO
+durante a execução (padrão recorrente). WIP dele é **intocável**: não faça stage/revert/edit fora dos
+caminhos exatos da task; `git add` só os caminhos da task; em conflito, o working tree vence. Nenhum
+comando git enxerga buffer não-salvo do editor — a garantia real é **Read fresco do arquivo
+imediatamente antes de editar** + escopo cirúrgico.
+
+- **Execute em silêncio dentro do definido.** Quando plano+spec+escopo já cobrem a task, implemente
+  sem narrar o padrão escolhido. **Explique o "porquê"/trade-off SÓ quando:** (a) a task desvia do
+  definido em docs/spec/escopo, ou (b) o João pergunta.
+- **Desvio de padrão = justifique e registre** no `.superpowers/sdd/progress.md` (as regras são o
+  default, não a prisão — Parte 0 do INSTRUÇÕES). Já as **leis invioláveis (§5)** não se desviam
+  sozinho: **PARE e confirme com o João Victor.**
 - **DoD = comportamento provado end-to-end contra a API real**, não build/lint/test verde. Bugs de
   peso legal (upload vazio, 422 silencioso) só a verificação real pegou.
-
+  
 ## 5. Leis invioláveis
 
 Vêm dos ADRs — a mecânica de cada uma está em INSTRUÇÕES. Se uma task parecer pedir que você quebre
