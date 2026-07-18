@@ -2,6 +2,7 @@
 // Regra: um `export * from './X'` por pasta. Nada de caminho fundo ('./X/X').
 export * from './AppAvatar'
 export * from './AppButton'
+export * from './AppCheckbox'
 export * from './AppDataTable'
 export * from './AppDialog'
 export * from './AppDivider'
