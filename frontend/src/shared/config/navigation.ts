@@ -20,5 +20,5 @@ export const NAV_MODULES: NavModule[] = [
   { key: 'cursos',         labelKey: 'nav.cursos',         icon: 'pi pi-book',           path: '/cursos',         permission: 'catalog.course.view' },
   { key: 'certificados',   labelKey: 'nav.certificados',   icon: 'pi pi-verified',       path: '/certificados',   permission: 'certification.certificate.view' },
   { key: 'personas',       labelKey: 'nav.personas',       icon: 'pi pi-id-card',        path: '/personas',       permission: 'identity.user.view' },
-  { key: 'administracion', labelKey: 'nav.administracion', icon: 'pi pi-cog',            path: '/administracion', permission: 'identity.access.manage' },
+  { key: 'administracion', labelKey: 'nav.administracion', icon: 'pi pi-cog',            path: '/administracion', permission: 'identity.user.view' },
 ]
