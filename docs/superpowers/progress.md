@@ -13,7 +13,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 
 > **Política de corte (este arquivo é carregado em TODA sessão):** passou de **25 linhas** na tabela,
 > particione — o arquivo raiz mantém `Ativo` + backlog + as **10 últimas** entregues; o resto vai
-> para `progress-archive.md`, consultado só sob demanda. Hoje: 19 linhas.
+> para `progress-archive.md`, consultado só sob demanda. Hoje: 20 linhas.
 
 | Data | Feature | Status | Resultado (1 linha) | Contexto | Plano | Spec |
 |------|---------|--------|---------------------|----------|-------|------|
@@ -35,15 +35,13 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
 | 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Entregue | CRUD de staff-user (`type=admin` + role Spatie) em `/administracion`; `SuperadminGuard` bloqueia (422) tirar o último superadmin ativo; `AuthController::login()` virou guard-explícito (`Auth::guard('web')`) — request `auth:sanctum` no mesmo processo trocava o guard default e dava 500 no login encadeado | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
+| 2026-07-18 | Bloco 5.2b · Administração: aba Roles y Permisos | Ativo | Ver roles de sistema read-only + criar/editar role customizada de subconjunto do catálogo fixo; guardrail das 3 permissões segregadas; sem excluir, sem auditoria de RBAC | Plano+spec do 5.2b; `RolePermissionSeeder`/`PermissionCatalog` (catálogo), `SystemRoleGuard`+`Role` (imutabilidade = 403), `RoleData`/`UserData` (molde DTO), `RoleController`/`UserController` (gates), ADR-07; front: molde `useUsersPage`/`useStaffUserForm`/`StaffUserDialog` + `AppRadioButton` (molde de wrapper) | `plans/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/2026-07-18-bloco5.2b-roles-permisos-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 _Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o bloco ser planejado._
 
-- Bloco 5.2b · Administração: aba Roles y Permisos (ver roles de sistema read-only + criar role
-  customizada de subconjunto do catálogo) — Notion 2.6.3. Contexto: plano/spec do 5.2a (molde
-  `UserData`/`RoleData`, `RoleController@index`), `RolePermissionSeeder`, `SystemRoleGuard`, ADR-07
 - Bloco 6 · Sprint 3 · Turmas / Operação — Contexto: `adrs.md` (ADR-02/10), `der-fisico` (turmas,
   matrículas), `estrutura-monolito` (domínio Operation é scaffold vazio), plano do Bloco 5.2
   (molde de Action+DTO), pendência P-03 (worktree/backend)
