@@ -35,7 +35,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
 | 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Entregue | CRUD de staff-user (`type=admin` + role Spatie) em `/administracion`; `SuperadminGuard` bloqueia (422) tirar o último superadmin ativo; `AuthController::login()` virou guard-explícito (`Auth::guard('web')`) — request `auth:sanctum` no mesmo processo trocava o guard default e dava 500 no login encadeado | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
-| 2026-07-18 | Bloco 5.2b · Administração: aba Roles y Permisos | Ativo | Ver roles de sistema read-only + criar/editar role customizada de subconjunto do catálogo fixo; guardrail das 3 permissões segregadas; sem excluir, sem auditoria de RBAC | Plano+spec do 5.2b; `RolePermissionSeeder`/`PermissionCatalog` (catálogo), `SystemRoleGuard`+`Role` (imutabilidade = 403), `RoleData`/`UserData` (molde DTO), `RoleController`/`UserController` (gates), ADR-07; front: molde `useUsersPage`/`useStaffUserForm`/`StaffUserDialog` + `AppRadioButton` (molde de wrapper) | `plans/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/2026-07-18-bloco5.2b-roles-permisos-design.md` |
+| 2026-07-18 | Bloco 5.2b · Administração: aba Roles y Permisos | Entregue | Ver roles de sistema read-only + criar/editar role customizada de subconjunto do catálogo fixo (`PermissionCatalog` = fonte única, também do seeder); guardrail das 3 segregadas em 2 camadas (422 no back + some do picker). **Validação de DTO roda ANTES do Action**: `notIn(SYSTEM_ROLES)` NÃO pode ficar em `RoleData::rules()` senão PUT de role de sistema dá 422 em vez do 403 do `SystemRoleGuard` — bloqueio de nome de sistema no create vem da colisão de nome | — | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
@@ -63,3 +63,9 @@ _Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o
   unicidade rut/email do `UpdateStaffUserAction` roda **fora** da transação (o `Create` roda dentro);
   auto-colisão de rut/email no update (mesmo valor, mesmo id) sem teste; teste do 422 de `redator`
   não afirma a chave `role`. Molde: `SuperadminGuard`/`UserData`/`UpdateStaffUserAction`.
+- Bloco 5.2b (Minors do review final, nenhum afeta correção) — testes de falha das Actions
+  (`CreateRoleAction`/`UpdateRoleAction`) afirmam só `expectException(ValidationException::class)`,
+  não a chave do error-bag (`name` vs `permissions`); **decisão pendente do João:** `GET /api/roles`
+  (gate `identity.user.view`) devolve `permissions[]` de toda role, então admin comum enumera as
+  permissões do superadmin — enquanto `/api/permissions` é superadmin-only. Tornar consistente =
+  projeção mais leve no `index` sem `identity.access.manage`. Molde: `RoleController@index`/`RoleData`.

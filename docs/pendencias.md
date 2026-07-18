@@ -20,4 +20,4 @@
 
 | ID | Pendência | Como fechou |
 |---|---|---|
-| _(nenhuma no momento)_ | — | P-00 saiu no fechamento do Bloco 5.2a após 1 sprint de rastro |
+| _(nenhuma no momento)_ | — | — |
