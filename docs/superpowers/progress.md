@@ -34,7 +34,6 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-17 | Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis (frontend) | Entregue | Tela de módulos com reordenação, totais derivados no render e aviso âmbar de divergência de carga (nunca bloqueia); `AppTextarea` em `shared/ui` | — | `plans/archive/2026-07-17-bloco4-course-modules-frontend.md` (+ roteiro) | `specs/archive/2026-07-17-bloco4-course-modules-frontend-design.md` |
 | 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
-| 2026-07-17 | Bloco 5.2 · Módulo Administração (usuários + roles) | Ativo | Catálogo de permissions vira o enum `SystemPermission` (seeder consome, API projeta, teste trava a divergência); módulo/verbo da matriz saem do NOME da permission — verbo novo aparece na tela sem tocar no front; role em `users` só via `auditSync` (pivot não audita sozinho) | ADR-07 (RBAC), `der-fisico` (tabelas Spatie), plano+spec 5.2 | `plans/2026-07-17-bloco5.2-administracao.md` | `specs/2026-07-17-bloco5.2-administracao-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
