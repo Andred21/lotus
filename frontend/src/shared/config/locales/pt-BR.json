@@ -34,6 +34,7 @@
     "module": "Administração",
     "moduleDescription": "Usuários internos, papéis e permissões",
     "tabUsers": "Usuários",
+    "tabRoles": "Perfis e permissões",
     "new": "Novo usuário",
     "create": "Criar",
     "empty": "Sem usuários",
@@ -63,6 +64,16 @@
     "superadmin": "SuperAdmin",
     "admin": "Administrador",
     "redator": "Redator"
+  },
+  "role": {
+    "new": "Novo perfil",
+    "name": "Nome",
+    "kind": "Tipo",
+    "system": "Sistema",
+    "custom": "Personalizado",
+    "permissions": "Permissões",
+    "empty": "Sem perfis",
+    "systemReadOnly": "As permissões dos perfis de sistema são somente leitura."
   },
   "userMenu": {
     "profile": "Meu perfil",

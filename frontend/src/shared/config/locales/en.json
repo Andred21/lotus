@@ -34,6 +34,7 @@
     "module": "Administration",
     "moduleDescription": "Internal users, roles and permissions",
     "tabUsers": "Users",
+    "tabRoles": "Roles & permissions",
     "new": "New user",
     "create": "Create",
     "empty": "No users",
@@ -63,6 +64,16 @@
     "superadmin": "SuperAdmin",
     "admin": "Administrator",
     "redator": "Editor"
+  },
+  "role": {
+    "new": "New role",
+    "name": "Name",
+    "kind": "Kind",
+    "system": "System",
+    "custom": "Custom",
+    "permissions": "Permissions",
+    "empty": "No roles",
+    "systemReadOnly": "System role permissions are read-only."
   },
   "userMenu": {
     "profile": "My profile",
