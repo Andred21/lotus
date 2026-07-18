@@ -10,8 +10,20 @@
 
 ## Como usar estes docs
 
-O `CLAUDE.md` na raiz é o mapa e as regras. Esta pasta é o detalhe sob demanda. Um agente não precisa carregar tudo isto toda sessão — carrega o doc relevante quando a tarefa exige. O `CLAUDE.md` §3 ("Como consultar contexto") diz qual doc consultar para cada tipo de decisão; a mecânica de código detalhada mora em `INSTRUÇÕES-DO-PROJETO.md`.
+`CLAUDE.md` é o mapa e as leis. Esta pasta é o **detalhe sob demanda** — um agente não carrega tudo
+toda sessão; carrega o doc que a tarefa exige (CLAUDE.md §3 diz qual).
 
+**Mecânica de código não está aqui nem no `INSTRUÇÕES`** — mora em `.claude/rules/`, path-scoped:
+entra sozinha quando o agente toca `backend/app/**`, `frontend/src/**`, migrations ou DTOs. O
+`INSTRUÇÕES-DO-PROJETO.md` guarda só a postura e as cláusulas de exceção.
+
+| Arquivo | O que é |
+|---|---|
+| `adrs.md` | ADRs — decisão + porquê + trade-off |
+| `der-fisico.md` | DER físico MySQL |
+| `estrutura-monolito.md` | Esqueleto back+front, regras de dependência |
+| `pendencias.md` | Divergências conhecidas, cada uma com gatilho de expiração |
+| `superpowers/progress.md` | Índice vivo — 1 linha por feature |
 ---
 
 ## Documentos
@@ -75,6 +87,13 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     anos-luz de arquitetura que nunca existiu ("compilar PHP → JSON via Vite") e as leis invioláveis
     mandavam por DTO em `app/Data`, pasta que nunca existiu — ambos sobreviveram porque ninguém
     confere doc contra código. Doc afirma o que **é**; o que se pretende vai marcado como pendência.
+    
+14. **Mecanismo vence instrução — quando existe mecanismo, use-o.** "Carregue só o necessário" era
+    instrução (o agente obedecia quando lembrava); `.claude/rules` com `paths:` é mecanismo (carrega
+    sozinho e volta depois da compactação). Mesma regra, custo zero de disciplina. Vale para o resto:
+    lei que precisa valer sempre quer Arch test ou hook, não parágrafo. Enquanto o mecanismo não
+    existe, a lei é instrução — e isso vai registrado como pendência (P-04), não como conforto.
+
 
 > **Índice vivo do desenvolvimento:** `docs/superpowers/progress.md` (versionado) é o índice do que
 > foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
@@ -84,6 +103,9 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
 > feature para alinhar com o que já existe — não repita erro já mapeado aqui.
 
 ---
+
+> **Divergências conhecidas:** `docs/pendencias.md`. Não duplique a lista aqui — ela já morou em dois
+> lugares (comando `sync-docs` + Parte IV do INSTRUÇÕES) e as duas cópias divergiram entre si.
 
 ## Fontes que NÃO foram espelhadas (ficam só no Drive)
 
