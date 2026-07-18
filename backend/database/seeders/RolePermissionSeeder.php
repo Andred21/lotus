@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Identity\Support\PermissionCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -23,7 +24,7 @@ class RolePermissionSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         DB::transaction(function () {
-            $permissions = $this->permissions();
+            $permissions = PermissionCatalog::descriptions();
 
             foreach (array_keys($permissions) as $name) {
                 Permission::firstOrCreate([
@@ -41,62 +42,6 @@ class RolePermissionSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
-    /**
-     * Catálogo canônico de permissões, agrupado por domínio.
-     * A chave é o nome da permission; o valor é a descrição (documentação inline).
-     */
-    private function permissions(): array
-    {
-        return [
-            // ---- Identity ----
-            'identity.user.view'    => 'Ver usuários e redatores',
-            'identity.user.create'  => 'Criar usuários e redatores',
-            'identity.user.update'  => 'Editar usuários e redatores',
-            'identity.user.delete'  => 'Remover (soft delete) usuários',
-            'identity.access.manage'=> 'Gerir roles e permissões de outros usuários (sensível)',
-
-            // ---- Commercial ----
-            'commercial.client.view'   => 'Ver clientes (empresas contratantes)',
-            'commercial.client.create' => 'Criar clientes',
-            'commercial.client.update' => 'Editar clientes, endereços e contatos',
-            'commercial.client.delete' => 'Remover clientes',
-            'commercial.budget.view'   => 'Ver orçamentos',
-            'commercial.budget.create' => 'Criar orçamentos',
-            'commercial.budget.update' => 'Editar orçamentos',
-            'commercial.budget.delete' => 'Remover orçamentos',
-            'commercial.quote.view'    => 'Ver cotações',
-            'commercial.quote.create'  => 'Criar cotações',
-            'commercial.quote.update'  => 'Editar cotações',
-            'commercial.quote.delete'  => 'Remover cotações',
-            'commercial.quote.approve' => 'Aprovar cotação com aceite do cliente (Fluxo 2 — só superadmin)',
-
-            // ---- Catalog ----
-            'catalog.course.view'   => 'Ver cursos e templates de certificado',
-            'catalog.course.create' => 'Criar cursos',
-            'catalog.course.update' => 'Editar cursos, templates e habilitação de redatores',
-            'catalog.course.delete' => 'Remover cursos',
-
-            // ---- Operation ----
-            'operation.turma.view'          => 'Ver turmas',
-            'operation.turma.create'        => 'Criar turmas',
-            'operation.turma.update'        => 'Editar turmas',
-            'operation.turma.delete'        => 'Remover turmas',
-            'operation.enrollment.manage'   => 'Matricular alunos / importar planilha (Fluxo 3)',
-            'operation.turma.assign_redator'=> 'Designar redator idôneo à turma (Fluxo 3)',
-            'operation.turma.complete'      => 'Confirmar conclusão da turma (Fluxo 4 — admin confirma)',
-            'operation.turma.submit_docs'   => 'Subir documentação da turma (Fluxo 1/4 — ação do redator)',
-
-            // ---- Certification ----
-            'certification.certificate.view'   => 'Ver certificados',
-            'certification.certificate.issue'  => 'Emitir certificado (Fluxo 5)',
-            'certification.certificate.revoke' => 'Revogar certificado (Fluxo 6 — sensível, peso legal)',
-
-            // ---- Feedback ----
-            'feedback.feedback.view'   => 'Ver feedbacks de turma',
-            'feedback.feedback.manage' => 'Gerir feedbacks de turma',
-        ];
-    }
-
     /** superadmin = todas as permissões (inclusive as segregadas por função). */
     private function superadminPermissions(array $permissions): array
     {
@@ -110,7 +55,7 @@ class RolePermissionSeeder extends Seeder
             'commercial.quote.approve',   // Fluxo 2: exclusivo do superadmin
             'identity.access.manage',     // controle do RBAC: exclusivo do superadmin
             'certification.certificate.revoke', // revogação de peso legal: exclusivo do superadmin
-            'operation.turma.submit_docs',// ação do redator, não do admin
+            'operation.turma.submit_docs', // ação do redator, não do admin
         ]));
     }
 
