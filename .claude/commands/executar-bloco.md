@@ -4,6 +4,8 @@ argument-hint: [nome-do-bloco ou EAP]
 allowed-tools: Bash(git status:*), Bash(git log:*), Bash(git diff:*)
 ---
 
+> **Fonte da mecânica de execução do Lotus** (gate inline, gate worktree, disciplina git, DoD).
+
 ## Âncora de contexto (não pule)
 
 Estado do projeto:

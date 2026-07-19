@@ -15,6 +15,7 @@ export function ClientsTable({
 
   return (
     <div className="space-y-3">
+      
       <AppInputText
         leftIcon="pi pi-search"
         placeholder={t('client.searchPlaceholder')}
