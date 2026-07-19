@@ -72,6 +72,12 @@ a Zustand o que não cruza fronteira — é over-engineering.
   (campo de item de coleção), `FormErrorSummary`/`FormErrorBanner` (erros sem campo onde pendurar).
   Todo diálogo usa o kit — **não reintroduzir `Field`/`UnmappedErrors` local** (era a duplicação nos
   6 diálogos que o Bloco 1 matou).
+  - **Grupo de campos coeso = subcomponente da feature.** Um bloco de campos que representa uma
+  entidade/conceito único (endereço, contato, período de vigência) e reaparece em mais de um
+  diálogo, ou passa de ~4 campos irmãos, vira componente próprio (`AddressFields`, `ContactFields`)
+  em `features/<x>/components/`, recebendo `value`/`onChange`/`readOnly`. Não é o kit `FormField`
+  (átomo genérico) nem molde `shared/ui` (não tem regra de negócio de domínio) — é composição de
+  feature. Contra-exemplo a eliminar: os 6 `<FormField>` de endereço repetidos inline no diálogo.
 - **Lista de coleção nested com replace-total usa `key={i}`, nunca `key={item.id}`.** O replace
   recria as linhas a cada save, então o `id` **muda** — keyar por ele remonta a lista inteira e
   derruba foco/estado. O índice É a identidade estável aqui (a ordem do array é o `sort_order`).
