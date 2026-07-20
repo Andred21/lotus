@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppDropdown, AppRadioButton, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
-import { CHILE_REGIONS } from '@shared/lib'
+import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
+import { AddressFields } from './AddressFields'
+import { ContactFields } from './ContactFields'
 
 const TYPE_VALUES = ['client', 'provider', 'other'] as const
 
@@ -74,56 +75,17 @@ export function ClientDialog({
         </div>
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionAddress')}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField label={t('client.region')}>
-            <AppDropdown value={addr.region} options={CHILE_REGIONS} disabled={readOnly} onChange={(e) => setAddr({ region: e.value })} />
-          </FormField>
-          <FormField label={t('client.commune')}>
-            <AppInputText value={addr.commune ?? ''} disabled={readOnly} onChange={(e) => setAddr({ commune: e.target.value })} className="w-full" />
-          </FormField>
-          <FormField label={t('client.city')}>
-            <AppInputText value={addr.city ?? ''} disabled={readOnly} onChange={(e) => setAddr({ city: e.target.value })} className="w-full" />
-          </FormField>
-          <FormField label={t('client.street')}>
-            <AppInputText value={addr.line1 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line1: e.target.value })} className="w-full" />
-          </FormField>
-          <FormField label={t('client.complement')}>
-            <AppInputText value={addr.line2 ?? ''} disabled={readOnly} onChange={(e) => setAddr({ line2: e.target.value })} className="w-full" />
-          </FormField>
-          <FormField label={t('client.number')}>
-            <AppInputText value={addr.number ?? ''} disabled={readOnly} onChange={(e) => setAddr({ number: e.target.value })} className="w-full" />
-          </FormField>
-        </div>
+        <AddressFields value={addr} readOnly={readOnly} onChange={setAddr} />
 
         <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
-        {form.contacts.map((c, i) => (
-          <div key={i} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] items-start gap-2">
-            <div className="flex h-10.5 items-center" title={t('client.contactPrimary')}>
-              <AppRadioButton
-                name="primaryContact"
-                checked={c.is_primary}
-                disabled={readOnly}
-                aria-label={t('client.contactPrimary')}
-                onChange={() => setPrimaryContact(i)}
-              />
-            </div>
-            <NestedField error={fieldErrors?.[`contacts.${i}.name`]?.[0]}>
-              <AppInputText placeholder={t('client.contactName')} value={c.name} disabled={readOnly} onChange={(e) => patchContact(i, { name: e.target.value })} />
-            </NestedField>
-            <NestedField error={fieldErrors?.[`contacts.${i}.job_title`]?.[0]}>
-              <AppInputText placeholder={t('client.contactJobTitle')} value={c.job_title ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { job_title: e.target.value })} />
-            </NestedField>
-            <NestedField error={fieldErrors?.[`contacts.${i}.email`]?.[0]}>
-              <AppInputText placeholder={t('common.email')} value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { email: e.target.value })} />
-            </NestedField>
-            <NestedField error={fieldErrors?.[`contacts.${i}.phone`]?.[0]}>
-              <AppInputText placeholder={t('common.phone')} value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { phone: e.target.value })} />
-            </NestedField>
-          </div>
-        ))}
-        {!readOnly && (
-          <AppButton label={t('client.addContact')} icon="pi pi-user-plus" text onClick={addContact} />
-        )}
+        <ContactFields
+          contacts={form.contacts}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+          onPatch={patchContact}
+          onSetPrimary={setPrimaryContact}
+          onAdd={addContact}
+        />
       </section>
     </CrudDialog>
   )
