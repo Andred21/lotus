@@ -15,13 +15,16 @@ export function ClientsTable({
 
   return (
     <div className="space-y-3">
-      
-      <AppInputText
-        leftIcon="pi pi-search"
-        placeholder={t('client.searchPlaceholder')}
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
+      <div className="flex flex-wrap gap-3">
+        <div className="min-w-64 flex-1">
+          <AppInputText
+            leftIcon="pi pi-search"
+            placeholder={t('client.searchPlaceholder')}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
+      </div>
       <AppDataTable
         value={clients}
         loading={loading}
