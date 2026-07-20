@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, AppRadioButton, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
@@ -79,8 +79,7 @@ export function QuoteWizard({
                 key={c.id}
                 className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                <input
-                  type="radio"
+                <AppRadioButton
                   name="quote-course"
                   checked={form.course_id === c.id}
                   onChange={() => set('course_id', c.id as number)}
