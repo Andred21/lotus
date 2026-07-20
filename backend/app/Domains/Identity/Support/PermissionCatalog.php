@@ -19,7 +19,13 @@ class PermissionCatalog
         'certification.certificate.revoke',
     ];
 
-    /** Catálogo canônico: nome da permissão => descrição. */
+    /**
+     * Catálogo canônico: nome da permissão => descrição.
+     *
+     * A `description` aqui é DEV-FACING (documenta o catálogo). O texto
+     * user-facing do picker vem dos locales do front (`perm.<name>`, Bloco 5.4):
+     * a UI é es-CL e a i18n é do front (ADR-15). O seeder só consome `array_keys`.
+     */
     public static function descriptions(): array
     {
         return [
