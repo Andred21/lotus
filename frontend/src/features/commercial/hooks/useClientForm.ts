@@ -57,7 +57,7 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
   const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
 
   return {
-    form, set, setForm, readOnly, submit,
+    form, set, readOnly, submit,
     setAddr, patchContact, setPrimaryContact, addContact,
     pending: create.isPending || update.isPending,
     fieldErrors, generalError,

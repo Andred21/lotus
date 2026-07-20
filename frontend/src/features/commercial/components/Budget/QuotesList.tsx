@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, FormErrorBanner } from '@shared/ui'
-import type { FileUploadHandlerEvent, AppFileUploadProps } from '@shared/ui'
+import type { FileUploadHandlerEvent } from '@shared/ui'
 import { useMutationErrors } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -82,8 +82,11 @@ export function QuotesList({
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-500">{t('quote.documents')}</span>
               <AppFileUpload
-                chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded', 'aria-label': t('common.upload') } as NonNullable<AppFileUploadProps['chooseOptions']>}
+                chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                 chooseLabel=""
+                // aria-label no span clicável do modo básico via passthrough tipado:
+                // o FileUpload do Prime descarta chaves desconhecidas de chooseOptions.
+                pt={{ basicButton: { 'aria-label': t('common.upload') } }}
                 disabled={uploadFile.isPending && uploadFile.variables?.quoteId === q.id}
                 uploadHandler={(e) => handleUpload(q.id!, e)}
               />
