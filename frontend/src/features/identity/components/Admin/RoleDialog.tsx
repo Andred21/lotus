@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppCheckbox, FormField, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppCheckbox, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { RoleData, PermissionData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { usePermissionCatalog } from '../../api/usePermissionCatalog'
@@ -50,6 +50,10 @@ export function RoleDialog({
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
+      {/* `name` mostra o próprio erro no FormField; um 422 keyed `permissions`
+          (assertAssignable) ou `permissions.N` (DTO) não tem input onde pendurar
+          — sem isto o save falha em silêncio. */}
+      <FormErrorSummary errors={fieldErrors} mapped={['name']} />
 
       <section className="space-y-4">
         <FormField label={t('role.name')} error={fieldErrors?.name?.[0]}>
@@ -64,7 +68,7 @@ export function RoleDialog({
           <h3 className="text-xs font-semibold uppercase text-slate-500">{t('role.permissions')}</h3>
           {groups.map(([group, perms]) => (
             <div key={group} className="space-y-2">
-              <p className="text-xs font-medium capitalize text-slate-400">{group}</p>
+              <p className="text-xs font-medium text-slate-400">{t(`permGroup.${group}`)}</p>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {perms.map((p) => (
                   <label key={p.name} className="flex items-start gap-2 text-sm">
@@ -74,7 +78,7 @@ export function RoleDialog({
                       disabled={!editable}
                       onChange={() => toggle(p.name)}
                     />
-                    <span>{p.description}</span>
+                    <span>{t(`perm.${p.name.replace(/\./g, '_')}`)}</span>
                   </label>
                 ))}
               </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
@@ -14,25 +15,31 @@ export function AdministracionPage() {
   const canManage = can('identity.access.manage')
   const page = useUsersPage()
   const rolesPage = useRolesPage()
+  const [tab, setTab] = useState(0)
+
+  const onRoles = tab === 1
 
   return (
     <ModulePage
       title={t('admin.module')}
       description={t('admin.moduleDescription')}
-      actions={canManage ? <AppButton variant="brandIcon" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} /> : null}
+      actions={
+        canManage ? (
+          onRoles ? (
+            <AppButton variant="brandIcon" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />
+          ) : (
+            <AppButton variant="brandIcon" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+          )
+        ) : null
+      }
     >
-      <ModuleTabs>
+      <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
         <ModuleTab header={t('admin.tabUsers')}>
           <UsersTable users={page.items} loading={page.loading} onView={page.openView} />
         </ModuleTab>
         {canManage && (
           <ModuleTab header={t('admin.tabRoles')}>
-            <div className="space-y-3">
-              <div className="flex justify-end">
-                <AppButton variant="brandIcon" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />
-              </div>
-              <RolesTable roles={rolesPage.items} loading={rolesPage.loading} onView={rolesPage.openView} />
-            </div>
+            <RolesTable roles={rolesPage.items} loading={rolesPage.loading} onView={rolesPage.openView} />
           </ModuleTab>
         )}
       </ModuleTabs>
