@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppPassword, AppDropdown, FormField, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { rolesApi } from '@shared/api/rolesApi'
@@ -41,6 +41,7 @@ export function StaffUserDialog({
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
+      <FormErrorSummary errors={fieldErrors} mapped={['name', 'rut', 'email', 'password', 'role']} />
 
       <section className="space-y-4">
         <h3 className="text-xs font-semibold uppercase text-slate-500">{t('admin.sectionUser')}</h3>
@@ -69,9 +70,11 @@ export function StaffUserDialog({
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          {/* type é sempre 'admin' para staff — read-only, reforça a distinção type vs role */}
+          {/* type é sempre 'admin' para staff — atributo fixo, não editável.
+              Tag em vez de input desabilitado: sinaliza "valor imutável", não
+              "campo editável acinzentado". */}
           <FormField label={t('admin.type')}>
-            <AppInputText value={t('admin.typeAdmin')} disabled className="w-full" />
+            <AppTag value={t('admin.typeAdmin')} severity="info" />
           </FormField>
           <FormField label={t('admin.role')} error={fieldErrors?.role?.[0]}>
             <AppDropdown value={form.role} options={roleOptions} optionLabel="label" optionValue="value" disabled={readOnly} onChange={(e) => set('role', e.value)} />
