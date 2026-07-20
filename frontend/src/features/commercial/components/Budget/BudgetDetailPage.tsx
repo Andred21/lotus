@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner } from '@shared/ui'
 import type { BudgetFileType } from '../../api/useCommercialFiles'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
@@ -107,11 +107,9 @@ export function BudgetDetailPage() {
             />
           </div>
         </header>
-        {d.fileError && (
-          <p className="mx-4 mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-            {d.fileError}
-          </p>
-        )}
+        <div className="mx-4">
+          <FormErrorBanner message={d.fileError} />
+        </div>
         <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
       </section>
 
