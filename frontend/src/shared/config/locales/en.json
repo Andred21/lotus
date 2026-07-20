@@ -190,6 +190,7 @@
     "new": "New quote",
     "edit": "Edit quote",
     "create": "Create quote",
+    "step": "Step {{current}} of {{total}}",
     "stepCourse": "Course",
     "stepData": "Quote data",
     "course": "Course",

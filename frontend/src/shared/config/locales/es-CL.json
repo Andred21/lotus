@@ -190,6 +190,7 @@
     "new": "Nueva cotización",
     "edit": "Editar cotización",
     "create": "Crear cotización",
+    "step": "Paso {{current}} de {{total}}",
     "stepCourse": "Curso",
     "stepData": "Datos de la cotización",
     "course": "Curso",

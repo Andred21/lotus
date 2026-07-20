@@ -46,7 +46,12 @@ export function QuoteWizard({
 
   return (
     <AppDialog
-      header={quote ? t('quote.edit') : t('quote.new')}
+      header={
+        <div className="flex items-center justify-between gap-4">
+          <span>{quote ? t('quote.edit') : t('quote.new')}</span>
+          <span className="text-xs font-normal text-slate-500">{t('quote.step', { current: step, total: 2 })}</span>
+        </div>
+      }
       visible={visible}
       onHide={onHide}
       footer={footer}

@@ -190,6 +190,7 @@
     "new": "Nova cotação",
     "edit": "Editar cotação",
     "create": "Criar cotação",
+    "step": "Passo {{current}} de {{total}}",
     "stepCourse": "Curso",
     "stepData": "Dados da cotação",
     "course": "Curso",
