@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, AppRadioButton, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, AppRadioButton, AppDatePicker, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
@@ -131,19 +131,15 @@ export function QuoteWizard({
 
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
-              <input
-                type="date"
-                className="w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800"
-                value={form.planned_start_date ?? ''}
-                onChange={(e) => set('planned_start_date', e.target.value || null)}
+              <AppDatePicker
+                value={form.planned_start_date ?? null}
+                onChange={(v) => set('planned_start_date', v)}
               />
             </FormField>
             <FormField label={t('quote.plannedEnd')} error={fieldErrors?.planned_end_date?.[0]}>
-              <input
-                type="date"
-                className="w-full rounded border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800"
-                value={form.planned_end_date ?? ''}
-                onChange={(e) => set('planned_end_date', e.target.value || null)}
+              <AppDatePicker
+                value={form.planned_end_date ?? null}
+                onChange={(v) => set('planned_end_date', v)}
               />
             </FormField>
           </div>
