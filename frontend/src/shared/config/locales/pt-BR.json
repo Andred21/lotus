@@ -28,7 +28,9 @@
     "delete": "Excluir",
     "password": "Senha",
     "active": "Ativo",
-    "inactive": "Inativo"
+    "inactive": "Inativo",
+    "view": "Ver",
+    "upload": "Enviar documento"
   },
   "admin": {
     "module": "Administração",

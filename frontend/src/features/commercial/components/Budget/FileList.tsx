@@ -25,10 +25,10 @@ export function FileList({ files, onRemove }: { files: FileData[]; onRemove?: (f
             </p>
           </div>
           <a href={f.download_url} target="_blank" rel="noreferrer">
-            <AppButton icon="pi pi-download" text rounded />
+            <AppButton icon="pi pi-download" text rounded aria-label={t('common.download')} />
           </a>
           {onRemove && (
-            <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => onRemove(f.id)} />
+            <AppButton icon="pi pi-trash" text rounded severity="danger" aria-label={t('common.delete')} onClick={() => onRemove(f.id)} />
           )}
         </li>
       ))}

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, FormErrorBanner } from '@shared/ui'
-import type { FileUploadHandlerEvent } from '@shared/ui'
+import type { FileUploadHandlerEvent, AppFileUploadProps } from '@shared/ui'
 import { useMutationErrors } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -71,10 +71,10 @@ export function QuotesList({
 
           <div className="flex items-center gap-1">
             {q.status !== 'approved' && onEdit && (
-              <AppButton icon="pi pi-pencil" text rounded onClick={() => onEdit(q)} />
+              <AppButton icon="pi pi-pencil" text rounded aria-label={t('common.edit')} onClick={() => onEdit(q)} />
             )}
             {q.status !== 'approved' && onRemove && (
-              <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => onRemove(q)} />
+              <AppButton icon="pi pi-trash" text rounded severity="danger" aria-label={t('common.delete')} onClick={() => onRemove(q)} />
             )}
           </div>
 
@@ -82,7 +82,7 @@ export function QuotesList({
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-500">{t('quote.documents')}</span>
               <AppFileUpload
-                chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
+                chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded', 'aria-label': t('common.upload') } as NonNullable<AppFileUploadProps['chooseOptions']>}
                 chooseLabel=""
                 disabled={uploadFile.isPending && uploadFile.variables?.quoteId === q.id}
                 uploadHandler={(e) => handleUpload(q.id!, e)}

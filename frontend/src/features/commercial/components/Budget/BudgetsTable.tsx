@@ -69,7 +69,7 @@ export function BudgetsTable({ budgets, loading }: { budgets: BudgetData[]; load
         />
         <AppColumn
           body={(b: BudgetData) => (
-            <AppButton icon="pi pi-eye" text rounded onClick={() => navigate(`/comercial/presupuestos/${b.id}`)} />
+            <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => navigate(`/comercial/presupuestos/${b.id}`)} />
           )}
           style={{ width: '4rem' }}
         />

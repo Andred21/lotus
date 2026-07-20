@@ -38,7 +38,7 @@ export function ClientsTable({
         <AppColumn header={t('client.commune')} body={(c: ClientData) => c.addresses[0]?.commune ?? '—'} />
         <AppColumn header={t('client.contacts')} body={(c: ClientData) => c.contacts.length} />
         <AppColumn
-          body={(c: ClientData) => <AppButton icon="pi pi-eye" text rounded onClick={() => onView(c)} />}
+          body={(c: ClientData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(c)} />}
           style={{ width: '4rem' }}
         />
       </AppDataTable>

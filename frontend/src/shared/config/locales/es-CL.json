@@ -28,7 +28,9 @@
     "delete": "Eliminar",
     "password": "Contraseña",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "view": "Ver",
+    "upload": "Subir documento"
   },
   "admin": {
     "module": "Administración",

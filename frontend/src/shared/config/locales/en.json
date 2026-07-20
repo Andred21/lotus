@@ -28,7 +28,9 @@
     "delete": "Delete",
     "password": "Password",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "view": "View",
+    "upload": "Upload document"
   },
   "admin": {
     "module": "Administration",
