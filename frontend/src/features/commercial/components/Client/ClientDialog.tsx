@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppButton, AppInputText, AppDropdown, AppRadioButton, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import { CHILE_REGIONS } from '@shared/lib'
@@ -21,22 +20,13 @@ export function ClientDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, setForm, readOnly, submit, pending, fieldErrors, generalError } = useClientForm(client, mode, onHide)
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError, setAddr, patchContact, setPrimaryContact, addContact } =
+    useClientForm(client, mode, onHide)
   const types = TYPE_VALUES.map((value) => ({ value, label: t(`clientType.${value}`) }))
 
-  // Cliente criado fora da UI (seed/API) pode não ter endereço nenhum — cai
-  // para um endereço vazio em vez de quebrar ao ler `addr.region`.
+  // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para vazio
+  // em vez de quebrar ao ler `addr.region`.
   const addr = form.addresses[0] ?? EMPTY_ADDRESS
-
-  // Só o primeiro endereço é editável nesta tela; os demais são preservados.
-  // (Antes o array era reconstruído com um único elemento e o update do backend,
-  // que apaga-e-recria os nested, descartava os outros endereços em silêncio.)
-  const setAddr = (patch: Partial<ClientAddressData>) =>
-    setForm((f) => {
-      const rest = f.addresses.slice(1)
-      const first = { ...(f.addresses[0] ?? EMPTY_ADDRESS), ...patch }
-      return { ...f, addresses: [first, ...rest] }
-    })
 
   return (
     <CrudDialog
@@ -114,47 +104,27 @@ export function ClientDialog({
                 checked={c.is_primary}
                 disabled={readOnly}
                 aria-label={t('client.contactPrimary')}
-                onChange={() => setPrimaryContact(setForm, i)}
+                onChange={() => setPrimaryContact(i)}
               />
             </div>
             <NestedField error={fieldErrors?.[`contacts.${i}.name`]?.[0]}>
-              <AppInputText placeholder={t('client.contactName')} value={c.name} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { name: e.target.value })} />
+              <AppInputText placeholder={t('client.contactName')} value={c.name} disabled={readOnly} onChange={(e) => patchContact(i, { name: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.job_title`]?.[0]}>
-              <AppInputText placeholder={t('client.contactJobTitle')} value={c.job_title ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { job_title: e.target.value })} />
+              <AppInputText placeholder={t('client.contactJobTitle')} value={c.job_title ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { job_title: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.email`]?.[0]}>
-              <AppInputText placeholder={t('common.email')} value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { email: e.target.value })} />
+              <AppInputText placeholder={t('common.email')} value={c.email ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { email: e.target.value })} />
             </NestedField>
             <NestedField error={fieldErrors?.[`contacts.${i}.phone`]?.[0]}>
-              <AppInputText placeholder={t('common.phone')} value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(setForm, i, { phone: e.target.value })} />
+              <AppInputText placeholder={t('common.phone')} value={c.phone ?? ''} disabled={readOnly} onChange={(e) => patchContact(i, { phone: e.target.value })} />
             </NestedField>
           </div>
         ))}
         {!readOnly && (
-          <AppButton
-            label={t('client.addContact')}
-            icon="pi pi-user-plus"
-            text
-            onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { id: undefined, name: '', job_title: null, email: null, phone: null, is_primary: false }] }))}
-          />
+          <AppButton label={t('client.addContact')} icon="pi pi-user-plus" text onClick={addContact} />
         )}
       </section>
     </CrudDialog>
   )
-}
-
-function patchContact(
-  setForm: Dispatch<SetStateAction<ClientData>>,
-  i: number,
-  patch: Partial<ClientData['contacts'][number]>,
-) {
-  setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
-}
-
-function setPrimaryContact(setForm: Dispatch<SetStateAction<ClientData>>, i: number) {
-  setForm((f) => ({
-    ...f,
-    contacts: f.contacts.map((c, idx) => ({ ...c, is_primary: idx === i })),
-  }))
 }
