@@ -11,6 +11,7 @@ use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
             'client_address' => ClientAddress::class,
             'client_contact' => ClientContact::class,
             'redator' => Redator::class,
+            'student' => Student::class,
             'course' => Course::class,
             'course_certificate_template' => CourseCertificateTemplate::class,
             'course_module' => CourseModule::class,

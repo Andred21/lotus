@@ -4,7 +4,6 @@ namespace App\Domains\Identity\Models;
 
 use App\Domains\Commercial\Models\Client;
 use Database\Factories\UserFactory;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements Auditable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes, AuditableTrait;
+    use AuditableTrait, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -63,7 +62,7 @@ class User extends Authenticatable implements Auditable
     public static function booted(): void
     {
         static::creating(function (User $user) {
-            if(empty($user->uuid)) {
+            if (empty($user->uuid)) {
                 $user->uuid = (string) Str::uuid();
             }
         });
@@ -77,6 +76,11 @@ class User extends Authenticatable implements Auditable
     public function redator(): HasOne
     {
         return $this->hasOne(Redator::class);
+    }
+
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
     }
 
     /**
