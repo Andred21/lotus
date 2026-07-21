@@ -179,12 +179,20 @@ end_date: string,
 status: TurmaStatus | undefined,
 redatores: TurmaRedatorData[],
 };
+export type TurmaDocumentData = {
+id: number,
+type: string,
+original_name: string,
+size: number,
+created_at: string,
+};
+export type TurmaDocumentType = 'MANUAL' | 'PRUEBAS' | 'EVALUACION_REDATOR';
 export type TurmaModalidade = 'presencial' | 'online';
 export type TurmaRedatorData = {
 id: number,
 name: string,
 };
-export type TurmaStatus = 'em_andamento' | 'habilitada' | 'concluida';
+export type TurmaStatus = 'em_andamento' | 'concluida';
 export type UserData = {
 id: undefined | number,
 uuid: undefined | string,

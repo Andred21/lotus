@@ -2,6 +2,7 @@
 
 use App\Domains\Operation\Http\Controllers\EnrollmentController;
 use App\Domains\Operation\Http\Controllers\TurmaController;
+use App\Domains\Operation\Http\Controllers\TurmaDocumentController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Operation (agregadas por routes/api.php sob prefixo `api/`).
@@ -13,6 +14,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('quotes/{quote}/turma', [TurmaController::class, 'store']);
     Route::post('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'designateRedator']);
     Route::delete('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'removeRedator']);
+
+    Route::get('turmas/{turma}/documents', [TurmaDocumentController::class, 'index']);
+    Route::post('turmas/{turma}/documents', [TurmaDocumentController::class, 'store']);
+    Route::delete('turmas/{turma}/documents/{file}', [TurmaDocumentController::class, 'destroy'])
+        ->scopeBindings();   // {file} resolve por $turma->files() — cross-turma = 404
 
     Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
