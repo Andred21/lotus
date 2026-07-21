@@ -13,7 +13,7 @@ para reconstruir contexto antes de qualquer plano/spec.
 
 > **Política de corte (este arquivo é carregado em TODA sessão):** passou de **25 linhas** na tabela,
 > particione — o arquivo raiz mantém `Ativo` + backlog + as **10 últimas** entregues; o resto vai
-> para `progress-archive.md`, consultado só sob demanda. Hoje: 22 linhas.
+> para `progress-archive.md`, consultado só sob demanda. Hoje: 23 linhas.
 
 | Data | Feature | Status | Resultado (1 linha) | Contexto | Plano | Spec |
 |------|---------|--------|---------------------|----------|-------|------|
@@ -38,15 +38,24 @@ para reconstruir contexto antes de qualquer plano/spec.
 | 2026-07-18 | Bloco 5.2b · Administração: aba Roles y Permisos | Entregue | Ver roles de sistema read-only + criar/editar role customizada de subconjunto do catálogo fixo (`PermissionCatalog` = fonte única, também do seeder); guardrail das 3 segregadas em 2 camadas (422 no back + some do picker). **Validação de DTO roda ANTES do Action**: `notIn(SYSTEM_ROLES)` NÃO pode ficar em `RoleData::rules()` senão PUT de role de sistema dá 422 em vez do 403 do `SystemRoleGuard` — bloqueio de nome de sistema no create vem da colisão de nome | — | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |
 | 2026-07-19 | Bloco 5.3 · Refino frontend Comercial (H.1.3) | Entregue | Refino C+B das revisões: array-helpers no `useClientForm`, `AddressFields`/`ContactFields`, `useBudgetDetail` (BudgetDetailPage declarativo), `AppDatePicker` (contrato ISO string anti-fuso + locale es-CL), `FormErrorBanner`/`AppRadioButton`, stepper, a11y, toolbar/ordem. **Lição:** `aria-label` em botão de upload do Prime (`FileUpload` basic) vai por `pt.basicButton` — `chooseOptions` descarta chaves desconhecidas | — | `plans/archive/2026-07-19-refino-comercial-frontend.md` | `specs/archive/2026-07-19-refino-comercial-frontend-design.md` |
 | 2026-07-20 | Bloco 5.4 · Refino frontend Administração | Entregue | `FormErrorSummary` nos 2 diálogos (422 de permissão deixa de sumir), toolbar contextual por aba, grupos+descrições de permissão via `permGroup.*`/`perm.*` (chave com underscore — keySeparator `.` do i18next proíbe ponto), Tipo como tag. `PermissionCatalog.description` virou dev-facing — permissão nova exige as 3 chaves `perm.*` nos locales | — | `plans/archive/2026-07-20-refino-administracao-frontend.md` | `specs/archive/2026-07-20-refino-administracao-frontend-design.md` |
+| 2026-07-20 | Bloco 6a · Sprint 3 · Aluno + vínculo + resolução (backend) | **Ativo** | (planejado) `Student` extensão de `User` (type=aluno, não loga); `student_client_logs` histórico RN-10 com 1-vínculo-aberto garantido por coluna gerada única; `StudentResolver` por RUT (existe→associa/move, novo→cria) p/ a importação da Turma (6c). Sem REST/tela/`StudentData` | spec+plano deste bloco; `der-fisico` (`students`/`student_client_logs` planejadas→implementar em inglês); `UserProvisioner` + molde Redator; lição #8 (RUT `withTrashed`), #10 (regressão via stash) | `plans/2026-07-20-bloco6a-aluno-vinculo.md` | `specs/2026-07-20-bloco6a-aluno-vinculo-design.md` |
 
 ## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
 
 _Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
 _Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o bloco ser planejado._
 
-- Bloco 6 · Sprint 3 · Turmas / Operação — Contexto: `adrs.md` (ADR-02/10), `der-fisico` (turmas,
-  matrículas), `estrutura-monolito` (domínio Operation é scaffold vazio), plano do Bloco 5.2
-  (molde de Action+DTO), pendência P-03 (worktree/backend)
+- Bloco 6b · Sprint 3 · Turma + designação de redator (backend) — Contexto: `der-fisico` (`turmas`
+  planejada), Commercial (`Quote` aprovada 1:1), Catalog (`course_redator` + gate idoneidade RN-09),
+  máquina de estados turma, ADR-02/10, pendência P-03. NÃO depende de 6a.
+- Bloco 6c · Sprint 3 · Matrícula + importação de alunos (backend) — Contexto: 6a (`StudentResolver`)
+  + 6b (`Turma`), `enrollments` (der planejada), parser xlsx/csv, `tela-turmas.md` (importação
+  tolerante a erro por linha; endpoint `POST /turmas/{id}/alunos/importar`)
+- Bloco 6d · Sprint 3 · Conclusão + manual (backend) — Contexto: máquina de estados turma
+  (`em andamento→habilitada→concluída`), RN-15 (blindagem)/RN-16 (doc habilita, admin confirma),
+  manual Blade sob demanda. Depende do upload de doc do redator (interface redator — sprint futura)
+- Bloco 6-frontend · Sprint 3 · Operação frontend — Contexto: depois dos blocos backend, como nas
+  Sprints 1 e 2; `tela-turmas.md` (hub Operação, tela própria não-modal)
 - Bloco 7 · Sprint 4 · Certificação (templates, PDF, endpoint público QR) — Contexto: `adrs.md`
   (ADR-08/10), `der-fisico` (certificates, certificate_sequences), lição sobre snapshot de template
   no ato da emissão
