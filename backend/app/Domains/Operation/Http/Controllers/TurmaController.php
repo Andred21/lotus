@@ -4,6 +4,7 @@ namespace App\Domains\Operation\Http\Controllers;
 
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Operation\Actions\ConcludeTurmaAction;
 use App\Domains\Operation\Actions\CreateTurmaAction;
 use App\Domains\Operation\Actions\DeleteTurmaAction;
 use App\Domains\Operation\Actions\DesignateRedatorAction;
@@ -27,6 +28,7 @@ class TurmaController extends Controller implements HasMiddleware
             new Middleware('permission:operation.turma.update', only: ['update']),
             new Middleware('permission:operation.turma.delete', only: ['destroy']),
             new Middleware('permission:operation.turma.assign_redator', only: ['designateRedator', 'removeRedator']),
+            new Middleware('permission:operation.turma.complete', only: ['conclude']),
         ];
     }
 
@@ -70,5 +72,12 @@ class TurmaController extends Controller implements HasMiddleware
     public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action): TurmaData
     {
         return TurmaData::fromModel($action->execute($turma, $redator));
+    }
+
+    public function conclude(Turma $turma, ConcludeTurmaAction $action): JsonResponse
+    {
+        return TurmaData::fromModel($action->execute($turma)->load('redatores.user'))
+            ->toResponse(request())
+            ->setStatusCode(200);
     }
 }

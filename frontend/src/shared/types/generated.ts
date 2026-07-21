@@ -177,6 +177,9 @@ local_aplicacao: string | null,
 start_date: string,
 end_date: string,
 status: TurmaStatus | undefined,
+habilitada: undefined | boolean,
+missing_document_types: string[],
+concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
 };
 export type TurmaDocumentData = {

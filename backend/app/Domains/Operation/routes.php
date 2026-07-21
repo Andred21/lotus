@@ -14,6 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('quotes/{quote}/turma', [TurmaController::class, 'store']);
     Route::post('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'designateRedator']);
     Route::delete('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'removeRedator']);
+    Route::post('turmas/{turma}/conclude', [TurmaController::class, 'conclude']);
 
     Route::get('turmas/{turma}/documents', [TurmaDocumentController::class, 'index']);
     Route::post('turmas/{turma}/documents', [TurmaDocumentController::class, 'store']);

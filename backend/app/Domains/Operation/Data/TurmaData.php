@@ -6,6 +6,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -28,6 +29,10 @@ class TurmaData extends Data
         public string $start_date,
         public string $end_date,
         public TurmaStatus|Optional $status,
+        public bool|Optional $habilitada,
+        /** @var string[] */
+        public array|Optional $missing_document_types,
+        public string|null|Optional $concluded_at,
         /** @var TurmaRedatorData[] */
         public array|Optional $redatores = [],
     ) {}
@@ -44,6 +49,8 @@ class TurmaData extends Data
 
     public static function fromModel(Turma $turma): self
     {
+        $habilitacao = app(TurmaHabilitacaoService::class);
+
         return new self(
             id: $turma->id,
             quote_id: $turma->quote_id,
@@ -53,6 +60,9 @@ class TurmaData extends Data
             start_date: $turma->start_date->toDateString(),
             end_date: $turma->end_date->toDateString(),
             status: $turma->status,
+            habilitada: $habilitacao->isHabilitada($turma),
+            missing_document_types: $habilitacao->missingTypes($turma),
+            concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
         );
     }
