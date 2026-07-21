@@ -136,6 +136,23 @@ is_active: boolean,
 roles: string[],
 permissions: string[],
 };
+export type TurmaData = {
+id: undefined | number,
+quote_id: undefined | number,
+course_id: undefined | number,
+modalidade: TurmaModalidade,
+local_aplicacao: string | null,
+start_date: string,
+end_date: string,
+status: TurmaStatus | undefined,
+redatores: TurmaRedatorData[],
+};
+export type TurmaModalidade = 'presencial' | 'online';
+export type TurmaRedatorData = {
+id: number,
+name: string,
+};
+export type TurmaStatus = 'em_andamento' | 'habilitada' | 'concluida';
 export type UserData = {
 id: undefined | number,
 uuid: undefined | string,
