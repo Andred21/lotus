@@ -305,5 +305,72 @@
     "idoneo": "Suitable",
     "por_vencer": "Expiring",
     "no_idoneo": "Not suitable"
+  },
+  "operation": {
+    "title": "Operations",
+    "subtitle": "Manage classes and approved quotes",
+    "pending": {
+      "title": "Approved quotes pending configuration",
+      "students": "{{count}} students",
+      "configure": "Configure class",
+      "empty": "No quotes pending configuration."
+    },
+    "table": {
+      "code": "Code",
+      "course": "Course",
+      "client": "Client",
+      "modality": "Modality",
+      "redator": "Redator",
+      "students": "Students",
+      "status": "Status",
+      "search": "Search by course, client or code…",
+      "filterAll": "All",
+      "count": "{{count}} classes",
+      "empty": "No classes yet.",
+      "noRedator": "— Unassigned"
+    },
+    "modality": { "presencial": "In person", "online": "Online" },
+    "status": { "em_andamento": "In progress", "habilitada": "Enabled", "concluida": "Concluded" },
+    "detail": {
+      "back": "Back to Operations",
+      "notFound": "Class not found.",
+      "relatedTo": "Budget {{budget}} · Quote {{quote}}",
+      "tabs": {
+        "config": "Configuration",
+        "students": "Students",
+        "redator": "Redator",
+        "docs": "Documentation",
+        "conclusion": "Conclusion"
+      },
+      "comingSoon": "Available in the next delivery."
+    },
+    "config": {
+      "title": "Class details",
+      "modality": "Modality",
+      "local": "Venue / Address",
+      "localPlaceholder": "Application address (in person)",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "workload": "Workload (from course, read-only)",
+      "workloadValue": "{{hours}} hours",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "create": {
+      "title": "Configure class",
+      "subtitle": "Quote {{quote}} · {{course}}"
+    },
+    "redator": {
+      "title": "Assigned redator",
+      "idoneo": "Eligible",
+      "change": "Change",
+      "designate": "Assign redator",
+      "remove": "Remove",
+      "none": "No redator assigned.",
+      "helpNote": "Only redatores enabled for this course with valid documentation are shown (RN-09).",
+      "pickerTitle": "Eligible redatores",
+      "pickerEmpty": "No eligible redatores for this course.",
+      "pick": "Assign"
+    }
   }
 }

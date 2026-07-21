@@ -305,5 +305,72 @@
     "idoneo": "Idóneo",
     "por_vencer": "Por vencer",
     "no_idoneo": "No idóneo"
+  },
+  "operation": {
+    "title": "Operación",
+    "subtitle": "Gestión de turmas y cotizaciones aprobadas",
+    "pending": {
+      "title": "Cotizaciones aprobadas pendientes de configuración",
+      "students": "{{count}} alumnos",
+      "configure": "Configurar turma",
+      "empty": "No hay cotizaciones pendientes de configuración."
+    },
+    "table": {
+      "code": "Código",
+      "course": "Curso",
+      "client": "Cliente",
+      "modality": "Modalidad",
+      "redator": "Redactor",
+      "students": "Alumnos",
+      "status": "Estado",
+      "search": "Buscar por curso, cliente o código…",
+      "filterAll": "Todos",
+      "count": "{{count}} turmas",
+      "empty": "No hay turmas todavía.",
+      "noRedator": "— Sin asignar"
+    },
+    "modality": { "presencial": "Presencial", "online": "Online" },
+    "status": { "em_andamento": "En curso", "habilitada": "Habilitada", "concluida": "Concluida" },
+    "detail": {
+      "back": "Volver a Operación",
+      "notFound": "Turma no encontrada.",
+      "relatedTo": "Presupuesto {{budget}} · Cotización {{quote}}",
+      "tabs": {
+        "config": "Configuración",
+        "students": "Alumnos",
+        "redator": "Redactor",
+        "docs": "Documentación",
+        "conclusion": "Conclusión"
+      },
+      "comingSoon": "Disponible en la próxima entrega."
+    },
+    "config": {
+      "title": "Datos de la turma",
+      "modality": "Modalidad",
+      "local": "Local / Dirección",
+      "localPlaceholder": "Dirección donde se aplica (presencial)",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de término",
+      "workload": "Carga horaria (del curso, solo lectura)",
+      "workloadValue": "{{hours}} horas",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "create": {
+      "title": "Configurar turma",
+      "subtitle": "Cotización {{quote}} · {{course}}"
+    },
+    "redator": {
+      "title": "Redactor asignado",
+      "idoneo": "Idóneo",
+      "change": "Cambiar",
+      "designate": "Designar redactor",
+      "remove": "Quitar",
+      "none": "Ningún redactor asignado.",
+      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente (RN-09).",
+      "pickerTitle": "Redactores idóneos",
+      "pickerEmpty": "No hay redactores idóneos para este curso.",
+      "pick": "Designar"
+    }
   }
 }
