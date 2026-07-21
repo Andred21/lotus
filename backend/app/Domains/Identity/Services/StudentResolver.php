@@ -8,6 +8,7 @@ use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Shared\Support\Rut;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -44,38 +45,45 @@ class StudentResolver
             ]);
         }
 
-        // Aluno novo: provisiona o User (inativo, sem role) e cria o Student.
-        if ($user === null) {
-            $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
-            $student = Student::create(['user_id' => $created->id]);
-            $this->linkService->link($student, $client);
+        // Atômico por linha: falha no meio faz rollback, sem User/Student órfão.
+        // A transação de link (interna) aninha via savepoint — ok no Laravel.
+        return DB::transaction(function () use ($user, $name, $rut, $email, $phone, $client) {
+            // Aluno novo: provisiona o User (inativo, sem role) e cria o Student.
+            if ($user === null) {
+                // Colisão de e-mail vira ValidationException por linha (chave email),
+                // inclusive contra soft-deletados — nunca 500 que aborta a planilha.
+                $this->provisioner->ensureEmailAvailable($email);
+                $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
+                $student = Student::create(['user_id' => $created->id]);
+                $this->linkService->link($student, $client);
 
-            return new StudentResolution($student, StudentResolutionOutcome::Created);
-        }
+                return new StudentResolution($student, StudentResolutionOutcome::Created);
+            }
 
-        // Aluno existente (possivelmente soft-deletado): restaura e revincula.
-        if ($user->trashed()) {
-            $user->restore();
-        }
+            // Aluno existente (possivelmente soft-deletado): restaura e revincula.
+            if ($user->trashed()) {
+                $user->restore();
+            }
 
-        $student = Student::withTrashed()->where('user_id', $user->id)->firstOrFail();
+            $student = Student::withTrashed()->where('user_id', $user->id)->firstOrFail();
 
-        if ($student->trashed()) {
-            $student->restore();
-        }
+            if ($student->trashed()) {
+                $student->restore();
+            }
 
-        $previousClient = $student->currentClient; // capturado ANTES do link
+            $previousClient = $student->currentClient; // capturado ANTES do link
 
-        $linkOutcome = $this->linkService->link($student, $client);
+            $linkOutcome = $this->linkService->link($student, $client);
 
-        $outcome = $linkOutcome === LinkOutcome::AlreadyLinked
-            ? StudentResolutionOutcome::AlreadyLinked
-            : StudentResolutionOutcome::Moved;
+            $outcome = $linkOutcome === LinkOutcome::AlreadyLinked
+                ? StudentResolutionOutcome::AlreadyLinked
+                : StudentResolutionOutcome::Moved;
 
-        return new StudentResolution(
-            $student,
-            $outcome,
-            $outcome === StudentResolutionOutcome::Moved ? $previousClient : null,
-        );
+            return new StudentResolution(
+                $student,
+                $outcome,
+                $outcome === StudentResolutionOutcome::Moved ? $previousClient : null,
+            );
+        });
     }
 }

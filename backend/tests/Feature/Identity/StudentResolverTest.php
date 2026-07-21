@@ -93,6 +93,23 @@ class StudentResolverTest extends TestCase
         }
     }
 
+    public function test_email_ja_usado_por_outro_usuario_lanca_validation_na_chave_email(): void
+    {
+        $client = $this->makeClient('A');
+        User::factory()->redator()->create(['rut' => '12.345.678-5', 'email' => 'dup@x.cl']);
+
+        try {
+            $this->resolver()->resolveByRut('7.654.321-6', 'X', 'dup@x.cl', null, $client);
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('email', $e->errors());
+        }
+
+        // Nenhuma linha parcial: sem Student e sem novo user aluno com o RUT da linha.
+        $this->assertSame(0, Student::count());
+        $this->assertDatabaseMissing('users', ['rut' => '7.654.321-6', 'type' => 'aluno']);
+    }
+
     public function test_aluno_soft_deletado_e_restaurado_sem_duplicar(): void
     {
         $client = $this->makeClient('A');
