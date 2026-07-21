@@ -16,6 +16,7 @@
 | P-04 | Leis invioláveis (§5) são instrução, não guardrail | Prompt não garante regra sob pressão; Pest Arch tests + eslint-boundaries adiados por decisão | Reavaliar quando a Sprint 3 fechar |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | Decisão do João no Bloco 2 — evitar inchaço do folder | Antes de subir para produção |
 | P-06 | `der-fisico.md`: `turmas.redator_id` (FK 1:N) vs. pivot `turma_redator` (N:N) implementado | Bloco 6b (2026-07-21, decisão do João): a premissa "ocasionalmente >1 redator por turma" pediu N:N. O der-fisico ainda modela `turmas.redator_id` FK simples e lista `turmas` em "PLANEJADAS" — precisa migrar para implementadas (nomes finais em inglês, colunas reais) e trocar a relação `redatores 1:N → turmas` por N:N via `turma_redator` | Doc-sync da Sprint 3 (`/auditar-docs` no `/fechar-sprint`) |
+| P-07 | Chaves i18n de `operation.enrollment.manage` ausentes nos 3 locales | Bloco 6c (2026-07-21): a permissão já existia no catálogo e agora tem rota consumidora (endpoints de matrícula), mas as chaves `perm.operation_enrollment_manage` (dot→underscore) não existem em pt/es/en — o picker de Roles renderiza a chave crua. Padrão do Bloco 5.4 exige as 3 chaves `perm.*` por permissão com uso na UI | Entrega do Bloco 6-frontend |
 
 ## Encerradas (mantidas 1 sprint para rastro, depois saem)
 

@@ -72,6 +72,19 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type EnrollmentApprovalStatus = 'pendiente' | 'aprobado' | 'reprobado';
+export type EnrollmentData = {
+id: undefined | number,
+turma_id: undefined | number,
+student_id: undefined | number,
+name: string,
+rut: string,
+email: string | null,
+phone: string | null,
+approval_status: EnrollmentApprovalStatus | undefined,
+attendance_pct: undefined | string | null,
+grades: undefined | Array<any> | null,
+};
 export type FileData = {
 id: number,
 type: string,
@@ -80,6 +93,25 @@ mime: string | null,
 size: number,
 download_url: string,
 created_at: string | null,
+};
+export type ImportResultData = {
+created: number,
+relinked: number,
+already_enrolled: number,
+moved: MovedStudentData[],
+errors: ImportRowErrorData[],
+enrolled_total: number,
+contracted_count: number,
+};
+export type ImportRowErrorData = {
+row: number,
+message: string,
+};
+export type MovedStudentData = {
+rut: string,
+name: string,
+previous_client: string | null,
+client: string,
 };
 export type PermissionData = {
 name: string,
