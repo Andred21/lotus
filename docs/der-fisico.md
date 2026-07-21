@@ -26,6 +26,8 @@
 - **client_addresses** — `id PK`, `client_id FK` → clients cascade, `line1`, `line2`, `number`, `commune`, `city`, `region`, `zip_code` (todos nullable), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
 - **client_contacts** — `id PK`, `client_id FK` → clients cascade, `name`, `email` (nullable), `phone` (nullable, 30), `job_title` (nullable, cargo/área do contato — `job_title` e não `role` porque `role` é RBAC), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
 - **redatores** — `id PK`, `user_id FK,UK` → users cascade, `deleted_at`. Extensão 1:1 de users. (Nome em PT — ver banner.)
+- **students** (alunos) — `id PK`, `user_id FK,UK` → users cascade, `current_client_id FK` (nullable) → clients `nullOnDelete`, `deleted_at`. Extensão 1:1 de users (`type=aluno`, `is_active=false`, **sem role** — não autentica, RN-01). `current_client_id` = ponteiro do vínculo aberto, mantido pelo `StudentClientLinkService` (fonte única). Soft-delete cascateia p/ o user (hook `deleting`). Auditable. Bloco 6a.
+- **student_client_logs** — `id PK`, `student_id FK` → students **`restrictOnDelete`**, `client_id FK` → clients `restrictOnDelete`, `started_on` (date), `ended_on` (date, nullable — `NULL` = vínculo aberto), `open_link_student_id` (**gerada STORED** = `CASE WHEN ended_on IS NULL THEN student_id END`, **`UNIQUE`**), timestamps. Histórico append-only do vínculo aluno↔cliente (RN-10): **sem soft-delete**, sem auditoria (é o próprio registro histórico). A coluna gerada + índice único garantem **1 vínculo aberto por aluno** no banco. **`student_id` é `restrict` (não cascade):** o InnoDB proíbe `ON DELETE CASCADE` numa FK cuja coluna uma coluna gerada STORED referencia (erro 1215; sqlite ignora — lição #15). Bloco 6a.
 
 ### Catalog
 - **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
@@ -62,11 +64,7 @@
 
 > Não existem como migration ainda. Os nomes de coluna abaixo são o rascunho conceitual do Drive; ao implementar, traduzir para inglês (como foi feito com clients/courses) e atualizar a seção acima.
 
-### Identity
-- **students** — `id PK`, `user_id FK`, `current_client_id FK`. 1:1 com users.
-
 ### Operation
-- **student_client_logs** — `id PK`, `student_id FK`, `client_id FK`, `data_inicio` (date), `data_fim` (date), `active_student_id` (generated). Histórico de vínculo aluno↔cliente.
 - **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum). Nasce de uma cotação (1:1). Um redator por turma.
 - **enrollments** (matrículas) — `id PK`, `student_id FK`, `turma_id FK`, `notas` (json), `presenca_pct` (decimal), `status_aprovacao` (enum).
 
@@ -105,7 +103,7 @@
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
 - **Contexto total (alvo):** 25 tabelas (18 de domínio + 7 RBAC/transversal). Implementadas até
-  2026-07-17: users, clients, client_addresses, client_contacts, redatores, courses,
-  course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits + as
-  5 de RBAC. As de framework (sessions, cache, jobs, password_reset_tokens,
-  personal_access_tokens) ficam fora da contagem de domínio.
+  2026-07-20: users, clients, client_addresses, client_contacts, redatores, **students**,
+  **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
+  budgets, quotes, files, audits + as 5 de RBAC. As de framework (sessions, cache, jobs,
+  password_reset_tokens, personal_access_tokens) ficam fora da contagem de domínio.

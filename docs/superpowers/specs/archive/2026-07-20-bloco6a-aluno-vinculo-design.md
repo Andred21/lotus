@@ -78,7 +78,7 @@ Histórico **append-only**, **sem soft-delete** — fechar um vínculo é setar 
 | Coluna | Tipo | Notas |
 |---|---|---|
 | `id` | PK | |
-| `student_id` | FK → `students` | `cascadeOnDelete` |
+| `student_id` | FK → `students` | `restrictOnDelete` (ver nota MySQL abaixo) |
 | `client_id` | FK → `clients` | `restrictOnDelete` (nunca hard-delete; preserva história) |
 | `started_on` | date | início do vínculo |
 | `ended_on` | date nullable | `NULL` = vínculo aberto (vigente) |
@@ -90,6 +90,13 @@ A coluna gerada carrega `student_id` quando o vínculo está aberto e `NULL` qua
 banco **rejeita** a tentativa de abrir um 2º. Sintaxe suportada em MySQL 8 e sqlite ≥ 3.31 (os testes
 rodam em sqlite `:memory:`). Schema builder: `->storedAs("CASE WHEN ended_on IS NULL THEN student_id END")`
 + `->unique()`.
+
+> **Nota MySQL (fix do fechamento, provada contra o engine real):** `student_id` é `restrictOnDelete`,
+> não `cascadeOnDelete`. O InnoDB proíbe `ON DELETE CASCADE` numa FK cuja coluna uma coluna gerada
+> STORED referencia — e `open_link_student_id` depende de `student_id` (erro 1215). A migration passava
+> em sqlite (ignora a restrição) e falhava em MySQL 8; só a prova do gate contra MySQL pegou. `restrict`
+> não muda comportamento (soft-delete de aluno não dispara FK de banco — o hook `deleting` cascateia p/
+> o `user`) e é mais correto p/ histórico append-only. Vira **lição #15** no `docs/README.md`.
 
 ## Models e morph map
 

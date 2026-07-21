@@ -94,6 +94,15 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     lei que precisa valer sempre quer Arch test ou hook, não parágrafo. Enquanto o mecanismo não
     existe, a lei é instrução — e isso vai registrado como pendência (P-04), não como conforto.
 
+15. **Migration verde em sqlite pode falhar em MySQL — o gate prova contra o engine real.** No Bloco
+    6a, `student_client_logs` tinha uma coluna gerada STORED (`open_link_student_id`, que garante "1
+    vínculo aberto por aluno") dependendo de `student_id`, e a FK `student_id` era `ON DELETE CASCADE`.
+    O InnoDB **proíbe** `ON DELETE CASCADE` (ou `SET NULL`) numa FK cuja coluna uma coluna gerada STORED
+    referencia (erro 1215). A suíte roda em sqlite `:memory:`, que **ignora** a restrição — 201 verdes,
+    migration quebrada. Só a prova do `/fechar-sprint` contra o MySQL real pegou. Toda coluna gerada
+    dependente de FK: a FK é `restrictOnDelete`, não cascade. E a prova de aceite de bloco que toca
+    schema roda `migrate` no MySQL de dev, não só a suíte.
+
 
 > **Índice vivo do desenvolvimento:** `docs/superpowers/progress.md` (versionado) é o índice do que
 > foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
