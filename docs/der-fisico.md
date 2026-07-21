@@ -65,7 +65,7 @@
 > Não existem como migration ainda. Os nomes de coluna abaixo são o rascunho conceitual do Drive; ao implementar, traduzir para inglês (como foi feito com clients/courses) e atualizar a seção acima.
 
 ### Operation
-- **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum). Nasce de uma cotação (1:1). Um redator por turma.
+- **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum `em_andamento`|`concluida`, default `em_andamento`), `concluded_at` (timestamp NULL — ato do admin, RN-16). Nasce de uma cotação (1:1). Um redator por turma. **`habilitada` NÃO é estado persistido** — deriva em runtime de doc RN-16 completa (`TurmaHabilitacaoService`, spec 6d D3); conclusão é terminal (D5).
 - **enrollments** (matrículas) — `id PK`, `student_id FK`, `turma_id FK`, `notas` (json), `presenca_pct` (decimal), `status_aprovacao` (enum).
 
 ### Certification
