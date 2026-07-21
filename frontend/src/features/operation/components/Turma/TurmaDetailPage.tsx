@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { AppTabView, AppTabPanel, AppTag } from '@shared/ui'
 import { useTurmaDetail } from '../../hooks/useTurmaDetail'
 import { turmaDisplayStatus, turmaStatusSeverity } from '../../lib/turmaStatus'
+import { TurmaConfigCard } from './TurmaConfigCard'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation()
   const d = useTurmaDetail()
   const [tab, setTab] = useState(0)
+  const [editingConfig, setEditingConfig] = useState(false)
 
   if (d.loading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
   if (!d.turma) return <p className="p-4 text-sm text-slate-500">{t('operation.detail.notFound')}</p>
@@ -48,7 +50,13 @@ export function TurmaDetailPage() {
 
       <AppTabView activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
         <AppTabPanel header={t('operation.detail.tabs.config')}>
-          <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
+          <TurmaConfigCard
+            mode={editingConfig ? 'edit' : 'view'}
+            turma={turma}
+            onEdit={() => setEditingConfig(true)}
+            onCancel={() => setEditingConfig(false)}
+            onSaved={() => setEditingConfig(false)}
+          />
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.students')}>
           <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
