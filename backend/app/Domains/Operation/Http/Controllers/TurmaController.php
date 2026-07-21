@@ -12,6 +12,7 @@ use App\Domains\Operation\Actions\RemoveRedatorAction;
 use App\Domains\Operation\Actions\UpdateTurmaAction;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ManualPdfService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -23,7 +24,7 @@ class TurmaController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:operation.turma.view', only: ['index', 'show']),
+            new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual']),
             new Middleware('permission:operation.turma.create', only: ['store']),
             new Middleware('permission:operation.turma.update', only: ['update']),
             new Middleware('permission:operation.turma.delete', only: ['destroy']),
@@ -79,5 +80,13 @@ class TurmaController extends Controller implements HasMiddleware
         return TurmaData::fromModel($action->execute($turma)->load('redatores.user'))
             ->toResponse(request())
             ->setStatusCode(200);
+    }
+
+    public function manual(Turma $turma, ManualPdfService $manual): Response
+    {
+        return response($manual->render($turma), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"manual-turma-{$turma->id}.pdf\"",
+        ]);
     }
 }

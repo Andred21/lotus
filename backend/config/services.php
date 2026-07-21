@@ -28,6 +28,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'gotenberg' => [
+        // Conversor HTML→PDF (compose service `gotenberg`). Sprint 4 (certificados) reusa.
+        'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
