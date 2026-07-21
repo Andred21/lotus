@@ -4,9 +4,11 @@ namespace App\Domains\Commercial\Models;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
+use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable as AuditableTrait;
@@ -60,5 +62,11 @@ class Quote extends Model implements Auditable
     public function files(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /** Turma nascida desta cotação (1:1). Ausente até a config manual (6b). */
+    public function turma(): HasOne
+    {
+        return $this->hasOne(Turma::class);
     }
 }
