@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Http\Controllers;
 
+use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Actions\ConcludeTurmaAction;
@@ -10,6 +11,7 @@ use App\Domains\Operation\Actions\DeleteTurmaAction;
 use App\Domains\Operation\Actions\DesignateRedatorAction;
 use App\Domains\Operation\Actions\RemoveRedatorAction;
 use App\Domains\Operation\Actions\UpdateTurmaAction;
+use App\Domains\Operation\Data\PendingQuoteData;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ManualPdfService;
@@ -25,7 +27,7 @@ class TurmaController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual']),
-            new Middleware('permission:operation.turma.create', only: ['store']),
+            new Middleware('permission:operation.turma.create', only: ['store', 'pending']),
             new Middleware('permission:operation.turma.update', only: ['update']),
             new Middleware('permission:operation.turma.delete', only: ['destroy']),
             new Middleware('permission:operation.turma.assign_redator', only: ['designateRedator', 'removeRedator']),
@@ -43,6 +45,19 @@ class TurmaController extends Controller implements HasMiddleware
     {
         return Turma::query()->withListingData()->latest()->get()
             ->map(fn (Turma $t) => TurmaData::fromModel($t))
+            ->all();
+    }
+
+    /** @return array<PendingQuoteData> */
+    public function pending(): array
+    {
+        return Quote::query()
+            ->where('status', QuoteStatus::Approved)
+            ->whereDoesntHave('turma')
+            ->with(['budget.client', 'course'])
+            ->latest()
+            ->get()
+            ->map(fn (Quote $q) => PendingQuoteData::fromModel($q))
             ->all();
     }
 

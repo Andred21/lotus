@@ -113,6 +113,14 @@ name: string,
 previous_client: string | null,
 client: string,
 };
+export type PendingQuoteData = {
+quote_id: number,
+quote_code: string | null,
+budget_code: string | null,
+client_name: string,
+course_name: string,
+student_count: number,
+};
 export type PermissionData = {
 name: string,
 description: string,
