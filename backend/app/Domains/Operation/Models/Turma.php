@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -67,5 +68,20 @@ class Turma extends Model implements Auditable
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * RN-15 — blindagem: turma concluída não aceita mais escrita acadêmica.
+     * TODO caminho de escrita acadêmica chama isto: docs da turma (6d) e o
+     * futuro endpoint de notas/presença (sprint do redator). Matrícula já é
+     * bloqueada pelo gate "só em andamento" do 6c.
+     */
+    public function assertAcademicallyWritable(): void
+    {
+        if ($this->status === TurmaStatus::Concluida) {
+            throw ValidationException::withMessages([
+                'turma' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+            ]);
+        }
     }
 }
