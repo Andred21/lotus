@@ -102,4 +102,46 @@ class TurmaCrudTest extends TestCase
             'modalidade' => 'online', 'local_aplicacao' => null,
         ]))->assertCreated()->assertJsonPath('modalidade', 'online');
     }
+
+    public function test_lista_turmas(): void
+    {
+        $this->actingAsAdmin();
+        $quote = $this->makeQuote('approved');
+        $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())->assertCreated();
+
+        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(1);
+    }
+
+    public function test_mostra_turma(): void
+    {
+        $this->actingAsAdmin();
+        $quote = $this->makeQuote('approved');
+        $id = $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())->json('id');
+
+        $this->getJson("/api/turmas/{$id}")->assertOk()->assertJsonPath('id', $id);
+    }
+
+    public function test_edita_campos_basicos_da_turma(): void
+    {
+        $this->actingAsAdmin();
+        $quote = $this->makeQuote('approved');
+        $id = $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())->json('id');
+
+        $this->putJson("/api/turmas/{$id}", $this->payload([
+            'modalidade' => 'online', 'local_aplicacao' => null, 'end_date' => '2026-08-15',
+        ]))->assertOk()
+            ->assertJsonPath('modalidade', 'online')
+            ->assertJsonPath('end_date', '2026-08-15')
+            ->assertJsonPath('status', 'em_andamento');   // update não mexe no status
+    }
+
+    public function test_remove_turma_soft_delete(): void
+    {
+        $this->actingAsAdmin();
+        $quote = $this->makeQuote('approved');
+        $id = $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())->json('id');
+
+        $this->deleteJson("/api/turmas/{$id}")->assertNoContent();
+        $this->assertSoftDeleted('turmas', ['id' => $id]);
+    }
 }
