@@ -181,6 +181,12 @@ habilitada: undefined | boolean,
 missing_document_types: string[],
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
+course_name: undefined | string,
+client_name: undefined | string,
+enrolled_count: undefined | number,
+quote_code: undefined | string | null,
+budget_code: undefined | string | null,
+budget_id: undefined | number | null,
 };
 export type TurmaDocumentData = {
 id: number,

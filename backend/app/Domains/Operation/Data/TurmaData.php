@@ -35,6 +35,12 @@ class TurmaData extends Data
         public string|null|Optional $concluded_at,
         /** @var TurmaRedatorData[] */
         public array|Optional $redatores = [],
+        public string|Optional $course_name = new Optional,
+        public string|Optional $client_name = new Optional,
+        public int|Optional $enrolled_count = new Optional,
+        public string|null|Optional $quote_code = new Optional,
+        public string|null|Optional $budget_code = new Optional,
+        public int|null|Optional $budget_id = new Optional,
     ) {}
 
     public static function rules(): array
@@ -64,6 +70,12 @@ class TurmaData extends Data
             missing_document_types: $habilitacao->missingTypes($turma),
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
+            course_name: $turma->course->name,
+            client_name: $turma->quote->budget->client->legal_name,
+            enrolled_count: $turma->enrollments_count ?? $turma->enrollments()->count(),
+            quote_code: $turma->quote->code,
+            budget_code: $turma->quote->budget->code,
+            budget_id: $turma->quote->budget->id,
         );
     }
 }

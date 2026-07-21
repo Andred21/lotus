@@ -59,7 +59,7 @@ class QuoteData extends Data
             value_uf: (string) $quote->value_uf,
             status: $quote->status,
             approved_at: $quote->approved_at?->toIso8601String(),
-            code: "Scap {$quote->budget_id} - Cot {$quote->seq_in_budget}",
+            code: $quote->code,
             purchase_order: $quote->purchase_order,
             planned_start_date: $quote->planned_start_date?->toDateString(),
             planned_end_date: $quote->planned_end_date?->toDateString(),

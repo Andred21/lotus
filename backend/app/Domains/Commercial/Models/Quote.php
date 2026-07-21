@@ -54,6 +54,12 @@ class Quote extends Model implements Auditable
         return $this->belongsTo(Budget::class);
     }
 
+    /** Composto calculado (ADR-17), nunca persistido — fonte única do "código" da cotação. */
+    public function getCodeAttribute(): string
+    {
+        return "Scap {$this->budget_id} - Cot {$this->seq_in_budget}";
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
