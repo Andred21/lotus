@@ -4,14 +4,14 @@ namespace Tests\Feature\Operation;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
-use App\Domains\Commercial\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
@@ -51,7 +51,7 @@ class ImportStudentsActionTest extends TestCase
     private function xlsx(array $rows): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
-        $writer = new XlsxWriter();
+        $writer = new XlsxWriter;
         $writer->openToFile($path);
         $writer->addRow(Row::fromValues(['RUT', 'Nombre', 'Email', 'Teléfono']));
         foreach ($rows as $row) {

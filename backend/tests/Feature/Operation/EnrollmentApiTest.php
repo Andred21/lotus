@@ -72,7 +72,7 @@ class EnrollmentApiTest extends TestCase
     {
         $this->actingAsAdmin();
         $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
-        $writer = new XlsxWriter();
+        $writer = new XlsxWriter;
         $writer->openToFile($path);
         $writer->addRow(Row::fromValues(['RUT', 'Nombre', 'Email', 'Teléfono']));
         $writer->addRow(Row::fromValues(['11.111.111-1', 'Juan Soto', 'juan@acme.cl', '']));

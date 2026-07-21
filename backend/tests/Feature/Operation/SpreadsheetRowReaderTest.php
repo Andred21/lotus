@@ -13,7 +13,7 @@ class SpreadsheetRowReaderTest extends TestCase
     private function makeXlsx(array $rows): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
-        $writer = new XlsxWriter();
+        $writer = new XlsxWriter;
         $writer->openToFile($path);
         foreach ($rows as $row) {
             $writer->addRow(Row::fromValues($row));
@@ -44,7 +44,7 @@ class SpreadsheetRowReaderTest extends TestCase
             ['22.222.222-2', 'Ana Rojas', '', ''],
         ]);
 
-        $rows = iterator_to_array((new SpreadsheetRowReader())->rows($file), false);
+        $rows = iterator_to_array((new SpreadsheetRowReader)->rows($file), false);
 
         $this->assertCount(2, $rows);
         $this->assertSame(2, $rows[0]['row']);
@@ -62,7 +62,7 @@ class SpreadsheetRowReaderTest extends TestCase
             ['11.111.111-1', 'Juan Soto', 'juan@acme.cl', ''],
         ]);
 
-        $rows = iterator_to_array((new SpreadsheetRowReader())->rows($file), false);
+        $rows = iterator_to_array((new SpreadsheetRowReader)->rows($file), false);
 
         $this->assertCount(1, $rows);
         $this->assertSame('Juan Soto', $rows[0]['name']);
@@ -78,7 +78,7 @@ class SpreadsheetRowReaderTest extends TestCase
             ['22.222.222-2', 'Ana Rojas', '', ''],
         ]);
 
-        $rows = iterator_to_array((new SpreadsheetRowReader())->rows($file), false);
+        $rows = iterator_to_array((new SpreadsheetRowReader)->rows($file), false);
 
         $this->assertCount(2, $rows);
         $this->assertSame(2, $rows[0]['row']);

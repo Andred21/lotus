@@ -6,7 +6,6 @@ use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Actions\RemoveEnrollmentAction;
 use App\Domains\Operation\Data\EnrollmentData;
-use App\Domains\Operation\Data\ImportResultData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
