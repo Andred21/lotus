@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Operation\Http\Controllers\EnrollmentController;
 use App\Domains\Operation\Http\Controllers\TurmaController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,4 +13,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('quotes/{quote}/turma', [TurmaController::class, 'store']);
     Route::post('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'designateRedator']);
     Route::delete('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'removeRedator']);
+
+    Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
+    Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
+    Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import']);
+    Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])
+        ->scopeBindings();
 });
