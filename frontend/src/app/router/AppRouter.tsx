@@ -11,6 +11,7 @@ import { PeoplePage } from '@features/identity/components/PeoplePage'
 import { AdministracionPage } from '@features/identity/components/AdministracionPage'
 import { CatalogPage } from '@features/catalog/components/CatalogPage'
 import { OperationPage } from '@features/operation/components/OperationPage'
+import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetailPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -38,6 +39,7 @@ export function AppRouter() {
           <Route path="/comercial" element={<CommercialPage />} />
           <Route path="/comercial/presupuestos/:id" element={<BudgetDetailPage />} />
           <Route path="/operacion" element={<OperationPage />} />
+          <Route path="/operacion/turmas/:id" element={<TurmaDetailPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
           <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
           <Route path="/personas" element={<PeoplePage />} />
