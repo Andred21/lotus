@@ -27,7 +27,7 @@ class StudentResolver
     public function resolveByRut(
         string $rut,
         string $name,
-        string $email,
+        ?string $email,
         ?string $phone,
         Client $client,
     ): StudentResolution {
@@ -50,6 +50,14 @@ class StudentResolver
         return DB::transaction(function () use ($user, $name, $rut, $email, $phone, $client) {
             // Aluno novo: provisiona o User (inativo, sem role) e cria o Student.
             if ($user === null) {
+                // Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há
+                // como provisionar o User. Vira ValidationException por linha, nunca 500.
+                if ($email === null || $email === '') {
+                    throw ValidationException::withMessages([
+                        'email' => 'E-mail é obrigatório para aluno novo.',
+                    ]);
+                }
+
                 // Colisão de e-mail vira ValidationException por linha (chave email),
                 // inclusive contra soft-deletados — nunca 500 que aborta a planilha.
                 $this->provisioner->ensureEmailAvailable($email);

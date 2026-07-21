@@ -122,4 +122,28 @@ class StudentResolverTest extends TestCase
         $this->assertFalse($result->student->trashed());
         $this->assertFalse($result->student->user->trashed());
     }
+
+    public function test_aluno_novo_sem_email_recusa_por_linha(): void
+    {
+        $client = $this->makeClient('A');
+
+        $this->expectException(ValidationException::class);
+        try {
+            $this->resolver()->resolveByRut('11.111.111-1', 'Juan Soto', null, null, $client);
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('email', $e->errors());
+            throw $e;
+        }
+    }
+
+    public function test_aluno_existente_sem_email_resolve_normal(): void
+    {
+        $client = $this->makeClient('A');
+        // cria o aluno com email (1ª passada)
+        $first = $this->resolver()->resolveByRut('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null, $client);
+        // 2ª passada SEM email: email só é usado no ramo de criação
+        $again = $this->resolver()->resolveByRut('11.111.111-1', 'Juan Soto', null, null, $client);
+
+        $this->assertSame($first->student->id, $again->student->id);
+    }
 }
