@@ -10,7 +10,12 @@ return new class extends Migration
     {
         Schema::create('student_client_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
+            // restrictOnDelete (não cascade): o InnoDB proíbe ON DELETE CASCADE numa FK cuja coluna
+            // uma coluna gerada STORED referencia — e open_link_student_id depende de student_id
+            // (MySQL erro 1215; sqlite ignora, por isso só a prova contra MySQL pegou). Não muda
+            // comportamento: soft-delete de aluno não dispara FK de banco (é o hook deleting que
+            // cascateia p/ o user); o histórico é append-only e não deve sumir por hard-delete.
+            $table->foreignId('student_id')->constrained('students')->restrictOnDelete();
             $table->foreignId('client_id')->constrained('clients')->restrictOnDelete();
             $table->date('started_on');
             $table->date('ended_on')->nullable();
