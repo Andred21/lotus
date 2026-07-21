@@ -37,7 +37,7 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function store(TurmaData $data, Quote $quote, CreateTurmaAction $action): TurmaData
     {
-        return TurmaData::fromModel($action->execute($quote, $data)->load('redatores.user'));
+        return $this->present($action->execute($quote, $data));
     }
 
     /** @return array<TurmaData> */
@@ -63,12 +63,12 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function show(Turma $turma): TurmaData
     {
-        return TurmaData::fromModel($turma->load('redatores.user'));
+        return $this->present($turma);
     }
 
     public function update(TurmaData $data, Turma $turma, UpdateTurmaAction $action): TurmaData
     {
-        return TurmaData::fromModel($action->execute($turma, $data));
+        return $this->present($action->execute($turma, $data));
     }
 
     public function destroy(Turma $turma, DeleteTurmaAction $action): Response
@@ -80,19 +80,19 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action): JsonResponse
     {
-        return TurmaData::fromModel($action->execute($turma, $redator))
+        return $this->present($action->execute($turma, $redator))
             ->toResponse(request())
             ->setStatusCode(200);
     }
 
     public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action): TurmaData
     {
-        return TurmaData::fromModel($action->execute($turma, $redator));
+        return $this->present($action->execute($turma, $redator));
     }
 
     public function conclude(Turma $turma, ConcludeTurmaAction $action): JsonResponse
     {
-        return TurmaData::fromModel($action->execute($turma)->load('redatores.user'))
+        return $this->present($action->execute($turma))
             ->toResponse(request())
             ->setStatusCode(200);
     }
@@ -103,5 +103,10 @@ class TurmaController extends Controller implements HasMiddleware
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "inline; filename=\"manual-turma-{$turma->id}.pdf\"",
         ]);
+    }
+
+    private function present(Turma $turma): TurmaData
+    {
+        return TurmaData::fromModel(Turma::query()->withListingData()->findOrFail($turma->id));
     }
 }
