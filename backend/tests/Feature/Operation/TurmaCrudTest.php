@@ -144,4 +144,22 @@ class TurmaCrudTest extends TestCase
         $this->deleteJson("/api/turmas/{$id}")->assertNoContent();
         $this->assertSoftDeleted('turmas', ['id' => $id]);
     }
+
+    public function test_recria_turma_apos_soft_delete(): void
+    {
+        $this->actingAsAdmin();
+        $quote = $this->makeQuote('approved');
+
+        $id = $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())
+            ->assertCreated()->json('id');
+        $this->deleteJson("/api/turmas/{$id}")->assertNoContent();
+
+        // recriar p/ a mesma cotação: a turma deletada não pode bloquear (nem 500).
+        $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('status', 'em_andamento');
+
+        $this->assertSame(1, Turma::where('quote_id', $quote->id)->count());
+        $this->assertSame(2, Turma::withTrashed()->where('quote_id', $quote->id)->count());
+    }
 }
