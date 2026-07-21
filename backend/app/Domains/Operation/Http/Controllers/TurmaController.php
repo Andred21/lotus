@@ -41,7 +41,7 @@ class TurmaController extends Controller implements HasMiddleware
     /** @return array<TurmaData> */
     public function index(): array
     {
-        return Turma::with('redatores.user')->get()
+        return Turma::query()->withListingData()->latest()->get()
             ->map(fn (Turma $t) => TurmaData::fromModel($t))
             ->all();
     }

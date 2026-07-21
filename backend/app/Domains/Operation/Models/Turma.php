@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -83,5 +85,11 @@ class Turma extends Model implements Auditable
                 'turma' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
             ]);
         }
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): TurmaQueryBuilder
+    {
+        return new TurmaQueryBuilder($query);
     }
 }
