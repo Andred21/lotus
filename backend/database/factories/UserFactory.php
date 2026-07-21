@@ -55,4 +55,12 @@ class UserFactory extends Factory
             'type' => 'redator',
         ]);
     }
+
+    public function aluno(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'aluno',
+            'is_active' => false,
+        ]);
+    }
 }
