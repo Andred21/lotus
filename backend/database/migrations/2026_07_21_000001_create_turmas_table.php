@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('turmas', function (Blueprint $table) {
             $table->id();
             // 1:1 com a cotação. RESTRICT: cotação não some com turma viva.
-            $table->foreignId('quote_id')->constrained('quotes')->restrictOnDelete()->unique();
+            $table->foreignId('quote_id')->unique()->constrained('quotes')->restrictOnDelete();
             $table->foreignId('course_id')->constrained('courses');   // derivado da quote
             $table->enum('modalidade', ['presencial', 'online']);
             $table->string('local_aplicacao')->nullable();            // exigido só se presencial (validação DTO)

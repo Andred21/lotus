@@ -10,6 +10,7 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,5 +64,23 @@ class TurmaModelTest extends TestCase
 
         $this->assertDatabaseHas('turma_redator', ['turma_id' => $turma->id, 'redator_id' => $redator->id]);
         $this->assertSame(1, $turma->redatores()->count());
+    }
+
+    public function test_quote_id_unico_bloqueia_segunda_turma(): void
+    {
+        $quote = $this->makeApprovedQuote();
+        Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $quote->course_id,
+            'modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Santiago',
+            'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
+        ]);
+
+        $this->expectException(QueryException::class);
+
+        Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $quote->course_id,
+            'modalidade' => TurmaModalidade::Online, 'local_aplicacao' => null,
+            'start_date' => '2026-09-01', 'end_date' => '2026-09-10',
+        ]);
     }
 }
