@@ -13,6 +13,7 @@ use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             'course_certificate_template' => CourseCertificateTemplate::class,
             'course_module' => CourseModule::class,
             'turma' => Turma::class,
+            'enrollment' => Enrollment::class,
             'budget' => Budget::class,
             'quote' => Quote::class,
             'file' => File::class,
