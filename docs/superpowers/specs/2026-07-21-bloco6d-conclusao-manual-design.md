@@ -21,8 +21,8 @@ demanda (RF-TUR-04) — HTML Blade → PDF via Gotenberg, estreando o caminho qu
 - `TurmaHabilitacaoService` (RN-16 derivada) + `assertAcademicallyWritable` (RN-15 mecanismo).
 - `ConcludeTurmaAction` (terminal) + rota `POST turmas/{turma}/conclude`.
 - Manual PDF sob demanda: Blade única + `ManualPdfService` (Gotenberg).
-- 2 permissões novas (`operation.turma.docs_manage`, `operation.turma.conclude`) no
-  catálogo/seeder.
+- Consumo das permissões **já existentes** `operation.turma.submit_docs` e
+  `operation.turma.complete` (D9 — nada novo no catálogo/seeder).
 - `TurmaData` estendido (`habilitada`, `missing_document_types`, `concluded_at`) +
   `TurmaDocumentData`; regen `generated.ts` com consumidores ajustados no mesmo commit (lição #11).
 - Prova e2e contra **MySQL + Gotenberg reais** (lição #15).
@@ -40,7 +40,7 @@ demanda (RF-TUR-04) — HTML Blade → PDF via Gotenberg, estreando o caminho qu
 
 | # | Decisão | Fundamento |
 |---|---------|-----------|
-| D1 | **Escopo A**: 6d entrega upload de doc da turma agora, agnóstico de quem chama — hoje o admin secretaria o redator; a sprint do redator só muda quem tem a permissão. | João. Sem isso, RN-16 nasceria improvável (interface do redator é sprint futura). |
+| D1 | **Escopo A**: 6d entrega upload de doc da turma agora, agnóstico de quem chama. **Permissões ficam como o seeder já decidiu** (D9): `submit_docs` = redator + superadmin; o redator já autentica (RN-01) — falta tela, não backend; superadmin cobre a secretaria de emergência. | João. Sem isso, RN-16 nasceria improvável (interface do redator é sprint futura). |
 | D2 | **RN-16 exige 3 tipos**: `MANUAL`, `PRUEBAS`, `EVALUACION_REDATOR` — ≥1 arquivo ativo de **cada**. Feedback do cliente fica fora (é da OS, módulo futuro). | RF-RED-07 literal; João. |
 | D3 | **`habilitada` é derivada em runtime, não persistida.** Coluna `status` guarda só `em_andamento`/`concluida`. | João. Mesmo padrão do Budget (status derivado, Bloco 0) — sem 2ª fonte de verdade que dessincroniza quando um doc some. |
 | D4 | **Endpoint de notas fica fora**; 6d entrega só o guard RN-15 e o aplica nos caminhos existentes. Admin não ganha caminho de nota (RN-02). | João. |
@@ -48,6 +48,7 @@ demanda (RF-TUR-04) — HTML Blade → PDF via Gotenberg, estreando o caminho qu
 | D6 | **Manual = Blade única padronizada no repo**, não template por curso. | João + `modulo-operacao.md` ("de forma padronizada"). |
 | D7 | **Saída do manual = PDF via Gotenberg**, stream, não materializado. | João. Manual é impresso/assinado em campo e volta escaneado; Sprint 4 reusa o caminho. |
 | D8 | **N arquivos por tipo; remoção individual.** Sem replace-por-tipo (molde do redator não se aplica: provas dos alunos são plural real). | João. |
+| D9 | **Nenhuma permissão nova.** `operation.turma.complete` e `operation.turma.submit_docs` **já existem** no catálogo/seeder (achado no planejamento). `complete` = admin+superadmin; `submit_docs` = redator+superadmin (exclusão do admin é deliberada no seeder — mantida). | João, 2026-07-21. |
 
 ## 3. Schema (migration)
 
@@ -140,18 +141,18 @@ aplicação; concluída ainda pode reimprimir).
 
 ## 6. HTTP
 
-### Permissões (novas no `PermissionCatalog` + seeder)
-- `operation.turma.docs_manage` — upload/remoção de documentos da turma.
-- `operation.turma.conclude` — confirmar conclusão. **Segregada do `update` de propósito**: é o
-  ato de peso legal (RN-16); role customizada pode dar update sem dar conclude.
-- Chaves i18n `perm.*`/`permGroup.*` das 2 → **pendência** (junta com P-07, entrega no
-  6-frontend).
+### Permissões (existentes — D9, nada novo)
+- `operation.turma.submit_docs` — upload/remoção de documentos da turma (redator + superadmin;
+  admin comum → 403, segregação deliberada do seeder).
+- `operation.turma.complete` — confirmar conclusão (admin + superadmin). Já segregada do
+  `update`: é o ato de peso legal (RN-16).
+- Chaves i18n `perm.*` das 2 → **pendência** (junta com P-07, entrega no 6-frontend).
 
 ### `Http/Controllers/TurmaDocumentController.php` (`HasMiddleware`)
 ```
 GET    turmas/{turma}/documents           operation.turma.view          → array<TurmaDocumentData>
-POST   turmas/{turma}/documents           operation.turma.docs_manage   → TurmaDocumentData (201)
-DELETE turmas/{turma}/documents/{file}    operation.turma.docs_manage   → 204
+POST   turmas/{turma}/documents           operation.turma.submit_docs   → TurmaDocumentData (201)
+DELETE turmas/{turma}/documents/{file}    operation.turma.submit_docs   → 204
 ```
 - POST multipart: `type` (`in:` valores do enum) + `file` (`mimes:pdf`, max 10MB — molde do
   upload do redator). Validação via FormRequest/inline no controller como o
@@ -161,7 +162,7 @@ DELETE turmas/{turma}/documents/{file}    operation.turma.docs_manage   → 204
 
 ### `TurmaController` (existente) — adições
 ```
-POST turmas/{turma}/conclude              operation.turma.conclude      → TurmaData (200)
+POST turmas/{turma}/conclude              operation.turma.complete      → TurmaData (200)
 GET  turmas/{turma}/manual                operation.turma.view          → PDF stream
 ```
 `conclude` retorna 200 com `TurmaData` atualizado (padrão do `designateRedator` 6b: ação sobre
@@ -187,7 +188,8 @@ recurso existente → 200, não 201).
 9. **RN-15**: upload e delete pós-conclusão → 422 — regressão vista **falhar** contra o código
    sem o guard (lição #10).
 10. DELETE cross-turma → 404 (scoped binding).
-11. Sem permissão (`docs_manage`/`conclude`) → 403.
+11. Permissão: **admin comum** em POST/DELETE documents → 403 (prova a segregação D9);
+    redator (role) sobe doc → 201; usuário sem `complete` no conclude → 403.
 12. Manual: service renderiza com Gotenberg fake (`Http::fake`) e o request contém o HTML; o
     conteúdo do Blade (curso, módulos, alunos) é asserido no HTML renderizado.
 
