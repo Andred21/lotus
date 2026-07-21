@@ -143,7 +143,8 @@ execute(Turma $turma, Redator $redator): Turma
   `end_date`, `status`, `redatores` (lista tipada mínima — `id` + nome via user, read-only).
 - `rules()` / atributos de validação:
   - `modalidade` `in:presencial,online` required.
-  - `local_aplicacao` `required_if:modalidade,presencial`, senão nullable.
+  - `local_aplicacao` `required_if:modalidade,presencial`, senão nullable opcional (João:
+    não forçar `null` no `online` — valor eventual sobrando é aceitável).
   - `start_date` / `end_date` date required; `end_date >= start_date`.
   - **sem** `course_id` no input (derivado). `quote_id` vem da rota, não do corpo.
 - `fromModel(Turma)` para saída.
@@ -203,8 +204,9 @@ mostrou que só o MySQL real pega constraint de FK). Cobre:
 
 ## 9. Divergências a reconciliar (doc-sync futura)
 
+João (2026-07-21): **registrar em `pendencias.md`, não fechar a doc no 6b.** O plano inclui uma
+task que adiciona a pendência:
 - **der-fisico**: `turmas.redator_id` FK → agora é pivot `turma_redator` N:N (D5). Atualizar a
   linha de `turmas` e a relação `redatores 1:N → turmas`.
 - **der-fisico** lista `turmas` em "PLANEJADAS"; mover para implementadas com nomes em inglês
   finais e colunas reais.
-- Registrar em `pendencias.md` se a divergência não for fechada no mesmo bloco.
