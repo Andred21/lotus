@@ -21,7 +21,8 @@ o `StudentResolver` do 6a sobre a `Turma` do 6b. Notas/presença/aprovação sã
   `ImportStudentsAction` + `SpreadsheetRowReader` (openspout).
 - `EnrollmentData` / `ImportResultData` (`#[TypeScript]`, regen `generated.ts`).
 - Endpoints: individual, importar, remover, listar (rotas nested de `turmas`).
-- Permissão `operation.turma.enroll` (catálogo + seeder).
+- Ajuste no `StudentResolver` (6a): `email` vira `?string`; ramo de criação sem email lança
+  `ValidationException` (D9).
 - Prova e2e contra **MySQL** (lição #15).
 
 **Fora (não implementar):**
@@ -40,7 +41,8 @@ o `StudentResolver` do 6a sobre a `Turma` do 6b. Notas/presença/aprovação sã
 | D5 | Parser = **openspout/openspout** (xlsx+csv, streaming, leve). | Proporcionalidade (~10 usuários). maatwebsite = superdimensionado; csv-only contraria RF-ALU-02. |
 | D6 | Duplicata (mesmo RUT 2× na planilha, ou reimport) = outcome `already_enrolled`, idempotente, não é erro. | Reimport de planilha corrigida precisa ser seguro. |
 | D7 | Remoção = **soft-delete** do enrollment; re-matricular **restaura** o mesmo registro. | Unique composto + soft-delete (lição #8): o par removido ocupa o índice — restore, nunca 2º insert. Histórico não duplica. |
-| D8 | Chaves i18n `perm.*` da permissão nova ficam como pendência para o 6-frontend. | Bloco backend-only não toca `frontend/`. |
+| D8 | Permissão = **`operation.enrollment.manage`** (JÁ existe no `PermissionCatalog` e no seeder — nada novo nasce). Chaves i18n `perm.*` dela ficam como pendência para o 6-frontend. | Catálogo já previa o Fluxo 3; bloco backend-only não toca `frontend/`. |
+| D9 | Linha sem email com RUT de aluno **novo** = erro por linha (`email` obrigatório para criar; `users.email` é NOT NULL+unique). Aluno **existente** aceita linha sem email (email só é usado no ramo de criação). | João, 2026-07-21. Sem email sintético (polui dado de peso legal), sem mexer no schema de Identity. |
 
 ## 3. Schema — `enrollments` (inglês, der-fisico)
 
@@ -125,12 +127,13 @@ DELETE /api/turmas/{turma}/alunos/{enrollment}          → 204   (scoped bindin
 ```
 
 ### Controller `EnrollmentController` (`HasMiddleware`)
-`operation.turma.view` → index · `operation.turma.enroll` → store/import/destroy. Fino: binding +
+`operation.turma.view` → index · `operation.enrollment.manage` → store/import/destroy. Fino: binding +
 Action + `Data::fromModel`.
 
 ### Permissão
-`operation.turma.enroll` no `PermissionCatalog` (+ descrição dev-facing) + seeder. Chaves
-`perm.*` dos 3 locales = pendência do 6-frontend (D8) — registrar em `docs/pendencias.md`.
+`operation.enrollment.manage` — **já existe** no `PermissionCatalog`/seeder (D8); este bloco só a
+usa no middleware. Chaves `perm.*` dos 3 locales = pendência do 6-frontend — registrar em
+`docs/pendencias.md`.
 
 ### DTOs
 - **`EnrollmentData`** (`#[TypeScript]`): `id`, `turma_id`, `student_id`, achata user (`name`,
@@ -150,6 +153,7 @@ Action + `Data::fromModel`.
 |---|---|
 | RUT inválido na linha | erro por linha no resumo; import segue |
 | RUT de redator/admin/cliente | erro por linha (`StudentResolver`, tipo conflitante) |
+| Linha sem email, aluno novo | erro por linha (D9); aluno existente sem email passa |
 | Mesmo RUT 2× na planilha | 1ª matricula, 2ª `already_enrolled` (D6) |
 | Reimport da mesma planilha | tudo `already_enrolled`; estado final idêntico |
 | Aluno vinculado a outro cliente | matricula E reporta em `moved[]` com cliente anterior |
@@ -185,7 +189,7 @@ ADR-10 (morph alias `enrollment`), ADR-04 (tipos gerados). Leis §5 (aluno não 
 
 ## 9. Follow-ups (não são 6c)
 
-- Chaves `perm.*` de `operation.turma.enroll` nos 3 locales → 6-frontend (registrar em
+- Chaves `perm.*` de `operation.enrollment.manage` nos 3 locales → 6-frontend (registrar em
   `pendencias.md`).
 - `der-fisico.md`: mover `enrollments` para implementadas (inglês, colunas reais) — fechamento.
 - 6d: escrita de notas/presença/aprovação + RN-15/16 + manual.
