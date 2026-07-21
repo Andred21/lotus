@@ -4,6 +4,7 @@ import { AppTabView, AppTabPanel, AppTag } from '@shared/ui'
 import { useTurmaDetail } from '../../hooks/useTurmaDetail'
 import { turmaDisplayStatus, turmaStatusSeverity } from '../../lib/turmaStatus'
 import { TurmaConfigCard } from './TurmaConfigCard'
+import { RedatorDesignation } from './RedatorDesignation'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation()
@@ -62,7 +63,7 @@ export function TurmaDetailPage() {
           <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.redator')}>
-          <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
+          <RedatorDesignation turma={turma} />
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.docs')}>
           <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
