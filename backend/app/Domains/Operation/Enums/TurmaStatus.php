@@ -3,12 +3,12 @@
 namespace App\Domains\Operation\Enums;
 
 /**
- * Estados da turma (máquina de 3 estados). 6b só nasce em EmAndamento;
- * Habilitada/Concluida são transições do 6d (conclusão).
+ * Estados PERSISTIDOS da turma. 'habilitada' não é estado de coluna: é
+ * derivação em runtime (TurmaHabilitacaoService — doc RN-16 completa) sobre
+ * uma turma em andamento. Conclusão é terminal (spec 6d, D5).
  */
 enum TurmaStatus: string
 {
     case EmAndamento = 'em_andamento';
-    case Habilitada = 'habilitada';
     case Concluida = 'concluida';
 }

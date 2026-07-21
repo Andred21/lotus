@@ -33,7 +33,7 @@ class Turma extends Model implements Auditable
 
     protected $auditInclude = [
         'quote_id', 'course_id', 'modalidade', 'local_aplicacao',
-        'start_date', 'end_date', 'status',
+        'start_date', 'end_date', 'status', 'concluded_at',
     ];
 
     protected $casts = [
@@ -41,6 +41,7 @@ class Turma extends Model implements Auditable
         'status' => TurmaStatus::class,
         'start_date' => 'date',
         'end_date' => 'date',
+        'concluded_at' => 'datetime',
     ];
 
     public function quote(): BelongsTo

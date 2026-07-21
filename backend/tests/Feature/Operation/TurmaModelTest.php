@@ -12,6 +12,7 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class TurmaModelTest extends TestCase
@@ -64,6 +65,23 @@ class TurmaModelTest extends TestCase
 
         $this->assertDatabaseHas('turma_redator', ['turma_id' => $turma->id, 'redator_id' => $redator->id]);
         $this->assertSame(1, $turma->redatores()->count());
+    }
+
+    public function test_concluded_at_nasce_nulo_e_casta_datetime(): void
+    {
+        $quote = $this->makeApprovedQuote();
+        $turma = Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $quote->course_id,
+            'modalidade' => TurmaModalidade::Online, 'local_aplicacao' => null,
+            'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
+        ]);
+
+        $this->assertNull($turma->fresh()->concluded_at);
+
+        $turma->concluded_at = now();
+        $turma->save();
+
+        $this->assertInstanceOf(Carbon::class, $turma->fresh()->concluded_at);
     }
 
     public function test_quote_id_unico_bloqueia_segunda_turma(): void

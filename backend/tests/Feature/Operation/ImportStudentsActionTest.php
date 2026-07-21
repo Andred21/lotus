@@ -102,7 +102,7 @@ class ImportStudentsActionTest extends TestCase
 
     public function test_turma_fora_de_andamento_recusa_422(): void
     {
-        $this->turma->update(['status' => TurmaStatus::Habilitada]);
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
 
         $this->expectException(ValidationException::class);
         app(ImportStudentsAction::class)->execute($this->turma, $this->xlsx([]));
