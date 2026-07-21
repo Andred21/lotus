@@ -40,7 +40,7 @@ class TurmaDesignationTest extends TestCase
         ]);
     }
 
-    private function makeRedator(bool $habilitado, ?string $reufValidUntil): Redator
+    private function makeRedator(bool $habilitado, string|false|null $reufValidUntil): Redator
     {
         $r = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
         if ($habilitado) {
