@@ -29,6 +29,11 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **SEMPRE:** `docs/superpowers/progress.md` — índice vivo versionado (1 linha por feature:
   o que foi construído, o desfecho, o contexto que ele exige e onde estão plano/spec). Barato e ancora a sessão.
   Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
+- **SE o bloco possuir Context Packet:** leia o packet apontado pelo `progress.md` antes de qualquer
+  consulta a Drive, Notion ou Figma. Se estiver `ready` e seus fingerprints ainda corresponderem ao
+  plano/spec ativos, use-o como snapshot do contexto externo e NÃO consulte novamente essas fontes.
+  Consulte a fonte externa somente se o packet estiver ausente, `partial`, `blocked`, stale ou se o
+  João solicitar verificação direta. O packet não substitui plano, spec, rules, ADRs ou código.
 - **SE a task implementa ou altera uma feature:** leia o plano e o spec apontados pelo
   `progress.md`, além do que a coluna **Contexto** listar. Se a entrada ainda não apontar caminhos,
   use os arquivos ativos correspondentes em `docs/superpowers/plans/` e `docs/superpowers/specs/`.
@@ -36,13 +41,14 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task-a-task
   (não versionado). Só para detalhe fino; a âncora canônica é o versionado acima.
 
-| Doc                               | Consulte antes de                                               |
-| --------------------------------- | ----------------------------------------------------------------|
-| `docs/adrs.md`                    | qualquer decisão de stack, padrão, estrutura ou infra           |
-| `docs/der-fisico.md`              | criar migration/model ou mexer em schema                        |
-| `docs/estrutura-monolito.md`      | criar arquivo novo — para saber ONDE ele vai                    |
-| `docs/README.md` (lições)         | iniciar feature — não repetir erro já mapeado                   |
-| `docs/pendencias.md`              | antes de reportar divergência de doc — pode já estar registrada |
+| Doc                                 | Consulte antes de                                               |
+| ------------------------------------|-----------------------------------------------------------------|
+| `docs/adrs.md`                      | qualquer decisão de stack, padrão, estrutura ou infra           |
+| `docs/der-fisico.md`                | criar migration/model ou mexer em schema                        |
+| `docs/estrutura-monolito.md`        | criar arquivo novo — para saber ONDE ele vai                    |
+| `docs/README.md` (lições)           | iniciar feature — não repetir erro já mapeado                   |
+| `docs/pendencias.md`                | antes de reportar divergência de doc — pode já estar registrada |
+| `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
 
 > Planejamento canônico: Google Drive (`Viagem Chile/Projetos/Lotus.cl/V2`).
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).

@@ -16,6 +16,9 @@ Nesta fase, o Codex é um agente auxiliar de **leitura, revisão e investigaçã
   alteração necessária sem tentar contornar a restrição.
 - Quando chamado pelo plugin do Claude Code, trate o pedido recebido como o escopo completo. Não
   amplie a tarefa nem importe contexto adicional sem necessidade.
+- **Exceção controlada:** quando a skill `lotus-context-packet` for invocada, consulte somente as
+  fontes externas exigidas pelo bloco e retorne o packet conforme o contrato da skill. Essa exceção
+  autoriza leitura externa seletiva, não escrita no workspace nem mudança de estado do Superpowers.
 
 ## 2. Bootstrap obrigatório e seletivo
 
@@ -87,3 +90,6 @@ Ao concluir, informe de forma objetiva:
 3. alterações realizadas — nesta fase, normalmente nenhuma;
 4. comandos e testes realmente executados, com resultado;
 5. limitações, riscos e decisões pendentes.
+
+Quando uma skill definir um contrato de saída mais estrito, o contrato da skill prevalece sobre
+esta estrutura genérica.
