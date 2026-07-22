@@ -26,13 +26,21 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
   }
 
   const close = () => {
+    if (importMutation.isPending) return
     setResult(null)
     importMutation.reset()
     onHide()
   }
 
   return (
-    <AppDialog visible={visible} header={t('operation.enrollment.import.title')} onHide={close}>
+    <AppDialog
+      visible={visible}
+      header={t('operation.enrollment.import.title')}
+      onHide={close}
+      closable={!importMutation.isPending}
+      closeOnEscape={!importMutation.isPending}
+      dismissableMask={false}
+    >
       <div className="space-y-4">
         {!result && (
           <>
