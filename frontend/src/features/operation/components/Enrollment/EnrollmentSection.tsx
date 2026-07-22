@@ -5,18 +5,25 @@ import type { TurmaData } from '@shared/types/generated'
 import { useEnrollmentSection } from '../../hooks/useEnrollmentSection'
 import { EnrollmentTable } from './EnrollmentTable'
 import { EnrollStudentForm } from './EnrollStudentForm'
+import { ImportDialog } from './ImportDialog'
 
-// Botão de importar planilha entra na Task 6.
 export function EnrollmentSection({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useEnrollmentSection(turma)
   const [addOpen, setAddOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   if (s.loading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
 
   return (
     <div className="space-y-4 p-4">
       <div className="flex justify-end gap-2">
+        <AppButton
+          label={t('operation.enrollment.importSheet')}
+          icon="pi pi-upload"
+          outlined
+          onClick={() => setImportOpen(true)}
+        />
         <AppButton
           label={t('operation.enrollment.addStudent')}
           icon="pi pi-user-plus"
@@ -37,6 +44,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         visible={addOpen}
         onHide={() => setAddOpen(false)}
       />
+      <ImportDialog turmaId={turma.id!} visible={importOpen} onHide={() => setImportOpen(false)} />
     </div>
   )
 }
