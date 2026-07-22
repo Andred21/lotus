@@ -2,13 +2,16 @@
 
 namespace App\Domains\Operation\Http\Controllers;
 
+use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Actions\RemoveEnrollmentAction;
 use App\Domains\Operation\Data\EnrollmentData;
+use App\Domains\Operation\Data\EnrollPreviewData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
+use App\Shared\Rules\ValidRut;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,7 +24,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview']),
         ];
     }
 
@@ -31,6 +34,16 @@ class EnrollmentController extends Controller implements HasMiddleware
         return $turma->enrollments()->with('student.user')->get()
             ->map(fn (Enrollment $e) => EnrollmentData::fromModel($e))
             ->all();
+    }
+
+    public function preview(Request $request, Turma $turma, StudentResolver $resolver): EnrollPreviewData
+    {
+        $validated = $request->validate(['rut' => ['required', 'string', new ValidRut]]);
+
+        return EnrollPreviewData::fromLookup(
+            $resolver->previewByRut($validated['rut']),
+            $turma->quote->budget->client,
+        );
     }
 
     public function store(EnrollmentData $data, Turma $turma, EnrollStudentAction $action): JsonResponse

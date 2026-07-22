@@ -94,4 +94,36 @@ class StudentResolver
             );
         });
     }
+
+    /**
+     * Leitura read-only para o preview de matrícula (RF-ALU-04): resolve o RUT
+     * sem criar nem mover. Lança por RUT inválido ou tipo não-aluno (mesmo
+     * critério do resolveByRut); ausência de aluno é resultado válido (exists=false).
+     */
+    public function previewByRut(string $rut): StudentLookup
+    {
+        $parsed = Rut::parse($rut);
+
+        if (! $parsed->isValid()) {
+            throw ValidationException::withMessages(['rut' => 'RUT inválido.']);
+        }
+
+        $formatted = $parsed->format();
+        $user = User::withTrashed()->where('rut', $formatted)->first();
+
+        if ($user === null) {
+            return new StudentLookup(false, null, $formatted);
+        }
+
+        if ($user->type !== 'aluno') {
+            throw ValidationException::withMessages([
+                'rut' => 'Este RUT pertence a um usuário de outro tipo.',
+            ]);
+        }
+
+        $student = Student::withTrashed()->where('user_id', $user->id)->firstOrFail();
+        $student->loadMissing('currentClient', 'user');
+
+        return new StudentLookup(true, $student, $formatted);
+    }
 }

@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->scopeBindings();   // {file} resolve por $turma->files() — cross-turma = 404
 
     Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
+    Route::get('turmas/{turma}/alunos/preview', [EnrollmentController::class, 'preview']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
     Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import']);
     Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])

@@ -72,6 +72,14 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type EnrollPreviewData = {
+exists: boolean,
+name: string | null,
+rut: string,
+current_client: string | null,
+will_move: boolean,
+previous_client: string | null,
+};
 export type EnrollmentApprovalStatus = 'pendiente' | 'aprobado' | 'reprobado';
 export type EnrollmentData = {
 id: undefined | number,
