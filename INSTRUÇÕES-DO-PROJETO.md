@@ -1,6 +1,6 @@
 # INSTRUÇÕES DO PROJETO — Lotus Platform
 
-> **Postura e cláusulas de exceção do Lotus.**. O `CLAUDE.md` é o mapa da sessão (leis, fluxo, comandos). 
+> **Postura e cláusulas de exceção do Lotus.** O `CLAUDE.md` é o mapa da sessão (leis, fluxo, comandos). 
 > O `/executar-bloco`, o procedimento; as `.claude/rules/`, a mecânica de código.
 > Este arquivo responde por UMA coisa: **como Claude atua**, e quando pode desviar de uma regra.
 
@@ -71,6 +71,3 @@ uma fora de contexto.
 
 Regra transversal que não cabe em nenhum path específico → CLAUDE.md §5 (se for lei) ou uma rule
 nova (se for convenção). **Não traga mecânica de volta para este arquivo.**
-```
-
----

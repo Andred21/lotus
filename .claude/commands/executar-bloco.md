@@ -2,6 +2,7 @@
 description: Executa um bloco do backlog pelo workflow superpowers, retomando da etapa pendente
 argument-hint: [nome-do-bloco ou EAP]
 allowed-tools: Bash(git status:*), Bash(git log:*), Bash(git diff:*)
+disable-model-invocation: true
 ---
 
 > **Fonte da mecânica de execução do Lotus** (gate inline, gate worktree, disciplina git, DoD).

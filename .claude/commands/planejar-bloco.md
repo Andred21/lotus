@@ -2,6 +2,7 @@
 description: Planeja um bloco novo pelo workflow superpowers (brainstorming → design → plano)
 argument-hint: [nome do bloco, ex. "Bloco 6 · Turmas"]
 allowed-tools: Bash(git status:*)
+disable-model-invocation: true
 ---
 
 ## Âncora de contexto (não pule)

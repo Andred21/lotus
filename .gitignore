@@ -14,5 +14,8 @@
 # Docker / sistema
 .DS_Store
 
-# Claude Code — comandos são versionados; settings local, não
+# Claude Code / Superpowers — estado local, não versionado
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+.superpowers/sdd/progress.md

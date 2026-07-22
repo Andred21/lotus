@@ -2,6 +2,7 @@
 description: Revisa a qualidade VISUAL/UX do frontend — hierarquia, espaçamento, estados, consistência. Roda DEPOIS do /revisar-frontend, sobre código já limpo.
 argument-hint: [feature ou tela — ex. commercial, ClientDialog]
 allowed-tools: Bash(git status:*), Bash(pnpm build:*)
+disable-model-invocation: true
 ---
 
 > **Eixo VISUAL do review de frontend.** Estética/UX sobre código JÁ estruturado. Se a estrutura

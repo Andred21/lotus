@@ -29,10 +29,9 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **SEMPRE:** `docs/superpowers/progress.md` — índice vivo versionado (1 linha por feature:
   o que foi construído, o desfecho, o contexto que ele exige e onde estão plano/spec). Barato e ancora a sessão.
   Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
-- **SE a task implementa/mexe numa feature:** o plano e o spec dela (caminho está no `progress.md`)
-  e o que a coluna **Contexto** daquela linha listar.
-- **SE a task implementa/mexe numa feature:** o plano e o spec mais recentes dela em
-  `docs/superpowers/plans/` e `docs/superpowers/specs/`.
+- **SE a task implementa ou altera uma feature:** leia o plano e o spec apontados pelo
+  `progress.md`, além do que a coluna **Contexto** listar. Se a entrada ainda não apontar caminhos,
+  use os arquivos ativos correspondentes em `docs/superpowers/plans/` e `docs/superpowers/specs/`.
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task-a-task
   (não versionado). Só para detalhe fino; a âncora canônica é o versionado acima.
@@ -59,7 +58,7 @@ sequência de cabeça, não pule nem reinicie etapa concluída. Ciclo canônico:
 `executing-plans` → `test-driven-development` → `requesting-code-review` →
 `finishing-a-development-branch`.
 
-Comandos do projeto: `/planejar-bloco` (entrada) · `/executar-bloco` (execução) · `/revisar-sprint`
+Comandos principais do fluxo: `/planejar-bloco` (entrada) · `/executar-bloco` (execução) · `/revisar-sprint`
 (review) · `/fechar-sprint` (gate). Planos/specs ativos em `docs/superpowers/`; concluídos em
 `plans/archive/` e `specs/archive/`. Índice versionado: `docs/superpowers/progress.md` (§3).
 

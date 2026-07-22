@@ -1,6 +1,7 @@
 ---
 name: fechar-sprint
 description: "Gate de fechamento de sprint ou bloco do Lotus: prova o critério de aceite, roda testes/lint/build/Pint, checa tipos e código morto, arquiva plano/spec e atualiza o índice progress.md. Use quando o João disser 'fechar a sprint', 'fechar o bloco', 'gate de fechamento', ou invocar /fechar-sprint. NÃO use no meio da execução — é o último passo, depois do comportamento provado."
+disable-model-invocation: true
 ---
 
 # Gate de fechamento — $ARGUMENTS
@@ -39,7 +40,8 @@ DTO mudou → `php artisan typescript:transform`; confirme `generated.ts` commit
 criou — dead code alheio se menciona, não se deleta.
 
 ## 6. Leis
-Nenhuma lei do CLAUDE.md §5 contrariada sem registro no ledger.
+Nenhuma lei do `CLAUDE.md` §5 foi contrariada. Registro no ledger não autoriza desvio de lei
+inviolável; qualquer exceção exige decisão explícita do João Victor e referência dessa decisão.
 
 ## 7. Pendências
 `docs/pendencias.md`: algum gatilho venceu? Alguma pendência fechou (move para "Encerradas")?

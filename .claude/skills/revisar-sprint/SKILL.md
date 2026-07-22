@@ -1,5 +1,7 @@
+---
 name: revisar-sprint
 description: "Revisão de qualidade pós-sprint do Lotus: acha código órfão e padrões júnior que o agente deixou, comparados com a implementação sênior do PADRÃO DESTE projeto (ADRs, leis §5, lições). Use ao fechar uma sprint, quando o João disser 'revisa o que foi feito', 'code review da sprint', 'tá com cara de júnior', 'limpa o código'. Roda por SPRINT, não por bloco. NÃO use para planejar feature nem para revisar diff pequeno — para diff, use /code-review nativo."
+disable-model-invocation: true
 ---
 
 # Revisar sprint — o que sobrou no caminho
@@ -23,11 +25,31 @@ Sem esse gabarito você está fazendo `/code-review` genérico. Carregue-o.
 
 ## Passo 1 — Órfãos (existência)
 
-- **Backend:** controller/método não referenciado em `Domains/*/routes.php`; Action sem chamador;
-  Blade nunca passado a `view()` nem incluído.
+### Backend
+
+Procure Controllers, Actions, Services, Models e métodos sem referência usando:
+
+- `php artisan route:list`;
+- `rg` ou `grep`;
+- busca por imports e chamadas;
+- leitura dos testes relacionados.
+
+`composer-unused` e PHPStan só podem ser executados quando estiverem declarados no
+`backend/composer.json`. Não instale ferramentas durante a revisão sem autorização.
   Ferramentas: `php artisan route:list`, `composer-unused`, `./vendor/bin/phpstan analyse`.
-- **Frontend:** componente que ninguém importa; hook sem consumidor; página fora do router.
-  Ferramenta: `npx knip`.
+
+### Frontend
+
+Procure componentes sem importação, hooks sem consumidor e páginas fora do router usando:
+
+- busca por imports com `rg` ou `grep`;
+- `pnpm lint`;
+- `pnpm build`;
+- inspeção do router e dos barrels.
+
+`knip` só pode ser executado quando estiver declarado no `frontend/package.json`.
+Não use `npx` para baixar uma ferramenta não versionada durante o review.
+
 - **Deps:** pacote sem import.
 
 **Falsos positivos deste projeto (NÃO reportar):** wrappers de `shared/ui` sem uso direto (é
@@ -37,15 +59,17 @@ map; migrations antigas (são histórico — nunca deletar); scaffold vazio de `
 
 ## Passo 2 — Padrões júnior vs. sênior
 
-Procure, nesta ordem:
+Procure, nesta ordem: 
 
 **Violações de lei (🔴 automático):**
-- Regra de escrita no controller em vez de Action (§5.1).
+- Repository genérico sobre Eloquent ou regra de negócio implementada diretamente no Controller
+  (§5.1 · ADR-02).
 - Delete via query builder em model Auditable (§5.2) · pivot sincronizado sem `auditSync`.
 - `generated.ts` editado à mão · `Data` fora de `Domains/*/Data` ou `Shared/*/Data` (§5.3).
 - `abort(422)` ou erro montado à mão em vez de `ValidationException::withMessages` (§5.4).
 - Feature importando `primereact` direto ou outra feature — inclusive só para tipo (§5.6).
 - Financeiro usado como gate (§5.7).
+
 
 **Violações de convenção (🔴/🟡 conforme o dano):**
 - `XData::from([...])` montando resposta em vez de `fromModel()`.
@@ -56,6 +80,8 @@ Procure, nesta ordem:
 - `setForm` vazando para o componente via helper solto.
 - `useEffect` para resetar form.
 - Regra de coleção fechada só no caminho da tela, não nas rotas nested.
+- Escrita direta no Controller quando a rule vigente da entidade exige uma Action, ainda que a
+  operação pareça CRUD simples. 
 
 **Catálogo universal (só o que o acima não cobre):** duplicação em vez de abstração; classe-deus;
 `mixed`/`any` para calar o compilador; catch vazio; string mágica; três jeitos de buscar dado;
