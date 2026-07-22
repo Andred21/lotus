@@ -1,0 +1,6 @@
+# Fase 1: Codex disponível somente para leitura, revisão e investigação.
+# Escrita será habilitada apenas quando o workflow de execução do Lotus for adaptado.
+
+approval_policy = "never"
+sandbox_mode = "read-only"
+web_search = "disabled"
