@@ -312,8 +312,7 @@
     "pending": {
       "title": "Approved quotes pending configuration",
       "students": "{{count}} students",
-      "configure": "Configure class",
-      "empty": "No quotes pending configuration."
+      "configure": "Configure class"
     },
     "table": {
       "code": "Code",
@@ -357,8 +356,7 @@
       "cancel": "Cancel"
     },
     "create": {
-      "title": "Configure class",
-      "subtitle": "Quote {{quote}} · {{course}}"
+      "title": "Configure class"
     },
     "redator": {
       "title": "Assigned redator",

@@ -312,8 +312,7 @@
     "pending": {
       "title": "Cotações aprovadas pendentes de configuração",
       "students": "{{count}} alunos",
-      "configure": "Configurar turma",
-      "empty": "Nenhuma cotação pendente de configuração."
+      "configure": "Configurar turma"
     },
     "table": {
       "code": "Código",
@@ -357,8 +356,7 @@
       "cancel": "Cancelar"
     },
     "create": {
-      "title": "Configurar turma",
-      "subtitle": "Cotação {{quote}} · {{course}}"
+      "title": "Configurar turma"
     },
     "redator": {
       "title": "Redator designado",
