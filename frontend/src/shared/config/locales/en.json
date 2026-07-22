@@ -369,6 +369,59 @@
       "pickerTitle": "Eligible redatores",
       "pickerEmpty": "No eligible redatores for this course.",
       "pick": "Assign"
+    },
+    "enrollment": {
+      "addStudent": "Add student",
+      "importSheet": "Import sheet (xlsx/csv)",
+      "empty": "No students enrolled yet.",
+      "footerCount": "{{count}} students enrolled",
+      "table": {
+        "name": "NAME",
+        "rut": "RUT",
+        "client": "CLIENT",
+        "status": "ENROLLMENT STATUS"
+      },
+      "status": {
+        "pendiente": "Enrolled",
+        "aprobado": "Passed",
+        "reprobado": "Failed"
+      },
+      "remove": "Remove",
+      "removeConfirm": "Remove {{name}}'s enrollment?",
+      "form": {
+        "title": "Add student",
+        "rutLabel": "RUT",
+        "verify": "Continue",
+        "nameLabel": "Name",
+        "emailLabel": "Email",
+        "emailHintNew": "Required for a new student.",
+        "phoneLabel": "Phone",
+        "submit": "Enroll",
+        "cancel": "Cancel",
+        "back": "Back"
+      },
+      "move": {
+        "title": "Student belongs to another client",
+        "body": "{{name}} is linked to {{previous}}. Enrolling here will move them to {{current}}.",
+        "confirm": "Yes, move and continue",
+        "cancel": "Cancel"
+      },
+      "import": {
+        "title": "Import sheet",
+        "help": "Upload an xlsx or csv file with columns RUT, Name, Email, Phone.",
+        "choose": "Choose file",
+        "uploading": "Importing…",
+        "resultTitle": "Import summary",
+        "created": "Created",
+        "relinked": "Relinked",
+        "alreadyEnrolled": "Already enrolled",
+        "moved": "Moved between clients",
+        "movedRow": "{{name}} ({{rut}}): {{previous}} → {{client}}",
+        "errors": "Rows with errors",
+        "errorRow": "Row {{row}}: {{message}}",
+        "enrolledVsContracted": "{{enrolled}} of {{contracted}} contracted",
+        "close": "Close"
+      }
     }
   }
 }

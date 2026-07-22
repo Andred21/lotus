@@ -369,6 +369,59 @@
       "pickerTitle": "Redatores idôneos",
       "pickerEmpty": "Nenhum redator idôneo para este curso.",
       "pick": "Designar"
+    },
+    "enrollment": {
+      "addStudent": "Adicionar aluno",
+      "importSheet": "Importar planilha (xlsx/csv)",
+      "empty": "Ainda não há alunos matriculados.",
+      "footerCount": "{{count}} alunos matriculados",
+      "table": {
+        "name": "NOME",
+        "rut": "RUT",
+        "client": "CLIENTE",
+        "status": "STATUS DE MATRÍCULA"
+      },
+      "status": {
+        "pendiente": "Matriculado",
+        "aprobado": "Aprovado",
+        "reprobado": "Reprovado"
+      },
+      "remove": "Remover",
+      "removeConfirm": "Remover a matrícula de {{name}}?",
+      "form": {
+        "title": "Adicionar aluno",
+        "rutLabel": "RUT",
+        "verify": "Continuar",
+        "nameLabel": "Nome",
+        "emailLabel": "E-mail",
+        "emailHintNew": "Obrigatório para aluno novo.",
+        "phoneLabel": "Telefone",
+        "submit": "Matricular",
+        "cancel": "Cancelar",
+        "back": "Voltar"
+      },
+      "move": {
+        "title": "O aluno pertence a outro cliente",
+        "body": "{{name}} está vinculado a {{previous}}. Ao matriculá-lo aqui, passará para {{current}}.",
+        "confirm": "Sim, mover e continuar",
+        "cancel": "Cancelar"
+      },
+      "import": {
+        "title": "Importar planilha",
+        "help": "Envie um arquivo xlsx ou csv com colunas RUT, Nome, Email, Telefone.",
+        "choose": "Escolher arquivo",
+        "uploading": "Importando…",
+        "resultTitle": "Resumo da importação",
+        "created": "Criados",
+        "relinked": "Reassociados",
+        "alreadyEnrolled": "Já matriculados",
+        "moved": "Movidos de cliente",
+        "movedRow": "{{name}} ({{rut}}): {{previous}} → {{client}}",
+        "errors": "Linhas com erro",
+        "errorRow": "Linha {{row}}: {{message}}",
+        "enrolledVsContracted": "{{enrolled}} de {{contracted}} contratados",
+        "close": "Fechar"
+      }
     }
   }
 }

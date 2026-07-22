@@ -369,6 +369,59 @@
       "pickerTitle": "Redactores idóneos",
       "pickerEmpty": "No hay redactores idóneos para este curso.",
       "pick": "Designar"
+    },
+    "enrollment": {
+      "addStudent": "Agregar alumno",
+      "importSheet": "Importar planilla (xlsx/csv)",
+      "empty": "Aún no hay alumnos matriculados.",
+      "footerCount": "{{count}} alumnos matriculados",
+      "table": {
+        "name": "NOMBRE",
+        "rut": "RUT",
+        "client": "CLIENTE",
+        "status": "ESTADO MATRÍCULA"
+      },
+      "status": {
+        "pendiente": "Matriculado",
+        "aprobado": "Aprobado",
+        "reprobado": "Reprobado"
+      },
+      "remove": "Quitar",
+      "removeConfirm": "¿Quitar la matrícula de {{name}}?",
+      "form": {
+        "title": "Agregar alumno",
+        "rutLabel": "RUT",
+        "verify": "Continuar",
+        "nameLabel": "Nombre",
+        "emailLabel": "Correo electrónico",
+        "emailHintNew": "Obligatorio para alumno nuevo.",
+        "phoneLabel": "Teléfono",
+        "submit": "Matricular",
+        "cancel": "Cancelar",
+        "back": "Volver"
+      },
+      "move": {
+        "title": "El alumno pertenece a otro cliente",
+        "body": "{{name}} está vinculado a {{previous}}. Al matricularlo aquí pasará a {{current}}.",
+        "confirm": "Sí, mover y continuar",
+        "cancel": "Cancelar"
+      },
+      "import": {
+        "title": "Importar planilla",
+        "help": "Sube un archivo xlsx o csv con columnas RUT, Nombre, Email, Teléfono.",
+        "choose": "Elegir archivo",
+        "uploading": "Importando…",
+        "resultTitle": "Resumen de la importación",
+        "created": "Creados",
+        "relinked": "Reasociados",
+        "alreadyEnrolled": "Ya matriculados",
+        "moved": "Movidos de cliente",
+        "movedRow": "{{name}} ({{rut}}): {{previous}} → {{client}}",
+        "errors": "Filas con error",
+        "errorRow": "Fila {{row}}: {{message}}",
+        "enrolledVsContracted": "{{enrolled}} de {{contracted}} contratados",
+        "close": "Cerrar"
+      }
     }
   }
 }
