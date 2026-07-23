@@ -439,7 +439,11 @@
       "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo.",
       "remove": "Quitar",
       "removeTitle": "Quitar documento",
-      "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso."
+      "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso.",
+      "lock": {
+        "concluida": "La turma está concluida: la documentación quedó inmutable (RN-15).",
+        "permission": "No tienes permiso para subir o quitar documentación."
+      }
     }
   }
 }

@@ -12,9 +12,18 @@ type Props = {
   onUpload: (file: File) => void
   onRemove: (file: TurmaDocumentData) => void
   removing: boolean
+  canSubmit: boolean
 }
 
-export function DocumentTypeCard({ type, files, uploading, onUpload, onRemove, removing }: Props) {
+export function DocumentTypeCard({
+  type,
+  files,
+  uploading,
+  onUpload,
+  onRemove,
+  removing,
+  canSubmit,
+}: Props) {
   const { t } = useTranslation()
   const delivered = files.length > 0
 
@@ -26,15 +35,17 @@ export function DocumentTypeCard({ type, files, uploading, onUpload, onRemove, r
           value={t(delivered ? 'operation.documents.delivered' : 'operation.documents.pending')}
           severity={delivered ? 'success' : 'warning'}
         />
-        <AppFileUpload
-          accept="application/pdf"
-          chooseLabel={t('operation.documents.upload')}
-          disabled={uploading}
-          uploadHandler={(e: FileUploadHandlerEvent) => {
-            const file = e.files[0]
-            if (file) onUpload(file)
-          }}
-        />
+        {canSubmit && (
+          <AppFileUpload
+            accept="application/pdf"
+            chooseLabel={t('operation.documents.upload')}
+            disabled={uploading}
+            uploadHandler={(e: FileUploadHandlerEvent) => {
+              const file = e.files[0]
+              if (file) onUpload(file)
+            }}
+          />
+        )}
       </header>
 
       <ul className="mt-3 space-y-1">
@@ -45,19 +56,21 @@ export function DocumentTypeCard({ type, files, uploading, onUpload, onRemove, r
             <span className="text-slate-400">
               {formatFileSize(file.size)} · {formatDate(new Date(file.created_at))}
             </span>
-            <AppButton
-              icon="pi pi-trash"
-              text
-              severity="danger"
-              aria-label={t('operation.documents.remove')}
-              disabled={removing}
-              onClick={() => onRemove(file)}
-            />
+            {canSubmit && (
+              <AppButton
+                icon="pi pi-trash"
+                text
+                severity="danger"
+                aria-label={t('operation.documents.remove')}
+                disabled={removing}
+                onClick={() => onRemove(file)}
+              />
+            )}
           </li>
         ))}
         {!delivered && <li className="text-sm text-slate-400">{t('operation.documents.empty')}</li>}
       </ul>
-      <p className="mt-2 text-xs text-slate-400">{t('operation.documents.uploadHint')}</p>
+      {canSubmit && <p className="mt-2 text-xs text-slate-400">{t('operation.documents.uploadHint')}</p>}
     </section>
   )
 }

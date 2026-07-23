@@ -439,7 +439,11 @@
       "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed.",
       "remove": "Remove",
       "removeTitle": "Remove document",
-      "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress."
+      "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress.",
+      "lock": {
+        "concluida": "The class is concluded: documentation is now immutable (RN-15).",
+        "permission": "You do not have permission to upload or remove documentation."
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
-import { useMutationErrors } from '@shared/hooks'
+import { useMutationErrors, usePermissions } from '@shared/hooks'
 import {
   useRemoveTurmaDocument,
   useTurmaDocuments,
@@ -29,6 +29,16 @@ export function useTurmaDocsSection(turma: TurmaData) {
     {} as Record<TurmaDocumentType, TurmaDocumentData[]>,
   )
 
+  const { can } = usePermissions()
+  const concluida = turma.status === 'concluida'
+  // `can()` é conveniência de interface; a autorização real é da API (ADR-07).
+  const hasPermission = can('operation.turma.submit_docs')
+  const lockReason: 'concluida' | 'permission' | null = concluida
+    ? 'concluida'
+    : hasPermission
+      ? null
+      : 'permission'
+
   return {
     turmaId,
     loading: list.isLoading,
@@ -37,7 +47,9 @@ export function useTurmaDocsSection(turma: TurmaData) {
     deliveredCount: TURMA_DOCUMENT_TYPES.filter((type) => byType[type].length > 0).length,
     totalTypes: TURMA_DOCUMENT_TYPES.length,
     habilitada: turma.habilitada === true,
-    concluida: turma.status === 'concluida',
+    concluida,
+    canSubmit: !concluida && hasPermission,
+    lockReason,
     upload: (type: TurmaDocumentType, file: File) =>
       uploadMutation.mutate({ turmaId, type, file }),
     uploading: uploadMutation.isPending,
