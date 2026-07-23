@@ -69,8 +69,13 @@ and explicit source references in the request.
    - Notion task organization;
    - memory only as a locator, never as evidence.
 
-3. Use configured MCP/connectors. Do not use broad web search as a substitute for an unavailable
-canonical source.
+3. Use the configured MCP connectors. In this runtime they are (verified 2026-07-23, see
+`AGENTS.md` §3): Google Drive via `mcp__codex_apps__google_drive_*` — the canonical planning
+source, so query it rather than assuming it is missing; Figma via `mcp__codex_apps__figma_*`;
+GitHub via `mcp__codex_apps__github_*`. Notion is not loaded in this runtime.
+Never mark a source `unavailable` without having called its tool and captured the failure; an
+untried source is a gap in the packet, not an unavailable one. Do not use broad web search as a
+substitute for an unavailable canonical source.
 4. Retrieve no more than five external artifacts unless the packet explains why additional sources
 are necessary.
 5. Record source ID, title, provider, modified time, retrieval status, and the exact purpose for
@@ -244,6 +249,7 @@ Confirm all of the following:
 - the packet contains at most 8 key facts and respects the word budget;
 - no implementation steps already owned by the plan were copied;
 - `ready` is not used while a blocking question remains;
+- every source marked `unavailable` was actually attempted, and the failure is stated;
 - no staleness trigger references a provenance hash, the promoting transition, or a `state.md` edit
   that only moves workflow fields;
 - the result contains only the suggested path and the marked packet.
