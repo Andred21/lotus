@@ -66,6 +66,12 @@ Use esta prioridade:
 Quando uma fonte necessária não estiver acessível, registre a limitação. Quando fontes divergirem,
 mostre a divergência e não escolha silenciosamente.
 
+**Limitação verificada em 2026-07-23 (piloto da Fase 7):** invocado pelo plugin do Claude Code, o
+Codex não expõe as ferramentas de Drive, Figma nem do plugin Notion. Marque essas fontes como
+`unavailable` e produza packet `partial` quando a spec ativa já cobrir escopo e aceite; não trate a
+ausência do conector como `blocked`. Reavalie esta limitação quando os conectores forem
+configurados no runtime do Codex.
+
 ## 4. Regras por caminho
 
 As `.claude/rules/` são regras compartilhadas do Lotus, embora o Codex não as carregue

@@ -60,7 +60,7 @@ Preserve WIP. Do not install dependencies or run mutating commands.
 
 ## External retrieval
 
-1. Derive the smallest source list from the plan/spec Fontes, the progress.md Contexto field,
+1. Derive the smallest source list from the plan/spec Fontes, the pointers in `state.md`,
 and explicit source references in the request.
 2. Query sources in the Lotus priority order:
    - current explicit instruction from João Victor;
@@ -78,9 +78,20 @@ which the source was consulted.
 6. Never include credentials, access tokens, private personal data, raw conversation transcripts,
 or large copied passages.
 
-If a named connector is unavailable, mark the source `unavailable`. Lack of Notion is not blocking
-when it only duplicates task status already grounded in `progress.md`. Lack of a requirement or
-explicit decision source is blocking when it would require guessing.
+If a named connector is unavailable, mark the source `unavailable`.
+
+Blocking is decided by the *missing fact*, never by the missing source:
+
+- Lack of Notion is **not** blocking when the active spec already carries the block's scope,
+  decisions, and acceptance criteria. Lotus work items are internal splits of a sprint
+  (`...-exec1`, `-exec2`, `-exec3`) and usually have **no 1:1 Notion task** — absence of a
+  matching task is expected, not evidence of missing context. Record it as `unavailable` and
+  continue with `partial`.
+- Lack of a requirement or explicit decision source **is** blocking when planning would otherwise
+  require guessing a business rule, an acceptance criterion, or a legal-weight behaviour.
+
+Use `blocked` only when you can name the specific fact that is missing and show that no available
+source supplies it.
 
 ## Reconciliation rules 
 
@@ -115,7 +126,8 @@ the divergence.
 
 ## Output contract
 
-The Codex sandbox remains read-only in this phase. Do not create or update the packet file. Return
+Packet generation is a read-only operation regardless of the configured sandbox: do not create or
+update the packet file — the caller stores it. Return
 exactly one suggested path followed by one packet between these markers:
 
 ```text
