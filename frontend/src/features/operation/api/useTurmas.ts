@@ -83,3 +83,29 @@ export function useRemoveRedator() {
     onSuccess: invalidate,
   })
 }
+
+/** Com `responseType: 'blob'` o corpo de erro também chega como Blob, então o
+ * interceptor do axios rejeita o próprio Blob no lugar do envelope RFC 7807 —
+ * por isso o corpo é lido e reparseado aqui (D10). */
+async function problemFromBlob(error: unknown): Promise<ProblemDetails> {
+  if (error instanceof Blob) {
+    try {
+      return JSON.parse(await error.text()) as ProblemDetails
+    } catch {
+      // corpo não-JSON (HTML de erro, PDF truncado): cai no envelope genérico abaixo
+    }
+  }
+  return error as ProblemDetails
+}
+
+export function useTurmaManual() {
+  return useMutation<Blob, ProblemDetails, number>({
+    mutationFn: (turmaId) =>
+      api
+        .get<Blob>(`/api/turmas/${turmaId}/manual`, { responseType: 'blob' })
+        .then((r) => r.data)
+        .catch(async (error: unknown) => {
+          throw await problemFromBlob(error)
+        }),
+  })
+}

@@ -425,6 +425,7 @@
     },
     "documents": {
       "title": "Class documentation",
+      "manual": "Open manual (PDF)",
       "progress": "{{done}} of {{total}} documents complete",
       "type": {
         "MANUAL": "Manual",

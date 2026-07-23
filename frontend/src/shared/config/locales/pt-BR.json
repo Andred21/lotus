@@ -425,6 +425,7 @@
     },
     "documents": {
       "title": "Documentação da turma",
+      "manual": "Abrir manual (PDF)",
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
         "MANUAL": "Manual",
