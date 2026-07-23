@@ -92,7 +92,18 @@ async function problemFromBlob(error: unknown): Promise<ProblemDetails> {
     try {
       return JSON.parse(await error.text()) as ProblemDetails
     } catch {
-      // corpo não-JSON (HTML de erro, PDF truncado): cai no envelope genérico abaixo
+      // corpo não-JSON (HTML de erro, proxy truncado): o Blob é só o corpo da
+      // resposta, não carrega status HTTP algum, então monta-se aqui um
+      // envelope sintético legível — sem isso `useMutationErrors` recebe o
+      // Blob crú, não acha `.detail` nem `.errors`, e a mensagem some para o
+      // usuário (o botão só para de carregar, sem feedback nenhum).
+      return {
+        type: 'https://lotus.cl/errors/unknown',
+        title: 'Erro inesperado',
+        status: 0,
+        detail: 'Não foi possível processar a resposta do servidor.',
+        instance: '',
+      }
     }
   }
   return error as ProblemDetails
