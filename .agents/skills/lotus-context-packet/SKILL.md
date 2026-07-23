@@ -17,8 +17,8 @@ code, advance Superpowers, update external systems, or resolve an unsupported am
 ## Input
 
 The request must identify a `block_id`, plan path, or the active block. When none is supplied, read
-`docs/superpowers/progress.md` and use the single `Ativo` entry. If zero or more than one active entry
-exists, return `BLOCKED` and state what must be identified.
+`docs/superpowers/state.md` and use `active_work_item`. If `active_work_item` is null or
+`workflow_state` is not `context_required`, return `BLOCKED` and state what must be identified.
 
 An optional existing packet path means refresh that packet instead of starting from zero.
 
@@ -29,18 +29,20 @@ Read only:
 1. `AGENTS.md`;
 2. `CLAUDE.md`;
 3. `INSTRUÇÕES-DO-PROJETO.md`;
-4. `docs/superpowers/progress.md`;
-5. the active plan and spec for the resolved block.
+4. `docs/superpowers/state.md`;
+5. `docs/superpowers/progress.md` (history only; it never resolves the active block);
+6. the active plan and spec pointed by `state.md`, ignoring null pointers.
 
 Read additional repository documents only when the active plan/spec explicitly points to them.
 Run read-only commands to capture:
 
 ```bash
 git status --short
-git rev-parse --abbrev-ref HEADgit
+git rev-parse --abbrev-ref HEAD
 git rev-parse HEAD
+git hash-object docs/superpowers/state.md
 git hash-object <progress-path>
-git hash-object <plan-path> 
+git hash-object <plan-path>
 git hash-object <spec-path>
 ```
 
@@ -48,6 +50,7 @@ Capture:
 
 - current branch or requested ref;
 - current commit;
+- blob SHA of `state.md`;
 - blob SHA of `progress.md`;
 - blob SHA of the active plan;
 - blob SHA of the active spec;
@@ -139,6 +142,8 @@ status: ready|partial|blocked
 generated_at: <ISO-8601 date or datetime>
 base_ref: <branch-or-ref>
 base_commit: <git-sha>
+state_path: docs/superpowers/state.md
+state_blob_sha: <blob-sha>
 progress_path: <path>
 progress_blob_sha: <blob-sha>
 plan_path: <path>
@@ -195,18 +200,13 @@ word_budget: 1200
 ## Validation before returning
 
 Confirm all of the following:
-- required frontmatter fields are populated;
+
+- required frontmatter fields are populated (`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha`
+  record `null` when the corresponding `state.md` pointer is null — never invent them);
 - base_commit and all repository blob hashes were obtained, not guessed;
 - every external fact cites a source-registry key;
 - material conflicts appear in the divergence table;
 - the packet contains at most 8 key facts and respects the word budget;
 - no implementation steps already owned by the plan were copied;
-- ready is not used while a blocking question remains;
-- the result contains only the suggested path and the marked packet.required;
-- base_commit and all repository blob hashes were obtained, not guessed;
-- every external fact cites a source-registry key;
-- material conflicts appear in the divergence table;
-- the packet contains at most 8 key facts and respects the word budget;
-- no implementation steps already owned by the plan were copied;
-- ready is not used while a blocking question remains;
+- `ready` is not used while a blocking question remains;
 - the result contains only the suggested path and the marked packet.
