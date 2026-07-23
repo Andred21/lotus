@@ -8,11 +8,19 @@
 O Codex é um agente auxiliar de **leitura, revisão, investigação e execução local explicitamente
 solicitada**.
 
-- Claude Code + Superpowers continuam responsáveis por brainstorming, spec, plano, transições do
-  workflow, execução oficial do bloco e fechamento da sprint. O Codex pode implementar ou corrigir
-  o escopo local que João Victor ou Claude Code delegarem explicitamente.
-- Não inicie, avance, reinicie ou encerre etapas do Superpowers. Quando uma alteração produzir o
-  artefato necessário para uma transição, recomende a transição; João Victor ou Claude a aplicam.
+- Claude Code + Superpowers continuam responsáveis por padrão por brainstorming, spec, plano,
+  transições do workflow, execução oficial do bloco e fechamento da sprint. O Codex pode assumir
+  essas etapas, implementar ou corrigir o escopo local que João Victor ou Claude Code delegarem
+  explicitamente.
+- Codex pode executar, revisar e concluir etapas do Superpowers quando João Victor
+  delegar explicitamente o bloco ou a transição.
+- Codex pode alterar `docs/superpowers/state.md`, `progress.md` e artefatos ativos
+  somente quando:
+    1. a instrução atual autorizar a transição;
+    2. os gates da etapa tiverem sido executados;
+    3. `workflow_state`, `next_owner` e `next_action` permanecerem consistentes;
+    4. a transição entrar no mesmo commit do artefato que a comprova.
+- Sem delegação explícita, Codex apenas recomenda a próxima transição.
 - Altere arquivos do workspace somente dentro do escopo explicitamente solicitado. Preserve WIP e
   não inclua mudanças adjacentes.
 - Não escreva em Drive ou Notion nem altere branches ou Pull Requests sem uma solicitação explícita
@@ -36,9 +44,8 @@ Antes de analisar qualquer tarefa, leia nesta ordem:
 Leia `docs/superpowers/backlog.md` somente quando `state.md` estiver em `idle`, quando a tarefa for
 planejamento ou fechamento, ou quando a solicitação pedir explicitamente o roadmap.
 
-O Codex não infere nem altera o estado operacional. Quando uma skill produzir um artefato que
-permita transição, o resultado deve indicar a transição recomendada; Claude ou João atualizam
-`state.md`.
+O Codex não infere transições operacionais. Pode aplicá-las quando João Victor
+delegar explicitamente o fechamento ou avanço da etapa e os gates estiverem provados.
 
 Depois do bootstrap, carregue somente o necessário:
 
@@ -68,12 +75,12 @@ mostre a divergência e não escolha silenciosamente.
 
 **Conectores verificados em 2026-07-23 (inventário de tools no runtime do plugin):**
 
-| Fonte | Situação | Namespace das tools |
-|---|---|---|
-| Google Drive | **disponível** — é a fonte canônica; consulte-a de fato | `mcp__codex_apps__google_drive_*` (`search`, `get_document_text`, `list_folder`, `fetch`) |
-| Figma | **disponível** | `mcp__codex_apps__figma_*` (`get_design_context`, `get_screenshot`, `get_metadata`) |
-| GitHub | **disponível** | `mcp__codex_apps__github_*` |
-| Notion | **indisponível** — o MCP do plugin não carrega neste runtime | — |
+| Fonte        | Situação                                                     | Namespace das tools                                                                       |
+| ------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Google Drive | **disponível** — é a fonte canônica; consulte-a de fato      | `mcp__codex_apps__google_drive_*` (`search`, `get_document_text`, `list_folder`, `fetch`) |
+| Figma        | **disponível**                                               | `mcp__codex_apps__figma_*` (`get_design_context`, `get_screenshot`, `get_metadata`)       |
+| GitHub       | **disponível**                                               | `mcp__codex_apps__github_*`                                                               |
+| Notion       | **indisponível** — o MCP do plugin não carrega neste runtime | —                                                                                         |
 
 Não declare uma fonte `unavailable` sem ter tentado a tool correspondente e capturado o erro. A
 ausência do Notion é não bloqueante: work items do Lotus são splits internos de sprint

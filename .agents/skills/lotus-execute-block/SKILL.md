@@ -39,9 +39,13 @@ authorized paths (per AGENTS.md §4).
 - Run only the verification commands the plan or `CLAUDE.md` §6 define. Never claim a test passed
   without running it.
 - Preserve existing WIP; start with `git status --short`.
-- Do not commit, push, branch, or alter `state.md`, `progress.md`, `backlog.md` — Claude commits.
 - Deviation needed from a plan step → stop that task, record the reason, continue only independent
   tasks, and report.
+
+Codex may commit implementation artifacts and update `state.md`/`progress.md`
+when the active plan names Codex as executor or João Victor explicitly delegates
+execution/closure. Never alter `backlog.md` unless explicitly requested.
+State transitions must be committed with their proving artifact.
 
 ## Output contract
 
