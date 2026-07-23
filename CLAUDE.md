@@ -28,15 +28,18 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 **Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
 
 - **SEMPRE, PRIMEIRO:** `docs/superpowers/state.md` — fonte única da etapa atual, do trabalho
-  ativo e da próxima ação permitida. Não deduza fase por commits, arquivos existentes, ordem do
+  ativo e da próxima ação permitida. Não deduza fase por commits, existência de arquivos, ordem do
   backlog ou texto do `progress.md`.
 - **DEPOIS:** `docs/superpowers/progress.md` — histórico curto e resultado das entregas recentes.
   Ele não controla o workflow.
-- **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada em `idle`,
-  planejamento ou fechamento.
-- **SE o bloco possuir Context Packet:** leia o packet indicado em `state.md` antes de qualquer
-  consulta a Drive, Notion ou Figma.
+- **EM SEGUIDA, PELOS PONTEIROS DO ESTADO:** leia `context_packet` (quando não for `null`),
+  `active_spec` e `active_plan` (quando não forem `null`). O packet vem antes de qualquer consulta
+  a Drive, Notion ou Figma e não substitui spec, plano, rules, ADRs ou código.
+- **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada apenas em
+  `idle`, planejamento, fechamento ou por solicitação explícita do João.
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
+- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
+  somente para retomar detalhe fino da execução; nunca decide a fase.
 
 | Doc                                 | Consulte antes de                                               |
 | ------------------------------------|-----------------------------------------------------------------|
@@ -51,8 +54,9 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).
 > Os `/docs` são snapshots datados;
 > Se divergirem do Drive, **o Drive vence.**
-> **Conflito de estado:** se `state.md`, plano, Git ou `progress.md` divergirem sobre a etapa atual,
-> PARE. Não escolha por heurística. Mostre a divergência e corrija o estado antes de continuar.
+> **Conflito de estado:** se `state.md`, packet, spec, plano, Git ou `progress.md` divergirem sobre
+> a etapa atual, PARE. Não escolha por heurística. Mostre a divergência e corrija o estado antes de
+> continuar.
 
 ## 4. Fluxo de trabalho (superpowers)
 
@@ -65,11 +69,14 @@ sequência de cabeça, não pule nem reinicie etapa concluída. Ciclo canônico:
 
 Comandos principais do fluxo: `/planejar-bloco` (entrada) · `/executar-bloco` (execução) · `/revisar-sprint`
 (review) · `/fechar-sprint` (gate). Planos/specs ativos em `docs/superpowers/`; concluídos em
-`plans/archive/` e `specs/archive/`. Índice versionado: `docs/superpowers/progress.md` (§3).
+`plans/archive/` e `specs/archive/`. Histórico curto: `docs/superpowers/progress.md` (§3).
+
+Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
+próprios comandos conforme `state.md`; os contratos vivem em `.agents/skills/`.
 
 **Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
 de executá-lo. O roadmap adiante vive como títulos em `docs/superpowers/backlog.md`, não como planos
-prontos que envelhecem.
+prontos que envelhecem. O backlog nunca autoriza execução nem promove trabalho sozinho.
 
 > **A mecânica de execução** — gate inline (5 critérios), gate worktree, disciplina git no main tree
 > e DoD end-to-end — **vive no `/executar-bloco`.** Não a duplique aqui.

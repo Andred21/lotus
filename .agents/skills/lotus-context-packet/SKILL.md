@@ -17,8 +17,8 @@ code, advance Superpowers, update external systems, or resolve an unsupported am
 ## Input
 
 The request must identify a `block_id`, plan path, or the active block. When none is supplied, read
-`docs/superpowers/progress.md` and use the single `Ativo` entry. If zero or more than one active entry
-exists, return `BLOCKED` and state what must be identified.
+`docs/superpowers/state.md` and use `active_work_item`. If `active_work_item` is null or
+`workflow_state` is not `context_required`, return `BLOCKED` and state what must be identified.
 
 An optional existing packet path means refresh that packet instead of starting from zero.
 
@@ -29,18 +29,20 @@ Read only:
 1. `AGENTS.md`;
 2. `CLAUDE.md`;
 3. `INSTRUÇÕES-DO-PROJETO.md`;
-4. `docs/superpowers/progress.md`;
-5. the active plan and spec for the resolved block.
+4. `docs/superpowers/state.md`;
+5. `docs/superpowers/progress.md` (history only; it never resolves the active block);
+6. the active plan and spec pointed by `state.md`, ignoring null pointers.
 
 Read additional repository documents only when the active plan/spec explicitly points to them.
 Run read-only commands to capture:
 
 ```bash
 git status --short
-git rev-parse --abbrev-ref HEADgit rev-parse --abbrev-ref HEAD
+git rev-parse --abbrev-ref HEAD
 git rev-parse HEAD
+git hash-object docs/superpowers/state.md
 git hash-object <progress-path>
-git hash-object <plan-path> 
+git hash-object <plan-path>
 git hash-object <spec-path>
 ```
 
@@ -48,6 +50,7 @@ Capture:
 
 - current branch or requested ref;
 - current commit;
+- blob SHA of `state.md`;
 - blob SHA of `progress.md`;
 - blob SHA of the active plan;
 - blob SHA of the active spec;
@@ -57,7 +60,7 @@ Preserve WIP. Do not install dependencies or run mutating commands.
 
 ## External retrieval
 
-1. Derive the smallest source list from the plan/spec Fontes, the progress.md Contexto field,
+1. Derive the smallest source list from the plan/spec Fontes, the pointers in `state.md`,
 and explicit source references in the request.
 2. Query sources in the Lotus priority order:
    - current explicit instruction from João Victor;
@@ -66,8 +69,18 @@ and explicit source references in the request.
    - Notion task organization;
    - memory only as a locator, never as evidence.
 
-3. Use configured MCP/connectors. Do not use broad web search as a substitute for an unavailable
-canonical source.
+3. Use the configured MCP connectors. In this runtime they are (verified 2026-07-23, see
+`AGENTS.md` §3): Google Drive via `mcp__codex_apps__google_drive_*` — the canonical planning
+source, so query it rather than assuming it is missing; Figma via `mcp__codex_apps__figma_*`;
+GitHub via `mcp__codex_apps__github_*`. Notion is not loaded in this runtime.
+A source may be marked `unavailable` only with one of two recorded evidences:
+
+- **tool present, call failed** — state the decisive error line;
+- **tool absent** — state the expected namespace and that tool discovery returned none for it.
+
+An assumption, a previous packet, or an instruction in the request is never sufficient evidence: an
+untried source with a working tool is a gap in the packet, not an unavailable one. Do not use broad
+web search as a substitute for an unavailable canonical source.
 4. Retrieve no more than five external artifacts unless the packet explains why additional sources
 are necessary.
 5. Record source ID, title, provider, modified time, retrieval status, and the exact purpose for
@@ -75,9 +88,20 @@ which the source was consulted.
 6. Never include credentials, access tokens, private personal data, raw conversation transcripts,
 or large copied passages.
 
-If a named connector is unavailable, mark the source `unavailable`. Lack of Notion is not blocking
-when it only duplicates task status already grounded in `progress.md`. Lack of a requirement or
-explicit decision source is blocking when it would require guessing.
+If a named connector is unavailable, mark the source `unavailable`.
+
+Blocking is decided by the *missing fact*, never by the missing source:
+
+- Lack of Notion is **not** blocking when the active spec already carries the block's scope,
+  decisions, and acceptance criteria. Lotus work items are internal splits of a sprint
+  (`...-exec1`, `-exec2`, `-exec3`) and usually have **no 1:1 Notion task** — absence of a
+  matching task is expected, not evidence of missing context. Record it as `unavailable` and
+  continue with `partial`.
+- Lack of a requirement or explicit decision source **is** blocking when planning would otherwise
+  require guessing a business rule, an acceptance criterion, or a legal-weight behaviour.
+
+Use `blocked` only when you can name the specific fact that is missing and show that no available
+source supplies it.
 
 ## Reconciliation rules 
 
@@ -112,7 +136,8 @@ the divergence.
 
 ## Output contract
 
-The Codex sandbox remains read-only in this phase. Do not create or update the packet file. Return
+Packet generation is a read-only operation regardless of the configured sandbox: do not create or
+update the packet file — the caller stores it. Return
 exactly one suggested path followed by one packet between these markers:
 
 ```text
@@ -120,12 +145,36 @@ SUGGESTED_PATH: docs/superpowers/context-packets/<plan-slug>.md
 BEGIN LOTUS CONTEXT PACKET
 <packet>
 END LOTUS CONTEXT PACKET
+RECOMMENDED_TRANSITION: ready_for_planning|blocked
 ```
 
 Do not add an introduction, conclusion, alternative version, implementation advice, or commentary
 outside these markers.
 
 The caller reviews and stores the returned packet.
+
+## Provenance versus staleness
+
+`base_commit`, `state_blob_sha`, `progress_blob_sha`, `plan_blob_sha` and `spec_blob_sha` are
+**provenance**: they record what was read at generation time so a reviewer can reproduce the
+packet. They are not staleness keys, and a bare hash mismatch never invalidates a packet.
+
+This distinction is mandatory because `state.md` requires the transition to be committed together
+with the artifact that proves it. The commit that stores the packet therefore also rewrites
+`state.md` (`workflow_state`, `context_packet`, `blocker`). A packet whose staleness triggered on
+its own `state_blob_sha` would be stale the instant it was promoted — the packet must never be
+authored that way.
+
+Staleness triggers must name **semantic** changes that would alter the packet's content, such as:
+
+- `active_work_item` or `active_spec` changing to a different item or file;
+- an edit to the spec, plan, or referenced code that changes scope, acceptance, or a constraint;
+- a canonical external source becoming available, or contradicting a recorded decision;
+- a decision recorded in the divergence table being reopened.
+
+Never list as a trigger: the promoting transition itself, the commit that stores the packet, or any
+`state.md` edit that only moves `workflow_state`, `next_owner`, `next_action`, `context_packet`,
+`blocker` or `resume_state`.
 
 ## Packet schema
 
@@ -138,6 +187,8 @@ status: ready|partial|blocked
 generated_at: <ISO-8601 date or datetime>
 base_ref: <branch-or-ref>
 base_commit: <git-sha>
+state_path: docs/superpowers/state.md
+state_blob_sha: <blob-sha>
 progress_path: <path>
 progress_blob_sha: <blob-sha>
 plan_path: <path>
@@ -194,18 +245,19 @@ word_budget: 1200
 ## Validation before returning
 
 Confirm all of the following:
-- required frontmatter fields are populated;
+
+- required frontmatter fields are populated (`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha`
+  record `null` when the corresponding `state.md` pointer is null — never invent them);
 - base_commit and all repository blob hashes were obtained, not guessed;
 - every external fact cites a source-registry key;
 - material conflicts appear in the divergence table;
 - the packet contains at most 8 key facts and respects the word budget;
 - no implementation steps already owned by the plan were copied;
-- ready is not used while a blocking question remains;
-- the result contains only the suggested path and the marked packet.required frontmatter fields are populated;
-- base_commit and all repository blob hashes were obtained, not guessed;
-- every external fact cites a source-registry key;
-- material conflicts appear in the divergence table;
-- the packet contains at most 8 key facts and respects the word budget;
-- no implementation steps already owned by the plan were copied;
-- ready is not used while a blocking question remains;
+- `ready` is not used while a blocking question remains;
+- every source marked `unavailable` carries one of the two admissible evidences (failed call with
+  its error line, or absence from tool discovery with the expected namespace named);
+- every row in the divergence table cites a resolution basis that actually decides that topic —
+  a decision record may only be cited for the subject it covers;
+- no staleness trigger references a provenance hash, the promoting transition, or a `state.md` edit
+  that only moves workflow fields;
 - the result contains only the suggested path and the marked packet.

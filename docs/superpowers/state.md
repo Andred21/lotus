@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: bloco6-frontend
-active_work_item: bloco6-frontend-exec3
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
-last_completed_work_item: bloco6-frontend-exec2
-last_transition_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
-active_spec: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+last_completed_work_item: bloco6-frontend-exec3
+state_basis_commit: 9aa0ca1819cee79d92eeb38fd051a047ffeb7488
+active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-updated_at: 2026-07-22
+updated_at: 2026-07-23
 ---
 
 # Estado operacional — Lotus v2
@@ -40,8 +40,10 @@ updated_at: 2026-07-22
 - Existe no máximo um `active_work_item`.
 - `next_action` deve corresponder a `workflow_state`.
 - `active_plan` é obrigatório a partir de `ready_for_execution`.
-- `context_packet` é obrigatório após `context_required` quando o bloco depende de fonte externa.
+- Quando o trabalho depender de contexto externo, `context_packet` deve permanecer `null` em
+  `context_required` e tornar-se obrigatório antes da transição para `ready_for_planning`.
 - Mudanças de estado ocorrem somente em fronteiras duráveis e entram no mesmo commit do artefato
   que prova a transição.
-- Divergência entre este arquivo, plano, Git ou `progress.md` bloqueia a sessão; não escolha por
-  heurística.
+- Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
+  por heurística.
+- O backlog nunca promove trabalho automaticamente.

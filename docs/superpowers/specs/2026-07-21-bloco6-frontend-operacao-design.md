@@ -53,6 +53,14 @@ abas do Figma mapeiam limpo nas execuções:
 | D7 | **Sem código próprio de turma (TR-NN).** A identificação vem **por relacionamento, do backend**: `quote_code` (cotação) + `budget_code` (orçamento) + `budget_id` (p/ link). Join via `TurmaQueryBuilder`. | João, 2026-07-21. "Facilitar a identificação a qual proposta e cotação a turma pertence." |
 | D8 | **Detalhe = página não-modal com abas** (`BudgetDetailPage` molde), não diálogo. | Figma; João ("seria uma page, assim como Orçamento"). |
 
+### Decisões da Exec 3 (brainstorming, João, 2026-07-23)
+
+| # | Decisão | Fundamento |
+|---|---------|-----------|
+| D9 | **`AppToast` novo em `shared/ui` + provider global** (`app/providers`), consumido por `shared/hooks/useToast`. O toast de conclusão não vira banner inline nem Toast local da página. | João, 2026-07-23. O projeto não tinha infra de toast; a Sprint 4 (certificação) reusa. |
+| D10 | **Manual PDF via `axios responseType: 'blob'` + `objectURL`**, aberto em aba nova e revogado no cleanup — não `window.open` da rota. | João, 2026-07-23. `window.open` joga 403/500 RFC 7807 crus numa aba e não tem estado de loading. |
+| D11 | **P-07 já está satisfeita no código**: as 8 chaves `perm.operation_*` (incluindo `operation_enrollment_manage`, `operation_turma_submit_docs`, `operation_turma_complete`) existem nos 3 locales desde `c48496c` (Bloco 5.4). A Exec 3 **prova** na UI e encerra P-07 em `pendencias.md`; não reescreve os textos. | João, 2026-07-23. Divergência entre §6 desta spec e o código, resolvida a favor do código. |
+
 ## 3. Telas (Figma) → composição
 
 **Hub `/operacion`** (`OperationPage`, substitui `ModulePlaceholder`):
@@ -151,8 +159,9 @@ Consequência das decisões; feature test contra **MySQL** (lição #15) para o 
 ## 6. i18n & permissões (P-07)
 
 - Fecha **P-07**: chaves `perm.*` de `operation_enrollment_manage`, `operation_turma_submit_docs`,
-  `operation_turma_complete` nos 3 locales (pt-BR/es-CL/en) — hoje o picker de Roles renderiza a chave
-  crua. Seguir o padrão do Bloco 5.4 (chave com underscore; `es-CL` referência).
+  `operation_turma_complete` nos 3 locales (pt-BR/es-CL/en). **Atualização 2026-07-23 (D11):** as
+  chaves já foram criadas por `c48496c` (Bloco 5.4, padrão chave com underscore; `es-CL` referência).
+  A Exec 3 apenas prova na UI que o picker de Roles não renderiza chave crua e encerra a pendência.
 - Namespace novo do módulo (`operation.*`) nos 3 locales, chaves **idênticas**; consome as chaves
   `operation.enrollment.manage` que a 6c deixou anotadas.
 

@@ -422,6 +422,48 @@
         "enrolledVsContracted": "{{enrolled}} of {{contracted}} contracted",
         "close": "Close"
       }
+    },
+    "documents": {
+      "title": "Class documentation",
+      "manual": "Open manual (PDF)",
+      "popupBlocked": "The browser blocked the manual from opening. Allow pop-ups and try again.",
+      "progress": "{{done}} of {{total}} documents complete",
+      "type": {
+        "MANUAL": "Manual",
+        "PRUEBAS": "Tests / assessments",
+        "EVALUACION_REDATOR": "Editor assessment"
+      },
+      "delivered": "Delivered",
+      "pending": "Pending",
+      "empty": "No files.",
+      "enabled": "Documentation complete · class enabled for completion.",
+      "upload": "Upload PDF",
+      "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed.",
+      "remove": "Remove",
+      "removeTitle": "Remove document",
+      "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress.",
+      "lock": {
+        "concluida": "The class is concluded: documentation is now immutable (RN-15).",
+        "permission": "You do not have permission to upload or remove documentation."
+      },
+      "uploaded": "Document uploaded."
+    },
+    "conclusion": {
+      "title": "Class completion",
+      "state": {
+        "em_andamento": "In progress (blocked)",
+        "habilitada": "Enabled",
+        "concluida": "Concluded"
+      },
+      "missingTitle": "Documents missing to enable the class:",
+      "ready": "The class is ready to be concluded.",
+      "warning": "On confirmation, grades and attendance become immutable and certificates for approved students become available for issuing. This action cannot be undone.",
+      "confirm": "Confirm completion",
+      "confirmTitle": "Confirm class completion",
+      "confirmBody": "This action is irreversible. Confirm the completion of this class?",
+      "success": "Completion confirmed. Certificates available for issuing.",
+      "concludedAt": "Concluded on {{date}}",
+      "noPermission": "You do not have permission to conclude classes."
     }
   }
 }

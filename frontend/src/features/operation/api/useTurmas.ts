@@ -83,3 +83,51 @@ export function useRemoveRedator() {
     onSuccess: invalidate,
   })
 }
+
+/** Com `responseType: 'blob'` o corpo de erro também chega como Blob, então o
+ * interceptor do axios rejeita o próprio Blob no lugar do envelope RFC 7807 —
+ * por isso o corpo é lido e reparseado aqui (D10). */
+async function problemFromBlob(error: unknown): Promise<ProblemDetails> {
+  if (error instanceof Blob) {
+    try {
+      return JSON.parse(await error.text()) as ProblemDetails
+    } catch {
+      // corpo não-JSON (HTML de erro, proxy truncado): o Blob é só o corpo da
+      // resposta, não carrega status HTTP algum, então monta-se aqui um
+      // envelope sintético legível — sem isso `useMutationErrors` recebe o
+      // Blob crú, não acha `.detail` nem `.errors`, e a mensagem some para o
+      // usuário (o botão só para de carregar, sem feedback nenhum).
+      return {
+        type: 'https://lotus.cl/errors/unknown',
+        title: 'Erro inesperado',
+        status: 0,
+        detail: 'Não foi possível processar a resposta do servidor.',
+        instance: '',
+      }
+    }
+  }
+  return error as ProblemDetails
+}
+
+/** Conclusão é terminal (RN-15): invalida lista, detalhe e pendentes via
+ * `turmaKeys.all` para nenhuma tela seguir mostrando a turma como em curso. */
+export function useConcludeTurma() {
+  const invalidate = useInvalidate()
+  return useMutation<TurmaData, ProblemDetails, number>({
+    mutationFn: (turmaId) =>
+      api.post<TurmaData>(`/api/turmas/${turmaId}/conclude`).then((r) => r.data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useTurmaManual() {
+  return useMutation<Blob, ProblemDetails, number>({
+    mutationFn: (turmaId) =>
+      api
+        .get<Blob>(`/api/turmas/${turmaId}/manual`, { responseType: 'blob' })
+        .then((r) => r.data)
+        .catch(async (error: unknown) => {
+          throw await problemFromBlob(error)
+        }),
+  })
+}

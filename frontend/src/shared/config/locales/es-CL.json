@@ -422,6 +422,48 @@
         "enrolledVsContracted": "{{enrolled}} de {{contracted}} contratados",
         "close": "Cerrar"
       }
+    },
+    "documents": {
+      "title": "Documentación de la turma",
+      "manual": "Abrir manual (PDF)",
+      "popupBlocked": "El navegador bloqueó la apertura del manual. Habilita las ventanas emergentes e inténtalo de nuevo.",
+      "progress": "{{done}} de {{total}} documentos completos",
+      "type": {
+        "MANUAL": "Manual",
+        "PRUEBAS": "Pruebas / evaluaciones",
+        "EVALUACION_REDATOR": "Evaluación del redactor"
+      },
+      "delivered": "Entregado",
+      "pending": "Pendiente",
+      "empty": "Sin archivos.",
+      "enabled": "Documentación completa · turma habilitada para la conclusión.",
+      "upload": "Subir PDF",
+      "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo.",
+      "remove": "Quitar",
+      "removeTitle": "Quitar documento",
+      "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso.",
+      "lock": {
+        "concluida": "La turma está concluida: la documentación quedó inmutable (RN-15).",
+        "permission": "No tienes permiso para subir o quitar documentación."
+      },
+      "uploaded": "Documento subido."
+    },
+    "conclusion": {
+      "title": "Conclusión de la turma",
+      "state": {
+        "em_andamento": "En curso (bloqueado)",
+        "habilitada": "Habilitada",
+        "concluida": "Concluida"
+      },
+      "missingTitle": "Faltan documentos para habilitar la turma:",
+      "ready": "La turma está lista para concluir.",
+      "warning": "Al confirmar, notas y asistencias quedan inmutables y los certificados de los alumnos aprobados pasan a estar disponibles para emisión. La acción no se puede deshacer.",
+      "confirm": "Confirmar conclusión",
+      "confirmTitle": "Confirmar conclusión de la turma",
+      "confirmBody": "Esta acción es irreversible. ¿Confirmas la conclusión de la turma?",
+      "success": "Conclusión confirmada. Certificados disponibles para emisión.",
+      "concludedAt": "Concluida el {{date}}",
+      "noPermission": "No tienes permiso para concluir turmas."
     }
   }
 }

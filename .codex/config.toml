@@ -1,5 +1,5 @@
-# Fase 1: Codex disponível somente para leitura, revisão e investigação.
-# Escrita será habilitada apenas quando o workflow de execução do Lotus for adaptado.
+# Fase 5: escrita habilitada somente para execução delegada via lotus-execute-block,
+# dentro dos paths autorizados pelo plano ativo. Estado e commits permanecem com Claude.
 
 approval_policy = "never"
 sandbox_mode = "workspace-write"
