@@ -30,6 +30,27 @@ Revise somente `active_work_item`, usando `active_spec`, `active_plan`, `context
 presente e o intervalo Git que prova esse trabalho. Não selecione uma sprint por backlog,
 `progress.md` ou heurística.
 
+## Classificação de risco (obrigatória, uma linha)
+
+Classifique `active_work_item` antes de revisar:
+
+- **Alto risco** — tocou qualquer domínio das leis §5 (migration/schema, `generated.ts`, auth/
+  Sanctum, auditoria, RBAC), dinheiro, certificados/documentos legais, ou foi executado via
+  `executor: codex`.
+- **Baixo risco** — todo o resto (ex.: frontend visual sem regra de negócio).
+
+**Baixo risco** → revisão Claude com o gabarito abaixo, como sempre.
+
+**Alto risco** → além da revisão Claude, acione uma revisão independente do Codex: carregue
+`mcp__codex__codex` (read-only) e peça revisão do intervalo Git do work item contra plano, spec e
+leis §5, retornando achados como `arquivo:linha — problema — impacto`. Depois:
+
+1. deduplique e funda os achados das duas revisões;
+2. achado que só o Codex viu não se aceita sem verificação própria no código;
+3. divergência entre revisores se mostra ao João, não se resolve em silêncio.
+
+A revisão independente não substitui o gabarito do projeto; é uma segunda lente.
+
 ## Gabarito (nesta ordem de autoridade)
 
 1. **CLAUDE.md §5** — as 8 leis invioláveis. Violação aqui é 🔴 sempre, sem discussão.
