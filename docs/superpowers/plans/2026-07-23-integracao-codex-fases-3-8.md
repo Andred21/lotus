@@ -525,9 +525,26 @@ git commit -m "docs(ai): fase8 - limpeza por evidencia do piloto e historico"
 
 ---
 
-## Evidência do piloto (preencher na Task 8)
+## Evidência do piloto (Task 8 + rerun na Task 9)
 
-- Status do packet: _
-- Fontes consultadas: _
-- Fontes indisponíveis: _
-- Defeitos de contrato: _
+- **1ª rodada — status `blocked`** (`RECOMMENDED_TRANSITION: blocked`). Causa declarada pelo Codex:
+  task `bloco6-frontend-exec3` não localizada no Notion.
+- **Diagnóstico:** duas causas independentes. (a) O runtime companion do Codex não expõe as
+  ferramentas do plugin Notion — verificado por contraste: a mesma busca respondeu pelo conector
+  Notion do Claude. (b) Não existe task 1:1 `bloco6-frontend-exec3` no Notion, porque `exec3` é
+  split interno da sprint; o Notion organiza por feature.
+- **Fontes consultadas:** `state.md`, `progress.md`, spec ativa (todas via git, com blob SHA real).
+- **Fontes indisponíveis:** Google Drive, Figma, Notion — as três, no runtime do Codex.
+- **Defeitos de contrato encontrados e corrigidos (Fase 8):**
+  1. bloqueio decidido pela *fonte* ausente em vez do *fato* ausente — reescrito;
+  2. ausência de task 1:1 no Notion tratada como bloqueante — agora explicitamente esperada para
+     splits internos (`-exec1/2/3`), resultando em `partial`;
+  3. "The Codex sandbox remains read-only in this phase" — afirmação vencida após a Fase 5
+     (`workspace-write`); trocada por regra independente de sandbox;
+  4. `progress.md Contexto field` — campo inexistente; trocado pelos ponteiros de `state.md`;
+  5. limitação de conectores não registrada — agora em `AGENTS.md` §3, com data e gatilho de
+     reavaliação.
+- **2ª rodada (contrato corrigido) — status `partial`**, `RECOMMENDED_TRANSITION: ready_for_planning`,
+  8 key facts, `Open questions: None blocking`. Packet salvo e estado transicionado no mesmo commit.
+- **Conclusão:** o caminho `context_required → Codex → packet → ready_for_planning` funciona
+  ponta a ponta; o gargalo remanescente é acesso do Codex a Drive/Figma/Notion, não o contrato.
