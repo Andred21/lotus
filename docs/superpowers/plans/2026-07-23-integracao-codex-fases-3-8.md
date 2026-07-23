@@ -566,7 +566,8 @@ git commit -m "docs(ai): fase8 - limpeza por evidencia do piloto e historico"
 - **Valor comprovado do Drive:** a rodada canônica achou duas divergências que as rodadas apoiadas
   só na spec não viam — o Drive atribui o upload documental ao redator em interface própria
   (a sprint atual restringe a admin/superadmin) e o fluxo antigo exigia feedback completo como gate
-  de habilitação (superado pela decisão D6). Ambas reconciliadas na tabela, sem reabrir D6.
+  de habilitação (a spec declara `Feedbacks (RF-FBK) → sprint futura` como não-escopo; **não** é
+  matéria de D6, que decide apenas a taxonomia documental). Ambas reconciliadas na tabela.
   8. **gate de conector insatisfazível + atribuição errada de decisão** (achados do stop gate na 3ª
      rodada): a regra "só marque `unavailable` depois de chamar a tool e capturar a falha" não tinha
      como ser cumprida pelo Notion, cuja tool não existe no runtime — nada a chamar, nada a falhar.
