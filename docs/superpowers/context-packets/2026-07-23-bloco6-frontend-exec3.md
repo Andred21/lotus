@@ -20,6 +20,9 @@ word_budget: 1200
 # Context Packet — Bloco 6 Frontend · Exec 3 — Docs + conclusão
 
 > Derived snapshot. Canonical source hierarchy and staleness rules remain authoritative.
+> Os hashes do frontmatter são **procedência** — registram o que foi lido na geração. O commit que
+> armazena este packet também move `state.md` para `ready_for_planning`; essa transição não torna o
+> packet obsoleto.
 
 ## Scope
 
@@ -82,7 +85,13 @@ word_budget: 1200
 
 ## Staleness triggers
 
-- Alteração do work item, dos ponteiros de estado ou de qualquer commit/blob SHA registrado.
-- Criação de um `active_plan` para a Exec 3.
+- `active_work_item` deixar de ser `bloco6-frontend-exec3`, ou `active_spec` apontar para outro
+  arquivo.
+- Edição da spec ativa que altere escopo, aceite ou constraint da Exec 3.
 - Disponibilização de Drive, Figma ou Notion com fatos materiais mais novos ou divergentes.
-- Nova decisão sobre taxonomia documental, conclusão, permissões ou critérios de aceite.
+- Nova decisão sobre taxonomia documental, conclusão, permissões ou critérios de aceite —
+  em especial reabertura da decisão D6.
+
+Não são gatilhos: a transição que promove este packet, o commit que o armazena, nem qualquer edição
+de `state.md` que apenas mova `workflow_state`, `next_owner`, `next_action`, `context_packet`,
+`blocker` ou `resume_state`.

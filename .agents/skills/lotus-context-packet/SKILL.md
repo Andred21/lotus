@@ -143,6 +143,29 @@ outside these markers.
 
 The caller reviews and stores the returned packet.
 
+## Provenance versus staleness
+
+`base_commit`, `state_blob_sha`, `progress_blob_sha`, `plan_blob_sha` and `spec_blob_sha` are
+**provenance**: they record what was read at generation time so a reviewer can reproduce the
+packet. They are not staleness keys, and a bare hash mismatch never invalidates a packet.
+
+This distinction is mandatory because `state.md` requires the transition to be committed together
+with the artifact that proves it. The commit that stores the packet therefore also rewrites
+`state.md` (`workflow_state`, `context_packet`, `blocker`). A packet whose staleness triggered on
+its own `state_blob_sha` would be stale the instant it was promoted — the packet must never be
+authored that way.
+
+Staleness triggers must name **semantic** changes that would alter the packet's content, such as:
+
+- `active_work_item` or `active_spec` changing to a different item or file;
+- an edit to the spec, plan, or referenced code that changes scope, acceptance, or a constraint;
+- a canonical external source becoming available, or contradicting a recorded decision;
+- a decision recorded in the divergence table being reopened.
+
+Never list as a trigger: the promoting transition itself, the commit that stores the packet, or any
+`state.md` edit that only moves `workflow_state`, `next_owner`, `next_action`, `context_packet`,
+`blocker` or `resume_state`.
+
 ## Packet schema
 
 ```md
@@ -221,4 +244,6 @@ Confirm all of the following:
 - the packet contains at most 8 key facts and respects the word budget;
 - no implementation steps already owned by the plan were copied;
 - `ready` is not used while a blocking question remains;
+- no staleness trigger references a provenance hash, the promoting transition, or a `state.md` edit
+  that only moves workflow fields;
 - the result contains only the suggested path and the marked packet.

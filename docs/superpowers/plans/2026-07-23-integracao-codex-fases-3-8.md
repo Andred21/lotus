@@ -543,7 +543,14 @@ git commit -m "docs(ai): fase8 - limpeza por evidencia do piloto e historico"
      (`workspace-write`); trocada por regra independente de sandbox;
   4. `progress.md Contexto field` — campo inexistente; trocado pelos ponteiros de `state.md`;
   5. limitação de conectores não registrada — agora em `AGENTS.md` §3, com data e gatilho de
-     reavaliação.
+     reavaliação;
+  6. **auto-invalidação do packet** (achado do stop gate do Codex, após a 2ª rodada): o schema pinava
+     `state_blob_sha` e o packet listava "qualquer commit/blob SHA registrado" como gatilho de
+     staleness, enquanto o invariante do `state.md` exige que a transição entre no mesmo commit do
+     artefato. Resultado: o commit que promovia o packet o marcava obsoleto no mesmo ato
+     (`36b913b7` gravado × `8b9fc246` real). Corrigido separando **procedência** (hashes, só para
+     reprodutibilidade) de **staleness** (mudanças semânticas), com regra explícita na skill,
+     item de validação novo e gatilhos do packet vigente reescritos.
 - **2ª rodada (contrato corrigido) — status `partial`**, `RECOMMENDED_TRANSITION: ready_for_planning`,
   8 key facts, `Open questions: None blocking`. Packet salvo e estado transicionado no mesmo commit.
 - **Conclusão:** o caminho `context_required → Codex → packet → ready_for_planning` funciona
