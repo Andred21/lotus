@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '@shared/ui'
 import { useMutationErrors } from '@shared/hooks'
@@ -11,22 +11,40 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
   const manual = useTurmaManual()
   const { message } = useMutationErrors([manual.error])
   const urlRef = useRef<string | null>(null)
+  const tabRef = useRef<Window | null>(null)
+  const [popupBlocked, setPopupBlocked] = useState(false)
 
   useEffect(
     () => () => {
       if (urlRef.current) URL.revokeObjectURL(urlRef.current)
+      tabRef.current?.close()
     },
     [],
   )
 
-  const open = () =>
+  const open = () => {
+    setPopupBlocked(false)
+    const tab = window.open('about:blank', '_blank')
+    if (!tab) {
+      setPopupBlocked(true)
+      return
+    }
+
+    tab.opener = null
+    tabRef.current = tab
     manual.mutate(turmaId, {
       onSuccess: (blob) => {
         if (urlRef.current) URL.revokeObjectURL(urlRef.current)
         urlRef.current = URL.createObjectURL(blob)
-        window.open(urlRef.current, '_blank', 'noopener')
+        tab.location.href = urlRef.current
+        tabRef.current = null
+      },
+      onError: () => {
+        tab.close()
+        tabRef.current = null
       },
     })
+  }
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -37,7 +55,11 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
         loading={manual.isPending}
         onClick={open}
       />
-      {message && <p className="text-sm text-red-600">{message}</p>}
+      {(popupBlocked || message) && (
+        <p className="text-sm text-red-600">
+          {popupBlocked ? t('operation.documents.popupBlocked') : message}
+        </p>
+      )}
     </div>
   )
 }

@@ -426,6 +426,7 @@
     "documents": {
       "title": "Documentación de la turma",
       "manual": "Abrir manual (PDF)",
+      "popupBlocked": "El navegador bloqueó la apertura del manual. Habilita las ventanas emergentes e inténtalo de nuevo.",
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
         "MANUAL": "Manual",

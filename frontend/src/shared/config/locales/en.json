@@ -426,6 +426,7 @@
     "documents": {
       "title": "Class documentation",
       "manual": "Open manual (PDF)",
+      "popupBlocked": "The browser blocked the manual from opening. Allow pop-ups and try again.",
       "progress": "{{done}} of {{total}} documents complete",
       "type": {
         "MANUAL": "Manual",
