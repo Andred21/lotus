@@ -1,13 +1,13 @@
 ---
 schema_version: 1
-packet_id: lotus-context-bloco6-frontend-exec3-v1
+packet_id: lotus-context-packet-bloco6-frontend-exec3
 block_id: bloco6-frontend-exec3
-status: blocked
-generated_at: 2026-07-23T04:37:49-03:00
+status: partial
+generated_at: 2026-07-23T04:43:53-03:00
 base_ref: chore/lotus-operational-state
-base_commit: 2cb764875af389f1cbdd6f6d8ba601269c588ccb
+base_commit: fb69bbaacd8ac339524652af26f443e72342fcb0
 state_path: docs/superpowers/state.md
-state_blob_sha: e6de81ee67499d2777a7a6512d9dfa9f5fe98102
+state_blob_sha: 36b913b7f0d3e76d04e047f90ece795cc50b6824
 progress_path: docs/superpowers/progress.md
 progress_blob_sha: 4f2008bdd499caa8b5c8e25ccd13e2bf3a76ac3c
 plan_path: null
@@ -17,71 +17,72 @@ spec_blob_sha: 0815e8e5418835b23e9d8e7b8803fe084ce1f551
 word_budget: 1200
 ---
 
-# Context Packet — Bloco 6-frontend · Execução 3 · Docs + conclusão
+# Context Packet — Bloco 6 Frontend · Exec 3 — Docs + conclusão
 
 > Derived snapshot. Canonical source hierarchy and staleness rules remain authoritative.
 
 ## Scope
 
-**Goal:** Fornecer contexto para planejar a Execução 3 do frontend de Operação: aba `Documentación`, conclusão de turma, manual PDF e fechamento da pendência P-07 de i18n.
+**Goal:** Planejar a Exec 3 da interface de Operação: aba `Documentación`, conclusão da turma, abertura do manual PDF e fechamento da pendência P-07 de i18n.
 
-**Non-goals:** interface própria do redator; escrita de notas, presença ou aprovação; feedbacks; templates de documentos gerados por código; certificação além do aviso de disponibilidade; seed operacional, que permanece task final separada.
+**Non-goals:** alterações de backend; interface própria do redator; escrita de notas, presença ou aprovação; feedbacks; certificação além do aviso pós-conclusão; templates gerados por código; ancoragem cross-module genérica; seed operacional, que permanece task final separada.
 
 ## Source registry
 
 | Key | Provider | Source | Modified | Status | Used for |
 |---|---|---|---|---|---|
-| REQUEST | João Victor | Instrução explícita para `bloco6-frontend-exec3` | 2026-07-23 | retrieved | Identificar bloco, ref e fontes obrigatórias |
-| LOCAL-STATE | Repository | `docs/superpowers/state.md` | 2026-07-23T02:56:45-03:00 | retrieved | Estado operacional e ponteiros ativos |
-| LOCAL-PROGRESS | Repository | `docs/superpowers/progress.md` | 2026-07-23T01:55:12-03:00 | retrieved | Histórico recente |
-| LOCAL-SPEC | Repository | `docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md` | 2026-07-21T18:41:04-03:00 | retrieved | Escopo, decisões e aceite da Execução 3 |
-| NOTION-TASK | Notion | `Lotus / Tasks-Lotus Fase 2 / bloco6-frontend-exec3` | unknown | unavailable | Confirmar task, status, escopo e aceite organizacional |
-| DRIVE-CANONICAL | Google Drive | `Viagem Chile/Projetos/Lotus.cl/V2` | unknown | unavailable | Verificar planejamento canônico |
-| FIGMA-PROTOTYPE | Figma | Protótipo do módulo Operacional referido pela spec | unknown | unavailable | Verificar referência visual e terminologia |
+| REQ | João Victor | Instrução atual para regenerar `bloco6-frontend-exec3` | 2026-07-23 | available | Estado efetivo, limites read-only e disponibilidade das fontes |
+| STATE | Git | `docs/superpowers/state.md` | 2026-07-23 | available | Work item, ponteiros, bloqueio anterior e `resume_state` |
+| PROGRESS | Git | `docs/superpowers/progress.md` | 2026-07-22 | available | Confirmar Exec 1 e Exec 2 entregues |
+| SPEC | Git | `docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md` | 2026-07-21 | available | Escopo, decisões e critérios de aceite da Exec 3 |
+| DRIVE | Google Drive | `Viagem Chile/Projetos/Lotus.cl/V2` | unknown | unavailable | Planejamento canônico externo |
+| FIGMA | Figma | Protótipo do módulo Operacional citado pela spec | unknown | unavailable | Referência visual externa |
+| NOTION | Notion | `Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2` | unknown | unavailable | Organização de tasks |
 
 ## Key facts
 
-1. O estado local identifica `bloco6-frontend-exec3`, `workflow_state: context_required`, spec ativa e plano nulo; `progress.md` registra as Execuções 1 e 2 como entregues. `[LOCAL-STATE]` `[LOCAL-PROGRESS]`
-2. A Execução 3 não prevê toque de backend: consome os endpoints existentes de documentos, conclusão e manual. `[LOCAL-SPEC]`
-3. `Documentación` trabalha com exatamente três tipos — `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR` —, aceita múltiplos arquivos por tipo e apresenta progresso e habilitação derivados. `[LOCAL-SPEC]`
-4. A conclusão permanece bloqueada até a turma estar habilitada, exige confirmação irreversível e torna documentos imutáveis após `concluida`; o manual deve abrir como PDF. `[LOCAL-SPEC]`
-5. P-07 exige rótulos para `operation_enrollment_manage`, `operation_turma_submit_docs` e `operation_turma_complete` nos três locales, com chaves idênticas e `es-CL` como referência. `[LOCAL-SPEC]`
-6. A task indispensável do Notion não pôde ser localizada nem lida porque as ferramentas do conector não ficaram disponíveis; portanto, seu escopo, status e aceite não foram reconciliados. `[NOTION-TASK]`
-7. Drive e Figma estão indisponíveis nesta sessão e não foram substituídos por busca web. `[DRIVE-CANONICAL]` `[FIGMA-PROTOTYPE]`
+1. A Exec 3 entrega `Documentación`, `Conclusión`, manual PDF e P-07; não requer toque de backend. `[SPEC]`
+2. `Documentación` usa somente `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR`, aceita múltiplos arquivos por tipo, mostra progresso e deriva a habilitação; upload e remoção ficam bloqueados após conclusão. `[SPEC]`
+3. A conclusão permanece desabilitada até a turma estar `habilitada`, informa `missing_document_types`, exige confirmação irreversível e, no sucesso, anuncia certificados disponíveis para emissão. `[SPEC]`
+4. O manual deve abrir o PDF fornecido pelo endpoint existente; documentos, conclusão e manual consomem contratos backend já entregues. `[SPEC]`
+5. P-07 exige traduções das permissões `operation_enrollment_manage`, `operation_turma_submit_docs` e `operation_turma_complete`, além do namespace `operation.*`, com chaves idênticas em pt-BR, es-CL e en. `[SPEC]`
+6. O aceite exige `pnpm build`, `pnpm lint` e prova do comportamento na UI contra o backend real, incluindo os três tipos documentais, habilitação derivada, conclusão e ausência de chaves cruas no picker de Roles. `[SPEC]`
+7. Exec 1 e Exec 2 já foram entregues; a Exec 3 é o work item ativo e ainda não possui plano. `[PROGRESS]` `[STATE]`
+8. `bloco6-frontend-exec3` é split interno da sprint; ausência de task 1:1 no Notion é esperada. A spec já contém escopo, decisões e aceite, logo as fontes externas indisponíveis tornam o packet `partial`, não `blocked`. `[REQ]` `[SPEC]`
 
 ## Resolved decisions and divergences
 
 | Topic | External snapshot | Current decision | Resolution basis |
 |---|---|---|---|
-| Taxonomia documental | A spec registra que o protótipo Figma mostrava quatro rótulos, incluindo `Lista de asistencia` e `Acta de cierre`. | Manter somente os três tipos existentes no backend. | Resolvido por decisão explícita D6 de João em 2026-07-21, registrada na spec; a fonte Figma direta está indisponível. `[LOCAL-SPEC]` |
-| Organização da task | Task do Notion indisponível para leitura. | O repositório aponta Execução 3 em `context_required`. | Não resolvido: o gating exige ler e reconciliar o achado do Notion antes do planejamento. `[NOTION-TASK]` `[LOCAL-STATE]` |
+| Bloqueio anterior por Notion | O bloqueio registrado decorreu de uma task 1:1 não localizada | Não há fato necessário ausente; ausência da task é não bloqueante | Regra explícita atual e cobertura integral da spec `[REQ]` `[STATE]` `[SPEC]` |
+| Taxonomia documental 4×3 | O protótipo Figma mostrava quatro rótulos exploratórios | Permanecem os três tipos do backend | Decisão D6 registrada por João na spec `[SPEC]` |
+| Estado para esta geração | `workflow_state: blocked` | Tratar como `context_required`, sem editar o estado | `resume_state: context_required` e instrução explícita atual `[REQ]` `[STATE]` |
 
 ## Constraints
 
-- Preservar RN-15/RN-16: conclusão irreversível, documentos com peso legal e taxonomia de três tipos.
-- Não criar endpoint ou fluxo backend para esta execução.
-- Não promover ideias FUT-1/FUT-2 nem o seed operacional para o escopo atual.
-- O working tree estava limpo (`git status --short` sem saída) durante a coleta.
+- Geração estritamente read-only; nenhuma alteração de arquivo, commit, branch ou estado.
+- Working tree estava limpo na geração.
+- `active_plan` permanece `null`; o packet não deve inventar etapas de implementação.
+- Preservar a taxonomia legal dos três documentos e o caráter irreversível da conclusão.
+- Drive, Figma e Notion não podem ser substituídos por busca web ou fontes alternativas.
 
 ## External acceptance signals
 
-- Nenhum sinal de aceite da task foi verificado no Notion porque a fonte ficou indisponível. `[NOTION-TASK]`
-- Nenhuma validação direta de Drive ou Figma foi obtida. `[DRIVE-CANONICAL]` `[FIGMA-PROTOTYPE]`
+- Nenhum sinal externo adicional foi recuperado porque os três conectores estão indisponíveis.
+- A spec disponível fornece aceite suficiente: três tipos documentais com progresso e habilitação derivada; conclusão protegida e irreversível; manual PDF; P-07 traduzida; build, lint e validação na UI real. `[SPEC]`
 
 ## Open questions
 
-- Qual é o escopo, status e conjunto de critérios de aceite registrados na task `bloco6-frontend-exec3` em `Tasks-Lotus Fase 2`? Esta lacuna é bloqueante até que a task seja recuperada e reconciliada.
+- None blocking.
 
 ## Deferred
 
-- Seed operacional após a Execução 3.
-- FUT-1: templates de documentos gerados por código.
-- FUT-2: ancoragem cross-módulo genérica.
-- Reavaliar quatro tipos documentais somente se a Lotus solicitar formalmente.
+- Seed operacional permanece task final após a Exec 3. `[SPEC]`
+- Templates gerados por código, ancoragem cross-module genérica e eventual revisão da taxonomia 4×3 dependem de decisões futuras. `[SPEC]`
 
 ## Staleness triggers
 
-- Alteração de `state.md`, `progress.md`, spec ativa, branch ou commit-base.
-- Disponibilização ou atualização da task do Notion.
-- Disponibilização de Drive ou Figma com evidência conflitante.
-- Criação do plano da Execução 3.
+- Alteração do work item, dos ponteiros de estado ou de qualquer commit/blob SHA registrado.
+- Criação de um `active_plan` para a Exec 3.
+- Disponibilização de Drive, Figma ou Notion com fatos materiais mais novos ou divergentes.
+- Nova decisão sobre taxonomia documental, conclusão, permissões ou critérios de aceite.

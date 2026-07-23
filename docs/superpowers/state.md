@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: bloco6-frontend
 active_work_item: bloco6-frontend-exec3
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 last_completed_work_item: bloco6-frontend-exec2
 state_basis_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
 active_spec: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
 active_plan: null
-context_packet: null
-blocker: "Piloto Fase 7: packet gerado pelo Codex retornou status blocked (docs/superpowers/context-packets/2026-07-23-bloco6-frontend-exec3.md). Causa declarada: task do Notion não localizada. Duas causas reais sob apuração — (a) o runtime companion do Codex não expõe as ferramentas do plugin Notion; (b) não existe task 1:1 `bloco6-frontend-exec3` no Notion, pois `exec3` é split interno da sprint."
-resume_state: context_required
+context_packet: docs/superpowers/context-packets/2026-07-23-bloco6-frontend-exec3.md
+blocker: null
+resume_state: null
 updated_at: 2026-07-23
 ---
 
