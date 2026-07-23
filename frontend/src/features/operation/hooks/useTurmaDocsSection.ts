@@ -1,5 +1,7 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import { useMutationErrors, usePermissions } from '@shared/hooks'
+import { useToast } from '@shared/ui'
+import { useTranslation } from 'react-i18next'
 import {
   useRemoveTurmaDocument,
   useTurmaDocuments,
@@ -11,6 +13,8 @@ import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
  * `habilitada` NÃO é recalculada aqui: vem derivada do backend em `TurmaData`. */
 export function useTurmaDocsSection(turma: TurmaData) {
   const turmaId = turma.id!
+  const { t } = useTranslation()
+  const toast = useToast()
   const list = useTurmaDocuments(turmaId)
   const uploadMutation = useUploadTurmaDocument()
   const removeMutation = useRemoveTurmaDocument()
@@ -51,7 +55,10 @@ export function useTurmaDocsSection(turma: TurmaData) {
     canSubmit: !concluida && hasPermission,
     lockReason,
     upload: (type: TurmaDocumentType, file: File) =>
-      uploadMutation.mutate({ turmaId, type, file }),
+      uploadMutation.mutate(
+        { turmaId, type, file },
+        { onSuccess: () => toast.success(t('operation.documents.uploaded')) },
+      ),
     uploading: uploadMutation.isPending,
     // O dialog fecha só no sucesso (onSuccess do caller): com a mutation em voo,
     // o ConfirmDialog trava ESC/X/Cancelar para o 403/422 ter onde pousar.

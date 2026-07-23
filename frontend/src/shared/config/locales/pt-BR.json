@@ -444,7 +444,8 @@
       "lock": {
         "concluida": "A turma está concluída: a documentação ficou imutável (RN-15).",
         "permission": "Você não tem permissão para subir ou remover documentação."
-      }
+      },
+      "uploaded": "Documento enviado."
     }
   }
 }

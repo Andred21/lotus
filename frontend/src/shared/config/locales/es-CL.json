@@ -444,7 +444,8 @@
       "lock": {
         "concluida": "La turma está concluida: la documentación quedó inmutable (RN-15).",
         "permission": "No tienes permiso para subir o quitar documentación."
-      }
+      },
+      "uploaded": "Documento subido."
     }
   }
 }

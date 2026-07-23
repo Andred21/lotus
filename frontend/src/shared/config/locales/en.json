@@ -444,7 +444,8 @@
       "lock": {
         "concluida": "The class is concluded: documentation is now immutable (RN-15).",
         "permission": "You do not have permission to upload or remove documentation."
-      }
+      },
+      "uploaded": "Document uploaded."
     }
   }
 }
