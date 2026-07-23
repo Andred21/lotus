@@ -94,6 +94,10 @@ O dono das técnicas internas continua sendo **`using-superpowers`**. Dentro da 
 2. **`writing-plans`** — escreva tasks pequenas com paths exatos, passos de verificação e DoD
    comportamental. O plano sai em
    `docs/superpowers/plans/AAAA-MM-DD-<active-work-item>.md`.
+   Todo plano termina com uma seção `## Handoff de execução` declarando `executor: claude|codex`
+   e, quando `codex`, a lista `paths_autorizados` (globs exatos). Critério: `codex` para tasks
+   mecânicas com verificação executável e paths fechados; `claude` quando a task toca lei do §5,
+   decisão de arquitetura ou exige julgamento fora do plano.
 
 ## Regras
 

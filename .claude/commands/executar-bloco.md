@@ -79,6 +79,22 @@ Priorize `subagent-driven-development`. Execução inline só quando todos forem
 
 Declare a classificação em uma linha. Se qualquer critério falhar, use o fluxo completo.
 
+### Gate de delegação (handoff)
+
+Leia `## Handoff de execução` do `active_plan`:
+
+- `executor: claude` ou seção ausente → execute com o ciclo Superpowers normal.
+- `executor: codex` → carregue `mcp__codex__codex` via ToolSearch e invoque a skill
+  `lotus-execute-block` com `plan_path`, intervalo de tasks e commit base. Depois do report:
+  1. valide os markers e o contrato;
+  2. revise o diff real (`git status` + `git diff`) contra o plano — o report não substitui o diff;
+  3. rode a verificação do plano você mesmo antes de aceitar;
+  4. commit por task ou grupo coeso, nos paths exatos;
+  5. `RECOMMENDED_TRANSITION: blocked` ou diff fora de `paths_autorizados` → `workflow_state:
+     blocked` com `blocker`, sem aceitar o diff.
+
+Estado, transições e commits permanecem com Claude em ambos os casos.
+
 ## TDD e disciplina Git
 
 - Siga o plano task a task e preserve red → green → refactor quando houver comportamento testável.
