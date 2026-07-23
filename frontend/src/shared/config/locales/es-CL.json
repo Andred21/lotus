@@ -422,6 +422,19 @@
         "enrolledVsContracted": "{{enrolled}} de {{contracted}} contratados",
         "close": "Cerrar"
       }
+    },
+    "documents": {
+      "title": "Documentación de la turma",
+      "progress": "{{done}} de {{total}} documentos completos",
+      "type": {
+        "MANUAL": "Manual",
+        "PRUEBAS": "Pruebas / evaluaciones",
+        "EVALUACION_REDATOR": "Evaluación del redactor"
+      },
+      "delivered": "Entregado",
+      "pending": "Pendiente",
+      "empty": "Sin archivos.",
+      "enabled": "Documentación completa · turma habilitada para la conclusión."
     }
   }
 }

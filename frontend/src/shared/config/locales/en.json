@@ -422,6 +422,19 @@
         "enrolledVsContracted": "{{enrolled}} of {{contracted}} contracted",
         "close": "Close"
       }
+    },
+    "documents": {
+      "title": "Class documentation",
+      "progress": "{{done}} of {{total}} documents complete",
+      "type": {
+        "MANUAL": "Manual",
+        "PRUEBAS": "Tests / assessments",
+        "EVALUACION_REDATOR": "Editor assessment"
+      },
+      "delivered": "Delivered",
+      "pending": "Pending",
+      "empty": "No files.",
+      "enabled": "Documentation complete · class enabled for completion."
     }
   }
 }

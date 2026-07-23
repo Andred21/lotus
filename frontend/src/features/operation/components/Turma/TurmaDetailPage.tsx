@@ -6,6 +6,7 @@ import { turmaDisplayStatus, turmaStatusSeverity } from '../../lib/turmaStatus'
 import { TurmaConfigCard } from './TurmaConfigCard'
 import { RedatorDesignation } from './RedatorDesignation'
 import { EnrollmentSection } from '../Enrollment/EnrollmentSection'
+import { TurmaDocuments } from '../Document/TurmaDocuments'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation()
@@ -67,7 +68,7 @@ export function TurmaDetailPage() {
           <RedatorDesignation turma={turma} />
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.docs')}>
-          <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
+          <TurmaDocuments turma={turma} />
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.conclusion')}>
           <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
