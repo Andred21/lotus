@@ -567,6 +567,15 @@ git commit -m "docs(ai): fase8 - limpeza por evidencia do piloto e historico"
   só na spec não viam — o Drive atribui o upload documental ao redator em interface própria
   (a sprint atual restringe a admin/superadmin) e o fluxo antigo exigia feedback completo como gate
   de habilitação (superado pela decisão D6). Ambas reconciliadas na tabela, sem reabrir D6.
+  8. **gate de conector insatisfazível + atribuição errada de decisão** (achados do stop gate na 3ª
+     rodada): a regra "só marque `unavailable` depois de chamar a tool e capturar a falha" não tinha
+     como ser cumprida pelo Notion, cuja tool não existe no runtime — nada a chamar, nada a falhar.
+     Passou a admitir duas evidências: chamada que falhou (com a linha do erro) ou ausência na
+     descoberta de tools (nomeando o namespace esperado). E o packet citava **D6** como base para
+     "feedback como gate", quando D6 decide apenas a taxonomia documental (3 tipos × 4 rótulos do
+     Figma); a base correta é a spec declarar `Feedbacks (RF-FBK) → sprint futura` como não-escopo.
+     Corrigido no packet e virou item de validação: uma decisão só pode ser citada para o assunto
+     que ela realmente decide.
 - **Conclusão:** o caminho `context_required → Codex → packet → ready_for_planning` funciona ponta a
   ponta **com a fonte canônica de fato consultada**. O gargalo remanescente é só o MCP do Notion,
   que é não bloqueante. Lição transversal: a causa de erro mais cara aqui não foi contrato mal

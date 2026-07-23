@@ -43,7 +43,7 @@ word_budget: 1200
 | DRIVE-ENTITY | Google Drive | `entidade-turma.md` (`1LkyQr_g-xqW0-XPpGShPfhLZXHo9v6oJ`) | 2026-06-12T18:06:30Z | available | Estados, RN-15 e RN-16 |
 | DRIVE-FLOW | Google Drive | `fluxos.md` (`1XRpMw2MF7hKUwg2tpIR52CcG97tSbRrM`) | 2026-06-19T14:29:39Z | available | Máquina de estados e handoff para certificação |
 | FIGMA | Figma | Protótipo Operacional citado pela spec | unknown | not located | O conector respondeu via `whoami`, mas a spec, o repositório e as buscas no Drive não forneceram URL ou file key consultável |
-| NOTION | Notion | Task 1:1 de `bloco6-frontend-exec3` | unknown | unavailable | Nenhuma ferramenta Notion está carregada após descoberta; split interno não requer task 1:1 |
+| NOTION | Notion | Task 1:1 de `bloco6-frontend-exec3` | unknown | unavailable | Evidência: descoberta de tools não retornou nenhuma no namespace esperado (`notion` / `mcp.notion.com`); não houve chamada a falhar. Não bloqueante: split interno não tem task 1:1 |
 
 ## Key facts
 
@@ -61,7 +61,7 @@ word_budget: 1200
 | Topic | External snapshot | Current decision | Resolution basis |
 |---|---|---|---|
 | Ator do upload | Drive descreve o redator enviando documentos em sua interface | Admin/superadmin fazem o upload nesta fase; interface do redator fica futura | Drive descreve o alvo final; a spec posterior delimita explicitamente o split atual, sem cancelar o fluxo futuro `[DRIVE-MOD]` `[DRIVE-UI]` `[SPEC]` |
-| Feedback como gate | O fluxo antigo exige documentação e feedback completos para habilitar | Exec 3 usa somente os três tipos documentais do backend; feedbacks ficam fora desta sprint | Decisão D6 posterior, registrada por João, preserva RN-16 nos três tipos e supera o snapshot anterior `[DRIVE-RN]` `[DRIVE-FLOW]` `[SPEC]` |
+| Feedback como gate | O fluxo antigo exige documentação e feedback completos para habilitar | Exec 3 usa somente os três tipos documentais do backend; feedbacks ficam fora desta sprint | A spec declara `Feedbacks (RF-FBK) → sprint futura` como não-escopo, e a habilitação consumida é a derivada pelo backend. **Não** decorre de D6, que trata apenas da taxonomia documental `[DRIVE-RN]` `[DRIVE-FLOW]` `[SPEC]` |
 | Protótipo 4×3 | O arquivo Figma não foi localizável; a spec registra indiretamente quatro rótulos exploratórios nos prints | Permanecem `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR` | Decisão D6 posterior de João já fechou a divergência; ausência de nova evidência não a reabre `[SPEC]` |
 
 ## Constraints
