@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag } from '@shared/ui'
+import { AppFileUpload, AppTag } from '@shared/ui'
+import type { FileUploadHandlerEvent } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import { formatFileSize } from '../../lib/turmaDocuments'
@@ -7,9 +8,11 @@ import { formatFileSize } from '../../lib/turmaDocuments'
 type Props = {
   type: TurmaDocumentType
   files: TurmaDocumentData[]
+  uploading: boolean
+  onUpload: (file: File) => void
 }
 
-export function DocumentTypeCard({ type, files }: Props) {
+export function DocumentTypeCard({ type, files, uploading, onUpload }: Props) {
   const { t } = useTranslation()
   const delivered = files.length > 0
 
@@ -20,6 +23,15 @@ export function DocumentTypeCard({ type, files }: Props) {
         <AppTag
           value={t(delivered ? 'operation.documents.delivered' : 'operation.documents.pending')}
           severity={delivered ? 'success' : 'warning'}
+        />
+        <AppFileUpload
+          accept="application/pdf"
+          chooseLabel={t('operation.documents.upload')}
+          disabled={uploading}
+          uploadHandler={(e: FileUploadHandlerEvent) => {
+            const file = e.files[0]
+            if (file) onUpload(file)
+          }}
         />
       </header>
 
@@ -35,6 +47,7 @@ export function DocumentTypeCard({ type, files }: Props) {
         ))}
         {!delivered && <li className="text-sm text-slate-400">{t('operation.documents.empty')}</li>}
       </ul>
+      <p className="mt-2 text-xs text-slate-400">{t('operation.documents.uploadHint')}</p>
     </section>
   )
 }

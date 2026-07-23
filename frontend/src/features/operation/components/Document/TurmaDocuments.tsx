@@ -35,7 +35,13 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
 
       <div className="space-y-3">
         {TURMA_DOCUMENT_TYPES.map((type) => (
-          <DocumentTypeCard key={type} type={type} files={s.byType[type]} />
+          <DocumentTypeCard
+            key={type}
+            type={type}
+            files={s.byType[type]}
+            uploading={s.uploading}
+            onUpload={(file) => s.upload(type, file)}
+          />
         ))}
       </div>
     </div>

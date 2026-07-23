@@ -1,6 +1,6 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
-import { useTurmaDocuments } from '../api/useTurmaDocuments'
+import { useTurmaDocuments, useUploadTurmaDocument } from '../api/useTurmaDocuments'
 import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
 
 /** Orquestra a aba Documentación. O componente só consome.
@@ -8,7 +8,8 @@ import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
 export function useTurmaDocsSection(turma: TurmaData) {
   const turmaId = turma.id!
   const list = useTurmaDocuments(turmaId)
-  const { message: error } = useMutationErrors([list.error])
+  const uploadMutation = useUploadTurmaDocument()
+  const { message: error } = useMutationErrors([list.error, uploadMutation.error])
 
   const files = list.data ?? []
   const byType = TURMA_DOCUMENT_TYPES.reduce<Record<TurmaDocumentType, TurmaDocumentData[]>>(
@@ -28,5 +29,8 @@ export function useTurmaDocsSection(turma: TurmaData) {
     totalTypes: TURMA_DOCUMENT_TYPES.length,
     habilitada: turma.habilitada === true,
     concluida: turma.status === 'concluida',
+    upload: (type: TurmaDocumentType, file: File) =>
+      uploadMutation.mutate({ turmaId, type, file }),
+    uploading: uploadMutation.isPending,
   }
 }

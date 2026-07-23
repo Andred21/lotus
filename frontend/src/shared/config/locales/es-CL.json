@@ -434,7 +434,9 @@
       "delivered": "Entregado",
       "pending": "Pendiente",
       "empty": "Sin archivos.",
-      "enabled": "Documentación completa · turma habilitada para la conclusión."
+      "enabled": "Documentación completa · turma habilitada para la conclusión.",
+      "upload": "Subir PDF",
+      "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo."
     }
   }
 }
