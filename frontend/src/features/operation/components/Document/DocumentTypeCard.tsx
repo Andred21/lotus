@@ -42,7 +42,16 @@ export function DocumentTypeCard({
             disabled={uploading}
             uploadHandler={(e: FileUploadHandlerEvent) => {
               const file = e.files[0]
-              if (file) onUpload(file)
+              if (!file) return
+              // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
+              // (diferente do useBudgetDetail, que limpa só no onSuccess): com
+              // filesState não-vazio o input some do DOM e o clique seguinte
+              // reenvia o MESMO arquivo em vez de reabrir o seletor — no sucesso
+              // (arquivo errado subiu) e na falha (422 rejeitado) igual. `file`
+              // já foi capturado no fechamento, então segue válido para
+              // `onUpload` mesmo depois do clear resetar o estado do Prime.
+              e.options.clear()
+              onUpload(file)
             }}
           />
         )}

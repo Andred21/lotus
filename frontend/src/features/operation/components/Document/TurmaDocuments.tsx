@@ -70,7 +70,7 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
         pending={s.removing}
         error={s.removeError}
         onConfirm={() => {
-          if (!pendingRemoval || s.removing) return
+          if (!pendingRemoval || s.removing || !s.canSubmit) return
           s.remove(pendingRemoval.id, { onSuccess: () => setPendingRemoval(null) })
         }}
         onCancel={() => {

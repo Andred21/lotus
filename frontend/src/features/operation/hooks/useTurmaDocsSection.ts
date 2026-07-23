@@ -1,4 +1,5 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
+import type { ProblemDetails } from '@shared/api/axios'
 import { useMutationErrors, usePermissions } from '@shared/hooks'
 import { useToast } from '@shared/ui'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +9,13 @@ import {
   useUploadTurmaDocument,
 } from '../api/useTurmaDocuments'
 import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
+
+/** Mesma resolução de mensagem do `useMutationErrors` (detail do 422/403, ou o
+ * 1º erro de campo), mas como função simples: dentro do `onError` de uma
+ * mutation não se pode chamar um hook. */
+function problemMessage(problem: ProblemDetails): string | null {
+  return problem.errors ? (Object.values(problem.errors)[0]?.[0] ?? null) : (problem.detail ?? null)
+}
 
 /** Orquestra a aba Documentación. O componente só consome.
  * `habilitada` NÃO é recalculada aqui: vem derivada do backend em `TurmaData`. */
@@ -57,7 +65,16 @@ export function useTurmaDocsSection(turma: TurmaData) {
     upload: (type: TurmaDocumentType, file: File) =>
       uploadMutation.mutate(
         { turmaId, type, file },
-        { onSuccess: () => toast.success(t('operation.documents.uploaded')) },
+        {
+          onSuccess: () => toast.success(t('operation.documents.uploaded')),
+          // O banner agregado (`error` acima) fica no topo da aba e pode ficar
+          // fora da viewport quando o card do 3º tipo está scrollado — o toast
+          // garante que a falha apareça onde o usuário está olhando.
+          onError: (err) => {
+            const message = problemMessage(err)
+            if (message) toast.error(message)
+          },
+        },
       ),
     uploading: uploadMutation.isPending,
     // O dialog fecha só no sucesso (onSuccess do caller): com a mutation em voo,
