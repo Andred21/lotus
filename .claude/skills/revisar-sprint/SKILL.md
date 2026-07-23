@@ -111,9 +111,10 @@ N+1 sem eager loading; `env()` fora de `config/`; feature que ninguém pediu.
 
 Relatório: órfãos + achados por severidade × esforço. **Aguarde o João aprovar** o que entra.
 
-Aprovado → **não gere prompts soltos**: o pacote aprovado vira um bloco novo no backlog do
-`progress.md` ("Bloco N · Refino de código Sprint X"), e ele passa por `/planejar-bloco` como
-qualquer outro. Foi assim que os Blocos 1 e 5.1 nasceram — é o molde.
+Aprovado → o pacote vira um bloco novo em `docs/superpowers/backlog.md`.
+
+Não promova automaticamente esse bloco para `state.md` enquanto existir outro
+`active_work_item`.
 
 **Padrão reincidente (2+ sprints)** não vira só refactor: vira regra. Proponha o texto para a rule
 da camada, ou um ADR se for decisão de arquitetura. Deletar de novo é enxugar gelo.

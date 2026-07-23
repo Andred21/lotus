@@ -2,5 +2,5 @@
 # Escrita será habilitada apenas quando o workflow de execução do Lotus for adaptado.
 
 approval_policy = "never"
-sandbox_mode = "read-only"
+sandbox_mode = "workspace-write"
 web_search = "disabled"

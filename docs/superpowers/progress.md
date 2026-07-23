@@ -1,87 +1,19 @@
 # Progresso — Lotus v2
 
-Índice vivo do projeto. **Uma linha por feature.** Sessão nova lê este arquivo primeiro
-para reconstruir contexto antes de qualquer plano/spec.
+> Histórico curto do que foi entregue e da feature em andamento. Este arquivo **não define a etapa
+> operacional**. Para saber o que fazer agora, leia `docs/superpowers/state.md`.
+> Fila futura: `docs/superpowers/backlog.md`. Histórico antigo: `progress-archive.md`.
 
-- **Ativo** = feature em desenvolvimento; plano/spec em `plans/` e `specs/`.
-- **Entregue** = mergeado e provado; plano/spec movidos para `plans/archive/` e `specs/archive/`.
-- **Contexto** = o que uma sessão nova precisa carregar para trabalhar neste bloco — e nada além.
-  Preenchida só para **Ativo** e **backlog**; entregue fica `—` (o plano arquivado tem o detalhe).
-  Padrão de código NÃO entra aqui: as rules de `.claude/rules/` carregam sozinhas.
-- Detalhe de decisões: `docs/adrs.md`. Schema: `docs/der-fisico.md`. Divergências conhecidas:
-  `docs/pendencias.md`.
-
-> **Política de corte:** como este arquivo é carregado em toda sessão, quando a tabela ultrapassar
-> **25 entradas**, o arquivo raiz mantém `Ativo` + backlog + as **10 últimas** entregues; o restante
-> vai para `progress-archive.md`, consultado somente sob demanda.
-
-| Data | Feature | Status | Resultado (1 linha) | Contexto | Plano | Spec |
-|------|---------|--------|---------------------|----------|-------|------|
-| 2026-07-04 | Login + store de sessão | Entregue | Auth SPA Sanctum, guard de rota, sessão em Zustand hidratada no boot | — | `plans/archive/2026-07-04-login-flow-session.md` | `specs/archive/2026-07-04-login-flow-session-design.md` |
-| 2026-07-06 | App Shell + Sidebar RBAC | Entregue | Shell (sidebar+header), nav filtrada por RBAC, dark mode layout-only em uiStore | — | `plans/archive/2026-07-06-app-shell-sidebar.md` | — |
-| 2026-07-07 | Sprint 1 · Cadastros backend (Cliente + Redator) | Entregue | Schema, models, DTOs, validação RUT, actions, controllers; provado em sqlite `:memory:` | — | `plans/archive/2026-07-07-sprint1-cadastros-backend.md` | `specs/archive/2026-07-07-sprint1-cadastros-backend-design.md` |
-| 2026-07-08 | Sprint 1 · Cursos backend | Entregue | `courses` + `course_certificate_templates` + `course_redator` (N:N habilitação) | — | `plans/archive/2026-07-08-sprint1-cadastros-cursos-backend.md` | — |
-| 2026-07-09 | Frontend · Fundação da UI | Entregue | Molde reutilizável: ModulePage, CrudDialog, useCrudPage, useEntityForm, i18n, tema dark | — | `plans/archive/2026-07-09-frontend-fundacao-ui.md` | — |
-| 2026-07-09 | Sprint 1 · Cadastros frontend + docs tipados | Entregue | Telas Cliente/Redator sobre hooks CRUD; documentos tipados do redator no backend | — | `plans/archive/2026-07-09-sprint1-cadastros-frontend.md` | `specs/archive/2026-07-09-sprint1-cadastros-frontend-design.md` |
-| 2026-07-09 | Sprint 1 · Correções code-review | Entregue | 7 defeitos do review corrigidos; build verde, comportamento provado por teste | — | `plans/archive/2026-07-09-sprint1-correcoes-code-review.md` | — |
-| 2026-07-10 | Sprint 1 · Catálogo frontend | Entregue | `/cursos`: listagem + form com habilitação de redatores (fecha Sprint 1) | — | `plans/archive/2026-07-10-sprint1-catalog-frontend.md` | `specs/archive/2026-07-10-sprint1-catalog-frontend-design.md` |
-| 2026-07-10 | Sprint 2 · Comercial backend | Entregue | Budget agrupa Quotes independentes; status/totais derivados (bcmath); aprovação superadmin; anexos polimórficos. ADR-17 (seq atômica) nasceu aqui | — | `plans/archive/2026-07-10-sprint2-commercial-backend.md` | `specs/archive/2026-07-10-sprint2-commercial-backend-design.md` |
-| 2026-07-13 | Sprint 2 · Comercial frontend | Entregue | Lista de orçamentos, detalhe com cotações, wizard de cotação (passo em useState), aprovação/recusa, anexos | — | `plans/archive/2026-07-13-sprint2-commercial-frontend.md` | `specs/archive/2026-07-13-sprint2-commercial-frontend-design.md` |
-| 2026-07-14 | Bloco 0 · Sync de docs pós-Sprint 2 | Entregue | Docs voltam a bater com o código: `budgets` sem status/total (derivados no `BudgetSummaryService`), `quotes` sem `client_id`; ADR-17 fechado | — | — (docs-only) | — |
-| 2026-07-16 | Bloco 1 · Refino de código Sprint 2 | Entregue | Kit de form em `shared/ui/FormField/` mata a duplicação dos 6 diálogos; `Delete{Budget,Quote}Action` tiram a guarda de peso legal do controller e ganham teste | — | `plans/archive/2026-07-16-bloco1-refino-sprint2.md` | `specs/archive/2026-07-16-bloco1-refino-sprint2-design.md` |
-| 2026-07-16 | Bloco 2 · CR Cliente (cargo, principal único, complemento) | Entregue | `client_contacts.job_title`; `PrimaryContactService::ensureSingle()` fecha "no máximo 1 principal" nos 2 caminhos de escrita; `AppRadioButton` em `shared/ui` | — | `plans/archive/2026-07-16-bloco2-cr-cliente.md` | `specs/archive/2026-07-16-bloco2-cr-cliente-design.md` |
-| 2026-07-17 | Bloco 3 · CR Curso: `course_modules` 1:N (backend) | Entregue | Quadro de módulos da proposta vira entidade 1:N de `courses`; `sort_order` derivado do índice do array e totais derivados em runtime — nada persistido | — | `plans/archive/2026-07-16-bloco3-course-modules-backend.md` | `specs/archive/2026-07-16-bloco3-course-modules-backend-design.md` |
-| 2026-07-17 | Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis (frontend) | Entregue | Tela de módulos com reordenação, totais derivados no render e aviso âmbar de divergência de carga (nunca bloqueia); `AppTextarea` em `shared/ui` | — | `plans/archive/2026-07-17-bloco4-course-modules-frontend.md` (+ roteiro) | `specs/archive/2026-07-17-bloco4-course-modules-frontend-design.md` |
-| 2026-07-17 | Bloco 5.0 · Coleção nested ausente não apaga (fix de peso legal) | Entregue | `CourseData::$templates`/`$modules` viram `Optional`: ausente = não mexe, `[]` = apaga — save de curso pela tela não apaga mais os templates de certificado | — | — (fix) | — |
-| 2026-07-17 | Bloco 5.1 · ADR-19 + sync de docs | Entregue | ADR-19 (dinheiro = decimal + bcmath) escrito e ADR-15 reescrito contra a realidade (i18next, dicionários separados por camada); `app/Data` corrigido nas leis | — (docs-only) | — |
-| 2026-07-17 | Bloco 5.2a · Administração: aba Usuarios | Entregue | CRUD de staff-user (`type=admin` + role Spatie) em `/administracion`; `SuperadminGuard` bloqueia (422) tirar o último superadmin ativo; `AuthController::login()` virou guard-explícito (`Auth::guard('web')`) — request `auth:sanctum` no mesmo processo trocava o guard default e dava 500 no login encadeado | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
-| 2026-07-18 | Bloco 5.2b · Administração: aba Roles y Permisos | Entregue | Ver roles de sistema read-only + criar/editar role customizada de subconjunto do catálogo fixo (`PermissionCatalog` = fonte única, também do seeder); guardrail das 3 segregadas em 2 camadas (422 no back + some do picker). **Validação de DTO roda ANTES do Action**: `notIn(SYSTEM_ROLES)` NÃO pode ficar em `RoleData::rules()` senão PUT de role de sistema dá 422 em vez do 403 do `SystemRoleGuard` — bloqueio de nome de sistema no create vem da colisão de nome | — | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |
-| 2026-07-19 | Bloco 5.3 · Refino frontend Comercial (H.1.3) | Entregue | Refino C+B das revisões: array-helpers no `useClientForm`, `AddressFields`/`ContactFields`, `useBudgetDetail` (BudgetDetailPage declarativo), `AppDatePicker` (contrato ISO string anti-fuso + locale es-CL), `FormErrorBanner`/`AppRadioButton`, stepper, a11y, toolbar/ordem. **Lição:** `aria-label` em botão de upload do Prime (`FileUpload` basic) vai por `pt.basicButton` — `chooseOptions` descarta chaves desconhecidas | — | `plans/archive/2026-07-19-refino-comercial-frontend.md` | `specs/archive/2026-07-19-refino-comercial-frontend-design.md` |
-| 2026-07-20 | Bloco 5.4 · Refino frontend Administração | Entregue | `FormErrorSummary` nos 2 diálogos (422 de permissão deixa de sumir), toolbar contextual por aba, grupos+descrições de permissão via `permGroup.*`/`perm.*` (chave com underscore — keySeparator `.` do i18next proíbe ponto), Tipo como tag. `PermissionCatalog.description` virou dev-facing — permissão nova exige as 3 chaves `perm.*` nos locales | — | `plans/archive/2026-07-20-refino-administracao-frontend.md` | `specs/archive/2026-07-20-refino-administracao-frontend-design.md` |
-| 2026-07-20 | Bloco 6a · Sprint 3 · Aluno + vínculo + resolução (backend) | Entregue | `Student` extensão de `User` (type=aluno, não loga); `student_client_logs` histórico RN-10 com 1-vínculo-aberto garantido por coluna gerada única; `StudentResolver` por RUT (novo→cria, existe→associa/move) — fundação do import da Turma (6c). **Lição #15:** coluna gerada STORED dependendo de FK proíbe `ON DELETE CASCADE` no InnoDB — `student_id` é `restrict`; passava em sqlite e só a prova real de MySQL no gate pegou. Sem REST/tela/`StudentData` (YAGNI). Provado e2e contra MySQL: 7 ramos + constraint | — | `plans/archive/2026-07-20-bloco6a-aluno-vinculo.md` | `specs/archive/2026-07-20-bloco6a-aluno-vinculo-design.md` |
-| 2026-07-21 | Bloco 6c · Sprint 3 · Matrícula + importação de alunos (backend) | Entregue | `enrollments` (unique turma+aluno spanning-trashed → rematrícula RESTAURA, não duplica); `EnrollStudentAction` é fonte ÚNICA (individual E cada linha do import — regra não deriva); import tolerante a erro POR LINHA (sem transação global; EnrollStudentAction detém a atômica); openspout com `SHOULD_PRESERVE_EMPTY_ROWS`. D9: email obrigatório só p/ aluno novo. Enroll individual faz move RN-10 cross-client em SILÊNCIO (só import reporta `moved[]`) — 6-frontend deve avisar. e2e real provado (201/422/200/204/404). P-07: chaves i18n de `operation.enrollment.manage` p/ 6-frontend | — | `plans/archive/2026-07-21-bloco6c-matricula-import.md` | `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
-| 2026-07-21 | Bloco 6d · Sprint 3 · Conclusão + manual (backend) | Entregue | `habilitada` é DERIVADA (`TurmaHabilitacaoService`, não persistida — enum status = 2 valores); conclusão TERMINAL gated RN-16 (3 tipos de doc), sem reversão; RN-15 = `Turma::assertAcademicallyWritable()` chamado por TODO caminho de escrita acadêmica (docs 6d + notas futuras); manual = Blade única → Gotenberg stream, não materializado (D6/D7, molde p/ certificado Sprint 4). Permissões já existiam (submit_docs redator+super; complete admin). e2e real provado (MySQL enum + Gotenberg %PDF) | — | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` | `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
-| 2026-07-21 | Bloco 6b · Sprint 3 · Turma + designação de redator (backend) | Entregue | `Turma` (1:1 cotação aprovada, nasce manual em_andamento), N:N `turma_redator`, gate RN-09 `RedatorIdoneidadeService` (REUF válido + habilitação), CRUD REST + designação. **1:1-turma-VIVA por coluna gerada `active_quote_id`** (não `unique(quote_id)` simples — soft-delete+recriar dava 500; padrão do 6a `open_link`, quote_id RESTRICT evita 1215). **Lição #15 de novo**: MySQL pegou 2 bugs que sqlite mascarava (`->unique()` após `->constrained()` não emite índice; `false`→`''` em `valid_until`). Designação POST retorna 200 (não 201 spatie) — candidato a ADR. e2e real provado (201/200/422 RN-09) | — | `plans/archive/2026-07-21-bloco6b-turma-designacao.md` | `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md` |
-| 2026-07-21 | Bloco 6-frontend · Sprint 3 · Operação (frontend) | Ativo | Fatiado em **3 execuções** (turmas / matrícula+import / docs+conclusão) + task de seed. **Exec 1:** hub `/operacion` (fila de pendentes + tabela enriquecida) + página de detalhe não-modal com abas `Configuración` (view/edit/create reusado) e `Redactor` (picker idôneo client-side). **Exec 2:** aba Alumnos — matrícula individual com pré-check de troca de cliente em 2 passos (RN-10), import de planilha xlsx/csv com resumo, remoção; backend `EnrollPreviewData` + endpoint preview não-mutante de RUT. Exec 3 planejada | Packet externo: `context-packets/2026-07-21-bloco6-frontend-exec1-turmas.md`; molde `commercial` (hub + `BudgetDetailPage`); feature `operation` greenfield; `redatoresApi`/`coursesApi` read-only já existem; idoneidade RN-09 calculada no front (`lib/eligibility`); **toques backend Exec 1** = `TurmaQueryBuilder` (1º do projeto) + `TurmaData` enriquecido (curso/cliente/alunos/`quote_code`/`budget_code`/`budget_id` — regen no mesmo commit, lição #11) + endpoint pendentes. Identificação orçamento↔cotação por relacionamento (D7). Prints do Figma anexados (2026-07-21). | `plans/2026-07-21-bloco6-frontend-exec1-turmas.md` | `specs/2026-07-21-bloco6-frontend-operacao-design.md` |
-
-## Backlog (títulos dos próximos blocos — sem plano detalhado ainda)
-
-_Planejamento just-in-time: só escrever o plano/spec quando o bloco entrar em execução._
-_Formato: `- Título — Contexto: <o que carregar>`. Contexto é palpite até o bloco ser planejado._
-
-- Bloco 6-frontend · **Exec 3** · Documentación + Conclusión + manual + P-07 — Contexto: spec (Exec 3);
-  consome `documents`/`conclude`/`manual` existentes (3 tipos de doc — RN-16); fecha **P-07** (`perm.*` das
-  3 permissões operacionais nos 3 locales). Sem toque backend. Planejar just-in-time.
-- FUT-1 · Templates de documento de turma **gerados via código** (redator baixa pré-preenchido com dados
-  da turma/alunos, preenche online/manuscrito, sobe) — templates a desenhar com a Lotus. **→ abrir task no
-  Notion + avaliar doc Drive/local quando definido.** Contexto: aba Documentación (Exec 3) é o ponto de entrada.
-- FUT-2 · Refino de **ancoragem cross-módulo** (link de dado compartilhado leva à página do módulo dono com a
-  entidade selecionada, ou a exibe inline) — **→ abrir task no Notion.** Contexto: turma→orçamento já entrega
-  o caso pontual (Exec 1); aqui é o mecanismo genérico.
-- Bloco 7 · Sprint 4 · Certificação (templates, PDF, endpoint público QR) — Contexto: `adrs.md`
-  (ADR-08/10), `der-fisico` (certificates, certificate_sequences), lição sobre snapshot de template
-  no ato da emissão
-- Hardening (ownership em rotas nested, política de retenção de docs)
-- Check de paridade permissão↔i18n — teste/CI que assere `array_keys(PermissionCatalog::descriptions())`
-  (dot→underscore) == chaves `perm.*` de cada locale; sem isso, permissão nova renderiza chave crua no
-  picker (achado do review final do Bloco 5.4). Contexto: `PermissionCatalog` + locales.
-- Unicidade de `client_addresses.is_primary` — mesmo gap que o Bloco 2 fechou nos contatos; ficou de
-  fora porque o contratante não pediu e a tela só edita o 1º endereço. `PrimaryContactService` é o molde.
-- `ClientContactData.is_primary` tem default `false` **não-`Optional`** — `PUT /api/contacts/{id}` sem o
-  campo rebaixa o principal em silêncio. Pré-existente; rota sem consumidor no front (achado do review
-  final do Bloco 2).
-- Decidir: a UI não consegue voltar a **zero** principais (radio não desmarca), mas o backend aceita 0 —
-  assimetria entre as camadas, nunca decidida explicitamente (achado do review final do Bloco 2).
-- Consolidar as migrations "adicionais" nas originais — antes de subir para produção (decisão do João
-  no Bloco 2, para o folder de migrations não inchar).
-- Bloco 5.2a (Minors do review final, nenhum afeta correção) — `SuperadminGuard` sem teste do caso
-  superadmin **inativo** (guard é no-op ali); `UserData::fromModel` chama `getRoleNames()` 2×;
-  unicidade rut/email do `UpdateStaffUserAction` roda **fora** da transação (o `Create` roda dentro);
-  auto-colisão de rut/email no update (mesmo valor, mesmo id) sem teste; teste do 422 de `redator`
-  não afirma a chave `role`. Molde: `SuperadminGuard`/`UserData`/`UpdateStaffUserAction`.
-- Bloco 5.2b (Minors do review final, nenhum afeta correção) — testes de falha das Actions
-  (`CreateRoleAction`/`UpdateRoleAction`) afirmam só `expectException(ValidationException::class)`,
-  não a chave do error-bag (`name` vs `permissions`); **decisão pendente do João:** `GET /api/roles`
-  (gate `identity.user.view`) devolve `permissions[]` de toda role, então admin comum enumera as
-  permissões do superadmin — enquanto `/api/permissions` é superadmin-only. Tornar consistente =
-  projeção mais leve no `index` sem `identity.access.manage`. Molde: `RoleController@index`/`RoleData`.
+| Data | Entrega | Status | Resultado | Referências |
+|---|---|---|---|---|
+| 2026-07-17 | Bloco 5.0 · Nested `Optional` | Entregue | Campo ausente preserva coleção; `[]` apaga explicitamente. | — |
+| 2026-07-17 | Bloco 5.1 · ADR-19 + docs | Entregue | Dinheiro, i18n e paths de DTO sincronizados com a implementação. | — |
+| 2026-07-17 | Bloco 5.2a · Usuarios | Entregue | CRUD de staff, roles e proteção do último superadmin. | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` · `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
+| 2026-07-18 | Bloco 5.2b · Roles y Permisos | Entregue | Roles customizadas e segregação de permissões implementadas. | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` · `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |
+| 2026-07-19 | Bloco 5.3 · Refino Comercial | Entregue | Forms compartilhados, detalhe declarativo e date picker ISO. | `plans/archive/2026-07-19-refino-comercial-frontend.md` · `specs/archive/2026-07-19-refino-comercial-frontend-design.md` |
+| 2026-07-20 | Bloco 5.4 · Refino Administração | Entregue | Erros 422, toolbar e descrições i18n de permissões corrigidos. | `plans/archive/2026-07-20-refino-administracao-frontend.md` · `specs/archive/2026-07-20-refino-administracao-frontend-design.md` |
+| 2026-07-20 | Bloco 6a · Aluno + vínculo | Entregue | Resolução por RUT e vínculo histórico único validados em MySQL. | `plans/archive/2026-07-20-bloco6a-aluno-vinculo.md` · `specs/archive/2026-07-20-bloco6a-aluno-vinculo-design.md` |
+| 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | `plans/archive/2026-07-21-bloco6c-matricula-import.md` · `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
+| 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` · `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
+| 2026-07-21 | Bloco 6b · Turma + redator | Entregue | Turma por cotação, designação N:N e gate RN-09 validados. | `plans/archive/2026-07-21-bloco6b-turma-designacao.md` · `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md` |
+| 2026-07-22 | Sprint 3 · Operação frontend | Em andamento | Execuções 1 e 2 entregues; Execução 3 é o trabalho atual. | `state.md` |

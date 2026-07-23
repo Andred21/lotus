@@ -7,13 +7,26 @@ disable-model-invocation: true
 
 ## Âncora de contexto (não pule)
 
-@docs/superpowers/progress.md
+@docs/superpowers/state.md
+@docs/superpowers/backlog.md
 
 ## Escopo
 
 **$ARGUMENTS**
 
 Caso vazio: liste o backlog da âncora e **pergunte qual bloco** — não escolha por mim.
+
+## Gate de estado
+
+Leia `workflow_state`.
+
+- `ready_for_planning` → prossiga para `active_work_item`.
+- `planning` → retome exatamente do ponto pendente.
+- `idle` → mostre o backlog e peça ao João que promova um item.
+- qualquer outro estado → PARE e informe `next_action`.
+
+O argumento, quando fornecido, deve corresponder a `active_work_item`.
+Não planeje outro bloco enquanto houver trabalho ativo.
 
 ## Antes de planejar
 

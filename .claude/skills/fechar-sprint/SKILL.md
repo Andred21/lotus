@@ -4,6 +4,16 @@ description: "Gate de fechamento de sprint ou bloco do Lotus: prova o critério 
 disable-model-invocation: true
 ---
 
+## Gate de estado
+
+`workflow_state` deve ser `ready_for_closure`.
+
+Qualquer outro estado → PARE:
+- `ready_for_review` ou `reviewing`: review ainda não terminou;
+- `executing`: implementação ainda está em andamento;
+- `planning`: não existe entrega para fechar;
+- `blocked`: resolva o bloqueio primeiro.
+
 # Gate de fechamento — $ARGUMENTS
 
 Execute o checklist na ordem. Reporte cada item como ✅/❌ e **PARE no primeiro ❌ que exija

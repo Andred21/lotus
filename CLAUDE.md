@@ -26,20 +26,17 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 **pergunte ao João Victor — alucinar arquitetura é pior que perguntar.**
 
 **Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
-- **SEMPRE:** `docs/superpowers/progress.md` — índice vivo versionado (1 linha por feature:
-  o que foi construído, o desfecho, o contexto que ele exige e onde estão plano/spec). Barato e ancora a sessão.
-  Features entregues têm plano/spec em `plans/archive/` e `specs/archive/`.
-- **SE o bloco possuir Context Packet:** leia o packet apontado pelo `progress.md` antes de qualquer
-  consulta a Drive, Notion ou Figma. Se estiver `ready` e seus fingerprints ainda corresponderem ao
-  plano/spec ativos, use-o como snapshot do contexto externo e NÃO consulte novamente essas fontes.
-  Consulte a fonte externa somente se o packet estiver ausente, `partial`, `blocked`, stale ou se o
-  João solicitar verificação direta. O packet não substitui plano, spec, rules, ADRs ou código.
-- **SE a task implementa ou altera uma feature:** leia o plano e o spec apontados pelo
-  `progress.md`, além do que a coluna **Contexto** listar. Se a entrada ainda não apontar caminhos,
-  use os arquivos ativos correspondentes em `docs/superpowers/plans/` e `docs/superpowers/specs/`.
+
+- **SEMPRE, PRIMEIRO:** `docs/superpowers/state.md` — fonte única da etapa atual, do trabalho
+  ativo e da próxima ação permitida. Não deduza fase por commits, arquivos existentes, ordem do
+  backlog ou texto do `progress.md`.
+- **DEPOIS:** `docs/superpowers/progress.md` — histórico curto e resultado das entregas recentes.
+  Ele não controla o workflow.
+- **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada em `idle`,
+  planejamento ou fechamento.
+- **SE o bloco possuir Context Packet:** leia o packet indicado em `state.md` antes de qualquer
+  consulta a Drive, Notion ou Figma.
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
-- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task-a-task
-  (não versionado). Só para detalhe fino; a âncora canônica é o versionado acima.
 
 | Doc                                 | Consulte antes de                                               |
 | ------------------------------------|-----------------------------------------------------------------|
@@ -54,6 +51,8 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).
 > Os `/docs` são snapshots datados;
 > Se divergirem do Drive, **o Drive vence.**
+> **Conflito de estado:** se `state.md`, plano, Git ou `progress.md` divergirem sobre a etapa atual,
+> PARE. Não escolha por heurística. Mostre a divergência e corrija o estado antes de continuar.
 
 ## 4. Fluxo de trabalho (superpowers)
 
@@ -69,7 +68,7 @@ Comandos principais do fluxo: `/planejar-bloco` (entrada) · `/executar-bloco` (
 `plans/archive/` e `specs/archive/`. Índice versionado: `docs/superpowers/progress.md` (§3).
 
 **Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
-de executá-lo. O roadmap adiante vive como títulos no backlog do `progress.md`, não como planos
+de executá-lo. O roadmap adiante vive como títulos em `docs/superpowers/backlog.md`, não como planos
 prontos que envelhecem.
 
 > **A mecânica de execução** — gate inline (5 critérios), gate worktree, disciplina git no main tree
@@ -79,6 +78,8 @@ prontos que envelhecem.
 
 Enunciados abaixo; a mecânica de cada uma mora nas rules/ADR indicados. Se uma task parecer pedir
 que você quebre uma destas, **PARE e confirme com o João Victor.**
+
+
 
 1. **DDD-lite, SEM Repository sobre Eloquent.** (ADR-02 · `.claude/rules/backend-ddd.md`)
 2. **Auditoria só na aplicação, nunca em trigger de banco.** (ADR-08 · `backend-ddd.md`)

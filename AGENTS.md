@@ -24,12 +24,17 @@ Nesta fase, o Codex é um agente auxiliar de **leitura, revisão e investigaçã
 
 Antes de analisar qualquer tarefa, leia nesta ordem:
 
-1. `CLAUDE.md` — mapa do projeto, leis, fontes e comandos;
-2. `INSTRUÇÕES-DO-PROJETO.md` — postura e cláusulas de exceção;
-3. `docs/superpowers/progress.md` — estado atual, bloco ativo e ponteiros de contexto.
+1. `CLAUDE.md` — leis, fontes e comandos;
+2. `INSTRUÇÕES-DO-PROJETO.md` — postura e exceções;
+3. `docs/superpowers/state.md` — etapa atual e próxima ação permitida;
+4. `docs/superpowers/progress.md` — histórico recente, somente para orientação.
 
-Os comandos e skills específicos do Claude descritos nesses arquivos são informativos para o
-Codex. Não os imite nem os considere ferramentas disponíveis.
+Leia `docs/superpowers/backlog.md` somente quando `state.md` estiver em `idle`, quando a tarefa for
+planejamento ou quando a solicitação pedir explicitamente o roadmap.
+
+O Codex não infere nem altera o estado operacional. Quando uma skill produzir um artefato que
+permita transição, o resultado deve indicar a transição recomendada; Claude ou João atualizam
+`state.md`.
 
 Depois do bootstrap, carregue somente o necessário:
 

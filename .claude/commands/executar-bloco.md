@@ -7,23 +7,26 @@ disable-model-invocation: true
 
 > **Fonte da mecânica de execução do Lotus** (gate inline, gate worktree, disciplina git, DoD).
 
-## Âncora de contexto (não pule)
+## Gate de estado
 
-Estado do projeto:
+@docs/superpowers/state.md
 
-@docs/superpowers/progress.md
+- `ready_for_execution` → use `active_work_item` e `active_plan`; transicione para `executing`.
+- `executing` → retome exatamente da primeira task não concluída do plano.
+- qualquer outro estado → PARE e informe a ação registrada em `next_action`.
 
-Working tree: !`git status --short`
-
-## Escopo:
-
-**$ARGUMENTS**
-
-Caso vazio: localize o primeiro bloco pendente na âncora acima e **confirme comigo antes de começar.**
+O argumento, quando fornecido, deve corresponder a `active_work_item`.
+Não selecione trabalho pelo `progress.md` ou pelo `backlog.md`.
 
 ## Reconstrução de contexto
 
-Carregue o que a coluna **Contexto** da linha deste bloco listar — e só isso. Nada mais.
+Carregue, nesta ordem:
+
+1. `active_spec`;
+2. `context_packet`, quando não for `null`;
+3. `active_plan`;
+4. arquivos exigidos pela task atual;
+5. rules carregadas pelos paths tocados.
 
 - Padrão de código **não se carrega**: as rules de `.claude/rules/` entram sozinhas quando você lê
   o arquivo que elas cobrem.
