@@ -25,6 +25,8 @@ Quando vazio, use exclusivamente `active_work_item`; nunca consulte o backlog pa
 
 Este comando aceita somente:
 
+- `context_required` → roteie a geração do Context Packet ao Codex (seção abaixo); com o packet
+  validado e salvo, transicione para `ready_for_planning` e prossiga;
 - `ready_for_planning` → valide as âncoras e transicione para `planning`;
 - `planning` → retome exatamente do ponto pendente.
 
@@ -39,6 +41,32 @@ workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
 ```
+
+## Rota `context_required` → Codex
+
+Pré-condições: `next_owner: codex`, `next_action: generate_context_packet`, `context_packet: null`.
+Divergência → `blocked`.
+
+1. Carregue as ferramentas do plugin Codex (`ToolSearch "select:mcp__codex__codex"`).
+2. Invoque o Codex (sandbox read-only) com prompt que exija a skill `lotus-context-packet` de
+   `.agents/skills/`, informando `active_work_item`, `active_spec`, branch e commit atuais. O Codex
+   não altera arquivos nem estado.
+3. Valide a resposta: markers exatos, frontmatter completo, ≤ 8 key facts, fontes indisponíveis
+   registradas, `RECOMMENDED_TRANSITION` presente. Contrato violado → uma re-invocação citando a
+   violação; persistindo → `blocked`.
+4. `RECOMMENDED_TRANSITION: blocked` → grave `workflow_state: blocked` com `blocker` copiado do
+   packet e PARE.
+5. `ready_for_planning` → salve o packet no `SUGGESTED_PATH`, e no MESMO commit atualize `state.md`:
+
+```yaml
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
+context_packet: docs/superpowers/context-packets/<arquivo>.md
+```
+
+6. Um packet `status: partial` prossegue; as fontes `unavailable` viram limitação declarada no
+   brainstorming. `status: blocked` nunca prossegue.
 
 ## Reconstrução de contexto
 
