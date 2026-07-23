@@ -15,6 +15,10 @@ export function useTurmaDocsSection(turma: TurmaData) {
   const uploadMutation = useUploadTurmaDocument()
   const removeMutation = useRemoveTurmaDocument()
   const { message: error } = useMutationErrors([list.error, uploadMutation.error, removeMutation.error])
+  // Escopo próprio para o dialog de remoção: o banner do painel usa o agregado
+  // acima (lista + upload + remoção); o dialog usa só o erro da remoção, senão
+  // um erro de upload velho aparece dentro da confirmação de remoção.
+  const { message: removeError } = useMutationErrors([removeMutation.error])
 
   const files = list.data ?? []
   const byType = TURMA_DOCUMENT_TYPES.reduce<Record<TurmaDocumentType, TurmaDocumentData[]>>(
@@ -37,7 +41,14 @@ export function useTurmaDocsSection(turma: TurmaData) {
     upload: (type: TurmaDocumentType, file: File) =>
       uploadMutation.mutate({ turmaId, type, file }),
     uploading: uploadMutation.isPending,
-    remove: (fileId: number) => removeMutation.mutate({ turmaId, fileId }),
+    // O dialog fecha só no sucesso (onSuccess do caller): com a mutation em voo,
+    // o ConfirmDialog trava ESC/X/Cancelar para o 403/422 ter onde pousar.
+    remove: (fileId: number, options?: { onSuccess: () => void }) =>
+      removeMutation.mutate({ turmaId, fileId }, options),
     removing: removeMutation.isPending,
+    removeError,
+    // Reseta a mutation ao cancelar: sem isso, reabrir o dialog para outro
+    // arquivo mostraria o erro fantasma de uma tentativa que nunca ocorreu para ele.
+    resetRemove: () => removeMutation.reset(),
   }
 }

@@ -57,13 +57,15 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
         confirmLabel={t('operation.documents.remove')}
         severity="danger"
         pending={s.removing}
-        error={s.error}
+        error={s.removeError}
         onConfirm={() => {
-          if (!pendingRemoval) return
-          s.remove(pendingRemoval.id)
+          if (!pendingRemoval || s.removing) return
+          s.remove(pendingRemoval.id, { onSuccess: () => setPendingRemoval(null) })
+        }}
+        onCancel={() => {
+          s.resetRemove()
           setPendingRemoval(null)
         }}
-        onCancel={() => setPendingRemoval(null)}
       />
     </div>
   )
