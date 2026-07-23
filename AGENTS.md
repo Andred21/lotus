@@ -19,9 +19,10 @@ solicitada**.
   que identifique a ação e o alvo.
 - Quando chamado pelo plugin do Claude Code, trate o pedido recebido como o escopo completo. Não
   amplie a tarefa nem importe contexto adicional sem necessidade.
-- **Context Packet:** quando a skill `lotus-context-packet` for invocada, consulte somente as
-  fontes externas exigidas pelo bloco e retorne o packet conforme o contrato da skill. A consulta
-  autoriza leitura externa seletiva, não escrita externa nem mudança de estado do Superpowers.
+- **Context Packet:** a skill `lotus-context-packet` é invocada pelo `/planejar-bloco` quando
+  `state.md` está em `context_required`. Consulte somente as fontes externas exigidas e retorne o
+  packet conforme o contrato da skill. A consulta autoriza leitura externa seletiva, não escrita
+  externa nem mudança de estado do Superpowers.
 
 ## 2. Bootstrap obrigatório e seletivo
 

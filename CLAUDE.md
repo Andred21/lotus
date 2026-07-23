@@ -71,6 +71,9 @@ Comandos principais do fluxo: `/planejar-bloco` (entrada) · `/executar-bloco` (
 (review) · `/fechar-sprint` (gate). Planos/specs ativos em `docs/superpowers/`; concluídos em
 `plans/archive/` e `specs/archive/`. Histórico curto: `docs/superpowers/progress.md` (§3).
 
+Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
+próprios comandos conforme `state.md`; os contratos vivem em `.agents/skills/`.
+
 **Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
 de executá-lo. O roadmap adiante vive como títulos em `docs/superpowers/backlog.md`, não como planos
 prontos que envelhecem. O backlog nunca autoriza execução nem promove trabalho sozinho.
