@@ -436,7 +436,10 @@
       "empty": "Sin archivos.",
       "enabled": "Documentación completa · turma habilitada para la conclusión.",
       "upload": "Subir PDF",
-      "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo."
+      "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo.",
+      "remove": "Quitar",
+      "removeTitle": "Quitar documento",
+      "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso."
     }
   }
 }

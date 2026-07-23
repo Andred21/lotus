@@ -43,3 +43,18 @@ export function useUploadTurmaDocument() {
     },
   })
 }
+
+/** Remoção de documento com peso legal (RN-16): a rota usa scopeBindings, então
+ * arquivo de outra turma responde 404. Invalida a lista e a turma (a habilitação
+ * pode cair de volta para "em curso"). */
+export function useRemoveTurmaDocument() {
+  const qc = useQueryClient()
+  return useMutation<void, ProblemDetails, { turmaId: number; fileId: number }>({
+    mutationFn: ({ turmaId, fileId }) =>
+      api.delete(`/api/turmas/${turmaId}/documents/${fileId}`).then(() => undefined),
+    onSuccess: (_data, { turmaId }) => {
+      qc.invalidateQueries({ queryKey: documentKeys.list(turmaId) })
+      qc.invalidateQueries({ queryKey: turmaKeys.all })
+    },
+  })
+}

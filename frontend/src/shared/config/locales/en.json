@@ -436,7 +436,10 @@
       "empty": "No files.",
       "enabled": "Documentation complete · class enabled for completion.",
       "upload": "Upload PDF",
-      "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed."
+      "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed.",
+      "remove": "Remove",
+      "removeTitle": "Remove document",
+      "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress."
     }
   }
 }

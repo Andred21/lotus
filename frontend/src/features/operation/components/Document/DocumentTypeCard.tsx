@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppFileUpload, AppTag } from '@shared/ui'
+import { AppButton, AppFileUpload, AppTag } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
@@ -10,9 +10,11 @@ type Props = {
   files: TurmaDocumentData[]
   uploading: boolean
   onUpload: (file: File) => void
+  onRemove: (file: TurmaDocumentData) => void
+  removing: boolean
 }
 
-export function DocumentTypeCard({ type, files, uploading, onUpload }: Props) {
+export function DocumentTypeCard({ type, files, uploading, onUpload, onRemove, removing }: Props) {
   const { t } = useTranslation()
   const delivered = files.length > 0
 
@@ -43,6 +45,14 @@ export function DocumentTypeCard({ type, files, uploading, onUpload }: Props) {
             <span className="text-slate-400">
               {formatFileSize(file.size)} · {formatDate(new Date(file.created_at))}
             </span>
+            <AppButton
+              icon="pi pi-trash"
+              text
+              severity="danger"
+              aria-label={t('operation.documents.remove')}
+              disabled={removing}
+              onClick={() => onRemove(file)}
+            />
           </li>
         ))}
         {!delivered && <li className="text-sm text-slate-400">{t('operation.documents.empty')}</li>}

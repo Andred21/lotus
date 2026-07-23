@@ -436,7 +436,10 @@
       "empty": "Sem arquivos.",
       "enabled": "Documentação completa · turma habilitada para a conclusão.",
       "upload": "Subir PDF",
-      "uploadHint": "Somente PDF, até 10 MB. É possível subir vários arquivos por tipo."
+      "uploadHint": "Somente PDF, até 10 MB. É possível subir vários arquivos por tipo.",
+      "remove": "Remover",
+      "removeTitle": "Remover documento",
+      "removeBody": "Remover «{{name}}»? Se o tipo ficar sem arquivos, a turma volta para Em curso."
     }
   }
 }

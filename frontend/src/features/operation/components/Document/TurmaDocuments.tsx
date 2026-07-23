@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { TurmaData } from '@shared/types/generated'
+import { ConfirmDialog } from '@shared/ui'
+import type { TurmaData, TurmaDocumentData } from '@shared/types/generated'
 import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
 import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
 import { DocumentTypeCard } from './DocumentTypeCard'
@@ -7,6 +9,7 @@ import { DocumentTypeCard } from './DocumentTypeCard'
 export function TurmaDocuments({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useTurmaDocsSection(turma)
+  const [pendingRemoval, setPendingRemoval] = useState<TurmaDocumentData | null>(null)
 
   if (s.loading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
 
@@ -41,9 +44,27 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
             files={s.byType[type]}
             uploading={s.uploading}
             onUpload={(file) => s.upload(type, file)}
+            removing={s.removing}
+            onRemove={setPendingRemoval}
           />
         ))}
       </div>
+
+      <ConfirmDialog
+        visible={pendingRemoval !== null}
+        title={t('operation.documents.removeTitle')}
+        message={t('operation.documents.removeBody', { name: pendingRemoval?.original_name ?? '' })}
+        confirmLabel={t('operation.documents.remove')}
+        severity="danger"
+        pending={s.removing}
+        error={s.error}
+        onConfirm={() => {
+          if (!pendingRemoval) return
+          s.remove(pendingRemoval.id)
+          setPendingRemoval(null)
+        }}
+        onCancel={() => setPendingRemoval(null)}
+      />
     </div>
   )
 }
