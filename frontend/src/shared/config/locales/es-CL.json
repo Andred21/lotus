@@ -446,6 +446,23 @@
         "permission": "No tienes permiso para subir o quitar documentación."
       },
       "uploaded": "Documento subido."
+    },
+    "conclusion": {
+      "title": "Conclusión de la turma",
+      "state": {
+        "em_andamento": "En curso (bloqueado)",
+        "habilitada": "Habilitada",
+        "concluida": "Concluida"
+      },
+      "missingTitle": "Faltan documentos para habilitar la turma:",
+      "ready": "La turma está lista para concluir.",
+      "warning": "Al confirmar, notas y asistencias quedan inmutables y los certificados de los alumnos aprobados pasan a estar disponibles para emisión. La acción no se puede deshacer.",
+      "confirm": "Confirmar conclusión",
+      "confirmTitle": "Confirmar conclusión de la turma",
+      "confirmBody": "Esta acción es irreversible. ¿Confirmas la conclusión de la turma?",
+      "success": "Conclusión confirmada. Certificados disponibles para emisión.",
+      "concludedAt": "Concluida el {{date}}",
+      "noPermission": "No tienes permiso para concluir turmas."
     }
   }
 }

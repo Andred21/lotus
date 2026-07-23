@@ -7,6 +7,7 @@ import { TurmaConfigCard } from './TurmaConfigCard'
 import { RedatorDesignation } from './RedatorDesignation'
 import { EnrollmentSection } from '../Enrollment/EnrollmentSection'
 import { TurmaDocuments } from '../Document/TurmaDocuments'
+import { ConcludePanel } from '../Document/ConcludePanel'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation()
@@ -71,7 +72,7 @@ export function TurmaDetailPage() {
           <TurmaDocuments turma={turma} />
         </AppTabPanel>
         <AppTabPanel header={t('operation.detail.tabs.conclusion')}>
-          <p className="p-4 text-sm text-slate-500">{t('operation.detail.comingSoon')}</p>
+          <ConcludePanel turma={turma} />
         </AppTabPanel>
       </AppTabView>
     </div>

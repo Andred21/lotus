@@ -109,6 +109,17 @@ async function problemFromBlob(error: unknown): Promise<ProblemDetails> {
   return error as ProblemDetails
 }
 
+/** Conclusão é terminal (RN-15): invalida lista, detalhe e pendentes via
+ * `turmaKeys.all` para nenhuma tela seguir mostrando a turma como em curso. */
+export function useConcludeTurma() {
+  const invalidate = useInvalidate()
+  return useMutation<TurmaData, ProblemDetails, number>({
+    mutationFn: (turmaId) =>
+      api.post<TurmaData>(`/api/turmas/${turmaId}/conclude`).then((r) => r.data),
+    onSuccess: invalidate,
+  })
+}
+
 export function useTurmaManual() {
   return useMutation<Blob, ProblemDetails, number>({
     mutationFn: (turmaId) =>
