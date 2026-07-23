@@ -40,7 +40,8 @@ updated_at: 2026-07-23
 - Existe no máximo um `active_work_item`.
 - `next_action` deve corresponder a `workflow_state`.
 - `active_plan` é obrigatório a partir de `ready_for_execution`.
-- `context_packet` é obrigatório após `context_required` quando o bloco depende de fonte externa.
+- Quando o trabalho depender de contexto externo, `context_packet` deve permanecer `null` em
+  `context_required` e tornar-se obrigatório antes da transição para `ready_for_planning`.
 - Mudanças de estado ocorrem somente em fronteiras duráveis e entram no mesmo commit do artefato
   que prova a transição.
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha

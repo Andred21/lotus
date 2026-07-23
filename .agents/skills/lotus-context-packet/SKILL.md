@@ -37,7 +37,7 @@ Run read-only commands to capture:
 
 ```bash
 git status --short
-git rev-parse --abbrev-ref HEADgit rev-parse --abbrev-ref HEAD
+git rev-parse --abbrev-ref HEADgit
 git rev-parse HEAD
 git hash-object <progress-path>
 git hash-object <plan-path> 
@@ -120,6 +120,7 @@ SUGGESTED_PATH: docs/superpowers/context-packets/<plan-slug>.md
 BEGIN LOTUS CONTEXT PACKET
 <packet>
 END LOTUS CONTEXT PACKET
+RECOMMENDED_TRANSITION: ready_for_planning|blocked
 ```
 
 Do not add an introduction, conclusion, alternative version, implementation advice, or commentary
@@ -201,7 +202,7 @@ Confirm all of the following:
 - the packet contains at most 8 key facts and respects the word budget;
 - no implementation steps already owned by the plan were copied;
 - ready is not used while a blocking question remains;
-- the result contains only the suggested path and the marked packet.required frontmatter fields are populated;
+- the result contains only the suggested path and the marked packet.required;
 - base_commit and all repository blob hashes were obtained, not guessed;
 - every external fact cites a source-registry key;
 - material conflicts appear in the divergence table;

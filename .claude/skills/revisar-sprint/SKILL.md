@@ -1,6 +1,6 @@
 ---
 name: revisar-sprint
-description: "Revisão de qualidade pós-sprint do Lotus: acha código órfão e padrões júnior que o agente deixou, comparados com a implementação sênior do PADRÃO DESTE projeto (ADRs, leis §5, lições). Use ao fechar uma sprint, quando o João disser 'revisa o que foi feito', 'code review da sprint', 'tá com cara de júnior', 'limpa o código'. Roda por SPRINT, não por bloco. NÃO use para planejar feature nem para revisar diff pequeno — para diff, use /code-review nativo."
+description: "Revisão final de qualidade do active_work_item do Lotus: acha código órfão e padrões júnior que o agente deixou, comparados com a implementação sênior do PADRÃO DESTE projeto (ADRs, leis §5, lições). Use ao fechar uma sprint, quando o João disser 'revisa o que foi feito', 'code review da sprint', 'tá com cara de júnior', 'limpa o código'. Roda por SPRINT, não por bloco. NÃO use para planejar feature nem para revisar diff pequeno — para diff, use /code-review nativo."
 disable-model-invocation: true
 ---
 

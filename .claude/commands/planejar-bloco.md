@@ -18,8 +18,8 @@ primeiro item pendente.
 
 **$ARGUMENTS**
 
-O argumento é obrigatório e deve corresponder exatamente a `active_work_item`. Argumento vazio ou
-divergente → PARE e informe o valor esperado. Não planeje outro item enquanto houver trabalho ativo.
+O argumento é opcional. Quando fornecido, deve corresponder exatamente a `active_work_item`.
+Quando vazio, use exclusivamente `active_work_item`; nunca consulte o backlog para selecionar outro.
 
 ## Gate de estado
 
