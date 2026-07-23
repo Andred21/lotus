@@ -3,13 +3,13 @@ schema_version: 1
 packet_id: lotus-context-packet-bloco6-frontend-exec3
 block_id: bloco6-frontend-exec3
 status: partial
-generated_at: 2026-07-23T04:43:53-03:00
+generated_at: 2026-07-23T05:05:36-03:00
 base_ref: chore/lotus-operational-state
-base_commit: fb69bbaacd8ac339524652af26f443e72342fcb0
+base_commit: d0b8f0493d77cc0eb96ede7950bb0f0e97832189
 state_path: docs/superpowers/state.md
-state_blob_sha: 36b913b7f0d3e76d04e047f90ece795cc50b6824
+state_blob_sha: 8b9fc246dba84716021793dcaf99ace9fa9f1724
 progress_path: docs/superpowers/progress.md
-progress_blob_sha: 4f2008bdd499caa8b5c8e25ccd13e2bf3a76ac3c
+progress_blob_sha: e160e1a0beec4d3099e1b07ffdf9141586d5d0a1
 plan_path: null
 plan_blob_sha: null
 spec_path: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
@@ -20,9 +20,8 @@ word_budget: 1200
 # Context Packet — Bloco 6 Frontend · Exec 3 — Docs + conclusão
 
 > Derived snapshot. Canonical source hierarchy and staleness rules remain authoritative.
-> Os hashes do frontmatter são **procedência** — registram o que foi lido na geração. O commit que
-> armazena este packet também move `state.md` para `ready_for_planning`; essa transição não torna o
-> packet obsoleto.
+> Os hashes do frontmatter são **procedência** — registram o que foi lido na geração. A transição
+> que promove este packet não o torna obsoleto.
 
 ## Scope
 
@@ -34,45 +33,50 @@ word_budget: 1200
 
 | Key | Provider | Source | Modified | Status | Used for |
 |---|---|---|---|---|---|
-| REQ | João Victor | Instrução atual para regenerar `bloco6-frontend-exec3` | 2026-07-23 | available | Estado efetivo, limites read-only e disponibilidade das fontes |
-| STATE | Git | `docs/superpowers/state.md` | 2026-07-23 | available | Work item, ponteiros, bloqueio anterior e `resume_state` |
-| PROGRESS | Git | `docs/superpowers/progress.md` | 2026-07-22 | available | Confirmar Exec 1 e Exec 2 entregues |
-| SPEC | Git | `docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md` | 2026-07-21 | available | Escopo, decisões e critérios de aceite da Exec 3 |
-| DRIVE | Google Drive | `Viagem Chile/Projetos/Lotus.cl/V2` | unknown | unavailable | Planejamento canônico externo |
-| FIGMA | Figma | Protótipo do módulo Operacional citado pela spec | unknown | unavailable | Referência visual externa |
-| NOTION | Notion | `Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2` | unknown | unavailable | Organização de tasks |
+| REQ | João Victor | Instrução atual para regenerar `bloco6-frontend-exec3` | 2026-07-23 | available | Escopo read-only, fontes obrigatórias e regras de reconciliação |
+| STATE | Git | `docs/superpowers/state.md` | 2026-07-23 | available | Work item, estado e ponteiros ativos |
+| PROGRESS | Git | `docs/superpowers/progress.md` | 2026-07-23 | available | Histórico das Execuções 1 e 2 |
+| SPEC | Git | `docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md` | 2026-07-21 | available | Escopo, decisões e aceite da Exec 3 |
+| DRIVE-RN | Google Drive | `requisitos-negocio.md` (`1Yk2qFtSBxasiMVatzWzIeipAKeXu5di5`) | 2026-06-09T14:58:52Z | available | Requisitos de turma, documentação, feedback e certificação |
+| DRIVE-MOD | Google Drive | `modulo-operacao.md` (`10cZLkhVSswTbJYIiE7kVM8CVi-cE9gEA`) | 2026-06-14T19:14:31Z | available | Fronteira do módulo e terminologia documental |
+| DRIVE-UI | Google Drive | `tela-turmas.md` (`1151kuUKZOv-8dUMAJJS62lGG3n0ZqG3w`) | 2026-06-16T15:54:22Z | available | Fluxo da tela, erros e sinais de aceite |
+| DRIVE-ENTITY | Google Drive | `entidade-turma.md` (`1LkyQr_g-xqW0-XPpGShPfhLZXHo9v6oJ`) | 2026-06-12T18:06:30Z | available | Estados, RN-15 e RN-16 |
+| DRIVE-FLOW | Google Drive | `fluxos.md` (`1XRpMw2MF7hKUwg2tpIR52CcG97tSbRrM`) | 2026-06-19T14:29:39Z | available | Máquina de estados e handoff para certificação |
+| FIGMA | Figma | Protótipo Operacional citado pela spec | unknown | not located | O conector respondeu via `whoami`, mas a spec, o repositório e as buscas no Drive não forneceram URL ou file key consultável |
+| NOTION | Notion | Task 1:1 de `bloco6-frontend-exec3` | unknown | unavailable | Nenhuma ferramenta Notion está carregada após descoberta; split interno não requer task 1:1 |
 
 ## Key facts
 
-1. A Exec 3 entrega `Documentación`, `Conclusión`, manual PDF e P-07; não requer toque de backend. `[SPEC]`
-2. `Documentación` usa somente `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR`, aceita múltiplos arquivos por tipo, mostra progresso e deriva a habilitação; upload e remoção ficam bloqueados após conclusão. `[SPEC]`
-3. A conclusão permanece desabilitada até a turma estar `habilitada`, informa `missing_document_types`, exige confirmação irreversível e, no sucesso, anuncia certificados disponíveis para emissão. `[SPEC]`
-4. O manual deve abrir o PDF fornecido pelo endpoint existente; documentos, conclusão e manual consomem contratos backend já entregues. `[SPEC]`
-5. P-07 exige traduções das permissões `operation_enrollment_manage`, `operation_turma_submit_docs` e `operation_turma_complete`, além do namespace `operation.*`, com chaves idênticas em pt-BR, es-CL e en. `[SPEC]`
-6. O aceite exige `pnpm build`, `pnpm lint` e prova do comportamento na UI contra o backend real, incluindo os três tipos documentais, habilitação derivada, conclusão e ausência de chaves cruas no picker de Roles. `[SPEC]`
-7. Exec 1 e Exec 2 já foram entregues; a Exec 3 é o work item ativo e ainda não possui plano. `[PROGRESS]` `[STATE]`
-8. `bloco6-frontend-exec3` é split interno da sprint; ausência de task 1:1 no Notion é esperada. A spec já contém escopo, decisões e aceite, logo as fontes externas indisponíveis tornam o packet `partial`, não `blocked`. `[REQ]` `[SPEC]`
+1. A Exec 3 entrega `Documentación`, `Conclusión`, manual PDF e P-07, sem toque de backend. `[SPEC]`
+2. A documentação operacional é composta por manual, provas e avaliação do redator; a spec fixa os contratos `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR`, com múltiplos arquivos por tipo, progresso e habilitação derivada. `[DRIVE-MOD]` `[DRIVE-UI]` `[SPEC]`
+3. O ciclo canônico é `em andamento → habilitada → concluída`: documentação completa habilita; o admin confirma; após conclusão, notas e presenças ficam imutáveis e matrículas aprovadas tornam-se certificáveis. `[DRIVE-ENTITY]` `[DRIVE-UI]` `[DRIVE-FLOW]`
+4. O manual é gerado sob demanda e a Exec 3 apenas abre o PDF fornecido pelo contrato backend existente. `[DRIVE-MOD]` `[DRIVE-UI]` `[SPEC]`
+5. Nesta sprint, uploads documentais ficam na interface admin/superadmin; a interface própria do redator permanece futura, preservando o alvo final descrito no Drive. `[DRIVE-MOD]` `[DRIVE-UI]` `[SPEC]`
+6. P-07 exige traduções de `operation_enrollment_manage`, `operation_turma_submit_docs` e `operation_turma_complete`, além de chaves `operation.*` idênticas em pt-BR, es-CL e en. `[SPEC]`
+7. O aceite exige os três tipos documentais, habilitação derivada, bloqueio antes de `habilitada`, confirmação irreversível, toast, manual PDF, ausência de chaves cruas, `pnpm build`, `pnpm lint` e prova na UI contra o backend real. `[SPEC]`
+8. Execuções 1 e 2 estão entregues; Exec 3 é o item ativo e `active_plan` permanece `null`. `[PROGRESS]` `[STATE]`
 
 ## Resolved decisions and divergences
 
 | Topic | External snapshot | Current decision | Resolution basis |
 |---|---|---|---|
-| Bloqueio anterior por Notion | O bloqueio registrado decorreu de uma task 1:1 não localizada | Não há fato necessário ausente; ausência da task é não bloqueante | Regra explícita atual e cobertura integral da spec `[REQ]` `[STATE]` `[SPEC]` |
-| Taxonomia documental 4×3 | O protótipo Figma mostrava quatro rótulos exploratórios | Permanecem os três tipos do backend | Decisão D6 registrada por João na spec `[SPEC]` |
-| Estado para esta geração | `workflow_state: blocked` | Tratar como `context_required`, sem editar o estado | `resume_state: context_required` e instrução explícita atual `[REQ]` `[STATE]` |
+| Ator do upload | Drive descreve o redator enviando documentos em sua interface | Admin/superadmin fazem o upload nesta fase; interface do redator fica futura | Drive descreve o alvo final; a spec posterior delimita explicitamente o split atual, sem cancelar o fluxo futuro `[DRIVE-MOD]` `[DRIVE-UI]` `[SPEC]` |
+| Feedback como gate | O fluxo antigo exige documentação e feedback completos para habilitar | Exec 3 usa somente os três tipos documentais do backend; feedbacks ficam fora desta sprint | Decisão D6 posterior, registrada por João, preserva RN-16 nos três tipos e supera o snapshot anterior `[DRIVE-RN]` `[DRIVE-FLOW]` `[SPEC]` |
+| Protótipo 4×3 | O arquivo Figma não foi localizável; a spec registra indiretamente quatro rótulos exploratórios nos prints | Permanecem `MANUAL`, `PRUEBAS` e `EVALUACION_REDATOR` | Decisão D6 posterior de João já fechou a divergência; ausência de nova evidência não a reabre `[SPEC]` |
 
 ## Constraints
 
-- Geração estritamente read-only; nenhuma alteração de arquivo, commit, branch ou estado.
-- Working tree estava limpo na geração.
-- `active_plan` permanece `null`; o packet não deve inventar etapas de implementação.
-- Preservar a taxonomia legal dos três documentos e o caráter irreversível da conclusão.
-- Drive, Figma e Notion não podem ser substituídos por busca web ou fontes alternativas.
+- Operação estritamente read-only; working tree permaneceu limpo.
+- `active_plan` é `null`; o packet não inventa etapas de implementação.
+- Preservar os três tipos documentais e o caráter terminal da conclusão.
+- Planejamento não pode introduzir feedbacks, interface do redator, backend ou seed na Exec 3.
+- Figma é indireto, e Notion é indisponível, mas nenhum fato necessário depende dessas fontes.
 
 ## External acceptance signals
 
-- Nenhum sinal externo adicional foi recuperado porque os três conectores estão indisponíveis.
-- A spec disponível fornece aceite suficiente: três tipos documentais com progresso e habilitação derivada; conclusão protegida e irreversível; manual PDF; P-07 traduzida; build, lint e validação na UI real. `[SPEC]`
+- O Drive exige painel do estado documental, botão de conclusão habilitado somente em `habilitada`, erro 422 com pendências e blindagem após conclusão. `[DRIVE-UI]` `[DRIVE-ENTITY]`
+- A conclusão faz o handoff Operação→Certificação, tornando certificados de matrículas aprovadas emissíveis; financeiro não integra esse gate. `[DRIVE-UI]` `[DRIVE-FLOW]`
+- A spec acrescenta confirmação irreversível, toast, abertura do manual e validação dos locales na UI real. `[SPEC]`
 
 ## Open questions
 
@@ -80,17 +84,16 @@ word_budget: 1200
 
 ## Deferred
 
-- Seed operacional permanece task final após a Exec 3. `[SPEC]`
-- Templates gerados por código, ancoragem cross-module genérica e eventual revisão da taxonomia 4×3 dependem de decisões futuras. `[SPEC]`
+- Interface do redator, feedbacks e seed operacional permanecem entregas futuras. `[SPEC]`
+- Templates gerados por código, ancoragem cross-module genérica e eventual revisão da taxonomia 4×3 dependem de nova decisão. `[SPEC]`
 
 ## Staleness triggers
 
-- `active_work_item` deixar de ser `bloco6-frontend-exec3`, ou `active_spec` apontar para outro
-  arquivo.
-- Edição da spec ativa que altere escopo, aceite ou constraint da Exec 3.
-- Disponibilização de Drive, Figma ou Notion com fatos materiais mais novos ou divergentes.
-- Nova decisão sobre taxonomia documental, conclusão, permissões ou critérios de aceite —
-  em especial reabertura da decisão D6.
+- `active_work_item` mudar de `bloco6-frontend-exec3` ou `active_spec` apontar para outro arquivo.
+- A spec ou um contrato referenciado mudar materialmente o escopo, aceite, permissões ou gate de conclusão.
+- Um documento canônico do Drive receber decisão mais nova que contradiga a reconciliação registrada.
+- O protótipo Figma tornar-se localizável e revelar requisito material ainda não reconciliado.
+- João reabrir as decisões sobre ator do upload, feedback como gate ou taxonomia documental.
 
 Não são gatilhos: a transição que promove este packet, o commit que o armazena, nem qualquer edição
 de `state.md` que apenas mova `workflow_state`, `next_owner`, `next_action`, `context_packet`,

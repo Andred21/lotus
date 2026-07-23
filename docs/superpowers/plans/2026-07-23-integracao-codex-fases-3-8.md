@@ -553,5 +553,21 @@ git commit -m "docs(ai): fase8 - limpeza por evidencia do piloto e historico"
      item de validação novo e gatilhos do packet vigente reescritos.
 - **2ª rodada (contrato corrigido) — status `partial`**, `RECOMMENDED_TRANSITION: ready_for_planning`,
   8 key facts, `Open questions: None blocking`. Packet salvo e estado transicionado no mesmo commit.
-- **Conclusão:** o caminho `context_required → Codex → packet → ready_for_planning` funciona
-  ponta a ponta; o gargalo remanescente é acesso do Codex a Drive/Figma/Notion, não o contrato.
+  7. **inventário de conectores errado, afirmado por mim** (correção do João): eu concluí, sem
+     inventariar as tools do Codex, que Drive/Figma/Notion estavam todos indisponíveis — e na 2ª
+     rodada *instruí* o Codex nesse sentido, contaminando o artefato. O inventário real mostra
+     `mcp__codex_apps__google_drive_*`, `..._figma_*` e `..._github_*` disponíveis; só o MCP do
+     Notion não carrega. Corrigido em `AGENTS.md` §3 (tabela por fonte + namespace) e na skill, que
+     agora proíbe marcar fonte `unavailable` sem ter chamado a tool e capturado a falha.
+- **3ª rodada (conectores corretos) — status `partial`**, `ready_for_planning`, com 5 documentos do
+  Drive efetivamente lidos (`requisitos-negocio`, `modulo-operacao`, `tela-turmas`,
+  `entidade-turma`, `fluxos`), citados por ID e data de modificação. Só Figma (`not located`, sem
+  file key) e Notion (`unavailable`) ficaram fora — ambos tentados e registrados.
+- **Valor comprovado do Drive:** a rodada canônica achou duas divergências que as rodadas apoiadas
+  só na spec não viam — o Drive atribui o upload documental ao redator em interface própria
+  (a sprint atual restringe a admin/superadmin) e o fluxo antigo exigia feedback completo como gate
+  de habilitação (superado pela decisão D6). Ambas reconciliadas na tabela, sem reabrir D6.
+- **Conclusão:** o caminho `context_required → Codex → packet → ready_for_planning` funciona ponta a
+  ponta **com a fonte canônica de fato consultada**. O gargalo remanescente é só o MCP do Notion,
+  que é não bloqueante. Lição transversal: a causa de erro mais cara aqui não foi contrato mal
+  escrito, foi eu afirmar indisponibilidade sem testar — daí a regra nova de tentativa obrigatória.
