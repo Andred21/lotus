@@ -44,8 +44,6 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
 
           <p className="text-sm text-slate-500">{t('operation.conclusion.warning')}</p>
 
-          {s.error && <p className="text-sm text-red-600">{s.error}</p>}
-
           {s.canComplete ? (
             <AppButton
               label={t('operation.conclusion.confirm')}
@@ -70,7 +68,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
         pending={s.concluding}
         error={s.error}
         onConfirm={() => {
-          if (s.concluding) return
+          if (s.concluding || !s.habilitada || s.concluida) return
           s.conclude({ onSuccess: () => setConfirming(false) })
         }}
         onCancel={() => {
