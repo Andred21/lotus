@@ -1,15 +1,15 @@
 ---
 schema_version: 1
-active_feature: bloco6-frontend
-active_work_item: bloco6-frontend-exec3
-workflow_state: ready_for_closure
-next_owner: codex
-next_action: execute_fechar_sprint
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 last_completed_work_item: bloco6-frontend-exec3
-state_basis_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
-active_spec: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
-active_plan: docs/superpowers/plans/2026-07-23-bloco6-frontend-exec3.md
-context_packet: docs/superpowers/context-packets/2026-07-23-bloco6-frontend-exec3.md
+state_basis_commit: 9aa0ca1819cee79d92eeb38fd051a047ffeb7488
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
 updated_at: 2026-07-23
