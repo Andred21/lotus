@@ -2,10 +2,10 @@
 schema_version: 1
 active_feature: bloco6-frontend
 active_work_item: bloco6-frontend-exec3
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
-last_completed_work_item: bloco6-frontend-exec2
+workflow_state: ready_for_closure
+next_owner: codex
+next_action: execute_fechar_sprint
+last_completed_work_item: bloco6-frontend-exec3
 state_basis_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
 active_spec: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
 active_plan: docs/superpowers/plans/2026-07-23-bloco6-frontend-exec3.md
