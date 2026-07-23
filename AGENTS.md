@@ -30,7 +30,7 @@ Antes de analisar qualquer tarefa, leia nesta ordem:
 4. `docs/superpowers/progress.md` — histórico recente, somente para orientação.
 
 Leia `docs/superpowers/backlog.md` somente quando `state.md` estiver em `idle`, quando a tarefa for
-planejamento ou quando a solicitação pedir explicitamente o roadmap.
+planejamento ou fechamento, ou quando a solicitação pedir explicitamente o roadmap.
 
 O Codex não infere nem altera o estado operacional. Quando uma skill produzir um artefato que
 permita transição, o resultado deve indicar a transição recomendada; Claude ou João atualizam
@@ -38,7 +38,8 @@ permita transição, o resultado deve indicar a transição recomendada; Claude 
 
 Depois do bootstrap, carregue somente o necessário:
 
-- feature ativa ou alterada: plano, spec e coluna **Contexto** apontados pelo `progress.md`;
+- feature ativa ou alterada: Context Packet, spec e plano apontados pelo `state.md`, ignorando os
+  ponteiros que estiverem `null`;
 - início de feature: `docs/README.md`;
 - arquitetura, stack ou infraestrutura: `docs/adrs.md`;
 - schema, migration ou model: `docs/der-fisico.md`;

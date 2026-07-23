@@ -6,13 +6,13 @@ workflow_state: context_required
 next_owner: codex
 next_action: generate_context_packet
 last_completed_work_item: bloco6-frontend-exec2
-last_transition_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
+state_basis_commit: 2179fc539cdab1897919d00e8f2530269cc2ed7b
 active_spec: docs/superpowers/specs/2026-07-21-bloco6-frontend-operacao-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-updated_at: 2026-07-22
+updated_at: 2026-07-23
 ---
 
 # Estado operacional — Lotus v2
@@ -43,5 +43,6 @@ updated_at: 2026-07-22
 - `context_packet` é obrigatório após `context_required` quando o bloco depende de fonte externa.
 - Mudanças de estado ocorrem somente em fronteiras duráveis e entram no mesmo commit do artefato
   que prova a transição.
-- Divergência entre este arquivo, plano, Git ou `progress.md` bloqueia a sessão; não escolha por
-  heurística.
+- Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
+  por heurística.
+- O backlog nunca promove trabalho automaticamente.

@@ -16,4 +16,4 @@
 | 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | `plans/archive/2026-07-21-bloco6c-matricula-import.md` · `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
 | 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` · `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
 | 2026-07-21 | Bloco 6b · Turma + redator | Entregue | Turma por cotação, designação N:N e gate RN-09 validados. | `plans/archive/2026-07-21-bloco6b-turma-designacao.md` · `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md` |
-| 2026-07-22 | Sprint 3 · Operação frontend | Em andamento | Execuções 1 e 2 entregues; Execução 3 é o trabalho atual. | `state.md` |
+| 2026-07-22 | Sprint 3 · Operação frontend | Em andamento | Execuções 1 e 2 entregues; continuidade controlada por `state.md`. | `state.md` |

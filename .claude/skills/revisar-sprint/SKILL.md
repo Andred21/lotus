@@ -9,6 +9,27 @@ disable-model-invocation: true
 O `/code-review` nativo revisa o **diff** contra boas práticas gerais. Esta skill revisa a **sprint**
 contra o padrão **deste** projeto. Lentes diferentes; uma não dispensa a outra.
 
+## Gate de estado
+
+Leia `docs/superpowers/state.md` primeiro. A skill aceita somente:
+
+- `ready_for_review` → valide o trabalho ativo e transicione para `reviewing`;
+- `reviewing` → retome a revisão ou as correções já aprovadas do mesmo trabalho.
+
+Qualquer outro estado → PARE e informe `workflow_state`, `next_owner` e `next_action`.
+
+Ao começar a partir de `ready_for_review`, atualize:
+
+```yaml
+workflow_state: reviewing
+next_owner: claude
+next_action: review_active_work_item
+```
+
+Revise somente `active_work_item`, usando `active_spec`, `active_plan`, `context_packet` quando
+presente e o intervalo Git que prova esse trabalho. Não selecione uma sprint por backlog,
+`progress.md` ou heurística.
+
 ## Gabarito (nesta ordem de autoridade)
 
 1. **CLAUDE.md §5** — as 8 leis invioláveis. Violação aqui é 🔴 sempre, sem discussão.
@@ -21,7 +42,8 @@ Sem esse gabarito você está fazendo `/code-review` genérico. Carregue-o.
 
 ## Escopo
 
-**Só os arquivos que a sprint tocou.** `git log`/`git diff` da sprint. Não é auditoria do repo.
+**Só os arquivos que `active_work_item` tocou.** Use o plano e `git log`/`git diff` do intervalo
+correspondente. Não é auditoria do repo.
 
 ## Passo 1 — Órfãos (existência)
 
@@ -105,16 +127,42 @@ N+1 sem eager loading; `env()` fora de `config/`; feature que ninguém pediu.
 - **Estilo não é achado** — Pint e eslint fazem isso.
 - Padrão repetido N vezes = **1 achado** com a lista de ocorrências.
 - **Se o código está bom, diga que está bom.** Achado inventado destrói a confiança na skill.
-- Achado que é decisão consciente registrada (`progress.md`, ADR, `pendencias.md`) **não é achado**.
+- Achado que é decisão consciente registrada (`backlog.md`, ADR, `pendencias.md`) **não é achado**.
 
 ## Saída e handoff
 
 Relatório: órfãos + achados por severidade × esforço. **Aguarde o João aprovar** o que entra.
 
-Aprovado → o pacote vira um bloco novo em `docs/superpowers/backlog.md`.
+Quando houver achados aguardando decisão, registre o resumo em `blocker` e transicione:
+
+```yaml
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
+```
+
+Somente achados aprovados podem ser corrigidos. Após as correções, retome `reviewing` e repita as
+checagens pertinentes ao mesmo `active_work_item`.
+
+Trabalho de código deferido vai para `docs/superpowers/backlog.md`. Divergência documental vai para
+`docs/pendencias.md`. Nenhum dos dois destinos promove trabalho automaticamente nem substitui o
+item ativo.
 
 Não promova automaticamente esse bloco para `state.md` enquanto existir outro
 `active_work_item`.
 
 **Padrão reincidente (2+ sprints)** não vira só refactor: vira regra. Proponha o texto para a rule
 da camada, ou um ADR se for decisão de arquitetura. Deletar de novo é enxugar gelo.
+
+Quando a revisão estiver limpa, sem achado aguardando decisão ou correção:
+
+```yaml
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+blocker: null
+resume_state: null
+```
+
+Não execute o fechamento automaticamente.
