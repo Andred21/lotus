@@ -1,6 +1,6 @@
 # Fase 5: escrita habilitada somente para execução delegada via lotus-execute-block,
-# dentro dos paths autorizados pelo plano ativo. Estado e commits permanecem com Claude.
+# dentro dos paths autorizados pelo plano ativo.
 
 approval_policy = "never"
 sandbox_mode = "workspace-write"
-web_search = "disabled"
+web_search = "indexed"
