@@ -10,7 +10,7 @@ use App\Domains\Operation\Services\RedatorIdoneidadeService;
  * Designa 1 redator à turma após o gate RN-09. Idempotente
  * (syncWithoutDetaching + unique do pivot). Multi-redator = múltiplas chamadas.
  */
-class DesignateRedatorAction
+class DesignateRedatorAction        
 {
     public function __construct(private RedatorIdoneidadeService $idoneidade) {}
 
