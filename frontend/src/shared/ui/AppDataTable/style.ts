@@ -19,3 +19,31 @@ export const appDataTablePt: DataTablePassThroughOptions = {
   },
   bodyRow: { className: 'transition-colors' },
 }
+
+/** Faixa de rodapé da tabela (spec D12): o paginador do DataTable É o rodapé —
+ * contagem à esquerda em `paginatorLeft`, controles à direita, uma faixa só.
+ *
+ * Layout e cor inline porque o tema Lara já estiliza `.p-paginator` (fundo
+ * branco, borda, padding, radius) e utility do Tailwind não vence a
+ * especificidade dele. Reproduz o visual do `AppCardFooter`: borda em cima,
+ * px-4 py-3, texto secundário. */
+export const appPaginatorPt: NonNullable<DataTablePassThroughOptions['paginator']> = {
+  root: {
+    className: 'text-sm',
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: '0.25rem',
+      background: 'transparent',
+      border: 'none',
+      borderTop: '1px solid var(--surface-border)',
+      borderRadius: 0,
+      padding: '0.75rem 1rem',
+      color: 'var(--text-color-secondary)',
+    },
+  },
+  /** Empurra os controles para a direita sem depender do `justify-content`:
+   * com uma página só, a contagem fica sozinha e continua à esquerda. */
+  left: { style: { marginRight: 'auto' } },
+}
