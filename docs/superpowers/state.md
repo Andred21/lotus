@@ -2,16 +2,24 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 8dcffa4
 active_spec: null
 active_plan: null
 context_packet: null
-blocker: null
-resume_state: null
+blocker: >-
+  Context Packet do Codex voltou status:blocked — nenhuma fonte externa alcançada. (1) NOTION:
+  unavailable no Codex por falta do namespace mcp__codex_apps__notion_*; o Claude confirmou que a
+  H.1.3 EXISTE e é alcançável (id 3a2bc960-3dfa-8059-abdd-e0230ad8e196) — gap de tooling, não de
+  fonte. (2) FIGMA: sem fileKey/URL do arquivo do protótipo, ninguém abre os frames. Falta o João
+  fornecer. (3) DRIVE: "auditoria de 2026-07-24" e "baseline refinada de 2026-07-26", citadas no
+  backlog, NÃO existem como arquivo — busca do Codex e do Claude voltaram vazias; provavelmente
+  foram artefatos de conversa nunca persistidos. Registro das buscas em
+  docs/superpowers/context-packets/bloco-visual-refino-ui.md (status:blocked, não autoriza plano).
+resume_state: context_required
 updated_at: 2026-07-26
 ---
 
@@ -74,6 +82,25 @@ existem `Identity/Models/Student.php` e `Identity/Services/StudentResolver.php`.
 refino. Virou backlog item 2, ordenado depois deste bloco para nascer já no padrão visual novo.
 
 O insumo do bloco (auditoria de 2026-07-24, 4 prints do protótipo, baseline de 2026-07-26) **não
-está no repo** — nada em `docs/` referencia 2026-07-24. Por isso o estado entra em
-`context_required`: o Codex gera o Context Packet com a skill `lotus-context-packet` antes de
-qualquer brainstorming.
+está no repo** — nada em `docs/` referencia 2026-07-24. Por isso o estado entrou em
+`context_required` e a geração do Context Packet foi roteada ao Codex.
+
+## Bloqueio — 2026-07-26
+
+O Codex devolveu o packet com `status: blocked` e `RECOMMENDED_TRANSITION: blocked`. O contrato da
+skill foi respeitado (markers, frontmatter, 8 key facts, fontes `unavailable` registradas), então
+não houve re-invocação: o veredito é legítimo, não violação. Detalhe do `blocker` no frontmatter.
+
+Três causas distintas, com desbloqueios distintos:
+
+1. **Notion — removível hoje.** O `unavailable` é gap de tooling do runtime do Codex, não ausência
+   de fonte. O Claude alcança a H.1.3.
+2. **Figma — depende do João.** Falta a URL/`fileKey` do arquivo do protótipo. Sem ela nenhum lado
+   abre os frames, e o packet não pode confirmar composição de card, toolbar, densidade de tabela,
+   paleta de tag, empty state, paginação nem a nova posição da ação primária.
+3. **Drive — gap real.** A "auditoria de 2026-07-24" e a "baseline refinada de 2026-07-26" citadas
+   no backlog não existem como arquivo no Drive. Busca independente do Codex e do Claude voltou
+   vazia. O backlog cita insumo que não foi persistido.
+
+`resume_state: context_required` — resolvido o bloqueio, o packet é regerado antes de qualquer
+brainstorming.
