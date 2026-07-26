@@ -7,7 +7,9 @@ export interface TableFilter<T> {
   term: string
   /** Linhas depois do `where` e da busca. */
   rows: T[]
-  /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar). */
+  /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar).
+   * Também clampada: se apontar além do fim de `rows` (lista encolheu, ex.
+   * deleção na última página), devolve 0 em vez do valor obsoleto. */
   first: number
   /** Troca o termo e volta à primeira página. */
   onFilterChange: (value: string) => void
@@ -60,7 +62,7 @@ export function useTableFilter<T>(
     filter,
     term,
     rows,
-    first,
+    first: first >= rows.length ? 0 : first,
     onFilterChange,
     onPage: (event) => setFirst(event.first),
     resetPage: () => setFirst(0),

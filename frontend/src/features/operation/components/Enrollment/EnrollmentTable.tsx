@@ -19,12 +19,15 @@ type Props = {
 export function EnrollmentTable({ enrollments, loading, onRemove, removing, removeError, onResetRemove }: Props) {
   const { t } = useTranslation()
   const [pending, setPending] = useState<EnrollmentData | null>(null)
+  const [first, setFirst] = useState(0)
 
   return (
     <>
       <AppDataTable
         value={enrollments}
         loading={loading}
+        first={first >= enrollments.length ? 0 : first}
+        onPage={(e) => setFirst(e.first)}
         footerCount={t('operation.enrollment.footerCount', { count: enrollments.length })}
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.
