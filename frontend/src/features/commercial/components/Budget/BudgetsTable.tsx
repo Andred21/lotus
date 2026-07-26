@@ -23,6 +23,7 @@ export function BudgetsTable({
   const navigate = useNavigate()
   const [filter, setFilter] = useState('')
   const [status, setStatus] = useState<QuoteStatus | null>(null)
+  const [first, setFirst] = useState(0)
   const clients = clientsApi.useList()
 
   const clientName = (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—'
@@ -60,7 +61,7 @@ export function BudgetsTable({
           label={t('common.clearSearch')}
           icon="pi pi-times"
           text
-          onClick={() => { setFilter(''); setStatus(null) }}
+          onClick={() => { setFilter(''); setStatus(null); setFirst(0) }}
         />
       }
     />
@@ -78,21 +79,28 @@ export function BudgetsTable({
                 leftIcon="pi pi-search"
                 placeholder={t('budget.searchPlaceholder')}
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={(e) => { setFilter(e.target.value); setFirst(0) }}
               />
             </div>
             <div className="w-48">
               <AppDropdown
                 value={status}
                 options={statusOptions}
-                onChange={(e) => setStatus(e.value as QuoteStatus | null)}
+                onChange={(e) => { setStatus(e.value as QuoteStatus | null); setFirst(0) }}
               />
             </div>
           </>
         }
         end={actions}
       />
-      <AppDataTable value={rows} loading={loading} emptyMessage={empty} paginator={rows.length > 10}>
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
         <AppColumn
           header={t('budget.code')}
           body={(b: BudgetData) => <span className="font-mono text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}

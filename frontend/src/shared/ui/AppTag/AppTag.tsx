@@ -15,7 +15,7 @@ export function AppTag({ tone, style, ...props }: AppTagProps) {
     tone === 'accent'
       ? {
           background: 'color-mix(in srgb, var(--purple-500) 15%, var(--surface-card))',
-          color: 'var(--purple-600)',
+          color: 'color-mix(in srgb, var(--purple-500) 70%, var(--text-color))',
         }
       : undefined
 

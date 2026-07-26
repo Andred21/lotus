@@ -32,6 +32,7 @@ export function AppDataTable<T extends DataTableValueArray>({ pt, ...props }: Da
     <DataTable
       dataKey="id"
       removableSort
+      rowHover
       paginator
       rows={10}
       pt={mergePt(appDataTablePt, pt as DataTableProps<DataTableValueArray>['pt'])}

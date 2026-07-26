@@ -21,8 +21,8 @@ const TONE_HUE: Record<AppCardTone, string | null> = {
 
 const TONE_TEXT: Record<AppCardTone, string> = {
   neutral: 'var(--text-color)',
-  success: 'var(--green-600)',
-  danger: 'var(--red-600)',
+  success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
+  danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
 }
 
 /**
@@ -41,7 +41,7 @@ export function AppCard({ variant = 'default', tone = 'neutral', className, chil
 
   return (
     <div
-      className={['rounded-lg border', variant === 'stat' ? 'px-5 py-4' : '', className].filter(Boolean).join(' ')}
+      className={['rounded-lg border overflow-hidden', variant === 'stat' ? 'px-5 py-4' : '', className].filter(Boolean).join(' ')}
       style={style}
     >
       {children}

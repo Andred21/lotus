@@ -15,6 +15,7 @@ export function ClientsTable({
 }) {
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
+  const [first, setFirst] = useState(0)
 
   const term = filter.trim().toLowerCase()
   const rows = term === ''
@@ -22,6 +23,11 @@ export function ClientsTable({
     : clients.filter(
         (c) => c.legal_name.toLowerCase().includes(term) || c.rut.toLowerCase().includes(term),
       )
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value)
+    setFirst(0)
+  }
 
   // Dois vazios distintos: sem dado convida a cadastrar; busca sem resultado
   // oferece limpar o filtro. Sugerir cadastro quando o problema é o termo manda
@@ -33,7 +39,7 @@ export function ClientsTable({
       icon="pi pi-search"
       title={t('common.noResults', { term: filter.trim() })}
       description={t('common.noResultsHint')}
-      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => setFilter('')} />}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
     />
   )
 
@@ -46,13 +52,20 @@ export function ClientsTable({
               leftIcon="pi pi-search"
               placeholder={t('client.searchPlaceholder')}
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              onChange={(e) => handleFilterChange(e.target.value)}
             />
           </div>
         }
         end={actions}
       />
-      <AppDataTable value={rows} loading={loading} emptyMessage={empty} paginator={rows.length > 10}>
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
         <AppColumn field="legal_name" header={t('client.legalName')} sortable />
         <AppColumn header={t('common.rut')} body={(c: ClientData) => <span className="font-mono text-sm">{c.rut}</span>} />
         <AppColumn header={t('client.type')} body={(c: ClientData) => <AppTag value={t(`clientType.${c.type}`)} severity="secondary" />} />
