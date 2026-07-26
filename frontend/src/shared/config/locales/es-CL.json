@@ -33,17 +33,40 @@
     "upload": "Subir documento",
     "noResults": "Sin resultados para \"{{term}}\"",
     "noResultsFiltered": "Sin resultados para los filtros aplicados",
+    "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
+    "clearFilters": "Limpiar filtros",
     "noResultsHint": "Revisa el término o limpia la búsqueda.",
     "clearSearch": "Limpiar búsqueda"
   },
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestión de clientes y presupuestos de capacitación"
+    },
+    "operacion": {
+      "title": "Operación",
+      "description": "Gestión de turmas y cotizaciones aprobadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos y sus redactores habilitados."
+    },
+    "personas": {
+      "title": "Personas",
+      "description": "Registro canónico de alumnos y redactores"
+    },
+    "administracion": {
+      "title": "Administración",
+      "description": "Usuarios internos, roles y permisos"
+    }
+  },
   "admin": {
-    "module": "Administración",
-    "moduleDescription": "Usuarios internos, roles y permisos",
     "tabUsers": "Usuarios",
     "tabRoles": "Roles y permisos",
     "new": "Nuevo usuario",
     "create": "Crear",
     "empty": "Sin usuarios",
+    "emptyHint": "Crea el primer usuario para comenzar.",
     "count": "{{count}} usuario(s)",
     "searchPlaceholder": "Buscar por nombre o correo...",
     "name": "Nombre",
@@ -124,6 +147,8 @@
     "custom": "Personalizado",
     "permissions": "Permisos",
     "empty": "Sin roles",
+    "emptyHint": "Crea el primer rol personalizado para comenzar.",
+    "count": "{{count}} roles",
     "systemReadOnly": "Los permisos de los roles de sistema son de solo lectura."
   },
   "userMenu": {
@@ -138,8 +163,6 @@
     "module": "Módulo en construcción."
   },
   "client": {
-    "module": "Comercial",
-    "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
     "new": "Nuevo cliente",
     "create": "Registrar cliente",
     "tabClients": "Clientes",
@@ -166,8 +189,6 @@
     "contacts": "Contactos"
   },
   "course": {
-    "module": "Cursos",
-    "moduleDescription": "Catálogo de cursos y sus redactores habilitados.",
     "new": "Nuevo curso",
     "create": "Crear curso",
     "tabCourses": "Cursos",
@@ -183,6 +204,7 @@
     "noRedatores": "Sin redactores habilitados.",
     "searchPlaceholder": "Buscar curso...",
     "empty": "No hay cursos.",
+    "emptyHint": "Crea el primer curso para comenzar.",
     "count": "{{count}} curso(s)",
     "redatorCount": "Redactores"
   },
@@ -205,8 +227,6 @@
     "empty": "Sin módulos registrados."
   },
   "budget": {
-    "module": "Comercial",
-    "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
     "tab": "Presupuestos",
     "new": "Nuevo presupuesto",
     "create": "Crear presupuesto",
@@ -278,14 +298,13 @@
     "other": "Otro"
   },
   "redator": {
-    "module": "Personas",
-    "moduleDescription": "Registro canónico de alumnos y redactores",
     "new": "Nuevo redactor",
     "create": "Registrar redactor",
     "tabRedatores": "Redactores",
     "tabStudents": "Alumnos",
     "studentsPlaceholder": "Módulo de alumnos — próxima sprint.",
     "empty": "Sin redactores",
+    "emptyHint": "Registra el primer redactor para comenzar.",
     "count": "{{count}} redactores",
     "searchPlaceholder": "Buscar por nombre o RUT...",
     "name": "Nombre completo",
@@ -313,8 +332,6 @@
     "no_idoneo": "No idóneo"
   },
   "operation": {
-    "title": "Operación",
-    "subtitle": "Gestión de turmas y cotizaciones aprobadas",
     "pending": {
       "title": "Cotizaciones aprobadas pendientes de configuración",
       "students": "{{count}} alumnos",
@@ -332,6 +349,7 @@
       "filterAll": "Todos",
       "count": "{{count}} turmas",
       "empty": "No hay turmas todavía.",
+      "emptyHint": "Las turmas se crean desde una cotización aprobada.",
       "noRedator": "— Sin asignar"
     },
     "modality": { "presencial": "Presencial", "online": "Online" },

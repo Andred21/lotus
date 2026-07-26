@@ -33,17 +33,40 @@
     "upload": "Enviar documento",
     "noResults": "Sem resultados para \"{{term}}\"",
     "noResultsFiltered": "Sem resultados para os filtros aplicados",
+    "noResultsFilteredHint": "Ajuste ou limpe os filtros aplicados.",
+    "clearFilters": "Limpar filtros",
     "noResultsHint": "Revise o termo ou limpe a busca.",
     "clearSearch": "Limpar busca"
   },
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestão de clientes e orçamentos de capacitação"
+    },
+    "operacion": {
+      "title": "Operação",
+      "description": "Gestão de turmas e cotações aprovadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos e seus redatores habilitados."
+    },
+    "personas": {
+      "title": "Pessoas",
+      "description": "Registro canônico de alunos e redatores"
+    },
+    "administracion": {
+      "title": "Administração",
+      "description": "Usuários internos, papéis e permissões"
+    }
+  },
   "admin": {
-    "module": "Administração",
-    "moduleDescription": "Usuários internos, papéis e permissões",
     "tabUsers": "Usuários",
     "tabRoles": "Perfis e permissões",
     "new": "Novo usuário",
     "create": "Criar",
     "empty": "Sem usuários",
+    "emptyHint": "Crie o primeiro usuário para começar.",
     "count": "{{count}} usuário(s)",
     "searchPlaceholder": "Buscar por nome ou e-mail...",
     "name": "Nome",
@@ -124,6 +147,8 @@
     "custom": "Personalizado",
     "permissions": "Permissões",
     "empty": "Sem perfis",
+    "emptyHint": "Crie o primeiro papel personalizado para começar.",
+    "count": "{{count}} papéis",
     "systemReadOnly": "As permissões dos perfis de sistema são somente leitura."
   },
   "userMenu": {
@@ -138,8 +163,6 @@
     "module": "Módulo em construção."
   },
   "client": {
-    "module": "Comercial",
-    "moduleDescription": "Gestão de clientes e orçamentos de capacitação",
     "new": "Novo cliente",
     "create": "Cadastrar cliente",
     "tabClients": "Clientes",
@@ -166,8 +189,6 @@
     "contacts": "Contatos"
   },
   "course": {
-    "module": "Cursos",
-    "moduleDescription": "Catálogo de cursos e seus redatores habilitados.",
     "new": "Novo curso",
     "create": "Criar curso",
     "tabCourses": "Cursos",
@@ -183,6 +204,7 @@
     "noRedatores": "Sem redatores habilitados.",
     "searchPlaceholder": "Buscar curso...",
     "empty": "Nenhum curso.",
+    "emptyHint": "Crie o primeiro curso para começar.",
     "count": "{{count}} curso(s)",
     "redatorCount": "Redatores"
   },
@@ -205,8 +227,6 @@
     "empty": "Nenhum módulo cadastrado."
   },
   "budget": {
-    "module": "Comercial",
-    "moduleDescription": "Gestão de clientes e orçamentos de capacitação",
     "tab": "Orçamentos",
     "new": "Novo orçamento",
     "create": "Criar orçamento",
@@ -278,14 +298,13 @@
     "other": "Outro"
   },
   "redator": {
-    "module": "Pessoas",
-    "moduleDescription": "Registro canônico de alunos e redatores",
     "new": "Novo redator",
     "create": "Cadastrar redator",
     "tabRedatores": "Redatores",
     "tabStudents": "Alunos",
     "studentsPlaceholder": "Módulo de alunos — próxima sprint.",
     "empty": "Sem redatores",
+    "emptyHint": "Cadastre o primeiro redator para começar.",
     "count": "{{count}} redatores",
     "searchPlaceholder": "Buscar por nome ou RUT...",
     "name": "Nome completo",
@@ -313,8 +332,6 @@
     "no_idoneo": "Não idôneo"
   },
   "operation": {
-    "title": "Operação",
-    "subtitle": "Gestão de turmas e cotações aprovadas",
     "pending": {
       "title": "Cotações aprovadas pendentes de configuração",
       "students": "{{count}} alunos",
@@ -332,6 +349,7 @@
       "filterAll": "Todos",
       "count": "{{count}} turmas",
       "empty": "Nenhuma turma ainda.",
+      "emptyHint": "As turmas são criadas a partir de uma cotação aprovada.",
       "noRedator": "— Sem designar"
     },
     "modality": { "presencial": "Presencial", "online": "Online" },

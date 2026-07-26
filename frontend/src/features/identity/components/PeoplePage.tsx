@@ -1,29 +1,43 @@
 import { useTranslation } from 'react-i18next'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, AppEmptyState } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
 import { RedatoresTable } from './Redator/RedatoresTable'
 import { RedatorDialog } from './Redator/RedatorDialog'
 
 export function PeoplePage() {
   const { t } = useTranslation()
+  const { can } = usePermissions()
   const page = useRedatoresPage()
 
   return (
-    <ModulePage
-      title={t('redator.module')}
-      description={t('redator.moduleDescription')}
-      actions={<AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />}
-    >
-      <ModuleTabs>
+    <ModulePage title={t('module.personas.title')} description={t('module.personas.description')}>
+      <AppCard>
+        <ModuleTabs>
+          <ModuleTab header={t('redator.tabRedatores')}>
+            <RedatoresTable
+              redatores={page.items}
+              loading={page.loading}
+              onView={page.openView}
+              actions={
+                can('identity.user.create')
+                  ? <AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  : undefined
+              }
+            />
+          </ModuleTab>
 
-        <ModuleTab header={t('redator.tabRedatores')}>
-          <RedatoresTable redatores={page.items} loading={page.loading} onView={page.openView} />
-        </ModuleTab>
-
-        <ModuleTab header={t('redator.tabStudents')}>
-          <p className="p-4 text-sm text-slate-500">{t('redator.studentsPlaceholder')}</p>
-        </ModuleTab>
-      </ModuleTabs>
+          <ModuleTab header={t('redator.tabStudents')}>
+            {/* Módulo de alunos é backlog item 2 (não existe endpoint). Aqui só
+                deixa de ser um <p> solto e passa a usar o empty state padrão. */}
+            <AppEmptyState
+              icon="pi pi-user"
+              title={t('redator.tabStudents')}
+              description={t('redator.studentsPlaceholder')}
+            />
+          </ModuleTab>
+        </ModuleTabs>
+      </AppCard>
 
       {page.dialog && (
         <RedatorDialog

@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 export type AppCardVariant = 'default' | 'stat'
-export type AppCardTone = 'neutral' | 'success' | 'danger'
+export type AppCardTone = 'neutral' | 'info' | 'success' | 'danger'
 
 export interface AppCardProps {
   variant?: AppCardVariant
-  /** Só tem efeito com variant="stat". */
+  /** Tinge fundo e borda em qualquer variante. Em `variant="stat"` tinge
+   * também o texto — lá o número É o sinal semântico. */
   tone?: AppCardTone
   className?: string
   children: ReactNode
@@ -15,12 +16,14 @@ export interface AppCardProps {
  * tingido é composto com --surface-card (que inverte) via color-mix. */
 const TONE_HUE: Record<AppCardTone, string | null> = {
   neutral: null,
+  info: 'var(--blue-500)',
   success: 'var(--green-500)',
   danger: 'var(--red-500)',
 }
 
 const TONE_TEXT: Record<AppCardTone, string> = {
   neutral: 'var(--text-color)',
+  info: 'color-mix(in srgb, var(--blue-500) 70%, var(--text-color))',
   success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
   danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
 }
@@ -29,14 +32,24 @@ const TONE_TEXT: Record<AppCardTone, string> = {
  * Container de conteúdo. Apresentacional puro — não conhece feature nem rota.
  * Compõe-se com AppCardHeader/AppCardToolbar/AppCardFooter; nenhum deles é
  * obrigatório, e a ordem é responsabilidade de quem compõe.
+ *
+ * `tone` e `variant` são ortogonais: o tom escolhe a cor, a variante escolhe a
+ * forma. Um card de alerta é `tone="info"` sem variante; um card de estatística
+ * é `variant="stat"` com o tom que o número pedir.
+ *
+ * Publica `--app-card-tone-text` aos descendentes para que os subcomponentes
+ * acompanhem o tom sem recebê-lo por prop.
  */
 export function AppCard({ variant = 'default', tone = 'neutral', className, children }: AppCardProps) {
-  const hue = variant === 'stat' ? TONE_HUE[tone] : null
+  const hue = TONE_HUE[tone]
 
   const style: CSSProperties = {
     background: hue ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
     borderColor: hue ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
+    // O texto do container só segue o tom em `stat`: numa lista ou tabela,
+    // tingir todo o corpo derruba o contraste em vez de sinalizar.
     color: variant === 'stat' ? TONE_TEXT[tone] : 'var(--text-color)',
+    ['--app-card-tone-text' as string]: TONE_TEXT[tone],
   }
 
   return (
@@ -57,7 +70,10 @@ export interface AppCardHeaderProps {
   actions?: ReactNode
 }
 
-/** Cabeçalho de card: título (+ badge de contagem) à esquerda, ação à direita. */
+/** Cabeçalho de card: título (+ badge de contagem) à esquerda, ação à direita.
+ * O título acompanha o tom do card pela var publicada pelo `AppCard`; o badge
+ * fica neutro de propósito, para não precisar de uma segunda escala de
+ * contraste por tom nos dois temas. */
 export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
   return (
     <div
@@ -65,7 +81,12 @@ export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
       style={{ borderColor: 'var(--surface-border)' }}
     >
       <div className="flex items-center gap-2">
-        <h3 className="text-base font-semibold" style={{ color: 'var(--text-color)' }}>{title}</h3>
+        <h3
+          className="text-base font-semibold"
+          style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
+        >
+          {title}
+        </h3>
         {count !== undefined && (
           <span
             className="rounded-full px-2 py-0.5 text-xs font-semibold"

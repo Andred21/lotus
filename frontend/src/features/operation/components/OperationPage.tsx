@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ModulePage } from '@shared/ui'
+import { ModulePage, AppCard } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import { useTurmas, usePendingQuotes } from '../api/useTurmas'
 import { PendingQuotesPanel } from './Turma/PendingQuotesPanel'
@@ -17,10 +17,12 @@ export function OperationPage() {
   const canCreate = can('operation.turma.create')
 
   return (
-    <ModulePage title={t('operation.title')} description={t('operation.subtitle')}>
+    <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
       <div className="space-y-6">
         {canCreate && <PendingQuotesPanel items={pending.data ?? []} />}
-        <TurmasTable turmas={turmas.data ?? []} loading={turmas.isLoading} />
+        <AppCard>
+          <TurmasTable turmas={turmas.data ?? []} loading={turmas.isLoading} />
+        </AppCard>
       </div>
     </ModulePage>
   )

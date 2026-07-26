@@ -1,71 +1,118 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag } from '@shared/ui'
+import {
+  AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
+  AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import { useTableFilter } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
-import { turmaDisplayStatus, turmaStatusSeverity, type TurmaDisplayStatus } from '../../lib/turmaStatus'
+import {
+  turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps, type TurmaDisplayStatus,
+} from '../../lib/turmaStatus'
 
 const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
 
 export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading: boolean }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [filter, setFilter] = useState('')
   const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
-
-  const rows = turmas.filter((turma) => {
-    const matchesStatus = status === null || turmaDisplayStatus(turma) === status
-    const term = filter.trim().toLowerCase()
-    const matchesTerm =
-      term === '' ||
-      (turma.course_name ?? '').toLowerCase().includes(term) ||
-      (turma.client_name ?? '').toLowerCase().includes(term) ||
-      (turma.quote_code ?? '').toLowerCase().includes(term) ||
-      (turma.budget_code ?? '').toLowerCase().includes(term)
-    return matchesStatus && matchesTerm
-  })
+  const table = useTableFilter(
+    turmas,
+    (turma) => [turma.course_name, turma.client_name, turma.quote_code, turma.budget_code],
+    status === null ? undefined : (turma) => turmaDisplayStatus(turma) === status,
+  )
 
   const statusOptions = [
     { label: t('operation.table.filterAll'), value: null },
     ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
   ]
 
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
-        <div className="min-w-64 flex-1">
-          <AppInputText
-            leftIcon="pi pi-search"
-            placeholder={t('operation.table.search')}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
-        <div className="w-48">
-          <AppDropdown value={status} options={statusOptions} onChange={(e) => setStatus(e.value as TurmaDisplayStatus | null)} />
-        </div>
-      </div>
+  const filtering = table.term !== '' || status !== null
 
-      <AppDataTable value={rows} loading={loading} emptyMessage={t('operation.table.empty')}>
+  const empty = filtering ? (
+    <AppEmptyState
+      icon="pi pi-search"
+      // Só cita o termo entre aspas quando existe termo; com apenas o filtro de
+      // estado ativo a frase citaria aspas em branco.
+      title={table.term === '' ? t('common.noResultsFiltered') : t('common.noResults', { term: table.filter.trim() })}
+      description={table.term === '' ? t('common.noResultsFilteredHint') : t('common.noResultsHint')}
+      action={
+        <AppButton
+          label={table.term === '' ? t('common.clearFilters') : t('common.clearSearch')}
+          icon="pi pi-times"
+          text
+          onClick={() => { table.clear(); setStatus(null) }}
+        />
+      }
+    />
+  ) : (
+    // Sem ação: turma não se cria por botão, nasce de cotação aprovada.
+    <AppEmptyState icon="pi pi-calendar" title={t('operation.table.empty')} description={t('operation.table.emptyHint')} />
+  )
+
+  return (
+    <>
+      <AppCardToolbar
+        start={
+          <>
+            <div className="min-w-64 flex-1">
+              <AppInputText
+                leftIcon="pi pi-search"
+                placeholder={t('operation.table.search')}
+                value={table.filter}
+                onChange={(e) => table.onFilterChange(e.target.value)}
+              />
+            </div>
+            <div className="w-48">
+              <AppDropdown
+                value={status}
+                options={statusOptions}
+                onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
+              />
+            </div>
+          </>
+        }
+      />
+      <AppDataTable
+        value={table.rows}
+        loading={loading}
+        emptyMessage={empty}
+        paginator={table.paginator}
+        first={table.first}
+        onPage={table.onPage}
+      >
         <AppColumn
           header={t('operation.table.code')}
-          body={(turma: TurmaData) => <span className="font-mono text-sm text-sky-600">{turma.quote_code ?? '—'}</span>}
+          body={(turma: TurmaData) => (
+            <span className="font-mono text-sm" style={{ color: 'var(--primary-color)' }}>
+              {turma.quote_code ?? '—'}
+            </span>
+          )}
         />
         <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
         <AppColumn header={t('operation.table.client')} body={(turma: TurmaData) => turma.client_name ?? '—'} />
         <AppColumn
           header={t('operation.table.modality')}
-          body={(turma: TurmaData) => <AppTag value={t(`operation.modality.${turma.modalidade}`)} />}
+          body={(turma: TurmaData) => (
+            <AppTag
+              value={t(`operation.modality.${turma.modalidade}`)}
+              {...turmaModalidadeTagProps(turma.modalidade)}
+            />
+          )}
         />
         <AppColumn
           header={t('operation.table.redator')}
           body={(turma: TurmaData) =>
             turma.redatores.length > 0 ? turma.redatores.map((r) => r.name).join(', ') : (
-              <span className="text-slate-400">{t('operation.table.noRedator')}</span>
+              <span style={{ color: 'var(--text-color-secondary)' }}>{t('operation.table.noRedator')}</span>
             )
           }
         />
-        <AppColumn header={t('operation.table.students')} body={(turma: TurmaData) => turma.enrolled_count ?? 0} />
+        <AppColumn
+          header={t('operation.table.students')}
+          body={(turma: TurmaData) => <span className="font-semibold">{turma.enrolled_count ?? 0}</span>}
+        />
         <AppColumn
           header={t('operation.table.status')}
           body={(turma: TurmaData) => {
@@ -86,8 +133,7 @@ export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading:
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-
-      <p className="text-sm text-slate-500">{t('operation.table.count', { count: rows.length })}</p>
-    </div>
+      <AppCardFooter count={t('operation.table.count', { count: table.rows.length })} />
+    </>
   )
 }

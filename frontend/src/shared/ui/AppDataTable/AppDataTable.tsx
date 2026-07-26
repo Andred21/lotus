@@ -26,8 +26,18 @@ function mergePt(
 }
 
 /** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
- * array puro). Colunas via <AppColumn/>. */
-export function AppDataTable<T extends DataTableValueArray>({ pt, ...props }: DataTableProps<T>) {
+ * array puro). Colunas via <AppColumn/>.
+ *
+ * Durante o `loading` o corpo vazio ainda renderiza — passar `undefined` em
+ * `emptyMessage` cairia no default inglês do PrimeReact (`No available
+ * options`). Um nó vazio truthy mantém a linha e cala o texto; suprimir isso é
+ * responsabilidade do wrapper, não de cada tabela. */
+export function AppDataTable<T extends DataTableValueArray>({
+  pt,
+  loading,
+  emptyMessage,
+  ...props
+}: DataTableProps<T>) {
   return (
     <DataTable
       dataKey="id"
@@ -36,6 +46,8 @@ export function AppDataTable<T extends DataTableValueArray>({ pt, ...props }: Da
       paginator
       rows={10}
       pt={mergePt(appDataTablePt, pt as DataTableProps<DataTableValueArray>['pt'])}
+      loading={loading}
+      emptyMessage={loading ? <span /> : emptyMessage}
       {...props}
     />
   )
