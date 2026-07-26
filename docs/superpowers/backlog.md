@@ -7,10 +7,7 @@
 
 ## Próximos blocos
 
-1. **Bloco 6-frontend · Seed operacional**
-   — cenário demo ponta a ponta registrado na spec de Operação, somente após a conclusão do item
-   operacional ativo.
-2. **Bloco visual · Refinamento de UI por módulo** — Notion **H.1.3**
+1. **Bloco visual · Refinamento de UI por módulo** — Notion **H.1.3**
    — camada compartilhada em `shared/ui` (`AppCard` com variante `stat`, toolbar dentro do card,
    densidade/zebra/hover do `AppDataTable` via `pt`, paleta semântica de estado no `AppTag`, empty
    state, convenção de footer/paginação) **+** migração de Comercial, Operación, Cursos, Pessoas,
@@ -20,6 +17,16 @@
    `className` na raiz + `pt`); tokens próprios e `unstyled` seguem rejeitados. Shell **fora de
    escopo** — o João prefere o real ao protótipo. Insumo: auditoria de 2026-07-24 + 4 prints do
    protótipo + baseline refinada de 2026-07-26.
+2. **Pessoas · Alunos — módulo novo (backend + frontend)**
+   — a aba Alunos de `PeoplePage` é um `<p>` inline; **não existe endpoint de aluno**. `grep student`
+   em `routes/api.php` e `app/Domains/*/routes.php` = vazio; o domínio tem só
+   `Identity/Models/Student.php` e `Identity/Services/StudentResolver.php` (consumidos pela
+   matrícula). Escopo: `StudentData` + controller + rotas de listagem/detalhe, vínculos
+   (`student_client_links`), histórico de turmas e certificados do aluno, mais a tela. Protótipo tem
+   busca, tabela, indicadores, detalhe, vínculos, histórico e certificados. **Feature, não refino
+   visual** (decisão do João em 2026-07-26, ao separar do bloco visual). Ordenado depois do bloco
+   visual para nascer já no padrão novo de `shared/ui`. Insumo pendente: print do protótipo (o João
+   anexa) + Notion.
 3. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
@@ -38,8 +45,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 - **Dashboard** — protótipo tem 4 KPIs, gráfico de turmas, gráfico de certificados, tarefas
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
-- **Pessoas · Alunos** — protótipo tem busca, tabela, indicadores, detalhe, vínculos, histórico e
-  certificados. Real: `<p>` inline dentro da aba, nem `ModulePlaceholder`.
+- **Pessoas · Alunos** — promovido a bloco próprio: ver **item 2** de "Próximos blocos".
 - **Certificados** — já coberto pelo Bloco 7.
 
 ## Futuros dependentes de decisão

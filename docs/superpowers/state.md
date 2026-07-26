@@ -1,10 +1,10 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: bloco-visual-refino-ui
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 8dcffa4
 active_spec: null
@@ -55,10 +55,25 @@ updated_at: 2026-07-26
 Execução delegada a subagente na branch `feat/seed-operacional` (`b0b19c0`), mergeada em `8dcffa4`.
 DoD ("ver os dados na UI") validado pelo João.
 
-A spec `2026-07-21-bloco6-frontend-operacao-design.md` teve sua última task aberta (§7) entregue e
-**está pronta para ir a `specs/archive/`** — o move fica para o próximo `/fechar-sprint`, junto da
-atualização da referência em `progress.md`.
+Higiene de fechamento pendente executada em 2026-07-26 (passos 8/9 do `/fechar-sprint`, fora do
+comando — o gate exige `ready_for_closure` e o estado já estava `idle`): spec de Operação movida
+para `specs/archive/`, referências atualizadas em `progress.md` e `pendencias.md`, item concluído
+removido do backlog.
 
-Próximo item sugerido (**não ativo**, não autoriza nada): backlog item 2, bloco visual de refinamento
-de UI por módulo (Notion H.1.3). O insumo verificado já existe; a promoção depende de decisão
-explícita do João.
+## Item ativo — `bloco-visual-refino-ui`
+
+Promovido por decisão explícita do João em 2026-07-26 (backlog item 1, Notion H.1.3). Um bloco,
+review por partes: camada compartilhada em `shared/ui` **+** migração de Comercial, Operación,
+Cursos, Pessoas, detalhe de orçamento e detalhe de turma. Escopo dentro do **ADR-16** (wrapper +
+`className` na raiz + `pt`); tokens próprios e `unstyled` seguem rejeitados. Shell **fora de
+escopo**.
+
+**Pessoas · Alunos ficou FORA deste bloco** (decisão do João, mesma sessão): não existe endpoint de
+aluno no backend — `grep student` em `routes/api.php` e `app/Domains/*/routes.php` = vazio; só
+existem `Identity/Models/Student.php` e `Identity/Services/StudentResolver.php`. É feature, não
+refino. Virou backlog item 2, ordenado depois deste bloco para nascer já no padrão visual novo.
+
+O insumo do bloco (auditoria de 2026-07-24, 4 prints do protótipo, baseline de 2026-07-26) **não
+está no repo** — nada em `docs/` referencia 2026-07-24. Por isso o estado entra em
+`context_required`: o Codex gera o Context Packet com a skill `lotus-context-packet` antes de
+qualquer brainstorming.
