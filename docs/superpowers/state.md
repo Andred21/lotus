@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_review
+workflow_state: ready_for_planning
 next_owner: claude
-next_action: request_code_review
+next_action: plan_part4
 last_completed_work_item: bloco6-frontend-seed
-state_basis_commit: dfa1883
+state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
@@ -370,3 +370,50 @@ DoD comportamental (prova visual nos dois temas com `OperationDemoSeeder`) segue
 — sandbox sem browser/root para Playwright, mesma limitação das Partes 1 e 2.
 
 Branch não mergeada ainda — aguarda `/revisar-sprint` (ou revisão equivalente) e decisão do João.
+
+## `/revisar-sprint` — Parte 3, 2026-07-26
+
+Risco **alto** (Task 20 com `executor: codex`), então além do gabarito rodei revisão independente
+do Codex em read-only sobre `dfa1883..worktree-bloco-visual-p3`. Achados fundidos; os dois que
+sobreviveram foram verificados por mim no código antes de aceitar.
+
+Verificações rodadas por mim na worktree (não aceitas do report anterior): `pnpm lint` limpo,
+`pnpm build` verde, `grep -rn "window.confirm"` vazio, `grep -rn "AppCardFooter\|table.paginator"
+src/features` vazio, paridade de locales `es-pt: []` / `es-en: []`. Órfãos: nenhum. Leis §5:
+nenhuma violação — zero import de `primereact` em `features/`, zero import cross-feature, zero cor
+Tailwind hardcoded nova nos arquivos tocados.
+
+O review de branch anterior (achado Important + 6 Minor, ver seção acima) já estava corrigido em
+`87cc206`; não reabri os Minor aceitos lá. 2 achados novos, não cobertos por aquele review:
+
+- **Q-7 🟡 P** — `QuotesList.tsx`: `first:border-t-0` nunca aplicava, porque o wrapper do banner de
+  erro (`<div className="m-4 empty:m-0">`, sempre presente no DOM) é que era o `:first-child` real
+  do contêiner, não o primeiro item da lista — toda cotização, inclusive a primeira, desenhava borda
+  superior. Regressão da Task 22 (trocou `divide-y` por `first:border-t-0` por item, sem perceber que
+  o item deixou de ser o primeiro filho real).
+- **Q-8 🟢 P** — `useTableFilter.ts` / `EnrollmentTable.tsx`: o clamp de `first` ao encolher a lista
+  só mascarava a leitura devolvida, sem resetar o estado (`setFirst`) — se a lista encolhesse e
+  crescesse de novo sem o usuário trocar de página, a página obsoleta reaparecia. Duplicado nos dois
+  lugares porque a aba Alumnos não usa o hook (decisão da Task 25).
+
+**João decidiu corrigir os dois na hora** (sem virar débito) e confirmou a prova visual (DoD
+comportamental, os dois temas) já feita. Corrigidos em `49d2ad2`: `QuotesList` ganhou um contêiner
+próprio para os itens (isolado do banner de erro), e o clamp de `first` passou a resetar o estado de
+fato, via ajuste durante o render (mesmo padrão do reset de form do projeto — não `useEffect`).
+`pnpm lint`/`pnpm build` verdes de novo depois da correção.
+
+## Parte 3 encerrada e mergeada — 2026-07-26
+
+Merge `--no-ff` de `worktree-bloco-visual-p3` em `29fd9b8`. Sem conflito — a `main` não avançara
+desde a base `dfa1883`. Pós-merge, na `main`: `pnpm lint` limpo, `pnpm build` verde, paridade
+`es-pt: []` / `es-en: []`, `window.confirm` e `AppCardFooter`/`table.paginator` em `features/`
+vazios. Worktree preservada, como as anteriores.
+
+**O bloco segue aberto.** Próxima ação: `/planejar-bloco` para a **Parte 4**, que herda do plano:
+
+- Cor no interior de `DocumentTypeCard`, `TurmaConfigCard` e `RedatorDesignation` (D14 adiou só isso
+  para a Parte 4).
+- `TurmaCreatePage.tsx`: última tela com o padrão antigo de botão de voltar (achado Minor aceito do
+  review de branch, pickup natural).
+- Q-1 (CTA duplicado no empty state de `ClientsTable`/`BudgetsTable`) e os demais débitos das Partes
+  1–2 seguem nos débitos do backlog, não promovidos.
