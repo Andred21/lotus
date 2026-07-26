@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton } from '@shared/ui'
+import { AppButton, AppCardToolbar, FormErrorBanner } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useEnrollmentSection } from '../../hooks/useEnrollmentSection'
 import { EnrollmentTable } from './EnrollmentTable'
@@ -13,30 +13,41 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
 
-  if (s.loading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
-
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex justify-end gap-2">
-        <AppButton
-          label={t('operation.enrollment.importSheet')}
-          icon="pi pi-upload"
-          outlined
-          onClick={() => setImportOpen(true)}
-        />
-        <AppButton
-          label={t('operation.enrollment.addStudent')}
-          icon="pi pi-user-plus"
-          outlined
-          onClick={() => setAddOpen(true)}
-        />
+    <>
+      <AppCardToolbar
+        // Grupo de botões à ESQUERDA, sem busca — é o que o protótipo mostra na
+        // aba Alumnos (packet, "Aba sem busca").
+        start={
+          <>
+            <AppButton
+              variant="brandIcon"
+              label={t('operation.enrollment.importSheet')}
+              icon="pi pi-upload"
+              onClick={() => setImportOpen(true)}
+            />
+            <AppButton
+              label={t('operation.enrollment.addStudent')}
+              icon="pi pi-user-plus"
+              outlined
+              onClick={() => setAddOpen(true)}
+            />
+          </>
+        }
+      />
+
+      <div className="mx-4 empty:m-0">
+        <FormErrorBanner message={s.error} />
       </div>
 
-      {s.error && <p className="text-sm text-red-600">{s.error}</p>}
-      <EnrollmentTable enrollments={s.enrollments} onRemove={s.remove} removing={s.removing} />
-      <p className="text-sm text-slate-500">
-        {t('operation.enrollment.footerCount', { count: s.enrollments.length })}
-      </p>
+      <EnrollmentTable
+        enrollments={s.enrollments}
+        loading={s.loading}
+        onRemove={s.remove}
+        removing={s.removing}
+        removeError={s.error}
+        onResetRemove={s.resetRemove}
+      />
 
       <EnrollStudentForm
         turmaId={turma.id!}
@@ -45,6 +56,6 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         onHide={() => setAddOpen(false)}
       />
       <ImportDialog turmaId={turma.id!} visible={importOpen} onHide={() => setImportOpen(false)} />
-    </div>
+    </>
   )
 }

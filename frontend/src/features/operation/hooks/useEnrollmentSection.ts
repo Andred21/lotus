@@ -4,18 +4,17 @@ import { useEnrollments, useRemoveEnrollment } from '../api/useEnrollments'
 
 /** Orquestra a lista/remoção da aba Alumnos. O componente só consome.
  *
- * `@shared/ui` não exporta `useConfirm` — a confirmação de remoção fica no
- * `EnrollmentTable` via `window.confirm` (ver componente). Remoção de
- * matrícula é reversível (soft-delete + rematrícula restaura), então uma
- * confirmação leve basta; não inventamos wrapper novo nesta task. */
+ * A confirmação de remoção usa o `ConfirmDialog` de `shared/ui` (P-11 fechada na
+ * Parte 3 do bloco visual): o antigo alerta nativo do navegador não era
+ * estilizável, não respeitava o tema e não mostrava erro de mutação. */
 export function useEnrollmentSection(turma: TurmaData) {
   const turmaId = turma.id!
   const list = useEnrollments(turmaId)
   const removeMutation = useRemoveEnrollment()
   const { message: error } = useMutationErrors([removeMutation.error])
 
-  const remove = (enrollmentId: number) =>
-    removeMutation.mutate({ turmaId, enrollmentId })
+  const remove = (enrollmentId: number, options?: { onSuccess?: () => void }) =>
+    removeMutation.mutate({ turmaId, enrollmentId }, { onSuccess: options?.onSuccess })
 
   return {
     enrollments: list.data ?? [],
@@ -23,5 +22,6 @@ export function useEnrollmentSection(turma: TurmaData) {
     remove,
     removing: removeMutation.isPending,
     error,
+    resetRemove: () => removeMutation.reset(),
   }
 }

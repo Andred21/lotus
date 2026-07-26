@@ -398,6 +398,7 @@
       "addStudent": "Add student",
       "importSheet": "Import sheet (xlsx/csv)",
       "empty": "No students enrolled yet.",
+      "emptyHint": "Add students one by one or import a spreadsheet to start.",
       "footerCount": "{{count}} students enrolled",
       "table": {
         "name": "NAME",
@@ -411,6 +412,7 @@
         "reprobado": "Failed"
       },
       "remove": "Remove",
+      "removeTitle": "Remove enrollment?",
       "removeConfirm": "Remove {{name}}'s enrollment?",
       "form": {
         "title": "Add student",
