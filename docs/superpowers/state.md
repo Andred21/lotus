@@ -2,22 +2,16 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: blocked
-next_owner: joao
-next_action: prove_part2_on_screen
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_part3
 last_completed_work_item: bloco6-frontend-seed
-state_basis_commit: a61a950
+state_basis_commit: 72ed668
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: >-
-  Review da Parte 2 fechado e limpo: os 5 achados aprovados foram aplicados (C1-C5, commits c3f7411
-  a 721edf0 na worktree) e reverificados. Falta a unica coisa que agente nao prova: o Joao rodar
-  `pnpm dev` e conferir as 5 telas nos dois temas contra os passos "Provar na tela" das Tasks 11-17
-  e das C1-C5. Provado isso, mergear `worktree-bloco-visual-p2` e seguir para o planejamento da
-  Parte 3. Na merge, resolver `docs/superpowers/state.md` pela versao da main -- a worktree carrega
-  um snapshot antigo, sincronizado em e9b5520 so para o executor enxergar o plano.
-resume_state: ready_for_planning
+blocker: null
+resume_state: null
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -299,3 +293,31 @@ ficou: C1 leva só o wrapper, C2 leva a `RolesTable` (com o toque de C1 nela), C
 Q-6 virou regra, não só refactor: o bullet "Tabela em card = `useTableFilter` + `AppCard{Toolbar,
 Footer}`" entrou em `.claude/rules/frontend-fsliced.md`, com os dois defeitos que a duplicação
 rendeu escritos como motivo.
+
+## Parte 2 encerrada e mergeada — 2026-07-26
+
+DoD comportamental provado na tela pelo João (as 5 telas nos dois temas), como nas partes
+anteriores — sandbox sem browser/root para Playwright. Merge `--no-ff` de
+`worktree-bloco-visual-p2` em `72ed668`.
+
+Um conflito no merge, previsto e anotado antes: `docs/superpowers/state.md`. A worktree carregava o
+snapshot sincronizado em `e9b5520` só para o Codex enxergar o plano; resolvido pela versão da
+`main`, que é a autoritativa. Nenhum outro arquivo conflitou.
+
+Pós-merge, na `main`: `pnpm lint` limpo, `pnpm build` verde, paridade `es-pt: []` / `es-en: []`.
+Worktree removida; branch `worktree-bloco-visual-p2` preservada, como a `p1`.
+
+**O bloco segue aberto.** `bloco-visual-refino-ui` é "um bloco, review por partes" e só fecha quando
+a Parte 4 provar DoD. Próxima ação: `/planejar-bloco` para a **Parte 3**, que já nasce com escopo
+herdado:
+
+- **D6, paginador unificado** — adiado duas vezes por falta de caso real. A aba Alumnos do detalhe
+  de turma é o caso: duas turmas com 12 e 15 matrículas, acima do `rows={10}`. Agora que
+  `useTableFilter` centraliza `paginator`, a unificação tem um lugar só para acontecer.
+- **P-11** — `EnrollmentTable.tsx:55` é o último `window.confirm` do front; o `ConfirmDialog` do
+  `shared/ui` já tem 5 consumidores.
+- **Q-1** (CTA duplicado no empty state real de `ClientsTable`/`BudgetsTable`) e os 9 achados Minor
+  do review da Parte 1 seguem nos débitos do backlog, não promovidos.
+
+`ModulePage.tags` e o slot `AppCardFooter.pagination`, reservados desde a Parte 1, ganham consumidor
+nesta parte.
