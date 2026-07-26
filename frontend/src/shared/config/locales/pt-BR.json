@@ -36,9 +36,29 @@
     "noResultsHint": "Revise o termo ou limpe a busca.",
     "clearSearch": "Limpar busca"
   },
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestão de clientes e orçamentos de capacitação"
+    },
+    "operacion": {
+      "title": "Operação",
+      "description": "Gestão de turmas e cotações aprovadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos e seus redatores habilitados."
+    },
+    "personas": {
+      "title": "Pessoas",
+      "description": "Registro canônico de alunos e redatores"
+    },
+    "administracion": {
+      "title": "Administração",
+      "description": "Usuários internos, papéis e permissões"
+    }
+  },
   "admin": {
-    "module": "Administração",
-    "moduleDescription": "Usuários internos, papéis e permissões",
     "tabUsers": "Usuários",
     "tabRoles": "Perfis e permissões",
     "new": "Novo usuário",
@@ -138,8 +158,6 @@
     "module": "Módulo em construção."
   },
   "client": {
-    "module": "Comercial",
-    "moduleDescription": "Gestão de clientes e orçamentos de capacitação",
     "new": "Novo cliente",
     "create": "Cadastrar cliente",
     "tabClients": "Clientes",
@@ -166,8 +184,6 @@
     "contacts": "Contatos"
   },
   "course": {
-    "module": "Cursos",
-    "moduleDescription": "Catálogo de cursos e seus redatores habilitados.",
     "new": "Novo curso",
     "create": "Criar curso",
     "tabCourses": "Cursos",
@@ -205,8 +221,6 @@
     "empty": "Nenhum módulo cadastrado."
   },
   "budget": {
-    "module": "Comercial",
-    "moduleDescription": "Gestão de clientes e orçamentos de capacitação",
     "tab": "Orçamentos",
     "new": "Novo orçamento",
     "create": "Criar orçamento",
@@ -278,8 +292,6 @@
     "other": "Outro"
   },
   "redator": {
-    "module": "Pessoas",
-    "moduleDescription": "Registro canônico de alunos e redatores",
     "new": "Novo redator",
     "create": "Cadastrar redator",
     "tabRedatores": "Redatores",
@@ -313,8 +325,6 @@
     "no_idoneo": "Não idôneo"
   },
   "operation": {
-    "title": "Operação",
-    "subtitle": "Gestão de turmas e cotações aprovadas",
     "pending": {
       "title": "Cotações aprovadas pendentes de configuração",
       "students": "{{count}} alunos",

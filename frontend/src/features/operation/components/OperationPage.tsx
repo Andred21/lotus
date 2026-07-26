@@ -17,7 +17,7 @@ export function OperationPage() {
   const canCreate = can('operation.turma.create')
 
   return (
-    <ModulePage title={t('operation.title')} description={t('operation.subtitle')}>
+    <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
       <div className="space-y-6">
         {canCreate && <PendingQuotesPanel items={pending.data ?? []} />}
         <TurmasTable turmas={turmas.data ?? []} loading={turmas.isLoading} />

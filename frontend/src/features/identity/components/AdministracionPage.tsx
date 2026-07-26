@@ -21,8 +21,8 @@ export function AdministracionPage() {
 
   return (
     <ModulePage
-      title={t('admin.module')}
-      description={t('admin.moduleDescription')}
+      title={t('module.administracion.title')}
+      description={t('module.administracion.description')}
       actions={
         canManage ? (
           onRoles ? (

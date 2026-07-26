@@ -36,9 +36,29 @@
     "noResultsHint": "Revisa el término o limpia la búsqueda.",
     "clearSearch": "Limpiar búsqueda"
   },
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestión de clientes y presupuestos de capacitación"
+    },
+    "operacion": {
+      "title": "Operación",
+      "description": "Gestión de turmas y cotizaciones aprobadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos y sus redactores habilitados."
+    },
+    "personas": {
+      "title": "Personas",
+      "description": "Registro canónico de alumnos y redactores"
+    },
+    "administracion": {
+      "title": "Administración",
+      "description": "Usuarios internos, roles y permisos"
+    }
+  },
   "admin": {
-    "module": "Administración",
-    "moduleDescription": "Usuarios internos, roles y permisos",
     "tabUsers": "Usuarios",
     "tabRoles": "Roles y permisos",
     "new": "Nuevo usuario",
@@ -138,8 +158,6 @@
     "module": "Módulo en construcción."
   },
   "client": {
-    "module": "Comercial",
-    "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
     "new": "Nuevo cliente",
     "create": "Registrar cliente",
     "tabClients": "Clientes",
@@ -166,8 +184,6 @@
     "contacts": "Contactos"
   },
   "course": {
-    "module": "Cursos",
-    "moduleDescription": "Catálogo de cursos y sus redactores habilitados.",
     "new": "Nuevo curso",
     "create": "Crear curso",
     "tabCourses": "Cursos",
@@ -205,8 +221,6 @@
     "empty": "Sin módulos registrados."
   },
   "budget": {
-    "module": "Comercial",
-    "moduleDescription": "Gestión de clientes y presupuestos de capacitación",
     "tab": "Presupuestos",
     "new": "Nuevo presupuesto",
     "create": "Crear presupuesto",
@@ -278,8 +292,6 @@
     "other": "Otro"
   },
   "redator": {
-    "module": "Personas",
-    "moduleDescription": "Registro canónico de alumnos y redactores",
     "new": "Nuevo redactor",
     "create": "Registrar redactor",
     "tabRedatores": "Redactores",
@@ -313,8 +325,6 @@
     "no_idoneo": "No idóneo"
   },
   "operation": {
-    "title": "Operación",
-    "subtitle": "Gestión de turmas y cotizaciones aprobadas",
     "pending": {
       "title": "Cotizaciones aprobadas pendientes de configuración",
       "students": "{{count}} alumnos",

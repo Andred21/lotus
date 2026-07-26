@@ -17,7 +17,7 @@ export function CommercialPage() {
   const [tab, setTab] = useState(0)
 
   return (
-    <ModulePage title={t('client.module')} description={t('client.moduleDescription')}>
+    <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
       <AppCard>
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('client.tabClients')}>

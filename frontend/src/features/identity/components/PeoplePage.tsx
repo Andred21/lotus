@@ -10,8 +10,8 @@ export function PeoplePage() {
 
   return (
     <ModulePage
-      title={t('redator.module')}
-      description={t('redator.moduleDescription')}
+      title={t('module.personas.title')}
+      description={t('module.personas.description')}
       actions={<AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />}
     >
       <ModuleTabs>

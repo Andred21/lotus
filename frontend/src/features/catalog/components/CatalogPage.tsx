@@ -10,8 +10,8 @@ export function CatalogPage() {
 
   return (
     <ModulePage
-      title={t('course.module')}
-      description={t('course.moduleDescription')}
+      title={t('module.cursos.title')}
+      description={t('module.cursos.description')}
       actions={<AppButton variant="brandIcon" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />}
     >
       <ModuleTabs>

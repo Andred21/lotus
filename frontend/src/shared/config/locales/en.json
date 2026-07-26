@@ -36,9 +36,29 @@
     "noResultsHint": "Check the term or clear the search.",
     "clearSearch": "Clear search"
   },
+  "module": {
+    "comercial": {
+      "title": "Commercial",
+      "description": "Client and training quote management"
+    },
+    "operacion": {
+      "title": "Operations",
+      "description": "Manage classes and approved quotes"
+    },
+    "cursos": {
+      "title": "Courses",
+      "description": "Course catalog and their enabled writers."
+    },
+    "personas": {
+      "title": "People",
+      "description": "Canonical registry of students and instructors"
+    },
+    "administracion": {
+      "title": "Administration",
+      "description": "Internal users, roles and permissions"
+    }
+  },
   "admin": {
-    "module": "Administration",
-    "moduleDescription": "Internal users, roles and permissions",
     "tabUsers": "Users",
     "tabRoles": "Roles & permissions",
     "new": "New user",
@@ -138,8 +158,6 @@
     "module": "Module under construction."
   },
   "client": {
-    "module": "Commercial",
-    "moduleDescription": "Client and training quote management",
     "new": "New client",
     "create": "Register client",
     "tabClients": "Clients",
@@ -166,8 +184,6 @@
     "contacts": "Contacts"
   },
   "course": {
-    "module": "Courses",
-    "moduleDescription": "Course catalog and their enabled writers.",
     "new": "New course",
     "create": "Create course",
     "tabCourses": "Courses",
@@ -205,8 +221,6 @@
     "empty": "No modules registered."
   },
   "budget": {
-    "module": "Commercial",
-    "moduleDescription": "Manage clients and training budgets",
     "tab": "Budgets",
     "new": "New budget",
     "create": "Create budget",
@@ -278,8 +292,6 @@
     "other": "Other"
   },
   "redator": {
-    "module": "People",
-    "moduleDescription": "Canonical registry of students and instructors",
     "new": "New instructor",
     "create": "Register instructor",
     "tabRedatores": "Instructors",
@@ -313,8 +325,6 @@
     "no_idoneo": "Not suitable"
   },
   "operation": {
-    "title": "Operations",
-    "subtitle": "Manage classes and approved quotes",
     "pending": {
       "title": "Approved quotes pending configuration",
       "students": "{{count}} students",
