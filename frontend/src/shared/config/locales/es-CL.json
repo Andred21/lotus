@@ -33,6 +33,8 @@
     "upload": "Subir documento",
     "noResults": "Sin resultados para \"{{term}}\"",
     "noResultsFiltered": "Sin resultados para los filtros aplicados",
+    "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
+    "clearFilters": "Limpiar filtros",
     "noResultsHint": "Revisa el término o limpia la búsqueda.",
     "clearSearch": "Limpiar búsqueda"
   },
