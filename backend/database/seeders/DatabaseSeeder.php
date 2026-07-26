@@ -25,10 +25,10 @@ class DatabaseSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@lotus.cl'],
             [
-                'uuid'      => (string) Str::uuid(),
-                'name'      => 'Admin Lotus',
-                'password'  => Hash::make('senha123'),
-                'type'      => 'admin',
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Admin Lotus',
+                'password' => Hash::make('senha123'),
+                'type' => 'admin',
                 'is_active' => true,
             ],
         );
@@ -36,5 +36,9 @@ class DatabaseSeeder extends Seeder
         // Conta de owner em dev: superadmin (acesso total). Ajuste para 'admin'
         // se quiser exercitar as restrições das ações segregadas.
         $admin->syncRoles(['superadmin']);
+
+        // Cenário operacional de demonstração (spec bloco 6-frontend §7). O
+        // próprio seeder tem o gate de ambiente — nunca roda fora de local/demo.
+        $this->call(OperationDemoSeeder::class);
     }
 }
