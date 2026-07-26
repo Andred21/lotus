@@ -1,4 +1,4 @@
-import type { TurmaData } from '@shared/types/generated'
+import type { TurmaData, TurmaModalidade } from '@shared/types/generated'
 
 export type TurmaDisplayStatus = 'em_andamento' | 'habilitada' | 'concluida'
 
@@ -15,4 +15,14 @@ export function turmaStatusSeverity(status: TurmaDisplayStatus): 'info' | 'warni
   if (status === 'concluida') return 'success'
   if (status === 'habilitada') return 'warning'
   return 'info'
+}
+
+/** Props de tom do `AppTag` para a modalidade. Modalidade **não é severidade**
+ * (spec D7): `presencial` usa o neutro do PrimeReact e `online` usa o tom
+ * `accent`, que não tem `severity` equivalente. Espalhe no AppTag:
+ * `<AppTag {...turmaModalidadeTagProps(m)} />`. */
+export function turmaModalidadeTagProps(
+  modalidade: TurmaModalidade,
+): { severity: 'secondary' } | { tone: 'accent' } {
+  return modalidade === 'online' ? { tone: 'accent' } : { severity: 'secondary' }
 }
