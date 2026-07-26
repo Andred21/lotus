@@ -2,22 +2,16 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: reviewing
+next_owner: claude
+next_action: apply_approved_review_findings
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: >-
-  /revisar-sprint da Parte 2 fechou com 5 achados aguardando decisao do Joao: Q-2 (RolesTable
-  mantem paginador default, double-band contra D6, 1 linha), Q-3 (emptyMessage undefined cai no
-  default ingles do PrimeReact em 7 tabelas), Q-4 (acao primaria sem check de permissao em
-  Cursos/Pessoas/Comercial, contra Administracion que checa), Q-5 (copy do empty state de filtro
-  so por estado fala de busca), Q-6 (scaffolding de tabela duplicado 6x, padrao reincidente 2
-  sprints, propor rule). Nenhum toca lei §5.
-resume_state: reviewing
+blocker: null
+resume_state: null
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -256,3 +250,17 @@ import de `primereact` em `features/`, zero import cross-feature, zero cor Tailw
 
 Descartado por ruído: `first` não reajustado quando um refetch encolhe a lista abaixo da página
 atual (achado do Codex) — real, mas exige volume que nenhuma tela tem hoje.
+
+**João aprovou os 5 achados em 2026-07-26 e delegou a aplicação ao Codex.** Viraram as Tasks C1 a
+C5 na seção `# Parte 2 — Correções de review` do `active_plan`, com `## Handoff de execução`
+próprio (`executor: codex`, base `d6023c7`). Ordem obrigatória C1→C5: C1 tira o ternário de
+`emptyMessage` das 7 tabelas e C5 reescreve as mesmas tabelas em cima do resultado.
+
+Desvio consciente do gate da Parte 2, que mandava contrato compartilhado para o `claude`: C1
+(`AppDataTable`) e C5 (`useTableFilter` + rule) tocam `shared/`, e mesmo assim vão para o Codex por
+decisão do João. Risco contido escrevendo o código de `shared/` literalmente no plano — o Codex
+aplica sem latitude de design — e conferindo o diff antes de commitar.
+
+O Codex **não commita** (na Parte 2 o `.git/worktrees/bloco-visual-p2` ficou somente-leitura no
+sandbox dele). Claude confere o diff contra `paths_autorizados`, roda lint/build/paridade por conta
+própria e commita task a task, como na Parte 2.
