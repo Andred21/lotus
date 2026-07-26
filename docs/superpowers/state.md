@@ -2,16 +2,22 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: reviewing
-next_owner: claude
-next_action: apply_approved_review_findings
+workflow_state: blocked
+next_owner: joao
+next_action: prove_part2_on_screen
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: null
-resume_state: null
+blocker: >-
+  Review da Parte 2 fechado e limpo: os 5 achados aprovados foram aplicados (C1-C5, commits c3f7411
+  a 721edf0 na worktree) e reverificados. Falta a unica coisa que agente nao prova: o Joao rodar
+  `pnpm dev` e conferir as 5 telas nos dois temas contra os passos "Provar na tela" das Tasks 11-17
+  e das C1-C5. Provado isso, mergear `worktree-bloco-visual-p2` e seguir para o planejamento da
+  Parte 3. Na merge, resolver `docs/superpowers/state.md` pela versao da main -- a worktree carrega
+  um snapshot antigo, sincronizado em e9b5520 so para o executor enxergar o plano.
+resume_state: ready_for_planning
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -264,3 +270,32 @@ aplica sem latitude de design — e conferindo o diff antes de commitar.
 O Codex **não commita** (na Parte 2 o `.git/worktrees/bloco-visual-p2` ficou somente-leitura no
 sandbox dele). Claude confere o diff contra `paths_autorizados`, roda lint/build/paridade por conta
 própria e commita task a task, como na Parte 2.
+
+## Correções de review aplicadas — Parte 2, 2026-07-26
+
+João aprovou os 5 achados e delegou a aplicação ao Codex. Tasks C1 a C5 escritas no `active_plan`
+com o código de `shared/` literal, para o Codex aplicar sem latitude de design. O Codex executou as
+5 na worktree e **não commitou**, como instruído — a limitação de sandbox da Parte 2 deixou de ser
+um `blocked` porque o handoff já previa que quem commita é o Claude.
+
+Conferi o diff eu mesmo antes de commitar: 17 arquivos, todos dentro dos `paths_autorizados`, nada
+fora. Rodei `pnpm lint`, `pnpm build`, o script de paridade (`es-pt: []` / `es-en: []`) e os 4
+greps de prova das tasks — todos verdes por execução minha, não pelo report.
+
+Commits, um por task: `c3f7411` (C1), `8bf28b9` (C2), `4dcf0ff` (C3), `91ed065` (C4), `721edf0`
+(C5). Working tree limpo em `721edf0`.
+
+**Lacuna do plano fechada na hora:** a Task C4 só nomeava `TurmasTable`, mas `BudgetsTable` tem o
+mesmo filtro de estado e o mesmo defeito de copy. Erro meu ao listar as ocorrências do Q-5, não do
+executor — corrigido junto no commit da C5.
+
+**Desvio de convenção registrado:** os commits não isolam perfeitamente uma task cada. A C1 mudou o
+wrapper **e** a linha `emptyMessage` das 7 tabelas; a C5 reescreveu 6 dessas tabelas por inteiro.
+Separar os dois toques no mesmo arquivo exigiria fatiar hunk a hunk sem ganho de auditoria. O que
+ficou: C1 leva só o wrapper, C2 leva a `RolesTable` (com o toque de C1 nela), C5 leva as outras 6
+(com os toques de C1 e C4 nelas). Cada commit intermediário compila — o ternário antigo do chamador
+é inofensivo depois de C1.
+
+Q-6 virou regra, não só refactor: o bullet "Tabela em card = `useTableFilter` + `AppCard{Toolbar,
+Footer}`" entrou em `.claude/rules/frontend-fsliced.md`, com os dois defeitos que a duplicação
+rendeu escritos como motivo.
