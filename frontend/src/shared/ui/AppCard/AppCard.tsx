@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 export type AppCardVariant = 'default' | 'stat'
-export type AppCardTone = 'neutral' | 'info' | 'success' | 'danger'
+export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
 
 export interface AppCardProps {
   variant?: AppCardVariant
@@ -18,6 +18,7 @@ const TONE_HUE: Record<AppCardTone, string | null> = {
   neutral: null,
   info: 'var(--blue-500)',
   success: 'var(--green-500)',
+  warning: 'var(--yellow-500)',
   danger: 'var(--red-500)',
 }
 
@@ -25,6 +26,7 @@ const TONE_TEXT: Record<AppCardTone, string> = {
   neutral: 'var(--text-color)',
   info: 'color-mix(in srgb, var(--blue-500) 70%, var(--text-color))',
   success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
+  warning: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
   danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
 }
 

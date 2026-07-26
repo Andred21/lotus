@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppTag, ConfirmDialog } from '@shared/ui'
+import { AppButton, AppCard, AppTag, ConfirmDialog } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
@@ -22,27 +22,27 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
       </div>
 
       {s.concluida ? (
-        <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+        <AppCard tone="success" className="px-3 py-2 text-sm">
           {s.concludedAt
             ? t('operation.conclusion.concludedAt', { date: formatDate(new Date(s.concludedAt)) })
             : t('operation.conclusion.state.concluida')}
-        </p>
+        </AppCard>
       ) : (
         <>
           {s.habilitada ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300">{t('operation.conclusion.ready')}</p>
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.ready')}</p>
           ) : (
-            <div className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            <AppCard tone="warning" className="px-3 py-2 text-sm">
               <p>{t('operation.conclusion.missingTitle')}</p>
               <ul className="mt-1 list-inside list-disc">
                 {s.missingTypes.map((type) => (
                   <li key={type}>{t(`operation.documents.type.${type}`)}</li>
                 ))}
               </ul>
-            </div>
+            </AppCard>
           )}
 
-          <p className="text-sm text-slate-500">{t('operation.conclusion.warning')}</p>
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.warning')}</p>
 
           {s.canComplete ? (
             <AppButton
@@ -54,7 +54,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
               onClick={() => setConfirming(true)}
             />
           ) : (
-            <p className="text-sm text-slate-500">{t('operation.conclusion.noPermission')}</p>
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.noPermission')}</p>
           )}
         </>
       )}
