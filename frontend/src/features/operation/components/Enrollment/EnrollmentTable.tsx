@@ -21,6 +21,13 @@ export function EnrollmentTable({ enrollments, loading, onRemove, removing, remo
   const [pending, setPending] = useState<EnrollmentData | null>(null)
   const [first, setFirst] = useState(0)
 
+  // Clamp do ESTADO, não só da leitura (mesmo raciocínio do useTableFilter):
+  // sem isto, a lista encolher e crescer de novo sem trocar de página reexuma
+  // a página obsoleta.
+  if (first >= enrollments.length && first !== 0) {
+    setFirst(0)
+  }
+
   return (
     <>
       <AppDataTable

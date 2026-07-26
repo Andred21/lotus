@@ -58,6 +58,15 @@ export function useTableFilter<T>(
     setFirst(0)
   }
 
+  // Clamp do ESTADO, não só da leitura: a lista pode encolher (ex. deleção na
+  // última página) e depois crescer de novo sem o usuário trocar de página —
+  // sem isto, a página obsoleta reaparece. Ajuste durante o render (mesmo
+  // padrão do reset de form via useState condicional), não useEffect: teria um
+  // frame de atraso.
+  if (first >= rows.length && first !== 0) {
+    setFirst(0)
+  }
+
   return {
     filter,
     term,
