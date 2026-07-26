@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTableFilter } from '@shared/hooks'
 import {
   AppDataTable, AppColumn, AppTag, AppInputText, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
 } from '@shared/ui'
@@ -14,32 +15,19 @@ export function ClientsTable({
   actions?: ReactNode
 }) {
   const { t } = useTranslation()
-  const [filter, setFilter] = useState('')
-  const [first, setFirst] = useState(0)
-
-  const term = filter.trim().toLowerCase()
-  const rows = term === ''
-    ? clients
-    : clients.filter(
-        (c) => c.legal_name.toLowerCase().includes(term) || c.rut.toLowerCase().includes(term),
-      )
-
-  const handleFilterChange = (value: string) => {
-    setFilter(value)
-    setFirst(0)
-  }
+  const table = useTableFilter(clients, (c) => [c.legal_name, c.rut])
 
   // Dois vazios distintos: sem dado convida a cadastrar; busca sem resultado
   // oferece limpar o filtro. Sugerir cadastro quando o problema é o termo manda
   // o usuário para o lugar errado.
-  const empty = term === '' ? (
+  const empty = table.term === '' ? (
     <AppEmptyState icon="pi pi-building" title={t('client.empty')} description={t('client.emptyHint')} action={actions} />
   ) : (
     <AppEmptyState
       icon="pi pi-search"
-      title={t('common.noResults', { term: filter.trim() })}
+      title={t('common.noResults', { term: table.filter.trim() })}
       description={t('common.noResultsHint')}
-      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
     />
   )
 
@@ -51,20 +39,20 @@ export function ClientsTable({
             <AppInputText
               leftIcon="pi pi-search"
               placeholder={t('client.searchPlaceholder')}
-              value={filter}
-              onChange={(e) => handleFilterChange(e.target.value)}
+              value={table.filter}
+              onChange={(e) => table.onFilterChange(e.target.value)}
             />
           </div>
         }
         end={actions}
       />
       <AppDataTable
-        value={rows}
+        value={table.rows}
         loading={loading}
-        emptyMessage={loading ? undefined : empty}
-        paginator={rows.length > 10}
-        first={first}
-        onPage={(e) => setFirst(e.first)}
+        emptyMessage={empty}
+        paginator={table.paginator}
+        first={table.first}
+        onPage={table.onPage}
       >
         <AppColumn field="legal_name" header={t('client.legalName')} sortable />
         <AppColumn header={t('common.rut')} body={(c: ClientData) => <span className="font-mono text-sm">{c.rut}</span>} />
@@ -76,7 +64,7 @@ export function ClientsTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('client.count', { count: rows.length })} />
+      <AppCardFooter count={t('client.count', { count: table.rows.length })} />
     </>
   )
 }

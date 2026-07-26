@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTableFilter } from '@shared/hooks'
 import {
   AppDataTable, AppColumn, AppInputText, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
 } from '@shared/ui'
@@ -14,31 +15,16 @@ export function CoursesTable({
   actions?: ReactNode
 }) {
   const { t } = useTranslation()
-  const [filter, setFilter] = useState('')
-  const [first, setFirst] = useState(0)
+  const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
 
-  const term = filter.trim().toLowerCase()
-  const rows = term === ''
-    ? courses
-    : courses.filter(
-        (c) =>
-          c.name.toLowerCase().includes(term) ||
-          (c.technical_name ?? '').toLowerCase().includes(term),
-      )
-
-  const handleFilterChange = (value: string) => {
-    setFilter(value)
-    setFirst(0)
-  }
-
-  const empty = term === '' ? (
+  const empty = table.term === '' ? (
     <AppEmptyState icon="pi pi-book" title={t('course.empty')} description={t('course.emptyHint')} action={actions} />
   ) : (
     <AppEmptyState
       icon="pi pi-search"
-      title={t('common.noResults', { term: filter.trim() })}
+      title={t('common.noResults', { term: table.filter.trim() })}
       description={t('common.noResultsHint')}
-      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
     />
   )
 
@@ -50,20 +36,20 @@ export function CoursesTable({
             <AppInputText
               leftIcon="pi pi-search"
               placeholder={t('course.searchPlaceholder')}
-              value={filter}
-              onChange={(e) => handleFilterChange(e.target.value)}
+              value={table.filter}
+              onChange={(e) => table.onFilterChange(e.target.value)}
             />
           </div>
         }
         end={actions}
       />
       <AppDataTable
-        value={rows}
+        value={table.rows}
         loading={loading}
-        emptyMessage={loading ? undefined : empty}
-        paginator={rows.length > 10}
-        first={first}
-        onPage={(e) => setFirst(e.first)}
+        emptyMessage={empty}
+        paginator={table.paginator}
+        first={table.first}
+        onPage={table.onPage}
       >
         <AppColumn field="name" header={t('course.name')} sortable />
         <AppColumn header={t('course.technicalName')} body={(c: CourseData) => c.technical_name ?? '—'} />
@@ -80,7 +66,7 @@ export function CoursesTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('course.count', { count: rows.length })} />
+      <AppCardFooter count={t('course.count', { count: table.rows.length })} />
     </>
   )
 }

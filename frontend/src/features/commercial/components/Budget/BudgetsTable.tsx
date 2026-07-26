@@ -5,6 +5,7 @@ import {
   AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
   AppCardToolbar, AppCardFooter, AppEmptyState,
 } from '@shared/ui'
+import { useTableFilter } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { clientsApi } from '@shared/api/clientsApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
@@ -21,9 +22,7 @@ export function BudgetsTable({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [filter, setFilter] = useState('')
   const [status, setStatus] = useState<QuoteStatus | null>(null)
-  const [first, setFirst] = useState(0)
   const clients = clientsApi.useList()
 
   const clientName = (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—'
@@ -31,22 +30,18 @@ export function BudgetsTable({
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
   // filtro é aplicado aqui, antes de entregar as linhas à tabela.
-  const term = filter.trim().toLowerCase()
-  const rows = budgets.filter((b) => {
-    const matchesStatus = status === null || b.status === status
-    const matchesTerm =
-      term === '' ||
-      (b.code ?? '').toLowerCase().includes(term) ||
-      clientName(b.client_id).toLowerCase().includes(term)
-    return matchesStatus && matchesTerm
-  })
+  const table = useTableFilter(
+    budgets,
+    (b) => [b.code, clientName(b.client_id)],
+    status === null ? undefined : (b) => b.status === status,
+  )
 
   const statusOptions = [
     { label: t('budget.filterAll'), value: null },
     ...STATUSES.map((s) => ({ label: t(`quoteStatus.${s}`), value: s })),
   ]
 
-  const filtering = term !== '' || status !== null
+  const filtering = table.term !== '' || status !== null
 
   const empty = filtering ? (
     <AppEmptyState
@@ -54,14 +49,14 @@ export function BudgetsTable({
       // Só monta `Sin resultados para "x"` quando existe termo. Com apenas o
       // filtro de estado ativo, o termo é vazio e a frase citaria aspas em
       // branco — cai no título genérico.
-      title={term === '' ? t('common.noResultsFiltered') : t('common.noResults', { term: filter.trim() })}
-      description={t('common.noResultsHint')}
+      title={table.term === '' ? t('common.noResultsFiltered') : t('common.noResults', { term: table.filter.trim() })}
+      description={table.term === '' ? t('common.noResultsFilteredHint') : t('common.noResultsHint')}
       action={
         <AppButton
-          label={t('common.clearSearch')}
+          label={table.term === '' ? t('common.clearFilters') : t('common.clearSearch')}
           icon="pi pi-times"
           text
-          onClick={() => { setFilter(''); setStatus(null); setFirst(0) }}
+          onClick={() => { table.clear(); setStatus(null) }}
         />
       }
     />
@@ -78,15 +73,15 @@ export function BudgetsTable({
               <AppInputText
                 leftIcon="pi pi-search"
                 placeholder={t('budget.searchPlaceholder')}
-                value={filter}
-                onChange={(e) => { setFilter(e.target.value); setFirst(0) }}
+                value={table.filter}
+                onChange={(e) => table.onFilterChange(e.target.value)}
               />
             </div>
             <div className="w-48">
               <AppDropdown
                 value={status}
                 options={statusOptions}
-                onChange={(e) => { setStatus(e.value as QuoteStatus | null); setFirst(0) }}
+                onChange={(e) => { setStatus(e.value as QuoteStatus | null); table.resetPage() }}
               />
             </div>
           </>
@@ -94,12 +89,12 @@ export function BudgetsTable({
         end={actions}
       />
       <AppDataTable
-        value={rows}
+        value={table.rows}
         loading={loading}
-        emptyMessage={loading ? undefined : empty}
-        paginator={rows.length > 10}
-        first={first}
-        onPage={(e) => setFirst(e.first)}
+        emptyMessage={empty}
+        paginator={table.paginator}
+        first={table.first}
+        onPage={table.onPage}
       >
         <AppColumn
           header={t('budget.code')}
@@ -121,7 +116,7 @@ export function BudgetsTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('budget.count', { count: rows.length })} />
+      <AppCardFooter count={t('budget.count', { count: table.rows.length })} />
     </>
   )
 }

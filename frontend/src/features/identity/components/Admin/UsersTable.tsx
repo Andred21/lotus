@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTableFilter } from '@shared/hooks'
 import {
   AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
   AppCardToolbar, AppCardFooter, AppEmptyState,
@@ -15,29 +16,16 @@ export function UsersTable({
   actions?: ReactNode
 }) {
   const { t } = useTranslation()
-  const [filter, setFilter] = useState('')
-  const [first, setFirst] = useState(0)
+  const table = useTableFilter(users, (u) => [u.name, u.email])
 
-  const term = filter.trim().toLowerCase()
-  const rows = term === ''
-    ? users
-    : users.filter(
-        (u) => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term),
-      )
-
-  const handleFilterChange = (value: string) => {
-    setFilter(value)
-    setFirst(0)
-  }
-
-  const empty = term === '' ? (
+  const empty = table.term === '' ? (
     <AppEmptyState icon="pi pi-users" title={t('admin.empty')} description={t('admin.emptyHint')} action={actions} />
   ) : (
     <AppEmptyState
       icon="pi pi-search"
-      title={t('common.noResults', { term: filter.trim() })}
+      title={t('common.noResults', { term: table.filter.trim() })}
       description={t('common.noResultsHint')}
-      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
     />
   )
 
@@ -49,20 +37,20 @@ export function UsersTable({
             <AppInputText
               leftIcon="pi pi-search"
               placeholder={t('admin.searchPlaceholder')}
-              value={filter}
-              onChange={(e) => handleFilterChange(e.target.value)}
+              value={table.filter}
+              onChange={(e) => table.onFilterChange(e.target.value)}
             />
           </div>
         }
         end={actions}
       />
       <AppDataTable
-        value={rows}
+        value={table.rows}
         loading={loading}
-        emptyMessage={loading ? undefined : empty}
-        paginator={rows.length > 10}
-        first={first}
-        onPage={(e) => setFirst(e.first)}
+        emptyMessage={empty}
+        paginator={table.paginator}
+        first={table.first}
+        onPage={table.onPage}
       >
         <AppColumn
           field="name"
@@ -90,7 +78,7 @@ export function UsersTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('admin.count', { count: rows.length })} />
+      <AppCardFooter count={t('admin.count', { count: table.rows.length })} />
     </>
   )
 }
