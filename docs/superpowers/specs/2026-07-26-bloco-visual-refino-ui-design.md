@@ -287,3 +287,58 @@ Leitura preliminar: **P1** e **P3** são `claude` — P1 define o contrato que a
 composição heterogênea. **P2** é candidato a `codex`: replicação de padrão já aprovado, paths
 fechados em `frontend/src/features/*/components/`. **P4** é `claude`, julgamento visual em sete
 telas.
+
+## 10. Adendo da Parte 3 — decisões do gate (2026-07-26)
+
+Quatro decisões tomadas no `/planejar-bloco` da Parte 3. Duas delas **substituem** texto das seções
+acima; está marcado onde.
+
+### D12 — A faixa do rodapé é o paginador do `DataTable` (substitui `AppCard.Footer` em §4)
+
+§4 previa alimentar o slot `pagination` do `AppCardFooter` pelo `paginatorTemplate` do `DataTable`.
+Ao planejar a Parte 3 apareceu o obstáculo que derruba a rota alternativa — fatiar a página fora da
+tabela: **cinco tabelas têm coluna `sortable`** (`ClientsTable`, `CoursesTable`, `RolesTable`,
+`RedatoresTable`, `UsersTable`). Com a página fatiada por um hook, o `DataTable` recebe só as linhas
+visíveis e passa a ordenar **a página**, não o conjunto — regressão silenciosa numa tela com peso
+de auditoria.
+
+Decisão: o `DataTable` continua dono de página **e** ordenação, e a faixa do rodapé passa a ser o
+próprio paginador dele. `AppDataTable` ganha `footerCount?: ReactNode` e internamente liga
+`alwaysShowPaginator`, coloca a contagem em `paginatorLeft` e só exibe os controles de página quando
+`value.length > rows`. O `pt` do paginador reproduz o visual do `AppCardFooter` (borda superior,
+`px-4 py-3`, `text-sm`, `--text-color-secondary`), centralizado em `AppDataTable/style.ts`.
+
+Consequências: `AppCardFooter` deixa de aparecer nas sete tabelas e sobrevive para card **sem**
+tabela; `useTableFilter` perde o campo `paginator`, que vira detalhe interno do `AppDataTable`; a
+linha de contrato de tabela-em-card na `.claude/rules/frontend-fsliced.md` muda junto.
+
+Rejeitadas: (a) `AppPaginator` avulso com ordenação reimplementada no hook — reescreveria a
+semântica de sort do PrimeReact (string vs número, locale) para ganhar nada visualmente; (b) faixa
+dupla condicional (paginador quando há páginas, `AppCardFooter` quando não há) — dois donos e dois
+estilos para a mesma faixa, com a contagem sumindo justo nas telas com mais dados.
+
+### D13 — `DetailHeader` próprio em `shared/ui`
+
+As duas telas de detalhe repetem o mesmo cabeçalho: link de voltar, título, subtítulo, tags de
+estado e ações. D1 manda a ação primária de detalhe morar aí, mas a Task 17 removeu `actions` do
+`PageHeader` de propósito — devolver a prop reabriria a porta que D1 fechou para página de módulo.
+
+Decisão: componente próprio `shared/ui/DetailHeader`, com `back`, `title`, `subtitle`, `tags` e
+`actions`. `PageHeader` fica intocado, exclusivo de módulo e sem ação. Cada contrato guarda uma
+forma só, e as cores fixas dos dois cabeçalhos morrem numa implementação única.
+
+### D14 — Cor: a Parte 3 corrige onde o card novo muda o fundo
+
+O interior das abas do detalhe de turma tem cor Tailwind fixa (`text-slate-500`, `bg-emerald-500`,
+`bg-slate-200`, `text-red-600`), contra ADR-16. A Parte 3 corrige o que o novo fundo do `AppCard`
+afeta de fato: banners de estado e erro, barra de progresso de documentos e os textos de
+`loading`/`notFound` das duas telas. O interior de `DocumentTypeCard`, `TurmaConfigCard` e
+`RedatorDesignation` fica para a **Parte 4**, que já tem contraste e densidade no checklist e
+revisitaria esses arquivos de qualquer jeito.
+
+### D15 — P-11 antecipa para a Parte 3 (substitui o bullet de P-11 em §5 · P4)
+
+§5 colocava o fim do `window.confirm` na Parte 4. A Parte 3 reescreve `EnrollmentTable` inteira
+(toolbar, faixa de rodapé, paginação real) — trocar pelo `ConfirmDialog` no mesmo passo custa poucas
+linhas, e adiar obrigaria a reabrir o arquivo. **P-11 fecha na Parte 3**; a Parte 4 só confere o
+`grep`.
