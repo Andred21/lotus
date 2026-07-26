@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_closure
+workflow_state: ready_for_planning
 next_owner: claude
-next_action: close_active_work_item
+next_action: plan_bloco_visual_parte2
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -148,5 +148,11 @@ temporariamente para o dev server da worktree, revertidos após o teste) em
 Risco: baixo (frontend visual, nenhuma lei §5 tocada, `executor: claude`). Órfãos: nenhum.
 `pnpm lint` e `pnpm build` verdes no intervalo `68f5e8d^..bad3066`. 1 achado novo (Q-1, CTA
 duplicado em `ClientsTable`/`BudgetsTable` no empty state real — não testado pelo DoD porque o
-seeder nunca zera a tabela). Aguardando decisão do João; achados Minor já listados acima seguem
-adiados, não reabertos.
+seeder nunca zera a tabela). João decidiu adiar — foi para os débitos técnicos do backlog. Achados
+Minor já listados acima seguem adiados, não reabertos.
+
+**Parte 1 encerrada, bloco segue aberto.** `bloco-visual-refino-ui` é "um bloco, review por
+partes" (§64 acima) — só fecha quando a Parte 4 provar DoD. Decisão do João em 2026-07-26: planejar
+e executar as Partes 2–4 em sequência antes de fechar o item, em vez de fechar por partes. Próxima
+ação: `/planejar-bloco` escreve o plano passo a passo da Parte 2 (Operación, Cursos, Pessoas,
+Administración — escopo já descrito na seção "Parte 2" de `active_plan`).
