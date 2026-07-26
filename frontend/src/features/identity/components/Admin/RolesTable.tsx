@@ -24,7 +24,7 @@ export function RolesTable({
     <>
       {/* Aba sem busca: o grupo de botões vai no slot ESQUERDO (spec D1). */}
       <AppCardToolbar start={actions} />
-      <AppDataTable value={roles} loading={loading} emptyMessage={loading ? undefined : empty}>
+      <AppDataTable value={roles} loading={loading} emptyMessage={empty} paginator={roles.length > 10}>
         <AppColumn field="name" header={t('role.name')} sortable />
         <AppColumn
           header={t('role.kind')}
