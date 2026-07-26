@@ -35,27 +35,37 @@ export function QuotesList({
   }
 
   if (quotes.length === 0) {
-    return <p className="p-4 text-sm text-slate-500">{t('budget.noQuotes')}</p>
+    return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noQuotes')}</p>
   }
 
   return (
-    <div className="divide-y divide-slate-200 dark:divide-slate-700">
+    <div>
       <div className="m-4 empty:m-0">
         <FormErrorBanner message={fileError} />
       </div>
-      {quotes.map((q) => (
-        <div key={q.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+      {quotes.map((q, i) => (
+        <div
+          key={q.id}
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t p-4 first:border-t-0"
+          style={{
+            borderColor: 'var(--surface-border)',
+            // Alternância como separação de item (spec D4): lista empilhada, não tabela.
+            background: i % 2 === 1 ? 'var(--surface-section)' : 'transparent',
+          }}
+        >
           <div className="min-w-64 flex-1">
             <div className="flex items-center gap-2">
               <span className="font-medium">{courseName(q.course_id)}</span>
               {q.status && <AppTag value={t(`quoteStatus.${q.status}`)} severity={quoteStatusSeverity(q.status)} />}
             </div>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
               {t('quote.studentsShort', { count: q.student_count })}
               {q.planned_start_date && ` · ${q.planned_start_date}`}
               {q.planned_end_date && ` – ${q.planned_end_date}`}
             </p>
-            {q.status === 'rejected' && <p className="mt-1 text-sm text-red-600">{t('quote.rejectedNote')}</p>}
+            {q.status === 'rejected' && (
+              <p className="mt-1 text-sm" style={{ color: 'var(--red-500)' }}>{t('quote.rejectedNote')}</p>
+            )}
           </div>
 
           <span className="font-semibold">{formatUf(q.value_uf)} UF</span>
@@ -80,7 +90,9 @@ export function QuotesList({
 
           <div className="w-full">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase text-slate-500">{t('quote.documents')}</span>
+              <span className="text-xs font-semibold uppercase" style={{ color: 'var(--text-color-secondary)' }}>
+                {t('quote.documents')}
+              </span>
               <AppFileUpload
                 chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                 chooseLabel=""

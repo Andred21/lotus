@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard, AppCardHeader } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 import type { BudgetFileType } from '../../api/useCommercialFiles'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
@@ -68,12 +68,8 @@ export function BudgetDetailPage() {
           <StatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
         </div>
 
-        <section className="rounded-lg border border-slate-200 dark:border-slate-700">
-          <header className="flex items-center justify-between p-4">
-            <h3 className="font-medium">
-              {t('budget.quotes')} <span className="text-slate-500">({budget.quotes.length})</span>
-            </h3>
-          </header>
+        <AppCard>
+          <AppCardHeader title={t('budget.quotes')} count={budget.quotes.length} />
           <QuotesList
             quotes={budget.quotes}
             onEdit={(q) => d.openWizard(q)}
@@ -81,7 +77,7 @@ export function BudgetDetailPage() {
             onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
             onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
           />
-        </section>
+        </AppCard>
 
         <section className="rounded-lg border border-slate-200 dark:border-slate-700">
           <header className="flex flex-wrap items-center justify-between gap-3 p-4">
