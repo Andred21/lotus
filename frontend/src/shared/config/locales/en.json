@@ -30,7 +30,11 @@
     "active": "Active",
     "inactive": "Inactive",
     "view": "View",
-    "upload": "Upload document"
+    "upload": "Upload document",
+    "noResults": "No results for \"{{term}}\"",
+    "noResultsFiltered": "No results for the applied filters",
+    "noResultsHint": "Check the term or clear the search.",
+    "clearSearch": "Clear search"
   },
   "admin": {
     "module": "Administration",
@@ -140,6 +144,7 @@
     "create": "Register client",
     "tabClients": "Clients",
     "empty": "No clients",
+    "emptyHint": "Register the first client to get started.",
     "count": "{{count}} clients",
     "searchPlaceholder": "Search by legal name or RUT...",
     "legalName": "Legal name",
@@ -215,6 +220,7 @@
     "status": "Status",
     "paymentTerms": "Payment terms",
     "empty": "No budgets",
+    "emptyHint": "Create the first budget to get started.",
     "count": "{{count}} budgets",
     "back": "Back to Commercial",
     "totalQuoted": "Total quoted",

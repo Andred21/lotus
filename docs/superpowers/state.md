@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_execution
+workflow_state: ready_for_review
 next_owner: claude
-next_action: execute_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco6-frontend-seed
-state_basis_commit: 8dcffa4
+state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
@@ -114,3 +114,31 @@ tags; o que sai dele é a ação primária de módulo.
 Achado extra da auditoria de baseline: **P-11 venceu**. O gatilho era "quando `shared/ui`
 padronizar um `ConfirmDialog`"; já padronizou, e 5 componentes consomem. Só `EnrollmentTable.tsx:55`
 ficou com `window.confirm`. Cai neste bloco.
+
+## Parte 1 executada e pronta para review — 2026-07-26
+
+8 tasks do plano (`docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md`, Parte 1) executadas
+via `subagent-driven-development` em worktree (`.claude/worktrees/bloco-visual-p1`, branch
+`worktree-bloco-visual-p1`), cada uma com implementador + review de task. Camada `shared/ui`
+(`AppCard`, `AppEmptyState`, `AppTag` tom `accent`, `AppDataTable` com densidade/hover/merge
+profundo, `ModulePage`/`PageHeader` com `tags`) construída e Comercial migrado — ternário do header
+removido (D3).
+
+Review final da branch (modelo mais capaz): "Ready to merge? With fixes" — 5 achados Important
+(rowHover nunca ligado, reset de página ausente ao filtrar, empty state falso durante loading,
+padding do `AppTabView` quebrando composição edge-to-edge do `AppCard`, contraste no tema escuro),
+0 Critical, 9 Minor. Todos os 5 Important corrigidos em `a61a950` e re-revisados sem regressão.
+
+DoD provado na tela real pelo João (não por agente — sandbox sem browser/root para instalar libs de
+Playwright; `chromium-cli` ausente). Detalhe do bloqueio e do contorno (CORS/Sanctum liberados
+temporariamente para o dev server da worktree, revertidos após o teste) em
+`.superpowers/sdd/progress.md` da worktree.
+
+**Pendências deixadas para depois, por decisão do João:**
+- Achado de plano (não implementação): "footer sem paginador" só vale para dados de seed;
+  Comercial em produção com >10 clientes vai mostrar paginador do PrimeReact + `AppCardFooter`
+  empilhados — o double-band que D6 quer evitar. Unificação via `paginatorTemplate` segue adiada
+  para a Parte 2 (spec já previa isso).
+- 9 achados Minor do review final (duplicação de scaffolding entre `ClientsTable`/`BudgetsTable`,
+  `AppDialog` com o mesmo merge raso que `AppDataTable` tinha, `clientName()` sem memo, etc.) —
+  listados no ledger da worktree, não bloqueiam merge.

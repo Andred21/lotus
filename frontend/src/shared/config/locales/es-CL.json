@@ -30,7 +30,11 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "view": "Ver",
-    "upload": "Subir documento"
+    "upload": "Subir documento",
+    "noResults": "Sin resultados para \"{{term}}\"",
+    "noResultsFiltered": "Sin resultados para los filtros aplicados",
+    "noResultsHint": "Revisa el término o limpia la búsqueda.",
+    "clearSearch": "Limpiar búsqueda"
   },
   "admin": {
     "module": "Administración",
@@ -140,6 +144,7 @@
     "create": "Registrar cliente",
     "tabClients": "Clientes",
     "empty": "Sin clientes",
+    "emptyHint": "Registra el primer cliente para comenzar.",
     "count": "{{count}} clientes",
     "searchPlaceholder": "Buscar por razón social o RUT...",
     "legalName": "Razón social",
@@ -215,6 +220,7 @@
     "status": "Estado",
     "paymentTerms": "Forma de pago",
     "empty": "No hay presupuestos",
+    "emptyHint": "Crea el primer presupuesto para comenzar.",
     "count": "{{count}} presupuestos",
     "back": "Volver a Comercial",
     "totalQuoted": "Total cotizado",
