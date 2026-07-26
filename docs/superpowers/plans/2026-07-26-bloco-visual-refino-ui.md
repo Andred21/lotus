@@ -1084,54 +1084,1737 @@ git commit -m "feat(comercial): compoe a pagina no card e remove o ternario do h
 
 ---
 
-# Partes 2, 3 e 4 — planejadas nos respectivos gates
+# Parte 2 — Operación, Cursos, Pessoas, Administración
+
+Replicação do contrato que a Parte 1 aprovou nas quatro páginas de módulo restantes, mais as duas
+correções de débito que caem junto (aba única de `Cursos`, títulos pendurados na entidade errada) e a
+remoção final de `actions` do `ModulePage`.
+
+## Decisões tomadas no gate desta parte
+
+Três pontos que a spec deixou em aberto e o João decidiu em 2026-07-26, antes de escrever as tasks.
+
+1. **`tone` do `AppCard` passa a ser ortogonal a `variant`, e ganha `info`.** O
+   `PendingQuotesPanel` precisa de um card de alerta azul, e hoje o tom só tinge com
+   `variant="stat"`, numa escala sem azul. Alternativas rejeitadas: `variant="alert"` com azul fixo
+   (cria dois jeitos de tingir o mesmo card) e resolver a cor dentro da feature (põe cor de container
+   na feature, contra `.claude/rules/frontend-fsliced.md`).
+2. **O paginador unificado fica para a Parte 3.** A spec D6 quer contagem à esquerda e paginador à
+   direita no mesmo `AppCardFooter`, mas nenhuma tabela desta parte passa de 10 linhas com o
+   `OperationDemoSeeder` (4 turmas, 3 cursos, 7 redatores), então o paginador nem aparece e a
+   unificação não teria prova end-to-end. O caso real está na aba Alumnos da Parte 3, onde duas
+   turmas têm 12 e 15 matrículas. O slot `pagination` do `AppCardFooter` continua reservado e vazio.
+3. **Executor dividido:** as Tasks 9 e 10 são `claude` (tocam o contrato compartilhado que as cinco
+   telas e as Partes 3–4 consomem); as Tasks 11 a 17 vão para o `codex`. Ver `## Handoff de execução`.
+
+Duas decisões menores, tomadas ao escrever o plano e declaradas aqui para não virarem achado de
+review:
+
+- **O slot direito da toolbar de Operación fica vazio.** O protótipo põe a contagem ali *e* no
+  footer; D6 já estabeleceu que a contagem mora no footer. Repetir o mesmo número em duas faixas da
+  mesma tela é a inconsistência que D6 resolveu, não um requisito. Operación também não tem ação
+  primária de módulo — turma nasce de cotação aprovada, pelo card de alerta.
+- **O badge de contagem do `AppCardHeader` continua neutro** (`--surface-section`), mesmo no card de
+  alerta, onde o protótipo mostra um badge azul sólido. Tingir o badge exigiria uma segunda escala de
+  contraste para funcionar nos dois temas; o título tingido e o fundo do card já sinalizam o alerta.
+
+## Correção de premissa apurada ao escrever esta parte
+
+**`PageHeader` não tem consumidor fora do `ModulePage`.** A Parte 1 escreveu que `actions` sai
+"quando a Parte 2 migrar os últimos consumidores", deixando a dúvida sobre as páginas de detalhe.
+`grep -rn "PageHeader" frontend/src --include=*.tsx` fora de `shared/ui/` volta **vazio**:
+`BudgetDetailPage` e `TurmaDetailPage` montam o próprio cabeçalho. Logo a Task 17 pode remover
+`actions` das duas assinaturas sem esperar a Parte 3.
+
+## Verificação recorrente: paridade dos 3 locales
+
+Cinco das nove tasks tocam os locales. Toda task que mexe em `frontend/src/shared/config/locales/`
+roda **este** comando antes de commitar, de dentro dessa pasta. É o mesmo script da Task 2, Step 6,
+repetido aqui para o intervalo da Parte 2 ficar autocontido:
+
+```bash
+python3 -c "
+import json
+def keys(o,p=''):
+    out=set()
+    for k,v in o.items():
+        n=f'{p}.{k}' if p else k
+        out.add(n)
+        if isinstance(v,dict): out |= keys(v,n)
+    return out
+a=keys(json.load(open('es-CL.json')))
+b=keys(json.load(open('pt-BR.json')))
+c=keys(json.load(open('en.json')))
+print('es-pt:', sorted(a^b))
+print('es-en:', sorted(a^c))
+"
+```
+
+Esperado sempre: `es-pt: []` e `es-en: []`. Qualquer chave listada é divergência a corrigir **antes**
+de seguir — chave que existe em um locale e falta em outro rende o literal cru na tela quando o
+usuário troca de idioma, e isso não aparece em `pnpm build`.
+
+Daqui em diante as tasks chamam este bloco de **script de paridade**.
+
+---
+
+## Task 9: Namespace `module.*` e dedup dos títulos de módulo
+
+Débito do backlog: o título da página mora no namespace da entidade (`client.module`,
+`redator.module`), e `budget.module` duplica `client.module` sem consumidor. Os textos já estão
+certos nos 3 locales — esta task move as chaves e não muda um pixel.
+
+**Files:**
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+- Modify: `frontend/src/features/commercial/components/CommercialPage.tsx`
+- Modify: `frontend/src/features/operation/components/OperationPage.tsx`
+- Modify: `frontend/src/features/catalog/components/CatalogPage.tsx`
+- Modify: `frontend/src/features/identity/components/PeoplePage.tsx`
+- Modify: `frontend/src/features/identity/components/AdministracionPage.tsx`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces: as chaves `module.<slug>.title` e `module.<slug>.description`, com `<slug>` em
+  `comercial | operacion | cursos | personas | administracion` — os mesmos slugs de `nav.*` e das
+  rotas. As Tasks 13 a 16 leem essas chaves.
+
+> **Por que não reaproveitar `nav.*`:** `nav.comercial` já rende `Comercial`. Reusar rótulo de
+> navegação como título de página acopla dois textos que só por coincidência são iguais hoje — o dia
+> em que a sidebar precisar de um rótulo curto, o título da página muda junto. O namespace `module.*`
+> dedup o que o backlog reportou (título pendurado na entidade, `budget.module` órfão) sem criar esse
+> acoplamento.
+
+- [ ] **Step 1: Criar o bloco `module` em `es-CL.json`**
+
+Insira como chave de primeiro nível, entre o fechamento de `"common"` e a abertura de `"admin"`:
+
+```json
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestión de clientes y presupuestos de capacitación"
+    },
+    "operacion": {
+      "title": "Operación",
+      "description": "Gestión de turmas y cotizaciones aprobadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos y sus redactores habilitados."
+    },
+    "personas": {
+      "title": "Personas",
+      "description": "Registro canónico de alumnos y redactores"
+    },
+    "administracion": {
+      "title": "Administración",
+      "description": "Usuarios internos, roles y permisos"
+    }
+  },
+```
+
+- [ ] **Step 2: Criar o bloco `module` em `pt-BR.json`**
+
+Mesma posição:
+
+```json
+  "module": {
+    "comercial": {
+      "title": "Comercial",
+      "description": "Gestão de clientes e orçamentos de capacitação"
+    },
+    "operacion": {
+      "title": "Operação",
+      "description": "Gestão de turmas e cotações aprovadas"
+    },
+    "cursos": {
+      "title": "Cursos",
+      "description": "Catálogo de cursos e seus redatores habilitados."
+    },
+    "personas": {
+      "title": "Pessoas",
+      "description": "Registro canônico de alunos e redatores"
+    },
+    "administracion": {
+      "title": "Administração",
+      "description": "Usuários internos, papéis e permissões"
+    }
+  },
+```
+
+- [ ] **Step 3: Criar o bloco `module` em `en.json`**
+
+Mesma posição:
+
+```json
+  "module": {
+    "comercial": {
+      "title": "Commercial",
+      "description": "Client and training quote management"
+    },
+    "operacion": {
+      "title": "Operations",
+      "description": "Manage classes and approved quotes"
+    },
+    "cursos": {
+      "title": "Courses",
+      "description": "Course catalog and their enabled writers."
+    },
+    "personas": {
+      "title": "People",
+      "description": "Canonical registry of students and instructors"
+    },
+    "administracion": {
+      "title": "Administration",
+      "description": "Internal users, roles and permissions"
+    }
+  },
+```
+
+Os textos são cópia literal dos valores que já existiam. Se algum divergir, o rename deixou de ser
+invisível — pare e confira.
+
+- [ ] **Step 4: Remover as 12 chaves antigas dos 3 locales**
+
+Em **cada um** dos 3 arquivos, apague:
+
+| Namespace | Chaves a remover |
+|---|---|
+| `client` | `module`, `moduleDescription` |
+| `budget` | `module`, `moduleDescription` (já eram órfãs — nenhum componente as lia) |
+| `course` | `module`, `moduleDescription` |
+| `redator` | `module`, `moduleDescription` |
+| `admin` | `module`, `moduleDescription` |
+| `operation` | `title`, `subtitle` (chaves de primeiro nível de `operation`, não de `operation.table`) |
+
+Cuide da vírgula da linha anterior quando a chave removida for a última do objeto.
+
+- [ ] **Step 5: Apontar os 5 consumidores para as chaves novas**
+
+Em `frontend/src/features/commercial/components/CommercialPage.tsx`, linha 20:
+
+```tsx
+    <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
+```
+
+Em `frontend/src/features/operation/components/OperationPage.tsx`, linha 20:
+
+```tsx
+    <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
+```
+
+Em `frontend/src/features/catalog/components/CatalogPage.tsx`, linhas 13-14:
+
+```tsx
+      title={t('module.cursos.title')}
+      description={t('module.cursos.description')}
+```
+
+Em `frontend/src/features/identity/components/PeoplePage.tsx`, linhas 13-14:
+
+```tsx
+      title={t('module.personas.title')}
+      description={t('module.personas.description')}
+```
+
+Em `frontend/src/features/identity/components/AdministracionPage.tsx`, linhas 24-25:
+
+```tsx
+      title={t('module.administracion.title')}
+      description={t('module.administracion.description')}
+```
+
+- [ ] **Step 6: Provar que nenhuma chave antiga sobrou**
+
+De `frontend/`:
+
+```bash
+grep -rn "\.module'\|\.moduleDescription'\|operation\.title'\|operation\.subtitle'" src --include=*.tsx --include=*.ts
+```
+
+Esperado: **uma única linha**, `src/app/pages/ModulePlaceholder.tsx` com `t('placeholder.module')` —
+namespace diferente, não faz parte deste rename. Qualquer outra ocorrência é consumidor esquecido.
+
+```bash
+grep -rn '"module"\|"moduleDescription"' src/shared/config/locales
+```
+
+Esperado: 3 linhas, uma por locale, todas o `"module": {` recém-criado. Nenhuma
+`"moduleDescription"`.
+
+- [ ] **Step 7: Verificar a paridade dos 3 locales**
+
+Rode o **script de paridade** (bloco `## Verificação recorrente` acima) de
+`frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e `es-en: []`.
+
+Esta task remove 12 chaves e adiciona 10 em cada arquivo — é a task da parte com maior risco de
+esquecer uma linha num locale só.
+
+- [ ] **Step 8: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 9: Provar na tela que nada mudou**
+
+`pnpm dev`, e nas 5 rotas — `/comercial`, `/operacion`, `/cursos`, `/personas`, `/administracion` —
+o título e a descrição do cabeçalho têm de estar **idênticos** ao que estavam. Chave faltando rende o
+literal `module.cursos.title` na tela; é assim que um erro aparece aqui. Trocar o idioma pelo seletor
+do header confirma os 3 locales.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add frontend/src/shared/config/locales frontend/src/features/commercial/components/CommercialPage.tsx frontend/src/features/operation/components/OperationPage.tsx frontend/src/features/catalog/components/CatalogPage.tsx frontend/src/features/identity/components/PeoplePage.tsx frontend/src/features/identity/components/AdministracionPage.tsx
+git commit -m "refactor(i18n): namespace module.* e dedup dos titulos de modulo"
+```
+
+---
+
+## Task 10: `AppCard` — `tone` ortogonal a `variant`, com tom `info`
+
+**Files:**
+- Modify: `frontend/src/shared/ui/AppCard/AppCard.tsx`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces: `AppCardTone` passa a ser `'neutral' | 'info' | 'success' | 'danger'`. O tom tinge fundo
+  e borda em **qualquer** `variant`; a cor do texto do container segue o tom só em `variant="stat"`.
+  `AppCard` publica a variável CSS `--app-card-tone-text` aos descendentes, e `AppCardHeader` passa a
+  usá-la no título. A Task 11 consome `<AppCard tone="info">`; a Parte 3 consome
+  `variant="stat"` com `neutral`/`success`/`danger`.
+
+- [ ] **Step 1: Reescrever o corpo do `AppCard` e o título do `AppCardHeader`**
+
+Só as três primeiras exportações do arquivo mudam. `AppCardToolbar`, `AppCardFooter` e todos os tipos
+de props seguem exatamente como estão.
+
+Substitua o trecho que vai de `export type AppCardVariant` até o fim de `AppCardHeader` por:
+
+```tsx
+export type AppCardVariant = 'default' | 'stat'
+export type AppCardTone = 'neutral' | 'info' | 'success' | 'danger'
+
+export interface AppCardProps {
+  variant?: AppCardVariant
+  /** Tinge fundo e borda em qualquer variante. Em `variant="stat"` tinge
+   * também o texto — lá o número É o sinal semântico. */
+  tone?: AppCardTone
+  className?: string
+  children: ReactNode
+}
+
+/** Hue por tom. Os palette vars do Lara NÃO invertem entre temas, então o fundo
+ * tingido é composto com --surface-card (que inverte) via color-mix. */
+const TONE_HUE: Record<AppCardTone, string | null> = {
+  neutral: null,
+  info: 'var(--blue-500)',
+  success: 'var(--green-500)',
+  danger: 'var(--red-500)',
+}
+
+const TONE_TEXT: Record<AppCardTone, string> = {
+  neutral: 'var(--text-color)',
+  info: 'color-mix(in srgb, var(--blue-500) 70%, var(--text-color))',
+  success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
+  danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
+}
+
+/**
+ * Container de conteúdo. Apresentacional puro — não conhece feature nem rota.
+ * Compõe-se com AppCardHeader/AppCardToolbar/AppCardFooter; nenhum deles é
+ * obrigatório, e a ordem é responsabilidade de quem compõe.
+ *
+ * `tone` e `variant` são ortogonais: o tom escolhe a cor, a variante escolhe a
+ * forma. Um card de alerta é `tone="info"` sem variante; um card de estatística
+ * é `variant="stat"` com o tom que o número pedir.
+ *
+ * Publica `--app-card-tone-text` aos descendentes para que os subcomponentes
+ * acompanhem o tom sem recebê-lo por prop.
+ */
+export function AppCard({ variant = 'default', tone = 'neutral', className, children }: AppCardProps) {
+  const hue = TONE_HUE[tone]
+
+  const style: CSSProperties = {
+    background: hue ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
+    borderColor: hue ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
+    // O texto do container só segue o tom em `stat`: numa lista ou tabela,
+    // tingir todo o corpo derruba o contraste em vez de sinalizar.
+    color: variant === 'stat' ? TONE_TEXT[tone] : 'var(--text-color)',
+    ['--app-card-tone-text' as string]: TONE_TEXT[tone],
+  }
+
+  return (
+    <div
+      className={['rounded-lg border overflow-hidden', variant === 'stat' ? 'px-5 py-4' : '', className].filter(Boolean).join(' ')}
+      style={style}
+    >
+      {children}
+    </div>
+  )
+}
+
+export interface AppCardHeaderProps {
+  title: ReactNode
+  /** Badge de contagem à direita do título. */
+  count?: number
+  /** Ação secundária, alinhada à direita. */
+  actions?: ReactNode
+}
+
+/** Cabeçalho de card: título (+ badge de contagem) à esquerda, ação à direita.
+ * O título acompanha o tom do card pela var publicada pelo `AppCard`; o badge
+ * fica neutro de propósito, para não precisar de uma segunda escala de
+ * contraste por tom nos dois temas. */
+export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
+  return (
+    <div
+      className="flex items-center justify-between gap-3 border-b px-4 py-3"
+      style={{ borderColor: 'var(--surface-border)' }}
+    >
+      <div className="flex items-center gap-2">
+        <h3
+          className="text-base font-semibold"
+          style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
+        >
+          {title}
+        </h3>
+        {count !== undefined && (
+          <span
+            className="rounded-full px-2 py-0.5 text-xs font-semibold"
+            style={{ background: 'var(--surface-section)', color: 'var(--text-color-secondary)' }}
+          >
+            {count}
+          </span>
+        )}
+      </div>
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro. `AppCardTone` ganhou um membro, o que é aditivo — nenhum consumidor atual
+quebra.
+
+- [ ] **Step 3: Provar que Comercial não regrediu**
+
+`pnpm dev`, http://localhost:5173/comercial. O card de Comercial usa `tone` default (`neutral`, hue
+`null`), então fundo e borda têm de continuar exatamente `--surface-card` e `--surface-border`. Se o
+card ficou tingido, o `TONE_HUE.neutral` deixou de ser `null`. Conferir nos dois temas.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/shared/ui/AppCard
+git commit -m "feat(ui): tone ortogonal a variant no AppCard e tom info"
+```
+
+---
+
+## Task 11: `PendingQuotesPanel` vira card de alerta
+
+**Files:**
+- Modify: `frontend/src/features/operation/components/Turma/PendingQuotesPanel.tsx`
+
+**Interfaces:**
+- Consumes: `AppCard` com `tone="info"` e `AppCardHeader` da Task 10.
+- Produces: nada — a assinatura `{ items: PendingQuoteData[] }` não muda.
+
+- [ ] **Step 1: Reescrever o componente**
+
+```tsx
+// frontend/src/features/operation/components/Turma/PendingQuotesPanel.tsx
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { AppButton, AppCard, AppCardHeader } from '@shared/ui'
+import type { PendingQuoteData } from '@shared/types/generated'
+
+export function PendingQuotesPanel({ items }: { items: PendingQuoteData[] }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  if (items.length === 0) return null
+
+  return (
+    <AppCard tone="info">
+      <AppCardHeader title={t('operation.pending.title')} count={items.length} />
+      <ul>
+        {items.map((q) => (
+          <li
+            key={q.quote_id}
+            className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0"
+            style={{ borderColor: 'var(--surface-border)' }}
+          >
+            <span className="text-sm" style={{ color: 'var(--text-color)' }}>
+              <i className="pi pi-file mr-2" style={{ color: 'var(--text-color-secondary)' }} aria-hidden="true" />
+              <strong>{q.client_name}</strong> · {q.course_name} ·{' '}
+              <span style={{ color: 'var(--text-color-secondary)' }}>
+                {t('operation.pending.students', { count: q.student_count })}
+              </span>
+            </span>
+            <AppButton
+              variant="brandIcon"
+              label={t('operation.pending.configure')}
+              icon="pi pi-cog"
+              onClick={() => navigate(`/operacion/turmas/nueva/${q.quote_id}`)}
+            />
+          </li>
+        ))}
+      </ul>
+    </AppCard>
+  )
+}
+```
+
+Sai daqui todo par Tailwind de cor hardcoded que violava o ADR-16: `border-sky-200 bg-sky-50
+dark:border-sky-900 dark:bg-sky-950/30` no container, `text-sky-800 dark:text-sky-200` no título,
+`bg-sky-600 text-white` no badge, `divide-sky-100 dark:divide-sky-900` nos separadores,
+`text-sky-600` no ícone e `text-slate-500` na contagem de alunos.
+
+- [ ] **Step 2: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 3: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/operacion, logado como usuário com `operation.turma.create` (o
+painel não renderiza sem a permissão). Com o `OperationDemoSeeder` carregado tem de aparecer, acima
+da tabela: card com fundo e borda **azulados**, título `Cotizaciones aprobadas pendientes de
+configuración` em azul com badge de contagem neutro ao lado, e uma linha por cotação com o botão
+`Configurar turma` à direita. Repetir no tema escuro pelo toggle do header — o fundo azulado tem de
+escurecer junto com o card, não virar uma faixa clara.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/features/operation/components/Turma/PendingQuotesPanel.tsx
+git commit -m "feat(operacion): painel de cotizaciones pendentes como AppCard de alerta"
+```
+
+---
+
+## Task 12: `TurmasTable` na toolbar e no footer do card
+
+**Files:**
+- Modify: `frontend/src/features/operation/lib/turmaStatus.ts`
+- Modify: `frontend/src/features/operation/components/Turma/TurmasTable.tsx`
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+
+**Interfaces:**
+- Consumes: `AppCardToolbar`, `AppCardFooter`, `AppEmptyState` (Parte 1).
+- Produces: `turmaModalidadeTagProps(modalidade)` em `operation/lib/turmaStatus.ts`, devolvendo
+  `{ severity: 'secondary' } | { tone: 'accent' }` para espalhar em `<AppTag>`. `TurmasTable` mantém
+  a assinatura `{ turmas, loading }` — Operación não tem ação primária de módulo, então não ganha
+  `actions`.
+
+- [ ] **Step 1: Adicionar o mapeamento de modalidade ao lib da feature**
+
+Primeiro, na **linha 1** de `frontend/src/features/operation/lib/turmaStatus.ts`, acrescente
+`TurmaModalidade` ao import que já existe — não crie um segundo import, e não ponha import no fim do
+arquivo (`import/first` do eslint reprova):
+
+```ts
+import type { TurmaData, TurmaModalidade } from '@shared/types/generated'
+```
+
+Depois anexe a função ao **fim** do arquivo, abaixo de `turmaStatusSeverity`:
+
+```ts
+/** Props de tom do `AppTag` para a modalidade. Modalidade **não é severidade**
+ * (spec D7): `presencial` usa o neutro do PrimeReact e `online` usa o tom
+ * `accent`, que não tem `severity` equivalente. Espalhe no AppTag:
+ * `<AppTag {...turmaModalidadeTagProps(m)} />`. */
+export function turmaModalidadeTagProps(
+  modalidade: TurmaModalidade,
+): { severity: 'secondary' } | { tone: 'accent' } {
+  return modalidade === 'online' ? { tone: 'accent' } : { severity: 'secondary' }
+}
+```
+
+- [ ] **Step 2: Adicionar `operation.table.emptyHint` nos 3 locales**
+
+Dentro de `operation.table`, ao lado de `"empty"`:
+
+`es-CL.json`: `"emptyHint": "Las turmas se crean desde una cotización aprobada."`
+`pt-BR.json`: `"emptyHint": "As turmas são criadas a partir de uma cotação aprovada."`
+`en.json`: `"emptyHint": "Classes are created from an approved quote."`
+
+O vazio de Operación **não** oferece ação: não existe botão de criar turma, ela nasce da cotação
+aprovada. Por isso a dica explica o caminho em vez de convidar a cadastrar.
+
+- [ ] **Step 3: Reescrever a tabela**
+
+```tsx
+// frontend/src/features/operation/components/Turma/TurmasTable.tsx
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import {
+  AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
+  AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import type { TurmaData } from '@shared/types/generated'
+import {
+  turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps, type TurmaDisplayStatus,
+} from '../../lib/turmaStatus'
+
+const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
+
+export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading: boolean }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [filter, setFilter] = useState('')
+  const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
+  const [first, setFirst] = useState(0)
+
+  const term = filter.trim().toLowerCase()
+  const rows = turmas.filter((turma) => {
+    const matchesStatus = status === null || turmaDisplayStatus(turma) === status
+    const matchesTerm =
+      term === '' ||
+      (turma.course_name ?? '').toLowerCase().includes(term) ||
+      (turma.client_name ?? '').toLowerCase().includes(term) ||
+      (turma.quote_code ?? '').toLowerCase().includes(term) ||
+      (turma.budget_code ?? '').toLowerCase().includes(term)
+    return matchesStatus && matchesTerm
+  })
+
+  const statusOptions = [
+    { label: t('operation.table.filterAll'), value: null },
+    ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
+  ]
+
+  const filtering = term !== '' || status !== null
+
+  const empty = filtering ? (
+    <AppEmptyState
+      icon="pi pi-search"
+      // Só cita o termo entre aspas quando existe termo; com apenas o filtro de
+      // estado ativo a frase citaria aspas em branco.
+      title={term === '' ? t('common.noResultsFiltered') : t('common.noResults', { term: filter.trim() })}
+      description={t('common.noResultsHint')}
+      action={
+        <AppButton
+          label={t('common.clearSearch')}
+          icon="pi pi-times"
+          text
+          onClick={() => { setFilter(''); setStatus(null); setFirst(0) }}
+        />
+      }
+    />
+  ) : (
+    // Sem ação: turma não se cria por botão, nasce de cotação aprovada.
+    <AppEmptyState icon="pi pi-calendar" title={t('operation.table.empty')} description={t('operation.table.emptyHint')} />
+  )
+
+  return (
+    <>
+      <AppCardToolbar
+        start={
+          <>
+            <div className="min-w-64 flex-1">
+              <AppInputText
+                leftIcon="pi pi-search"
+                placeholder={t('operation.table.search')}
+                value={filter}
+                onChange={(e) => { setFilter(e.target.value); setFirst(0) }}
+              />
+            </div>
+            <div className="w-48">
+              <AppDropdown
+                value={status}
+                options={statusOptions}
+                onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); setFirst(0) }}
+              />
+            </div>
+          </>
+        }
+      />
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
+        <AppColumn
+          header={t('operation.table.code')}
+          body={(turma: TurmaData) => (
+            <span className="font-mono text-sm" style={{ color: 'var(--primary-color)' }}>
+              {turma.quote_code ?? '—'}
+            </span>
+          )}
+        />
+        <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
+        <AppColumn header={t('operation.table.client')} body={(turma: TurmaData) => turma.client_name ?? '—'} />
+        <AppColumn
+          header={t('operation.table.modality')}
+          body={(turma: TurmaData) => (
+            <AppTag
+              value={t(`operation.modality.${turma.modalidade}`)}
+              {...turmaModalidadeTagProps(turma.modalidade)}
+            />
+          )}
+        />
+        <AppColumn
+          header={t('operation.table.redator')}
+          body={(turma: TurmaData) =>
+            turma.redatores.length > 0 ? turma.redatores.map((r) => r.name).join(', ') : (
+              <span style={{ color: 'var(--text-color-secondary)' }}>{t('operation.table.noRedator')}</span>
+            )
+          }
+        />
+        <AppColumn
+          header={t('operation.table.students')}
+          body={(turma: TurmaData) => <span className="font-semibold">{turma.enrolled_count ?? 0}</span>}
+        />
+        <AppColumn
+          header={t('operation.table.status')}
+          body={(turma: TurmaData) => {
+            const s = turmaDisplayStatus(turma)
+            return <AppTag value={t(`operation.status.${s}`)} severity={turmaStatusSeverity(s)} />
+          }}
+        />
+        <AppColumn
+          body={(turma: TurmaData) => (
+            <AppButton
+              icon="pi pi-eye"
+              text
+              rounded
+              aria-label={t('common.view')}
+              onClick={() => navigate(`/operacion/turmas/${turma.id}`)}
+            />
+          )}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+      <AppCardFooter count={t('operation.table.count', { count: rows.length })} />
+    </>
+  )
+}
+```
+
+Quatro mudanças de comportamento, todas deliberadas: `text-sky-600` do código vira
+`var(--primary-color)` (D8, ADR-16); `text-slate-400` do `— Sin asignar` vira
+`--text-color-secondary`; a modalidade ganha tom (`Presencial` neutro, `Online` roxo, D7); e a coluna
+`ALUMNOS` fica em negrito, como as demais colunas numéricas do protótipo.
+
+- [ ] **Step 4: Verificar paridade dos locales e build**
+
+Rode o **script de paridade** de `frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e
+`es-en: []`.
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro. A tabela ainda não está dentro de um `AppCard` — a Task 13 fecha isso —
+então a tela fica visualmente estranha neste commit. É esperado.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/features/operation/lib/turmaStatus.ts frontend/src/features/operation/components/Turma/TurmasTable.tsx frontend/src/shared/config/locales
+git commit -m "feat(operacion): tabela de turmas na toolbar e footer do card"
+```
+
+---
+
+## Task 13: Compor `OperationPage`
+
+**Files:**
+- Modify: `frontend/src/features/operation/components/OperationPage.tsx`
+
+**Interfaces:**
+- Consumes: `AppCard` (Task 10), `PendingQuotesPanel` (Task 11), `TurmasTable` (Task 12).
+- Produces: nada para tasks posteriores.
+
+- [ ] **Step 1: Reescrever a página**
+
+```tsx
+// frontend/src/features/operation/components/OperationPage.tsx
+import { useTranslation } from 'react-i18next'
+import { ModulePage, AppCard } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
+import { useTurmas, usePendingQuotes } from '../api/useTurmas'
+import { PendingQuotesPanel } from './Turma/PendingQuotesPanel'
+import { TurmasTable } from './Turma/TurmasTable'
+
+export function OperationPage() {
+  // `usePendingQuotes` dispara sempre; sem `operation.turma.create` o backend
+  // responde 403 e o painel simplesmente não é renderizado (o `can()` é RBAC de
+  // UI — a API é a fronteira). Query condicional por permissão quebraria a regra
+  // de hooks; guarda-se no render.
+  const { t } = useTranslation()
+  const { can } = usePermissions()
+  const turmas = useTurmas()
+  const pending = usePendingQuotes()
+  const canCreate = can('operation.turma.create')
+
+  return (
+    <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
+      <div className="space-y-6">
+        {canCreate && <PendingQuotesPanel items={pending.data ?? []} />}
+        <AppCard>
+          <TurmasTable turmas={turmas.data ?? []} loading={turmas.isLoading} />
+        </AppCard>
+      </div>
+    </ModulePage>
+  )
+}
+```
+
+Operación não tem abas: a tabela vai direto no card, e o card de alerta fica acima, separado pelo
+`space-y-6` que já existia.
+
+- [ ] **Step 2: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 3: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/operacion, com o `OperationDemoSeeder` carregado:
+
+1. Card de alerta azul no topo (com a permissão `operation.turma.create`), card branco/escuro abaixo.
+2. Dentro do card principal: busca e filtro `Todos` à esquerda na toolbar, **nada** à direita.
+3. Tabela com as 4 turmas; cabeçalho em caixa alta esmaecido; hover na linha sob o cursor; sem zebra.
+4. Coluna `CÓDIGO` em monospace na cor primária do tema — abrir o inspetor e confirmar que o
+   `color` computado vem de `var(--primary-color)`, **não** de `text-sky-600`.
+5. Coluna `MODALIDAD`: `Presencial` em cinza neutro, `Online` em roxo.
+6. Turma sem redator mostrando `— Sin asignar` esmaecido, não em branco.
+7. Footer lendo `4 turmas`.
+8. Buscar `zzz`: `Sin resultados para "zzz"` com `Limpiar búsqueda`, **sem** dica de criar turma.
+   Filtrar só por estado `Concluida` e limpar a busca: título genérico `Sin resultados para los
+   filtros aplicados`.
+9. Repetir 1–8 no tema escuro. O card de alerta, o card principal, o footer e o empty state precisam
+   inverter juntos.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/features/operation/components/OperationPage.tsx
+git commit -m "feat(operacion): compoe a pagina no card"
+```
+
+---
+
+## Task 14: Cursos — tabela no card e fim da aba única
+
+**Files:**
+- Modify: `frontend/src/features/catalog/components/Course/CoursesTable.tsx`
+- Modify: `frontend/src/features/catalog/components/CatalogPage.tsx`
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+
+**Interfaces:**
+- Consumes: `AppCard`, `AppCardToolbar`, `AppCardFooter`, `AppEmptyState`.
+- Produces: `CoursesTable` passa a receber `actions?: ReactNode`.
+
+- [ ] **Step 1: Adicionar `course.emptyHint` nos 3 locales**
+
+Dentro de `course`, ao lado de `"empty"`:
+
+`es-CL.json`: `"emptyHint": "Crea el primer curso para comenzar."`
+`pt-BR.json`: `"emptyHint": "Crie o primeiro curso para começar."`
+`en.json`: `"emptyHint": "Create the first course to get started."`
+
+- [ ] **Step 2: Reescrever a tabela**
+
+```tsx
+// frontend/src/features/catalog/components/Course/CoursesTable.tsx
+import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  AppDataTable, AppColumn, AppInputText, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import type { CourseData } from '@shared/types/generated'
+
+export function CoursesTable({
+  courses, loading, onView, actions,
+}: {
+  courses: CourseData[]
+  loading: boolean
+  onView: (c: CourseData) => void
+  actions?: ReactNode
+}) {
+  const { t } = useTranslation()
+  const [filter, setFilter] = useState('')
+  const [first, setFirst] = useState(0)
+
+  const term = filter.trim().toLowerCase()
+  const rows = term === ''
+    ? courses
+    : courses.filter(
+        (c) =>
+          c.name.toLowerCase().includes(term) ||
+          (c.technical_name ?? '').toLowerCase().includes(term),
+      )
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value)
+    setFirst(0)
+  }
+
+  const empty = term === '' ? (
+    <AppEmptyState icon="pi pi-book" title={t('course.empty')} description={t('course.emptyHint')} action={actions} />
+  ) : (
+    <AppEmptyState
+      icon="pi pi-search"
+      title={t('common.noResults', { term: filter.trim() })}
+      description={t('common.noResultsHint')}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+    />
+  )
+
+  return (
+    <>
+      <AppCardToolbar
+        start={
+          <div className="min-w-64 flex-1">
+            <AppInputText
+              leftIcon="pi pi-search"
+              placeholder={t('course.searchPlaceholder')}
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+            />
+          </div>
+        }
+        end={actions}
+      />
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
+        <AppColumn field="name" header={t('course.name')} sortable />
+        <AppColumn header={t('course.technicalName')} body={(c: CourseData) => c.technical_name ?? '—'} />
+        <AppColumn
+          header={t('course.workloadHours')}
+          body={(c: CourseData) => <span className="font-semibold">{c.workload_hours}</span>}
+        />
+        <AppColumn
+          header={t('course.redatorCount')}
+          body={(c: CourseData) => <span className="font-semibold">{c.redator_ids.length}</span>}
+        />
+        <AppColumn
+          body={(c: CourseData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(c)} />}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+      <AppCardFooter count={t('course.count', { count: rows.length })} />
+    </>
+  )
+}
+```
+
+O `globalFilter` do PrimeReact sai e o filtro passa a ser aplicado antes, para o empty state saber
+**por que** está vazio. O botão do olho ganha `aria-label`, que faltava.
+
+- [ ] **Step 3: Reescrever a página, sem `ModuleTabs`**
+
+```tsx
+// frontend/src/features/catalog/components/CatalogPage.tsx
+import { useTranslation } from 'react-i18next'
+import { ModulePage, AppButton, AppCard } from '@shared/ui'
+import { useCoursesPage } from '../hooks/useCoursesPage'
+import { CoursesTable } from './Course/CoursesTable'
+import { CourseDialog } from './Course/CourseDialog'
+
+export function CatalogPage() {
+  const { t } = useTranslation()
+  const page = useCoursesPage()
+
+  return (
+    <ModulePage title={t('module.cursos.title')} description={t('module.cursos.description')}>
+      <AppCard>
+        <CoursesTable
+          courses={page.items}
+          loading={page.loading}
+          onView={page.openView}
+          actions={<AppButton variant="brandIcon" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />}
+        />
+      </AppCard>
+
+      {page.dialog && (
+        <CourseDialog
+          visible
+          mode={page.dialog.mode}
+          course={page.dialog.entity}
+          onHide={page.close}
+          onEdit={page.startEdit}
+        />
+      )}
+    </ModulePage>
+  )
+}
+```
+
+Fecha o débito do backlog: `ModuleTabs` com uma aba só contrariava o contrato do próprio
+`ModulePage` ("uma entidade: passe a tabela direto em `children`"). A chave `course.tabCourses`
+deixa de ter consumidor mas **fica nos locales** — a Task 16 é a última a mexer em i18n, e remover
+chave órfã de uma entidade não é escopo desta parte.
+
+- [ ] **Step 4: Verificar paridade dos locales e build**
+
+Rode o **script de paridade** de `frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e
+`es-en: []`.
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 5: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/cursos:
+
+1. **Nenhuma aba.** Card único com toolbar, tabela e footer.
+2. Busca à esquerda, `Nuevo curso` à direita, mesma linha.
+3. Cabeçalho da página sem botão nenhum.
+4. Footer lendo `3 curso(s)` (o seeder cria 3).
+5. Buscar `zzz`: empty de busca com `Limpiar búsqueda`, não convite a cadastrar.
+6. Repetir nos dois temas.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/features/catalog/components frontend/src/shared/config/locales
+git commit -m "feat(cursos): tabela no card e remove a aba unica"
+```
+
+---
+
+## Task 15: Pessoas — tabela no card e aba Alunos com empty state
+
+**Files:**
+- Modify: `frontend/src/features/identity/components/Redator/RedatoresTable.tsx`
+- Modify: `frontend/src/features/identity/components/PeoplePage.tsx`
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+
+**Interfaces:**
+- Consumes: `AppCard`, `AppCardToolbar`, `AppCardFooter`, `AppEmptyState`.
+- Produces: `RedatoresTable` passa a receber `actions?: ReactNode`.
+
+- [ ] **Step 1: Adicionar `redator.emptyHint` nos 3 locales**
+
+Dentro de `redator`, ao lado de `"empty"`:
+
+`es-CL.json`: `"emptyHint": "Registra el primer redactor para comenzar."`
+`pt-BR.json`: `"emptyHint": "Cadastre o primeiro redator para começar."`
+`en.json`: `"emptyHint": "Register the first instructor to get started."`
+
+- [ ] **Step 2: Reescrever a tabela**
+
+```tsx
+// frontend/src/features/identity/components/Redator/RedatoresTable.tsx
+import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
+  AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import type { RedatorData } from '@shared/types/generated'
+import { idoneidade } from '../../lib/redatorStatus'
+
+const IDON_SEVERITY = { idoneo: 'success', por_vencer: 'warning', no_idoneo: 'danger' } as const
+
+export function RedatoresTable({
+  redatores, loading, onView, actions,
+}: {
+  redatores: RedatorData[]
+  loading: boolean
+  onView: (r: RedatorData) => void
+  actions?: ReactNode
+}) {
+  const { t } = useTranslation()
+  const [filter, setFilter] = useState('')
+  const [first, setFirst] = useState(0)
+
+  const term = filter.trim().toLowerCase()
+  const rows = term === ''
+    ? redatores
+    : redatores.filter(
+        (r) => r.name.toLowerCase().includes(term) || r.rut.toLowerCase().includes(term),
+      )
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value)
+    setFirst(0)
+  }
+
+  const empty = term === '' ? (
+    <AppEmptyState icon="pi pi-users" title={t('redator.empty')} description={t('redator.emptyHint')} action={actions} />
+  ) : (
+    <AppEmptyState
+      icon="pi pi-search"
+      title={t('common.noResults', { term: filter.trim() })}
+      description={t('common.noResultsHint')}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+    />
+  )
+
+  return (
+    <>
+      <AppCardToolbar
+        start={
+          <div className="min-w-64 flex-1">
+            <AppInputText
+              leftIcon="pi pi-search"
+              placeholder={t('redator.searchPlaceholder')}
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+            />
+          </div>
+        }
+        end={actions}
+      />
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
+        <AppColumn
+          field="name"
+          header={t('redator.name')}
+          sortable
+          body={(r: RedatorData) => (
+            <div>
+              <p className="font-medium">{r.name}</p>
+              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{r.email}</p>
+            </div>
+          )}
+        />
+        <AppColumn
+          header={t('common.rut')}
+          body={(r: RedatorData) => <span className="font-mono text-sm">{r.rut}</span>}
+        />
+        <AppColumn
+          header={t('redator.enabledCourses')}
+          body={(r: RedatorData) => <span className="font-semibold">{r.course_ids.length}</span>}
+        />
+        <AppColumn
+          header={t('redator.suitability')}
+          body={(r: RedatorData) => {
+            const k = idoneidade(r)
+            return <AppTag value={t(`suitability.${k}`)} severity={IDON_SEVERITY[k]} />
+          }}
+        />
+        <AppColumn
+          body={(r: RedatorData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+      <AppCardFooter count={t('redator.count', { count: rows.length })} />
+    </>
+  )
+}
+```
+
+O RUT ganha monospace, como em Comercial; o e-mail sob o nome troca `text-slate-500` por variável do
+tema; o botão do olho ganha `aria-label`.
+
+- [ ] **Step 3: Reescrever a página**
+
+```tsx
+// frontend/src/features/identity/components/PeoplePage.tsx
+import { useTranslation } from 'react-i18next'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, AppEmptyState } from '@shared/ui'
+import { useRedatoresPage } from '../hooks/useRedatoresPage'
+import { RedatoresTable } from './Redator/RedatoresTable'
+import { RedatorDialog } from './Redator/RedatorDialog'
+
+export function PeoplePage() {
+  const { t } = useTranslation()
+  const page = useRedatoresPage()
+
+  return (
+    <ModulePage title={t('module.personas.title')} description={t('module.personas.description')}>
+      <AppCard>
+        <ModuleTabs>
+          <ModuleTab header={t('redator.tabRedatores')}>
+            <RedatoresTable
+              redatores={page.items}
+              loading={page.loading}
+              onView={page.openView}
+              actions={<AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />}
+            />
+          </ModuleTab>
+
+          <ModuleTab header={t('redator.tabStudents')}>
+            {/* Módulo de alunos é backlog item 2 (não existe endpoint). Aqui só
+                deixa de ser um <p> solto e passa a usar o empty state padrão. */}
+            <AppEmptyState
+              icon="pi pi-user"
+              title={t('redator.tabStudents')}
+              description={t('redator.studentsPlaceholder')}
+            />
+          </ModuleTab>
+        </ModuleTabs>
+      </AppCard>
+
+      {page.dialog && (
+        <RedatorDialog
+          visible
+          mode={page.dialog.mode}
+          redator={page.dialog.entity}
+          onHide={page.close}
+          onEdit={page.startEdit}
+        />
+      )}
+    </ModulePage>
+  )
+}
+```
+
+Corrige um bug de tabela junto: hoje `Nuevo redactor` fica no cabeçalho da página e aparece **também
+quando a aba Alumnos está ativa**, oferecendo uma ação que não pertence àquela aba. Com a ação dentro
+da toolbar de `RedatoresTable`, ela some junto com a aba.
+
+- [ ] **Step 4: Verificar paridade dos locales e build**
+
+Rode o **script de paridade** de `frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e `es-en: []`.
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 5: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/personas:
+
+1. Card único envolvendo as duas abas.
+2. Aba **Redactores**: busca à esquerda, `Nuevo redactor` à direita; footer `7 redactores` (o seeder
+   cria 7); RUT em monospace; tag de idoneidade colorida.
+3. Trocar para **Alumnos**: empty state com ícone, título `Alumnos` e a frase de próxima sprint —
+   e **nenhum** botão `Nuevo redactor` visível.
+4. Buscar `zzz` na aba Redactores: empty de busca com `Limpiar búsqueda`.
+5. Repetir nos dois temas.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/features/identity/components/Redator/RedatoresTable.tsx frontend/src/features/identity/components/PeoplePage.tsx frontend/src/shared/config/locales
+git commit -m "feat(personas): tabela no card e aba de alunos com empty state"
+```
+
+---
+
+## Task 16: Administración — as duas tabelas no card e fim do ternário
+
+**Files:**
+- Modify: `frontend/src/features/identity/components/Admin/UsersTable.tsx`
+- Modify: `frontend/src/features/identity/components/Admin/RolesTable.tsx`
+- Modify: `frontend/src/features/identity/components/AdministracionPage.tsx`
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+
+**Interfaces:**
+- Consumes: `AppCard`, `AppCardToolbar`, `AppCardFooter`, `AppEmptyState`.
+- Produces: `UsersTable` e `RolesTable` passam a receber `actions?: ReactNode`.
+
+- [ ] **Step 1: Adicionar as chaves faltantes nos 3 locales**
+
+Dentro de `admin`, ao lado de `"empty"`:
+
+`es-CL.json`: `"emptyHint": "Crea el primer usuario para comenzar."`
+`pt-BR.json`: `"emptyHint": "Crie o primeiro usuário para começar."`
+`en.json`: `"emptyHint": "Create the first user to get started."`
+
+Dentro de `role`, ao lado de `"empty"` — `count` **não existia**, o footer precisa dela:
+
+`es-CL.json`:
+```json
+"emptyHint": "Crea el primer rol personalizado para comenzar.",
+"count": "{{count}} roles"
+```
+
+`pt-BR.json`:
+```json
+"emptyHint": "Crie o primeiro papel personalizado para começar.",
+"count": "{{count}} papéis"
+```
+
+`en.json`:
+```json
+"emptyHint": "Create the first custom role to get started.",
+"count": "{{count}} roles"
+```
+
+- [ ] **Step 2: Reescrever `UsersTable`**
+
+```tsx
+// frontend/src/features/identity/components/Admin/UsersTable.tsx
+import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
+  AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import type { UserData } from '@shared/types/generated'
+
+export function UsersTable({
+  users, loading, onView, actions,
+}: {
+  users: UserData[]
+  loading: boolean
+  onView: (u: UserData) => void
+  actions?: ReactNode
+}) {
+  const { t } = useTranslation()
+  const [filter, setFilter] = useState('')
+  const [first, setFirst] = useState(0)
+
+  const term = filter.trim().toLowerCase()
+  const rows = term === ''
+    ? users
+    : users.filter(
+        (u) => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term),
+      )
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value)
+    setFirst(0)
+  }
+
+  const empty = term === '' ? (
+    <AppEmptyState icon="pi pi-users" title={t('admin.empty')} description={t('admin.emptyHint')} action={actions} />
+  ) : (
+    <AppEmptyState
+      icon="pi pi-search"
+      title={t('common.noResults', { term: filter.trim() })}
+      description={t('common.noResultsHint')}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={() => handleFilterChange('')} />}
+    />
+  )
+
+  return (
+    <>
+      <AppCardToolbar
+        start={
+          <div className="min-w-64 flex-1">
+            <AppInputText
+              leftIcon="pi pi-search"
+              placeholder={t('admin.searchPlaceholder')}
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+            />
+          </div>
+        }
+        end={actions}
+      />
+      <AppDataTable
+        value={rows}
+        loading={loading}
+        emptyMessage={loading ? undefined : empty}
+        paginator={rows.length > 10}
+        first={first}
+        onPage={(e) => setFirst(e.first)}
+      >
+        <AppColumn
+          field="name"
+          header={t('admin.name')}
+          sortable
+          body={(u: UserData) => (
+            <div>
+              <p className="font-medium">{u.name}</p>
+              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{u.email}</p>
+            </div>
+          )}
+        />
+        <AppColumn header={t('admin.role')} body={(u: UserData) => u.role} />
+        <AppColumn
+          header={t('admin.state')}
+          body={(u: UserData) => (
+            <AppTag
+              value={u.is_active ? t('common.active') : t('common.inactive')}
+              severity={u.is_active ? 'success' : 'danger'}
+            />
+          )}
+        />
+        <AppColumn
+          body={(u: UserData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(u)} />}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+      <AppCardFooter count={t('admin.count', { count: rows.length })} />
+    </>
+  )
+}
+```
+
+- [ ] **Step 3: Reescrever `RolesTable`**
+
+Roles **não tem busca**. Pela D1, aba sem busca põe o grupo de botões no slot **esquerdo** da
+toolbar, acima da tabela.
+
+```tsx
+// frontend/src/features/identity/components/Admin/RolesTable.tsx
+import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
+} from '@shared/ui'
+import type { RoleData } from '@shared/types/generated'
+
+export function RolesTable({
+  roles, loading, onView, actions,
+}: {
+  roles: RoleData[]
+  loading: boolean
+  onView: (r: RoleData) => void
+  actions?: ReactNode
+}) {
+  const { t } = useTranslation()
+
+  // Sem busca nesta aba: só um vazio possível, o de "sem dado".
+  const empty = (
+    <AppEmptyState icon="pi pi-shield" title={t('role.empty')} description={t('role.emptyHint')} action={actions} />
+  )
+
+  return (
+    <>
+      {/* Aba sem busca: o grupo de botões vai no slot ESQUERDO (spec D1). */}
+      <AppCardToolbar start={actions} />
+      <AppDataTable value={roles} loading={loading} emptyMessage={loading ? undefined : empty}>
+        <AppColumn field="name" header={t('role.name')} sortable />
+        <AppColumn
+          header={t('role.kind')}
+          body={(r: RoleData) => (
+            <AppTag value={r.is_system ? t('role.system') : t('role.custom')} severity={r.is_system ? 'info' : 'success'} />
+          )}
+        />
+        <AppColumn
+          header={t('role.permissions')}
+          body={(r: RoleData) => <span className="font-semibold">{r.permissions.length}</span>}
+        />
+        <AppColumn
+          body={(r: RoleData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+      <AppCardFooter count={t('role.count', { count: roles.length })} />
+    </>
+  )
+}
+```
+
+Sem estado de página aqui: sem busca e sem filtro, não há nada que possa deixar o usuário numa página
+que sumiu. O `paginator` default do `AppDataTable` continua ligado e cuida do caso de muitas roles.
+
+- [ ] **Step 4: Reescrever a página**
+
+```tsx
+// frontend/src/features/identity/components/AdministracionPage.tsx
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
+import { useUsersPage } from '../hooks/useUsersPage'
+import { useRolesPage } from '../hooks/useRolesPage'
+import { UsersTable } from './Admin/UsersTable'
+import { StaffUserDialog } from './Admin/StaffUserDialog'
+import { RolesTable } from './Admin/RolesTable'
+import { RoleDialog } from './Admin/RoleDialog'
+
+export function AdministracionPage() {
+  const { t } = useTranslation()
+  const { can } = usePermissions()
+  const canManage = can('identity.access.manage')
+  const page = useUsersPage()
+  const rolesPage = useRolesPage()
+  const [tab, setTab] = useState(0)
+
+  return (
+    <ModulePage title={t('module.administracion.title')} description={t('module.administracion.description')}>
+      <AppCard>
+        <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+          <ModuleTab header={t('admin.tabUsers')}>
+            <UsersTable
+              users={page.items}
+              loading={page.loading}
+              onView={page.openView}
+              actions={
+                canManage
+                  ? <AppButton variant="brandIcon" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  : undefined
+              }
+            />
+          </ModuleTab>
+          {canManage && (
+            <ModuleTab header={t('admin.tabRoles')}>
+              <RolesTable
+                roles={rolesPage.items}
+                loading={rolesPage.loading}
+                onView={rolesPage.openView}
+                actions={<AppButton variant="brandIcon" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />}
+              />
+            </ModuleTab>
+          )}
+        </ModuleTabs>
+      </AppCard>
+
+      {page.dialog && (
+        <StaffUserDialog
+          visible
+          mode={page.dialog.mode}
+          user={page.dialog.entity}
+          canManage={canManage}
+          onHide={page.close}
+          onEdit={page.startEdit}
+        />
+      )}
+
+      {rolesPage.dialog && (
+        <RoleDialog
+          visible
+          mode={rolesPage.dialog.mode}
+          role={rolesPage.dialog.entity}
+          canManage={canManage}
+          onHide={rolesPage.close}
+          onEdit={rolesPage.startEdit}
+        />
+      )}
+    </ModulePage>
+  )
+}
+```
+
+A constante `onRoles` e o ternário aninhado (`canManage ? (onRoles ? role.new : admin.new) : null`)
+somem: cada aba carrega a própria ação, e o guard de `canManage` fica em cada uma. Na aba Roles o
+guard já está na renderização da própria aba, então a ação entra sem condicional.
+
+- [ ] **Step 5: Verificar paridade dos locales e build**
+
+Rode o **script de paridade** de `frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e `es-en: []`.
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 6: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/administracion, logado como superadmin:
+
+1. Card único envolvendo as duas abas.
+2. Aba **Usuarios**: busca à esquerda, `Nuevo usuario` à direita; footer com a contagem.
+3. Aba **Roles y permisos**: **nenhuma busca**, botão `Nuevo rol` à **esquerda** na toolbar; tabela
+   com a coluna de tipo (`Sistema` azul / `Personalizado` verde) e a contagem de permissões em
+   negrito; footer `N roles`.
+4. O cabeçalho da página não tem botão em nenhuma das abas.
+5. Buscar `zzz` na aba Usuarios: empty de busca com `Limpiar búsqueda`.
+6. Repetir nos dois temas.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add frontend/src/features/identity/components/Admin frontend/src/features/identity/components/AdministracionPage.tsx frontend/src/shared/config/locales
+git commit -m "feat(administracion): tabelas no card e remove o ternario do header"
+```
+
+---
+
+## Task 17: Remover `actions` do `ModulePage` e do `PageHeader`
+
+Agora sem consumidor. O `tsc` é a prova: se alguma tela ainda passar `actions`, o build quebra.
+
+**Files:**
+- Modify: `frontend/src/shared/ui/ModulePage/ModulePage.tsx`
+- Modify: `frontend/src/shared/ui/PageHeader/PageHeader.tsx`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces: `ModulePage` fica `{ title, description?, tags?, children }`; `PageHeader` fica
+  `{ title, description?, tags? }`. A Parte 3 usa `tags` no detalhe de turma.
+
+- [ ] **Step 1: Provar que não há mais consumidor antes de remover**
+
+De `frontend/`:
+
+```bash
+grep -rn "actions=" src/features --include=*.tsx
+```
+
+Esperado: **nenhuma linha** em que o `actions=` esteja num `<ModulePage`. Ocorrências em
+`<ClientsTable`, `<BudgetsTable`, `<CoursesTable`, `<RedatoresTable`, `<UsersTable`, `<RolesTable`
+e `<AppCardHeader` são as corretas — a prop mudou de dono, não sumiu.
+
+```bash
+grep -rn "PageHeader" src --include=*.tsx | grep -v "shared/ui/"
+```
+
+Esperado: nenhuma linha. `PageHeader` só é usado pelo `ModulePage`.
+
+Se qualquer um dos dois greps contrariar o esperado, **pare**: falta migrar uma tela e a remoção
+quebraria a Parte 3.
+
+- [ ] **Step 2: Remover `actions` do `PageHeader`**
+
+```tsx
+// frontend/src/shared/ui/PageHeader/PageHeader.tsx
+import type { ReactNode } from 'react'
+
+/** Cabeçalho de módulo: título + descrição à esquerda, tags à direita.
+ * Apresentacional puro (não conhece feature).
+ *
+ * Não tem slot de ação: a ação primária de módulo mora na toolbar do card
+ * (spec de 2026-07-26, D1). */
+export function PageHeader({
+  title,
+  description,
+  tags,
+}: {
+  title: string
+  description?: string
+  tags?: ReactNode
+}) {
+  return (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>
+        {description && (
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{description}</p>
+        )}
+      </div>
+      {tags && <div className="flex shrink-0 flex-wrap items-center gap-2">{tags}</div>}
+    </div>
+  )
+}
+```
+
+- [ ] **Step 3: Remover `actions` do `ModulePage`**
+
+```tsx
+// frontend/src/shared/ui/ModulePage/ModulePage.tsx
+import type { ReactNode } from 'react'
+import { PageHeader } from '../PageHeader'
+import { AppTabView, AppTabPanel } from '../AppTabView'
+
+/**
+ * Molde de página de módulo: cabeçalho (título, descrição, tags) + corpo.
+ * Apresentacional puro — não conhece feature, não conhece rota.
+ *
+ * O corpo é um <AppCard> composto pela tela: abas, toolbar, tabela e footer.
+ * A ação primária vive na toolbar do card, não aqui (spec de 2026-07-26, D1).
+ */
+export function ModulePage({
+  title,
+  description,
+  tags,
+  children,
+}: {
+  title: string
+  description?: string
+  tags?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div>
+      <PageHeader title={title} description={description} tags={tags} />
+      {children}
+    </div>
+  )
+}
+
+export const ModuleTabs = AppTabView
+export const ModuleTab = AppTabPanel
+```
+
+- [ ] **Step 4: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro. Se o `tsc` acusar `Property 'actions' does not exist`, uma tela ficou para
+trás — corrija a tela, não reponha a prop.
+
+- [ ] **Step 5: Provar o DoD da Parte 2 nas cinco telas**
+
+`docker compose up -d` e `pnpm dev`, com o `OperationDemoSeeder` carregado. Nas cinco rotas —
+`/comercial`, `/operacion`, `/cursos`, `/personas`, `/administracion` — confirme, **nos dois temas**:
+
+1. Card único envolvendo abas (onde houver), toolbar, tabela e footer.
+2. Cabeçalho da página **sem botão nenhum** nas cinco.
+3. A ação primária de cada tela na toolbar do card, e mudando junto com a aba ativa.
+4. `Cursos` sem aba.
+5. Footer com contagem em prosa nas seis tabelas.
+6. Busca por `zzz` mostrando o empty de busca, não o convite a cadastrar (Roles não tem busca).
+7. Nenhum título ou descrição rendendo chave crua (`module.cursos.title` na tela = chave faltando).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/shared/ui/ModulePage frontend/src/shared/ui/PageHeader
+git commit -m "refactor(ui): remove actions do ModulePage e do PageHeader"
+```
+
+---
+
+# Partes 3 e 4 — planejadas nos respectivos gates
 
 O `CLAUDE.md` §4 manda escrever o plano detalhado de um bloco **imediatamente antes** de executá-lo,
-para que o roadmap adiante não envelheça. As Partes 2 a 4 consomem a API do `AppCard` que a Parte 1
-constrói, e essa API é exatamente o que o review da Parte 1 pode mandar mudar. Escrever JSX exato
-para sete telas contra um contrato ainda não revisado produziria plano para reescrever.
+para que o roadmap adiante não envelheça. As Partes 3 e 4 consomem a API do `AppCard` que as Partes 1
+e 2 constroem, e essa API é exatamente o que o review de cada parte pode mandar mudar. Escrever JSX
+exato para sete telas contra um contrato ainda não revisado produziria plano para reescrever.
 
 Cada parte abaixo declara escopo, arquivos e DoD. O plano passo a passo de cada uma é escrito no
 gate de review da parte anterior.
-
-## Parte 2 — Operación, Cursos, Pessoas, Administración
-
-**Entra quando:** o DoD da Parte 1 estiver provado por ti na tela.
-
-**Arquivos:**
-- `frontend/src/features/operation/components/OperationPage.tsx`
-- `frontend/src/features/operation/components/Turma/TurmasTable.tsx`
-- `frontend/src/features/operation/components/Turma/PendingQuotesPanel.tsx`
-- `frontend/src/features/catalog/components/CatalogPage.tsx`
-- `frontend/src/features/catalog/components/Course/CoursesTable.tsx`
-- `frontend/src/features/identity/components/PeoplePage.tsx`
-- `frontend/src/features/identity/components/Redator/RedatoresTable.tsx`
-- `frontend/src/features/identity/components/AdministracionPage.tsx`
-- `frontend/src/features/identity/components/Admin/UsersTable.tsx`
-- `frontend/src/features/identity/components/Admin/RolesTable.tsx`
-- `frontend/src/shared/ui/ModulePage/ModulePage.tsx` e `PageHeader/PageHeader.tsx` (remoção final de
-  `actions`)
-- Os 3 locales, para o rename de chave de título.
-
-**Escopo:**
-- Mesma composição da Parte 1 nas quatro páginas.
-- `TurmasTable.tsx:53` — `text-sky-600` vira `var(--primary-color)` (D8; a coluna `CÓDIGO` **fica**,
-  seguindo exibindo `quote_code`).
-- `PendingQuotesPanel` vira `AppCard` de alerta acima do card principal, com `AppCardHeader`
-  levando título e badge de contagem.
-- `CatalogPage` — hoje usa `ModuleTabs` com **uma aba só**, contra o contrato do próprio
-  `ModulePage`; a tabela passa a ir direto no `AppCard`, sem abas.
-- Rename das chaves de título de módulo. Os 3 locales **já rendem o texto certo**
-  (`Comercial`/`Comercial`/`Commercial` e `Personas`/`Pessoas`/`People`); o débito é a chave estar
-  pendurada na entidade, com `budget.module` duplicando `client.module`. Mudança visível: nenhuma.
-- Aba Alunos de `PeoplePage` segue o `<p>` inline (backlog item 2); só passa a viver dentro do card
-  sem parecer quebrada.
-- **Última task da parte:** remover `actions` de `ModulePage` e `PageHeader`, agora sem consumidor.
-  O `pnpm build` é a prova — se alguém ainda passar, o `tsc` acusa.
-
-**DoD:** as cinco páginas com a mesma composição; `Cursos` sem aba única; código da turma com
-variável do tema no inspetor, não `text-sky-600`; `grep -rn "actions=" frontend/src/features` sem
-ocorrência em `ModulePage`; os 3 locales com chaves idênticas pelo script da Task 2, Step 6.
 
 ## Parte 3 — Detalhe de orçamento e detalhe de turma
 
@@ -1145,6 +2828,8 @@ ocorrência em `ModulePage`; os 3 locales com chaves idênticas pelo script da T
 - `frontend/src/features/operation/components/Turma/TurmaConfigCard.tsx`
 - `frontend/src/features/operation/components/Enrollment/EnrollmentTable.tsx`
 - `frontend/src/features/operation/components/Document/TurmaDocuments.tsx`
+- `frontend/src/shared/ui/AppPaginator/**` (novo) e `frontend/src/shared/ui/AppDataTable/**`, para a
+  unificação do footer.
 
 **Escopo:**
 - Três `AppCard variant="stat"` no detalhe de orçamento: total cotizado `neutral`, total aprobado
@@ -1155,10 +2840,17 @@ ocorrência em `ModulePage`; os 3 locales com chaves idênticas pelo script da T
 - Detalhe de turma: tags de estado e modalidade no `PageHeader` via a prop `tags` da Task 5; as cinco
   abas dentro do `AppCard`. A modalidade `Online` usa `tone="accent"` da Task 3.
 - Aba Alumnos: grupo de botões **à esquerda** no slot `start` da toolbar, sem busca.
+- **Paginador unificado (adiado da Parte 1 e reconfirmado no gate da Parte 2).** Contagem à esquerda e
+  paginador à direita no mesmo `AppCardFooter`, fechando o double-band que D6 quer evitar. Exige um
+  wrapper `AppPaginator` em `shared/ui` (feature não importa `primereact` direto, lei §5.6) e desligar
+  o paginador interno do `AppDataTable` quando o footer assumir. **Esta é a parte onde o caso é
+  real:** o `OperationDemoSeeder` cria turmas com 12 e 15 matrículas, acima do `rows={10}` — nenhuma
+  tabela das Partes 1 e 2 passa de 10 linhas, e por isso a unificação não tinha como ser provada lá.
 
 **DoD:** os três stat cards nas cores certas nos dois temas; aprovar e rejeitar cotização no lugar e
 funcionando contra a API real; detalhe de turma com tags no cabeçalho e cinco abas dentro do card;
-`Online` roxo e `Presencial` neutro.
+`Online` roxo e `Presencial` neutro; na aba Alumnos de uma turma com 12 ou 15 matrículas, **uma única
+faixa** no rodapé, com a contagem à esquerda e o paginador à direita.
 
 ## Parte 4 — Checklist H.2.1
 
@@ -1188,30 +2880,41 @@ mutação visível **com texto**, nunca só cor.
 
 # Handoff de execução
 
-**executor:** `claude` para as Partes 1, 3 e 4; `codex` candidato para a Parte 2.
+**executor:** `claude` nas Partes 1, 3 e 4 e nas Tasks 9–10; `codex` nas Tasks 11–17.
 
-| Parte | Executor | Por quê |
-|---|---|---|
-| 1 | `claude` | Define o contrato que todas as outras copiam. Erro aqui se replica em sete telas. |
-| 2 | `codex` | Replicação mecânica de padrão já aprovado e revisado, com verificação executável (`pnpm lint`, `pnpm build`, script de paridade de locales) e paths fechados. |
-| 3 | `claude` | Composição heterogênea — stat cards, cabeçalho de card com ação, lista com alternância, abas com conteúdo diferente por aba. Julgamento visual fora do plano. |
-| 4 | `claude` | Julgamento visual e de acessibilidade em sete telas; nenhum item se prova por comando. |
+| Parte | Tasks | Executor | Por quê |
+|---|---|---|---|
+| 1 | 1–8 | `claude` | Define o contrato que todas as outras copiam. Erro aqui se replica em sete telas. |
+| 2 | 9–10 | `claude` | A Task 9 renomeia chave de i18n consumida pelas cinco telas de uma vez; a Task 10 muda o contrato do `AppCard`, que as Partes 3 e 4 inteiras consomem. Erro em qualquer das duas não é local. |
+| 2 | 11–17 | `codex` | Replicação mecânica do padrão já aprovado e revisado, com verificação executável (`pnpm lint`, `pnpm build`, script de paridade de locales) e paths fechados. |
+| 3 | — | `claude` | Composição heterogênea — stat cards, cabeçalho de card com ação, lista com alternância, abas com conteúdo diferente por aba, e o `AppPaginator` novo. Julgamento visual fora do plano. |
+| 4 | — | `claude` | Julgamento visual e de acessibilidade em sete telas; nenhum item se prova por comando. |
 
-**`paths_autorizados` da Parte 2 (quando delegada ao `codex`):**
+**Intervalo delegado ao `codex`:** Tasks 11 a 17, nesta ordem. A Task 17 é a última e depende de todas
+as anteriores — remover `actions` antes de as cinco telas migrarem quebra o build.
+
+**Pré-condição do handoff:** as Tasks 9 e 10 commitadas e verdes. O commit da Task 10 é o `commit
+base` a informar ao Codex.
+
+**`paths_autorizados` das Tasks 11–17:**
 
 ```
 frontend/src/features/operation/components/OperationPage.tsx
 frontend/src/features/operation/components/Turma/TurmasTable.tsx
 frontend/src/features/operation/components/Turma/PendingQuotesPanel.tsx
-frontend/src/features/catalog/components/**
+frontend/src/features/operation/lib/turmaStatus.ts
+frontend/src/features/catalog/components/CatalogPage.tsx
+frontend/src/features/catalog/components/Course/CoursesTable.tsx
 frontend/src/features/identity/components/PeoplePage.tsx
 frontend/src/features/identity/components/AdministracionPage.tsx
-frontend/src/features/identity/components/Admin/**
+frontend/src/features/identity/components/Admin/UsersTable.tsx
+frontend/src/features/identity/components/Admin/RolesTable.tsx
 frontend/src/features/identity/components/Redator/RedatoresTable.tsx
 frontend/src/shared/ui/ModulePage/**
 frontend/src/shared/ui/PageHeader/**
 frontend/src/shared/config/locales/*.json
 ```
 
-Fora desses globs, o Codex não escreve. `backend/`, `docs/` e `frontend/src/shared/types/` ficam
-explicitamente fora.
+Fora desses globs, o Codex não escreve. `backend/`, `docs/`, `frontend/src/shared/types/` e
+`frontend/src/shared/ui/AppCard/**` ficam explicitamente fora — o `AppCard` é da Task 10, que é do
+Claude.

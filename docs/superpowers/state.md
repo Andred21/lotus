@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: plan_bloco_visual_parte2
+next_action: execute_active_plan
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -153,6 +153,23 @@ Minor já listados acima seguem adiados, não reabertos.
 
 **Parte 1 encerrada, bloco segue aberto.** `bloco-visual-refino-ui` é "um bloco, review por
 partes" (§64 acima) — só fecha quando a Parte 4 provar DoD. Decisão do João em 2026-07-26: planejar
-e executar as Partes 2–4 em sequência antes de fechar o item, em vez de fechar por partes. Próxima
-ação: `/planejar-bloco` escreve o plano passo a passo da Parte 2 (Operación, Cursos, Pessoas,
-Administración — escopo já descrito na seção "Parte 2" de `active_plan`).
+e executar as Partes 2–4 em sequência antes de fechar o item, em vez de fechar por partes.
+
+## Parte 2 planejada — 2026-07-26
+
+Tasks 9 a 17 escritas no mesmo `active_plan`
+(`docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md`, seção `# Parte 2`). Três decisões do
+João no gate, registradas na seção `## Decisões tomadas no gate desta parte` do plano:
+
+1. **`tone` do `AppCard` vira ortogonal a `variant` e ganha `info`**, para o card de alerta de
+   Operación. Rejeitadas: `variant="alert"` com azul fixo e resolver a cor dentro da feature.
+2. **Paginador unificado (D6) adiado para a Parte 3.** Nenhuma tabela da Parte 2 passa de 10 linhas
+   com o seeder (4 turmas, 3 cursos, 7 redatores), então não haveria prova end-to-end. O caso real é
+   a aba Alumnos, onde duas turmas têm 12 e 15 matrículas. Escopo e DoD já anexados à Parte 3.
+3. **Executor dividido:** Tasks 9–10 (`claude`, tocam contrato compartilhado — i18n das 5 telas e o
+   `AppCard` que as Partes 3–4 consomem); Tasks 11–17 (`codex`, replicação mecânica com paths
+   fechados). `paths_autorizados` reescritos e `shared/ui/AppCard/**` explicitamente fora.
+
+Correção de premissa apurada ao planejar: **`PageHeader` não tem consumidor fora do `ModulePage`** —
+`BudgetDetailPage` e `TurmaDetailPage` montam o próprio cabeçalho. A Task 17 pode remover `actions`
+sem esperar a Parte 3, ao contrário do que a Parte 1 supunha.
