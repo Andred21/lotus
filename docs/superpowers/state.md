@@ -2,13 +2,13 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 8dcffa4
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
 blocker: null
 resume_state: null
