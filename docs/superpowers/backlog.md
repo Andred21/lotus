@@ -100,3 +100,8 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 - Bloco 5.2b (minors do review final): testes de falha de `CreateRoleAction`/`UpdateRoleAction` não
   afirmam a chave do error-bag; decisão pendente do João sobre `GET /api/roles` permitir a admin
   comum enumerar permissões do superadmin enquanto `/api/permissions` é superadmin-only.
+- Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`, adiado pelo João em 2026-07-26): CTA duplicado
+  quando `ClientsTable`/`BudgetsTable` estão genuinamente vazias — `AppCardToolbar` (`end={actions}`)
+  e `AppEmptyState` (`action={actions}`) renderizam o mesmo botão nos dois lugares ao mesmo tempo.
+  Não pegou no DoD porque o `OperationDemoSeeder` nunca zera as duas tabelas. Escolher um lugar só
+  para o botão (`ClientsTable.tsx:36,59`, `BudgetsTable.tsx:69,94`).

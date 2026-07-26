@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: "revisar-sprint Parte 1 achou Q-1 (CTA duplicado no empty state real de ClientsTable/BudgetsTable) aguardando decisao do Joao"
-resume_state: reviewing
+blocker: null
+resume_state: null
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
