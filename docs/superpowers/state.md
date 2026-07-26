@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco6-frontend-seed
-state_basis_commit: 96517f5
+state_basis_commit: dfa1883
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
@@ -349,3 +349,24 @@ fechados). Decisão do João no gate: ao delegar, o pedido manda o Codex usar a 
 `superpowers:executing-plans` — ele tem o Superpowers como plugin — além da `lotus-execute-block`.
 Como nas partes anteriores, **o Codex não commita**: o Claude confere o diff, roda lint/build/greps
 por conta própria e commita.
+
+## Parte 3 executada e pronta para review — 2026-07-26
+
+9 tasks (18–26) do plano executadas via `subagent-driven-development` em worktree
+(`.claude/worktrees/bloco-visual-p3`, branch `worktree-bloco-visual-p3`), base `dfa1883`. Executor
+dividido conforme o gate: Tasks 18, 19, 21–26 por `claude` (implementador + review de task cada
+uma); Task 20 delegada ao `codex` via `lotus-execute-block` (não commitou, Claude conferiu o diff
+contra `paths_autorizados` e commitou). D12 (paginador unificado), D13 (`DetailHeader`), D14 (cor
+onde o card novo muda o fundo) e D15 (P-11 antecipada) entregues. `P-11` fechada — zero
+`window.confirm` no app.
+
+Review final da branch (modelo mais capaz): "Ready to merge? With fixes" — 1 achado Important
+(interação cruzada Tasks 18/20/25: `first` da paginação não clampava ao a lista encolher abaixo da
+página atual, produzindo empty state falso com o rodapé ainda contando o total antigo) e 6 Minor.
+Important e 2 Minor corrigidos em `87cc206`; os demais Minor são achados legítimos mas não
+bloqueiam merge (detalhes no ledger `.superpowers/sdd/progress.md` da worktree).
+
+DoD comportamental (prova visual nos dois temas com `OperationDemoSeeder`) segue pendente do João
+— sandbox sem browser/root para Playwright, mesma limitação das Partes 1 e 2.
+
+Branch não mergeada ainda — aguarda `/revisar-sprint` (ou revisão equivalente) e decisão do João.
