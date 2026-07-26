@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
-  AppDataTable, AppColumn, AppInputText, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppDataTable, AppColumn, AppInputText, AppButton, AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 
@@ -47,7 +47,7 @@ export function CoursesTable({
         value={table.rows}
         loading={loading}
         emptyMessage={empty}
-        paginator={table.paginator}
+        footerCount={t('course.count', { count: table.rows.length })}
         first={table.first}
         onPage={table.onPage}
       >
@@ -66,7 +66,6 @@ export function CoursesTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('course.count', { count: table.rows.length })} />
     </>
   )
 }

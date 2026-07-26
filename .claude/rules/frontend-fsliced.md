@@ -89,14 +89,16 @@ a Zustand o que não cruza fronteira — é over-engineering.
   objeto); `useEntityForm` cuida de form + reset por prop + erros de mutação; moldes
   `ModulePage`/`CrudDialog`. Dialog unificado view=edit=create (campos vazios = cadastro); prop
   `onEdit` abre a edição a partir do view.
-- **Tabela em card = `useTableFilter` + `AppCard{Toolbar,Footer}`.** Busca, `first` controlado,
-  `clear()` e `paginator={rows.length > 10}` vêm do hook (`shared/hooks/useTableFilter.ts`); a
-  feature só declara `searchable` e, quando tem filtro próprio, `where`. Reescrever o bloco na
-  feature foi o que rendeu, em 6 cópias, um `RolesTable` com o paginador default ligado (duas
-  faixas, contra a spec D6) e um empty state falso durante o loading. A supressão do vazio durante
-  `loading` é do `AppDataTable`, não do chamador — **não** reintroduzir
-  `emptyMessage={loading ? undefined : empty}`, que cai no default inglês do PrimeReact
-  (`No available options`).
+- **Tabela em card = `useTableFilter` + `AppCardToolbar` + `footerCount`.** Busca, `first` controlado
+  e `clear()` vêm do hook (`shared/hooks/useTableFilter.ts`); a feature só declara `searchable` e,
+  quando tem filtro próprio, `where`. **O rodapé é o paginador:** passe `footerCount` ao
+  `AppDataTable` e não renderize `AppCardFooter` junto de tabela — o wrapper exibe a faixa sempre e
+  os controles de página só quando passa de `rows` (spec D12). Reescrever o bloco na feature foi o
+  que rendeu, em 6 cópias, um `RolesTable` com o paginador default ligado (duas faixas, contra a spec
+  D6) e um empty state falso durante o loading. A supressão do vazio durante `loading` é do
+  `AppDataTable`, não do chamador — **não** reintroduzir `emptyMessage={loading ? undefined : empty}`,
+  que cai no default inglês do PrimeReact (`No available options`). Nunca fatiar a página fora do
+  `DataTable`: com coluna `sortable`, ordenar a página em vez do conjunto é regressão silenciosa.
 - **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
   no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
   Sem documento obrigatório → `no_idoneo`.

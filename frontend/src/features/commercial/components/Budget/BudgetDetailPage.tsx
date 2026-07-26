@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard, AppCardHeader } from '@shared/ui'
+import type { AppCardTone } from '@shared/ui'
 import type { BudgetFileType } from '../../api/useCommercialFiles'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
@@ -16,139 +17,136 @@ export function BudgetDetailPage() {
   const budgetId = Number(id)
   const d = useBudgetDetail(budgetId)
 
-  if (d.loading) return <p className="p-4 text-sm text-slate-500">{t('common.loading')}</p>
-  if (!d.budget) return <p className="p-4 text-sm text-slate-500">{t('budget.notFound')}</p>
+  if (d.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+  if (!d.budget) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.notFound')}</p>
 
   const budget = d.budget
 
   return (
-    <div className="space-y-6">
-      <button
-        type="button"
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-        onClick={d.goBack}
-      >
-        <i className="pi pi-arrow-left" aria-hidden="true" />
-        {t('budget.back')}
-      </button>
-
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold">{budget.code}</h2>
-          <p className="text-sm text-slate-500">
+    <div>
+      <DetailHeader
+        back={{ label: t('budget.back'), onClick: d.goBack }}
+        title={budget.code ?? '—'}
+        subtitle={
+          <>
             {d.client?.legal_name ?? '—'}
             {d.client?.rut && ` · RUT ${d.client.rut}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {budget.status && (
+          </>
+        }
+        tags={
+          budget.status && (
             <AppTag value={t(`quoteStatus.${budget.status}`)} severity={quoteStatusSeverity(budget.status)} />
-          )}
-          {/* Ação primária primeiro; destrutivo por último (UI-B5). */}
-          <AppButton
-            variant="brandIcon"
-            label={t('budget.addQuote')}
-            icon="pi pi-file"
-            onClick={() => d.openWizard(null)}
-          />
-          {/* Único caminho de edição: o backend só deixa payment_terms mudar. */}
-          <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={d.openEdit} />
-          <AppButton
-            label={t('common.delete')}
-            icon="pi pi-trash"
-            outlined
-            severity="danger"
-            onClick={d.askDeleteBudget}
-          />
-        </div>
-      </header>
-
-      {/* Os três totais vêm SOMADOS do backend (bcmath). A UI nunca soma UF. */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <TotalCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
-        <TotalCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
-        <TotalCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
-      </div>
-
-      <section className="rounded-lg border border-slate-200 dark:border-slate-700">
-        <header className="flex items-center justify-between p-4">
-          <h3 className="font-medium">
-            {t('budget.quotes')} <span className="text-slate-500">({budget.quotes.length})</span>
-          </h3>
-        </header>
-        <QuotesList
-          quotes={budget.quotes}
-          onEdit={(q) => d.openWizard(q)}
-          onRemove={(q) => d.askConfirm('remove', q)}
-          onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
-          onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
-        />
-      </section>
-
-      <section className="rounded-lg border border-slate-200 dark:border-slate-700">
-        <header className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <h3 className="font-medium">{t('budget.documents')}</h3>
-          <div className="flex items-center gap-2">
-            <div className="w-44">
-              <AppDropdown
-                value={d.fileType}
-                options={[
-                  { label: t('budget.fileTypeInvoice'), value: 'invoice' },
-                  { label: t('budget.fileTypeReceipt'), value: 'receipt' },
-                ]}
-                onChange={(e) => d.setFileType(e.value as BudgetFileType)}
-              />
-            </div>
-            <AppFileUpload
-              chooseOptions={{ icon: 'pi pi-upload' }}
-              chooseLabel={t('budget.uploadDocument')}
-              disabled={d.uploadPending}
-              uploadHandler={d.handleUpload}
+          )
+        }
+        actions={
+          <>
+            {/* Ação primária primeiro; destrutivo por último (UI-B5). */}
+            <AppButton
+              variant="brandIcon"
+              label={t('budget.addQuote')}
+              icon="pi pi-file"
+              onClick={() => d.openWizard(null)}
             />
-          </div>
-        </header>
-        <div className="mx-4">
-          <FormErrorBanner message={d.fileError} />
+            {/* Único caminho de edição: o backend só deixa payment_terms mudar. */}
+            <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={d.openEdit} />
+            <AppButton
+              label={t('common.delete')}
+              icon="pi pi-trash"
+              outlined
+              severity="danger"
+              onClick={d.askDeleteBudget}
+            />
+          </>
+        }
+      />
+
+      <div className="space-y-6">
+        {/* Os três totais vêm SOMADOS do backend (bcmath). A UI nunca soma UF. */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
+          <StatCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
+          <StatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
         </div>
-        <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
-      </section>
 
-      {/* Reusa o dialog em modo edit — trava cliente e código, só payment_terms muda. */}
-      {d.editing && (
-        <BudgetDialog visible mode="edit" budget={budget} onHide={d.closeEdit} />
-      )}
+        <AppCard>
+          <AppCardHeader title={t('budget.quotes')} count={budget.quotes.length} />
+          <QuotesList
+            quotes={budget.quotes}
+            onEdit={(q) => d.openWizard(q)}
+            onRemove={(q) => d.askConfirm('remove', q)}
+            onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
+            onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
+          />
+        </AppCard>
 
-      {d.wizard && (
-        <QuoteWizard visible budgetId={budgetId} quote={d.wizard.quote} onHide={d.closeWizard} />
-      )}
+        <AppCard>
+          <AppCardHeader
+            title={t('budget.documents')}
+            count={budget.files?.length ?? 0}
+            actions={
+              <>
+                <div className="w-44">
+                  <AppDropdown
+                    value={d.fileType}
+                    options={[
+                      { label: t('budget.fileTypeInvoice'), value: 'invoice' },
+                      { label: t('budget.fileTypeReceipt'), value: 'receipt' },
+                    ]}
+                    onChange={(e) => d.setFileType(e.value as BudgetFileType)}
+                  />
+                </div>
+                <AppFileUpload
+                  chooseOptions={{ icon: 'pi pi-upload' }}
+                  chooseLabel={t('budget.uploadDocument')}
+                  disabled={d.uploadPending}
+                  uploadHandler={d.handleUpload}
+                />
+              </>
+            }
+          />
+          <div className="mx-4 mt-4 empty:m-0">
+            <FormErrorBanner message={d.fileError} />
+          </div>
+          <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
+        </AppCard>
 
-      {d.confirm && (
-        <ConfirmDialog
-          visible
-          title={t(CONFIRM_COPY[d.confirm.action].title)}
-          message={t(CONFIRM_COPY[d.confirm.action].body)}
-          confirmLabel={t(CONFIRM_COPY[d.confirm.action].label)}
-          severity={d.confirm.action === 'approve' ? undefined : 'danger'}
-          pending={d.confirmPending}
-          error={d.confirmError}
-          onCancel={d.closeConfirm}
-          onConfirm={d.runConfirm}
-        />
-      )}
+        {/* Reusa o dialog em modo edit — trava cliente e código, só payment_terms muda. */}
+        {d.editing && (
+          <BudgetDialog visible mode="edit" budget={budget} onHide={d.closeEdit} />
+        )}
 
-      {d.confirmDeleteBudget && (
-        <ConfirmDialog
-          visible
-          title={t('budget.confirmDeleteTitle')}
-          message={t('budget.confirmDeleteBody')}
-          confirmLabel={t('common.delete')}
-          severity="danger"
-          pending={d.removeBudgetPending}
-          error={d.removeBudgetError}
-          onCancel={d.closeDeleteBudget}
-          onConfirm={d.deleteBudget}
-        />
-      )}
+        {d.wizard && (
+          <QuoteWizard visible budgetId={budgetId} quote={d.wizard.quote} onHide={d.closeWizard} />
+        )}
+
+        {d.confirm && (
+          <ConfirmDialog
+            visible
+            title={t(CONFIRM_COPY[d.confirm.action].title)}
+            message={t(CONFIRM_COPY[d.confirm.action].body)}
+            confirmLabel={t(CONFIRM_COPY[d.confirm.action].label)}
+            severity={d.confirm.action === 'approve' ? undefined : 'danger'}
+            pending={d.confirmPending}
+            error={d.confirmError}
+            onCancel={d.closeConfirm}
+            onConfirm={d.runConfirm}
+          />
+        )}
+
+        {d.confirmDeleteBudget && (
+          <ConfirmDialog
+            visible
+            title={t('budget.confirmDeleteTitle')}
+            message={t('budget.confirmDeleteBody')}
+            confirmLabel={t('common.delete')}
+            severity="danger"
+            pending={d.removeBudgetPending}
+            error={d.removeBudgetError}
+            onCancel={d.closeDeleteBudget}
+            onConfirm={d.deleteBudget}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -159,13 +157,13 @@ const CONFIRM_COPY = {
   remove: { title: 'quote.confirmDeleteTitle', body: 'quote.confirmDeleteBody', label: 'common.delete' },
 } as const
 
-function TotalCard({ label, value, tone }: { label: string; value?: string; tone?: 'success' | 'danger' }) {
-  const color =
-    tone === 'success' ? 'text-emerald-600' : tone === 'danger' ? 'text-red-600' : 'text-slate-900 dark:text-slate-100'
+/** O número É o sinal: o `AppCard variant="stat"` já tinge texto, fundo e borda
+ * pelo `tone`, então aqui não há cor nenhuma — só composição. */
+function StatCard({ label, value, tone }: { label: string; value?: string; tone?: AppCardTone }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-      <p className={`text-2xl font-semibold ${color}`}>{formatUf(value ?? '0')} UF</p>
-      <p className="mt-1 text-sm text-slate-500">{label}</p>
-    </div>
+    <AppCard variant="stat" tone={tone}>
+      <p className="text-2xl font-semibold">{formatUf(value ?? '0')} UF</p>
+      <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</p>
+    </AppCard>
   )
 }

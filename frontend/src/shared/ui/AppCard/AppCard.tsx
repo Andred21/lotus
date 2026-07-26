@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 export type AppCardVariant = 'default' | 'stat'
-export type AppCardTone = 'neutral' | 'info' | 'success' | 'danger'
+export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
 
 export interface AppCardProps {
   variant?: AppCardVariant
@@ -18,6 +18,7 @@ const TONE_HUE: Record<AppCardTone, string | null> = {
   neutral: null,
   info: 'var(--blue-500)',
   success: 'var(--green-500)',
+  warning: 'var(--yellow-500)',
   danger: 'var(--red-500)',
 }
 
@@ -25,6 +26,7 @@ const TONE_TEXT: Record<AppCardTone, string> = {
   neutral: 'var(--text-color)',
   info: 'color-mix(in srgb, var(--blue-500) 70%, var(--text-color))',
   success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
+  warning: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
   danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
 }
 
@@ -124,14 +126,13 @@ export interface AppCardFooterProps {
   /**
    * Paginação, quando houver mais de uma página.
    *
-   * ATENÇÃO — pendência conhecida da Parte 1: o `DataTable` do PrimeReact é dono
-   * do estado de página e renderiza o próprio paginador logo abaixo do corpo da
-   * tabela, ou seja ACIMA deste footer. Com as duas coisas ligadas aparecem duas
-   * faixas, e o protótipo mostra uma. Em Comercial o caso não ocorre (o seeder
-   * cria 4 clientes e 6 orçamentos, abaixo do `rows={10}`), então a Parte 1
-   * entrega o footer só com contagem. Unificar as duas faixas — via
-   * `paginatorTemplate` do `DataTable` alimentando este slot — é escopo da
-   * Parte 2, onde Operación tem o caso real.
+   * Efetivamente sem uso hoje: nenhuma tabela renderiza `AppCardFooter` mais.
+   * A unificação das duas faixas (corpo dono do paginador vs. este footer),
+   * cogitada para a Parte 2 e adiada de novo, acabou resolvida na Parte 3 —
+   * mas por outro mecanismo: o `footerCount` do `AppDataTable` faz o próprio
+   * paginador do `DataTable` virar o rodapé do card (contagem à esquerda,
+   * controles à direita), sem passar por este slot. `AppCardFooter` continua
+   * no código para cards com rodapé que não têm tabela.
    */
   pagination?: ReactNode
 }

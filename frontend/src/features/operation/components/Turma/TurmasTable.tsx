@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
-  AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
@@ -78,7 +78,7 @@ export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading:
         value={table.rows}
         loading={loading}
         emptyMessage={empty}
-        paginator={table.paginator}
+        footerCount={t('operation.table.count', { count: table.rows.length })}
         first={table.first}
         onPage={table.onPage}
       >
@@ -133,7 +133,6 @@ export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading:
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('operation.table.count', { count: table.rows.length })} />
     </>
   )
 }

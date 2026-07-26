@@ -398,6 +398,7 @@
       "addStudent": "Agregar alumno",
       "importSheet": "Importar planilla (xlsx/csv)",
       "empty": "Aún no hay alumnos matriculados.",
+      "emptyHint": "Agrega alumnos uno a uno o importa una planilla para comenzar.",
       "footerCount": "{{count}} alumnos matriculados",
       "table": {
         "name": "NOMBRE",
@@ -411,6 +412,7 @@
         "reprobado": "Reprobado"
       },
       "remove": "Quitar",
+      "removeTitle": "¿Quitar matrícula?",
       "removeConfirm": "¿Quitar la matrícula de {{name}}?",
       "form": {
         "title": "Agregar alumno",

@@ -7,7 +7,9 @@ export interface TableFilter<T> {
   term: string
   /** Linhas depois do `where` e da busca. */
   rows: T[]
-  /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar). */
+  /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar).
+   * Também clampada: se apontar além do fim de `rows` (lista encolheu, ex.
+   * deleção na última página), devolve 0 em vez do valor obsoleto. */
   first: number
   /** Troca o termo e volta à primeira página. */
   onFilterChange: (value: string) => void
@@ -17,8 +19,6 @@ export interface TableFilter<T> {
   resetPage: () => void
   /** Limpa a busca e volta à primeira página. */
   clear: () => void
-  /** Liga o paginador só quando há mais de uma página (spec D6: uma faixa só). */
-  paginator: boolean
 }
 
 /**
@@ -27,6 +27,10 @@ export interface TableFilter<T> {
  * Parte 2: o paginador default ligado na `RolesTable` (duas faixas, contra D6) e
  * o empty state falso durante o loading. Contrato fixado em
  * `.claude/rules/frontend-fsliced.md`.
+ *
+ * Quando ligar o paginador não é decisão do hook nem da tela: quem sabe quantas
+ * linhas cabem na página é o `AppDataTable`, que exibe os controles só quando
+ * `value.length > rows` (spec D12).
  *
  * `searchable` devolve os campos que a busca varre — `null`/`undefined` são
  * ignorados. `where` é o filtro próprio da tela (estado, tipo) e roda ANTES da
@@ -54,15 +58,23 @@ export function useTableFilter<T>(
     setFirst(0)
   }
 
+  // Clamp do ESTADO, não só da leitura: a lista pode encolher (ex. deleção na
+  // última página) e depois crescer de novo sem o usuário trocar de página —
+  // sem isto, a página obsoleta reaparece. Ajuste durante o render (mesmo
+  // padrão do reset de form via useState condicional), não useEffect: teria um
+  // frame de atraso.
+  if (first >= rows.length && first !== 0) {
+    setFirst(0)
+  }
+
   return {
     filter,
     term,
     rows,
-    first,
+    first: first >= rows.length ? 0 : first,
     onFilterChange,
     onPage: (event) => setFirst(event.first),
     resetPage: () => setFirst(0),
     clear: () => onFilterChange(''),
-    paginator: rows.length > 10,
   }
 }
