@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: null
-resume_state: null
+blocker: "revisar-sprint Parte 1 achou Q-1 (CTA duplicado no empty state real de ClientsTable/BudgetsTable) aguardando decisao do Joao"
+resume_state: reviewing
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -142,3 +142,11 @@ temporariamente para o dev server da worktree, revertidos após o teste) em
 - 9 achados Minor do review final (duplicação de scaffolding entre `ClientsTable`/`BudgetsTable`,
   `AppDialog` com o mesmo merge raso que `AppDataTable` tinha, `clientName()` sem memo, etc.) —
   listados no ledger da worktree, não bloqueiam merge.
+
+## `/revisar-sprint` — Parte 1, 2026-07-26
+
+Risco: baixo (frontend visual, nenhuma lei §5 tocada, `executor: claude`). Órfãos: nenhum.
+`pnpm lint` e `pnpm build` verdes no intervalo `68f5e8d^..bad3066`. 1 achado novo (Q-1, CTA
+duplicado em `ClientsTable`/`BudgetsTable` no empty state real — não testado pelo DoD porque o
+seeder nunca zera a tabela). Aguardando decisão do João; achados Minor já listados acima seguem
+adiados, não reabertos.
