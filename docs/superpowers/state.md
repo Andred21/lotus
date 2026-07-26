@@ -2,16 +2,22 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: null
-resume_state: null
+blocker: >-
+  /revisar-sprint da Parte 2 fechou com 5 achados aguardando decisao do Joao: Q-2 (RolesTable
+  mantem paginador default, double-band contra D6, 1 linha), Q-3 (emptyMessage undefined cai no
+  default ingles do PrimeReact em 7 tabelas), Q-4 (acao primaria sem check de permissao em
+  Cursos/Pessoas/Comercial, contra Administracion que checa), Q-5 (copy do empty state de filtro
+  so por estado fala de busca), Q-6 (scaffolding de tabela duplicado 6x, padrao reincidente 2
+  sprints, propor rule). Nenhum toca lei §5.
+resume_state: reviewing
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -215,4 +221,38 @@ browser/root para Playwright, mesma limitação já registrada na Parte 1. Não 
 DoD comportamental fica para quando o João rodar `pnpm dev` e conferir contra os passos "Provar na
 tela" de cada task do plano.
 
-Branch **não mergeada ainda** — aguarda `/revisar-sprint` (próxima ação: `request_code_review`).
+Branch **não mergeada ainda** — aguarda decisão do João sobre os achados abaixo.
+
+## `/revisar-sprint` — Parte 2, 2026-07-26
+
+Risco **alto** (Tasks 11–17 com `executor: codex`), então além do gabarito rodei revisão
+independente do Codex em read-only sobre `0addf47..worktree-bloco-visual-p2`. Achados fundidos;
+verifiquei no código cada um que só o Codex viu. Verificações rodadas por mim na worktree, não
+aceitas do report: `pnpm lint` limpo, `pnpm build` verde, script de paridade `es-pt: []` /
+`es-en: []`.
+
+Órfãos: nenhum (`course.tabCourses` sem consumidor e os slots `AppCardFooter.pagination` /
+`ModulePage.tags` reservados são todos declarados no plano). Leis §5: nenhuma violação — zero
+import de `primereact` em `features/`, zero import cross-feature, zero cor Tailwind hardcoded nova.
+
+5 achados aguardando decisão (detalhe em `blocker`):
+
+- **Q-2 🔴 P** — `RolesTable.tsx:27` não faz opt-out do `paginator` default do `AppDataTable`
+  (`alwaysShowPaginator: true` no PrimeReact), então paginador de página única renderiza acima do
+  `AppCardFooter`: a double-band que D6 elimina. As outras 6 tabelas fazem `paginator={rows.length > 10}`.
+  A decisão #2 do gate assumiu que o paginador "nem apareceria" com ≤10 linhas — premissa errada.
+- **Q-3 🟡 P** — `emptyMessage={loading ? undefined : empty}` (7 ocorrências, herdado da correção da
+  Parte 1) não suprime o corpo vazio: o PrimeReact cai em `localeOption('emptyMessage')` e o locale
+  ativo é `en` (`primeLocale.ts` só faz `addLocale`, nunca `locale('es')`). Rende `No available
+  options` sob o overlay de loading em todas as tabelas.
+- **Q-4 🟡 P** — ação primária sem check de permissão em `CatalogPage:18`, `PeoplePage:20`,
+  `CommercialPage:28/35`, enquanto `AdministracionPage:29` gateia com `canManage`. Role customizada
+  só-leitura vê o botão e leva 403 no submit.
+- **Q-5 🟢 P** — `TurmasTable.tsx:46-56`: com só o filtro de estado ativo, a descrição e o CTA ainda
+  falam de busca, embora o `onClick` limpe busca **e** estado.
+- **Q-6 🟡 M** — scaffolding de tabela duplicado em 6 componentes; a Parte 1 já registrou com 2
+  cópias. Padrão reincidente (2 sprints) → propor `useTableFilter` em `shared/` **e** uma linha em
+  `.claude/rules/frontend-fsliced.md` fixando o contrato de tabela-em-card.
+
+Descartado por ruído: `first` não reajustado quando um refetch encolhe a lista abaixo da página
+atual (achado do Codex) — real, mas exige volume que nenhuma tela tem hoje.
