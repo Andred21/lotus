@@ -79,33 +79,36 @@ export function BudgetDetailPage() {
           />
         </AppCard>
 
-        <section className="rounded-lg border border-slate-200 dark:border-slate-700">
-          <header className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <h3 className="font-medium">{t('budget.documents')}</h3>
-            <div className="flex items-center gap-2">
-              <div className="w-44">
-                <AppDropdown
-                  value={d.fileType}
-                  options={[
-                    { label: t('budget.fileTypeInvoice'), value: 'invoice' },
-                    { label: t('budget.fileTypeReceipt'), value: 'receipt' },
-                  ]}
-                  onChange={(e) => d.setFileType(e.value as BudgetFileType)}
+        <AppCard>
+          <AppCardHeader
+            title={t('budget.documents')}
+            count={budget.files?.length ?? 0}
+            actions={
+              <>
+                <div className="w-44">
+                  <AppDropdown
+                    value={d.fileType}
+                    options={[
+                      { label: t('budget.fileTypeInvoice'), value: 'invoice' },
+                      { label: t('budget.fileTypeReceipt'), value: 'receipt' },
+                    ]}
+                    onChange={(e) => d.setFileType(e.value as BudgetFileType)}
+                  />
+                </div>
+                <AppFileUpload
+                  chooseOptions={{ icon: 'pi pi-upload' }}
+                  chooseLabel={t('budget.uploadDocument')}
+                  disabled={d.uploadPending}
+                  uploadHandler={d.handleUpload}
                 />
-              </div>
-              <AppFileUpload
-                chooseOptions={{ icon: 'pi pi-upload' }}
-                chooseLabel={t('budget.uploadDocument')}
-                disabled={d.uploadPending}
-                uploadHandler={d.handleUpload}
-              />
-            </div>
-          </header>
-          <div className="mx-4">
+              </>
+            }
+          />
+          <div className="mx-4 mt-4 empty:m-0">
             <FormErrorBanner message={d.fileError} />
           </div>
           <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
-        </section>
+        </AppCard>
 
         {/* Reusa o dialog em modo edit — trava cliente e código, só payment_terms muda. */}
         {d.editing && (
