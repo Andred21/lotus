@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
 import { useClientsPage } from '../hooks/useClientsPage'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
 import { ClientsTable } from './Client/ClientsTable'
@@ -16,28 +16,27 @@ export function CommercialPage() {
   const budgets = useBudgetsPage()
   const [tab, setTab] = useState(0)
 
-  const onBudgets = tab === 1
-
   return (
-    <ModulePage
-      title={t('client.module')}
-      description={t('client.moduleDescription')}
-      actions={
-        onBudgets ? (
-          <AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />
-        ) : (
-          <AppButton variant="brandIcon" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />
-        )
-      }
-    >
-      <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
-        <ModuleTab header={t('client.tabClients')}>
-          <ClientsTable clients={clients.items} loading={clients.loading} onView={clients.openView} />
-        </ModuleTab>
-        <ModuleTab header={t('budget.tab')}>
-          <BudgetsTable budgets={budgets.items} loading={budgets.loading} />
-        </ModuleTab>
-      </ModuleTabs>
+    <ModulePage title={t('client.module')} description={t('client.moduleDescription')}>
+      <AppCard>
+        <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+          <ModuleTab header={t('client.tabClients')}>
+            <ClientsTable
+              clients={clients.items}
+              loading={clients.loading}
+              onView={clients.openView}
+              actions={<AppButton variant="brandIcon" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />}
+            />
+          </ModuleTab>
+          <ModuleTab header={t('budget.tab')}>
+            <BudgetsTable
+              budgets={budgets.items}
+              loading={budgets.loading}
+              actions={<AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />}
+            />
+          </ModuleTab>
+        </ModuleTabs>
+      </AppCard>
 
       {clients.dialog && (
         <ClientDialog
