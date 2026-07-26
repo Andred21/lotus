@@ -30,7 +30,11 @@
     "active": "Ativo",
     "inactive": "Inativo",
     "view": "Ver",
-    "upload": "Enviar documento"
+    "upload": "Enviar documento",
+    "noResults": "Sem resultados para \"{{term}}\"",
+    "noResultsFiltered": "Sem resultados para os filtros aplicados",
+    "noResultsHint": "Revise o termo ou limpe a busca.",
+    "clearSearch": "Limpar busca"
   },
   "admin": {
     "module": "Administração",
@@ -140,6 +144,7 @@
     "create": "Cadastrar cliente",
     "tabClients": "Clientes",
     "empty": "Sem clientes",
+    "emptyHint": "Cadastre o primeiro cliente para começar.",
     "count": "{{count}} clientes",
     "searchPlaceholder": "Buscar por razão social ou RUT...",
     "legalName": "Razão social",
@@ -215,6 +220,7 @@
     "status": "Estado",
     "paymentTerms": "Forma de pagamento",
     "empty": "Nenhum orçamento",
+    "emptyHint": "Crie o primeiro orçamento para começar.",
     "count": "{{count}} orçamentos",
     "back": "Voltar ao Comercial",
     "totalQuoted": "Total cotado",
