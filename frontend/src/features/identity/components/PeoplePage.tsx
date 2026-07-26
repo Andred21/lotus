@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, AppEmptyState } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
 import { RedatoresTable } from './Redator/RedatoresTable'
 import { RedatorDialog } from './Redator/RedatorDialog'
 
 export function PeoplePage() {
   const { t } = useTranslation()
+  const { can } = usePermissions()
   const page = useRedatoresPage()
 
   return (
@@ -17,7 +19,11 @@ export function PeoplePage() {
               redatores={page.items}
               loading={page.loading}
               onView={page.openView}
-              actions={<AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />}
+              actions={
+                can('identity.user.create')
+                  ? <AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  : undefined
+              }
             />
           </ModuleTab>
 

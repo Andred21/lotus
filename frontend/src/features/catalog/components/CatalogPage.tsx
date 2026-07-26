@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { ModulePage, AppButton, AppCard } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
 import { useCoursesPage } from '../hooks/useCoursesPage'
 import { CoursesTable } from './Course/CoursesTable'
 import { CourseDialog } from './Course/CourseDialog'
 
 export function CatalogPage() {
   const { t } = useTranslation()
+  const { can } = usePermissions()
   const page = useCoursesPage()
 
   return (
@@ -15,7 +17,11 @@ export function CatalogPage() {
           courses={page.items}
           loading={page.loading}
           onView={page.openView}
-          actions={<AppButton variant="brandIcon" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />}
+          actions={
+            can('catalog.course.create')
+              ? <AppButton variant="brandIcon" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />
+              : undefined
+          }
         />
       </AppCard>
 

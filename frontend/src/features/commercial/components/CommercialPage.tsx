@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
+import { usePermissions } from '@shared/hooks'
 import { useClientsPage } from '../hooks/useClientsPage'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
 import { ClientsTable } from './Client/ClientsTable'
@@ -12,6 +13,7 @@ import { BudgetDialog } from './Budget/BudgetDialog'
 export function CommercialPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { can } = usePermissions()
   const clients = useClientsPage()
   const budgets = useBudgetsPage()
   const [tab, setTab] = useState(0)
@@ -25,14 +27,22 @@ export function CommercialPage() {
               clients={clients.items}
               loading={clients.loading}
               onView={clients.openView}
-              actions={<AppButton variant="brandIcon" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />}
+              actions={
+                can('commercial.client.create')
+                  ? <AppButton variant="brandIcon" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />
+                  : undefined
+              }
             />
           </ModuleTab>
           <ModuleTab header={t('budget.tab')}>
             <BudgetsTable
               budgets={budgets.items}
               loading={budgets.loading}
-              actions={<AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />}
+              actions={
+                can('commercial.budget.create')
+                  ? <AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />
+                  : undefined
+              }
             />
           </ModuleTab>
         </ModuleTabs>
