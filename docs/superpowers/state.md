@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 96517f5
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -321,3 +321,31 @@ herdado:
 
 `ModulePage.tags` e o slot `AppCardFooter.pagination`, reservados desde a Parte 1, ganham consumidor
 nesta parte.
+
+## Parte 3 planejada — 2026-07-26
+
+Tasks 18 a 26 escritas no mesmo `active_plan` (seção `# Parte 3`), com adendo `D12` a `D15` na spec
+(§10). Quatro decisões do João no gate:
+
+1. **A faixa do rodapé é o paginador do `DataTable` (D12)**, não um `AppPaginator` avulso. O esboço
+   da Parte 3 previa fatiar a página fora da tabela; ao levantar o baseline apareceu que **5 tabelas
+   têm coluna `sortable`** (`ClientsTable`, `CoursesTable`, `RolesTable`, `RedatoresTable`,
+   `UsersTable`) — com a página fatiada, o `DataTable` ordenaria só as linhas visíveis. `AppDataTable`
+   ganha `footerCount`; `useTableFilter` perde o campo `paginator`; `AppCardFooter` sai das 7 tabelas
+   e sobrevive para card sem tabela. Verificado na fonte do PrimeReact antes de decidir:
+   `paginator.cjs.js:1201-1229` mostra que template falsy não cria controle algum e que `leftContent`
+   renderiza fora desse ramo — é o que sustenta a faixa de página única.
+2. **`DetailHeader` novo em `shared/ui` (D13)**, em vez de devolver `actions` ao `PageHeader` — a
+   Task 17 removeu essa prop de propósito e devolvê-la reabriria a porta que D1 fechou.
+3. **Cor: a Parte 3 corrige onde o card novo muda o fundo (D14)** — banners, barra de progresso e
+   textos de `loading`/`notFound`. Interior de `DocumentTypeCard`, `TurmaConfigCard` e
+   `RedatorDesignation` fica para a Parte 4.
+4. **P-11 antecipa para esta parte (D15).** A Task 25 reescreve `EnrollmentTable` inteira; adiar
+   obrigaria a reabrir o arquivo.
+
+**Executor dividido:** Tasks 18–19 e 21–26 no `claude` (contrato compartilhado e composição
+heterogênea); **Task 20 no `codex`** (replicação mecânica em 7 tabelas + hook + rule, paths
+fechados). Decisão do João no gate: ao delegar, o pedido manda o Codex usar a skill
+`superpowers:executing-plans` — ele tem o Superpowers como plugin — além da `lotus-execute-block`.
+Como nas partes anteriores, **o Codex não commita**: o Claude confere o diff, roda lint/build/greps
+por conta própria e commita.

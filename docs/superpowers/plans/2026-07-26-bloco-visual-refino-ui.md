@@ -3415,3 +3415,1407 @@ Fora desses globs o Codex não escreve. `backend/`, `docs/`, `frontend/src/share
 
 **Prova visual** de todas as 5 correções fica com o João, como no resto do bloco — o sandbox não tem
 browser.
+
+---
+
+# Parte 3 — Detalhe de orçamento e detalhe de turma (Tasks 18 a 26)
+
+Base: `96517f5` na `main` (Parte 2 mergeada em `72ed668`). Escopo e DoD herdados do esboço acima,
+mais as quatro decisões do gate desta parte, registradas na spec como **D12 a D15** (§10).
+
+## Decisões tomadas no gate desta parte
+
+1. **A faixa do rodapé é o paginador do `DataTable` (D12).** O esboço da Parte 3 previa um
+   `AppPaginator` avulso alimentando o slot `pagination` do `AppCardFooter`, com a página fatiada
+   fora da tabela. Ao levantar o baseline apareceu o obstáculo: **5 tabelas têm coluna `sortable`**
+   (`ClientsTable`, `CoursesTable`, `RolesTable`, `RedatoresTable`, `UsersTable`). Se o `DataTable`
+   receber só as linhas visíveis, ele ordena **a página**, não o conjunto — regressão silenciosa.
+   O `DataTable` continua dono de página e ordenação; `AppDataTable` ganha `footerCount` e o
+   paginador vira a faixa.
+2. **`DetailHeader` novo em `shared/ui` (D13)**, em vez de devolver `actions` ao `PageHeader` —
+   a Task 17 tirou essa prop de propósito.
+3. **Cor: só onde o card novo muda o fundo (D14).** Interior de `DocumentTypeCard`,
+   `TurmaConfigCard` e `RedatorDesignation` fica para a Parte 4.
+4. **P-11 antecipa para esta parte (D15).** A Task 25 reescreve `EnrollmentTable` inteira; trocar o
+   `window.confirm` ali custa poucas linhas.
+
+## Fato verificado na fonte do PrimeReact (não deduzir de novo)
+
+`paginator.cjs.js:1201-1219` — `createElements()` começa com `if (props.template)`. Template `''` é
+falsy, então **nenhum controle é criado**. E `leftContent` é montado fora desse ramo
+(`paginator.cjs.js:1224-1229`), logo continua renderizando. Com `alwaysShowPaginator` (que vira
+`alwaysShow`, `datatable.cjs.js:7613`) o early-return de `totalPages <= 1` também não dispara.
+
+Consequência: `paginatorTemplate=''` + `alwaysShowPaginator` + `paginatorLeft` rende exatamente
+`<div class="p-paginator">{contagem}</div>` — uma faixa com a contagem e nada mais. É isso que
+sustenta D12.
+
+O `pt` do `DataTable` cascateia para o Paginator pela chave `paginator` (`datatable.cjs.js:7615`),
+com as subchaves `root`, `left` e `end` do próprio Paginator.
+
+---
+
+## Task 18: `AppDataTable` ganha `footerCount` — o paginador vira a faixa do rodapé
+
+**Files:**
+- Modify: `frontend/src/shared/ui/AppDataTable/style.ts`
+- Modify: `frontend/src/shared/ui/AppDataTable/AppDataTable.tsx`
+
+**Interfaces:**
+- Consumes: `appDataTablePt` e `mergePt`, que já existem.
+- Produces: `AppDataTable` aceita `footerCount?: ReactNode`. Quando ela vem, o componente liga
+  `paginator`, `alwaysShowPaginator` e `paginatorLeft={footerCount}`, e só mostra controles de página
+  quando `value.length > rows` (`rows` default 10). Quando não vem, nada de paginador — o
+  comportamento das telas que ainda não migraram não muda. A Task 20 consome nas 7 tabelas; a Task 25
+  consome na aba Alumnos.
+
+- [ ] **Step 1: Acrescentar o `pt` do paginador em `style.ts`**
+
+Acrescente ao fim do arquivo, sem tocar em `appDataTablePt`:
+
+```ts
+/** Faixa de rodapé da tabela (spec D12): o paginador do DataTable É o rodapé —
+ * contagem à esquerda em `paginatorLeft`, controles à direita, uma faixa só.
+ *
+ * Layout e cor inline porque o tema Lara já estiliza `.p-paginator` (fundo
+ * branco, borda, padding, radius) e utility do Tailwind não vence a
+ * especificidade dele. Reproduz o visual do `AppCardFooter`: borda em cima,
+ * px-4 py-3, texto secundário. */
+export const appPaginatorPt: NonNullable<DataTablePassThroughOptions['paginator']> = {
+  root: {
+    className: 'text-sm',
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: '0.25rem',
+      background: 'transparent',
+      border: 'none',
+      borderTop: '1px solid var(--surface-border)',
+      borderRadius: 0,
+      padding: '0.75rem 1rem',
+      color: 'var(--text-color-secondary)',
+    },
+  },
+  /** Empurra os controles para a direita sem depender do `justify-content`:
+   * com uma página só, a contagem fica sozinha e continua à esquerda. */
+  left: { style: { marginRight: 'auto' } },
+}
+```
+
+- [ ] **Step 2: Ligar `footerCount` no wrapper**
+
+Em `AppDataTable.tsx`, mantenha `mergePt` como está. Troque o import e a assinatura:
+
+```tsx
+import type { ReactNode } from 'react'
+import { DataTable } from 'primereact/datatable'
+import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+import { appDataTablePt, appPaginatorPt } from './style'
+```
+
+E substitua o corpo do componente por:
+
+```tsx
+export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T> & {
+  /** Contagem em prosa do rodapé. Passá-la liga a faixa: o paginador do
+   * DataTable vira o rodapé do card (spec D12), com a contagem à esquerda e os
+   * controles de página à direita — e só quando há mais de uma página. */
+  footerCount?: ReactNode
+}
+
+/** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
+ * array puro). Colunas via <AppColumn/>.
+ *
+ * Durante o `loading` o corpo vazio ainda renderiza — passar `undefined` em
+ * `emptyMessage` cairia no default inglês do PrimeReact (`No available
+ * options`). Um nó vazio truthy mantém a linha e cala o texto; suprimir isso é
+ * responsabilidade do wrapper, não de cada tabela.
+ *
+ * O rodapé é o paginador: com `footerCount`, `alwaysShowPaginator` mantém a
+ * faixa mesmo em página única e `paginatorTemplate=''` apaga os controles
+ * (template falsy não cria elemento algum; `leftContent` renderiza fora desse
+ * ramo). Fatiar a página fora da tabela foi rejeitado: 5 tabelas têm coluna
+ * `sortable`, e o DataTable só ordena o que recebe. */
+export function AppDataTable<T extends DataTableValueArray>({
+  pt,
+  loading,
+  emptyMessage,
+  footerCount,
+  value,
+  rows = 10,
+  ...props
+}: AppDataTableProps<T>) {
+  const paginated = (value?.length ?? 0) > rows
+
+  return (
+    <DataTable
+      dataKey="id"
+      removableSort
+      rowHover
+      value={value}
+      rows={rows}
+      paginator={footerCount !== undefined}
+      alwaysShowPaginator
+      paginatorLeft={footerCount}
+      paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
+      pt={mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, pt as DataTableProps<DataTableValueArray>['pt'])}
+      loading={loading}
+      emptyMessage={loading ? <span /> : emptyMessage}
+      {...props}
+    />
+  )
+}
+```
+
+O spread `{...props}` fica por último de propósito: uma tela que ainda passe `paginator={...}`
+continua vencendo, e é isso que mantém as 7 tabelas funcionando entre esta task e a Task 20.
+
+**Regressão intermediária conhecida e aceita:** o `paginator` default sai de `true` para "só com
+`footerCount`". A única tela que dependia do default é a aba Alumnos — entre esta task e a Task 25
+uma turma de 15 matrículas passa a listar as 15 de uma vez, sem paginar. Some na Task 25, que passa
+`footerCount`.
+
+- [ ] **Step 3: Verificar build**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 4: Provar as duas pontas na tela**
+
+`pnpm dev` com o `OperationDemoSeeder` carregado.
+
+1. http://localhost:5173/comercial — a aba Clientes ainda passa `paginator={table.paginator}` (4
+   clientes, false) e continua **sem** faixa do paginador, só com o `AppCardFooter` da Parte 1. Nada
+   pode ter mudado visualmente aqui.
+2. Só para conferir a faixa nova antes da Task 20, sem commitar: no `ClientsTable`, troque
+   temporariamente `paginator={table.paginator}` por `footerCount={t('client.count', { count: table.rows.length })}`.
+   Esperado: uma faixa só, borda em cima, `4 clientes` à esquerda, nenhum controle de página (4 ≤ 10).
+   **Desfaça** a troca antes do commit — ela é a Task 20.
+
+Conferir nos dois temas: o fundo da faixa tem de acompanhar o card (transparente sobre
+`--surface-card`), não ficar branco no tema escuro.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/shared/ui/AppDataTable
+git commit -m "feat(ui): footerCount no AppDataTable, paginador vira a faixa do rodape"
+```
+
+---
+
+## Task 19: `DetailHeader` em `shared/ui`
+
+**Files:**
+- Create: `frontend/src/shared/ui/DetailHeader/DetailHeader.tsx`
+- Create: `frontend/src/shared/ui/DetailHeader/index.ts`
+- Modify: `frontend/src/shared/ui/index.ts`
+
+**Interfaces:**
+- Consumes: nada.
+- Produces: `DetailHeader` com `back?: { label: string; onClick: () => void }`, `title: string`,
+  `subtitle?: ReactNode`, `tags?: ReactNode`, `actions?: ReactNode`. As Tasks 21 e 24 consomem.
+  `PageHeader` **não** muda — continua sem `actions`, exclusivo de módulo (D13).
+
+- [ ] **Step 1: Criar o componente**
+
+`frontend/src/shared/ui/DetailHeader/DetailHeader.tsx`:
+
+```tsx
+import type { ReactNode } from 'react'
+
+export interface DetailHeaderProps {
+  /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele. */
+  back?: { label: string; onClick: () => void }
+  title: string
+  /** Linha de identificação sob o título (cliente, RUT, vínculo). */
+  subtitle?: ReactNode
+  /** Tags de estado e modalidade, à direita. */
+  tags?: ReactNode
+  /** Ações da página, à direita das tags (spec D1: em detalhe, a ação primária
+   * mora no cabeçalho da página, não na toolbar do card). */
+  actions?: ReactNode
+}
+
+/**
+ * Cabeçalho de página de detalhe. Apresentacional puro — não conhece feature,
+ * não conhece rota: quem navega é o `onClick` de quem compõe.
+ *
+ * Separado do `PageHeader` de propósito (spec D13): página de módulo não tem
+ * ação no cabeçalho desde a Task 17, e devolver `actions` lá reabriria a porta
+ * que D1 fechou.
+ */
+export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHeaderProps) {
+  return (
+    <div className="mb-6 flex flex-col gap-4">
+      {back && (
+        <button
+          type="button"
+          className="flex w-fit items-center gap-2 text-sm hover:underline"
+          style={{ color: 'var(--text-color-secondary)' }}
+          onClick={back.onClick}
+        >
+          <i className="pi pi-arrow-left" aria-hidden="true" />
+          {back.label}
+        </button>
+      )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>
+          {subtitle && (
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+          )}
+        </div>
+        {(tags || actions) && (
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            {tags}
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+```
+
+`frontend/src/shared/ui/DetailHeader/index.ts`:
+
+```ts
+export * from './DetailHeader'
+```
+
+- [ ] **Step 2: Exportar no barrel**
+
+Em `frontend/src/shared/ui/index.ts`, acrescente a linha na ordem alfabética do arquivo:
+
+```ts
+export * from './DetailHeader'
+```
+
+- [ ] **Step 3: Verificar build**
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro. Componente ainda sem consumidor — o `tsc` não reclama de export não usado
+em barrel.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/shared/ui/DetailHeader frontend/src/shared/ui/index.ts
+git commit -m "feat(ui): DetailHeader para pagina de detalhe"
+```
+
+---
+
+## Task 20: as 7 tabelas trocam `AppCardFooter` por `footerCount`
+
+**Files:**
+- Modify: `frontend/src/shared/hooks/useTableFilter.ts`
+- Modify: `frontend/src/features/commercial/components/Client/ClientsTable.tsx`
+- Modify: `frontend/src/features/commercial/components/Budget/BudgetsTable.tsx`
+- Modify: `frontend/src/features/operation/components/Turma/TurmasTable.tsx`
+- Modify: `frontend/src/features/catalog/components/Course/CoursesTable.tsx`
+- Modify: `frontend/src/features/identity/components/Admin/UsersTable.tsx`
+- Modify: `frontend/src/features/identity/components/Admin/RolesTable.tsx`
+- Modify: `frontend/src/features/identity/components/Redator/RedatoresTable.tsx`
+- Modify: `.claude/rules/frontend-fsliced.md`
+
+**Interfaces:**
+- Consumes: `footerCount` da Task 18.
+- Produces: `TableFilter<T>` perde o campo `paginator`. `first`, `onPage`, `resetPage`, `clear`,
+  `filter`, `term` e `rows` seguem iguais. Nenhuma outra task depende de `paginator`.
+
+**Executor:** `codex` (ver `## Handoff de execução — Parte 3`).
+
+- [ ] **Step 1: Tirar `paginator` do `useTableFilter`**
+
+Em `frontend/src/shared/hooks/useTableFilter.ts`, remova as duas ocorrências — a declaração na
+interface e o campo no retorno:
+
+Na interface `TableFilter<T>`, apague estas 3 linhas:
+
+```ts
+  /** Liga o paginador só quando há mais de uma página (spec D6: uma faixa só). */
+  paginator: boolean
+```
+
+No objeto retornado, apague esta linha:
+
+```ts
+    paginator: rows.length > 10,
+```
+
+E troque o segundo parágrafo do docblock do hook por:
+
+```ts
+ * Estado de busca e paginação de uma tabela em card. Os 6 consumidores repetiam
+ * este bloco literalmente, e a duplicação rendeu dois defeitos no review da
+ * Parte 2: o paginador default ligado na `RolesTable` (duas faixas, contra D6) e
+ * o empty state falso durante o loading. Contrato fixado em
+ * `.claude/rules/frontend-fsliced.md`.
+ *
+ * Quando ligar o paginador não é decisão do hook nem da tela: quem sabe quantas
+ * linhas cabem na página é o `AppDataTable`, que exibe os controles só quando
+ * `value.length > rows` (spec D12).
+```
+
+- [ ] **Step 2: Trocar o rodapé nas 7 tabelas**
+
+Em cada arquivo, três edições mecânicas:
+
+1. **Import** — remover `AppCardFooter` da lista importada de `@shared/ui`. `AppCardToolbar` e
+   `AppEmptyState` ficam.
+2. **`AppDataTable`** — remover a linha `paginator={table.paginator}` (em `RolesTable`,
+   `paginator={roles.length > 10}`) e acrescentar `footerCount` com **a mesma chave i18n e a mesma
+   contagem** que o `AppCardFooter` usava. `first={table.first}` e `onPage={table.onPage}` **ficam**:
+   é o reset de página ao filtrar, corrigido na Parte 1.
+3. **Rodapé** — apagar a linha `<AppCardFooter count={...} />`. Se o `return` virar um único
+   elemento, o fragmento `<>...</>` continua necessário por causa do `AppCardToolbar`; só a
+   `RolesTable` fica com toolbar + tabela e mantém o fragmento igual.
+
+Mapa exato de `footerCount` por arquivo (copiar a expressão do `AppCardFooter` que está sendo
+apagado):
+
+| Arquivo | `footerCount` |
+|---|---|
+| `ClientsTable.tsx` | `{t('client.count', { count: table.rows.length })}` |
+| `BudgetsTable.tsx` | `{t('budget.count', { count: table.rows.length })}` |
+| `TurmasTable.tsx` | `{t('operation.table.count', { count: table.rows.length })}` |
+| `CoursesTable.tsx` | `{t('course.count', { count: table.rows.length })}` |
+| `UsersTable.tsx` | `{t('admin.count', { count: table.rows.length })}` |
+| `RolesTable.tsx` | `{t('role.count', { count: roles.length })}` |
+| `RedatoresTable.tsx` | `{t('redator.count', { count: table.rows.length })}` |
+
+Exemplo completo, `ClientsTable.tsx` — o `AppDataTable` fica assim e o `<AppCardFooter …/>` some:
+
+```tsx
+      <AppDataTable
+        value={table.rows}
+        loading={loading}
+        emptyMessage={empty}
+        footerCount={t('client.count', { count: table.rows.length })}
+        first={table.first}
+        onPage={table.onPage}
+      >
+```
+
+E a `RolesTable`, que não usa `useTableFilter`:
+
+```tsx
+      <AppDataTable
+        value={roles}
+        loading={loading}
+        emptyMessage={empty}
+        footerCount={t('role.count', { count: roles.length })}
+      >
+```
+
+- [ ] **Step 3: Atualizar o contrato na rule**
+
+Em `.claude/rules/frontend-fsliced.md`, substitua o bullet **"Tabela em card"** inteiro por:
+
+```markdown
+- **Tabela em card = `useTableFilter` + `AppCardToolbar` + `footerCount`.** Busca, `first` controlado
+  e `clear()` vêm do hook (`shared/hooks/useTableFilter.ts`); a feature só declara `searchable` e,
+  quando tem filtro próprio, `where`. **O rodapé é o paginador:** passe `footerCount` ao
+  `AppDataTable` e não renderize `AppCardFooter` junto de tabela — o wrapper exibe a faixa sempre e
+  os controles de página só quando passa de `rows` (spec D12). Reescrever o bloco na feature foi o
+  que rendeu, em 6 cópias, um `RolesTable` com o paginador default ligado (duas faixas, contra a spec
+  D6) e um empty state falso durante o loading. A supressão do vazio durante `loading` é do
+  `AppDataTable`, não do chamador — **não** reintroduzir `emptyMessage={loading ? undefined : empty}`,
+  que cai no default inglês do PrimeReact (`No available options`). Nunca fatiar a página fora do
+  `DataTable`: com coluna `sortable`, ordenar a página em vez do conjunto é regressão silenciosa.
+```
+
+- [ ] **Step 4: Verificar**
+
+De `frontend/`:
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro. Depois, a prova de que nenhuma tabela ficou com o rodapé antigo:
+
+```bash
+grep -rn "AppCardFooter\|table.paginator" src/features
+```
+
+Esperado: **nenhuma linha**. `AppCardFooter` continua existindo em `src/shared/ui/AppCard/AppCard.tsx`
+para card sem tabela — a busca acima é só em `src/features`.
+
+- [ ] **Step 5: Provar na tela**
+
+`pnpm dev`, nos dois temas:
+
+- http://localhost:5173/comercial — uma faixa só embaixo da tabela, `4 clientes` à esquerda, sem
+  controles de página. Trocar para Presupuestos: `6 presupuestos`, mesma faixa.
+- http://localhost:5173/operacion — `4 turmas`, sem controles.
+- Buscar `zzz` em Comercial: empty state de busca, e a faixa mostra `0 clientes`.
+- Ordenar por `Razón social` em Comercial: a ordenação vale para a lista inteira (com 4 clientes,
+  confirmar que a ordem muda e a contagem não).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/shared/hooks/useTableFilter.ts frontend/src/features .claude/rules/frontend-fsliced.md
+git commit -m "refactor(ui): rodape das 7 tabelas passa a ser o paginador (D12)"
+```
+
+---
+
+## Task 21: `BudgetDetailPage` — `DetailHeader` e os três cards `stat`
+
+**Files:**
+- Modify: `frontend/src/features/commercial/components/Budget/BudgetDetailPage.tsx`
+
+**Interfaces:**
+- Consumes: `DetailHeader` (Task 19), `AppCard` com `variant="stat"` e `tone` (Task 10).
+- Produces: nada para outras tasks. O componente local `TotalCard` **deixa de existir**.
+
+- [ ] **Step 1: Trocar o cabeçalho e os totais**
+
+Em `BudgetDetailPage.tsx`:
+
+1. No import de `@shared/ui`, acrescente `DetailHeader` e `AppCard`.
+2. Troque as linhas de `loading`/`notFound` por versões sem cor fixa:
+
+```tsx
+  if (d.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+  if (!d.budget) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.notFound')}</p>
+```
+
+3. Substitua o `<button>` de voltar **e** o `<header>` inteiro por:
+
+```tsx
+      <DetailHeader
+        back={{ label: t('budget.back'), onClick: d.goBack }}
+        title={budget.code}
+        subtitle={
+          <>
+            {d.client?.legal_name ?? '—'}
+            {d.client?.rut && ` · RUT ${d.client.rut}`}
+          </>
+        }
+        tags={
+          budget.status && (
+            <AppTag value={t(`quoteStatus.${budget.status}`)} severity={quoteStatusSeverity(budget.status)} />
+          )
+        }
+        actions={
+          <>
+            {/* Ação primária primeiro; destrutivo por último (UI-B5). */}
+            <AppButton
+              variant="brandIcon"
+              label={t('budget.addQuote')}
+              icon="pi pi-file"
+              onClick={() => d.openWizard(null)}
+            />
+            {/* Único caminho de edição: o backend só deixa payment_terms mudar. */}
+            <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={d.openEdit} />
+            <AppButton
+              label={t('common.delete')}
+              icon="pi pi-trash"
+              outlined
+              severity="danger"
+              onClick={d.askDeleteBudget}
+            />
+          </>
+        }
+      />
+```
+
+Como o `DetailHeader` já tem `mb-6`, troque o wrapper externo `<div className="space-y-6">` por
+`<div>` e passe a espaçar o corpo: envolva tudo **abaixo** do `DetailHeader` num
+`<div className="space-y-6">`.
+
+4. Substitua o grid de totais e apague a função `TotalCard` do fim do arquivo:
+
+```tsx
+      {/* Os três totais vêm SOMADOS do backend (bcmath). A UI nunca soma UF. */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
+        <StatCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
+        <StatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
+      </div>
+```
+
+E no fim do arquivo, no lugar de `TotalCard`:
+
+```tsx
+/** O número É o sinal: o `AppCard variant="stat"` já tinge texto, fundo e borda
+ * pelo `tone`, então aqui não há cor nenhuma — só composição. */
+function StatCard({ label, value, tone }: { label: string; value?: string; tone?: AppCardTone }) {
+  return (
+    <AppCard variant="stat" tone={tone}>
+      <p className="text-2xl font-semibold">{formatUf(value ?? '0')} UF</p>
+      <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</p>
+    </AppCard>
+  )
+}
+```
+
+O tipo `AppCardTone` entra no import de `@shared/ui` como `import type`.
+
+- [ ] **Step 2: Verificar build**
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 3: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/comercial → aba Presupuestos → abrir um orçamento com cotações
+aprovadas **e** rejeitadas (o seeder cria: `students: 12` aprovada, `students: 8` rejeitada).
+
+Esperado, nos dois temas: `← Volver a Comercial` acima do título; código do orçamento como título;
+cliente · RUT como subtítulo; tag de estado seguida dos três botões, na ordem
+`Agregar cotización` → `Editar` → `Eliminar`; três cards lado a lado com o total em cima e o rótulo
+embaixo — `Total cotizado` neutro, `Total aprobado` verde, `Total rechazado` vermelho, cada um com
+fundo tingido e borda da mesma família. No tema escuro os três precisam continuar legíveis (o
+`color-mix` com `--surface-card` cuida disso; se algum ficou lavado, o tom está errado, não o tema).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/features/commercial/components/Budget/BudgetDetailPage.tsx
+git commit -m "feat(commercial): DetailHeader e stat cards no detalhe de orcamento"
+```
+
+---
+
+## Task 22: Cotizaciones vira `AppCard` com cabeçalho e contagem
+
+**Files:**
+- Modify: `frontend/src/features/commercial/components/Budget/BudgetDetailPage.tsx`
+- Modify: `frontend/src/features/commercial/components/Budget/QuotesList.tsx`
+
+**Interfaces:**
+- Consumes: `AppCard`, `AppCardHeader` (Tasks 1 e 10).
+- Produces: nada para outras tasks.
+
+- [ ] **Step 1: Trocar a `<section>` de cotizaciones pelo card**
+
+Em `BudgetDetailPage.tsx`, substitua a `<section>` de Cotizaciones inteira por:
+
+```tsx
+      <AppCard>
+        <AppCardHeader title={t('budget.quotes')} count={budget.quotes.length} />
+        <QuotesList
+          quotes={budget.quotes}
+          onEdit={(q) => d.openWizard(q)}
+          onRemove={(q) => d.askConfirm('remove', q)}
+          onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
+          onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
+        />
+      </AppCard>
+```
+
+O `(3)` em texto sai: a contagem agora é o badge do `AppCardHeader`. Acrescente `AppCardHeader` ao
+import de `@shared/ui`.
+
+- [ ] **Step 2: Alternância e cor na `QuotesList`**
+
+A lista de cotizaciones **mantém a alternância de fundo** — é lista de itens empilhados, não tabela,
+e D4 ("sem zebra") vale para tabela. Em `QuotesList.tsx`:
+
+1. Vazio sem cor fixa:
+
+```tsx
+  if (quotes.length === 0) {
+    return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noQuotes')}</p>
+  }
+```
+
+2. Troque o wrapper e o item do `map`. O separador vira `--surface-border` e a alternância vira
+   `--surface-section` por índice — inline, porque a cor tem de acompanhar o tema (ADR-16):
+
+```tsx
+    <div>
+      <div className="m-4 empty:m-0">
+        <FormErrorBanner message={fileError} />
+      </div>
+      {quotes.map((q, i) => (
+        <div
+          key={q.id}
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t p-4 first:border-t-0"
+          style={{
+            borderColor: 'var(--surface-border)',
+            // Alternância como separação de item (spec D4): lista empilhada, não tabela.
+            background: i % 2 === 1 ? 'var(--surface-section)' : 'transparent',
+          }}
+        >
+```
+
+3. Nos filhos do item, troque as duas cores fixas restantes:
+
+```tsx
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+```
+
+```tsx
+            {q.status === 'rejected' && (
+              <p className="mt-1 text-sm" style={{ color: 'var(--red-500)' }}>{t('quote.rejectedNote')}</p>
+            )}
+```
+
+4. E o rótulo `Documentos` de cada cotação:
+
+```tsx
+              <span className="text-xs font-semibold uppercase" style={{ color: 'var(--text-color-secondary)' }}>
+                {t('quote.documents')}
+              </span>
+```
+
+- [ ] **Step 3: Verificar build**
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 4: Provar na tela**
+
+Mesmo orçamento da Task 21, nos dois temas. Esperado: card com cabeçalho `Cotizaciones` + badge com
+o número, borda separando o cabeçalho da lista, itens alternando fundo (1º transparente, 2º
+tingido), o aviso de cotização rejeitada em vermelho legível nos dois temas, e os botões
+`Aprobar`/`Rechazar` no mesmo lugar de antes. Aprovar uma cotização pendente contra a API real e
+conferir que o card de `Total aprobado` (Task 21) sobe.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/features/commercial/components/Budget/BudgetDetailPage.tsx frontend/src/features/commercial/components/Budget/QuotesList.tsx
+git commit -m "feat(commercial): card de cotizaciones com contagem e alternancia"
+```
+
+---
+
+## Task 23: Documentos do orçamento — card com ação no cabeçalho e ícone tipado
+
+**Files:**
+- Modify: `frontend/src/features/commercial/components/Budget/BudgetDetailPage.tsx`
+- Modify: `frontend/src/features/commercial/components/Budget/FileList.tsx`
+
+**Interfaces:**
+- Consumes: `AppCard`, `AppCardHeader`.
+- Produces: nada para outras tasks. `FileList` mantém a assinatura
+  `{ files: FileData[]; onRemove?: (fileId: number) => void }` — `QuotesList` também a usa.
+
+- [ ] **Step 1: Card de documentos com dropdown e upload no cabeçalho**
+
+Em `BudgetDetailPage.tsx`, substitua a `<section>` de Documentos por:
+
+```tsx
+      <AppCard>
+        <AppCardHeader
+          title={t('budget.documents')}
+          count={budget.files?.length ?? 0}
+          actions={
+            <>
+              <div className="w-44">
+                <AppDropdown
+                  value={d.fileType}
+                  options={[
+                    { label: t('budget.fileTypeInvoice'), value: 'invoice' },
+                    { label: t('budget.fileTypeReceipt'), value: 'receipt' },
+                  ]}
+                  onChange={(e) => d.setFileType(e.value as BudgetFileType)}
+                />
+              </div>
+              <AppFileUpload
+                chooseOptions={{ icon: 'pi pi-upload' }}
+                chooseLabel={t('budget.uploadDocument')}
+                disabled={d.uploadPending}
+                uploadHandler={d.handleUpload}
+              />
+            </>
+          }
+        />
+        <div className="mx-4 mt-4 empty:m-0">
+          <FormErrorBanner message={d.fileError} />
+        </div>
+        <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
+      </AppCard>
+```
+
+- [ ] **Step 2: Ícone tipado e meta no `FileList`**
+
+Substitua o corpo de `FileList.tsx` por:
+
+```tsx
+import { useTranslation } from 'react-i18next'
+import { AppButton } from '@shared/ui'
+import type { FileData } from '@shared/types/generated'
+
+const KB = 1024
+
+/** Ícone e cor por extensão. O protótipo mostra o PDF em quadrado arredondado
+ * vermelho; os outros tipos seguem a mesma forma com a cor da família. Cor por
+ * palette var do Lara, composta com --surface-card no fundo para funcionar nos
+ * dois temas (os palette vars não invertem). */
+function fileIcon(name: string): { icon: string; hue: string } {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return { icon: 'pi pi-file-pdf', hue: 'var(--red-500)' }
+  if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') return { icon: 'pi pi-file-excel', hue: 'var(--green-500)' }
+  if (ext === 'png' || ext === 'jpg' || ext === 'jpeg') return { icon: 'pi pi-image', hue: 'var(--blue-500)' }
+  return { icon: 'pi pi-file', hue: 'var(--text-color-secondary)' }
+}
+
+export function FileList({ files, onRemove }: { files: FileData[]; onRemove?: (fileId: number) => void }) {
+  const { t } = useTranslation()
+
+  if (files.length === 0) {
+    return <p className="px-4 pb-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noDocuments')}</p>
+  }
+
+  return (
+    <ul>
+      {files.map((f) => {
+        const { icon, hue } = fileIcon(f.original_name)
+        return (
+          <li
+            key={f.id}
+            className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0"
+            style={{ borderColor: 'var(--surface-border)' }}
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}
+            >
+              <i className={icon} aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{f.original_name}</p>
+              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+                {f.created_at ? new Date(f.created_at).toLocaleDateString() : ''}
+                {' · '}
+                {Math.round(f.size / KB)} KB
+              </p>
+            </div>
+            <a href={f.download_url} target="_blank" rel="noreferrer">
+              <AppButton icon="pi pi-download" text rounded aria-label={t('common.download')} />
+            </a>
+            {onRemove && (
+              <AppButton icon="pi pi-trash" text rounded severity="danger" aria-label={t('common.delete')} onClick={() => onRemove(f.id)} />
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+```
+
+- [ ] **Step 3: Verificar build**
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 4: Provar na tela**
+
+Mesmo orçamento, nos dois temas. O seeder sobe 17 arquivos no MinIO, então há PDF para ver.
+
+Esperado: card `Documentos` com badge de contagem, dropdown de tipo e botão de upload **no
+cabeçalho**; cada arquivo com quadrado arredondado vermelho e ícone de PDF, nome, `data · KB` e
+ícone de download à direita. Baixar um arquivo pelo ícone (abre em nova aba). Subir um PDF novo e
+conferir que ele aparece na lista sem recarregar a página.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/features/commercial/components/Budget
+git commit -m "feat(commercial): card de documentos com icone tipado por extensao"
+```
+
+---
+
+## Task 24: `TurmaDetailPage` — `DetailHeader` com tags e as cinco abas dentro do card
+
+**Files:**
+- Modify: `frontend/src/features/operation/components/Turma/TurmaDetailPage.tsx`
+
+**Interfaces:**
+- Consumes: `DetailHeader` (Task 19), `AppCard` (Task 1), `turmaModalidadeTagProps` (Task 12).
+- Produces: as abas passam a viver dentro de um `AppCard`; as Tasks 25 e 26 compõem o **interior**
+  dos painéis assumindo esse contexto (fundo `--surface-card`, `panelContainer` sem padding).
+
+- [ ] **Step 1: Reescrever o corpo**
+
+Em `TurmaDetailPage.tsx`:
+
+1. Import: acrescente `DetailHeader` e `AppCard` a `@shared/ui`; acrescente `turmaModalidadeTagProps`
+   ao import de `../../lib/turmaStatus`.
+2. `loading`/`notFound` sem cor fixa:
+
+```tsx
+  if (d.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+  if (!d.turma) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.detail.notFound')}</p>
+```
+
+3. Substitua o `<button>` de voltar e o `<header>` por:
+
+```tsx
+      <DetailHeader
+        back={{ label: t('operation.detail.back'), onClick: d.goBack }}
+        title={turma.course_name ?? '—'}
+        subtitle={
+          <>
+            {turma.client_name ?? '—'}
+            {turma.budget_id != null && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  className="hover:underline"
+                  style={{ color: 'var(--primary-color)' }}
+                  onClick={() => d.goToBudget(turma.budget_id!)}
+                >
+                  {t('operation.detail.relatedTo', { budget: turma.budget_code ?? '—', quote: turma.quote_code ?? '—' })}
+                </button>
+              </>
+            )}
+          </>
+        }
+        tags={
+          <>
+            <AppTag value={t(`operation.status.${status}`)} severity={turmaStatusSeverity(status)} />
+            <AppTag value={t(`operation.modality.${turma.modalidade}`)} {...turmaModalidadeTagProps(turma.modalidade)} />
+          </>
+        }
+      />
+```
+
+O link para o orçamento entra no subtítulo em vez de virar uma terceira linha: o protótipo mostra
+título + uma linha de identificação, e o `text-sky-600` fixo morre junto (ADR-16).
+
+4. Envolva as abas no card, trocando o wrapper externo `<div className="space-y-6">` por `<div>`:
+
+```tsx
+      <AppCard>
+        <AppTabView activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+```
+
+fechando com `</AppTabView>` e `</AppCard>`.
+
+- [ ] **Step 2: Verificar build**
+
+```bash
+pnpm lint && pnpm build
+```
+
+Esperado: ambos sem erro.
+
+- [ ] **Step 3: Provar na tela**
+
+`pnpm dev`, http://localhost:5173/operacion → abrir uma turma **online** e uma **presencial** (o
+seeder cria as duas modalidades), nos dois temas.
+
+Esperado: `← Volver a Operación`; título com o nome do curso; subtítulo com cliente · vínculo
+clicável (que ainda navega para o orçamento); à direita, duas tags — estado (`En curso` azul,
+`Habilitada` âmbar ou `Concluida` verde) e modalidade (`Presencial` neutro, `Online` **roxo**). As
+cinco abas dentro de um card só, com a barra de abas encostada na borda do card, sem faixa branca
+sobrando no tema escuro.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/features/operation/components/Turma/TurmaDetailPage.tsx
+git commit -m "feat(operation): DetailHeader com tags e abas dentro do card"
+```
+
+---
+
+## Task 25: Aba Alumnos — toolbar, faixa de rodapé com paginação real e fim do `window.confirm`
+
+**Files:**
+- Modify: `frontend/src/features/operation/components/Enrollment/EnrollmentSection.tsx`
+- Modify: `frontend/src/features/operation/components/Enrollment/EnrollmentTable.tsx`
+- Modify: `frontend/src/features/operation/hooks/useEnrollmentSection.ts`
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+
+**Interfaces:**
+- Consumes: `footerCount` (Task 18), `AppCardToolbar` (Task 1), `AppEmptyState` (Task 2),
+  `ConfirmDialog` (já existe em `shared/ui`).
+- Produces: **fecha P-11** — `grep -rn "window.confirm" frontend/src` fica vazio.
+
+Esta é a task onde a faixa unificada tem caso real: o `OperationDemoSeeder` cria turmas com **12** e
+**15** matrículas, acima do `rows={10}`. Nenhuma tabela das Partes 1 e 2 passa de 10 linhas.
+
+- [ ] **Step 1: Duas chaves novas nos 3 locales**
+
+Em `es-CL.json`, dentro de `operation.enrollment`, junto de `empty`:
+
+```json
+      "emptyHint": "Agrega alumnos uno a uno o importa una planilla para comenzar.",
+      "removeTitle": "¿Quitar matrícula?",
+```
+
+`pt-BR.json`:
+
+```json
+      "emptyHint": "Adicione alunos um a um ou importe uma planilha para começar.",
+      "removeTitle": "Remover matrícula?",
+```
+
+`en.json`:
+
+```json
+      "emptyHint": "Add students one by one or import a spreadsheet to start.",
+      "removeTitle": "Remove enrollment?",
+```
+
+Rode o **script de paridade** (bloco da Parte 2) de dentro de
+`frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e `es-en: []`.
+
+- [ ] **Step 2: Confirmação de remoção sai do `window.confirm`**
+
+Em `useEnrollmentSection.ts`, o docblock explica o `window.confirm` que está saindo. Substitua o
+arquivo inteiro por:
+
+```ts
+import type { TurmaData } from '@shared/types/generated'
+import { useMutationErrors } from '@shared/hooks'
+import { useEnrollments, useRemoveEnrollment } from '../api/useEnrollments'
+
+/** Orquestra a lista/remoção da aba Alumnos. O componente só consome.
+ *
+ * A confirmação de remoção usa o `ConfirmDialog` de `shared/ui` (P-11 fechada na
+ * Parte 3 do bloco visual): `window.confirm` não é estilizável, não respeita o
+ * tema e não mostra erro de mutação. */
+export function useEnrollmentSection(turma: TurmaData) {
+  const turmaId = turma.id!
+  const list = useEnrollments(turmaId)
+  const removeMutation = useRemoveEnrollment()
+  const { message: error } = useMutationErrors([removeMutation.error])
+
+  const remove = (enrollmentId: number, options?: { onSuccess?: () => void }) =>
+    removeMutation.mutate({ turmaId, enrollmentId }, { onSuccess: options?.onSuccess })
+
+  return {
+    enrollments: list.data ?? [],
+    loading: list.isLoading,
+    remove,
+    removing: removeMutation.isPending,
+    error,
+    resetRemove: () => removeMutation.reset(),
+  }
+}
+```
+
+- [ ] **Step 3: `EnrollmentTable` com faixa, empty state e diálogo**
+
+Substitua `EnrollmentTable.tsx` inteiro por:
+
+```tsx
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { AppDataTable, AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
+import type { EnrollmentData } from '@shared/types/generated'
+import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '../../lib/enrollmentStatus'
+
+type Props = {
+  enrollments: EnrollmentData[]
+  loading: boolean
+  onRemove: (enrollmentId: number, options?: { onSuccess?: () => void }) => void
+  removing: boolean
+  removeError?: string
+  onResetRemove: () => void
+}
+
+// Sem coluna CLIENTE: EnrollmentData não expõe cliente (a turma tem um único
+// cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
+// (§3), não uma lacuna.
+export function EnrollmentTable({ enrollments, loading, onRemove, removing, removeError, onResetRemove }: Props) {
+  const { t } = useTranslation()
+  const [pending, setPending] = useState<EnrollmentData | null>(null)
+
+  return (
+    <>
+      <AppDataTable
+        value={enrollments}
+        loading={loading}
+        footerCount={t('operation.enrollment.footerCount', { count: enrollments.length })}
+        emptyMessage={
+          // Sem ação: matricular é o botão da toolbar, logo acima.
+          <AppEmptyState
+            icon="pi pi-users"
+            title={t('operation.enrollment.empty')}
+            description={t('operation.enrollment.emptyHint')}
+          />
+        }
+      >
+        <AppColumn
+          header={t('operation.enrollment.table.name')}
+          body={(e: EnrollmentData) => (
+            <div className="flex items-center gap-3">
+              <AppAvatar name={e.name} />
+              <span className="font-medium">{e.name}</span>
+            </div>
+          )}
+        />
+        <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />
+        <AppColumn
+          header={t('operation.enrollment.table.status')}
+          body={(e: EnrollmentData) =>
+            e.approval_status ? (
+              <AppTag
+                value={t(enrollmentStatusLabelKey(e.approval_status))}
+                severity={enrollmentStatusSeverity(e.approval_status)}
+              />
+            ) : null
+          }
+        />
+        <AppColumn
+          body={(e: EnrollmentData) => (
+            <AppButton
+              icon="pi pi-times"
+              text
+              rounded
+              severity="danger"
+              disabled={removing}
+              aria-label={t('operation.enrollment.remove')}
+              onClick={() => setPending(e)}
+            />
+          )}
+          style={{ width: '4rem' }}
+        />
+      </AppDataTable>
+
+      <ConfirmDialog
+        visible={pending !== null}
+        title={t('operation.enrollment.removeTitle')}
+        message={t('operation.enrollment.removeConfirm', { name: pending?.name ?? '' })}
+        confirmLabel={t('operation.enrollment.remove')}
+        severity="danger"
+        pending={removing}
+        error={removeError}
+        onConfirm={() => {
+          if (pending?.id == null || removing) return
+          onRemove(pending.id, { onSuccess: () => setPending(null) })
+        }}
+        onCancel={() => {
+          onResetRemove()
+          setPending(null)
+        }}
+      />
+    </>
+  )
+}
+```
+
+O `if (enrollments.length === 0) return <p>` some: o vazio agora é o `emptyMessage` da tabela, que já
+sabe se calar durante o `loading` (correção C1).
+
+- [ ] **Step 4: `EnrollmentSection` com a toolbar do card**
+
+Substitua o corpo do `return` em `EnrollmentSection.tsx` por:
+
+```tsx
+  return (
+    <>
+      <AppCardToolbar
+        // Grupo de botões à ESQUERDA, sem busca — é o que o protótipo mostra na
+        // aba Alumnos (packet, "Aba sem busca").
+        start={
+          <>
+            <AppButton
+              variant="brandIcon"
+              label={t('operation.enrollment.importSheet')}
+              icon="pi pi-upload"
+              onClick={() => setImportOpen(true)}
+            />
+            <AppButton
+              label={t('operation.enrollment.addStudent')}
+              icon="pi pi-user-plus"
+              outlined
+              onClick={() => setAddOpen(true)}
+            />
+          </>
+        }
+      />
+
+      <div className="mx-4 empty:m-0">
+        <FormErrorBanner message={s.error} />
+      </div>
+
+      <EnrollmentTable
+        enrollments={s.enrollments}
+        loading={s.loading}
+        onRemove={s.remove}
+        removing={s.removing}
+        removeError={s.error}
+        onResetRemove={s.resetRemove}
+      />
+
+      <EnrollStudentForm
+        turmaId={turma.id!}
+        turmaClientName={turma.client_name ?? null}
+        visible={addOpen}
+        onHide={() => setAddOpen(false)}
+      />
+      <ImportDialog turmaId={turma.id!} visible={importOpen} onHide={() => setImportOpen(false)} />
+    </>
+  )
+```
+
+Ajuste o import para `import { AppButton, AppCardToolbar, FormErrorBanner } from '@shared/ui'` e
+**remova** o early-return de `loading` — quem mostra o carregamento agora é a tabela (`loading`
+prop), e sumir com a toolbar durante o refetch faz a tela pular. A contagem em `<p>` no fim também
+sai: virou o `footerCount`.
+
+- [ ] **Step 5: Verificar**
+
+```bash
+pnpm lint && pnpm build
+grep -rn "window.confirm" src
+```
+
+Esperado: lint e build sem erro; o `grep` **sem nenhuma linha** — P-11 fechada.
+
+- [ ] **Step 6: Provar na tela**
+
+`pnpm dev`, nos dois temas:
+
+1. Abrir a turma de **15 matrículas** (curso `seguridad`, 15 alunos no seeder) → aba `Alumnos`.
+   Esperado: os dois botões à **esquerda**, acima da tabela, sem campo de busca; 10 linhas; **uma
+   única faixa** no rodapé com `15 alumnos matriculados` à esquerda e `‹ 1 2 ›` à direita. Ir para a
+   página 2: 5 linhas, contagem inalterada.
+2. Abrir a turma de **12 matrículas** (curso `lineas220`): mesma faixa, `12 alumnos matriculados`,
+   duas páginas.
+3. Abrir uma turma com poucas matrículas: mesma faixa, sem controles de página.
+4. Clicar no `×` de uma matrícula: abre o `ConfirmDialog` com o nome do aluno — **não** o alerta do
+   navegador. Cancelar não remove. Confirmar remove e a contagem da faixa cai.
+5. Provocar erro de remoção (turma concluída, RN-15): a mensagem aparece **dentro do diálogo**, com
+   texto, e o diálogo não fecha.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add frontend/src/features/operation frontend/src/shared/config/locales
+git commit -m "feat(operation): aba Alumnos com faixa unica, empty state e ConfirmDialog (P-11)"
+```
+
+---
+
+## Task 26: Banners e progresso das abas sem cor fixa
+
+**Files:**
+- Modify: `frontend/src/shared/ui/AppCard/AppCard.tsx`
+- Modify: `frontend/src/features/operation/components/Document/TurmaDocuments.tsx`
+- Modify: `frontend/src/features/operation/components/Document/ConcludePanel.tsx`
+
+**Interfaces:**
+- Consumes: `AppCard` com `tone` (Task 10).
+- Produces: `AppCardTone` ganha `'warning'`. Aditivo, como a Task 10 fez com `info`.
+
+Escopo limitado por D14: só o que o fundo novo do card afeta. `DocumentTypeCard`, `TurmaConfigCard`
+e `RedatorDesignation` ficam para a Parte 4.
+
+- [ ] **Step 1: Tom `warning` no `AppCard`**
+
+Em `AppCard.tsx`, três linhas:
+
+```ts
+export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
+```
+
+```ts
+  warning: 'var(--yellow-500)',
+```
+
+(em `TONE_HUE`, entre `success` e `danger`)
+
+```ts
+  warning: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
+```
+
+(em `TONE_TEXT`, na mesma posição)
+
+- [ ] **Step 2: `TurmaDocuments` — banners e barra de progresso**
+
+Em `TurmaDocuments.tsx`:
+
+1. Import: `import { AppCard, ConfirmDialog, FormErrorBanner } from '@shared/ui'`.
+2. `loading` sem cor fixa:
+
+```tsx
+  if (s.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+```
+
+3. Cabeçalho, progresso e banners:
+
+```tsx
+        <div>
+          <h3 className="font-medium">{t('operation.documents.title')}</h3>
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('operation.documents.progress', { done: s.deliveredCount, total: s.totalTypes })}
+          </p>
+          <div className="mt-2 h-2 w-64 rounded" style={{ background: 'var(--surface-section)' }}>
+            <div
+              className="h-2 rounded transition-[width]"
+              style={{ width: `${(s.deliveredCount / s.totalTypes) * 100}%`, background: 'var(--green-500)' }}
+            />
+          </div>
+        </div>
+```
+
+```tsx
+      <FormErrorBanner message={s.error} />
+
+      {s.habilitada && !s.concluida && (
+        <AppCard tone="success" className="px-3 py-2 text-sm">
+          {t('operation.documents.enabled')}
+        </AppCard>
+      )}
+
+      {s.lockReason && (
+        <AppCard tone="info" className="px-3 py-2 text-sm">
+          {t(`operation.documents.lock.${s.lockReason}`)}
+        </AppCard>
+      )}
+```
+
+O `<p className="text-sm text-red-600">{s.error}</p>` sai: erro de mutação já tem componente próprio
+(`FormErrorBanner`), que é o padrão do kit de form.
+
+- [ ] **Step 3: `ConcludePanel` — banners**
+
+Em `ConcludePanel.tsx`, import `import { AppButton, AppCard, AppTag, ConfirmDialog } from '@shared/ui'`
+e troque os quatro blocos com cor fixa:
+
+```tsx
+      {s.concluida ? (
+        <AppCard tone="success" className="px-3 py-2 text-sm">
+          {s.concludedAt
+            ? t('operation.conclusion.concludedAt', { date: formatDate(new Date(s.concludedAt)) })
+            : t('operation.conclusion.state.concluida')}
+        </AppCard>
+      ) : (
+        <>
+          {s.habilitada ? (
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.ready')}</p>
+          ) : (
+            <AppCard tone="warning" className="px-3 py-2 text-sm">
+              <p>{t('operation.conclusion.missingTitle')}</p>
+              <ul className="mt-1 list-inside list-disc">
+                {s.missingTypes.map((type) => (
+                  <li key={type}>{t(`operation.documents.type.${type}`)}</li>
+                ))}
+              </ul>
+            </AppCard>
+          )}
+
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.warning')}</p>
+```
+
+e, no ramo sem permissão:
+
+```tsx
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.conclusion.noPermission')}</p>
+```
+
+- [ ] **Step 4: Verificar**
+
+```bash
+pnpm lint && pnpm build
+grep -rn "slate-\|emerald-\|amber-\|red-600" src/features/operation/components/Document/TurmaDocuments.tsx src/features/operation/components/Document/ConcludePanel.tsx src/features/operation/components/Turma/TurmaDetailPage.tsx src/features/operation/components/Enrollment/EnrollmentSection.tsx
+```
+
+Esperado: lint e build sem erro; o `grep` **sem nenhuma linha** nesses quatro arquivos.
+
+- [ ] **Step 5: Provar na tela**
+
+`pnpm dev`, nos dois temas, no detalhe de turma:
+
+1. Aba `Documentación` de uma turma **habilitada**: banner verde tingido com borda da mesma família,
+   legível no escuro; barra de progresso cinza com preenchimento verde.
+2. Aba `Documentación` de uma turma **concluída**: banner de bloqueio azul com o texto de RN-15.
+3. Aba `Conclusión` de uma turma **sem documentação completa**: banner âmbar com a lista de tipos
+   faltantes.
+4. Aba `Conclusión` de uma turma **concluída**: banner verde com a data.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/shared/ui/AppCard frontend/src/features/operation/components/Document
+git commit -m "refactor(ui): banners e progresso das abas por variavel do tema"
+```
+
+---
+
+# Handoff de execução — Parte 3
+
+**executor:** `claude` nas Tasks 18, 19 e 21 a 26; `codex` na Task 20.
+
+| Task | Executor | Por quê |
+|---|---|---|
+| 18 | `claude` | Muda o contrato do `AppDataTable`, consumido por 8 telas. Erro aqui não é local. |
+| 19 | `claude` | Componente novo em `shared/ui`; decisão de contrato (D13). |
+| 20 | `codex` | Replicação mecânica em 7 arquivos + 1 hook + 1 rule, com o mapa de chaves i18n escrito acima, paths fechados e verificação executável (`pnpm lint`, `pnpm build`, `grep`). |
+| 21–26 | `claude` | Composição heterogênea e julgamento visual: stat cards, cabeçalho de card com ação, lista com alternância, abas com conteúdo diferente por aba, tom novo no `AppCard`. |
+
+**Pré-condição da Task 20:** Tasks 18 e 19 commitadas, `pnpm lint` e `pnpm build` verdes. O commit da
+Task 19 é o **commit base** a informar ao Codex.
+
+**Como delegar a Task 20 ao Codex:** o Codex tem o Superpowers como plugin. O pedido deve mandá-lo
+usar a skill **`superpowers:executing-plans`** para percorrer os steps da task na ordem, marcando os
+checkboxes, além da `lotus-execute-block` (que fixa o contrato de saída, os `paths_autorizados` e o
+relatório auditável). Informe: `plan_path`, `Task 20` como intervalo, branch e commit base.
+
+**O Codex não commita.** Nas Partes 2 e 2-correções o `.git/worktrees/...` ficou somente-leitura no
+sandbox dele. Deixe a árvore suja; o Claude confere o diff contra os `paths_autorizados`, roda
+`pnpm lint`, `pnpm build` e os `grep` de prova por conta própria, e commita.
+
+**`paths_autorizados` da Task 20:**
+
+```
+frontend/src/shared/hooks/useTableFilter.ts
+frontend/src/features/commercial/components/Client/ClientsTable.tsx
+frontend/src/features/commercial/components/Budget/BudgetsTable.tsx
+frontend/src/features/operation/components/Turma/TurmasTable.tsx
+frontend/src/features/catalog/components/Course/CoursesTable.tsx
+frontend/src/features/identity/components/Admin/UsersTable.tsx
+frontend/src/features/identity/components/Admin/RolesTable.tsx
+frontend/src/features/identity/components/Redator/RedatoresTable.tsx
+.claude/rules/frontend-fsliced.md
+```
+
+Fora desses globs o Codex não escreve. `backend/`, `docs/`, `frontend/src/shared/types/`,
+`frontend/src/shared/ui/**` e os arquivos das Tasks 21–26 ficam explicitamente fora.
+
+**Prova visual** de todas as tasks fica com o João — o sandbox não tem browser nem root para instalar
+as libs do Playwright, limitação já registrada nas Partes 1 e 2.
+
+## DoD da Parte 3
+
+Provado na tela, nos dois temas, com o `OperationDemoSeeder` carregado:
+
+1. Detalhe de orçamento com três cards `stat` — `Total cotizado` neutro, `Total aprobado` verde,
+   `Total rechazado` vermelho — e aprovar/rejeitar cotização funcionando contra a API real.
+2. Cards de Cotizaciones e Documentos com cabeçalho, badge de contagem e ação no lugar; documento
+   listado com ícone tipado, `data · KB` e download.
+3. Detalhe de turma com `En curso`/`Presencial` (ou `Online` roxo) no cabeçalho e as cinco abas
+   dentro de um card só.
+4. Aba Alumnos de uma turma com 12 ou 15 matrículas: **uma faixa** no rodapé, contagem à esquerda,
+   paginador à direita; turma com poucas matrículas: mesma faixa, sem controles.
+5. Ordenação de `Razón social` em Comercial ordena o conjunto, não a página.
+6. `grep -rn "window.confirm" frontend/src` vazio.
