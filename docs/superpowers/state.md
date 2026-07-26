@@ -11,14 +11,12 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: >-
-  Context Packet do Codex voltou status:blocked — nenhuma fonte externa alcançada. (1) NOTION:
-  unavailable no Codex por falta do namespace mcp__codex_apps__notion_*; o Claude confirmou que a
-  H.1.3 EXISTE e é alcançável (id 3a2bc960-3dfa-8059-abdd-e0230ad8e196) — gap de tooling, não de
-  fonte. (2) FIGMA: sem fileKey/URL do arquivo do protótipo, ninguém abre os frames. Falta o João
-  fornecer. (3) DRIVE: "auditoria de 2026-07-24" e "baseline refinada de 2026-07-26", citadas no
-  backlog, NÃO existem como arquivo — busca do Codex e do Claude voltaram vazias; provavelmente
-  foram artefatos de conversa nunca persistidos. Registro das buscas em
-  docs/superpowers/context-packets/bloco-visual-refino-ui.md (status:blocked, não autoriza plano).
+  Falta o João anexar os prints do protótipo. Sem eles o packet não confirma composição do card,
+  toolbar dentro do card, densidade/zebra da tabela, paleta do AppTag, empty state, paginação nem
+  ONDE A AÇÃO PRIMÁRIA PASSA A FICAR depois de sair do PageHeader — que é o pivô do bloco. O
+  protótipo é um Figma Site publicado (piece-desert-35638359.figma.site), não um arquivo figma.com:
+  o HTML servido é shell JS (só o título "Protótipo AF") e o MCP do Figma exige fileKey. Notion e
+  Drive já foram resolvidos — ver packet v2.
 resume_state: context_required
 updated_at: 2026-07-26
 ---
@@ -91,16 +89,27 @@ O Codex devolveu o packet com `status: blocked` e `RECOMMENDED_TRANSITION: block
 skill foi respeitado (markers, frontmatter, 8 key facts, fontes `unavailable` registradas), então
 não houve re-invocação: o veredito é legítimo, não violação. Detalhe do `blocker` no frontmatter.
 
-Três causas distintas, com desbloqueios distintos:
+Três causas distintas. Duas caíram na mesma sessão; uma continua aberta.
 
-1. **Notion — removível hoje.** O `unavailable` é gap de tooling do runtime do Codex, não ausência
-   de fonte. O Claude alcança a H.1.3.
-2. **Figma — depende do João.** Falta a URL/`fileKey` do arquivo do protótipo. Sem ela nenhum lado
-   abre os frames, e o packet não pode confirmar composição de card, toolbar, densidade de tabela,
-   paleta de tag, empty state, paginação nem a nova posição da ação primária.
-3. **Drive — gap real.** A "auditoria de 2026-07-24" e a "baseline refinada de 2026-07-26" citadas
-   no backlog não existem como arquivo no Drive. Busca independente do Codex e do Claude voltou
-   vazia. O backlog cita insumo que não foi persistido.
+1. **Notion — resolvido.** O `unavailable` era gap de tooling do runtime do Codex, não ausência de
+   fonte. O Claude leu as páginas. **Achado:** as 4 páginas com EAP `H.1.3` estão **em branco**, com
+   `Critério de aceite` vazio. O conteúdo real mora em **H.2.1** (`[Template] Refinamento de UI/UX
+   por módulo`), e o escopo dele é **responsividade + estados**, não a composição visual que o
+   backlog descreve. Decisão do João: **o bloco entrega as duas frentes**.
+2. **Drive — gap real, contornado.** A "auditoria de 2026-07-24" e a "baseline refinada de
+   2026-07-26" citadas no backlog não existem como arquivo. Buscas independentes do Codex e do
+   Claude voltaram vazias — insumo nunca persistido. Decisão do João: **reconstruir do código**. O
+   baseline levantado está na seção `Baseline do código` do packet v2, agora versionado em `docs/`
+   para não sumir de novo.
+3. **Figma — ABERTO.** O protótipo é um **Figma Site publicado**
+   (`piece-desert-35638359.figma.site`), não um arquivo `figma.com`: o HTML servido é shell JS (só o
+   título `Protótipo AF`) e o MCP do Figma exige `fileKey`. Decisão do João: **ele anexa os
+   prints**. É o único bloqueador restante.
 
-`resume_state: context_required` — resolvido o bloqueio, o packet é regerado antes de qualquer
-brainstorming.
+O packet foi regerado pelo Claude como v2, `status: partial`, em
+`docs/superpowers/context-packets/bloco-visual-refino-ui.md`. `context_packet` segue `null` porque a
+seção visual está vazia — chegando os prints, o packet fecha e o estado vai a `ready_for_planning`.
+
+Achado extra da auditoria de baseline: **P-11 venceu**. O gatilho era "quando `shared/ui`
+padronizar um `ConfirmDialog`"; já padronizou, e 5 componentes consomem. Só `EnrollmentTable.tsx:55`
+ficou com `window.confirm`. Cai neste bloco.
