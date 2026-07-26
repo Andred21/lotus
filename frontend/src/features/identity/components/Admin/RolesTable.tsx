@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
 
@@ -24,7 +24,12 @@ export function RolesTable({
     <>
       {/* Aba sem busca: o grupo de botões vai no slot ESQUERDO (spec D1). */}
       <AppCardToolbar start={actions} />
-      <AppDataTable value={roles} loading={loading} emptyMessage={empty} paginator={roles.length > 10}>
+      <AppDataTable
+        value={roles}
+        loading={loading}
+        emptyMessage={empty}
+        footerCount={t('role.count', { count: roles.length })}
+      >
         <AppColumn field="name" header={t('role.name')} sortable />
         <AppColumn
           header={t('role.kind')}
@@ -41,7 +46,6 @@ export function RolesTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('role.count', { count: roles.length })} />
     </>
   )
 }

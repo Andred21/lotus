@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
   AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
-  AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 
@@ -48,7 +48,7 @@ export function UsersTable({
         value={table.rows}
         loading={loading}
         emptyMessage={empty}
-        paginator={table.paginator}
+        footerCount={t('admin.count', { count: table.rows.length })}
         first={table.first}
         onPage={table.onPage}
       >
@@ -78,7 +78,6 @@ export function UsersTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('admin.count', { count: table.rows.length })} />
     </>
   )
 }

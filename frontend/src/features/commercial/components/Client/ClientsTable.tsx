@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
-  AppDataTable, AppColumn, AppTag, AppInputText, AppButton, AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppDataTable, AppColumn, AppTag, AppInputText, AppButton, AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { ClientData } from '@shared/types/generated'
 
@@ -50,7 +50,7 @@ export function ClientsTable({
         value={table.rows}
         loading={loading}
         emptyMessage={empty}
-        paginator={table.paginator}
+        footerCount={t('client.count', { count: table.rows.length })}
         first={table.first}
         onPage={table.onPage}
       >
@@ -64,7 +64,6 @@ export function ClientsTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('client.count', { count: table.rows.length })} />
     </>
   )
 }

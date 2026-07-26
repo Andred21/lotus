@@ -17,8 +17,6 @@ export interface TableFilter<T> {
   resetPage: () => void
   /** Limpa a busca e volta à primeira página. */
   clear: () => void
-  /** Liga o paginador só quando há mais de uma página (spec D6: uma faixa só). */
-  paginator: boolean
 }
 
 /**
@@ -27,6 +25,10 @@ export interface TableFilter<T> {
  * Parte 2: o paginador default ligado na `RolesTable` (duas faixas, contra D6) e
  * o empty state falso durante o loading. Contrato fixado em
  * `.claude/rules/frontend-fsliced.md`.
+ *
+ * Quando ligar o paginador não é decisão do hook nem da tela: quem sabe quantas
+ * linhas cabem na página é o `AppDataTable`, que exibe os controles só quando
+ * `value.length > rows` (spec D12).
  *
  * `searchable` devolve os campos que a busca varre — `null`/`undefined` são
  * ignorados. `where` é o filtro próprio da tela (estado, tipo) e roda ANTES da
@@ -63,6 +65,5 @@ export function useTableFilter<T>(
     onPage: (event) => setFirst(event.first),
     resetPage: () => setFirst(0),
     clear: () => onFilterChange(''),
-    paginator: rows.length > 10,
   }
 }

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
-  AppCardToolbar, AppCardFooter, AppEmptyState,
+  AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
@@ -92,7 +92,7 @@ export function BudgetsTable({
         value={table.rows}
         loading={loading}
         emptyMessage={empty}
-        paginator={table.paginator}
+        footerCount={t('budget.count', { count: table.rows.length })}
         first={table.first}
         onPage={table.onPage}
       >
@@ -116,7 +116,6 @@ export function BudgetsTable({
           style={{ width: '4rem' }}
         />
       </AppDataTable>
-      <AppCardFooter count={t('budget.count', { count: table.rows.length })} />
     </>
   )
 }
