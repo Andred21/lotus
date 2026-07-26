@@ -64,6 +64,7 @@
     "new": "Nuevo usuario",
     "create": "Crear",
     "empty": "Sin usuarios",
+    "emptyHint": "Crea el primer usuario para comenzar.",
     "count": "{{count}} usuario(s)",
     "searchPlaceholder": "Buscar por nombre o correo...",
     "name": "Nombre",
@@ -144,6 +145,8 @@
     "custom": "Personalizado",
     "permissions": "Permisos",
     "empty": "Sin roles",
+    "emptyHint": "Crea el primer rol personalizado para comenzar.",
+    "count": "{{count}} roles",
     "systemReadOnly": "Los permisos de los roles de sistema son de solo lectura."
   },
   "userMenu": {
@@ -199,6 +202,7 @@
     "noRedatores": "Sin redactores habilitados.",
     "searchPlaceholder": "Buscar curso...",
     "empty": "No hay cursos.",
+    "emptyHint": "Crea el primer curso para comenzar.",
     "count": "{{count}} curso(s)",
     "redatorCount": "Redactores"
   },
@@ -298,6 +302,7 @@
     "tabStudents": "Alumnos",
     "studentsPlaceholder": "Módulo de alumnos — próxima sprint.",
     "empty": "Sin redactores",
+    "emptyHint": "Registra el primer redactor para comenzar.",
     "count": "{{count}} redactores",
     "searchPlaceholder": "Buscar por nombre o RUT...",
     "name": "Nombre completo",
@@ -342,6 +347,7 @@
       "filterAll": "Todos",
       "count": "{{count}} turmas",
       "empty": "No hay turmas todavía.",
+      "emptyHint": "Las turmas se crean desde una cotización aprobada.",
       "noRedator": "— Sin asignar"
     },
     "modality": { "presencial": "Presencial", "online": "Online" },
