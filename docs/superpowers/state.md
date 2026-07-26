@@ -2,22 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 8dcffa4
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: >-
-  Falta o João anexar os prints do protótipo. Sem eles o packet não confirma composição do card,
-  toolbar dentro do card, densidade/zebra da tabela, paleta do AppTag, empty state, paginação nem
-  ONDE A AÇÃO PRIMÁRIA PASSA A FICAR depois de sair do PageHeader — que é o pivô do bloco. O
-  protótipo é um Figma Site publicado (piece-desert-35638359.figma.site), não um arquivo figma.com:
-  o HTML servido é shell JS (só o título "Protótipo AF") e o MCP do Figma exige fileKey. Notion e
-  Drive já foram resolvidos — ver packet v2.
-resume_state: context_required
+context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
+blocker: null
+resume_state: null
+context_packet_status: ready
 updated_at: 2026-07-26
 ---
 
@@ -83,13 +78,13 @@ O insumo do bloco (auditoria de 2026-07-24, 4 prints do protótipo, baseline de 
 está no repo** — nada em `docs/` referencia 2026-07-24. Por isso o estado entrou em
 `context_required` e a geração do Context Packet foi roteada ao Codex.
 
-## Bloqueio — 2026-07-26
+## Bloqueio de contexto — aberto e resolvido em 2026-07-26
 
 O Codex devolveu o packet com `status: blocked` e `RECOMMENDED_TRANSITION: blocked`. O contrato da
 skill foi respeitado (markers, frontmatter, 8 key facts, fontes `unavailable` registradas), então
-não houve re-invocação: o veredito é legítimo, não violação. Detalhe do `blocker` no frontmatter.
+não houve re-invocação: o veredito era legítimo, não violação.
 
-Três causas distintas. Duas caíram na mesma sessão; uma continua aberta.
+Três causas distintas, todas resolvidas na mesma sessão.
 
 1. **Notion — resolvido.** O `unavailable` era gap de tooling do runtime do Codex, não ausência de
    fonte. O Claude leu as páginas. **Achado:** as 4 páginas com EAP `H.1.3` estão **em branco**, com
@@ -101,14 +96,20 @@ Três causas distintas. Duas caíram na mesma sessão; uma continua aberta.
    Claude voltaram vazias — insumo nunca persistido. Decisão do João: **reconstruir do código**. O
    baseline levantado está na seção `Baseline do código` do packet v2, agora versionado em `docs/`
    para não sumir de novo.
-3. **Figma — ABERTO.** O protótipo é um **Figma Site publicado**
+3. **Figma — contornado.** O protótipo é um **Figma Site publicado**
    (`piece-desert-35638359.figma.site`), não um arquivo `figma.com`: o HTML servido é shell JS (só o
-   título `Protótipo AF`) e o MCP do Figma exige `fileKey`. Decisão do João: **ele anexa os
-   prints**. É o único bloqueador restante.
+   título `Protótipo AF`) e o MCP do Figma exige `fileKey`. O João anexou **5 prints** (Comercial,
+   Operación, detalhe de orçamento, e as abas Configuración e Alumnos do detalhe de turma), em tema
+   claro e escuro. A leitura deles está na seção `Protótipo` do packet.
 
-O packet foi regerado pelo Claude como v2, `status: partial`, em
-`docs/superpowers/context-packets/bloco-visual-refino-ui.md`. `context_packet` segue `null` porque a
-seção visual está vazia — chegando os prints, o packet fecha e o estado vai a `ready_for_planning`.
+Packet fechado como **v3, `status: ready`**, em
+`docs/superpowers/context-packets/bloco-visual-refino-ui.md`.
+
+**A resposta do pivô:** a ação não tem posição única — ela mora no cabeçalho do container mais
+próximo. Em página de módulo desce para a toolbar dentro do card, à direita, na mesma linha da
+busca. Em página de detalhe fica no cabeçalho da página, ao lado da tag de estado. Em aba sem busca
+vira grupo de botões à esquerda, acima da tabela. O `PageHeader` sobrevive para título, descrição e
+tags; o que sai dele é a ação primária de módulo.
 
 Achado extra da auditoria de baseline: **P-11 venceu**. O gatilho era "quando `shared/ui`
 padronizar um `ConfirmDialog`"; já padronizou, e 5 componentes consomem. Só `EnrollmentTable.tsx:55`
