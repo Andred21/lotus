@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -173,3 +173,46 @@ João no gate, registradas na seção `## Decisões tomadas no gate desta parte`
 Correção de premissa apurada ao planejar: **`PageHeader` não tem consumidor fora do `ModulePage`** —
 `BudgetDetailPage` e `TurmaDetailPage` montam o próprio cabeçalho. A Task 17 pode remover `actions`
 sem esperar a Parte 3, ao contrário do que a Parte 1 supunha.
+
+## Parte 2 executada e pronta para review — 2026-07-26
+
+Tasks 9–17 completas em worktree (`.claude/worktrees/bloco-visual-p2`, branch
+`worktree-bloco-visual-p2`), base `0addf47`. Executor dividido conforme o gate: Tasks 9–10 por
+`claude` via `subagent-driven-development` (implementador + review de task cada uma, ambas
+aprovadas sem achados) — commits `dac46ff` (namespace `module.*`) e `27a2a0b` (`AppCard.tone`
+ortogonal, tom `info`).
+
+Tasks 11–17 delegadas ao `codex` via `lotus-execute-block`, commit base `27a2a0b`. Duas iterações:
+
+1. Primeira chamada devolveu `BLOCKED` — o `state.md` da worktree ainda lia `ready_for_execution`
+   porque a transição para `executing` tinha sido commitada só na `main`, antes de a worktree
+   existir. Corrigido com `git cherry-pick` do commit de transição para o branch da worktree
+   (`2bd7641`); não é divergência real, é artefato de branch criado antes do commit da doc.
+2. Segunda chamada implementou as 7 tasks (lint+build verdes em cada uma, script de paridade verde,
+   greps da Task 17 limpos), mas devolveu `RECOMMENDED_TRANSITION: blocked` porque não conseguiu
+   commitar — `.git/worktrees/bloco-visual-p2` ficou somente-leitura dentro do sandbox do Codex.
+   Limitação de ambiente, não do plano nem do código.
+
+Diff revisado por mim contra `paths_autorizados` do plano — os 16 arquivos batem exatamente, nada
+fora do escopo. Rodei eu mesmo `pnpm lint`, `pnpm build` e o script de paridade dos locales antes
+de aceitar (não confiei só no report do Codex), todos verdes. Commitei por task, na ordem do plano:
+`6650b15` (Task 11), `3ebb829` (Task 12), `a2dbf59` (Task 13), `e12c3d0` (Task 14), `2ba6699`
+(Task 15), `c179dfe` (Task 16), `2509ead` (Task 17).
+
+**Desvio de convenção registrado:** as chaves de locale das Tasks 12/14/15/16
+(`operation.table.emptyHint`, `course.emptyHint`, `redator.emptyHint`, `admin.emptyHint`,
+`role.emptyHint`/`role.count`) foram commitadas juntas num commit próprio (`d6023c7`), não uma por
+task — chegaram do Codex como um único diff não commitado nos 3 JSONs, sem histórico intermediário
+para separar por task, e fatiar por hunk manualmente arriscava corromper o JSON. Script de paridade
+confirmou `es-pt: []` e `es-en: []` no estado final.
+
+Working tree da worktree limpo em `d6023c7`. Ledger completo em `.superpowers/sdd/progress.md`
+dessa worktree.
+
+**Pendência para o João:** prova visual das 5 telas (`/comercial` já provado na Parte 1;
+`/operacion`, `/cursos`, `/personas`, `/administracion` desta parte) nos dois temas — sandbox sem
+browser/root para Playwright, mesma limitação já registrada na Parte 1. Não é gate deste comando: o
+DoD comportamental fica para quando o João rodar `pnpm dev` e conferir contra os passos "Provar na
+tela" de cada task do plano.
+
+Branch **não mergeada ainda** — aguarda `/revisar-sprint` (próxima ação: `request_code_review`).
