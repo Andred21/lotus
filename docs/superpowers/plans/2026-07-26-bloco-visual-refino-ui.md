@@ -2918,3 +2918,500 @@ frontend/src/shared/config/locales/*.json
 Fora desses globs, o Codex não escreve. `backend/`, `docs/`, `frontend/src/shared/types/` e
 `frontend/src/shared/ui/AppCard/**` ficam explicitamente fora — o `AppCard` é da Task 10, que é do
 Claude.
+
+---
+
+# Parte 2 — Correções de review (Tasks C1 a C5)
+
+`/revisar-sprint` da Parte 2 fechou com 5 achados (Q-2 a Q-6). **João aprovou todos, em
+2026-07-26**, e delegou a aplicação ao Codex. Estas tasks rodam na mesma worktree
+(`.claude/worktrees/bloco-visual-p2`, branch `worktree-bloco-visual-p2`), sobre `d6023c7`, antes do
+merge.
+
+Duas delas (C1 e C5) tocam `shared/` — o contrato que as Partes 3 e 4 consomem. O gate da Parte 2
+mandava contrato compartilhado para o `claude`; aqui o João decidiu o contrário. O risco fica
+contido de outro jeito: **o código de `shared/` está escrito literalmente abaixo**, o Codex aplica
+sem latitude de design, e o diff volta para conferência antes do commit.
+
+## Ordem obrigatória
+
+C1 → C2 → C3 → C4 → C5. C1 tira o ternário de `emptyMessage` das 7 tabelas; C5 reescreve as mesmas
+tabelas em cima do resultado. Inverter a ordem faz C5 propagar o defeito que C1 corrige.
+
+---
+
+## Task C1 (Q-3): `AppDataTable` suprime o vazio durante o loading
+
+**Files:**
+- Modify: `frontend/src/shared/ui/AppDataTable/AppDataTable.tsx`
+- Modify: as 7 tabelas (lista no Step 2)
+
+**O defeito:** `emptyMessage={loading ? undefined : empty}` não suprime nada. O `DataTable` renderiza
+o corpo vazio sempre que `data` está vazio, inclusive durante o `loading`, e faz
+`getJSXElement(props.emptyMessage) || localeOption('emptyMessage')`
+(`primereact/datatable/datatable.cjs.js:3389-3392`). O locale ativo do PrimeReact é `en` —
+`shared/config/primeLocale.ts` só faz `addLocale('es', …)` para o Calendar e nunca chama
+`locale('es')`. Resultado: `No available options`, em inglês, sob o overlay translúcido de loading,
+em toda tabela do app.
+
+**A correção mora no wrapper, não nos 7 chamadores.** O `AppDataTable` já recebe `loading`; é ele
+quem sabe a regra.
+
+- [ ] **Step 1: Reescrever a assinatura do `AppDataTable`**
+
+Só a função exportada muda; `mergePt` e os reexports ficam como estão.
+
+```tsx
+/** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
+ * array puro). Colunas via <AppColumn/>.
+ *
+ * Durante o `loading` o corpo vazio ainda renderiza — passar `undefined` em
+ * `emptyMessage` cairia no default inglês do PrimeReact (`No available
+ * options`). Um nó vazio truthy mantém a linha e cala o texto; suprimir isso é
+ * responsabilidade do wrapper, não de cada tabela. */
+export function AppDataTable<T extends DataTableValueArray>({
+  pt,
+  loading,
+  emptyMessage,
+  ...props
+}: DataTableProps<T>) {
+  return (
+    <DataTable
+      dataKey="id"
+      removableSort
+      rowHover
+      paginator
+      rows={10}
+      pt={mergePt(appDataTablePt, pt as DataTableProps<DataTableValueArray>['pt'])}
+      loading={loading}
+      emptyMessage={loading ? <span /> : emptyMessage}
+      {...props}
+    />
+  )
+}
+```
+
+`loading` e `emptyMessage` são desestruturados, então o `{...props}` no fim **não** os
+sobrescreve — a ordem está correta como escrita.
+
+- [ ] **Step 2: Trocar o ternário por `empty` nos 7 chamadores**
+
+Em cada arquivo, `emptyMessage={loading ? undefined : empty}` vira `emptyMessage={empty}`:
+
+```
+frontend/src/features/commercial/components/Client/ClientsTable.tsx:64
+frontend/src/features/commercial/components/Budget/BudgetsTable.tsx:99
+frontend/src/features/catalog/components/Course/CoursesTable.tsx:63
+frontend/src/features/identity/components/Admin/RolesTable.tsx:27
+frontend/src/features/identity/components/Admin/UsersTable.tsx:62
+frontend/src/features/identity/components/Redator/RedatoresTable.tsx:65
+frontend/src/features/operation/components/Turma/TurmasTable.tsx:88
+```
+
+- [ ] **Step 3: Provar que o ternário sumiu**
+
+De `frontend/`:
+
+```bash
+grep -rn "loading ? undefined" src
+```
+
+Esperado: **nenhuma linha**.
+
+- [ ] **Step 4: Verificar build**
+
+De `frontend/`: `pnpm lint && pnpm build`. Esperado: ambos sem erro.
+
+---
+
+## Task C2 (Q-2): `RolesTable` faz opt-out do paginador default
+
+**Files:**
+- Modify: `frontend/src/features/identity/components/Admin/RolesTable.tsx`
+
+**O defeito:** o `AppDataTable` liga `paginator` por default e o PrimeReact tem
+`alwaysShowPaginator: true` (`datatable.cjs.js:489`). Com as 3 roles do seeder, um paginador de
+página única renderiza **acima** do `AppCardFooter`: duas faixas na mesma tela, que é exatamente o
+double-band que a spec D6 elimina. As outras 6 tabelas já fazem o opt-out.
+
+O texto da Task 16 ("o `paginator` default continua ligado e cuida do caso de muitas roles") e a
+decisão #2 do gate ("nenhuma tabela desta parte passa de 10 linhas, então o paginador nem aparece")
+partiam da premissa errada de que `paginator` sem `alwaysShowPaginator={false}` some com poucas
+linhas. Some não.
+
+- [ ] **Step 1: Ligar o paginador por contagem**
+
+Na linha do `AppDataTable`:
+
+```tsx
+<AppDataTable value={roles} loading={loading} emptyMessage={empty} paginator={roles.length > 10}>
+```
+
+Sem `first`/`onPage`: a aba não tem busca nem filtro, então não existe caminho que deixe o usuário
+numa página que sumiu.
+
+- [ ] **Step 2: Provar a consistência entre as 7 tabelas**
+
+De `frontend/`:
+
+```bash
+grep -rn "paginator=" src/features
+```
+
+Esperado: **7 linhas**, todas na forma `paginator={<algo>.length > 10}`.
+
+- [ ] **Step 3: Verificar build**
+
+De `frontend/`: `pnpm lint && pnpm build`. Esperado: ambos sem erro.
+
+---
+
+## Task C3 (Q-4): ação primária de módulo atrás de `can()`
+
+**Files:**
+- Modify: `frontend/src/features/catalog/components/CatalogPage.tsx`
+- Modify: `frontend/src/features/identity/components/PeoplePage.tsx`
+- Modify: `frontend/src/features/commercial/components/CommercialPage.tsx`
+
+**O defeito:** três páginas renderizam a ação primária sem checar permissão, enquanto
+`AdministracionPage` gateia com `canManage` — inconsistência dentro do mesmo diff. Um superadmin
+cria role customizada só-leitura (é para isso que serve a `RolesTable`); esse usuário vê
+`Nuevo curso`, preenche o diálogo e leva 403 no submit.
+
+As 4 permissões existem em `backend/app/Domains/Identity/Support/PermissionCatalog.php`.
+
+- [ ] **Step 1: `CatalogPage`**
+
+Acrescente `import { usePermissions } from '@shared/hooks'`, e no corpo:
+
+```tsx
+  const { can } = usePermissions()
+```
+
+A prop vira:
+
+```tsx
+          actions={
+            can('catalog.course.create')
+              ? <AppButton variant="brandIcon" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />
+              : undefined
+          }
+```
+
+- [ ] **Step 2: `PeoplePage`**
+
+Mesmo padrão, com `identity.user.create`:
+
+```tsx
+              actions={
+                can('identity.user.create')
+                  ? <AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  : undefined
+              }
+```
+
+- [ ] **Step 3: `CommercialPage`**
+
+Duas abas, duas permissões — `commercial.client.create` na de clientes e
+`commercial.budget.create` na de orçamentos. Mesma forma ternária.
+
+- [ ] **Step 4: Verificar build**
+
+De `frontend/`: `pnpm lint && pnpm build`. Esperado: ambos sem erro.
+
+> `can()` é conveniência de interface, não segurança — a autorização é da API (ADR-07,
+> `.claude/rules/frontend-fsliced.md`). O ganho aqui é não oferecer ação que termina em 403.
+
+---
+
+## Task C4 (Q-5): copy do vazio quando só o filtro de estado está ativo
+
+**Files:**
+- Modify: `frontend/src/shared/config/locales/es-CL.json`
+- Modify: `frontend/src/shared/config/locales/pt-BR.json`
+- Modify: `frontend/src/shared/config/locales/en.json`
+- Modify: `frontend/src/features/operation/components/Turma/TurmasTable.tsx`
+
+**O defeito:** com só o filtro de estado ativo, o título já troca para `common.noResultsFiltered`,
+mas a descrição segue `common.noResultsHint` ("Revisa el término o limpia la búsqueda") e o CTA
+segue `common.clearSearch` ("Limpiar búsqueda") — enquanto o `onClick` limpa busca **e** estado.
+
+- [ ] **Step 1: Duas chaves novas em `common`, nos 3 locales**
+
+Ao lado de `noResultsFiltered`:
+
+`es-CL.json`:
+```json
+    "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
+    "clearFilters": "Limpiar filtros",
+```
+
+`pt-BR.json`:
+```json
+    "noResultsFilteredHint": "Ajuste ou limpe os filtros aplicados.",
+    "clearFilters": "Limpar filtros",
+```
+
+`en.json`:
+```json
+    "noResultsFilteredHint": "Adjust or clear the applied filters.",
+    "clearFilters": "Clear filters",
+```
+
+- [ ] **Step 2: Usar as chaves quando não há termo**
+
+No `empty` de busca do `TurmasTable`, `description` e `label` acompanham o título:
+
+```tsx
+      description={term === '' ? t('common.noResultsFilteredHint') : t('common.noResultsHint')}
+      action={
+        <AppButton
+          label={term === '' ? t('common.clearFilters') : t('common.clearSearch')}
+          icon="pi pi-times"
+          text
+          onClick={...}
+        />
+      }
+```
+
+O `onClick` não muda — já limpava busca, estado e página.
+
+- [ ] **Step 3: Verificar paridade dos locales e build**
+
+Rode o **script de paridade** de `frontend/src/shared/config/locales/`. Esperado: `es-pt: []` e
+`es-en: []`. Depois, de `frontend/`: `pnpm lint && pnpm build`.
+
+---
+
+## Task C5 (Q-6): `useTableFilter` — o scaffolding de tabela vira contrato
+
+**Files:**
+- Create: `frontend/src/shared/hooks/useTableFilter.ts`
+- Modify: `frontend/src/shared/hooks/index.ts`
+- Modify: as 6 tabelas com busca (a `RolesTable` não tem busca e fica de fora)
+- Modify: `.claude/rules/frontend-fsliced.md`
+
+**Por que vira regra e não só refactor:** a Parte 1 já registrou a duplicação com 2 cópias; a Parte 2
+levou a 6. As duas correções acima são a prova do custo — Q-2 é um esquecimento em 1 de 6 cópias e
+Q-3 é o mesmo acerto errado replicado em 6 de 6. Padrão reincidente em 2 sprints vira contrato.
+
+- [ ] **Step 1: Criar o hook**
+
+```ts
+// frontend/src/shared/hooks/useTableFilter.ts
+import { useState } from 'react'
+
+export interface TableFilter<T> {
+  /** Termo cru — alimenta o input e é o que se cita no empty state. */
+  filter: string
+  /** Termo normalizado (trim + lowercase); `''` quando não há busca. */
+  term: string
+  /** Linhas depois do `where` e da busca. */
+  rows: T[]
+  /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar). */
+  first: number
+  /** Troca o termo e volta à primeira página. */
+  onFilterChange: (value: string) => void
+  /** Handler de página do `AppDataTable`. */
+  onPage: (event: { first: number }) => void
+  /** Volta à primeira página sem mexer no termo — para o filtro próprio da tela. */
+  resetPage: () => void
+  /** Limpa a busca e volta à primeira página. */
+  clear: () => void
+  /** Liga o paginador só quando há mais de uma página (spec D6: uma faixa só). */
+  paginator: boolean
+}
+
+/**
+ * Estado de busca e paginação de uma tabela em card. Os 6 consumidores repetiam
+ * este bloco literalmente, e a duplicação rendeu dois defeitos no review da
+ * Parte 2: o paginador default ligado na `RolesTable` (duas faixas, contra D6) e
+ * o empty state falso durante o loading. Contrato fixado em
+ * `.claude/rules/frontend-fsliced.md`.
+ *
+ * `searchable` devolve os campos que a busca varre — `null`/`undefined` são
+ * ignorados. `where` é o filtro próprio da tela (estado, tipo) e roda ANTES da
+ * busca; saber se ele está ativo continua sendo da tela, não do hook.
+ */
+export function useTableFilter<T>(
+  items: T[],
+  searchable: (item: T) => (string | null | undefined)[],
+  where?: (item: T) => boolean,
+): TableFilter<T> {
+  const [filter, setFilter] = useState('')
+  const [first, setFirst] = useState(0)
+
+  const term = filter.trim().toLowerCase()
+  const scoped = where ? items.filter(where) : items
+  const rows =
+    term === ''
+      ? scoped
+      : scoped.filter((item) =>
+          searchable(item).some((value) => (value ?? '').toLowerCase().includes(term)),
+        )
+
+  const onFilterChange = (value: string) => {
+    setFilter(value)
+    setFirst(0)
+  }
+
+  return {
+    filter,
+    term,
+    rows,
+    first,
+    onFilterChange,
+    onPage: (event) => setFirst(event.first),
+    resetPage: () => setFirst(0),
+    clear: () => onFilterChange(''),
+    paginator: rows.length > 10,
+  }
+}
+```
+
+- [ ] **Step 2: Exportar no barrel**
+
+Em `frontend/src/shared/hooks/index.ts`, mantendo a ordem alfabética existente:
+
+```ts
+export { useTableFilter } from './useTableFilter'
+export type { TableFilter } from './useTableFilter'
+```
+
+- [ ] **Step 3: Migrar as 5 tabelas de busca simples**
+
+`ClientsTable`, `BudgetsTable`, `CoursesTable`, `RedatoresTable`, `UsersTable`. O molde, com
+`ClientsTable` como exemplo — some o `useState` de `filter`/`first`, o cálculo de `term`/`rows` e o
+`handleFilterChange`:
+
+```tsx
+  const table = useTableFilter(clients, (c) => [c.legal_name, c.rut])
+```
+
+e as referências trocam assim:
+
+| Antes | Depois |
+|---|---|
+| `term` | `table.term` |
+| `rows` | `table.rows` |
+| `filter` (valor do input) | `table.filter` |
+| `handleFilterChange(v)` | `table.onFilterChange(v)` |
+| `handleFilterChange('')` (CTA limpar) | `table.clear()` |
+| `paginator={rows.length > 10}` | `paginator={table.paginator}` |
+| `first={first}` | `first={table.first}` |
+| `onPage={(e) => setFirst(e.first)}` | `onPage={table.onPage}` |
+| `t('common.noResults', { term: filter.trim() })` | `t('common.noResults', { term: table.filter.trim() })` |
+
+Campos de busca por tabela, na ordem exata do código atual:
+
+| Tabela | `searchable` |
+|---|---|
+| `ClientsTable` | `(c) => [c.legal_name, c.rut]` |
+| `BudgetsTable` | os mesmos campos que o filtro atual varre — leia o arquivo, não invente |
+| `CoursesTable` | `(c) => [c.name, c.technical_name]` |
+| `RedatoresTable` | `(r) => [r.name, r.rut]` |
+| `UsersTable` | `(u) => [u.name, u.email]` |
+
+O `BudgetsTable` tem filtro próprio além da busca; trate-o como o `TurmasTable` do Step 4 se for o
+caso. **Não mude quais campos a busca varre em nenhuma tabela** — este refactor é comportamento
+idêntico.
+
+- [ ] **Step 4: Migrar o `TurmasTable`, que tem filtro de estado**
+
+O `status` continua na tela; entra como `where`:
+
+```tsx
+  const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
+  const table = useTableFilter(
+    turmas,
+    (turma) => [turma.course_name, turma.client_name, turma.quote_code, turma.budget_code],
+    status === null ? undefined : (turma) => turmaDisplayStatus(turma) === status,
+  )
+
+  const filtering = table.term !== '' || status !== null
+```
+
+O `onChange` do dropdown reseta a página pelo hook:
+
+```tsx
+                onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
+```
+
+E o CTA de limpar zera os dois:
+
+```tsx
+          onClick={() => { table.clear(); setStatus(null) }}
+```
+
+- [ ] **Step 5: Provar que o scaffolding sumiu**
+
+De `frontend/`:
+
+```bash
+grep -rn "handleFilterChange\|setFirst\|filter.trim().toLowerCase()" src/features
+```
+
+Esperado: **nenhuma linha**.
+
+```bash
+grep -rn "useTableFilter" src/features
+```
+
+Esperado: 6 linhas, uma por tabela com busca.
+
+- [ ] **Step 6: Fixar a regra**
+
+Em `.claude/rules/frontend-fsliced.md`, na lista `## Padrões de código`, logo **depois** do bullet
+"Página CRUD:", acrescente:
+
+```markdown
+- **Tabela em card = `useTableFilter` + `AppCard{Toolbar,Footer}`.** Busca, `first` controlado,
+  `clear()` e `paginator={rows.length > 10}` vêm do hook (`shared/hooks/useTableFilter.ts`); a
+  feature só declara `searchable` e, quando tem filtro próprio, `where`. Reescrever o bloco na
+  feature foi o que rendeu, em 6 cópias, um `RolesTable` com o paginador default ligado (duas
+  faixas, contra a spec D6) e um empty state falso durante o loading. A supressão do vazio durante
+  `loading` é do `AppDataTable`, não do chamador — **não** reintroduzir
+  `emptyMessage={loading ? undefined : empty}`, que cai no default inglês do PrimeReact
+  (`No available options`).
+```
+
+- [ ] **Step 7: Verificar build**
+
+De `frontend/`: `pnpm lint && pnpm build`. Esperado: ambos sem erro.
+
+---
+
+## Handoff de execução — Tasks C1 a C5
+
+`executor: codex` · base: `d6023c7` na branch `worktree-bloco-visual-p2` (worktree
+`.claude/worktrees/bloco-visual-p2`).
+
+**O Codex não commita.** Na Parte 2 o `.git/worktrees/bloco-visual-p2` ficou somente-leitura dentro
+do sandbox e o `RECOMMENDED_TRANSITION` voltou `blocked` por isso. Deixe a árvore suja; o Claude
+confere o diff contra estes `paths_autorizados`, roda `pnpm lint`, `pnpm build` e o script de
+paridade por conta própria, e commita task a task.
+
+**`paths_autorizados` das Tasks C1–C5:**
+
+```
+frontend/src/shared/ui/AppDataTable/**
+frontend/src/shared/hooks/**
+frontend/src/shared/config/locales/*.json
+frontend/src/features/commercial/components/CommercialPage.tsx
+frontend/src/features/commercial/components/Client/ClientsTable.tsx
+frontend/src/features/commercial/components/Budget/BudgetsTable.tsx
+frontend/src/features/catalog/components/CatalogPage.tsx
+frontend/src/features/catalog/components/Course/CoursesTable.tsx
+frontend/src/features/identity/components/PeoplePage.tsx
+frontend/src/features/identity/components/Redator/RedatoresTable.tsx
+frontend/src/features/identity/components/Admin/UsersTable.tsx
+frontend/src/features/identity/components/Admin/RolesTable.tsx
+frontend/src/features/operation/components/Turma/TurmasTable.tsx
+.claude/rules/frontend-fsliced.md
+```
+
+Fora desses globs o Codex não escreve. `backend/`, `docs/`, `frontend/src/shared/types/` e
+`frontend/src/shared/ui/AppCard/**` ficam explicitamente fora.
+
+**Prova visual** de todas as 5 correções fica com o João, como no resto do bloco — o sandbox não tem
+browser.

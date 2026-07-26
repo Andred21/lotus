@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: executing
+workflow_state: reviewing
 next_owner: claude
-next_action: continue_active_plan
+next_action: apply_approved_review_findings
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: a61a950
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -173,3 +173,94 @@ João no gate, registradas na seção `## Decisões tomadas no gate desta parte`
 Correção de premissa apurada ao planejar: **`PageHeader` não tem consumidor fora do `ModulePage`** —
 `BudgetDetailPage` e `TurmaDetailPage` montam o próprio cabeçalho. A Task 17 pode remover `actions`
 sem esperar a Parte 3, ao contrário do que a Parte 1 supunha.
+
+## Parte 2 executada e pronta para review — 2026-07-26
+
+Tasks 9–17 completas em worktree (`.claude/worktrees/bloco-visual-p2`, branch
+`worktree-bloco-visual-p2`), base `0addf47`. Executor dividido conforme o gate: Tasks 9–10 por
+`claude` via `subagent-driven-development` (implementador + review de task cada uma, ambas
+aprovadas sem achados) — commits `dac46ff` (namespace `module.*`) e `27a2a0b` (`AppCard.tone`
+ortogonal, tom `info`).
+
+Tasks 11–17 delegadas ao `codex` via `lotus-execute-block`, commit base `27a2a0b`. Duas iterações:
+
+1. Primeira chamada devolveu `BLOCKED` — o `state.md` da worktree ainda lia `ready_for_execution`
+   porque a transição para `executing` tinha sido commitada só na `main`, antes de a worktree
+   existir. Corrigido com `git cherry-pick` do commit de transição para o branch da worktree
+   (`2bd7641`); não é divergência real, é artefato de branch criado antes do commit da doc.
+2. Segunda chamada implementou as 7 tasks (lint+build verdes em cada uma, script de paridade verde,
+   greps da Task 17 limpos), mas devolveu `RECOMMENDED_TRANSITION: blocked` porque não conseguiu
+   commitar — `.git/worktrees/bloco-visual-p2` ficou somente-leitura dentro do sandbox do Codex.
+   Limitação de ambiente, não do plano nem do código.
+
+Diff revisado por mim contra `paths_autorizados` do plano — os 16 arquivos batem exatamente, nada
+fora do escopo. Rodei eu mesmo `pnpm lint`, `pnpm build` e o script de paridade dos locales antes
+de aceitar (não confiei só no report do Codex), todos verdes. Commitei por task, na ordem do plano:
+`6650b15` (Task 11), `3ebb829` (Task 12), `a2dbf59` (Task 13), `e12c3d0` (Task 14), `2ba6699`
+(Task 15), `c179dfe` (Task 16), `2509ead` (Task 17).
+
+**Desvio de convenção registrado:** as chaves de locale das Tasks 12/14/15/16
+(`operation.table.emptyHint`, `course.emptyHint`, `redator.emptyHint`, `admin.emptyHint`,
+`role.emptyHint`/`role.count`) foram commitadas juntas num commit próprio (`d6023c7`), não uma por
+task — chegaram do Codex como um único diff não commitado nos 3 JSONs, sem histórico intermediário
+para separar por task, e fatiar por hunk manualmente arriscava corromper o JSON. Script de paridade
+confirmou `es-pt: []` e `es-en: []` no estado final.
+
+Working tree da worktree limpo em `d6023c7`. Ledger completo em `.superpowers/sdd/progress.md`
+dessa worktree.
+
+**Pendência para o João:** prova visual das 5 telas (`/comercial` já provado na Parte 1;
+`/operacion`, `/cursos`, `/personas`, `/administracion` desta parte) nos dois temas — sandbox sem
+browser/root para Playwright, mesma limitação já registrada na Parte 1. Não é gate deste comando: o
+DoD comportamental fica para quando o João rodar `pnpm dev` e conferir contra os passos "Provar na
+tela" de cada task do plano.
+
+Branch **não mergeada ainda** — aguarda decisão do João sobre os achados abaixo.
+
+## `/revisar-sprint` — Parte 2, 2026-07-26
+
+Risco **alto** (Tasks 11–17 com `executor: codex`), então além do gabarito rodei revisão
+independente do Codex em read-only sobre `0addf47..worktree-bloco-visual-p2`. Achados fundidos;
+verifiquei no código cada um que só o Codex viu. Verificações rodadas por mim na worktree, não
+aceitas do report: `pnpm lint` limpo, `pnpm build` verde, script de paridade `es-pt: []` /
+`es-en: []`.
+
+Órfãos: nenhum (`course.tabCourses` sem consumidor e os slots `AppCardFooter.pagination` /
+`ModulePage.tags` reservados são todos declarados no plano). Leis §5: nenhuma violação — zero
+import de `primereact` em `features/`, zero import cross-feature, zero cor Tailwind hardcoded nova.
+
+5 achados aguardando decisão (detalhe em `blocker`):
+
+- **Q-2 🔴 P** — `RolesTable.tsx:27` não faz opt-out do `paginator` default do `AppDataTable`
+  (`alwaysShowPaginator: true` no PrimeReact), então paginador de página única renderiza acima do
+  `AppCardFooter`: a double-band que D6 elimina. As outras 6 tabelas fazem `paginator={rows.length > 10}`.
+  A decisão #2 do gate assumiu que o paginador "nem apareceria" com ≤10 linhas — premissa errada.
+- **Q-3 🟡 P** — `emptyMessage={loading ? undefined : empty}` (7 ocorrências, herdado da correção da
+  Parte 1) não suprime o corpo vazio: o PrimeReact cai em `localeOption('emptyMessage')` e o locale
+  ativo é `en` (`primeLocale.ts` só faz `addLocale`, nunca `locale('es')`). Rende `No available
+  options` sob o overlay de loading em todas as tabelas.
+- **Q-4 🟡 P** — ação primária sem check de permissão em `CatalogPage:18`, `PeoplePage:20`,
+  `CommercialPage:28/35`, enquanto `AdministracionPage:29` gateia com `canManage`. Role customizada
+  só-leitura vê o botão e leva 403 no submit.
+- **Q-5 🟢 P** — `TurmasTable.tsx:46-56`: com só o filtro de estado ativo, a descrição e o CTA ainda
+  falam de busca, embora o `onClick` limpe busca **e** estado.
+- **Q-6 🟡 M** — scaffolding de tabela duplicado em 6 componentes; a Parte 1 já registrou com 2
+  cópias. Padrão reincidente (2 sprints) → propor `useTableFilter` em `shared/` **e** uma linha em
+  `.claude/rules/frontend-fsliced.md` fixando o contrato de tabela-em-card.
+
+Descartado por ruído: `first` não reajustado quando um refetch encolhe a lista abaixo da página
+atual (achado do Codex) — real, mas exige volume que nenhuma tela tem hoje.
+
+**João aprovou os 5 achados em 2026-07-26 e delegou a aplicação ao Codex.** Viraram as Tasks C1 a
+C5 na seção `# Parte 2 — Correções de review` do `active_plan`, com `## Handoff de execução`
+próprio (`executor: codex`, base `d6023c7`). Ordem obrigatória C1→C5: C1 tira o ternário de
+`emptyMessage` das 7 tabelas e C5 reescreve as mesmas tabelas em cima do resultado.
+
+Desvio consciente do gate da Parte 2, que mandava contrato compartilhado para o `claude`: C1
+(`AppDataTable`) e C5 (`useTableFilter` + rule) tocam `shared/`, e mesmo assim vão para o Codex por
+decisão do João. Risco contido escrevendo o código de `shared/` literalmente no plano — o Codex
+aplica sem latitude de design — e conferindo o diff antes de commitar.
+
+O Codex **não commita** (na Parte 2 o `.git/worktrees/bloco-visual-p2` ficou somente-leitura no
+sandbox dele). Claude confere o diff contra `paths_autorizados`, roda lint/build/paridade por conta
+própria e commita task a task, como na Parte 2.
