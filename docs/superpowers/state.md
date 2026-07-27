@@ -2,16 +2,21 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: null
-resume_state: null
+blocker: |
+  /revisar-sprint da Parte 4 devolveu 7 achados aguardando decisão do João (Q-9 a Q-15).
+  Q-9 (detalhe de erro de rede fixo em português, exibido pelo AppErrorState em UI es-CL) é o
+  único 🔴. Q-10 a Q-13 são 🟡; Q-14 e Q-15 são 🟢. Detalhe na seção
+  "## /revisar-sprint — Parte 4" deste arquivo. Merge na main bloqueado até a decisão e até o
+  João provar o DoD comportamental na tela.
+resume_state: reviewing
 context_packet_status: ready
 updated_at: 2026-07-26
 ---
@@ -518,3 +523,58 @@ Ledger completo em `.superpowers/sdd/progress.md` da worktree.
 **Este é o fechamento da última parte do bloco.** `bloco-visual-refino-ui` só fecha quando o João
 confirmar o DoD comportamental na tela e a branch mergear — próxima ação depende de instrução
 explícita, este comando não inicia review nem merge sozinho.
+
+## `/revisar-sprint` — Parte 4, 2026-07-27
+
+Risco **alto** (Tasks 31, 33, 34, 36 com `executor: codex`), então além do gabarito rodei revisão
+independente do Codex em read-only sobre `baaedbf..10dc59f`. Achados fundidos; verifiquei no código
+cada um que só o Codex viu, e 2 dos 9 dele caíram na verificação.
+
+Verificações rodadas por mim na worktree (não aceitas do report anterior): `pnpm lint` limpo,
+`pnpm build` verde, paridade de locales `es-pt: []` / `es-en: []`. Leis §5: nenhuma violação — zero
+`from 'primereact'` em `features/`/`app/`, zero import cross-feature, zero `@features` em `shared/`,
+zero `window.confirm`, zero `AppCardFooter` em `features/`, zero
+`emptyMessage={loading ? undefined : ...}`.
+
+**Órfão (1):** `useRedatorPicker.ts:27` expõe `loadingList` sem nenhum consumidor —
+`RedatorDesignation` nunca lê. Sintoma do Q-11 abaixo, não item separado.
+
+7 achados aguardando decisão:
+
+- **Q-9 🔴 P** — `shared/api/axios.ts:48-52`: o `ProblemDetails` sintético do erro de rede tem
+  `title`/`detail` fixos em português (`"Não foi possível conectar ao servidor."`). Código
+  pré-existente, mas foi o D16 que o tornou **visível**: `AppErrorState` renderiza
+  `error.detail ?? t('common.loadErrorHint')`, e queda de rede é o gatilho mais comum do estado que
+  a parte inteira entregou. Resultado: texto em português no meio de uma UI `es-CL`, em 10+ telas.
+  Fere a rule de i18n (3 locales com chaves idênticas; `es-CL` é a referência de rótulo).
+- **Q-10 🟡 P** — `BudgetDetailPage.tsx:20-30` e `TurmaDetailPage.tsx:19-27`: o branch de erro (e o
+  de `notFound`) retorna **antes** do `DetailHeader`, então some o botão "Volver". Com um GET que
+  falha e continua falhando, o usuário fica preso na rota — o `AppErrorState` oferece Reintentar,
+  não saída. Regressão de composição introduzida pelas Tasks 30/32.
+- **Q-11 🟡 P** — `RedatorDesignation.tsx:55`: `picker.eligible.length === 0` rende
+  `operation.redator.pickerEmpty` ("nenhum redator elegível") tanto para lista vazia quanto para GET
+  falho — `useRedatorPicker` nem expõe erro. É literalmente o defeito que o D16 existe para matar,
+  no mesmo módulo, num diálogo que decide designação de redator.
+- **Q-12 🟡 M** — query auxiliar falha em silêncio, 3 ocorrências do mesmo padrão:
+  `OperationPage.tsx:22` (`pending.data ?? []` faz o painel de cotizações pendentes **sumir**, já
+  que `PendingQuotesPanel` retorna `null` em lista vazia); `BudgetsTable.tsx:28/30` (falha de
+  `clientsApi` troca todo nome de cliente por `—` **e** quebra a busca por cliente sem avisar);
+  `useBudgetDetail.ts:19-21` (`loadError`/`reload` cobrem só o orçamento, então o skeleton termina
+  com o cliente ainda carregando e o Reintentar não recupera o cliente).
+- **Q-13 🟡 P** — divergência entre o Step 2 e o Step 5 da Task 33: o Step 2 implementa
+  `sm:grid-cols-2` (uma coluna só **abaixo de 640px**) e o Step 5 manda provar "campos em uma
+  coluna" a **768px**. A 768px continuam duas colunas. O código está coerente com o que foi
+  implementado; o texto do DoD é que não pode passar. Some-se `RoleDialog.tsx:72` em `md:` (768px),
+  terceiro breakpoint — a divergência já estava anotada como candidata a backlog.
+- **Q-14 🟢 P** — `AppErrorState.tsx:36`: o botão Reintentar não recebe estado de refetch nem
+  `disabled`; cliques repetidos disparam refetch em série sem nenhum feedback.
+- **Q-15 🟢 P** — `AppDataTable.tsx:106`: `paginator` liga com `footerCount` mesmo durante
+  `loading`, então a faixa de rodapé afirma "0 registros" sob o overlay antes de o GET terminar.
+  Cosmético.
+
+**Descartados na verificação (achados do Codex que não sobreviveram):**
+- "`useCrudPage` não expõe `isError`" — a truthiness de `error` **é** o sinal, decisão documentada
+  no JSDoc do hook e entregue assim de propósito (`error: query.isError ? ... : null`). O contrato
+  do D16 está satisfeito; `isError` seria campo redundante.
+- "`AppDataTable` conta 0 durante o loading" — real, mas rebaixado a 🟢 (Q-15): a overlay do
+  PrimeReact cobre a faixa e o D19 decidiu manter essa overlay na tabela.
