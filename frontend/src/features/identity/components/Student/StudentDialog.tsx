@@ -40,6 +40,11 @@ export function StudentDialog({
   // não conseguir listar clientes (commercial.client.view) vê o motivo aqui,
   // em vez do botão sumir ou do dropdown ficar vazio sem explicação.
   const clients = clientsApi.useList({ enabled: mode === 'create' })
+  // Bloqueia só quando NÃO há lista utilizável (ainda carregando ou falhou sem
+  // cache prévio) — um refetch em background que falha com `clients.data` já
+  // populado (retry manual, refoco de aba) não deve travar um form que ainda
+  // tem opções válidas para escolher.
+  const clientsUnusable = mode === 'create' && !clients.data
   const detail = useStudentDetail(mode === 'create' ? null : student?.id)
 
   return (
@@ -51,7 +56,7 @@ export function StudentDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
-      disabled={mode === 'create' && (clients.isLoading || clients.isError)}
+      disabled={clientsUnusable}
       submitLabel={mode === 'create' ? t('student.create') : undefined}
       headerExtra={mode !== 'create' ? <AppAvatar name={form.name} size="normal" /> : null}
     >
@@ -79,7 +84,7 @@ export function StudentDialog({
               <>
                 <AppDropdown
                   value={form.client_id}
-                  disabled={clients.isError}
+                  disabled={clientsUnusable}
                   options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
                   onChange={(e) => set('client_id', e.value as number)}
                   className="w-full"
