@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -465,3 +465,56 @@ Duas correções de premissa apuradas ao planejar, ambas encolhendo o escopo pre
 Erro de tipo pego no self-review do plano, antes de virar bug de execução: `query.error ?? {}`
 produz a união `ProblemDetails | {}`, e as telas de detalhe leem `.detail` direto — não compilaria.
 As Tasks 30 e 32 usam `?? ({} as ProblemDetails)`.
+
+## Parte 4 executada e pronta para review — 2026-07-26
+
+13 tasks (27–39) do plano executadas via `subagent-driven-development` em worktree
+(`.claude/worktrees/bloco-visual-p4`, branch `worktree-bloco-visual-p4`), base `baaedbf`. Executor
+dividido conforme o gate: Tasks 27–30, 32, 35, 37–39 por `claude` (implementador + review de task
+cada uma, todas aprovadas sem achados bloqueantes); Tasks 31, 33, 34, 36 delegadas ao `codex` via
+`lotus-execute-block` — não commitou; Claude conferiu cada diff contra `paths_autorizados`, rodou
+lint/build/greps de prova por conta própria antes de commitar. D16 (`AppErrorState` +
+`AppDataTable.error` + `useCrudPage.error`/`refetch`), D17 (colapso de sidebar por viewport,
+read-only ao `uiStore`), D18 (cor por variável em `shared/ui` + os 3 arquivos do D14), D19
+(`AppSkeleton`/`AppDetailSkeleton`), D20 (scroll horizontal no `pt`, não coluna colapsável) e D21
+(`FormSection`) entregues.
+
+Task 39 (verificação final) achou e corrigiu 2 problemas reais durante a própria passada: um
+comentário JSDoc batendo falso-positivo no grep de cor hardcoded, e uma violação real do DoD — as 6
+tabelas de módulo com botão de criar ofereciam cadastro em cima de uma falha de carga (toolbar não
+respeitava `error`). Commits `b0921f3` e `a7e0dce`.
+
+Review final da branch (modelo mais capaz, 15 commits `baaedbf..a7e0dce`): "Approved with
+reservations" — confirmou lint/build/tsc/paridade i18n/greps de cor limpos de forma independente. 4
+achados Important + 6 Minor. Triagem:
+
+- 3 corrigidos direto (regressão desta Parte 4, sem conflito com o plano): `min-w-[48rem]` da
+  `AppDataTable` empurrando o botão Reintentar para fora da tela estreita quando não há linhas;
+  `AppCardToolbar` deixando uma faixa vazia quando os dois slots ficam ocultos; classe Tailwind
+  morta no `Clock` desde a Task 35. Commit `127e175`.
+- 3 achados eram conflito de escopo do plano ou pré-existentes fora de qualquer Files de task —
+  levados ao João (`AskUserQuestion`), não decididos sozinho: (1) aba Documentación mostrando "0 de
+  4 entregados" como confirmado durante uma falha de carga — decisão original da Task 32 era deixar
+  como estava; (2) aba Alumnos nunca agregava erro de carregamento da lista — arquivos nunca tocados
+  por nenhuma task 27–39; (3) toggle da sidebar sem efeito abaixo de 1024px, corrompendo
+  silenciosamente o `sidebarCollapsed` persistido — trade-off que a própria Task 37 previu e adiou
+  de propósito ("não trave o toggle agora, seria decisão nova").
+- **João decidiu: corrigir (1) e (2) agora, manter (3) como está e ir para o backlog.** Documentación
+  e Alumnos ganharam `loadError`/`reload` no mesmo padrão das Tasks 27–32. Commit `9c70a10`, revisado
+  por subagente dedicado sem achados bloqueantes.
+- Achados Minor de token de cor semanticamente errado (mas funcionalmente correto), resíduo de cor
+  fora do escopo declarado do D18, e divergência de breakpoint do `RoleDialog` ficam registrados
+  como candidatos a backlog, sem correção nesta parte.
+
+DoD comportamental (prova visual nos dois temas, 1400px e 768px, com `OperationDemoSeeder`, mais o
+teste de teclado/foco em `ClientDialog` e o teste de API derrubada nas 7 telas) segue pendente do
+João — sandbox sem browser/root para Playwright, mesma limitação de todas as partes anteriores. Os
+5 greps de prova do checklist H.2.1 (Step 1 da Task 39) rodam vazios; lint, build e paridade de
+locales verdes.
+
+Branch não mergeada ainda — aguarda `/revisar-sprint` (ou revisão equivalente) e decisão do João.
+Ledger completo em `.superpowers/sdd/progress.md` da worktree.
+
+**Este é o fechamento da última parte do bloco.** `bloco-visual-refino-ui` só fecha quando o João
+confirmar o DoD comportamental na tela e a branch mergear — próxima ação depende de instrução
+explícita, este comando não inicia review nem merge sozinho.
