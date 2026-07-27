@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -441,3 +441,27 @@ Seis decisões do gate viraram o adendo `D16` a `D21` da spec (§11):
    em tela de auditoria é perda silenciosa).
 6. **D21** — `FormSection` fecha o item de duplicação local; o item "forms de `shared/ui`" já estava
    satisfeito (zero controle nativo em `features/`).
+
+## Parte 4 planejada — 2026-07-26
+
+Tasks 27 a 39 escritas no mesmo `active_plan` (seção `# Parte 4`). É a última parte: o bloco fecha
+quando o DoD dela for provado.
+
+**Executor dividido:** Tasks 27–30, 32, 35, 37, 38 e 39 no `claude` (contrato compartilhado novo,
+ordem de guarda que é julgamento, exceção ao shell e prova de acessibilidade); Tasks 31, 33, 34 e 36
+no `codex` (repasse de props em 12 arquivos, substituição literal em 9 e 13 pontos, tabela de trocas
+de cor em 3 arquivos — todas com grep de prova e paths fechados). O código de `shared/` que o Codex
+toca (`AppDialog/style.ts`, `FormSection`) está escrito literal no plano, sem latitude de design.
+Como nas Partes 2 e 3, **o Codex não commita**.
+
+Duas correções de premissa apuradas ao planejar, ambas encolhendo o escopo previsto:
+
+- **"Componentes de formulário vindos de `shared/ui`" já estava satisfeito** —
+  `grep -rnE "<(input|select|textarea)[ >]" frontend/src/features` volta vazio. Sobrava só o `<h3>` de
+  seção duplicado em 6 diálogos, que a Task 34 resolve.
+- **`OperationPage` não usa `useCrudPage`** — consome `useTurmas()` direto, então a propagação de
+  erro nela vem da query, não do hook de CRUD.
+
+Erro de tipo pego no self-review do plano, antes de virar bug de execução: `query.error ?? {}`
+produz a união `ProblemDetails | {}`, e as telas de detalhe leem `.detail` direto — não compilaria.
+As Tasks 30 e 32 usam `?? ({} as ProblemDetails)`.
