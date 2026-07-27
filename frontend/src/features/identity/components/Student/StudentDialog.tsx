@@ -35,8 +35,10 @@ export function StudentDialog({
   const { t } = useTranslation()
   const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useStudentForm(student, mode, onHide)
   // Só busca clientes no create: view/edit mostram current_client_name (já
-  // vem no StudentData), sem depender de commercial.client.view — permissão
-  // que identity.user.view/update não implicam.
+  // vem no StudentData), sem chamada extra. O create em si segue exigindo só
+  // identity.user.create (D8/StudentController) — quem tiver a permissão mas
+  // não conseguir listar clientes (commercial.client.view) vê o motivo aqui,
+  // em vez do botão sumir ou do dropdown ficar vazio sem explicação.
   const clients = clientsApi.useList({ enabled: mode === 'create' })
   const detail = useStudentDetail(mode === 'create' ? null : student?.id)
 
@@ -71,10 +73,17 @@ export function StudentDialog({
           <FormField label={t('common.phone')}>
             <AppInputText value={form.phone ?? ''} disabled={readOnly} onChange={(e) => set('phone', e.target.value)} className="w-full" />
           </FormField>
-          <FormField label={t('student.client')} error={fieldErrors?.client_id?.[0]}>
+          <FormField
+            label={t('student.client')}
+            error={
+              fieldErrors?.client_id?.[0]
+              ?? (mode === 'create' && clients.isError ? (clients.error?.detail ?? t('common.loadErrorHint')) : undefined)
+            }
+          >
             {mode === 'create' ? (
               <AppDropdown
                 value={form.client_id}
+                disabled={clients.isError}
                 options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
                 onChange={(e) => set('client_id', e.value as number)}
                 className="w-full"

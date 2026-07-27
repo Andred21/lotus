@@ -41,11 +41,7 @@ export function PeoplePage() {
               onRetry={students.refetch}
               onView={students.openView}
               actions={
-                // O create do aluno exige commercial.client.view (o dropdown de
-                // empresa depende dele) além de identity.user.create — sem os
-                // dois, o botão fica escondido em vez de abrir um formulário
-                // que vai falhar ao carregar as opções.
-                can('identity.user.create') && can('commercial.client.view')
+                can('identity.user.create')
                   ? <AppButton variant="brandIcon" label={t('student.new')} icon="pi pi-user-plus" onClick={students.openCreate} />
                   : undefined
               }
