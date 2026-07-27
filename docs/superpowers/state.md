@@ -102,6 +102,16 @@ inválido enviado no `update` (a UI nunca manda esse campo lá) recebe 422 do DT
 em `UpdateStudentAction`, que o ignoraria — inconsistência latente entre validação do DTO e regra
 da Action, sem efeito prático hoje.
 
+**Fix pós stop-gate review do Codex em 2026-07-27**, commit `14ca1a9`. 3 achados reais: (1)
+`toFields()` zerava `client_id` ao entrar em view/edit — dropdown de empresa aparecia vazio mesmo
+com vínculo existente; (2) o dropdown de empresa em view/edit dependia de `commercial.client.view`
+via `clientsApi`, permissão sem relação com `identity.user.*` (o resto do módulo) — quem tivesse
+`identity.user.view`/`update` sem `commercial.client.view` batia 403 silencioso; (3) botão Editar
+do dialog aparecia sem checar `identity.user.update`. Corrigido trocando o dropdown por texto
+read-only (`current_client_name`, já vem no `StudentData`) fora do create, gate duplo
+(`identity.user.create` + `commercial.client.view`) no botão "Nuevo alumno", e Editar gated por
+`identity.user.update` (mesmo padrão de `RoleDialog`/`StaffUserDialog`). build+lint verdes.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
