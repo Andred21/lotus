@@ -122,6 +122,13 @@ desabilitado + `clients.error.detail` no `FormField` quando `clientsApi` falha, 
 vazias sem explicação ou do botão sumir para quem tem autorização real. Não há caminho para
 alinhar as permissões de fato sem decisão do João sobre RBAC/spec — fora do escopo desta sessão.
 
+**Terceiro fix, mesmo dia, commit `10043dc`.** Achado seguinte: com o dropdown desabilitado e a
+query de clientes sem retry automático, o usuário ficava sem saída — só fechando o dialog (e
+perdendo nome/RUT/email já digitados) pra tentar de novo. `CrudDialog` ganhou prop opcional
+`disabled` (repassada ao botão salvar, sem efeito nos outros 6 consumidores que não a passam);
+`StudentDialog` ganhou botão "Reintentar" chamando `clients.refetch()` sem fechar o dialog, e o
+submit fica desabilitado enquanto `clients` está carregando ou com erro.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
