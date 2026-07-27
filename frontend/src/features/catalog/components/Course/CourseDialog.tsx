@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTextarea, FormField, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTextarea, FormField, FormSection, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { redatoresApi } from '@shared/api/redatoresApi'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
@@ -48,7 +48,7 @@ export function CourseDialog({
       />
 
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">{t('course.sectionGeneral')}</h3>
+        <FormSection title={t('course.sectionGeneral')} />
 
         <FormField label={t('course.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} placeholder={t('course.namePlaceholder')} onChange={(e) => set('name', e.target.value)} className="w-full" />
@@ -72,7 +72,7 @@ export function CourseDialog({
           <AppTextarea value={form.description ?? ''} disabled={readOnly} rows={3} onChange={(e) => set('description', e.target.value)} className="w-full" />
         </FormField>
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('courseModule.section')}</h3>
+        <FormSection title={t('courseModule.section')} spaced />
 
         {form.modules.length === 0 && (
           <p className="text-sm text-slate-500">{t('courseModule.empty')}</p>
@@ -176,7 +176,7 @@ export function CourseDialog({
           </p>
         )}
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('course.sectionRedatores')}</h3>
+        <FormSection title={t('course.sectionRedatores')} spaced />
 
         {isCreate ? (
           // Exceção do produto: habilitar redatores só no cadastro do curso.

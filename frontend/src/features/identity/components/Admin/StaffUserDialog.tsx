@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { rolesApi } from '@shared/api/rolesApi'
@@ -44,7 +44,7 @@ export function StaffUserDialog({
       <FormErrorSummary errors={fieldErrors} mapped={['name', 'rut', 'email', 'password', 'role']} />
 
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">{t('admin.sectionUser')}</h3>
+        <FormSection title={t('admin.sectionUser')} />
 
         <FormField label={t('admin.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />

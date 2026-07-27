@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppCheckbox, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppCheckbox, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { RoleData, PermissionData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { usePermissionCatalog } from '../../api/usePermissionCatalog'
@@ -65,7 +65,7 @@ export function RoleDialog({
         )}
 
         <div className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase text-slate-500">{t('role.permissions')}</h3>
+          <FormSection title={t('role.permissions')} />
           {groups.map(([group, perms]) => (
             <div key={group} className="space-y-2">
               <p className="text-xs font-medium text-slate-400">{t(`permGroup.${group}`)}</p>

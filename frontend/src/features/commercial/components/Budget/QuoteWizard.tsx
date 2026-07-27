@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, AppRadioButton, AppDatePicker, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, AppRadioButton, AppDatePicker, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
@@ -71,7 +71,7 @@ export function QuoteWizard({
 
       {step === 1 ? (
         <section className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase text-slate-500">{t('quote.stepCourse')}</h3>
+          <FormSection title={t('quote.stepCourse')} />
           <AppInputText
             leftIcon="pi pi-search"
             placeholder={t('quote.courseSearchPlaceholder')}
@@ -99,7 +99,7 @@ export function QuoteWizard({
         </section>
       ) : (
         <section className="space-y-4">
-          <h3 className="text-xs font-semibold uppercase text-slate-500">{t('quote.stepData')}</h3>
+          <FormSection title={t('quote.stepData')} />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, FormField, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, FormField, FormSection, FormErrorBanner } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -74,7 +74,7 @@ export function RedatorDialog({
 
       <section className="space-y-4">
         
-        <h3 className="text-xs font-semibold uppercase text-slate-500">{t('redator.sectionUser')}</h3>
+        <FormSection title={t('redator.sectionUser')} />
         <FormField label={t('redator.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
         </FormField>
@@ -90,7 +90,7 @@ export function RedatorDialog({
           <AppInputText value={form.phone ?? ''} disabled={readOnly} onChange={(e) => set('phone', e.target.value)} className="w-full" />
         </FormField>
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('redator.sectionDocuments')}</h3>
+        <FormSection title={t('redator.sectionDocuments')} spaced />
         {upload.error && (
           <p className="text-sm text-red-600">{upload.error.detail}</p>
         )}
@@ -148,7 +148,7 @@ export function RedatorDialog({
           )
         })}
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('redator.sectionCourses')}</h3>
+        <FormSection title={t('redator.sectionCourses')} spaced />
         <div className="space-y-1">
           {(courses.data ?? []).map((c) => (
             <label key={c.id} className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-800">
