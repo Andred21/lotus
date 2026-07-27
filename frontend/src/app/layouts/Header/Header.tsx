@@ -24,7 +24,7 @@ export function Header() {
       <div className="flex items-center gap-4">
         <AppearanceControls />
         <AppDivider layout="vertical" className="mx-0! h-6" />
-        <Clock className="hidden md:block dark:text-slate-200" />
+        <Clock className="hidden md:block" />
         <UserMenu />
       </div>
     </AppHeader>

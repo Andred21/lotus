@@ -75,6 +75,13 @@ export function AppDataTable<T extends DataTableValueArray>({
   const errored = error != null
   const data = (errored ? [] : value) as T | undefined
   const paginated = (data?.length ?? 0) > rows
+  // A largura mínima só faz sentido protegendo colunas de dado real: sem
+  // linhas (erro ou vazio), ela empurra o conteúdo centralizado de
+  // AppErrorState/AppEmptyState (e o botão Reintentar) para fora da faixa
+  // visível numa tela estreita — o oposto do que a Task 33 resolveu nos
+  // diálogos.
+  const hasRows = (data?.length ?? 0) > 0
+  const widthPt: DataTablePassThroughOptions = hasRows ? {} : { table: { className: '' } }
 
   const body = errored ? (
     <AppErrorState
@@ -100,7 +107,10 @@ export function AppDataTable<T extends DataTableValueArray>({
       alwaysShowPaginator
       paginatorLeft={footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
-      pt={mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, pt as DataTableProps<DataTableValueArray>['pt'])}
+      pt={mergePt(
+        mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, widthPt),
+        pt as DataTableProps<DataTableValueArray>['pt'],
+      )}
       loading={loading && !errored}
       emptyMessage={body}
       {...props}
