@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
-active_spec: null
+active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
 blocker: null
