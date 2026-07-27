@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
 blocker: null
 resume_state: null
-context_packet_status: null
+context_packet_status: partial
 updated_at: 2026-07-27
 ---
 
@@ -62,7 +62,16 @@ Não é refino visual: nasce já no padrão de `shared/ui` entregue em 2026-07-2
 Packet: rota Codex, **condicionada** a uma sondagem prévia dos conectores (Drive, Figma, Notion,
 GitHub) no runtime dele — decisão do João em 2026-07-27, motivada pelo v1 do
 `bloco-visual-refino-ui`, que voltou `blocked` por gap de tooling e não por ausência de fonte.
-Prints do protótipo anexados pelo João entram como fonte `PROTO`.
+A sondagem passou nos 4: **Notion responde neste runtime** (`mcp__codex_apps__notion_*`, base
+`Tasks · Lotus Fase 2` encontrada), contra o que o `AGENTS.md` §3 registrou em 2026-07-23 — a
+verificação de lá venceu e o `.agents/skills/lotus-context-packet/SKILL.md` ainda afirma
+"Notion is not loaded in this runtime".
+
+Packet `partial` em `context-packets/bloco-alunos-modulo.md`, v2 — o v1 foi rejeitado por três
+violações do contrato de validação (tabela `student_client_links` inexistente, decisão do João
+fabricada sobre CRUD, `identity.user.*` como constraint sem lastro no `PermissionCatalog`).
+Duas perguntas abertas entram no brainstorming: alcance CRUD e permissão do módulo. Prints do
+protótipo, anexados pelo João, entram como fonte `PROTO` — o Codex não os alcança.
 
 ## Último item fechado — 2026-07-27
 
