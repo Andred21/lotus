@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Operation\Models\Enrollment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -47,6 +48,17 @@ class Student extends Model implements Auditable
     public function logs(): HasMany
     {
         return $this->hasMany(StudentClientLog::class);
+    }
+
+    /**
+     * Matrículas do aluno. Identity aponta para Operation aqui pela mesma razão
+     * que Catalog\Course aponta para Identity\Redator: a projeção de leitura do
+     * aluno precisa do histórico, e um endpoint separado só empurraria a
+     * composição para a tela.
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     /** O vínculo vigente (ended_on IS NULL). No máximo 1 — garantido no banco. */
