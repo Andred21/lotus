@@ -34,7 +34,10 @@ export function StudentDialog({
 }) {
   const { t } = useTranslation()
   const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useStudentForm(student, mode, onHide)
-  const clients = clientsApi.useList()
+  // Só busca clientes no create: view/edit mostram current_client_name (já
+  // vem no StudentData), sem depender de commercial.client.view — permissão
+  // que identity.user.view/update não implicam.
+  const clients = clientsApi.useList({ enabled: mode === 'create' })
   const detail = useStudentDetail(mode === 'create' ? null : student?.id)
 
   return (
@@ -69,13 +72,16 @@ export function StudentDialog({
             <AppInputText value={form.phone ?? ''} disabled={readOnly} onChange={(e) => set('phone', e.target.value)} className="w-full" />
           </FormField>
           <FormField label={t('student.client')} error={fieldErrors?.client_id?.[0]}>
-            <AppDropdown
-              value={form.client_id}
-              disabled={readOnly || mode === 'edit'}
-              options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
-              onChange={(e) => set('client_id', e.value as number)}
-              className="w-full"
-            />
+            {mode === 'create' ? (
+              <AppDropdown
+                value={form.client_id}
+                options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
+                onChange={(e) => set('client_id', e.value as number)}
+                className="w-full"
+              />
+            ) : (
+              <AppInputText value={student?.current_client_name ?? t('student.noClient')} disabled className="w-full" />
+            )}
             {mode === 'edit' && (
               <p className="mt-1 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
                 {t('student.clientLocked')}

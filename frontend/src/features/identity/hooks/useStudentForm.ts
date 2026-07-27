@@ -13,17 +13,12 @@ const EMPTY: StudentFormFields = {
   id: undefined, name: '', rut: '', email: '', phone: null, client_id: null,
 }
 
-const toFields = (s: StudentFormFields): StudentFormFields => {
-  const { id, name, rut, email, phone } = s
-  return structuredClone({ id, name, rut, email, phone, client_id: null })
-}
-
 export function useStudentForm(student: StudentData | null, mode: DialogMode, onDone: () => void) {
   const entity: StudentFormFields | null = student
     ? { id: student.id, name: student.name, rut: student.rut, email: student.email, phone: student.phone ?? null, client_id: student.current_client_id ?? null }
     : null
 
-  const { form, set, readOnly } = useEntityForm<StudentFormFields>(entity, mode, EMPTY, toFields)
+  const { form, set, readOnly } = useEntityForm<StudentFormFields>(entity, mode, EMPTY)
 
   const create = studentsApi.useCreate()
   const update = studentsApi.useUpdate()
