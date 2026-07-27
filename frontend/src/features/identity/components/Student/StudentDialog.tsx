@@ -100,8 +100,9 @@ export function StudentDialog({
                   </p>
                 )}
                 {!clients.isError && clients.isSuccess && clients.data.length === 0 && (
-                  <p className="mt-1 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-                    {t('student.noClientsAvailable')}
+                  <p className="mt-1 flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+                    <span>{t('student.noClientsAvailable')}</span>
+                    <AppButton label={t('common.retry')} text onClick={() => void clients.refetch()} />
                   </p>
                 )}
               </>
