@@ -40,22 +40,27 @@ api.interceptors.response.use(
     (error: AxiosError<ProblemDetails>) => {
         const problem = error.response?.data;
         
-        // Erro de rede / sem resposta do servidor
+        // Erro de rede / sem resposta do servidor.
+        // Traduzido pelo i18n, não fixo: desde a spec D16 este `detail` é o corpo
+        // visível do AppErrorState, e queda de rede é o gatilho mais comum dele.
+        // Texto fixo aqui vazava português para a UI es-CL do cliente chileno.
         if(!error.response) {
             return Promise.reject({
                 type: "https://lotus.cl/errors/network",
-                title: "Erro de conexão",
+                title: i18n.t('common.networkError'),
                 status: 0,
-                detail: "Não foi possível conectar ao servidor.",
+                detail: i18n.t('common.networkErrorHint'),
                 instance: '',
             } satisfies ProblemDetails);
         }
 
-        // Se o backend mandou o envelope RFC 7807, retorna normalizado.
-        // Se não (raro), monta um fallback com o status HTTP.
+        // Se o backend mandou o envelope RFC 7807, retorna normalizado (já vem
+        // localizado — o request manda Accept-Language). Se não (raro), monta um
+        // fallback com o status HTTP; `error.message` é do axios e fica em inglês,
+        // então o título traduzido é o que o usuário lê.
         const normalized: ProblemDetails = problem ?? {
             type: 'https://lotus.cl/errors/unknown',
-            title: 'Erro inesperado',
+            title: i18n.t('common.unexpectedError'),
             status: error.response.status,
             detail:error.message,
             instance: '',

@@ -39,7 +39,10 @@
     "clearSearch": "Clear search",
     "loadError": "Could not load the data",
     "loadErrorHint": "Check your connection and try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "networkError": "Cannot reach the server",
+    "networkErrorHint": "Check your connection and try again.",
+    "unexpectedError": "Unexpected error"
   },
   "module": {
     "comercial": {

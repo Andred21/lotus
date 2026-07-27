@@ -39,7 +39,10 @@
     "clearSearch": "Limpiar búsqueda",
     "loadError": "No se pudieron cargar los datos",
     "loadErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "networkError": "Sin conexión con el servidor",
+    "networkErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
+    "unexpectedError": "Error inesperado"
   },
   "module": {
     "comercial": {
