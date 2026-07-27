@@ -108,9 +108,11 @@ ambos presentes no protótipo. Card vazio foi rejeitado explicitamente: afirmar 
 quando a verdade é "o módulo não existe" é a falha silenciosa que o D16 do bloco visual fechou, e aqui
 o dado tem peso legal.
 
-### D11 — Aba `Alumnos` passa a ser a primeira.
+### D11 — A ordem das abas não muda: `Redactores` continua primeiro.
 
-Como no print. Hoje `Redatores` vem primeiro.
+O print mostra `Alumnos` como primeira aba. **Divergência aceita por decisão do João em 2026-07-27:**
+a ordem atual fica. `Redactores` segue sendo aba do `PeoplePage`, sem nenhuma outra alteração; a aba
+`Alumnos` só troca o empty state fixo pelo conteúdo real.
 
 ## 4. Contrato de API
 
@@ -146,7 +148,7 @@ Tudo em `features/identity`; nenhum componente novo em `shared/ui`.
 | `features/identity/hooks/useStudentForm.ts` | `useEntityForm` |
 | `features/identity/components/Student/StudentsTable.tsx` | tabela + toolbar |
 | `features/identity/components/Student/StudentDialog.tsx` | detalhe e form |
-| `features/identity/components/PeoplePage.tsx` | ordem das abas + montagem |
+| `features/identity/components/PeoplePage.tsx` | montagem da aba `Alumnos` (ordem das abas inalterada, D11) |
 
 **Listagem** — `useTableFilter` com `searchable` em nome e RUT, `AppCardToolbar` (busca à esquerda;
 `Nuevo alumno` à direita, sob `can('identity.user.create')`), `footerCount` para a faixa
