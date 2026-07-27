@@ -26,7 +26,11 @@ export function useTurmaDocsSection(turma: TurmaData) {
   const list = useTurmaDocuments(turmaId)
   const uploadMutation = useUploadTurmaDocument()
   const removeMutation = useRemoveTurmaDocument()
-  const { message: error } = useMutationErrors([list.error, uploadMutation.error, removeMutation.error])
+  // Erro de carregamento é distinto de erro de mutação (upload/remoção): o
+  // primeiro substitui a aba inteira por AppErrorState com Reintentar (peso
+  // legal — "0 de 4 entregados" não pode ser lido como confirmado quando a
+  // lista nem carregou); o segundo continua no FormErrorBanner do corpo.
+  const { message: error } = useMutationErrors([uploadMutation.error, removeMutation.error])
   // Escopo próprio para o dialog de remoção: o banner do painel usa o agregado
   // acima (lista + upload + remoção); o dialog usa só o erro da remoção, senão
   // um erro de upload velho aparece dentro da confirmação de remoção.
@@ -54,6 +58,8 @@ export function useTurmaDocsSection(turma: TurmaData) {
   return {
     turmaId,
     loading: list.isLoading,
+    loadError: list.isError ? (list.error ?? ({} as ProblemDetails)) : null,
+    reload: () => { void list.refetch() },
     error,
     byType,
     deliveredCount: TURMA_DOCUMENT_TYPES.filter((type) => byType[type].length > 0).length,
