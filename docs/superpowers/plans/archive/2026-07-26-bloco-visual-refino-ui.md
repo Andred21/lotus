@@ -15,7 +15,7 @@ ao painel da aba ativa — não à página.
 **Tech Stack:** React 19 + TypeScript (Vite), PrimeReact via wrappers em `shared/ui`, tema Lara
 trocado por folha de estilo em runtime (ADR-16), Tailwind v4 só para layout, i18n em 3 locales.
 
-**Spec:** `docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-07-26-bloco-visual-refino-ui-design.md`
 **Context packet:** `docs/superpowers/context-packets/bloco-visual-refino-ui.md`
 
 ## Global Constraints

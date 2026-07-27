@@ -22,3 +22,5 @@
 | 2026-07-17 | Bloco 4 · CR Curso: AppTextarea + módulos reordenáveis (frontend) | Entregue | Tela de módulos com reordenação, totais derivados no render e aviso âmbar de divergência de carga (nunca bloqueia); `AppTextarea` em `shared/ui` | — | `plans/archive/2026-07-17-bloco4-course-modules-frontend.md` (+ roteiro) | `specs/archive/2026-07-17-bloco4-course-modules-frontend-design.md` |
 | 2026-07-17 | Bloco 5.0 · Nested `Optional` | Entregue | Campo ausente preserva coleção; `[]` apaga explicitamente. | — | — | — |
 | 2026-07-17 | Bloco 5.1 · ADR-19 + docs | Entregue | Dinheiro, i18n e paths de DTO sincronizados com a implementação. | — | — | — |
+| 2026-07-17 | Bloco 5.2a · Usuarios | Entregue | CRUD de staff, roles e proteção do último superadmin. | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
+| 2026-07-18 | Bloco 5.2b · Roles y Permisos | Entregue | Roles customizadas e segregação de permissões implementadas. | — | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |

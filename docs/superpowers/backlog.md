@@ -7,35 +7,25 @@
 
 ## Próximos blocos
 
-1. **Bloco visual · Refinamento de UI por módulo** — Notion **H.1.3**
-   — camada compartilhada em `shared/ui` (`AppCard` com variante `stat`, toolbar dentro do card,
-   densidade/zebra/hover do `AppDataTable` via `pt`, paleta semântica de estado no `AppTag`, empty
-   state, convenção de footer/paginação) **+** migração de Comercial, Operación, Cursos, Pessoas,
-   detalhe de orçamento e detalhe de turma. **Um bloco, review por partes** (decisão do João em
-   2026-07-26): a camada muda o contrato do `ModulePage` — a ação primária sai do `PageHeader` — e
-   entregá-la isolada deixaria a ação sumida nas telas. Escopo **dentro do ADR-16** (wrapper +
-   `className` na raiz + `pt`); tokens próprios e `unstyled` seguem rejeitados. Shell **fora de
-   escopo** — o João prefere o real ao protótipo. Insumo: auditoria de 2026-07-24 + 4 prints do
-   protótipo + baseline refinada de 2026-07-26.
-2. **Pessoas · Alunos — módulo novo (backend + frontend)**
+1. **Pessoas · Alunos — módulo novo (backend + frontend)**
    — a aba Alunos de `PeoplePage` é um `<p>` inline; **não existe endpoint de aluno**. `grep student`
    em `routes/api.php` e `app/Domains/*/routes.php` = vazio; o domínio tem só
    `Identity/Models/Student.php` e `Identity/Services/StudentResolver.php` (consumidos pela
    matrícula). Escopo: `StudentData` + controller + rotas de listagem/detalhe, vínculos
    (`student_client_links`), histórico de turmas e certificados do aluno, mais a tela. Protótipo tem
    busca, tabela, indicadores, detalhe, vínculos, histórico e certificados. **Feature, não refino
-   visual** (decisão do João em 2026-07-26, ao separar do bloco visual). Ordenado depois do bloco
-   visual para nascer já no padrão novo de `shared/ui`. Insumo pendente: print do protótipo (o João
+   visual** (decisão do João em 2026-07-26, ao separar do bloco visual). Nasce já no padrão novo de `shared/ui`,
+   entregue pelo bloco visual em 2026-07-27. Insumo pendente: print do protótipo (o João
    anexa) + Notion.
-3. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Bloco 7 · Sprint 4 · Certificação**
+3. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-5. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -45,7 +35,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 - **Dashboard** — protótipo tem 4 KPIs, gráfico de turmas, gráfico de certificados, tarefas
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
-- **Pessoas · Alunos** — promovido a bloco próprio: ver **item 2** de "Próximos blocos".
+- **Pessoas · Alunos** — promovido a bloco próprio: ver **item 1** de "Próximos blocos".
 - **Certificados** — já coberto pelo Bloco 7.
 
 ## Futuros dependentes de decisão
@@ -80,6 +70,14 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   transação única. Saídas a avaliar: mover o upload para fora da transação com compensação, registrar
   a linha primeiro e gravar depois, ou `DB::afterCommit`. Interage com **P-02** (política de retenção
   nunca decidida).
+- **Toggle da sidebar sem efeito abaixo de 1024px, corrompendo o estado persistido.** O D17 fez a
+  `Sidebar` forçar `collapsed` por media query sem escrever no `uiStore`, então abaixo de 1024px o
+  botão de toggle continua clicável, não muda nada na tela e ainda assim inverte o `sidebarCollapsed`
+  persistido — o usuário volta ao desktop com a sidebar no estado oposto ao que deixou. Trade-off
+  previsto e adiado de propósito pela Task 37 ("travar o toggle agora seria decisão nova"); achado
+  Important do review final da Parte 4, **João decidiu manter como está em 2026-07-27**. Saídas a
+  avaliar: esconder o toggle abaixo do breakpoint, ou desacoplar o colapso por viewport do estado
+  persistido.
 - **Shell fora de conformidade com o ADR-16 §4 — exceção deliberada.** `Sidebar.tsx` e
   `AppLayout.tsx` usam pares Tailwind de cor hardcoded (`bg-gray-200 dark:bg-slate-900`,
   `border-slate-400 dark:border-slate-800`, `bg-slate-50 dark:bg-slate-950`, `text-slate-400`) em vez
@@ -90,10 +88,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   `backend/database/migrations/`; `UserData` não tem o campo. O "último acesso" que o protótipo mostra
   na tela de Usuários exige coluna nova, captura no login e exposição no DTO. Task de backend, não
   de UI.
-- `CatalogPage` usa `ModuleTabs` com uma aba só, contra o contrato do próprio `ModulePage` ("uma
-  entidade: passe a tabela direto em `children`"). Cai junto com o bloco visual.
-- Títulos de módulo derivados da entidade errada: Comercial usa `t('client.module')` e Pessoas usa
-  `t('redator.module')`. Vocabulário `es-CL` pede `Comercial` e `Personas`. Cai junto com o bloco visual.
 - Check de paridade permissão↔i18n — teste/CI que assere
   `array_keys(PermissionCatalog::descriptions())` (dot→underscore) igual às chaves `perm.*` de cada
   locale; sem isso, permissão nova renderiza chave crua no picker.
