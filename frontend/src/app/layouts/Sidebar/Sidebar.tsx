@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useUiStore } from '@shared/stores/uiStore'
-import { usePermissions } from '@shared/hooks/usePermissions'
+import { usePermissions, useIsCompactViewport } from '@shared/hooks'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'
 import { AppButton, AppSidebar, AppLogo } from '@shared/ui'
@@ -10,7 +10,11 @@ import { SidebarItem } from './SidebarItem'
 export function Sidebar() {
 
   const { t } = useTranslation()
-  const collapsed = useUiStore((s) => s.sidebarCollapsed)
+  const compact = useIsCompactViewport()
+  // Abaixo de 1024px a sidebar expandida come a largura útil e empurra a tabela
+  // para fora da janela. O colapso é imposto pela viewport sem tocar no estado
+  // persistido: ao alargar de volta, a preferência do usuário volta com ele.
+  const collapsed = useUiStore((s) => s.sidebarCollapsed) || compact
   const toggle = useUiStore((s) => s.toggleSidebar)
   const { can, roles } = usePermissions()
 
