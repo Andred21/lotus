@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
@@ -93,6 +93,16 @@ adicionado guard explícito em `CreateStudentAction` lançando `ValidationExcept
 `sortBy([['started_on','desc'],['id','desc']])`; (3) dois fixtures de teste da Task 2 criavam
 aluno sem RUT (campo obrigatório no DTO) e o RUT de exemplo `12.876.543-K` da Task 5 falha
 `ValidRut` — ajustados para RUTs válidos.
+
+**Tasks 6-10 (frontend, Claude) concluídas em 2026-07-27**, commits `f4c1900`, `d939a63`,
+`2646c02`, `06700c8`, `42c6366`, `d1db604`. Sem desvios do plano. DoD (spec §7, 6 itens) provado
+via HTTP real autenticado (Sanctum, sem browser tool na sessão) — detalhe em
+`.superpowers/sdd/progress.md`. Um achado registrado como minor, não bloqueante: `client_id`
+inválido enviado no `update` (a UI nunca manda esse campo lá) recebe 422 do DTO antes de chegar
+em `UpdateStudentAction`, que o ignoraria — inconsistência latente entre validação do DTO e regra
+da Action, sem efeito prático hoje.
+
+Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
 
