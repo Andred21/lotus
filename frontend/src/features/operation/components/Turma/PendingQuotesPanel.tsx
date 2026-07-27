@@ -1,11 +1,32 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppButton, AppCard, AppCardHeader } from '@shared/ui'
+import { AppButton, AppCard, AppCardHeader, AppErrorState } from '@shared/ui'
 import type { PendingQuoteData } from '@shared/types/generated'
 
-export function PendingQuotesPanel({ items }: { items: PendingQuoteData[] }) {
+export function PendingQuotesPanel({
+  items, error, onRetry,
+}: {
+  items: PendingQuoteData[]
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // O erro vem antes do vazio: sem essa guarda, um GET falho caía no `null` de
+  // lista vazia e a fila de cotizações pendentes simplesmente sumia da tela —
+  // o operador leria "não há nada para configurar" sobre uma falha de rede.
+  if (error)
+    return (
+      <AppCard tone="info">
+        <AppErrorState
+          title={t('common.loadError')}
+          detail={error.detail ?? t('common.loadErrorHint')}
+          retryLabel={onRetry ? t('common.retry') : undefined}
+          onRetry={onRetry}
+        />
+      </AppCard>
+    )
 
   if (items.length === 0) return null
 

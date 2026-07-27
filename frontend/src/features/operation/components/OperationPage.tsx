@@ -19,7 +19,13 @@ export function OperationPage() {
   return (
     <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
       <div className="space-y-6">
-        {canCreate && <PendingQuotesPanel items={pending.data ?? []} />}
+        {canCreate && (
+          <PendingQuotesPanel
+            items={pending.data ?? []}
+            error={pending.isError ? (pending.error ?? {}) : null}
+            onRetry={() => { void pending.refetch() }}
+          />
+        )}
         <AppCard>
           <TurmasTable
             turmas={turmas.data ?? []}

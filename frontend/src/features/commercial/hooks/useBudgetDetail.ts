@@ -75,12 +75,18 @@ export function useBudgetDetail(budgetId: number) {
   const deleteBudget = () => removeBudget.mutate(budgetId, { onSuccess: () => navigate('/comercial') })
 
   return {
-    loading: query.isLoading,
-    /** Falha do GET do orçamento. Distinto de `confirmError`/`fileError`, que
-     * são erros de mutação. O cast é obrigatório: a página lê `.detail`, e a
-     * união com `{}` não compila. */
-    loadError: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    reload: () => { void query.refetch() },
+    // As duas queries entram: o subtítulo da página é o cliente, e sem agregar
+    // `clients` o skeleton terminava com ele ainda carregando (subtítulo `—` que
+    // vira nome sozinho) e o Reintentar não recuperava a query que falhou.
+    loading: query.isLoading || clients.isLoading,
+    /** Falha do GET do orçamento ou do de clientes. Distinto de
+     * `confirmError`/`fileError`, que são erros de mutação. O cast é obrigatório:
+     * a página lê `.detail`, e a união com `{}` não compila. */
+    loadError:
+      query.isError ? (query.error ?? ({} as ProblemDetails))
+      : clients.isError ? (clients.error ?? ({} as ProblemDetails))
+      : null,
+    reload: () => { void query.refetch(); void clients.refetch() },
     budget,
     client,
     canApprove,

@@ -29,6 +29,13 @@ export function BudgetsTable({
 
   const clientName = (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—'
 
+  // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
+  // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
+  // busca por cliente devolvendo vazio, tudo em silêncio — a tela afirmaria que
+  // esses orçamentos não têm cliente (spec D16). Reintentar recarrega as duas.
+  const loadError = error ?? (clients.isError ? (clients.error ?? {}) : null)
+  const retry = () => { onRetry?.(); void clients.refetch() }
+
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
   // filtro é aplicado aqui, antes de entregar as linhas à tabela.
@@ -88,13 +95,13 @@ export function BudgetsTable({
             </div>
           </>
         }
-        end={error ? undefined : actions}
+        end={loadError ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
-        loading={loading}
-        error={error}
-        onRetry={onRetry}
+        loading={loading || clients.isLoading}
+        error={loadError}
+        onRetry={retry}
         emptyMessage={empty}
         footerCount={t('budget.count', { count: table.rows.length })}
         first={table.first}
