@@ -184,6 +184,42 @@ is_active: boolean,
 roles: string[],
 permissions: string[],
 };
+export type StudentClientLogData = {
+id: number,
+client_id: number,
+client_name: string,
+started_on: string,
+ended_on: string | null,
+};
+export type StudentData = {
+id: undefined | number,
+name: string,
+rut: string,
+email: string,
+phone: undefined | string | null,
+client_id: undefined | number,
+current_client_id: number | null,
+current_client_name: string | null,
+enrollments_count: number,
+};
+export type StudentDetailData = {
+id: number,
+name: string,
+rut: string,
+email: string,
+phone: string | null,
+current_client_id: number | null,
+current_client_name: string | null,
+links: StudentClientLogData[],
+turmas: StudentTurmaData[],
+};
+export type StudentTurmaData = {
+turma_id: number,
+quote_code: string | null,
+course_name: string,
+start_date: string,
+approval_status: string,
+};
 export type TurmaData = {
 id: undefined | number,
 quote_id: undefined | number,
