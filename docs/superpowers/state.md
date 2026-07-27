@@ -2,23 +2,16 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: blocked
-next_owner: joão
-next_action: resolve_blocker
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
 active_plan: docs/superpowers/plans/2026-07-27-bloco-alunos-modulo.md
 context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
-blocker: >
-  Runtime do Codex (mcp__codex__codex) sem acesso a /var/run/docker.sock — confirmado em duas
-  tentativas (sandbox workspace-write e danger-full-access, ambas negadas antes de qualquer
-  comando). Tasks 1-5 (backend, handoff Codex) não puderam rodar o ciclo TDD do plano, que
-  depende de `docker compose exec -T app php artisan test`. Zero diff aceito, nenhum commit
-  feito. O Claude, no mesmo host, TEM acesso Docker funcional (`docker compose exec -T app php
-  artisan --version` responde). Repete o padrão do v1 de bloco-visual-refino-ui: blocked por gap
-  de tooling, não por ausência de fonte.
-resume_state: executing
+blocker: null
+resume_state: null
 context_packet_status: partial
 updated_at: 2026-07-27
 ---
@@ -79,6 +72,27 @@ violações do contrato de validação (tabela `student_client_links` inexistent
 fabricada sobre CRUD, `identity.user.*` como constraint sem lastro no `PermissionCatalog`).
 Duas perguntas abertas entram no brainstorming: alcance CRUD e permissão do módulo. Prints do
 protótipo, anexados pelo João, entram como fonte `PROTO` — o Codex não os alcança.
+
+**Execução — Tasks 1-5 (backend, Codex) concluídas em 2026-07-27**, commits `93f415e`, `7a3a1b8`,
+`ddf22db`, `05d8ec9`, `aacd13b`. Bloqueou uma vez no meio do caminho: a primeira tentativa via
+`mcp__codex__codex` (sandbox `workspace-write`) e a retentativa via `mcp__codex__codex-reply` (que
+não tem parâmetro `sandbox` — herda o da sessão original) apanharam
+`permission denied ... /var/run/docker.sock`, já que o container `app` exige o socket Docker para
+o ciclo TDD do plano. `state.md` foi a `blocked` no commit `0cfd369`. Resolvido reabrindo uma
+sessão **nova** de `mcp__codex__codex` com `sandbox: danger-full-access` (sessão, não reply — o
+parâmetro só é aplicado na abertura); a primeira chamada com esse sandbox foi barrada pelo
+classificador de auto mode do próprio Claude Code, destravada com aprovação explícita do João.
+Diff revisado por Claude contra o plano e `.claude/rules/backend-ddd.md`/`generated-types.md`:
+302 testes verdes (suíte completa, rodada de novo pelo Claude, não só reportada pelo Codex), Pint
+limpo, `git diff --name-only` só nos `paths_autorizados`. Três desvios do código literal do plano,
+todos registrados pelo Codex e verificados: (1) `client_id` ausente no `store` não virava 422 —
+`rules()` usa `sometimes` porque o mesmo DTO serve o `update`, que não deve exigir `client_id`;
+adicionado guard explícito em `CreateStudentAction` lançando `ValidationException`, com teste novo
+(`test_cliente_e_obrigatorio_no_cadastro`), fechando D3; (2) `sortByDesc('started_on')` no
+`StudentDetailData` não desempatava dois vínculos abertos no mesmo dia — trocado por
+`sortBy([['started_on','desc'],['id','desc']])`; (3) dois fixtures de teste da Task 2 criavam
+aluno sem RUT (campo obrigatório no DTO) e o RUT de exemplo `12.876.543-K` da Task 5 falha
+`ValidRut` — ajustados para RUTs válidos.
 
 ## Último item fechado — 2026-07-27
 
