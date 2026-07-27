@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { AppErrorState } from '../AppErrorState'
 import { appDataTablePt, appPaginatorPt } from './style'
 
 /** Mescla o passthrough do chamador com o da base POR CHAVE. Um spread raso
@@ -31,6 +33,12 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
    * DataTable vira o rodapé do card (spec D12), com a contagem à esquerda e os
    * controles de página à direita — e só quando há mais de uma página. */
   footerCount?: ReactNode
+  /** Problema que impediu o carregamento. Truthy => o corpo vira
+   * `AppErrorState` (spec D16). Estruturalmente compatível com `ProblemDetails`
+   * sem importar de `shared/api`. */
+  error?: { detail?: string | null } | null
+  /** Recarrega a lista. Sem ele o estado de erro não oferece botão. */
+  onRetry?: () => void
 }
 
 /** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
@@ -45,32 +53,56 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
  * faixa mesmo em página única e `paginatorTemplate=''` apaga os controles
  * (template falsy não cria elemento algum; `leftContent` renderiza fora desse
  * ramo). Fatiar a página fora da tabela foi rejeitado: 5 tabelas têm coluna
- * `sortable`, e o DataTable só ordena o que recebe. */
+ * `sortable`, e o DataTable só ordena o que recebe.
+ *
+ * Em erro (spec D16) o wrapper força três coisas de uma vez: linhas vazias (dado
+ * obsoleto de um refetch que falhou não é dado válido), rodapé desligado
+ * (contar linhas de uma lista que não carregou é ruído) e o corpo virando
+ * `AppErrorState`. O estado de erro vence o de vazio: a tabela nunca convida a
+ * cadastrar sobre uma falha. */
 export function AppDataTable<T extends DataTableValueArray>({
   pt,
   loading,
   emptyMessage,
   footerCount,
+  error,
+  onRetry,
   value,
   rows = 10,
   ...props
 }: AppDataTableProps<T>) {
-  const paginated = (value?.length ?? 0) > rows
+  const { t } = useTranslation()
+  const errored = error != null
+  const data = (errored ? [] : value) as T | undefined
+  const paginated = (data?.length ?? 0) > rows
+
+  const body = errored ? (
+    <AppErrorState
+      title={t('common.loadError')}
+      detail={error?.detail ?? t('common.loadErrorHint')}
+      retryLabel={onRetry ? t('common.retry') : undefined}
+      onRetry={onRetry}
+    />
+  ) : loading ? (
+    <span />
+  ) : (
+    emptyMessage
+  )
 
   return (
     <DataTable
       dataKey="id"
       removableSort
       rowHover
-      value={value}
+      value={data}
       rows={rows}
-      paginator={footerCount !== undefined}
+      paginator={footerCount !== undefined && !errored}
       alwaysShowPaginator
       paginatorLeft={footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
       pt={mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, pt as DataTableProps<DataTableValueArray>['pt'])}
-      loading={loading}
-      emptyMessage={loading ? <span /> : emptyMessage}
+      loading={loading && !errored}
+      emptyMessage={body}
       {...props}
     />
   )

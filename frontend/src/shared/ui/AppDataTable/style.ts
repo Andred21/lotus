@@ -7,6 +7,14 @@ import type { DataTablePassThroughOptions } from 'primereact/datatable'
  * precisa de zebra para guiar o olho. */
 export const appDataTablePt: DataTablePassThroughOptions = {
   root: { className: 'text-sm' },
+  /** Responsividade (spec D20): quem rola é o card, nunca a página. A tabela
+   * ganha largura mínima para as colunas não se espremerem a ponto de quebrar
+   * palavra; abaixo disso o wrapper rola na horizontal.
+   *
+   * Colapsar coluna foi rejeitado: escolher qual dado some é julgamento de
+   * domínio, e esconder coluna em tela com peso de auditoria é perda silenciosa. */
+  wrapper: { className: 'overflow-x-auto' },
+  table: { className: 'min-w-[48rem]' },
   headerRow: { className: 'text-xs uppercase tracking-wide' },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a
   // DataTablePassThroughOptions — cascatam via `column` (tipagem do PrimeReact 10.9.8).
