@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
-  CrudDialog, AppAvatar, AppInputText, AppDropdown, AppTag, AppDataTable, AppColumn,
+  CrudDialog, AppAvatar, AppButton, AppInputText, AppDropdown, AppTag, AppDataTable, AppColumn,
   AppSkeleton, AppErrorState, FormField, FormSection, FormErrorBanner,
 } from '@shared/ui'
 import type { StudentData, StudentTurmaData, StudentClientLogData } from '@shared/types/generated'
@@ -51,6 +51,7 @@ export function StudentDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      disabled={mode === 'create' && (clients.isLoading || clients.isError)}
       submitLabel={mode === 'create' ? t('student.create') : undefined}
       headerExtra={mode !== 'create' ? <AppAvatar name={form.name} size="normal" /> : null}
     >
@@ -73,21 +74,26 @@ export function StudentDialog({
           <FormField label={t('common.phone')}>
             <AppInputText value={form.phone ?? ''} disabled={readOnly} onChange={(e) => set('phone', e.target.value)} className="w-full" />
           </FormField>
-          <FormField
-            label={t('student.client')}
-            error={
-              fieldErrors?.client_id?.[0]
-              ?? (mode === 'create' && clients.isError ? (clients.error?.detail ?? t('common.loadErrorHint')) : undefined)
-            }
-          >
+          <FormField label={t('student.client')} error={fieldErrors?.client_id?.[0]}>
             {mode === 'create' ? (
-              <AppDropdown
-                value={form.client_id}
-                disabled={clients.isError}
-                options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
-                onChange={(e) => set('client_id', e.value as number)}
-                className="w-full"
-              />
+              <>
+                <AppDropdown
+                  value={form.client_id}
+                  disabled={clients.isError}
+                  options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
+                  onChange={(e) => set('client_id', e.value as number)}
+                  className="w-full"
+                />
+                {clients.isError && (
+                  <p
+                    className="mt-1 flex items-center justify-between gap-2 text-xs"
+                    style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
+                  >
+                    <span>{clients.error?.detail ?? t('common.loadErrorHint')}</span>
+                    <AppButton label={t('common.retry')} text onClick={() => void clients.refetch()} />
+                  </p>
+                )}
+              </>
             ) : (
               <AppInputText value={student?.current_client_name ?? t('student.noClient')} disabled className="w-full" />
             )}

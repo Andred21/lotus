@@ -12,7 +12,7 @@ import type { DialogMode } from '@shared/lib'
  * só com título e conteúdo contextual (`headerExtra`).
  */
 export function CrudDialog({
-  visible, mode, title, onHide, onEdit, onSubmit, pending, submitLabel, headerExtra, children,
+  visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, submitLabel, headerExtra, children,
 }: {
   visible: boolean
   mode: DialogMode
@@ -21,6 +21,9 @@ export function CrudDialog({
   onEdit?: () => void
   onSubmit?: () => void
   pending?: boolean
+  /** Desabilita o botão salvar sem mexer no loading (ex.: dependência externa
+   * que ainda não carregou, como a lista de clientes do create de aluno). */
+  disabled?: boolean
   submitLabel?: string
   headerExtra?: ReactNode
   children: ReactNode
@@ -48,6 +51,7 @@ export function CrudDialog({
           label={submitLabel ?? t('common.save')}
           icon="pi pi-check"
           loading={pending}
+          disabled={disabled}
           onClick={onSubmit}
         />
       </div>
