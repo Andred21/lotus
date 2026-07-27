@@ -137,6 +137,16 @@ desabilitava dropdown e submit mesmo com lista utilizável em cache. Trocado por
 verdade (primeiro load ou erro sem cache prévio); o aviso de erro + retry continuam aparecendo
 sempre que `isError`, agora sem bloquear nada quando há dado utilizável.
 
+**Quinto fix, mesmo dia, commit `6654ce2`.** Dois achados reais, um deles fora do escopo do
+`StudentDialog` propriamente: `useLogout()` (`features/identity/api/authApi.ts`) só limpava o
+`sessionStore`, nunca o `QueryClient` global — dado em cache de QUALQUER recurso sobrevivia ao
+logout na mesma aba, atravessando a fronteira de autorização de um usuário pro outro (o cliente
+que o usuário anterior podia ver aparecendo pro seguinte, mesmo sem a permissão). Adicionado
+`queryClient.clear()` no `onSuccess` do logout. Segundo achado, local: `clientsUnusable` checava
+só `!clients.data`, mas `[]` é truthy — uma lista vazia bem-sucedida contava como "utilizável" e
+habilitava o submit sem opção nenhuma pra escolher. Trocado por `!clients.data?.length` + mensagem
+explícita (`student.noClientsAvailable`, 3 locales) quando a lista volta vazia sem erro.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
