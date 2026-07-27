@@ -25,7 +25,7 @@ export function RolesTable({
   return (
     <>
       {/* Aba sem busca: o grupo de botões vai no slot ESQUERDO (spec D1). */}
-      <AppCardToolbar start={actions} />
+      <AppCardToolbar start={error ? undefined : actions} />
       <AppDataTable
         value={roles}
         loading={loading}

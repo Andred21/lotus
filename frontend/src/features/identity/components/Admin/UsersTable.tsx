@@ -44,7 +44,7 @@ export function UsersTable({
             />
           </div>
         }
-        end={actions}
+        end={error ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}

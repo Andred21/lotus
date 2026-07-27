@@ -88,7 +88,7 @@ export function BudgetsTable({
             </div>
           </>
         }
-        end={actions}
+        end={error ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
