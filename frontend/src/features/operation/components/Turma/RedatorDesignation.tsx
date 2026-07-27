@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppAvatar, AppButton, AppTag, AppDialog } from '@shared/ui'
+import { AppAvatar, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
 
@@ -52,7 +52,18 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
       {picker.error && <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>{picker.error}</p>}
 
       <AppDialog visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
-        {picker.eligible.length === 0 ? (
+        {/* Ordem das guardas: erro > carregando > vazio. Invertê-la faria a falha
+            de carga passar por "nenhum redator elegível" (spec D16). */}
+        {picker.loadError ? (
+          <AppErrorState
+            title={t('common.loadError')}
+            detail={picker.loadError.detail ?? t('common.loadErrorHint')}
+            retryLabel={t('common.retry')}
+            onRetry={picker.reloadList}
+          />
+        ) : picker.loadingList ? (
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+        ) : picker.eligible.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.pickerEmpty')}</p>
         ) : (
           <ul className="space-y-2">
