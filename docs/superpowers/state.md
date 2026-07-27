@@ -2,23 +2,18 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
 active_plan: docs/superpowers/plans/2026-07-26-bloco-visual-refino-ui.md
 context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
-blocker: |
-  /revisar-sprint da Parte 4 devolveu 7 achados aguardando decisão do João (Q-9 a Q-15).
-  Q-9 (detalhe de erro de rede fixo em português, exibido pelo AppErrorState em UI es-CL) é o
-  único 🔴. Q-10 a Q-13 são 🟡; Q-14 e Q-15 são 🟢. Detalhe na seção
-  "## /revisar-sprint — Parte 4" deste arquivo. Merge na main bloqueado até a decisão e até o
-  João provar o DoD comportamental na tela.
-resume_state: reviewing
+blocker: null
+resume_state: null
 context_packet_status: ready
-updated_at: 2026-07-26
+updated_at: 2026-07-27
 ---
 
 # Estado operacional — Lotus v2
@@ -578,3 +573,32 @@ zero `window.confirm`, zero `AppCardFooter` em `features/`, zero
   do D16 está satisfeito; `isError` seria campo redundante.
 - "`AppDataTable` conta 0 durante o loading" — real, mas rebaixado a 🟢 (Q-15): a overlay do
   PrimeReact cobre a faixa e o D19 decidiu manter essa overlay na tabela.
+
+## Correções de review aplicadas — Parte 4, 2026-07-27
+
+**João aprovou Q-9 a Q-13 e pediu merge assim que corrigidos**, sem esperar a prova visual (Q-14 e
+Q-15 foram para os débitos do `backlog.md`, junto com a cor fora do corte do D18). Apliquei eu
+mesmo — nenhuma delegação, o escopo era pequeno e cirúrgico. Um commit por achado:
+
+- `6f2c000` (Q-9) — o `ProblemDetails` sintético de erro de rede e o fallback sem envelope RFC 7807
+  passam pelo `i18n`. Chaves `common.networkError`, `common.networkErrorHint` e
+  `common.unexpectedError` nos 3 locales.
+- `6376633` (Q-10) — `DetailHeader.title` vira opcional e os branches `loadError`/`notFound` das duas
+  telas de detalhe renderizam o cabeçalho só com o `back`.
+- `c89dd09` (Q-11) — `useRedatorPicker` expõe `loadError`/`reloadList`; o diálogo aplica a ordem de
+  guarda erro > carregando > vazio. **Fecha o órfão `loadingList`**, que agora tem consumidor.
+- `6345a21` (Q-12) — as 3 ocorrências de query auxiliar silenciosa (`PendingQuotesPanel`,
+  `BudgetsTable`, `useBudgetDetail`): erro vence vazio e o retry recarrega as duas queries.
+- `6c2f47b` (Q-13) — `RoleDialog` passa de `md:` para `sm:grid-cols-2` (um breakpoint só nos 10
+  grids de diálogo) e o Step 5 da Task 33 foi reescrito para o que o código garante: **duas** colunas
+  a 768px, uma abaixo de 640px, sem scroll horizontal nas duas larguras.
+
+Verificações rodadas por mim depois das correções: `pnpm lint` limpo, `pnpm build` verde, paridade
+`es-pt: []` / `es-en: []`, e os 6 greps de lei §5 todos em zero. Órfãos: nenhum.
+
+**Decisão de escopo registrada:** o Q-12 resolve `BudgetsTable` agregando a falha de `clientsApi` ao
+erro da própria tabela, em vez de degradar a coluna Cliente. Blanquear a tabela por falha de uma
+query auxiliar é mais agressivo, mas a alternativa era manter a busca por cliente quebrada em
+silêncio — e é a busca que o DoD da Parte 1 provou.
+
+Revisão limpa: nenhum achado aguardando decisão ou correção.
