@@ -308,7 +308,6 @@
     "create": "Registrar redactor",
     "tabRedatores": "Redactores",
     "tabStudents": "Alumnos",
-    "studentsPlaceholder": "Módulo de alumnos — próxima sprint.",
     "empty": "Sin redactores",
     "emptyHint": "Registra el primer redactor para comenzar.",
     "count": "{{count}} redactores",

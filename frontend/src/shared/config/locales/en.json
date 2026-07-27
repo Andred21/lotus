@@ -308,7 +308,6 @@
     "create": "Register instructor",
     "tabRedatores": "Instructors",
     "tabStudents": "Students",
-    "studentsPlaceholder": "Students module — next sprint.",
     "empty": "No instructors",
     "emptyHint": "Register the first instructor to get started.",
     "count": "{{count}} instructors",
