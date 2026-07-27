@@ -14,11 +14,13 @@ import { formatUf } from '../../lib/uf'
 const STATUSES: QuoteStatus[] = ['pending', 'approved', 'rejected']
 
 export function BudgetsTable({
-  budgets, loading, actions,
+  budgets, loading, actions, error, onRetry,
 }: {
   budgets: BudgetData[]
   loading: boolean
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -91,6 +93,8 @@ export function BudgetsTable({
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('budget.count', { count: table.rows.length })}
         first={table.first}

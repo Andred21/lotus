@@ -25,6 +25,8 @@ export function AdministracionPage() {
             <UsersTable
               users={page.items}
               loading={page.loading}
+              error={page.error}
+              onRetry={page.refetch}
               onView={page.openView}
               actions={
                 canManage
@@ -38,6 +40,8 @@ export function AdministracionPage() {
               <RolesTable
                 roles={rolesPage.items}
                 loading={rolesPage.loading}
+                error={rolesPage.error}
+                onRetry={rolesPage.refetch}
                 onView={rolesPage.openView}
                 actions={<AppButton variant="brandIcon" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />}
               />

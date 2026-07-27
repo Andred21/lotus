@@ -21,7 +21,12 @@ export function OperationPage() {
       <div className="space-y-6">
         {canCreate && <PendingQuotesPanel items={pending.data ?? []} />}
         <AppCard>
-          <TurmasTable turmas={turmas.data ?? []} loading={turmas.isLoading} />
+          <TurmasTable
+            turmas={turmas.data ?? []}
+            loading={turmas.isLoading}
+            error={turmas.isError ? (turmas.error ?? {}) : null}
+            onRetry={() => { void turmas.refetch() }}
+          />
         </AppCard>
       </div>
     </ModulePage>

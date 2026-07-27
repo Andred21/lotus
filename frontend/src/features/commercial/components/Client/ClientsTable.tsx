@@ -7,12 +7,14 @@ import {
 import type { ClientData } from '@shared/types/generated'
 
 export function ClientsTable({
-  clients, loading, onView, actions,
+  clients, loading, onView, actions, error, onRetry,
 }: {
   clients: ClientData[]
   loading: boolean
   onView: (c: ClientData) => void
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const table = useTableFilter(clients, (c) => [c.legal_name, c.rut])
@@ -49,6 +51,8 @@ export function ClientsTable({
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('client.count', { count: table.rows.length })}
         first={table.first}
