@@ -15,17 +15,30 @@ export function TurmaDetailPage() {
   const [tab, setTab] = useState(0)
   const [editingConfig, setEditingConfig] = useState(false)
 
+  // Erro e notFound mantêm o `back`: sem ele um GET que falha e continua falhando
+  // prende o usuário na rota — Reintentar recarrega, não sai.
+  const back = { label: t('operation.detail.back'), onClick: d.goBack }
+
   if (d.loading) return <AppDetailSkeleton />
   if (d.loadError)
     return (
-      <AppErrorState
-        title={t('common.loadError')}
-        detail={d.loadError.detail ?? t('common.loadErrorHint')}
-        retryLabel={t('common.retry')}
-        onRetry={d.reload}
-      />
+      <div>
+        <DetailHeader back={back} />
+        <AppErrorState
+          title={t('common.loadError')}
+          detail={d.loadError.detail ?? t('common.loadErrorHint')}
+          retryLabel={t('common.retry')}
+          onRetry={d.reload}
+        />
+      </div>
     )
-  if (!d.turma) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.detail.notFound')}</p>
+  if (!d.turma)
+    return (
+      <div>
+        <DetailHeader back={back} />
+        <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.detail.notFound')}</p>
+      </div>
+    )
 
   const turma = d.turma
   const status = turmaDisplayStatus(turma)
@@ -33,7 +46,7 @@ export function TurmaDetailPage() {
   return (
     <div>
       <DetailHeader
-        back={{ label: t('operation.detail.back'), onClick: d.goBack }}
+        back={back}
         title={turma.course_name ?? '—'}
         subtitle={
           <>

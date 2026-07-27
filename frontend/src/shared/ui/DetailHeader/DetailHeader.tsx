@@ -3,7 +3,10 @@ import type { ReactNode } from 'react'
 export interface DetailHeaderProps {
   /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele. */
   back?: { label: string; onClick: () => void }
-  title: string
+  /** Ausente quando não há entidade para nomear: falha de carga ou id inexistente.
+   * Nesses estados o cabeçalho sobrevive só pelo `back` — sem ele a tela vira um
+   * beco sem saída, e Reintentar não é saída. */
+  title?: string
   /** Linha de identificação sob o título (cliente, RUT, vínculo). */
   subtitle?: ReactNode
   /** Tags de estado e modalidade, à direita. */
@@ -35,20 +38,22 @@ export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHea
           {back.label}
         </button>
       )}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>
-          {subtitle && (
-            <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+      {(title || subtitle || tags || actions) && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>}
+            {subtitle && (
+              <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+            )}
+          </div>
+          {(tags || actions) && (
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              {tags}
+              {actions}
+            </div>
           )}
         </div>
-        {(tags || actions) && (
-          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-            {tags}
-            {actions}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

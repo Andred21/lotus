@@ -17,24 +17,37 @@ export function BudgetDetailPage() {
   const budgetId = Number(id)
   const d = useBudgetDetail(budgetId)
 
+  // Erro e notFound mantêm o `back`: sem ele um GET que falha e continua falhando
+  // prende o usuário na rota — Reintentar recarrega, não sai.
+  const back = { label: t('budget.back'), onClick: d.goBack }
+
   if (d.loading) return <AppDetailSkeleton />
   if (d.loadError)
     return (
-      <AppErrorState
-        title={t('common.loadError')}
-        detail={d.loadError.detail ?? t('common.loadErrorHint')}
-        retryLabel={t('common.retry')}
-        onRetry={d.reload}
-      />
+      <div>
+        <DetailHeader back={back} />
+        <AppErrorState
+          title={t('common.loadError')}
+          detail={d.loadError.detail ?? t('common.loadErrorHint')}
+          retryLabel={t('common.retry')}
+          onRetry={d.reload}
+        />
+      </div>
     )
-  if (!d.budget) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.notFound')}</p>
+  if (!d.budget)
+    return (
+      <div>
+        <DetailHeader back={back} />
+        <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.notFound')}</p>
+      </div>
+    )
 
   const budget = d.budget
 
   return (
     <div>
       <DetailHeader
-        back={{ label: t('budget.back'), onClick: d.goBack }}
+        back={back}
         title={budget.code ?? '—'}
         subtitle={
           <>
