@@ -147,6 +147,12 @@ só `!clients.data`, mas `[]` é truthy — uma lista vazia bem-sucedida contava
 habilitava o submit sem opção nenhuma pra escolher. Trocado por `!clients.data?.length` + mensagem
 explícita (`student.noClientsAvailable`, 3 locales) quando a lista volta vazia sem erro.
 
+**Sexto fix, mesmo dia, commit `6e5c54b`.** A mensagem de "nenhum cliente" não tinha ação de
+atualizar — `refetchOnWindowFocus` está desligado globalmente, então nem trocar de aba revalidava,
+e o único jeito de ver um cliente cadastrado nesse meio tempo era fechar o dialog e perder
+nome/RUT/email já digitados. Mesmo botão "Reintentar" (`clients.refetch()`) do estado de erro,
+agora também no estado vazio.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
