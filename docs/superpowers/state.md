@@ -2,16 +2,29 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
 active_plan: docs/superpowers/plans/2026-07-27-bloco-alunos-modulo.md
 context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
-blocker: null
-resume_state: null
+blocker: >-
+  Revisão de sprint (Claude + Codex read-only) devolveu 6 achados aguardando decisão do João.
+  Q-1 🔴 relação soft-deletada (Client/Course/Turma) na projeção do aluno: GET /api/students/{id}
+  vira 500 — PROVADO em tinker; variante silenciosa na listagem ("Sin cliente" com vínculo aberto).
+  Q-2 🟡 seção "Historial de turmas" vazia quando o detalhe falha (fere D16). Q-3 🟡
+  approval_status como string em vez de EnrollmentApprovalStatus, forçando APPROVAL_SEVERITY
+  duplicado de features/operation/lib — a rule manda o union para shared/lib. Q-4 🟢 client_id
+  validado no update que o ignora. Q-5 🟢 StudentDetailData sem enrollments_count, contra D5.
+  Q-6 🟢 data fixa em es-CL nos 3 locales (padrão reincidente com shared/lib/datetime.ts).
+  Verificação: 302 testes verdes, build e lint verdes, sem órfãos, i18n 428 chaves nos 3 locales.
+  5 achados do Codex descartados com motivo (slate e end={error} são padrão do repo; staleness do
+  form é o desenho do useCrudPage; race check-then-insert é pré-existente e desproporcional;
+  gate de commercial.client.view já resolvido em 3e0bc36 — mas o desalinhamento de RBAC segue
+  aberto e precisa migrar do state.md para docs/pendencias.md antes do fechamento).
+resume_state: reviewing
 context_packet_status: partial
 updated_at: 2026-07-27
 ---
