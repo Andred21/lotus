@@ -7,9 +7,8 @@ export interface FormSectionProps {
 /**
  * Cabeçalho de seção dentro de um formulário. Apresentacional puro.
  *
- * Existia copiado em 13 lugares, com a cor fixa em `text-slate-500` — que é
- * cor Tailwind hardcoded contra o ADR-16. Centralizar mata as duas coisas de
- * uma vez.
+ * Existia copiado em 13 lugares, com a cor cinza fixa em Tailwind — hardcoded
+ * contra o ADR-16. Centralizar mata as duas coisas de uma vez.
  */
 export function FormSection({ title, spaced }: FormSectionProps) {
   return (
