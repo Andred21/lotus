@@ -2,16 +2,23 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: ready_for_execution
-next_owner: claude
-next_action: execute_active_plan
+workflow_state: blocked
+next_owner: joão
+next_action: resolve_blocker
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
 active_plan: docs/superpowers/plans/2026-07-27-bloco-alunos-modulo.md
 context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
-blocker: null
-resume_state: null
+blocker: >
+  Runtime do Codex (mcp__codex__codex) sem acesso a /var/run/docker.sock — confirmado em duas
+  tentativas (sandbox workspace-write e danger-full-access, ambas negadas antes de qualquer
+  comando). Tasks 1-5 (backend, handoff Codex) não puderam rodar o ciclo TDD do plano, que
+  depende de `docker compose exec -T app php artisan test`. Zero diff aceito, nenhum commit
+  feito. O Claude, no mesmo host, TEM acesso Docker funcional (`docker compose exec -T app php
+  artisan --version` responde). Repete o padrão do v1 de bloco-visual-refino-ui: blocked por gap
+  de tooling, não por ausência de fonte.
+resume_state: executing
 context_packet_status: partial
 updated_at: 2026-07-27
 ---
