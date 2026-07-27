@@ -112,6 +112,16 @@ read-only (`current_client_name`, já vem no `StudentData`) fora do create, gate
 (`identity.user.create` + `commercial.client.view`) no botão "Nuevo alumno", e Editar gated por
 `identity.user.update` (mesmo padrão de `RoleDialog`/`StaffUserDialog`). build+lint verdes.
 
+**Correção do fix anterior, mesmo dia, commit `3e0bc36`.** O gate duplo do botão "Nuevo alumno"
+(`identity.user.create` + `commercial.client.view`) foi ele mesmo um achado do stop-gate review
+seguinte: contradiz D8 da spec e o `StudentController` real, que só exige `identity.user.create`
+no `store` — escondia o botão de quem tinha a permissão certa. Revertido para só
+`identity.user.create`. O problema de origem (dropdown de cliente sem relação de permissão com o
+resto do módulo) fica resolvido tornando a falha **visível** em vez de escondida: dropdown
+desabilitado + `clients.error.detail` no `FormField` quando `clientsApi` falha, em vez de opções
+vazias sem explicação ou do botão sumir para quem tem autorização real. Não há caminho para
+alinhar as permissões de fato sem decisão do João sobre RBAC/spec — fora do escopo desta sessão.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
