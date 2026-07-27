@@ -343,7 +343,8 @@
     "turmaCourse": "Course",
     "turmaDate": "Date",
     "turmaStatus": "Status",
-    "clientLocked": "Company changes happen at enrollment."
+    "clientLocked": "Company changes happen at enrollment.",
+    "noClientsAvailable": "No clients registered yet. Register a client first."
   },
   "documentType": {
     "CV": "Résumé (CV)",

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import { initCsrf } from '@shared/api/csrf'
@@ -40,10 +40,17 @@ export function useLogin() {
 
 export function useLogout() {
   const clear = useSessionStore((s) => s.clear)
+  const queryClient = useQueryClient()
 
   return useMutation<void, ProblemDetails, void>({
     mutationFn: () => logout(),
-    onSuccess: () => clear(),
+    // O QueryClient é global e nada o limpava no logout: dado em cache
+    // (clientes, alunos, o que for) sobrevivia pro próximo login na mesma aba,
+    // atravessando a fronteira de autorização de um usuário pro outro.
+    onSuccess: () => {
+      clear()
+      queryClient.clear()
+    },
   })
 }
 

@@ -343,7 +343,8 @@
     "turmaCourse": "Curso",
     "turmaDate": "Fecha",
     "turmaStatus": "Estado",
-    "clientLocked": "El cambio de empresa se hace en la matrícula."
+    "clientLocked": "El cambio de empresa se hace en la matrícula.",
+    "noClientsAvailable": "No hay clientes registrados. Registra un cliente primero."
   },
   "documentType": {
     "CV": "Currículum (CV)",

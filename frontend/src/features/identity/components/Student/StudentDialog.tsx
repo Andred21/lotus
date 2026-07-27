@@ -40,11 +40,12 @@ export function StudentDialog({
   // não conseguir listar clientes (commercial.client.view) vê o motivo aqui,
   // em vez do botão sumir ou do dropdown ficar vazio sem explicação.
   const clients = clientsApi.useList({ enabled: mode === 'create' })
-  // Bloqueia só quando NÃO há lista utilizável (ainda carregando ou falhou sem
-  // cache prévio) — um refetch em background que falha com `clients.data` já
-  // populado (retry manual, refoco de aba) não deve travar um form que ainda
-  // tem opções válidas para escolher.
-  const clientsUnusable = mode === 'create' && !clients.data
+  // Bloqueia só quando NÃO há lista utilizável (ainda carregando, falhou sem
+  // cache prévio, ou a lista veio vazia — `[]` é truthy, então checar só
+  // `!clients.data` deixaria passar cliente nenhum pra escolher). Um refetch
+  // em background que falha com `clients.data` já populado (retry manual,
+  // refoco de aba) não deve travar um form que ainda tem opções válidas.
+  const clientsUnusable = mode === 'create' && !clients.data?.length
   const detail = useStudentDetail(mode === 'create' ? null : student?.id)
 
   return (
@@ -96,6 +97,11 @@ export function StudentDialog({
                   >
                     <span>{clients.error?.detail ?? t('common.loadErrorHint')}</span>
                     <AppButton label={t('common.retry')} text onClick={() => void clients.refetch()} />
+                  </p>
+                )}
+                {!clients.isError && clients.isSuccess && clients.data.length === 0 && (
+                  <p className="mt-1 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+                    {t('student.noClientsAvailable')}
                   </p>
                 )}
               </>
