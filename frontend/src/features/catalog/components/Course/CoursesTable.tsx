@@ -7,12 +7,14 @@ import {
 import type { CourseData } from '@shared/types/generated'
 
 export function CoursesTable({
-  courses, loading, onView, actions,
+  courses, loading, onView, actions, error, onRetry,
 }: {
   courses: CourseData[]
   loading: boolean
   onView: (c: CourseData) => void
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
@@ -41,11 +43,13 @@ export function CoursesTable({
             />
           </div>
         }
-        end={actions}
+        end={error ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('course.count', { count: table.rows.length })}
         first={table.first}

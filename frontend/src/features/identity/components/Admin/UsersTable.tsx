@@ -8,12 +8,14 @@ import {
 import type { UserData } from '@shared/types/generated'
 
 export function UsersTable({
-  users, loading, onView, actions,
+  users, loading, onView, actions, error, onRetry,
 }: {
   users: UserData[]
   loading: boolean
   onView: (u: UserData) => void
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const table = useTableFilter(users, (u) => [u.name, u.email])
@@ -42,11 +44,13 @@ export function UsersTable({
             />
           </div>
         }
-        end={actions}
+        end={error ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('admin.count', { count: table.rows.length })}
         first={table.first}

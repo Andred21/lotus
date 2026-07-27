@@ -13,7 +13,14 @@ import {
 
 const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
 
-export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading: boolean }) {
+export function TurmasTable({
+  turmas, loading, error, onRetry,
+}: {
+  turmas: TurmaData[]
+  loading: boolean
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
@@ -77,6 +84,8 @@ export function TurmasTable({ turmas, loading }: { turmas: TurmaData[]; loading:
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('operation.table.count', { count: table.rows.length })}
         first={table.first}

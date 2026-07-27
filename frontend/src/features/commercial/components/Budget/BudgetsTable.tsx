@@ -14,11 +14,13 @@ import { formatUf } from '../../lib/uf'
 const STATUSES: QuoteStatus[] = ['pending', 'approved', 'rejected']
 
 export function BudgetsTable({
-  budgets, loading, actions,
+  budgets, loading, actions, error, onRetry,
 }: {
   budgets: BudgetData[]
   loading: boolean
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -26,6 +28,13 @@ export function BudgetsTable({
   const clients = clientsApi.useList()
 
   const clientName = (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—'
+
+  // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
+  // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
+  // busca por cliente devolvendo vazio, tudo em silêncio — a tela afirmaria que
+  // esses orçamentos não têm cliente (spec D16). Reintentar recarrega as duas.
+  const loadError = error ?? (clients.isError ? (clients.error ?? {}) : null)
+  const retry = () => { onRetry?.(); void clients.refetch() }
 
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
@@ -86,11 +95,13 @@ export function BudgetsTable({
             </div>
           </>
         }
-        end={actions}
+        end={loadError ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
-        loading={loading}
+        loading={loading || clients.isLoading}
+        error={loadError}
+        onRetry={retry}
         emptyMessage={empty}
         footerCount={t('budget.count', { count: table.rows.length })}
         first={table.first}

@@ -16,6 +16,8 @@ export function CatalogPage() {
         <CoursesTable
           courses={page.items}
           loading={page.loading}
+          error={page.error}
+          onRetry={page.refetch}
           onView={page.openView}
           actions={
             can('catalog.course.create')

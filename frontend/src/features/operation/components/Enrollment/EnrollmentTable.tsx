@@ -11,12 +11,16 @@ type Props = {
   removing: boolean
   removeError?: string
   onResetRemove: () => void
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }
 
 // Sem coluna CLIENTE: EnrollmentData não expõe cliente (a turma tem um único
 // cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
 // (§3), não uma lacuna.
-export function EnrollmentTable({ enrollments, loading, onRemove, removing, removeError, onResetRemove }: Props) {
+export function EnrollmentTable({
+  enrollments, loading, onRemove, removing, removeError, onResetRemove, error, onRetry,
+}: Props) {
   const { t } = useTranslation()
   const [pending, setPending] = useState<EnrollmentData | null>(null)
   const [first, setFirst] = useState(0)
@@ -33,6 +37,8 @@ export function EnrollmentTable({ enrollments, loading, onRemove, removing, remo
       <AppDataTable
         value={enrollments}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         first={first >= enrollments.length ? 0 : first}
         onPage={(e) => setFirst(e.first)}
         footerCount={t('operation.enrollment.footerCount', { count: enrollments.length })}

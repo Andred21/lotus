@@ -18,6 +18,8 @@ export function PeoplePage() {
             <RedatoresTable
               redatores={page.items}
               loading={page.loading}
+              error={page.error}
+              onRetry={page.refetch}
               onView={page.openView}
               actions={
                 can('identity.user.create')

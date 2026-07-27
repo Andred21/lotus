@@ -19,20 +19,22 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         // Grupo de botões à ESQUERDA, sem busca — é o que o protótipo mostra na
         // aba Alumnos (packet, "Aba sem busca").
         start={
-          <>
-            <AppButton
-              variant="brandIcon"
-              label={t('operation.enrollment.importSheet')}
-              icon="pi pi-upload"
-              onClick={() => setImportOpen(true)}
-            />
-            <AppButton
-              label={t('operation.enrollment.addStudent')}
-              icon="pi pi-user-plus"
-              outlined
-              onClick={() => setAddOpen(true)}
-            />
-          </>
+          s.loadError ? undefined : (
+            <>
+              <AppButton
+                variant="brandIcon"
+                label={t('operation.enrollment.importSheet')}
+                icon="pi pi-upload"
+                onClick={() => setImportOpen(true)}
+              />
+              <AppButton
+                label={t('operation.enrollment.addStudent')}
+                icon="pi pi-user-plus"
+                outlined
+                onClick={() => setAddOpen(true)}
+              />
+            </>
+          )
         }
       />
 
@@ -47,6 +49,8 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         removing={s.removing}
         removeError={s.error}
         onResetRemove={s.resetRemove}
+        error={s.loadError}
+        onRetry={s.reload}
       />
 
       <EnrollStudentForm

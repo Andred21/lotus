@@ -36,7 +36,13 @@
     "noResultsFilteredHint": "Ajuste ou limpe os filtros aplicados.",
     "clearFilters": "Limpar filtros",
     "noResultsHint": "Revise o termo ou limpe a busca.",
-    "clearSearch": "Limpar busca"
+    "clearSearch": "Limpar busca",
+    "loadError": "Não foi possível carregar os dados",
+    "loadErrorHint": "Verifique sua conexão e tente de novo.",
+    "retry": "Tentar de novo",
+    "networkError": "Sem conexão com o servidor",
+    "networkErrorHint": "Verifique sua conexão e tente de novo.",
+    "unexpectedError": "Erro inesperado"
   },
   "module": {
     "comercial": {

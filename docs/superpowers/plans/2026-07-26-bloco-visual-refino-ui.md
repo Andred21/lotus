@@ -5717,7 +5717,11 @@ por:
 ```
 
 `grid-cols-2` sem prefixo mantém duas colunas em qualquer largura; com `sm:` ele cai para uma coluna
-abaixo de 640px. `RoleDialog.tsx:72` já usa `grid-cols-1 md:grid-cols-2` e **não** é tocada.
+abaixo de 640px.
+
+> **Correção do review (Q-13, 2026-07-27):** `RoleDialog.tsx:72` usava `grid-cols-1 md:grid-cols-2`
+> — um terceiro breakpoint no mesmo tipo de grid. Passou a `sm:grid-cols-2` como as outras 9, para
+> a quebra de coluna dos diálogos ter **um** breakpoint só (640px).
 
 - [ ] **Step 3: Provar que não sobrou grid fixo**
 
@@ -5741,9 +5745,16 @@ Esperado: ambos sem erro.
 
 - [ ] **Step 5: Provar na tela**
 
-Janela em 768px, `/comercial` → `Nuevo cliente`. Esperado: diálogo quase da largura da janela, campos
-em **uma** coluna, sem scroll horizontal. Repita em `Nuevo curso` (`/cursos`) e `Nuevo usuario`
-(`/administracion`). Nos dois temas.
+> **Correção do review (Q-13, 2026-07-27):** este passo mandava provar "uma coluna a 768px", o que
+> o Step 2 nunca implementou — `sm:` quebra em 640px, então a 768px **duas** colunas são o
+> resultado correto. O DoD real do Step 2 é largura e ausência de scroll, não contagem de colunas a
+> 768px. Texto abaixo corrigido para o que o código garante.
+
+Janela em **768px**, `/comercial` → `Nuevo cliente`. Esperado: diálogo quase da largura da janela,
+**duas** colunas, sem scroll horizontal. Estreite para **600px** (abaixo do `sm`): os mesmos campos
+caem para **uma** coluna, ainda sem scroll horizontal. Repita em `Nuevo curso` (`/cursos`),
+`Nuevo usuario` e `Nuevo rol` (`/administracion` — a grade de permissões segue o mesmo breakpoint
+desde o Q-13). Nos dois temas.
 
 - [ ] **Step 6: Commit**
 

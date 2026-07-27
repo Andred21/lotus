@@ -4,6 +4,7 @@ import type { FileUploadHandlerEvent } from '@shared/ui'
 import { usePermissions, useMutationErrors } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
+import type { ProblemDetails } from '@shared/api/axios'
 import type { QuoteData } from '@shared/types/generated'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../api/useQuotes'
 import { useUploadBudgetFile, useRemoveBudgetFile, type BudgetFileType } from '../api/useCommercialFiles'
@@ -74,7 +75,18 @@ export function useBudgetDetail(budgetId: number) {
   const deleteBudget = () => removeBudget.mutate(budgetId, { onSuccess: () => navigate('/comercial') })
 
   return {
-    loading: query.isLoading,
+    // As duas queries entram: o subtítulo da página é o cliente, e sem agregar
+    // `clients` o skeleton terminava com ele ainda carregando (subtítulo `—` que
+    // vira nome sozinho) e o Reintentar não recuperava a query que falhou.
+    loading: query.isLoading || clients.isLoading,
+    /** Falha do GET do orçamento ou do de clientes. Distinto de
+     * `confirmError`/`fileError`, que são erros de mutação. O cast é obrigatório:
+     * a página lê `.detail`, e a união com `{}` não compila. */
+    loadError:
+      query.isError ? (query.error ?? ({} as ProblemDetails))
+      : clients.isError ? (clients.error ?? ({} as ProblemDetails))
+      : null,
+    reload: () => { void query.refetch(); void clients.refetch() },
     budget,
     client,
     canApprove,

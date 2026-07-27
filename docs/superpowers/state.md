@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_execution
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: execute_active_plan
+next_action: close_active_work_item
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -13,7 +13,7 @@ context_packet: docs/superpowers/context-packets/bloco-visual-refino-ui.md
 blocker: null
 resume_state: null
 context_packet_status: ready
-updated_at: 2026-07-26
+updated_at: 2026-07-27
 ---
 
 # Estado operacional — Lotus v2
@@ -465,3 +465,140 @@ Duas correções de premissa apuradas ao planejar, ambas encolhendo o escopo pre
 Erro de tipo pego no self-review do plano, antes de virar bug de execução: `query.error ?? {}`
 produz a união `ProblemDetails | {}`, e as telas de detalhe leem `.detail` direto — não compilaria.
 As Tasks 30 e 32 usam `?? ({} as ProblemDetails)`.
+
+## Parte 4 executada e pronta para review — 2026-07-26
+
+13 tasks (27–39) do plano executadas via `subagent-driven-development` em worktree
+(`.claude/worktrees/bloco-visual-p4`, branch `worktree-bloco-visual-p4`), base `baaedbf`. Executor
+dividido conforme o gate: Tasks 27–30, 32, 35, 37–39 por `claude` (implementador + review de task
+cada uma, todas aprovadas sem achados bloqueantes); Tasks 31, 33, 34, 36 delegadas ao `codex` via
+`lotus-execute-block` — não commitou; Claude conferiu cada diff contra `paths_autorizados`, rodou
+lint/build/greps de prova por conta própria antes de commitar. D16 (`AppErrorState` +
+`AppDataTable.error` + `useCrudPage.error`/`refetch`), D17 (colapso de sidebar por viewport,
+read-only ao `uiStore`), D18 (cor por variável em `shared/ui` + os 3 arquivos do D14), D19
+(`AppSkeleton`/`AppDetailSkeleton`), D20 (scroll horizontal no `pt`, não coluna colapsável) e D21
+(`FormSection`) entregues.
+
+Task 39 (verificação final) achou e corrigiu 2 problemas reais durante a própria passada: um
+comentário JSDoc batendo falso-positivo no grep de cor hardcoded, e uma violação real do DoD — as 6
+tabelas de módulo com botão de criar ofereciam cadastro em cima de uma falha de carga (toolbar não
+respeitava `error`). Commits `b0921f3` e `a7e0dce`.
+
+Review final da branch (modelo mais capaz, 15 commits `baaedbf..a7e0dce`): "Approved with
+reservations" — confirmou lint/build/tsc/paridade i18n/greps de cor limpos de forma independente. 4
+achados Important + 6 Minor. Triagem:
+
+- 3 corrigidos direto (regressão desta Parte 4, sem conflito com o plano): `min-w-[48rem]` da
+  `AppDataTable` empurrando o botão Reintentar para fora da tela estreita quando não há linhas;
+  `AppCardToolbar` deixando uma faixa vazia quando os dois slots ficam ocultos; classe Tailwind
+  morta no `Clock` desde a Task 35. Commit `127e175`.
+- 3 achados eram conflito de escopo do plano ou pré-existentes fora de qualquer Files de task —
+  levados ao João (`AskUserQuestion`), não decididos sozinho: (1) aba Documentación mostrando "0 de
+  4 entregados" como confirmado durante uma falha de carga — decisão original da Task 32 era deixar
+  como estava; (2) aba Alumnos nunca agregava erro de carregamento da lista — arquivos nunca tocados
+  por nenhuma task 27–39; (3) toggle da sidebar sem efeito abaixo de 1024px, corrompendo
+  silenciosamente o `sidebarCollapsed` persistido — trade-off que a própria Task 37 previu e adiou
+  de propósito ("não trave o toggle agora, seria decisão nova").
+- **João decidiu: corrigir (1) e (2) agora, manter (3) como está e ir para o backlog.** Documentación
+  e Alumnos ganharam `loadError`/`reload` no mesmo padrão das Tasks 27–32. Commit `9c70a10`, revisado
+  por subagente dedicado sem achados bloqueantes.
+- Achados Minor de token de cor semanticamente errado (mas funcionalmente correto), resíduo de cor
+  fora do escopo declarado do D18, e divergência de breakpoint do `RoleDialog` ficam registrados
+  como candidatos a backlog, sem correção nesta parte.
+
+DoD comportamental (prova visual nos dois temas, 1400px e 768px, com `OperationDemoSeeder`, mais o
+teste de teclado/foco em `ClientDialog` e o teste de API derrubada nas 7 telas) segue pendente do
+João — sandbox sem browser/root para Playwright, mesma limitação de todas as partes anteriores. Os
+5 greps de prova do checklist H.2.1 (Step 1 da Task 39) rodam vazios; lint, build e paridade de
+locales verdes.
+
+Branch não mergeada ainda — aguarda `/revisar-sprint` (ou revisão equivalente) e decisão do João.
+Ledger completo em `.superpowers/sdd/progress.md` da worktree.
+
+**Este é o fechamento da última parte do bloco.** `bloco-visual-refino-ui` só fecha quando o João
+confirmar o DoD comportamental na tela e a branch mergear — próxima ação depende de instrução
+explícita, este comando não inicia review nem merge sozinho.
+
+## `/revisar-sprint` — Parte 4, 2026-07-27
+
+Risco **alto** (Tasks 31, 33, 34, 36 com `executor: codex`), então além do gabarito rodei revisão
+independente do Codex em read-only sobre `baaedbf..10dc59f`. Achados fundidos; verifiquei no código
+cada um que só o Codex viu, e 2 dos 9 dele caíram na verificação.
+
+Verificações rodadas por mim na worktree (não aceitas do report anterior): `pnpm lint` limpo,
+`pnpm build` verde, paridade de locales `es-pt: []` / `es-en: []`. Leis §5: nenhuma violação — zero
+`from 'primereact'` em `features/`/`app/`, zero import cross-feature, zero `@features` em `shared/`,
+zero `window.confirm`, zero `AppCardFooter` em `features/`, zero
+`emptyMessage={loading ? undefined : ...}`.
+
+**Órfão (1):** `useRedatorPicker.ts:27` expõe `loadingList` sem nenhum consumidor —
+`RedatorDesignation` nunca lê. Sintoma do Q-11 abaixo, não item separado.
+
+7 achados aguardando decisão:
+
+- **Q-9 🔴 P** — `shared/api/axios.ts:48-52`: o `ProblemDetails` sintético do erro de rede tem
+  `title`/`detail` fixos em português (`"Não foi possível conectar ao servidor."`). Código
+  pré-existente, mas foi o D16 que o tornou **visível**: `AppErrorState` renderiza
+  `error.detail ?? t('common.loadErrorHint')`, e queda de rede é o gatilho mais comum do estado que
+  a parte inteira entregou. Resultado: texto em português no meio de uma UI `es-CL`, em 10+ telas.
+  Fere a rule de i18n (3 locales com chaves idênticas; `es-CL` é a referência de rótulo).
+- **Q-10 🟡 P** — `BudgetDetailPage.tsx:20-30` e `TurmaDetailPage.tsx:19-27`: o branch de erro (e o
+  de `notFound`) retorna **antes** do `DetailHeader`, então some o botão "Volver". Com um GET que
+  falha e continua falhando, o usuário fica preso na rota — o `AppErrorState` oferece Reintentar,
+  não saída. Regressão de composição introduzida pelas Tasks 30/32.
+- **Q-11 🟡 P** — `RedatorDesignation.tsx:55`: `picker.eligible.length === 0` rende
+  `operation.redator.pickerEmpty` ("nenhum redator elegível") tanto para lista vazia quanto para GET
+  falho — `useRedatorPicker` nem expõe erro. É literalmente o defeito que o D16 existe para matar,
+  no mesmo módulo, num diálogo que decide designação de redator.
+- **Q-12 🟡 M** — query auxiliar falha em silêncio, 3 ocorrências do mesmo padrão:
+  `OperationPage.tsx:22` (`pending.data ?? []` faz o painel de cotizações pendentes **sumir**, já
+  que `PendingQuotesPanel` retorna `null` em lista vazia); `BudgetsTable.tsx:28/30` (falha de
+  `clientsApi` troca todo nome de cliente por `—` **e** quebra a busca por cliente sem avisar);
+  `useBudgetDetail.ts:19-21` (`loadError`/`reload` cobrem só o orçamento, então o skeleton termina
+  com o cliente ainda carregando e o Reintentar não recupera o cliente).
+- **Q-13 🟡 P** — divergência entre o Step 2 e o Step 5 da Task 33: o Step 2 implementa
+  `sm:grid-cols-2` (uma coluna só **abaixo de 640px**) e o Step 5 manda provar "campos em uma
+  coluna" a **768px**. A 768px continuam duas colunas. O código está coerente com o que foi
+  implementado; o texto do DoD é que não pode passar. Some-se `RoleDialog.tsx:72` em `md:` (768px),
+  terceiro breakpoint — a divergência já estava anotada como candidata a backlog.
+- **Q-14 🟢 P** — `AppErrorState.tsx:36`: o botão Reintentar não recebe estado de refetch nem
+  `disabled`; cliques repetidos disparam refetch em série sem nenhum feedback.
+- **Q-15 🟢 P** — `AppDataTable.tsx:106`: `paginator` liga com `footerCount` mesmo durante
+  `loading`, então a faixa de rodapé afirma "0 registros" sob o overlay antes de o GET terminar.
+  Cosmético.
+
+**Descartados na verificação (achados do Codex que não sobreviveram):**
+- "`useCrudPage` não expõe `isError`" — a truthiness de `error` **é** o sinal, decisão documentada
+  no JSDoc do hook e entregue assim de propósito (`error: query.isError ? ... : null`). O contrato
+  do D16 está satisfeito; `isError` seria campo redundante.
+- "`AppDataTable` conta 0 durante o loading" — real, mas rebaixado a 🟢 (Q-15): a overlay do
+  PrimeReact cobre a faixa e o D19 decidiu manter essa overlay na tabela.
+
+## Correções de review aplicadas — Parte 4, 2026-07-27
+
+**João aprovou Q-9 a Q-13 e pediu merge assim que corrigidos**, sem esperar a prova visual (Q-14 e
+Q-15 foram para os débitos do `backlog.md`, junto com a cor fora do corte do D18). Apliquei eu
+mesmo — nenhuma delegação, o escopo era pequeno e cirúrgico. Um commit por achado:
+
+- `6f2c000` (Q-9) — o `ProblemDetails` sintético de erro de rede e o fallback sem envelope RFC 7807
+  passam pelo `i18n`. Chaves `common.networkError`, `common.networkErrorHint` e
+  `common.unexpectedError` nos 3 locales.
+- `6376633` (Q-10) — `DetailHeader.title` vira opcional e os branches `loadError`/`notFound` das duas
+  telas de detalhe renderizam o cabeçalho só com o `back`.
+- `c89dd09` (Q-11) — `useRedatorPicker` expõe `loadError`/`reloadList`; o diálogo aplica a ordem de
+  guarda erro > carregando > vazio. **Fecha o órfão `loadingList`**, que agora tem consumidor.
+- `6345a21` (Q-12) — as 3 ocorrências de query auxiliar silenciosa (`PendingQuotesPanel`,
+  `BudgetsTable`, `useBudgetDetail`): erro vence vazio e o retry recarrega as duas queries.
+- `6c2f47b` (Q-13) — `RoleDialog` passa de `md:` para `sm:grid-cols-2` (um breakpoint só nos 10
+  grids de diálogo) e o Step 5 da Task 33 foi reescrito para o que o código garante: **duas** colunas
+  a 768px, uma abaixo de 640px, sem scroll horizontal nas duas larguras.
+
+Verificações rodadas por mim depois das correções: `pnpm lint` limpo, `pnpm build` verde, paridade
+`es-pt: []` / `es-en: []`, e os 6 greps de lei §5 todos em zero. Órfãos: nenhum.
+
+**Decisão de escopo registrada:** o Q-12 resolve `BudgetsTable` agregando a falha de `clientsApi` ao
+erro da própria tabela, em vez de degradar a coluna Cliente. Blanquear a tabela por falha de uma
+query auxiliar é mais agressivo, mas a alternativa era manter a busca por cliente quebrada em
+silêncio — e é a busca que o DoD da Parte 1 provou.
+
+Revisão limpa: nenhum achado aguardando decisão ou correção.

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppDropdown, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
 import { AddressFields } from './AddressFields'
@@ -50,14 +50,14 @@ export function ClientDialog({
         excludePrefixes={['contacts.']}
       />
       <section className="space-y-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">{t('client.sectionGeneral')}</h3>
+        <FormSection title={t('client.sectionGeneral')} />
         {/* Empresa não tem "nome" separado da razón social — `name` (exigido
             pelo backend) é derivado de `legal_name` no submit. Erro de `name`
             aparece aqui pois foi este campo que o gerou. */}
         <FormField label={t('client.legalName')} error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
           <AppInputText value={form.legal_name} disabled={readOnly} onChange={(e) => set('legal_name', e.target.value)} className="w-full" />
         </FormField>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
           </FormField>
@@ -65,7 +65,7 @@ export function ClientDialog({
             <AppInputText value={form.email} disabled={readOnly} onChange={(e) => set('email', e.target.value)} className="w-full" />
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('client.type')}>
             <AppDropdown value={form.type} options={types} disabled={readOnly} onChange={(e) => set('type', e.value)} />
           </FormField>
@@ -74,10 +74,10 @@ export function ClientDialog({
           </FormField>
         </div>
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionAddress')}</h3>
+        <FormSection title={t('client.sectionAddress')} spaced />
         <AddressFields value={addr} readOnly={readOnly} onChange={setAddr} />
 
-        <h3 className="pt-2 text-xs font-semibold uppercase text-slate-500">{t('client.sectionContacts')}</h3>
+        <FormSection title={t('client.sectionContacts')} spaced />
         <ContactFields
           contacts={form.contacts}
           readOnly={readOnly}

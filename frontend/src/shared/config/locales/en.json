@@ -36,7 +36,13 @@
     "noResultsFilteredHint": "Adjust or clear the applied filters.",
     "clearFilters": "Clear filters",
     "noResultsHint": "Check the term or clear the search.",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "loadError": "Could not load the data",
+    "loadErrorHint": "Check your connection and try again.",
+    "retry": "Retry",
+    "networkError": "Cannot reach the server",
+    "networkErrorHint": "Check your connection and try again.",
+    "unexpectedError": "Unexpected error"
   },
   "module": {
     "comercial": {

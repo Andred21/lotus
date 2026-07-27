@@ -112,6 +112,7 @@ export interface AppCardToolbarProps {
 
 /** Linha de controles do card. Empilha em telas estreitas (H.2.1). */
 export function AppCardToolbar({ start, end }: AppCardToolbarProps) {
+  if (!start && !end) return null
   return (
     <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 flex-wrap items-center gap-3">{start}</div>

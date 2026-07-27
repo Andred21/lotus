@@ -59,6 +59,18 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Q-14 — `AppErrorState` não sinaliza "reintentando".** `AppErrorState.tsx:36`: o botão Reintentar
+  não recebe estado de refetch nem `disabled`, então cliques repetidos disparam refetch em série sem
+  nenhum feedback. Achado 🟢 do `/revisar-sprint` da Parte 4 (2026-07-27); o João optou por não
+  corrigir na parte. Exige propagar `isFetching` do consumidor até o componente.
+- **Q-15 — faixa de rodapé conta 0 durante o load inicial.** `AppDataTable.tsx:106`: `paginator`
+  liga junto com `footerCount` mesmo em `loading`, então a faixa afirma "0 registros" sob a overlay
+  do PrimeReact antes de o GET terminar. Cosmético; a overlay cobre. Achado 🟢 do `/revisar-sprint`
+  da Parte 4 (2026-07-27), deferido pelo João.
+- **Cor fora do corte do D18.** Os 6 diálogos de feature ficaram com cor Tailwind hardcoded
+  (`text-slate-500`, `text-slate-400` no `RoleDialog`, entre outros) — o D18 cortou o escopo em
+  `shared/ui` + os 3 arquivos do D14 de propósito. Achado Minor do review final da Parte 4, não é
+  esquecimento.
 - **Arquivo órfão no MinIO em rollback de transação.** `UploadFileAction::execute` grava no disco
   **antes** de inserir em `files`; `StoreRedatorDocumentAction:24` e `CreateRedatorAction:30` envolvem
   essa chamada em `DB::transaction`. Rollback derruba a linha e deixa o objeto no bucket — vazamento de

@@ -11,12 +11,14 @@ import { idoneidade } from '../../lib/redatorStatus'
 const IDON_SEVERITY = { idoneo: 'success', por_vencer: 'warning', no_idoneo: 'danger' } as const
 
 export function RedatoresTable({
-  redatores, loading, onView, actions,
+  redatores, loading, onView, actions, error, onRetry,
 }: {
   redatores: RedatorData[]
   loading: boolean
   onView: (r: RedatorData) => void
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
@@ -45,11 +47,13 @@ export function RedatoresTable({
             />
           </div>
         }
-        end={actions}
+        end={error ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('redator.count', { count: table.rows.length })}
         first={table.first}

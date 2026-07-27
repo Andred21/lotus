@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { redatoresApi } from '@shared/api/redatoresApi'
+import type { ProblemDetails } from '@shared/api/axios'
 import type { RedatorData, TurmaData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { isEligible } from '../lib/eligibility'
@@ -25,6 +26,12 @@ export function useRedatorPicker(turma: TurmaData) {
   return {
     eligible,
     loadingList: redatores.isLoading,
+    /** Falha do GET de redatores, distinta de `error` (erro de mutação). Sem ela
+     * `eligible` vinha `[]` tanto em lista vazia quanto em GET quebrado, e o
+     * diálogo afirmava "nenhum redator elegível" sobre uma falha de rede — o
+     * mesmo defeito que a spec D16 matou nas listagens. */
+    loadError: redatores.isError ? (redatores.error ?? ({} as ProblemDetails)) : null,
+    reloadList: () => { void redatores.refetch() },
     designate: (redatorId: number) => designate.mutate({ turmaId: turma.id!, redatorId }),
     remove: (redatorId: number) => remove.mutate({ turmaId: turma.id!, redatorId }),
     pending: designate.isPending || remove.isPending,

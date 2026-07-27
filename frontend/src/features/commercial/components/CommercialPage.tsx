@@ -26,6 +26,8 @@ export function CommercialPage() {
             <ClientsTable
               clients={clients.items}
               loading={clients.loading}
+              error={clients.error}
+              onRetry={clients.refetch}
               onView={clients.openView}
               actions={
                 can('commercial.client.create')
@@ -38,6 +40,8 @@ export function CommercialPage() {
             <BudgetsTable
               budgets={budgets.items}
               loading={budgets.loading}
+              error={budgets.error}
+              onRetry={budgets.refetch}
               actions={
                 can('commercial.budget.create')
                   ? <AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />

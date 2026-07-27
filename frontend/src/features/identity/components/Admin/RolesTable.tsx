@@ -6,12 +6,14 @@ import {
 import type { RoleData } from '@shared/types/generated'
 
 export function RolesTable({
-  roles, loading, onView, actions,
+  roles, loading, onView, actions, error, onRetry,
 }: {
   roles: RoleData[]
   loading: boolean
   onView: (r: RoleData) => void
   actions?: ReactNode
+  error?: { detail?: string | null } | null
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
 
@@ -23,10 +25,12 @@ export function RolesTable({
   return (
     <>
       {/* Aba sem busca: o grupo de botões vai no slot ESQUERDO (spec D1). */}
-      <AppCardToolbar start={actions} />
+      <AppCardToolbar start={error ? undefined : actions} />
       <AppDataTable
         value={roles}
         loading={loading}
+        error={error}
+        onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
       >

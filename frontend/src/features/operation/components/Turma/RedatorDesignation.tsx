@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppAvatar, AppButton, AppTag, AppDialog } from '@shared/ui'
+import { AppAvatar, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
 
@@ -11,15 +11,16 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
 
   return (
     <div className="space-y-4 p-4">
-      <h3 className="text-sm font-medium uppercase tracking-wide text-slate-500">{t('operation.redator.title')}</h3>
+      <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.title')}</h3>
 
-      {turma.redatores.length === 0 && <p className="text-sm text-slate-500">{t('operation.redator.none')}</p>}
+      {turma.redatores.length === 0 && <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.none')}</p>}
 
       <ul className="space-y-2">
         {turma.redatores.map((r) => (
           <li
             key={r.id}
-            className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+            className="flex items-center justify-between rounded-lg border p-3"
+            style={{ borderColor: 'var(--surface-border)' }}
           >
             <div className="flex items-center gap-3">
               <AppAvatar name={r.name} />
@@ -47,16 +48,27 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
         onClick={() => setOpen(true)}
       />
 
-      <p className="text-sm text-slate-500">{t('operation.redator.helpNote')}</p>
-      {picker.error && <p className="text-sm text-red-600">{picker.error}</p>}
+      <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.helpNote')}</p>
+      {picker.error && <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>{picker.error}</p>}
 
       <AppDialog visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
-        {picker.eligible.length === 0 ? (
-          <p className="text-sm text-slate-500">{t('operation.redator.pickerEmpty')}</p>
+        {/* Ordem das guardas: erro > carregando > vazio. Invertê-la faria a falha
+            de carga passar por "nenhum redator elegível" (spec D16). */}
+        {picker.loadError ? (
+          <AppErrorState
+            title={t('common.loadError')}
+            detail={picker.loadError.detail ?? t('common.loadErrorHint')}
+            retryLabel={t('common.retry')}
+            onRetry={picker.reloadList}
+          />
+        ) : picker.loadingList ? (
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+        ) : picker.eligible.length === 0 ? (
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.pickerEmpty')}</p>
         ) : (
           <ul className="space-y-2">
             {picker.eligible.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border p-3" style={{ borderColor: 'var(--surface-border)' }}>
                 <div className="flex items-center gap-3">
                   <AppAvatar name={r.name} />
                   <span className="font-medium">{r.name}</span>

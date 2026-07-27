@@ -10,9 +10,16 @@ export type FormFieldProps = {
 export function FormField({ label, error, children }: FormFieldProps) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm text-slate-600 dark:text-slate-300">{label}</span>
+      <span className="mb-1 block text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</span>
       {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
+      {error && (
+        <span
+          className="mt-1 block text-sm"
+          style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
+        >
+          {error}
+        </span>
+      )}
     </label>
   )
 }
@@ -29,7 +36,14 @@ export function NestedField({ error, children }: NestedFieldProps) {
   return (
     <div>
       {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
+      {error && (
+        <span
+          className="mt-1 block text-sm"
+          style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
+        >
+          {error}
+        </span>
+      )}
     </div>
   )
 }
@@ -52,7 +66,13 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
   )
   if (leftover.length === 0) return null
   return (
-    <ul className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+    <ul
+      className="mb-4 rounded px-3 py-2 text-sm"
+      style={{
+        background: 'color-mix(in srgb, var(--red-500) 10%, var(--surface-card))',
+        color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
+      }}
+    >
       {leftover.map(([key, msgs]) => (
         <li key={key}>{msgs[0]}</li>
       ))}
@@ -72,13 +92,24 @@ export function FormErrorBanner({ message, variant = 'box' }: FormErrorBannerPro
   if (!message) return null
   if (variant === 'inline') {
     return (
-      <div role="alert" className="text-sm text-red-600 dark:text-red-400">
+      <div
+        role="alert"
+        className="text-sm"
+        style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
+      >
         {message}
       </div>
     )
   }
   return (
-    <p role="alert" className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+    <p
+      role="alert"
+      className="mb-4 rounded px-3 py-2 text-sm"
+      style={{
+        background: 'color-mix(in srgb, var(--red-500) 10%, var(--surface-card))',
+        color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
+      }}
+    >
       {message}
     </p>
   )
