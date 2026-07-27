@@ -69,7 +69,7 @@ export function RoleDialog({
           {groups.map(([group, perms]) => (
             <div key={group} className="space-y-2">
               <p className="text-xs font-medium text-slate-400">{t(`permGroup.${group}`)}</p>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {perms.map((p) => (
                   <label key={p.name} className="flex items-start gap-2 text-sm">
                     <AppCheckbox
