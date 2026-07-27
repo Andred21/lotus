@@ -602,3 +602,28 @@ query auxiliar é mais agressivo, mas a alternativa era manter a busca por clien
 silêncio — e é a busca que o DoD da Parte 1 provou.
 
 Revisão limpa: nenhum achado aguardando decisão ou correção.
+
+## Parte 4 mergeada — 2026-07-27
+
+Merge `--no-ff` de `worktree-bloco-visual-p4` em `ff6bb3a`. Sem conflito: a `main` não avançara
+desde a base `baaedbf`, então o `state.md` não repetiu o conflito da Parte 2. Pós-merge, na `main`:
+`pnpm lint` limpo, `pnpm build` verde, paridade `es-pt: []` / `es-en: []`, e os 7 greps de lei §5 e
+de convenção todos em zero (`primereact` em feature/app, cross-feature, `shared`→feature,
+`window.confirm`, `AppCardFooter` em feature, `emptyMessage` ternário, `grid-cols-2` fora do `sm:`).
+
+**O bloco NÃO está fechado.** O João optou por mergear antes da prova visual (opção "mergear assim
+que corrigir"), então o **DoD comportamental da Parte 4 segue pendente** — e agora pendente sobre a
+`main`, não sobre a branch:
+
+- prova visual das telas nos dois temas, a 1400px e 768px, com o `OperationDemoSeeder`;
+- teste de teclado/foco em `ClientDialog`;
+- teste de API derrubada nas 7 telas — que agora cobre também o texto de erro de rede localizado
+  (Q-9), a saída pelo `back` nas telas de detalhe (Q-10), o picker de redator (Q-11) e as 3 queries
+  auxiliares (Q-12);
+- o Step 5 corrigido da Task 33: **duas** colunas a 768px, **uma** abaixo de 640px, incluindo
+  `Nuevo rol` em `/administracion`.
+
+Sandbox sem browser/root para Playwright, mesma limitação de todas as partes anteriores.
+
+`bloco-visual-refino-ui` só fecha em `/fechar-sprint`, depois que o João confirmar o DoD acima.
+Worktree `bloco-visual-p4` e a branch preservadas até lá, como nas partes anteriores.
