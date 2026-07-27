@@ -9,8 +9,8 @@ export function Clock({ className = '' }: { className?: string }) {
   const now = useClock()
 
   return (
-    <div className={`text-right text-sm leading-tight text-slate-500 ${className} `}>
-      <p className="font-semibold text-slate-700 dark:text-slate-200">{formatTime(now)}</p>
+    <div className={`text-right text-sm leading-tight ${className} `} style={{ color: 'var(--text-color-secondary)' }}>
+      <p className="font-semibold" style={{ color: 'var(--text-color)' }}>{formatTime(now)}</p>
       <p>{formatDate(now)}</p>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppDialog } from '../AppDialog'
 import { AppButton } from '../AppButton'
+import { FormErrorBanner } from '../FormField'
 
 /** Confirmação de ação irreversível ou de peso legal (aprovar uma cotação libera
  * a turma na Operação). Apresentacional puro: não conhece feature nem mutação. */
@@ -44,12 +45,8 @@ export function ConfirmDialog({
       closable={!pending}
       closeOnEscape={!pending}
     >
-      {error && (
-        <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
-          {error}
-        </p>
-      )}
-      <p className="text-sm text-slate-600 dark:text-slate-300">{message}</p>
+      <FormErrorBanner message={error} />
+      <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{message}</p>
     </AppDialog>
   )
 }

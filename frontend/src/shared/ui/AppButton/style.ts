@@ -4,8 +4,8 @@
 
 // Visual de marca: contorno #25A5E4 sobre branco no claro; preenchido no escuro.
 const brandOutline =
-  'bg-white text-[#25A5E4] border-2 border-[#25A5E4] ring-0 hover:text-slate-700 ' +
-  'dark:bg-[#25A5E4] dark:border-2 dark:border-white dark:text-white dark:hover:text-slate-300'
+  'bg-[var(--surface-card)] text-[#25A5E4] border-2 border-[#25A5E4] ring-0 hover:text-[var(--text-color)] ' +
+  'dark:bg-[#25A5E4] dark:border-2 dark:border-white dark:text-white dark:hover:text-[var(--surface-card)]'
 
 export const appButtonStyles = {
   /** Marca, com rótulo (ex.: seletor de idioma "EN"). */
