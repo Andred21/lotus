@@ -129,6 +129,14 @@ perdendo nome/RUT/email já digitados) pra tentar de novo. `CrudDialog` ganhou p
 `StudentDialog` ganhou botão "Reintentar" chamando `clients.refetch()` sem fechar o dialog, e o
 submit fica desabilitado enquanto `clients` está carregando ou com erro.
 
+**Quarto fix, mesmo dia, commit `03280c6`.** O gate por `clients.isError` do fix anterior travava
+demais: a TanStack Query mantém `clients.data` do último fetch bem-sucedido mesmo quando um
+refetch em background falha, então um erro depois do próprio retry manual (ou refoco de aba)
+desabilitava dropdown e submit mesmo com lista utilizável em cache. Trocado por
+`clientsUnusable = mode === 'create' && !clients.data` — bloqueia só quando não há opções de
+verdade (primeiro load ou erro sem cache prévio); o aviso de erro + retry continuam aparecendo
+sempre que `isError`, agora sem bloquear nada quando há dado utilizável.
+
 Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
 
 ## Último item fechado — 2026-07-27
