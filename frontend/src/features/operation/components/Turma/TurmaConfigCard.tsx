@@ -71,7 +71,11 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       </div>
 
       <FormErrorSummary errors={f.fieldErrors} mapped={MAPPED} />
-      {f.generalError && <p className="text-sm text-red-600">{f.generalError}</p>}
+      {f.generalError && (
+        <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+          {f.generalError}
+        </p>
+      )}
 
       {mode !== 'view' && (
         <div className="flex justify-end gap-2">

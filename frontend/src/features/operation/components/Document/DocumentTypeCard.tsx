@@ -28,7 +28,7 @@ export function DocumentTypeCard({
   const delivered = files.length > 0
 
   return (
-    <section className="rounded border border-slate-200 p-4 dark:border-slate-700">
+    <section className="rounded border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
         <h4 className="font-medium">{t(`operation.documents.type.${type}`)}</h4>
         <AppTag
@@ -59,10 +59,10 @@ export function DocumentTypeCard({
 
       <ul className="mt-3 space-y-1">
         {files.map((file) => (
-          <li key={file.id} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+          <li key={file.id} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-color)' }}>
             <i className="pi pi-file-pdf" aria-hidden="true" />
             <span>{file.original_name}</span>
-            <span className="text-slate-400">
+            <span style={{ color: 'var(--text-color-secondary)' }}>
               {formatFileSize(file.size)} · {formatDate(new Date(file.created_at))}
             </span>
             {canSubmit && (
@@ -77,9 +77,9 @@ export function DocumentTypeCard({
             )}
           </li>
         ))}
-        {!delivered && <li className="text-sm text-slate-400">{t('operation.documents.empty')}</li>}
+        {!delivered && <li className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.empty')}</li>}
       </ul>
-      {canSubmit && <p className="mt-2 text-xs text-slate-400">{t('operation.documents.uploadHint')}</p>}
+      {canSubmit && <p className="mt-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.uploadHint')}</p>}
     </section>
   )
 }
