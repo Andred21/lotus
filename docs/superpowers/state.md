@@ -1,12 +1,12 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: pessoas-alunos
+active_work_item: bloco-alunos-modulo
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 last_completed_work_item: bloco-visual-refino-ui
-state_basis_commit: ff6bb3a
+state_basis_commit: 34a8c94
 active_spec: null
 active_plan: null
 context_packet: null
@@ -49,6 +49,20 @@ updated_at: 2026-07-27
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
+
+## Item ativo — `bloco-alunos-modulo`
+
+Promovido do backlog (item 1, "Pessoas · Alunos") por decisão explícita do João em 2026-07-27.
+Módulo novo **backend + frontend**: hoje a aba Alunos de `PeoplePage` é um `<p>` inline e não existe
+endpoint de aluno — o domínio tem só `Identity/Models/Student.php` e
+`Identity/Services/StudentResolver.php`, consumidos pela matrícula.
+
+Não é refino visual: nasce já no padrão de `shared/ui` entregue em 2026-07-27.
+
+Packet: rota Codex, **condicionada** a uma sondagem prévia dos conectores (Drive, Figma, Notion,
+GitHub) no runtime dele — decisão do João em 2026-07-27, motivada pelo v1 do
+`bloco-visual-refino-ui`, que voltou `blocked` por gap de tooling e não por ausência de fonte.
+Prints do protótipo anexados pelo João entram como fonte `PROTO`.
 
 ## Último item fechado — 2026-07-27
 
