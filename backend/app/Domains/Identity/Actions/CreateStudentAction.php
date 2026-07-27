@@ -8,6 +8,7 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Services\StudentClientLinkService;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -29,6 +30,12 @@ class CreateStudentAction
     public function execute(StudentData $data): Student
     {
         return DB::transaction(function () use ($data) {
+            if ($data->client_id instanceof Optional) {
+                throw ValidationException::withMessages([
+                    'client_id' => 'O cliente é obrigatório no cadastro do aluno.',
+                ]);
+            }
+
             $this->provisioner->ensureEmailAvailable($data->email);
 
             $user = $this->provisioner->provision(

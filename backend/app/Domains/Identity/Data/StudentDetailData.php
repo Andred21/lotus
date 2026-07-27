@@ -41,7 +41,10 @@ class StudentDetailData extends Data
             current_client_id: $student->current_client_id,
             current_client_name: $student->currentClient?->legal_name,
             links: $student->logs
-                ->sortByDesc('started_on')
+                ->sortBy([
+                    ['started_on', 'desc'],
+                    ['id', 'desc'],
+                ])
                 ->values()
                 ->map(fn ($log) => StudentClientLogData::fromModel($log))
                 ->all(),

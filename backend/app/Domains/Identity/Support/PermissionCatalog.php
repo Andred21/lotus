@@ -30,9 +30,9 @@ class PermissionCatalog
     {
         return [
             // ---- Identity ----
-            'identity.user.view' => 'Ver usuários e redatores',
-            'identity.user.create' => 'Criar usuários e redatores',
-            'identity.user.update' => 'Editar usuários e redatores',
+            'identity.user.view' => 'Ver usuários, redatores e alunos',
+            'identity.user.create' => 'Criar usuários, redatores e alunos',
+            'identity.user.update' => 'Editar usuários, redatores e alunos',
             'identity.user.delete' => 'Remover (soft delete) usuários',
             'identity.access.manage' => 'Gerir roles e permissões de outros usuários (sensível)',
 

@@ -65,6 +65,17 @@ class CreateStudentActionTest extends TestCase
         ]));
     }
 
+    public function test_cliente_e_obrigatorio_no_cadastro(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        app(CreateStudentAction::class)->execute(StudentData::from([
+            'name' => 'María González Rojas',
+            'rut' => '12.876.543-K',
+            'email' => 'mgonzalez@transelec.cl',
+        ]));
+    }
+
     public function test_falha_no_meio_nao_deixa_user_orfao(): void
     {
         $client = $this->client();

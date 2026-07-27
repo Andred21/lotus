@@ -5,6 +5,7 @@ use App\Domains\Identity\Http\Controllers\PermissionController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
 use App\Domains\Identity\Http\Controllers\RoleController;
+use App\Domains\Identity\Http\Controllers\StudentController;
 use App\Domains\Identity\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('users', UserController::class)
         ->only(['index', 'store', 'show', 'update', 'destroy']);
+
+    Route::apiResource('students', StudentController::class)
+        ->only(['index', 'store', 'show', 'update']);
 
     Route::apiResource('roles', RoleController::class)->only(['index', 'store', 'update']);
     Route::get('permissions', [PermissionController::class, 'index']);
