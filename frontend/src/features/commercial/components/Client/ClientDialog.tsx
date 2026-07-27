@@ -57,7 +57,7 @@ export function ClientDialog({
         <FormField label={t('client.legalName')} error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}>
           <AppInputText value={form.legal_name} disabled={readOnly} onChange={(e) => set('legal_name', e.target.value)} className="w-full" />
         </FormField>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
           </FormField>
@@ -65,7 +65,7 @@ export function ClientDialog({
             <AppInputText value={form.email} disabled={readOnly} onChange={(e) => set('email', e.target.value)} className="w-full" />
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('client.type')}>
             <AppDropdown value={form.type} options={types} disabled={readOnly} onChange={(e) => set('type', e.value)} />
           </FormField>

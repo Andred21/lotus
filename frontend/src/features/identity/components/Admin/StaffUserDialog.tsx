@@ -50,7 +50,7 @@ export function StaffUserDialog({
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />
         </FormField>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
             <AppInputText value={form.rut} disabled={readOnly} onChange={(e) => set('rut', e.target.value)} className="w-full" />
           </FormField>
@@ -69,7 +69,7 @@ export function StaffUserDialog({
           </FormField>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.
               Tag em vez de input desabilitado: sinaliza "valor imutável", não
               "campo editável acinzentado". */}

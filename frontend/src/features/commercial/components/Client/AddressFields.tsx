@@ -14,7 +14,7 @@ export function AddressFields({
 }) {
   const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid gap-4 sm:grid-cols-2">
       <FormField label={t('client.region')}>
         <AppDropdown value={value.region} options={CHILE_REGIONS} disabled={readOnly} onChange={(e) => onChange({ region: e.value })} />
       </FormField>

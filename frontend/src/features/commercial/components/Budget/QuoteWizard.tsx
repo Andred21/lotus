@@ -101,7 +101,7 @@ export function QuoteWizard({
         <section className="space-y-4">
           <h3 className="text-xs font-semibold uppercase text-slate-500">{t('quote.stepData')}</h3>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>
               <AppInputText
                 value={String(form.student_count)}
@@ -134,7 +134,7 @@ export function QuoteWizard({
             />
           </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <FormField label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
               <AppDatePicker
                 value={form.planned_start_date ?? null}
