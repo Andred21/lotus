@@ -36,7 +36,10 @@
     "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
     "clearFilters": "Limpiar filtros",
     "noResultsHint": "Revisa el término o limpia la búsqueda.",
-    "clearSearch": "Limpiar búsqueda"
+    "clearSearch": "Limpiar búsqueda",
+    "loadError": "No se pudieron cargar los datos",
+    "loadErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar"
   },
   "module": {
     "comercial": {
