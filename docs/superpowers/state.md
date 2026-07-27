@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bloco-visual-refino-ui
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_part4
+next_action: continue_active_planning
 last_completed_work_item: bloco6-frontend-seed
 state_basis_commit: 29fd9b8
 active_spec: docs/superpowers/specs/2026-07-26-bloco-visual-refino-ui-design.md
@@ -417,3 +417,27 @@ vazios. Worktree preservada, como as anteriores.
   review de branch, pickup natural).
 - Q-1 (CTA duplicado no empty state de `ClientsTable`/`BudgetsTable`) e os demais débitos das Partes
   1–2 seguem nos débitos do backlog, não promovidos.
+
+## Parte 4 em planejamento — 2026-07-26
+
+Brainstorming feito contra baseline levantado do código, não contra o esboço de §5 · P4 da spec. O
+levantamento mudou o escopo: o checklist H.2.1 não era conferência, eram lacunas.
+
+Achado que domina a parte: **erro de listagem some em silêncio.** `useCrudPage` só expõe `loading`,
+então um GET que falha rende tabela vazia com o empty state de "sem dados" — o convite a cadastrar
+sobre uma falha de rede, num módulo com auditoria.
+
+Seis decisões do gate viraram o adendo `D16` a `D21` da spec (§11):
+
+1. **D16** — `useCrudPage` expõe `isError`/`error`/`refetch`; `AppErrorState` novo; `AppDataTable`
+   ganha `error`. Rejeitados toast global e adiar como débito.
+2. **D17** — exceção mínima ao shell (§7 o punha fora): `Sidebar` colapsa por viewport abaixo de
+   1024px, sem escrever no `uiStore` e sem mudar aparência em desktop. As cores do shell ficam e
+   viram pendência.
+3. **D18** — corte da cor: os 3 arquivos do D14 **mais** todo o `shared/ui` (alcance, não contagem).
+   Os 6 diálogos de feature ficam como débito.
+4. **D19** — loading vira `AppSkeleton`, não texto.
+5. **D20** — tabela responsiva por scroll horizontal no `pt`, não coluna colapsável (esconder coluna
+   em tela de auditoria é perda silenciosa).
+6. **D21** — `FormSection` fecha o item de duplicação local; o item "forms de `shared/ui`" já estava
+   satisfeito (zero controle nativo em `features/`).

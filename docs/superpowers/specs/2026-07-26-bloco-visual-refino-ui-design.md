@@ -342,3 +342,113 @@ revisitaria esses arquivos de qualquer jeito.
 (toolbar, faixa de rodapé, paginação real) — trocar pelo `ConfirmDialog` no mesmo passo custa poucas
 linhas, e adiar obrigaria a reabrir o arquivo. **P-11 fecha na Parte 3**; a Parte 4 só confere o
 `grep`.
+
+## 11. Adendo da Parte 4 — decisões do gate (2026-07-26)
+
+Seis decisões tomadas no `/planejar-bloco` da Parte 4. As quatro primeiras são do João; as duas
+últimas foram tomadas ao escrever a spec e ficam declaradas para não virarem achado de review.
+
+### Baseline levantado do código antes de decidir
+
+O escopo previsto em §5 · P4 supunha um checklist a conferir. O levantamento mostrou lacunas maiores
+que a conferência:
+
+| Item do checklist | Estado real no código |
+|---|---|
+| Erro visível | **`useCrudPage` só expõe `loading`.** GET que falha rende tabela vazia com o empty state de "sem dados", que convida a cadastrar. O sistema mente sobre a causa. |
+| Responsividade | 15 usos de breakpoint no app inteiro; nenhuma tabela com scroll próprio; 6 diálogos com `grid-cols-2` **fixo**, que não colapsa; `AppDialog` travado em `w-[70vw]` |
+| Loading | 3 telas com `<p>{t('common.loading')}</p>`; tabelas com o overlay do PrimeReact |
+| Contraste | 29 arquivos com cor Tailwind fixa, incluindo `shared/ui/FormField` (6 ocorrências) e `CourseDialog` (16) |
+| Forms de `shared/ui` | **já satisfeito** — zero `<input>`, `<select>` ou `<textarea>` nativo em `features/`. O que sobra é duplicação de cabeçalho de seção em 6 diálogos |
+| Densidade / empty state | entregues nas Partes 1 e 2 |
+
+### D16 — Erro de listagem sobe até a tela, com estado próprio
+
+`useCrudPage` passa a expor `isError`, `error` e `refetch`. `shared/ui` ganha **`AppErrorState`** —
+ícone, título, `detail` do RFC 7807 e botão `Reintentar` — e `AppDataTable` ganha `error?: ReactNode`,
+que vence `emptyMessage` e apaga a faixa de rodapé (contar linhas de uma lista que não carregou é
+ruído). As 7 tabelas e as 2 telas de detalhe passam a distinguir **falhou** de **vazio**.
+
+É o único item do checklist em que a tela hoje afirma algo falso, e a lei de que erro não some em
+silêncio existe por peso legal.
+
+Rejeitadas: (a) toast global de erro de query — o toast some e a tabela continua dizendo "sem
+registros"; (b) deixar como débito — o convite a cadastrar sobre uma falha de rede é o pior estado
+possível num módulo com auditoria.
+
+### D17 — Exceção mínima ao shell: colapso por viewport
+
+§7 põe o shell fora de escopo porque o João aprovou sua aparência. Mas `Sidebar` tem largura fixa
+(`w-64` / `w-20`) e só colapsa por clique — sem tocá-la, "sem scroll horizontal em 768px" não se
+prova.
+
+Decisão: a `Sidebar` força `collapsed` abaixo de 1024px por media query, **sem** escrever no
+`uiStore` (o toggle manual do usuário continua sendo dele) e sem trocar cor, estrutura ou aparência
+em desktop. `AppLayout` troca `p-6` por `p-4 sm:p-6`.
+
+O par `bg-slate-50 dark:bg-slate-950` do `AppLayout` e as cores da `Sidebar` **ficam como estão** —
+são cor hardcoded contra ADR-16, mas trocá-las mudaria a aparência aprovada. Vira pendência nova.
+
+Rejeitada: drawer off-canvas no mobile — mexe mais no shell do que o colapso, e o protótipo não
+cobre esse padrão.
+
+### D18 — Corte da cor: os 3 arquivos do D14 **mais** todo o `shared/ui`
+
+D14 nomeou `DocumentTypeCard`, `TurmaConfigCard` e `RedatorDesignation`. O baseline achou 29
+arquivos. O corte é por alcance, não por contagem: cor errada em `shared/ui` se replica em todas as
+telas, então `FormField`, `AppPassword`, `ConfirmDialog`, `AppButton/style` e `Clock` entram junto.
+
+Ficam fora, como débito: os 6 diálogos de feature (`CourseDialog` com 16 ocorrências, `ClientDialog`,
+`StaffUserDialog`, `RedatorDialog`, `RoleDialog`, `QuoteWizard`), `LoginForm`, `ImportDialog`,
+`ImportResultSummary`, `ManualButton`, `EnrollStudentForm` e o shell.
+
+### D19 — Loading padrão é skeleton, não texto
+
+`shared/ui` ganha **`AppSkeleton`**, wrapper de `primereact/skeleton` (feature não importa PrimeReact
+direto, §5.6). Substitui os 3 `<p>{t('common.loading')}</p>` de `BudgetDetailPage`, `TurmaDetailPage`
+e `TurmaDocuments`. A tabela mantém o overlay do PrimeReact, que já é consistente e já foi corrigido
+na Parte 2 (Q-3).
+
+Texto cru como estado de carregamento produz salto de layout e não sinaliza a forma do conteúdo que
+vem — o checklist pede "skeleton/spinner padrão", e o skeleton é o que a tela de detalhe comporta.
+
+### D20 — Responsividade da tabela é scroll horizontal no `pt`, não coluna colapsável
+
+O checklist aceita "scroll horizontal **ou** colunas colapsáveis". Colapsar coluna exige decidir, por
+tabela, qual dado some — julgamento de domínio que nenhuma fonte cobre, e esconder coluna numa tela
+com peso de auditoria é perda de informação silenciosa.
+
+Decisão: `AppDataTable` ganha, no `pt` base, `wrapper` com `overflow-x-auto` e `table` com
+`min-width`. Uma mudança em um arquivo torna as 7 tabelas responsivas, e a página nunca rola na
+horizontal — quem rola é o card.
+
+### D21 — `FormSection` fecha o item de duplicação local
+
+O item "componentes de formulário vindos de `shared/ui`" já está satisfeito: nenhum controle nativo
+em `features/`. O que sobra é o `<h3 className="text-xs font-semibold uppercase text-slate-500">`
+copiado em 6 diálogos — mesma marcação, mesma cor hardcoded, seis vezes. Vira `FormSection` em
+`shared/ui`, e a cor morre junto numa implementação única.
+
+### Escopo da Parte 4, consolidado
+
+1. `AppErrorState`, `AppSkeleton` e `FormSection` novos em `shared/ui`.
+2. `AppDataTable` com `error` e scroll horizontal; `AppDialog` com largura responsiva; `useCrudPage`
+   expondo `isError`/`error`/`refetch`.
+3. Cor por variável do tema em `FormField`, `AppPassword`, `ConfirmDialog`, `AppButton/style`,
+   `Clock` e nos 3 arquivos do D14.
+4. `Sidebar` colapsando por viewport; `AppLayout` com padding responsivo.
+5. As 7 tabelas e as 2 telas de detalhe com estado de erro; as 3 telas de loading com skeleton.
+6. `grid-cols-2` fixo virando `sm:grid-cols-2` em 6 diálogos.
+7. `TurmaCreatePage` migrando para `DetailHeader` + `AppCard`.
+
+### DoD da Parte 4
+
+- Janela em 768px: nenhuma página com scroll horizontal; a tabela rola **dentro** do card.
+- Diálogo de cliente em 768px: campos em uma coluna.
+- Com a API derrubada (`docker compose stop nginx`), `/comercial` mostra `AppErrorState` com texto
+  explícito e botão `Reintentar`; subindo a API de volta, `Reintentar` recarrega a lista. Nenhuma tela
+  oferece "cadastre o primeiro" sobre uma falha.
+- `Tab` percorre `ClientDialog` na ordem visual, com foco visível em cada controle.
+- Telas de detalhe abrem com skeleton, não com texto.
+- `grep -rn "window.confirm" frontend/src` vazio (conferência do P-11, fechado na Parte 3).
+- Tudo provado nos dois temas.
