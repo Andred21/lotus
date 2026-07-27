@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard, AppCardHeader } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 import type { BudgetFileType } from '../../api/useCommercialFiles'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
@@ -17,7 +17,16 @@ export function BudgetDetailPage() {
   const budgetId = Number(id)
   const d = useBudgetDetail(budgetId)
 
-  if (d.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+  if (d.loading) return <AppDetailSkeleton />
+  if (d.loadError)
+    return (
+      <AppErrorState
+        title={t('common.loadError')}
+        detail={d.loadError.detail ?? t('common.loadErrorHint')}
+        retryLabel={t('common.retry')}
+        onRetry={d.reload}
+      />
+    )
   if (!d.budget) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.notFound')}</p>
 
   const budget = d.budget

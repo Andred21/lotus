@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, ConfirmDialog, FormErrorBanner } from '@shared/ui'
+import { AppCard, ConfirmDialog, FormErrorBanner, AppDetailSkeleton } from '@shared/ui'
 import type { TurmaData, TurmaDocumentData } from '@shared/types/generated'
 import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
 import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
@@ -12,7 +12,7 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
   const s = useTurmaDocsSection(turma)
   const [pendingRemoval, setPendingRemoval] = useState<TurmaDocumentData | null>(null)
 
-  if (s.loading) return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
+  if (s.loading) return <AppDetailSkeleton />
 
   return (
     <div className="space-y-4 p-4">
