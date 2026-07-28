@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: review_active_work_item
+next_action: close_active_work_item
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
@@ -193,8 +193,13 @@ Prova end-to-end com Sanctum real: arquivando de fato o cliente 1, `/api/student
 `trashed` nas 4 tabelas.
 
 Fica **aberto e fora deste bloco**: o desalinhamento de RBAC entre `identity.user.*` (o módulo) e
-`commercial.client.view` (o dropdown de empresa no create) precisa de decisão do João e deve migrar
-para `docs/pendencias.md` antes do fechamento — hoje só vive aqui.
+`commercial.client.view` (o dropdown de empresa no create) precisa de decisão do João. Registrado em
+`docs/superpowers/backlog.md` em 2026-07-27, para não morrer no arquivamento deste arquivo.
+
+**Revisão encerrada sem achado pendente.** Re-checagem sobre o diff corrigido: sem órfão (os dois
+helpers movidos têm consumidor nas duas features, o que é justamente o que os põe em `shared/lib`),
+sem import morto de `features/operation/lib`, i18n em 428 chaves idênticas nos 3 locales. Bloco
+liberado para `/fechar-sprint` por decisão do João em 2026-07-27.
 
 ## Último item fechado — 2026-07-27
 

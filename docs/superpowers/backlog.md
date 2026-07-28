@@ -111,3 +111,14 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   e `AppEmptyState` (`action={actions}`) renderizam o mesmo botão nos dois lugares ao mesmo tempo.
   Não pegou no DoD porque o `OperationDemoSeeder` nunca zera as duas tabelas. Escolher um lugar só
   para o botão (`ClientsTable.tsx:36,59`, `BudgetsTable.tsx:69,94`).
+- **Alunos · o dropdown de empresa depende de uma permissão de outro módulo.** O módulo de alunos
+  inteiro é gated por `identity.user.*` (D8 da spec, e é o que o `StudentController` exige), mas o
+  dropdown de empresa do create lista via `clientsApi`, que exige `commercial.client.view`. Quem tem
+  `identity.user.create` sem `commercial.client.view` consegue criar aluno pela API e não consegue
+  pela tela. Duas tentativas de contornar na UI foram revertidas por serem piores que o problema
+  (gate duplo no botão escondia a ação de quem tinha autorização real, `3e0bc36`; travar o submit
+  por `isError` bloqueava com lista utilizável em cache, `03280c6`). O estado atual é o menos ruim:
+  a falha fica **visível** (dropdown desabilitado + motivo + "Reintentar"), não escondida.
+  **Alinhar de verdade exige decisão do João sobre RBAC/spec** — endpoint de clientes sob
+  `identity.user.view`, permissão nova, ou aceitar o acoplamento. Levantado no `/revisar-sprint` do
+  `bloco-alunos-modulo` (2026-07-27); movido para cá para não morrer no arquivamento do `state.md`.
