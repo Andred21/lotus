@@ -10,6 +10,7 @@ use App\Domains\Identity\Data\StudentClientLogData;
 use App\Domains\Identity\Data\StudentTurmaData;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
@@ -95,7 +96,7 @@ class StudentHistoryDataTest extends TestCase
         $this->assertSame($quote->fresh()->code, $data->quote_code);
         $this->assertSame('Trabajos en líneas energizadas 220kV', $data->course_name);
         $this->assertSame('2026-06-01', $data->start_date);
-        $this->assertSame('aprobado', $data->approval_status);
+        $this->assertSame(EnrollmentApprovalStatus::Aprobado, $data->approval_status);
     }
 
     public function test_student_navega_para_as_proprias_matriculas(): void

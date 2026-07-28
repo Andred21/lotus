@@ -30,9 +30,19 @@ class CreateStudentAction
     public function execute(StudentData $data): Student
     {
         return DB::transaction(function () use ($data) {
-            if ($data->client_id instanceof Optional) {
+            if ($data->client_id instanceof Optional || $data->client_id === null) {
                 throw ValidationException::withMessages([
                     'client_id' => 'O cliente é obrigatório no cadastro do aluno.',
+                ]);
+            }
+
+            // `find` + 422, não `findOrFail`: cliente inexistente é erro de
+            // preenchimento (422 com a causa no campo), não recurso ausente (404).
+            $client = Client::find($data->client_id);
+
+            if ($client === null) {
+                throw ValidationException::withMessages([
+                    'client_id' => 'Cliente não encontrado.',
                 ]);
             }
 
@@ -48,7 +58,7 @@ class CreateStudentAction
 
             $student = Student::create(['user_id' => $user->id]);
 
-            $this->linkService->link($student, Client::findOrFail($data->client_id));
+            $this->linkService->link($student, $client);
 
             return $student->refresh();
         });

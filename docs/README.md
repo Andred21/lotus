@@ -104,6 +104,22 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     schema roda `migrate` no MySQL de dev, não só a suíte.
 
 
+16. **Soft delete é arquivamento, não desaparecimento — a projeção de leitura tem que sobreviver a
+    ele.** Um `belongsTo` para model soft-deletable devolve `null` depois do delete, e o `fromModel`
+    que o atravessa estoura: a tela inteira cai em 500 por causa de **um** registro arquivado, ou —
+    com `?->` — mente em silêncio. Provado em 2026-07-27, duas vezes no mesmo dia: o detalhe do
+    aluno com cliente arquivado (`StudentClientLogData`), e o módulo Comercial inteiro depois que
+    `Client::deleting` cascateou o soft delete para o `User` (`Attempt to read property "name" on
+    null` em `ClientData`). Eram 7 DTOs em 4 domínios com o mesmo defeito — não era bug de um bloco,
+    era padrão. Mecânica na `.claude/rules/backend-ddd.md`; guarda em
+    `tests/Feature/Shared/SoftDeletedRelationProjectionTest.php`.
+
+17. **`restore()` não desfaz cascata de `deleting`.** O hook `static::deleting` de `Client` e
+    `Student` propaga o soft delete para o `User` (e endereços/contatos); o `restore()` do pai
+    recupera **só o pai**, e o que ficou para trás derruba a tela seguinte. Testar delete no banco
+    de dev exige `DB::beginTransaction()`/`rollBack()` ou um teste com `RefreshDatabase` — nunca
+    `delete()` + `restore()` no tinker, que foi como esse estrago nasceu.
+
 > **Índice vivo do desenvolvimento:** `docs/superpowers/progress.md` (versionado) é o índice do que
 > foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
 > mora no ADR, de schema no `der-fisico`, de padrão de código no `INSTRUÇÕES`, e o passo-a-passo nos

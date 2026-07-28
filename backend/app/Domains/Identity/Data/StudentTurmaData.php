@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Data;
 
+use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -21,7 +22,9 @@ class StudentTurmaData extends Data
         public ?string $quote_code,
         public string $course_name,
         public string $start_date,
-        public string $approval_status,
+        /** O enum, não `string`: o front precisa da união fechada para casar
+         * severidade e rótulo sem um fallback que engula estado novo. */
+        public EnrollmentApprovalStatus $approval_status,
     ) {}
 
     public static function fromModel(Enrollment $enrollment): self
@@ -33,7 +36,7 @@ class StudentTurmaData extends Data
             quote_code: $turma->quote?->code,
             course_name: $turma->course->name,
             start_date: $turma->start_date->toDateString(),
-            approval_status: $enrollment->approval_status->value,
+            approval_status: $enrollment->approval_status,
         );
     }
 }

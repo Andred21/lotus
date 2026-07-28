@@ -46,7 +46,9 @@ class Client extends Model implements Auditable
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function addresses(): HasMany

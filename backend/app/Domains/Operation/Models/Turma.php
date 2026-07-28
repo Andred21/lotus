@@ -49,12 +49,16 @@ class Turma extends Model implements Auditable
 
     public function quote(): BelongsTo
     {
-        return $this->belongsTo(Quote::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Quote::class)->withTrashed();
     }
 
     public function course(): BelongsTo
     {
-        return $this->belongsTo(Course::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Course::class)->withTrashed();
     }
 
     public function redatores(): BelongsToMany

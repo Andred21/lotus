@@ -24,6 +24,7 @@ class StudentDetailData extends Data
         public ?string $phone,
         public ?int $current_client_id,
         public ?string $current_client_name,
+        public int $enrollments_count,
         /** @var array<StudentClientLogData> */
         public array $links,
         /** @var array<StudentTurmaData> */
@@ -40,6 +41,9 @@ class StudentDetailData extends Data
             phone: $student->user->phone,
             current_client_id: $student->current_client_id,
             current_client_name: $student->currentClient?->legal_name,
+            // Deriva das matrículas já carregadas quando o `show` não pediu o
+            // loadCount — a relação está em memória, então não gera query extra.
+            enrollments_count: $student->enrollments_count ?? $student->enrollments->count(),
             links: $student->logs
                 ->sortBy([
                     ['started_on', 'desc'],

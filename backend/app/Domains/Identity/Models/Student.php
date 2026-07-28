@@ -37,12 +37,16 @@ class Student extends Model implements Auditable
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function currentClient(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'current_client_id');
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Client::class, 'current_client_id')->withTrashed();
     }
 
     public function logs(): HasMany

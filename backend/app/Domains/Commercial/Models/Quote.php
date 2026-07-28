@@ -51,7 +51,9 @@ class Quote extends Model implements Auditable
 
     public function budget(): BelongsTo
     {
-        return $this->belongsTo(Budget::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Budget::class)->withTrashed();
     }
 
     /** Composto calculado (ADR-17), nunca persistido — fonte única do "código" da cotação. */
@@ -62,7 +64,9 @@ class Quote extends Model implements Auditable
 
     public function course(): BelongsTo
     {
-        return $this->belongsTo(Course::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Course::class)->withTrashed();
     }
 
     public function files(): MorphMany

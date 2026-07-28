@@ -37,11 +37,15 @@ class Enrollment extends Model implements AuditableContract
 
     public function turma(): BelongsTo
     {
-        return $this->belongsTo(Turma::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Turma::class)->withTrashed();
     }
 
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Student::class)->withTrashed();
     }
 }

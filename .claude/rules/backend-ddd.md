@@ -55,6 +55,18 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
   pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
   fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —
   não voltar a escrever contato direto no Eloquent.
+- **`belongsTo` que a projeção de leitura atravessa vai `->withTrashed()`.** Soft delete é
+  **arquivamento, não desaparecimento**: o registro que aponta para o arquivado continua existindo e
+  continua sendo lido. Sem isso o `belongsTo` devolve `null`, o `fromModel` estoura
+  (`Attempt to read property "x" on null`) e a **tela inteira cai em 500 por causa de um registro
+  arquivado** — ou, com `?->`, mente em silêncio ("Sin cliente" com vínculo aberto). Provado em
+  2026-07-27: um soft delete de cliente cascateou para o `User` e derrubou o módulo Comercial
+  inteiro. Vale para todo `belongsTo` alcançado por um `fromModel`: `Client::user`,
+  `Redator::user`, `Student::user`/`currentClient`, `StudentClientLog::client`,
+  `Enrollment::turma`/`student`, `Turma::quote`/`course`, `Quote::budget`/`course`,
+  `Budget::client`. **Coleção (`hasMany`/`belongsToMany`) NÃO leva** — ali o item arquivado deve
+  mesmo sumir da lista viva. Guarda: `tests/Feature/Shared/SoftDeletedRelationProjectionTest.php`,
+  um caso por DTO; DTO novo com `belongsTo` para model soft-deletable entra lá.
 - **Domain Service (`Domains/<X>/Services/`) = regra compartilhada entre entidades.** Não se duplica.
   Ex.: cliente e redator são extensões 1:1 de `User`; o provisionamento do User de login (normalizar
   RUT, unicidade com `withTrashed`, criar inativo — RN-01) vive em `Identity/Services/UserProvisioner`,

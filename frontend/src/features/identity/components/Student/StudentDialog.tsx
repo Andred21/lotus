@@ -5,23 +5,10 @@ import {
 } from '@shared/ui'
 import type { StudentData, StudentTurmaData, StudentClientLogData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
+import { enrollmentStatusLabelKey, enrollmentStatusSeverity, formatMonthYear } from '@shared/lib'
 import { clientsApi } from '@shared/api/clientsApi'
 import { useStudentDetail } from '../../api/useStudentDetail'
 import { useStudentForm } from '../../hooks/useStudentForm'
-
-/**
- * Severidade do estado da matrícula. O helper equivalente vive em
- * `features/operation/lib/enrollmentStatus.ts` e NÃO pode ser importado daqui:
- * feature não importa outra feature, nem para tipo (ADR-05, lei §5.6). A chave
- * de i18n `operation.enrollment.status.*` é reusada porque chave de tradução não
- * é import de código.
- */
-const APPROVAL_SEVERITY: Record<string, 'success' | 'danger' | 'info'> = {
-  aprobado: 'success', reprobado: 'danger', pendiente: 'info',
-}
-
-const monthYear = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('es-CL', { month: 'short', year: 'numeric' })
 
 export function StudentDialog({
   visible, mode, student, onHide, onEdit,
@@ -117,30 +104,38 @@ export function StudentDialog({
           </FormField>
         </div>
 
-        {mode === 'view' && (
+        {mode === 'view' && (detail.isError ? (
+          /* O erro cobre as DUAS seções, não só a primeira. Mostrar o
+             AppErrorState nos vínculos e deixar "Historial de turmas" com o
+             cabeçalho e nada abaixo faz a falha de rede se parecer com "este
+             aluno não tem turma" — vazio silencioso proibido (D16), e aqui o
+             dado tem peso legal. */
+          <AppErrorState
+            title={t('common.loadError')}
+            detail={detail.error?.detail ?? t('common.loadErrorHint')}
+            retryLabel={t('common.retry')}
+            onRetry={() => void detail.refetch()}
+          />
+        ) : (
           <>
             <FormSection title={t('student.sectionLinks')} spaced />
             {detail.isLoading && <AppSkeleton height="4rem" />}
-            {detail.isError && (
-              <AppErrorState
-                title={t('common.loadError')}
-                detail={detail.error?.detail ?? t('common.loadErrorHint')}
-                retryLabel={t('common.retry')}
-                onRetry={() => void detail.refetch()}
-              />
-            )}
             {detail.data && (detail.data.links.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('student.noLinks')}</p>
             ) : (
               <ul className="space-y-2">
                 {detail.data.links.map((link: StudentClientLogData) => (
-                  <li key={link.id} className="flex items-center justify-between rounded border border-slate-200 p-3 dark:border-slate-700">
+                  <li
+                    key={link.id}
+                    className="flex items-center justify-between rounded border p-3"
+                    style={{ borderColor: 'var(--surface-border)' }}
+                  >
                     <span className="text-sm font-medium">{link.client_name}</span>
                     <span className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
                       {link.ended_on === null && <AppTag value={t('student.linkCurrent')} severity="info" />}
                       {link.ended_on === null
-                        ? t('student.linkSince', { date: monthYear(link.started_on) })
-                        : t('student.linkRange', { from: monthYear(link.started_on), to: monthYear(link.ended_on) })}
+                        ? t('student.linkSince', { date: formatMonthYear(link.started_on) })
+                        : t('student.linkRange', { from: formatMonthYear(link.started_on), to: formatMonthYear(link.ended_on) })}
                     </span>
                   </li>
                 ))}
@@ -158,20 +153,20 @@ export function StudentDialog({
                   )}
                 />
                 <AppColumn header={t('student.turmaCourse')} body={(turma: StudentTurmaData) => turma.course_name} />
-                <AppColumn header={t('student.turmaDate')} body={(turma: StudentTurmaData) => monthYear(turma.start_date)} />
+                <AppColumn header={t('student.turmaDate')} body={(turma: StudentTurmaData) => formatMonthYear(turma.start_date)} />
                 <AppColumn
                   header={t('student.turmaStatus')}
                   body={(turma: StudentTurmaData) => (
                     <AppTag
-                      value={t(`operation.enrollment.status.${turma.approval_status}`)}
-                      severity={APPROVAL_SEVERITY[turma.approval_status] ?? 'info'}
+                      value={t(enrollmentStatusLabelKey(turma.approval_status))}
+                      severity={enrollmentStatusSeverity(turma.approval_status)}
                     />
                   )}
                 />
               </AppDataTable>
             )}
           </>
-        )}
+        ))}
       </section>
     </CrudDialog>
   )

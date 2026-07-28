@@ -2,29 +2,16 @@
 schema_version: 1
 active_feature: pessoas-alunos
 active_work_item: bloco-alunos-modulo
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: reviewing
+next_owner: claude
+next_action: review_active_work_item
 last_completed_work_item: bloco-visual-refino-ui
 state_basis_commit: 34a8c94
 active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
 active_plan: docs/superpowers/plans/2026-07-27-bloco-alunos-modulo.md
 context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
-blocker: >-
-  Revisão de sprint (Claude + Codex read-only) devolveu 6 achados aguardando decisão do João.
-  Q-1 🔴 relação soft-deletada (Client/Course/Turma) na projeção do aluno: GET /api/students/{id}
-  vira 500 — PROVADO em tinker; variante silenciosa na listagem ("Sin cliente" com vínculo aberto).
-  Q-2 🟡 seção "Historial de turmas" vazia quando o detalhe falha (fere D16). Q-3 🟡
-  approval_status como string em vez de EnrollmentApprovalStatus, forçando APPROVAL_SEVERITY
-  duplicado de features/operation/lib — a rule manda o union para shared/lib. Q-4 🟢 client_id
-  validado no update que o ignora. Q-5 🟢 StudentDetailData sem enrollments_count, contra D5.
-  Q-6 🟢 data fixa em es-CL nos 3 locales (padrão reincidente com shared/lib/datetime.ts).
-  Verificação: 302 testes verdes, build e lint verdes, sem órfãos, i18n 428 chaves nos 3 locales.
-  5 achados do Codex descartados com motivo (slate e end={error} são padrão do repo; staleness do
-  form é o desenho do useCrudPage; race check-then-insert é pré-existente e desproporcional;
-  gate de commercial.client.view já resolvido em 3e0bc36 — mas o desalinhamento de RBAC segue
-  aberto e precisa migrar do state.md para docs/pendencias.md antes do fechamento).
-resume_state: reviewing
+blocker: null
+resume_state: null
 context_packet_status: partial
 updated_at: 2026-07-27
 ---
@@ -166,7 +153,48 @@ e o único jeito de ver um cliente cadastrado nesse meio tempo era fechar o dial
 nome/RUT/email já digitados. Mesmo botão "Reintentar" (`clients.refetch()`) do estado de erro,
 agora também no estado vazio.
 
-Bloco **completo, todas as 10 tasks**; próxima ação é revisão (fora deste comando).
+Bloco **completo, todas as 10 tasks**; revisão de sprint executada em 2026-07-27.
+
+**Revisão de sprint (Claude + Codex read-only) e correção dos 6 achados, 2026-07-27.** Risco alto
+(generated.ts, RBAC, auth/logout, backend via Codex), então revisão dupla. 5 achados do Codex foram
+descartados com motivo verificado no código (`border-slate-*` e `end={error ? undefined : actions}`
+são padrão do repo inteiro, não deste bloco; "staleness" do form é o desenho documentado do
+`useCrudPage`; race check-then-insert é pré-existente no `UserProvisioner` e desproporcional para
+~10 usuários; o gate de `commercial.client.view` já fora resolvido em `3e0bc36`).
+
+**Q-1 cresceu de achado para regra.** O que parecia bug do detalhe do aluno era padrão em **7 DTOs
+de 4 domínios**: todo `belongsTo` para model soft-deletable atravessado por um `fromModel` estourava
+`Attempt to read property on null` assim que o alvo fosse arquivado. Confirmado ao vivo no mesmo dia
+— um `delete()`+`restore()` de cliente feito por engano no tinker (durante a própria prova do achado)
+deixou o `User` para trás, porque `Client::deleting` cascateia e `restore()` não desfaz cascata, e
+derrubou o módulo Comercial com o erro exato. Correção: `->withTrashed()` em 12 relações
+(`Client::user`, `Redator::user`, `Student::user`/`currentClient`, `StudentClientLog::client`,
+`Enrollment::turma`/`student`, `Turma::quote`/`course`, `Quote::budget`/`course`, `Budget::client`);
+coleções ficam como estão, porque ali o arquivado deve mesmo sumir. Institucionalizado na
+`.claude/rules/backend-ddd.md` e nas lições 16 e 17 do `docs/README.md`; guarda em
+`tests/Feature/Shared/SoftDeletedRelationProjectionTest.php` (9 casos, todos vistos reprovando
+contra o código antigo — lição 10). Alinha com o plano do João de expor os arquivados por módulo.
+
+Demais achados: **Q-2** erro do detalhe passa a cobrir as duas seções (vínculos + turmas), em vez de
+deixar "Historial de turmas" com cabeçalho vazio que se lê como "sem turmas"; **Q-3**
+`StudentTurmaData::approval_status` volta a ser `EnrollmentApprovalStatus` e o helper
+`enrollmentStatus` sobe de `features/operation/lib` para `shared/lib`, matando a cópia do mapa de
+severidade (a rule já mandava o union para shared); **Q-4** `client_id` sai do `exists` no DTO e a
+existência do cliente vira regra da `CreateStudentAction`, com 422 no campo em vez de 404, de modo
+que o PUT deixa de recusar edição por um campo que ele ignora; **Q-5** `enrollments_count` entra no
+`StudentDetailData`, fechando D5; **Q-6** `formatMonthYear` nasce em `shared/lib/datetime.ts` e os
+formatters passam a seguir o idioma ativo — antes fixavam `es-CL` no dialog e `pt-br` no shared.
+
+Verificação: **313 testes verdes** (302 + 11 novos), Pint limpo nos arquivos tocados, `pnpm build` e
+`pnpm lint` verdes, `typescript:transform` rodado com os consumidores ajustados no mesmo commit.
+Prova end-to-end com Sanctum real: arquivando de fato o cliente 1, `/api/students`,
+`/api/students/1`, `/api/clients`, `/api/budgets` e `/api/turmas` devolvem 200 (antes o detalhe era
+500) e o histórico segue nomeando "Subestación Norte S.A."; banco restaurado ao final, zero
+`trashed` nas 4 tabelas.
+
+Fica **aberto e fora deste bloco**: o desalinhamento de RBAC entre `identity.user.*` (o módulo) e
+`commercial.client.view` (o dropdown de empresa no create) precisa de decisão do João e deve migrar
+para `docs/pendencias.md` antes do fechamento — hoje só vive aqui.
 
 ## Último item fechado — 2026-07-27
 

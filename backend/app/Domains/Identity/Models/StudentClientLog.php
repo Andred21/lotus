@@ -28,6 +28,8 @@ class StudentClientLog extends Model
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(Client::class);
+        // Arquivamento não apaga: a projeção de leitura precisa do registro
+        // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
+        return $this->belongsTo(Client::class)->withTrashed();
     }
 }

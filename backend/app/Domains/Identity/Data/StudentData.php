@@ -34,7 +34,7 @@ class StudentData extends Data
         public string $email,
         public string|Optional|null $phone,
         /** Cliente ao qual o aluno é vinculado no cadastro. Só entrada. */
-        public int|Optional $client_id,
+        public int|Optional|null $client_id,
         #[Computed]
         public ?int $current_client_id = null,
         #[Computed]
@@ -47,7 +47,11 @@ class StudentData extends Data
     {
         return [
             'rut' => ['required', 'string', new ValidRut],
-            'client_id' => ['sometimes', 'integer', 'exists:clients,id'],
+            // Só a FORMA aqui. A existência do cliente é regra do cadastro e
+            // vive na CreateStudentAction: `exists` neste DTO fazia o PUT
+            // recusar um client_id inválido que o UpdateStudentAction ignora
+            // de propósito (D3), bloqueando edição de dados pessoais.
+            'client_id' => ['sometimes', 'nullable', 'integer'],
         ];
     }
 

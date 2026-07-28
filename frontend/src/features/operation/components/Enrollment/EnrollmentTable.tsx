@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDataTable, AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
 import type { EnrollmentData } from '@shared/types/generated'
-import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '../../lib/enrollmentStatus'
+import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
 
 type Props = {
   enrollments: EnrollmentData[]
