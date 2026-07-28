@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: pessoas-alunos
-active_work_item: bloco-alunos-modulo
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-last_completed_work_item: bloco-visual-refino-ui
-state_basis_commit: 34a8c94
-active_spec: docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md
-active_plan: docs/superpowers/plans/2026-07-27-bloco-alunos-modulo.md
-context_packet: docs/superpowers/context-packets/bloco-alunos-modulo.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+last_completed_work_item: bloco-alunos-modulo
+state_basis_commit: 3789954
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
-context_packet_status: partial
+context_packet_status: null
 updated_at: 2026-07-27
 ---
 
@@ -50,184 +50,40 @@ updated_at: 2026-07-27
 - O backlog nunca promove trabalho automaticamente.
 
 
-## Item ativo — `bloco-alunos-modulo`
+## Item ativo
 
-Promovido do backlog (item 1, "Pessoas · Alunos") por decisão explícita do João em 2026-07-27.
-Módulo novo **backend + frontend**: hoje a aba Alunos de `PeoplePage` é um `<p>` inline e não existe
-endpoint de aluno — o domínio tem só `Identity/Models/Student.php` e
-`Identity/Services/StudentResolver.php`, consumidos pela matrícula.
-
-Não é refino visual: nasce já no padrão de `shared/ui` entregue em 2026-07-27.
-
-Packet: rota Codex, **condicionada** a uma sondagem prévia dos conectores (Drive, Figma, Notion,
-GitHub) no runtime dele — decisão do João em 2026-07-27, motivada pelo v1 do
-`bloco-visual-refino-ui`, que voltou `blocked` por gap de tooling e não por ausência de fonte.
-A sondagem passou nos 4: **Notion responde neste runtime** (`mcp__codex_apps__notion_*`, base
-`Tasks · Lotus Fase 2` encontrada), contra o que o `AGENTS.md` §3 registrou em 2026-07-23 — a
-verificação de lá venceu e o `.agents/skills/lotus-context-packet/SKILL.md` ainda afirma
-"Notion is not loaded in this runtime".
-
-Packet `partial` em `context-packets/bloco-alunos-modulo.md`, v2 — o v1 foi rejeitado por três
-violações do contrato de validação (tabela `student_client_links` inexistente, decisão do João
-fabricada sobre CRUD, `identity.user.*` como constraint sem lastro no `PermissionCatalog`).
-Duas perguntas abertas entram no brainstorming: alcance CRUD e permissão do módulo. Prints do
-protótipo, anexados pelo João, entram como fonte `PROTO` — o Codex não os alcança.
-
-**Execução — Tasks 1-5 (backend, Codex) concluídas em 2026-07-27**, commits `93f415e`, `7a3a1b8`,
-`ddf22db`, `05d8ec9`, `aacd13b`. Bloqueou uma vez no meio do caminho: a primeira tentativa via
-`mcp__codex__codex` (sandbox `workspace-write`) e a retentativa via `mcp__codex__codex-reply` (que
-não tem parâmetro `sandbox` — herda o da sessão original) apanharam
-`permission denied ... /var/run/docker.sock`, já que o container `app` exige o socket Docker para
-o ciclo TDD do plano. `state.md` foi a `blocked` no commit `0cfd369`. Resolvido reabrindo uma
-sessão **nova** de `mcp__codex__codex` com `sandbox: danger-full-access` (sessão, não reply — o
-parâmetro só é aplicado na abertura); a primeira chamada com esse sandbox foi barrada pelo
-classificador de auto mode do próprio Claude Code, destravada com aprovação explícita do João.
-Diff revisado por Claude contra o plano e `.claude/rules/backend-ddd.md`/`generated-types.md`:
-302 testes verdes (suíte completa, rodada de novo pelo Claude, não só reportada pelo Codex), Pint
-limpo, `git diff --name-only` só nos `paths_autorizados`. Três desvios do código literal do plano,
-todos registrados pelo Codex e verificados: (1) `client_id` ausente no `store` não virava 422 —
-`rules()` usa `sometimes` porque o mesmo DTO serve o `update`, que não deve exigir `client_id`;
-adicionado guard explícito em `CreateStudentAction` lançando `ValidationException`, com teste novo
-(`test_cliente_e_obrigatorio_no_cadastro`), fechando D3; (2) `sortByDesc('started_on')` no
-`StudentDetailData` não desempatava dois vínculos abertos no mesmo dia — trocado por
-`sortBy([['started_on','desc'],['id','desc']])`; (3) dois fixtures de teste da Task 2 criavam
-aluno sem RUT (campo obrigatório no DTO) e o RUT de exemplo `12.876.543-K` da Task 5 falha
-`ValidRut` — ajustados para RUTs válidos.
-
-**Tasks 6-10 (frontend, Claude) concluídas em 2026-07-27**, commits `f4c1900`, `d939a63`,
-`2646c02`, `06700c8`, `42c6366`, `d1db604`. Sem desvios do plano. DoD (spec §7, 6 itens) provado
-via HTTP real autenticado (Sanctum, sem browser tool na sessão) — detalhe em
-`.superpowers/sdd/progress.md`. Um achado registrado como minor, não bloqueante: `client_id`
-inválido enviado no `update` (a UI nunca manda esse campo lá) recebe 422 do DTO antes de chegar
-em `UpdateStudentAction`, que o ignoraria — inconsistência latente entre validação do DTO e regra
-da Action, sem efeito prático hoje.
-
-**Fix pós stop-gate review do Codex em 2026-07-27**, commit `14ca1a9`. 3 achados reais: (1)
-`toFields()` zerava `client_id` ao entrar em view/edit — dropdown de empresa aparecia vazio mesmo
-com vínculo existente; (2) o dropdown de empresa em view/edit dependia de `commercial.client.view`
-via `clientsApi`, permissão sem relação com `identity.user.*` (o resto do módulo) — quem tivesse
-`identity.user.view`/`update` sem `commercial.client.view` batia 403 silencioso; (3) botão Editar
-do dialog aparecia sem checar `identity.user.update`. Corrigido trocando o dropdown por texto
-read-only (`current_client_name`, já vem no `StudentData`) fora do create, gate duplo
-(`identity.user.create` + `commercial.client.view`) no botão "Nuevo alumno", e Editar gated por
-`identity.user.update` (mesmo padrão de `RoleDialog`/`StaffUserDialog`). build+lint verdes.
-
-**Correção do fix anterior, mesmo dia, commit `3e0bc36`.** O gate duplo do botão "Nuevo alumno"
-(`identity.user.create` + `commercial.client.view`) foi ele mesmo um achado do stop-gate review
-seguinte: contradiz D8 da spec e o `StudentController` real, que só exige `identity.user.create`
-no `store` — escondia o botão de quem tinha a permissão certa. Revertido para só
-`identity.user.create`. O problema de origem (dropdown de cliente sem relação de permissão com o
-resto do módulo) fica resolvido tornando a falha **visível** em vez de escondida: dropdown
-desabilitado + `clients.error.detail` no `FormField` quando `clientsApi` falha, em vez de opções
-vazias sem explicação ou do botão sumir para quem tem autorização real. Não há caminho para
-alinhar as permissões de fato sem decisão do João sobre RBAC/spec — fora do escopo desta sessão.
-
-**Terceiro fix, mesmo dia, commit `10043dc`.** Achado seguinte: com o dropdown desabilitado e a
-query de clientes sem retry automático, o usuário ficava sem saída — só fechando o dialog (e
-perdendo nome/RUT/email já digitados) pra tentar de novo. `CrudDialog` ganhou prop opcional
-`disabled` (repassada ao botão salvar, sem efeito nos outros 6 consumidores que não a passam);
-`StudentDialog` ganhou botão "Reintentar" chamando `clients.refetch()` sem fechar o dialog, e o
-submit fica desabilitado enquanto `clients` está carregando ou com erro.
-
-**Quarto fix, mesmo dia, commit `03280c6`.** O gate por `clients.isError` do fix anterior travava
-demais: a TanStack Query mantém `clients.data` do último fetch bem-sucedido mesmo quando um
-refetch em background falha, então um erro depois do próprio retry manual (ou refoco de aba)
-desabilitava dropdown e submit mesmo com lista utilizável em cache. Trocado por
-`clientsUnusable = mode === 'create' && !clients.data` — bloqueia só quando não há opções de
-verdade (primeiro load ou erro sem cache prévio); o aviso de erro + retry continuam aparecendo
-sempre que `isError`, agora sem bloquear nada quando há dado utilizável.
-
-**Quinto fix, mesmo dia, commit `6654ce2`.** Dois achados reais, um deles fora do escopo do
-`StudentDialog` propriamente: `useLogout()` (`features/identity/api/authApi.ts`) só limpava o
-`sessionStore`, nunca o `QueryClient` global — dado em cache de QUALQUER recurso sobrevivia ao
-logout na mesma aba, atravessando a fronteira de autorização de um usuário pro outro (o cliente
-que o usuário anterior podia ver aparecendo pro seguinte, mesmo sem a permissão). Adicionado
-`queryClient.clear()` no `onSuccess` do logout. Segundo achado, local: `clientsUnusable` checava
-só `!clients.data`, mas `[]` é truthy — uma lista vazia bem-sucedida contava como "utilizável" e
-habilitava o submit sem opção nenhuma pra escolher. Trocado por `!clients.data?.length` + mensagem
-explícita (`student.noClientsAvailable`, 3 locales) quando a lista volta vazia sem erro.
-
-**Sexto fix, mesmo dia, commit `6e5c54b`.** A mensagem de "nenhum cliente" não tinha ação de
-atualizar — `refetchOnWindowFocus` está desligado globalmente, então nem trocar de aba revalidava,
-e o único jeito de ver um cliente cadastrado nesse meio tempo era fechar o dialog e perder
-nome/RUT/email já digitados. Mesmo botão "Reintentar" (`clients.refetch()`) do estado de erro,
-agora também no estado vazio.
-
-Bloco **completo, todas as 10 tasks**; revisão de sprint executada em 2026-07-27.
-
-**Revisão de sprint (Claude + Codex read-only) e correção dos 6 achados, 2026-07-27.** Risco alto
-(generated.ts, RBAC, auth/logout, backend via Codex), então revisão dupla. 5 achados do Codex foram
-descartados com motivo verificado no código (`border-slate-*` e `end={error ? undefined : actions}`
-são padrão do repo inteiro, não deste bloco; "staleness" do form é o desenho documentado do
-`useCrudPage`; race check-then-insert é pré-existente no `UserProvisioner` e desproporcional para
-~10 usuários; o gate de `commercial.client.view` já fora resolvido em `3e0bc36`).
-
-**Q-1 cresceu de achado para regra.** O que parecia bug do detalhe do aluno era padrão em **7 DTOs
-de 4 domínios**: todo `belongsTo` para model soft-deletable atravessado por um `fromModel` estourava
-`Attempt to read property on null` assim que o alvo fosse arquivado. Confirmado ao vivo no mesmo dia
-— um `delete()`+`restore()` de cliente feito por engano no tinker (durante a própria prova do achado)
-deixou o `User` para trás, porque `Client::deleting` cascateia e `restore()` não desfaz cascata, e
-derrubou o módulo Comercial com o erro exato. Correção: `->withTrashed()` em 12 relações
-(`Client::user`, `Redator::user`, `Student::user`/`currentClient`, `StudentClientLog::client`,
-`Enrollment::turma`/`student`, `Turma::quote`/`course`, `Quote::budget`/`course`, `Budget::client`);
-coleções ficam como estão, porque ali o arquivado deve mesmo sumir. Institucionalizado na
-`.claude/rules/backend-ddd.md` e nas lições 16 e 17 do `docs/README.md`; guarda em
-`tests/Feature/Shared/SoftDeletedRelationProjectionTest.php` (9 casos, todos vistos reprovando
-contra o código antigo — lição 10). Alinha com o plano do João de expor os arquivados por módulo.
-
-Demais achados: **Q-2** erro do detalhe passa a cobrir as duas seções (vínculos + turmas), em vez de
-deixar "Historial de turmas" com cabeçalho vazio que se lê como "sem turmas"; **Q-3**
-`StudentTurmaData::approval_status` volta a ser `EnrollmentApprovalStatus` e o helper
-`enrollmentStatus` sobe de `features/operation/lib` para `shared/lib`, matando a cópia do mapa de
-severidade (a rule já mandava o union para shared); **Q-4** `client_id` sai do `exists` no DTO e a
-existência do cliente vira regra da `CreateStudentAction`, com 422 no campo em vez de 404, de modo
-que o PUT deixa de recusar edição por um campo que ele ignora; **Q-5** `enrollments_count` entra no
-`StudentDetailData`, fechando D5; **Q-6** `formatMonthYear` nasce em `shared/lib/datetime.ts` e os
-formatters passam a seguir o idioma ativo — antes fixavam `es-CL` no dialog e `pt-br` no shared.
-
-Verificação: **313 testes verdes** (302 + 11 novos), Pint limpo nos arquivos tocados, `pnpm build` e
-`pnpm lint` verdes, `typescript:transform` rodado com os consumidores ajustados no mesmo commit.
-Prova end-to-end com Sanctum real: arquivando de fato o cliente 1, `/api/students`,
-`/api/students/1`, `/api/clients`, `/api/budgets` e `/api/turmas` devolvem 200 (antes o detalhe era
-500) e o histórico segue nomeando "Subestación Norte S.A."; banco restaurado ao final, zero
-`trashed` nas 4 tabelas.
-
-Fica **aberto e fora deste bloco**: o desalinhamento de RBAC entre `identity.user.*` (o módulo) e
-`commercial.client.view` (o dropdown de empresa no create) precisa de decisão do João. Registrado em
-`docs/superpowers/backlog.md` em 2026-07-27, para não morrer no arquivamento deste arquivo.
-
-**Revisão encerrada sem achado pendente.** Re-checagem sobre o diff corrigido: sem órfão (os dois
-helpers movidos têm consumidor nas duas features, o que é justamente o que os põe em `shared/lib`),
-sem import morto de `features/operation/lib`, i18n em 428 chaves idênticas nos 3 locales. Bloco
-liberado para `/fechar-sprint` por decisão do João em 2026-07-27.
+Nenhum. `/fechar-sprint` encerrou `bloco-alunos-modulo` em 2026-07-27. A próxima ação é do João:
+escolher explicitamente um item de `docs/superpowers/backlog.md`. O backlog não promove sozinho.
 
 ## Último item fechado — 2026-07-27
 
-`bloco-visual-refino-ui` — 39 tasks em 4 partes, cada uma com review próprio, worktree própria e
-prova visual do João antes do merge. Fechado com `/fechar-sprint` em 2026-07-27; histórico da
-entrega em `progress.md`, decisões em `specs/archive/2026-07-26-bloco-visual-refino-ui-design.md`
-(D1–D21) e passo a passo em `plans/archive/2026-07-26-bloco-visual-refino-ui.md`.
+`bloco-alunos-modulo` — 10 tasks (backend 1–5 pelo Codex, frontend 6–10 por Claude), executadas no
+main tree (P-03). Histórico da entrega em `progress.md`; decisões em
+`specs/archive/2026-07-27-bloco-alunos-modulo-design.md` (D1–D11), passo a passo em
+`plans/archive/2026-07-27-bloco-alunos-modulo.md`, packet em
+`context-packets/bloco-alunos-modulo.md` (`partial`), ledger fino em `.superpowers/sdd/progress.md`.
 
-Merges: Parte 1 `bad3066`, Parte 2 `72ed668`, Parte 3 `29fd9b8`, Parte 4 `ff6bb3a`. As 4 branches
-`worktree-bloco-visual-p1..p4` ficam preservadas; as worktrees foram removidas no fechamento.
+Provas do gate de fechamento (contra a API real, Sanctum, banco restaurado ao final): criação
+gerando `User` inativo `type=aluno` + `current_client_id` + primeira linha de `student_client_logs`
+com `ended_on` nulo (DoD-1); RUT repetido em 422 com causa, sem associação silenciosa (DoD-2);
+edição de nome refletida no detalhe sem mexer no vínculo (DoD-3); detalhe do aluno 1 do seeder com
+vínculo atual, anterior fechado e turma com `approval_status` (DoD-4); os 4 endpoints em 403 para
+usuário sem permissão (DoD-6). 313 testes verdes, Pint limpo nos 23 arquivos PHP da sprint,
+`pnpm lint` e `pnpm build` verdes, `typescript:transform` sem drift no `generated.ts`.
 
 O que o fechamento moveu, além do arquivamento:
 
-- **P-11 encerrada** — `grep -rn "window.confirm" frontend/src` em zero.
-- **P-13 mantida aberta com gatilho novo** — o gatilho antigo ("decisão do João no planejamento do
-  bloco visual") venceu e produziu a decisão D8: a coluna fica com `quote_code`. O gatilho agora é
-  pedido da Lotus por identificador próprio de turma, o que vira task de backend.
-- **Débito novo no backlog** — toggle da sidebar sem efeito abaixo de 1024px corrompendo o
-  `sidebarCollapsed` persistido (trade-off previsto pela Task 37; João decidiu manter em 2026-07-27).
-- **Dois débitos antigos removidos** por terem sido resolvidos no bloco: `CatalogPage` com
-  `ModuleTabs` de uma aba só, e títulos de módulo derivados da entidade errada (namespace `module.*`
-  da Task 9).
+- **P-14, P-15 e P-16 nascem** em `docs/pendencias.md` — as três divergências declaradas na spec
+  (rota `students` vs. `alunos` do Drive; certificados fora da listagem e do detalhe até o Bloco 7;
+  `Redactores` continua sendo a primeira aba), cada uma com gatilho próprio.
+- **P-07 e P-12 saem** da tabela "Encerradas" — cumpriram a sprint de rastro.
+- O desalinhamento de RBAC entre `identity.user.*` e `commercial.client.view` **segue aberto no
+  backlog**, em "Débitos técnicos". Exige decisão do João sobre RBAC/spec; não é resolvível na UI.
 
-**Gatilhos vencidos que este bloco não podia resolver** (backend/processo, decisão do João):
+**Gatilhos vencidos que este bloco não resolveu** (seguem abertos em `docs/pendencias.md`, sem
+alteração silenciosa — os mesmos dois que o fechamento anterior reportou):
 
 - **P-04** — "reavaliar quando a Sprint 3 fechar"; a Sprint 3 fechou em 2026-07-23 e a reavaliação
-  dos guardrails (Pest Arch tests + eslint-boundaries) nunca aconteceu.
-- **P-06** — "doc-sync da Sprint 3"; o `der-fisico.md` ainda modela `turmas.redator_id` como FK 1:N
-  contra o pivot `turma_redator` N:N implementado. Nenhum bloco visual toca schema.
-
-Ambas seguem abertas em `docs/pendencias.md`, sem alteração silenciosa.
+  dos guardrails (Pest Arch tests + eslint-boundaries) continua sem acontecer.
+- **P-06** — "doc-sync da Sprint 3"; `der-fisico.md` ainda modela `turmas.redator_id` como FK 1:N
+  contra o pivot `turma_redator` N:N implementado. Este bloco não tocou schema.

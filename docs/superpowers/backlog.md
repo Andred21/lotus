@@ -7,25 +7,15 @@
 
 ## Próximos blocos
 
-1. **Pessoas · Alunos — módulo novo (backend + frontend)**
-   — a aba Alunos de `PeoplePage` é um `<p>` inline; **não existe endpoint de aluno**. `grep student`
-   em `routes/api.php` e `app/Domains/*/routes.php` = vazio; o domínio tem só
-   `Identity/Models/Student.php` e `Identity/Services/StudentResolver.php` (consumidos pela
-   matrícula). Escopo: `StudentData` + controller + rotas de listagem/detalhe, vínculos
-   (`student_client_links`), histórico de turmas e certificados do aluno, mais a tela. Protótipo tem
-   busca, tabela, indicadores, detalhe, vínculos, histórico e certificados. **Feature, não refino
-   visual** (decisão do João em 2026-07-26, ao separar do bloco visual). Nasce já no padrão novo de `shared/ui`,
-   entregue pelo bloco visual em 2026-07-27. Insumo pendente: print do protótipo (o João
-   anexa) + Notion.
-2. **Administração · Roles e permissões — redesenho de composição**
+1. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-3. **Bloco 7 · Sprint 4 · Certificação**
+2. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-4. **Hardening**
+3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -35,7 +25,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 - **Dashboard** — protótipo tem 4 KPIs, gráfico de turmas, gráfico de certificados, tarefas
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
-- **Pessoas · Alunos** — promovido a bloco próprio: ver **item 1** de "Próximos blocos".
+- ~~**Pessoas · Alunos**~~ — entregue em 2026-07-27 (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
 - **Certificados** — já coberto pelo Bloco 7.
 
 ## Futuros dependentes de decisão

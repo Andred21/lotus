@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3, spatie/laravel-data + typescript-transformer, spatie/laravel-permission, Pest/PHPUnit sobre sqlite `:memory:`; React 19 + TS, TanStack Query, PrimeReact via `shared/ui`, Tailwind v4 só para layout, i18next em 3 locales.
 
-**Spec:** `docs/superpowers/specs/2026-07-27-bloco-alunos-modulo-design.md` (D1–D11)
+**Spec:** `docs/superpowers/specs/archive/2026-07-27-bloco-alunos-modulo-design.md` (D1–D11)
 **Context packet:** `docs/superpowers/context-packets/bloco-alunos-modulo.md`
 
 ## Global Constraints
