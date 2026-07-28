@@ -6,6 +6,6 @@ import type { DialogPassThroughOptions } from 'primereact/dialog'
 export const appDialogPt: DialogPassThroughOptions = {
   root: { className: 'w-[95vw] sm:w-[85vw] lg:w-[70vw] max-w-screen' },
   header: { className: 'bg-[var(--surface-section)] border-b border-[var(--surface-border)]' },
-  content: { className: 'bg-[var(--surface-card)]' },
-  footer: { className: 'bg-[var(--surface-section)] border-t border-[var(--surface-border)]' },
+  content: { className: 'bg-[var(--surface-card)] pt-2' },
+  footer: { className: 'bg-[var(--surface-section)] border-t border-[var(--surface-border)] py-3' },
 }
