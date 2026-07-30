@@ -73,19 +73,20 @@ Use esta prioridade:
 Quando uma fonte necessária não estiver acessível, registre a limitação. Quando fontes divergirem,
 mostre a divergência e não escolha silenciosamente.
 
-**Conectores verificados em 2026-07-23 (inventário de tools no runtime do plugin):**
+**Conectores verificados em 2026-07-23 (inventário de tools no runtime do plugin), linha do Notion
+revista em 2026-07-30:**
 
 | Fonte        | Situação                                                     | Namespace das tools                                                                       |
 | ------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
 | Google Drive | **disponível** — é a fonte canônica; consulte-a de fato      | `mcp__codex_apps__google_drive_*` (`search`, `get_document_text`, `list_folder`, `fetch`) |
 | Figma        | **disponível**                                               | `mcp__codex_apps__figma_*` (`get_design_context`, `get_screenshot`, `get_metadata`)       |
 | GitHub       | **disponível**                                               | `mcp__codex_apps__github_*`                                                               |
-| Notion       | **indisponível** — o MCP do plugin não carrega neste runtime | —                                                                                         |
+| Notion       | **disponível** — verificado em 2026-07-30 pela geração do packet H.1.3.1 | `mcp__codex_apps__notion_*` (base `Tasks · Lotus Fase 2`) |
 
-Não declare uma fonte `unavailable` sem ter tentado a tool correspondente e capturado o erro. A
-ausência do Notion é não bloqueante: work items do Lotus são splits internos de sprint
-(`-exec1/2/3`) e normalmente não têm task 1:1 lá. Reavalie a linha do Notion quando o MCP do plugin
-passar a carregar.
+Não declare uma fonte `unavailable` sem ter tentado a tool correspondente e capturado o erro — a
+linha do Notion ficou errada por uma semana exatamente assim. A ausência de uma task 1:1 no Notion
+continua sendo não bloqueante: work items do Lotus são splits internos de sprint (`-exec1/2/3`) e
+normalmente não têm task própria lá.
 
 ## 4. Regras por caminho
 

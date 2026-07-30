@@ -72,7 +72,9 @@ and explicit source references in the request.
 3. Use the configured MCP connectors. In this runtime they are (verified 2026-07-23, see
 `AGENTS.md` §3): Google Drive via `mcp__codex_apps__google_drive_*` — the canonical planning
 source, so query it rather than assuming it is missing; Figma via `mcp__codex_apps__figma_*`;
-GitHub via `mcp__codex_apps__github_*`. Notion is not loaded in this runtime.
+GitHub via `mcp__codex_apps__github_*`. Notion via `mcp__codex_apps__notion_*` — verified 2026-07-30
+while generating the `hardening-doc-sync-sprint4` packet; the base `Tasks · Lotus Fase 2` answered
+search and fetch.
 A source may be marked `unavailable` only with one of two recorded evidences:
 
 - **tool present, call failed** — state the decisive error line;
