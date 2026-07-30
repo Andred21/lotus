@@ -55,37 +55,37 @@ mesmo bloqueio de via do Drive registrado na seção 1).
 
 ## 4. Eixo `/docs` ↔ Notion
 
-**Task H.1.3.1 (esta task):** `notion-fetch` confirma o que o packet já registrou —
-`Critério de aceite`, `Depende de` e `ADR ref` vazios, `Status: Backlog`, `Descrição: "Alinhar
-código ↔ /docs ↔ Drive canônico ↔ Notion."`. Sem achado novo aqui, só confirmação.
+> **CORREÇÃO (registrada durante a Task 7):** a primeira versão desta seção consultou
+> `collection://6adbc960-3dfa-8269-9d57-8719e44eed2c` — uma base **diferente e obsoleta**, com
+> páginas hoje marcadas `deleted` (confirmado por `notion-fetch` retornando `<page ... deleted>`),
+> que por acaso também se chama "Tasks · Lotus Fase 2". A base real, canônica, é
+> `collection://e64b7d57-d000-4433-b652-a410e75193cc` (`Lotus.cl` → `Lotus · Desenvolvimento
+> (Fase 2)` → `Tasks · Lotus Fase 2`, database `7e55d684-cdd4-4bf3-b152-e15ce70d324b`). O João
+> identificou a divergência ao ver as 12 "correções de status" propostas — ele já tinha essas tasks
+> como concluídas. Reconsultada a base certa, **12 das 15 linhas abaixo eram falso-positivo**. A
+> própria task H.1.3.1 desta execução também tinha o ID errado (`e30bc960…`, da base obsoleta) —
+> coincidência de conteúdo idêntico entre as cópias salvou o packet de um erro de fato, mas não de
+> proveniência; o ID correto é `3a2bc9603dfa803b94bbf27c075b27d6`, confirmado por `notion-fetch`
+> nesta correção com as mesmas propriedades (`Critério de aceite` vazio, `Status: Backlog`).
 
-**Board Sprint 3 · Acadêmico vs. `progress.md` (2026-07-20 a 2026-07-27):** consulta SQL nas 26
-tasks do board (`Tasks · Lotus Fase 2`, filtro `Sprint = 'Sprint 3 · Acadêmico'`) mostra **nenhuma**
-com status `Feito`/`Concluído` — todas em `A fazer` ou `Backlog` — enquanto `progress.md` registra
-9 entregas nesse intervalo, a maior parte mapeando 1:1 para EAPs deste board.
+**Board Sprint 3 · Acadêmico (base correta) vs. `progress.md` (2026-07-20 a 2026-07-27):** das 26
+tasks do board real, a esmagadora maioria já está `Concluída`. Só 3 exceções, todas verificadas
+contra o código, não assumidas:
 
-| ID | EAPs | Status no Notion | Estado real (`progress.md`) | Evidência | Destino sugerido |
+| ID | EAP | Status no Notion (base correta) | Estado real | Evidência | Destino |
 |---|---|---|---|---|---|
-| E3-01 | 7.1.1–7.1.5 (migration/model/actions de Turma) | `A fazer` (todas) | Entregue — Bloco 6b "Turma + redator" (2026-07-21) e Bloco 6d "Conclusão + manual" (2026-07-21, cobre 7.1.5) | `progress.md:12-13`; páginas `93bbc960…`, `66ebc960…`, `6b1bc960…`, `8bbbc960…`, `c03bc960…` | `write-externo` (Notion, D11) |
-| E3-02 | 7.1.6 (anexos polimórficos de documentação) | `A fazer` | Entregue — endpoints de documentos já existentes antes da Exec 3 frontend (pré-flight do plano `2026-07-23-bloco6-frontend-exec3.md` cita as rotas prontas); sem commit isolado identificado para esta linha | `progress.md:14`; página `82dbc960…` | `write-externo` (Notion, D11) — confirmar o commit exato antes de aplicar, evidência mais fraca que as demais |
-| E3-03 | 7.2.1, 7.2.3 (migrations students/logs; regra 1 cliente por vez) | `A fazer` | Entregue — Bloco 6a "Aluno + vínculo" (2026-07-20) | `progress.md:10`; páginas `fd3bc960…`, `be9bc960…` | `write-externo` (Notion, D11) |
-| E3-04 | 7.2.2 (import xlsx/csv → alunos) | `A fazer` | Entregue — Bloco 6c "Matrícula + importação" (2026-07-21) | `progress.md:11`; página `09bbc960…` | `write-externo` (Notion, D11) |
-| E3-05 | 7.2.4–7.2.7 (DTO, actions CRUD, querybuilder, controller de alunos) | `Backlog` (todas) | Entregue — Bloco Pessoas · Alunos, Tasks 1–5 backend (2026-07-27) | `progress.md:17`; páginas `3aabc960…` (4 URLs distintas, mesmo prefixo) | `write-externo` (Notion, D11) |
-| E3-06 | 7.3.1–7.3.2 (migration enrollments; matrícula em lote) | `A fazer` | Entregue — Bloco 6c (2026-07-21) | `progress.md:11`; páginas `b8bbc960…`, `848bc960…` | `write-externo` (Notion, D11) |
-| E3-07 | 7.3.3 (endpoint do redator p/ lançar notas/presença) | `A fazer` | **Sem evidência de entrega** em `progress.md` — não é achado de status, pode seguir pendente de verdade | página `8f3bc960…` | nenhum — verificar no código antes de mexer, fora do escopo desta task |
-| E3-08 | 7.4.1, 7.4.3 (hook useTurma+detalhe 5 abas; aba Redator) | `A fazer` | Entregue — Sprint 3 Operação frontend, Exec 1 (2026-07-23) | `progress.md:14`; páginas `accbc960…`, `befbc960…` | `write-externo` (Notion, D11) |
-| E3-09 | 7.4.2 (aba Alumnos: upload/preview import) | `A fazer` | Entregue — Exec 2 (2026-07-23) | `progress.md:14`; página `6c5bc960…` | `write-externo` (Notion, D11) |
-| E3-10 | 7.4.4–7.4.5 (aba Documentación; aba Conclusión) | `A fazer` (ambas) | Entregue — Exec 3 (2026-07-23) | `progress.md:14`; páginas `08fbc960…`, `7fabc960…` | `write-externo` (Notion, D11) |
-| E3-11 | 7.4.6–7.4.8 (hook useStudents; aba Alumnos em Personas; detalhe do aluno) | `Backlog` (todas) | Entregue — Bloco Pessoas · Alunos, Tasks 6–10 frontend (2026-07-27) | `progress.md:17`; páginas `3aabc960…` (3 URLs distintas) | `write-externo` (Notion, D11) |
-| E3-12 | H.1.3 (Refinamento UI/UX por módulo, cópia Sprint 3) | `Backlog` | Entregue — Bloco visual · Refinamento de UI (2026-07-27, 39 tasks) | `progress.md:18`; página `c18bc960…` | `write-externo` (Notion, D11) |
-| E3-13 | H.1.3.1 (Sincronização de documentação, cópia Sprint 3) | `Backlog` | **Correto ficar `Backlog`** — nunca foi executado; é a origem do gatilho vencido de P-06 ("doc-sync da Sprint 3"). Este próprio bloco (`hardening-doc-sync-sprint4`) está fazendo agora, retroativamente, o que essa task pedia | página `a25bc960…` | Sem achado — só registrar que H.1.3.1/Sprint 3 fecha quando a Task 14 deste bloco reexecutar a auditoria |
-| E3-14 | H.1.3.2 (Fechamento técnico de sprint, cópia Sprint 3, página `6a8bc960…`) | `Backlog` | Sprint 3 fechou de fato em 2026-07-23 (citado em `docs/superpowers/state.md`, P-04) mas a página de gate nunca mudou de status | `docs/superpowers/state.md` (P-04); página `6a8bc960…` | `write-externo` (Notion, D11) |
-| E3-15 | Anomalia de dado (não é E1/E2/E3 no sentido usual) — página `f88bc960…` tem `Descrição: "Fechamento — Sprint 3"` mas a propriedade `Sprint` real é `Sprint 2 · Comercial` | — | Mislabel dentro do próprio Notion, não é código vs. doc | `notion-fetch` de `f88bc960…` | Fora do escopo do D11 (autoriza só status e critério de aceite de H.1.3.1) — só reportar ao João, não corrigir nesta task |
+| E3-01 | 7.2.6 — QueryBuilder de alunos com filtros/vínculos/histórico | `Backlog` | **Correto.** Não existe `StudentQueryBuilder`; `backend/app/Domains/Identity/QueryBuilders/` está vazio — a listagem de alunos não passa por Custom Query Builder dedicado | `find backend/app/Domains/Identity/QueryBuilders` (vazio) | Sem achado |
+| E3-02 | 7.3.3 — Endpoint do redator p/ lançar notas/presença | `A fazer` | **Correto.** Sem evidência de entrega em `progress.md` nem no código | página `388bc9603dfa81eb847ae51b2075f231` | Sem achado |
+| E3-03 | 7.4.2 — Aba Alumnos: upload de planilha + preview de import | `Em progresso` | Entregue — Exec 2 (2026-07-23, `progress.md:14`); arquivos reais presentes (`useImportStudents.ts`, `ImportDialog.tsx`, `ImportResultSummary.tsx`) e a Task 6 do ledger fino confirma commits `89e7237`+`5babe3d` | `progress.md:14`; `frontend/src/features/operation/{api/useImportStudents.ts, components/Enrollment/ImportDialog.tsx}`; página `388bc9603dfa814c9c9ee7028d20cd6e` | `write-externo` (Notion, D11) — única linha real |
+| E3-04 | H.1.3.1 (Sprint 3), página `3a2bc9603dfa8021b69ee399cd8fd915` | `Backlog` | **Correto ficar `Backlog`** — nunca foi executado; é a origem do gatilho vencido de P-06. Confirmado também na base correta | mesma leitura | Sem achado — mesma nota de antes |
+| E3-05 | Anomalia de dado — página `f88bc9603dfa8253b40981686f8ae023` tem `Descrição: "Fechamento — Sprint 3"` mas `Sprint` real é `Sprint 2 · Comercial` | — | Mislabel dentro do próprio Notion, independente da correção acima (confirmada nas duas consultas) | `notion-fetch` de `f88bc960…` | Fora do escopo do D11 — só reportar |
 
-**Total:** 15 linhas (E3-01 a E3-15). 12 são status desatualizado com destino candidato
-`write-externo` via D11 (Notion, `notion_write: claude` confirmado na seção 1); uma (E3-07) não é
-achado; uma (E3-13) confirma que o gatilho de P-06 está correto em apontar para cá; uma (E3-15) é
-uma anomalia de dado fora do escopo de autorização do D11.
+**Total real:** 1 divergência de status (E3-03) — não 12. As outras 4 linhas ou já estavam corretas
+ou são achados fora do escopo de escrita autorizada. **Lição para o método:** duas bases com o mesmo
+nome de exibição no mesmo workspace é um risco de proveniência que nem o `notion-search` nem o
+`notion-fetch` sinalizam sozinhos — só o confronto com quem vive o dado (o João) pegou. Registrado
+como achado de processo, não de doc, ao final desta seção como nota — sem ID formal, porque não é
+uma divergência entre dois documentos e sim um risco do próprio método de consulta.
 
 ## 5. Eixo docs de agente
 
@@ -124,8 +124,8 @@ achado por falta de evidência, não por confirmação de que está correto.
 
 ## 6. Tabela consolidada
 
-27 achados com destino proposto (evidência completa nas seções 2–5); mais 2 linhas sem achado
-(E3-07, E3-13, mantidas nas respectivas seções, não repetidas aqui).
+16 achados com destino proposto (evidência completa nas seções 2–5) — 7 de E1, 6 de E2, 2 de E3
+(após a correção da base Notion registrada na seção 4) e 1 de E4.
 
 | ID | Eixo | Divergência (resumo) | Destino proposto |
 |---|---|---|---|
@@ -142,20 +142,14 @@ achado por falta de evidência, não por confirmação de que está correto.
 | E2-04 | docs↔Drive | ADR-16 (Tailwind/PrimeReact) ausente do Drive | write-externo |
 | E2-05 | docs↔Drive | ADR-18 (`createCrudResource`) ausente do Drive | write-externo |
 | E2-06 | docs↔Drive | ADR-19 (dinheiro decimal+bcmath) ausente do Drive | write-externo |
-| E3-01 | docs↔Notion | EAP 7.1.1–7.1.5 (Turma backend) status desatualizado | write-externo (D11) |
-| E3-02 | docs↔Notion | EAP 7.1.6 (anexos documentação) status desatualizado, evidência mais fraca | write-externo (D11) |
-| E3-03 | docs↔Notion | EAP 7.2.1/7.2.3 (students migration/regra vínculo) status desatualizado | write-externo (D11) |
-| E3-04 | docs↔Notion | EAP 7.2.2 (import xlsx/csv) status desatualizado | write-externo (D11) |
-| E3-05 | docs↔Notion | EAP 7.2.4–7.2.7 (CRUD alunos backend) status desatualizado | write-externo (D11) |
-| E3-06 | docs↔Notion | EAP 7.3.1–7.3.2 (enrollments/matrícula lote) status desatualizado | write-externo (D11) |
-| E3-08 | docs↔Notion | EAP 7.4.1/7.4.3 (hook+detalhe turma, aba Redator) status desatualizado | write-externo (D11) |
-| E3-09 | docs↔Notion | EAP 7.4.2 (aba Alumnos import) status desatualizado | write-externo (D11) |
-| E3-10 | docs↔Notion | EAP 7.4.4–7.4.5 (aba Documentación/Conclusión) status desatualizado | write-externo (D11) |
-| E3-11 | docs↔Notion | EAP 7.4.6–7.4.8 (alunos frontend Personas) status desatualizado | write-externo (D11) |
-| E3-12 | docs↔Notion | EAP H.1.3 (refinamento UI, cópia Sprint 3) status desatualizado | write-externo (D11) |
-| E3-14 | docs↔Notion | EAP H.1.3.2 (fechamento Sprint 3) status desatualizado — sprint fechou de fato | write-externo (D11) |
-| E3-15 | docs↔Notion | Página `f88bc960…`: `Descrição` cita Sprint 3, propriedade `Sprint` real é Sprint 2 | pendência (fora do escopo de escrita do D11 — só reportar) |
+| E3-03 | docs↔Notion | EAP 7.4.2 (aba Alumnos import) status `Em progresso`, entregue de verdade | write-externo (D11) |
+| E3-05 | docs↔Notion | Página `f88bc960…`: `Descrição` cita Sprint 3, propriedade `Sprint` real é Sprint 2 | pendência (fora do escopo de escrita do D11 — só reportar) |
 | E4-01 | docs de agente | `AGENTS.md`/`SKILL.md` — Notion declarado indisponível, falso desde ≥2026-07-30 | corrigir-agora |
+
+> **Nota de correção:** as linhas antigas E3-01/02/04/06/08/09/10/11/12/14 (10 achados de "status
+> desatualizado" via `write-externo`) foram **retiradas** — eram falso-positivo por consulta à base
+> Notion errada (ver correção na seção 4). E3-01/E3-02/E3-04 antigos (agora sem achado) confirmaram
+> que os EAPs correspondentes já estavam corretamente `Concluída`/`Backlog` na base real.
 
 ## 7. Proveniência
 
