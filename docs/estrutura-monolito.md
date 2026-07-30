@@ -43,7 +43,8 @@ backend/app/
 │   └── Http/Middleware/        # SetLocale (i18n, ADR-15)
 │
 ├── Providers/
-│   └── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
+│   ├── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
+│   └── TypeScriptTransformerServiceProvider.php  # output do ADR-04 (config/typescript-transformer.php)
 │       # AuthServiceProvider.php e RouteServiceProvider.php planejados aqui NÃO existem no repo.
 │       # Nenhuma classe Policy foi criada ainda em nenhum domínio (pasta Policies/ é scaffold vazio
 │       # onde existe); routes.php de cada domínio é agregado por glob() direto em routes/api.php
@@ -127,7 +128,7 @@ frontend/vite.config.ts         # react + tailwind + aliases (@, @app, @shared, 
                                 #   NÃO tem plugin de i18n nem de typescript-transformer: os tipos
                                 #   são gerados por `php artisan typescript:transform` (ADR-04) e o
                                 #   i18n é runtime (i18next em shared/config/i18n.ts, ADR-15).
-frontend/tsconfig.json          # paths: @shared, @features, @app
+frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.json só referencia os sub-projetos)
 ```
 
 ### Regras do frontend (acionáveis)
