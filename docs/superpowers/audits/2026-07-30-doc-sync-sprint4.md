@@ -121,3 +121,64 @@ As linhas de Drive/Figma/GitHub da tabela **não foram re-verificadas** e não e
 **Total:** 1 divergência (E4-01) — a mesma que a Task 9 do plano já existe para corrigir. Inventário
 de Drive/Figma/GitHub não re-verificado nesta execução (Step 3, limitação declarada acima), sem
 achado por falta de evidência, não por confirmação de que está correto.
+
+## 6. Tabela consolidada
+
+27 achados com destino proposto (evidência completa nas seções 2–5); mais 2 linhas sem achado
+(E3-07, E3-13, mantidas nas respectivas seções, não repetidas aqui).
+
+| ID | Eixo | Divergência (resumo) | Destino proposto |
+|---|---|---|---|
+| E1-01 | código↔docs | `pendencias.md` P-04 — gatilho vencido (Sprint 3 fechou, guardrail §5 não reavaliado) | pendência |
+| E1-02 | código↔docs | `pendencias.md` P-06 — gatilho vencido (der-fisico.md ainda modela `turmas` como planejada/1:N) | corrigir-agora |
+| E1-03 | código↔docs | `estrutura-monolito.md` — `Operation/` documentado como scaffold vazio, tem código real | corrigir-agora |
+| E1-04 | código↔docs | `backend-ddd.md` — estado desatualizado, falta `Operation` como domínio real | corrigir-agora |
+| E1-05 | código↔docs | `estrutura-monolito.md` — `RouteServiceProvider.php` documentado, não existe (é `glob()`) | corrigir-agora |
+| E1-06 | código↔docs | `estrutura-monolito.md` — `AuthServiceProvider.php`/Policies documentados, não existem | corrigir-agora |
+| E1-07 | código↔docs | `backend-ddd.md` — data-scoping de Turma por Policy descrito, não implementado | corrigir-agora (lição 13 — marcar como não-construído, não como regra vigente) |
+| E2-01 | docs↔Drive | Drive: `redator_id` FK 1:N; repo: pivot `turma_redator` N:N | write-externo (já P-01/P-06) |
+| E2-02 | docs↔Drive | Drive: `/api/alunos`; repo: `/api/students` | write-externo (já P-14) |
+| E2-03 | docs↔Drive | ADR-15 revisado 2026-07-17 no repo, Drive com a versão pré-revisão | write-externo |
+| E2-04 | docs↔Drive | ADR-16 (Tailwind/PrimeReact) ausente do Drive | write-externo |
+| E2-05 | docs↔Drive | ADR-18 (`createCrudResource`) ausente do Drive | write-externo |
+| E2-06 | docs↔Drive | ADR-19 (dinheiro decimal+bcmath) ausente do Drive | write-externo |
+| E3-01 | docs↔Notion | EAP 7.1.1–7.1.5 (Turma backend) status desatualizado | write-externo (D11) |
+| E3-02 | docs↔Notion | EAP 7.1.6 (anexos documentação) status desatualizado, evidência mais fraca | write-externo (D11) |
+| E3-03 | docs↔Notion | EAP 7.2.1/7.2.3 (students migration/regra vínculo) status desatualizado | write-externo (D11) |
+| E3-04 | docs↔Notion | EAP 7.2.2 (import xlsx/csv) status desatualizado | write-externo (D11) |
+| E3-05 | docs↔Notion | EAP 7.2.4–7.2.7 (CRUD alunos backend) status desatualizado | write-externo (D11) |
+| E3-06 | docs↔Notion | EAP 7.3.1–7.3.2 (enrollments/matrícula lote) status desatualizado | write-externo (D11) |
+| E3-08 | docs↔Notion | EAP 7.4.1/7.4.3 (hook+detalhe turma, aba Redator) status desatualizado | write-externo (D11) |
+| E3-09 | docs↔Notion | EAP 7.4.2 (aba Alumnos import) status desatualizado | write-externo (D11) |
+| E3-10 | docs↔Notion | EAP 7.4.4–7.4.5 (aba Documentación/Conclusión) status desatualizado | write-externo (D11) |
+| E3-11 | docs↔Notion | EAP 7.4.6–7.4.8 (alunos frontend Personas) status desatualizado | write-externo (D11) |
+| E3-12 | docs↔Notion | EAP H.1.3 (refinamento UI, cópia Sprint 3) status desatualizado | write-externo (D11) |
+| E3-14 | docs↔Notion | EAP H.1.3.2 (fechamento Sprint 3) status desatualizado — sprint fechou de fato | write-externo (D11) |
+| E3-15 | docs↔Notion | Página `f88bc960…`: `Descrição` cita Sprint 3, propriedade `Sprint` real é Sprint 2 | pendência (fora do escopo de escrita do D11 — só reportar) |
+| E4-01 | docs de agente | `AGENTS.md`/`SKILL.md` — Notion declarado indisponível, falso desde ≥2026-07-30 | corrigir-agora |
+
+## 7. Proveniência
+
+Escopo desta seção: as decisões que **explicam** os achados acima (E1–E4), não um levantamento de
+toda decisão já tomada no projeto — isso contrariaria o não-objetivo "redesenhar arquitetura" da
+spec. `grep -rn "^[-*] \*\*D[0-9]" docs/superpowers/specs/` só bate o formato de bullet desta spec
+(12 ocorrências, todas D1–D12 deste próprio bloco); os specs arquivados registram decisão em outro
+formato (tabela `| D5 | ... |` ou heading `### D5 — ...`), lidos manualmente para as decisões abaixo.
+`grep -c "^| ADR-" docs/adrs.md` = 19.
+
+| Decisão | Onde está registrada | Proveniência no texto | Governa código vivo? (arquivo:linha) |
+|---|---|---|---|
+| D5 — Redator↔Turma N:N via `turma_redator` | `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md:41` | Explícita: "João, 2026-07-21" | Sim — `backend/database/migrations/..._create_turma_redator_table.php`, `TurmaRedator` model |
+| D7 — Rota `/api/students`, não `/alunos` | `specs/archive/2026-07-27-bloco-alunos-modulo-design.md:81-85` | **Não explícita** — justificativa técnica (evita hack de inflector), sem a frase "decisão do João" | Sim — `backend/app/Domains/Identity/routes.php` |
+| D3 — Edição de aluno não toca vínculo de cliente | `specs/archive/2026-07-27-bloco-alunos-modulo-design.md:46-54` | **Não explícita** — justificativa técnica, sem atribuição nominal | Sim — `UpdateStudentAction` só altera campos de `User` |
+| D10 — Certificados fora da listagem/detalhe do aluno | `specs/archive/2026-07-27-bloco-alunos-modulo-design.md:103-109` | **Não explícita**, mas justificada por ausência de infra (`Certification/` vazio) — natureza factual, não arbitrária | Sim — `StudentsTable`/`StudentDialog` sem coluna/card de certificados; já rastreada em P-15 |
+| D11 — Ordem das abas mantém `Redactores` primeiro | `specs/archive/2026-07-27-bloco-alunos-modulo-design.md:111-114` | Explícita: "decisão do João em 2026-07-27" | Sim — `PeoplePage.tsx`; já rastreada em P-16 |
+| ADR-16 — Tailwind como layout, tema PrimeReact em runtime | `docs/adrs.md:120-148` | Nota de sync própria diz "nasceu no desenvolvimento (repo)" — sem atribuição nominal explícita | Sim — é a stack de estilo real do frontend |
+| ADR-15 (revisão 2026-07-17) — dicionários i18n separados, sem compilação PHP→JSON | `docs/adrs.md:93-116` | Revisão datada, mas sem "decisão do João" explícito no texto da revisão | Sim — `shared/config/i18n.ts` + `lang/` separados, é o mecanismo real |
+
+D5 e D11 têm proveniência explícita — **não** entram como achado de ratificação (D9), só de
+write-externo (já cobertas em E2-01/E3 respectivas). D7, D3, ADR-16 e a revisão do ADR-15 **governam
+código vivo e não têm a atribuição nominal explícita** que D9 pede — candidatas a `ratificação` na
+Task 7. D10, apesar de sem a frase padrão, é justificada por um fato verificável (pasta vazia, sem
+migration) e não por uma escolha discricionária — proposta como `ratificação` mesmo assim, para o
+João confirmar a leitura, não porque haja dúvida real sobre o fato.
