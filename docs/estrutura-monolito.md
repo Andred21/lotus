@@ -28,7 +28,7 @@ backend/app/
 │   │   └── routes.php          # rotas do domínio (agregadas pelo RouteServiceProvider)
 │   ├── Commercial/             # cliente/endereço/contato, orçamento, cotação, aprovação, anexos
 │   ├── Catalog/                # cursos, templates de certificado, habilitação redator-curso
-│   ├── Operation/              # turma, matrícula, designação redator, conclusão  [scaffold vazio]
+│   ├── Operation/              # turma, matrícula, designação redator, conclusão  [código real]
 │   ├── Certification/          # emissão on-demand, validação QR pública          [scaffold vazio]
 │   └── Feedback/               # avaliações, pré-condição de conclusão            [não existe ainda]
 │   (cada domínio: mesma estrutura interna, conforme necessidade)
@@ -41,9 +41,10 @@ backend/app/
 │   └── Http/Middleware/        # SetLocale (i18n, ADR-15)
 │
 ├── Providers/
-│   ├── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
-│   ├── AuthServiceProvider.php # registra Policies dos domínios
-│   └── RouteServiceProvider.php# carrega os routes.php de cada domínio
+│   └── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
+│       # AuthServiceProvider.php e RouteServiceProvider.php planejados aqui NÃO existem no repo.
+│       # Nenhuma classe Policy foi criada ainda em nenhum domínio (pasta Policies/ é scaffold vazio
+│       # onde existe); routes.php de cada domínio é agregado por glob() direto em routes/api.php
 └── Console/                    # comandos (ex: pruning da auditoria, ADR-08)
 
 backend/database/
@@ -110,7 +111,9 @@ frontend/src/
 │   │   └── lib/                # helpers de UI locais (quoteStatusSeverity → severidade da AppTag;
 │   │                           #   uf → formato chileno 1.234,5678)
 │   ├── catalog/                # cursos + habilitação de redatores (código real)
-│   ├── operation/ certification/   # scaffold vazio (.gitkeep) — entram nas Sprints 3 e 4
+│   ├── operation/              # turmas, matrícula, documentos, conclusão — código real
+│   │   ├── api/ components/{Document,Enrollment,Turma}/ hooks/ lib/ stores/
+│   ├── certification/          # scaffold vazio (.gitkeep) — entra na Sprint 4
 │   │   (feedback/ ainda não existe)
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui
@@ -144,7 +147,14 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 
 1. **Wrappers `shared/ui`:** o planejamento escreveu `AppButton.tsx` (arquivo); o repo adotou **pasta-por-componente** (`AppButton/AppButton.tsx` + `index.ts`). Padrão vigente = pasta. Manter uniforme: todo wrapper é pasta.
 2. **`App.tsx`:** resolvido — o shell (task 2.4.1) foi entregue; o entrypoint e os providers vivem em `app/`. `main.tsx` na raiz de `src/` segue como ponto de montagem.
-3. **Features com código real:** `identity`, `commercial` e `catalog` estão em desenvolvimento (código real). `operation` e `certification` existem como **scaffold vazio** dos dois lados — no backend, pastas sob `Domains/` sem classes; no front, pastas com `.gitkeep`. **`feedback` não existe** em nenhum dos dois (só na árvore-alvo acima). O scaffold vazio contraria a regra "não criar pastas vazias especulativas" (dívida consciente, herdada do bootstrap do repo): quando a Sprint 3 abrir `operation`, ou se preenche, ou se enxuga. Não é bloqueante.
+3. **Features com código real:** `identity`, `commercial`, `catalog` e, desde a Sprint 3, `operation`
+   estão em desenvolvimento (código real — 38 arquivos PHP em `Domains/Operation/`, 32 em
+   `features/operation/`). `certification` segue como **scaffold vazio** dos dois lados — no
+   backend, pastas sob `Domains/Certification/` sem nenhuma classe; no front, pasta com
+   `.gitkeep`/stores vazios. **`feedback` não existe** em nenhum dos dois (só na árvore-alvo acima).
+   O scaffold vazio de `certification` contraria a regra "não criar pastas vazias especulativas"
+   (dívida consciente, herdada do bootstrap do repo): quando a Sprint 4 abrir `certification`, ou se
+   preenche, ou se enxuga. Não é bloqueante.
 4. **Cliente REST em `shared/api`, não na feature (ADR-18):** a árvore original insinuava `features/<x>/api/` como casa do CRUD. Vigente: `createCrudResource` sempre em `shared/api`; `features/<x>/api/` guarda só hooks de sub-recurso (nested/upload) que invalidam a key do pai.
 
 ---
