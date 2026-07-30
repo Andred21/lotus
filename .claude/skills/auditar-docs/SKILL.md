@@ -36,6 +36,15 @@ Se o subagent não estiver disponível, rode inline, mas leia só o que a checag
 8. **`docs/pendencias.md`** — pendência com **gatilho vencido** (reporte como achado: pendência
    vencida é dívida, não silenciador).
 
+## Fonte externa se referencia por ID, nunca por nome (2026-07-30)
+
+Quando a auditoria confrontar Drive, Notion ou Figma, cite o **ID** do arquivo, da página ou da
+collection — não o título. O workspace tem mais de uma base chamada `Tasks · Lotus Fase 2`, e a
+obsoleta responde `search`/`fetch` sem sinalizar nada: o doc-sync de 2026-07-30 auditou a errada e
+produziu 12 divergências falsas. A base canônica é
+`collection://e64b7d57-d000-4433-b652-a410e75193cc`. Achado externo sem ID na coluna de evidência é
+achado sem proveniência — não conta.
+
 ## O que procurar em especial (lição 13)
 
 **Doc que descreve intenção não-construída é pior que doc ausente.** Procure ativamente por
