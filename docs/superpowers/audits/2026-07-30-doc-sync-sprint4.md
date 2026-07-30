@@ -214,3 +214,20 @@ refletem os números corrigidos, não os originais.
 **Ratificação (seção 7):** as 5 decisões (D7, D3, D10, ADR-16, revisão do ADR-15) foram ratificadas
 em bloco pelo João em 2026-07-30 — confirmadas como decisões dele, viram ADR/linha em
 `pendencias.md` conforme a Task 13 decidir o formato.
+
+## 9. Correções internas aplicadas (Fase 2 — Tasks 8-10)
+
+Prova de que cada achado `corrigir-agora` reproduziu e depois deixou de reproduzir:
+
+| ID | Comando de prova | Antes | Depois | Commit |
+|---|---|---|---|---|
+| E1-02 | `grep -n "redator_id" docs/der-fisico.md` | bullet `turmas` em "PLANEJADAS" com `redator_id FK` | Zero ocorrência dentro do bullet `turmas`; `turma_redator` presente em "IMPLEMENTADAS" | `f1e7f8e` |
+| E1-03 | `grep -n "scaffold vazio" docs/estrutura-monolito.md` | `Operation/` marcado `[scaffold vazio]` nas 3 linhas (backend, frontend, divergências) | Só `Certification/` segue `[scaffold vazio]` | `2e1bd9d` |
+| E1-04 | `grep -n "placeholder" .claude/rules/backend-ddd.md` | "Identity, Commercial e Catalog têm código real; os demais são placeholder" | "Identity, Commercial, Catalog e Operation têm código real; Certification e Feedback são placeholder" | `270008b` |
+| E1-05 | `grep -n "RouteServiceProvider.php#" docs/estrutura-monolito.md` | Listado como arquivo real na árvore de `Providers/` | Removido da árvore; nota explica que o agregador real é `glob()` em `routes/api.php` | `2e1bd9d` |
+| E1-06 | `find backend/app/Domains -iname "*Policy*"` | `AuthServiceProvider.php` documentado como registrador de Policies | Removido da árvore; nota explica que nenhuma classe `Policy` existe ainda | `2e1bd9d` |
+| E1-07 | `.claude/rules/backend-ddd.md:98-99` | "Policy fica para data-scoping (Turma: 'redator só vê as suas')" como regra vigente | Reescrito como intenção não-construída, com débito explícito de backlog | `270008b` |
+| E4-01 | `grep -n "indisponível\|is not loaded" AGENTS.md .agents/skills/lotus-context-packet/SKILL.md` | 2 ocorrências | Zero ocorrências | `10341bf` |
+
+Todos os 7 reproduziram antes da correção e pararam de reproduzir depois — nenhuma correção foi
+aplicada sem achado reproduzível (regra da Task 10, Step 2).
