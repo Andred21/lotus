@@ -115,6 +115,9 @@ plugin de compilação no `vite.config.ts`, e os dois dicionários vivem separad
 UI. O texto acima descreve o que existe. A premissa "evita duplicar dicionário" não se sustentou:
 não há duplicação a evitar, porque os conjuntos de mensagem não se sobrepõem.
 
+**Proveniência ratificada (doc-sync 2026-07-30):** a revisão não trazia atribuição nominal explícita
+no texto; confirmada como decisão do João no portão de triagem do bloco `hardening-doc-sync-sprint4`.
+
 **Nota:** filtrar recomendações de i18n que pressupõem Inertia (não usamos).
 
 ## ADR-16 — Tailwind como layout; tema do PrimeReact trocado em runtime
@@ -145,7 +148,12 @@ depurar estilo, cheque o seletor COMPLETO que o markup gera, não a classe isola
 reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estágio do projeto.
 
 > **Nota de sync:** o ADR-16 nasceu no desenvolvimento (repo) e ainda **não foi espelhado
-> para o canônico do Drive** (`decisao-stack.md`) — follow-up de write externo.
+> para o canônico do Drive** (`decisao-stack.md`) — patch pronto em
+> `docs/superpowers/audits/2026-07-30-drive-patches/decisao-stack.md` (P-17), aplicação pendente do
+> João.
+>
+> **Proveniência ratificada (doc-sync 2026-07-30):** o texto não trazia atribuição nominal explícita;
+> confirmada como decisão do João no portão de triagem do bloco `hardening-doc-sync-sprint4`.
 
 ## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
 
