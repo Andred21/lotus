@@ -21,6 +21,8 @@ backend/app/
 │   │   ├── Models/             # User, ... Eloquent (ADR-10 enforceMorphMap)
 │   │   ├── Services/           # Domain Services (regra entre agregados)
 │   │   ├── QueryBuilders/      # Custom Query Builders (consultas complexas)
+│   │   ├── Support/            # value object / helper específico do domínio, quando houver
+│   │   │                       #   (ex.: Identity/Support/PermissionCatalog.php)
 │   │   ├── Policies/           # autorização por modelo (casa com Spatie, ADR-07)
 │   │   ├── Exceptions/         # exceção própria do domínio (só quando houver)
 │   │   ├── Http/Controllers/   # CRUD simples mora aqui direto (ADR-02)
@@ -45,11 +47,11 @@ backend/app/
 │       # AuthServiceProvider.php e RouteServiceProvider.php planejados aqui NÃO existem no repo.
 │       # Nenhuma classe Policy foi criada ainda em nenhum domínio (pasta Policies/ é scaffold vazio
 │       # onde existe); routes.php de cada domínio é agregado por glob() direto em routes/api.php
-└── Console/                    # comandos (ex: pruning da auditoria, ADR-08)
+└── Console/                    # planejado, NÃO existe ainda — comandos (ex: pruning da auditoria, ADR-08) nascem quando a poda entrar em desenvolvimento
 
 backend/database/
 ├── migrations/                 # FONTE ÚNICA — migrations são globais, NÃO por domínio
-├── seeders/                    # RoleSeeder, PermissionSeeder (ADR-07)
+├── seeders/                    # RolePermissionSeeder (ADR-07)
 └── factories/
 backend/routes/api.php          # só o esqueleto; delega aos routes.php dos domínios
 ```
@@ -94,11 +96,14 @@ frontend/src/
 │   └── config/                 # brand, navigation, primeTheme (ADR-16), i18n + locales (ADR-15)
 │
 ├── features/                   # DOMÍNIO. Espelha os Domains do backend.
-│   ├── identity/               # auth (login) E redator — espelha Domains/Identity do backend
+│   ├── identity/               # auth (login), redator, alunos, admin — espelha Domains/Identity
 │   │   ├── api/                # authApi (login/logout/me num arquivo), redator, documentos
 │   │   ├── components/         # sub-pasta por entidade quando passa de ~3 arquivos:
 │   │   │   ├── Login/          #   LoginPage, LoginForm
 │   │   │   ├── Redator/        #   RedatorDialog, RedatoresTable
+│   │   │   ├── Student/        #   StudentDialog, StudentsTable (Bloco Pessoas · Alunos)
+│   │   │   ├── Admin/          #   RoleDialog, RolesTable, StaffUserDialog, UsersTable
+│   │   │   ├── AdministracionPage.tsx  # página de Administração (roles/usuários)
 │   │   │   └── PeoplePage.tsx  #   página do módulo (rota /personas)
 │   │   ├── hooks/              # hooks locais (useRedatorForm, useRedatoresPage…)
 │   │   └── lib/                # helpers de UI locais (redatorStatus devolve CHAVE de status, não texto)
