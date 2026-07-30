@@ -231,3 +231,18 @@ Prova de que cada achado `corrigir-agora` reproduziu e depois deixou de reproduz
 
 Todos os 7 reproduziram antes da correção e pararam de reproduzir depois — nenhuma correção foi
 aplicada sem achado reproduzível (regra da Task 10, Step 2).
+
+## 10. Writes externos
+
+| Documento | Via | Aplicado? | Evidência |
+|---|---|---|---|
+| `decisao-stack.md` (Drive) | fallback | Patch gerado, não aplicado | `docs/superpowers/audits/2026-07-30-drive-patches/decisao-stack.md` — P-17 aberta até o João aplicar |
+| `modelo-fisico-e-diagramas.md` (Drive) | fallback | Patch gerado, não aplicado | `docs/superpowers/audits/2026-07-30-drive-patches/modelo-fisico-e-diagramas.md` — P-01 aberta |
+| `modelo-conceitual.md` (Drive) | fallback | Patch gerado, não aplicado | `docs/superpowers/audits/2026-07-30-drive-patches/modelo-conceitual.md` — mesma pendência de P-01/E2-01 |
+| `tela-pessoas.md` (Drive) | fallback | Patch gerado, não aplicado | `docs/superpowers/audits/2026-07-30-drive-patches/tela-pessoas.md` — P-14 aberta até o João aplicar |
+| H.1.3.1 — critério de aceite (Notion) | real (`notion-update-page`) | **Aplicado** | Página `3a2bc9603dfa803b94bbf27c075b27d6` — releitura confirma `Critério de aceite` preenchido |
+| EAP 7.4.2 — status (Notion) | real (`notion-update-page`) | **Aplicado** | Página `388bc9603dfa814c9c9ee7028d20cd6e` — releitura confirma `Status: Concluída` |
+
+Nenhum write no Drive foi tentado nesta execução (via `fallback` confirmada na seção 1) — os 4
+patches ficam para o João aplicar manualmente; P-01/P-14/P-17 seguem abertas em `pendencias.md` até
+confirmação. Os 2 writes no Notion foram aplicados e confirmados por releitura.
