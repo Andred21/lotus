@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: hardening-doc-sync-sprint4
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 last_completed_work_item: bloco-alunos-modulo
 state_basis_commit: 74e4a2d
 active_spec: docs/superpowers/specs/2026-07-30-hardening-doc-sync-sprint4-design.md
@@ -77,6 +77,14 @@ levantam sem mudar nada, **Task 7 é portão humano** (nenhuma task de 8 a 13 co
 commitada), Tasks 8–13 aplicam e a Task 14 prova reexecutando a auditoria. O Codex entra só na
 sondagem de escrita externa (Task 1) e, se ela provar capacidade, no write do Drive (Task 12), sempre
 sem tocar o repositório. O subagente `auditor-docs` roda nas Tasks 2 e 14.
+
+Revisão (`/revisar-sprint`, 2026-07-30, baixo risco — nenhum arquivo executável tocado): 6 achados,
+todos aprovados pelo João e fechados em `a9131be` e `993c1ff`, registrados na seção 12 do relatório
+de auditoria. Q-2 virou regra ("fonte externa se referencia por ID, nunca por nome de exibição") em
+`AGENTS.md` §3, na SKILL do packet e em `.claude/skills/auditar-docs`; Q-1 abriu **P-22** (H.1.3.1
+duplicada dentro da base Notion canônica). **Pendência de execução do fechamento — Q-4:** write
+autorizado para mover a página `3a2bc9603dfa803b94bbf27c075b27d6` de `Backlog` para `Concluída` no
+Notion, com releitura registrada na seção 10 do relatório. O `/fechar-sprint` não termina sem isso.
 
 Gatilhos vencidos que este bloco tende a encostar (hoje abertos em `docs/pendencias.md`): **P-04**
 (reavaliação dos guardrails após a Sprint 3), **P-06** (`der-fisico.md` ainda modela

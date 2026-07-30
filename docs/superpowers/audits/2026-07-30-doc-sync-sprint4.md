@@ -278,3 +278,32 @@ Quatro rodadas de `auditor-docs` até zero achado fora de `pendencias.md`:
    `AGENTS.md` e `.agents/skills/`; nenhum arquivo de `backend/app` ou `frontend/src` foi tocado.
 
 Todos os 7 critérios do DoD atendidos.
+
+## 12. Revisão do bloco (`/revisar-sprint`, 2026-07-30)
+
+Revisão classificada **baixo risco** (nenhum arquivo executável tocado; só `/docs`,
+`.claude/rules/`, `AGENTS.md`, `.agents/skills/`), com o gabarito aplicado sobre a verdade de cada
+afirmação de doc contra o repositório real. As afirmações de schema do `der-fisico.md`
+(`turmas`/`turma_redator`/`enrollments`), `RolePermissionSeeder`, ausência de `Console/` e de classe
+`Policy`, o `glob()` de `routes/api.php`, `tsconfig.app.json`, `budgets.code`, a contagem de 32
+arquivos em `features/operation` e o total de 19 ADRs foram reconferidos e batem. Os **2 writes no
+Notion foram reconfirmados por `notion-fetch` próprio**, na base canônica — não pela palavra da
+seção 10.
+
+Seis achados, todos aprovados pelo João em 2026-07-30:
+
+| ID | Achado | Severidade | Como fechou |
+|---|---|---|---|
+| Q-1 | H.1.3.1 duplicada **dentro** da base canônica: `3a2bc960…b27d6` (Sprint 4, critério preenchido) e `3a2bc960…d8fd915` (Sprint 3, critério vazio). A seção 4 (E3-04) cita uma; as seções 8/10 escrevem na outra; o relatório nunca notou que são duas | 🔴 | **P-22** aberta com os dois IDs — qual é a canônica é decisão do João. Commit `993c1ff` |
+| Q-2 | `AGENTS.md`/`SKILL.md` do packet passaram a apontar a base Notion por **nome de exibição**, o nome que existe em duas bases — a lição dos 12 falsos positivos ficou só no relatório arquivado | 🔴 | ID canônico gravado nos dois docs + regra nova "fonte externa se referencia por ID, nunca por nome" em `AGENTS.md` §3, na SKILL do packet e em `.claude/skills/auditar-docs`. Commit `a9131be` |
+| Q-3 | `der-fisico.md:85` ainda marcava `students` como `(planejada)`, contra a própria lista de implementadas (linha 107) e contra `create_students_table` | 🟡 | Linha corrigida com o vínculo real (`students.current_client_id`). Commit `993c1ff` |
+| Q-4 | A própria H.1.3.1 fecha com `Status: Backlog` no Notion enquanto o `progress.md` diz Entregue — a classe exata de drift que o bloco existiu para matar | 🟡 | **Write autorizado pelo João em 2026-07-30**, a aplicar no `/fechar-sprint` (página `3a2bc9603dfa803b94bbf27c075b27d6` → `Concluída`), não antes: o bloco ainda não estava fechado no momento da revisão |
+| Q-5 | Linha de seeders corrigida na rodada 1 da re-auditoria parou no meio — citava só `RolePermissionSeeder`, omitindo `DatabaseSeeder` e `OperationDemoSeeder` | 🟢 | Os três documentados, com o gate local/demo do `OperationDemoSeeder`. Commit `993c1ff` |
+| Q-6 | Gatilho de P-03 ("se a concorrência passar a doer") não era verificável e escapou do grep de prova do DoD-2 por diferença de redação | 🟢 | Trocado por condição observável em `state.md` + data-limite `2026-10-31`. Commit `993c1ff` |
+
+**Padrão reincidente virou regra (Q-2):** duas bases com o mesmo nome de exibição derrubaram a Task 4
+deste bloco e a lição não tinha mecanismo. Agora tem, nos três documentos que um agente lê antes de
+consultar fonte externa.
+
+**Q-4 é a única pendência de execução desta revisão** — o `/fechar-sprint` aplica o write e registra
+a evidência de releitura na seção 10.
