@@ -1,19 +1,19 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: hardening-doc-sync-sprint4
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 last_completed_work_item: bloco-alunos-modulo
-state_basis_commit: 3789954
+state_basis_commit: 74e4a2d
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 context_packet_status: null
-updated_at: 2026-07-27
+updated_at: 2026-07-30
 ---
 
 # Estado operacional — Lotus v2
@@ -50,10 +50,23 @@ updated_at: 2026-07-27
 - O backlog nunca promove trabalho automaticamente.
 
 
-## Item ativo
+## Item ativo — `hardening-doc-sync-sprint4`
 
-Nenhum. `/fechar-sprint` encerrou `bloco-alunos-modulo` em 2026-07-27. A próxima ação é do João:
-escolher explicitamente um item de `docs/superpowers/backlog.md`. O backlog não promove sozinho.
+Promovido do backlog (item 1, "Hardening · H.1.3.1 — Sincronização de documentação e fontes
+canônicas") por decisão explícita do João em 2026-07-30. Escopo declarado no backlog: auditar
+código ↔ `/docs` ↔ Drive ↔ Notion, reconciliar divergências, identificar decisões sem proveniência
+ou sem ciência do João, atualizar a documentação interna, aplicar somente writes externos
+explicitamente autorizados, reexecutar a auditoria e registrar as pendências não resolvidas.
+
+Bloco de documentação e proveniência, não de feature: o insumo principal é externo (Drive canônico,
+Notion, Figma) confrontado com o repositório, então o Context Packet é pré-requisito e vai pela
+rota Codex. `active_spec` e `active_plan` seguem `null` até o planejamento.
+
+Gatilhos vencidos que este bloco tende a encostar (hoje abertos em `docs/pendencias.md`): **P-04**
+(reavaliação dos guardrails após a Sprint 3), **P-06** (`der-fisico.md` ainda modela
+`turmas.redator_id` 1:N contra o pivot `turma_redator` N:N) e **P-14/P-15/P-16**, nascidas no
+fechamento do `bloco-alunos-modulo`. O que entra no escopo é decisão do planejamento, não deste
+arquivo.
 
 ## Último item fechado — 2026-07-27
 
