@@ -44,6 +44,11 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Guardrail das leis §5 (P-04).** Leis invioláveis hoje são instrução em `CLAUDE.md`, não mecanismo
+  — "lei que precisa valer sempre quer Arch test ou hook, não parágrafo" (lição 14). Instalar Pest
+  Arch tests cobrindo DDD-lite/sem-Repository, auditoria só na aplicação e demais leis testáveis no
+  backend, mais `eslint-boundaries` para a regra de dependência do frontend (features não importam
+  PrimeReact direto nem outra feature). Gatilho em `pendencias.md` P-04: reavaliar em 2026-08-15.
 - **Q-14 — `AppErrorState` não sinaliza "reintentando".** `AppErrorState.tsx:36`: o botão Reintentar
   não recebe estado de refetch nem `disabled`, então cliques repetidos disparam refetch em série sem
   nenhum feedback. Achado 🟢 do `/revisar-sprint` da Parte 4 (2026-07-27); o João optou por não
