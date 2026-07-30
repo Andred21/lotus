@@ -82,7 +82,7 @@
 
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
 - `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
-- `students` (planejada) N:1 → `clients`; histórico em `student_client_logs`.
+- `students` N:1 → `clients` (vínculo atual em `students.current_client_id`); histórico em `student_client_logs`.
 - `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`; e (planejada) `certificates`.
 - `redatores` 1:N → `course_redator` (idoneidade); N:N com `turmas` via `turma_redator` (ministra).
 - `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`; e (planejada) `feedbacks`.

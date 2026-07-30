@@ -52,7 +52,8 @@ backend/app/
 
 backend/database/
 ├── migrations/                 # FONTE ÚNICA — migrations são globais, NÃO por domínio
-├── seeders/                    # RolePermissionSeeder (ADR-07)
+├── seeders/                    # DatabaseSeeder, RolePermissionSeeder (ADR-07),
+│                               #   OperationDemoSeeder (demo — gate local/demo, aborta se há cliente)
 └── factories/
 backend/routes/api.php          # só o esqueleto; delega aos routes.php dos domínios
 ```

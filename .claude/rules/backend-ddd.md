@@ -31,7 +31,9 @@ liga aliases a classes. Registre alias só de classe que existe na sprint; todo 
 Auditable/polimórfico precisa do seu alias.
 
 **Rotas** por domínio em `Domains/*/routes.php`, carregadas no `bootstrap/app.php`, sob
-`auth:sanctum`. Seeders: `RolePermissionSeeder` (ADR-07). Migrations: ver a rule
+`auth:sanctum`. Seeders: `DatabaseSeeder` (orquestrador), `RolePermissionSeeder` (ADR-07) e
+`OperationDemoSeeder` (cenário de demo montado pelas Actions reais; gate local/demo, aborta se já
+existe cliente — nunca roda em produção). Migrations: ver a rule
 `migrations.md`.
 
 ## Padrão de entidade (CRUD) — DRY entre domínios
