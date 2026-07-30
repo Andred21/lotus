@@ -28,3 +28,27 @@ Nota: como o `notion_write` já saiu confirmado pelo Step 2 (schema carrega = to
 | E1-07 | `.claude/rules/backend-ddd.md` | "Policy fica para data-scoping (Turma: 'redator só vê as suas')" descreve um mecanismo que não existe — `TurmaController@index` não filtra por redator, só por `permission:` middleware | `.claude/rules/backend-ddd.md:98-99` vs. `backend/app/Domains/Operation/Http/Controllers/TurmaController.php:26-34` (só middlewares `permission:operation.turma.*`) e `backend/app/Domains/Operation/QueryBuilders/TurmaQueryBuilder.php` (sem filtro por redator) | Marcar como débito/backlog explícito ou implementar o scoping antes de descrevê-lo como regra vigente |
 
 **Total:** 7 divergências, das quais 2 são gatilhos vencidos (E1-01/P-04, E1-02/P-06).
+
+## 3. Eixo `/docs` ↔ Drive
+
+Verificação do path canônico (Step 2): `docs/README.md:3` afirma `V2/Planejamento/` — confirmado
+via `search_files` (`Lotus.cl` → `V2` → `Planejamento`, com as três subpastas `1-inicial`,
+`2-intermediario`, `3-avancado`, mais `Templates`). A lista de "Fontes que NÃO foram espelhadas"
+(`docs/README.md:135-143`: camadas 1-inicial/2-intermediario, fluxos UI/UX, protótipos Figma,
+diagramas de arquitetura) bate com a estrutura real — `1-inicial` e `2-intermediario` existem como
+pastas próprias fora de `3-avancado`, que é de onde vêm os 4 documentos lidos nesta task. Sem achado
+nesse ponto.
+
+| ID | Drive afirma | Repo afirma | Evidência | Quem está errado (D10) |
+|---|---|---|---|---|
+| E2-01 | `redatores ‖--o{ turmas : "ministra"` (1:N), `turmas.redator_id FK` — em `modelo-fisico-e-diagramas.md` e `modelo-conceitual.md` | Pivot `turma_redator` N:N, sem `turmas.redator_id` | DRIVE-SCHEMA/DRIVE-DOMAIN (Drive) vs. `backend/database/migrations/2026_07_21_000001_create_turmas_table.php` + `..._create_turma_redator_table.php` | Drive — decisão posterior explícita do João (spec `2026-07-21-bloco6b-turma-designacao-design.md` D5). Já rastreado em `pendencias.md` P-06 (= E1-02, gatilho vencido) e P-01 (write externo pendente) |
+| E2-02 | `POST/PUT /api/alunos` (`tela-pessoas.md` §B) | `GET/POST/PUT /api/students` | DRIVE-PEOPLE vs. `backend/app/Domains/Identity/routes.php` | Drive — decisão posterior explícita do João (spec `2026-07-27-bloco-alunos-modulo-design.md` D7). Já rastreado em `pendencias.md` P-14, mesmo gatilho de P-01 |
+| E2-03 | ADR-15 versão em `decisao-stack.md`: "sistema de localização do Laravel como fonte; compartilhar dicionários... compilar traduções PHP → JSON via Vite"; biblioteca `[A CONFIRMAR FASE 2]` | ADR-15 revisado em 2026-07-17 (`docs/adrs.md:108-112`): "Nada disso foi construído... não existe plugin de compilação no `vite.config.ts`, e os dois dicionários vivem separados" | DRIVE-STACK vs. `docs/adrs.md:93-116` | Drive — decisão posterior registrada e datada no próprio ADR. **Sem pendência hoje** — achado novo |
+| E2-04 | ADR-16 (Tailwind/PrimeReact runtime) ausente | Presente, com nota de sync própria: "nasceu no desenvolvimento (repo) e ainda não foi espelhado para o canônico do Drive" (`docs/adrs.md:147-148`) | DRIVE-STACK (sem ADR-16) vs. `docs/adrs.md:120-148` | Drive — repo já se autodeclara não-espelhado. **Sem pendência hoje** — achado novo |
+| E2-05 | ADR-18 (clientes REST `createCrudResource`) ausente | Presente, sem nota de sync | DRIVE-STACK (sem ADR-18) vs. `docs/adrs.md:171-189` | Drive. **Sem pendência hoje** — achado novo |
+| E2-06 | ADR-19 (dinheiro em decimal + bcmath) ausente | Presente, sem nota de sync | DRIVE-STACK (sem ADR-19) vs. `docs/adrs.md:190-...` | Drive. **Sem pendência hoje** — achado novo |
+
+**Total:** 6 divergências (E2-01 a E2-06). Duas (E2-01, E2-02) já têm pendência aberta (P-06/P-01,
+P-14) — a Task 7 decide se a triagem consolida ou mantém separado. Quatro (E2-03 a E2-06) são
+achados novos, todos do tipo "o canônico está desatualizado" (destino candidato: `write-externo`,
+mesmo bloqueio de via do Drive registrado na seção 1).
