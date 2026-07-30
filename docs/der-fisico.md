@@ -43,6 +43,11 @@
 - **files** — `id PK`, `fileable_type`, `fileable_id`, `type` (80), `path`, `original_name`, `mime` (100, nullable), `size` (bigint), `valid_until` (date, nullable), `deleted_at`. Índice: (`fileable_type`,`fileable_id`). Polimórfica — `enforceMorphMap` (ADR-10). `type` = string genérica; o enum vive no domínio (ex.: `RedatorDocumentType`). Anexos de `budgets` e `quotes` também vivem aqui (morphs `budget`/`quote`).
 - **audits** — `id PK`, `user_id FK`, `event`, `auditable_type`, `auditable_id`, `old_values`, `new_values`, IP, user-agent. owen-it (ADR-08).
 
+### Operation
+- **turmas** — `id PK`, `quote_id FK` → quotes `restrictOnDelete`, `course_id FK` → courses (derivado da quote), `modalidade` enum(`presencial`,`online`), `local_aplicacao` (nullable — exigido só se presencial, validado no DTO), `start_date` (date), `end_date` (date), `status` enum(`em_andamento`,`concluida`, default `em_andamento` — no MySQL o enum foi estreitado por `ALTER...MODIFY`; no schema em papel/sqlite ainda carrega `habilitada` como terceiro valor histórico, nunca gravado desde a migration de conclusão), `concluded_at` (timestamp NULL — ato do admin, RN-16), `active_quote_id` (coluna gerada STORED `CASE WHEN deleted_at IS NULL THEN quote_id END`, `UNIQUE`), `deleted_at`. Índice: `status`. Nasce de uma cotação — a unicidade é sobre `active_quote_id`, então 1:1 vale entre turmas **vivas** e uma turma soft-deletada não bloqueia recriar. **Redatores são N:N** via `turma_redator` (spec 6b, D5) — não existe `turmas.redator_id`. **`habilitada` NÃO é estado persistido**: deriva em runtime de doc RN-16 completa (`TurmaHabilitacaoService`, spec 6d D3); conclusão é terminal (D5).
+- **turma_redator** — `id PK`, `turma_id FK` → turmas cascade, `redator_id FK` → redatores `restrictOnDelete`, timestamps, `unique(turma_id, redator_id)`. Pivô N:N de designação (quais redatores ministram a turma), sem soft-delete. Pivot não audita sozinho: a designação usa `auditSync`.
+- **enrollments** (matrículas) — `id PK`, `turma_id FK` → turmas `restrictOnDelete`, `student_id FK` → students `restrictOnDelete`, `grades` (json, nullable), `attendance_pct` (decimal 5,2, nullable), `approval_status` enum(`pendiente`,`aprobado`,`reprobado`, default `pendiente`), `deleted_at`. Índice único nomeado `enrollments_turma_student_unique` (`turma_id`,`student_id`) — encadear `->unique()` no `foreignId()` não emite índice (lição 6b).
+
 ### RBAC (Spatie — vêm do pacote, não criar à mão)
 - **roles** — `id PK`, `name`, `guard_name`.
 - **permissions** — `id PK`, `name`, `guard_name`.
@@ -64,10 +69,6 @@
 
 > Não existem como migration ainda. Os nomes de coluna abaixo são o rascunho conceitual do Drive; ao implementar, traduzir para inglês (como foi feito com clients/courses) e atualizar a seção acima.
 
-### Operation
-- **turmas** — `id PK`, `quote_id FK,UK`, `course_id FK`, `redator_id FK`, `modalidade` (enum), `status` (enum `em_andamento`|`concluida`, default `em_andamento`), `concluded_at` (timestamp NULL — ato do admin, RN-16). Nasce de uma cotação (1:1). Um redator por turma. **`habilitada` NÃO é estado persistido** — deriva em runtime de doc RN-16 completa (`TurmaHabilitacaoService`, spec 6d D3); conclusão é terminal (D5).
-- **enrollments** (matrículas) — `id PK`, `student_id FK`, `turma_id FK`, `notas` (json), `presenca_pct` (decimal), `status_aprovacao` (enum).
-
 ### Certification
 - **certificates** — `id PK`, `uuid UK`, `enrollment_id FK,UK`, `course_id FK`, `codigo UK`, `valido_ate` (date), `qr_code_hash UK`, `status` (enum). Gerado sob demanda; metadata armazenada, PDF não.
 - **certificate_sequences** — `id PK`, `year UK` (smallint), `last_seq` (int). Numeração por ano.
@@ -82,11 +83,11 @@
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
 - `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
 - `students` (planejada) N:1 → `clients`; histórico em `student_client_logs`.
-- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, e (planejadas) `turmas`, `certificates`.
-- `redatores` 1:N → `course_redator` (idoneidade), e (planejada) `turmas` (ministra).
-- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (planejada) · `turmas` 1:N → `enrollments`, `feedbacks` (planejadas).
+- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`; e (planejada) `certificates`.
+- `redatores` 1:N → `course_redator` (idoneidade); N:N com `turmas` via `turma_redator` (ministra).
+- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`; e (planejada) `feedbacks`.
 - `budgets` / `quotes` 1:N → `files` (anexos polimórficos).
-- `enrollments` 1:1 → `certificates` (planejadas).
+- `enrollments` 1:1 → `certificates` (planejada).
 - `users` 1:N → `model_has_roles`, `audits`.
 - **Soft-delete cascateia:** deletar `clients`/`redatores` cascateia até o `users` e os nested (evento `deleting`, guard `isForceDeleting`). Padrão para toda tabela futura com `client_id`/`redator_id`.
 
@@ -103,7 +104,8 @@
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
 - **Contexto total (alvo):** 25 tabelas (18 de domínio + 7 RBAC/transversal). Implementadas até
-  2026-07-20: users, clients, client_addresses, client_contacts, redatores, **students**,
+  2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
   **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
-  budgets, quotes, files, audits + as 5 de RBAC. As de framework (sessions, cache, jobs,
-  password_reset_tokens, personal_access_tokens) ficam fora da contagem de domínio.
+  budgets, quotes, files, audits, **turmas**, **turma_redator**, **enrollments** + as 5 de RBAC. As
+  de framework (sessions, cache, jobs, password_reset_tokens, personal_access_tokens) ficam fora da
+  contagem de domínio.
