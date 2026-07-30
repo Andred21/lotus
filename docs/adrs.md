@@ -1,6 +1,6 @@
 # ADRs — Decisões de Arquitetura · Lotus
 
-> Snapshot de 2026-07-04 (atualizado 2026-07-10). Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
+> Snapshot de 2026-07-04 (atualizado 2026-07-30, doc-sync da Sprint 4). Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
 > Princípio diretor de TODAS as decisões: **máxima senioridade, mínima complexidade desnecessária (anti over-engineering), proporcional a ~10 usuários internos.**
 >
 > Formato adaptado para agente: cada ADR traz a **regra acionável** (o que fazer/não fazer no código) e o **porquê** (contexto + trade-off). As decisões estão fechadas — se uma tarefa contrariar um ADR, sinalize antes de prosseguir.
@@ -235,4 +235,4 @@ somar valor, reconsiderar o value object.
 - Estratégia fina de pruning da auditoria (ADR-08).
 
 ## Regras de negócio herdadas (referência)
-Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); um redator por turma; só admin e redator autenticam (RN-01).
+Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); **redator↔turma é N:N** (a v1 previa um redator por turma; superado no Bloco 6b, spec `2026-07-21-bloco6b-turma-designacao-design.md` D5 — pivot `turma_redator`); só admin e redator autenticam (RN-01).

@@ -1,6 +1,6 @@
 # Estrutura do Monólito — Lotus
 
-> Snapshot de 2026-07-04 (atualizado 2026-07-10). Fonte: planejamento (camada avançada) + estado real do repo.
+> Snapshot de 2026-07-04 (atualizado 2026-07-30, doc-sync da Sprint 4). Fonte: planejamento (camada avançada) + estado real do repo.
 > Backend por DOMÍNIO (DDD-lite · ADR-02). Frontend em 3 camadas por ALCANCE (feature-based · ADR-05).
 > **Consulte antes de criar qualquer arquivo — para saber ONDE ele vai e que regra de importação segue.**
 
@@ -42,6 +42,9 @@ backend/app/
 │   ├── Support/                # value objects / helpers puros (Rut, ...)
 │   └── Http/Middleware/        # SetLocale (i18n, ADR-15)
 │
+├── Http/Controllers/Controller.php  # classe base abstrata do framework; TODO controller de domínio
+│                               #   estende ela (nada de regra de negócio aqui)
+│
 ├── Providers/
 │   ├── AppServiceProvider.php  # Relation::enforceMorphMap() vive aqui (ADR-10)
 │   └── TypeScriptTransformerServiceProvider.php  # output do ADR-04 (config/typescript-transformer.php)
@@ -61,7 +64,7 @@ backend/routes/api.php          # só o esqueleto; delega aos routes.php dos dom
 ### Regras do backend (acionáveis)
 - **PSR-4:** `App\Domains\` → `app/Domains/` no composer.json. Trade-off assumido: alguns `artisan make:*` precisam de stub custom.
 - **Migrations NÃO por domínio:** ficam em `database/migrations/` único. Migration é cronológica/global; FK cruza domínios (ex: `turmas.quote_id` → Commercial).
-- **routes.php por domínio:** cada domínio declara suas rotas; RouteServiceProvider agrega. `routes/api.php` fica limpo.
+- **routes.php por domínio:** cada domínio declara suas rotas; `routes/api.php` as agrega por `glob(app_path('Domains/*/routes.php'))` e fica só como esqueleto. Não existe `RouteServiceProvider` no repo — o `glob()` é o mecanismo real.
 - **Cruzamento de domínio:** ex. Operation consome Quote (Commercial) via Service/Action do Commercial OU lendo o Model — **nunca duplicando a regra**. Acoplamento controlado, não proibido.
 - **Criar estrutura de domínio só quando ele entra em desenvolvimento.** Não criar pastas vazias especulativas.
 

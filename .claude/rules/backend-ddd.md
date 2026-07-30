@@ -18,8 +18,9 @@ Domínios (espelhados 1:1 pelas `features/` do front):
 - **Certification** — emissão on-demand, validação QR pública
 - **Feedback** — avaliações de turma
 
-**Estado atual:** Identity, Commercial, Catalog e Operation têm código real; Certification e Feedback
-são placeholder (`.gitkeep`). Crie a estrutura de um domínio só quando ele entra em desenvolvimento.
+**Estado atual:** Identity, Commercial, Catalog e Operation têm código real. `Certification/` existe
+como pastas sem nenhuma classe; **`Feedback/` não existe no backend** (só na árvore-alvo). Crie a
+estrutura de um domínio só quando ele entra em desenvolvimento.
 
 **`App\Shared\`** = infra transversal: `Exceptions/ProblemDetails` (converte qualquer exceção em
 envelope RFC 7807, ligado em `bootstrap/app.php` para `api/*` e requests JSON — controllers não

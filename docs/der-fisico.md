@@ -1,6 +1,6 @@
 # DER Físico (MySQL) — Lotus
 
-> Snapshot de 2026-07-04 (atualizado 2026-07-14, pós-Sprint 2). Fonte canônica: `Drive/V2/Planejamento/3-avancado/modelo-fisico-e-diagramas.md`.
+> Snapshot de 2026-07-04 (atualizado 2026-07-30, pós-Sprint 3 / doc-sync da Sprint 4). Fonte canônica: `Drive/V2/Planejamento/3-avancado/modelo-fisico-e-diagramas.md`.
 > DER FÍSICO: com tipos MySQL, PK/FK, índices. Difere do modelo conceitual (camada intermediária, sem tipos).
 > **Consulte antes de criar migration, model ou mexer em schema.** Os nomes aqui são a referência — não invente nomes divergentes.
 >
@@ -103,7 +103,9 @@
   `CourseData`, `templates`/`modules` ausentes do payload significam "não mexe"; `[]` apaga. Um
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
-- **Contexto total (alvo):** 25 tabelas (18 de domínio + 7 RBAC/transversal). Implementadas até
+- **Contexto total (alvo):** 26 tabelas — 19 de domínio (16 implementadas + `certificates`,
+  `certificate_sequences`, `feedbacks` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
+  `audits`, que esta lista classifica como Transversal). Implementadas até
   2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
   **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
   budgets, quotes, files, audits, **turmas**, **turma_redator**, **enrollments** + as 5 de RBAC. As

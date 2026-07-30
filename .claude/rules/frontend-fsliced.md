@@ -57,7 +57,8 @@ a Zustand o que não cruza fronteira — é over-engineering.
   com ref de DOM útil — foco, seleção, medida: `AppInputText`, `AppPassword`, `AppTextarea`,
   `AppMenu`. **Não leva** quem embrulha *class component* do Prime (`RadioButton`, `Dropdown` — o
   ref não é DOM e `forwardRef` só mente sobre o tipo) nem wrapper apresentacional sem ref
-  (`AppButton`, `AppTag`, `AppDivider`). Hoje: 5 de 25 wrappers. Na dúvida, siga o vizinho da mesma
+  (`AppButton`, `AppTag`, `AppDivider`). Hoje: 4 dos 34 wrappers — a minoria é o normal, não a
+exceção. Na dúvida, siga o vizinho da mesma
   categoria (`AppRadioButton` segue o `AppDropdown`, não o `AppInputText`).
 - **Tailwind = layout** (grid/espaçamento); cor via variável CSS do tema (ADR-16). Utility não vence
   a especificidade do tema — ao depurar estilo, cheque o **seletor completo do markup**, não a classe
