@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: hardening-doc-sync-sprint4
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 last_completed_work_item: bloco-alunos-modulo
 state_basis_commit: 74e4a2d
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/hardening-doc-sync-sprint4.md
 blocker: null
 resume_state: null
-context_packet_status: null
+context_packet_status: ready
 updated_at: 2026-07-30
 ---
 
@@ -61,6 +61,16 @@ explicitamente autorizados, reexecutar a auditoria e registrar as pendências n�
 Bloco de documentação e proveniência, não de feature: o insumo principal é externo (Drive canônico,
 Notion, Figma) confrontado com o repositório, então o Context Packet é pré-requisito e vai pela
 rota Codex. `active_spec` e `active_plan` seguem `null` até o planejamento.
+
+Packet `ready` em `context-packets/hardening-doc-sync-sprint4.md`, aceito de primeira: 5 fontes
+recuperadas (4 documentos do Drive canônico + a task H.1.3.1 no Notion), provenance conferida contra
+`git hash-object` local. Dois achados do packet importam para o planejamento: a task do Notion está
+sem critério de aceite, então o escopo do backlog é a definição mais completa que existe; e o Notion
+**responde** neste runtime, contra o que `.agents/skills/lotus-context-packet/SKILL.md` §External
+retrieval e o `AGENTS.md` §3 ainda afirmam — a própria doc de agentes é divergência a reconciliar
+neste bloco. Figma não foi consultado por decisão declarada (bloco não é de UI). Questão aberta
+não bloqueante: espelhar no Drive ADR-15 revisado, ADR-16/18/19, schema N:N e rota `/students`
+exige autorização explícita do João antes de qualquer write externo.
 
 Gatilhos vencidos que este bloco tende a encostar (hoje abertos em `docs/pendencias.md`): **P-04**
 (reavaliação dos guardrails após a Sprint 3), **P-06** (`der-fisico.md` ainda modela
