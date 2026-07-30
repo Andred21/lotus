@@ -176,3 +176,41 @@ código vivo e não têm a atribuição nominal explícita** que D9 pede — can
 Task 7. D10, apesar de sem a frase padrão, é justificada por um fato verificável (pasta vazia, sem
 migration) e não por uma escolha discricionária — proposta como `ratificação` mesmo assim, para o
 João confirmar a leitura, não porque haja dúvida real sobre o fato.
+
+## 8. Triagem
+
+Decidido pelo João em 2026-07-30, em duas rodadas (`AskUserQuestion`, por grupo — não por achado).
+Na segunda rodada, o João apontou que já tinha as tasks do Sprint 3 como concluídas, o que levou à
+correção da seção 4 (base Notion errada) **antes** de fechar esta triagem — os destinos abaixo já
+refletem os números corrigidos, não os originais.
+
+| ID | Destino final | Decisão do João | Data |
+|---|---|---|---|
+| E1-01 (P-04) | pendência | Gatilho novo: reavaliar em **2026-08-15** (data fixa, não "quando a Sprint X fechar") | 2026-07-30 |
+| E1-02 | corrigir-agora | Aprovado em bloco (as 7 correções de texto) | 2026-07-30 |
+| E1-03 | corrigir-agora | Aprovado em bloco | 2026-07-30 |
+| E1-04 | corrigir-agora | Aprovado em bloco | 2026-07-30 |
+| E1-05 | corrigir-agora | Aprovado em bloco | 2026-07-30 |
+| E1-06 | corrigir-agora | Aprovado em bloco | 2026-07-30 |
+| E1-07 | corrigir-agora | Aprovado em bloco (mantém como correção de texto, não backlog) | 2026-07-30 |
+| E4-01 | corrigir-agora | Aprovado em bloco | 2026-07-30 |
+| E2-01 | write-externo | Patch aprovado para `modelo-fisico-e-diagramas.md` e `modelo-conceitual.md` | 2026-07-30 |
+| E2-02 | write-externo | Patch aprovado para `tela-pessoas.md` | 2026-07-30 |
+| E2-03 | write-externo | Patch aprovado para `decisao-stack.md` | 2026-07-30 |
+| E2-04 | write-externo | Patch aprovado para `decisao-stack.md` | 2026-07-30 |
+| E2-05 | write-externo | Patch aprovado para `decisao-stack.md` | 2026-07-30 |
+| E2-06 | write-externo | Patch aprovado para `decisao-stack.md` | 2026-07-30 |
+| E3-03 | write-externo | Autorizado — write real via `notion-update-page` (EAP 7.4.2 → `Concluída`) | 2026-07-30 |
+| E3-05 | pendência | Só registrar; fora do escopo do D11, sem write | 2026-07-30 |
+
+**Três decisões nominais adicionais (spec §3):**
+1. **Gatilho novo de P-04:** 2026-08-15 (ver E1-01 acima).
+2. **Documentos do Drive autorizados a receber patch (D1, um a um):** `decisao-stack.md`,
+   `modelo-fisico-e-diagramas.md`, `modelo-conceitual.md`, `tela-pessoas.md` — os 4 aprovados.
+3. **Notion (D11):** autorizado o write real em 2 pontos — critério de aceite da própria H.1.3.1
+   (página `3a2bc9603dfa803b94bbf27c075b27d6`, escopo do backlog como texto) e status de EAP 7.4.2
+   (página `388bc9603dfa814c9c9ee7028d20cd6e`, `Em progresso` → `Concluída`).
+
+**Ratificação (seção 7):** as 5 decisões (D7, D3, D10, ADR-16, revisão do ADR-15) foram ratificadas
+em bloco pelo João em 2026-07-30 — confirmadas como decisões dele, viram ADR/linha em
+`pendencias.md` conforme a Task 13 decidir o formato.
