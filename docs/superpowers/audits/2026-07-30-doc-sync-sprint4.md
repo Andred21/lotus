@@ -246,3 +246,35 @@ aplicada sem achado reproduzível (regra da Task 10, Step 2).
 Nenhum write no Drive foi tentado nesta execução (via `fallback` confirmada na seção 1) — os 4
 patches ficam para o João aplicar manualmente; P-01/P-14/P-17 seguem abertas em `pendencias.md` até
 confirmação. Os 2 writes no Notion foram aplicados e confirmados por releitura.
+
+## 11. Re-auditoria (Task 14)
+
+Quatro rodadas de `auditor-docs` até zero achado fora de `pendencias.md`:
+
+| Rodada | Achados | Como fechou |
+|---|---|---|
+| 1 | 5 (seeders `RoleSeeder,PermissionSeeder`; `Console/` documentado como existente; `Support/` ausente da árvore de domínio; `Admin/`/`Student/`/`AdministracionPage.tsx` ausentes do front; `openspout` sem ADR) | 4 correção de texto direta (commit `872906a`); 1 nova pendência **P-20** |
+| 2 | 2 (`tsconfig.json` vs `tsconfig.app.json` nos path aliases; `TypeScriptTransformerServiceProvider.php` ausente da árvore de `Providers/`) | Correção de texto direta (commit `ff2929e`) |
+| 3 | 3 (`.claude/rules/backend-ddd.md` — achado descartado após não reproduzir via `grep`, texto do alias `'cotacao'` não existe no arquivo; `.claude/rules/migrations.md` — `budgets.codigo` vs `budgets.code` real; `simplesoftwareio/simple-qrcode` instalado sem uso e sem ADR) | 1 correção de texto direta (commit `5edaaa1`); 1 nova pendência **P-21**; 1 falso positivo descartado (não reproduziu) |
+| 4 | 0 | Auditoria limpa |
+
+### Verificação do DoD (spec §6)
+
+1. **Re-auditoria zero achados fora de pendências** — rodada 4 confirma, tabela acima é a prova.
+2. **Nenhum gatilho vencido ou não verificável** — todos os gatilhos de `pendencias.md` são data fixa
+   (P-04, `2026-08-15`, não vencida) ou evento externo verificável (confirmação do João, correção no
+   Notion, chegada do Bloco 7); nenhum do tipo vago que a lição 13 proíbe.
+3. **P-06 fechada** — `der-fisico.md` modela `turma_redator` N:N e `turmas` em "IMPLEMENTADAS" com
+   colunas reais, conferido contra a migration (Task 8); confirmado de novo pela rodada 4.
+4. **`AGENTS.md`/SKILL.md dizem a verdade sobre o Notion** — `AGENTS.md:84` e
+   `.agents/skills/lotus-context-packet/SKILL.md:75` marcam Notion disponível, com data de
+   verificação 2026-07-30.
+5. **Todo write externo aprovado tem evidência ou patch+pendência aberta** — seção 10: 2 writes reais
+   no Notion com releitura confirmada; 4 patches de Drive entregues com pendência aberta (P-01/P-14/P-17).
+6. **Toda decisão com efeito vivo ratificada/rejeitada/pendente, sem linha em branco** — seção 8: as 5
+   ratificadas (D7→P-14, D3→P-19, D10→P-15, ADR-16 e revisão do ADR-15→`docs/adrs.md`) têm status
+   registrado; nenhuma decisão de proveniência ficou sem destino.
+7. **Código tocado → suíte + Pint** — não se aplica: bloco é só de `/docs`, `.claude/rules/`,
+   `AGENTS.md` e `.agents/skills/`; nenhum arquivo de `backend/app` ou `frontend/src` foi tocado.
+
+Todos os 7 critérios do DoD atendidos.

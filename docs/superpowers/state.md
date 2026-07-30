@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: hardening-doc-sync-sprint4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: bloco-alunos-modulo
 state_basis_commit: 74e4a2d
 active_spec: docs/superpowers/specs/2026-07-30-hardening-doc-sync-sprint4-design.md
