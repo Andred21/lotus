@@ -52,3 +52,37 @@ nesse ponto.
 P-14) — a Task 7 decide se a triagem consolida ou mantém separado. Quatro (E2-03 a E2-06) são
 achados novos, todos do tipo "o canônico está desatualizado" (destino candidato: `write-externo`,
 mesmo bloqueio de via do Drive registrado na seção 1).
+
+## 4. Eixo `/docs` ↔ Notion
+
+**Task H.1.3.1 (esta task):** `notion-fetch` confirma o que o packet já registrou —
+`Critério de aceite`, `Depende de` e `ADR ref` vazios, `Status: Backlog`, `Descrição: "Alinhar
+código ↔ /docs ↔ Drive canônico ↔ Notion."`. Sem achado novo aqui, só confirmação.
+
+**Board Sprint 3 · Acadêmico vs. `progress.md` (2026-07-20 a 2026-07-27):** consulta SQL nas 26
+tasks do board (`Tasks · Lotus Fase 2`, filtro `Sprint = 'Sprint 3 · Acadêmico'`) mostra **nenhuma**
+com status `Feito`/`Concluído` — todas em `A fazer` ou `Backlog` — enquanto `progress.md` registra
+9 entregas nesse intervalo, a maior parte mapeando 1:1 para EAPs deste board.
+
+| ID | EAPs | Status no Notion | Estado real (`progress.md`) | Evidência | Destino sugerido |
+|---|---|---|---|---|---|
+| E3-01 | 7.1.1–7.1.5 (migration/model/actions de Turma) | `A fazer` (todas) | Entregue — Bloco 6b "Turma + redator" (2026-07-21) e Bloco 6d "Conclusão + manual" (2026-07-21, cobre 7.1.5) | `progress.md:12-13`; páginas `93bbc960…`, `66ebc960…`, `6b1bc960…`, `8bbbc960…`, `c03bc960…` | `write-externo` (Notion, D11) |
+| E3-02 | 7.1.6 (anexos polimórficos de documentação) | `A fazer` | Entregue — endpoints de documentos já existentes antes da Exec 3 frontend (pré-flight do plano `2026-07-23-bloco6-frontend-exec3.md` cita as rotas prontas); sem commit isolado identificado para esta linha | `progress.md:14`; página `82dbc960…` | `write-externo` (Notion, D11) — confirmar o commit exato antes de aplicar, evidência mais fraca que as demais |
+| E3-03 | 7.2.1, 7.2.3 (migrations students/logs; regra 1 cliente por vez) | `A fazer` | Entregue — Bloco 6a "Aluno + vínculo" (2026-07-20) | `progress.md:10`; páginas `fd3bc960…`, `be9bc960…` | `write-externo` (Notion, D11) |
+| E3-04 | 7.2.2 (import xlsx/csv → alunos) | `A fazer` | Entregue — Bloco 6c "Matrícula + importação" (2026-07-21) | `progress.md:11`; página `09bbc960…` | `write-externo` (Notion, D11) |
+| E3-05 | 7.2.4–7.2.7 (DTO, actions CRUD, querybuilder, controller de alunos) | `Backlog` (todas) | Entregue — Bloco Pessoas · Alunos, Tasks 1–5 backend (2026-07-27) | `progress.md:17`; páginas `3aabc960…` (4 URLs distintas, mesmo prefixo) | `write-externo` (Notion, D11) |
+| E3-06 | 7.3.1–7.3.2 (migration enrollments; matrícula em lote) | `A fazer` | Entregue — Bloco 6c (2026-07-21) | `progress.md:11`; páginas `b8bbc960…`, `848bc960…` | `write-externo` (Notion, D11) |
+| E3-07 | 7.3.3 (endpoint do redator p/ lançar notas/presença) | `A fazer` | **Sem evidência de entrega** em `progress.md` — não é achado de status, pode seguir pendente de verdade | página `8f3bc960…` | nenhum — verificar no código antes de mexer, fora do escopo desta task |
+| E3-08 | 7.4.1, 7.4.3 (hook useTurma+detalhe 5 abas; aba Redator) | `A fazer` | Entregue — Sprint 3 Operação frontend, Exec 1 (2026-07-23) | `progress.md:14`; páginas `accbc960…`, `befbc960…` | `write-externo` (Notion, D11) |
+| E3-09 | 7.4.2 (aba Alumnos: upload/preview import) | `A fazer` | Entregue — Exec 2 (2026-07-23) | `progress.md:14`; página `6c5bc960…` | `write-externo` (Notion, D11) |
+| E3-10 | 7.4.4–7.4.5 (aba Documentación; aba Conclusión) | `A fazer` (ambas) | Entregue — Exec 3 (2026-07-23) | `progress.md:14`; páginas `08fbc960…`, `7fabc960…` | `write-externo` (Notion, D11) |
+| E3-11 | 7.4.6–7.4.8 (hook useStudents; aba Alumnos em Personas; detalhe do aluno) | `Backlog` (todas) | Entregue — Bloco Pessoas · Alunos, Tasks 6–10 frontend (2026-07-27) | `progress.md:17`; páginas `3aabc960…` (3 URLs distintas) | `write-externo` (Notion, D11) |
+| E3-12 | H.1.3 (Refinamento UI/UX por módulo, cópia Sprint 3) | `Backlog` | Entregue — Bloco visual · Refinamento de UI (2026-07-27, 39 tasks) | `progress.md:18`; página `c18bc960…` | `write-externo` (Notion, D11) |
+| E3-13 | H.1.3.1 (Sincronização de documentação, cópia Sprint 3) | `Backlog` | **Correto ficar `Backlog`** — nunca foi executado; é a origem do gatilho vencido de P-06 ("doc-sync da Sprint 3"). Este próprio bloco (`hardening-doc-sync-sprint4`) está fazendo agora, retroativamente, o que essa task pedia | página `a25bc960…` | Sem achado — só registrar que H.1.3.1/Sprint 3 fecha quando a Task 14 deste bloco reexecutar a auditoria |
+| E3-14 | H.1.3.2 (Fechamento técnico de sprint, cópia Sprint 3, página `6a8bc960…`) | `Backlog` | Sprint 3 fechou de fato em 2026-07-23 (citado em `docs/superpowers/state.md`, P-04) mas a página de gate nunca mudou de status | `docs/superpowers/state.md` (P-04); página `6a8bc960…` | `write-externo` (Notion, D11) |
+| E3-15 | Anomalia de dado (não é E1/E2/E3 no sentido usual) — página `f88bc960…` tem `Descrição: "Fechamento — Sprint 3"` mas a propriedade `Sprint` real é `Sprint 2 · Comercial` | — | Mislabel dentro do próprio Notion, não é código vs. doc | `notion-fetch` de `f88bc960…` | Fora do escopo do D11 (autoriza só status e critério de aceite de H.1.3.1) — só reportar ao João, não corrigir nesta task |
+
+**Total:** 15 linhas (E3-01 a E3-15). 12 são status desatualizado com destino candidato
+`write-externo` via D11 (Notion, `notion_write: claude` confirmado na seção 1); uma (E3-07) não é
+achado; uma (E3-13) confirma que o gatilho de P-06 está correto em apontar para cá; uma (E3-15) é
+uma anomalia de dado fora do escopo de autorização do D11.
