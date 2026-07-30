@@ -86,3 +86,38 @@ com status `Feito`/`Concluído` — todas em `A fazer` ou `Backlog` — enquanto
 `write-externo` via D11 (Notion, `notion_write: claude` confirmado na seção 1); uma (E3-07) não é
 achado; uma (E3-13) confirma que o gatilho de P-06 está correto em apontar para cá; uma (E3-15) é
 uma anomalia de dado fora do escopo de autorização do D11.
+
+## 5. Eixo docs de agente
+
+**Step 1 — afirmações vigentes capturadas:**
+- `AGENTS.md:83` — `| Notion | **indisponível** — o MCP do plugin não carrega neste runtime | — |`
+- `AGENTS.md:85-88` — "Não declare uma fonte `unavailable` sem ter tentado a tool correspondente...
+  Reavalie a linha do Notion quando o MCP do plugin passar a carregar."
+- `.agents/skills/lotus-context-packet/SKILL.md:75` — "GitHub via `mcp__codex_apps__github_*`.
+  Notion is not loaded in this runtime."
+
+**Step 2 — confronto com evidência real (duas provas independentes):**
+1. O packet `hardening-doc-sync-sprint4.md` (fato 2) recuperou `NOTION-H131` com sucesso via
+   `notion-fetch`/`notion-search` durante a geração do packet em 2026-07-30 — runtime que gera
+   packet é o do Codex conforme `.agents/skills/lotus-context-packet/SKILL.md`.
+2. A Task 4 desta execução leu a mesma página (`e30bc960…`) e listou as 26 tasks do board via
+   `mcp__claude_ai_Notion__notion-query-data-sources`, pelo runtime do Claude (não do Codex) — uma
+   terceira via, ainda mais direta.
+
+As duas provas (mais a terceira desta sessão) contradizem a linha "indisponível" com dados de
+2026-07-30, sete dias depois da verificação registrada (2026-07-23) que a gerou.
+
+**Step 3 — inventário de conectores (limitação declarada):** o plano pedia confrontar a tabela de
+`AGENTS.md:78-83` (Drive/Figma/GitHub via `mcp__codex_apps__*`) com os nomes de tool que a Task 1
+devolveria da sondagem do runtime do Codex. Essa sondagem foi pulada por decisão do João (seção 1)
+— não há, nesta execução, uma lista real de tools do namespace `mcp__codex_apps__*` para confrontar.
+As linhas de Drive/Figma/GitHub da tabela **não foram re-verificadas** e não entram como achado
+(nem confirmadas nem refutadas) — ficam como estavam, com a mesma data de verificação de 2026-07-23.
+
+| ID | Doc | Divergência | Evidência | Sugestão |
+|---|---|---|---|---|
+| E4-01 | `AGENTS.md:83`, `AGENTS.md:85-88`, `SKILL.md:75` | Notion declarado "indisponível"/"not loaded" — falso há pelo menos desde 2026-07-30 (packet), possivelmente antes | Packet `hardening-doc-sync-sprint4.md` fato 2; Task 4 desta execução (`notion-query-data-sources` real) | Corrigir as três linhas para "disponível", com data de verificação 2026-07-30 (Task 9 já prevista no plano para isso) |
+
+**Total:** 1 divergência (E4-01) — a mesma que a Task 9 do plano já existe para corrigir. Inventário
+de Drive/Figma/GitHub não re-verificado nesta execução (Step 3, limitação declarada acima), sem
+achado por falta de evidência, não por confirmação de que está correto.
