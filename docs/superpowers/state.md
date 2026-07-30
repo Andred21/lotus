@@ -2,13 +2,13 @@
 schema_version: 1
 active_feature: null
 active_work_item: hardening-doc-sync-sprint4
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 last_completed_work_item: bloco-alunos-modulo
 state_basis_commit: 74e4a2d
 active_spec: docs/superpowers/specs/2026-07-30-hardening-doc-sync-sprint4-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-07-30-hardening-doc-sync-sprint4.md
 context_packet: docs/superpowers/context-packets/hardening-doc-sync-sprint4.md
 blocker: null
 resume_state: null
@@ -71,6 +71,12 @@ retrieval e o `AGENTS.md` §3 ainda afirmam — a própria doc de agentes é div
 neste bloco. Figma não foi consultado por decisão declarada (bloco não é de UI). Questão aberta
 não bloqueante: espelhar no Drive ADR-15 revisado, ADR-16/18/19, schema N:N e rota `/students`
 exige autorização explícita do João antes de qualquer write externo.
+
+Plano em `plans/2026-07-30-hardening-doc-sync-sprint4.md`: 14 tasks, `executor: claude`. Tasks 1–6
+levantam sem mudar nada, **Task 7 é portão humano** (nenhuma task de 8 a 13 começa sem a triagem
+commitada), Tasks 8–13 aplicam e a Task 14 prova reexecutando a auditoria. O Codex entra só na
+sondagem de escrita externa (Task 1) e, se ela provar capacidade, no write do Drive (Task 12), sempre
+sem tocar o repositório. O subagente `auditor-docs` roda nas Tasks 2 e 14.
 
 Gatilhos vencidos que este bloco tende a encostar (hoje abertos em `docs/pendencias.md`): **P-04**
 (reavaliação dos guardrails após a Sprint 3), **P-06** (`der-fisico.md` ainda modela
