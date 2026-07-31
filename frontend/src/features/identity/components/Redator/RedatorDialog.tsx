@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, AppFilePreviewDialog, FormField, FormSection, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, AppFilePreviewDialog, AppFileRow, FormField, FormSection, FormErrorBanner } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData, RedatorDocumentData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -104,47 +104,103 @@ export function RedatorDialog({
           const doc = existing.find((d) => d.type === type)
           const staged = stagedDocs[type]
           const st = doc ? docStatus(doc.valid_until) : null
-          const rowLabel = mode === 'create'
-            ? (staged ? staged.name : t('common.notLoaded'))
-            : (doc ? doc.original_name : t('common.notLoaded'))
           return (
-            <div key={type} className="flex items-center justify-between rounded border border-slate-200 p-2 dark:border-slate-700">
-              <div>
+            <div key={type} className="rounded border border-slate-200 p-2 dark:border-slate-700">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium">{t(`documentType.${type}`)}</p>
-                <p className="text-xs text-slate-500">{rowLabel}</p>
-              </div>
-              <div className="flex items-center gap-2">
                 {mode !== 'create' && st && <AppTag value={t(`documentStatus.${st}`)} severity={STATUS_SEVERITY[st]} />}
+              </div>
 
-                {/* view: só status + ver/baixar, documento é imutável */}
-                {mode === 'view' && doc && (
-                  <>
-                    <AppButton
-                      icon="pi pi-eye"
-                      text
-                      rounded
-                      aria-label={t('common.preview')}
-                      onClick={() => setPreview(doc)}
+              {/* create: arquivo fica só no estado local até o submit (multipart único).
+                  `staged` é um File puro (sem download_url ainda), então não há o que
+                  pré-visualizar — mesmo comportamento de antes, só a linha ganhou AppFileRow. */}
+              {mode === 'create' && (
+                staged ? (
+                  <div className="mt-2">
+                    <AppFileRow
+                      name={staged.name}
+                      mime={staged.type}
+                      size={staged.size}
+                      actions={<AppButton icon="pi pi-times" text rounded severity="danger" onClick={() => unstageDoc(type)} />}
                     />
-                    <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
-                  </>
-                )}
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500">{t('common.notLoaded')}</p>
+                    <AppFileUpload
+                      chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
+                      chooseLabel=""
+                      onSizeReject={setSizeError}
+                      uploadHandler={(e) => handleStage(type, e)}
+                    />
+                  </div>
+                )
+              )}
 
-                {/* edit: ver + upload/substituição imediata via endpoint aninhado + exclusão */}
-                {mode === 'edit' && (
-                  <>
-                    {doc && (
-                      <>
-                        <AppButton
-                          icon="pi pi-eye"
-                          text
-                          rounded
-                          aria-label={t('common.preview')}
-                          onClick={() => setPreview(doc)}
-                        />
-                        <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
-                      </>
-                    )}
+              {/* view: só status + ver/baixar, documento é imutável */}
+              {mode === 'view' && (
+                doc ? (
+                  <div className="mt-2">
+                    <AppFileRow
+                      name={doc.original_name}
+                      mime={doc.mime}
+                      size={doc.size}
+                      createdAt={doc.created_at}
+                      actions={
+                        <>
+                          <AppButton
+                            icon="pi pi-eye"
+                            text
+                            rounded
+                            aria-label={t('common.preview')}
+                            onClick={() => setPreview(doc)}
+                          />
+                          <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
+                        </>
+                      }
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-500">{t('common.notLoaded')}</p>
+                )
+              )}
+
+              {/* edit: ver + upload/substituição imediata via endpoint aninhado + exclusão */}
+              {mode === 'edit' && (
+                doc ? (
+                  <div className="mt-2">
+                    <AppFileRow
+                      name={doc.original_name}
+                      mime={doc.mime}
+                      size={doc.size}
+                      createdAt={doc.created_at}
+                      actions={
+                        <>
+                          <AppButton
+                            icon="pi pi-eye"
+                            text
+                            rounded
+                            aria-label={t('common.preview')}
+                            onClick={() => setPreview(doc)}
+                          />
+                          <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
+                          <AppFileUpload
+                            chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
+                            chooseLabel=""
+                            disabled={upload.isPending && upload.variables?.type === type}
+                            onSizeReject={setSizeError}
+                            uploadHandler={(e) => handleUpload(type, e)}
+                          />
+                          {redator?.id && (
+                            <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => removeDoc.mutate({ redatorId: redator.id!, fileId: doc.id })} />
+                          )}
+                        </>
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500">{t('common.notLoaded')}</p>
                     <AppFileUpload
                       chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                       chooseLabel=""
@@ -152,26 +208,9 @@ export function RedatorDialog({
                       onSizeReject={setSizeError}
                       uploadHandler={(e) => handleUpload(type, e)}
                     />
-                    {doc && redator?.id && (
-                      <AppButton icon="pi pi-trash" text rounded severity="danger" onClick={() => removeDoc.mutate({ redatorId: redator.id!, fileId: doc.id })} />
-                    )}
-                  </>
-                )}
-
-                {/* create: arquivo fica só no estado local até o submit (multipart único) */}
-                {mode === 'create' && (
-                  staged ? (
-                    <AppButton icon="pi pi-times" text rounded severity="danger" onClick={() => unstageDoc(type)} />
-                  ) : (
-                    <AppFileUpload
-                      chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
-                      chooseLabel=""
-                      onSizeReject={setSizeError}
-                      uploadHandler={(e) => handleStage(type, e)}
-                    />
-                  )
-                )}
-              </div>
+                  </div>
+                )
+              )}
             </div>
           )
         })}
