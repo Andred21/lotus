@@ -164,7 +164,10 @@ export type RedatorDocumentData = {
 id: number,
 type: string,
 original_name: string,
+mime: string | null,
+size: number,
 valid_until: string | null,
+created_at: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
@@ -245,8 +248,10 @@ export type TurmaDocumentData = {
 id: number,
 type: string,
 original_name: string,
+mime: string | null,
 size: number,
 created_at: string,
+download_url: string,
 };
 export type TurmaDocumentType = 'MANUAL' | 'PRUEBAS' | 'EVALUACION_REDATOR';
 export type TurmaModalidade = 'presencial' | 'online';

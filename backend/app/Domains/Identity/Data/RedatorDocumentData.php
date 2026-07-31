@@ -18,7 +18,10 @@ class RedatorDocumentData extends Data
         public int $id,
         public string $type,
         public string $original_name,
+        public ?string $mime,
+        public int $size,
         public ?string $valid_until,
+        public ?string $created_at,
         public string $download_url,
     ) {}
 
@@ -28,7 +31,10 @@ class RedatorDocumentData extends Data
             id: $file->id,
             type: $file->type,
             original_name: $file->original_name,
+            mime: $file->mime,
+            size: $file->size,
             valid_until: $file->valid_until?->toDateString(),
+            created_at: $file->created_at?->toIso8601String(),
             download_url: app(UploadFileAction::class)->temporaryUrl($file),
         );
     }

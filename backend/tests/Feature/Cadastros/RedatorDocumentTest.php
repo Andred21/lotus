@@ -52,6 +52,27 @@ class RedatorDocumentTest extends TestCase
         $this->assertStringContainsString('http', $response->json('documents.0.download_url'));
     }
 
+    public function test_dto_do_documento_expoe_nucleo_comum(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $response = $this->postJson('/api/redatores', [
+            'name' => 'Ana Rojas',
+            'rut' => '13.456.789-9',
+            'email' => 'ar@lotus.cl',
+            'documents' => [
+                'CV' => UploadedFile::fake()->create('cv.pdf', 100, 'application/pdf'),
+            ],
+        ])->assertCreated();
+
+        $doc = collect($response->json('documents'))->firstWhere('type', 'CV');
+
+        $this->assertSame('application/pdf', $doc['mime']);
+        $this->assertGreaterThan(0, $doc['size']);
+        $this->assertNotNull($doc['created_at']);
+    }
+
     public function test_substitui_documento_do_mesmo_tipo(): void
     {
         Storage::fake('s3');
