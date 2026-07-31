@@ -2,17 +2,24 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
 last_completed_work_item: hardening-doc-sync-sprint4
 state_basis_commit: e4204a8
 active_spec: null
 active_plan: null
 context_packet: null
-blocker: null
-resume_state: null
-context_packet_status: null
+blocker: >
+  As 4 imagens de referencia do bloco (`pressuposto-no-visualization-docs`,
+  `teste-image-document-pressuposto`, `erro-document-pressuposta-ui`,
+  `erro-document-pressuposta-console`) nao foram recuperadas em nenhuma fonte externa. Faltam dois
+  fatos: (a) mensagem exata, status HTTP e endpoint do erro rotulado como CORS, que so
+  `erro-document-pressuposta-console` fornece; (b) o comportamento de visualizacao demonstrado pelas
+  outras 3. Resolucao: o Joao cola os 4 prints na sessao (as imagens sao caller-held, precedente
+  `context-packets/bloco-alunos-modulo.md` linha 53), ou autoriza reproduzir o erro localmente.
+resume_state: context_required
+context_packet_status: blocked
 updated_at: 2026-07-31
 ---
 
@@ -62,11 +69,20 @@ visualização compartilhada para documentos da tabela polimórfica `files`, apl
 cotações, documentos de redator e documentos de turma, preservando download, exclusão, URLs
 temporárias e autorização existentes.
 
-`workflow_state: context_required` porque o bloco depende de 4 artefatos externos que não existem no
-repositório — `pressuposto-no-visualization-docs`, `teste-image-document-pressuposto`,
-`erro-document-pressuposta-ui`, `erro-document-pressuposta-console`. A próxima ação é o Codex gerar
-o Context Packet com `lotus-context-packet` (read-only); o packet é obrigatório antes de
-`ready_for_planning`.
+`workflow_state: blocked` (`resume_state: context_required`). O bloco depende de 4 artefatos externos
+que não existem no repositório — `pressuposto-no-visualization-docs`,
+`teste-image-document-pressuposto`, `erro-document-pressuposta-ui`,
+`erro-document-pressuposta-console`. O Codex rodou `lotus-context-packet` em read-only
+(thread `019fb918-a4aa-7493-b751-f8f02c781879`) e devolveu `RECOMMENDED_TRANSITION: blocked`: Drive
+respondeu `results: []`, o Notion não tem task 1:1 e o namespace de busca do Figma não existe no
+runtime dele. Confirmado de forma independente pelo caller — busca por título e varredura de
+`mimeType contains 'image/'` desde 2026-06-01 no Drive não retornam nenhum dos 4 nomes.
+
+Não é falha de recuperação: pelo precedente de `context-packets/bloco-alunos-modulo.md` (linha 53,
+fonte `PROTO`), imagem de referência neste projeto é **caller-held** — o João cola o print na
+sessão. O packet só sai de `blocked` quando os 4 prints entrarem na sessão (ou quando o erro for
+reproduzido localmente com autorização), porque decidir diagnóstico e contrato visual sem eles seria
+adivinhar regra de negócio.
 
 ## Último item fechado — 2026-07-30
 
