@@ -23,7 +23,7 @@ class TurmaDocumentApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake();
+        Storage::fake('s3');
         $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
             ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
@@ -65,6 +65,20 @@ class TurmaDocumentApiTest extends TestCase
 
         $this->getJson("/api/turmas/{$this->turma->id}/documents")
             ->assertOk()->assertJsonCount(1)->assertJsonPath('0.type', 'MANUAL');
+    }
+
+    public function test_listagem_expoe_mime_e_download_url(): void
+    {
+        $this->actingAsRedatorRole();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'MANUAL', 'file' => $this->pdf(),
+        ])->assertCreated();
+
+        $response = $this->getJson("/api/turmas/{$this->turma->id}/documents")->assertOk();
+
+        $response->assertJsonPath('0.mime', 'application/pdf');
+        $this->assertNotEmpty($response->json('0.download_url'));
     }
 
     public function test_admin_comum_sem_submit_docs_403(): void

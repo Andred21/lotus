@@ -1,0 +1,34 @@
+schema_version: 1
+
+roles:
+  context_provider:
+    purpose: >
+      Recuperar, reconciliar e compactar o contexto necessário para um work item.
+    required_capabilities:
+      - repository_read
+      - external_source_read
+      - provenance_tracking
+      - structured_output
+    required_processes:
+      - using-superpowers
+      - lotus-context-packet
+    mutates_repository: false
+    may_transition_state: false
+
+  implementer:
+    purpose: >
+      Executar tasks de um plano aprovado dentro do escopo e dos paths autorizados.
+    required_capabilities:
+      - repository_read
+      - workspace_write
+      - command_execution
+      - test_execution
+      - structured_output
+    required_processes:
+      - using-superpowers
+      - executing-plans
+      - test-driven-development
+      - verification-before-completion
+      - lotus-execute-block
+    mutates_repository: true
+    may_transition_state: false
