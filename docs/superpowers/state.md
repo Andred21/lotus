@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
+blocker: null
+resume_state: null
 last_completed_work_item: hardening-doc-sync-sprint4
-state_basis_commit: f271c12
+state_basis_commit: faf7c78
 active_spec: docs/superpowers/specs/2026-07-31-hardening-upload-visualizacao-arquivos-design.md
 active_plan: docs/superpowers/plans/2026-07-31-hardening-upload-visualizacao-arquivos.md
 context_packet: docs/superpowers/context-packets/hardening-upload-visualizacao-arquivos.md
-blocker: null
-resume_state: null
 context_packet_status: partial
 updated_at: 2026-07-31
 ---
@@ -86,6 +86,18 @@ Sanctum autenticada. **Pendente:** prova visual do João (preview de imagem/PDF,
 upload de 3 MB nos 4 consumidores) — sem browser tool nesta sessão, mesmo padrão de todos os blocos
 anteriores deste projeto (ver `bloco-alunos-modulo`, Execuções 1-3 acima). Não bloqueia a transição
 para `ready_for_review`; bloqueia o fechamento (`/fechar-sprint`) até o João confirmar.
+
+**Review (`/revisar-sprint`), alto risco por `executor: codex` na Parte A:** Codex (read-only,
+`mcp__codex__codex`) revisou o intervalo `dfadb0c..f271c12` contra spec/plano/leis §5 e devolveu 2
+achados; Claude reverificou DoD de forma independente (suíte 318→321 passed, PHP `12M|12M` no
+container, 11 MB → `401` nunca `413`, 13 MB → `413` mantido, `pnpm build`+`pnpm lint` verdes,
+`generated.ts` só com os campos do DTO). Achado 1 do Codex (teste não reprova contra código antigo)
+não foi aceito — é guarda intencional documentada na Task 4 do plano, e a prova real do bug
+(413→401) é o curl manual, reconfirmado. Achado 2 (Q-1, real): `UploadSizeLimitTest.php` só cobria
+cotação e orçamento; redator, turma e o import de matrícula (D11) ficavam sem regressão do teto de
+10 MB. João aprovou a correção; fix em `faf7c78` (3 casos novos, suíte 321 passed, Pint limpo).
+Revisão fechada sem achado pendente — bloco em `ready_for_closure`, `/fechar-sprint` ainda depende
+da prova visual do João acima.
 
 O bloco passou por `blocked` (commit `5f8adcb`) e saiu no mesmo dia. A primeira rodada do Codex com
 `lotus-context-packet` (thread `019fb918-a4aa-7493-b751-f8f02c781879`) devolveu
