@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 last_completed_work_item: hardening-doc-sync-sprint4
-state_basis_commit: e4204a8
+state_basis_commit: 8f56da2
 active_spec: docs/superpowers/specs/2026-07-31-hardening-upload-visualizacao-arquivos-design.md
 active_plan: docs/superpowers/plans/2026-07-31-hardening-upload-visualizacao-arquivos.md
 context_packet: docs/superpowers/context-packets/hardening-upload-visualizacao-arquivos.md
@@ -62,8 +62,9 @@ visualização compartilhada para documentos da tabela polimórfica `files`, apl
 cotações, documentos de redator e documentos de turma, preservando download, exclusão, URLs
 temporárias e autorização existentes.
 
-`workflow_state: ready_for_planning`, com packet `status: partial` em
-`context-packets/hardening-upload-visualizacao-arquivos.md`.
+`workflow_state: executing` — spec (`a9e266a`) e plano (`8f56da2`) commitados em 2026-07-31; o corpo
+desta seção ficou defasado atrás do frontmatter até a correção em `state_basis_commit` acima. Packet
+`status: partial` em `context-packets/hardening-upload-visualizacao-arquivos.md`.
 
 O bloco passou por `blocked` (commit `5f8adcb`) e saiu no mesmo dia. A primeira rodada do Codex com
 `lotus-context-packet` (thread `019fb918-a4aa-7493-b751-f8f02c781879`) devolveu
