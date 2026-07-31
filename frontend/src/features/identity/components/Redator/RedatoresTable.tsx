@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
-  AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
+  AppDataTable, AppColumn, AppAvatar, AppTag, AppInputText, AppButton,
   AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
@@ -64,9 +64,12 @@ export function RedatoresTable({
           header={t('redator.name')}
           sortable
           body={(r: RedatorData) => (
-            <div>
-              <p className="font-medium">{r.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{r.email}</p>
+            <div className="flex items-center gap-3">
+              <AppAvatar name={r.name} image={r.photo_url} size="normal" />
+              <div>
+                <p className="font-medium">{r.name}</p>
+                <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{r.email}</p>
+              </div>
             </div>
           )}
         />

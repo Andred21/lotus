@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
-  AppDataTable, AppColumn, AppTag, AppInputText, AppButton,
+  AppDataTable, AppColumn, AppAvatar, AppTag, AppInputText, AppButton,
   AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
@@ -61,9 +61,12 @@ export function UsersTable({
           header={t('admin.name')}
           sortable
           body={(u: UserData) => (
-            <div>
-              <p className="font-medium">{u.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{u.email}</p>
+            <div className="flex items-center gap-3">
+              <AppAvatar name={u.name} image={u.photo_url} size="normal" />
+              <div>
+                <p className="font-medium">{u.name}</p>
+                <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{u.email}</p>
+              </div>
             </div>
           )}
         />
