@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
 blocker: null
 resume_state: null
@@ -48,11 +48,25 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `planning`
+## Estado atual — `ready_for_execution`
 
-Spec aprovada pelo João e escrita em
-`docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md` (15 decisões, D1–D15).
-Falta o plano de implementação. Contexto abaixo preservado.
+Spec (15 decisões, D1–D15) e plano (12 tasks) prontos e aprovados. Próxima ação:
+`/executar-bloco foto-avatar-e-contatos-cliente`.
+
+**Handoff do plano — execução dividida:**
+
+- **Tasks 1–4 (backend + `generated.ts`): Codex.** Paths fechados, verificação executável, zero
+  julgamento visual. `paths_autorizados` na seção "Handoff de execução" do plano.
+- **Tasks 5–12 (frontend): Claude.** Sem test runner no frontend; a prova é visual e a Task 11
+  depende das imagens de referência caller-held.
+
+**Review de risco declarado:** a Parte A muda contrato de escrita (`contacts` mínimo 1) e apaga
+objeto de storage de forma irreversível. Como no bloco anterior, o fechamento pede segunda lente
+independente sobre o intervalo de commits da Parte A.
+
+**Pendência de contexto:** as 4 imagens de referência (`alumnos-exemplo-avatar`,
+`client-no-component-photo`, `redator-no-component-photo`, `alumnos-component-wrong-photo`) seguem
+caller-held. O João as fornece na execução; elas calibram o visual, não alteram os contratos.
 
 
 
