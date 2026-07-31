@@ -3,6 +3,12 @@
  * propósito (spec D2), então quem rejeita é sempre o backend. */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
+/** Teto lógico da FOTO de perfil: 5 MB. É o MESMO valor do `max:5120` (KB) do
+ * `UserPhotoService::RULES` — 5120 * 1024. Menor que o dos documentos de
+ * propósito (spec D9): foto de perfil não precisa de 10 MB, e o teto menor
+ * barra o upload acidental de foto de câmera crua. */
+export const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+
 /** Tamanho legível para a linha do arquivo (o backend devolve bytes). */
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`

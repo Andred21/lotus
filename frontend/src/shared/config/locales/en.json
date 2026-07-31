@@ -171,6 +171,13 @@
   "placeholder": {
     "module": "Module under construction."
   },
+  "photo": {
+    "label": "Photo",
+    "select": "Select photo",
+    "replace": "Replace",
+    "remove": "Remove photo",
+    "createUploadFailed": "The record was created, but the photo was not uploaded."
+  },
   "client": {
     "new": "New client",
     "create": "Register client",

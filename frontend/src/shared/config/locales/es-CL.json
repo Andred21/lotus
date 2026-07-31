@@ -171,6 +171,13 @@
   "placeholder": {
     "module": "Módulo en construcción."
   },
+  "photo": {
+    "label": "Foto",
+    "select": "Seleccionar foto",
+    "replace": "Reemplazar",
+    "remove": "Eliminar foto",
+    "createUploadFailed": "El registro fue creado, pero la foto no se subió."
+  },
   "client": {
     "new": "Nuevo cliente",
     "create": "Registrar cliente",
