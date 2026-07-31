@@ -30,8 +30,8 @@ export function AppAvatar({ name, image, ...props }: AppAvatarProps) {
         image={image}
         shape="circle"
         imageAlt={name}
-        onImageError={() => setFailed(image)}
         {...props}
+        onImageError={() => setFailed(image)}
       />
     )
   }
