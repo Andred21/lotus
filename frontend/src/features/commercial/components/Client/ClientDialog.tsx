@@ -31,7 +31,7 @@ export function ClientDialog({
     invalidateKey: clientsApi.keys.all,
   })
 
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError, setAddr, patchContact, setPrimaryContact, addContact } =
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError, setAddr, patchContact, setPrimaryContact, addContact, removeContact } =
     useClientForm(client, mode, onHide, (created) => photo.flush(created.id as number))
   const types = TYPE_VALUES.map((value) => ({ value, label: t(`clientType.${value}`) }))
 
@@ -108,6 +108,7 @@ export function ClientDialog({
           onPatch={patchContact}
           onSetPrimary={setPrimaryContact}
           onAdd={addContact}
+          onRemove={removeContact}
         />
       </section>
     </CrudDialog>

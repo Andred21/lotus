@@ -49,6 +49,23 @@ export function useClientForm(
   const addContact = () =>
     setForm((f) => ({ ...f, contacts: [...f.contacts, { ...EMPTY_CONTACT }] }))
 
+  /** Remove o contato do índice. Não deixa a lista vazia: o backend exige ao
+   * menos um (spec D13) e a UI desabilita o botão nesse caso — esta guarda é
+   * a rede, não a regra. Se o removido era o principal, o primeiro que sobra
+   * assume, para a lista nunca ficar sem principal por efeito colateral. */
+  const removeContact = (i: number) =>
+    setForm((f) => {
+      if (f.contacts.length <= 1) return f
+
+      const rest = f.contacts.filter((_, idx) => idx !== i)
+      const hasPrimary = rest.some((c) => c.is_primary)
+
+      return {
+        ...f,
+        contacts: hasPrimary ? rest : rest.map((c, idx) => ({ ...c, is_primary: idx === 0 })),
+      }
+    })
+
   function submit() {
     // Empresa não tem nome separado da razón social: `name` (exigido pelo backend
     // para o `users.name` do login provisionado) é sempre igual a `legal_name`.
@@ -69,7 +86,7 @@ export function useClientForm(
 
   return {
     form, set, readOnly, submit,
-    setAddr, patchContact, setPrimaryContact, addContact,
+    setAddr, patchContact, setPrimaryContact, addContact, removeContact,
     pending: create.isPending || update.isPending,
     fieldErrors, generalError,
   }

@@ -202,6 +202,9 @@
     "contactName": "Nombre",
     "contactJobTitle": "Cargo",
     "contactPrimary": "Contacto principal",
+    "contactPrimaryTag": "Principal",
+    "removeContact": "Eliminar contacto",
+    "lastContactHint": "El cliente debe tener al menos un contacto",
     "contacts": "Contactos"
   },
   "course": {
