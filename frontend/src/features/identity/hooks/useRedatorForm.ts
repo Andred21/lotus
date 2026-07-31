@@ -21,7 +21,12 @@ const toFields = (r: RedatorFormFields): RedatorFormFields => {
   return structuredClone({ id, name, rut, email, phone, course_ids })
 }
 
-export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogMode, onDone: () => void) {
+export function useRedatorForm(
+  redator: RedatorData | null,
+  mode: RedatorDialogMode,
+  onDone: () => void,
+  afterCreate?: (created: RedatorData) => Promise<void>,
+) {
   const { form, set, setForm, readOnly, didReset } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
 
   // Documentos escolhidos no `create`: ficam no estado local até o submit (não
@@ -65,7 +70,12 @@ export function useRedatorForm(redator: RedatorData | null, mode: RedatorDialogM
       if (form.phone) fd.append('phone', form.phone)
       form.course_ids.forEach((id) => fd.append('course_ids[]', String(id)))
       Object.entries(stagedDocs).forEach(([type, file]) => fd.append(`documents[${type}]`, file))
-      create.mutate(fd, { onSuccess: onDone })
+      create.mutate(fd, {
+        onSuccess: async (created) => {
+          await afterCreate?.(created)
+          onDone()
+        },
+      })
       return
     }
     const payload = { name: form.name, rut: form.rut, email: form.email, phone: form.phone, course_ids: form.course_ids }

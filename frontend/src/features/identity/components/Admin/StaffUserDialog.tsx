@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormSection, FormErrorSummary, FormErrorBanner, AppPhotoField } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { rolesApi } from '@shared/api/rolesApi'
+import { usersApi } from '@shared/api/usersApi'
+import { useEntityPhoto } from '@shared/hooks'
 import { useStaffUserForm } from '../../hooks/useStaffUserForm'
 
 export function StaffUserDialog({
@@ -16,7 +18,16 @@ export function StaffUserDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useStaffUserForm(user, mode, onHide)
+  const photo = useEntityPhoto({
+    resource: 'users',
+    id: mode === 'create' ? null : (user?.id ?? null),
+    mode,
+    url: user?.photo_url,
+    invalidateKey: usersApi.keys.all,
+  })
+
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError } =
+    useStaffUserForm(user, mode, onHide, (created) => photo.flush(created.id as number))
   const roles = rolesApi.useList()
 
   // Roles atribuíveis: todas menos 'redator' (RN-01: redator tem tela própria).
@@ -42,8 +53,21 @@ export function StaffUserDialog({
     >
       <FormErrorBanner message={generalError} />
       <FormErrorSummary errors={fieldErrors} mapped={['name', 'rut', 'email', 'password', 'role']} />
+      {photo.hasBufferedFailure && <FormErrorBanner message={t('photo.createUploadFailed')} />}
 
       <section className="space-y-4">
+        <AppPhotoField
+          name={form.name}
+          url={photo.url}
+          readOnly={readOnly}
+          pending={photo.pending}
+          error={photo.error}
+          onSelect={photo.onSelect}
+          onRemove={photo.onRemove}
+          onSizeReject={photo.onSizeReject}
+          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+        />
+
         <FormSection title={t('admin.sectionUser')} />
 
         <FormField label={t('admin.name')} error={fieldErrors?.name?.[0]}>

@@ -17,7 +17,12 @@ const EMPTY: StaffUserFormFields = {
 
 const toFields = (f: StaffUserFormFields): StaffUserFormFields => structuredClone(f)
 
-export function useStaffUserForm(user: UserData | null, mode: DialogMode, onDone: () => void) {
+export function useStaffUserForm(
+  user: UserData | null,
+  mode: DialogMode,
+  onDone: () => void,
+  afterCreate?: (created: UserData) => Promise<void>,
+) {
   // `rut`/`phone` chegam `string | null | undefined` do contrato (Optional na
   // entrada); normaliza para string vazia antes de entrar no form — mesmo
   // padrão do `entity` normalizado em useCourseForm.
@@ -49,7 +54,15 @@ export function useStaffUserForm(user: UserData | null, mode: DialogMode, onDone
     }
 
     if (mode === 'create') {
-      create.mutate({ ...base, password: form.password }, { onSuccess: onDone })
+      create.mutate(
+        { ...base, password: form.password },
+        {
+          onSuccess: async (created) => {
+            await afterCreate?.(created)
+            onDone()
+          },
+        },
+      )
       return
     }
 

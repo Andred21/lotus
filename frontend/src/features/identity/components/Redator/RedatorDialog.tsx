@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, AppFilePreviewDialog, AppFileRow, FormField, FormSection, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, AppFilePreviewDialog, AppFileRow, FormField, FormSection, FormErrorBanner, AppPhotoField } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorData, RedatorDocumentData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
+import { redatoresApi } from '@shared/api/redatoresApi'
+import { useEntityPhoto } from '@shared/hooks'
 import { useUploadDocument, useRemoveDocument } from '../../api/useRedatorDocuments'
 import { useRedatorForm, type RedatorDialogMode } from '../../hooks/useRedatorForm'
 import { docStatus, idoneidade, type DocStatus } from '../../lib/redatorStatus'
@@ -25,10 +27,18 @@ export function RedatorDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
+  const photo = useEntityPhoto({
+    resource: 'redatores',
+    id: mode === 'create' ? null : (redator?.id ?? null),
+    mode,
+    url: redator?.photo_url,
+    invalidateKey: redatoresApi.keys.all,
+  })
+
   const {
     form, set, toggleCourse, readOnly, submit, pending,
     stagedDocs, stageDoc, unstageDoc, fieldErrors, generalError,
-  } = useRedatorForm(redator, mode, onHide)
+  } = useRedatorForm(redator, mode, onHide, (created) => photo.flush(created.id as number))
   const courses = coursesApi.useList()
   const upload = useUploadDocument()
   const removeDoc = useRemoveDocument()
@@ -76,9 +86,21 @@ export function RedatorDialog({
       }
     >
       <FormErrorBanner message={generalError} />
+      {photo.hasBufferedFailure && <FormErrorBanner message={t('photo.createUploadFailed')} />}
 
       <section className="space-y-4">
-        
+        <AppPhotoField
+          name={form.name}
+          url={photo.url}
+          readOnly={readOnly}
+          pending={photo.pending}
+          error={photo.error}
+          onSelect={photo.onSelect}
+          onRemove={photo.onRemove}
+          onSizeReject={photo.onSizeReject}
+          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+        />
+
         <FormSection title={t('redator.sectionUser')} />
         <FormField label={t('redator.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />

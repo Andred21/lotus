@@ -21,7 +21,12 @@ const EMPTY: ClientData = {
   contacts: [{ ...EMPTY_CONTACT, is_primary: true }],
 }
 
-export function useClientForm(client: ClientData | null, mode: ClientDialogMode, onDone: () => void) {
+export function useClientForm(
+  client: ClientData | null,
+  mode: ClientDialogMode,
+  onDone: () => void,
+  afterCreate?: (created: ClientData) => Promise<void>,
+) {
   const { form, setForm, set, readOnly } = useEntityForm(client, mode, EMPTY)
   const create = clientsApi.useCreate()
   const update = clientsApi.useUpdate()
@@ -49,7 +54,12 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
     // para o `users.name` do login provisionado) é sempre igual a `legal_name`.
     const payload = { ...form, name: form.legal_name }
     if (mode === 'create') {
-      create.mutate(payload, { onSuccess: onDone })
+      create.mutate(payload, {
+        onSuccess: async (created) => {
+          await afterCreate?.(created)
+          onDone()
+        },
+      })
       return
     }
     update.mutate({ id: client!.id!, payload }, { onSuccess: onDone })

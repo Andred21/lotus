@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppDropdown, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppDropdown, FormField, FormSection, FormErrorSummary, FormErrorBanner, AppPhotoField } from '@shared/ui'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
+import { clientsApi } from '@shared/api/clientsApi'
+import { useEntityPhoto } from '@shared/hooks'
 import { useClientForm, type ClientDialogMode } from '../../hooks/useClientForm'
 import { AddressFields } from './AddressFields'
 import { ContactFields } from './ContactFields'
@@ -21,8 +23,16 @@ export function ClientDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
+  const photo = useEntityPhoto({
+    resource: 'clients',
+    id: mode === 'create' ? null : (client?.id ?? null),
+    mode,
+    url: client?.photo_url,
+    invalidateKey: clientsApi.keys.all,
+  })
+
   const { form, set, readOnly, submit, pending, fieldErrors, generalError, setAddr, patchContact, setPrimaryContact, addContact } =
-    useClientForm(client, mode, onHide)
+    useClientForm(client, mode, onHide, (created) => photo.flush(created.id as number))
   const types = TYPE_VALUES.map((value) => ({ value, label: t(`clientType.${value}`) }))
 
   // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para vazio
@@ -49,7 +59,20 @@ export function ClientDialog({
         mapped={['legal_name', 'name', 'rut', 'email', 'type', 'business_activity']}
         excludePrefixes={['contacts.']}
       />
+      {photo.hasBufferedFailure && <FormErrorBanner message={t('photo.createUploadFailed')} />}
       <section className="space-y-4">
+        <AppPhotoField
+          name={form.legal_name}
+          url={photo.url}
+          readOnly={readOnly}
+          pending={photo.pending}
+          error={photo.error}
+          onSelect={photo.onSelect}
+          onRemove={photo.onRemove}
+          onSizeReject={photo.onSizeReject}
+          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+        />
+
         <FormSection title={t('client.sectionGeneral')} />
         {/* Empresa não tem "nome" separado da razón social — `name` (exigido
             pelo backend) é derivado de `legal_name` no submit. Erro de `name`
