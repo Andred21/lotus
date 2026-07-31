@@ -1,0 +1,13 @@
+schema_version: 1
+project: lotus
+
+assignments:
+  context_provider:
+    primary_agent: codex
+    fallback_agents:
+      - claude
+
+  implementer:
+    primary_agent: codex
+    fallback_agents:
+      - claude
