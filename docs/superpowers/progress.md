@@ -6,7 +6,6 @@
 
 | Data | Entrega | Status | Resultado | Referências |
 |---|---|---|---|---|
-| 2026-07-20 | Bloco 5.4 · Refino Administração | Entregue | Erros 422, toolbar e descrições i18n de permissões corrigidos. | `plans/archive/2026-07-20-refino-administracao-frontend.md` · `specs/archive/2026-07-20-refino-administracao-frontend-design.md` |
 | 2026-07-20 | Bloco 6a · Aluno + vínculo | Entregue | Resolução por RUT e vínculo histórico único validados em MySQL. | `plans/archive/2026-07-20-bloco6a-aluno-vinculo.md` · `specs/archive/2026-07-20-bloco6a-aluno-vinculo-design.md` |
 | 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | `plans/archive/2026-07-21-bloco6c-matricula-import.md` · `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
 | 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` · `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
