@@ -2,13 +2,13 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 last_completed_work_item: hardening-doc-sync-sprint4
 state_basis_commit: e4204a8
 active_spec: docs/superpowers/specs/2026-07-31-hardening-upload-visualizacao-arquivos-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-07-31-hardening-upload-visualizacao-arquivos.md
 context_packet: docs/superpowers/context-packets/hardening-upload-visualizacao-arquivos.md
 blocker: null
 resume_state: null
