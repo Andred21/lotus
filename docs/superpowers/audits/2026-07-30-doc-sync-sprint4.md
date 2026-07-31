@@ -247,6 +247,11 @@ Nenhum write no Drive foi tentado nesta execução (via `fallback` confirmada na
 patches ficam para o João aplicar manualmente; P-01/P-14/P-17 seguem abertas em `pendencias.md` até
 confirmação. Os 2 writes no Notion foram aplicados e confirmados por releitura.
 
+> **Adendo 2026-07-31:** o João confirmou ter aplicado os 4 patches no Drive. P-01/P-14/P-17/P-19
+> passaram para "Encerradas" em `docs/pendencias.md` e a pasta
+> `docs/superpowers/audits/2026-07-30-drive-patches/` foi removida — os caminhos citados na tabela
+> acima descrevem o estado da execução de 2026-07-30 e não existem mais na árvore.
+
 ## 11. Re-auditoria (Task 14)
 
 Quatro rodadas de `auditor-docs` até zero achado fora de `pendencias.md`:
