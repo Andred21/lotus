@@ -18,6 +18,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
   const importMutation = useImportStudents()
   const { message } = useMutationErrors([importMutation.error])
   const [result, setResult] = useState<ImportResultData | null>(null)
+  const [sizeError, setSizeError] = useState<string | null>(null)
 
   const upload = (e: FileUploadHandlerEvent) => {
     const file = e.files[0]
@@ -48,7 +49,8 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
             <AppFileUpload
               accept=".xlsx,.csv"
               chooseLabel={t('operation.enrollment.import.choose')}
-              uploadHandler={upload}
+              onSizeReject={setSizeError}
+              uploadHandler={(e) => { setSizeError(null); upload(e) }}
               disabled={importMutation.isPending}
             />
             {importMutation.isPending && (
@@ -66,7 +68,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
           </>
         )}
 
-        {message && <p className="text-sm text-red-600">{message}</p>}
+        {(sizeError || message) && <p className="text-sm text-red-600">{sizeError || message}</p>}
       </div>
     </AppDialog>
   )
