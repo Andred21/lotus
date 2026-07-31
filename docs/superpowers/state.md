@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
-updated_at: 2026-07-31T20:35:00-03:00
+updated_at: 2026-07-31T21:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -78,6 +78,24 @@ arquivo de 6.4MB rejeitado com `422`/RFC 7807 (nunca `413`), `PUT /api/clients/1
 `contacts: []` rejeitado com `422` sem apagar os contatos existentes. Detalhe completo em
 `.superpowers/sdd/progress.md`.
 
+**2 achados críticos pós-DoD, durante a prova visual do João (commits `9197d08`, `b6dc068`):**
+
+1. `UserPhotoService::store()` não checava falha de `UploadedFile::store()` (devolve `false`, não
+   lança). Sem a checagem, `false` virava `photo_path='0'` no banco e o objeto anterior — que ainda
+   funcionava — era apagado, achando que o update tinha dado certo. 2 clientes reais no banco de dev
+   ficaram com `photo_path='0'`, limpos. Fix: aborta com `RuntimeException` antes de update/delete.
+   Regressão provada via `chmod` real (não mock), vista reprovando contra o código antigo.
+2. Causa da falha real: `AWS_ENDPOINT` precisa ser `http://minio:9000` (rede Docker) pra escrita
+   funcionar do container, mas a URL pré-assinada resultante embute esse host — inalcançável pelo
+   navegador. Não existe valor único que sirva pros dois lados (confirmado: trocar só o hostname na
+   URL já assinada quebra a assinatura, `403 SignatureDoesNotMatch`). Fix (autorizado pelo João,
+   toca arquivo fora do escopo original do bloco): `UploadFileAction::publicDiskFor()` assina leitura
+   contra um disco `{disco}_public` separado (endpoint alcançável pelo navegador via novo
+   `AWS_ENDPOINT_PUBLIC`), nunca usado pra escrever — mesmo choke point que documentos de
+   redator/turma/orçamento já usavam, então também corrigiu a exibição deles (sem regressão: `GET
+   /api/redatores/1` provado com `download_url` funcionando pós-fix). Sem a env var (prod), cai no
+   mesmo disco de sempre — zero mudança fora do dev com MinIO. Suíte pós-fixes: 343 passed.
+
 **Pendências que só o João resolve, antes ou durante o review:**
 - Prova visual do bloco (as 4 tabelas, os 4 diálogos, fallback de imagem indisponível, foto do
   create pós-save, cards de contato) nos dois temas, 1400px e 768px.
@@ -89,8 +107,10 @@ arquivo de 6.4MB rejeitado com `422`/RFC 7807 (nunca `413`), `PUT /api/clients/1
   `pending || photo.pending`.
 
 **Review de risco declarado:** a Parte A muda contrato de escrita (`contacts` mínimo 1) e apaga
-objeto de storage de forma irreversível. Como no bloco anterior, o fechamento pede segunda lente
-independente sobre o intervalo de commits da Parte A.
+objeto de storage de forma irreversível; os 2 achados pós-DoD tocam a mesma classe de risco
+(escrita de storage) mais um domínio compartilhado (`App\Shared\Files`, usado por 4+ domínios). A
+segunda lente independente do fechamento cobre `4dfe3a9..b6dc068` inteiro, não só a Parte A
+original.
 
 > Histórico das decisões que desbloquearam o bloco durante o planejamento (2026-07-31, packet
 > `blocked`→`partial` via `[J-02]`) está preservado em `.superpowers/sdd/progress.md` e no packet
