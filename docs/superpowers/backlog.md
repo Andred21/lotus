@@ -7,17 +7,7 @@
 
 ## Próximos blocos
 
-1. **Hardening · Upload e visualização de arquivos**
-   — Investigar o erro apresentado como CORS nos uploads de arquivos, identificar
-   a camada que rejeita o payload e alinhar os limites de frontend, Nginx, PHP e
-   Laravel. Criar visualização compartilhada para documentos da tabela polimórfica
-   `files`, aplicando-a a orçamentos, cotações, documentos de redator e documentos
-   de turma. Preservar download, exclusão, URLs temporárias e autorização existente.
-   Imagens de referência: `pressuposto-no-visualization-docs`,
-   `teste-image-document-pressuposto`, `erro-document-pressuposta-ui`,
-   `erro-document-pressuposta-console`.
-
-2. **Identidade visual · Foto e avatar das entidades derivadas de User**
+1. **Identidade visual · Foto e avatar das entidades derivadas de User**
    — Expor `photo_url` nos contratos de User, Client, Redator e Student; padronizar
    a primeira coluna das respectivas tabelas com `AppAvatar`; criar componente
    compartilhado de foto no corpo dos dialogs, com visualização, seleção,
@@ -27,13 +17,13 @@
    `client-no-component-photo`, `redator-no-component-photo`,
    `alumnos-component-wrong-photo`.
 
-3. **Comercial · Refinamento dos contatos do cliente**
+2. **Comercial · Refinamento dos contatos do cliente**
    — Reestruturar `ContactFields` em cards responsivos com labels explícitas,
    melhor proximidade visual, indicação de contato principal e ação de exclusão.
    Adicionar `removeContact` ao hook e preservar a semântica replace-total do
    backend e a exibição dos erros nested.
 
-4. **Catálogo e Personas · Cards da relação Curso ↔ Redator**
+3. **Catálogo e Personas · Cards da relação Curso ↔ Redator**
    — Substituir representações textuais simples por cards. No curso, mostrar
    foto, nome, RUT e idoneidade dos redatores habilitados. No redator, mostrar
    cursos habilitados com nome, carga horária e quantidade de módulos; em edição,
@@ -42,15 +32,15 @@
    Imagens de referência: `courses-redator`,
    `prototipo-redator-dialog-course`, `redator-courses`. 
 
-5. **Administração · Roles e permissões — redesenho de composição**
+4. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-6. **Bloco 7 · Sprint 4 · Certificação**
+5. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-7. **Hardening**
+6. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

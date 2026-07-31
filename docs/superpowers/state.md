@@ -1,18 +1,17 @@
 ---
 schema_version: 1
-active_feature: hardening
-active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: hardening-doc-sync-sprint4
+last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: faf7c78
-active_spec: docs/superpowers/specs/2026-07-31-hardening-upload-visualizacao-arquivos-design.md
-active_plan: docs/superpowers/plans/2026-07-31-hardening-upload-visualizacao-arquivos.md
-context_packet: docs/superpowers/context-packets/hardening-upload-visualizacao-arquivos.md
-context_packet_status: partial
 updated_at: 2026-07-31
 ---
 
@@ -49,101 +48,50 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
+## Estado atual — `idle`
 
-## Item ativo — desde 2026-07-31
+Nenhum `active_work_item`. Próxima ação: o João escolhe explicitamente um item de
+`docs/superpowers/backlog.md`. Este arquivo não promove nada sozinho.
 
-`hardening-upload-visualizacao-arquivos` — item 1 dos "Próximos blocos" do `backlog.md`, promovido
-por seleção explícita do João em 2026-07-31 (`/planejar-bloco "Hardening · Upload e visualização de
-arquivos"`).
+## Último item fechado — 2026-07-31
 
-Escopo declarado no backlog: investigar o erro apresentado como CORS nos uploads, identificar a
-camada que rejeita o payload e alinhar os limites de frontend, Nginx, PHP e Laravel; criar
-visualização compartilhada para documentos da tabela polimórfica `files`, aplicada a orçamentos,
-cotações, documentos de redator e documentos de turma, preservando download, exclusão, URLs
-temporárias e autorização existentes.
+`hardening-upload-visualizacao-arquivos` — 11 tasks, execução em 2 partes: Tasks 1–4
+(infra+backend) pelo Codex, Tasks 5–10 (frontend) por Claude, ambas com
+`subagent-driven-development`. Commits `dfadb0c`..`f271c12` (execução), `faf7c78` (fix de review),
+`8a592f1` (transição pós-review).
 
-`workflow_state: ready_for_review` — as 11 tasks do plano executadas e provadas em 2026-07-31. Packet
-`status: partial` em `context-packets/hardening-upload-visualizacao-arquivos.md` (não bloqueante,
-§ acima).
+**Entrega:** o erro reportado como CORS era `client_max_body_size` de 1 MB (default do nginx)
+cortando o upload antes do Laravel — as 4 camadas (nginx/PHP/Laravel/frontend) discordavam de
+teto. Nginx e PHP sobem para 12 MB de transporte (folga de multipart, D2); o `max:10240` (10 MB)
+dos 5 controllers, já existente, passa a ser sempre quem rejeita, com envelope RFC 7807 e header
+CORS. `TurmaDocumentData` e `RedatorDocumentData` sobem ao núcleo comum de `FileData` (`mime`,
+`size`/`created_at`, `download_url`) — a turma ganhou download, que não tinha. `shared/ui` ganha
+`AppFileRow` + `AppFilePreviewDialog` (imagem/PDF inline, fallback explícito nos demais tipos —
+D9), adotados pelos 4 consumidores; `AppFileUpload` barra arquivo acima do teto antes da
+requisição (D4). Um achado de review virou decisão do João: a Task 9 só colara um botão de
+preview em vez de adotar `AppFileRow` — corrigido por completo (`474f97d`).
 
-**Execução:** Parte A (Tasks 1-4, infra+backend) delegada ao Codex via `lotus-execute-block` com
-`subagent-driven-development`, commits `dfadb0c`..`940e793` (Task 3 revisada e commitada por Claude
-após o Codex reter por disciplina de escopo — manifest do typescript-transformer). Parte B (Tasks
-5-10, frontend) executada por Claude com `subagent-driven-development`, um implementador+revisor por
-task, commits `a78bb0c`..`f271c12`. Um achado de review virou decisão do João via `AskUserQuestion`:
-Task 9 (documento do redator) só colara um botão de preview em vez de adotar `AppFileRow` na linha,
-divergindo de D8 e das Tasks 7/8 já mergeadas — João pediu a correção completa (fix `474f97d`,
-re-review Approved). Um achado simples (Task 10, `sizeError` não resetava no fechamento do diálogo de
-importação) foi corrigido direto, sem escalar (fix `f271c12`).
+**Review de alto risco** (Codex tocou infra+backend na Parte A): segunda lente via
+`mcp__codex__codex` (read-only) sobre `dfadb0c..f271c12` encontrou 1 achado real —
+`UploadSizeLimitTest` só cobria cotação e orçamento, sem regressão do teto de 10 MB em redator,
+turma e import de matrícula (D11). João aprovou a correção; fix em `faf7c78` (3 casos novos,
+suíte 321 passed).
 
-**DoD (Task 11) provado automaticamente:** suíte 318 passed; `pnpm build`+`pnpm lint` verdes; 11 MB
-autenticado → `401`/`419` antes do rebuild vs. **nunca `413`** depois (nginx/PHP alinhados a 12 MB,
-D2); 5 MB autenticado → `201` real (`POST /api/quotes/1/files`); 11 MB autenticado → `422
-application/problem+json` com `detail: "El campo file no debe ser mayor que 10240 kilobytes."` (não
-o 422 genérico, não 413 opaco); `GET /api/turmas/1/documents` expõe `mime`+`download_url`; `GET
-/api/redatores/1` expõe `mime`+`size`+`created_at` nos documentos — os dois contra API real, sessão
-Sanctum autenticada. **Pendente:** prova visual do João (preview de imagem/PDF, fallback `.docx`,
-upload de 3 MB nos 4 consumidores) — sem browser tool nesta sessão, mesmo padrão de todos os blocos
-anteriores deste projeto (ver `bloco-alunos-modulo`, Execuções 1-3 acima). Não bloqueia a transição
-para `ready_for_review`; bloqueia o fechamento (`/fechar-sprint`) até o João confirmar.
+**DoD provado contra API real, sessão Sanctum autenticada:** 5 MB → `201`; 11 MB →
+`422 application/problem+json` com `detail: "El campo file no debe ser mayor que 10240
+kilobytes."` (nunca `413` opaco, header CORS presente); `GET /api/turmas/1/documents` expõe
+`mime`+`download_url`; `GET /api/redatores/1` expõe `mime`+`size`+`created_at` nos documentos.
+Suíte 321 passed, `pnpm build`+`pnpm lint` verdes, Pint limpo. Prova visual do João (preview de
+imagem, preview de PDF, fallback `.docx`, upload de 3 MB) aprovada nos 4 consumidores
+(orçamento, cotação, turma, redator).
 
-**Review (`/revisar-sprint`), alto risco por `executor: codex` na Parte A:** Codex (read-only,
-`mcp__codex__codex`) revisou o intervalo `dfadb0c..f271c12` contra spec/plano/leis §5 e devolveu 2
-achados; Claude reverificou DoD de forma independente (suíte 318→321 passed, PHP `12M|12M` no
-container, 11 MB → `401` nunca `413`, 13 MB → `413` mantido, `pnpm build`+`pnpm lint` verdes,
-`generated.ts` só com os campos do DTO). Achado 1 do Codex (teste não reprova contra código antigo)
-não foi aceito — é guarda intencional documentada na Task 4 do plano, e a prova real do bug
-(413→401) é o curl manual, reconfirmado. Achado 2 (Q-1, real): `UploadSizeLimitTest.php` só cobria
-cotação e orçamento; redator, turma e o import de matrícula (D11) ficavam sem regressão do teto de
-10 MB. João aprovou a correção; fix em `faf7c78` (3 casos novos, suíte 321 passed, Pint limpo).
-Revisão fechada sem achado pendente — bloco em `ready_for_closure`, `/fechar-sprint` ainda depende
-da prova visual do João acima.
+Arquivado: `plans/archive/2026-07-31-hardening-upload-visualizacao-arquivos.md` ·
+`specs/archive/2026-07-31-hardening-upload-visualizacao-arquivos-design.md` ·
+`context-packets/hardening-upload-visualizacao-arquivos.md` (`partial`, não bloqueante — as 4
+imagens de referência eram caller-held, o João as forneceu na sessão de planejamento).
+Histórico completo: `docs/superpowers/progress.md`.
 
-O bloco passou por `blocked` (commit `5f8adcb`) e saiu no mesmo dia. A primeira rodada do Codex com
-`lotus-context-packet` (thread `019fb918-a4aa-7493-b751-f8f02c781879`) devolveu
-`RECOMMENDED_TRANSITION: blocked` porque nenhuma das 4 imagens de referência foi recuperada — Drive
-respondeu `results: []`, Notion não tem task 1:1 e o namespace de busca do Figma não existe no
-runtime do Codex. O caller confirmou de forma independente (busca por título e varredura de
-`mimeType contains 'image/'` desde 2026-06-01 no Drive).
-
-Não era falha de recuperação: pelo precedente de `context-packets/bloco-alunos-modulo.md` (linha 53,
-fonte `PROTO`), imagem de referência neste projeto é **caller-held**. O João forneceu os 4 prints na
-sessão em 2026-07-31 e a segunda rodada do Codex, na mesma thread, fechou o packet como `partial`.
-`FIGMA` segue `unavailable` e `GDRIVE` segue sem os artefatos — ambos não bloqueantes, porque a
-fonte de prioridade máxima (instrução direta do João) supriu os fatos.
-
-## Último item fechado — 2026-07-30
-
-`hardening-doc-sync-sprint4` — 14 tasks, `executor: claude`, bloco de documentação e proveniência
-(nenhum arquivo de `backend/` ou `frontend/` tocado no intervalo inteiro). Histórico em
-`progress.md`; decisões em `specs/archive/2026-07-30-hardening-doc-sync-sprint4-design.md` (D1–D12),
-passo a passo em `plans/archive/2026-07-30-hardening-doc-sync-sprint4.md`, packet em
-`context-packets/hardening-doc-sync-sprint4.md` (`ready`), relatório durável em
-`audits/2026-07-30-doc-sync-sprint4.md` (13 seções).
-
-Provas do gate: os 2 writes de Notion reconfirmados por `notion-fetch` na base canônica
-`collection://e64b7d57-d000-4433-b652-a410e75193cc` — critério de aceite de H.1.3.1 preenchido e a
-própria task movida para `Concluída` (Q-4); 4 patches de Drive entregues, aplicação manual pendente
-do João (P-01/P-14/P-17); re-auditoria de fechamento com as 12 divergências de fato corrigidas e
-confirmação inline (tabelas do `Schema::create` vs. `der-fisico.md`, 34 wrappers / 4 `forwardRef`,
-19 ADRs, tabela de comandos vs. `.claude/`, nenhum gatilho vencido).
-
-O que o fechamento moveu, além do arquivamento:
-
-- **P-06 fecha** — `der-fisico.md` descreve o schema real de `turmas`/`turma_redator`/`enrollments`.
-- **P-17 a P-23 nascem** — patches de Drive pendentes, mislabel no Notion, `openspout` e
-  `simple-qrcode` sem ADR, **P-22** (H.1.3.1 duplicada dentro da base Notion canônica) e **P-23**
-  (formato do `progress.md`).
-- **Q-2 da revisão virou regra:** "fonte externa se referencia por ID, nunca por nome de exibição",
-  em `AGENTS.md` §3, na SKILL do packet e em `.claude/skills/auditar-docs`.
-- **P-11 sai** da tabela "Encerradas" — cumpriu a sprint de rastro.
-
-**Lição que este bloco deixa, e que o próximo DoD de auditoria precisa respeitar:** a 4ª rodada do
-`auditor-docs` devolveu zero achados e a rodada do gate, horas depois, devolveu 14 — todas reais.
-"Re-auditoria limpa" é evidência sobre uma execução do subagente, não propriedade dos docs. DoD de
-auditoria se ancora em checagens verificáveis por comando, ou assume explicitamente que auditoria
-por agente é amostragem.
-
-**Gatilhos abertos que este bloco não resolveu** (em `docs/pendencias.md`, sem alteração silenciosa):
-**P-04** — guardrails das leis §5 (Pest Arch tests + `eslint-boundaries`) seguem sem existir; o
-gatilho vago virou data fixa, **2026-08-15**, e o item está em "Débitos técnicos" do backlog.
+**Gatilhos abertos que este bloco não resolveu** (fora de escopo por decisão da spec, sem
+alteração silenciosa): autorização/RBAC dos endpoints de arquivo; política de retenção documental
+(P-02); débito do arquivo órfão no MinIO em rollback de transação (pré-existente, backlog);
+código próprio de turma (P-13); URL pré-assinada/ADR-11 (nenhuma mudança de modelo).
