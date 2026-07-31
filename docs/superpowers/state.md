@@ -2,14 +2,14 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: blocked
+next_owner: joao
+next_action: decide_photo_object_lifecycle
 active_spec: null
 active_plan: null
 context_packet: null
-blocker: null
-resume_state: null
+blocker: "Ciclo de vida do objeto de foto no S3 ao substituir ou remover: apagar imediatamente, reter por prazo definido para auditoria, ou apenas desvincular de users.photo_path? Nenhuma fonte canônica decide (Drive exige conformidade LGPD/legislação chilena em termos gerais, sem regra de retenção da foto). Dado pessoal com exigência legal — não se supõe."
+resume_state: context_required
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
 updated_at: 2026-07-31
@@ -48,7 +48,25 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `context_required`
+## Estado atual — `blocked`
+
+O Context Packet foi gerado pelo Codex (read-only) e devolveu `status: blocked` /
+`RECOMMENDED_TRANSITION: blocked`, com **um** fato faltando — não uma fonte faltando. O packet está
+salvo como evidência em `docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md`, mas
+`context_packet` permanece `null` porque um packet `blocked` nunca autoriza planejamento.
+
+**Blocker:** ao substituir ou remover a foto de uma pessoa, o objeto anterior no S3 deve ser
+apagado imediatamente, retido por prazo definido para auditoria, ou apenas desvinculado de
+`users.photo_path`? O Drive (`requisitos-negocio.md`, `entidade-usuario.md`) exige conformidade
+LGPD/legislação chilena e validação de upload em termos gerais, mas não decide retenção da foto.
+É dado pessoal com exigência legal, e interage com **P-02** (política de retenção documental nunca
+decidida) e com o débito conhecido do arquivo órfão no MinIO em rollback de transação.
+
+Próxima ação: decisão explícita do João. Com ela registrada, o packet é atualizado (rodada nova do
+Codex ou emenda na tabela de divergências) e o estado volta a `resume_state: context_required` para
+seguir a `ready_for_planning`.
+
+## Escopo do bloco
 
 `active_work_item: foto-avatar-e-contatos-cliente` — bloco único que junta, por decisão explícita
 do João em 2026-07-31, os itens 1 e 2 do backlog:
