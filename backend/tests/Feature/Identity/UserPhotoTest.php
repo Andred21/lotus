@@ -4,6 +4,7 @@ namespace Tests\Feature\Identity;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\UserPhotoService;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,18 @@ use Tests\TestCase;
 class UserPhotoTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** Redator autenticado: não tem identity.user.* nem commercial.client.*. */
+    private function actingAsRedator(): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $user->assignRole('redator');
+        $this->actingAs($user, 'web');
+
+        return $user;
+    }
 
     public function test_store_grava_photo_path_e_o_objeto_existe(): void
     {
@@ -106,5 +119,109 @@ class UserPhotoTest extends TestCase
             'auditable_id' => $user->id,
             'event' => 'updated',
         ]);
+    }
+
+    public function test_post_photo_do_usuario_devolve_204_e_grava(): void
+    {
+        $storage = Storage::fake('s3');
+        $this->actingAsAdmin();
+        $target = User::factory()->create(['type' => 'admin']);
+
+        $this->post("/api/users/{$target->id}/photo", [
+            'photo' => UploadedFile::fake()->image('foto.png'),
+        ])->assertNoContent();
+
+        $target->refresh();
+        $this->assertNotNull($target->photo_path);
+        $storage->assertExists($target->photo_path);
+    }
+
+    public function test_delete_photo_do_usuario_devolve_204(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+        $target = User::factory()->create(['type' => 'admin']);
+        app(UserPhotoService::class)->store($target, UploadedFile::fake()->image('foto.png'));
+
+        $this->deleteJson("/api/users/{$target->id}/photo")->assertNoContent();
+
+        $this->assertNull($target->refresh()->photo_path);
+    }
+
+    public function test_photo_com_mime_invalido_da_422_com_envelope_rfc7807(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+        $target = User::factory()->create(['type' => 'admin']);
+
+        $this->post("/api/users/{$target->id}/photo", [
+            'photo' => UploadedFile::fake()->create('contrato.pdf', 10, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertHeader('content-type', 'application/problem+json')
+            ->assertJsonPath('errors.photo.0', fn ($m) => is_string($m));
+    }
+
+    public function test_photo_acima_de_5mb_da_422(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+        $target = User::factory()->create(['type' => 'admin']);
+
+        // 6 MB em kilobytes — acima do teto de 5120 KB, abaixo dos 12 MB de
+        // transporte do nginx/PHP, para que quem rejeite seja o Laravel.
+        $this->post("/api/users/{$target->id}/photo", [
+            'photo' => UploadedFile::fake()->create('grande.jpg', 6144, 'image/jpeg'),
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.photo.0', fn ($m) => is_string($m));
+    }
+
+    public function test_redator_nao_gerencia_foto_de_nenhuma_entidade(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsRedator();
+
+        $target = User::factory()->create(['type' => 'admin']);
+        $redator = User::factory()->create(['type' => 'redator'])
+            ->redator()->create([]);
+        $student = User::factory()->create(['type' => 'aluno'])
+            ->student()->create([]);
+        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
+            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+
+        $photo = ['photo' => UploadedFile::fake()->image('foto.png')];
+
+        $this->post("/api/users/{$target->id}/photo", $photo)->assertForbidden();
+        $this->post("/api/redatores/{$redator->id}/photo", $photo)->assertForbidden();
+        $this->post("/api/students/{$student->id}/photo", $photo)->assertForbidden();
+        $this->post("/api/clients/{$client->id}/photo", $photo)->assertForbidden();
+
+        $this->deleteJson("/api/users/{$target->id}/photo")->assertForbidden();
+        $this->deleteJson("/api/clients/{$client->id}/photo")->assertForbidden();
+    }
+
+    public function test_post_photo_das_outras_tres_entidades_grava_no_user_da_entidade(): void
+    {
+        $storage = Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $redator = User::factory()->create(['type' => 'redator'])->redator()->create([]);
+        $student = User::factory()->create(['type' => 'aluno'])->student()->create([]);
+        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
+            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+
+        foreach ([
+            "/api/redatores/{$redator->id}/photo" => $redator,
+            "/api/students/{$student->id}/photo" => $student,
+            "/api/clients/{$client->id}/photo" => $client,
+        ] as $url => $entity) {
+            $this->post($url, ['photo' => UploadedFile::fake()->image('foto.png')])
+                ->assertNoContent();
+
+            $path = $entity->user()->first()->photo_path;
+            $this->assertNotNull($path, "photo_path nulo depois de POST em {$url}");
+            $storage->assertExists($path);
+        }
     }
 }

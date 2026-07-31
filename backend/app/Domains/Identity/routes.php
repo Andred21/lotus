@@ -4,9 +4,12 @@ use App\Domains\Identity\Http\Controllers\AuthController;
 use App\Domains\Identity\Http\Controllers\PermissionController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
+use App\Domains\Identity\Http\Controllers\RedatorPhotoController;
 use App\Domains\Identity\Http\Controllers\RoleController;
 use App\Domains\Identity\Http\Controllers\StudentController;
+use App\Domains\Identity\Http\Controllers\StudentPhotoController;
 use App\Domains\Identity\Http\Controllers\UserController;
+use App\Domains\Identity\Http\Controllers\UserPhotoController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Identity. Já entram sob prefixo `api/` e middleware `api`
@@ -36,5 +39,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:identity.user.update')->group(function () {
         Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store']);
         Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy']);
+
+        Route::post('users/{user}/photo', [UserPhotoController::class, 'store']);
+        Route::delete('users/{user}/photo', [UserPhotoController::class, 'destroy']);
+
+        Route::post('redatores/{redator}/photo', [RedatorPhotoController::class, 'store']);
+        Route::delete('redatores/{redator}/photo', [RedatorPhotoController::class, 'destroy']);
+
+        Route::post('students/{student}/photo', [StudentPhotoController::class, 'store']);
+        Route::delete('students/{student}/photo', [StudentPhotoController::class, 'destroy']);
     });
 });
