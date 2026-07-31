@@ -2,14 +2,14 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: blocked
-next_owner: joao
-next_action: decide_photo_object_lifecycle
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: "Ciclo de vida do objeto de foto no S3 ao substituir ou remover: apagar imediatamente, reter por prazo definido para auditoria, ou apenas desvincular de users.photo_path? Nenhuma fonte canônica decide (Drive exige conformidade LGPD/legislação chilena em termos gerais, sem regra de retenção da foto). Dado pessoal com exigência legal — não se supõe."
-resume_state: context_required
+context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
+blocker: null
+resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
 updated_at: 2026-07-31
@@ -48,23 +48,25 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `blocked`
+## Estado atual — `ready_for_planning`
 
-O Context Packet foi gerado pelo Codex (read-only) e devolveu `status: blocked` /
-`RECOMMENDED_TRANSITION: blocked`, com **um** fato faltando — não uma fonte faltando. O packet está
-salvo como evidência em `docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md`, mas
-`context_packet` permanece `null` porque um packet `blocked` nunca autoriza planejamento.
+O Context Packet do Codex voltou `status: blocked` por **um fato ausente**, não por fonte ausente:
+nenhuma fonte canônica decidia o ciclo de vida do objeto de foto no S3. O João decidiu o ponto (e
+mais um) na mesma sessão, o packet foi emendado com a fonte `[J-02]` e passou a `partial`.
 
-**Blocker:** ao substituir ou remover a foto de uma pessoa, o objeto anterior no S3 deve ser
-apagado imediatamente, retido por prazo definido para auditoria, ou apenas desvinculado de
-`users.photo_path`? O Drive (`requisitos-negocio.md`, `entidade-usuario.md`) exige conformidade
-LGPD/legislação chilena e validação de upload em termos gerais, mas não decide retenção da foto.
-É dado pessoal com exigência legal, e interage com **P-02** (política de retenção documental nunca
-decidida) e com o débito conhecido do arquivo órfão no MinIO em rollback de transação.
+**Decisões que desbloquearam o bloco (2026-07-31):**
 
-Próxima ação: decisão explícita do João. Com ela registrada, o packet é atualizado (rodada nova do
-Codex ou emenda na tabela de divergências) e o estado volta a `resume_state: context_required` para
-seguir a `ready_for_planning`.
+- Substituir ou remover foto **apaga o objeto anterior no S3 imediatamente** — sem retenção, sem
+  órfão desvinculado. Consequência que o plano tem de tratar: delete imediato é irreversível e
+  `UploadFileAction::execute` já grava antes de inserir em `files`, com chamadas dentro de
+  `DB::transaction`; a ordem precisa de `DB::afterCommit` ou compensação explícita.
+- Cliente termina com **no mínimo um contato, validado no backend** — a API deixa de aceitar coleção
+  vazia, e o `removeContact` novo não pode zerar a lista.
+
+Única fonte ainda `unavailable`: as 4 imagens de referência, caller-held — não bloqueantes, o João
+as fornece durante o planejamento.
+
+Próxima ação: `/planejar-bloco` produz spec (brainstorming) e plano para `foto-avatar-e-contatos-cliente`.
 
 ## Escopo do bloco
 
