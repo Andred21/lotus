@@ -2,10 +2,10 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
 blocker: null
@@ -48,7 +48,13 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_planning`
+## Estado atual — `planning`
+
+Spec aprovada pelo João e escrita em
+`docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md` (15 decisões, D1–D15).
+Falta o plano de implementação. Contexto abaixo preservado.
+
+
 
 O Context Packet do Codex voltou `status: blocked` por **um fato ausente**, não por fonte ausente:
 nenhuma fonte canônica decidia o ciclo de vida do objeto de foto no S3. O João decidiu o ponto (e
