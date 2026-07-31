@@ -29,6 +29,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
   const close = () => {
     if (importMutation.isPending) return
     setResult(null)
+    setSizeError(null)
     importMutation.reset()
     onHide()
   }
