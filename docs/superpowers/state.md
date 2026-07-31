@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
-updated_at: 2026-07-31T18:40:00-03:00
+updated_at: 2026-07-31T20:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,51 +48,53 @@ updated_at: 2026-07-31T18:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `executing`
+## Estado atual — `ready_for_review`
 
-Spec (15 decisões, D1–D15) e plano (12 tasks) aprovados; execução em andamento.
+Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Próxima ação: solicitar
+code review do bloco (segunda lente independente sobre a Parte A é obrigatória — ver abaixo).
 
 **Parte A (Tasks 1–4, backend + `generated.ts`, executor Codex) — COMPLETA.** Commits `4dfe3a9`
 (Task 4), `0c3039a` (Task 1), `c5476dc` (Task 2), `ec9c92a` (Task 3). Revisado por Claude (diff real
 contra `paths_autorizados`, suíte rodada de novo — 340 passed, Pint limpo, `route:list --path=photo`
 com as 8 rotas, `generated.ts` só com `photo_url` nas 4 interfaces certas). Dois achados reais
-resolvidos durante a execução, ambos registrados em `.superpowers/sdd/progress.md`: GD do container
-sem suporte a JPEG (fixtures de teste trocados para `.png`, decisão do João — zero impacto em
-produção, `UserPhotoService::store()` não decodifica imagem) e `GET /api/students/{id}` devolve
+resolvidos durante a execução: GD do container sem suporte a JPEG (fixtures de teste trocados para
+`.png`, decisão do João — zero impacto em produção) e `GET /api/students/{id}` devolve
 `StudentDetailData`, não `StudentData` (teste corrigido para verificar `photo_url` via `GET
 /api/students`, index — é o endpoint que o frontend de fato consome).
 
-**Próxima ação:** Tasks 5–12 (frontend, executor Claude) — `AppAvatar`, `AppPhotoField`,
-`useEntityPhoto`, os 4 diálogos, as 4 tabelas e os cards de contato do cliente. Sem test runner no
-frontend; a prova é visual e a Task 11 depende das imagens de referência caller-held.
+**Parte B (Tasks 5–12, frontend, executor Claude, `subagent-driven-development`) — COMPLETA.**
+Commits `59c3794`..`d816980` (implementação) + `25cdbad`/`71d5f6d` (fixes de review). `AppAvatar`
+com fallback duplo (D7), `AppPhotoField` + `useEntityPhoto` (buffer no create D10, flush nunca lança
+D11, retry uniforme em qualquer modo após fix), avatar nas 4 tabelas, `AppPhotoField` nos 4 diálogos
+(padrão único, `StudentDialog` sem avatar no header — D15), contatos do cliente em cards com
+`removeContact` e mínimo de 1 preservado na UI (D12–D14). Todas as 8 tasks com review Approved
+(2 exigiram fix antes de aprovar: Task 5 — `onImageError` sobrescrevível pelo caller; Task 7 —
+`onRetry` não funcionava fora do caminho estreito pós-create).
+
+**DoD (Task 12) provado contra API real, sessão Sanctum autenticada** (suíte 340 passed, Pint
+limpo, `pnpm build`+`pnpm lint` verdes): upload/substituição/remoção de foto em `students` e
+`clients` (logo), delete imediato do objeto anterior confirmado direto no storage (D4/J-02),
+arquivo de 6.4MB rejeitado com `422`/RFC 7807 (nunca `413`), `PUT /api/clients/1` com
+`contacts: []` rejeitado com `422` sem apagar os contatos existentes. Detalhe completo em
+`.superpowers/sdd/progress.md`.
+
+**Pendências que só o João resolve, antes ou durante o review:**
+- Prova visual do bloco (as 4 tabelas, os 4 diálogos, fallback de imagem indisponível, foto do
+  create pós-save, cards de contato) nos dois temas, 1400px e 768px.
+- As 4 imagens de referência caller-held (`alumnos-exemplo-avatar`, `client-no-component-photo`,
+  `redator-no-component-photo`, `alumnos-component-wrong-photo`) seguem não fornecidas nesta sessão.
+- Decisão sobre o achado não bloqueante da Task 9 (carregado para os 4 diálogos): janela entre o
+  `201` do create e o `flush` da foto onde Cancelar/X fecha o diálogo sem esperar o upload, sem
+  banner de erro visível — aceitar como limitação conhecida, ou gatear Cancelar/X em
+  `pending || photo.pending`.
 
 **Review de risco declarado:** a Parte A muda contrato de escrita (`contacts` mínimo 1) e apaga
 objeto de storage de forma irreversível. Como no bloco anterior, o fechamento pede segunda lente
 independente sobre o intervalo de commits da Parte A.
 
-**Pendência de contexto:** as 4 imagens de referência (`alumnos-exemplo-avatar`,
-`client-no-component-photo`, `redator-no-component-photo`, `alumnos-component-wrong-photo`) seguem
-caller-held. O João as fornece na execução; elas calibram o visual, não alteram os contratos.
-
-
-
-O Context Packet do Codex voltou `status: blocked` por **um fato ausente**, não por fonte ausente:
-nenhuma fonte canônica decidia o ciclo de vida do objeto de foto no S3. O João decidiu o ponto (e
-mais um) na mesma sessão, o packet foi emendado com a fonte `[J-02]` e passou a `partial`.
-
-**Decisões que desbloquearam o bloco (2026-07-31):**
-
-- Substituir ou remover foto **apaga o objeto anterior no S3 imediatamente** — sem retenção, sem
-  órfão desvinculado. Consequência que o plano tem de tratar: delete imediato é irreversível e
-  `UploadFileAction::execute` já grava antes de inserir em `files`, com chamadas dentro de
-  `DB::transaction`; a ordem precisa de `DB::afterCommit` ou compensação explícita.
-- Cliente termina com **no mínimo um contato, validado no backend** — a API deixa de aceitar coleção
-  vazia, e o `removeContact` novo não pode zerar a lista.
-
-Única fonte ainda `unavailable`: as 4 imagens de referência, caller-held — não bloqueantes, o João
-as fornece durante o planejamento.
-
-Próxima ação: `/planejar-bloco` produz spec (brainstorming) e plano para `foto-avatar-e-contatos-cliente`.
+> Histórico das decisões que desbloquearam o bloco durante o planejamento (2026-07-31, packet
+> `blocked`→`partial` via `[J-02]`) está preservado em `.superpowers/sdd/progress.md` e no packet
+> arquivado; superado pela execução completa acima.
 
 ## Escopo do bloco
 
