@@ -7,6 +7,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -50,6 +51,17 @@ class UserPhotoService
     {
         $old = $user->photo_path;
         $new = $photo->store("user-photos/{$user->id}", $this->disk());
+
+        // `UploadedFile::store()` devolve `false` (não lança) quando a
+        // escrita falha e o disco não está configurado com `throw`. Achado
+        // real (2026-07-31): sem esta guarda, `false` virava `photo_path =
+        // '0'` no banco (coerção de tipo) e o objeto ANTERIOR — que ainda
+        // funcionava — era apagado, porque o código seguia como se o update
+        // tivesse sido bem-sucedido. Abortar aqui, antes do update, é o que
+        // preserva a garantia de D4: falha nunca corrompe o estado atual.
+        if ($new === false) {
+            throw new RuntimeException("Falha ao gravar a foto do usuário {$user->id} no disco.");
+        }
 
         try {
             $user->update(['photo_path' => $new]);

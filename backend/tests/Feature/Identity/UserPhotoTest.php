@@ -307,4 +307,48 @@ class UserPhotoTest extends TestCase
 
         $this->assertIsString($studentFromIndex()['photo_url']);
     }
+
+    /**
+     * Achado real de produção (2026-07-31): uma falha silenciosa de escrita
+     * (MinIO/S3 indisponível, permissão, disco cheio) faz `UploadedFile::store()`
+     * devolver `false` em vez de lançar. O código antigo não checava isso: o
+     * `false` virava `photo_path = '0'` no banco (coerção de tipo) e, pior, o
+     * objeto ANTIGO (que ainda funcionava) era apagado, porque o service achava
+     * que o update tinha ido bem. Resultado real observado: cliente perdeu a
+     * foto que tinha e ficou com uma URL pré-assinada apontando para um objeto
+     * "0" que nunca existiu.
+     */
+    public function test_falha_no_upload_nao_corrompe_photo_path_nem_apaga_o_antigo(): void
+    {
+        $storage = Storage::fake('s3');
+        $user = User::factory()->create(['type' => 'admin']);
+        $service = app(UserPhotoService::class);
+
+        $service->store($user, UploadedFile::fake()->image('primeira.png'));
+        $old = $user->refresh()->photo_path;
+        $storage->assertExists($old);
+
+        // Simula falha real de escrita (não mock): remove permissão de escrita
+        // do diretório ONDE O ARQUIVO JÁ EXISTE — igual ao caso real, em que o
+        // diretório do usuário já existe da foto anterior e só a escrita do
+        // arquivo NOVO falha. `chmod` na raiz do disco fake não reproduz a
+        // falha (a raiz tem outros efeitos colaterais); no diretório-folha
+        // real, força `UploadedFile::store()` a devolver `false`, como uma
+        // falha real de permissão/disco cheio/S3 indisponível faria.
+        $leafDir = dirname(Storage::disk('s3')->path($old));
+        chmod($leafDir, 0555);
+
+        try {
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessage('Falha ao gravar a foto');
+
+            $service->store($user, UploadedFile::fake()->image('segunda.png'));
+        } finally {
+            chmod($leafDir, 0755);
+        }
+
+        $user->refresh();
+        $this->assertSame($old, $user->photo_path, 'photo_path não pode corromper numa falha de upload');
+        $storage->assertExists($old, 'o objeto antigo não pode ser apagado se o novo nunca chegou a existir');
+    }
 }
