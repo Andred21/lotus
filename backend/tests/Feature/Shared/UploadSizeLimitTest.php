@@ -6,6 +6,9 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Models\Turma;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -47,6 +50,31 @@ class UploadSizeLimitTest extends TestCase
         ]);
     }
 
+    private function turma(): Turma
+    {
+        $quote = $this->quote();
+
+        return Turma::create([
+            'quote_id' => $quote->id,
+            'course_id' => $quote->course_id,
+            'modalidade' => TurmaModalidade::Online,
+            'local_aplicacao' => null,
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-10',
+        ]);
+    }
+
+    /** Redator autentica (RN-01) e a role dele TEM submit_docs — admin comum não tem (D9). */
+    private function actingAsRedatorRole(): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $user->assignRole('redator');
+        $this->actingAs($user, 'web');
+
+        return $user;
+    }
+
     public function test_anexo_de_cotacao_acima_de_10mb_e_422(): void
     {
         Storage::fake('s3');
@@ -84,5 +112,45 @@ class UploadSizeLimitTest extends TestCase
             'type' => 'quote_document',
             'file' => UploadedFile::fake()->create('no-limite.pdf', 10240, 'application/pdf'),
         ])->assertCreated();
+    }
+
+    public function test_documento_de_turma_acima_de_10mb_e_422(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsRedatorRole();
+
+        $turma = $this->turma();
+
+        $this->postJson("/api/turmas/{$turma->id}/documents", [
+            'type' => 'MANUAL',
+            'file' => UploadedFile::fake()->create('grande.pdf', self::OVERSIZED_KB, 'application/pdf'),
+        ])->assertStatus(422)->assertJsonValidationErrors('file');
+    }
+
+    public function test_documento_do_redator_acima_de_10mb_e_422(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/redatores', [
+            'name' => 'Juan Morales', 'rut' => '13.456.789-9', 'email' => 'jm@lotus.cl',
+            'documents' => ['CV' => UploadedFile::fake()->create('cv.pdf', 100, 'application/pdf')],
+        ])->json('id');
+
+        $this->postJson("/api/redatores/{$id}/documents", [
+            'type' => 'CV',
+            'file' => UploadedFile::fake()->create('grande.pdf', self::OVERSIZED_KB, 'application/pdf'),
+        ])->assertStatus(422)->assertJsonValidationErrors('file');
+    }
+
+    public function test_import_de_matricula_acima_de_10mb_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $turma = $this->turma();
+
+        $this->postJson("/api/turmas/{$turma->id}/alunos/importar", [
+            'file' => UploadedFile::fake()->create('grande.xlsx', self::OVERSIZED_KB),
+        ])->assertStatus(422)->assertJsonValidationErrors('file');
     }
 }
