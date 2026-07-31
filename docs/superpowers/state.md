@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
-updated_at: 2026-07-31
+updated_at: 2026-07-31T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,17 +48,23 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `executing`
 
-Spec (15 decisões, D1–D15) e plano (12 tasks) prontos e aprovados. Próxima ação:
-`/executar-bloco foto-avatar-e-contatos-cliente`.
+Spec (15 decisões, D1–D15) e plano (12 tasks) aprovados; execução em andamento.
 
-**Handoff do plano — execução dividida:**
+**Parte A (Tasks 1–4, backend + `generated.ts`, executor Codex) — COMPLETA.** Commits `4dfe3a9`
+(Task 4), `0c3039a` (Task 1), `c5476dc` (Task 2), `ec9c92a` (Task 3). Revisado por Claude (diff real
+contra `paths_autorizados`, suíte rodada de novo — 340 passed, Pint limpo, `route:list --path=photo`
+com as 8 rotas, `generated.ts` só com `photo_url` nas 4 interfaces certas). Dois achados reais
+resolvidos durante a execução, ambos registrados em `.superpowers/sdd/progress.md`: GD do container
+sem suporte a JPEG (fixtures de teste trocados para `.png`, decisão do João — zero impacto em
+produção, `UserPhotoService::store()` não decodifica imagem) e `GET /api/students/{id}` devolve
+`StudentDetailData`, não `StudentData` (teste corrigido para verificar `photo_url` via `GET
+/api/students`, index — é o endpoint que o frontend de fato consome).
 
-- **Tasks 1–4 (backend + `generated.ts`): Codex.** Paths fechados, verificação executável, zero
-  julgamento visual. `paths_autorizados` na seção "Handoff de execução" do plano.
-- **Tasks 5–12 (frontend): Claude.** Sem test runner no frontend; a prova é visual e a Task 11
-  depende das imagens de referência caller-held.
+**Próxima ação:** Tasks 5–12 (frontend, executor Claude) — `AppAvatar`, `AppPhotoField`,
+`useEntityPhoto`, os 4 diálogos, as 4 tabelas e os cards de contato do cliente. Sem test runner no
+frontend; a prova é visual e a Task 11 depende das imagens de referência caller-held.
 
 **Review de risco declarado:** a Parte A muda contrato de escrita (`contacts` mínimo 1) e apaga
 objeto de storage de forma irreversível. Como no bloco anterior, o fechamento pede segunda lente
