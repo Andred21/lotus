@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-upload-visualizacao-arquivos
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 last_completed_work_item: hardening-doc-sync-sprint4
-state_basis_commit: 8f56da2
+state_basis_commit: f271c12
 active_spec: docs/superpowers/specs/2026-07-31-hardening-upload-visualizacao-arquivos-design.md
 active_plan: docs/superpowers/plans/2026-07-31-hardening-upload-visualizacao-arquivos.md
 context_packet: docs/superpowers/context-packets/hardening-upload-visualizacao-arquivos.md
@@ -62,9 +62,30 @@ visualização compartilhada para documentos da tabela polimórfica `files`, apl
 cotações, documentos de redator e documentos de turma, preservando download, exclusão, URLs
 temporárias e autorização existentes.
 
-`workflow_state: executing` — spec (`a9e266a`) e plano (`8f56da2`) commitados em 2026-07-31; o corpo
-desta seção ficou defasado atrás do frontmatter até a correção em `state_basis_commit` acima. Packet
-`status: partial` em `context-packets/hardening-upload-visualizacao-arquivos.md`.
+`workflow_state: ready_for_review` — as 11 tasks do plano executadas e provadas em 2026-07-31. Packet
+`status: partial` em `context-packets/hardening-upload-visualizacao-arquivos.md` (não bloqueante,
+§ acima).
+
+**Execução:** Parte A (Tasks 1-4, infra+backend) delegada ao Codex via `lotus-execute-block` com
+`subagent-driven-development`, commits `dfadb0c`..`940e793` (Task 3 revisada e commitada por Claude
+após o Codex reter por disciplina de escopo — manifest do typescript-transformer). Parte B (Tasks
+5-10, frontend) executada por Claude com `subagent-driven-development`, um implementador+revisor por
+task, commits `a78bb0c`..`f271c12`. Um achado de review virou decisão do João via `AskUserQuestion`:
+Task 9 (documento do redator) só colara um botão de preview em vez de adotar `AppFileRow` na linha,
+divergindo de D8 e das Tasks 7/8 já mergeadas — João pediu a correção completa (fix `474f97d`,
+re-review Approved). Um achado simples (Task 10, `sizeError` não resetava no fechamento do diálogo de
+importação) foi corrigido direto, sem escalar (fix `f271c12`).
+
+**DoD (Task 11) provado automaticamente:** suíte 318 passed; `pnpm build`+`pnpm lint` verdes; 11 MB
+autenticado → `401`/`419` antes do rebuild vs. **nunca `413`** depois (nginx/PHP alinhados a 12 MB,
+D2); 5 MB autenticado → `201` real (`POST /api/quotes/1/files`); 11 MB autenticado → `422
+application/problem+json` com `detail: "El campo file no debe ser mayor que 10240 kilobytes."` (não
+o 422 genérico, não 413 opaco); `GET /api/turmas/1/documents` expõe `mime`+`download_url`; `GET
+/api/redatores/1` expõe `mime`+`size`+`created_at` nos documentos — os dois contra API real, sessão
+Sanctum autenticada. **Pendente:** prova visual do João (preview de imagem/PDF, fallback `.docx`,
+upload de 3 MB nos 4 consumidores) — sem browser tool nesta sessão, mesmo padrão de todos os blocos
+anteriores deste projeto (ver `bloco-alunos-modulo`, Execuções 1-3 acima). Não bloqueia a transição
+para `ready_for_review`; bloqueia o fechamento (`/fechar-sprint`) até o João confirmar.
 
 O bloco passou por `blocked` (commit `5f8adcb`) e saiu no mesmo dia. A primeira rodada do Codex com
 `lotus-context-packet` (thread `019fb918-a4aa-7493-b751-f8f02c781879`) devolveu
