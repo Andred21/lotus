@@ -16,6 +16,7 @@ const EMPTY_CONTACT: ClientData['contacts'][number] = {
 const EMPTY: ClientData = {
   id: undefined, name: '', rut: '', email: '', phone: null,
   legal_name: '', type: 'client', business_activity: null,
+  photo_url: null,
   addresses: [{ ...EMPTY_ADDRESS }],
   contacts: [{ ...EMPTY_CONTACT, is_primary: true }],
 }
