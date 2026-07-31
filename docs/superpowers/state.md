@@ -1,17 +1,17 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: identidade-visual-e-comercial
+active_work_item: foto-avatar-e-contatos-cliente
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
-state_basis_commit: faf7c78
+state_basis_commit: 1544143
 updated_at: 2026-07-31
 ---
 
@@ -48,10 +48,24 @@ updated_at: 2026-07-31
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `context_required`
 
-Nenhum `active_work_item`. Próxima ação: o João escolhe explicitamente um item de
-`docs/superpowers/backlog.md`. Este arquivo não promove nada sozinho.
+`active_work_item: foto-avatar-e-contatos-cliente` — bloco único que junta, por decisão explícita
+do João em 2026-07-31, os itens 1 e 2 do backlog:
+
+1. **Identidade visual · Foto e avatar das entidades derivadas de User** — expor `photo_url` nos
+   contratos de User, Client, Redator e Student; `AppAvatar` na primeira coluna das tabelas;
+   componente compartilhado de foto no corpo dos dialogs (visualizar, selecionar, substituir,
+   remover); fallback de duas iniciais; remover avatar do header do `StudentDialog`.
+2. **Comercial · Refinamento dos contatos do cliente** — `ContactFields` em cards responsivos com
+   labels explícitas, indicação de contato principal e exclusão; `removeContact` no hook,
+   preservando a semântica replace-total do backend e os erros nested.
+
+Próxima ação: o Codex gera o Context Packet (`lotus-context-packet`, sandbox read-only). As imagens
+de referência (`alumnos-exemplo-avatar`, `client-no-component-photo`, `redator-no-component-photo`,
+`alumnos-component-wrong-photo`) são **caller-held** — estão na máquina do João, não no Drive,
+Notion ou GitHub; devem ser registradas como fonte `unavailable` no packet e serão fornecidas por
+ele durante o planejamento. Packet `partial` por esse motivo não bloqueia.
 
 ## Último item fechado — 2026-07-31
 
