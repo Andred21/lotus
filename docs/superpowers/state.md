@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: hardening-upload-visualizacao-arquivos
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 last_completed_work_item: hardening-doc-sync-sprint4
-state_basis_commit: 7aabe77
+state_basis_commit: e4204a8
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 context_packet_status: null
-updated_at: 2026-07-30
+updated_at: 2026-07-31
 ---
 
 # Estado operacional — Lotus v2
@@ -50,10 +50,23 @@ updated_at: 2026-07-30
 - O backlog nunca promove trabalho automaticamente.
 
 
-## Item ativo
+## Item ativo — desde 2026-07-31
 
-Nenhum. `workflow_state: idle` — a próxima ação é o João escolher explicitamente um item de
-`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
+`hardening-upload-visualizacao-arquivos` — item 1 dos "Próximos blocos" do `backlog.md`, promovido
+por seleção explícita do João em 2026-07-31 (`/planejar-bloco "Hardening · Upload e visualização de
+arquivos"`).
+
+Escopo declarado no backlog: investigar o erro apresentado como CORS nos uploads, identificar a
+camada que rejeita o payload e alinhar os limites de frontend, Nginx, PHP e Laravel; criar
+visualização compartilhada para documentos da tabela polimórfica `files`, aplicada a orçamentos,
+cotações, documentos de redator e documentos de turma, preservando download, exclusão, URLs
+temporárias e autorização existentes.
+
+`workflow_state: context_required` porque o bloco depende de 4 artefatos externos que não existem no
+repositório — `pressuposto-no-visualization-docs`, `teste-image-document-pressuposto`,
+`erro-document-pressuposta-ui`, `erro-document-pressuposta-console`. A próxima ação é o Codex gerar
+o Context Packet com `lotus-context-packet` (read-only); o packet é obrigatório antes de
+`ready_for_planning`.
 
 ## Último item fechado — 2026-07-30
 
