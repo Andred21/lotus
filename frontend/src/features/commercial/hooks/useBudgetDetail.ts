@@ -26,6 +26,9 @@ export function useBudgetDetail(budgetId: number) {
   const [confirm, setConfirm] = useState<{ action: ConfirmAction; quote: QuoteData } | null>(null)
   const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
   const [fileType, setFileType] = useState<BudgetFileType>('invoice')
+  // Rejeição por tamanho é local (não passa pela API): o AppFileUpload barra o
+  // arquivo antes de qualquer request, então não vira erro de mutação.
+  const [fileSizeError, setFileSizeError] = useState<string | null>(null)
 
   const { can } = usePermissions()
   const canApprove = can('commercial.quote.approve')
@@ -47,6 +50,7 @@ export function useBudgetDetail(budgetId: number) {
   const handleUpload = (e: FileUploadHandlerEvent) => {
     const file = e.files[0]
     if (!file) return
+    setFileSizeError(null)
     uploadFile.mutate({ budgetId, type: fileType, file }, { onSuccess: () => e.options.clear() })
   }
 
@@ -114,6 +118,8 @@ export function useBudgetDetail(budgetId: number) {
     uploadPending: uploadFile.isPending,
     removeFile: (fileId: number) => removeFile.mutate({ budgetId, fileId }),
     fileError,
+    fileSizeError,
+    onFileSizeReject: setFileSizeError,
     goBack: () => navigate('/comercial'),
   }
 }
