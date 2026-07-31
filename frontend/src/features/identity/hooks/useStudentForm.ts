@@ -13,7 +13,12 @@ const EMPTY: StudentFormFields = {
   id: undefined, name: '', rut: '', email: '', phone: null, client_id: null,
 }
 
-export function useStudentForm(student: StudentData | null, mode: DialogMode, onDone: () => void) {
+export function useStudentForm(
+  student: StudentData | null,
+  mode: DialogMode,
+  onDone: () => void,
+  afterCreate?: (created: StudentData) => Promise<void>,
+) {
   const entity: StudentFormFields | null = student
     ? { id: student.id, name: student.name, rut: student.rut, email: student.email, phone: student.phone ?? null, client_id: student.current_client_id ?? null }
     : null
@@ -27,7 +32,15 @@ export function useStudentForm(student: StudentData | null, mode: DialogMode, on
     if (mode === 'create') {
       create.mutate(
         { name: form.name, rut: form.rut, email: form.email, phone: form.phone, client_id: form.client_id },
-        { onSuccess: onDone },
+        {
+          // A foto escolhida no create sobe DEPOIS do 201, quando o id existe
+          // (spec D10). `afterCreate` nunca lança — se o upload falhar, o
+          // diálogo continua aberto mostrando o motivo (spec D11).
+          onSuccess: async (created) => {
+            await afterCreate?.(created)
+            onDone()
+          },
+        },
       )
       return
     }
