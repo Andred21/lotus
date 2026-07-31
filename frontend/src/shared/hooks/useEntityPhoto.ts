@@ -33,6 +33,10 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
   const [preview, setPreview] = useState<string | null>(null)
   const [sizeError, setSizeError] = useState<string | null>(null)
   const [bufferedFailure, setBufferedFailure] = useState(false)
+  // Id do último upload direto tentado (edit/view) OU o `createdId` que o
+  // `flush` estava tentando quando falhou — não o `id` da prop, que pode
+  // mudar de render pra render. `onRetry` usa este valor, nunca a prop.
+  const [retryId, setRetryId] = useState<number | null>(null)
 
   // Object URL é recurso do browser: sem o revoke, cada troca de foto no
   // create vaza um blob até o reload da aba.
@@ -61,7 +65,17 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
       return
     }
 
-    upload.mutate({ id, file })
+    // Guarda o arquivo E o id usados nesta tentativa — se o upload falhar,
+    // `onRetry` reenvia o MESMO arquivo para o MESMO id, não o que a prop
+    // tiver no momento do clique em "Reintentar".
+    setBuffered(file)
+    setRetryId(id)
+    upload.mutate({ id, file }, {
+      onSuccess: () => {
+        setBuffered(null)
+        setRetryId(null)
+      },
+    })
   }
 
   function onRemove() {
@@ -75,6 +89,8 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
       return
     }
 
+    setBuffered(null)
+    setRetryId(null)
     remove.mutate(id)
   }
 
@@ -89,9 +105,14 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
     try {
       await upload.mutateAsync({ id: createdId, file: buffered })
       setBuffered(null)
+      setRetryId(null)
       if (preview) URL.revokeObjectURL(preview)
       setPreview(null)
     } catch {
+      // Guarda o `createdId` (não o `id` da prop) para que `onRetry` reenvie
+      // pro destino certo mesmo que a transição pra edit ainda não tenha
+      // propagado a prop `id` no momento do clique.
+      setRetryId(createdId)
       setBufferedFailure(true)
     }
   }
@@ -109,8 +130,21 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
     onSelect,
     onRemove,
     onSizeReject: (message: string) => setSizeError(message),
+    // Funciona em qualquer modo: reenvia o último arquivo tentado
+    // (`buffered`) pro último id tentado (`retryId`) — seja uma falha de
+    // upload direto em edit/view, seja uma falha de `flush` pós-create.
     onRetry: () => {
-      if (id !== null && buffered) upload.mutate({ id, file: buffered })
+      if (retryId === null || !buffered) return
+
+      upload.mutate({ id: retryId, file: buffered }, {
+        onSuccess: () => {
+          setBuffered(null)
+          setRetryId(null)
+          if (preview) URL.revokeObjectURL(preview)
+          setPreview(null)
+          setBufferedFailure(false)
+        },
+      })
     },
     flush,
     hasBufferedFailure: bufferedFailure,
