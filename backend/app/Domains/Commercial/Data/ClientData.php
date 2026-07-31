@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Data;
 
+use App\Domains\Commercial\Models\Client;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Email;
@@ -45,6 +46,11 @@ class ClientData extends Data
     {
         return [
             'rut' => ['required', 'string', new ValidRut],
+            // Um ou mais contatos (Drive `entidade-contato-cliente.md`,
+            // ratificado em 2026-07-31). `required` também fecha o buraco do
+            // replace-total: antes, omitir a chave apagava a coleção em
+            // silêncio, porque $contacts é `array = []` e não `Optional`.
+            'contacts' => ['required', 'array', 'min:1'],
         ];
     }
 
@@ -52,7 +58,7 @@ class ClientData extends Data
      * Hidrata o DTO do model, achatando os campos do user (name/rut/email/
      * phone) para o topo. Usado nas respostas do ClientController.
      */
-    public static function fromModel(\App\Domains\Commercial\Models\Client $client): self
+    public static function fromModel(Client $client): self
     {
         return new self(
             id: $client->id,
