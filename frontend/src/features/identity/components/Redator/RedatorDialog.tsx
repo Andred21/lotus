@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, FormField, FormSection, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppButton, AppInputText, AppTag, AppFileUpload, AppFilePreviewDialog, FormField, FormSection, FormErrorBanner } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
-import type { RedatorData } from '@shared/types/generated'
+import type { RedatorData, RedatorDocumentData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useUploadDocument, useRemoveDocument } from '../../api/useRedatorDocuments'
 import { useRedatorForm, type RedatorDialogMode } from '../../hooks/useRedatorForm'
@@ -31,6 +32,8 @@ export function RedatorDialog({
   const courses = coursesApi.useList()
   const upload = useUploadDocument()
   const removeDoc = useRemoveDocument()
+  const [preview, setPreview] = useState<RedatorDocumentData | null>(null)
+  const [sizeError, setSizeError] = useState<string | null>(null)
 
   // Documentos vêm da entidade viva (derivada da lista), não do estado do form:
   // são geridos por mutações próprias e devem refletir o servidor na hora.
@@ -38,6 +41,7 @@ export function RedatorDialog({
   const courseIds = form.course_ids
 
   function handleUpload(type: string, e: FileUploadHandlerEvent) {
+    setSizeError(null)
     const file = e.files[0]
     if (file && redator?.id) {
       upload.mutate({ redatorId: redator.id, type, file })
@@ -46,6 +50,7 @@ export function RedatorDialog({
   }
 
   function handleStage(type: string, e: FileUploadHandlerEvent) {
+    setSizeError(null)
     const file = e.files[0]
     if (file) stageDoc(type, file)
     e.options.clear()
@@ -94,6 +99,7 @@ export function RedatorDialog({
         {upload.error && (
           <p className="text-sm text-red-600">{upload.error.detail}</p>
         )}
+        {sizeError && <p className="text-sm text-red-600">{sizeError}</p>}
         {DOC_TYPES.map((type) => {
           const doc = existing.find((d) => d.type === type)
           const staged = stagedDocs[type]
@@ -110,19 +116,40 @@ export function RedatorDialog({
               <div className="flex items-center gap-2">
                 {mode !== 'create' && st && <AppTag value={t(`documentStatus.${st}`)} severity={STATUS_SEVERITY[st]} />}
 
-                {/* view: só status + link de download, documento é imutável */}
+                {/* view: só status + ver/baixar, documento é imutável */}
                 {mode === 'view' && doc && (
-                  <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
+                  <>
+                    <AppButton
+                      icon="pi pi-eye"
+                      text
+                      rounded
+                      aria-label={t('common.preview')}
+                      onClick={() => setPreview(doc)}
+                    />
+                    <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
+                  </>
                 )}
 
-                {/* edit: upload/substituição imediata via endpoint aninhado + exclusão */}
+                {/* edit: ver + upload/substituição imediata via endpoint aninhado + exclusão */}
                 {mode === 'edit' && (
                   <>
-                    {doc && <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>}
+                    {doc && (
+                      <>
+                        <AppButton
+                          icon="pi pi-eye"
+                          text
+                          rounded
+                          aria-label={t('common.preview')}
+                          onClick={() => setPreview(doc)}
+                        />
+                        <a href={doc.download_url} target="_blank" rel="noreferrer"><AppButton icon="pi pi-download" text rounded /></a>
+                      </>
+                    )}
                     <AppFileUpload
                       chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                       chooseLabel=""
                       disabled={upload.isPending && upload.variables?.type === type}
+                      onSizeReject={setSizeError}
                       uploadHandler={(e) => handleUpload(type, e)}
                     />
                     {doc && redator?.id && (
@@ -139,6 +166,7 @@ export function RedatorDialog({
                     <AppFileUpload
                       chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
                       chooseLabel=""
+                      onSizeReject={setSizeError}
                       uploadHandler={(e) => handleStage(type, e)}
                     />
                   )
@@ -147,6 +175,7 @@ export function RedatorDialog({
             </div>
           )
         })}
+        <AppFilePreviewDialog file={preview} visible={preview !== null} onHide={() => setPreview(null)} />
 
         <FormSection title={t('redator.sectionCourses')} spaced />
         <div className="space-y-1">
