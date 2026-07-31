@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
@@ -38,6 +39,8 @@ class RedatorData extends Data
         /** @var array<RedatorDocumentData> */
         #[Computed]
         public array $documents = [],
+        #[Computed]
+        public ?string $photo_url = null,
     ) {}
 
     public static function rules(): array
@@ -81,6 +84,7 @@ class RedatorData extends Data
             documents: $redator->documents->map(
                 fn ($f) => RedatorDocumentData::fromModel($f)
             )->all(),
+            photo_url: app(UserPhotoService::class)->urlFor($redator->user->photo_path),
         );
     }
 }

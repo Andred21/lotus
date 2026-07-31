@@ -47,6 +47,7 @@ type: string,
 business_activity: undefined | string | null,
 addresses: ClientAddressData[],
 contacts: ClientContactData[],
+photo_url: string | null,
 };
 export type CourseData = {
 id: undefined | number,
@@ -159,6 +160,7 @@ email: string,
 phone: undefined | string | null,
 course_ids: number[],
 documents: RedatorDocumentData[],
+photo_url: string | null,
 };
 export type RedatorDocumentData = {
 id: number,
@@ -204,6 +206,7 @@ client_id: undefined | number | null,
 current_client_id: number | null,
 current_client_name: string | null,
 enrollments_count: number,
+photo_url: string | null,
 };
 export type StudentDetailData = {
 id: number,
@@ -272,4 +275,5 @@ is_active: boolean,
 password: undefined | string,
 type: undefined | string,
 roles: string[],
+photo_url: string | null,
 };

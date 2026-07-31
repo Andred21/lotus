@@ -3,7 +3,9 @@
 namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Rules\ValidRut;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\In;
@@ -40,6 +42,8 @@ class ClientData extends Data
         /** @var array<ClientContactData> */
         #[DataCollectionOf(ClientContactData::class)]
         public array $contacts = [],
+        #[Computed]
+        public ?string $photo_url = null,
     ) {}
 
     public static function rules(): array
@@ -71,6 +75,7 @@ class ClientData extends Data
             business_activity: $client->business_activity,
             addresses: ClientAddressData::collect($client->addresses->all()),
             contacts: ClientContactData::collect($client->contacts->all()),
+            photo_url: app(UserPhotoService::class)->urlFor($client->user->photo_path),
         );
     }
 }

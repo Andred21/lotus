@@ -24,7 +24,11 @@ class UserPhotoTest extends TestCase
     {
         $this->seed(RolePermissionSeeder::class);
 
-        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $user = User::factory()->create([
+            'type' => 'redator',
+            'is_active' => true,
+            'rut' => '12.345.678-5',
+        ]);
         $user->assignRole('redator');
         $this->actingAs($user, 'web');
 
@@ -183,11 +187,15 @@ class UserPhotoTest extends TestCase
         $this->actingAsRedator();
 
         $target = User::factory()->create(['type' => 'admin']);
-        $redator = User::factory()->create(['type' => 'redator'])
+        $redator = User::factory()->create(['type' => 'redator', 'rut' => '12.345.679-3'])
             ->redator()->create([]);
-        $student = User::factory()->create(['type' => 'aluno'])
+        $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.680-7'])
             ->student()->create([]);
-        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
+        $client = User::factory()->create([
+            'type' => 'cliente',
+            'is_active' => false,
+            'rut' => '12.345.681-5',
+        ])
             ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
 
         $photo = ['photo' => UploadedFile::fake()->image('foto.png')];
@@ -206,9 +214,15 @@ class UserPhotoTest extends TestCase
         $storage = Storage::fake('s3');
         $this->actingAsAdmin();
 
-        $redator = User::factory()->create(['type' => 'redator'])->redator()->create([]);
-        $student = User::factory()->create(['type' => 'aluno'])->student()->create([]);
-        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
+        $redator = User::factory()->create(['type' => 'redator', 'rut' => '12.345.682-3'])
+            ->redator()->create([]);
+        $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.683-1'])
+            ->student()->create([]);
+        $client = User::factory()->create([
+            'type' => 'cliente',
+            'is_active' => false,
+            'rut' => '12.345.684-K',
+        ])
             ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
 
         foreach ([
@@ -223,5 +237,74 @@ class UserPhotoTest extends TestCase
             $this->assertNotNull($path, "photo_path nulo depois de POST em {$url}");
             $storage->assertExists($path);
         }
+    }
+
+    public function test_photo_url_e_null_sem_foto_e_string_com_foto(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $target = User::factory()->create(['type' => 'admin']);
+        $target->assignRole('admin');
+
+        $this->getJson("/api/users/{$target->id}")
+            ->assertOk()
+            ->assertJsonPath('photo_url', null);
+
+        $this->post("/api/users/{$target->id}/photo", [
+            'photo' => UploadedFile::fake()->image('foto.png'),
+        ])->assertNoContent();
+
+        $url = $this->getJson("/api/users/{$target->id}")->assertOk()->json('photo_url');
+        $this->assertIsString($url);
+    }
+
+    public function test_photo_url_aparece_nas_outras_tres_entidades(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $redator = User::factory()->create(['type' => 'redator', 'rut' => '12.345.685-8'])
+            ->redator()->create([]);
+        $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.686-6'])
+            ->student()->create([]);
+        $client = User::factory()->create([
+            'type' => 'cliente',
+            'is_active' => false,
+            'rut' => '12.345.687-4',
+        ])
+            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+
+        foreach ([
+            "/api/redatores/{$redator->id}" => "/api/redatores/{$redator->id}/photo",
+            "/api/clients/{$client->id}" => "/api/clients/{$client->id}/photo",
+        ] as $showUrl => $photoUrl) {
+            $this->getJson($showUrl)->assertOk()->assertJsonPath('photo_url', null);
+
+            $this->post($photoUrl, ['photo' => UploadedFile::fake()->image('foto.png')])
+                ->assertNoContent();
+
+            $this->assertIsString(
+                $this->getJson($showUrl)->assertOk()->json('photo_url'),
+                "photo_url ausente em {$showUrl} depois do upload",
+            );
+        }
+
+        $studentFromIndex = function () use ($student): array {
+            $item = collect($this->getJson('/api/students')->assertOk()->json())
+                ->firstWhere('id', $student->id);
+
+            $this->assertIsArray($item);
+
+            return $item;
+        };
+
+        $this->assertNull($studentFromIndex()['photo_url']);
+
+        $this->post("/api/students/{$student->id}/photo", [
+            'photo' => UploadedFile::fake()->image('foto.png'),
+        ])->assertNoContent();
+
+        $this->assertIsString($studentFromIndex()['photo_url']);
     }
 }
