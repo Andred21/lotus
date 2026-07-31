@@ -7,20 +7,15 @@
 
 ## Próximos blocos
 
-1. **Hardening · H.1.3.1 — Sincronização de documentação e fontes canônicas**
-   — Auditar código ↔ /docs ↔ Drive ↔ Notion; reconciliar divergências;
-   identificar decisões sem proveniência ou sem ciência do João; atualizar
-   documentação interna; aplicar writes externos explicitamente autorizados;
-   reexecutar auditoria e registrar pendências não resolvidas.
-2. **Administração · Roles e permissões — redesenho de composição**
+1. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-3. **Bloco 7 · Sprint 4 · Certificação**
+2. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-4. **Hardening**
+3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

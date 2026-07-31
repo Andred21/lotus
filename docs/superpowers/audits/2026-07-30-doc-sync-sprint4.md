@@ -1,6 +1,6 @@
 # Auditoria de sincronização — hardening-doc-sync-sprint4
 
-**Data:** 2026-07-30 · **Spec:** `docs/superpowers/specs/2026-07-30-hardening-doc-sync-sprint4-design.md`
+**Data:** 2026-07-30 · **Spec:** `docs/superpowers/specs/archive/2026-07-30-hardening-doc-sync-sprint4-design.md`
 **Packet:** `docs/superpowers/context-packets/hardening-doc-sync-sprint4.md`
 
 ## 1. Capacidade de escrita externa
@@ -307,3 +307,46 @@ consultar fonte externa.
 
 **Q-4 é a única pendência de execução desta revisão** — o `/fechar-sprint` aplica o write e registra
 a evidência de releitura na seção 10.
+
+## 13. Gate de fechamento (2026-07-30)
+
+**Q-4 aplicado:** página `3a2bc9603dfa803b94bbf27c075b27d6` movida de `Backlog` para `Concluída` via
+`notion-update-page`; releitura por `notion-fetch` confirma `"Status":"Concluída"` na base canônica
+`collection://e64b7d57-d000-4433-b652-a410e75193cc`. A seção 10 fica completa: 2 writes de Notion
+aplicados e reconfirmados no fechamento, 4 patches de Drive entregues com pendência aberta.
+
+**O item 0 do gate reprovou na primeira passada.** A re-auditoria de fechamento, com o mesmo prompt
+da Task 14, devolveu **14 divergências** — contra as 0 da 4ª rodada do próprio bloco, horas antes.
+Nenhuma era invenção: as 8 primeiras foram reconferidas na mão antes de irem para a triagem do João.
+
+> **Lição — "zero achados" mede o auditor, não os docs.** O `auditor-docs` varia em profundidade e em
+> recorte entre execuções; uma rodada limpa é evidência sobre *aquela* execução. DoD que se satisfaz
+> com uma rodada limpa compra a sensação de sincronia, não a sincronia. Um DoD honesto ou fixa a
+> lista de checagens que precisam passar (verificáveis por comando, como as 7 provas da seção 11), ou
+> assume que a auditoria por agente é amostragem — nunca prova de exaustão.
+
+Decisão do João no gate: corrigir os 12 fatos antes de fechar (commit `7aabe77`), corrigir também a
+§4 do `CLAUDE.md` (comando vs. skill) e mandar o formato do `progress.md` para pendência (**P-23**).
+
+| # | Divergência | Fechou como |
+|---|---|---|
+| 1 | Contagem-alvo de tabelas não fechava: "25 (18 de domínio + 7)" com `files`/`audits` contados dos dois lados | 26 (19 de domínio + 7 RBAC/transversal), em `der-fisico.md` e `README.md` |
+| 2 | `adrs.md` regras herdadas ainda diziam "um redator por turma" contra o N:N implementado | Linha marcada como regra da v1 superada pelo Bloco 6b (D5) |
+| 3 | 4 docs com cabeçalho "atualizado em" anterior ao próprio corpo | Datas alinhadas em `adrs.md`, `estrutura-monolito.md`, `der-fisico.md`, `README.md` |
+| 4 | `estrutura-monolito.md:64` afirmava que o `RouteServiceProvider` agrega as rotas — 15 linhas depois do mesmo doc dizer que ele não existe | Regra acionável descreve o `glob()` real |
+| 5 | `backend-ddd.md` dizia `Certification`/`Feedback` placeholder `.gitkeep`; não há `.gitkeep` no backend e `Domains/Feedback/` não existe | Texto passa a dizer o que é |
+| 6 | `frontend-fsliced.md` "5 de 25 wrappers" | "4 dos 34", conferido (34 pastas em `shared/ui`, 4 com `forwardRef<>`) |
+| 7 | `generated-types.md` e `pendencias.md` apontavam para "o backlog do `progress.md`", que não existe desde o `backlog.md` | Ponteiros repontados |
+| 8 | `CLAUDE.md` mandava `./vendor/bin/pint` da raiz — não há `vendor/` lá | `cd backend && ./vendor/bin/pint <arquivos>`, verificado rodando (`{"tool":"pint","result":"passed"}`) |
+| 9 | `CLAUDE.md` §4 listava `/revisar-sprint` e `/fechar-sprint` como comandos (são skills) e omitia `/revisar-frontend` e `/revisar-ui` | Tabela nova separando comando de skill, conferida contra `.claude/commands/` e `.claude/skills/` |
+| 10 | `CLAUDE.md` omitia o serviço `createbuckets` do Compose | Incluído |
+| 11 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | **P-23** — é decisão de formato do João, não fato |
+| 12 | `app/Http/Controllers/Controller.php`, base de todos os controllers, fora da árvore documentada | Acrescentado |
+| 13-14 | `progress.md` "Entregue" com plano/spec fora de `archive/`; seção do item ativo no `state.md` desatualizada | Mecânica deste fechamento — resolvidas nos itens 8-10 do gate |
+
+**Confirmação inline (o subagente da rodada de confirmação foi cortado por limite de sessão; a skill
+permite rodar inline nesse caso):** tabela real do `Schema::create` vs. bullets do `der-fisico.md` só
+difere nas 5 de framework que o doc declara fora da contagem; 34 wrappers / 4 `forwardRef`; 19 ADRs
+batendo com o `README.md`; tabela de comandos batendo com `.claude/`; nenhum gatilho de
+`pendencias.md` vencido (as datas fixas são 2026-08-15, 2026-09-30 e 2026-10-31); zero arquivo de
+`backend/` ou `frontend/` tocado no bloco inteiro (`git diff --name-only 74e4a2d..HEAD`).

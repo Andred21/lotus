@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: hardening-doc-sync-sprint4
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-last_completed_work_item: bloco-alunos-modulo
-state_basis_commit: 74e4a2d
-active_spec: docs/superpowers/specs/2026-07-30-hardening-doc-sync-sprint4-design.md
-active_plan: docs/superpowers/plans/2026-07-30-hardening-doc-sync-sprint4.md
-context_packet: docs/superpowers/context-packets/hardening-doc-sync-sprint4.md
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+last_completed_work_item: hardening-doc-sync-sprint4
+state_basis_commit: 7aabe77
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
-context_packet_status: ready
+context_packet_status: null
 updated_at: 2026-07-30
 ---
 
@@ -50,77 +50,43 @@ updated_at: 2026-07-30
 - O backlog nunca promove trabalho automaticamente.
 
 
-## Item ativo — `hardening-doc-sync-sprint4`
+## Item ativo
 
-Promovido do backlog (item 1, "Hardening · H.1.3.1 — Sincronização de documentação e fontes
-canônicas") por decisão explícita do João em 2026-07-30. Escopo declarado no backlog: auditar
-código ↔ `/docs` ↔ Drive ↔ Notion, reconciliar divergências, identificar decisões sem proveniência
-ou sem ciência do João, atualizar a documentação interna, aplicar somente writes externos
-explicitamente autorizados, reexecutar a auditoria e registrar as pendências não resolvidas.
+Nenhum. `workflow_state: idle` — a próxima ação é o João escolher explicitamente um item de
+`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
 
-Bloco de documentação e proveniência, não de feature: o insumo principal é externo (Drive canônico,
-Notion, Figma) confrontado com o repositório, então o Context Packet é pré-requisito e vai pela
-rota Codex. `active_spec` e `active_plan` seguem `null` até o planejamento.
+## Último item fechado — 2026-07-30
 
-Packet `ready` em `context-packets/hardening-doc-sync-sprint4.md`, aceito de primeira: 5 fontes
-recuperadas (4 documentos do Drive canônico + a task H.1.3.1 no Notion), provenance conferida contra
-`git hash-object` local. Dois achados do packet importam para o planejamento: a task do Notion está
-sem critério de aceite, então o escopo do backlog é a definição mais completa que existe; e o Notion
-**responde** neste runtime, contra o que `.agents/skills/lotus-context-packet/SKILL.md` §External
-retrieval e o `AGENTS.md` §3 ainda afirmam — a própria doc de agentes é divergência a reconciliar
-neste bloco. Figma não foi consultado por decisão declarada (bloco não é de UI). Questão aberta
-não bloqueante: espelhar no Drive ADR-15 revisado, ADR-16/18/19, schema N:N e rota `/students`
-exige autorização explícita do João antes de qualquer write externo.
+`hardening-doc-sync-sprint4` — 14 tasks, `executor: claude`, bloco de documentação e proveniência
+(nenhum arquivo de `backend/` ou `frontend/` tocado no intervalo inteiro). Histórico em
+`progress.md`; decisões em `specs/archive/2026-07-30-hardening-doc-sync-sprint4-design.md` (D1–D12),
+passo a passo em `plans/archive/2026-07-30-hardening-doc-sync-sprint4.md`, packet em
+`context-packets/hardening-doc-sync-sprint4.md` (`ready`), relatório durável em
+`audits/2026-07-30-doc-sync-sprint4.md` (13 seções).
 
-Plano em `plans/2026-07-30-hardening-doc-sync-sprint4.md`: 14 tasks, `executor: claude`. Tasks 1–6
-levantam sem mudar nada, **Task 7 é portão humano** (nenhuma task de 8 a 13 começa sem a triagem
-commitada), Tasks 8–13 aplicam e a Task 14 prova reexecutando a auditoria. O Codex entra só na
-sondagem de escrita externa (Task 1) e, se ela provar capacidade, no write do Drive (Task 12), sempre
-sem tocar o repositório. O subagente `auditor-docs` roda nas Tasks 2 e 14.
-
-Revisão (`/revisar-sprint`, 2026-07-30, baixo risco — nenhum arquivo executável tocado): 6 achados,
-todos aprovados pelo João e fechados em `a9131be` e `993c1ff`, registrados na seção 12 do relatório
-de auditoria. Q-2 virou regra ("fonte externa se referencia por ID, nunca por nome de exibição") em
-`AGENTS.md` §3, na SKILL do packet e em `.claude/skills/auditar-docs`; Q-1 abriu **P-22** (H.1.3.1
-duplicada dentro da base Notion canônica). **Pendência de execução do fechamento — Q-4:** write
-autorizado para mover a página `3a2bc9603dfa803b94bbf27c075b27d6` de `Backlog` para `Concluída` no
-Notion, com releitura registrada na seção 10 do relatório. O `/fechar-sprint` não termina sem isso.
-
-Gatilhos vencidos que este bloco tende a encostar (hoje abertos em `docs/pendencias.md`): **P-04**
-(reavaliação dos guardrails após a Sprint 3), **P-06** (`der-fisico.md` ainda modela
-`turmas.redator_id` 1:N contra o pivot `turma_redator` N:N) e **P-14/P-15/P-16**, nascidas no
-fechamento do `bloco-alunos-modulo`. O que entra no escopo é decisão do planejamento, não deste
-arquivo.
-
-## Último item fechado — 2026-07-27
-
-`bloco-alunos-modulo` — 10 tasks (backend 1–5 pelo Codex, frontend 6–10 por Claude), executadas no
-main tree (P-03). Histórico da entrega em `progress.md`; decisões em
-`specs/archive/2026-07-27-bloco-alunos-modulo-design.md` (D1–D11), passo a passo em
-`plans/archive/2026-07-27-bloco-alunos-modulo.md`, packet em
-`context-packets/bloco-alunos-modulo.md` (`partial`), ledger fino em `.superpowers/sdd/progress.md`.
-
-Provas do gate de fechamento (contra a API real, Sanctum, banco restaurado ao final): criação
-gerando `User` inativo `type=aluno` + `current_client_id` + primeira linha de `student_client_logs`
-com `ended_on` nulo (DoD-1); RUT repetido em 422 com causa, sem associação silenciosa (DoD-2);
-edição de nome refletida no detalhe sem mexer no vínculo (DoD-3); detalhe do aluno 1 do seeder com
-vínculo atual, anterior fechado e turma com `approval_status` (DoD-4); os 4 endpoints em 403 para
-usuário sem permissão (DoD-6). 313 testes verdes, Pint limpo nos 23 arquivos PHP da sprint,
-`pnpm lint` e `pnpm build` verdes, `typescript:transform` sem drift no `generated.ts`.
+Provas do gate: os 2 writes de Notion reconfirmados por `notion-fetch` na base canônica
+`collection://e64b7d57-d000-4433-b652-a410e75193cc` — critério de aceite de H.1.3.1 preenchido e a
+própria task movida para `Concluída` (Q-4); 4 patches de Drive entregues, aplicação manual pendente
+do João (P-01/P-14/P-17); re-auditoria de fechamento com as 12 divergências de fato corrigidas e
+confirmação inline (tabelas do `Schema::create` vs. `der-fisico.md`, 34 wrappers / 4 `forwardRef`,
+19 ADRs, tabela de comandos vs. `.claude/`, nenhum gatilho vencido).
 
 O que o fechamento moveu, além do arquivamento:
 
-- **P-14, P-15 e P-16 nascem** em `docs/pendencias.md` — as três divergências declaradas na spec
-  (rota `students` vs. `alunos` do Drive; certificados fora da listagem e do detalhe até o Bloco 7;
-  `Redactores` continua sendo a primeira aba), cada uma com gatilho próprio.
-- **P-07 e P-12 saem** da tabela "Encerradas" — cumpriram a sprint de rastro.
-- O desalinhamento de RBAC entre `identity.user.*` e `commercial.client.view` **segue aberto no
-  backlog**, em "Débitos técnicos". Exige decisão do João sobre RBAC/spec; não é resolvível na UI.
+- **P-06 fecha** — `der-fisico.md` descreve o schema real de `turmas`/`turma_redator`/`enrollments`.
+- **P-17 a P-23 nascem** — patches de Drive pendentes, mislabel no Notion, `openspout` e
+  `simple-qrcode` sem ADR, **P-22** (H.1.3.1 duplicada dentro da base Notion canônica) e **P-23**
+  (formato do `progress.md`).
+- **Q-2 da revisão virou regra:** "fonte externa se referencia por ID, nunca por nome de exibição",
+  em `AGENTS.md` §3, na SKILL do packet e em `.claude/skills/auditar-docs`.
+- **P-11 sai** da tabela "Encerradas" — cumpriu a sprint de rastro.
 
-**Gatilhos vencidos que este bloco não resolveu** (seguem abertos em `docs/pendencias.md`, sem
-alteração silenciosa — os mesmos dois que o fechamento anterior reportou):
+**Lição que este bloco deixa, e que o próximo DoD de auditoria precisa respeitar:** a 4ª rodada do
+`auditor-docs` devolveu zero achados e a rodada do gate, horas depois, devolveu 14 — todas reais.
+"Re-auditoria limpa" é evidência sobre uma execução do subagente, não propriedade dos docs. DoD de
+auditoria se ancora em checagens verificáveis por comando, ou assume explicitamente que auditoria
+por agente é amostragem.
 
-- **P-04** — "reavaliar quando a Sprint 3 fechar"; a Sprint 3 fechou em 2026-07-23 e a reavaliação
-  dos guardrails (Pest Arch tests + eslint-boundaries) continua sem acontecer.
-- **P-06** — "doc-sync da Sprint 3"; `der-fisico.md` ainda modela `turmas.redator_id` como FK 1:N
-  contra o pivot `turma_redator` N:N implementado. Este bloco não tocou schema.
+**Gatilhos abertos que este bloco não resolveu** (em `docs/pendencias.md`, sem alteração silenciosa):
+**P-04** — guardrails das leis §5 (Pest Arch tests + `eslint-boundaries`) seguem sem existir; o
+gatilho vago virou data fixa, **2026-08-15**, e o item está em "Débitos técnicos" do backlog.
