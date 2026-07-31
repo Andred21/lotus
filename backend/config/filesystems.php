@@ -60,6 +60,29 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Mesmas credenciais do disco `s3`, só existe quando AWS_ENDPOINT_PUBLIC
+         * está definido (dev/MinIO). Usado exclusivamente por
+         * `UploadFileAction::publicDiskFor()` pra ASSINAR URLs de leitura contra
+         * um endpoint que o navegador alcança — nunca pra gravar/apagar. Em
+         * produção (sem hostname interno de container), esta chave não existe e
+         * `publicDiskFor()` cai de volta no disco `s3` normal.
+         */
+        ...(env('AWS_ENDPOINT_PUBLIC') ? [
+            's3_public' => [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET'),
+                'url' => env('AWS_URL'),
+                'endpoint' => env('AWS_ENDPOINT_PUBLIC'),
+                'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+                'throw' => false,
+                'report' => false,
+            ],
+        ] : []),
+
     ],
 
     /*

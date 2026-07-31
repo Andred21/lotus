@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -91,7 +92,14 @@ class UserPhotoService
         $this->deleteObject($old);
     }
 
-    /** URL pré-assinada temporária (ADR-11). `null` quando não há foto. */
+    /**
+     * URL pré-assinada temporária (ADR-11). `null` quando não há foto.
+     *
+     * Assina contra `UploadFileAction::publicDiskFor()`, não contra
+     * `$this->disk()` — mesmo motivo do `UploadFileAction::temporaryUrl()`
+     * (achado real 2026-07-31): o disco de escrita usa o hostname interno do
+     * Docker, inalcançável pelo navegador.
+     */
     public function urlFor(?string $path): ?string
     {
         if ($path === null) {
@@ -99,7 +107,7 @@ class UserPhotoService
         }
 
         /** @var FilesystemAdapter $storage */
-        $storage = Storage::disk($this->disk());
+        $storage = Storage::disk(UploadFileAction::publicDiskFor($this->disk()));
 
         return $storage->temporaryUrl($path, now()->addMinutes(self::URL_MINUTES));
     }

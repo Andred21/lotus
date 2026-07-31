@@ -34,4 +34,24 @@ class UploadFileActionTest extends TestCase
         ]);
         $this->assertSame('redator', $file->fileable_type);
     }
+
+    /**
+     * Achado real (2026-07-31): `AWS_ENDPOINT` precisa apontar pro hostname
+     * interno do Docker (`minio`) pra escrita real funcionar de dentro do
+     * container, mas uma URL pré-assinada com esse host não é alcançável
+     * pelo navegador. `publicDiskFor()` resolve isso escolhendo, só pra
+     * ASSINAR a URL de leitura, o disco `{disco}_public` quando ele existir
+     * na config — nunca usado para put/delete.
+     */
+    public function test_public_disk_for_usa_variante_public_quando_configurada(): void
+    {
+        config(['filesystems.disks.s3_public' => ['driver' => 'local', 'root' => sys_get_temp_dir()]]);
+
+        $this->assertSame('s3_public', UploadFileAction::publicDiskFor('s3'));
+    }
+
+    public function test_public_disk_for_cai_no_mesmo_disco_sem_variante_public(): void
+    {
+        $this->assertSame('local', UploadFileAction::publicDiskFor('local'));
+    }
 }
