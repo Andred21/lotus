@@ -2,10 +2,10 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-debitos-integridade
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: run_planejar_bloco
-active_spec: null
+next_action: write_plan
+active_spec: docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -48,11 +48,12 @@ updated_at: 2026-08-01T16:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_planning`
+## Estado atual — `planning`
 
 `hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
 pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
-contra o código real. Próxima ação: `/planejar-bloco`.
+contra o código real. Spec aprovada e escrita (D1–D9); próxima ação: escrever o plano de
+implementação. Não implementar antes do plano.
 
 **Escopo fechado (6 itens).** Correção e peso legal:
 
