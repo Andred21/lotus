@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: cards-relacao-curso-redator
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-01-cards-relacao-curso-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-01-cards-relacao-curso-redator.md
 context_packet: null
