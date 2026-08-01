@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: cards-relacao-curso-redator
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-01-cards-relacao-curso-redator-design.md
-active_plan: docs/superpowers/plans/2026-08-01-cards-relacao-curso-redator.md
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: foto-avatar-e-contatos-cliente
+last_completed_work_item: cards-relacao-curso-redator
 state_basis_commit: 8e200b3
-updated_at: 2026-08-01T14:30:00-03:00
+updated_at: 2026-08-01T15:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,28 +48,58 @@ updated_at: 2026-08-01T14:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `idle`
 
-`cards-relacao-curso-redator` — executado em worktree (`using-git-worktrees` +
-`subagent-driven-development`), 10 tasks de conteúdo + Task 11 (gate). Todas as 10 revisadas por
-subagente reviewer com verdict Approved (spec compliance + qualidade), review-package por task.
-Achado operacional: o Step 1 da Task 2 tinha um `cd /home/jvbat/projetos/lotus` absoluto herdado do
-plano (escrito antes do worktree existir) — o implementador seguiu literalmente e comitou
-`redatorStatus` no `main` em vez do worktree. Corrigido por decisão do João: cherry-pick do commit
-para o branch do worktree + `git reset --hard` do `main` de volta ao commit do plano (árvore do main
-estava limpa, nada perdido). Dispatches seguintes reescreveram os caminhos para o worktree.
-
-Gate da Task 11: `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado); os 3 greps da
-lei §5.6 (import cruzado `catalog`↔`identity`, `primereact` direto em feature) sem saída; `pnpm
-build` + `pnpm lint` verdes; suíte backend 347 passed (1083 assertions) como regressão, nenhum
-arquivo de `backend/` tocado. Prova visual do João aceita nos 6 critérios comportamentais do DoD
-(spec §7), dois temas, 1400px e 768px.
-
-Ledger de execução: `.superpowers/sdd/progress.md` (task a task, dentro do worktree).
-
-Próxima ação: solicitar review do bloco (não iniciada automaticamente por este comando).
+Nenhum work item ativo. Próxima ação: o João escolher explicitamente um item de
+`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
 
 ## Último item fechado — 2026-08-01
+
+`cards-relacao-curso-redator` — bloco 100% frontend, zero arquivo de `backend/` tocado (D1).
+Executado em worktree (`using-git-worktrees` + `subagent-driven-development`), 10 tasks de conteúdo
++ Task 11 (gate). Commits `00381cb`..`8e200b3`.
+
+**Entrega:** substitui as duas representações textuais mais pobres das telas — checkbox+nome em
+`RedatorDialog`, `<div>{r.name}</div>` em `CourseDialog` — por `AppSelectableCard` (novo primitivo
+em `shared/ui`) com conteúdo de feature: `RedatorCard` (avatar, RUT, tag de idoneidade) em
+`catalog`, `CourseCard` (carga horária contratada, contagem de módulos) em `identity`.
+`redatorStatus.ts` sobe de `features/identity/lib` para `shared/lib` (D2) — só assim `catalog`
+consegue pintar a idoneidade sem importar `identity` (lei §5.6). Botão-olho do `CourseDialog` não
+abre `RedatorDialog` direto (importaria outra feature); navega para `/personas?redator=<id>` e
+`PeoplePage` resolve o deep link com `openViewById` novo em `useCrudPage`, lendo o parâmetro pelo
+padrão "adjust state during render" da casa (nunca `useEffect` com `setState`) — primeiro caso
+concreto do FUT-2 registrado no backlog. Ordem dos cursos no `edit` do redator congela na abertura
+(`useEnabledFirstCourses`, D9): reordenar a cada toggle faria o card clicado saltar sob o ponteiro.
+Falha de GET nas duas seções deixa de se disfarçar de lista vazia (D11) — antes, `?? []` fazia um
+403 por falta de `identity.user.view` virar "sem redatores habilitados" num curso que tem três;
+agora distingue loading/erro-com-Reintentar/vazio de verdade.
+
+**Achado operacional durante a execução:** o Step 1 da Task 2 tinha um `cd /home/jvbat/projetos/lotus`
+absoluto herdado do plano (escrito antes do worktree existir) — o implementador seguiu literalmente
+e comitou `redatorStatus` no `main` em vez do worktree. Corrigido por decisão do João: cherry-pick
+do commit para o branch do worktree + `git reset --hard` do `main` de volta ao commit do plano
+(árvore do main estava limpa, nada perdido). Dispatches seguintes reescreveram os caminhos para o
+worktree.
+
+**Review (baixo risco — sem migration/RBAC novo/`generated.ts`, só Claude, sem segunda lente do
+Codex):** zero achado sobrevivente. Órfãos: nenhum. i18n paritário nas 3 locales. Greps da lei §5.6
+(import cruzado `catalog`↔`identity`, `primereact` direto em feature) sem saída.
+
+**Gate de fechamento:** `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado);
+suíte backend 347 passed (1083 assertions) como regressão; `pnpm build` + `pnpm lint` verdes.
+Prova visual do João aceita nos 6 critérios comportamentais do DoD (spec §7), dois temas, 1400px e
+768px.
+
+Arquivado: `plans/archive/2026-08-01-cards-relacao-curso-redator.md` ·
+`specs/archive/2026-08-01-cards-relacao-curso-redator-design.md` (sem context packet — o João deu
+as 3 imagens de referência direto na sessão de planejamento).
+
+**Aberto, registrado, não resolvido:** o acoplamento RBAC entre `catalog` e `identity` (D11 só
+removeu a mentira da UI, não fechou o acoplamento — mesma classe do item "Alunos · o dropdown de
+empresa depende de uma permissão de outro módulo" no `backlog.md`); FUT-2 no caso geral (D8 resolve
+só o caso concreto do botão-olho).
+
+## Penúltimo item fechado — 2026-08-01
 
 `foto-avatar-e-contatos-cliente` — bloco único juntando os itens 1 e 2 do backlog por decisão do
 João. Spec de 15 decisões (D1–D15), plano de 12 tasks; Parte A (backend, Tasks 1–4) pelo Codex,
@@ -123,45 +153,4 @@ commitado) e, no `backlog.md`, Q-5 (check-then-act sem lock no mínimo de contat
 severidade declarada com a segunda lente) e Q-6 (idioma das mensagens de `ValidationException`
 inconsistente no repo, pré-existente).
 
-## Penúltimo item fechado — 2026-07-31
-
-`hardening-upload-visualizacao-arquivos` — 11 tasks, execução em 2 partes: Tasks 1–4
-(infra+backend) pelo Codex, Tasks 5–10 (frontend) por Claude, ambas com
-`subagent-driven-development`. Commits `dfadb0c`..`f271c12` (execução), `faf7c78` (fix de review),
-`8a592f1` (transição pós-review).
-
-**Entrega:** o erro reportado como CORS era `client_max_body_size` de 1 MB (default do nginx)
-cortando o upload antes do Laravel — as 4 camadas (nginx/PHP/Laravel/frontend) discordavam de
-teto. Nginx e PHP sobem para 12 MB de transporte (folga de multipart, D2); o `max:10240` (10 MB)
-dos 5 controllers, já existente, passa a ser sempre quem rejeita, com envelope RFC 7807 e header
-CORS. `TurmaDocumentData` e `RedatorDocumentData` sobem ao núcleo comum de `FileData` (`mime`,
-`size`/`created_at`, `download_url`) — a turma ganhou download, que não tinha. `shared/ui` ganha
-`AppFileRow` + `AppFilePreviewDialog` (imagem/PDF inline, fallback explícito nos demais tipos —
-D9), adotados pelos 4 consumidores; `AppFileUpload` barra arquivo acima do teto antes da
-requisição (D4). Um achado de review virou decisão do João: a Task 9 só colara um botão de
-preview em vez de adotar `AppFileRow` — corrigido por completo (`474f97d`).
-
-**Review de alto risco** (Codex tocou infra+backend na Parte A): segunda lente via
-`mcp__codex__codex` (read-only) sobre `dfadb0c..f271c12` encontrou 1 achado real —
-`UploadSizeLimitTest` só cobria cotação e orçamento, sem regressão do teto de 10 MB em redator,
-turma e import de matrícula (D11). João aprovou a correção; fix em `faf7c78` (3 casos novos,
-suíte 321 passed).
-
-**DoD provado contra API real, sessão Sanctum autenticada:** 5 MB → `201`; 11 MB →
-`422 application/problem+json` com `detail: "El campo file no debe ser mayor que 10240
-kilobytes."` (nunca `413` opaco, header CORS presente); `GET /api/turmas/1/documents` expõe
-`mime`+`download_url`; `GET /api/redatores/1` expõe `mime`+`size`+`created_at` nos documentos.
-Suíte 321 passed, `pnpm build`+`pnpm lint` verdes, Pint limpo. Prova visual do João (preview de
-imagem, preview de PDF, fallback `.docx`, upload de 3 MB) aprovada nos 4 consumidores
-(orçamento, cotação, turma, redator).
-
-Arquivado: `plans/archive/2026-07-31-hardening-upload-visualizacao-arquivos.md` ·
-`specs/archive/2026-07-31-hardening-upload-visualizacao-arquivos-design.md` ·
-`context-packets/hardening-upload-visualizacao-arquivos.md` (`partial`, não bloqueante — as 4
-imagens de referência eram caller-held, o João as forneceu na sessão de planejamento).
 Histórico completo: `docs/superpowers/progress.md`.
-
-**Gatilhos abertos que este bloco não resolveu** (fora de escopo por decisão da spec, sem
-alteração silenciosa): autorização/RBAC dos endpoints de arquivo; política de retenção documental
-(P-02); débito do arquivo órfão no MinIO em rollback de transação (pré-existente, backlog);
-código próprio de turma (P-13); URL pré-assinada/ADR-11 (nenhuma mudança de modelo).
