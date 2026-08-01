@@ -7,23 +7,7 @@
 
 ## Próximos blocos
 
-1. **Identidade visual · Foto e avatar das entidades derivadas de User**
-   — Expor `photo_url` nos contratos de User, Client, Redator e Student; padronizar
-   a primeira coluna das respectivas tabelas com `AppAvatar`; criar componente
-   compartilhado de foto no corpo dos dialogs, com visualização, seleção,
-   substituição e remoção. Sem foto ou com imagem indisponível, exibir as duas
-   iniciais do nome. Remover o avatar do header do StudentDialog.
-   Imagens de referência: `alumnos-exemplo-avatar`,
-   `client-no-component-photo`, `redator-no-component-photo`,
-   `alumnos-component-wrong-photo`.
-
-2. **Comercial · Refinamento dos contatos do cliente**
-   — Reestruturar `ContactFields` em cards responsivos com labels explícitas,
-   melhor proximidade visual, indicação de contato principal e ação de exclusão.
-   Adicionar `removeContact` ao hook e preservar a semântica replace-total do
-   backend e a exibição dos erros nested.
-
-3. **Catálogo e Personas · Cards da relação Curso ↔ Redator**
+1. **Catálogo e Personas · Cards da relação Curso ↔ Redator**
    — Substituir representações textuais simples por cards. No curso, mostrar
    foto, nome, RUT e idoneidade dos redatores habilitados. No redator, mostrar
    cursos habilitados com nome, carga horária e quantidade de módulos; em edição,
@@ -32,15 +16,15 @@
    Imagens de referência: `courses-redator`,
    `prototipo-redator-dialog-course`, `redator-courses`. 
 
-4. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-5. **Bloco 7 · Sprint 4 · Certificação**
+3. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-6. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -65,6 +49,17 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Q-5 — check-then-act sem lock no mínimo de contatos.** `DeleteClientContactAction.php:22`: `count()`
+  e `delete()` fora de transação; duas exclusões concorrentes leem 2 contatos e apagam os 2, deixando o
+  cliente sem nenhum. Achado 🟢 do segundo `/revisar-sprint` de `foto-avatar-e-contatos-cliente`
+  (2026-08-01), deferido pelo João por proporcionalidade (~10 usuários internos, baixa concorrência).
+  Saída: `DB::transaction` + `lockForUpdate()` na contagem. **Divergência declarada:** a segunda lente
+  (Codex) classificou mais alto que 🟢.
+- **Q-6 — idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial escreve em
+  PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`)
+  — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;
+  levantado no segundo review (2026-08-01) porque o 422 novo de contatos tem uma única mensagem e ela é
+  a que o cliente vê. Exige decisão do João sobre o idioma canônico antes de valer a pena unificar.
 - **Guardrail das leis §5 (P-04).** Leis invioláveis hoje são instrução em `CLAUDE.md`, não mecanismo
   — "lei que precisa valer sempre quer Arch test ou hook, não parágrafo" (lição 14). Instalar Pest
   Arch tests cobrindo DDD-lite/sem-Repository, auditoria só na aplicação e demais leis testáveis no
