@@ -2,9 +2,13 @@
 
 namespace Tests\Feature\Comercial;
 
+use App\Domains\Commercial\Actions\DeleteClientContactAction;
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
@@ -119,5 +123,33 @@ class ClientContactMinimumTest extends TestCase
         $this->deleteJson("/api/contacts/{$segundo->id}")->assertNoContent();
 
         $this->assertSame(1, $client->contacts()->count());
+    }
+
+    /**
+     * Q-5. A suíte roda sqlite `:memory:`, onde `lockForUpdate()` é no-op —
+     * este teste NÃO prova serialização. Prova o que dá para provar aqui: que
+     * a contagem e o delete acontecem dentro de uma transação, que é a
+     * condição sem a qual o lock não teria efeito nem em MySQL. A serialização
+     * real é provada à mão contra MySQL no gate de fechamento.
+     */
+    public function test_exclusao_roda_dentro_de_transacao(): void
+    {
+        $client = $this->client();
+        $client->contacts()->create(['name' => 'Bruno']);
+        $client->contacts()->create(['name' => 'Carla']);
+        $alvo = $client->contacts()->where('name', 'Carla')->firstOrFail();
+
+        $niveis = [];
+        Event::listen('eloquent.deleting: '.ClientContact::class, function () use (&$niveis): void {
+            $niveis[] = DB::transactionLevel();
+        });
+
+        app(DeleteClientContactAction::class)->execute($alvo);
+
+        $this->assertNotEmpty($niveis, 'o evento de delete não disparou');
+        // 2, não 1: o `RefreshDatabase` já mantém uma transação aberta durante
+        // o teste inteiro. Asserir `> 0` passaria sem o Action abrir transação
+        // nenhuma — mediria o RefreshDatabase, não o código sob teste.
+        $this->assertSame(2, $niveis[0], 'o delete não abriu transação própria sobre a do RefreshDatabase');
     }
 }
