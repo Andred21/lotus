@@ -112,7 +112,15 @@ class UploadFileAction
         $disk ??= config('filesystems.default');
 
         try {
-            Storage::disk($disk)->delete($path);
+            // `delete()` devolve `false` em vez de lançar quando o disco não
+            // apaga o objeto — mesmo modo silencioso do `false` de `putFile()`
+            // (D2). Sem checar o retorno, o órfão fica sem qualquer rastro.
+            if (Storage::disk($disk)->delete($path) === false) {
+                Log::warning('Falha ao descartar objeto órfão de upload', [
+                    'path' => $path,
+                    'disk' => $disk,
+                ]);
+            }
         } catch (Throwable $e) {
             Log::warning('Falha ao descartar objeto órfão de upload', [
                 'path' => $path,

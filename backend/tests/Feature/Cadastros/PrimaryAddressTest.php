@@ -3,6 +3,8 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Models\ClientAddress;
+use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -75,5 +77,93 @@ class PrimaryAddressTest extends TestCase
 
         $this->assertDatabaseHas('client_addresses', ['commune' => 'Providencia', 'is_primary' => true]);
         $this->assertDatabaseHas('client_addresses', ['commune' => 'Ñuñoa', 'is_primary' => false]);
+    }
+
+    private function makeClientWithPrimary(): Client
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
+        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
+
+        return $client;
+    }
+
+    /**
+     * A rota nested de endereço (`ClientAddressController`) já existia antes
+     * deste serviço (`5bc1d87`) — sem passar por `PrimaryAddressService`, um
+     * POST aqui deixava dois endereços principais. Achado no review do bloco.
+     */
+    public function test_rota_nested_marcar_novo_principal_desmarca_o_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+
+        $this->postJson("/api/clients/{$client->id}/addresses", [
+            'commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => true,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Providencia', 'is_primary' => false]);
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Las Condes', 'is_primary' => true]);
+    }
+
+    public function test_rota_nested_update_marcando_principal_desmarca_o_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+        $b = $client->addresses()->create(['commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => false]);
+
+        $this->putJson("/api/addresses/{$b->id}", [
+            'commune' => 'Las Condes', 'is_primary' => true,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Providencia', 'is_primary' => false]);
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Las Condes', 'is_primary' => true]);
+    }
+
+    public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
+    {
+        $client = $this->makeClientWithPrimary();
+        $a = $client->addresses()->firstOrFail();
+
+        $this->putJson("/api/addresses/{$a->id}", [
+            'commune' => 'Providencia', 'is_primary' => false,
+        ])->assertOk();
+
+        $this->assertSame(0, ClientAddress::where('client_id', $client->id)
+            ->where('is_primary', true)
+            ->count());
+    }
+
+    /**
+     * A (id menor, não principal) e B (id maior, principal). Promover A
+     * explicitamente tem que prevalecer sobre o "último por id" (que seria
+     * B) — senão o serviço desmarcaria o endereço que o caller acabou de
+     * pedir para promover.
+     */
+    public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
+        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $a = $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => false]);
+        $b = $client->addresses()->create(['commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => true]);
+
+        $this->putJson("/api/addresses/{$a->id}", [
+            'commune' => 'Providencia', 'is_primary' => true,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('client_addresses', ['id' => $a->id, 'is_primary' => true]);
+        $this->assertDatabaseHas('client_addresses', ['id' => $b->id, 'is_primary' => false]);
+    }
+
+    public function test_rota_nested_endereco_novo_nao_principal_nao_mexe_no_anterior(): void
+    {
+        $client = $this->makeClientWithPrimary();
+
+        $this->postJson("/api/clients/{$client->id}/addresses", [
+            'commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => false,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Providencia', 'is_primary' => true]);
+        $this->assertDatabaseHas('client_addresses', ['commune' => 'Las Condes', 'is_primary' => false]);
     }
 }

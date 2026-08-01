@@ -8,6 +8,7 @@ use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
 use RuntimeException;
@@ -141,5 +142,26 @@ class UploadFileActionTest extends TestCase
         app(UploadFileAction::class)->discard('redator/1/fake.pdf', 's3');
 
         $this->assertTrue(true); // não lançou
+    }
+
+    /**
+     * `delete()` devolve `false` em vez de lançar quando o disco não apaga o
+     * objeto — mesmo modo silencioso do `false` de `putFile()` (D2). Sem
+     * checar o retorno, o órfão ficava sem qualquer rastro de log. Achado no
+     * review do bloco.
+     */
+    public function test_discard_loga_quando_o_disco_devolve_false(): void
+    {
+        Log::shouldReceive('warning')
+            ->once()
+            ->with('Falha ao descartar objeto órfão de upload', Mockery::on(
+                fn (array $context) => $context['path'] === 'redator/1/fake.pdf' && $context['disk'] === 's3',
+            ));
+
+        $disk = Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('delete')->once()->andReturn(false);
+        Storage::shouldReceive('disk')->with('s3')->andReturn($disk);
+
+        app(UploadFileAction::class)->discard('redator/1/fake.pdf', 's3');
     }
 }
