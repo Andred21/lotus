@@ -45,6 +45,10 @@ export function useCrudPage<T extends { id?: number }>(resource: ListableResourc
     dialog: dialog ? { mode: dialog.mode, entity } : null,
     openCreate: () => setDialog({ mode: 'create', id: null }),
     openView: (item: T) => setDialog({ mode: 'view', id: item.id ?? null }),
+    /** Abre `view` a partir de um id solto (deep link vindo de outro módulo).
+     * A entidade continua derivada da lista viva, então ela chega sozinha
+     * quando o GET terminar — não há objeto para congelar aqui. */
+    openViewById: (id: number) => setDialog({ mode: 'view', id }),
     /** view -> edit, preservando a entidade aberta. Nunca entra em edit sem entidade. */
     startEdit: () => setDialog((d) => (d && d.id != null ? { ...d, mode: 'edit' } : d)),
     close: () => setDialog(null),
