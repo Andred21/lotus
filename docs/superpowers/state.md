@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: cards-relacao-curso-redator
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-01-cards-relacao-curso-redator-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-01-cards-relacao-curso-redator.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: foto-avatar-e-contatos-cliente
-state_basis_commit: 8702408
-updated_at: 2026-08-01T12:00:00-03:00
+state_basis_commit: f80dcdb
+updated_at: 2026-08-01T13:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,16 +48,20 @@ updated_at: 2026-08-01T12:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `planning`
+## Estado atual — `ready_for_execution`
 
 `cards-relacao-curso-redator` — item 1 do `backlog.md`, promovido por seleção explícita do João em
 2026-08-01. Sem Context Packet por decisão do João: as 3 imagens de referência (`courses-redator`,
 `prototipo-redator-dialog-course`, `redator-courses`) foram fornecidas direto na sessão e o restante
 do contexto está no repositório.
 
-Spec aprovada em `specs/2026-08-01-cards-relacao-curso-redator-design.md` (12 decisões). Bloco 100%
-frontend: os dois endpoints já entregam todos os campos dos cards. Próxima ação: escrever o plano
-com `writing-plans`.
+Spec aprovada (12 decisões) e plano escrito (11 tasks, `executor: claude`). Bloco 100% frontend: os
+dois endpoints já entregam todos os campos dos cards, então nenhum arquivo de `backend/` é tocado —
+a Task 11 prova isso por `git diff --name-only`. Duas decisões estruturais: D2 move
+`redatorStatus.ts` para `shared/lib` (senão `catalog` importaria `identity`, lei §5.6) e D8 resolve
+o botão "ver redator" por navegação para `/personas?redator=<id>`, não por diálogo importado.
+
+Próxima ação: `/executar-bloco cards-relacao-curso-redator`.
 
 ## Último item fechado — 2026-08-01
 
