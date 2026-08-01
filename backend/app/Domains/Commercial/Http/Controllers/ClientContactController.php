@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\CreateClientContactAction;
+use App\Domains\Commercial\Actions\DeleteClientContactAction;
 use App\Domains\Commercial\Actions\UpdateClientContactAction;
 use App\Domains\Commercial\Data\ClientContactData;
 use App\Domains\Commercial\Models\Client;
@@ -22,9 +23,9 @@ class ClientContactController extends Controller
         return ClientContactData::from($action->execute($contact, $data));
     }
 
-    public function destroy(ClientContact $contact): Response
+    public function destroy(ClientContact $contact, DeleteClientContactAction $action): Response
     {
-        $contact->delete();
+        $action->execute($contact);
 
         return response()->noContent();
     }

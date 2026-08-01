@@ -49,6 +49,7 @@ export function StaffUserDialog({
       onEdit={canManage ? onEdit : undefined}
       onSubmit={submit}
       pending={pending}
+      closeBlocked={pending || photo.pending}
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
@@ -65,7 +66,7 @@ export function StaffUserDialog({
           onSelect={photo.onSelect}
           onRemove={photo.onRemove}
           onSizeReject={photo.onSizeReject}
-          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+          onRetry={photo.onRetry}
         />
 
         <FormSection title={t('admin.sectionUser')} />

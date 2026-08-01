@@ -58,6 +58,7 @@ export function StudentDialog({
       onSubmit={submit}
       pending={pending}
       disabled={clientsUnusable}
+      closeBlocked={pending || photo.pending}
       submitLabel={mode === 'create' ? t('student.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
@@ -73,7 +74,7 @@ export function StudentDialog({
           onSelect={photo.onSelect}
           onRemove={photo.onRemove}
           onSizeReject={photo.onSizeReject}
-          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+          onRetry={photo.onRetry}
         />
 
         <FormSection title={t('student.sectionPersonal')} />

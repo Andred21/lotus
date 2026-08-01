@@ -12,7 +12,7 @@ import type { DialogMode } from '@shared/lib'
  * só com título e conteúdo contextual (`headerExtra`).
  */
 export function CrudDialog({
-  visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, submitLabel, headerExtra, children,
+  visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
 }: {
   visible: boolean
   mode: DialogMode
@@ -24,6 +24,12 @@ export function CrudDialog({
   /** Desabilita o botão salvar sem mexer no loading (ex.: dependência externa
    * que ainda não carregou, como a lista de clientes do create de aluno). */
   disabled?: boolean
+  /** Fecha as TRÊS saídas do diálogo (Cancelar/Fechar, X do header, ESC)
+   * enquanto uma escrita em voo não pode ser abandonada — hoje, o upload da
+   * foto bufferizada logo depois do `201` do create. Fechar nessa janela
+   * descartaria a foto em silêncio: a entidade já existe, mas o arquivo nunca
+   * chega, e o diálogo some antes de qualquer banner de erro. */
+  closeBlocked?: boolean
   submitLabel?: string
   headerExtra?: ReactNode
   children: ReactNode
@@ -40,12 +46,12 @@ export function CrudDialog({
   const footer =
     mode === 'view' ? (
       <div className="flex justify-end gap-2">
-        <AppButton label={t('common.close')} text onClick={onHide} />
+        <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={onHide} />
         {onEdit && <AppButton variant="brandIcon" label={t('common.edit')} icon="pi pi-pencil" onClick={onEdit} />}
       </div>
     ) : (
       <div className="flex justify-end gap-2">
-        <AppButton label={t('common.cancel')} text onClick={onHide} />
+        <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={onHide} />
         <AppButton
           variant="brandIcon"
           label={submitLabel ?? t('common.save')}
@@ -58,7 +64,14 @@ export function CrudDialog({
     )
 
   return (
-    <AppDialog header={header} visible={visible} onHide={onHide} footer={footer}>
+    <AppDialog
+      header={header}
+      visible={visible}
+      onHide={onHide}
+      closable={!closeBlocked}
+      closeOnEscape={!closeBlocked}
+      footer={footer}
+    >
       {children}
     </AppDialog>
   )

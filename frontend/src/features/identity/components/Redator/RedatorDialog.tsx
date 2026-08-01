@@ -75,6 +75,7 @@ export function RedatorDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      closeBlocked={pending || photo.pending}
       submitLabel={mode === 'create' ? t('redator.create') : undefined}
       headerExtra={
         mode !== 'create' && redator ? (
@@ -98,7 +99,7 @@ export function RedatorDialog({
           onSelect={photo.onSelect}
           onRemove={photo.onRemove}
           onSizeReject={photo.onSizeReject}
-          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+          onRetry={photo.onRetry}
         />
 
         <FormSection title={t('redator.sectionUser')} />

@@ -69,7 +69,25 @@ export function useClientForm(
   function submit() {
     // Empresa não tem nome separado da razón social: `name` (exigido pelo backend
     // para o `users.name` do login provisionado) é sempre igual a `legal_name`.
-    const payload = { ...form, name: form.legal_name }
+    //
+    // Campos LISTADOS, não `...form`: `photo_url` é `#[Computed]` e não tem o
+    // que fazer num payload de escrita — hoje o backend o ignora (a promoção
+    // no construtor do `ClientData` desvia do `CannotSetComputedValue`, medido
+    // em 2026-08-01: PUT com `photo_url` devolve 200), mas mandar campo de
+    // saída no corpo da escrita depende desse detalhe do pacote para não
+    // virar 500. Os outros 3 forms já montam o payload explícito.
+    const payload = {
+      id: form.id,
+      name: form.legal_name,
+      legal_name: form.legal_name,
+      rut: form.rut,
+      email: form.email,
+      phone: form.phone,
+      type: form.type,
+      business_activity: form.business_activity,
+      addresses: form.addresses,
+      contacts: form.contacts,
+    }
     if (mode === 'create') {
       create.mutate(payload, {
         onSuccess: async (created) => {

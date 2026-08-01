@@ -8,6 +8,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 /**
@@ -123,6 +124,45 @@ class UserPhotoTest extends TestCase
             'auditable_id' => $user->id,
             'event' => 'updated',
         ]);
+
+        // O registro existir não basta: `$auditInclude` filtra o diff, então
+        // um `photo_path` fora da lista gera um audit de `new_values` VAZIO —
+        // sabe-se que algo mudou, não O QUE mudou. Num domínio com peso legal,
+        // "trocou a foto" sem dizer qual objeto foi desvinculado não é rastro.
+        $audit = $user->audits()->latest('id')->first();
+        $this->assertArrayHasKey('photo_path', $audit->new_values);
+        $this->assertSame($user->refresh()->photo_path, $audit->new_values['photo_path']);
+    }
+
+    /**
+     * `/api/users/{user}/photo` é a rota de foto do STAFF, sob
+     * `identity.user.update`. Sem a guarda de `type`, quem administra staff
+     * alcança a foto de cliente/aluno/redator por ela, driblando a permissão
+     * do módulo dono (`commercial.client.update` etc.) — exatamente o
+     * acoplamento RBAC cross-módulo que a spec D1 evita ao ter 4 controllers.
+     * `UserController::show/update/destroy` já usa a mesma guarda.
+     */
+    public function test_rota_de_foto_do_staff_recusa_user_que_nao_e_admin(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $clientUser = User::factory()->create([
+            'type' => 'cliente',
+            'is_active' => false,
+            'rut' => '12.345.688-2',
+        ]);
+        $clientUser->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+        app(UserPhotoService::class)->store($clientUser, UploadedFile::fake()->image('logo.png'));
+        $path = $clientUser->refresh()->photo_path;
+
+        $this->post("/api/users/{$clientUser->id}/photo", [
+            'photo' => UploadedFile::fake()->image('outra.png'),
+        ])->assertNotFound();
+
+        $this->deleteJson("/api/users/{$clientUser->id}/photo")->assertNotFound();
+
+        $this->assertSame($path, $clientUser->refresh()->photo_path);
     }
 
     public function test_post_photo_do_usuario_devolve_204_e_grava(): void
@@ -338,17 +378,24 @@ class UserPhotoTest extends TestCase
         $leafDir = dirname(Storage::disk('s3')->path($old));
         chmod($leafDir, 0555);
 
+        // A exceção é capturada À MÃO, não por `expectException`: com
+        // `expectException`, a exceção sai do método de teste e as asserções
+        // abaixo — que são as que provam a garantia real — nunca rodam, mas o
+        // teste passa mesmo assim.
         try {
-            $this->expectException(\RuntimeException::class);
-            $this->expectExceptionMessage('Falha ao gravar a foto');
-
             $service->store($user, UploadedFile::fake()->image('segunda.png'));
+            $this->fail('store() deveria abortar quando a escrita no disco falha');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('Falha ao gravar a foto', $e->getMessage());
         } finally {
             chmod($leafDir, 0755);
         }
 
         $user->refresh();
         $this->assertSame($old, $user->photo_path, 'photo_path não pode corromper numa falha de upload');
-        $storage->assertExists($old, 'o objeto antigo não pode ser apagado se o novo nunca chegou a existir');
+        // Sem mensagem: o 2º argumento de `assertExists` é o CONTEÚDO esperado
+        // do arquivo, não uma descrição — passar texto aqui compara o texto com
+        // os bytes do PNG e reprova por motivo errado.
+        $storage->assertExists($old);
     }
 }

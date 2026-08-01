@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: reviewing
+next_owner: joao
+next_action: prove_review_fixes_visually
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
 state_basis_commit: 1544143
-updated_at: 2026-07-31T21:05:00-03:00
+updated_at: 2026-08-01T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,49 @@ updated_at: 2026-07-31T21:05:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `reviewing`
 
-Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Próxima ação: solicitar
-code review do bloco (segunda lente independente sobre a Parte A é obrigatória — ver abaixo).
+Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Review executado (duas
+lentes: Claude linha a linha + `mcp__codex__codex` read-only sobre `4dfe3a9..b6dc068`), 7 achados
+levantados, decisão do João tomada em 2026-08-01. Próxima ação: prova visual dos fixes pelo João;
+depois disso, repetir o review sobre a rodada de correção e transicionar para `ready_for_closure`.
+
+### Rodada de correção do review — 2026-08-01
+
+Aprovado pelo João: corrigir Q1–Q6, aceitar Q7 como débito, e fechar o achado aberto da Task 9.
+
+- **Q1 (`useClientForm` espalhava `photo_url` no payload) — FALSO POSITIVO, corrigido no relatório.**
+  A segunda lente leu `DataFromArrayResolver` no vendor e concluiu 500 por `CannotSetComputedValue`;
+  medido de verdade, o PUT com `photo_url` devolve **200**. O resolver desvia antes do throw quando a
+  propriedade é promovida no construtor (`$property->isPromoted` → `continue`), que é o caso de
+  `ClientData::$photo_url`. O payload passou a ser montado campo a campo mesmo assim (padrão dos
+  outros 3 forms, não depender desse detalhe do pacote), mas **não existia o bug de golden path
+  descrito** — nenhum edit de cliente com foto quebrava.
+- **Q2 (mínimo de 1 contato não valia na rota nested) — corrigido.** Novo
+  `DeleteClientContactAction` (mesma forma de `Create/UpdateClientContactAction`) recusa com `422`
+  quando sobraria zero contato; `ClientContactController::destroy` passou a delegar.
+- **Q3 (retry sem botão fora do caminho pós-create) — corrigido.** O gate saiu dos 4 diálogos
+  (`onRetry={photo.onRetry}`) e desceu para `useEntityPhoto`, que devolve `onRetry: undefined`
+  quando não há o que reenviar — assim o botão também não aparece no erro de TAMANHO, onde clicar
+  não faria nada (efeito colateral que a correção ingênua nos chamadores teria criado).
+- **Q4 (rota de foto do staff aceitava qualquer User) — corrigido.**
+  `abort_unless($user->type === 'admin', 404)` no `UserPhotoController`, mesma guarda de
+  `UserController::show/update/destroy`.
+- **Q5 (`photo_path` fora de `$auditInclude`) — corrigido.** Sem ele o audit existia com
+  `new_values` vazio: registrava que algo mudou, nunca qual objeto foi desvinculado.
+- **Q6 (asserções inalcançáveis no teste de regressão crítico) — corrigido.** `expectException`
+  trocado por `try/fail/catch`, e a asserção que agora roda revelou um segundo defeito no mesmo
+  teste: `assertExists($old, 'mensagem')` — o 2º argumento é o CONTEÚDO esperado do arquivo, não uma
+  descrição, então comparava o texto com os bytes do PNG.
+- **Q7 (compensação pode apagar objeto já referenciado) — aceito como débito**, registrado em
+  `docs/pendencias.md` como **P-24** com gatilho de expiração.
+- **Task 9 (Cancelar/X durante o flush pós-create) — fechado.** `CrudDialog` ganhou `closeBlocked`,
+  que bloqueia as três saídas (botão, X do header, ESC); os 4 diálogos passam
+  `pending || photo.pending`.
+
+Verificação da rodada: suíte **346 passed** (1076 assertions — 3 casos novos, todos vistos
+reprovando contra o código antigo antes do fix), `pnpm build` + `pnpm lint` verdes, Pint limpo nos
+6 arquivos backend tocados.
 
 **Parte A (Tasks 1–4, backend + `generated.ts`, executor Codex) — COMPLETA.** Commits `4dfe3a9`
 (Task 4), `0c3039a` (Task 1), `c5476dc` (Task 2), `ec9c92a` (Task 3). Revisado por Claude (diff real
@@ -96,15 +135,13 @@ arquivo de 6.4MB rejeitado com `422`/RFC 7807 (nunca `413`), `PUT /api/clients/1
    /api/redatores/1` provado com `download_url` funcionando pós-fix). Sem a env var (prod), cai no
    mesmo disco de sempre — zero mudança fora do dev com MinIO. Suíte pós-fixes: 343 passed.
 
-**Pendências que só o João resolve, antes ou durante o review:**
+**Pendências que só o João resolve, antes do fechamento:**
 - Prova visual do bloco (as 4 tabelas, os 4 diálogos, fallback de imagem indisponível, foto do
-  create pós-save, cards de contato) nos dois temas, 1400px e 768px.
+  create pós-save, cards de contato) nos dois temas, 1400px e 768px — agora incluindo o que a
+  rodada de correção mudou: exclusão do último contato recusada, botão "Reintentar" numa falha de
+  upload em edit, e Cancelar/X bloqueados enquanto a foto do create sobe.
 - As 4 imagens de referência caller-held (`alumnos-exemplo-avatar`, `client-no-component-photo`,
   `redator-no-component-photo`, `alumnos-component-wrong-photo`) seguem não fornecidas nesta sessão.
-- Decisão sobre o achado não bloqueante da Task 9 (carregado para os 4 diálogos): janela entre o
-  `201` do create e o `flush` da foto onde Cancelar/X fecha o diálogo sem esperar o upload, sem
-  banner de erro visível — aceitar como limitação conhecida, ou gatear Cancelar/X em
-  `pending || photo.pending`.
 
 **Review de risco declarado:** a Parte A muda contrato de escrita (`contacts` mínimo 1) e apaga
 objeto de storage de forma irreversível; os 2 achados pós-DoD tocam a mesma classe de risco

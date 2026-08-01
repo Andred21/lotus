@@ -88,4 +88,36 @@ class ClientContactMinimumTest extends TestCase
             'contacts' => [['name' => 'Beatriz', 'is_primary' => true]],
         ]))->assertOk()->assertJsonPath('contacts.0.name', 'Beatriz');
     }
+
+    /**
+     * A regra de coleção vale em TODOS os caminhos de escrita, não só no da
+     * tela (`backend-ddd.md`): o replace-total do pai E a rota nested da
+     * própria entidade. Fechar só o `ClientData::rules()` deixa
+     * `DELETE /api/contacts/{contact}` esvaziando a coleção pela porta dos
+     * fundos — mesmo buraco que `PrimaryContactService::ensureSingle()` já
+     * fecha para "no máximo 1 principal".
+     */
+    public function test_delete_do_ultimo_contato_da_422_e_nao_apaga(): void
+    {
+        $this->actingAsAdmin();
+        $client = $this->client();
+        $contact = $client->contacts()->first();
+
+        $this->deleteJson("/api/contacts/{$contact->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('errors.contacts.0', fn ($m) => is_string($m));
+
+        $this->assertSame(1, $client->contacts()->count());
+    }
+
+    public function test_delete_de_contato_com_outro_restante_continua_passando(): void
+    {
+        $this->actingAsAdmin();
+        $client = $this->client();
+        $segundo = $client->contacts()->create(['name' => 'Beatriz', 'is_primary' => false]);
+
+        $this->deleteJson("/api/contacts/{$segundo->id}")->assertNoContent();
+
+        $this->assertSame(1, $client->contacts()->count());
+    }
 }

@@ -48,6 +48,7 @@ export function ClientDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      closeBlocked={pending || photo.pending}
       submitLabel={mode === 'create' ? t('client.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
@@ -70,7 +71,7 @@ export function ClientDialog({
           onSelect={photo.onSelect}
           onRemove={photo.onRemove}
           onSizeReject={photo.onSizeReject}
-          onRetry={photo.hasBufferedFailure ? photo.onRetry : undefined}
+          onRetry={photo.onRetry}
         />
 
         <FormSection title={t('client.sectionGeneral')} />

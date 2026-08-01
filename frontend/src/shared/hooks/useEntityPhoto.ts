@@ -133,9 +133,13 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
     // Funciona em qualquer modo: reenvia o último arquivo tentado
     // (`buffered`) pro último id tentado (`retryId`) — seja uma falha de
     // upload direto em edit/view, seja uma falha de `flush` pós-create.
-    onRetry: () => {
-      if (retryId === null || !buffered) return
-
+    //
+    // `undefined` quando não há o que reenviar, porque é isso que apaga o
+    // botão "Reintentar" no `AppPhotoField`. O caller não decide quando o
+    // retry faz sentido: gatear no chamador foi o que deixou a falha de
+    // upload direto sem botão, e uma função sempre-definida faria o botão
+    // aparecer também no erro de TAMANHO, onde clicar não faz nada.
+    onRetry: retryId !== null && buffered ? () => {
       upload.mutate({ id: retryId, file: buffered }, {
         onSuccess: () => {
           setBuffered(null)
@@ -145,7 +149,7 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
           setBufferedFailure(false)
         },
       })
-    },
+    } : undefined,
     flush,
     hasBufferedFailure: bufferedFailure,
   }
