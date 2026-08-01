@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: hardening-debitos-integridade
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: run_planejar_bloco
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: cards-relacao-curso-redator
-state_basis_commit: 8e200b3
-updated_at: 2026-08-01T15:30:00-03:00
+state_basis_commit: 1c80f69
+updated_at: 2026-08-01T16:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,36 @@ updated_at: 2026-08-01T15:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `ready_for_planning`
 
-Nenhum work item ativo. Próxima ação: o João escolher explicitamente um item de
-`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
+`hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
+pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
+contra o código real. Próxima ação: `/planejar-bloco`.
+
+**Escopo fechado (6 itens).** Correção e peso legal:
+
+1. Arquivo órfão no MinIO em rollback — `UploadFileAction::execute` grava no disco antes do insert em
+   `files`; `StoreRedatorDocumentAction:24` e `CreateRedatorAction:30` envolvem em `DB::transaction`.
+   Rollback deixa binário sem linha, logo sem auditoria e sem rastro.
+2. P-24 — `UserPhotoService::store()` apaga o objeto NOVO se a auditoria lançar depois do UPDATE já
+   commitado.
+3. Q-5 — `DeleteClientContactAction.php:22`: `count()` + `delete()` fora de transação; duas exclusões
+   concorrentes esvaziam a coleção.
+
+Falha silenciosa:
+
+4. `ClientContactData.is_primary` com default `false` não-`Optional` — `PUT /api/contacts/{id}` sem o
+   campo rebaixa o principal em silêncio.
+5. Check de paridade permissão↔i18n — sem ele, permissão nova renderiza chave crua no picker.
+6. Unicidade de `client_addresses.is_primary` — toca schema, exige `der-fisico.md`.
+
+**Fora do escopo por decisão do João no mesmo dia:** os débitos de UI (Q-14, Q-15, CTA duplicado,
+cor hardcoded nos 6 diálogos), os minors de 5.2a/5.2b e `UserData::fromModel` chamando
+`getRoleNames()` duas vezes. Também ficam abertas, sem resolver agora, as decisões de Q-6 (idioma
+canônico das mensagens), P-20 (`openspout`) e P-21 (`simple-qrcode`).
+
+Sem context packet: o bloco não depende de Drive, Notion ou Figma — a fonte é o código, o
+`backlog.md` e o `pendencias.md`.
 
 ## Último item fechado — 2026-08-01
 
