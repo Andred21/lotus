@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: reviewing
+workflow_state: blocked
 next_owner: joao
-next_action: prove_review_fixes_visually
+next_action: approve_review_findings
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
-blocker: null
-resume_state: null
+blocker: "Segunda rodada de review (Claude + segunda lente Codex read-only) sobre o commit de correcao 34ab3c2 achou 6 achados verificados, nenhum bloqueante: (Q-1) o gate fechou Cancelar/X/ESC mas NAO o botao Salvar, entao salvar em edit durante o upload fecha o dialogo com a foto em voo - mesma perda silenciosa da Task 9 pela outra porta; (Q-2) onSizeReject nao limpa buffered/retryId, entao o botao Reintentar aparece colado na mensagem de TAMANHO e reenvia o arquivo anterior; (Q-3) o teste do Q5 assere new_values no primeiro upload, mas o que o Q5 queria rastrear (qual objeto foi desvinculado) vive em old_values na substituicao, que o teste nao cobre; (Q-4) axios sem timeout + closeBlocked sem saida = requisicao pendurada tranca o dialogo, agora inclusive num Salvar pendurado; (Q-5, 🟢) check-then-act sem lock em DeleteClientContactAction, desproporcional a concorrencia real de ~10 usuarios; (Q-6, 🟢) mensagem do 422 em PT num endpoint de cliente chileno, inconsistencia pre-existente do repo. Divergencia entre as lentes: o Codex classificou Q-5 e Q-6 no mesmo nivel dos demais, Claude desceu ambos para 🟢. Aguardando decisao do Joao."
+resume_state: reviewing
 last_completed_work_item: hardening-upload-visualizacao-arquivos
-state_basis_commit: 1544143
+state_basis_commit: 34ab3c2
 updated_at: 2026-08-01T00:00:00-03:00
 ---
 
@@ -48,7 +48,7 @@ updated_at: 2026-08-01T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `reviewing`
+## Estado atual — `blocked` (retoma em `reviewing`)
 
 Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Review executado (duas
 lentes: Claude linha a linha + `mcp__codex__codex` read-only sobre `4dfe3a9..b6dc068`), 7 achados
@@ -91,6 +91,15 @@ Aprovado pelo João: corrigir Q1–Q6, aceitar Q7 como débito, e fechar o achad
 Verificação da rodada: suíte **346 passed** (1076 assertions — 3 casos novos, todos vistos
 reprovando contra o código antigo antes do fix), `pnpm build` + `pnpm lint` verdes, Pint limpo nos
 6 arquivos backend tocados.
+
+### Segundo review — sobre a própria rodada de correção (`34ab3c2`), 2026-08-01
+
+Duas lentes de novo (Claude + `mcp__codex__codex` read-only sobre `34ab3c2`). Sem órfãos e **sem
+achado 🔴** — os fixes aprovados se sustentam. 6 achados aguardando decisão do João, detalhados no
+`blocker`: Q-1 e Q-2 são a mesma correção vazando pelo outro lado (o gate não cobre o Salvar; o
+retry ressurge no erro de tamanho), Q-3 é o teste do Q5 provando menos do que o Q5 pedia, Q-4 é a
+trava dura que o gate criou sem timeout no axios, e Q-5/Q-6 ficaram em 🟢 por proporcionalidade —
+divergência declarada com a segunda lente, que os classificara mais alto.
 
 **Parte A (Tasks 1–4, backend + `generated.ts`, executor Codex) — COMPLETA.** Commits `4dfe3a9`
 (Task 4), `0c3039a` (Task 1), `c5476dc` (Task 2), `ec9c92a` (Task 3). Revisado por Claude (diff real
