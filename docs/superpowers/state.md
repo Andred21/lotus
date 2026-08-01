@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: cards-relacao-curso-redator
-workflow_state: ready_for_execution
+workflow_state: ready_for_review
 next_owner: claude
-next_action: execute_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-01-cards-relacao-curso-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-01-cards-relacao-curso-redator.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: foto-avatar-e-contatos-cliente
-state_basis_commit: f80dcdb
-updated_at: 2026-08-01T13:00:00-03:00
+state_basis_commit: 8e200b3
+updated_at: 2026-08-01T14:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,20 +48,26 @@ updated_at: 2026-08-01T13:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `ready_for_review`
 
-`cards-relacao-curso-redator` — item 1 do `backlog.md`, promovido por seleção explícita do João em
-2026-08-01. Sem Context Packet por decisão do João: as 3 imagens de referência (`courses-redator`,
-`prototipo-redator-dialog-course`, `redator-courses`) foram fornecidas direto na sessão e o restante
-do contexto está no repositório.
+`cards-relacao-curso-redator` — executado em worktree (`using-git-worktrees` +
+`subagent-driven-development`), 10 tasks de conteúdo + Task 11 (gate). Todas as 10 revisadas por
+subagente reviewer com verdict Approved (spec compliance + qualidade), review-package por task.
+Achado operacional: o Step 1 da Task 2 tinha um `cd /home/jvbat/projetos/lotus` absoluto herdado do
+plano (escrito antes do worktree existir) — o implementador seguiu literalmente e comitou
+`redatorStatus` no `main` em vez do worktree. Corrigido por decisão do João: cherry-pick do commit
+para o branch do worktree + `git reset --hard` do `main` de volta ao commit do plano (árvore do main
+estava limpa, nada perdido). Dispatches seguintes reescreveram os caminhos para o worktree.
 
-Spec aprovada (12 decisões) e plano escrito (11 tasks, `executor: claude`). Bloco 100% frontend: os
-dois endpoints já entregam todos os campos dos cards, então nenhum arquivo de `backend/` é tocado —
-a Task 11 prova isso por `git diff --name-only`. Duas decisões estruturais: D2 move
-`redatorStatus.ts` para `shared/lib` (senão `catalog` importaria `identity`, lei §5.6) e D8 resolve
-o botão "ver redator" por navegação para `/personas?redator=<id>`, não por diálogo importado.
+Gate da Task 11: `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado); os 3 greps da
+lei §5.6 (import cruzado `catalog`↔`identity`, `primereact` direto em feature) sem saída; `pnpm
+build` + `pnpm lint` verdes; suíte backend 347 passed (1083 assertions) como regressão, nenhum
+arquivo de `backend/` tocado. Prova visual do João aceita nos 6 critérios comportamentais do DoD
+(spec §7), dois temas, 1400px e 768px.
 
-Próxima ação: `/executar-bloco cards-relacao-curso-redator`.
+Ledger de execução: `.superpowers/sdd/progress.md` (task a task, dentro do worktree).
+
+Próxima ação: solicitar review do bloco (não iniciada automaticamente por este comando).
 
 ## Último item fechado — 2026-08-01
 
