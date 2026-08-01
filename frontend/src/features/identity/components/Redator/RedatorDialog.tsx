@@ -8,7 +8,7 @@ import { redatoresApi } from '@shared/api/redatoresApi'
 import { useEntityPhoto } from '@shared/hooks'
 import { useUploadDocument, useRemoveDocument } from '../../api/useRedatorDocuments'
 import { useRedatorForm, type RedatorDialogMode } from '../../hooks/useRedatorForm'
-import { docStatus, idoneidade, type DocStatus } from '../../lib/redatorStatus'
+import { docStatus, idoneidade, type DocStatus } from '@shared/lib'
 
 const DOC_TYPES = ['CV', 'REUF', 'TITULO', 'POSTGRADO'] as const
 
