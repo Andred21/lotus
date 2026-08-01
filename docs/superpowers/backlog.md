@@ -46,6 +46,16 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (2026-08-01), deferido pelo João por proporcionalidade (~10 usuários internos, baixa concorrência).
   Saída: `DB::transaction` + `lockForUpdate()` na contagem. **Divergência declarada:** a segunda lente
   (Codex) classificou mais alto que 🟢.
+- **Q-16 — `PrimaryContactService`/`PrimaryAddressService` sem lock: dois writes concorrentes podem
+  deixar dois principais.** `ensureSingle()` lê os principais com `SELECT` comum (sem `lockForUpdate`)
+  e sem travar o `Client`. Dois `PUT`/`POST` concorrentes promovendo endereços/contatos distintos
+  podem cada um enxergar só o próprio principal marcado, não achar conflito e ambos commitarem como
+  principais. Achado pela segunda lente (Codex) no review de correção de `hardening-debitos-integridade`
+  (2026-08-01, commit `ca02c9b`) — mesmo padrão em `PrimaryContactService`, já em produção, não
+  introduzido por este bloco. Não bloqueou o fechamento por proporcionalidade (~10 usuários internos,
+  mesma classe de decisão do Q-5) e porque corrigir exigiria lock do `Client` nos dois serviços, escopo
+  maior que a correção pontual de rota que motivou o achado. Saída provável: `lockForUpdate()` no
+  `Client` (não só na coleção) antes do `ensureSingle()`, nos dois serviços juntos.
 - **Q-6 — idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial escreve em
   PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`)
   — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;

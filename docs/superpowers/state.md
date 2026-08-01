@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-debitos-integridade
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-01-hardening-debitos-integridade.md
 context_packet: null
@@ -48,7 +48,7 @@ updated_at: 2026-08-01T18:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `reviewing`
 
 `hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
 pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
@@ -60,8 +60,31 @@ sem resíduo do bug do `false` silencioso, e prova real de duas sessões MySQL c
 lock do Q-5 (D6) serializa de verdade em InnoDB (detalhe em `.superpowers/sdd/progress.md`, seção
 "Task 8"). Também fechado fora do plano original, por decisão do João em sessão: Task 2b
 (`UpdateRedatorAction` tinha o mesmo bug de arquivo órfão que a Task 2 fechou, achado no review).
-Próxima ação: solicitar a revisão do bloco (`/revisar-sprint` + segunda lente do Codex — `generated.ts`
-mudou, spec §8) — **não iniciada automaticamente por este fechamento.**
+
+**Review 1 (`/revisar-sprint`, alto risco — segunda lente Codex, spec §8), 2026-08-01: 2 achados,
+ambos corrigidos e aprovados pelo João no mesmo dia (commit `ca02c9b`).**
+- **Q-1** — a spec §3 assumia "endereço não tem rota nested hoje" (premissa da decisão de D8 de não
+  dar `winner` ao `PrimaryAddressService`). Falso: `ClientAddressController` (`5bc1d87`, anterior a
+  este bloco) já expõe `POST /api/clients/{client}/addresses` e `PUT /api/addresses/{address}`
+  escrevendo direto no Eloquent, ignorando o serviço — dois requests sequenciais deixavam dois
+  endereços principais, a mesma classe de bug que o bloco existe para fechar. Corrigido com
+  `CreateClientAddressAction`/`UpdateClientAddressAction` (espelham os de contato) e `winner` novo em
+  `PrimaryAddressService::ensureSingle()`.
+- **Q-2** — `UploadFileAction::discard()` só capturava exceção; um `delete()` que devolve `false` sem
+  lançar (mesmo modo silencioso do bug D2, fechado em `put()`) não gerava warning nenhum. Corrigido.
+- Achados vistos reprovando contra o código antigo antes do fix (stash dos 3 arquivos de produção,
+  suíte rodada, 4 testes falharam como esperado, stash restaurado) — lição 10.
+- Suíte 372 passed (1360 assertions; +6 testes novos), Pint limpo, `generated.ts` sem diff (fix não
+  tocou DTO).
+
+**Review 2 (sobre o commit de correção `ca02c9b`, segunda lente Codex), 2026-08-01: limpa para
+fechamento.** Único achado — `ensureSingle()` sem `lockForUpdate` no `Client` permite dois principais
+sob escrita concorrente, em `PrimaryContactService` **e**, agora simetricamente, em
+`PrimaryAddressService` — não é regressão deste commit (mesmo padrão já em produção desde antes do
+bloco). Registrado como Q-16 em `backlog.md`, não bloqueia o fechamento (mesma classe de decisão do
+Q-5: proporcionalidade, ~10 usuários internos).
+
+Próxima ação: `/fechar-sprint`.
 
 **Escopo fechado (6 itens).** Correção e peso legal:
 
