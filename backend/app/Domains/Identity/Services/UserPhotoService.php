@@ -6,6 +6,7 @@ use App\Domains\Identity\Models\User;
 use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -45,8 +46,14 @@ class UserPhotoService
      * A ORDEM não é detalhe. Apagar o antigo antes do update deixa a linha
      * apontando para um objeto morto se o update falhar — referência mentindo.
      * Apagar depois, e falhar, deixa órfão de storage: custo, não mentira.
-     * Sem `DB::transaction`: é um UPDATE de uma linha, e envolver delete de
-     * storage numa transação é o débito já registrado no `UploadFileAction`.
+     *
+     * O UPDATE roda em `DB::transaction` (P-24): a auditoria é síncrona
+     * (`audit.queue.enable = false`) e o evento `updated` do owen-it dispara
+     * DEPOIS do SQL UPDATE, dentro da mesma chamada. Sem transação, uma
+     * auditoria que lança deixava a coluna gravada e a compensação apagava um
+     * objeto que o banco já referenciava. A transação cobre UPDATE + auditoria
+     * e NUNCA o delete de storage — esse é o débito do `UploadFileAction`,
+     * fechado com `put`/`discard`, não com transação em volta do disco.
      */
     public function store(User $user, UploadedFile $photo): void
     {
@@ -65,10 +72,10 @@ class UserPhotoService
         }
 
         try {
-            $user->update(['photo_path' => $new]);
+            DB::transaction(fn () => $user->update(['photo_path' => $new]));
         } catch (Throwable $e) {
-            // Compensação: o objeto novo já está no bucket e ninguém aponta
-            // para ele.
+            // Compensação: o rollback desfez o UPDATE, então o objeto novo
+            // está no bucket e ninguém aponta para ele.
             $this->deleteObject($new);
 
             throw $e;

@@ -5,8 +5,10 @@ namespace Tests\Feature\Identity;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\UserPhotoService;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
@@ -438,5 +440,58 @@ class UserPhotoTest extends TestCase
         // do arquivo, não uma descrição — passar texto aqui compara o texto com
         // os bytes do PNG e reprova por motivo errado.
         $storage->assertExists($old);
+    }
+
+    /**
+     * P-24. O evento `updated` do owen-it dispara DEPOIS do SQL UPDATE, dentro
+     * da mesma chamada. Sem transação, uma auditoria que lança deixa a coluna
+     * já gravada e a compensação apaga um objeto que o banco REFERENCIA — o
+     * comentário "ninguém aponta para ele" vira falso. Com transação, o
+     * rollback desfaz o UPDATE e a compensação volta a ser verdadeira.
+     */
+    public function test_falha_na_auditoria_desfaz_o_update_e_apaga_o_objeto_novo(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        $user = User::factory()->create(['type' => 'admin']);
+        Event::listen('eloquent.updated: '.User::class, function (): void {
+            throw new RuntimeException('auditoria fora do ar');
+        });
+
+        try {
+            app(UserPhotoService::class)->store($user, UploadedFile::fake()->image('foto.png'));
+            $this->fail('esperava RuntimeException');
+        } catch (RuntimeException) {
+            // esperado
+        }
+
+        $this->assertNull($user->fresh()->photo_path);
+        $this->assertSame([], $storage->allFiles(), 'objeto novo ficou no bucket sem ninguém apontar para ele');
+    }
+
+    public function test_falha_na_auditoria_preserva_a_foto_anterior(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        $user = User::factory()->create(['type' => 'admin']);
+        $service = app(UserPhotoService::class);
+
+        $service->store($user, UploadedFile::fake()->image('primeira.png'));
+        $old = $user->fresh()->photo_path;
+
+        Event::listen('eloquent.updated: '.User::class, function (): void {
+            throw new RuntimeException('auditoria fora do ar');
+        });
+
+        try {
+            $service->store($user->fresh(), UploadedFile::fake()->image('segunda.png'));
+            $this->fail('esperava RuntimeException');
+        } catch (RuntimeException) {
+            // esperado
+        }
+
+        $this->assertSame($old, $user->fresh()->photo_path);
+        $storage->assertExists($old);
+        $this->assertCount(1, $storage->allFiles(), 'sobrou objeto além da foto anterior');
     }
 }
