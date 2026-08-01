@@ -26,7 +26,7 @@ commune: undefined | string | null,
 city: undefined | string | null,
 region: undefined | string | null,
 zip_code: undefined | string | null,
-is_primary: boolean,
+is_primary: undefined | boolean,
 };
 export type ClientContactData = {
 id: undefined | number,
@@ -34,7 +34,7 @@ name: string,
 email: undefined | string | null,
 phone: undefined | string | null,
 job_title: undefined | string | null,
-is_primary: boolean,
+is_primary: undefined | boolean,
 };
 export type ClientData = {
 id: undefined | number,

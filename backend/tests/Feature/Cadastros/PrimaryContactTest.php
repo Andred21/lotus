@@ -208,4 +208,41 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => true]);
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => false]);
     }
+
+    /**
+     * `is_primary` era `bool = false`, não `Optional`: um PUT que não mandava o
+     * campo rebaixava o principal em silêncio, porque `toArray()` devolvia
+     * `false` para uma chave que o cliente nunca enviou.
+     */
+    public function test_put_de_contato_sem_is_primary_mantem_o_principal(): void
+    {
+        $this->actingAsAdmin();
+
+        $id = $this->postJson('/api/clients', $this->payload([
+            ['name' => 'Contato A', 'is_primary' => true],
+        ]))->assertCreated()->json('id');
+
+        $contatoId = Client::findOrFail($id)->contacts()->firstOrFail()->id;
+
+        $this->putJson("/api/contacts/{$contatoId}", ['name' => 'Contato A editado'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('client_contacts', [
+            'id' => $contatoId,
+            'name' => 'Contato A editado',
+            'is_primary' => true,
+        ]);
+    }
+
+    public function test_contato_criado_sem_is_primary_nasce_nao_principal(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/clients', $this->payload([
+            ['name' => 'Contato A', 'is_primary' => true],
+            ['name' => 'Contato B'],
+        ]))->assertCreated();
+
+        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => false]);
+    }
 }
