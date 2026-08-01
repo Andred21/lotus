@@ -31,22 +31,8 @@ class PermissionI18nParityTest extends TestCase
         sort($esperadas);
 
         foreach (self::LOCALES as $locale) {
-            // Try multiple path variants for compatibility (container vs. host)
-            $candidates = [
-                base_path("../frontend/src/shared/config/locales/{$locale}.json"),
-                "/frontend/src/shared/config/locales/{$locale}.json",
-                realpath(base_path("../../frontend/src/shared/config/locales/{$locale}.json")) ?: null,
-            ];
-
-            $path = null;
-            foreach ($candidates as $candidate) {
-                if ($candidate && file_exists($candidate)) {
-                    $path = $candidate;
-                    break;
-                }
-            }
-
-            $this->assertNotNull($path, "Locale {$locale} não encontrado em nenhum dos caminhos: ".implode(', ', array_filter($candidates)));
+            $path = "/frontend/src/shared/config/locales/{$locale}.json";
+            $this->assertFileExists($path, "Locale {$locale} não encontrado em {$path}");
 
             $json = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
             $this->assertArrayHasKey('perm', $json, "Locale {$locale} não tem o namespace `perm`");
