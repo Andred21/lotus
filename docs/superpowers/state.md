@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: reviewing
-next_owner: joao
-next_action: prove_review_fixes_visually
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
-state_basis_commit: 35c6a35
+state_basis_commit: 73870b0
 updated_at: 2026-08-01T00:00:00-03:00
 ---
 
@@ -48,12 +48,13 @@ updated_at: 2026-08-01T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `reviewing`
+## Estado atual — `ready_for_closure`
 
 Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Review executado (duas
 lentes: Claude linha a linha + `mcp__codex__codex` read-only sobre `4dfe3a9..b6dc068`), 7 achados
-levantados, decisão do João tomada em 2026-08-01. Próxima ação: prova visual dos fixes pelo João;
-depois disso, repetir o review sobre a rodada de correção e transicionar para `ready_for_closure`.
+levantados, decisão do João tomada em 2026-08-01. Segundo review sobre a rodada de correção feito e
+seus 4 achados aprovados fechados; **prova visual aceita pelo João em 2026-08-01**. Próxima ação:
+`/fechar-sprint`.
 
 ### Rodada de correção do review — 2026-08-01
 
