@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-active_spec: null
+active_work_item: cards-relacao-curso-redator
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-01-cards-relacao-curso-redator-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: foto-avatar-e-contatos-cliente
-state_basis_commit: 73870b0
-updated_at: 2026-08-01T00:00:00-03:00
+state_basis_commit: 8702408
+updated_at: 2026-08-01T12:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,16 @@ updated_at: 2026-08-01T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `planning`
 
-Nenhum work item ativo. Próxima ação: o João escolher explicitamente um item de
-`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
+`cards-relacao-curso-redator` — item 1 do `backlog.md`, promovido por seleção explícita do João em
+2026-08-01. Sem Context Packet por decisão do João: as 3 imagens de referência (`courses-redator`,
+`prototipo-redator-dialog-course`, `redator-courses`) foram fornecidas direto na sessão e o restante
+do contexto está no repositório.
+
+Spec aprovada em `specs/2026-08-01-cards-relacao-curso-redator-design.md` (12 decisões). Bloco 100%
+frontend: os dois endpoints já entregam todos os campos dos cards. Próxima ação: escrever o plano
+com `writing-plans`.
 
 ## Último item fechado — 2026-08-01
 
