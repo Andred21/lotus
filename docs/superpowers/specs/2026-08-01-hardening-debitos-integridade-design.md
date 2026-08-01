@@ -47,6 +47,12 @@ P-10, P-13, P-15, P-16 (dependem da Lotus ou do Bloco 7).
   (transação própria), `CreateRedatorAction` (aninha o anterior) e o `OperationDemoSeeder` (envolve
   17 uploads numa transação única). `StoreTurmaDocumentAction`, `QuoteFileController` e
   `BudgetFileController` chamam fora de transação — não afetados.
+
+  **Correção pós-execução (Task 2, achado no review):** esta verificação estava incompleta.
+  `UpdateRedatorAction` também abre transação por fora e chama `StoreRedatorDocumentAction::execute()`
+  de dentro dela — quarto chamador do mesmo padrão, não três. Diferente do `OperationDemoSeeder`
+  (dev/demo, D4), este é caminho de produção real (`PUT /api/redatores/{id}`), então a exceção de D4
+  não se aplica a ele. Corrigido como Task 2b, aprovada pelo João durante a execução — ver D3b.
 - **`UploadFileAction::execute` não checa o retorno de `store()`.** É o mesmo bug que o
   `UserPhotoService` já levou em dev em 2026-08-01 (`photo_path = '0'`, objeto anterior apagado);
   no `UploadFileAction` ele segue aberto e ninguém o registrou.
@@ -98,6 +104,15 @@ falha do `9197d08`, agora fechada no choke point compartilhado em vez de só no 
   rethrow. Ganha `registerUploaded(...)` para quem já segura transação e já fez o `put`.
 - `CreateRedatorAction` — sobe **todos** os documentos antes de abrir a transação, guarda
   `[tipo => path]`, e dentro dela chama `registerUploaded`. `catch` → `discard` de todos os paths.
+
+### D3b — `UpdateRedatorAction` (achado pós-execução, não estava no escopo original)
+
+Mesmo padrão de D3: sobe todos os documentos via `put()` (não `putTo()` — o redator já existe
+numa atualização) antes de abrir a transação, guarda `[tipo => path/meta]`, chama
+`registerUploaded` dentro dela, `discard` de todos os paths no catch. Aprovado pelo João durante
+a execução da Task 2, depois que o review encontrou que este chamador tinha o mesmo bug de
+`CreateRedatorAction` por um caminho que a verificação do §3 não tinha mapeado — ver a correção
+ali. Executado como Task 2b.
 
 ### D4 — O `OperationDemoSeeder` fica como está, declarado
 
@@ -173,6 +188,7 @@ Nenhuma camada nova, nenhuma migration, nenhuma permissão nova. Arquivos tocado
 
 - `app/Shared/Files/Actions/UploadFileAction.php` — D1, D2
 - `app/Domains/Identity/Actions/StoreRedatorDocumentAction.php`, `CreateRedatorAction.php` — D3
+- `app/Domains/Identity/Actions/UpdateRedatorAction.php` — D3b (achado pós-execução)
 - `app/Domains/Identity/Services/UserPhotoService.php` — D5
 - `app/Domains/Commercial/Actions/DeleteClientContactAction.php` — D6
 - `app/Domains/Commercial/Data/ClientContactData.php`, `ClientAddressData.php` — D7
