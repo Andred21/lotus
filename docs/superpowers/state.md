@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-debitos-integridade
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: run_executar_bloco
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-01-hardening-debitos-integridade.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: cards-relacao-curso-redator
-state_basis_commit: 1c80f69
-updated_at: 2026-08-01T16:10:00-03:00
+state_basis_commit: 0738777
+updated_at: 2026-08-01T16:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
