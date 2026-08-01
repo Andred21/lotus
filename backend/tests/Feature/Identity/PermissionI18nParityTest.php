@@ -14,9 +14,12 @@ use Tests\TestCase;
  * ler o arquivo é a lição 10 de novo — se o caminho não resolver, o teste
  * REPROVA.
  *
- * `base_path('../frontend/...')` resolve nos dois ambientes: no host é
- * `backend/../frontend`; no container é `/var/www/../frontend` = `/frontend`,
- * que o compose já monta.
+ * Path absoluto `/frontend/...`: o compose monta `./frontend` diretamente em
+ * `/frontend` no container, independente de `/var/www` (mount irmão, não
+ * aninhado) — `base_path('../frontend/...')` resolveria para `/var/frontend`,
+ * que não existe. Mesma convenção já usada em
+ * `TypeScriptTransformerServiceProvider::outputDirectory('/frontend/...')`.
+ * Suíte só roda em container (host sem mbstring — ver CLAUDE.md §6).
  */
 class PermissionI18nParityTest extends TestCase
 {
