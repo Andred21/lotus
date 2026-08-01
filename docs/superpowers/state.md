@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-debitos-integridade
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-01-hardening-debitos-integridade.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: cards-relacao-curso-redator
-state_basis_commit: a937cf2
-updated_at: 2026-08-01T16:52:00-03:00
+state_basis_commit: 7a307b1
+updated_at: 2026-08-01T18:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,12 +48,20 @@ updated_at: 2026-08-01T16:52:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `ready_for_review`
 
 `hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
 pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
 contra o código real. Spec aprovada (D1–D9) e plano escrito em 8 tasks (7 de conteúdo + gate).
-Próxima ação: `/executar-bloco`. Main tree, nunca worktree (P-03).
+**Execução concluída em 2026-08-01** (Tasks 1–8, `subagent-driven-development`, main tree — bloco
+toca backend, sem worktree, P-03). Gate provado: suíte 366 passed (1344 assertions, baseline
+347/1083), Pint limpo, `generated.ts` sem diff, frontend build+lint verdes, grep de `->store(`
+sem resíduo do bug do `false` silencioso, e prova real de duas sessões MySQL confirmando que o
+lock do Q-5 (D6) serializa de verdade em InnoDB (detalhe em `.superpowers/sdd/progress.md`, seção
+"Task 8"). Também fechado fora do plano original, por decisão do João em sessão: Task 2b
+(`UpdateRedatorAction` tinha o mesmo bug de arquivo órfão que a Task 2 fechou, achado no review).
+Próxima ação: solicitar a revisão do bloco (`/revisar-sprint` + segunda lente do Codex — `generated.ts`
+mudou, spec §8) — **não iniciada automaticamente por este fechamento.**
 
 **Escopo fechado (6 itens).** Correção e peso legal:
 
