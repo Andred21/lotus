@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: identidade-visual-e-comercial
 active_work_item: foto-avatar-e-contatos-cliente
-workflow_state: blocked
+workflow_state: reviewing
 next_owner: joao
-next_action: approve_review_findings
+next_action: prove_review_fixes_visually
 active_spec: docs/superpowers/specs/2026-07-31-foto-avatar-e-contatos-cliente-design.md
 active_plan: docs/superpowers/plans/2026-07-31-foto-avatar-e-contatos-cliente.md
 context_packet: docs/superpowers/context-packets/foto-avatar-e-contatos-cliente.md
-blocker: "Segunda rodada de review (Claude + segunda lente Codex read-only) sobre o commit de correcao 34ab3c2 achou 6 achados verificados, nenhum bloqueante: (Q-1) o gate fechou Cancelar/X/ESC mas NAO o botao Salvar, entao salvar em edit durante o upload fecha o dialogo com a foto em voo - mesma perda silenciosa da Task 9 pela outra porta; (Q-2) onSizeReject nao limpa buffered/retryId, entao o botao Reintentar aparece colado na mensagem de TAMANHO e reenvia o arquivo anterior; (Q-3) o teste do Q5 assere new_values no primeiro upload, mas o que o Q5 queria rastrear (qual objeto foi desvinculado) vive em old_values na substituicao, que o teste nao cobre; (Q-4) axios sem timeout + closeBlocked sem saida = requisicao pendurada tranca o dialogo, agora inclusive num Salvar pendurado; (Q-5, 🟢) check-then-act sem lock em DeleteClientContactAction, desproporcional a concorrencia real de ~10 usuarios; (Q-6, 🟢) mensagem do 422 em PT num endpoint de cliente chileno, inconsistencia pre-existente do repo. Divergencia entre as lentes: o Codex classificou Q-5 e Q-6 no mesmo nivel dos demais, Claude desceu ambos para 🟢. Aguardando decisao do Joao."
-resume_state: reviewing
+blocker: null
+resume_state: null
 last_completed_work_item: hardening-upload-visualizacao-arquivos
-state_basis_commit: 34ab3c2
+state_basis_commit: 35c6a35
 updated_at: 2026-08-01T00:00:00-03:00
 ---
 
@@ -48,7 +48,7 @@ updated_at: 2026-08-01T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `blocked` (retoma em `reviewing`)
+## Estado atual — `reviewing`
 
 Spec (15 decisões, D1–D15) e plano (12 tasks) implementados por completo. Review executado (duas
 lentes: Claude linha a linha + `mcp__codex__codex` read-only sobre `4dfe3a9..b6dc068`), 7 achados
@@ -95,11 +95,36 @@ reprovando contra o código antigo antes do fix), `pnpm build` + `pnpm lint` ver
 ### Segundo review — sobre a própria rodada de correção (`34ab3c2`), 2026-08-01
 
 Duas lentes de novo (Claude + `mcp__codex__codex` read-only sobre `34ab3c2`). Sem órfãos e **sem
-achado 🔴** — os fixes aprovados se sustentam. 6 achados aguardando decisão do João, detalhados no
-`blocker`: Q-1 e Q-2 são a mesma correção vazando pelo outro lado (o gate não cobre o Salvar; o
-retry ressurge no erro de tamanho), Q-3 é o teste do Q5 provando menos do que o Q5 pedia, Q-4 é a
-trava dura que o gate criou sem timeout no axios, e Q-5/Q-6 ficaram em 🟢 por proporcionalidade —
-divergência declarada com a segunda lente, que os classificara mais alto.
+achado 🔴** — os fixes aprovados se sustentam. 6 achados; o João aprovou Q-1 a Q-4 (commits
+`35c6a35` e o do Q-4), e Q-5/Q-6 ficam registrados sem ação.
+
+- **Q-1 — Salvar era a QUARTA saída do diálogo.** `closeBlocked` fechava Cancelar/X/ESC, mas o
+  `onSubmit` segue fechando o diálogo no `onSuccess`: salvar em edit durante o upload levava à mesma
+  perda silenciosa pela outra porta. Os 4 diálogos passaram a gatear `disabled` por `photo.pending`,
+  e a prop `closeBlocked` documenta que as duas andam juntas.
+- **Q-2 — retry ressurgindo no erro de TAMANHO.** `useEntityPhoto` devolve `onRetry: undefined`
+  enquanto houver `sizeError`: o erro exibido passa a ser o de tamanho, mas `buffered`/`retryId`
+  ainda guardavam a tentativa anterior, então o botão reenviaria um arquivo que não é o escolhido.
+- **Q-3 — o teste do Q5 provava menos do que o Q5 pedia.** Novo caso cobre o rastro do objeto
+  DESVINCULADO (`old_values` na substituição e na remoção). **Durante a própria prova, o teste novo
+  passou VAZIO**: sem `photo_path` no diff da auditoria, todos os valores viram `null` e
+  `null === null` aprova tudo — foi preciso `assertNotNull` nos caminhos para que os 2 testes de
+  auditoria fossem vistos reprovando. Lição 10 reaparecendo dentro do fix da própria lição 10.
+- **Q-4 — a trava dura criada pelo gate.** A instância axios não tinha `timeout`, então uma
+  requisição pendurada nunca resolvia e o `closeBlocked` prendia o usuário até recarregar a aba.
+  `timeout: 120_000` (generoso de propósito: o teto de upload é 10 MB e o timeout do axios conta a
+  requisição inteira, não a inatividade). O erro cai no ramo "sem resposta" do interceptor, vira
+  `ProblemDetails` traduzido, e o gate abre sozinho.
+- **Q-5 (🟢, sem ação) — check-then-act sem lock** no `DeleteClientContactAction`: `count()` +
+  `delete()` sem transação. Desproporcional à concorrência real (~10 usuários internos).
+- **Q-6 (🟢, sem ação) — mensagem do 422 em PT** num endpoint de cliente chileno. Inconsistência
+  **pré-existente** do repo (Commercial em PT, Operation em ES), não introduzida aqui.
+
+Divergência declarada entre as lentes: o Codex classificou Q-5 e Q-6 no mesmo nível dos demais;
+Claude desceu ambos para 🟢 por proporcionalidade, e o João manteve.
+
+Verificação da segunda rodada: suíte **347 passed** (1083 assertions), `pnpm build` + `pnpm lint`
+verdes, Pint limpo.
 
 **Parte A (Tasks 1–4, backend + `generated.ts`, executor Codex) — COMPLETA.** Commits `4dfe3a9`
 (Task 4), `0c3039a` (Task 1), `c5476dc` (Task 2), `ec9c92a` (Task 3). Revisado por Claude (diff real

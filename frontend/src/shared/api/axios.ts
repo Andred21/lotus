@@ -21,6 +21,18 @@ export const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     withCredentials: true,   // envia/recebe cookies (Sactum SPA)
     withXSRFToken: true,     // lê o cookie XSRF-TOKEN e envia no header X-XSRF-TOKEN
+    // Sem timeout, uma requisição pendurada NUNCA resolve: a mutation fica
+    // `isPending` para sempre e o `closeBlocked` do CrudDialog — que bloqueia
+    // Cancelar, X e ESC durante uma escrita em voo — tranca o usuário no
+    // diálogo até ele recarregar a aba e perder o formulário inteiro.
+    // Com timeout, o erro chega, cai no ramo "sem resposta" do interceptor
+    // abaixo (vira ProblemDetails traduzido) e o gate abre sozinho.
+    //
+    // 120s e não 30s por causa do UPLOAD: o teto é 10 MB (documentos) e 5 MB
+    // (foto), e o timeout do axios conta a requisição INTEIRA, não a inatividade
+    // — um teto curto mataria o upload grande em rede lenta, que é o oposto do
+    // problema que este valor resolve.
+    timeout: 120_000,
     headers: {
         Accept: "application/json",
     },
