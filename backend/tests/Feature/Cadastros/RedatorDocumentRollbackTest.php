@@ -4,6 +4,7 @@ namespace Tests\Feature\Cadastros;
 
 use App\Domains\Identity\Actions\CreateRedatorAction;
 use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
+use App\Domains\Identity\Actions\UpdateRedatorAction;
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
@@ -33,6 +34,28 @@ class RedatorDocumentRollbackTest extends TestCase
     {
         Event::listen('eloquent.creating: '.File::class, function (): void {
             throw new RuntimeException('insert recusado');
+        });
+    }
+
+    /**
+     * Falha só a partir do SEGUNDO `File::create()`. Necessário para provar o
+     * bug do update: se a falha fosse já no primeiro (como `failOnFileInsert`
+     * faz), o próprio catch do `StoreRedatorDocumentAction::execute()` já
+     * descartaria o binário daquele documento sozinho, sem nunca chegar no
+     * segundo — o cenário não exercitaria o rollback da transação externa
+     * desfazendo o registro do PRIMEIRO documento (já bem-sucedido) sem
+     * descartar o binário dele.
+     */
+    private function failOnSecondFileInsert(): void
+    {
+        $insercoes = 0;
+
+        Event::listen('eloquent.creating: '.File::class, function () use (&$insercoes): void {
+            $insercoes++;
+
+            if ($insercoes >= 2) {
+                throw new RuntimeException('insert recusado');
+            }
         });
     }
 
@@ -99,5 +122,36 @@ class RedatorDocumentRollbackTest extends TestCase
 
         $storage->assertExists($file->path);
         $this->assertSame('cv.pdf', $file->original_name);
+    }
+
+    public function test_falha_no_insert_durante_update_redator_limpa_todos_os_documentos(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        config(['filesystems.default' => 's3']);
+        $redator = $this->redator();
+        $data = RedatorData::from([
+            'name' => $redator->user->name,
+            // O factory não seta rut (coluna nullable) — $redator->user->rut
+            // viria null e RedatorData::from() rejeitaria antes de chegar na
+            // Action. Um RUT válido qualquer serve: o teste é sobre o
+            // rollback do upload, não sobre o valor do RUT.
+            'rut' => '13.456.789-9',
+            'email' => $redator->user->email,
+        ]);
+        $this->failOnSecondFileInsert();
+
+        try {
+            app(UpdateRedatorAction::class)->execute($redator, $data, [
+                'CV' => UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'),
+                'REUF' => UploadedFile::fake()->create('reuf.pdf', 10, 'application/pdf'),
+            ]);
+            $this->fail('esperava RuntimeException');
+        } catch (RuntimeException) {
+            // esperado
+        }
+
+        $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
+        $this->assertDatabaseCount('files', 0);
     }
 }
