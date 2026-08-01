@@ -11,7 +11,7 @@ context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: cards-relacao-curso-redator
-state_basis_commit: 0738777
+state_basis_commit: a937cf2
 updated_at: 2026-08-01T16:52:00-03:00
 ---
 
