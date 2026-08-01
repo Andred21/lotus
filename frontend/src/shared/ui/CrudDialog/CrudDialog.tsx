@@ -28,7 +28,12 @@ export function CrudDialog({
    * enquanto uma escrita em voo não pode ser abandonada — hoje, o upload da
    * foto bufferizada logo depois do `201` do create. Fechar nessa janela
    * descartaria a foto em silêncio: a entidade já existe, mas o arquivo nunca
-   * chega, e o diálogo some antes de qualquer banner de erro. */
+   * chega, e o diálogo some antes de qualquer banner de erro.
+   *
+   * **Salvar é a QUARTA saída** e não é coberta por esta prop: o `onSubmit`
+   * do chamador costuma fechar o diálogo no `onSuccess`. Quem usa
+   * `closeBlocked` precisa gatear `disabled` pela mesma condição, senão a
+   * perda silenciosa volta pela porta do Salvar. */
   closeBlocked?: boolean
   submitLabel?: string
   headerExtra?: ReactNode

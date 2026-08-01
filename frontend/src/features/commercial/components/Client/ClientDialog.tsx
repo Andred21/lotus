@@ -49,6 +49,7 @@ export function ClientDialog({
       onSubmit={submit}
       pending={pending}
       closeBlocked={pending || photo.pending}
+      disabled={photo.pending}
       submitLabel={mode === 'create' ? t('client.create') : undefined}
     >
       <FormErrorBanner message={generalError} />

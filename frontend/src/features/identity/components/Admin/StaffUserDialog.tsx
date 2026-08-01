@@ -50,6 +50,7 @@ export function StaffUserDialog({
       onSubmit={submit}
       pending={pending}
       closeBlocked={pending || photo.pending}
+      disabled={photo.pending}
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />

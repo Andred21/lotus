@@ -137,9 +137,14 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
     // `undefined` quando não há o que reenviar, porque é isso que apaga o
     // botão "Reintentar" no `AppPhotoField`. O caller não decide quando o
     // retry faz sentido: gatear no chamador foi o que deixou a falha de
-    // upload direto sem botão, e uma função sempre-definida faria o botão
-    // aparecer também no erro de TAMANHO, onde clicar não faz nada.
-    onRetry: retryId !== null && buffered ? () => {
+    // upload direto sem botão.
+    //
+    // `sizeError` também apaga o botão, e não por cosmética: o erro exibido
+    // passa a ser o de TAMANHO (tem precedência), mas `buffered`/`retryId`
+    // ainda guardam a tentativa ANTERIOR. Com o botão visível ali, clicar
+    // reenviaria um arquivo que não é o que o usuário acabou de escolher —
+    // o botão mentiria sobre o próprio efeito.
+    onRetry: sizeError === null && retryId !== null && buffered ? () => {
       upload.mutate({ id: retryId, file: buffered }, {
         onSuccess: () => {
           setBuffered(null)

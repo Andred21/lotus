@@ -76,6 +76,7 @@ export function RedatorDialog({
       onSubmit={submit}
       pending={pending}
       closeBlocked={pending || photo.pending}
+      disabled={photo.pending}
       submitLabel={mode === 'create' ? t('redator.create') : undefined}
       headerExtra={
         mode !== 'create' && redator ? (

@@ -135,6 +135,47 @@ class UserPhotoTest extends TestCase
     }
 
     /**
+     * O que precisa de rastro não é "mudou a foto" — é QUAL objeto deixou de
+     * ser referenciado, porque a substituição o apaga do bucket de forma
+     * irreversível (spec D4). Esse dado vive em `old_values`, e só existe na
+     * SUBSTITUIÇÃO e na REMOÇÃO: o teste do primeiro upload sozinho passaria
+     * mesmo se o rastro do objeto apagado se perdesse.
+     */
+    public function test_substituir_e_remover_registram_o_objeto_desvinculado(): void
+    {
+        Storage::fake('s3');
+        $user = User::factory()->create(['type' => 'admin']);
+        $service = app(UserPhotoService::class);
+
+        $service->store($user, UploadedFile::fake()->image('primeira.png'));
+        $primeira = $user->refresh()->photo_path;
+
+        $service->store($user, UploadedFile::fake()->image('segunda.png'));
+        $segunda = $user->refresh()->photo_path;
+
+        // Sem estas duas, o teste passa VAZIO: com `photo_path` fora do diff da
+        // auditoria, os caminhos e os valores do audit são todos `null`, e
+        // `null === null` aprova tudo. Provado na revisão de 2026-08-01.
+        $this->assertNotNull($primeira);
+        $this->assertNotSame($primeira, $segunda);
+
+        $troca = $user->audits()->latest('id')->first();
+        $this->assertSame($primeira, $troca->old_values['photo_path'] ?? null);
+        $this->assertSame($segunda, $troca->new_values['photo_path'] ?? null);
+
+        $service->remove($user);
+
+        // Na remoção o rastro que importa é o `old_values`: é ele que diz qual
+        // objeto foi apagado do bucket. O `new_values` do owen-it não carrega
+        // a chave nesse caso (o valor novo é `null`) — asserir presença ali
+        // reprovaria por um detalhe do pacote, não pela garantia.
+        $remocao = $user->audits()->latest('id')->first();
+        $this->assertSame($segunda, $remocao->old_values['photo_path'] ?? null);
+        $this->assertNull($remocao->new_values['photo_path'] ?? null);
+        $this->assertNull($user->refresh()->photo_path);
+    }
+
+    /**
      * `/api/users/{user}/photo` é a rota de foto do STAFF, sob
      * `identity.user.update`. Sem a guarda de `type`, quem administra staff
      * alcança a foto de cliente/aluno/redator por ela, driblando a permissão
