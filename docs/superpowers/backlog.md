@@ -40,12 +40,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
-- **Q-5 — check-then-act sem lock no mínimo de contatos.** `DeleteClientContactAction.php:22`: `count()`
-  e `delete()` fora de transação; duas exclusões concorrentes leem 2 contatos e apagam os 2, deixando o
-  cliente sem nenhum. Achado 🟢 do segundo `/revisar-sprint` de `foto-avatar-e-contatos-cliente`
-  (2026-08-01), deferido pelo João por proporcionalidade (~10 usuários internos, baixa concorrência).
-  Saída: `DB::transaction` + `lockForUpdate()` na contagem. **Divergência declarada:** a segunda lente
-  (Codex) classificou mais alto que 🟢.
 - **Q-16 — `PrimaryContactService`/`PrimaryAddressService` sem lock: dois writes concorrentes podem
   deixar dois principais.** `ensureSingle()` lê os principais com `SELECT` comum (sem `lockForUpdate`)
   e sem travar o `Client`. Dois `PUT`/`POST` concorrentes promovendo endereços/contatos distintos
@@ -78,15 +72,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (`text-slate-500`, `text-slate-400` no `RoleDialog`, entre outros) — o D18 cortou o escopo em
   `shared/ui` + os 3 arquivos do D14 de propósito. Achado Minor do review final da Parte 4, não é
   esquecimento.
-- **Arquivo órfão no MinIO em rollback de transação.** `UploadFileAction::execute` grava no disco
-  **antes** de inserir em `files`; `StoreRedatorDocumentAction:24` e `CreateRedatorAction:30` envolvem
-  essa chamada em `DB::transaction`. Rollback derruba a linha e deixa o objeto no bucket — vazamento de
-  storage e, pior, documento sem linha em `files`, logo sem auditoria e sem rastro (peso legal).
-  Pré-existente desde `2fdbdea`, não introduzido pelo seeder; achado por revisão do Codex em
-  2026-07-26 sobre o `OperationDemoSeeder`, que amplifica o caso ao envolver 17 uploads numa
-  transação única. Saídas a avaliar: mover o upload para fora da transação com compensação, registrar
-  a linha primeiro e gravar depois, ou `DB::afterCommit`. Interage com **P-02** (política de retenção
-  nunca decidida).
 - **Toggle da sidebar sem efeito abaixo de 1024px, corrompendo o estado persistido.** O D17 fez a
   `Sidebar` forçar `collapsed` por media query sem escrever no `uiStore`, então abaixo de 1024px o
   botão de toggle continua clicável, não muda nada na tela e ainda assim inverte o `sidebarCollapsed`
@@ -105,13 +90,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   `backend/database/migrations/`; `UserData` não tem o campo. O "último acesso" que o protótipo mostra
   na tela de Usuários exige coluna nova, captura no login e exposição no DTO. Task de backend, não
   de UI.
-- Check de paridade permissão↔i18n — teste/CI que assere
-  `array_keys(PermissionCatalog::descriptions())` (dot→underscore) igual às chaves `perm.*` de cada
-  locale; sem isso, permissão nova renderiza chave crua no picker.
-- Unicidade de `client_addresses.is_primary` — mesmo gap que o Bloco 2 fechou nos contatos; ficou
-  fora porque o contratante não pediu e a tela só edita o primeiro endereço.
-- `ClientContactData.is_primary` tem default `false` não-`Optional` — `PUT /api/contacts/{id}` sem
-  o campo rebaixa o principal em silêncio; rota ainda sem consumidor no frontend.
 - Decidir assimetria entre camadas: a UI não consegue voltar a zero principais, mas o backend
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão

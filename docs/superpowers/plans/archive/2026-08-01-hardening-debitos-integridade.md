@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3, spatie/laravel-data, owen-it/laravel-auditing, PHPUnit (sqlite `:memory:`), Storage fake/S3-MinIO, spatie/typescript-transformer.
 
-**Spec:** `docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-01-hardening-debitos-integridade-design.md`
 
 ## Global Constraints
 

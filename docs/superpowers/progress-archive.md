@@ -5,6 +5,7 @@
 
 | Data | Feature | Status | Resultado | Contexto | Plano | Spec |
 |---|---|---|---|---|---|---|
+| 2026-07-21 | Bloco 6b · Turma + redator | Entregue | Turma por cotação, designação N:N e gate RN-09 validados. | — | `plans/archive/2026-07-21-bloco6b-turma-designacao.md` | `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md` |
 | 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | — | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` | `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
 | 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | — | `plans/archive/2026-07-21-bloco6c-matricula-import.md` | `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
 | 2026-07-04 | Login + store de sessão | Entregue | Auth SPA Sanctum, guard de rota, sessão em Zustand hidratada no boot | — | `plans/archive/2026-07-04-login-flow-session.md` | `specs/archive/2026-07-04-login-flow-session-design.md` |

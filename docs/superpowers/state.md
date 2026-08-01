@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: hardening
-active_work_item: hardening-debitos-integridade
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-01-hardening-debitos-integridade-design.md
-active_plan: docs/superpowers/plans/2026-08-01-hardening-debitos-integridade.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: cards-relacao-curso-redator
-state_basis_commit: 7a307b1
-updated_at: 2026-08-01T18:10:00-03:00
+last_completed_work_item: hardening-debitos-integridade
+state_basis_commit: ca02c9b
+updated_at: 2026-08-01T20:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,70 +48,69 @@ updated_at: 2026-08-01T18:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `reviewing`
+## Estado atual — `idle`
+
+Nenhum `active_work_item`. Próxima ação: João escolhe explicitamente um item de
+`docs/superpowers/backlog.md`.
+
+## Último item fechado — 2026-08-01
 
 `hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
 pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
 contra o código real. Spec aprovada (D1–D9) e plano escrito em 8 tasks (7 de conteúdo + gate).
-**Execução concluída em 2026-08-01** (Tasks 1–8, `subagent-driven-development`, main tree — bloco
-toca backend, sem worktree, P-03). Gate provado: suíte 366 passed (1344 assertions, baseline
-347/1083), Pint limpo, `generated.ts` sem diff, frontend build+lint verdes, grep de `->store(`
-sem resíduo do bug do `false` silencioso, e prova real de duas sessões MySQL confirmando que o
-lock do Q-5 (D6) serializa de verdade em InnoDB (detalhe em `.superpowers/sdd/progress.md`, seção
-"Task 8"). Também fechado fora do plano original, por decisão do João em sessão: Task 2b
-(`UpdateRedatorAction` tinha o mesmo bug de arquivo órfão que a Task 2 fechou, achado no review).
+Execução em 2026-08-01 (Tasks 1–8, `subagent-driven-development`, main tree — bloco toca backend,
+sem worktree, P-03), com Task 2b fora do plano original (`UpdateRedatorAction` tinha o mesmo bug de
+arquivo órfão que a Task 2 fechou, achado no review). Gate provado: suíte 366 passed (1344
+assertions, baseline 347/1083), Pint limpo, `generated.ts` sem diff, frontend build+lint verdes,
+prova real de duas sessões MySQL confirmando que o lock do Q-5 (D6) serializa de verdade em InnoDB.
 
-**Review 1 (`/revisar-sprint`, alto risco — segunda lente Codex, spec §8), 2026-08-01: 2 achados,
-ambos corrigidos e aprovados pelo João no mesmo dia (commit `ca02c9b`).**
-- **Q-1** — a spec §3 assumia "endereço não tem rota nested hoje" (premissa da decisão de D8 de não
-  dar `winner` ao `PrimaryAddressService`). Falso: `ClientAddressController` (`5bc1d87`, anterior a
-  este bloco) já expõe `POST /api/clients/{client}/addresses` e `PUT /api/addresses/{address}`
-  escrevendo direto no Eloquent, ignorando o serviço — dois requests sequenciais deixavam dois
-  endereços principais, a mesma classe de bug que o bloco existe para fechar. Corrigido com
-  `CreateClientAddressAction`/`UpdateClientAddressAction` (espelham os de contato) e `winner` novo em
-  `PrimaryAddressService::ensureSingle()`.
-- **Q-2** — `UploadFileAction::discard()` só capturava exceção; um `delete()` que devolve `false` sem
-  lançar (mesmo modo silencioso do bug D2, fechado em `put()`) não gerava warning nenhum. Corrigido.
-- Achados vistos reprovando contra o código antigo antes do fix (stash dos 3 arquivos de produção,
-  suíte rodada, 4 testes falharam como esperado, stash restaurado) — lição 10.
-- Suíte 372 passed (1360 assertions; +6 testes novos), Pint limpo, `generated.ts` sem diff (fix não
-  tocou DTO).
+**Escopo fechado (6 itens).** Correção e peso legal: (1) arquivo órfão no MinIO em rollback —
+`UploadFileAction::execute` gravava no disco antes do insert em `files`; (2) P-24 —
+`UserPhotoService::store()` apagava o objeto NOVO se a auditoria lançasse depois do UPDATE já
+commitado; (3) Q-5 — `count()`+`delete()` fora de transação em `DeleteClientContactAction` deixava
+duas exclusões concorrentes esvaziarem a coleção de contatos. Falha silenciosa: (4)
+`ClientContactData.is_primary` com default `false` não-`Optional` rebaixava o principal em silêncio
+num PUT parcial; (5) sem check de paridade permissão↔i18n, permissão nova renderizava chave crua no
+picker; (6) sem unicidade de `client_addresses.is_primary`, análogo ao gap já fechado nos contatos.
 
-**Review 2 (sobre o commit de correção `ca02c9b`, segunda lente Codex), 2026-08-01: limpa para
-fechamento.** Único achado — `ensureSingle()` sem `lockForUpdate` no `Client` permite dois principais
-sob escrita concorrente, em `PrimaryContactService` **e**, agora simetricamente, em
-`PrimaryAddressService` — não é regressão deste commit (mesmo padrão já em produção desde antes do
-bloco). Registrado como Q-16 em `backlog.md`, não bloqueia o fechamento (mesma classe de decisão do
-Q-5: proporcionalidade, ~10 usuários internos).
+**Review em 2 rodadas (alto risco — `generated.ts` mudou, spec §8 — segunda lente Codex nas duas).**
+Rodada 1 (`/revisar-sprint`): 2 achados reais, ambos corrigidos no mesmo dia (commit `ca02c9b`).
+**Q-1** — a spec §3 assumia "endereço não tem rota nested hoje" (premissa da decisão de D8 de não
+dar `winner` ao `PrimaryAddressService`); falso — `ClientAddressController` (`5bc1d87`, anterior a
+este bloco) já expunha `POST /api/clients/{client}/addresses` e `PUT /api/addresses/{address}`
+escrevendo direto no Eloquent, ignorando o serviço — dois requests sequenciais deixavam dois
+endereços principais, a mesma classe de bug que o bloco existe para fechar. Corrigido com
+`CreateClientAddressAction`/`UpdateClientAddressAction` (espelham os de contato) e `winner` novo em
+`PrimaryAddressService::ensureSingle()`. **Q-2** — `UploadFileAction::discard()` só capturava
+exceção; um `delete()` que devolve `false` sem lançar (mesmo modo silencioso do bug D2, fechado em
+`put()`) não gerava warning nenhum; corrigido. Os 6 testes novos foram vistos reprovando contra o
+código antigo antes do fix (stash dos 3 arquivos de produção, suíte rodada, 4 testes falharam como
+esperado, stash restaurado) — lição 10. Rodada 2 (sobre `ca02c9b`): único achado — `ensureSingle()`
+sem `lockForUpdate` no `Client` permite dois principais sob escrita concorrente, em
+`PrimaryContactService` **e**, agora simetricamente, em `PrimaryAddressService` — não é regressão
+deste commit (mesmo padrão já em produção desde antes do bloco). Registrado como Q-16 em
+`backlog.md`, não bloqueou o fechamento (mesma classe de decisão do Q-5: proporcionalidade, ~10
+usuários internos).
 
-Próxima ação: `/fechar-sprint`.
+**Fora do escopo por decisão do João no mesmo dia (execução original):** os débitos de UI (Q-14,
+Q-15, CTA duplicado, cor hardcoded nos 6 diálogos), os minors de 5.2a/5.2b e `UserData::fromModel`
+chamando `getRoleNames()` duas vezes. Seguem abertas as decisões de Q-6 (idioma canônico das
+mensagens), P-20 (`openspout`) e P-21 (`simple-qrcode`).
 
-**Escopo fechado (6 itens).** Correção e peso legal:
+**Gate de fechamento:** DoD provado contra API real com sessão Sanctum (dois endereços
+`is_primary=true` no create deixam só um; POST na rota nested sobre cliente com principal existente
+idem — prova ao vivo do fix de Q-1; PUT de contato sem `is_primary` mantém o principal; DELETE do
+contato único → `422`). Suíte 372 passed (1360 assertions), Pint limpo, `generated.ts` sem diff,
+`pnpm build`+`pnpm lint` verdes. P-24 sai de `pendencias.md`; Q-5 sai de `backlog.md`. Sem context
+packet — a fonte é o código, o `backlog.md` e o `pendencias.md`.
 
-1. Arquivo órfão no MinIO em rollback — `UploadFileAction::execute` grava no disco antes do insert em
-   `files`; `StoreRedatorDocumentAction:24` e `CreateRedatorAction:30` envolvem em `DB::transaction`.
-   Rollback deixa binário sem linha, logo sem auditoria e sem rastro.
-2. P-24 — `UserPhotoService::store()` apaga o objeto NOVO se a auditoria lançar depois do UPDATE já
-   commitado.
-3. Q-5 — `DeleteClientContactAction.php:22`: `count()` + `delete()` fora de transação; duas exclusões
-   concorrentes esvaziam a coleção.
+Arquivado: `plans/archive/2026-08-01-hardening-debitos-integridade.md` ·
+`specs/archive/2026-08-01-hardening-debitos-integridade-design.md`.
 
-Falha silenciosa:
+**Aberto, registrado, não resolvido:** Q-16 em `backlog.md` (`ensureSingle()` sem lock no `Client`,
+`PrimaryContactService`/`PrimaryAddressService`); Q-6, P-20, P-21 em `pendencias.md`/`backlog.md`.
 
-4. `ClientContactData.is_primary` com default `false` não-`Optional` — `PUT /api/contacts/{id}` sem o
-   campo rebaixa o principal em silêncio.
-5. Check de paridade permissão↔i18n — sem ele, permissão nova renderiza chave crua no picker.
-6. Unicidade de `client_addresses.is_primary` — toca schema, exige `der-fisico.md`.
-
-**Fora do escopo por decisão do João no mesmo dia:** os débitos de UI (Q-14, Q-15, CTA duplicado,
-cor hardcoded nos 6 diálogos), os minors de 5.2a/5.2b e `UserData::fromModel` chamando
-`getRoleNames()` duas vezes. Também ficam abertas, sem resolver agora, as decisões de Q-6 (idioma
-canônico das mensagens), P-20 (`openspout`) e P-21 (`simple-qrcode`).
-
-Sem context packet: o bloco não depende de Drive, Notion ou Figma — a fonte é o código, o
-`backlog.md` e o `pendencias.md`.
-
-## Último item fechado — 2026-08-01
+## Penúltimo item fechado — 2026-08-01
 
 `cards-relacao-curso-redator` — bloco 100% frontend, zero arquivo de `backend/` tocado (D1).
 Executado em worktree (`using-git-worktrees` + `subagent-driven-development`), 10 tasks de conteúdo
@@ -156,59 +155,5 @@ as 3 imagens de referência direto na sessão de planejamento).
 removeu a mentira da UI, não fechou o acoplamento — mesma classe do item "Alunos · o dropdown de
 empresa depende de uma permissão de outro módulo" no `backlog.md`); FUT-2 no caso geral (D8 resolve
 só o caso concreto do botão-olho).
-
-## Penúltimo item fechado — 2026-08-01
-
-`foto-avatar-e-contatos-cliente` — bloco único juntando os itens 1 e 2 do backlog por decisão do
-João. Spec de 15 decisões (D1–D15), plano de 12 tasks; Parte A (backend, Tasks 1–4) pelo Codex,
-Parte B (frontend, Tasks 5–12) por Claude com `subagent-driven-development`. Commits `4dfe3a9`..
-`73870b0`.
-
-**Entrega:** `photo_url` (`#[Computed]`) nos 4 contratos (User/Client/Redator/Student);
-`UserPhotoService` guarda a foto em `users.photo_path`, FORA de `files` — foto não é documento, não
-vence, não habilita turma, não entra em certificado (D3). 8 rotas nested, uma por módulo dono, para
-não recriar acoplamento RBAC cross-módulo (D1). `AppAvatar` com fallback duplo (D7: a URL
-pré-assinada expira, e círculo vazio parece defeito, não "sem foto"), `AppPhotoField` +
-`useEntityPhoto` (buffer no create D10, `flush` nunca lança D11), avatar nas 4 tabelas, contatos do
-cliente em cards com exclusão e mínimo de 1 (D12–D14).
-
-**Dois achados críticos apareceram só na prova visual do João, depois do DoD:**
-`UploadedFile::store()` devolve `false` sem lançar — `photo_path` virava `'0'` e o objeto anterior,
-que ainda funcionava, era apagado (`9197d08`; 2 clientes reais de dev ficaram assim). E não existe
-valor único de `AWS_ENDPOINT` que sirva para escrita e leitura: resolvido assinando a leitura contra
-um disco `{disco}_public` separado (`b6dc068`), no mesmo choke point que os documentos de
-redator/turma/orçamento já usavam.
-
-**Dois reviews, de duas lentes cada** (Claude + `mcp__codex__codex` read-only). O primeiro sobre
-`4dfe3a9..b6dc068`: 7 achados, dos quais **Q1 era falso positivo** — medido, o resolver do spatie
-desvia do `CannotSetComputedValue` quando a propriedade é promovida no construtor. Reais: o mínimo
-de 1 contato escapava pela rota nested `DELETE /api/contacts/{id}`, e a rota de foto do staff
-aceitava `User` de qualquer tipo, driblando a permissão do módulo dono. O segundo, sobre a própria
-rodada de correção (`34ab3c2`): 4 achados aprovados — o gate de fechamento não cobria o botão
-**Salvar** (quarta saída do diálogo), o retry ressurgia no erro de TAMANHO reenviando o arquivo
-errado, o teste do Q5 provava menos do que o Q5 pedia, e o `closeBlocked` sem `timeout` no axios
-virava trava dura.
-
-**Lição 10 reapareceu dentro do fix da própria lição 10:** o teste novo de auditoria passou VAZIO na
-primeira prova — sem `photo_path` no diff, todos os valores viram `null`, e `null === null` aprova
-tudo. Só com `assertNotNull` nos caminhos ele foi visto reprovando.
-
-**Gate de fechamento:** DoD e correções provados contra API real com sessão Sanctum (contato único →
-`422` sem apagar; `DELETE` com 3 contatos → `204`; `/api/users/{userDeCliente}/photo` → `404` sem
-tocar a foto; `POST /api/clients/1/photo` → `204` e a URL pré-assinada devolvendo `200 image/png`;
-`contacts: []` → `422` com os contatos intactos). Suíte 347 passed (1083 assertions), `pnpm build` +
-`pnpm lint` verdes, Pint limpo nos 19 arquivos PHP do bloco, `generated.ts` regenerado sem diff.
-Prova visual do João aceita.
-
-Arquivado: `plans/archive/2026-07-31-foto-avatar-e-contatos-cliente.md` ·
-`specs/archive/2026-07-31-foto-avatar-e-contatos-cliente-design.md` ·
-`context-packets/foto-avatar-e-contatos-cliente.md` (`partial` — as 4 imagens de referência eram
-caller-held e **nunca foram fornecidas**; o bloco entregou sem elas).
-
-**Aberto, registrado, não resolvido:** P-24 em `docs/pendencias.md` (a compensação do
-`UserPhotoService::store()` pode apagar o objeto novo se a auditoria lançar depois do UPDATE já ter
-commitado) e, no `backlog.md`, Q-5 (check-then-act sem lock no mínimo de contatos — divergência de
-severidade declarada com a segunda lente) e Q-6 (idioma das mensagens de `ValidationException`
-inconsistente no repo, pré-existente).
 
 Histórico completo: `docs/superpowers/progress.md`.
