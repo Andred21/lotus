@@ -6,6 +6,7 @@ use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Commercial\Models\ClientContact;
+use App\Domains\Commercial\Services\PrimaryAddressService;
 use App\Domains\Commercial\Services\PrimaryContactService;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class UpdateClientAction
     public function __construct(
         private UserProvisioner $users,
         private PrimaryContactService $primaryContacts,
+        private PrimaryAddressService $primaryAddresses,
     ) {}
 
     public function execute(Client $client, ClientData $data): Client
@@ -52,6 +54,7 @@ class UpdateClientAction
                 $client->contacts()->create($contact->toArray());
             }
 
+            $this->primaryAddresses->ensureSingle($client);
             $this->primaryContacts->ensureSingle($client);
 
             return $client->fresh()->load(['user', 'addresses', 'contacts']);

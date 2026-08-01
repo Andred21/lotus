@@ -4,6 +4,7 @@ namespace App\Domains\Commercial\Actions;
 
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Services\PrimaryAddressService;
 use App\Domains\Commercial\Services\PrimaryContactService;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class CreateClientAction
     public function __construct(
         private UserProvisioner $users,
         private PrimaryContactService $primaryContacts,
+        private PrimaryAddressService $primaryAddresses,
     ) {}
 
     public function execute(ClientData $data): Client
@@ -46,6 +48,7 @@ class CreateClientAction
                 $client->contacts()->create($contact->toArray());
             }
 
+            $this->primaryAddresses->ensureSingle($client);
             $this->primaryContacts->ensureSingle($client);
 
             return $client->load(['user', 'addresses', 'contacts']);
