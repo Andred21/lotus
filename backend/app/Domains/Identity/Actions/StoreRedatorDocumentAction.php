@@ -9,6 +9,7 @@ use App\Shared\Files\Models\File;
 use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Adiciona ou substitui um documento do redator. Se já existe um doc ativo do
@@ -21,15 +22,38 @@ class StoreRedatorDocumentAction
 
     public function execute(Redator $redator, RedatorDocumentType $type, UploadedFile $file, ?CarbonInterface $validUntil = null): File
     {
-        return DB::transaction(function () use ($redator, $type, $file, $validUntil) {
-            // Soft-delete por instância, não pelo query builder: `->delete()` no
-            // builder emite um UPDATE direto, sem eventos de model — e sem
-            // eventos o owen-it não grava a linha em `audits`. A rastreabilidade
-            // do documento removido é requisito (o binário fica no bucket).
-            $redator->documents()->where('type', $type->value)->get()
-                ->each(fn (File $antigo) => $antigo->delete());
+        // Escrita no disco ANTES da transação (spec D1/D3): dentro dela, um
+        // rollback derrubaria a linha e deixaria o binário no bucket — documento
+        // sem rastro. Aqui, o que sobra em caso de falha é objeto órfão, que o
+        // `discard` abaixo apaga.
+        $meta = $this->uploads->metadataOf($file);
+        $path = $this->uploads->put($redator, $file);
 
-            return $this->uploads->execute($redator, $file, $type->value, $validUntil);
-        });
+        try {
+            return DB::transaction(fn () => $this->registerUploaded($redator, $type, $path, $meta, $validUntil));
+        } catch (Throwable $e) {
+            $this->uploads->discard($path);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Para quem JÁ segura a transação e JÁ fez o `put` — hoje, o
+     * `CreateRedatorAction`. Faz o replace do documento ativo do mesmo tipo e
+     * registra o novo.
+     *
+     * @param  array{original_name: string, mime: string, size: int}  $meta
+     */
+    public function registerUploaded(Redator $redator, RedatorDocumentType $type, string $path, array $meta, ?CarbonInterface $validUntil = null): File
+    {
+        // Soft-delete por instância, não pelo query builder: `->delete()` no
+        // builder emite um UPDATE direto, sem eventos de model — e sem
+        // eventos o owen-it não grava a linha em `audits`. A rastreabilidade
+        // do documento removido é requisito (o binário fica no bucket).
+        $redator->documents()->where('type', $type->value)->get()
+            ->each(fn (File $antigo) => $antigo->delete());
+
+        return $this->uploads->register($redator, $path, $meta, $type->value, $validUntil);
     }
 }
