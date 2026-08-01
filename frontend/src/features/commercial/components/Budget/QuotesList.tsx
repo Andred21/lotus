@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, FormErrorBanner } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
@@ -25,6 +26,9 @@ export function QuotesList({
   // `message`: o upload é um único input por linha, sem campo onde pendurar o
   // 422 de "file"/"type" — o hook já resolve o fallback.
   const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
+  // Rejeição por tamanho é local (não passa pela API): o AppFileUpload barra o
+  // arquivo antes de qualquer request, então não vira erro de mutação.
+  const [sizeError, setSizeError] = useState<string | null>(null)
 
   const courseName = (id: number) => courses.data?.find((c) => c.id === id)?.name ?? '—'
 
@@ -42,6 +46,7 @@ export function QuotesList({
     <div>
       <div className="m-4 empty:m-0">
         <FormErrorBanner message={fileError} />
+        {sizeError && <FormErrorBanner message={sizeError} />}
       </div>
       {/* Contêiner próprio: `first:border-t-0` mira o primeiro filho DESTA div,
        * não o primeiro filho do wrapper de cima (que sempre existe por causa do
@@ -104,7 +109,8 @@ export function QuotesList({
                   // o FileUpload do Prime descarta chaves desconhecidas de chooseOptions.
                   pt={{ basicButton: { 'aria-label': t('common.upload') } }}
                   disabled={uploadFile.isPending && uploadFile.variables?.quoteId === q.id}
-                  uploadHandler={(e) => handleUpload(q.id!, e)}
+                  onSizeReject={setSizeError}
+                  uploadHandler={(e) => { setSizeError(null); handleUpload(q.id!, e) }}
                 />
               </div>
               <FileList files={q.files ?? []} onRemove={(fileId) => removeFile.mutate({ quoteId: q.id!, fileId })} />

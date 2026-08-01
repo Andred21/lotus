@@ -31,7 +31,7 @@ Migrations globais e cronológicas em `database/migrations/` (FK cruza domínios
   genérica (`type` string). Delete de doc = soft-delete do metadado; **o arquivo permanece no bucket**
   (rastreável — peso legal). `File` é `Auditable`. Upload polimórfico: valide cada **folha** com
   `instanceof UploadedFile` (não só o nível de cima), senão `documents[CV][]` vira TypeError/500.
-- **Código de negócio é da aplicação, não do banco** (ADR-08/17). `budgets.codigo = 'Scap ' . id`
+- **Código de negócio é da aplicação, não do banco** (ADR-08/17). `budgets.code = 'Scap ' . id`
   gerado na camada de aplicação; sequência atômica via `lockForUpdate()` no contador do pai. InnoDB
   só aceita um AUTO_INCREMENT por tabela — código composto se computa em runtime, não se persiste.
 

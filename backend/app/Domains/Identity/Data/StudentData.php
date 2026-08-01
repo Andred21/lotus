@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Student;
+use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
@@ -41,6 +42,8 @@ class StudentData extends Data
         public ?string $current_client_name = null,
         #[Computed]
         public int $enrollments_count = 0,
+        #[Computed]
+        public ?string $photo_url = null,
     ) {}
 
     public static function rules(): array
@@ -69,6 +72,7 @@ class StudentData extends Data
             // `enrollments_count` vem do withCount() do controller; o fallback
             // cobre a chamada direta (testes de unidade) sem gerar N+1 na lista.
             enrollments_count: $student->enrollments_count ?? $student->enrollments()->count(),
+            photo_url: app(UserPhotoService::class)->urlFor($student->user->photo_path),
         );
     }
 }

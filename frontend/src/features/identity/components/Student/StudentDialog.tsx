@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import {
-  CrudDialog, AppAvatar, AppButton, AppInputText, AppDropdown, AppTag, AppDataTable, AppColumn,
-  AppSkeleton, AppErrorState, FormField, FormSection, FormErrorBanner,
+  CrudDialog, AppButton, AppInputText, AppDropdown, AppTag, AppDataTable, AppColumn,
+  AppSkeleton, AppErrorState, FormField, FormSection, FormErrorBanner, AppPhotoField,
 } from '@shared/ui'
 import type { StudentData, StudentTurmaData, StudentClientLogData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity, formatMonthYear } from '@shared/lib'
 import { clientsApi } from '@shared/api/clientsApi'
+import { studentsApi } from '@shared/api/studentsApi'
+import { useEntityPhoto } from '@shared/hooks'
 import { useStudentDetail } from '../../api/useStudentDetail'
 import { useStudentForm } from '../../hooks/useStudentForm'
 
@@ -20,7 +22,18 @@ export function StudentDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useStudentForm(student, mode, onHide)
+  const photo = useEntityPhoto({
+    resource: 'students',
+    id: mode === 'create' ? null : (student?.id ?? null),
+    mode,
+    url: student?.photo_url,
+    invalidateKey: studentsApi.keys.all,
+  })
+
+  // `flush` sobe a foto bufferizada com o id recém-criado. Não lança: a
+  // entidade já existe, e fechar o diálogo aqui esconderia a falha (D11).
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError } =
+    useStudentForm(student, mode, onHide, (created) => photo.flush(created.id as number))
   // Só busca clientes no create: view/edit mostram current_client_name (já
   // vem no StudentData), sem chamada extra. O create em si segue exigindo só
   // identity.user.create (D8/StudentController) — quem tiver a permissão mas
@@ -44,13 +57,26 @@ export function StudentDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
-      disabled={clientsUnusable}
+      disabled={clientsUnusable || photo.pending}
+      closeBlocked={pending || photo.pending}
       submitLabel={mode === 'create' ? t('student.create') : undefined}
-      headerExtra={mode !== 'create' ? <AppAvatar name={form.name} size="normal" /> : null}
     >
       <FormErrorBanner message={generalError} />
+      {photo.hasBufferedFailure && <FormErrorBanner message={t('photo.createUploadFailed')} />}
 
       <section className="space-y-4">
+        <AppPhotoField
+          name={form.name}
+          url={photo.url}
+          readOnly={readOnly}
+          pending={photo.pending}
+          error={photo.error}
+          onSelect={photo.onSelect}
+          onRemove={photo.onRemove}
+          onSizeReject={photo.onSizeReject}
+          onRetry={photo.onRetry}
+        />
+
         <FormSection title={t('student.sectionPersonal')} />
         <FormField label={t('student.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText value={form.name} disabled={readOnly} onChange={(e) => set('name', e.target.value)} className="w-full" />

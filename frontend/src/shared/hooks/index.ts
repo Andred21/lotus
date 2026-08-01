@@ -1,6 +1,8 @@
 export { useClock } from './useClock'
 export { useCrudPage } from './useCrudPage'
 export { useEntityForm, useMutationErrors } from './useEntityForm'
+export { useEntityPhoto } from './useEntityPhoto'
+export type { UseEntityPhotoOptions } from './useEntityPhoto'
 export { useIsCompactViewport } from './useIsCompactViewport'
 export { usePermissions } from './usePermissions'
 export { useTableFilter } from './useTableFilter'

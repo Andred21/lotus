@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import {
-  AppDataTable, AppColumn, AppTag, AppInputText, AppButton, AppCardToolbar, AppEmptyState,
+  AppDataTable, AppColumn, AppAvatar, AppTag, AppInputText, AppButton, AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { ClientData } from '@shared/types/generated'
 
@@ -58,7 +58,17 @@ export function ClientsTable({
         first={table.first}
         onPage={table.onPage}
       >
-        <AppColumn field="legal_name" header={t('client.legalName')} sortable />
+        <AppColumn
+          field="legal_name"
+          header={t('client.legalName')}
+          sortable
+          body={(c: ClientData) => (
+            <div className="flex items-center gap-3">
+              <AppAvatar name={c.legal_name} image={c.photo_url} size="normal" />
+              <span className="font-medium">{c.legal_name}</span>
+            </div>
+          )}
+        />
         <AppColumn header={t('common.rut')} body={(c: ClientData) => <span className="font-mono text-sm">{c.rut}</span>} />
         <AppColumn header={t('client.type')} body={(c: ClientData) => <AppTag value={t(`clientType.${c.type}`)} severity="secondary" />} />
         <AppColumn header={t('client.commune')} body={(c: ClientData) => c.addresses[0]?.commune ?? '—'} />

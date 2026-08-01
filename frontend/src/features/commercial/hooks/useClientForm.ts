@@ -16,11 +16,17 @@ const EMPTY_CONTACT: ClientData['contacts'][number] = {
 const EMPTY: ClientData = {
   id: undefined, name: '', rut: '', email: '', phone: null,
   legal_name: '', type: 'client', business_activity: null,
+  photo_url: null,
   addresses: [{ ...EMPTY_ADDRESS }],
   contacts: [{ ...EMPTY_CONTACT, is_primary: true }],
 }
 
-export function useClientForm(client: ClientData | null, mode: ClientDialogMode, onDone: () => void) {
+export function useClientForm(
+  client: ClientData | null,
+  mode: ClientDialogMode,
+  onDone: () => void,
+  afterCreate?: (created: ClientData) => Promise<void>,
+) {
   const { form, setForm, set, readOnly } = useEntityForm(client, mode, EMPTY)
   const create = clientsApi.useCreate()
   const update = clientsApi.useUpdate()
@@ -43,12 +49,52 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
   const addContact = () =>
     setForm((f) => ({ ...f, contacts: [...f.contacts, { ...EMPTY_CONTACT }] }))
 
+  /** Remove o contato do índice. Não deixa a lista vazia: o backend exige ao
+   * menos um (spec D13) e a UI desabilita o botão nesse caso — esta guarda é
+   * a rede, não a regra. Se o removido era o principal, o primeiro que sobra
+   * assume, para a lista nunca ficar sem principal por efeito colateral. */
+  const removeContact = (i: number) =>
+    setForm((f) => {
+      if (f.contacts.length <= 1) return f
+
+      const rest = f.contacts.filter((_, idx) => idx !== i)
+      const hasPrimary = rest.some((c) => c.is_primary)
+
+      return {
+        ...f,
+        contacts: hasPrimary ? rest : rest.map((c, idx) => ({ ...c, is_primary: idx === 0 })),
+      }
+    })
+
   function submit() {
     // Empresa não tem nome separado da razón social: `name` (exigido pelo backend
     // para o `users.name` do login provisionado) é sempre igual a `legal_name`.
-    const payload = { ...form, name: form.legal_name }
+    //
+    // Campos LISTADOS, não `...form`: `photo_url` é `#[Computed]` e não tem o
+    // que fazer num payload de escrita — hoje o backend o ignora (a promoção
+    // no construtor do `ClientData` desvia do `CannotSetComputedValue`, medido
+    // em 2026-08-01: PUT com `photo_url` devolve 200), mas mandar campo de
+    // saída no corpo da escrita depende desse detalhe do pacote para não
+    // virar 500. Os outros 3 forms já montam o payload explícito.
+    const payload = {
+      id: form.id,
+      name: form.legal_name,
+      legal_name: form.legal_name,
+      rut: form.rut,
+      email: form.email,
+      phone: form.phone,
+      type: form.type,
+      business_activity: form.business_activity,
+      addresses: form.addresses,
+      contacts: form.contacts,
+    }
     if (mode === 'create') {
-      create.mutate(payload, { onSuccess: onDone })
+      create.mutate(payload, {
+        onSuccess: async (created) => {
+          await afterCreate?.(created)
+          onDone()
+        },
+      })
       return
     }
     update.mutate({ id: client!.id!, payload }, { onSuccess: onDone })
@@ -58,7 +104,7 @@ export function useClientForm(client: ClientData | null, mode: ClientDialogMode,
 
   return {
     form, set, readOnly, submit,
-    setAddr, patchContact, setPrimaryContact, addContact,
+    setAddr, patchContact, setPrimaryContact, addContact, removeContact,
     pending: create.isPending || update.isPending,
     fieldErrors, generalError,
   }

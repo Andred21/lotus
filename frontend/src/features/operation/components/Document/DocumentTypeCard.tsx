@@ -1,9 +1,8 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppFileUpload, AppTag } from '@shared/ui'
+import { AppButton, AppFileUpload, AppTag, AppFileRow, AppFilePreviewDialog } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
-import { formatDate } from '@shared/lib'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
-import { formatFileSize } from '../../lib/turmaDocuments'
 
 type Props = {
   type: TurmaDocumentType
@@ -25,6 +24,8 @@ export function DocumentTypeCard({
   canSubmit,
 }: Props) {
   const { t } = useTranslation()
+  const [preview, setPreview] = useState<TurmaDocumentData | null>(null)
+  const [sizeError, setSizeError] = useState<string | null>(null)
   const delivered = files.length > 0
 
   return (
@@ -40,7 +41,9 @@ export function DocumentTypeCard({
             accept="application/pdf"
             chooseLabel={t('operation.documents.upload')}
             disabled={uploading}
+            onSizeReject={setSizeError}
             uploadHandler={(e: FileUploadHandlerEvent) => {
+              setSizeError(null)
               const file = e.files[0]
               if (!file) return
               // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
@@ -57,28 +60,49 @@ export function DocumentTypeCard({
         )}
       </header>
 
-      <ul className="mt-3 space-y-1">
+      <ul className="mt-3 space-y-2">
         {files.map((file) => (
-          <li key={file.id} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-color)' }}>
-            <i className="pi pi-file-pdf" aria-hidden="true" />
-            <span>{file.original_name}</span>
-            <span style={{ color: 'var(--text-color-secondary)' }}>
-              {formatFileSize(file.size)} · {formatDate(new Date(file.created_at))}
-            </span>
-            {canSubmit && (
-              <AppButton
-                icon="pi pi-trash"
-                text
-                severity="danger"
-                aria-label={t('operation.documents.remove')}
-                disabled={removing}
-                onClick={() => onRemove(file)}
-              />
-            )}
+          <li key={file.id}>
+            <AppFileRow
+              name={file.original_name}
+              mime={file.mime}
+              size={file.size}
+              createdAt={file.created_at}
+              actions={
+                <>
+                  <AppButton
+                    icon="pi pi-eye"
+                    text
+                    rounded
+                    aria-label={t('common.preview')}
+                    onClick={() => setPreview(file)}
+                  />
+                  <a href={file.download_url} target="_blank" rel="noreferrer">
+                    <AppButton icon="pi pi-download" text rounded aria-label={t('common.download')} />
+                  </a>
+                  {canSubmit && (
+                    <AppButton
+                      icon="pi pi-trash"
+                      text
+                      rounded
+                      severity="danger"
+                      aria-label={t('operation.documents.remove')}
+                      disabled={removing}
+                      onClick={() => onRemove(file)}
+                    />
+                  )}
+                </>
+              }
+            />
           </li>
         ))}
         {!delivered && <li className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.empty')}</li>}
       </ul>
+
+      {sizeError && <p className="mt-2 text-sm" style={{ color: 'var(--red-500)' }}>{sizeError}</p>}
+
+      <AppFilePreviewDialog file={preview} visible={preview !== null} onHide={() => setPreview(null)} />
+
       {canSubmit && <p className="mt-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.uploadHint')}</p>}
     </section>
   )

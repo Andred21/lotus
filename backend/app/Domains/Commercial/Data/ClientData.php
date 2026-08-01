@@ -2,7 +2,10 @@
 
 namespace App\Domains\Commercial\Data;
 
+use App\Domains\Commercial\Models\Client;
+use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Rules\ValidRut;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\In;
@@ -39,12 +42,19 @@ class ClientData extends Data
         /** @var array<ClientContactData> */
         #[DataCollectionOf(ClientContactData::class)]
         public array $contacts = [],
+        #[Computed]
+        public ?string $photo_url = null,
     ) {}
 
     public static function rules(): array
     {
         return [
             'rut' => ['required', 'string', new ValidRut],
+            // Um ou mais contatos (Drive `entidade-contato-cliente.md`,
+            // ratificado em 2026-07-31). `required` também fecha o buraco do
+            // replace-total: antes, omitir a chave apagava a coleção em
+            // silêncio, porque $contacts é `array = []` e não `Optional`.
+            'contacts' => ['required', 'array', 'min:1'],
         ];
     }
 
@@ -52,7 +62,7 @@ class ClientData extends Data
      * Hidrata o DTO do model, achatando os campos do user (name/rut/email/
      * phone) para o topo. Usado nas respostas do ClientController.
      */
-    public static function fromModel(\App\Domains\Commercial\Models\Client $client): self
+    public static function fromModel(Client $client): self
     {
         return new self(
             id: $client->id,
@@ -65,6 +75,7 @@ class ClientData extends Data
             business_activity: $client->business_activity,
             addresses: ClientAddressData::collect($client->addresses->all()),
             contacts: ClientContactData::collect($client->contacts->all()),
+            photo_url: app(UserPhotoService::class)->urlFor($client->user->photo_path),
         );
     }
 }

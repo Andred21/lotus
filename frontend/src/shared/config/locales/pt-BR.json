@@ -31,6 +31,9 @@
     "inactive": "Inativo",
     "view": "Ver",
     "upload": "Enviar documento",
+    "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
+    "preview": "Ver",
+    "previewUnavailable": "Este formato não tem pré-visualização. Baixe o arquivo para abri-lo.",
     "noResults": "Sem resultados para \"{{term}}\"",
     "noResultsFiltered": "Sem resultados para os filtros aplicados",
     "noResultsFilteredHint": "Ajuste ou limpe os filtros aplicados.",
@@ -168,6 +171,13 @@
   "placeholder": {
     "module": "Módulo em construção."
   },
+  "photo": {
+    "label": "Foto",
+    "select": "Selecionar foto",
+    "replace": "Substituir",
+    "remove": "Remover foto",
+    "createUploadFailed": "O cadastro foi criado, mas a foto não subiu."
+  },
   "client": {
     "new": "Novo cliente",
     "create": "Cadastrar cliente",
@@ -192,6 +202,9 @@
     "contactName": "Nome",
     "contactJobTitle": "Cargo",
     "contactPrimary": "Contato principal",
+    "contactPrimaryTag": "Principal",
+    "removeContact": "Remover contato",
+    "lastContactHint": "O cliente precisa de ao menos um contato",
     "contacts": "Contatos"
   },
   "course": {
@@ -212,7 +225,9 @@
     "empty": "Nenhum curso.",
     "emptyHint": "Crie o primeiro curso para começar.",
     "count": "{{count}} curso(s)",
-    "redatorCount": "Redatores"
+    "redatorCount": "Redatores",
+    "workloadShort": "{{hours}} h",
+    "redatoresSelectNote": "Selecione os redatores habilitados para este curso."
   },
   "courseModule": {
     "section": "Módulos",
@@ -230,7 +245,8 @@
     "total": "Total: {{hours}} h",
     "modulesTotal": "Total dos módulos: {{hours}} h",
     "hoursMismatch": "A soma dos módulos ({{modules}} h) difere da carga horária do curso ({{workload}} h). Você pode salvar assim mesmo.",
-    "empty": "Nenhum módulo cadastrado."
+    "empty": "Nenhum módulo cadastrado.",
+    "countShort": "{{count}} módulo(s)"
   },
   "budget": {
     "tab": "Orçamentos",
@@ -317,7 +333,8 @@
     "sectionDocuments": "Documentos",
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
-    "suitability": "Idoneidade"
+    "suitability": "Idoneidade",
+    "noCourses": "Sem cursos habilitados."
   },
   "student": {
     "new": "Novo aluno",

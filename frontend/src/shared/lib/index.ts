@@ -1,6 +1,8 @@
 export * from './datetime'
 export * from './enrollmentStatus'
+export * from './redatorStatus'
 export * from './roles'
 export * from './name'
+export * from './upload'
 export { CHILE_REGIONS } from './chileRegions'
 export type { DialogMode } from './dialogMode'

@@ -72,7 +72,15 @@ and explicit source references in the request.
 3. Use the configured MCP connectors. In this runtime they are (verified 2026-07-23, see
 `AGENTS.md` §3): Google Drive via `mcp__codex_apps__google_drive_*` — the canonical planning
 source, so query it rather than assuming it is missing; Figma via `mcp__codex_apps__figma_*`;
-GitHub via `mcp__codex_apps__github_*`. Notion is not loaded in this runtime.
+GitHub via `mcp__codex_apps__github_*`. Notion via `mcp__codex_apps__notion_*` — verified 2026-07-30
+while generating the `hardening-doc-sync-sprint4` packet; the canonical base is
+`collection://e64b7d57-d000-4433-b652-a410e75193cc` (database `7e55d684-cdd4-4bf3-b152-e15ce70d324b`).
+
+**Address every external source by ID, never by display name.** A second, obsolete base also called
+`Tasks · Lotus Fase 2` (`collection://6adbc960-3dfa-8269-9d57-8719e44eed2c`, pages now `deleted`)
+still answers search and fetch; querying it produced 12 false divergences in the 2026-07-30 doc-sync.
+The tools do not flag the ambiguity. Record the Drive file ID, the Notion page/collection ID and the
+Figma node ID in the source registry — a title is a locator, not provenance.
 A source may be marked `unavailable` only with one of two recorded evidences:
 
 - **tool present, call failed** — state the decisive error line;

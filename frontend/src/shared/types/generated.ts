@@ -47,6 +47,7 @@ type: string,
 business_activity: undefined | string | null,
 addresses: ClientAddressData[],
 contacts: ClientContactData[],
+photo_url: string | null,
 };
 export type CourseData = {
 id: undefined | number,
@@ -159,12 +160,16 @@ email: string,
 phone: undefined | string | null,
 course_ids: number[],
 documents: RedatorDocumentData[],
+photo_url: string | null,
 };
 export type RedatorDocumentData = {
 id: number,
 type: string,
 original_name: string,
+mime: string | null,
+size: number,
 valid_until: string | null,
+created_at: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
@@ -201,6 +206,7 @@ client_id: undefined | number | null,
 current_client_id: number | null,
 current_client_name: string | null,
 enrollments_count: number,
+photo_url: string | null,
 };
 export type StudentDetailData = {
 id: number,
@@ -245,8 +251,10 @@ export type TurmaDocumentData = {
 id: number,
 type: string,
 original_name: string,
+mime: string | null,
 size: number,
 created_at: string,
+download_url: string,
 };
 export type TurmaDocumentType = 'MANUAL' | 'PRUEBAS' | 'EVALUACION_REDATOR';
 export type TurmaModalidade = 'presencial' | 'online';
@@ -267,4 +275,5 @@ is_active: boolean,
 password: undefined | string,
 type: undefined | string,
 roles: string[],
+photo_url: string | null,
 };

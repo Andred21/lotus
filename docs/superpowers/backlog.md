@@ -27,6 +27,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
 - ~~**Pessoas · Alunos**~~ — entregue em 2026-07-27 (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
 - **Certificados** — já coberto pelo Bloco 7.
+- **Perfil do Usuário** - página dedicada para usuário (administrativo e redator), visualizando seu perfil e dados.
 
 ## Futuros dependentes de decisão
 
@@ -39,6 +40,22 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Q-5 — check-then-act sem lock no mínimo de contatos.** `DeleteClientContactAction.php:22`: `count()`
+  e `delete()` fora de transação; duas exclusões concorrentes leem 2 contatos e apagam os 2, deixando o
+  cliente sem nenhum. Achado 🟢 do segundo `/revisar-sprint` de `foto-avatar-e-contatos-cliente`
+  (2026-08-01), deferido pelo João por proporcionalidade (~10 usuários internos, baixa concorrência).
+  Saída: `DB::transaction` + `lockForUpdate()` na contagem. **Divergência declarada:** a segunda lente
+  (Codex) classificou mais alto que 🟢.
+- **Q-6 — idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial escreve em
+  PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`)
+  — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;
+  levantado no segundo review (2026-08-01) porque o 422 novo de contatos tem uma única mensagem e ela é
+  a que o cliente vê. Exige decisão do João sobre o idioma canônico antes de valer a pena unificar.
+- **Guardrail das leis §5 (P-04).** Leis invioláveis hoje são instrução em `CLAUDE.md`, não mecanismo
+  — "lei que precisa valer sempre quer Arch test ou hook, não parágrafo" (lição 14). Instalar Pest
+  Arch tests cobrindo DDD-lite/sem-Repository, auditoria só na aplicação e demais leis testáveis no
+  backend, mais `eslint-boundaries` para a regra de dependência do frontend (features não importam
+  PrimeReact direto nem outra feature). Gatilho em `pendencias.md` P-04: reavaliar em 2026-08-15.
 - **Q-14 — `AppErrorState` não sinaliza "reintentando".** `AppErrorState.tsx:36`: o botão Reintentar
   não recebe estado de refetch nem `disabled`, então cliques repetidos disparam refetch em série sem
   nenhum feedback. Achado 🟢 do `/revisar-sprint` da Parte 4 (2026-07-27); o João optou por não

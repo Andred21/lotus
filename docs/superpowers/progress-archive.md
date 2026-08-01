@@ -5,6 +5,8 @@
 
 | Data | Feature | Status | Resultado | Contexto | Plano | Spec |
 |---|---|---|---|---|---|---|
+| 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | — | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` | `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
+| 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | — | `plans/archive/2026-07-21-bloco6c-matricula-import.md` | `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |
 | 2026-07-04 | Login + store de sessão | Entregue | Auth SPA Sanctum, guard de rota, sessão em Zustand hidratada no boot | — | `plans/archive/2026-07-04-login-flow-session.md` | `specs/archive/2026-07-04-login-flow-session-design.md` |
 | 2026-07-06 | App Shell + Sidebar RBAC | Entregue | Shell (sidebar+header), nav filtrada por RBAC, dark mode layout-only em uiStore | — | `plans/archive/2026-07-06-app-shell-sidebar.md` | — |
 | 2026-07-07 | Sprint 1 · Cadastros backend (Cliente + Redator) | Entregue | Schema, models, DTOs, validação RUT, actions, controllers; provado em sqlite `:memory:` | — | `plans/archive/2026-07-07-sprint1-cadastros-backend.md` | `specs/archive/2026-07-07-sprint1-cadastros-backend-design.md` |
@@ -25,3 +27,5 @@
 | 2026-07-17 | Bloco 5.2a · Usuarios | Entregue | CRUD de staff, roles e proteção do último superadmin. | — | `plans/archive/2026-07-17-bloco5.2a-usuarios.md` | `specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` |
 | 2026-07-18 | Bloco 5.2b · Roles y Permisos | Entregue | Roles customizadas e segregação de permissões implementadas. | — | `plans/archive/2026-07-18-bloco5.2b-roles-permisos.md` | `specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md` |
 | 2026-07-19 | Bloco 5.3 · Refino Comercial | Entregue | Forms compartilhados, detalhe declarativo e date picker ISO. | — | `plans/archive/2026-07-19-refino-comercial-frontend.md` | `specs/archive/2026-07-19-refino-comercial-frontend-design.md` |
+| 2026-07-20 | Bloco 5.4 · Refino Administração | Entregue | Erros 422, toolbar e descrições i18n de permissões corrigidos. | `plans/archive/2026-07-20-refino-administracao-frontend.md` · `specs/archive/2026-07-20-refino-administracao-frontend-design.md` |
+| 2026-07-20 | Bloco 6a · Aluno + vínculo | Entregue | Resolução por RUT e vínculo histórico único validados em MySQL. | — | `plans/archive/2026-07-20-bloco6a-aluno-vinculo.md` | `specs/archive/2026-07-20-bloco6a-aluno-vinculo-design.md` |

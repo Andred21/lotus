@@ -67,9 +67,20 @@ sequência de cabeça, não pule nem reinicie etapa concluída. Ciclo canônico:
 `executing-plans` → `test-driven-development` → `requesting-code-review` →
 `finishing-a-development-branch`.
 
-Comandos principais do fluxo: `/planejar-bloco` (entrada) · `/executar-bloco` (execução) · `/revisar-sprint`
-(review) · `/fechar-sprint` (gate). Planos/specs ativos em `docs/superpowers/`; concluídos em
-`plans/archive/` e `specs/archive/`. Histórico curto: `docs/superpowers/progress.md` (§3).
+Entradas do fluxo — **comandos** (`.claude/commands/`) e **skills** (`.claude/skills/`) se invocam
+igual, com `/`, mas não são a mesma coisa: comando é prompt fixo, skill carrega instrução sob demanda.
+
+| `/` | Onde vive | Para que serve |
+| --- | --- | --- |
+| `/planejar-bloco` | comando | entrada do bloco (brainstorming → spec → plano) |
+| `/executar-bloco` | comando | execução, com a mecânica de gate e disciplina git |
+| `/revisar-frontend` · `/revisar-ui` | comando | revisões focadas de frontend e de UI |
+| `/revisar-sprint` | skill | review do bloco contra o padrão do projeto |
+| `/fechar-sprint` | skill | gate de fechamento |
+| `/auditar-docs` | skill | auditoria de doc vs. código (reporta, não corrige) |
+
+Planos/specs ativos em `docs/superpowers/`; concluídos em `plans/archive/` e `specs/archive/`.
+Histórico curto: `docs/superpowers/progress.md` (§3).
 
 Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
 próprios comandos conforme `state.md`; os contratos vivem em `.agents/skills/`.
@@ -109,7 +120,12 @@ docker compose exec -T app php artisan test                    # suíte (sqlite 
 docker compose exec -T app php artisan test --filter=NomeTest   # teste único
 docker compose exec -T app php artisan typescript:transform     # regenera generated.ts
 docker compose exec -T app php artisan migrate && ... db:seed
-./vendor/bin/pint <arquivos>   # NUNCA sem argumento — reformata o repo inteiro
+```
+
+Pint é a exceção: roda **no host, de dentro de `backend/`** (não precisa do container).
+
+```bash
+cd backend && ./vendor/bin/pint <arquivos>   # NUNCA sem argumento — reformata o repo inteiro
 ```
 
 Frontend (de `frontend/`, nativo no WSL — Node 22/pnpm, sem test runner ainda):
@@ -121,4 +137,5 @@ pnpm lint     # eslint .
 ```
 
 Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`
-(PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev).
+(PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev) e
+`createbuckets` (job de bootstrap do bucket do MinIO; sobe, cria e sai).

@@ -5,6 +5,7 @@ use App\Domains\Commercial\Http\Controllers\BudgetFileController;
 use App\Domains\Commercial\Http\Controllers\ClientAddressController;
 use App\Domains\Commercial\Http\Controllers\ClientContactController;
 use App\Domains\Commercial\Http\Controllers\ClientController;
+use App\Domains\Commercial\Http\Controllers\ClientPhotoController;
 use App\Domains\Commercial\Http\Controllers\QuoteController;
 use App\Domains\Commercial\Http\Controllers\QuoteFileController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('clients/{client}/contacts', [ClientContactController::class, 'store']);
         Route::put('contacts/{contact}', [ClientContactController::class, 'update']);
         Route::delete('contacts/{contact}', [ClientContactController::class, 'destroy']);
+
+        Route::post('clients/{client}/photo', [ClientPhotoController::class, 'store']);
+        Route::delete('clients/{client}/photo', [ClientPhotoController::class, 'destroy']);
     });
 
     Route::middleware('permission:commercial.budget.update')->group(function () {

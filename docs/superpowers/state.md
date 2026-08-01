@@ -5,15 +5,14 @@ active_work_item: null
 workflow_state: idle
 next_owner: joao
 next_action: select_backlog_item
-last_completed_work_item: bloco-alunos-modulo
-state_basis_commit: 3789954
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-context_packet_status: null
-updated_at: 2026-07-27
+last_completed_work_item: cards-relacao-curso-redator
+state_basis_commit: 8e200b3
+updated_at: 2026-08-01T15:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,41 +48,109 @@ updated_at: 2026-07-27
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
+## Estado atual — `idle`
 
-## Item ativo
+Nenhum work item ativo. Próxima ação: o João escolher explicitamente um item de
+`docs/superpowers/backlog.md`. O backlog não promove nada sozinho.
 
-Nenhum. `/fechar-sprint` encerrou `bloco-alunos-modulo` em 2026-07-27. A próxima ação é do João:
-escolher explicitamente um item de `docs/superpowers/backlog.md`. O backlog não promove sozinho.
+## Último item fechado — 2026-08-01
 
-## Último item fechado — 2026-07-27
+`cards-relacao-curso-redator` — bloco 100% frontend, zero arquivo de `backend/` tocado (D1).
+Executado em worktree (`using-git-worktrees` + `subagent-driven-development`), 10 tasks de conteúdo
++ Task 11 (gate). Commits `00381cb`..`8e200b3`.
 
-`bloco-alunos-modulo` — 10 tasks (backend 1–5 pelo Codex, frontend 6–10 por Claude), executadas no
-main tree (P-03). Histórico da entrega em `progress.md`; decisões em
-`specs/archive/2026-07-27-bloco-alunos-modulo-design.md` (D1–D11), passo a passo em
-`plans/archive/2026-07-27-bloco-alunos-modulo.md`, packet em
-`context-packets/bloco-alunos-modulo.md` (`partial`), ledger fino em `.superpowers/sdd/progress.md`.
+**Entrega:** substitui as duas representações textuais mais pobres das telas — checkbox+nome em
+`RedatorDialog`, `<div>{r.name}</div>` em `CourseDialog` — por `AppSelectableCard` (novo primitivo
+em `shared/ui`) com conteúdo de feature: `RedatorCard` (avatar, RUT, tag de idoneidade) em
+`catalog`, `CourseCard` (carga horária contratada, contagem de módulos) em `identity`.
+`redatorStatus.ts` sobe de `features/identity/lib` para `shared/lib` (D2) — só assim `catalog`
+consegue pintar a idoneidade sem importar `identity` (lei §5.6). Botão-olho do `CourseDialog` não
+abre `RedatorDialog` direto (importaria outra feature); navega para `/personas?redator=<id>` e
+`PeoplePage` resolve o deep link com `openViewById` novo em `useCrudPage`, lendo o parâmetro pelo
+padrão "adjust state during render" da casa (nunca `useEffect` com `setState`) — primeiro caso
+concreto do FUT-2 registrado no backlog. Ordem dos cursos no `edit` do redator congela na abertura
+(`useEnabledFirstCourses`, D9): reordenar a cada toggle faria o card clicado saltar sob o ponteiro.
+Falha de GET nas duas seções deixa de se disfarçar de lista vazia (D11) — antes, `?? []` fazia um
+403 por falta de `identity.user.view` virar "sem redatores habilitados" num curso que tem três;
+agora distingue loading/erro-com-Reintentar/vazio de verdade.
 
-Provas do gate de fechamento (contra a API real, Sanctum, banco restaurado ao final): criação
-gerando `User` inativo `type=aluno` + `current_client_id` + primeira linha de `student_client_logs`
-com `ended_on` nulo (DoD-1); RUT repetido em 422 com causa, sem associação silenciosa (DoD-2);
-edição de nome refletida no detalhe sem mexer no vínculo (DoD-3); detalhe do aluno 1 do seeder com
-vínculo atual, anterior fechado e turma com `approval_status` (DoD-4); os 4 endpoints em 403 para
-usuário sem permissão (DoD-6). 313 testes verdes, Pint limpo nos 23 arquivos PHP da sprint,
-`pnpm lint` e `pnpm build` verdes, `typescript:transform` sem drift no `generated.ts`.
+**Achado operacional durante a execução:** o Step 1 da Task 2 tinha um `cd /home/jvbat/projetos/lotus`
+absoluto herdado do plano (escrito antes do worktree existir) — o implementador seguiu literalmente
+e comitou `redatorStatus` no `main` em vez do worktree. Corrigido por decisão do João: cherry-pick
+do commit para o branch do worktree + `git reset --hard` do `main` de volta ao commit do plano
+(árvore do main estava limpa, nada perdido). Dispatches seguintes reescreveram os caminhos para o
+worktree.
 
-O que o fechamento moveu, além do arquivamento:
+**Review (baixo risco — sem migration/RBAC novo/`generated.ts`, só Claude, sem segunda lente do
+Codex):** zero achado sobrevivente. Órfãos: nenhum. i18n paritário nas 3 locales. Greps da lei §5.6
+(import cruzado `catalog`↔`identity`, `primereact` direto em feature) sem saída.
 
-- **P-14, P-15 e P-16 nascem** em `docs/pendencias.md` — as três divergências declaradas na spec
-  (rota `students` vs. `alunos` do Drive; certificados fora da listagem e do detalhe até o Bloco 7;
-  `Redactores` continua sendo a primeira aba), cada uma com gatilho próprio.
-- **P-07 e P-12 saem** da tabela "Encerradas" — cumpriram a sprint de rastro.
-- O desalinhamento de RBAC entre `identity.user.*` e `commercial.client.view` **segue aberto no
-  backlog**, em "Débitos técnicos". Exige decisão do João sobre RBAC/spec; não é resolvível na UI.
+**Gate de fechamento:** `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado);
+suíte backend 347 passed (1083 assertions) como regressão; `pnpm build` + `pnpm lint` verdes.
+Prova visual do João aceita nos 6 critérios comportamentais do DoD (spec §7), dois temas, 1400px e
+768px.
 
-**Gatilhos vencidos que este bloco não resolveu** (seguem abertos em `docs/pendencias.md`, sem
-alteração silenciosa — os mesmos dois que o fechamento anterior reportou):
+Arquivado: `plans/archive/2026-08-01-cards-relacao-curso-redator.md` ·
+`specs/archive/2026-08-01-cards-relacao-curso-redator-design.md` (sem context packet — o João deu
+as 3 imagens de referência direto na sessão de planejamento).
 
-- **P-04** — "reavaliar quando a Sprint 3 fechar"; a Sprint 3 fechou em 2026-07-23 e a reavaliação
-  dos guardrails (Pest Arch tests + eslint-boundaries) continua sem acontecer.
-- **P-06** — "doc-sync da Sprint 3"; `der-fisico.md` ainda modela `turmas.redator_id` como FK 1:N
-  contra o pivot `turma_redator` N:N implementado. Este bloco não tocou schema.
+**Aberto, registrado, não resolvido:** o acoplamento RBAC entre `catalog` e `identity` (D11 só
+removeu a mentira da UI, não fechou o acoplamento — mesma classe do item "Alunos · o dropdown de
+empresa depende de uma permissão de outro módulo" no `backlog.md`); FUT-2 no caso geral (D8 resolve
+só o caso concreto do botão-olho).
+
+## Penúltimo item fechado — 2026-08-01
+
+`foto-avatar-e-contatos-cliente` — bloco único juntando os itens 1 e 2 do backlog por decisão do
+João. Spec de 15 decisões (D1–D15), plano de 12 tasks; Parte A (backend, Tasks 1–4) pelo Codex,
+Parte B (frontend, Tasks 5–12) por Claude com `subagent-driven-development`. Commits `4dfe3a9`..
+`73870b0`.
+
+**Entrega:** `photo_url` (`#[Computed]`) nos 4 contratos (User/Client/Redator/Student);
+`UserPhotoService` guarda a foto em `users.photo_path`, FORA de `files` — foto não é documento, não
+vence, não habilita turma, não entra em certificado (D3). 8 rotas nested, uma por módulo dono, para
+não recriar acoplamento RBAC cross-módulo (D1). `AppAvatar` com fallback duplo (D7: a URL
+pré-assinada expira, e círculo vazio parece defeito, não "sem foto"), `AppPhotoField` +
+`useEntityPhoto` (buffer no create D10, `flush` nunca lança D11), avatar nas 4 tabelas, contatos do
+cliente em cards com exclusão e mínimo de 1 (D12–D14).
+
+**Dois achados críticos apareceram só na prova visual do João, depois do DoD:**
+`UploadedFile::store()` devolve `false` sem lançar — `photo_path` virava `'0'` e o objeto anterior,
+que ainda funcionava, era apagado (`9197d08`; 2 clientes reais de dev ficaram assim). E não existe
+valor único de `AWS_ENDPOINT` que sirva para escrita e leitura: resolvido assinando a leitura contra
+um disco `{disco}_public` separado (`b6dc068`), no mesmo choke point que os documentos de
+redator/turma/orçamento já usavam.
+
+**Dois reviews, de duas lentes cada** (Claude + `mcp__codex__codex` read-only). O primeiro sobre
+`4dfe3a9..b6dc068`: 7 achados, dos quais **Q1 era falso positivo** — medido, o resolver do spatie
+desvia do `CannotSetComputedValue` quando a propriedade é promovida no construtor. Reais: o mínimo
+de 1 contato escapava pela rota nested `DELETE /api/contacts/{id}`, e a rota de foto do staff
+aceitava `User` de qualquer tipo, driblando a permissão do módulo dono. O segundo, sobre a própria
+rodada de correção (`34ab3c2`): 4 achados aprovados — o gate de fechamento não cobria o botão
+**Salvar** (quarta saída do diálogo), o retry ressurgia no erro de TAMANHO reenviando o arquivo
+errado, o teste do Q5 provava menos do que o Q5 pedia, e o `closeBlocked` sem `timeout` no axios
+virava trava dura.
+
+**Lição 10 reapareceu dentro do fix da própria lição 10:** o teste novo de auditoria passou VAZIO na
+primeira prova — sem `photo_path` no diff, todos os valores viram `null`, e `null === null` aprova
+tudo. Só com `assertNotNull` nos caminhos ele foi visto reprovando.
+
+**Gate de fechamento:** DoD e correções provados contra API real com sessão Sanctum (contato único →
+`422` sem apagar; `DELETE` com 3 contatos → `204`; `/api/users/{userDeCliente}/photo` → `404` sem
+tocar a foto; `POST /api/clients/1/photo` → `204` e a URL pré-assinada devolvendo `200 image/png`;
+`contacts: []` → `422` com os contatos intactos). Suíte 347 passed (1083 assertions), `pnpm build` +
+`pnpm lint` verdes, Pint limpo nos 19 arquivos PHP do bloco, `generated.ts` regenerado sem diff.
+Prova visual do João aceita.
+
+Arquivado: `plans/archive/2026-07-31-foto-avatar-e-contatos-cliente.md` ·
+`specs/archive/2026-07-31-foto-avatar-e-contatos-cliente-design.md` ·
+`context-packets/foto-avatar-e-contatos-cliente.md` (`partial` — as 4 imagens de referência eram
+caller-held e **nunca foram fornecidas**; o bloco entregou sem elas).
+
+**Aberto, registrado, não resolvido:** P-24 em `docs/pendencias.md` (a compensação do
+`UserPhotoService::store()` pode apagar o objeto novo se a auditoria lançar depois do UPDATE já ter
+commitado) e, no `backlog.md`, Q-5 (check-then-act sem lock no mínimo de contatos — divergência de
+severidade declarada com a segunda lente) e Q-6 (idioma das mensagens de `ValidationException`
+inconsistente no repo, pré-existente).
+
+Histórico completo: `docs/superpowers/progress.md`.

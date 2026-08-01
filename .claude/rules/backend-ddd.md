@@ -18,8 +18,9 @@ Domínios (espelhados 1:1 pelas `features/` do front):
 - **Certification** — emissão on-demand, validação QR pública
 - **Feedback** — avaliações de turma
 
-**Estado atual:** Identity, Commercial e Catalog têm código real; os demais são placeholder
-(`.gitkeep`). Crie a estrutura de um domínio só quando ele entra em desenvolvimento.
+**Estado atual:** Identity, Commercial, Catalog e Operation têm código real. `Certification/` existe
+como pastas sem nenhuma classe; **`Feedback/` não existe no backend** (só na árvore-alvo). Crie a
+estrutura de um domínio só quando ele entra em desenvolvimento.
 
 **`App\Shared\`** = infra transversal: `Exceptions/ProblemDetails` (converte qualquer exceção em
 envelope RFC 7807, ligado em `bootstrap/app.php` para `api/*` e requests JSON — controllers não
@@ -31,7 +32,9 @@ liga aliases a classes. Registre alias só de classe que existe na sprint; todo 
 Auditable/polimórfico precisa do seu alias.
 
 **Rotas** por domínio em `Domains/*/routes.php`, carregadas no `bootstrap/app.php`, sob
-`auth:sanctum`. Seeders: `RoleSeeder`, `PermissionSeeder` (ADR-07). Migrations: ver a rule
+`auth:sanctum`. Seeders: `DatabaseSeeder` (orquestrador), `RolePermissionSeeder` (ADR-07) e
+`OperationDemoSeeder` (cenário de demo montado pelas Actions reais; gate local/demo, aborta se já
+existe cliente — nunca roda em produção). Migrations: ver a rule
 `migrations.md`.
 
 ## Padrão de entidade (CRUD) — DRY entre domínios
@@ -95,8 +98,12 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 `supports_credentials: true`. `User` gera `uuid` no create, soft-delete, `Auditable`; `type` enum
 (`admin`/`redator`/`aluno`/`cliente`), `is_active` libera login. **Só admin e redator autenticam** (RN-01).
 
-**RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Policy
-fica para data-scoping (Turma: "redator só vê as suas"). Toda permissão nova entra no seeder.
+**RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Toda
+permissão nova entra no seeder. **Data-scoping por Policy (ex.: Turma — "redator só vê as suas") é
+intenção, não mecanismo vigente:** nenhuma classe `Policy` existe no repo hoje, e `TurmaController`
+não filtra por redator — só o `permission:` middleware gateia o endpoint inteiro. Quando o
+data-scoping entrar em desenvolvimento, cria-se a Policy no domínio; até lá, tratar como débito de
+backlog, não como regra já aplicada.
 
 ## Testes
 

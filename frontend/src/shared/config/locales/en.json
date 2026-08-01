@@ -31,6 +31,9 @@
     "inactive": "Inactive",
     "view": "View",
     "upload": "Upload document",
+    "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
+    "preview": "View",
+    "previewUnavailable": "This format cannot be previewed. Download it to open.",
     "noResults": "No results for \"{{term}}\"",
     "noResultsFiltered": "No results for the applied filters",
     "noResultsFilteredHint": "Adjust or clear the applied filters.",
@@ -168,6 +171,13 @@
   "placeholder": {
     "module": "Module under construction."
   },
+  "photo": {
+    "label": "Photo",
+    "select": "Select photo",
+    "replace": "Replace",
+    "remove": "Remove photo",
+    "createUploadFailed": "The record was created, but the photo was not uploaded."
+  },
   "client": {
     "new": "New client",
     "create": "Register client",
@@ -192,6 +202,9 @@
     "contactName": "Name",
     "contactJobTitle": "Job title",
     "contactPrimary": "Primary contact",
+    "contactPrimaryTag": "Primary",
+    "removeContact": "Remove contact",
+    "lastContactHint": "The client must have at least one contact",
     "contacts": "Contacts"
   },
   "course": {
@@ -212,7 +225,9 @@
     "empty": "No courses.",
     "emptyHint": "Create the first course to get started.",
     "count": "{{count}} course(s)",
-    "redatorCount": "Writers"
+    "redatorCount": "Writers",
+    "workloadShort": "{{hours}} h",
+    "redatoresSelectNote": "Select the writers enabled for this course."
   },
   "courseModule": {
     "section": "Modules",
@@ -230,7 +245,8 @@
     "total": "Total: {{hours}} h",
     "modulesTotal": "Modules total: {{hours}} h",
     "hoursMismatch": "The modules sum ({{modules}} h) differs from the course workload ({{workload}} h). You can save anyway.",
-    "empty": "No modules registered."
+    "empty": "No modules registered.",
+    "countShort": "{{count}} module(s)"
   },
   "budget": {
     "tab": "Budgets",
@@ -317,7 +333,8 @@
     "sectionDocuments": "Documents",
     "sectionCourses": "Enabled courses",
     "enabledCourses": "Enabled courses",
-    "suitability": "Suitability"
+    "suitability": "Suitability",
+    "noCourses": "No enabled courses."
   },
   "student": {
     "new": "New student",

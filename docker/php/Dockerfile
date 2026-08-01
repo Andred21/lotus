@@ -10,4 +10,5 @@ RUN addgroup -g ${GID} appuser \
  && adduser -D -u ${UID} -G appuser appuser
 
 WORKDIR /var/www
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 USER appuser

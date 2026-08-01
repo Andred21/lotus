@@ -50,6 +50,13 @@ class User extends Authenticatable implements Auditable
         ];
     }
 
+    /**
+     * `$auditInclude` filtra o DIFF, não só o evento: atributo de fora da
+     * lista gera um audit de `old_values`/`new_values` vazios — sabe-se que
+     * algo mudou, nunca O QUE mudou. `photo_path` entra por isso: trocar ou
+     * remover a foto apaga o objeto anterior de forma irreversível (spec D4),
+     * então qual objeto foi desvinculado é justamente o que precisa de rastro.
+     */
     protected $auditInclude = [
         'name',
         'email',
@@ -57,6 +64,7 @@ class User extends Authenticatable implements Auditable
         'phone',
         'type',
         'is_active',
+        'photo_path',
     ];
 
     public static function booted(): void

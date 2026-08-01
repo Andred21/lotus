@@ -33,7 +33,8 @@ docker compose exec -T app php artisan typescript:transform
   mexe; `[]` = apaga. Default `array = []` apaga a coleção de quem só omitiu o campo — em silêncio,
   com peso legal. Ref.: `CourseData::$templates`/`$modules`.
 - **Campo de escrita com default não-`Optional` rebaixa dado em silêncio** no PUT parcial.
-  Ref.: `ClientContactData.is_primary` (dívida conhecida — ver backlog do `progress.md`).
+  Ref.: `ClientContactData.is_primary` (dívida conhecida — ver `docs/superpowers/backlog.md`,
+  "Débitos técnicos").
 
 ## Task que regenera ajusta os consumidores NO MESMO commit
 

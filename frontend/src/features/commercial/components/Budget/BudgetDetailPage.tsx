@@ -121,6 +121,7 @@ export function BudgetDetailPage() {
                   chooseOptions={{ icon: 'pi pi-upload' }}
                   chooseLabel={t('budget.uploadDocument')}
                   disabled={d.uploadPending}
+                  onSizeReject={d.onFileSizeReject}
                   uploadHandler={d.handleUpload}
                 />
               </>
@@ -128,6 +129,7 @@ export function BudgetDetailPage() {
           />
           <div className="mx-4 mt-4 empty:m-0">
             <FormErrorBanner message={d.fileError} />
+            {d.fileSizeError && <FormErrorBanner message={d.fileSizeError} />}
           </div>
           <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
         </AppCard>
