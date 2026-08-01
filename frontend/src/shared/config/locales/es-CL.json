@@ -225,7 +225,9 @@
     "empty": "No hay cursos.",
     "emptyHint": "Crea el primer curso para comenzar.",
     "count": "{{count}} curso(s)",
-    "redatorCount": "Redactores"
+    "redatorCount": "Redactores",
+    "workloadShort": "{{hours}} h",
+    "redatoresSelectNote": "Seleccione los redactores habilitados para este curso."
   },
   "courseModule": {
     "section": "Módulos",
@@ -243,7 +245,8 @@
     "total": "Total: {{hours}} h",
     "modulesTotal": "Total de los módulos: {{hours}} h",
     "hoursMismatch": "La suma de los módulos ({{modules}} h) difiere de la carga horaria del curso ({{workload}} h). Puedes guardar de todas formas.",
-    "empty": "Sin módulos registrados."
+    "empty": "Sin módulos registrados.",
+    "countShort": "{{count}} módulo(s)"
   },
   "budget": {
     "tab": "Presupuestos",
@@ -330,7 +333,8 @@
     "sectionDocuments": "Documentos",
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
-    "suitability": "Idoneidad"
+    "suitability": "Idoneidad",
+    "noCourses": "Sin cursos habilitados."
   },
   "student": {
     "new": "Nuevo alumno",

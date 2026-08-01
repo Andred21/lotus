@@ -6,7 +6,7 @@ import {
   AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade } from '../../lib/redatorStatus'
+import { idoneidade } from '@shared/lib'
 
 const IDON_SEVERITY = { idoneo: 'success', por_vencer: 'warning', no_idoneo: 'danger' } as const
 
