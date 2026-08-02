@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: operation
 active_work_item: abstracao-componentes-operation
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
 active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-operation.md
 context_packet: null
@@ -48,7 +48,7 @@ updated_at: 2026-08-02T21:15:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `ready_for_closure`
 
 `abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
@@ -92,7 +92,45 @@ diff (D4, os 7 consumidores antigos de `useTableFilter` intocados); grep de
 (`primereact` direto, import cross-feature) limpos; `pnpm build` + `pnpm lint` verdes; suíte backend
 **372 passed (1360 assertions)**, igual à baseline — sem regressão.
 
-Próxima ação: solicitar code review do bloco (`/revisar-sprint` ou equivalente).
+**Review em 2026-08-02 (`/revisar-sprint`, baixo risco — 100% frontend, sem schema/auth/RBAC/
+`generated.ts`/dinheiro, `executor: claude`; só lente Claude, sem Codex).** Órfãos: nenhum (cada
+hook novo com exatamente 1 consumidor). Leis §5: sem violação. Conferidos linha a linha contra o
+`main`: retrocompatibilidade do `useTableFilter` (com `searchable` presente o caminho é idêntico;
+ausente com termo não-vazio degrada para `rows = scoped` e **não** estoura); `rows === enrollments`
+por referência no `EnrollmentTable`, com clamp e `onPage` idênticos aos apagados; markup de
+`PickerBody`/`ManualButton`/`handleUpload` como cópia literal. A única condicional que mudou de
+forma — `course ? …` → `f.workloadHours != null ? …` — foi checada nos 4 casos: `workload_hours: 0`
+segue renderizando "0 horas" (o `??` não coage zero, o `!= null` não o rejeita) e curso não
+resolvido segue `—`; o único caso divergente é inalcançável (`workload_hours` é `number` não-nulo em
+`generated.ts:57`) e vai na direção conservadora. Descartado antes de virar achado: expor
+`setSizeError` cru do `useImportStudentsFlow` **segue** o molde declarado — `useEnrollStudentFlow`
+já expõe `setRut`.
+
+**1 achado, aprovado pelo João e resolvido na mesma sessão — e não era defeito deste diff:**
+
+- **Q-1 🟡** "query em componente de feature" é **padrão reincidente em 2 sprints** (Q-4 do
+  `abstracao-componentes-redator`/`RedatorCourseSelector`; C-1 deste bloco/`TurmaConfigCard`) e
+  sobrevivia em **7 pontos** de `catalog`/`commercial`/`identity`. A rule existia, mas era parágrafo,
+  e o grep do DoD era por-pasta — só provava a feature recém-limpa. Pela cláusula de reincidência do
+  `/revisar-sprint` + lição 14, virou **mecanismo**: `no-restricted-syntax` em `eslint.config.js`
+  sobre `src/features/*/components/**`, reprovando `xxxApi.useAlgo()` e `useQuery`/`useMutation`
+  diretos. **Provado nos dois sentidos** (lição 10): dispara no violador real (`QuoteWizard.tsx:20`
+  e `QuotesList.tsx:23`, des-ignorados temporariamente) e **não** dispara no `useMutationErrors` da
+  linha 28 do mesmo arquivo — o falso positivo que o `\b` do grep original protegia, aqui protegido
+  pelo `$` da regex. Entrou com **catraca**: os 7 legados em `ignores`, lista que só encolhe, para o
+  `pnpm lint` não quebrar na hora. Texto correspondente na `.claude/rules/frontend-fsliced.md`; o
+  esvaziamento da lista é o **item 5 do `backlog.md`**, bloco próprio.
+
+**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; DoD 6–11 reconferidos e intactos —
+`backend/` e locales sem diff, as 3 features consumidoras de `useTableFilter` ainda com diff
+**zero** (as correções tocaram só `eslint.config.js`, `.claude/rules/` e `docs/`), greps de
+query-em-componente, `primereact` direto e cross-feature limpos, `useState(0)` só no
+`TurmaDetailPage` (índice de aba).
+
+Próxima ação: `/fechar-sprint`. **Nota para o fechamento:** o item 4 do `backlog.md` descreve o C-2
+como "`searchable` aceita `() => []`" — desenho que a spec D4 depois rejeitou em favor do parâmetro
+opcional. O fechamento remove esse item, o que já resolve; não deixar o texto sobreviver como está
+(lição 13).
 
 ## Último item fechado — 2026-08-02
 
