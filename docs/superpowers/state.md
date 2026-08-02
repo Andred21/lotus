@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-active_spec: null
+active_feature: operation
+active_work_item: abstracao-componentes-operation
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-redator
-state_basis_commit: e5c0f7b
-updated_at: 2026-08-02T19:30:00-03:00
+state_basis_commit: 1404e3c
+updated_at: 2026-08-02T20:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,18 @@ updated_at: 2026-08-02T19:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `planning`
 
-Nenhum item ativo. A próxima ação é do João: escolher explicitamente um item do `backlog.md`. O
-backlog não promove nada sozinho e a ordem dele não autoriza execução.
+`abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
+2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
+`features/operation` da mesma sessão: 3 achados C (violam a rule `frontend-fsliced.md`) + 3 B, lei
+§6 limpa.
+
+**Sem context packet** (`context_packet: null`, decisão registrada): o bloco não depende de Drive,
+Notion nem Figma — a fonte é o código de `frontend/src/features/operation/` e o relatório do
+`/revisar-frontend` desta sessão. Mesmo caso do `abstracao-componentes-redator`.
+
+Próxima ação: concluir brainstorming → spec → plano. Não implementar nesta fase.
 
 ## Último item fechado — 2026-08-02
 
