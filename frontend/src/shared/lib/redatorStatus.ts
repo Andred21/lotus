@@ -17,11 +17,35 @@ export function docStatus(validUntil: string | null): DocStatus {
   return 'vigente'
 }
 
+export type Idoneidade = 'idoneo' | 'por_vencer' | 'no_idoneo'
+
 /** Idoneidade provisória (visual). Regra canônica + gate por policy = futuro (RN-09). */
-export function idoneidade(r: RedatorData): 'idoneo' | 'por_vencer' | 'no_idoneo' {
+export function idoneidade(r: RedatorData): Idoneidade {
   const docs = r.documents ?? []
   const statuses = docs.map((d: RedatorDocumentData) => docStatus(d.valid_until))
   if (docs.length === 0 || statuses.includes('vencido') || r.course_ids.length === 0) return 'no_idoneo'
   if (statuses.includes('por_vencer')) return 'por_vencer'
   return 'idoneo'
+}
+
+/** Tipos de documento do redator. Vocabulário do backend (`documents[<tipo>]`),
+ * não constante de componente. */
+export const DOC_TYPES = ['CV', 'REUF', 'TITULO', 'POSTGRADO'] as const
+export type DocType = (typeof DOC_TYPES)[number]
+
+/** Convenção única de cor para idoneidade e para status de documento.
+ * Antes existiam três cópias divergindo (RedatoresTable, RedatorDialog inline,
+ * catalog/RedatorCard) — e o comentário do RedatorCard já pedia que não se
+ * inventasse uma segunda. Agora é uma só, ao lado da regra que a produz. */
+export const IDONEIDADE_SEVERITY: Record<Idoneidade, 'success' | 'warning' | 'danger'> = {
+  idoneo: 'success',
+  por_vencer: 'warning',
+  no_idoneo: 'danger',
+}
+
+export const DOC_STATUS_SEVERITY: Record<DocStatus, 'success' | 'warning' | 'danger'> = {
+  sin_venc: 'success',
+  vigente: 'success',
+  por_vencer: 'warning',
+  vencido: 'danger',
 }

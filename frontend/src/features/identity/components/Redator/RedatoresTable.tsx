@@ -6,9 +6,7 @@ import {
   AppCardToolbar, AppEmptyState,
 } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade } from '@shared/lib'
-
-const IDON_SEVERITY = { idoneo: 'success', por_vencer: 'warning', no_idoneo: 'danger' } as const
+import { idoneidade, IDONEIDADE_SEVERITY } from '@shared/lib'
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
@@ -85,7 +83,7 @@ export function RedatoresTable({
           header={t('redator.suitability')}
           body={(r: RedatorData) => {
             const k = idoneidade(r)
-            return <AppTag value={t(`suitability.${k}`)} severity={IDON_SEVERITY[k]} />
+            return <AppTag value={t(`suitability.${k}`)} severity={IDONEIDADE_SEVERITY[k]} />
           }}
         />
         <AppColumn
