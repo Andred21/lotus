@@ -43,14 +43,11 @@ export function AppPhotoField({
   }
 
   return (
-    <div className="flex items-start gap-4">
-      <AppAvatar name={name} image={url} size="xlarge" />
+    <div className="flex flex-col items-center gap-4">
+      <AppAvatar name={name} image={url} size="xlarge"  />
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-          {t('photo.label')}
-        </span>
-
+      
         {!readOnly && (
           <div className="flex flex-wrap items-center gap-2">
             <AppFileUpload

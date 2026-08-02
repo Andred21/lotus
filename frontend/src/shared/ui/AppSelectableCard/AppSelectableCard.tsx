@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { AppButton } from '../AppButton'
 
 export interface AppSelectableCardProps {
   /** Ausente (junto com `onToggle`) => card de leitura, sem semântica de botão. */
@@ -51,7 +52,7 @@ export function AppSelectableCard({
   return (
     <div className={classes} style={style}>
       {interactive ? (
-        <button
+        <AppButton
           type="button"
           aria-pressed={selected}
           disabled={disabled}
@@ -59,7 +60,7 @@ export function AppSelectableCard({
           className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60"
         >
           {children}
-        </button>
+        </AppButton>
       ) : (
         content
       )}

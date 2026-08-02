@@ -109,7 +109,7 @@ export function BudgetsTable({
       >
         <AppColumn
           header={t('budget.code')}
-          body={(b: BudgetData) => <span className="font-mono text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
+          body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
         />
         <AppColumn header={t('budget.client')} body={(b: BudgetData) => clientName(b.client_id)} />
         <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />

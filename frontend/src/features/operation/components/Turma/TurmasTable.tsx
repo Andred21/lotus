@@ -94,7 +94,7 @@ export function TurmasTable({
         <AppColumn
           header={t('operation.table.code')}
           body={(turma: TurmaData) => (
-            <span className="font-mono text-sm" style={{ color: 'var(--primary-color)' }}>
+            <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>
               {turma.quote_code ?? '—'}
             </span>
           )}
