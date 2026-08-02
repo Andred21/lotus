@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: identity
 active_work_item: abstracao-componentes-redator
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-redator.md
 context_packet: null
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-debitos-integridade
 state_basis_commit: b2a6011
-updated_at: 2026-08-02T01:00:00-03:00
+updated_at: 2026-08-02T02:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,21 +48,30 @@ updated_at: 2026-08-02T01:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `executing`
 
 `abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
 escrito em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
 context packet: a fonte é o código e o relatório do review da mesma sessão.
 
-Próxima ação: `/executar-bloco abstracao-componentes-redator`.
+Branch `refactor/abstracao-componentes-redator` criada a partir do `main` (D12, sem worktree).
+Task 0 feita (branch + desvio de TDD registrado no ledger local). **Task 1 (baseline de
+screenshots, D11) NÃO executada** — decisão do João em 2026-08-02: a sessão do Claude não tem
+ferramenta de browser/screenshot disponível. Nenhum arquivo salvo em
+`docs/superpowers/audits/2026-08-02-baseline-abstracao-redator/` (a pasta não chegou a ser
+criada). As verificações "conferir na tela" por task (3, 4, 5, 7, 8, 9) também não rodam durante a
+execução; a única prova visual do bloco vira a comparação ao vivo da Task 10 (Step 6), feita pelo
+João sem baseline capturada antes. **Diverge de D11/R8 da spec** — risco aceito explicitamente pelo
+João, registrado no ledger local (`.superpowers/sdd/progress.md`), não escolhido por heurística do
+executor. Task 2 em andamento.
+
+Próxima ação: retomar a task pendente do plano (`continue_active_plan`).
 
 **Handoff:** `executor: claude`, sem `paths_autorizados`. Nenhuma task tem verificação executável
-suficiente — o aceite é comparação visual contra baseline em 3 features, e "build verde" seria falso
-aceite (lei §8). As Tasks 2 e 9 tocam a fronteira da lei §6 e a decisão viva do `D8-upload`.
-
-**Ordem obrigatória:** Task 0 → Task 1 antes de qualquer código. A baseline de screenshots é a única
-referência objetiva do que "nada mudou" significa neste bloco; sem ela a Task 10 vira opinião.
+suficiente — o aceite é comparação visual ao vivo (sem baseline salva, ver acima), e "build verde"
+seria falso aceite (lei §8). As Tasks 2 e 9 tocam a fronteira da lei §6 e a decisão viva do
+`D8-upload`.
 
 **Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
 a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
