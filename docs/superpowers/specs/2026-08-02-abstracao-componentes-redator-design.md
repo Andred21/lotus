@@ -156,8 +156,17 @@ vigor**, e este bloco se desenha dentro dele.
   critério é "nada mudou" não se prova de memória: sem referência capturada antes, a comparação final
   é contra a lembrança da tela de ontem, e diferença sutil de espaçamento ou de ordem de botão passa.
 
-- **D12 — Worktree, não main tree.** Bloco 100% frontend, sem toque em `backend/`, logo a pendência
-  P-03 não se aplica. Mesmo precedente de `cards-relacao-curso-redator`.
+- **D12 — Branch no main tree, sem worktree.** Decisão do João em 2026-08-02, **divergindo do
+  precedente** de `cards-relacao-curso-redator` (que foi em worktree). O motivo é o DoD: este bloco se
+  prova exclusivamente na tela, e o worktree custaria `pnpm install` próprio mais um segundo dev
+  server, enquanto o compose (`nginx`/`app`/`minio`) e a URL de trabalho apontam para o main tree.
+  Isolar sairia mais caro que o benefício num refactor que não toca `backend/`.
+
+  **Consequência que o plano tem que carregar:** sem o isolamento do worktree, a disciplina git do
+  `/executar-bloco` no main tree passa a valer integralmente — `git status` antes de cada task,
+  `git add` só nos paths exatos da task, e `git diff <arquivo>` antes de editar arquivo sujo. A
+  lição 9 é explícita: o João edita o working tree **ao vivo** durante a execução, e o WIP dele é
+  intocável. Branch dedicada a partir do `main`, nunca commit direto no `main`.
 
 ## 6. Arquivos
 
