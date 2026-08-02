@@ -5,6 +5,7 @@
 
 | Data | Feature | Status | Resultado | Contexto | Plano | Spec |
 |---|---|---|---|---|---|---|
+| 2026-07-23 | Sprint 3 · Operação frontend | Entregue | Execuções 1–3: Turmas, Alumnos, Documentación e Conclusión na UI; manual PDF abre no gesto do clique; P-07 e P-12 encerradas. Gate e2e contra API real: `GET /api/turmas/1/documents` 200, `GET /api/turmas/1/manual` 200 `application/pdf`, `POST /api/turmas/1/conclude` 422 terminal. | — | `plans/archive/2026-07-21-bloco6-frontend-exec1-turmas.md` · `plans/archive/2026-07-22-bloco6-frontend-exec2-alumnos.md` · `plans/archive/2026-07-23-bloco6-frontend-exec3.md` | `specs/archive/2026-07-21-bloco6-frontend-operacao-design.md` |
 | 2026-07-21 | Bloco 6b · Turma + redator | Entregue | Turma por cotação, designação N:N e gate RN-09 validados. | — | `plans/archive/2026-07-21-bloco6b-turma-designacao.md` | `specs/archive/2026-07-21-bloco6b-turma-designacao-design.md` |
 | 2026-07-21 | Bloco 6d · Conclusão + manual | Entregue | Habilitação derivada, conclusão terminal e manual via Gotenberg. | — | `plans/archive/2026-07-21-bloco6d-conclusao-manual.md` | `specs/archive/2026-07-21-bloco6d-conclusao-manual-design.md` |
 | 2026-07-21 | Bloco 6c · Matrícula + importação | Entregue | Matrícula idempotente e import tolerante a erros por linha. | — | `plans/archive/2026-07-21-bloco6c-matricula-import.md` | `specs/archive/2026-07-21-bloco6c-matricula-import-design.md` |

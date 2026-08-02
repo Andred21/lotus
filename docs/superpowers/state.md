@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: identity
-active_work_item: abstracao-componentes-redator
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-redator-design.md
-active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-redator.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: hardening-debitos-integridade
-state_basis_commit: b2a6011
-updated_at: 2026-08-02T03:00:00-03:00
+last_completed_work_item: abstracao-componentes-redator
+state_basis_commit: e5c0f7b
+updated_at: 2026-08-02T19:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,12 @@ updated_at: 2026-08-02T03:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `idle`
+
+Nenhum item ativo. A próxima ação é do João: escolher explicitamente um item do `backlog.md`. O
+backlog não promove nada sozinho e a ordem dele não autoriza execução.
+
+## Último item fechado — 2026-08-02
 
 `abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
@@ -75,12 +80,39 @@ limpos (sem `primereact` direto em `features/`, sem import cruzado `catalog`/`co
 `operation`↔`identity`); `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado,
 bloco 100% frontend); nenhum `useState` de preview sobrou em `features/`.
 
-Próxima ação: solicitar revisão do bloco (`request_code_review`). Não inicia automaticamente.
+**Review em 2026-08-02 (`/revisar-sprint`, baixo risco — 100% frontend, sem schema/auth/RBAC/
+`generated.ts`/dinheiro, `executor: claude`; só lente Claude, sem Codex).** Órfãos: nenhum. Leis §5:
+sem violação. `orderKey` do `useEnabledFirstCourses`, ordem dos botões do `edit` (olho → baixar →
+substituir → lixeira) e paridade i18n conferidos contra o `main`. **4 achados, todos aprovados pelo
+João e corrigidos na mesma sessão:**
 
-**Handoff:** `executor: claude`, sem `paths_autorizados`. Risco de review: sem test runner e sem
-baseline salva, a segunda lente tem que validar contra o comportamento descrito na spec/plano, não
-contra um diff de screenshot. As Tasks 2 e 9 tocaram a fronteira da lei §6 e a decisão viva do
-`D8-upload` — vale conferência extra do review nelas.
+- **Q-1 🟡** `canRemove` + `onRemoveDoc` eram par redundante e a asserção `redator!.id!` migrou para
+  fora da guarda que a protegia — se `canRemove` virasse permissão, o DELETE de documento sairia com
+  `undefined` na URL, falha silenciosa em caminho de peso legal. `canRemove` morreu; `onRemoveDoc` é
+  opcional e sua ausência desliga a lixeira (mesmo contrato do `AppFileActions.onRemove`, D3/D4), com
+  o id estreitado pelo compilador.
+- **Q-2 🟡** `RedatorDocumentSlot` tinha recortado o emaranhado para outro arquivo sem cumprir a D5:
+  três `mode === 'x' && (doc ? A : B)` irmãos dentro de um `return`. Agora são guardas sequenciais em
+  `SlotBody`, e o bloco "não carregado + upload" — duplicado entre `create` e `edit` — virou
+  `EmptySlot`.
+- **Q-3 🟢** o `AppFileActions` fixava `aria-label={t('common.delete')}` e apagava o rótulo próprio de
+  `operation` (`operation.documents.remove`) — mudança de comportamento fora do declarado no §7 da
+  spec, na direção contrária da D10. Prop `removeLabel?` com default `common.delete`.
+- **Q-4 🟢** `RedatorCourseSelector` carregava query + derivação (a rule manda ir para hook da
+  feature). Extraído `useRedatorCourses`.
+
+Correções em `e5c0f7b`. **Divergência documental (não é achado):** a D2 pedia
+`useFilePreview<T extends PreviewableFile>`; o código soltou o constraint para `shared/hooks` não
+depender de `shared/ui`, com justificativa no arquivo e sem risco de tipo (quem restringe é o
+`AppFilePreviewDialog`). Decisão melhor que a da spec — registrada como **P-25** em `pendencias.md`.
+
+**Gate de fechamento.** Suíte backend 372 passed (1360 assertions) como regressão; `pnpm build` +
+`pnpm lint` verdes; `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado); `generated.ts`
+sem diff; greps §5.6 sem saída; nenhum órfão; `canRemove` sem resíduo; Pint n/a (zero arquivo de
+backend). **Prova visual do João aceita duas vezes** — a segunda porque as correções de Q-1/Q-2
+reescreveram o markup do slot (corpo em `SlotBody`/`EmptySlot`, wrapper `div.mt-2`) depois da primeira
+aprovação, e sem baseline (D11 não executada) fechar sobre a lembrança da tela anterior seria assinar
+o item 0 do gate em falso.
 
 **Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
 a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
@@ -89,7 +121,15 @@ confirmou (~14 props, ~6 só para diferenciar consumidor). O `D8` permanece em v
 compartilha apenas `AppFileActions` + `useFilePreview` e corta o `RedatorDialog` em subcomponentes
 locais de `identity`.
 
-## Último item fechado — 2026-08-01
+Arquivado: `plans/archive/2026-08-02-abstracao-componentes-redator.md` ·
+`specs/archive/2026-08-02-abstracao-componentes-redator-design.md` (sem context packet — a fonte foi
+o código e o relatório do `/revisar-frontend` da mesma sessão).
+
+**Aberto, registrado, não resolvido:** P-25 (constraint de `useFilePreview`, spec vs. código); a régua
+de ~150 linhas do `frontend-fsliced.md` segue não atingida no `RedatorDialog` (189), aceita na spec §8;
+o `PersonFields` genérico segue descartado, não reabrir sem motivo novo.
+
+## Penúltimo item fechado — 2026-08-01
 
 `hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
 pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
@@ -145,51 +185,5 @@ Arquivado: `plans/archive/2026-08-01-hardening-debitos-integridade.md` ·
 
 **Aberto, registrado, não resolvido:** Q-16 em `backlog.md` (`ensureSingle()` sem lock no `Client`,
 `PrimaryContactService`/`PrimaryAddressService`); Q-6, P-20, P-21 em `pendencias.md`/`backlog.md`.
-
-## Penúltimo item fechado — 2026-08-01
-
-`cards-relacao-curso-redator` — bloco 100% frontend, zero arquivo de `backend/` tocado (D1).
-Executado em worktree (`using-git-worktrees` + `subagent-driven-development`), 10 tasks de conteúdo
-+ Task 11 (gate). Commits `00381cb`..`8e200b3`.
-
-**Entrega:** substitui as duas representações textuais mais pobres das telas — checkbox+nome em
-`RedatorDialog`, `<div>{r.name}</div>` em `CourseDialog` — por `AppSelectableCard` (novo primitivo
-em `shared/ui`) com conteúdo de feature: `RedatorCard` (avatar, RUT, tag de idoneidade) em
-`catalog`, `CourseCard` (carga horária contratada, contagem de módulos) em `identity`.
-`redatorStatus.ts` sobe de `features/identity/lib` para `shared/lib` (D2) — só assim `catalog`
-consegue pintar a idoneidade sem importar `identity` (lei §5.6). Botão-olho do `CourseDialog` não
-abre `RedatorDialog` direto (importaria outra feature); navega para `/personas?redator=<id>` e
-`PeoplePage` resolve o deep link com `openViewById` novo em `useCrudPage`, lendo o parâmetro pelo
-padrão "adjust state during render" da casa (nunca `useEffect` com `setState`) — primeiro caso
-concreto do FUT-2 registrado no backlog. Ordem dos cursos no `edit` do redator congela na abertura
-(`useEnabledFirstCourses`, D9): reordenar a cada toggle faria o card clicado saltar sob o ponteiro.
-Falha de GET nas duas seções deixa de se disfarçar de lista vazia (D11) — antes, `?? []` fazia um
-403 por falta de `identity.user.view` virar "sem redatores habilitados" num curso que tem três;
-agora distingue loading/erro-com-Reintentar/vazio de verdade.
-
-**Achado operacional durante a execução:** o Step 1 da Task 2 tinha um `cd /home/jvbat/projetos/lotus`
-absoluto herdado do plano (escrito antes do worktree existir) — o implementador seguiu literalmente
-e comitou `redatorStatus` no `main` em vez do worktree. Corrigido por decisão do João: cherry-pick
-do commit para o branch do worktree + `git reset --hard` do `main` de volta ao commit do plano
-(árvore do main estava limpa, nada perdido). Dispatches seguintes reescreveram os caminhos para o
-worktree.
-
-**Review (baixo risco — sem migration/RBAC novo/`generated.ts`, só Claude, sem segunda lente do
-Codex):** zero achado sobrevivente. Órfãos: nenhum. i18n paritário nas 3 locales. Greps da lei §5.6
-(import cruzado `catalog`↔`identity`, `primereact` direto em feature) sem saída.
-
-**Gate de fechamento:** `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado);
-suíte backend 347 passed (1083 assertions) como regressão; `pnpm build` + `pnpm lint` verdes.
-Prova visual do João aceita nos 6 critérios comportamentais do DoD (spec §7), dois temas, 1400px e
-768px.
-
-Arquivado: `plans/archive/2026-08-01-cards-relacao-curso-redator.md` ·
-`specs/archive/2026-08-01-cards-relacao-curso-redator-design.md` (sem context packet — o João deu
-as 3 imagens de referência direto na sessão de planejamento).
-
-**Aberto, registrado, não resolvido:** o acoplamento RBAC entre `catalog` e `identity` (D11 só
-removeu a mentira da UI, não fechou o acoplamento — mesma classe do item "Alunos · o dropdown de
-empresa depende de uma permissão de outro módulo" no `backlog.md`); FUT-2 no caso geral (D8 resolve
-só o caso concreto do botão-olho).
 
 Histórico completo: `docs/superpowers/progress.md`.

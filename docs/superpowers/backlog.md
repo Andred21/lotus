@@ -17,26 +17,6 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **Frontend · Abstração de componentes do Redator** — *spec escrita em 2026-08-02*
-   — `RedatorDialog.tsx` tem 448 linhas e 4 responsabilidades (form + foto + documentos em 3 modos ×
-   4 tipos + seleção de cursos em 5 estados); o corpo do `.map` de documento tem 6 caminhos de render
-   numa expressão e o bloco de cursos é um ternário de 5 ramos. Em volta, duplicação medida em 3
-   features: 3 cópias do estado de preview e 4 blocos de ação ver/baixar/excluir
-   (`RedatorDialog`, `operation/Document/DocumentTypeCard.tsx`, `commercial/Budget/FileList.tsx`),
-   mais 3 cópias do mapa de severidade da idoneidade.
-   **Escopo final em `specs/2026-08-02-abstracao-componentes-redator-design.md`.** O primeiro desenho
-   (promover `AppFileList`/`AppDocumentSlot` a `shared/ui`) foi **descartado no brainstorming**: o
-   `D8` da spec de upload de 2026-07-31 já tinha avaliado e rejeitado exatamente esse componente,
-   pelo motivo que o contrato confirmou — precisaria de ~14 props, ~6 delas só para um consumidor
-   diferir do outro. O bloco passa a compartilhar só as **ações da linha** (`AppFileActions`) e o
-   **estado do preview** (`useFilePreview`), com a estrutura de cada tela permanecendo na tela; o
-   `RedatorDialog` é cortado em 3 subcomponentes **locais** de `identity`.
-   **Analisado e descartado:** extrair `PersonFields` dos 4 campos `name/rut/email/phone` — os grids
-   de Redator/Aluno/Staff divergem de propósito e um componente único mudaria o que 3 telas
-   renderizam. Não reabrir sem motivo novo.
-   **Risco:** refactor sem test runner no front — o DoD depende de baseline de screenshots capturada
-   antes do corte e prova visual nas 3 telas, não de `pnpm build` verde.
-
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
