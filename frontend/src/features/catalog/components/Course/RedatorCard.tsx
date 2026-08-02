@@ -1,15 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppSelectableCard, AppTag } from '@shared/ui'
-import { idoneidade } from '@shared/lib'
+import { idoneidade, IDONEIDADE_SEVERITY } from '@shared/lib'
 import type { RedatorData } from '@shared/types/generated'
-
-/** Mesmo mapa usado no cabeçalho do RedatorDialog — não inventar uma segunda
- * convenção de cor para o mesmo conceito (spec D5). */
-const SEVERITY = {
-  idoneo: 'success',
-  por_vencer: 'warning',
-  no_idoneo: 'danger',
-} as const
 
 /**
  * Card do redator visto pelo lado do curso. A idoneidade é derivada no front
@@ -53,7 +45,7 @@ export function RedatorCard({
         <AppTag
           className="mt-1"
           value={t(`suitability.${status}`)}
-          severity={SEVERITY[status]}
+          severity={IDONEIDADE_SEVERITY[status]}
         />
       </div>
     </AppSelectableCard>

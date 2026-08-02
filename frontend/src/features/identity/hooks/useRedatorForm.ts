@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
-import type { DialogMode } from '@shared/lib'
+import type { DialogMode, DocType } from '@shared/lib'
 import { redatoresApi } from '@shared/api/redatoresApi'
 
 export type RedatorDialogMode = DialogMode
@@ -33,7 +33,7 @@ export function useRedatorForm(
   // há `redator.id` ainda para subir pelo endpoint aninhado). Limpo junto com
   // o reset do núcleo (mesmo padrão de setState condicional no render), com a
   // guarda de tamanho para não regerar o objeto e disparar um loop de renders.
-  const [stagedDocs, setStagedDocs] = useState<Record<string, File>>({})
+  const [stagedDocs, setStagedDocs] = useState<Partial<Record<DocType, File>>>({})
   if (didReset && Object.keys(stagedDocs).length > 0) setStagedDocs({})
 
   const create = redatoresApi.useCreate()
@@ -50,8 +50,8 @@ export function useRedatorForm(
         : [...f.course_ids, id],
     }))
 
-  const stageDoc = (type: string, file: File) => setStagedDocs((s) => ({ ...s, [type]: file }))
-  const unstageDoc = (type: string) =>
+  const stageDoc = (type: DocType, file: File) => setStagedDocs((s) => ({ ...s, [type]: file }))
+  const unstageDoc = (type: DocType) =>
     setStagedDocs((s) => {
       const next = { ...s }
       delete next[type]

@@ -17,7 +17,6 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
@@ -25,7 +24,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 - **Dashboard** — protótipo tem 4 KPIs, gráfico de turmas, gráfico de certificados, tarefas
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
-- ~~**Pessoas · Alunos**~~ — entregue em 2026-07-27 (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
+- **Pessoas · Alunos**~~ — entregue em 2026-07-27 (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
 - **Certificados** — já coberto pelo Bloco 7.
 - **Perfil do Usuário** - página dedicada para usuário (administrativo e redator), visualizando seu perfil e dados.
 
