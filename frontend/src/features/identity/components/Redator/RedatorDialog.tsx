@@ -29,7 +29,7 @@ import {
   type RedatorDialogMode,
 } from "../../hooks/useRedatorForm";
 import { useEnabledFirstCourses } from "../../hooks/useEnabledFirstCourses";
-import { docStatus, idoneidade, type DocStatus } from "@shared/lib";
+import { docStatus, idoneidade, type DocStatus, type DocType } from "@shared/lib";
 import { CourseCard } from "./CourseCard";
 
 const DOC_TYPES = ["CV", "REUF", "TITULO", "POSTGRADO"] as const;
@@ -102,7 +102,7 @@ export function RedatorDialog({
     `${redator?.id ?? "new"}:${mode}`,
   );
 
-  function handleUpload(type: string, e: FileUploadHandlerEvent) {
+  function handleUpload(type: DocType, e: FileUploadHandlerEvent) {
     setSizeError(null);
     const file = e.files[0];
     if (file && redator?.id) {
@@ -111,7 +111,7 @@ export function RedatorDialog({
     e.options.clear();
   }
 
-  function handleStage(type: string, e: FileUploadHandlerEvent) {
+  function handleStage(type: DocType, e: FileUploadHandlerEvent) {
     setSizeError(null);
     const file = e.files[0];
     if (file) stageDoc(type, file);
