@@ -75,6 +75,7 @@ export function DocumentTypeCard({
                   onPreview={preview.open}
                   onRemove={canSubmit ? () => onRemove(file) : undefined}
                   removing={removing}
+                  removeLabel={t('operation.documents.remove')}
                 />
               }
             />

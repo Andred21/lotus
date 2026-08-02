@@ -9,6 +9,9 @@ export type AppFileActionsProps<T extends PreviewableFile> = {
   /** Ausente = sem botão de excluir. */
   onRemove?: () => void
   removing?: boolean
+  /** Rótulo acessível da lixeira. Default `common.delete`; a tela sobrescreve
+   * quando tem verbo próprio (ex.: `operation.documents.remove`). */
+  removeLabel?: string
   /** Ações da própria tela, entre baixar e excluir (ex.: substituir, no redator). */
   children?: ReactNode
 }
@@ -32,6 +35,7 @@ export function AppFileActions<T extends PreviewableFile>({
   onPreview,
   onRemove,
   removing,
+  removeLabel,
   children,
 }: AppFileActionsProps<T>) {
   const { t } = useTranslation()
@@ -55,7 +59,7 @@ export function AppFileActions<T extends PreviewableFile>({
           text
           rounded
           severity="danger"
-          aria-label={t('common.delete')}
+          aria-label={removeLabel ?? t('common.delete')}
           disabled={removing}
           onClick={onRemove}
         />

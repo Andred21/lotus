@@ -72,6 +72,11 @@ export function RedatorDialog({
   // são geridos por mutações próprias e devem refletir o servidor na hora.
   const existing = redator?.documents ?? [];
   const courseIds = form.course_ids;
+  // Só há exclusão quando o redator já existe: sem id não há endpoint aninhado.
+  // A ausência do callback é o que desliga a lixeira (mesmo contrato do
+  // `AppFileActions.onRemove`) — assim o id chega ao `mutate` estreitado pelo
+  // compilador, sem asserção.
+  const redatorId = redator?.id;
 
   function handleUpload(type: DocType, e: FileUploadHandlerEvent) {
     setSizeError(null);
@@ -151,13 +156,14 @@ export function RedatorDialog({
             mode={mode}
             doc={existing.find((d) => d.type === type)}
             staged={stagedDocs[type]}
-            canRemove={Boolean(redator?.id)}
             uploading={upload.isPending && upload.variables?.type === type}
             onStage={handleStage}
             onUnstage={unstageDoc}
             onUpload={handleUpload}
-            onRemoveDoc={(fileId) =>
-              removeDoc.mutate({ redatorId: redator!.id!, fileId })
+            onRemoveDoc={
+              redatorId != null
+                ? (fileId) => removeDoc.mutate({ redatorId, fileId })
+                : undefined
             }
             onPreview={preview.open}
             onSizeReject={setSizeError}
