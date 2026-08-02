@@ -3,12 +3,10 @@ import { useTranslation } from "react-i18next";
 import {
   CrudDialog,
   AppButton,
-  AppInputText,
   AppTag,
   AppFileUpload,
   AppFilePreviewDialog,
   AppFileRow,
-  FormField,
   FormSection,
   FormErrorBanner,
   AppPhotoField,
@@ -31,6 +29,7 @@ import {
 import { useEnabledFirstCourses } from "../../hooks/useEnabledFirstCourses";
 import { docStatus, idoneidade, type DocStatus, type DocType } from "@shared/lib";
 import { CourseCard } from "./CourseCard";
+import { RedatorIdentityFields } from "./RedatorIdentityFields";
 
 const DOC_TYPES = ["CV", "REUF", "TITULO", "POSTGRADO"] as const;
 
@@ -167,45 +166,12 @@ export function RedatorDialog({
             onRetry={photo.onRetry}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("redator.name")} error={fieldErrors?.name?.[0]}>
-            <AppInputText
-              value={form.name}
-              disabled={readOnly}
-              onChange={(e) => set("name", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-
-          <FormField label={t("common.rut")} error={fieldErrors?.rut?.[0]}>
-            <AppInputText
-              value={form.rut}
-              disabled={readOnly}
-              onChange={(e) => set("rut", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("common.email")} error={fieldErrors?.email?.[0]}>
-            <AppInputText
-              value={form.email}
-              disabled={readOnly}
-              onChange={(e) => set("email", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-
-          <FormField label={t("common.phone")}>
-            <AppInputText
-              value={form.phone ?? ""}
-              disabled={readOnly}
-              onChange={(e) => set("phone", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-        </div>
+        <RedatorIdentityFields
+          form={form}
+          set={set}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+        />
 
         <FormSection title={t("redator.sectionDocuments")} spaced />
         {upload.error && (
