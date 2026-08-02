@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-active_spec: null
+active_feature: identity
+active_work_item: abstracao-componentes-redator
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-redator-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-debitos-integridade
-state_basis_commit: ca02c9b
-updated_at: 2026-08-01T20:30:00-03:00
+state_basis_commit: b4faf40
+updated_at: 2026-08-02T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,22 @@ updated_at: 2026-08-01T20:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `planning`
 
-Nenhum `active_work_item`. Próxima ação: João escolhe explicitamente um item de
-`docs/superpowers/backlog.md`.
+`abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
+2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada e escrita em
+`specs/2026-08-02-abstracao-componentes-redator-design.md` (D1–D12). Sem context packet: a fonte é o
+código e o relatório do review da mesma sessão.
+
+Próxima ação: escrever o plano de implementação (`writing-plans`). Nada de código até o plano existir
+e o estado ir para `ready_for_execution`.
+
+**Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
+a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
+(2026-07-31) já havia avaliado e rejeitado esse mesmo componente, pelo motivo que o contrato
+confirmou (~14 props, ~6 só para diferenciar consumidor). O `D8` permanece em vigor; o bloco
+compartilha apenas `AppFileActions` + `useFilePreview` e corta o `RedatorDialog` em subcomponentes
+locais de `identity`.
 
 ## Último item fechado — 2026-08-01
 
