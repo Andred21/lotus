@@ -62,7 +62,7 @@ export function UsersTable({
           sortable
           body={(u: UserData) => (
             <div className="flex items-center gap-3">
-              <AppAvatar name={u.name} image={u.photo_url} size="normal" />
+              <AppAvatar name={u.name} image={u.photo_url} size="large" />
               <div>
                 <p className="font-medium">{u.name}</p>
                 <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{u.email}</p>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AppButton } from '../AppButton';
 
 export interface DetailHeaderProps {
   /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele. */
@@ -28,15 +29,15 @@ export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHea
   return (
     <div className="mb-6 flex flex-col gap-4">
       {back && (
-        <button
-          type="button"
-          className="flex w-fit items-center gap-2 text-sm hover:underline"
-          style={{ color: 'var(--text-color-secondary)' }}
+        <AppButton
+         variant="brandIcon"  
+          className="flex w-fit "
+        
           onClick={back.onClick}
         >
           <i className="pi pi-arrow-left" aria-hidden="true" />
           {back.label}
-        </button>
+        </AppButton >
       )}
       {(title || subtitle || tags || actions) && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

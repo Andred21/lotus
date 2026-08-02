@@ -53,6 +53,7 @@ export function CourseDialog({
       pending={pending}
       submitLabel={isCreate ? t('course.create') : undefined}
     >
+      
       <FormErrorBanner message={generalError} />
       <FormErrorSummary
         errors={fieldErrors}

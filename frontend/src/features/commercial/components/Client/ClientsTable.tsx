@@ -64,7 +64,7 @@ export function ClientsTable({
           sortable
           body={(c: ClientData) => (
             <div className="flex items-center gap-3">
-              <AppAvatar name={c.legal_name} image={c.photo_url} size="normal" />
+              <AppAvatar name={c.legal_name} image={c.photo_url} size="large" />
               <span className="font-medium">{c.legal_name}</span>
             </div>
           )}

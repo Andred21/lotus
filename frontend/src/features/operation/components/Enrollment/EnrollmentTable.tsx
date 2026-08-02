@@ -55,7 +55,7 @@ export function EnrollmentTable({
           header={t('operation.enrollment.table.name')}
           body={(e: EnrollmentData) => (
             <div className="flex items-center gap-3">
-              <AppAvatar name={e.name} />
+              <AppAvatar name={e.name}  size='large' />
               <span className="font-medium">{e.name}</span>
             </div>
           )}
