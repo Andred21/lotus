@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: identity
 active_work_item: abstracao-componentes-redator
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-redator-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-redator.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-debitos-integridade
-state_basis_commit: b4faf40
-updated_at: 2026-08-02T00:00:00-03:00
+state_basis_commit: b2a6011
+updated_at: 2026-08-02T01:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,15 +48,21 @@ updated_at: 2026-08-02T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `planning`
+## Estado atual — `ready_for_execution`
 
 `abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
-2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada e escrita em
-`specs/2026-08-02-abstracao-componentes-redator-design.md` (D1–D12). Sem context packet: a fonte é o
-código e o relatório do review da mesma sessão.
+2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
+escrito em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
+context packet: a fonte é o código e o relatório do review da mesma sessão.
 
-Próxima ação: escrever o plano de implementação (`writing-plans`). Nada de código até o plano existir
-e o estado ir para `ready_for_execution`.
+Próxima ação: `/executar-bloco abstracao-componentes-redator`.
+
+**Handoff:** `executor: claude`, sem `paths_autorizados`. Nenhuma task tem verificação executável
+suficiente — o aceite é comparação visual contra baseline em 3 features, e "build verde" seria falso
+aceite (lei §8). As Tasks 2 e 9 tocam a fronteira da lei §6 e a decisão viva do `D8-upload`.
+
+**Ordem obrigatória:** Task 0 → Task 1 antes de qualquer código. A baseline de screenshots é a única
+referência objetiva do que "nada mudou" significa neste bloco; sem ela a Task 10 vira opinião.
 
 **Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
 a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
