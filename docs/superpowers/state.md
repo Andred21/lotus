@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: operation
 active_work_item: abstracao-componentes-operation
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-operation.md
 context_packet: null
 blocker: null
 resume_state: null
@@ -48,7 +48,7 @@ updated_at: 2026-08-02T20:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `planning`
+## Estado atual — `ready_for_execution`
 
 `abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
@@ -59,7 +59,14 @@ updated_at: 2026-08-02T20:10:00-03:00
 Notion nem Figma — a fonte é o código de `frontend/src/features/operation/` e o relatório do
 `/revisar-frontend` desta sessão. Mesmo caso do `abstracao-componentes-redator`.
 
-Próxima ação: concluir brainstorming → spec → plano. Não implementar nesta fase.
+Spec aprovada pelo João (D1–D11) e plano escrito em 10 tasks: 4 de conteúdo antes do CP-1
+(`useTableFilter` opcional → `EnrollmentTable` → `useTurmaConfigForm` → `useImportStudentsFlow`),
+checkpoint visual, 3 de conteúdo antes do CP-2 (`PickerBody` → `useTurmaManualOpener` →
+`handleUpload`), checkpoint visual e gate. `executor: claude` — nenhuma task delegada ao Codex, por
+não haver verificação executável do critério de aceite (frontend sem test runner; o DoD é
+comportamento idêntico provado na tela).
+
+Próxima ação: `/executar-bloco abstracao-componentes-operation`.
 
 ## Último item fechado — 2026-08-02
 
