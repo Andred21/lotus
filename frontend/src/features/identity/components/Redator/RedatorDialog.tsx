@@ -10,12 +10,9 @@ import {
   FormSection,
   FormErrorBanner,
   AppPhotoField,
-  AppErrorState,
-  AppSkeleton,
 } from "@shared/ui";
 import type { FileUploadHandlerEvent } from "@shared/ui";
 import type { RedatorData, RedatorDocumentData } from "@shared/types/generated";
-import { coursesApi } from "@shared/api/coursesApi";
 import { redatoresApi } from "@shared/api/redatoresApi";
 import { useEntityPhoto } from "@shared/hooks";
 import {
@@ -26,10 +23,9 @@ import {
   useRedatorForm,
   type RedatorDialogMode,
 } from "../../hooks/useRedatorForm";
-import { useEnabledFirstCourses } from "../../hooks/useEnabledFirstCourses";
 import { docStatus, idoneidade, type DocStatus, type DocType } from "@shared/lib";
-import { CourseCard } from "./CourseCard";
 import { RedatorIdentityFields } from "./RedatorIdentityFields";
+import { RedatorCourseSelector } from "./RedatorCourseSelector";
 
 const DOC_TYPES = ["CV", "REUF", "TITULO", "POSTGRADO"] as const;
 
@@ -78,7 +74,6 @@ export function RedatorDialog({
   } = useRedatorForm(redator, mode, onHide, (created) =>
     photo.flush(created.id as number),
   );
-  const courses = coursesApi.useList();
   const upload = useUploadDocument();
   const removeDoc = useRemoveDocument();
   const [preview, setPreview] = useState<RedatorDocumentData | null>(null);
@@ -88,18 +83,6 @@ export function RedatorDialog({
   // são geridos por mutações próprias e devem refletir o servidor na hora.
   const existing = redator?.documents ?? [];
   const courseIds = form.course_ids;
-
-  // Em leitura só os habilitados; em seleção todos, com os habilitados primeiro
-  // e a ordem congelada na abertura (spec D9).
-  const allCourses = courses.data ?? [];
-  const enabledCourses = allCourses.filter((c) =>
-    courseIds.includes(c.id as number),
-  );
-  const orderedCourses = useEnabledFirstCourses(
-    allCourses,
-    courseIds,
-    `${redator?.id ?? "new"}:${mode}`,
-  );
 
   function handleUpload(type: DocType, e: FileUploadHandlerEvent) {
     setSizeError(null);
@@ -358,56 +341,12 @@ export function RedatorDialog({
 
         <FormSection title={t("redator.sectionCourses")} spaced />
 
-        {/* Mesmos três estados do lado do curso (spec D11): `?? []` fazia falha
-            de GET virar "sem cursos habilitados". */}
-        {courses.isLoading ? (
-          <div className="grid gap-2 sm:grid-cols-2" aria-busy="true">
-            <AppSkeleton height="3.5rem" />
-            <AppSkeleton height="3.5rem" />
-          </div>
-        ) : courses.isError ? (
-          <AppErrorState
-            title={t("common.loadError")}
-            detail={courses.error?.detail ?? t("common.loadErrorHint")}
-            retryLabel={t("common.retry")}
-            onRetry={() => {
-              void courses.refetch();
-            }}
-          />
-        ) : allCourses.length === 0 ? (
-          <p
-            className="text-sm"
-            style={{ color: "var(--text-color-secondary)" }}
-          >
-            {t("course.empty")}
-          </p>
-        ) : readOnly ? (
-          enabledCourses.length === 0 ? (
-            <p
-              className="text-sm"
-              style={{ color: "var(--text-color-secondary)" }}
-            >
-              {t("redator.noCourses")}
-            </p>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {enabledCourses.map((c) => (
-                <CourseCard key={c.id} course={c} />
-              ))}
-            </div>
-          )
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {orderedCourses.map((c) => (
-              <CourseCard
-                key={c.id}
-                course={c}
-                selected={courseIds.includes(c.id as number)}
-                onToggle={() => toggleCourse(c.id as number)}
-              />
-            ))}
-          </div>
-        )}
+        <RedatorCourseSelector
+          courseIds={courseIds}
+          readOnly={readOnly}
+          onToggle={toggleCourse}
+          orderKey={`${redator?.id ?? "new"}:${mode}`}
+        />
       </section>
     </CrudDialog>
   );
