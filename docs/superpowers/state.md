@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: operation
-active_work_item: abstracao-componentes-operation
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
-active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-operation.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: abstracao-componentes-redator
-state_basis_commit: 2b95687
-updated_at: 2026-08-02T21:15:00-03:00
+last_completed_work_item: abstracao-componentes-operation
+state_basis_commit: 1825162
+updated_at: 2026-08-02T22:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,13 @@ updated_at: 2026-08-02T21:15:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_closure`
+## Estado atual — `idle`
+
+Nenhum item ativo. `abstracao-componentes-operation` foi fechado em 2026-08-02 (seção abaixo).
+A próxima ação é do João: escolher explicitamente um item do `backlog.md`. Nenhum item é promovido
+por ordem, por parecer óbvio ou por estar no topo da fila.
+
+## Último item fechado — 2026-08-02
 
 `abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
@@ -119,7 +125,7 @@ já expõe `setRut`.
   linha 28 do mesmo arquivo — o falso positivo que o `\b` do grep original protegia, aqui protegido
   pelo `$` da regex. Entrou com **catraca**: os 7 legados em `ignores`, lista que só encolhe, para o
   `pnpm lint` não quebrar na hora. Texto correspondente na `.claude/rules/frontend-fsliced.md`; o
-  esvaziamento da lista é o **item 5 do `backlog.md`**, bloco próprio.
+  esvaziamento da lista é bloco próprio no `backlog.md` (**item 4** depois do fechamento deste).
 
 **Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; DoD 6–11 reconferidos e intactos —
 `backend/` e locales sem diff, as 3 features consumidoras de `useTableFilter` ainda com diff
@@ -127,14 +133,34 @@ já expõe `setRut`.
 query-em-componente, `primereact` direto e cross-feature limpos, `useState(0)` só no
 `TurmaDetailPage` (índice de aba).
 
-Próxima ação: `/fechar-sprint`. **Nota para o fechamento:** o item 4 do `backlog.md` descreve o C-2
-como "`searchable` aceita `() => []`" — desenho que a spec D4 depois rejeitou em favor do parâmetro
-opcional. O fechamento remove esse item, o que já resolve; não deixar o texto sobreviver como está
-(lição 13).
+**Gate de fechamento (2026-08-02).** Suíte backend **372 passed (1360 assertions)** como regressão;
+`pnpm lint` e `pnpm build` verdes; Pint **n/a** (zero arquivo de `backend/` no diff); `generated.ts`
+sem diff e nenhum DTO tocado, logo sem `typescript:transform`; greps do DoD e da lei §5.6 rerodados
+limpos; sem órfão (cada hook novo com exatamente 1 consumidor). **Item 0 do gate** — o critério de
+aceite é comportamento idêntico na tela, provado pelo João nos checkpoints CP-1 e CP-2, ambos
+aprovados em 2026-08-02; a única mudança depois do CP-2 foi o commit `1825162` (Q-1), que tocou
+apenas `eslint.config.js`, `.claude/rules/` e `docs/` — nenhum componente — então a aprovação
+visual continua válida, diferente do bloco do redator, onde o markup mudou e a prova foi refeita.
+Pendências: nenhum gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova —
+o débito nascido aqui (catraca de `ignores`) é item de código e foi para o `backlog.md`. P-25 segue
+aberta: o texto que este bloco acrescentou ao `frontend-fsliced.md` é sobre query-em-componente, não
+sobre a direção de dependência que fecharia o gatilho dela.
 
-## Último item fechado — 2026-08-02
+Nota registrada e resolvida no fechamento: o item removido do `backlog.md` descrevia o C-2 como
+"`searchable` aceita `() => []`" — desenho que a D4 rejeitou em favor do parâmetro opcional; o texto
+saiu com o item (lição 13).
 
-`abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
+Arquivado: `plans/archive/2026-08-02-abstracao-componentes-operation.md` ·
+`specs/archive/2026-08-02-abstracao-componentes-operation-design.md` (sem context packet — a fonte
+foi o código de `features/operation/` e o relatório do `/revisar-frontend` da mesma sessão).
+
+**Aberto, registrado, não resolvido:** a catraca de 7 componentes legados em `ignores` do
+`no-restricted-syntax` (bloco próprio no `backlog.md`); cor Tailwind hardcoded em 4 arquivos de
+`Enrollment`/`Document` e `turma.id!` em 5 pontos, ambos fora do corte por decisão da spec; P-25.
+
+## Penúltimo item fechado — 2026-08-02
+
+`abstracao-componentes-redator` — item 4 do `backlog.md` à época, selecionado explicitamente pelo João em
 2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
 executado em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
 context packet: a fonte foi o código e o relatório do review da mesma sessão.
@@ -207,62 +233,5 @@ o código e o relatório do `/revisar-frontend` da mesma sessão).
 **Aberto, registrado, não resolvido:** P-25 (constraint de `useFilePreview`, spec vs. código); a régua
 de ~150 linhas do `frontend-fsliced.md` segue não atingida no `RedatorDialog` (189), aceita na spec §8;
 o `PersonFields` genérico segue descartado, não reabrir sem motivo novo.
-
-## Penúltimo item fechado — 2026-08-01
-
-`hardening-debitos-integridade` — fatia do item 3 do backlog (Hardening), selecionada explicitamente
-pelo João em 2026-08-01 depois de triagem do `backlog.md` §Débitos técnicos e do `pendencias.md`
-contra o código real. Spec aprovada (D1–D9) e plano escrito em 8 tasks (7 de conteúdo + gate).
-Execução em 2026-08-01 (Tasks 1–8, `subagent-driven-development`, main tree — bloco toca backend,
-sem worktree, P-03), com Task 2b fora do plano original (`UpdateRedatorAction` tinha o mesmo bug de
-arquivo órfão que a Task 2 fechou, achado no review). Gate provado: suíte 366 passed (1344
-assertions, baseline 347/1083), Pint limpo, `generated.ts` sem diff, frontend build+lint verdes,
-prova real de duas sessões MySQL confirmando que o lock do Q-5 (D6) serializa de verdade em InnoDB.
-
-**Escopo fechado (6 itens).** Correção e peso legal: (1) arquivo órfão no MinIO em rollback —
-`UploadFileAction::execute` gravava no disco antes do insert em `files`; (2) P-24 —
-`UserPhotoService::store()` apagava o objeto NOVO se a auditoria lançasse depois do UPDATE já
-commitado; (3) Q-5 — `count()`+`delete()` fora de transação em `DeleteClientContactAction` deixava
-duas exclusões concorrentes esvaziarem a coleção de contatos. Falha silenciosa: (4)
-`ClientContactData.is_primary` com default `false` não-`Optional` rebaixava o principal em silêncio
-num PUT parcial; (5) sem check de paridade permissão↔i18n, permissão nova renderizava chave crua no
-picker; (6) sem unicidade de `client_addresses.is_primary`, análogo ao gap já fechado nos contatos.
-
-**Review em 2 rodadas (alto risco — `generated.ts` mudou, spec §8 — segunda lente Codex nas duas).**
-Rodada 1 (`/revisar-sprint`): 2 achados reais, ambos corrigidos no mesmo dia (commit `ca02c9b`).
-**Q-1** — a spec §3 assumia "endereço não tem rota nested hoje" (premissa da decisão de D8 de não
-dar `winner` ao `PrimaryAddressService`); falso — `ClientAddressController` (`5bc1d87`, anterior a
-este bloco) já expunha `POST /api/clients/{client}/addresses` e `PUT /api/addresses/{address}`
-escrevendo direto no Eloquent, ignorando o serviço — dois requests sequenciais deixavam dois
-endereços principais, a mesma classe de bug que o bloco existe para fechar. Corrigido com
-`CreateClientAddressAction`/`UpdateClientAddressAction` (espelham os de contato) e `winner` novo em
-`PrimaryAddressService::ensureSingle()`. **Q-2** — `UploadFileAction::discard()` só capturava
-exceção; um `delete()` que devolve `false` sem lançar (mesmo modo silencioso do bug D2, fechado em
-`put()`) não gerava warning nenhum; corrigido. Os 6 testes novos foram vistos reprovando contra o
-código antigo antes do fix (stash dos 3 arquivos de produção, suíte rodada, 4 testes falharam como
-esperado, stash restaurado) — lição 10. Rodada 2 (sobre `ca02c9b`): único achado — `ensureSingle()`
-sem `lockForUpdate` no `Client` permite dois principais sob escrita concorrente, em
-`PrimaryContactService` **e**, agora simetricamente, em `PrimaryAddressService` — não é regressão
-deste commit (mesmo padrão já em produção desde antes do bloco). Registrado como Q-16 em
-`backlog.md`, não bloqueou o fechamento (mesma classe de decisão do Q-5: proporcionalidade, ~10
-usuários internos).
-
-**Fora do escopo por decisão do João no mesmo dia (execução original):** os débitos de UI (Q-14,
-Q-15, CTA duplicado, cor hardcoded nos 6 diálogos), os minors de 5.2a/5.2b e `UserData::fromModel`
-chamando `getRoleNames()` duas vezes. Seguem abertas as decisões de Q-6 (idioma canônico das
-mensagens), P-20 (`openspout`) e P-21 (`simple-qrcode`).
-
-**Gate de fechamento:** DoD provado contra API real com sessão Sanctum (dois endereços
-`is_primary=true` no create deixam só um; POST na rota nested sobre cliente com principal existente
-idem — prova ao vivo do fix de Q-1; PUT de contato sem `is_primary` mantém o principal; DELETE do
-contato único → `422`). Suíte 372 passed (1360 assertions), Pint limpo, `generated.ts` sem diff,
-`pnpm build`+`pnpm lint` verdes. P-24 sai de `pendencias.md`; Q-5 sai de `backlog.md`. Sem context
-packet — a fonte é o código, o `backlog.md` e o `pendencias.md`.
-
-Arquivado: `plans/archive/2026-08-01-hardening-debitos-integridade.md` ·
-`specs/archive/2026-08-01-hardening-debitos-integridade-design.md`.
-
-**Aberto, registrado, não resolvido:** Q-16 em `backlog.md` (`ensureSingle()` sem lock no `Client`,
-`PrimaryContactService`/`PrimaryAddressService`); Q-6, P-20, P-21 em `pendencias.md`/`backlog.md`.
 
 Histórico completo: `docs/superpowers/progress.md`.

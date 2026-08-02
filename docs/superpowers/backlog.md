@@ -17,24 +17,7 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **Frontend · Abstração de componentes de `operation`**
-   — saída do `/revisar-frontend` de `features/operation` (2026-08-02). Lei §6 limpa (zero
-   PrimeReact direto, zero import cross-feature); `api/`, `hooks/` e `lib/` aderentes. **3 achados C
-   (violam rule) + 3 B.** C-1: `TurmaConfigCard` carrega `coursesApi.useList()` + derivação do curso
-   no componente — mesmo achado que o Q-4 do bloco `abstracao-componentes-redator`, resolver movendo
-   para `useTurmaConfigForm` (expõe `workloadHours`). C-2: `EnrollmentTable` reimplementa
-   `useTableFilter` (estado de `first`, clamp e `onPage` copiados literalmente, comentário incluído)
-   — a aba não tem busca, mas `searchable` aceita `() => []`. C-3: `ImportDialog` orquestra mutation
-   + `result` + `sizeError` + `close` no componente, sem hook, enquanto o vizinho `EnrollStudentForm`
-   já usa `useEnrollStudentFlow`. B-1: ternário de 4 níveis no `return` de `RedatorDesignation`
-   (erro > loading > vazio > lista) → guardas sequenciais num `PickerBody`, mesma classe do Q-2 do
-   bloco anterior. B-2: `ManualButton` com mutation + 2 refs + `open` no componente → hook. B-3:
-   `uploadHandler` de 13 linhas dentro do JSX do `DocumentTypeCard`. Fora do corte proposto, só
-   registrado: cor Tailwind hardcoded em 4 arquivos de `Enrollment`/`Document` (fatia do débito
-   "Cor fora do corte do D18") e `turma.id!` em 5 pontos (forma do Q-1, risco real baixo — o id vem
-   sempre de GET bem-sucedido). Bloco 100% frontend; DoD se prova na tela (detalhe da turma, 5 abas
-   + import + manual), build verde não é aceite.
-5. **Frontend · Zerar a catraca de query-em-componente** (Q-1 do review de
+4. **Frontend · Zerar a catraca de query-em-componente** (Q-1 do review de
    `abstracao-componentes-operation`, 2026-08-02)
    — a regra "componente de feature = declarativo" virou lint no mesmo review
    (`no-restricted-syntax` em `eslint.config.js`), mas entrou com **7 componentes legados na lista
@@ -49,6 +32,7 @@
    Precedentes de forma: `useRedatorCourses` (Q-4 do bloco do redator) e `useTurmaConfigForm` (C-1
    deste bloco). Bloco 100% frontend, sem test runner: o DoD é comportamento idêntico provado na
    tela por diálogo tocado, mais `pnpm lint` verde **com a lista vazia**.
+
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como

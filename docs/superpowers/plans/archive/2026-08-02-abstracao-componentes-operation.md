@@ -12,7 +12,7 @@ existente que absorve a query do curso (`useTurmaConfigForm`), um subcomponente 
 
 **Tech Stack:** React 19 + TS, Vite, TanStack Query, PrimeReact via `shared/ui`, Tailwind v4 (layout).
 
-**Spec:** [`docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md`](../specs/2026-08-02-abstracao-componentes-operation-design.md) (D1–D11)
+**Spec:** [`docs/superpowers/specs/archive/2026-08-02-abstracao-componentes-operation-design.md`](../../specs/archive/2026-08-02-abstracao-componentes-operation-design.md) (D1–D11)
 
 ## Global Constraints
 
