@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppFileUpload, AppTag, AppFileRow, AppFilePreviewDialog } from '@shared/ui'
+import { AppFileUpload, AppTag, AppFileRow, AppFilePreviewDialog, AppFileActions } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
+import { useFilePreview } from '@shared/hooks'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 
 type Props = {
@@ -24,7 +25,7 @@ export function DocumentTypeCard({
   canSubmit,
 }: Props) {
   const { t } = useTranslation()
-  const [preview, setPreview] = useState<TurmaDocumentData | null>(null)
+  const preview = useFilePreview<TurmaDocumentData>()
   const [sizeError, setSizeError] = useState<string | null>(null)
   const delivered = files.length > 0
 
@@ -69,29 +70,12 @@ export function DocumentTypeCard({
               size={file.size}
               createdAt={file.created_at}
               actions={
-                <>
-                  <AppButton
-                    icon="pi pi-eye"
-                    text
-                    rounded
-                    aria-label={t('common.preview')}
-                    onClick={() => setPreview(file)}
-                  />
-                  <a href={file.download_url} target="_blank" rel="noreferrer">
-                    <AppButton icon="pi pi-download" text rounded aria-label={t('common.download')} />
-                  </a>
-                  {canSubmit && (
-                    <AppButton
-                      icon="pi pi-trash"
-                      text
-                      rounded
-                      severity="danger"
-                      aria-label={t('operation.documents.remove')}
-                      disabled={removing}
-                      onClick={() => onRemove(file)}
-                    />
-                  )}
-                </>
+                <AppFileActions
+                  file={file}
+                  onPreview={preview.open}
+                  onRemove={canSubmit ? () => onRemove(file) : undefined}
+                  removing={removing}
+                />
               }
             />
           </li>
@@ -101,7 +85,7 @@ export function DocumentTypeCard({
 
       {sizeError && <p className="mt-2 text-sm" style={{ color: 'var(--red-500)' }}>{sizeError}</p>}
 
-      <AppFilePreviewDialog file={preview} visible={preview !== null} onHide={() => setPreview(null)} />
+      <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
 
       {canSubmit && <p className="mt-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.uploadHint')}</p>}
     </section>
