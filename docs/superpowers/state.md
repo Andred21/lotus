@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: identity
 active_work_item: abstracao-componentes-redator
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-redator.md
 context_packet: null
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: hardening-debitos-integridade
 state_basis_commit: b2a6011
-updated_at: 2026-08-02T02:00:00-03:00
+updated_at: 2026-08-02T03:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,30 +48,39 @@ updated_at: 2026-08-02T02:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `executing`
+## Estado atual — `ready_for_review`
 
 `abstracao-componentes-redator` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
-escrito em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
-context packet: a fonte é o código e o relatório do review da mesma sessão.
+executado em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
+context packet: a fonte foi o código e o relatório do review da mesma sessão.
 
-Branch `refactor/abstracao-componentes-redator` criada a partir do `main` (D12, sem worktree).
-Task 0 feita (branch + desvio de TDD registrado no ledger local). **Task 1 (baseline de
-screenshots, D11) NÃO executada** — decisão do João em 2026-08-02: a sessão do Claude não tem
-ferramenta de browser/screenshot disponível. Nenhum arquivo salvo em
-`docs/superpowers/audits/2026-08-02-baseline-abstracao-redator/` (a pasta não chegou a ser
-criada). As verificações "conferir na tela" por task (3, 4, 5, 7, 8, 9) também não rodam durante a
-execução; a única prova visual do bloco vira a comparação ao vivo da Task 10 (Step 6), feita pelo
-João sem baseline capturada antes. **Diverge de D11/R8 da spec** — risco aceito explicitamente pelo
-João, registrado no ledger local (`.superpowers/sdd/progress.md`), não escolhido por heurística do
-executor. Task 2 em andamento.
+Branch `refactor/abstracao-componentes-redator` a partir do `main` (D12, sem worktree), 8 commits
+de conteúdo (`16e9cfc`..`fb25084`). `RedatorDialog.tsx` cai de 448 para 183 linhas; três
+subcomponentes locais de `identity` (`RedatorIdentityFields`, `RedatorCourseSelector`,
+`RedatorDocumentSlot`) e dois primitivos novos em `shared/` (`AppFileActions`, `useFilePreview`)
+adotados também por `operation/DocumentTypeCard` e `commercial/FileList`. Mapas de severidade e
+`DOC_TYPES` sobem para `shared/lib/redatorStatus.ts` (D8, D9).
 
-Próxima ação: retomar a task pendente do plano (`continue_active_plan`).
+**Task 1 (baseline de screenshots, D11) NÃO executada** — decisão do João em 2026-08-02: a sessão
+do Claude não tinha ferramenta de browser/screenshot disponível. Nenhum arquivo salvo em
+`docs/superpowers/audits/`. As verificações "conferir na tela" por task também não rodaram durante
+a execução; a única prova visual do bloco foi a comparação ao vivo da Task 10 (Step 6), feita pelo
+João sem baseline capturada antes — **aprovada** ("tudo certo") contra os 11 critérios do §7 da
+spec. **Diverge de D11/R8** — risco aceito explicitamente pelo João, registrado no ledger local
+(`.superpowers/sdd/progress.md`), não escolhido por heurística do executor.
 
-**Handoff:** `executor: claude`, sem `paths_autorizados`. Nenhuma task tem verificação executável
-suficiente — o aceite é comparação visual ao vivo (sem baseline salva, ver acima), e "build verde"
-seria falso aceite (lei §8). As Tasks 2 e 9 tocam a fronteira da lei §6 e a decisão viva do
-`D8-upload`.
+Gate automatizado (Task 10, Steps 1–3 e 5): `pnpm build` + `pnpm lint` verdes; greps da lei §6
+limpos (sem `primereact` direto em `features/`, sem import cruzado `catalog`/`commercial`/
+`operation`↔`identity`); `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado,
+bloco 100% frontend); nenhum `useState` de preview sobrou em `features/`.
+
+Próxima ação: solicitar revisão do bloco (`request_code_review`). Não inicia automaticamente.
+
+**Handoff:** `executor: claude`, sem `paths_autorizados`. Risco de review: sem test runner e sem
+baseline salva, a segunda lente tem que validar contra o comportamento descrito na spec/plano, não
+contra um diff de screenshot. As Tasks 2 e 9 tocaram a fronteira da lei §6 e a decisão viva do
+`D8-upload` — vale conferência extra do review nelas.
 
 **Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
 a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
