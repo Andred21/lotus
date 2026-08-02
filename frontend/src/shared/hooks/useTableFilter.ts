@@ -33,12 +33,16 @@ export interface TableFilter<T> {
  * `value.length > rows` (spec D12).
  *
  * `searchable` devolve os campos que a busca varre — `null`/`undefined` são
- * ignorados. `where` é o filtro próprio da tela (estado, tipo) e roda ANTES da
- * busca; saber se ele está ativo continua sendo da tela, não do hook.
+ * ignorados. É OPCIONAL: uma tabela em card pode não ter busca (a aba Alumnos
+ * não tem, por decisão do protótipo) e ainda assim precisa do estado de página
+ * e do clamp — sem isso o consumidor reimplementa o bloco, que é a duplicação
+ * que este hook existe para matar. `where` é o filtro próprio da tela (estado,
+ * tipo) e roda ANTES da busca; saber se ele está ativo continua sendo da tela,
+ * não do hook.
  */
 export function useTableFilter<T>(
   items: T[],
-  searchable: (item: T) => (string | null | undefined)[],
+  searchable?: (item: T) => (string | null | undefined)[],
   where?: (item: T) => boolean,
 ): TableFilter<T> {
   const [filter, setFilter] = useState('')
@@ -47,7 +51,7 @@ export function useTableFilter<T>(
   const term = filter.trim().toLowerCase()
   const scoped = where ? items.filter(where) : items
   const rows =
-    term === ''
+    term === '' || !searchable
       ? scoped
       : scoped.filter((item) =>
           searchable(item).some((value) => (value ?? '').toLowerCase().includes(term)),

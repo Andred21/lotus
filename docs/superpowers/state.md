@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: operation
 active_work_item: abstracao-componentes-operation
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
 active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-operation.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-redator
-state_basis_commit: 1404e3c
-updated_at: 2026-08-02T20:10:00-03:00
+state_basis_commit: 60035e4
+updated_at: 2026-08-02T20:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
