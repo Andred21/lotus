@@ -1,10 +1,6 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppFileUpload } from '@shared/ui'
-import type { FileUploadHandlerEvent } from '@shared/ui'
-import type { ImportResultData } from '@shared/types/generated'
-import { useMutationErrors } from '@shared/hooks'
-import { useImportStudents } from '../../api/useImportStudents'
+import { useImportStudentsFlow } from '../../hooks/useImportStudentsFlow'
 import { ImportResultSummary } from './ImportResultSummary'
 
 type Props = {
@@ -15,61 +11,46 @@ type Props = {
 
 export function ImportDialog({ turmaId, visible, onHide }: Props) {
   const { t } = useTranslation()
-  const importMutation = useImportStudents()
-  const { message } = useMutationErrors([importMutation.error])
-  const [result, setResult] = useState<ImportResultData | null>(null)
-  const [sizeError, setSizeError] = useState<string | null>(null)
-
-  const upload = (e: FileUploadHandlerEvent) => {
-    const file = e.files[0]
-    if (!file) return
-    importMutation.mutate({ turmaId, file }, { onSuccess: (r) => setResult(r) })
-  }
-
-  const close = () => {
-    if (importMutation.isPending) return
-    setResult(null)
-    setSizeError(null)
-    importMutation.reset()
-    onHide()
-  }
+  const f = useImportStudentsFlow(turmaId, onHide)
 
   return (
     <AppDialog
       visible={visible}
       header={t('operation.enrollment.import.title')}
-      onHide={close}
-      closable={!importMutation.isPending}
-      closeOnEscape={!importMutation.isPending}
+      onHide={f.close}
+      closable={!f.pending}
+      closeOnEscape={!f.pending}
       dismissableMask={false}
     >
       <div className="space-y-4">
-        {!result && (
+        {!f.result && (
           <>
             <p className="text-sm text-slate-500">{t('operation.enrollment.import.help')}</p>
             <AppFileUpload
               accept=".xlsx,.csv"
               chooseLabel={t('operation.enrollment.import.choose')}
-              onSizeReject={setSizeError}
-              uploadHandler={(e) => { setSizeError(null); upload(e) }}
-              disabled={importMutation.isPending}
+              onSizeReject={f.setSizeError}
+              uploadHandler={f.upload}
+              disabled={f.pending}
             />
-            {importMutation.isPending && (
+            {f.pending && (
               <p className="text-sm text-slate-500">{t('operation.enrollment.import.uploading')}</p>
             )}
           </>
         )}
 
-        {result && (
+        {f.result && (
           <>
-            <ImportResultSummary result={result} />
+            <ImportResultSummary result={f.result} />
             <div className="flex justify-end">
-              <AppButton label={t('operation.enrollment.import.close')} onClick={close} />
+              <AppButton label={t('operation.enrollment.import.close')} onClick={f.close} />
             </div>
           </>
         )}
 
-        {(sizeError || message) && <p className="text-sm text-red-600">{sizeError || message}</p>}
+        {(f.sizeError || f.message) && (
+          <p className="text-sm text-red-600">{f.sizeError || f.message}</p>
+        )}
       </div>
     </AppDialog>
   )
