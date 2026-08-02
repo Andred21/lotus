@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: operation
 active_work_item: abstracao-componentes-operation
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-02-abstracao-componentes-operation-design.md
 active_plan: docs/superpowers/plans/2026-08-02-abstracao-componentes-operation.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-redator
-state_basis_commit: 60035e4
-updated_at: 2026-08-02T20:30:00-03:00
+state_basis_commit: 2b95687
+updated_at: 2026-08-02T21:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,25 +48,51 @@ updated_at: 2026-08-02T20:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `ready_for_review`
 
 `abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
 `features/operation` da mesma sessão: 3 achados C (violam a rule `frontend-fsliced.md`) + 3 B, lei
-§6 limpa.
+§6 limpa. Spec aprovada (D1–D11) e plano executado em 10 tasks via `/executar-bloco` +
+`executing-plans` inline (`executor: claude` — sem task delegada ao Codex, frontend sem test
+runner, DoD é comportamento idêntico provado na tela).
 
-**Sem context packet** (`context_packet: null`, decisão registrada): o bloco não depende de Drive,
-Notion nem Figma — a fonte é o código de `frontend/src/features/operation/` e o relatório do
-`/revisar-frontend` desta sessão. Mesmo caso do `abstracao-componentes-redator`.
+**Sem context packet** (`context_packet: null`): a fonte foi o código de
+`frontend/src/features/operation/` e o relatório do `/revisar-frontend` da mesma sessão.
 
-Spec aprovada pelo João (D1–D11) e plano escrito em 10 tasks: 4 de conteúdo antes do CP-1
-(`useTableFilter` opcional → `EnrollmentTable` → `useTurmaConfigForm` → `useImportStudentsFlow`),
-checkpoint visual, 3 de conteúdo antes do CP-2 (`PickerBody` → `useTurmaManualOpener` →
-`handleUpload`), checkpoint visual e gate. `executor: claude` — nenhuma task delegada ao Codex, por
-não haver verificação executável do critério de aceite (frontend sem test runner; o DoD é
-comportamento idêntico provado na tela).
+**Escopo entregue (6 achados fechados).** `useTableFilter` (`shared/hooks`) ganha `searchable`
+opcional — os 7 consumidores antigos não mudaram uma linha (D4), prova por diff vazio; a aba
+Alumnos (`EnrollmentTable`) vira o 8º consumidor e perde o `useState`/clamp/`onPage` copiados à mão
+(C-2). A query do curso desce de `TurmaConfigCard` para `useTurmaConfigForm`, que expõe
+`workloadHours` (C-1, mesmo achado do Q-4 do bloco anterior). `useImportStudentsFlow` novo absorve
+mutation/`result`/`sizeError`/`close` do `ImportDialog` (C-3, molde `useEnrollStudentFlow`). O
+ternário de 4 níveis do picker de redator vira `PickerBody` com guardas sequenciais erro > loading >
+vazio > lista (B-1, mesma lição do Q-2/`SlotBody` do bloco anterior). `useTurmaManualOpener` novo
+absorve mutation do blob, refs de objectURL/aba e cleanup de unmount do `ManualButton` (B-2). O
+handler de upload de 13 linhas do `DocumentTypeCard` sobe para `handleUpload` acima do `return`,
+sem hook — estado local que não cruza componente (B-3, D8).
 
-Próxima ação: `/executar-bloco abstracao-componentes-operation`.
+Branch `refactor/abstracao-componentes-operation` a partir do `main` (D2, sem worktree — bloco toca
+`shared/hooks/useTableFilter.ts`, e o DoD se prova na tela contra o `docker compose` do main tree),
+7 commits de conteúdo (`7c25a47`..`2b95687`).
+
+**Prova visual em 2 checkpoints (D11), sem baseline capturada** (mesma limitação do bloco anterior —
+sem ferramenta de browser/screenshot na sessão): **CP-1** (depois das Tasks 1–4) — carga horária em
+Configuración, paginação/clamp de Alumnos, diálogo de import nos 3 casos — **aprovado pelo João em
+2026-08-02**. **CP-2** (depois das Tasks 6–8) — os 4 estados do picker de Redator (erro/loading/
+vazio/lista), upload/remoção/Manual em Documentación — **aprovado pelo João em 2026-08-02**.
+
+**Gate automatizado (Task 10):** `git diff --name-only main...HEAD -- backend/` vazio (D1, bloco
+100% frontend); `git diff --name-only main...HEAD -- frontend/src/shared/config/locales/` vazio
+(D10, zero chave i18n nova); `git diff --stat main...HEAD -- frontend/src/features/catalog/
+frontend/src/features/commercial/ frontend/src/features/identity/` vazio e `TurmasTable` fora do
+diff (D4, os 7 consumidores antigos de `useTableFilter` intocados); grep de
+`use(Query|Mutation)\b|Api\.useList` em `features/operation/components/` sem saída; grep de
+`useState(0)` devolve só `TurmaDetailPage.tsx` (índice de aba, não paginação); greps da lei §6
+(`primereact` direto, import cross-feature) limpos; `pnpm build` + `pnpm lint` verdes; suíte backend
+**372 passed (1360 assertions)**, igual à baseline — sem regressão.
+
+Próxima ação: solicitar code review do bloco (`/revisar-sprint` ou equivalente).
 
 ## Último item fechado — 2026-08-02
 
