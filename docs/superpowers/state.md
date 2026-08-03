@@ -174,10 +174,9 @@ catraca de `max-lines` nascida aqui é item de código e foi para §Débitos té
 não para `pendencias.md`. **P-25 segue aberta:** o `frontend-fsliced.md` foi tocado, mas no parágrafo
 da régua de tamanho, não no da fronteira de tipo que fecharia o gatilho dela.
 
-Código morto mencionado, não deletado (é de fora deste bloco):
-`frontend/src/features/operation/components/.gitkeep` segue versionado e órfão de fato — a pasta tem
-arquivos reais desde o bloco de `operation`. Deleção não entrou em nenhum commit deste fechamento
-(lição 9).
+Código morto: nenhum. O `frontend/src/features/operation/components/.gitkeep`, que o fechamento
+anterior registrou como órfão com deleção não commitada no working tree do João (lição 9), **foi
+deletado por ele em `e236aa0`**, commit anterior a esta branch — a pendência não existe mais.
 
 Arquivado: `plans/archive/2026-08-03-abstracao-componentes-catalog.md` ·
 `specs/archive/2026-08-03-abstracao-componentes-catalog-design.md` (sem context packet — a fonte foi
