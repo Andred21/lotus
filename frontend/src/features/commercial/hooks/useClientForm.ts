@@ -104,6 +104,11 @@ export function useClientForm(
 
   return {
     form, set, readOnly, submit,
+    // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para o
+    // vazio em vez de quebrar ao ler `addr.region`. Resolvido aqui porque a
+    // constante que define "endereço vazio" já mora neste arquivo; tê-la também
+    // no componente eram duas fontes para o mesmo default.
+    addr: form.addresses[0] ?? EMPTY_ADDRESS,
     setAddr, patchContact, setPrimaryContact, addContact, removeContact,
     pending: create.isPending || update.isPending,
     fieldErrors, generalError,

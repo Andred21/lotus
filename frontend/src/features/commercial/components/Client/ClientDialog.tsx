@@ -9,7 +9,7 @@ import {
   FormErrorBanner,
   AppPhotoField,
 } from "@shared/ui";
-import type { ClientAddressData, ClientData } from "@shared/types/generated";
+import type { ClientData } from "@shared/types/generated";
 import { clientsApi } from "@shared/api/clientsApi";
 import { useEntityPhoto } from "@shared/hooks";
 import {
@@ -20,18 +20,6 @@ import { AddressFields } from "./AddressFields";
 import { ContactFields } from "./ContactFields";
 
 const TYPE_VALUES = ["client", "provider", "other"] as const;
-
-const EMPTY_ADDRESS: ClientAddressData = {
-  id: undefined,
-  line1: null,
-  line2: null,
-  number: null,
-  commune: null,
-  city: null,
-  region: null,
-  zip_code: null,
-  is_primary: true,
-};
 
 export function ClientDialog({
   visible,
@@ -63,6 +51,7 @@ export function ClientDialog({
     pending,
     fieldErrors,
     generalError,
+    addr,
     setAddr,
     patchContact,
     setPrimaryContact,
@@ -75,10 +64,6 @@ export function ClientDialog({
     value,
     label: t(`clientType.${value}`),
   }));
-
-  // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para vazio
-  // em vez de quebrar ao ler `addr.region`.
-  const addr = form.addresses[0] ?? EMPTY_ADDRESS;
 
   return (
     <CrudDialog
