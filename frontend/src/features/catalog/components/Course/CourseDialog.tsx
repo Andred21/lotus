@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppButton, AppInputText, AppTextarea, AppErrorState, AppSkeleton, FormField, FormSection, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
-import { redatoresApi } from '@shared/api/redatoresApi'
 import { usePermissions } from '@shared/hooks'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
+import { useCourseRedatores } from '../../hooks/useCourseRedatores'
 import { RedatorCard } from './RedatorCard'
 
 export function CourseDialog({
@@ -19,7 +19,7 @@ export function CourseDialog({
   const { t } = useTranslation()
   const { form, set, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
           addModule, removeModule, patchModule, moveModule } = useCourseForm(course, mode, onHide)
-  const redatores = redatoresApi.useList()
+  const redatores = useCourseRedatores(form.redator_ids)
   const navigate = useNavigate()
   const { can } = usePermissions()
   // O olho leva ao módulo dono do redator. `catalog` não pode importar o
@@ -33,8 +33,7 @@ export function CourseDialog({
 
   const isCreate = mode === 'create'
   const enabledIds = form.redator_ids
-  // Leitura (view/edit): só os redatores já habilitados, derivados da lista viva.
-  const enabledRedatores = (redatores.data ?? []).filter((r) => enabledIds.includes(r.id as number))
+  const enabledRedatores = redatores.enabledRedatores
 
   // Totais derivados: reagem ao que está sendo digitado, não ao último valor salvo
   // (o modules_total_hours do backend serve a consumidores de leitura).
@@ -203,9 +202,9 @@ export function CourseDialog({
         ) : redatores.isError ? (
           <AppErrorState
             title={t('common.loadError')}
-            detail={redatores.error?.detail ?? t('common.loadErrorHint')}
+            detail={redatores.errorDetail ?? t('common.loadErrorHint')}
             retryLabel={t('common.retry')}
-            onRetry={() => { void redatores.refetch() }}
+            onRetry={redatores.refetch}
           />
         ) : isCreate ? (
           // Exceção do produto: habilitar redatores pelo lado do curso só no cadastro.
@@ -214,7 +213,7 @@ export function CourseDialog({
               {t('course.redatoresSelectNote')}
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {(redatores.data ?? []).map((r) => (
+              {redatores.allRedatores.map((r) => (
                 <RedatorCard
                   key={r.id}
                   redator={r}
