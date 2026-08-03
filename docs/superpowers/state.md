@@ -2,10 +2,10 @@
 schema_version: 1
 active_feature: commercial
 active_work_item: zerar-catraca-e-componentes-commercial
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: run_planejar_bloco
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-03-zerar-catraca-e-componentes-commercial-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -48,11 +48,13 @@ updated_at: 2026-08-03T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_planning`
+## Estado atual — `planning`
 
 `zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
-João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Próxima
-ação: `/planejar-bloco`. **Sem context packet** (`context_packet: null`): a fonte é o código de
+João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Spec
+aprovada em 2026-08-03 (D1–D9), em
+`specs/2026-08-03-zerar-catraca-e-componentes-commercial-design.md`; falta o plano.
+**Sem context packet** (`context_packet: null`): a fonte é o código de
 `frontend/src/features/commercial/`, o `eslint.config.js` e o relatório do `/revisar-frontend` da
 mesma sessão — nada de Drive/Notion/Figma.
 
