@@ -33,7 +33,6 @@ export function CourseDialog({
 
   const isCreate = mode === 'create'
   const enabledIds = form.redator_ids
-  const enabledRedatores = redatores.enabledRedatores
 
   // Totais derivados: reagem ao que está sendo digitado, não ao último valor salvo
   // (o modules_total_hours do backend serve a consumidores de leitura).
@@ -229,13 +228,13 @@ export function CourseDialog({
             <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
               {t('course.redatoresReadonlyNote')}
             </p>
-            {enabledRedatores.length === 0 ? (
+            {redatores.enabledRedatores.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
                 {t('course.noRedatores')}
               </p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
-                {enabledRedatores.map((r) => (
+                {redatores.enabledRedatores.map((r) => (
                   <RedatorCard
                     key={r.id}
                     redator={r}
