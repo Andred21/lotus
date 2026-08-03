@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: commercial
 active_work_item: zerar-catraca-e-componentes-commercial
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-03-zerar-catraca-e-componentes-commercial-design.md
 active_plan: docs/superpowers/plans/2026-08-03-zerar-catraca-e-componentes-commercial.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-operation
-state_basis_commit: a6bc190
-updated_at: 2026-08-03T16:15:00-03:00
+state_basis_commit: 5e74a28
+updated_at: 2026-08-03T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -122,7 +122,48 @@ com 2 consumidores, os outros 6 hooks + os 6 componentes novos com exatamente 1 
 **372 passed (1360 assertions)**, igual à baseline — sem regressão; Pint n/a (zero arquivo de
 `backend/` no diff).
 
-Próxima ação: solicitar code review do bloco.
+**Review em 2026-08-03 (`/revisar-sprint`, baixo risco** — 100% frontend, zero arquivo de `backend/`,
+`generated.ts`, locales, auth, RBAC, schema ou dinheiro no diff, `executor: claude`; só lente Claude,
+sem Codex). Órfãos: nenhum — 7 hooks e 6 componentes novos, todos com consumidor
+(`useCommercialClients` com 2, o resto com 1), e nenhum campo de retorno sem leitor na tela (D3).
+Leis §5: sem violação.
+
+Gate da Task 11 reconferido do zero, não aceito por relatório: `pnpm build` + `pnpm lint` verdes;
+greps de query-em-componente, `ignores`, `primereact` direto e cross-feature sem saída; diffs de
+`backend/`, locales, `generated.ts` e `shared/` vazios; `ClientDialog` em 132 linhas.
+**Mecanismo reprovado de forma independente (lição 10):** sonda temporária em
+`features/commercial/components/Budget/` com `clientsApi.useList()` + `useQuery` + `useMutationErrors`
+— o lint reprovou as duas primeiras e **não** reprovou a terceira, confirmando que a regra vale sem
+`ignores` e que o falso positivo do `useMutationErrors` segue protegido; sonda apagada.
+
+Conferidos linha a linha contra o `main`: as 6 extrações são movimento literal (nenhuma condicional
+mudou de forma, nenhum `key` mudou de critério; `ClientGeneralFields` devolve Fragment, sem nó DOM
+novo), e as 9 invariantes de comportamento da §4 da spec sobreviveram uma a uma — `enabled: mode ===
+'create'` e `unusable`/`showEmptyHint` do aluno, `loadError`/`retry` duplo da tabela, `sizeError`
+zerado antes da mutation e `isUploading` por linha, os 3 estados de redatores, o filtro `!== 'redator'`
+(RN-01). O `?? []` do B-7 não virou tratamento de erro em lugar nenhum (risco §8 não materializado).
+Descartado antes de virar achado: `clientsApi` no `ClientDialog` é `keys.all` (invalidação, não query);
+as duas chamadas de `clientsApi.useList()` são dedupe do TanStack pela mesma key, decidido na D2.
+
+**2 achados 🟢, ambos aprovados pelo João e corrigidos na mesma sessão** (`5e74a28`):
+
+- **Q-1 🟢** `catalog/api/useCourseRedatores.ts` exportava `useSyncCourseRedatores` e passou a colidir
+  de basename com o hook novo `catalog/hooks/useCourseRedatores.ts` — o import só se distinguia pelo
+  segmento de pasta. Renomeado para `api/useSyncCourseRedatores.ts`; a colocação já estava certa pela
+  rule (`api/` = sub-recurso, `hooks/` = derivação de tela), o nome é que não dizia o conteúdo. Um
+  único importador (`useCourseForm.ts`), sem barrel.
+- **Q-2 🟢** `enabledRedatores` era re-alias puro de `redatores.enabledRedatores` no `CourseDialog`,
+  resíduo da extração da query, convivendo com `redatores.allRedatores` lido direto no mesmo arquivo.
+  Os 2 usos passam a ler do hook.
+
+**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; todos os greps do DoD rerodados
+limpos; `enabledIds` segue com uso legítimo (`selected` do `RedatorCard`, linha 219). **A aprovação
+visual do CP-2 continua válida:** a correção do `CourseDialog` é substituição de identificador por
+seu próprio valor (`enabledRedatores` === `redatores.enabledRedatores`), com JSX renderizado idêntico
+por construção — diferente do bloco do redator, onde o markup mudou de forma e a prova teve de ser
+refeita.
+
+Próxima ação: executar `/fechar-sprint` para `zerar-catraca-e-componentes-commercial`.
 
 ## Último item fechado — 2026-08-02
 
