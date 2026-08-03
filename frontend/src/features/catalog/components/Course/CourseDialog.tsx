@@ -1,8 +1,6 @@
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppTextarea, AppErrorState, AppSkeleton, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
-import { usePermissions } from '@shared/hooks'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
 import { RedatorCard } from './RedatorCard'
@@ -21,17 +19,7 @@ export function CourseDialog({
   const { form, set, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
           addModule, removeModule, patchModule, moveModule,
           modulesTotal, hoursMismatch } = useCourseForm(course, mode, onHide)
-  const redatores = useCourseRedatores(form.redator_ids)
-  const navigate = useNavigate()
-  const { can } = usePermissions()
-  // O olho leva ao módulo dono do redator. `catalog` não pode importar o
-  // RedatorDialog de `identity` (lei §5.6) — composição cruzada mora na rota.
-  // Sem `identity.user.view` a página de destino não serviria de nada.
-  const canOpenRedator = can('identity.user.view')
-  const openRedator = (id: number) => {
-    onHide()
-    navigate(`/personas?redator=${id}`)
-  }
+  const redatores = useCourseRedatores(form.redator_ids, onHide)
 
   const isCreate = mode === 'create'
   const enabledIds = form.redator_ids
@@ -145,7 +133,7 @@ export function CourseDialog({
                   <RedatorCard
                     key={r.id}
                     redator={r}
-                    onView={canOpenRedator ? () => openRedator(r.id as number) : undefined}
+                    onView={redatores.canOpenRedator ? () => redatores.openRedator(r.id as number) : undefined}
                   />
                 ))}
               </div>
