@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppButton, AppInputText, AppTextarea, AppErrorState, AppSkeleton, FormField, FormSection, NestedField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppTextarea, AppErrorState, AppSkeleton, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
 import { RedatorCard } from './RedatorCard'
+import { ModuleFields } from './ModuleFields'
 
 export function CourseDialog({
   visible, mode, course, onHide, onEdit,
@@ -81,107 +82,18 @@ export function CourseDialog({
 
         <FormSection title={t('courseModule.section')} spaced />
 
-        {form.modules.length === 0 && (
-          <p className="text-sm text-slate-500">{t('courseModule.empty')}</p>
-        )}
-
-        {/* key={i}: o backend faz replace dos módulos, então os ids trocam a cada save —
-            um id como key remontaria as linhas e perderia o foco. A ordem só muda por
-            ação explícita do usuário (moveModule). */}
-        {form.modules.map((m, i) => (
-          <div key={i} className="space-y-3 rounded border border-slate-200 p-3 dark:border-slate-700">
-            <div className="flex items-start gap-2">
-              <span className="mt-2.5 text-xs font-semibold text-slate-500">{t('courseModule.itemLabel', { n: i + 1 })}</span>
-              <NestedField error={fieldErrors?.[`modules.${i}.name`]?.[0]}>
-                <div className="flex-1">
-                  <AppInputText
-                    placeholder={t('courseModule.namePlaceholder')}
-                    aria-label={t('courseModule.name')}
-                    value={m.name}
-                    disabled={readOnly}
-                    onChange={(e) => patchModule(i, { name: e.target.value })}
-                    className="w-full"
-                  />
-                </div>
-              </NestedField>
-              {!readOnly && (
-                <div className="flex gap-1">
-                  <AppButton icon="pi pi-arrow-up" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={i === 0} onClick={() => moveModule(i, -1)} />
-                  <AppButton icon="pi pi-arrow-down" text aria-label={t('courseModule.moveDown')} tooltip={t('courseModule.moveDown')} disabled={i === form.modules.length - 1} onClick={() => moveModule(i, 1)} />
-                  <AppButton icon="pi pi-trash" text aria-label={t('courseModule.remove')} tooltip={t('courseModule.remove')} onClick={() => removeModule(i)} />
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-              <NestedField error={fieldErrors?.[`modules.${i}.theory_hours`]?.[0]}>
-                <span className="mb-1 block text-xs text-slate-500">{t('courseModule.theoryHours')}</span>
-                <AppInputText
-                  aria-label={t('courseModule.theoryHours')}
-                  value={String(m.theory_hours)}
-                  disabled={readOnly}
-                  onChange={(e) => patchModule(i, { theory_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-                  className="w-full"
-                />
-              </NestedField>
-              <NestedField error={fieldErrors?.[`modules.${i}.practice_hours`]?.[0]}>
-                <span className="mb-1 block text-xs text-slate-500">{t('courseModule.practiceHours')}</span>
-                <AppInputText
-                  aria-label={t('courseModule.practiceHours')}
-                  value={String(m.practice_hours)}
-                  disabled={readOnly}
-                  onChange={(e) => patchModule(i, { practice_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-                  className="w-full"
-                />
-              </NestedField>
-              <span className="pb-2 text-sm text-slate-500">
-                {t('courseModule.total', { hours: m.theory_hours + m.practice_hours })}
-              </span>
-            </div>
-
-            <NestedField error={fieldErrors?.[`modules.${i}.learnings`]?.[0]}>
-              <span className="mb-1 block text-xs text-slate-500">{t('courseModule.learnings')}</span>
-              <AppTextarea
-                aria-label={t('courseModule.learnings')}
-                value={m.learnings ?? ''}
-                disabled={readOnly}
-                rows={2}
-                onChange={(e) => patchModule(i, { learnings: e.target.value })}
-                className="w-full"
-              />
-            </NestedField>
-
-            <NestedField error={fieldErrors?.[`modules.${i}.contents`]?.[0]}>
-              <span className="mb-1 block text-xs text-slate-500">{t('courseModule.contents')}</span>
-              <AppTextarea
-                aria-label={t('courseModule.contents')}
-                value={m.contents ?? ''}
-                disabled={readOnly}
-                rows={3}
-                onChange={(e) => patchModule(i, { contents: e.target.value })}
-                className="w-full"
-              />
-            </NestedField>
-          </div>
-        ))}
-
-        {!readOnly && (
-          <AppButton label={t('courseModule.add')} icon="pi pi-plus" text onClick={addModule} />
-        )}
-
-        {form.modules.length > 0 && (
-          <p className="text-right text-sm text-slate-500">
-            {t('courseModule.modulesTotal', { hours: modulesTotal })}
-          </p>
-        )}
-
-        {/* Aviso, não erro: âmbar e sem role="alert" (o FormErrorBanner é vermelho e
-            para 422). NUNCA bloqueia o submit — §5.7, registro não bloqueia ação. */}
-        {hoursMismatch && (
-          <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
-            {t('courseModule.hoursMismatch', { modules: modulesTotal, workload: form.workload_hours })}
-          </p>
-        )}
+        <ModuleFields
+          modules={form.modules}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+          workloadHours={form.workload_hours}
+          modulesTotal={modulesTotal}
+          hoursMismatch={hoursMismatch}
+          onAdd={addModule}
+          onRemove={removeModule}
+          onPatch={patchModule}
+          onMove={moveModule}
+        />
 
         <FormSection title={t('course.sectionRedatores')} spaced />
 
