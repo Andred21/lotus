@@ -36,7 +36,6 @@ export default defineConfig([
     ignores: [
       'src/features/catalog/components/Course/CourseDialog.tsx',
       'src/features/commercial/components/Budget/QuotesList.tsx',
-      'src/features/commercial/components/Budget/QuoteWizard.tsx',
       'src/features/identity/components/Admin/StaffUserDialog.tsx',
       'src/features/identity/components/Student/StudentDialog.tsx',
     ],

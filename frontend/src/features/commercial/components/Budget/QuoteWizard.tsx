@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppInputText, AppRadioButton, AppDatePicker, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
-import { coursesApi } from '@shared/api/coursesApi'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
+import { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 import { parseUfInput } from '../../lib/uf'
 
 export function QuoteWizard({
@@ -17,12 +16,7 @@ export function QuoteWizard({
   const { t } = useTranslation()
   const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } =
     useQuoteForm(budgetId, quote, onHide)
-  const courses = coursesApi.useList()
-  const [search, setSearch] = useState('')
-
-  const list = (courses.data ?? []).filter((c) =>
-    c.name.toLowerCase().includes(search.trim().toLowerCase()),
-  )
+  const { list, search, setSearch } = useQuoteCourseSearch()
 
   const footer =
     step === 1 ? (
