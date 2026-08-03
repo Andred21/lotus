@@ -6,11 +6,11 @@ import {
 import type { StudentData, StudentTurmaData, StudentClientLogData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity, formatMonthYear } from '@shared/lib'
-import { clientsApi } from '@shared/api/clientsApi'
 import { studentsApi } from '@shared/api/studentsApi'
 import { useEntityPhoto } from '@shared/hooks'
 import { useStudentDetail } from '../../api/useStudentDetail'
 import { useStudentForm } from '../../hooks/useStudentForm'
+import { useStudentClients } from '../../hooks/useStudentClients'
 
 export function StudentDialog({
   visible, mode, student, onHide, onEdit,
@@ -34,18 +34,8 @@ export function StudentDialog({
   // entidade já existe, e fechar o diálogo aqui esconderia a falha (D11).
   const { form, set, readOnly, submit, pending, fieldErrors, generalError } =
     useStudentForm(student, mode, onHide, (created) => photo.flush(created.id as number))
-  // Só busca clientes no create: view/edit mostram current_client_name (já
-  // vem no StudentData), sem chamada extra. O create em si segue exigindo só
-  // identity.user.create (D8/StudentController) — quem tiver a permissão mas
-  // não conseguir listar clientes (commercial.client.view) vê o motivo aqui,
-  // em vez do botão sumir ou do dropdown ficar vazio sem explicação.
-  const clients = clientsApi.useList({ enabled: mode === 'create' })
-  // Bloqueia só quando NÃO há lista utilizável (ainda carregando, falhou sem
-  // cache prévio, ou a lista veio vazia — `[]` é truthy, então checar só
-  // `!clients.data` deixaria passar cliente nenhum pra escolher). Um refetch
-  // em background que falha com `clients.data` já populado (retry manual,
-  // refoco de aba) não deve travar um form que ainda tem opções válidas.
-  const clientsUnusable = mode === 'create' && !clients.data?.length
+  const clients = useStudentClients(mode)
+  const clientsUnusable = clients.unusable
   const detail = useStudentDetail(mode === 'create' ? null : student?.id)
 
   return (
@@ -99,7 +89,7 @@ export function StudentDialog({
                 <AppDropdown
                   value={form.client_id}
                   disabled={clientsUnusable}
-                  options={(clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))}
+                  options={clients.options}
                   onChange={(e) => set('client_id', e.value as number)}
                   className="w-full"
                 />
@@ -108,14 +98,14 @@ export function StudentDialog({
                     className="mt-1 flex items-center justify-between gap-2 text-xs"
                     style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
                   >
-                    <span>{clients.error?.detail ?? t('common.loadErrorHint')}</span>
-                    <AppButton label={t('common.retry')} text onClick={() => void clients.refetch()} />
+                    <span>{clients.errorDetail ?? t('common.loadErrorHint')}</span>
+                    <AppButton label={t('common.retry')} text onClick={clients.refetch} />
                   </p>
                 )}
-                {!clients.isError && clients.isSuccess && clients.data.length === 0 && (
+                {clients.showEmptyHint && (
                   <p className="mt-1 flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
                     <span>{t('student.noClientsAvailable')}</span>
-                    <AppButton label={t('common.retry')} text onClick={() => void clients.refetch()} />
+                    <AppButton label={t('common.retry')} text onClick={clients.refetch} />
                   </p>
                 )}
               </>

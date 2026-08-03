@@ -2,10 +2,10 @@ import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppPassword, AppDropdown, AppTag, FormField, FormSection, FormErrorSummary, FormErrorBanner, AppPhotoField } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
-import { rolesApi } from '@shared/api/rolesApi'
 import { usersApi } from '@shared/api/usersApi'
 import { useEntityPhoto } from '@shared/hooks'
 import { useStaffUserForm } from '../../hooks/useStaffUserForm'
+import { useStaffRoleOptions } from '../../hooks/useStaffRoleOptions'
 
 export function StaffUserDialog({
   visible, mode, user, canManage, onHide, onEdit,
@@ -28,12 +28,7 @@ export function StaffUserDialog({
 
   const { form, set, readOnly, submit, pending, fieldErrors, generalError } =
     useStaffUserForm(user, mode, onHide, (created) => photo.flush(created.id as number))
-  const roles = rolesApi.useList()
-
-  // Roles atribuíveis: todas menos 'redator' (RN-01: redator tem tela própria).
-  const roleOptions = (roles.data ?? [])
-    .filter((r) => r.name !== 'redator')
-    .map((r) => ({ label: r.name, value: r.name }))
+  const { roleOptions } = useStaffRoleOptions()
 
   const stateOptions = [
     { label: t('common.active'), value: true },

@@ -1,15 +1,12 @@
 import { useTranslation } from "react-i18next";
 import {
   CrudDialog,
-  AppInputText,
-  AppDropdown,
-  FormField,
   FormSection,
   FormErrorSummary,
   FormErrorBanner,
   AppPhotoField,
 } from "@shared/ui";
-import type { ClientAddressData, ClientData } from "@shared/types/generated";
+import type { ClientData } from "@shared/types/generated";
 import { clientsApi } from "@shared/api/clientsApi";
 import { useEntityPhoto } from "@shared/hooks";
 import {
@@ -18,20 +15,7 @@ import {
 } from "../../hooks/useClientForm";
 import { AddressFields } from "./AddressFields";
 import { ContactFields } from "./ContactFields";
-
-const TYPE_VALUES = ["client", "provider", "other"] as const;
-
-const EMPTY_ADDRESS: ClientAddressData = {
-  id: undefined,
-  line1: null,
-  line2: null,
-  number: null,
-  commune: null,
-  city: null,
-  region: null,
-  zip_code: null,
-  is_primary: true,
-};
+import { ClientGeneralFields } from "./ClientGeneralFields";
 
 export function ClientDialog({
   visible,
@@ -63,6 +47,7 @@ export function ClientDialog({
     pending,
     fieldErrors,
     generalError,
+    addr,
     setAddr,
     patchContact,
     setPrimaryContact,
@@ -71,14 +56,6 @@ export function ClientDialog({
   } = useClientForm(client, mode, onHide, (created) =>
     photo.flush(created.id as number),
   );
-  const types = TYPE_VALUES.map((value) => ({
-    value,
-    label: t(`clientType.${value}`),
-  }));
-
-  // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para vazio
-  // em vez de quebrar ao ler `addr.region`.
-  const addr = form.addresses[0] ?? EMPTY_ADDRESS;
 
   return (
     <CrudDialog
@@ -128,56 +105,12 @@ export function ClientDialog({
           />
         </div>
 
-        {/* Empresa não tem "nome" separado da razón social — `name` (exigido
-            pelo backend) é derivado de `legal_name` no submit. Erro de `name`
-            aparece aqui pois foi este campo que o gerou. */}
-        <FormField
-          label={t("client.legalName")}
-          error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}
-        >
-          <AppInputText
-            value={form.legal_name}
-            disabled={readOnly}
-            onChange={(e) => set("legal_name", e.target.value)}
-            className="w-full"
-          />
-        </FormField>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("common.rut")} error={fieldErrors?.rut?.[0]}>
-            <AppInputText
-              value={form.rut}
-              disabled={readOnly}
-              onChange={(e) => set("rut", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-          <FormField label={t("common.email")} error={fieldErrors?.email?.[0]}>
-            <AppInputText
-              value={form.email}
-              disabled={readOnly}
-              onChange={(e) => set("email", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("client.type")}>
-            <AppDropdown
-              value={form.type}
-              options={types}
-              disabled={readOnly}
-              onChange={(e) => set("type", e.value)}
-            />
-          </FormField>
-          <FormField label={t("client.businessActivity")}>
-            <AppInputText
-              value={form.business_activity ?? ""}
-              disabled={readOnly}
-              onChange={(e) => set("business_activity", e.target.value)}
-              className="w-full"
-            />
-          </FormField>
-        </div>
+        <ClientGeneralFields
+          form={form}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+          onChange={set}
+        />
 
         <FormSection title={t("client.sectionAddress")} spaced />
         <AddressFields value={addr} readOnly={readOnly} onChange={setAddr} />

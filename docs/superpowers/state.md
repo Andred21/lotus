@@ -10,9 +10,9 @@ active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: abstracao-componentes-operation
-state_basis_commit: 1825162
-updated_at: 2026-08-02T22:40:00-03:00
+last_completed_work_item: zerar-catraca-e-componentes-commercial
+state_basis_commit: 5e74a28
+updated_at: 2026-08-03T19:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -50,11 +50,156 @@ updated_at: 2026-08-02T22:40:00-03:00
 
 ## Estado atual — `idle`
 
-Nenhum item ativo. `abstracao-componentes-operation` foi fechado em 2026-08-02 (seção abaixo).
-A próxima ação é do João: escolher explicitamente um item do `backlog.md`. Nenhum item é promovido
-por ordem, por parecer óbvio ou por estar no topo da fila.
+Nenhum trabalho ativo. `zerar-catraca-e-componentes-commercial` foi fechado em 2026-08-03; o
+próximo item sai de `backlog.md` por escolha explícita do João — o backlog não promove sozinho.
 
-## Último item fechado — 2026-08-02
+## Último item fechado — 2026-08-03
+
+`zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
+João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Spec
+aprovada (D1–D9) e plano executado em 12 tasks (Task 0 branch + 9 de conteúdo + 2 checkpoints + Task
+10 mecanismo + Task 11 gate) via `/executar-bloco` + `executing-plans` inline (`executor: claude` —
+sem task delegada ao Codex: frontend sem test runner, DoD é comportamento provado na tela, e o bloco
+toca `eslint.config.js` e `.claude/rules/`).
+
+**Sem context packet** (`context_packet: null`): a fonte foi o código de
+`frontend/src/features/commercial/` (mais 1 arquivo de `catalog` e 2 de `identity`), o
+`eslint.config.js` e o relatório do `/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma.
+
+**O item 4 do backlog mudou de forma nesta sessão, por decisão do João.** O antigo item 4 ("Zerar a
+catraca de query-em-componente") **não estava feito** — `eslint.config.js` ainda listava os 7
+`ignores` — e foi **absorvido**, não fechado: o bloco cobriu os 7 arquivos das 3 features
+(`catalog`, `commercial`, `identity`) mais a estrutura de `commercial`.
+
+**Escopo entregue — duas metades provadas na mesma tela.**
+
+*Metade 1 — catraca zerada nos 7 arquivos.* Cada um saiu de `ignores` no mesmo commit que perdeu a
+query para um hook novo: `useCommercialClients` (`BudgetsTable` + `BudgetDialog`, 2 consumidores —
+único hook do bloco com mais de um), `useQuoteCourseSearch` (`QuoteWizard`), `useQuoteFiles` +
+`useQuotesListCourses` (`QuotesList`, fatiado em 2 por responsabilidade — D4), `useCourseRedatores`
+(`catalog/CourseDialog`, preserva os 3 estados loading/erro/lista — D11 do bloco de cards),
+`useStaffRoleOptions` (`identity/StaffUserDialog`, filtro de `redator` RN-01 viaja com a query),
+`useStudentClients` (`identity/StudentDialog`, preserva o `enabled: mode === 'create'` condicional e
+a distinção erro-de-GET vs. lista-vazia). Nenhum hook expõe `isError` onde o comportamento de hoje é
+`?? []` silencioso (`useQuoteCourseSearch`, `useQuotesListCourses`) — isso é o B-7, fora do corte.
+
+*Metade 2 — estrutura de `commercial` (B-1 a B-6), fechada nas mesmas 4 telas.* `EMPTY_ADDRESS`
+deixou de existir em dois lugares — `useClientForm` devolve `addr` resolvido, `ClientDialog` só
+consome. `ClientGeneralFields` + `ContactCard` tiraram o `ClientDialog` de 199 para 132 linhas.
+`QuoteRow`, `CourseStep`/`DataStep` e `BudgetDocumentsCard` tiraram bloco coeso de dentro de
+`.map`/ternário do `QuotesList`, `QuoteWizard` e `BudgetDetailPage` — markup movido literal, nenhuma
+condicional mudou de forma, nenhum `key` mudou de critério.
+
+**Mecanismo (Task 10):** o bloco `ignores` do `no-restricted-syntax` saiu inteiro do
+`eslint.config.js` — a regra vale sem exceção para as 3 features. Vista reprovando de novo depois da
+remoção (lição 10): violação introduzida de propósito em `BudgetsTable.tsx`, `pnpm lint` reprovou por
+esta regra, revertida via `git checkout`. `.claude/rules/frontend-fsliced.md` atualizada: o texto da
+catraca vira nota de que foi zerada em 2026-08-03, não reintroduzir `ignores`.
+
+**Fora do corte, registrado:** o B-7 (`courses.data ?? []` no `QuoteWizard` — GET falho vira lista
+vazia sem mensagem, `canAdvance` nunca liga) **muda comportamento de propósito**; foi para
+§Débitos técnicos do `backlog.md` por decisão do João em 2026-08-03.
+
+Branch `refactor/zerar-catraca-e-componentes-commercial` a partir do `main` (D1, sem worktree — o
+bloco toca `eslint.config.js`, que vale para o repositório inteiro, e o DoD se prova na tela contra o
+`docker compose` do main tree), 10 commits de conteúdo (`cd486a2`..`a6bc190`).
+
+**Prova visual em 2 checkpoints (D8), sem baseline capturada** (mesma limitação dos blocos
+anteriores — sem ferramenta de browser/screenshot na sessão): **CP-1** (depois da Task 6, as 4 telas
+de `commercial` já com catraca + estrutura no estado final) — Presupuestos (busca por código/cliente,
+filtro de estado, empty states, erro de clientes com Reintentar), diálogo de orçamento (create/edit),
+detalhe do orçamento (cotações, upload por linha, card de documentos), diálogo de cliente (endereço,
+contatos, foto) — **aprovado pelo João em 2026-08-03**. **CP-2** (depois da Task 9, os 3 diálogos de
+fora) — os 3 estados de redatores do diálogo de curso, dropdown de rol sem `redator` no diálogo de
+admin, dropdown de clientes + erro + vazio no diálogo de aluno — **aprovado pelo João em 2026-08-03**.
+Nenhum checkpoint precisou ser refeito: a Task 10 (depois do CP-2) tocou só `eslint.config.js` e
+`.claude/rules/`, nenhum componente.
+
+**Gate automatizado (Task 11):** `pnpm build` + `pnpm lint` verdes; grep de
+`use(Query|Mutation)\b|Api\.use` em `features/*/components/` **sem saída** (placar zerado, era 7);
+`grep -n "ignores" eslint.config.js` também sem saída — mais forte que o "uma linha" previsto no
+plano, porque `globalIgnores` (I maiúsculo) não bate no grep case-sensitive por "ignores" minúsculo,
+divergência de redação da spec/plano, não de comportamento — confirmado com `-in` que só resta o
+`globalIgnores(['dist', 'generated.ts'])` de sempre; `git diff --name-only main...HEAD -- backend/`,
+`.../locales/` e `.../generated.ts` vazios, `git diff --stat main...HEAD -- frontend/src/shared/`
+vazio (nada subiu para `shared/`, D5); nenhum hook ou componente novo órfão (`useCommercialClients`
+com 2 consumidores, os outros 6 hooks + os 6 componentes novos com exatamente 1 cada); suíte backend
+**372 passed (1360 assertions)**, igual à baseline — sem regressão; Pint n/a (zero arquivo de
+`backend/` no diff).
+
+**Review em 2026-08-03 (`/revisar-sprint`, baixo risco** — 100% frontend, zero arquivo de `backend/`,
+`generated.ts`, locales, auth, RBAC, schema ou dinheiro no diff, `executor: claude`; só lente Claude,
+sem Codex). Órfãos: nenhum — 7 hooks e 6 componentes novos, todos com consumidor
+(`useCommercialClients` com 2, o resto com 1), e nenhum campo de retorno sem leitor na tela (D3).
+Leis §5: sem violação.
+
+Gate da Task 11 reconferido do zero, não aceito por relatório: `pnpm build` + `pnpm lint` verdes;
+greps de query-em-componente, `ignores`, `primereact` direto e cross-feature sem saída; diffs de
+`backend/`, locales, `generated.ts` e `shared/` vazios; `ClientDialog` em 132 linhas.
+**Mecanismo reprovado de forma independente (lição 10):** sonda temporária em
+`features/commercial/components/Budget/` com `clientsApi.useList()` + `useQuery` + `useMutationErrors`
+— o lint reprovou as duas primeiras e **não** reprovou a terceira, confirmando que a regra vale sem
+`ignores` e que o falso positivo do `useMutationErrors` segue protegido; sonda apagada.
+
+Conferidos linha a linha contra o `main`: as 6 extrações são movimento literal (nenhuma condicional
+mudou de forma, nenhum `key` mudou de critério; `ClientGeneralFields` devolve Fragment, sem nó DOM
+novo), e as 9 invariantes de comportamento da §4 da spec sobreviveram uma a uma — `enabled: mode ===
+'create'` e `unusable`/`showEmptyHint` do aluno, `loadError`/`retry` duplo da tabela, `sizeError`
+zerado antes da mutation e `isUploading` por linha, os 3 estados de redatores, o filtro `!== 'redator'`
+(RN-01). O `?? []` do B-7 não virou tratamento de erro em lugar nenhum (risco §8 não materializado).
+Descartado antes de virar achado: `clientsApi` no `ClientDialog` é `keys.all` (invalidação, não query);
+as duas chamadas de `clientsApi.useList()` são dedupe do TanStack pela mesma key, decidido na D2.
+
+**2 achados 🟢, ambos aprovados pelo João e corrigidos na mesma sessão** (`5e74a28`):
+
+- **Q-1 🟢** `catalog/api/useCourseRedatores.ts` exportava `useSyncCourseRedatores` e passou a colidir
+  de basename com o hook novo `catalog/hooks/useCourseRedatores.ts` — o import só se distinguia pelo
+  segmento de pasta. Renomeado para `api/useSyncCourseRedatores.ts`; a colocação já estava certa pela
+  rule (`api/` = sub-recurso, `hooks/` = derivação de tela), o nome é que não dizia o conteúdo. Um
+  único importador (`useCourseForm.ts`), sem barrel.
+- **Q-2 🟢** `enabledRedatores` era re-alias puro de `redatores.enabledRedatores` no `CourseDialog`,
+  resíduo da extração da query, convivendo com `redatores.allRedatores` lido direto no mesmo arquivo.
+  Os 2 usos passam a ler do hook.
+
+**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; todos os greps do DoD rerodados
+limpos; `enabledIds` segue com uso legítimo (`selected` do `RedatorCard`, linha 219). **A aprovação
+visual do CP-2 continua válida:** a correção do `CourseDialog` é substituição de identificador por
+seu próprio valor (`enabledRedatores` === `redatores.enabledRedatores`), com JSX renderizado idêntico
+por construção — diferente do bloco do redator, onde o markup mudou de forma e a prova teve de ser
+refeita.
+
+**Gate de fechamento (2026-08-03).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+a metade visual é comportamento idêntico na tela, provado pelo João nos CP-1 e CP-2, ambos aprovados
+em 2026-08-03; a única mudança depois do CP-2 foi `5e74a28` (Q-1/Q-2 do review), substituição de
+identificador pelo próprio valor mais um rename de arquivo — JSX idêntico por construção, então a
+aprovação visual continua válida, diferente do bloco do redator, onde o markup mudou de forma e a
+prova teve de ser refeita. A metade mecanismo foi reprovada de novo no próprio fechamento (lição 10):
+sonda temporária em `features/commercial/components/Budget/` com `clientsApi.useList()` + `useQuery` +
+`useMutationErrors` — `pnpm lint` devolveu `2 problems (2 errors, 0 warnings)`, um por violação real,
+**zero** no `useMutationErrors`; sonda apagada, árvore limpa. Suíte backend **372 passed (1360
+assertions)** como regressão; `pnpm build` + `pnpm lint` verdes; Pint **n/a** (zero arquivo de
+`backend/` no diff); `generated.ts` e locales sem diff e nenhum DTO tocado, logo sem
+`typescript:transform`; greps do DoD e das leis §5.6 rerodados limpos; sem órfão. Pendências: nenhum
+gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova — a dívida que este
+bloco fechou (catraca de `ignores`) era item de código no `backlog.md`, não pendência documental.
+**P-25 segue aberta:** o `frontend-fsliced.md` foi tocado, mas no parágrafo da catraca, não no da
+fronteira de tipo que fecharia o gatilho dela.
+
+Código morto mencionado, não deletado (é de fora deste bloco): `frontend/src/features/operation/components/.gitkeep`
+está com deleção **não commitada** no working tree do João desde o início da sessão — a pasta já tem
+arquivos reais desde o bloco de `operation`, então o `.gitkeep` é órfão de fato, mas é WIP dele
+(lição 9) e não entrou em nenhum commit deste fechamento.
+
+Arquivado: `plans/archive/2026-08-03-zerar-catraca-e-componentes-commercial.md` ·
+`specs/archive/2026-08-03-zerar-catraca-e-componentes-commercial-design.md` (sem context packet — a
+fonte foi o código de `features/commercial`, o `eslint.config.js` e o relatório do
+`/revisar-frontend` da mesma sessão).
+
+**Aberto, registrado, não resolvido:** o B-7 (`courses.data ?? []` no `QuoteWizard`) em §Débitos
+técnicos do `backlog.md`; P-25; e a régua de ~150 linhas do `frontend-fsliced.md`, agora atingida no
+`ClientDialog` (132).
+
+## Penúltimo item fechado — 2026-08-02
 
 `abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
@@ -157,81 +302,3 @@ foi o código de `features/operation/` e o relatório do `/revisar-frontend` da 
 **Aberto, registrado, não resolvido:** a catraca de 7 componentes legados em `ignores` do
 `no-restricted-syntax` (bloco próprio no `backlog.md`); cor Tailwind hardcoded em 4 arquivos de
 `Enrollment`/`Document` e `turma.id!` em 5 pontos, ambos fora do corte por decisão da spec; P-25.
-
-## Penúltimo item fechado — 2026-08-02
-
-`abstracao-componentes-redator` — item 4 do `backlog.md` à época, selecionado explicitamente pelo João em
-2026-08-02 depois do `/revisar-frontend` de `features/identity`. Spec aprovada (D1–D12) e plano
-executado em 11 tasks (Task 0 branch/desvio + Task 1 baseline + 8 de conteúdo + Task 10 gate). Sem
-context packet: a fonte foi o código e o relatório do review da mesma sessão.
-
-Branch `refactor/abstracao-componentes-redator` a partir do `main` (D12, sem worktree), 8 commits
-de conteúdo (`16e9cfc`..`fb25084`). `RedatorDialog.tsx` cai de 448 para 183 linhas; três
-subcomponentes locais de `identity` (`RedatorIdentityFields`, `RedatorCourseSelector`,
-`RedatorDocumentSlot`) e dois primitivos novos em `shared/` (`AppFileActions`, `useFilePreview`)
-adotados também por `operation/DocumentTypeCard` e `commercial/FileList`. Mapas de severidade e
-`DOC_TYPES` sobem para `shared/lib/redatorStatus.ts` (D8, D9).
-
-**Task 1 (baseline de screenshots, D11) NÃO executada** — decisão do João em 2026-08-02: a sessão
-do Claude não tinha ferramenta de browser/screenshot disponível. Nenhum arquivo salvo em
-`docs/superpowers/audits/`. As verificações "conferir na tela" por task também não rodaram durante
-a execução; a única prova visual do bloco foi a comparação ao vivo da Task 10 (Step 6), feita pelo
-João sem baseline capturada antes — **aprovada** ("tudo certo") contra os 11 critérios do §7 da
-spec. **Diverge de D11/R8** — risco aceito explicitamente pelo João, registrado no ledger local
-(`.superpowers/sdd/progress.md`), não escolhido por heurística do executor.
-
-Gate automatizado (Task 10, Steps 1–3 e 5): `pnpm build` + `pnpm lint` verdes; greps da lei §6
-limpos (sem `primereact` direto em `features/`, sem import cruzado `catalog`/`commercial`/
-`operation`↔`identity`); `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado,
-bloco 100% frontend); nenhum `useState` de preview sobrou em `features/`.
-
-**Review em 2026-08-02 (`/revisar-sprint`, baixo risco — 100% frontend, sem schema/auth/RBAC/
-`generated.ts`/dinheiro, `executor: claude`; só lente Claude, sem Codex).** Órfãos: nenhum. Leis §5:
-sem violação. `orderKey` do `useEnabledFirstCourses`, ordem dos botões do `edit` (olho → baixar →
-substituir → lixeira) e paridade i18n conferidos contra o `main`. **4 achados, todos aprovados pelo
-João e corrigidos na mesma sessão:**
-
-- **Q-1 🟡** `canRemove` + `onRemoveDoc` eram par redundante e a asserção `redator!.id!` migrou para
-  fora da guarda que a protegia — se `canRemove` virasse permissão, o DELETE de documento sairia com
-  `undefined` na URL, falha silenciosa em caminho de peso legal. `canRemove` morreu; `onRemoveDoc` é
-  opcional e sua ausência desliga a lixeira (mesmo contrato do `AppFileActions.onRemove`, D3/D4), com
-  o id estreitado pelo compilador.
-- **Q-2 🟡** `RedatorDocumentSlot` tinha recortado o emaranhado para outro arquivo sem cumprir a D5:
-  três `mode === 'x' && (doc ? A : B)` irmãos dentro de um `return`. Agora são guardas sequenciais em
-  `SlotBody`, e o bloco "não carregado + upload" — duplicado entre `create` e `edit` — virou
-  `EmptySlot`.
-- **Q-3 🟢** o `AppFileActions` fixava `aria-label={t('common.delete')}` e apagava o rótulo próprio de
-  `operation` (`operation.documents.remove`) — mudança de comportamento fora do declarado no §7 da
-  spec, na direção contrária da D10. Prop `removeLabel?` com default `common.delete`.
-- **Q-4 🟢** `RedatorCourseSelector` carregava query + derivação (a rule manda ir para hook da
-  feature). Extraído `useRedatorCourses`.
-
-Correções em `e5c0f7b`. **Divergência documental (não é achado):** a D2 pedia
-`useFilePreview<T extends PreviewableFile>`; o código soltou o constraint para `shared/hooks` não
-depender de `shared/ui`, com justificativa no arquivo e sem risco de tipo (quem restringe é o
-`AppFilePreviewDialog`). Decisão melhor que a da spec — registrada como **P-25** em `pendencias.md`.
-
-**Gate de fechamento.** Suíte backend 372 passed (1360 assertions) como regressão; `pnpm build` +
-`pnpm lint` verdes; `git diff --name-only main...HEAD -- backend/` vazio (D1 preservado); `generated.ts`
-sem diff; greps §5.6 sem saída; nenhum órfão; `canRemove` sem resíduo; Pint n/a (zero arquivo de
-backend). **Prova visual do João aceita duas vezes** — a segunda porque as correções de Q-1/Q-2
-reescreveram o markup do slot (corpo em `SlotBody`/`EmptySlot`, wrapper `div.mt-2`) depois da primeira
-aprovação, e sem baseline (D11 não executada) fechar sobre a lembrança da tela anterior seria assinar
-o item 0 do gate em falso.
-
-**Decisão que moldou o bloco:** o desenho inicial do review — promover `AppFileList`/`AppDocumentSlot`
-a `shared/ui` — foi descartado no brainstorming ao se descobrir que o `D8` da spec de upload
-(2026-07-31) já havia avaliado e rejeitado esse mesmo componente, pelo motivo que o contrato
-confirmou (~14 props, ~6 só para diferenciar consumidor). O `D8` permanece em vigor; o bloco
-compartilha apenas `AppFileActions` + `useFilePreview` e corta o `RedatorDialog` em subcomponentes
-locais de `identity`.
-
-Arquivado: `plans/archive/2026-08-02-abstracao-componentes-redator.md` ·
-`specs/archive/2026-08-02-abstracao-componentes-redator-design.md` (sem context packet — a fonte foi
-o código e o relatório do `/revisar-frontend` da mesma sessão).
-
-**Aberto, registrado, não resolvido:** P-25 (constraint de `useFilePreview`, spec vs. código); a régua
-de ~150 linhas do `frontend-fsliced.md` segue não atingida no `RedatorDialog` (189), aceita na spec §8;
-o `PersonFields` genérico segue descartado, não reabrir sem motivo novo.
-
-Histórico completo: `docs/superpowers/progress.md`.

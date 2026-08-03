@@ -1,15 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, AppFileUpload, AppDropdown, FormErrorBanner, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
+import { AppButton, AppTag, ConfirmDialog, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
-import type { BudgetFileType } from '../../api/useCommercialFiles'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { QuotesList } from './QuotesList'
 import { BudgetDialog } from './BudgetDialog'
 import { QuoteWizard } from './QuoteWizard'
-import { FileList } from './FileList'
+import { BudgetDocumentsCard } from './BudgetDocumentsCard'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -101,38 +100,17 @@ export function BudgetDetailPage() {
           />
         </AppCard>
 
-        <AppCard>
-          <AppCardHeader
-            title={t('budget.documents')}
-            count={budget.files?.length ?? 0}
-            actions={
-              <>
-                <div className="w-44">
-                  <AppDropdown
-                    value={d.fileType}
-                    options={[
-                      { label: t('budget.fileTypeInvoice'), value: 'invoice' },
-                      { label: t('budget.fileTypeReceipt'), value: 'receipt' },
-                    ]}
-                    onChange={(e) => d.setFileType(e.value as BudgetFileType)}
-                  />
-                </div>
-                <AppFileUpload
-                  chooseOptions={{ icon: 'pi pi-upload' }}
-                  chooseLabel={t('budget.uploadDocument')}
-                  disabled={d.uploadPending}
-                  onSizeReject={d.onFileSizeReject}
-                  uploadHandler={d.handleUpload}
-                />
-              </>
-            }
-          />
-          <div className="mx-4 mt-4 empty:m-0">
-            <FormErrorBanner message={d.fileError} />
-            {d.fileSizeError && <FormErrorBanner message={d.fileSizeError} />}
-          </div>
-          <FileList files={budget.files ?? []} onRemove={(fileId) => d.removeFile(fileId)} />
-        </AppCard>
+        <BudgetDocumentsCard
+          files={budget.files ?? []}
+          fileType={d.fileType}
+          onFileTypeChange={d.setFileType}
+          uploadPending={d.uploadPending}
+          onUpload={d.handleUpload}
+          onSizeReject={d.onFileSizeReject}
+          onRemove={(fileId) => d.removeFile(fileId)}
+          fileError={d.fileError}
+          fileSizeError={d.fileSizeError}
+        />
 
         {/* Reusa o dialog em modo edit — trava cliente e código, só payment_terms muda. */}
         {d.editing && (

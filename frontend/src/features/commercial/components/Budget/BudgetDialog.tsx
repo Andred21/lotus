@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { BudgetData } from '@shared/types/generated'
-import { clientsApi } from '@shared/api/clientsApi'
 import { useBudgetForm, type BudgetDialogMode } from '../../hooks/useBudgetForm'
+import { useCommercialClients } from '../../hooks/useCommercialClients'
 
 export function BudgetDialog({
   visible, mode, budget, onHide, onCreated,
@@ -19,10 +19,9 @@ export function BudgetDialog({
   const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useBudgetForm(
     budget, mode, onHide, onCreated,
   )
-  const clients = clientsApi.useList()
+  const { clientOptions } = useCommercialClients()
 
   const isCreate = mode === 'create'
-  const clientOptions = (clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id }))
 
   return (
     <CrudDialog

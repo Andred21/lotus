@@ -3,7 +3,7 @@ import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { CourseData, CourseModuleData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { coursesApi } from '@shared/api/coursesApi'
-import { useSyncCourseRedatores } from '../api/useCourseRedatores'
+import { useSyncCourseRedatores } from '../api/useSyncCourseRedatores'
 
 export type CourseDialogMode = DialogMode
 
