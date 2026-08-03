@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, AppRadioButton, AppDatePicker, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
 import { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
-import { parseUfInput } from '../../lib/uf'
+import { CourseStep } from './CourseStep'
+import { DataStep } from './DataStep'
 
 export function QuoteWizard({
   visible, budgetId, quote, onHide,
@@ -64,85 +65,15 @@ export function QuoteWizard({
       )}
 
       {step === 1 ? (
-        <section className="space-y-3">
-          <FormSection title={t('quote.stepCourse')} />
-          <AppInputText
-            leftIcon="pi pi-search"
-            placeholder={t('quote.courseSearchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className="max-h-80 space-y-1 overflow-y-auto">
-            {list.map((c) => (
-              <label
-                key={c.id}
-                className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <AppRadioButton
-                  name="quote-course"
-                  checked={form.course_id === c.id}
-                  onChange={() => set('course_id', c.id as number)}
-                />
-                <span className="text-sm">
-                  {c.name}
-                  <span className="ml-2 text-slate-500">{c.workload_hours}h</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </section>
+        <CourseStep
+          list={list}
+          search={search}
+          onSearch={setSearch}
+          selectedId={form.course_id}
+          onSelect={(id) => set('course_id', id)}
+        />
       ) : (
-        <section className="space-y-4">
-          <FormSection title={t('quote.stepData')} />
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>
-              <AppInputText
-                value={String(form.student_count)}
-                onChange={(e) => set('student_count', Number(e.target.value.replace(/\D/g, '')) || 0)}
-                className="w-full"
-              />
-            </FormField>
-
-            {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
-                e normaliza para ponto — troca de caractere, não aritmética.
-                O estado é canônico (ponto), mas a EXIBIÇÃO é sempre es-CL
-                (vírgula): "1.250" é ambíguo (mil duzentos e cinquenta, ou
-                1,25?) e nenhuma heurística resolve isso sem errar outro caso.
-                Mostrando de volta "1,250", o usuário VÊ que o valor virou
-                decimal — o caso ambíguo falha à vista, não em silêncio. */}
-            <FormField label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
-              <AppInputText
-                value={form.value_uf.replace('.', ',')}
-                onChange={(e) => set('value_uf', parseUfInput(e.target.value))}
-                className="w-full"
-              />
-            </FormField>
-          </div>
-
-          <FormField label={t('quote.purchaseOrder')} error={fieldErrors?.purchase_order?.[0]}>
-            <AppInputText
-              value={form.purchase_order ?? ''}
-              onChange={(e) => set('purchase_order', e.target.value || null)}
-              className="w-full"
-            />
-          </FormField>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
-              <AppDatePicker
-                value={form.planned_start_date ?? null}
-                onChange={(v) => set('planned_start_date', v)}
-              />
-            </FormField>
-            <FormField label={t('quote.plannedEnd')} error={fieldErrors?.planned_end_date?.[0]}>
-              <AppDatePicker
-                value={form.planned_end_date ?? null}
-                onChange={(v) => set('planned_end_date', v)}
-              />
-            </FormField>
-          </div>
-        </section>
+        <DataStep form={form} fieldErrors={fieldErrors} onChange={set} />
       )}
     </AppDialog>
   )
