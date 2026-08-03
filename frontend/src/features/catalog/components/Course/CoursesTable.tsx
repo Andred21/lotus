@@ -10,6 +10,7 @@ import {
   AppEmptyState,
 } from "@shared/ui";
 import type { CourseData } from "@shared/types/generated";
+import { BRAND_COLOR } from "@shared/config/brand";
 
 export function CoursesTable({
   courses,
@@ -84,7 +85,7 @@ export function CoursesTable({
           sortable
           body={(c: CourseData) => (
             <div className="flex items-center gap-3">
-              <i className={`pi pi-book }`} style={{ color: '#25A5E4', fontSize: '1.25rem' }} />
+              <i className="pi pi-book" style={{ color: BRAND_COLOR, fontSize: '1.25rem' }} />
               <span className="font-medium">{c.name}</span>
             </div>
           )}
