@@ -2,14 +2,14 @@
 schema_version: 1
 active_feature: catalog
 active_work_item: abstracao-componentes-catalog
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
 active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
 active_plan: docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md
 context_packet: null
-blocker: null
-resume_state: null
+blocker: "Review 2026-08-03 (baixo risco, só lente Claude): 1 achado aguardando decisão do João. Q-1 🟡 — a régua de ~150 linhas que a spec §1 e o state.md do bloco anterior citam NÃO existe em .claude/rules/frontend-fsliced.md nem em pendencias.md (lição 13), e o padrão que ela deveria conter já custou 3 blocos consecutivos de refactor (operation 2026-08-02, commercial 2026-08-03, catalog 2026-08-03) — reincidência que pede mecanismo, não prosa (lição 14). Proposta: max-lines no eslint.config.js sobre src/features/*/components/**, com catraca, molde do no-restricted-syntax. Opções: (a) executar agora, (b) só o texto na rule sem eslint, (c) diferir para o backlog.md. Sem achado de código: extrações provadas literais linha a linha, zero órfão, leis §5 limpas, gate reconferido do zero. Divergência de DoD reportada e não corrigida: CoursesTable.tsx em 125 linhas vs. ~110 da spec §5 — pré-existente (124 no main), fora do escopo do bloco."
+resume_state: reviewing
 last_completed_work_item: zerar-catraca-e-componentes-commercial
 state_basis_commit: ce674af
 updated_at: 2026-08-03T21:40:00-03:00
