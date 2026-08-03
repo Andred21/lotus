@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: catalog
-active_work_item: abstracao-componentes-catalog
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
-active_plan: docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: zerar-catraca-e-componentes-commercial
-state_basis_commit: ce674af
-updated_at: 2026-08-03T22:30:00-03:00
+last_completed_work_item: abstracao-componentes-catalog
+state_basis_commit: 088f20d
+updated_at: 2026-08-03T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-03T22:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_closure`
+## Último item fechado — 2026-08-03
 
 `abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão. Spec aprovada
@@ -152,9 +152,42 @@ import do `BRAND_COLOR`, e o escopo era a linha 87, não a estrutura do arquivo)
 spec era régua avulsa de um bloco; o mecanismo do Q-1 fixa a régua do projeto em **150**, e
 `CoursesTable` passa nela com folga. Não há dívida aberta aqui.
 
-Próxima ação: `/fechar-sprint` (não acionado automaticamente por este comando).
+**Gate de fechamento (2026-08-03).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+o critério é comportamento idêntico na tela, provado pelo João no checkpoint único (D10), aprovado em
+2026-08-03; a única mudança depois dele foi `58ce5d8` (Q-1), que tocou **apenas** `eslint.config.js` e
+`.claude/rules/frontend-fsliced.md` — nenhum componente, confirmado por `git show --name-only` no
+fechamento — então a aprovação visual continua válida, diferente do bloco do redator, onde o markup
+mudou de forma e a prova teve de ser refeita. A metade mecanismo foi **reprovada de novo no próprio
+fechamento (lição 10)**: sonda de 160 linhas em `catalog/components/Course/` devolveu
+`File has too many lines (160). Maximum allowed is 150  max-lines` **com a catraca ativa** (ela não
+acoberta arquivo novo), e a **mesma** sonda em `catalog/hooks/` ficou em silêncio (escopo correto —
+hook longo é legítimo); sondas apagadas, árvore limpa. Placar da catraca reconferido pelo `wc -l`:
+exatamente os 4 arquivos de `ignores` acima de 150 (`StudentDialog` 189, `RedatorDialog` 189,
+`RedatorDocumentSlot` 175, `BudgetDetailPage` 171), sem drift; `CourseDialog` em 96 linhas.
+Suíte backend **372 passed (1360 assertions)** como regressão; `pnpm build` + `pnpm lint` verdes;
+Pint **n/a** (zero arquivo de `backend/` no diff); `generated.ts`, locales e `shared/` sem diff e
+nenhum DTO tocado, logo sem `typescript:transform`; greps das leis §5.6 (`primereact` direto,
+cross-feature) e do DoD (query-em-componente, `#25A5E4` em `features/`) sem saída; sem órfão — os 3
+componentes novos com exatamente 1 consumidor cada e os 4 campos novos de hook com leitor.
+Pendências: nenhum gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova — a
+catraca de `max-lines` nascida aqui é item de código e foi para §Débitos técnicos do `backlog.md`,
+não para `pendencias.md`. **P-25 segue aberta:** o `frontend-fsliced.md` foi tocado, mas no parágrafo
+da régua de tamanho, não no da fronteira de tipo que fecharia o gatilho dela.
 
-## Último item fechado — 2026-08-03
+Código morto mencionado, não deletado (é de fora deste bloco):
+`frontend/src/features/operation/components/.gitkeep` segue versionado e órfão de fato — a pasta tem
+arquivos reais desde o bloco de `operation`. Deleção não entrou em nenhum commit deste fechamento
+(lição 9).
+
+Arquivado: `plans/archive/2026-08-03-abstracao-componentes-catalog.md` ·
+`specs/archive/2026-08-03-abstracao-componentes-catalog-design.md` (sem context packet — a fonte foi
+o código de `features/catalog/`, a rule `frontend-fsliced.md` e o relatório do `/revisar-frontend` da
+mesma sessão).
+
+**Aberto, registrado, não resolvido:** a catraca de 4 legados do `max-lines` (§Débitos técnicos do
+`backlog.md`); o B-7 (`courses.data ?? []` no `QuoteWizard`); e P-25.
+
+## Penúltimo item fechado — 2026-08-03
 
 `zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
 João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Spec
@@ -299,107 +332,3 @@ fonte foi o código de `features/commercial`, o `eslint.config.js` e o relatóri
 **Aberto, registrado, não resolvido:** o B-7 (`courses.data ?? []` no `QuoteWizard`) em §Débitos
 técnicos do `backlog.md`; P-25; e a régua de ~150 linhas do `frontend-fsliced.md`, agora atingida no
 `ClientDialog` (132).
-
-## Penúltimo item fechado — 2026-08-02
-
-`abstracao-componentes-operation` — item 4 do `backlog.md`, selecionado explicitamente pelo João em
-2026-08-02 ao invocar `/planejar-bloco` com o título do item. Saída do `/revisar-frontend` de
-`features/operation` da mesma sessão: 3 achados C (violam a rule `frontend-fsliced.md`) + 3 B, lei
-§6 limpa. Spec aprovada (D1–D11) e plano executado em 10 tasks via `/executar-bloco` +
-`executing-plans` inline (`executor: claude` — sem task delegada ao Codex, frontend sem test
-runner, DoD é comportamento idêntico provado na tela).
-
-**Sem context packet** (`context_packet: null`): a fonte foi o código de
-`frontend/src/features/operation/` e o relatório do `/revisar-frontend` da mesma sessão.
-
-**Escopo entregue (6 achados fechados).** `useTableFilter` (`shared/hooks`) ganha `searchable`
-opcional — os 7 consumidores antigos não mudaram uma linha (D4), prova por diff vazio; a aba
-Alumnos (`EnrollmentTable`) vira o 8º consumidor e perde o `useState`/clamp/`onPage` copiados à mão
-(C-2). A query do curso desce de `TurmaConfigCard` para `useTurmaConfigForm`, que expõe
-`workloadHours` (C-1, mesmo achado do Q-4 do bloco anterior). `useImportStudentsFlow` novo absorve
-mutation/`result`/`sizeError`/`close` do `ImportDialog` (C-3, molde `useEnrollStudentFlow`). O
-ternário de 4 níveis do picker de redator vira `PickerBody` com guardas sequenciais erro > loading >
-vazio > lista (B-1, mesma lição do Q-2/`SlotBody` do bloco anterior). `useTurmaManualOpener` novo
-absorve mutation do blob, refs de objectURL/aba e cleanup de unmount do `ManualButton` (B-2). O
-handler de upload de 13 linhas do `DocumentTypeCard` sobe para `handleUpload` acima do `return`,
-sem hook — estado local que não cruza componente (B-3, D8).
-
-Branch `refactor/abstracao-componentes-operation` a partir do `main` (D2, sem worktree — bloco toca
-`shared/hooks/useTableFilter.ts`, e o DoD se prova na tela contra o `docker compose` do main tree),
-7 commits de conteúdo (`7c25a47`..`2b95687`).
-
-**Prova visual em 2 checkpoints (D11), sem baseline capturada** (mesma limitação do bloco anterior —
-sem ferramenta de browser/screenshot na sessão): **CP-1** (depois das Tasks 1–4) — carga horária em
-Configuración, paginação/clamp de Alumnos, diálogo de import nos 3 casos — **aprovado pelo João em
-2026-08-02**. **CP-2** (depois das Tasks 6–8) — os 4 estados do picker de Redator (erro/loading/
-vazio/lista), upload/remoção/Manual em Documentación — **aprovado pelo João em 2026-08-02**.
-
-**Gate automatizado (Task 10):** `git diff --name-only main...HEAD -- backend/` vazio (D1, bloco
-100% frontend); `git diff --name-only main...HEAD -- frontend/src/shared/config/locales/` vazio
-(D10, zero chave i18n nova); `git diff --stat main...HEAD -- frontend/src/features/catalog/
-frontend/src/features/commercial/ frontend/src/features/identity/` vazio e `TurmasTable` fora do
-diff (D4, os 7 consumidores antigos de `useTableFilter` intocados); grep de
-`use(Query|Mutation)\b|Api\.useList` em `features/operation/components/` sem saída; grep de
-`useState(0)` devolve só `TurmaDetailPage.tsx` (índice de aba, não paginação); greps da lei §6
-(`primereact` direto, import cross-feature) limpos; `pnpm build` + `pnpm lint` verdes; suíte backend
-**372 passed (1360 assertions)**, igual à baseline — sem regressão.
-
-**Review em 2026-08-02 (`/revisar-sprint`, baixo risco — 100% frontend, sem schema/auth/RBAC/
-`generated.ts`/dinheiro, `executor: claude`; só lente Claude, sem Codex).** Órfãos: nenhum (cada
-hook novo com exatamente 1 consumidor). Leis §5: sem violação. Conferidos linha a linha contra o
-`main`: retrocompatibilidade do `useTableFilter` (com `searchable` presente o caminho é idêntico;
-ausente com termo não-vazio degrada para `rows = scoped` e **não** estoura); `rows === enrollments`
-por referência no `EnrollmentTable`, com clamp e `onPage` idênticos aos apagados; markup de
-`PickerBody`/`ManualButton`/`handleUpload` como cópia literal. A única condicional que mudou de
-forma — `course ? …` → `f.workloadHours != null ? …` — foi checada nos 4 casos: `workload_hours: 0`
-segue renderizando "0 horas" (o `??` não coage zero, o `!= null` não o rejeita) e curso não
-resolvido segue `—`; o único caso divergente é inalcançável (`workload_hours` é `number` não-nulo em
-`generated.ts:57`) e vai na direção conservadora. Descartado antes de virar achado: expor
-`setSizeError` cru do `useImportStudentsFlow` **segue** o molde declarado — `useEnrollStudentFlow`
-já expõe `setRut`.
-
-**1 achado, aprovado pelo João e resolvido na mesma sessão — e não era defeito deste diff:**
-
-- **Q-1 🟡** "query em componente de feature" é **padrão reincidente em 2 sprints** (Q-4 do
-  `abstracao-componentes-redator`/`RedatorCourseSelector`; C-1 deste bloco/`TurmaConfigCard`) e
-  sobrevivia em **7 pontos** de `catalog`/`commercial`/`identity`. A rule existia, mas era parágrafo,
-  e o grep do DoD era por-pasta — só provava a feature recém-limpa. Pela cláusula de reincidência do
-  `/revisar-sprint` + lição 14, virou **mecanismo**: `no-restricted-syntax` em `eslint.config.js`
-  sobre `src/features/*/components/**`, reprovando `xxxApi.useAlgo()` e `useQuery`/`useMutation`
-  diretos. **Provado nos dois sentidos** (lição 10): dispara no violador real (`QuoteWizard.tsx:20`
-  e `QuotesList.tsx:23`, des-ignorados temporariamente) e **não** dispara no `useMutationErrors` da
-  linha 28 do mesmo arquivo — o falso positivo que o `\b` do grep original protegia, aqui protegido
-  pelo `$` da regex. Entrou com **catraca**: os 7 legados em `ignores`, lista que só encolhe, para o
-  `pnpm lint` não quebrar na hora. Texto correspondente na `.claude/rules/frontend-fsliced.md`; o
-  esvaziamento da lista é bloco próprio no `backlog.md` (**item 4** depois do fechamento deste).
-
-**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; DoD 6–11 reconferidos e intactos —
-`backend/` e locales sem diff, as 3 features consumidoras de `useTableFilter` ainda com diff
-**zero** (as correções tocaram só `eslint.config.js`, `.claude/rules/` e `docs/`), greps de
-query-em-componente, `primereact` direto e cross-feature limpos, `useState(0)` só no
-`TurmaDetailPage` (índice de aba).
-
-**Gate de fechamento (2026-08-02).** Suíte backend **372 passed (1360 assertions)** como regressão;
-`pnpm lint` e `pnpm build` verdes; Pint **n/a** (zero arquivo de `backend/` no diff); `generated.ts`
-sem diff e nenhum DTO tocado, logo sem `typescript:transform`; greps do DoD e da lei §5.6 rerodados
-limpos; sem órfão (cada hook novo com exatamente 1 consumidor). **Item 0 do gate** — o critério de
-aceite é comportamento idêntico na tela, provado pelo João nos checkpoints CP-1 e CP-2, ambos
-aprovados em 2026-08-02; a única mudança depois do CP-2 foi o commit `1825162` (Q-1), que tocou
-apenas `eslint.config.js`, `.claude/rules/` e `docs/` — nenhum componente — então a aprovação
-visual continua válida, diferente do bloco do redator, onde o markup mudou e a prova foi refeita.
-Pendências: nenhum gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova —
-o débito nascido aqui (catraca de `ignores`) é item de código e foi para o `backlog.md`. P-25 segue
-aberta: o texto que este bloco acrescentou ao `frontend-fsliced.md` é sobre query-em-componente, não
-sobre a direção de dependência que fecharia o gatilho dela.
-
-Nota registrada e resolvida no fechamento: o item removido do `backlog.md` descrevia o C-2 como
-"`searchable` aceita `() => []`" — desenho que a D4 rejeitou em favor do parâmetro opcional; o texto
-saiu com o item (lição 13).
-
-Arquivado: `plans/archive/2026-08-02-abstracao-componentes-operation.md` ·
-`specs/archive/2026-08-02-abstracao-componentes-operation-design.md` (sem context packet — a fonte
-foi o código de `features/operation/` e o relatório do `/revisar-frontend` da mesma sessão).
-
-**Aberto, registrado, não resolvido:** a catraca de 7 componentes legados em `ignores` do
-`no-restricted-syntax` (bloco próprio no `backlog.md`); cor Tailwind hardcoded em 4 arquivos de
-`Enrollment`/`Document` e `turma.id!` em 5 pontos, ambos fora do corte por decisão da spec; P-25.

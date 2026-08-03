@@ -17,26 +17,7 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **`abstracao-componentes-catalog` — estrutura de `features/catalog`**
-   — saída do `/revisar-frontend` de `catalog` (2026-08-03): 4 achados C + 3 B, lei §6 limpa (zero
-   PrimeReact direto, zero import cross-feature). Mesma família dos blocos de `operation` (2026-08-02)
-   e `commercial` (2026-08-03); é o que sobrou de estrutura depois que a catraca foi zerada.
-   **C-1** `CourseDialog.tsx` é o maior componente do repo (251 linhas) e traz o bloco de módulo
-   inline (`:96-171`, 76 linhas, 5 campos irmãos por item) — vira `ModuleFields` + `ModuleCard`, molde
-   `ContactFields`/`ContactCard` do `ClientDialog`. **C-2** a seção de redatores do mesmo arquivo
-   (`:191-247`, ternário de 4 ramos: loading/erro/create-selecionável/view-leitura) vira
-   `CourseRedatoresSection`. Com as duas, o diálogo cai para ~90 linhas. **C-3** `CoursesTable.tsx:87`
-   tem template literal quebrado — `` className={`pi pi-book }`} `` sem interpolação, mandando classe
-   lixo `}` para o DOM. **C-4** mesma linha hardcoda `'#25A5E4'`, cópia literal do `BRAND_COLOR` de
-   `shared/config/brand.ts` (único hex hardcoded em `features/` fora do `LoginPage`); é duplicação de
-   constante, não escolha estética — se o João preferir, migra para o `/revisar-ui`.
-   **B-1** `modulesTotal`/`hoursMismatch` (`:39-41`) derivam de `form` e devem morar no
-   `useCourseForm`. **B-2** `useNavigate` + `usePermissions` + `openRedator` (`:28-32`) são navegação
-   solta no componente — sobem para o `useCourseRedatores(enabledIds, onClose)`. **B-3** micro que
-   dobra nos fixes acima: alias `enabledIds` e `r.id as number` repetido 3x.
-   Caso A, sem ação: `RedatorCard`, `useCourseForm`, `useCourseRedatores`, `useCoursesPage`,
-   `useSyncCourseRedatores`. DoD é comportamento idêntico provado nos 3 modos do diálogo
-   (create/view/edit) — `pnpm build` + `pnpm lint` não bastam (lei §8).
+
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
@@ -59,6 +40,15 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
+  `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
+  `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
+  (189), `RedatorDialog` (189), `RedatorDocumentSlot` (175), `BudgetDetailPage` (171). Enquanto a
+  lista existir, o lint verde afirma menos do que parece — mesmo padrão da catraca de
+  query-em-componente, zerada em 2026-08-03. Lista que só encolhe: não acrescente arquivo para calar
+  o lint. Saída: extrair o bloco coeso de cada um nos moldes já provados
+  (`ContactFields`/`ContactCard`, `ModuleFields`/`ModuleCard`), um arquivo por commit, saindo dos
+  `ignores` no mesmo commit — DoD é comportamento idêntico na tela, não lint verde.
 - **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
   `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
   sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
