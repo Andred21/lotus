@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary } from '@shared/ui'
 import type { DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
-import { coursesApi } from '@shared/api/coursesApi'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
 
 type Props = {
@@ -19,8 +18,6 @@ const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
-  const courses = coursesApi.useList()
-  const course = turma?.course_id != null ? courses.data?.find((c) => c.id === turma.course_id) : undefined
 
   const modalityOptions = [
     { label: t('operation.modality.presencial'), value: 'presencial' },
@@ -65,7 +62,11 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
 
         {mode !== 'create' && (
           <FormField label={t('operation.config.workload')}>
-            <AppInputText value={course ? t('operation.config.workloadValue', { hours: course.workload_hours }) : '—'} disabled readOnly />
+            <AppInputText
+              value={f.workloadHours != null ? t('operation.config.workloadValue', { hours: f.workloadHours }) : '—'}
+              disabled
+              readOnly
+            />
           </FormField>
         )}
       </div>

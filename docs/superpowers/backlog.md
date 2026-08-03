@@ -17,6 +17,22 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
+4. **Frontend · Zerar a catraca de query-em-componente** (Q-1 do review de
+   `abstracao-componentes-operation`, 2026-08-02)
+   — a regra "componente de feature = declarativo" virou lint no mesmo review
+   (`no-restricted-syntax` em `eslint.config.js`), mas entrou com **7 componentes legados na lista
+   de `ignores`** para o `pnpm lint` não quebrar na hora. Este bloco esvazia a lista; cada arquivo
+   sai dos `ignores` no mesmo commit que move a query para um hook da feature, e o bloco fecha
+   quando o array estiver vazio e a regra valer para `src/features/*/components/**` inteiro.
+   Ocorrências: `catalog/…/CourseDialog.tsx:22` (`redatoresApi`), `commercial/…/QuoteWizard.tsx:20`
+   e `commercial/…/QuotesList.tsx:23` (`coursesApi`), `commercial/…/BudgetsTable.tsx:28` e
+   `commercial/…/BudgetDialog.tsx:22` (`clientsApi`), `identity/…/StaffUserDialog.tsx:31`
+   (`rolesApi`), `identity/…/StudentDialog.tsx:42` (`clientsApi`, este com
+   `{ enabled: mode === 'create' }` — o hook precisa preservar o enable condicional).
+   Precedentes de forma: `useRedatorCourses` (Q-4 do bloco do redator) e `useTurmaConfigForm` (C-1
+   deste bloco). Bloco 100% frontend, sem test runner: o DoD é comportamento idêntico provado na
+   tela por diálogo tocado, mais `pnpm lint` verde **com a lista vazia**.
+
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como

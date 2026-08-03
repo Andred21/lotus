@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDataTable, AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
+import { useTableFilter } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
 
@@ -23,25 +24,20 @@ export function EnrollmentTable({
 }: Props) {
   const { t } = useTranslation()
   const [pending, setPending] = useState<EnrollmentData | null>(null)
-  const [first, setFirst] = useState(0)
-
-  // Clamp do ESTADO, não só da leitura (mesmo raciocínio do useTableFilter):
-  // sem isto, a lista encolher e crescer de novo sem trocar de página reexuma
-  // a página obsoleta.
-  if (first >= enrollments.length && first !== 0) {
-    setFirst(0)
-  }
+  // Aba sem busca (decisão do protótipo): o hook entra pelo estado de página e
+  // pelo clamp, que estavam copiados aqui linha a linha.
+  const table = useTableFilter(enrollments)
 
   return (
     <>
       <AppDataTable
-        value={enrollments}
+        value={table.rows}
         loading={loading}
         error={error}
         onRetry={onRetry}
-        first={first >= enrollments.length ? 0 : first}
-        onPage={(e) => setFirst(e.first)}
-        footerCount={t('operation.enrollment.footerCount', { count: enrollments.length })}
+        first={table.first}
+        onPage={table.onPage}
+        footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.
           <AppEmptyState

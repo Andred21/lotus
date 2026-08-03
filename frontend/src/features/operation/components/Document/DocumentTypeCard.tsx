@@ -29,6 +29,21 @@ export function DocumentTypeCard({
   const [sizeError, setSizeError] = useState<string | null>(null)
   const delivered = files.length > 0
 
+  // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
+  // (diferente do useBudgetDetail, que limpa só no onSuccess): com
+  // filesState não-vazio o input some do DOM e o clique seguinte
+  // reenvia o MESMO arquivo em vez de reabrir o seletor — no sucesso
+  // (arquivo errado subiu) e na falha (422 rejeitado) igual. `file`
+  // já foi capturado no fechamento, então segue válido para
+  // `onUpload` mesmo depois do clear resetar o estado do Prime.
+  const handleUpload = (e: FileUploadHandlerEvent) => {
+    setSizeError(null)
+    const file = e.files[0]
+    if (!file) return
+    e.options.clear()
+    onUpload(file)
+  }
+
   return (
     <section className="rounded border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
@@ -43,20 +58,7 @@ export function DocumentTypeCard({
             chooseLabel={t('operation.documents.upload')}
             disabled={uploading}
             onSizeReject={setSizeError}
-            uploadHandler={(e: FileUploadHandlerEvent) => {
-              setSizeError(null)
-              const file = e.files[0]
-              if (!file) return
-              // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
-              // (diferente do useBudgetDetail, que limpa só no onSuccess): com
-              // filesState não-vazio o input some do DOM e o clique seguinte
-              // reenvia o MESMO arquivo em vez de reabrir o seletor — no sucesso
-              // (arquivo errado subiu) e na falha (422 rejeitado) igual. `file`
-              // já foi capturado no fechamento, então segue válido para
-              // `onUpload` mesmo depois do clear resetar o estado do Prime.
-              e.options.clear()
-              onUpload(file)
-            }}
+            uploadHandler={handleUpload}
           />
         )}
       </header>

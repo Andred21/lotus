@@ -66,6 +66,15 @@ exceção. Na dúvida, siga o vizinho da mesma
 - **Componente de feature = declarativo.** Estado, mutations/queries, navegação e derivação vão para
   um hook da feature (`features/<x>/hooks/useAlgo.ts`, ex. `useLoginForm`); o componente só consome e
   renderiza JSX. Wrappers `shared/ui` são a exceção (puro apresentacional).
+  **Isto é lint, não conselho:** `no-restricted-syntax` em `eslint.config.js` reprova
+  `xxxApi.useAlgo()` e `useQuery`/`useMutation` diretos sob `src/features/*/components/**`.
+  `useMutationErrors` continua liberado — é consumo de erro, não busca de dado. A regra nasceu de
+  reincidência medida: o MESMO achado (query + derivação dentro do componente) custou um bloco de
+  refactor em duas sprints seguidas — Q-4 do `abstracao-componentes-redator`
+  (`RedatorCourseSelector`) e C-1 do `abstracao-componentes-operation` (`TurmaConfigCard`) — porque
+  a regra era parágrafo e o gate era grep por-pasta, que só prova a feature recém-limpa (lição 14).
+  A lista de `ignores` da regra é **catraca de débito**: enumera os componentes legados, só encolhe,
+  e não recebe arquivo novo — componente novo que precisa de query ganha um hook.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.
