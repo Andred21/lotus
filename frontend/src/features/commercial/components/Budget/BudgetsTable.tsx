@@ -7,9 +7,9 @@ import {
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
-import { clientsApi } from '@shared/api/clientsApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
+import { useCommercialClients } from '../../hooks/useCommercialClients'
 
 const STATUSES: QuoteStatus[] = ['pending', 'approved', 'rejected']
 
@@ -25,23 +25,21 @@ export function BudgetsTable({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [status, setStatus] = useState<QuoteStatus | null>(null)
-  const clients = clientsApi.useList()
-
-  const clientName = (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—'
+  const clients = useCommercialClients()
 
   // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
   // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
   // busca por cliente devolvendo vazio, tudo em silêncio — a tela afirmaria que
   // esses orçamentos não têm cliente (spec D16). Reintentar recarrega as duas.
-  const loadError = error ?? (clients.isError ? (clients.error ?? {}) : null)
-  const retry = () => { onRetry?.(); void clients.refetch() }
+  const loadError = error ?? clients.loadError
+  const retry = () => { onRetry?.(); clients.refetch() }
 
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
   // filtro é aplicado aqui, antes de entregar as linhas à tabela.
   const table = useTableFilter(
     budgets,
-    (b) => [b.code, clientName(b.client_id)],
+    (b) => [b.code, clients.clientName(b.client_id)],
     status === null ? undefined : (b) => b.status === status,
   )
 
@@ -111,7 +109,7 @@ export function BudgetsTable({
           header={t('budget.code')}
           body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
         />
-        <AppColumn header={t('budget.client')} body={(b: BudgetData) => clientName(b.client_id)} />
+        <AppColumn header={t('budget.client')} body={(b: BudgetData) => clients.clientName(b.client_id)} />
         <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />
         <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} />
         <AppColumn
