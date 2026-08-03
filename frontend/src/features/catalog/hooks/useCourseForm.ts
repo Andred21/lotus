@@ -127,11 +127,18 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
     update.mutate({ id: course!.id!, payload }, { onSuccess: onDone })
   }
 
+  // Totais derivados: reagem ao que está sendo digitado, não ao último valor
+  // salvo (o modules_total_hours do backend serve a consumidores de leitura).
+  const modulesTotal = form.modules.reduce((sum, m) => sum + m.theory_hours + m.practice_hours, 0)
+  // Curso sem módulo nenhum não é divergência — é curso sem módulo cadastrado.
+  const hoursMismatch = form.modules.length > 0 && modulesTotal !== form.workload_hours
+
   const { fieldErrors, generalError } = useMutationErrors([create.error, update.error, sync.error])
 
   return {
     form, set, toggleRedator, readOnly, submit,
     addModule, removeModule, patchModule, moveModule,
+    modulesTotal, hoursMismatch,
     pending: create.isPending || update.isPending || sync.isPending,
     fieldErrors, generalError,
   }

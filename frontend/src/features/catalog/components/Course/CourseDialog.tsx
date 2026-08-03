@@ -18,7 +18,8 @@ export function CourseDialog({
 }) {
   const { t } = useTranslation()
   const { form, set, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
-          addModule, removeModule, patchModule, moveModule } = useCourseForm(course, mode, onHide)
+          addModule, removeModule, patchModule, moveModule,
+          modulesTotal, hoursMismatch } = useCourseForm(course, mode, onHide)
   const redatores = useCourseRedatores(form.redator_ids)
   const navigate = useNavigate()
   const { can } = usePermissions()
@@ -33,12 +34,6 @@ export function CourseDialog({
 
   const isCreate = mode === 'create'
   const enabledIds = form.redator_ids
-
-  // Totais derivados: reagem ao que está sendo digitado, não ao último valor salvo
-  // (o modules_total_hours do backend serve a consumidores de leitura).
-  const modulesTotal = form.modules.reduce((sum, m) => sum + m.theory_hours + m.practice_hours, 0)
-  // Curso sem módulo nenhum não é divergência — é curso sem módulo cadastrado.
-  const hoursMismatch = form.modules.length > 0 && modulesTotal !== form.workload_hours
 
   return (
     <CrudDialog
