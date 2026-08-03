@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-active_spec: null
+active_feature: catalog
+active_work_item: abstracao-componentes-catalog
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: zerar-catraca-e-componentes-commercial
-state_basis_commit: 5e74a28
-updated_at: 2026-08-03T19:10:00-03:00
+state_basis_commit: ce674af
+updated_at: 2026-08-03T19:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,10 +48,28 @@ updated_at: 2026-08-03T19:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `planning`
 
-Nenhum trabalho ativo. `zerar-catraca-e-componentes-commercial` foi fechado em 2026-08-03; o
-próximo item sai de `backlog.md` por escolha explícita do João — o backlog não promove sozinho.
+`abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
+2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão (o item nasceu
+nesta sessão, a partir do relatório desse review, e foi promovido no mesmo commit).
+
+**Sem context packet** (`context_packet: null`): a fonte é o código de
+`frontend/src/features/catalog/`, a rule `.claude/rules/frontend-fsliced.md` e o relatório do
+`/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma. Mesmo desenho dos dois blocos
+anteriores da família.
+
+Escopo bruto (a spec decide o corte): C-1 `ModuleFields`/`ModuleCard` do `CourseDialog`; C-2
+`CourseRedatoresSection`; C-3 template literal quebrado em `CoursesTable.tsx:87`; C-4 `'#25A5E4'`
+hardcoded na mesma linha vs. `BRAND_COLOR`; B-1 derivação `modulesTotal`/`hoursMismatch` para o
+`useCourseForm`; B-2 navegação `openRedator` para o `useCourseRedatores`; B-3 micros que dobram nos
+anteriores. Lei §6 já está limpa em `catalog` — não há achado bloqueante.
+
+Spec aprovada em 2026-08-03 (D1–D10, mais §4 com 13 invariantes de comportamento e §5 com o gate).
+Falta o plano; `active_plan` continua `null` até ele existir.
+
+Próxima ação: escrever o plano em `docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md`
+e transicionar para `ready_for_execution` no mesmo commit.
 
 ## Último item fechado — 2026-08-03
 
