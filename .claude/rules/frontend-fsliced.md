@@ -73,8 +73,10 @@ exceção. Na dúvida, siga o vizinho da mesma
   refactor em duas sprints seguidas — Q-4 do `abstracao-componentes-redator`
   (`RedatorCourseSelector`) e C-1 do `abstracao-componentes-operation` (`TurmaConfigCard`) — porque
   a regra era parágrafo e o gate era grep por-pasta, que só prova a feature recém-limpa (lição 14).
-  A lista de `ignores` da regra é **catraca de débito**: enumera os componentes legados, só encolhe,
-  e não recebe arquivo novo — componente novo que precisa de query ganha um hook.
+  A regra nasceu com uma **catraca**: 7 componentes legados em `ignores`, lista que só encolhia.
+  **Zerada em 2026-08-03** — o bloco `ignores` não existe mais e a regra vale sem exceção. Não
+  reintroduza o campo para calar um arquivo: componente que precisa de query ganha um hook em
+  `features/<x>/hooks/`.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.

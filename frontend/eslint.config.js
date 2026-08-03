@@ -30,10 +30,6 @@ export default defineConfig([
   // limpa; isto aqui reprova na hora, em qualquer feature.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    // Débito conhecido e enumerado (item do backlog). É catraca: a lista só
-    // encolhe. NÃO acrescente arquivo aqui para calar a regra — se um componente
-    // novo precisa de query, o lugar dela é um hook em `features/<x>/hooks/`.
-    ignores: [],
     rules: {
       'no-restricted-syntax': [
         'error',
