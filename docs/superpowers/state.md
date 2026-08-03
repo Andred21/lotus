@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: commercial
 active_work_item: zerar-catraca-e-componentes-commercial
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-03-zerar-catraca-e-componentes-commercial-design.md
 active_plan: docs/superpowers/plans/2026-08-03-zerar-catraca-e-componentes-commercial.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-operation
-state_basis_commit: 94d66bd
-updated_at: 2026-08-03T00:30:00-03:00
+state_basis_commit: a6bc190
+updated_at: 2026-08-03T16:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,51 +48,81 @@ updated_at: 2026-08-03T00:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `ready_for_review`
 
 `zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
 João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Spec
-aprovada em 2026-08-03 (D1–D9) e plano escrito em 12 tasks (Task 0 branch + 11 de conteúdo/gate),
-com 2 checkpoints de prova visual e `executor: claude` — sem task delegada ao Codex (frontend sem
-test runner, DoD é comportamento provado na tela, e o bloco toca `eslint.config.js` e
-`.claude/rules/`). Próxima ação: `/executar-bloco`.
-**Sem context packet** (`context_packet: null`): a fonte é o código de
-`frontend/src/features/commercial/`, o `eslint.config.js` e o relatório do `/revisar-frontend` da
-mesma sessão — nada de Drive/Notion/Figma.
+aprovada (D1–D9) e plano executado em 12 tasks (Task 0 branch + 9 de conteúdo + 2 checkpoints + Task
+10 mecanismo + Task 11 gate) via `/executar-bloco` + `executing-plans` inline (`executor: claude` —
+sem task delegada ao Codex: frontend sem test runner, DoD é comportamento provado na tela, e o bloco
+toca `eslint.config.js` e `.claude/rules/`).
+
+**Sem context packet** (`context_packet: null`): a fonte foi o código de
+`frontend/src/features/commercial/` (mais 1 arquivo de `catalog` e 2 de `identity`), o
+`eslint.config.js` e o relatório do `/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma.
 
 **O item 4 do backlog mudou de forma nesta sessão, por decisão do João.** O antigo item 4 ("Zerar a
 catraca de query-em-componente") **não estava feito** — `eslint.config.js` ainda listava os 7
-`ignores` — e foi **absorvido**, não fechado: o bloco atual cobre os 7 arquivos das 3 features
-(`catalog`, `commercial`, `identity`) mais a estrutura de `commercial`. Nenhum trabalho foi dado
-por concluído sem prova.
+`ignores` — e foi **absorvido**, não fechado: o bloco cobriu os 7 arquivos das 3 features
+(`catalog`, `commercial`, `identity`) mais a estrutura de `commercial`.
 
-**Escopo fechado — duas metades que se provam na mesma tela.**
+**Escopo entregue — duas metades provadas na mesma tela.**
 
-*Metade 1 — catraca (C-1 a C-4 do review + os 3 de fora de `commercial`).* Cada arquivo sai dos
-`ignores` no mesmo commit que move a query para um hook da feature: `QuoteWizard.tsx:20`
-(`coursesApi` + `useState(search)` + filtro derivado), `QuotesList.tsx:23-39` (1 query + 2 mutations
-+ `sizeError` + `courseName` + `handleUpload` — o pior caso da feature), `BudgetsTable.tsx:28-37`
-(`clientsApi` + `clientName` + merge de `loadError` + `retry`), `BudgetDialog.tsx:22-25`
-(`clientsApi` + `clientOptions` — **caso idêntico ao C-1 do bloco de `operation`**, copiar o molde
-`TurmaConfigCard` → `useTurmaConfigForm`), `catalog/CourseDialog.tsx:22` (`redatoresApi`),
-`identity/StaffUserDialog.tsx:31` (`rolesApi`), `identity/StudentDialog.tsx:42` (`clientsApi` com
-`{ enabled: mode === 'create' }` — o hook **precisa preservar** o enable condicional).
+*Metade 1 — catraca zerada nos 7 arquivos.* Cada um saiu de `ignores` no mesmo commit que perdeu a
+query para um hook novo: `useCommercialClients` (`BudgetsTable` + `BudgetDialog`, 2 consumidores —
+único hook do bloco com mais de um), `useQuoteCourseSearch` (`QuoteWizard`), `useQuoteFiles` +
+`useQuotesListCourses` (`QuotesList`, fatiado em 2 por responsabilidade — D4), `useCourseRedatores`
+(`catalog/CourseDialog`, preserva os 3 estados loading/erro/lista — D11 do bloco de cards),
+`useStaffRoleOptions` (`identity/StaffUserDialog`, filtro de `redator` RN-01 viaja com a query),
+`useStudentClients` (`identity/StudentDialog`, preserva o `enabled: mode === 'create'` condicional e
+a distinção erro-de-GET vs. lista-vazia). Nenhum hook expõe `isError` onde o comportamento de hoje é
+`?? []` silencioso (`useQuoteCourseSearch`, `useQuotesListCourses`) — isso é o B-7, fora do corte.
 
-*Metade 2 — estrutura de `commercial` (B-1 a B-6).* `EMPTY_ADDRESS` duplicado entre
-`ClientDialog.tsx:24` e `useClientForm.ts:8` (o hook passa a devolver `addr` resolvido);
-`ClientGeneralFields` tira o `ClientDialog` das 199 linhas; `QuoteRow`, `CourseStep`/`DataStep`,
-`ContactCard` e `BudgetDocumentsCard` tiram bloco coeso de dentro de `.map`/ternário.
+*Metade 2 — estrutura de `commercial` (B-1 a B-6), fechada nas mesmas 4 telas.* `EMPTY_ADDRESS`
+deixou de existir em dois lugares — `useClientForm` devolve `addr` resolvido, `ClientDialog` só
+consome. `ClientGeneralFields` + `ContactCard` tiraram o `ClientDialog` de 199 para 132 linhas.
+`QuoteRow`, `CourseStep`/`DataStep` e `BudgetDocumentsCard` tiraram bloco coeso de dentro de
+`.map`/ternário do `QuotesList`, `QuoteWizard` e `BudgetDetailPage` — markup movido literal, nenhuma
+condicional mudou de forma, nenhum `key` mudou de critério.
+
+**Mecanismo (Task 10):** o bloco `ignores` do `no-restricted-syntax` saiu inteiro do
+`eslint.config.js` — a regra vale sem exceção para as 3 features. Vista reprovando de novo depois da
+remoção (lição 10): violação introduzida de propósito em `BudgetsTable.tsx`, `pnpm lint` reprovou por
+esta regra, revertida via `git checkout`. `.claude/rules/frontend-fsliced.md` atualizada: o texto da
+catraca vira nota de que foi zerada em 2026-08-03, não reintroduzir `ignores`.
 
 **Fora do corte, registrado:** o B-7 (`courses.data ?? []` no `QuoteWizard` — GET falho vira lista
-vazia sem mensagem, e `canAdvance` nunca liga) **muda comportamento de propósito** e sairia do DoD
-"idêntico"; foi para §Débitos técnicos do `backlog.md` por decisão do João em 2026-08-03.
+vazia sem mensagem, `canAdvance` nunca liga) **muda comportamento de propósito**; foi para
+§Débitos técnicos do `backlog.md` por decisão do João em 2026-08-03.
 
-**Lei §6 conferida e limpa** em `commercial` no review: zero `primereact` direto, zero import
-cross-feature (greps sem saída).
+Branch `refactor/zerar-catraca-e-componentes-commercial` a partir do `main` (D1, sem worktree — o
+bloco toca `eslint.config.js`, que vale para o repositório inteiro, e o DoD se prova na tela contra o
+`docker compose` do main tree), 10 commits de conteúdo (`cd486a2`..`a6bc190`).
 
-**DoD:** comportamento idêntico provado na tela por diálogo/tela tocada, `pnpm build` verde e
-`pnpm lint` verde **com o array `ignores` vazio** — não basta o lint passar, o array tem de estar
-vazio, senão a lei segue desligada por arquivo.
+**Prova visual em 2 checkpoints (D8), sem baseline capturada** (mesma limitação dos blocos
+anteriores — sem ferramenta de browser/screenshot na sessão): **CP-1** (depois da Task 6, as 4 telas
+de `commercial` já com catraca + estrutura no estado final) — Presupuestos (busca por código/cliente,
+filtro de estado, empty states, erro de clientes com Reintentar), diálogo de orçamento (create/edit),
+detalhe do orçamento (cotações, upload por linha, card de documentos), diálogo de cliente (endereço,
+contatos, foto) — **aprovado pelo João em 2026-08-03**. **CP-2** (depois da Task 9, os 3 diálogos de
+fora) — os 3 estados de redatores do diálogo de curso, dropdown de rol sem `redator` no diálogo de
+admin, dropdown de clientes + erro + vazio no diálogo de aluno — **aprovado pelo João em 2026-08-03**.
+Nenhum checkpoint precisou ser refeito: a Task 10 (depois do CP-2) tocou só `eslint.config.js` e
+`.claude/rules/`, nenhum componente.
+
+**Gate automatizado (Task 11):** `pnpm build` + `pnpm lint` verdes; grep de
+`use(Query|Mutation)\b|Api\.use` em `features/*/components/` **sem saída** (placar zerado, era 7);
+`grep -n "ignores" eslint.config.js` também sem saída — mais forte que o "uma linha" previsto no
+plano, porque `globalIgnores` (I maiúsculo) não bate no grep case-sensitive por "ignores" minúsculo,
+divergência de redação da spec/plano, não de comportamento — confirmado com `-in` que só resta o
+`globalIgnores(['dist', 'generated.ts'])` de sempre; `git diff --name-only main...HEAD -- backend/`,
+`.../locales/` e `.../generated.ts` vazios, `git diff --stat main...HEAD -- frontend/src/shared/`
+vazio (nada subiu para `shared/`, D5); nenhum hook ou componente novo órfão (`useCommercialClients`
+com 2 consumidores, os outros 6 hooks + os 6 componentes novos com exatamente 1 cada); suíte backend
+**372 passed (1360 assertions)**, igual à baseline — sem regressão; Pint n/a (zero arquivo de
+`backend/` no diff).
+
+Próxima ação: solicitar code review do bloco.
 
 ## Último item fechado — 2026-08-02
 
