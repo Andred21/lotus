@@ -77,6 +77,21 @@ exceção. Na dúvida, siga o vizinho da mesma
   **Zerada em 2026-08-03** — o bloco `ignores` não existe mais e a regra vale sem exceção. Não
   reintroduza o campo para calar um arquivo: componente que precisa de query ganha um hook em
   `features/<x>/hooks/`.
+- **Componente de feature acima de ~150 linhas quer extração, não rolagem.** Passou da régua, procure
+  o bloco coeso preso lá dentro — quadro de itens de uma coleção, seção de um formulário, ramo de
+  estado com markup próprio — e tire-o para um componente irmão em `features/<x>/components/`.
+  Moldes já provados: `ContactFields`/`ContactCard` (`ClientDialog` 199 → 132) e
+  `ModuleFields`/`ModuleCard` (`CourseDialog` 251 → 96). Extração é **movimento literal**: nenhuma
+  condicional muda de forma, nenhum `key` muda de critério, e quem tinha irmãos diretos devolve
+  `Fragment`, não `<div>` — um nó novo muda o espaçamento do `space-y-*` do pai.
+  **Isto é lint, não conselho:** `max-lines` (150) em `eslint.config.js` sobre
+  `src/features/*/components/**`. Vale só para `components/` — hook longo é legítimo, componente
+  inchado não. A régua tem catraca: **4 legados em `ignores`** (`StudentDialog`, `RedatorDialog`,
+  `RedatorDocumentSlot`, `BudgetDetailPage`), lista que só encolhe; não acrescente arquivo para calar
+  o lint. Ela nasceu de reincidência medida — o mesmo achado custou **três blocos consecutivos**
+  (`abstracao-componentes-operation` 2026-08-02, `zerar-catraca-e-componentes-commercial` e
+  `abstracao-componentes-catalog` 2026-08-03) — e de uma lição mais cara: a régua era **citada** pelas
+  specs e pelo `state.md` como se estivesse escrita aqui, e não estava em lugar nenhum (lição 13).
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.
