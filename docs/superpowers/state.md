@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: catalog
 active_work_item: abstracao-componentes-catalog
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
 active_plan: docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md
 context_packet: null
-blocker: "Review 2026-08-03 (baixo risco, só lente Claude): 1 achado aguardando decisão do João. Q-1 🟡 — a régua de ~150 linhas que a spec §1 e o state.md do bloco anterior citam NÃO existe em .claude/rules/frontend-fsliced.md nem em pendencias.md (lição 13), e o padrão que ela deveria conter já custou 3 blocos consecutivos de refactor (operation 2026-08-02, commercial 2026-08-03, catalog 2026-08-03) — reincidência que pede mecanismo, não prosa (lição 14). Proposta: max-lines no eslint.config.js sobre src/features/*/components/**, com catraca, molde do no-restricted-syntax. Opções: (a) executar agora, (b) só o texto na rule sem eslint, (c) diferir para o backlog.md. Sem achado de código: extrações provadas literais linha a linha, zero órfão, leis §5 limpas, gate reconferido do zero. Divergência de DoD reportada e não corrigida: CoursesTable.tsx em 125 linhas vs. ~110 da spec §5 — pré-existente (124 no main), fora do escopo do bloco."
-resume_state: reviewing
+blocker: null
+resume_state: null
 last_completed_work_item: zerar-catraca-e-componentes-commercial
 state_basis_commit: ce674af
-updated_at: 2026-08-03T21:40:00-03:00
+updated_at: 2026-08-03T22:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-03T21:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_review`
+## Estado atual — `ready_for_closure`
 
 `abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão. Spec aprovada
@@ -100,13 +100,59 @@ componente — todos sem saída; `CourseDialog.tsx` em 96 linhas (abaixo de 100)
 **372 passed (1360 assertions)**, igual à baseline — sem regressão. Pint **n/a** (zero arquivo de
 `backend/` no diff); `typescript:transform` **n/a** (nenhum DTO tocado).
 
-**Divergência não bloqueante registrada:** `CoursesTable.tsx` ficou com 125 linhas (124 no `main`
-antes deste bloco, +1 da linha de import do `BRAND_COLOR`) — acima do "~110" do gate da spec §5. Não
-é dívida nova deste bloco: o arquivo já excedia a régua antes da Task 1, e o escopo aqui foi só a
-linha 87 (C-3/C-4), não a estrutura do arquivo. Fica registrado para o `/revisar-sprint`, não
-corrigido por iniciativa própria.
+**Review em 2026-08-03 (`/revisar-sprint`, baixo risco** — 100% frontend, zero arquivo de `backend/`,
+`generated.ts`, locales, auth, RBAC, schema ou dinheiro no diff, `executor: claude`; só lente Claude,
+sem Codex). Órfãos: nenhum — os 10 arquivos de `catalog` com consumidor, os 3 componentes novos com
+exatamente 1 cada. Leis §5: sem violação.
 
-Próxima ação: `/revisar-sprint` (não acionado automaticamente por este comando).
+**As extrações foram provadas literais, não assumidas.** Comparação normalizada do `main` contra os
+arquivos novos: `ModuleCard` é **idêntico byte a byte** às linhas 97-170 do `CourseDialog` original,
+com exatamente 4 linhas divergentes — todas previstas (`key={i}` migrou para o `.map`; `i === 0` /
+`i === length-1` viraram `isFirst`/`isLast`; os 3 handlers viraram props). `ModuleFields` preserva a
+ordem dos blocos (vazio → lista → add → total → aviso). `CourseRedatoresSection` difere do ternário
+original só pelas chaves `{...}` de interpolação JSX que somem ao virar `return` — os 4 ramos na
+mesma ordem, cada um produzindo um elemento, DOM sem nó novo. Fidelidade ao molde confirmada:
+`fieldErrors?: Record<string, string[]> | null` é a assinatura exata do `ContactCard`/`ContactFields`,
+e `ReturnType<typeof useCourseRedatores>` tem precedente em `RedatorDesignation.tsx`
+(`useRedatorPicker`), com os 7 campos do hook consumidos. Descartados antes de virar achado:
+`enabledIds` chegar ao hook e ao componente não pode divergir (mesma `form.redator_ids`, mesmo
+render, D3); derivação sem `useMemo` é o comportamento de antes.
+
+**1 achado 🟡, aprovado pelo João e corrigido na mesma sessão** (`58ce5d8`):
+
+- **Q-1 🟡** A **régua de ~150 linhas não existia.** A spec §1 deste bloco abre citando "251 linhas
+  … contra a régua de ~150 **da rule**", e o `state.md` do bloco anterior a cita igual — mas
+  `grep -niE "régua|~1[0-9]{2}|tamanho"` na `frontend-fsliced.md` voltava **vazio**, e
+  `pendencias.md` também não a registrava (lição 13: doc que descreve intenção não-construída).
+  Pior, o padrão que ela deveria conter — bloco coeso preso dentro de componente grande — custou
+  **três blocos consecutivos** de refactor: `abstracao-componentes-operation` (2026-08-02),
+  `zerar-catraca-e-componentes-commercial` e este. Pela cláusula de reincidência do `/revisar-sprint`
+  + lição 14, virou **mecanismo**: `max-lines` (150) em `eslint.config.js` sobre
+  `src/features/*/components/**`, mais o texto correspondente na rule (com os moldes
+  `ContactFields`/`ContactCard` e `ModuleFields`/`ModuleCard`, e a regra do `Fragment` na extração).
+  O limite saiu da distribuição real, não de chute: 53 dos 57 componentes de feature já ficavam
+  abaixo dele. Entrou com **catraca** de 4 legados (`StudentDialog` 189, `RedatorDialog` 189,
+  `RedatorDocumentSlot` 175, `BudgetDetailPage` 171), lista que só encolhe. **Bloco de config
+  separado** do `no-restricted-syntax` de propósito — `ignores` compartilhados reabririam em silêncio
+  a catraca de query-em-componente zerada em 2026-08-03.
+  **Provado nos dois sentidos (lição 10):** com a catraca esvaziada, reprovou exatamente os 4, com as
+  contagens batendo o `wc -l` (`File has too many lines (171|175|189|189). Maximum allowed is 150`);
+  sonda temporária de 160 linhas em `catalog/components/Course/` reprovou **com a catraca ativa**
+  (prova de que ela não acoberta arquivo novo); a **mesma** sonda movida para `catalog/hooks/` ficou
+  em silêncio, confirmando o escopo — hook longo é legítimo, componente inchado não. Sonda apagada,
+  árvore limpa.
+
+**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; todos os greps do DoD rerodados
+limpos; os 4 diffs proibidos (`backend/`, `shared/`, `locales/`, `generated.ts`) seguem vazios; placar
+da catraca reconferido em exatamente 4 arquivos, sem drift.
+
+**Divergência de DoD, resolvida pelo próprio Q-1:** `CoursesTable.tsx` ficou com 125 linhas — acima
+do "~110" que a spec §5 pedia. Não era dívida deste bloco (124 no `main` antes da Task 1; a +1 é o
+import do `BRAND_COLOR`, e o escopo era a linha 87, não a estrutura do arquivo). O número "~110" da
+spec era régua avulsa de um bloco; o mecanismo do Q-1 fixa a régua do projeto em **150**, e
+`CoursesTable` passa nela com folga. Não há dívida aberta aqui.
+
+Próxima ação: `/fechar-sprint` (não acionado automaticamente por este comando).
 
 ## Último item fechado — 2026-08-03
 
