@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: catalog
 active_work_item: abstracao-componentes-catalog
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md
 context_packet: null
 blocker: null
 resume_state: null
@@ -48,7 +48,7 @@ updated_at: 2026-08-03T19:25:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `planning`
+## Estado atual — `ready_for_execution`
 
 `abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão (o item nasceu
@@ -65,11 +65,21 @@ hardcoded na mesma linha vs. `BRAND_COLOR`; B-1 derivação `modulesTotal`/`hour
 `useCourseForm`; B-2 navegação `openRedator` para o `useCourseRedatores`; B-3 micros que dobram nos
 anteriores. Lei §6 já está limpa em `catalog` — não há achado bloqueante.
 
-Spec aprovada em 2026-08-03 (D1–D10, mais §4 com 13 invariantes de comportamento e §5 com o gate).
-Falta o plano; `active_plan` continua `null` até ele existir.
+Spec aprovada em 2026-08-03 (D1–D10, mais §4 com 13 invariantes de comportamento e §5 com o gate) e
+plano escrito em **8 tasks**: Task 0 branch · Task 1 C-3/C-4 (`CoursesTable:87`) · Task 2 B-1
+(derivação para o `useCourseForm`) · Task 3 C-1 (`ModuleFields` + `ModuleCard`) · Task 4 B-2
+(navegação para o `useCourseRedatores`) · Task 5 C-2 (`CourseRedatoresSection`) · Task 6 checkpoint
+visual (D10, gate humano) · Task 7 gate automatizado + transição.
 
-Próxima ação: escrever o plano em `docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md`
-e transicionar para `ready_for_execution` no mesmo commit.
+`executor: claude`, sem task delegada ao Codex: o frontend não tem test runner, o aceite é
+comportamento idêntico julgado na tela, e cada extração exige decidir na hora se o markup é cópia
+literal ou mudou de forma. `paths_autorizados`: n/a.
+
+Ajuste da D8 no mesmo commit do plano: o cast `r.id as number` **não** vai para o hook (exigiria
+`RedatorData.id` não-opcional no `generated.ts`, fora do escopo) — concentra-se no
+`CourseRedatoresSection`. Só o alias `enabledIds` desaparece.
+
+Próxima ação: `/executar-bloco abstracao-componentes-catalog`.
 
 ## Último item fechado — 2026-08-03
 

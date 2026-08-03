@@ -121,8 +121,11 @@ regressão silenciosa — derrubaria foco e estado da linha. O comentário que e
 
 ### D8 — B-3 não vira task própria
 
-O alias `enabledIds` e os três `r.id as number` desaparecem como efeito das D2/D3/D5; o cast único
-passa a viver no hook. Task própria para eles seria commit sem conteúdo.
+O alias `enabledIds` desaparece como efeito da D3 — o `CourseDialog` passa `form.redator_ids` direto.
+Os três `r.id as number` se concentram no `CourseRedatoresSection`, junto do markup que os usa;
+eliminá-los exigiria o hook devolver uma lista com `id` não-opcional, e `RedatorData.id` é `number |
+undefined` no `generated.ts` — mudar isso é mexer no DTO, fora do escopo. Task própria para o B-3
+seria commit sem conteúdo.
 
 ### D9 — Nada de órfão
 
