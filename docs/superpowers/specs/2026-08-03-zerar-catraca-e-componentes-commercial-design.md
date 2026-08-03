@@ -66,9 +66,11 @@ o componente precise. Devolver a query inteira passaria o lint e desrespeitaria 
 
 ### D3 — Hook expõe só o que o componente consome hoje
 
-Nenhum campo novo "que pode ser útil". `useQuoteCourseSearch` e `useQuotesListCourses` **não**
-expõem `isError`: distinguir erro de vazio ali é exatamente o B-7, que está fora do corte. API
-morta em hook novo é órfão parcial e mente sobre o que a tela trata.
+Nenhum campo que consumidor nenhum use. (`useCommercialClients` devolve `clientName` **e**
+`clientOptions` porque cada um tem seu consumidor — D2; o proibido é campo que nenhuma tela lê.)
+`useQuoteCourseSearch` e `useQuotesListCourses` **não** expõem `isError`: distinguir erro de vazio
+ali é exatamente o B-7, que está fora do corte. API morta em hook novo é órfão parcial e mente
+sobre o que a tela trata.
 
 ### D4 — `QuotesList` fatiado por responsabilidade, em dois hooks
 
@@ -213,9 +215,11 @@ CP-2, fora de `commercial`:
 8. `pnpm build` e `pnpm lint` verdes.
 9. `grep -n "ignores" frontend/eslint.config.js` devolve **apenas** o `globalIgnores` de
    `dist`/`generated.ts`.
-10. `grep -rE "Api\.use|useQuery|useMutation" frontend/src/features/*/components/` sem saída —
-    incluindo `useMutationErrors`, que **não** pode aparecer em componente pelo grep, mesmo sendo
-    permitido pelo lint (o `$` da regex o protege; o grep é mais estrito de propósito).
+10. `grep -rE "use(Query|Mutation)\b|Api\.use" frontend/src/features/*/components/` sem saída. O `\b`
+    é deliberado e espelha o `$` da regex do lint: `useMutationErrors` **continua permitido** em
+    componente (é consumo de erro, não busca de dado), e um grep que o reprovasse seria mais
+    estrito que a lei que ele existe para provar. Hoje esse grep devolve exatamente as 7 linhas da
+    catraca — ao fim do bloco, nenhuma.
 11. `git diff --name-only main...HEAD -- backend/` vazio.
 12. `git diff --name-only main...HEAD -- frontend/src/shared/config/locales/` vazio (zero chave
     i18n nova) e `frontend/src/shared/types/generated.ts` sem diff.
