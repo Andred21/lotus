@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppTextarea, AppErrorState, AppSkeleton, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppTextarea, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
-import { RedatorCard } from './RedatorCard'
 import { ModuleFields } from './ModuleFields'
+import { CourseRedatoresSection } from './CourseRedatoresSection'
 
 export function CourseDialog({
   visible, mode, course, onHide, onEdit,
@@ -22,7 +22,6 @@ export function CourseDialog({
   const redatores = useCourseRedatores(form.redator_ids, onHide)
 
   const isCreate = mode === 'create'
-  const enabledIds = form.redator_ids
 
   return (
     <CrudDialog
@@ -85,61 +84,12 @@ export function CourseDialog({
 
         <FormSection title={t('course.sectionRedatores')} spaced />
 
-        {/* Três estados distintos, de propósito (spec D11): antes, um GET com 403
-            caía em `?? []` e a tela dizia "sem redatores habilitados" num curso
-            que tem três — afirmação falsa sobre o banco. */}
-        {redatores.isLoading ? (
-          <div className="grid gap-2 sm:grid-cols-2" aria-busy="true">
-            <AppSkeleton height="4.5rem" />
-            <AppSkeleton height="4.5rem" />
-          </div>
-        ) : redatores.isError ? (
-          <AppErrorState
-            title={t('common.loadError')}
-            detail={redatores.errorDetail ?? t('common.loadErrorHint')}
-            retryLabel={t('common.retry')}
-            onRetry={redatores.refetch}
-          />
-        ) : isCreate ? (
-          // Exceção do produto: habilitar redatores pelo lado do curso só no cadastro.
-          <div className="space-y-2">
-            <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-              {t('course.redatoresSelectNote')}
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {redatores.allRedatores.map((r) => (
-                <RedatorCard
-                  key={r.id}
-                  redator={r}
-                  selected={enabledIds.includes(r.id as number)}
-                  onToggle={() => toggleRedator(r.id as number)}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          // View/edit: leitura. A edição da habilitação mora em Pessoas.
-          <div className="space-y-2">
-            <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-              {t('course.redatoresReadonlyNote')}
-            </p>
-            {redatores.enabledRedatores.length === 0 ? (
-              <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-                {t('course.noRedatores')}
-              </p>
-            ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {redatores.enabledRedatores.map((r) => (
-                  <RedatorCard
-                    key={r.id}
-                    redator={r}
-                    onView={redatores.canOpenRedator ? () => redatores.openRedator(r.id as number) : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <CourseRedatoresSection
+          redatores={redatores}
+          isCreate={isCreate}
+          enabledIds={form.redator_ids}
+          onToggle={toggleRedator}
+        />
       </section>
     </CrudDialog>
   )
