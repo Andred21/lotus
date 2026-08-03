@@ -35,7 +35,6 @@ export default defineConfig([
     // novo precisa de query, o lugar dela é um hook em `features/<x>/hooks/`.
     ignores: [
       'src/features/catalog/components/Course/CourseDialog.tsx',
-      'src/features/commercial/components/Budget/QuotesList.tsx',
       'src/features/identity/components/Admin/StaffUserDialog.tsx',
       'src/features/identity/components/Student/StudentDialog.tsx',
     ],

@@ -1,13 +1,10 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, FormErrorBanner } from '@shared/ui'
-import type { FileUploadHandlerEvent } from '@shared/ui'
-import { useMutationErrors } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
-import { coursesApi } from '@shared/api/coursesApi'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '../../lib/uf'
-import { useUploadQuoteFile, useRemoveQuoteFile } from '../../api/useCommercialFiles'
+import { useQuoteFiles } from '../../hooks/useQuoteFiles'
+import { useQuotesListCourses } from '../../hooks/useQuotesListCourses'
 import { FileList } from './FileList'
 
 export function QuotesList({
@@ -20,23 +17,8 @@ export function QuotesList({
   onReject?: (q: QuoteData) => void
 }) {
   const { t } = useTranslation()
-  const courses = coursesApi.useList()
-  const uploadFile = useUploadQuoteFile()
-  const removeFile = useRemoveQuoteFile()
-  // `message`: o upload é um único input por linha, sem campo onde pendurar o
-  // 422 de "file"/"type" — o hook já resolve o fallback.
-  const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
-  // Rejeição por tamanho é local (não passa pela API): o AppFileUpload barra o
-  // arquivo antes de qualquer request, então não vira erro de mutação.
-  const [sizeError, setSizeError] = useState<string | null>(null)
-
-  const courseName = (id: number) => courses.data?.find((c) => c.id === id)?.name ?? '—'
-
-  const handleUpload = (quoteId: number, e: FileUploadHandlerEvent) => {
-    const file = e.files[0]
-    if (!file) return
-    uploadFile.mutate({ quoteId, file }, { onSuccess: () => e.options.clear() })
-  }
+  const { courseName } = useQuotesListCourses()
+  const files = useQuoteFiles()
 
   if (quotes.length === 0) {
     return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noQuotes')}</p>
@@ -45,8 +27,8 @@ export function QuotesList({
   return (
     <div>
       <div className="m-4 empty:m-0">
-        <FormErrorBanner message={fileError} />
-        {sizeError && <FormErrorBanner message={sizeError} />}
+        <FormErrorBanner message={files.fileError} />
+        {files.sizeError && <FormErrorBanner message={files.sizeError} />}
       </div>
       {/* Contêiner próprio: `first:border-t-0` mira o primeiro filho DESTA div,
        * não o primeiro filho do wrapper de cima (que sempre existe por causa do
@@ -108,12 +90,12 @@ export function QuotesList({
                   // aria-label no span clicável do modo básico via passthrough tipado:
                   // o FileUpload do Prime descarta chaves desconhecidas de chooseOptions.
                   pt={{ basicButton: { 'aria-label': t('common.upload') } }}
-                  disabled={uploadFile.isPending && uploadFile.variables?.quoteId === q.id}
-                  onSizeReject={setSizeError}
-                  uploadHandler={(e) => { setSizeError(null); handleUpload(q.id!, e) }}
+                  disabled={files.isUploading(q.id!)}
+                  onSizeReject={files.setSizeError}
+                  uploadHandler={(e) => files.upload(q.id!, e)}
                 />
               </div>
-              <FileList files={q.files ?? []} onRemove={(fileId) => removeFile.mutate({ quoteId: q.id!, fileId })} />
+              <FileList files={q.files ?? []} onRemove={(fileId) => files.remove(q.id!, fileId)} />
             </div>
           </div>
         ))}
