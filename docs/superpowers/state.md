@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: commercial
+active_work_item: zerar-catraca-e-componentes-commercial
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: run_planejar_bloco
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-operation
-state_basis_commit: 1825162
-updated_at: 2026-08-02T22:40:00-03:00
+state_basis_commit: 887a025
+updated_at: 2026-08-03T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,11 +48,47 @@ updated_at: 2026-08-02T22:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `idle`
+## Estado atual — `ready_for_planning`
 
-Nenhum item ativo. `abstracao-componentes-operation` foi fechado em 2026-08-02 (seção abaixo).
-A próxima ação é do João: escolher explicitamente um item do `backlog.md`. Nenhum item é promovido
-por ordem, por parecer óbvio ou por estar no topo da fila.
+`zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
+João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Próxima
+ação: `/planejar-bloco`. **Sem context packet** (`context_packet: null`): a fonte é o código de
+`frontend/src/features/commercial/`, o `eslint.config.js` e o relatório do `/revisar-frontend` da
+mesma sessão — nada de Drive/Notion/Figma.
+
+**O item 4 do backlog mudou de forma nesta sessão, por decisão do João.** O antigo item 4 ("Zerar a
+catraca de query-em-componente") **não estava feito** — `eslint.config.js` ainda listava os 7
+`ignores` — e foi **absorvido**, não fechado: o bloco atual cobre os 7 arquivos das 3 features
+(`catalog`, `commercial`, `identity`) mais a estrutura de `commercial`. Nenhum trabalho foi dado
+por concluído sem prova.
+
+**Escopo fechado — duas metades que se provam na mesma tela.**
+
+*Metade 1 — catraca (C-1 a C-4 do review + os 3 de fora de `commercial`).* Cada arquivo sai dos
+`ignores` no mesmo commit que move a query para um hook da feature: `QuoteWizard.tsx:20`
+(`coursesApi` + `useState(search)` + filtro derivado), `QuotesList.tsx:23-39` (1 query + 2 mutations
++ `sizeError` + `courseName` + `handleUpload` — o pior caso da feature), `BudgetsTable.tsx:28-37`
+(`clientsApi` + `clientName` + merge de `loadError` + `retry`), `BudgetDialog.tsx:22-25`
+(`clientsApi` + `clientOptions` — **caso idêntico ao C-1 do bloco de `operation`**, copiar o molde
+`TurmaConfigCard` → `useTurmaConfigForm`), `catalog/CourseDialog.tsx:22` (`redatoresApi`),
+`identity/StaffUserDialog.tsx:31` (`rolesApi`), `identity/StudentDialog.tsx:42` (`clientsApi` com
+`{ enabled: mode === 'create' }` — o hook **precisa preservar** o enable condicional).
+
+*Metade 2 — estrutura de `commercial` (B-1 a B-6).* `EMPTY_ADDRESS` duplicado entre
+`ClientDialog.tsx:24` e `useClientForm.ts:8` (o hook passa a devolver `addr` resolvido);
+`ClientGeneralFields` tira o `ClientDialog` das 199 linhas; `QuoteRow`, `CourseStep`/`DataStep`,
+`ContactCard` e `BudgetDocumentsCard` tiram bloco coeso de dentro de `.map`/ternário.
+
+**Fora do corte, registrado:** o B-7 (`courses.data ?? []` no `QuoteWizard` — GET falho vira lista
+vazia sem mensagem, e `canAdvance` nunca liga) **muda comportamento de propósito** e sairia do DoD
+"idêntico"; foi para §Débitos técnicos do `backlog.md` por decisão do João em 2026-08-03.
+
+**Lei §6 conferida e limpa** em `commercial` no review: zero `primereact` direto, zero import
+cross-feature (greps sem saída).
+
+**DoD:** comportamento idêntico provado na tela por diálogo/tela tocada, `pnpm build` verde e
+`pnpm lint` verde **com o array `ignores` vazio** — não basta o lint passar, o array tem de estar
+vazio, senão a lei segue desligada por arquivo.
 
 ## Último item fechado — 2026-08-02
 
