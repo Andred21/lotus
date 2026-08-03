@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: catalog
 active_work_item: abstracao-componentes-catalog
-workflow_state: ready_for_execution
+workflow_state: ready_for_review
 next_owner: claude
-next_action: execute_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-03-abstracao-componentes-catalog-design.md
 active_plan: docs/superpowers/plans/2026-08-03-abstracao-componentes-catalog.md
 context_packet: null
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: zerar-catraca-e-componentes-commercial
 state_basis_commit: ce674af
-updated_at: 2026-08-03T19:25:00-03:00
+updated_at: 2026-08-03T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,38 +48,65 @@ updated_at: 2026-08-03T19:25:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Estado atual — `ready_for_execution`
+## Estado atual — `ready_for_review`
 
 `abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
-2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão (o item nasceu
-nesta sessão, a partir do relatório desse review, e foi promovido no mesmo commit).
+2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão. Spec aprovada
+(D1–D10, §4 com 13 invariantes, §5 com o gate) e plano executado em **8 tasks** via `/executar-bloco`
++ `executing-plans` inline (`executor: claude` — sem task delegada ao Codex: frontend sem test
+runner, DoD é comportamento idêntico provado na tela, cada extração exigiu decidir na hora se o
+markup era cópia literal).
 
-**Sem context packet** (`context_packet: null`): a fonte é o código de
+**Sem context packet** (`context_packet: null`): a fonte foi o código de
 `frontend/src/features/catalog/`, a rule `.claude/rules/frontend-fsliced.md` e o relatório do
-`/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma. Mesmo desenho dos dois blocos
-anteriores da família.
+`/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma.
 
-Escopo bruto (a spec decide o corte): C-1 `ModuleFields`/`ModuleCard` do `CourseDialog`; C-2
-`CourseRedatoresSection`; C-3 template literal quebrado em `CoursesTable.tsx:87`; C-4 `'#25A5E4'`
-hardcoded na mesma linha vs. `BRAND_COLOR`; B-1 derivação `modulesTotal`/`hoursMismatch` para o
-`useCourseForm`; B-2 navegação `openRedator` para o `useCourseRedatores`; B-3 micros que dobram nos
-anteriores. Lei §6 já está limpa em `catalog` — não há achado bloqueante.
+**Escopo entregue (5 tasks de conteúdo).** Task 1 (C-3/C-4): `CoursesTable.tsx:87` — o template
+literal quebrado (`` `pi pi-book }` ``) virou `"pi pi-book"` e o hex `'#25A5E4'` hardcoded virou
+`BRAND_COLOR` de `@shared/config/brand`, ambos no-op visual por construção. Task 2 (B-1):
+`modulesTotal`/`hoursMismatch` subiram do `CourseDialog` para o `useCourseForm` — o `reduce` que
+vivia em componente agora mora no hook, dono de `form.modules`/`form.workload_hours`. Task 3 (C-1):
+o quadro de módulos (76 linhas, 5 campos por item) virou `ModuleFields` (lista, `key={i}`, add,
+totais) + `ModuleCard` (um módulo, `index` fechado nos handlers) — molde `ContactFields`/
+`ContactCard` do `ClientDialog`, `Fragment` no lugar de `<div>` (os filhos são irmãos diretos do
+`section` com `space-y-4`). Task 4 (B-2): a navegação do olho (`useNavigate`/`usePermissions`/
+`openRedator`) subiu para o `useCourseRedatores(enabledIds, onClose)`, que passou a expor
+`canOpenRedator` e `openRedator`; `onClose` roda antes do `navigate`. Task 5 (C-2): a seção de
+redatores (ternário de 4 ramos: loading > erro > create > view/edit) virou `CourseRedatoresSection`
+— não achatada em guarda sequencial, o 3º ramo é modo de diálogo, não estado de carga. B-3
+(`enabledIds` alias) desapareceu como efeito colateral da Task 5; os `r.id as number` ficaram
+concentrados no `CourseRedatoresSection` (ajuste da D8, fora do escopo mexer no `generated.ts`).
 
-Spec aprovada em 2026-08-03 (D1–D10, mais §4 com 13 invariantes de comportamento e §5 com o gate) e
-plano escrito em **8 tasks**: Task 0 branch · Task 1 C-3/C-4 (`CoursesTable:87`) · Task 2 B-1
-(derivação para o `useCourseForm`) · Task 3 C-1 (`ModuleFields` + `ModuleCard`) · Task 4 B-2
-(navegação para o `useCourseRedatores`) · Task 5 C-2 (`CourseRedatoresSection`) · Task 6 checkpoint
-visual (D10, gate humano) · Task 7 gate automatizado + transição.
+`CourseDialog.tsx` foi de **251 para 96 linhas**.
 
-`executor: claude`, sem task delegada ao Codex: o frontend não tem test runner, o aceite é
-comportamento idêntico julgado na tela, e cada extração exige decidir na hora se o markup é cópia
-literal ou mudou de forma. `paths_autorizados`: n/a.
+Branch `refactor/abstracao-componentes-catalog` a partir do `main` (D1, sem worktree — DoD provado
+na tela contra o `docker compose` do main tree), 5 commits de conteúdo (`9bc5973`..`c78d719`).
 
-Ajuste da D8 no mesmo commit do plano: o cast `r.id as number` **não** vai para o hook (exigiria
-`RedatorData.id` não-opcional no `generated.ts`, fora do escopo) — concentra-se no
-`CourseRedatoresSection`. Só o alias `enabledIds` desaparece.
+**Prova visual em 1 checkpoint (D10), sem baseline capturada** (mesma limitação dos blocos
+anteriores — sem ferramenta de browser/screenshot na sessão; a checagem "na tela" de cada task
+individual foi substituída por revisão de diff literal linha a linha, com a prova real reservada
+para este checkpoint único): Cursos (busca, os 2 empty states, ícone na cor de marca), diálogo
+**create** (add/mover/remover módulo, total, aviso âmbar sem bloquear submit, grid de redatores
+selecionável), **view** (leitura, olho leva a `/personas?redator=<id>`, "sem redatores" quando
+vazio), **edit** (campos e módulos editáveis, redatores em leitura), **erro** de redatores com
+Reintentar (backend derrubado e restaurado) — **aprovado pelo João em 2026-08-03**.
 
-Próxima ação: `/executar-bloco abstracao-componentes-catalog`.
+**Gate automatizado (Task 7):** `pnpm build` + `pnpm lint` verdes; diffs de `backend/`, `shared/`,
+`locales/` e `generated.ts` vazios; greps de query-em-componente, `primereact` direto,
+cross-feature, `#25A5E4` fora de `shared/config/brand.ts`, `pi-book }` quebrado e `reduce(` em
+componente — todos sem saída; `CourseDialog.tsx` em 96 linhas (abaixo de 100); nenhum órfão
+(`ModuleFields`, `ModuleCard`, `CourseRedatoresSection` com exatamente 1 consumidor cada;
+`modulesTotal`, `hoursMismatch`, `canOpenRedator`, `openRedator` todos com leitor); suíte backend
+**372 passed (1360 assertions)**, igual à baseline — sem regressão. Pint **n/a** (zero arquivo de
+`backend/` no diff); `typescript:transform` **n/a** (nenhum DTO tocado).
+
+**Divergência não bloqueante registrada:** `CoursesTable.tsx` ficou com 125 linhas (124 no `main`
+antes deste bloco, +1 da linha de import do `BRAND_COLOR`) — acima do "~110" do gate da spec §5. Não
+é dívida nova deste bloco: o arquivo já excedia a régua antes da Task 1, e o escopo aqui foi só a
+linha 87 (C-3/C-4), não a estrutura do arquivo. Fica registrado para o `/revisar-sprint`, não
+corrigido por iniciativa própria.
+
+Próxima ação: `/revisar-sprint` (não acionado automaticamente por este comando).
 
 ## Último item fechado — 2026-08-03
 
