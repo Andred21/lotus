@@ -33,9 +33,7 @@ export default defineConfig([
     // Débito conhecido e enumerado (item do backlog). É catraca: a lista só
     // encolhe. NÃO acrescente arquivo aqui para calar a regra — se um componente
     // novo precisa de query, o lugar dela é um hook em `features/<x>/hooks/`.
-    ignores: [
-      'src/features/identity/components/Student/StudentDialog.tsx',
-    ],
+    ignores: [],
     rules: {
       'no-restricted-syntax': [
         'error',
