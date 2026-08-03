@@ -17,43 +17,6 @@
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **Frontend · Zerar a catraca de query-em-componente + abstração de `commercial`**
-   (saída do `/revisar-frontend` de `features/commercial`, 2026-08-03; absorve o antigo item 4,
-   "Zerar a catraca", que era Q-1 do review de `abstracao-componentes-operation`, 2026-08-02)
-   — bloco 100% frontend, sem test runner. Duas metades que se provam juntas na mesma tela.
-
-   **Metade 1 — a catraca (os 7 arquivos, todas as features).** A regra "componente de feature =
-   declarativo" virou lint em 2026-08-02 (`no-restricted-syntax` em `eslint.config.js`), mas entrou
-   com **7 componentes legados na lista de `ignores`** para o `pnpm lint` não quebrar na hora. Este
-   bloco esvazia a lista; cada arquivo sai dos `ignores` no mesmo commit que move a query para um
-   hook da feature, e a metade fecha quando o array estiver vazio e a regra valer para
-   `src/features/*/components/**` inteiro. Ocorrências: `catalog/…/CourseDialog.tsx:22`
-   (`redatoresApi`), `commercial/…/QuoteWizard.tsx:20` e `commercial/…/QuotesList.tsx:23`
-   (`coursesApi`), `commercial/…/BudgetsTable.tsx:28` e `commercial/…/BudgetDialog.tsx:22`
-   (`clientsApi`), `identity/…/StaffUserDialog.tsx:31` (`rolesApi`), `identity/…/StudentDialog.tsx:42`
-   (`clientsApi`, este com `{ enabled: mode === 'create' }` — o hook precisa preservar o enable
-   condicional). Precedentes de forma: `useRedatorCourses` (Q-4 do bloco do redator) e
-   `useTurmaConfigForm` (C-1 do bloco de `operation`) — o `BudgetDialog` é o caso idêntico ao
-   segundo (query desce para `useBudgetForm`, que passa a expor `clientOptions`).
-
-   **Metade 2 — estrutura de `commercial` (B-1 a B-6 do review).** `EMPTY_ADDRESS` está duplicado
-   entre `ClientDialog.tsx:24` e `useClientForm.ts:8` — duas fontes do mesmo default, divergência
-   silenciosa; o hook passa a devolver `addr` já resolvido. `ClientDialog` (199 linhas, régua ~150)
-   perde a seção "General" para um `ClientGeneralFields` local, ao lado dos já existentes
-   `AddressFields`/`ContactFields`. Blocos coesos que hoje moram dentro de `.map`/ternário viram
-   subcomponente local: `QuoteRow` (`QuotesList.tsx:55-118`, ~64 linhas por linha da lista),
-   `CourseStep`/`DataStep` (`QuoteWizard.tsx:72-152`, ternário de dois ramos de ~80 linhas cada —
-   mesma lição do `SlotBody`/`PickerBody` dos dois blocos anteriores), `ContactCard`
-   (`ContactFields.tsx:44-137`; `key={i}` fica no pai, replace-total) e `BudgetDocumentsCard`
-   (`BudgetDetailPage.tsx:104-135`, prioridade baixa — a página já é declarativa).
-
-   **Fora do escopo, por decisão do João em 2026-08-03:** o B-7 do review (erro de GET disfarçado de
-   lista vazia no `QuoteWizard`) muda comportamento de propósito e sairia do DoD "idêntico" —
-   registrado em Débitos técnicos.
-
-   **DoD:** comportamento idêntico provado na tela por diálogo/tela tocada, `pnpm build` verde e
-   `pnpm lint` verde **com o array `ignores` vazio**.
-
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
