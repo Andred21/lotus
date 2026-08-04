@@ -88,6 +88,18 @@ export default defineConfig([
           message:
             'TanStack Query direto não vive em componente de feature: mova para features/<x>/api/ ou hooks/ (frontend-fsliced.md).',
         },
+        {
+          // O escape do seletor acima: `useCrudPage(budgetsApi)` não casa
+          // `xxxApi.useAlgo()`, mas a query está lá dentro do mesmo jeito — o
+          // `useCrudPage` chama `resource.useList()`. Casa pelo ARGUMENTO, não
+          // pelo nome do hook: banir `useCrudPage` fecharia só o caso conhecido
+          // e `useOutraCoisa(clientsApi)` escaparia igual amanhã, que é como
+          // este buraco nasceu (spec D5). Os `xxxApi.keys.all` dos 4 diálogos
+          // não são argumento de chamada e seguem passando.
+          selector: 'CallExpression[arguments.0.name=/Api$/]',
+          message:
+            'Recurso de API não entra em componente de feature nem como argumento: consuma um hook de features/<x>/hooks/ (frontend-fsliced.md).',
+        },
         // Componente também não monta multipart. Mora AQUI, e não num bloco
         // `src/features/**` próprio, porque flat config faz merge raso de
         // `rules`: dois blocos que casam o mesmo arquivo e declaram

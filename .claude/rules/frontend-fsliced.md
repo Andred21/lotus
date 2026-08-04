@@ -77,7 +77,12 @@ exceção. Na dúvida, siga o vizinho da mesma
   renderiza JSX. Wrappers `shared/ui` são a exceção (puro apresentacional).
   **Isto é lint, não conselho:** `no-restricted-syntax` em `eslint.config.js` reprova
   `xxxApi.useAlgo()` e `useQuery`/`useMutation` diretos sob `src/features/*/components/**`.
-  `useMutationErrors` continua liberado — é consumo de erro, não busca de dado. A regra nasceu de
+  `useMutationErrors` continua liberado — é consumo de erro, não busca de dado.
+  O seletor casa também o **argumento**: `useCrudPage(budgetsApi)` dentro de um componente reprova,
+  porque a query mora dentro do `useCrudPage` do mesmo jeito. É por isso que os 7 aliases
+  `useXPage` existem em `features/<x>/hooks/` — eles não são delegação vazia, são o que mantém a
+  query fora da página; eliminá-los regrediria a fronteira e o lint antigo não veria (2026-08-04).
+  A regra nasceu de
   reincidência medida: o MESMO achado (query + derivação dentro do componente) custou um bloco de
   refactor em duas sprints seguidas — Q-4 do `abstracao-componentes-redator`
   (`RedatorCourseSelector`) e C-1 do `abstracao-componentes-operation` (`TurmaConfigCard`) — porque
