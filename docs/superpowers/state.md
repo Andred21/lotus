@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening-estrutural-pre-sprint-4-restante
+active_work_item: hardening-estrutural-pre-sprint-4-restante
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: 4ae336e
-updated_at: 2026-08-04T02:00:00-03:00
+state_basis_commit: cc24cf2
+updated_at: 2026-08-04T02:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,39 @@ updated_at: 2026-08-04T02:00:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Bloco ativo — `hardening-estrutural-pre-sprint-4-restante`
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
+sem argumento, com o estado em `idle`; a seleção veio da pergunta explícita, não do comando). É o
+**restante** do mesmo item que o bloco `hardening-estrutural-pre-sprint-4` fechou parcialmente em
+2026-08-04: entregues H.4.1, H.4.2 e H.4.3; abertos **H.3.1 e H.4.4–H.4.9**. O backlog já registra
+esse recorte desde `cc24cf2`, então nenhuma edição dele acompanha esta transição.
+
+**Rota `context_required`, por gatilho de staleness — não por rotina.** O packet de 2026-08-03
+(`context-packets/hardening-estrutural-pre-sprint-4.md`, `status: ready`, `base_commit` `563e78c`)
+cobre as 10 tasks Notion, inclusive as 7 restantes, com os sinais de aceite de cada uma. **Ele está
+stale por dois dos seus próprios gatilhos declarados** (§Staleness triggers, linhas 89 e 91):
+
+1. **Mudança semântica no item 1 do backlog** — H.4.1/H.4.2/H.4.3 saíram da lista e o restante
+   passou a ser citado por ID do Notion.
+2. **Decisão posterior do João que alterou o corte** — o brainstorming de 2026-08-03 escolheu 3 dos
+   10; o corte que o packet declarava "ainda aberto" foi decidido e consumido.
+
+Some-se a isso que `base_commit`, `state_blob_sha` e `progress_blob_sha` do packet apontam para um
+`HEAD` anterior a 6 commits de conteúdo + review. Logo o packet **não é reaproveitado como está**;
+o Codex gera um novo, para o escopo restante.
+
+**Ponto de partida que o novo packet precisa reconciliar, não redescobrir:** o packet antigo já
+registrou que **o Drive não tem documento que delimite este hardening** (buscas dirigidas no V2
+voltaram só ADRs, Certification e setup) e que **H.4.5 nunca apareceu em nenhuma das duas listas do
+backlog** — só no conjunto Notion. Com H.4.4 agora explicitamente no escopo e H.4.5 dependendo dele,
+a inclusão do H.4.5 volta a ser decisão do brainstorming, pela segunda vez.
+
+**Dependências Notion que sobrevivem ao corte anterior** (do packet antigo, §Constraints): H.4.4
+dependia de H.4.3 — **satisfeita**, o vitest existe desde 2026-08-04. H.4.6 dependia de H.4.1 —
+**satisfeita**. H.4.7/H.4.8 dependiam de H.4.2 — **satisfeitas**. Restam internas: H.4.5→H.4.4 e
+H.4.9→H.4.6. Nenhum item restante está bloqueado por algo fora deste bloco.
 
 ## Último item fechado — 2026-08-04
 
