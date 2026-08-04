@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4-restante
 active_work_item: hardening-estrutural-pre-sprint-4-restante
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-04-hardening-estrutural-pre-sprint-4-restante-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4-restante.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: 7419c32
-updated_at: 2026-08-04T02:30:00-03:00
+state_basis_commit: 4c82921
+updated_at: 2026-08-04T03:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -113,10 +113,50 @@ SKILL permite.
 alvos confirmados tratam ADRs, Certification ou setup. Ausência **confirmada** de novo nesta geração,
 não herdada do packet anterior.
 
-**Não decidido de propósito, e é o que o brainstorming abre:** o corte. São 7 tasks candidatas em
-duas naturezas diferentes — H.3.1 é backend com peso de autorização (posse em rota nested devolvendo
-403/404, `addresses`/`contacts`/`templates`/`files`), enquanto H.4.4–H.4.9 são estruturais e
-frontend-pesadas. O packet não ordena nem prioriza.
+**Corte decidido no brainstorming de 2026-08-04, pelo João:** entram **H.3.1, H.4.5, H.4.6, H.4.7 e
+H.4.8**. Ficam fora **H.4.4** (`SearchableTableFrame`, 9 tabelas / 932 linhas) e **H.4.9** (builders
+de teste, 76 arquivos) — as duas únicas de porte. Critério: *fechar tudo que é barato e não precisa
+de prova visual*, isolando os dois refactors grandes num bloco próprio.
+
+**A medição do código mudou três das cinco tasks antes de o corte ser feito.** O Notion descreve
+intenção; o repositório disse outra coisa:
+
+1. **H.3.1 não tinha o buraco que a task supõe.** Das 6 rotas com pai+filho na URL, **5 já estão
+   guardadas** (2 por `->scopeBindings()`, 3 por `abort_unless(...404)` manual) e a 6ª
+   (`turmas/{turma}/redatores/{redator}`) é **N:N** — redator não pertence à turma, não há posse a
+   checar. Os 3 recursos que a task nomeia (`addresses`, `contacts`, `templates`) têm rota **plana**
+   (`PUT /addresses/{address}`): o pai nem entra na URL, e a permissão é global. Sem furo de
+   privilégio. A task vira guardrail + unificação de mecanismo, com `git diff` de comportamento
+   observável vazio.
+2. **H.4.8 já estava em paridade perfeita** — 443 chaves em `en`/`es-CL`/`pt-BR`, zero diff em
+   qualquer direção. Guardrail puro, zero correção. Mesma forma do H.4.1 do bloco anterior.
+3. **H.4.5 se resolveu ao contrário do que a task sugere.** Os 7 `useXPage` são aliases puros
+   idênticos de 6 linhas, mas **eliminá-los regrediria a fronteira de query-em-componente** zerada em
+   2026-08-03: `useCrudPage` chama `resource.useList()` por dentro, então matar o alias moveria a
+   query para 4 componentes de página — e **passaria no lint**, porque o seletor casa
+   `budgetsApi.useList()` e não `useCrudPage(budgetsApi)`. A task pede "eliminar ou justificar"; a
+   justificativa existe, só não é a que se imaginava (não é a lição 3, que trata de fronteira de
+   import proibido). Vira mecanismo: o escape é fechado no `eslint.config.js`.
+
+**Duas famílias no H.4.6, não 8 ocorrências soltas:** DTO calculando valor de domínio
+(`BudgetData`+`BudgetSummaryService`, `TurmaData`+`TurmaHabilitacaoService`) contra assinatura de URL
+na serialização (`photo_url` ×4, `download_url` ×2). O piloto é o `BudgetData` — dinheiro, 4 call
+sites, todos do próprio controller, sem cascata. A família 2 fica, com razão registrada.
+
+**Mecânicas conferidas antes de entrarem na spec, não supostas** (lição 13): `Budget::files()`,
+`Quote::files()`, `Redator::documents()` e `Turma::files()` existem e são `MorphMany`; e
+`Route::enforcesScopedBindings()` existe no Laravel 13.8 instalado — é ele que deixa o guardrail
+**ler** a rota em vez de inspecionar texto de controller, evitando o defeito de regex-que-atravessa-
+comentário do bloco anterior.
+
+**Risco único do bloco, isolado na spec §D12:** o H.4.7 toca 5 caminhos de upload de documento com
+peso legal, e a falha da lição 6 é **silenciosa** (`Content-Type` fixado → `File` vira `{}` → upload
+vazio com 201/204 de sucesso). Build e lint não veem. Exige upload real contra a API em 2 dos 5
+pontos.
+
+**Spec aprovada pelo João em 2026-08-04**, 12 decisões (D1–D12), 8 invariantes de comportamento e o
+gate com item 0 próprio: os 3 guardrails vistos reprovando com sonda fresca, pelo motivo certo.
+Sem checkpoint visual — nenhuma tela muda de forma.
 
 ## Último item fechado — 2026-08-04
 
