@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4
 active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-03-hardening-estrutural-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-03-hardening-estrutural-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-catalog
-state_basis_commit: bfe9051
-updated_at: 2026-08-03T23:55:00-03:00
+state_basis_commit: d28d269
+updated_at: 2026-08-04T01:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -114,6 +114,40 @@ João**. Por camada: backend é só a Task 1; docs é a 2; frontend são 3, 4, 5
 Reprovação ali significa que a classificação da spec §D2 deixou passar um import, e reclassificar é
 decisão do João. As sondas de lição 10 exigem conferir que a falha veio **pelo motivo certo**;
 falha pelo motivo errado é `BLOCKED`, não prova.
+
+**Execução em 2026-08-04, `/executar-bloco` + `executing-plans`, `executor: misto`.** Branch
+`hardening/estrutural-pre-sprint-4` a partir do `main` (D14, sem worktree — toca `backend/`,
+`eslint.config.js` e `vite.config.ts`), 6 commits de conteúdo (`211da41`..`d28d269`).
+
+**Tasks 1, 2 e 5 no Codex** (`codex exec -s danger-full-access`, direto no CLI — a chamada via
+`mcp__codex__codex` batia em `permission denied` no socket do docker sob a sandbox
+`workspace-write`, que não preserva o grupo suplementar `docker` do processo sandboxado; resolvido
+subindo a sandbox do Codex para `danger-full-access`, decisão do João). Report + diff sempre
+revisados por Claude antes do commit — nenhum commit feito pelo Codex, conforme o gate de
+delegação. **Task 2 achou desvio do plano, não do código:** o Step 5 esperava só 1 menção restante a
+`RouteServiceProvider` no doc, mas o arquivo já tinha 3 antes deste bloco (linhas 30, 51, 67) — só a
+30 estava errada, 51 e 67 já afirmavam corretamente que o provider não existe. Codex parou
+corretamente (regra de parada); Claude completou o Step 6 (P-04) e revalidou com o critério certo
+("zero contradição", não "exatamente 1 linha"). **Task 3 achou bug real de ESLint flat config:**
+fronteiras 1 (PrimeReact) e 2 (feature→feature) em blocos `no-restricted-imports` separados com
+`files` sobrepostos colidem — o bloco mais específico apaga o mais genérico por inteiro (merge raso
+de `rules`, não concatenação de `patterns`); visto reprovando (sonda da fronteira 1 parava de
+disparar) antes de consolidar as duas fronteiras num único bloco por feature. Fronteira 3
+(`shared`→feature) não colidia e ficou como no plano.
+
+**Gate automatizado (Task 8), tudo reconferido do zero:** suíte backend **374 passed (1363
+assertions)** (372 baseline + 2 do `DomainDependencyTest`); `pnpm test` **12 passed** (6
+`useTableFilter` + 5 `useCrudPage` + 1 de `filtering`), `pnpm build` e `pnpm lint` verdes; diffs de
+`generated.ts`, locales, `backend/database/` e `backend/app/` vazios (H.4.1 é só teste + doc, zero
+import corrigido); os 3 guardrails vistos reprovando de novo com sondas novas — backend (Regra A via
+FQN inline, citando `SondaArchTemporaria.php`) e frontend (`no-restricted-imports` ≥1 ocorrência em
+`CoursesTable` importando `commercial`), sondas apagadas, árvore limpa nos dois; `filtering` com
+definição em `useTableFilter.ts` e exatamente 2 consumidores (`TurmasTable`, `BudgetsTable`); Pint
+sem alteração pendente; nenhum DTO tocado, logo sem `typescript:transform`.
+
+**Checkpoint visual (Task 7): aprovado pelo João em 2026-08-04**, Operação e Presupuestos, os 5
+pontos do plano (vazio sem filtro, cheio sem filtro, filtro sem resultado + Limpar filtros, busca
+sem resultado + Limpar busca, alternância Todos↔estado real).
 
 ## Último item fechado — 2026-08-03
 
