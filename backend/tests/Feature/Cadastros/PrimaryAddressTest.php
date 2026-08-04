@@ -4,8 +4,8 @@ namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -16,6 +16,7 @@ use Tests\TestCase;
  */
 class PrimaryAddressTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function payload(array $addresses): array
@@ -79,16 +80,6 @@ class PrimaryAddressTest extends TestCase
         $this->assertDatabaseHas('client_addresses', ['commune' => 'Ñuñoa', 'is_primary' => false]);
     }
 
-    private function makeClientWithPrimary(): Client
-    {
-        $this->actingAsAdmin();
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
-        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
-
-        return $client;
-    }
-
     /**
      * A rota nested de endereço (`ClientAddressController`) já existia antes
      * deste serviço (`5bc1d87`) — sem passar por `PrimaryAddressService`, um
@@ -96,7 +87,9 @@ class PrimaryAddressTest extends TestCase
      */
     public function test_rota_nested_marcar_novo_principal_desmarca_o_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
 
         $this->postJson("/api/clients/{$client->id}/addresses", [
             'commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => true,
@@ -108,7 +101,9 @@ class PrimaryAddressTest extends TestCase
 
     public function test_rota_nested_update_marcando_principal_desmarca_o_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
         $b = $client->addresses()->create(['commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => false]);
 
         $this->putJson("/api/addresses/{$b->id}", [
@@ -121,7 +116,9 @@ class PrimaryAddressTest extends TestCase
 
     public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
         $a = $client->addresses()->firstOrFail();
 
         $this->putJson("/api/addresses/{$a->id}", [
@@ -142,8 +139,7 @@ class PrimaryAddressTest extends TestCase
     public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void
     {
         $this->actingAsAdmin();
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
         $a = $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => false]);
         $b = $client->addresses()->create(['commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => true]);
 
@@ -157,7 +153,9 @@ class PrimaryAddressTest extends TestCase
 
     public function test_rota_nested_endereco_novo_nao_principal_nao_mexe_no_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'is_primary' => true]);
 
         $this->postJson("/api/clients/{$client->id}/addresses", [
             'commune' => 'Las Condes', 'city' => 'Santiago', 'is_primary' => false,

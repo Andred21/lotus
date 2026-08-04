@@ -2,27 +2,21 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class BudgetCrudTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function clientId(): int
-    {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
-    }
 
     public function test_cria_orcamento_gera_code_scap(): void
     {
         $this->actingAsAdmin();
-        $clientId = $this->clientId();
+        $clientId = $this->makeClientWithUser()->id;
 
         $response = $this->postJson('/api/budgets', [
             'client_id' => $clientId,
@@ -50,7 +44,7 @@ class BudgetCrudTest extends TestCase
     public function test_lista_mostra_edita_remove(): void
     {
         $this->actingAsAdmin();
-        $clientId = $this->clientId();
+        $clientId = $this->makeClientWithUser()->id;
 
         $id = $this->postJson('/api/budgets', ['client_id' => $clientId])->json('id');
 
@@ -59,7 +53,7 @@ class BudgetCrudTest extends TestCase
 
         // update: payment_terms muda; code e client_id são imutáveis MESMO se
         // o payload mandar valores forjados diferentes dos reais.
-        $forgedClientId = $this->clientId();
+        $forgedClientId = $this->makeClientWithUser()->id;
         $this->putJson("/api/budgets/{$id}", [
             'client_id' => $forgedClientId,
             'code' => 'Scap 999',
@@ -79,10 +73,10 @@ class BudgetCrudTest extends TestCase
     public function test_destroy_com_cotacao_aprovada_bloqueado(): void
     {
         $this->actingAsAdmin();
-        $budget = Budget::create(['client_id' => $this->clientId(), 'code' => 'Scap 1']);
+        $budget = Budget::create(['client_id' => $this->makeClientWithUser()->id, 'code' => 'Scap 1']);
         Quote::create([
             'budget_id' => $budget->id,
-            'course_id' => Course::create(['name' => 'C', 'workload_hours' => 8])->id,
+            'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1, 'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
 

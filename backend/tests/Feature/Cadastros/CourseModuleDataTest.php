@@ -3,17 +3,18 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Data\CourseData;
-use App\Domains\Catalog\Models\Course;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CourseModuleDataTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_totais_sao_derivados_do_model_sem_coluna(): void
     {
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 40]);
+        $course = $this->makeCourse(['name' => 'Curso X', 'workload_hours' => 40]);
         $course->modules()->create(['sort_order' => 1, 'name' => 'M1', 'theory_hours' => 6, 'practice_hours' => 2]);
         $course->modules()->create(['sort_order' => 2, 'name' => 'M2', 'theory_hours' => 4, 'practice_hours' => 0]);
 
@@ -28,7 +29,7 @@ class CourseModuleDataTest extends TestCase
 
     public function test_curso_sem_modulos_soma_zero(): void
     {
-        $course = Course::create(['name' => 'Curso Y', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
 
         $data = CourseData::fromModel($course->load(['certificateTemplates', 'redatores', 'modules']));
 

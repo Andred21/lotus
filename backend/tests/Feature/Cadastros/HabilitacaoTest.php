@@ -2,20 +2,16 @@
 
 namespace Tests\Feature\Cadastros;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class HabilitacaoTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function actingAdmin(): void
-    {
-        $this->actingAsAdmin();
-    }
 
     private function redator(string $rut = '12.345.678-5'): Redator
     {
@@ -26,8 +22,8 @@ class HabilitacaoTest extends TestCase
 
     public function test_habilita_pelo_lado_do_curso_reflete_no_redator(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
         $redator = $this->redator();
 
         $this->putJson("/api/courses/{$course->id}/redatores", [
@@ -45,8 +41,8 @@ class HabilitacaoTest extends TestCase
 
     public function test_sync_pelo_lado_do_curso_substitui(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
         $r1 = $this->redator('12.345.678-5');
         $r2 = $this->redator('20.347.878-K');
 
@@ -62,8 +58,8 @@ class HabilitacaoTest extends TestCase
 
     public function test_redator_id_inexistente_rejeitado(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
 
         $this->putJson("/api/courses/{$course->id}/redatores", [
             'redator_ids' => [99999],
@@ -72,9 +68,9 @@ class HabilitacaoTest extends TestCase
 
     public function test_habilita_pelo_lado_do_redator_via_update(): void
     {
-        $this->actingAdmin();
-        $c1 = Course::create(['name' => 'C1', 'workload_hours' => 8]);
-        $c2 = Course::create(['name' => 'C2', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $c1 = $this->makeCourse();
+        $c2 = $this->makeCourse(['name' => 'C2', 'workload_hours' => 8]);
         $redator = $this->redator();
 
         $this->putJson("/api/redatores/{$redator->id}", [
@@ -90,8 +86,8 @@ class HabilitacaoTest extends TestCase
 
     public function test_update_sem_course_ids_preserva_habilitacao(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'C1', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
         $redator = $this->redator();
         $redator->courses()->attach($course->id);
 
@@ -109,7 +105,7 @@ class HabilitacaoTest extends TestCase
 
     public function test_course_id_inexistente_no_update_rejeitado(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
         $redator = $this->redator();
 
         $this->putJson("/api/redatores/{$redator->id}", [

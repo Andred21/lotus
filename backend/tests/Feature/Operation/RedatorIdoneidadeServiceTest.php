@@ -2,17 +2,18 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Exceptions\RedatorNaoElegivelException;
 use App\Domains\Operation\Services\RedatorIdoneidadeService;
 use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class RedatorIdoneidadeServiceTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function service(): RedatorIdoneidadeService
@@ -36,7 +37,7 @@ class RedatorIdoneidadeServiceTest extends TestCase
 
     public function test_habilitado_com_reuf_futuro_e_elegivel(): void
     {
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $r = $this->makeRedator();
         $course->redatores()->attach($r->id);
         $this->reuf($r, '2030-01-01');
@@ -47,7 +48,7 @@ class RedatorIdoneidadeServiceTest extends TestCase
 
     public function test_reuf_com_validade_nula_vale_sempre(): void
     {
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $r = $this->makeRedator();
         $course->redatores()->attach($r->id);
         $this->reuf($r, null);
@@ -57,7 +58,7 @@ class RedatorIdoneidadeServiceTest extends TestCase
 
     public function test_sem_reuf_reprova(): void
     {
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $r = $this->makeRedator();
         $course->redatores()->attach($r->id);
 
@@ -67,7 +68,7 @@ class RedatorIdoneidadeServiceTest extends TestCase
 
     public function test_reuf_vencido_reprova(): void
     {
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $r = $this->makeRedator();
         $course->redatores()->attach($r->id);
         $this->reuf($r, '2020-01-01');
@@ -79,7 +80,7 @@ class RedatorIdoneidadeServiceTest extends TestCase
 
     public function test_nao_habilitado_ao_curso_reprova(): void
     {
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $r = $this->makeRedator();
         $this->reuf($r, '2030-01-01');   // REUF ok, mas sem course_redator
 

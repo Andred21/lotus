@@ -2,27 +2,22 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Data\StudentDetailData;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentDataTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function client(string $legalName): Client
-    {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $legalName, 'type' => 'client']);
-    }
 
     public function test_data_achata_os_campos_do_user_e_o_cliente_atual(): void
     {
-        $client = $this->client('Transelec');
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         $user = User::factory()->aluno()->create([
             'name' => 'María González Rojas',
             'rut' => '12.876.543-K',
@@ -56,8 +51,8 @@ class StudentDataTest extends TestCase
 
     public function test_detail_data_traz_o_historico_de_vinculos_do_mais_recente_ao_mais_antigo(): void
     {
-        $antigo = $this->client('Transelec');
-        $atual = $this->client('Subestación Norte S.A.');
+        $antigo = $this->makeClientWithUser(['legal_name' => 'Transelec']);
+        $atual = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.']);
         $student = Student::create([
             'user_id' => User::factory()->aluno()->create(['rut' => '12.876.543-K'])->id,
             'current_client_id' => $atual->id,

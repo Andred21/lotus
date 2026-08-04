@@ -2,26 +2,25 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class TurmaCrudTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private int $courseId;
 
     private function makeQuote(string $status = 'approved'): Quote
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $this->courseId = Course::create(['name' => 'AT', 'workload_hours' => 8])->id;
+        $this->courseId = $this->makeCourse()->id;
 
         return Quote::create([
             'budget_id' => $budget->id, 'course_id' => $this->courseId, 'seq_in_budget' => 1,
@@ -55,7 +54,7 @@ class TurmaCrudTest extends TestCase
     {
         $this->actingAsAdmin();
         $quote = $this->makeQuote('approved');
-        $outroCurso = Course::create(['name' => 'Outro', 'workload_hours' => 4])->id;
+        $outroCurso = $this->makeCourse(['name' => 'Outro', 'workload_hours' => 4])->id;
 
         $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload(['course_id' => $outroCurso]))
             ->assertCreated()

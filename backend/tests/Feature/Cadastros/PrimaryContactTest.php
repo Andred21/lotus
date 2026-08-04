@@ -4,12 +4,13 @@ namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class PrimaryContactTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function payload(array $contacts): array
@@ -126,19 +127,11 @@ class PrimaryContactTest extends TestCase
         ]);
     }
 
-    private function makeClientWithPrimary(): Client
-    {
-        $this->actingAsAdmin();
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
-        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
-
-        return $client;
-    }
-
     public function test_rota_nested_marcar_novo_principal_desmarca_o_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
 
         $this->postJson("/api/clients/{$client->id}/contacts", [
             'name' => 'Contato B', 'is_primary' => true,
@@ -150,7 +143,9 @@ class PrimaryContactTest extends TestCase
 
     public function test_rota_nested_update_marcando_principal_desmarca_o_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
         $b = $client->contacts()->create(['name' => 'Contato B', 'is_primary' => false]);
 
         $this->putJson("/api/contacts/{$b->id}", [
@@ -163,7 +158,9 @@ class PrimaryContactTest extends TestCase
 
     public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
         $a = $client->contacts()->firstOrFail();
 
         $this->putJson("/api/contacts/{$a->id}", [
@@ -184,8 +181,7 @@ class PrimaryContactTest extends TestCase
         // "último por id" (que seria B) — senão o serviço desmarcaria o contato
         // que o caller acabou de pedir para promover.
         $this->actingAsAdmin();
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = $user->client()->create(['legal_name' => 'ACME Ltda', 'type' => 'client']);
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
         $a = $client->contacts()->create(['name' => 'Contato A', 'is_primary' => false]);
         $b = $client->contacts()->create(['name' => 'Contato B', 'is_primary' => true]);
 
@@ -199,7 +195,9 @@ class PrimaryContactTest extends TestCase
 
     public function test_rota_nested_contato_novo_nao_principal_nao_mexe_no_anterior(): void
     {
-        $client = $this->makeClientWithPrimary();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
 
         $this->postJson("/api/clients/{$client->id}/contacts", [
             'name' => 'Contato B', 'is_primary' => false,

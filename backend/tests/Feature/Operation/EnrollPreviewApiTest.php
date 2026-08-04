@@ -4,7 +4,6 @@ namespace Tests\Feature\Operation;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaModalidade;
@@ -12,10 +11,12 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class EnrollPreviewApiTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Turma $turma;
@@ -25,15 +26,14 @@ class EnrollPreviewApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $this->course = $this->makeCourse();
         $this->turma = $this->makeTurmaForClient('ACME', 1);
     }
 
     /** Cria cliente + budget + quote approved + turma em_andamento. */
     private function makeTurmaForClient(string $clientName, int $seq): Turma
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $clientName, 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => $clientName])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => "Scap {$seq}"]);
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $this->course->id, 'seq_in_budget' => 1,

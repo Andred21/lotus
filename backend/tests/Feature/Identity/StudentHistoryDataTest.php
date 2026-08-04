@@ -2,9 +2,7 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Data\StudentClientLogData;
 use App\Domains\Identity\Data\StudentTurmaData;
@@ -16,17 +14,13 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentHistoryDataTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function client(string $legalName): Client
-    {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $legalName, 'type' => 'client']);
-    }
 
     private function student(): Student
     {
@@ -38,7 +32,7 @@ class StudentHistoryDataTest extends TestCase
     public function test_log_data_achata_o_nome_do_cliente_e_o_periodo(): void
     {
         $student = $this->student();
-        $client = $this->client('Transelec');
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
 
         $log = $student->logs()->create([
             'client_id' => $client->id,
@@ -57,7 +51,7 @@ class StudentHistoryDataTest extends TestCase
     public function test_log_data_mantem_vinculo_aberto_com_ended_on_nulo(): void
     {
         $student = $this->student();
-        $client = $this->client('Enel Distribución');
+        $client = $this->makeClientWithUser(['legal_name' => 'Enel Distribución']);
 
         $log = $student->logs()->create([
             'client_id' => $client->id,
@@ -71,9 +65,9 @@ class StudentHistoryDataTest extends TestCase
     public function test_turma_data_projeta_matricula_com_codigo_da_cotacao(): void
     {
         $student = $this->student();
-        $client = $this->client('Subestación Norte S.A.');
+        $client = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.']);
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 9']);
-        $course = Course::create(['name' => 'Trabajos en líneas energizadas 220kV', 'workload_hours' => 40]);
+        $course = $this->makeCourse(['name' => 'Trabajos en líneas energizadas 220kV', 'workload_hours' => 40]);
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
@@ -102,9 +96,9 @@ class StudentHistoryDataTest extends TestCase
     public function test_student_navega_para_as_proprias_matriculas(): void
     {
         $student = $this->student();
-        $client = $this->client('ACME');
+        $client = $this->makeClientWithUser();
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 10']);
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',

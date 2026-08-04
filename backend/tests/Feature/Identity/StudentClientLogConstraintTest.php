@@ -2,15 +2,16 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentClientLogConstraintTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_banco_rejeita_segundo_vinculo_aberto_do_mesmo_aluno(): void
@@ -60,8 +61,7 @@ class StudentClientLogConstraintTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $clientUser = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = Client::create(['user_id' => $clientUser->id, 'legal_name' => 'Empresa X']);
+        $client = $this->makeClientWithUser(['legal_name' => 'Empresa X']);
 
         return [$studentId, $client->id];
     }

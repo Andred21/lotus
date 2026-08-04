@@ -4,21 +4,18 @@ namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Models\Course;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CourseTemplateTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function actingAdmin(): void
-    {
-        $this->actingAsAdmin();
-    }
 
     public function test_gerencia_template_individual_do_curso(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
 
         $templateId = $this->postJson("/api/courses/{$course->id}/templates", [
             'version' => 1,
@@ -42,7 +39,7 @@ class CourseTemplateTest extends TestCase
 
     public function test_replace_de_templates_via_update_do_curso_registra_auditoria(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,
@@ -65,7 +62,7 @@ class CourseTemplateTest extends TestCase
 
     public function test_update_sem_o_campo_templates_preserva_os_templates(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,
@@ -89,7 +86,7 @@ class CourseTemplateTest extends TestCase
 
     public function test_update_com_templates_vazio_apaga_explicitamente(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,
@@ -108,7 +105,7 @@ class CourseTemplateTest extends TestCase
 
     public function test_delete_de_curso_audita_o_soft_delete_dos_templates(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,

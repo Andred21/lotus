@@ -21,6 +21,7 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -37,6 +38,7 @@ use Tests\TestCase;
  */
 class SoftDeletedRelationProjectionTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private int $rutSeq = 0;
@@ -47,18 +49,9 @@ class SoftDeletedRelationProjectionTest extends TestCase
         return '1.000.'.str_pad((string) ++$this->rutSeq, 3, '0', STR_PAD_LEFT).'-0';
     }
 
-    private function client(string $legalName = 'Transelec'): Client
-    {
-        return User::factory()->create([
-            'type' => 'cliente',
-            'is_active' => false,
-            'rut' => $this->nextRut(),
-        ])->client()->create(['legal_name' => $legalName, 'type' => 'client']);
-    }
-
     private function course(string $name = 'Alta Tensión'): Course
     {
-        return Course::create([
+        return $this->makeCourse([
             'name' => $name,
             'technical_name' => $name,
             'description' => 'x',
@@ -99,7 +92,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
     public function test_client_data_projeta_cliente_com_user_arquivado(): void
     {
-        $client = $this->client('Enel Distribución');
+        $client = $this->makeClientWithUser(['legal_name' => 'Enel Distribución']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $client->user->delete();
 
         $data = ClientData::fromModel($client->fresh(['user', 'addresses', 'contacts']));
@@ -110,7 +104,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
     public function test_budget_data_projeta_orcamento_de_cliente_arquivado(): void
     {
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'PRE-9']);
 
         $client->delete();
@@ -138,7 +133,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
     public function test_student_data_mostra_cliente_atual_mesmo_arquivado(): void
     {
         $student = $this->student();
-        $client = $this->client('Colbún');
+        $client = $this->makeClientWithUser(['legal_name' => 'Colbún']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $student->update(['current_client_id' => $client->id]);
 
         $client->delete();
@@ -152,7 +148,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
     public function test_student_detail_projeta_historico_com_cliente_arquivado(): void
     {
         $student = $this->student();
-        $client = $this->client('CGE');
+        $client = $this->makeClientWithUser(['legal_name' => 'CGE']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $student->logs()->create([
             'client_id' => $client->id,
             'started_on' => '2025-01-01',
@@ -170,7 +167,9 @@ class SoftDeletedRelationProjectionTest extends TestCase
     {
         $student = $this->student();
         $course = $this->course('Trabajo en Altura');
-        $turma = $this->turma($this->client(), $course);
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
+        $client->user()->update(['rut' => $this->nextRut()]);
+        $turma = $this->turma($client, $course);
         Enrollment::create(['turma_id' => $turma->id, 'student_id' => $student->id]);
 
         $course->delete();
@@ -186,7 +185,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
     public function test_turma_data_projeta_turma_com_curso_e_cliente_arquivados(): void
     {
         $course = $this->course();
-        $client = $this->client('Saesa');
+        $client = $this->makeClientWithUser(['legal_name' => 'Saesa']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $turma = $this->turma($client, $course);
 
         $quoteCode = $turma->quote->code;
@@ -209,7 +209,9 @@ class SoftDeletedRelationProjectionTest extends TestCase
     {
         $student = $this->student();
         $student->user->update(['name' => 'Pedro Soto']);
-        $turma = $this->turma($this->client(), $this->course());
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
+        $client->user()->update(['rut' => $this->nextRut()]);
+        $turma = $this->turma($client, $this->course());
         $enrollment = Enrollment::create(['turma_id' => $turma->id, 'student_id' => $student->id]);
 
         $student->user->delete();
@@ -221,7 +223,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
     public function test_pending_quote_data_projeta_cotacao_de_cliente_arquivado(): void
     {
-        $client = $this->client('Frontel');
+        $client = $this->makeClientWithUser(['legal_name' => 'Frontel']);
+        $client->user()->update(['rut' => $this->nextRut()]);
         $course = $this->course('Rescate');
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'PRE-7']);
         $quote = $budget->quotes()->create([
