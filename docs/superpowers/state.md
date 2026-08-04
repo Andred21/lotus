@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-guardrails-e-transportes-pre-sprint-4
 active_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: 6bd344a
-updated_at: 2026-08-04T03:30:00-03:00
+state_basis_commit: f554244
+updated_at: 2026-08-04T04:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -209,6 +209,39 @@ transporte a centralizar) e que o recorte real foi 6 de 7 pontos.
 **Spec reescrita e aprovada pelo João em 2026-08-04**, 4 tasks, 17 decisões (D1–D14 com D4b/D11b/D13b),
 7 invariantes de comportamento e gate com item 0 próprio. Sem checkpoint visual — nenhuma tela muda
 de forma.
+
+**Plano em 6 tasks** (0 branch · 1 H.3.1 · 2 H.4.6 · 3 H.4.7 · 4 H.4.8 · 5 gate), TDD em todas as
+que produzem mecanismo: o teste entra antes, é visto reprovando, e só então o código muda.
+
+**A rede de regressão do H.3.1 já existia e foi localizada, não escrita:**
+`test_delete_cross_tipo_arquivo_de_budget_pela_rota_de_quote_404` exige 404 **pelo tipo**
+(arquivo de budget pela rota de quote, mesmo id), e `test_remove_documento_de_outro_redator_da_404`
+cobre o redator. Como `$quote->files()` é `MorphMany` filtrada por `fileable_type`, o
+`scopeBindings` preserva as duas garantias — mas o plano manda rodar os dois **antes de aceitar** a
+troca, com regra de parada explícita: teste vermelho ali significa que a relação não filtra o que o
+`abort_unless` filtrava, e a saída **não** é reintroduzir o check manual.
+
+**Auto-review do plano achou um bug no próprio plano:** o passo de Pint do gate montava a lista de
+arquivos por `git diff` e a passava direto — se o diff viesse vazio, `./vendor/bin/pint` rodaria
+**sem argumento** e reformataria o repositório inteiro, que é exatamente a lição 9. Corrigido com
+guarda de lista vazia antes da chamada.
+
+**`executor: misto`.** **Tasks 1 e 4 vão ao Codex** — código literal, verificação executável, paths
+fechados, e no caso da 1 a rede de regressão já existe. **Tasks 0, 2, 3 e 5 ficam com Claude:** a 2
+exige *ler* o resultado do piloto pela D9 (inclusive a hipótese de reverter a task, o que não se
+delega), a 3 toca 6 caminhos de upload com peso legal e falha silenciosa (D12), a 0 julga árvore suja
+e baseline divergente, e a 5 julga o placar e a prova de upload real.
+
+**Regras de parada da delegação:** Task 1 Step 2 — se a lista de rotas indefinidas não for exatamente
+as 5 previstas, o Codex **para**; rota a mais significa que a medição da spec deixou passar um caso,
+e classificá-la é decisão do João. Task 1 Step 7 — teste cross-pai vermelho **para**, não se
+"conserta" reintroduzindo o `abort_unless`. Task 4 Steps 3-5 — as sondas editam arquivo de locale;
+`git status` que não volte limpo **para**, porque locale sujo é diff proibido no gate. Nenhum commit
+é feito pelo Codex sem diff revisado por Claude antes.
+
+**Três pendências de fechamento registradas no plano, fora das tasks:** levar ao `backlog.md` a
+conclusão técnica do H.4.5, e os dois writes no Notion (D4b e D11b), ambos por ID e com texto
+aprovado pelo João antes de enviar.
 
 ## Último item fechado — 2026-08-04
 
