@@ -2,23 +2,22 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class QuoteApprovalTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function quote(string $status = 'pending'): Quote
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budgetId = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1'])->id;
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
 
         return Quote::create([
             'budget_id' => $budgetId, 'course_id' => $courseId, 'seq_in_budget' => 1,

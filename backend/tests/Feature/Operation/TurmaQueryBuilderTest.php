@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
@@ -10,18 +9,19 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class TurmaQueryBuilderTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_with_listing_data_carrega_relacoes_e_conta_matriculas(): void
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $courseId = Course::create(['name' => 'AT 220kV', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse(['name' => 'AT 220kV', 'workload_hours' => 8])->id;
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',

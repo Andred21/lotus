@@ -2,29 +2,19 @@
 
 namespace Tests\Feature\Cadastros;
 
-use App\Domains\Commercial\Models\Client;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class ClientNestedTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function makeClient(): Client
-    {
-        $this->actingAsAdmin();
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-
-        return $user->client()->create([
-            'legal_name' => 'ACME Ltda',
-            'type' => 'client',
-        ]);
-    }
 
     public function test_adiciona_endereco_aninhado(): void
     {
-        $client = $this->makeClient();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
 
         $this->postJson("/api/clients/{$client->id}/addresses", [
             'commune' => 'Ñuñoa', 'city' => 'Santiago', 'region' => 'RM', 'is_primary' => true,
@@ -35,7 +25,8 @@ class ClientNestedTest extends TestCase
 
     public function test_adiciona_contato_aninhado(): void
     {
-        $client = $this->makeClient();
+        $this->actingAsAdmin();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
 
         $this->postJson("/api/clients/{$client->id}/contacts", [
             'name' => 'Nelson Gonzalez', 'email' => 'n@acme.cl',

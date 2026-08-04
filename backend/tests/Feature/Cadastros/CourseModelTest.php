@@ -2,20 +2,21 @@
 
 namespace Tests\Feature\Cadastros;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CourseModelTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_curso_navega_templates_e_redatores_habilitados(): void
     {
-        $course = Course::create([
+        $course = $this->makeCourse([
             'name' => 'Alta Tensão NR-10',
             'technical_name' => 'AT-NR10',
             'workload_hours' => 40,
@@ -40,7 +41,7 @@ class CourseModelTest extends TestCase
 
     public function test_soft_delete_do_curso_cascateia_para_templates(): void
     {
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $template = $course->certificateTemplates()->create([
             'version' => 1,
             'layout_config' => [],
@@ -54,7 +55,7 @@ class CourseModelTest extends TestCase
 
     public function test_modules_vem_ordenado_por_sort_order(): void
     {
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
 
         // Inseridos fora de ordem de propósito: a relação é que ordena.
         $course->modules()->create(['sort_order' => 2, 'name' => 'Segundo', 'theory_hours' => 3, 'practice_hours' => 1]);
@@ -65,7 +66,7 @@ class CourseModelTest extends TestCase
 
     public function test_soft_delete_do_curso_cascateia_para_modules_e_audita(): void
     {
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
 
         $course->delete();
@@ -83,7 +84,7 @@ class CourseModelTest extends TestCase
 
     public function test_criacao_do_modulo_audita_o_course_id(): void
     {
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $module = $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
 
         $audit = DB::table('audits')

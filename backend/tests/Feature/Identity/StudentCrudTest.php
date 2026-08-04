@@ -2,29 +2,24 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Actions\CreateStudentAction;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\StudentClientLinkService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentCrudTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function client(string $legalName = 'Transelec'): Client
-    {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $legalName, 'type' => 'client']);
-    }
 
     public function test_lista_alunos_com_cliente_atual(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         app(CreateStudentAction::class)->execute(StudentData::from([
             'name' => 'Carlos Pérez Muñoz',
             'rut' => '15.234.567-8',
@@ -42,7 +37,7 @@ class StudentCrudTest extends TestCase
     public function test_cria_aluno_pela_api_e_grava_o_primeiro_vinculo(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
 
         $response = $this->postJson('/api/students', [
             'name' => 'María González Rojas',
@@ -60,7 +55,7 @@ class StudentCrudTest extends TestCase
     public function test_rut_invalido_vira_422_com_a_chave_rut(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
 
         $this->postJson('/api/students', [
             'name' => 'RUT Ruim',
@@ -73,7 +68,7 @@ class StudentCrudTest extends TestCase
     public function test_rut_duplicado_vira_422(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         app(CreateStudentAction::class)->execute(StudentData::from([
             'name' => 'Carlos Pérez Muñoz',
             'rut' => '15.234.567-8',
@@ -92,8 +87,8 @@ class StudentCrudTest extends TestCase
     public function test_detalhe_traz_vinculos_e_turmas(): void
     {
         $this->actingAsAdmin();
-        $antigo = $this->client('Transelec');
-        $atual = $this->client('Subestación Norte S.A.');
+        $antigo = $this->makeClientWithUser(['legal_name' => 'Transelec']);
+        $atual = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.']);
         $student = app(CreateStudentAction::class)->execute(StudentData::from([
             'name' => 'Carlos Pérez Muñoz',
             'rut' => '15.234.567-8',
@@ -120,7 +115,7 @@ class StudentCrudTest extends TestCase
     public function test_update_ignora_client_id_invalido_em_vez_de_recusar(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         $student = app(CreateStudentAction::class)->execute(StudentData::from([
             'name' => 'Maria Gonzales Roas',
             'rut' => '12.345.678-5',
@@ -157,7 +152,7 @@ class StudentCrudTest extends TestCase
     public function test_atualiza_dados_pessoais(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         $student = app(CreateStudentAction::class)->execute(StudentData::from([
             'name' => 'Maria Gonzales Roas',
             'rut' => '12.345.678-5',

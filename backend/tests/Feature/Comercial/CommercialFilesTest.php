@@ -2,25 +2,24 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CommercialFilesTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private int $budgetCounter = 0;
 
     private function budget(): Budget
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $this->budgetCounter++;
 
         return Budget::create(['client_id' => $clientId, 'code' => "Scap {$this->budgetCounter}"]);
@@ -47,7 +46,7 @@ class CommercialFilesTest extends TestCase
         Storage::fake();
         $this->actingAsAdmin();
         $budget = $this->budget();
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
@@ -98,7 +97,7 @@ class CommercialFilesTest extends TestCase
         Storage::fake();
         $this->actingAsAdmin();
         $budget = $this->budget();
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
@@ -138,7 +137,7 @@ class CommercialFilesTest extends TestCase
         Storage::fake();
         $this->actingAsAdmin();
         $budget = $this->budget();
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',

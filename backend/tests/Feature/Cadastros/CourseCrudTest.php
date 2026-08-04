@@ -10,14 +10,9 @@ class CourseCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function actingAdmin(): void
-    {
-        $this->actingAsAdmin();
-    }
-
     public function test_cria_curso_com_template(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $response = $this->postJson('/api/courses', [
             'name' => 'Alta Tensão NR-10',
@@ -40,7 +35,7 @@ class CourseCrudTest extends TestCase
 
     public function test_name_obrigatorio(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $this->postJson('/api/courses', ['workload_hours' => 10])
             ->assertStatus(422)
@@ -49,7 +44,7 @@ class CourseCrudTest extends TestCase
 
     public function test_lista_mostra_edita_remove(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,

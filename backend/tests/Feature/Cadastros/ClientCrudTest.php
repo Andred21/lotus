@@ -12,11 +12,6 @@ class ClientCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function actingAdmin(): User
-    {
-        return $this->actingAsAdmin();
-    }
-
     private function payload(array $override = []): array
     {
         return array_merge([
@@ -33,7 +28,7 @@ class ClientCrudTest extends TestCase
 
     public function test_cria_cliente_completo(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $this->postJson('/api/clients', $this->payload())
             ->assertCreated()
@@ -49,7 +44,7 @@ class ClientCrudTest extends TestCase
 
     public function test_rut_duplicado_rejeitado(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
         User::factory()->create(['rut' => '12.345.678-5']);
 
         $this->postJson('/api/clients', $this->payload())
@@ -59,7 +54,7 @@ class ClientCrudTest extends TestCase
 
     public function test_lista_mostra_e_atualiza_e_remove(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
 
@@ -87,7 +82,7 @@ class ClientCrudTest extends TestCase
 
     public function test_rut_de_cliente_soft_deletado_e_rejeitado_ao_recriar(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
 
@@ -103,7 +98,7 @@ class ClientCrudTest extends TestCase
 
     public function test_remove_cascateia_para_enderecos_contatos_e_user(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
         $userId = Client::find($id)->user_id;
@@ -139,7 +134,7 @@ class ClientCrudTest extends TestCase
 
     public function test_cargo_do_contato_persiste_no_create_e_volta_na_resposta(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $this->postJson('/api/clients', $this->payload([
             'contacts' => [['name' => 'Parris Barrios', 'email' => 'p@switch.cl', 'job_title' => 'Jefe de Operaciones', 'is_primary' => true]],
@@ -155,7 +150,7 @@ class ClientCrudTest extends TestCase
 
     public function test_cargo_do_contato_persiste_no_update(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
         $id = $this->postJson('/api/clients', $this->payload())->json('id');
 
         $this->putJson("/api/clients/{$id}", $this->payload([
@@ -167,7 +162,7 @@ class ClientCrudTest extends TestCase
 
     public function test_cargo_do_contato_e_opcional(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $this->postJson('/api/clients', $this->payload())
             ->assertCreated()

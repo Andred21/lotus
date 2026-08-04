@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
@@ -10,10 +9,12 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class ManualTurmaTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Turma $turma;
@@ -21,10 +22,9 @@ class ManualTurmaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME Chile', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => 'ACME Chile'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $course = Course::create(['name' => 'Alta Tensión', 'workload_hours' => 8]);
+        $course = $this->makeCourse(['name' => 'Alta Tensión', 'workload_hours' => 8]);
         $course->modules()->create([
             'sort_order' => 0, 'name' => 'Módulo Seguridad', 'learnings' => 'L',
             'contents' => 'C', 'theory_hours' => 4, 'practice_hours' => 4,

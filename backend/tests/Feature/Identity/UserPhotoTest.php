@@ -11,6 +11,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -20,6 +21,7 @@ use Tests\TestCase;
  */
 class UserPhotoTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     /** Redator autenticado: não tem identity.user.* nem commercial.client.*. */
@@ -190,12 +192,7 @@ class UserPhotoTest extends TestCase
         Storage::fake('s3');
         $this->actingAsAdmin();
 
-        $clientUser = User::factory()->create([
-            'type' => 'cliente',
-            'is_active' => false,
-            'rut' => '12.345.688-2',
-        ]);
-        $clientUser->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+        $clientUser = $this->makeClientWithUser([], ['rut' => '12.345.688-2'])->user;
         app(UserPhotoService::class)->store($clientUser, UploadedFile::fake()->image('logo.png'));
         $path = $clientUser->refresh()->photo_path;
 
@@ -274,12 +271,7 @@ class UserPhotoTest extends TestCase
             ->redator()->create([]);
         $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.680-7'])
             ->student()->create([]);
-        $client = User::factory()->create([
-            'type' => 'cliente',
-            'is_active' => false,
-            'rut' => '12.345.681-5',
-        ])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+        $client = $this->makeClientWithUser([], ['rut' => '12.345.681-5']);
 
         $photo = ['photo' => UploadedFile::fake()->image('foto.png')];
 
@@ -301,12 +293,7 @@ class UserPhotoTest extends TestCase
             ->redator()->create([]);
         $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.683-1'])
             ->student()->create([]);
-        $client = User::factory()->create([
-            'type' => 'cliente',
-            'is_active' => false,
-            'rut' => '12.345.684-K',
-        ])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+        $client = $this->makeClientWithUser([], ['rut' => '12.345.684-K']);
 
         foreach ([
             "/api/redatores/{$redator->id}/photo" => $redator,
@@ -351,12 +338,7 @@ class UserPhotoTest extends TestCase
             ->redator()->create([]);
         $student = User::factory()->create(['type' => 'aluno', 'rut' => '12.345.686-6'])
             ->student()->create([]);
-        $client = User::factory()->create([
-            'type' => 'cliente',
-            'is_active' => false,
-            'rut' => '12.345.687-4',
-        ])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
+        $client = $this->makeClientWithUser([], ['rut' => '12.345.687-4']);
 
         foreach ([
             "/api/redatores/{$redator->id}" => "/api/redatores/{$redator->id}/photo",

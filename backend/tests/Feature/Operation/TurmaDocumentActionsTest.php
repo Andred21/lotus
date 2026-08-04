@@ -2,10 +2,8 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Actions\DeleteTurmaDocumentAction;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
 use App\Domains\Operation\Enums\TurmaDocumentType;
@@ -15,10 +13,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class TurmaDocumentActionsTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Turma $turma;
@@ -27,10 +27,9 @@ class TurmaDocumentActionsTest extends TestCase
     {
         parent::setUp();
         Storage::fake();
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',

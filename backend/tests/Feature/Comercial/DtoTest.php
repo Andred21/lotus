@@ -2,27 +2,26 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Commercial\Services\BudgetSummaryService;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class DtoTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function seedBudget(): Budget
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 7']);
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
         Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 2,
             'student_count' => 15, 'value_uf' => 120.0, 'status' => 'approved',

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Cadastros;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Models\File;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -17,6 +17,7 @@ use Tests\TestCase;
  */
 class CadastroAuthorizationTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -49,9 +50,8 @@ class CadastroAuthorizationTest extends TestCase
     {
         // Entidades reais para o route-model-binding resolver (senão 404 antes
         // do permission middleware). A autorização é que precisa negar (403).
-        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
-        $course = Course::create(['name' => 'Curso X', 'workload_hours' => 8]);
+        $client = $this->makeClientWithUser();
+        $course = $this->makeCourse();
 
         $this->actingAsRedator();
 

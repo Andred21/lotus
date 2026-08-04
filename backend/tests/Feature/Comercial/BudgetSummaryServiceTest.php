@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Commercial\Services\BudgetSummaryService;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class BudgetSummaryServiceTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private BudgetSummaryService $service;
@@ -27,11 +27,10 @@ class BudgetSummaryServiceTest extends TestCase
 
     private function budgetWithValues(array $valuesUf): Budget
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $this->budgetCounter++;
         $budget = Budget::create(['client_id' => $clientId, 'code' => "Scap {$this->budgetCounter}"]);
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
 
         foreach ($valuesUf as $i => $value) {
             Quote::create([
@@ -45,11 +44,10 @@ class BudgetSummaryServiceTest extends TestCase
 
     private function budgetWith(array $statuses): Budget
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $this->budgetCounter++;
         $budget = Budget::create(['client_id' => $clientId, 'code' => "Scap {$this->budgetCounter}"]);
-        $courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
 
         foreach ($statuses as $i => $status) {
             Quote::create([

@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Comercial;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class QuoteCrudTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private int $budgetId;
@@ -19,10 +19,9 @@ class QuoteCrudTest extends TestCase
 
     private function setUpBudget(): void
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $this->budgetId = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1'])->id;
-        $this->courseId = Course::create(['name' => 'C', 'workload_hours' => 8])->id;
+        $this->courseId = $this->makeCourse()->id;
     }
 
     private function payload(): array

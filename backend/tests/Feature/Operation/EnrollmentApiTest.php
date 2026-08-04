@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
@@ -15,10 +14,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class EnrollmentApiTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Turma $turma;
@@ -26,10 +27,9 @@ class EnrollmentApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $course = Course::create(['name' => 'AT', 'workload_hours' => 8]);
+        $course = $this->makeCourse();
         $quote = Quote::create([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',

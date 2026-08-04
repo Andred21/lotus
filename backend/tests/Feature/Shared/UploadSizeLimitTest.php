@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Shared;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
@@ -12,6 +11,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -22,6 +22,7 @@ use Tests\TestCase;
  */
 class UploadSizeLimitTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     /** 11 MB em kilobytes — acima do teto, abaixo do limite de transporte. */
@@ -31,8 +32,7 @@ class UploadSizeLimitTest extends TestCase
 
     private function budget(): Budget
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $this->budgetCounter++;
 
         return Budget::create(['client_id' => $clientId, 'code' => "Scap {$this->budgetCounter}"]);
@@ -42,7 +42,7 @@ class UploadSizeLimitTest extends TestCase
     {
         return Quote::create([
             'budget_id' => $this->budget()->id,
-            'course_id' => Course::create(['name' => 'C', 'workload_hours' => 8])->id,
+            'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,
             'student_count' => 5,
             'value_uf' => 10,

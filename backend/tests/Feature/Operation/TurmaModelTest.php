@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
@@ -13,18 +12,19 @@ use App\Domains\Operation\Models\Turma;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class TurmaModelTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private function makeApprovedQuote(): Quote
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
-        $courseId = Course::create(['name' => 'AT', 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse()->id;
 
         return Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,

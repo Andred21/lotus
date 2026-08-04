@@ -2,28 +2,24 @@
 
 namespace Tests\Feature\Cadastros;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class RedatorCrudTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function actingAdmin(): void
-    {
-        $this->actingAsAdmin();
-    }
 
     public function test_cria_redator_com_documento(): void
     {
         Storage::fake('s3');
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $response = $this->postJson('/api/redatores', [
             'name' => 'Magallanes Acuña',
@@ -41,8 +37,8 @@ class RedatorCrudTest extends TestCase
 
     public function test_cria_redator_com_curso_sincroniza_habilitacao(): void
     {
-        $this->actingAdmin();
-        $course = Course::create(['name' => 'Alta Tensão I', 'workload_hours' => 40]);
+        $this->actingAsAdmin();
+        $course = $this->makeCourse(['name' => 'Alta Tensão I', 'workload_hours' => 40]);
 
         $response = $this->postJson('/api/redatores', [
             'name' => 'Fabián Cifuentes',
@@ -59,7 +55,7 @@ class RedatorCrudTest extends TestCase
 
     public function test_cria_redator_sem_course_ids_nao_habilita_nem_erra(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $response = $this->postJson('/api/redatores', [
             'name' => 'Fabián Cifuentes',
@@ -72,7 +68,7 @@ class RedatorCrudTest extends TestCase
 
     public function test_rut_duplicado_rejeitado(): void
     {
-        $this->actingAdmin();
+        $this->actingAsAdmin();
         User::factory()->create(['rut' => '20.347.878-K']);
 
         $this->postJson('/api/redatores', [
@@ -85,7 +81,7 @@ class RedatorCrudTest extends TestCase
     public function test_lista_mostra_remove(): void
     {
         Storage::fake('s3');
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/redatores', [
             'name' => 'Fabián Cifuentes', 'rut' => '12.345.678-5', 'email' => 'fc@lotus.cl',
@@ -100,7 +96,7 @@ class RedatorCrudTest extends TestCase
     public function test_rut_de_redator_soft_deletado_e_rejeitado_ao_recriar(): void
     {
         Storage::fake('s3');
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/redatores', [
             'name' => 'Fabián Cifuentes', 'rut' => '12.345.678-5', 'email' => 'fc@lotus.cl',
@@ -118,7 +114,7 @@ class RedatorCrudTest extends TestCase
     public function test_remove_cascateia_para_documentos_e_user(): void
     {
         Storage::fake('s3');
-        $this->actingAdmin();
+        $this->actingAsAdmin();
 
         $id = $this->postJson('/api/redatores', [
             'name' => 'Magallanes Acuña',

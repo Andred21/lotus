@@ -8,17 +8,13 @@ use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CreateStudentActionTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function client(string $legalName = 'Transelec'): Client
-    {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $legalName, 'type' => 'client']);
-    }
 
     private function data(Client $client, string $rut = '12.876.543-K'): StudentData
     {
@@ -33,7 +29,7 @@ class CreateStudentActionTest extends TestCase
 
     public function test_cria_user_inativo_student_e_o_primeiro_vinculo(): void
     {
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
 
         $student = app(CreateStudentAction::class)->execute($this->data($client));
 
@@ -52,7 +48,7 @@ class CreateStudentActionTest extends TestCase
 
     public function test_rut_duplicado_vira_erro_de_validacao_e_nao_associacao_silenciosa(): void
     {
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         app(CreateStudentAction::class)->execute($this->data($client));
 
         $this->expectException(ValidationException::class);
@@ -78,7 +74,7 @@ class CreateStudentActionTest extends TestCase
 
     public function test_falha_no_meio_nao_deixa_user_orfao(): void
     {
-        $client = $this->client();
+        $client = $this->makeClientWithUser(['legal_name' => 'Transelec']);
         User::factory()->create(['email' => 'colisao@transelec.cl']);
 
         try {

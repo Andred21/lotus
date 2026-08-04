@@ -2,22 +2,23 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Enums\LinkOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\StudentClientLinkService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentClientLinkServiceTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_primeiro_vinculo_abre_log_e_seta_ponteiro(): void
     {
         $student = $this->makeStudent();
-        $client = $this->makeClient('A');
+        $client = $this->makeClientWithUser(['legal_name' => 'Empresa A']);
 
         $outcome = (new StudentClientLinkService)->link($student, $client);
 
@@ -30,7 +31,7 @@ class StudentClientLinkServiceTest extends TestCase
     public function test_mesmo_cliente_e_noop(): void
     {
         $student = $this->makeStudent();
-        $client = $this->makeClient('A');
+        $client = $this->makeClientWithUser(['legal_name' => 'Empresa A']);
         $service = new StudentClientLinkService;
 
         $service->link($student, $client);
@@ -44,8 +45,8 @@ class StudentClientLinkServiceTest extends TestCase
     public function test_move_fecha_o_antigo_e_deixa_exatamente_um_aberto(): void
     {
         $student = $this->makeStudent();
-        $clientA = $this->makeClient('A');
-        $clientB = $this->makeClient('B');
+        $clientA = $this->makeClientWithUser(['legal_name' => 'Empresa A']);
+        $clientB = $this->makeClientWithUser(['legal_name' => 'Empresa B']);
         $service = new StudentClientLinkService;
 
         $service->link($student, $clientA);
@@ -66,12 +67,5 @@ class StudentClientLinkServiceTest extends TestCase
         $user = User::factory()->aluno()->create();
 
         return Student::create(['user_id' => $user->id]);
-    }
-
-    private function makeClient(string $suffix): Client
-    {
-        $user = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-
-        return Client::create(['user_id' => $user->id, 'legal_name' => "Empresa {$suffix}"]);
     }
 }

@@ -2,34 +2,25 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class PendingQuotesTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function actingAdmin(): User
-    {
-        Permission::findOrCreate('operation.turma.create', 'web');
-        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
-        $user->givePermissionTo('operation.turma.create');
-
-        return $user;
-    }
 
     private function approvedQuote(string $client, string $course, int $students): Quote
     {
-        $clientId = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => $client, 'type' => 'client'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => $client])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap '.fake()->unique()->numberBetween(1, 9999)]);
-        $courseId = Course::create(['name' => $course, 'workload_hours' => 8])->id;
+        $courseId = $this->makeCourse(['name' => $course, 'workload_hours' => 8])->id;
 
         return Quote::create([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
@@ -49,8 +40,18 @@ class PendingQuotesTest extends TestCase
             'start_date' => '2026-08-01', 'end_date' => '2026-08-10', 'status' => 'em_andamento',
         ]);
 
-        $res = $this->actingAs($this->actingAdmin())
-            ->getJson('/api/turmas/pendientes-configuracion');
+        // User com EXATAMENTE a permissão que gateia a rota
+        // (`permission:operation.turma.create` em `pending`, TurmaController).
+        // Rodar como admin completo faria a troca da permissão exigida passar
+        // verde, porque o admin tem todas — e o placar do H.4.9 é cego a isso,
+        // já que escopo de permissão é setup, não asserção. D12 tratou os 6
+        // `actingAdmin` como repasse puro; este era o único que não era
+        // (review de 2026-08-04, Q-3).
+        Permission::findOrCreate('operation.turma.create', 'web');
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->givePermissionTo('operation.turma.create');
+
+        $res = $this->actingAs($user)->getJson('/api/turmas/pendientes-configuracion');
 
         $res->assertOk()
             ->assertJsonCount(1)
@@ -63,6 +64,24 @@ class PendingQuotesTest extends TestCase
     public function test_sem_permissao_recebe_403(): void
     {
         $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+
+        $this->actingAs($user)->getJson('/api/turmas/pendientes-configuracion')->assertForbidden();
+    }
+
+    /**
+     * Qual permissão gateia a rota, não apenas se alguma gateia. O teste acima
+     * cobre só a remoção total do middleware; trocar `operation.turma.create`
+     * por outra permissão passaria verde nele e no teste positivo, porque o
+     * admin tem todas. Guarda nascida do review de 2026-08-04 (Q-3), depois de
+     * a migração do H.4.9 ter trocado o user de permissão única por
+     * `actingAsAdmin()` sem que o placar da suíte se movesse — escopo de
+     * permissão é setup, e nenhum gate baseado em contagem enxerga isso.
+     */
+    public function test_permissao_vizinha_de_turma_nao_abre_a_rota(): void
+    {
+        Permission::findOrCreate('operation.turma.view', 'web');
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->givePermissionTo('operation.turma.view');
 
         $this->actingAs($user)->getJson('/api/turmas/pendientes-configuracion')->assertForbidden();
     }

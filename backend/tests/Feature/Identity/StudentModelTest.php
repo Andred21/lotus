@@ -2,14 +2,15 @@
 
 namespace Tests\Feature\Identity;
 
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class StudentModelTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
 
     public function test_student_navega_user_client_e_logs(): void
@@ -17,8 +18,7 @@ class StudentModelTest extends TestCase
         $studentUser = User::factory()->aluno()->create();
         $student = Student::create(['user_id' => $studentUser->id]);
 
-        $clientUser = User::factory()->create(['type' => 'cliente', 'is_active' => false]);
-        $client = Client::create(['user_id' => $clientUser->id, 'legal_name' => 'Empresa X']);
+        $client = $this->makeClientWithUser(['legal_name' => 'Empresa X']);
 
         $student->update(['current_client_id' => $client->id]);
         $student->logs()->create(['client_id' => $client->id, 'started_on' => '2026-01-01', 'ended_on' => null]);

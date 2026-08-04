@@ -3,12 +3,11 @@
 namespace Tests\Feature\Comercial;
 
 use App\Domains\Commercial\Actions\DeleteClientContactAction;
-use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
-use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -23,17 +22,8 @@ use Tests\TestCase;
  */
 class ClientContactMinimumTest extends TestCase
 {
+    use CreatesDomainRecords;
     use RefreshDatabase;
-
-    private function client(): Client
-    {
-        $client = User::factory()->create(['type' => 'cliente', 'is_active' => false])
-            ->client()->create(['legal_name' => 'ACME', 'type' => 'client']);
-
-        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
-
-        return $client;
-    }
 
     private function payload(array $override = []): array
     {
@@ -50,7 +40,8 @@ class ClientContactMinimumTest extends TestCase
     public function test_update_com_contacts_vazio_da_422(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
 
         $this->putJson("/api/clients/{$client->id}", $this->payload(['contacts' => []]))
             ->assertStatus(422)
@@ -63,7 +54,8 @@ class ClientContactMinimumTest extends TestCase
     public function test_update_sem_a_chave_contacts_da_422_em_vez_de_apagar(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
         $payload = $this->payload();
         unset($payload['contacts']);
 
@@ -86,7 +78,8 @@ class ClientContactMinimumTest extends TestCase
     public function test_update_com_um_contato_continua_passando(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
 
         $this->putJson("/api/clients/{$client->id}", $this->payload([
             'contacts' => [['name' => 'Beatriz', 'is_primary' => true]],
@@ -104,7 +97,8 @@ class ClientContactMinimumTest extends TestCase
     public function test_delete_do_ultimo_contato_da_422_e_nao_apaga(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
         $contact = $client->contacts()->first();
 
         $this->deleteJson("/api/contacts/{$contact->id}")
@@ -117,7 +111,8 @@ class ClientContactMinimumTest extends TestCase
     public function test_delete_de_contato_com_outro_restante_continua_passando(): void
     {
         $this->actingAsAdmin();
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
         $segundo = $client->contacts()->create(['name' => 'Beatriz', 'is_primary' => false]);
 
         $this->deleteJson("/api/contacts/{$segundo->id}")->assertNoContent();
@@ -134,7 +129,8 @@ class ClientContactMinimumTest extends TestCase
      */
     public function test_exclusao_roda_dentro_de_transacao(): void
     {
-        $client = $this->client();
+        $client = $this->makeClientWithUser();
+        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
         $client->contacts()->create(['name' => 'Bruno']);
         $client->contacts()->create(['name' => 'Carla']);
         $alvo = $client->contacts()->where('name', 'Carla')->firstOrFail();
