@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4-restante
 active_work_item: hardening-estrutural-pre-sprint-4-restante
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4-restante.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: cc24cf2
-updated_at: 2026-08-04T02:15:00-03:00
+state_basis_commit: 7419c32
+updated_at: 2026-08-04T02:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -80,6 +80,43 @@ a inclusão do H.4.5 volta a ser decisão do brainstorming, pela segunda vez.
 dependia de H.4.3 — **satisfeita**, o vitest existe desde 2026-08-04. H.4.6 dependia de H.4.1 —
 **satisfeita**. H.4.7/H.4.8 dependiam de H.4.2 — **satisfeitas**. Restam internas: H.4.5→H.4.4 e
 H.4.9→H.4.6. Nenhum item restante está bloqueado por algo fora deste bloco.
+
+**Context Packet gerado pelo Codex em 2026-08-04** (`lotus-context-packet`, `mcp__codex__codex`
+sandbox read-only — sem o problema de socket do docker do bloco anterior, porque geração de packet
+não precisa de container), `base_commit` `7419c32`, `status: ready` — 14 fontes, nenhuma
+`unavailable`: as 7 tasks Notion buscadas **uma a uma** pela base canônica por ID, 4 alvos do Drive
+reconfirmados, 1 falso positivo de busca ampla descartado explicitamente
+(`Planilha_Projetos_Integrada`, fora do V2) e 2 chaves de repositório.
+
+**Validação do contrato, conferida e não aceita por relatório:** markers exatos, frontmatter completo
+com `plan_*`/`spec_*` em `null` (os ponteiros do estado são nulos, e o contrato proíbe inventá-los),
+exatamente 8 key facts (no teto), `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum gatilho de
+staleness citando hash de provenance ou a própria transição promotora. **Os 7 blob SHAs do packet
+foram recalculados aqui com `git hash-object` e batem todos** — `state.md`, `progress.md`,
+`backlog.md`, `DomainDependencyTest.php`, `eslint.config.js`, `package.json`, `vite.config.ts`.
+
+**O packet excedeu de propósito o teto de 5 artefatos externos**, declarando o motivo no próprio
+registro de fontes: a instrução exigia reconsulta individual das 7 páginas, mais a revalidação dos
+alvos de Drive que sustentavam a ausência. Aceito — o excesso está justificado no packet, como a
+SKILL permite.
+
+**Dois fatos que o packet confirmou, e que mudam o ponto de partida do brainstorming:**
+
+1. **As 7 tasks seguem `Status: Backlog` no Notion** — nenhuma foi marcada concluída pelo bloco
+   anterior, e nenhuma mudou de conteúdo desde `2026-08-03T21:49`. O escopo externo é o mesmo.
+2. **A leitura do H.4.5 mudou.** O packet antigo dizia que ele não aparecia em lista nenhuma; agora
+   o backlog cita o intervalo `H.4.4–H.4.9` por ID, que **o alcança** — mas as listas em prosa
+   (2 bloqueantes + 4 pilotos) somam 6 e não o enumeram. A contradição continua, só mudou de forma.
+   O packet registra e **não decide**: a inclusão do H.4.5 volta ao brainstorming pela segunda vez.
+
+**Reconciliado, não redescoberto:** o Drive V2 segue sem documento que delimite este hardening — os
+alvos confirmados tratam ADRs, Certification ou setup. Ausência **confirmada** de novo nesta geração,
+não herdada do packet anterior.
+
+**Não decidido de propósito, e é o que o brainstorming abre:** o corte. São 7 tasks candidatas em
+duas naturezas diferentes — H.3.1 é backend com peso de autorização (posse em rota nested devolvendo
+403/404, `addresses`/`contacts`/`templates`/`files`), enquanto H.4.4–H.4.9 são estruturais e
+frontend-pesadas. O packet não ordena nem prioriza.
 
 ## Último item fechado — 2026-08-04
 
