@@ -114,4 +114,22 @@ describe('useTableFilter', () => {
     )
     expect(comWhere.result.current.filtering).toBe(true)
   })
+
+  it('where que não corta nada não é "filtrando" — nem sobre lista vazia', () => {
+    // Escopo permanente (where sempre passado, não só quando o usuário escolhe)
+    // não pode nascer "filtrando para sempre": mostraria o empty state de filtro
+    // sobre uma lista legitimamente vazia, que é o defeito que este bloco veio
+    // corrigir, reintroduzido pela porta da frente.
+    const naoCorta = renderHook(() => useTableFilter(rows, searchable, () => true))
+    expect(naoCorta.result.current.filtering).toBe(false)
+
+    const listaVazia = renderHook(() => useTableFilter([] as Row[], searchable, () => true))
+    expect(listaVazia.result.current.rows).toEqual([])
+    expect(listaVazia.result.current.filtering).toBe(false)
+
+    // Mas um where que corta de verdade continua sendo filtro ativo.
+    const corta = renderHook(() => useTableFilter(rows, searchable, () => false))
+    expect(corta.result.current.rows).toEqual([])
+    expect(corta.result.current.filtering).toBe(true)
+  })
 })

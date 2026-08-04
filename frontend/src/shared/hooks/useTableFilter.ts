@@ -5,9 +5,11 @@ export interface TableFilter<T> {
   filter: string
   /** Termo normalizado (trim + lowercase); `''` quando não há busca. */
   term: string
-  /** `true` quando há busca ativa OU filtro próprio da tela (`where`). É a
-   * resposta autoritativa para "mostrar o empty state de filtro ou o de lista
-   * vazia?" — a tela não recalcula essa pergunta. */
+  /** `true` quando há busca ativa OU o `where` da tela está de fato cortando
+   * linha. É a resposta autoritativa para "mostrar o empty state de filtro ou o
+   * de lista vazia?" — a tela não recalcula essa pergunta. Repare que é o
+   * EFEITO do `where`, não a presença dele: uma tabela com escopo permanente
+   * (`where` sempre passado) não fica "filtrando" para sempre. */
   filtering: boolean
   /** Linhas depois do `where` e da busca. */
   rows: T[]
@@ -50,6 +52,14 @@ export interface TableFilter<T> {
  * `option.value` é vazio (`dropdown.cjs.js:1441`, `ObjectUtils.isEmpty(null)`
  * é `true`). Com "Todos" selecionado a tela dizia "sem resultados para os
  * filtros aplicados" sobre uma lista que só estava vazia.
+ *
+ * `filtering` mede o **efeito** do `where`, não a presença dele. Medir a
+ * presença (`where !== undefined`) reproduziria o mesmo defeito pela porta da
+ * frente: uma tabela com escopo permanente — `where` passado sempre, não só
+ * quando o usuário escolhe algo — nasceria "filtrando para sempre" e mostraria
+ * o empty state de filtro sobre uma lista legitimamente vazia. Achado do review
+ * de 2026-08-04 (Q-6), latente: os 8 consumidores de hoje passam `where`
+ * condicional.
  */
 export function useTableFilter<T>(
   items: T[],
@@ -85,7 +95,7 @@ export function useTableFilter<T>(
   return {
     filter,
     term,
-    filtering: term !== '' || where !== undefined,
+    filtering: term !== '' || scoped.length !== items.length,
     rows,
     first: first >= rows.length ? 0 : first,
     onFilterChange,

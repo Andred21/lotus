@@ -74,12 +74,32 @@ describe('useCrudPage', () => {
     expect(result.current.dialog?.entity?.name).toBe('chegou')
   })
 
-  it('startEdit não entra em edit sem entidade', () => {
+  it('startEdit não sai de create', () => {
     const { result } = renderHook(() => useCrudPage(fakeResource({ data: [{ id: 1, name: 'x' }] })))
 
     act(() => result.current.openCreate())
     act(() => result.current.startEdit())
 
     expect(result.current.dialog?.mode).toBe('create')
+  })
+
+  it('startEdit não entra em edit sem entidade, e entra quando ela chega', () => {
+    // Deep link cujo GET ainda não voltou: o dialog está em view com id, mas
+    // sem entidade. Guardar por `id != null` deixava entrar em edit com
+    // `entity` nula — quem segurava era cada página, não o hook.
+    const { result, rerender } = renderHook(({ items }) => useCrudPage(fakeResource({ data: items })), {
+      initialProps: { items: [] as Item[] },
+    })
+
+    act(() => result.current.openViewById(7))
+    act(() => result.current.startEdit())
+
+    expect(result.current.dialog?.mode).toBe('view')
+
+    rerender({ items: [{ id: 7, name: 'chegou' }] })
+    act(() => result.current.startEdit())
+
+    expect(result.current.dialog?.mode).toBe('edit')
+    expect(result.current.dialog?.entity?.name).toBe('chegou')
   })
 })

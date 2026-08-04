@@ -49,8 +49,12 @@ export function useCrudPage<T extends { id?: number }>(resource: ListableResourc
      * A entidade continua derivada da lista viva, então ela chega sozinha
      * quando o GET terminar — não há objeto para congelar aqui. */
     openViewById: (id: number) => setDialog({ mode: 'view', id }),
-    /** view -> edit, preservando a entidade aberta. Nunca entra em edit sem entidade. */
-    startEdit: () => setDialog((d) => (d && d.id != null ? { ...d, mode: 'edit' } : d)),
+    /** view -> edit, preservando a entidade aberta. Nunca entra em edit sem
+     * entidade — a guarda é a ENTIDADE, não o id. Guardando por id, um deep
+     * link (`openViewById`) cujo GET ainda não voltou entrava em edit com
+     * `entity` nula; quem segurava era cada página, checando `dialog.entity`
+     * antes de renderizar o diálogo (review de 2026-08-04, Q-7). */
+    startEdit: () => setDialog((d) => (d && entity ? { ...d, mode: 'edit' } : d)),
     close: () => setDialog(null),
   }
 }
