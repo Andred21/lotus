@@ -7,19 +7,22 @@
 
 ## Próximos blocos
 
-1. **Hardening estrutural pré-Sprint 4**
- — Notion: H.4.1–H.4.9 + H.3.1
+1. **Hardening estrutural pré-Sprint 4** — parcialmente concluído em 2026-08-04 pelo bloco
+   `hardening-estrutural-pre-sprint-4` (`progress.md`): entregou H.4.1 (matriz/guardrail de
+   dependências entre domínios, `DomainDependencyTest`) e H.4.2 (guardrails frontend, as 3
+   fronteiras via `no-restricted-imports`) dos bloqueantes, e H.4.3 (infraestrutura mínima de
+   teste — vitest instalado + regressão de `useTableFilter`/`useCrudPage`). H.3.1, H.4.4–H.4.9
+   ficaram de fora por decisão do João no brainstorming do bloco; seguem como o restante deste
+   item.
+ — Notion: H.3.1, H.4.4–H.4.9
 
   Objetivo:
   reduzir acoplamento estrutural e repetição antes da abertura do
   domínio Certification, sem reestruturar o monólito nem introduzir
   abstrações genéricas.
 
-  Bloqueantes antes da Sprint 4:
-  - matriz/guardrail de dependências entre domínios;
-  - guardrails frontend;
+  Bloqueantes antes da Sprint 4 (restantes):
   - ownership de rotas nested;
-  - infraestrutura mínima de teste das abstrações compartilhadas;
   - SearchableTableFrame.
 
   Pilotos / não bloqueantes:

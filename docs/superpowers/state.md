@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: hardening-estrutural-pre-sprint-4
-active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-03-hardening-estrutural-pre-sprint-4-design.md
-active_plan: docs/superpowers/plans/2026-08-03-hardening-estrutural-pre-sprint-4.md
-context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: abstracao-componentes-catalog
-state_basis_commit: d28d269
-updated_at: 2026-08-04T01:10:00-03:00
+last_completed_work_item: hardening-estrutural-pre-sprint-4
+state_basis_commit: 4ae336e
+updated_at: 2026-08-04T02:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-04T01:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Bloco ativo — `hardening-estrutural-pre-sprint-4`
+## Último item fechado — 2026-08-04
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-03** (`/planejar-bloco`
 com o escopo nomeado no argumento). O item entrou no `backlog.md` na mesma sessão, por edição dele;
@@ -213,7 +213,42 @@ Q-7) e foi o Q-1 do bloco anterior — duas sprints seguidas. A proposta de meca
 confere os comandos citados nas rules contra os scripts reais) foi para §Débitos técnicos do
 `backlog.md`; o João aprovou os 7 achados, não o mecanismo.
 
-## Último item fechado — 2026-08-03
+**Gate de fechamento (2026-08-04).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+o bloco entrega guardrail, não feature de tela — a prova é reprovar os dois mecanismos de novo com
+sonda fresca, não só ler a suíte verde (lição 10). Reconferido do zero, fora do que o review já tinha
+provado: sonda de import de NAMESPACE (`use App\Domains\Identity\Actions;`) em `Catalog` reprovou
+`DomainDependencyTest` pela violação de forma certa; sonda de `primereact` direto + import relativo
+cross-feature (`../../../commercial/...`) em `catalog/components/Sonda/` reprovou as duas fronteiras
+do `no-restricted-imports` pelo motivo certo; as duas sondas removidas, árvore limpa nos dois. O caso
+de borda do Q-6 marcado como "não visto na tela" (§190-196) está coberto por teste dedicado
+(`useTableFilter.test.ts`: "where que não corta nada não é 'filtrando' — nem sobre lista vazia",
+linha 118) — lista globalmente vazia com estado selecionado mostra "Nenhuma turma ainda", não o empty
+state de filtro, confirmado pela lógica do hook (`scoped.length !== items.length` é `false` quando os
+dois lados são zero).
+
+Suíte backend **375 passed (1365 assertions)** reconferida; `pnpm test` **14 passed**, `pnpm build` e
+`pnpm lint` verdes reconferidos; Pint (`--test`) sem alteração pendente no único arquivo de `backend/`
+tocado (`DomainDependencyTest.php`); `generated.ts` e DTOs sem diff (nenhum tocado, sem
+`typescript:transform`). Código morto: nenhum — diffstat da branch contra `main` (17 arquivos) sem
+placeholder nem `.gitkeep` órfão; `package.json`/`pnpm-lock.yaml` mudam só pela instalação do vitest.
+Leis §5: sem violação — bloco não toca DDD, auditoria, auth, RBAC ou financeiro, só reforça a lei
+§5.6 com mecanismo. Pendências: nenhum gatilho vencido (P-04 é o mais próximo, 2026-08-15, e já
+passou a **parcialmente resolvida** durante a execução — texto em `pendencias.md`); nenhuma
+pendência nova.
+
+Item 1 do backlog (**"Hardening estrutural pré-Sprint 4"**) não fechou por inteiro — só H.4.1, H.4.2
+e H.4.3 dos 9 itens listados. Editado, não removido: os 3 entregues saem da lista, H.3.1 e H.4.4–H.4.9
+seguem como o restante do item, agora citados pelo ID do Notion em vez de descrição solta.
+
+Arquivado: `plans/archive/2026-08-03-hardening-estrutural-pre-sprint-4.md` ·
+`specs/archive/2026-08-03-hardening-estrutural-pre-sprint-4-design.md` (não compartilhada por outro
+work item). Entrega registrada em `progress.md` (a mais antiga, `Bloco visual · Refinamento de UI por
+módulo` de 2026-07-27, migrou para `progress-archive.md` para manter o teto de dez).
+
+**Aberto, registrado, não resolvido:** o restante do item 1 do backlog (H.3.1, H.4.4–H.4.9); P-04
+para §5.1/§5.2 (reavaliar 2026-08-15); a lição 13 sem mecanismo (§Débitos técnicos do `backlog.md`).
+
+## Penúltimo item fechado — 2026-08-03
 
 `abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
 2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão. Spec aprovada
@@ -350,149 +385,3 @@ mesma sessão).
 
 **Aberto, registrado, não resolvido:** a catraca de 4 legados do `max-lines` (§Débitos técnicos do
 `backlog.md`); o B-7 (`courses.data ?? []` no `QuoteWizard`); e P-25.
-
-## Penúltimo item fechado — 2026-08-03
-
-`zerar-catraca-e-componentes-commercial` — item 4 do `backlog.md`, selecionado explicitamente pelo
-João em 2026-08-03 depois do `/revisar-frontend` de `features/commercial` da mesma sessão. Spec
-aprovada (D1–D9) e plano executado em 12 tasks (Task 0 branch + 9 de conteúdo + 2 checkpoints + Task
-10 mecanismo + Task 11 gate) via `/executar-bloco` + `executing-plans` inline (`executor: claude` —
-sem task delegada ao Codex: frontend sem test runner, DoD é comportamento provado na tela, e o bloco
-toca `eslint.config.js` e `.claude/rules/`).
-
-**Sem context packet** (`context_packet: null`): a fonte foi o código de
-`frontend/src/features/commercial/` (mais 1 arquivo de `catalog` e 2 de `identity`), o
-`eslint.config.js` e o relatório do `/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma.
-
-**O item 4 do backlog mudou de forma nesta sessão, por decisão do João.** O antigo item 4 ("Zerar a
-catraca de query-em-componente") **não estava feito** — `eslint.config.js` ainda listava os 7
-`ignores` — e foi **absorvido**, não fechado: o bloco cobriu os 7 arquivos das 3 features
-(`catalog`, `commercial`, `identity`) mais a estrutura de `commercial`.
-
-**Escopo entregue — duas metades provadas na mesma tela.**
-
-*Metade 1 — catraca zerada nos 7 arquivos.* Cada um saiu de `ignores` no mesmo commit que perdeu a
-query para um hook novo: `useCommercialClients` (`BudgetsTable` + `BudgetDialog`, 2 consumidores —
-único hook do bloco com mais de um), `useQuoteCourseSearch` (`QuoteWizard`), `useQuoteFiles` +
-`useQuotesListCourses` (`QuotesList`, fatiado em 2 por responsabilidade — D4), `useCourseRedatores`
-(`catalog/CourseDialog`, preserva os 3 estados loading/erro/lista — D11 do bloco de cards),
-`useStaffRoleOptions` (`identity/StaffUserDialog`, filtro de `redator` RN-01 viaja com a query),
-`useStudentClients` (`identity/StudentDialog`, preserva o `enabled: mode === 'create'` condicional e
-a distinção erro-de-GET vs. lista-vazia). Nenhum hook expõe `isError` onde o comportamento de hoje é
-`?? []` silencioso (`useQuoteCourseSearch`, `useQuotesListCourses`) — isso é o B-7, fora do corte.
-
-*Metade 2 — estrutura de `commercial` (B-1 a B-6), fechada nas mesmas 4 telas.* `EMPTY_ADDRESS`
-deixou de existir em dois lugares — `useClientForm` devolve `addr` resolvido, `ClientDialog` só
-consome. `ClientGeneralFields` + `ContactCard` tiraram o `ClientDialog` de 199 para 132 linhas.
-`QuoteRow`, `CourseStep`/`DataStep` e `BudgetDocumentsCard` tiraram bloco coeso de dentro de
-`.map`/ternário do `QuotesList`, `QuoteWizard` e `BudgetDetailPage` — markup movido literal, nenhuma
-condicional mudou de forma, nenhum `key` mudou de critério.
-
-**Mecanismo (Task 10):** o bloco `ignores` do `no-restricted-syntax` saiu inteiro do
-`eslint.config.js` — a regra vale sem exceção para as 3 features. Vista reprovando de novo depois da
-remoção (lição 10): violação introduzida de propósito em `BudgetsTable.tsx`, `pnpm lint` reprovou por
-esta regra, revertida via `git checkout`. `.claude/rules/frontend-fsliced.md` atualizada: o texto da
-catraca vira nota de que foi zerada em 2026-08-03, não reintroduzir `ignores`.
-
-**Fora do corte, registrado:** o B-7 (`courses.data ?? []` no `QuoteWizard` — GET falho vira lista
-vazia sem mensagem, `canAdvance` nunca liga) **muda comportamento de propósito**; foi para
-§Débitos técnicos do `backlog.md` por decisão do João em 2026-08-03.
-
-Branch `refactor/zerar-catraca-e-componentes-commercial` a partir do `main` (D1, sem worktree — o
-bloco toca `eslint.config.js`, que vale para o repositório inteiro, e o DoD se prova na tela contra o
-`docker compose` do main tree), 10 commits de conteúdo (`cd486a2`..`a6bc190`).
-
-**Prova visual em 2 checkpoints (D8), sem baseline capturada** (mesma limitação dos blocos
-anteriores — sem ferramenta de browser/screenshot na sessão): **CP-1** (depois da Task 6, as 4 telas
-de `commercial` já com catraca + estrutura no estado final) — Presupuestos (busca por código/cliente,
-filtro de estado, empty states, erro de clientes com Reintentar), diálogo de orçamento (create/edit),
-detalhe do orçamento (cotações, upload por linha, card de documentos), diálogo de cliente (endereço,
-contatos, foto) — **aprovado pelo João em 2026-08-03**. **CP-2** (depois da Task 9, os 3 diálogos de
-fora) — os 3 estados de redatores do diálogo de curso, dropdown de rol sem `redator` no diálogo de
-admin, dropdown de clientes + erro + vazio no diálogo de aluno — **aprovado pelo João em 2026-08-03**.
-Nenhum checkpoint precisou ser refeito: a Task 10 (depois do CP-2) tocou só `eslint.config.js` e
-`.claude/rules/`, nenhum componente.
-
-**Gate automatizado (Task 11):** `pnpm build` + `pnpm lint` verdes; grep de
-`use(Query|Mutation)\b|Api\.use` em `features/*/components/` **sem saída** (placar zerado, era 7);
-`grep -n "ignores" eslint.config.js` também sem saída — mais forte que o "uma linha" previsto no
-plano, porque `globalIgnores` (I maiúsculo) não bate no grep case-sensitive por "ignores" minúsculo,
-divergência de redação da spec/plano, não de comportamento — confirmado com `-in` que só resta o
-`globalIgnores(['dist', 'generated.ts'])` de sempre; `git diff --name-only main...HEAD -- backend/`,
-`.../locales/` e `.../generated.ts` vazios, `git diff --stat main...HEAD -- frontend/src/shared/`
-vazio (nada subiu para `shared/`, D5); nenhum hook ou componente novo órfão (`useCommercialClients`
-com 2 consumidores, os outros 6 hooks + os 6 componentes novos com exatamente 1 cada); suíte backend
-**372 passed (1360 assertions)**, igual à baseline — sem regressão; Pint n/a (zero arquivo de
-`backend/` no diff).
-
-**Review em 2026-08-03 (`/revisar-sprint`, baixo risco** — 100% frontend, zero arquivo de `backend/`,
-`generated.ts`, locales, auth, RBAC, schema ou dinheiro no diff, `executor: claude`; só lente Claude,
-sem Codex). Órfãos: nenhum — 7 hooks e 6 componentes novos, todos com consumidor
-(`useCommercialClients` com 2, o resto com 1), e nenhum campo de retorno sem leitor na tela (D3).
-Leis §5: sem violação.
-
-Gate da Task 11 reconferido do zero, não aceito por relatório: `pnpm build` + `pnpm lint` verdes;
-greps de query-em-componente, `ignores`, `primereact` direto e cross-feature sem saída; diffs de
-`backend/`, locales, `generated.ts` e `shared/` vazios; `ClientDialog` em 132 linhas.
-**Mecanismo reprovado de forma independente (lição 10):** sonda temporária em
-`features/commercial/components/Budget/` com `clientsApi.useList()` + `useQuery` + `useMutationErrors`
-— o lint reprovou as duas primeiras e **não** reprovou a terceira, confirmando que a regra vale sem
-`ignores` e que o falso positivo do `useMutationErrors` segue protegido; sonda apagada.
-
-Conferidos linha a linha contra o `main`: as 6 extrações são movimento literal (nenhuma condicional
-mudou de forma, nenhum `key` mudou de critério; `ClientGeneralFields` devolve Fragment, sem nó DOM
-novo), e as 9 invariantes de comportamento da §4 da spec sobreviveram uma a uma — `enabled: mode ===
-'create'` e `unusable`/`showEmptyHint` do aluno, `loadError`/`retry` duplo da tabela, `sizeError`
-zerado antes da mutation e `isUploading` por linha, os 3 estados de redatores, o filtro `!== 'redator'`
-(RN-01). O `?? []` do B-7 não virou tratamento de erro em lugar nenhum (risco §8 não materializado).
-Descartado antes de virar achado: `clientsApi` no `ClientDialog` é `keys.all` (invalidação, não query);
-as duas chamadas de `clientsApi.useList()` são dedupe do TanStack pela mesma key, decidido na D2.
-
-**2 achados 🟢, ambos aprovados pelo João e corrigidos na mesma sessão** (`5e74a28`):
-
-- **Q-1 🟢** `catalog/api/useCourseRedatores.ts` exportava `useSyncCourseRedatores` e passou a colidir
-  de basename com o hook novo `catalog/hooks/useCourseRedatores.ts` — o import só se distinguia pelo
-  segmento de pasta. Renomeado para `api/useSyncCourseRedatores.ts`; a colocação já estava certa pela
-  rule (`api/` = sub-recurso, `hooks/` = derivação de tela), o nome é que não dizia o conteúdo. Um
-  único importador (`useCourseForm.ts`), sem barrel.
-- **Q-2 🟢** `enabledRedatores` era re-alias puro de `redatores.enabledRedatores` no `CourseDialog`,
-  resíduo da extração da query, convivendo com `redatores.allRedatores` lido direto no mesmo arquivo.
-  Os 2 usos passam a ler do hook.
-
-**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; todos os greps do DoD rerodados
-limpos; `enabledIds` segue com uso legítimo (`selected` do `RedatorCard`, linha 219). **A aprovação
-visual do CP-2 continua válida:** a correção do `CourseDialog` é substituição de identificador por
-seu próprio valor (`enabledRedatores` === `redatores.enabledRedatores`), com JSX renderizado idêntico
-por construção — diferente do bloco do redator, onde o markup mudou de forma e a prova teve de ser
-refeita.
-
-**Gate de fechamento (2026-08-03).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
-a metade visual é comportamento idêntico na tela, provado pelo João nos CP-1 e CP-2, ambos aprovados
-em 2026-08-03; a única mudança depois do CP-2 foi `5e74a28` (Q-1/Q-2 do review), substituição de
-identificador pelo próprio valor mais um rename de arquivo — JSX idêntico por construção, então a
-aprovação visual continua válida, diferente do bloco do redator, onde o markup mudou de forma e a
-prova teve de ser refeita. A metade mecanismo foi reprovada de novo no próprio fechamento (lição 10):
-sonda temporária em `features/commercial/components/Budget/` com `clientsApi.useList()` + `useQuery` +
-`useMutationErrors` — `pnpm lint` devolveu `2 problems (2 errors, 0 warnings)`, um por violação real,
-**zero** no `useMutationErrors`; sonda apagada, árvore limpa. Suíte backend **372 passed (1360
-assertions)** como regressão; `pnpm build` + `pnpm lint` verdes; Pint **n/a** (zero arquivo de
-`backend/` no diff); `generated.ts` e locales sem diff e nenhum DTO tocado, logo sem
-`typescript:transform`; greps do DoD e das leis §5.6 rerodados limpos; sem órfão. Pendências: nenhum
-gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova — a dívida que este
-bloco fechou (catraca de `ignores`) era item de código no `backlog.md`, não pendência documental.
-**P-25 segue aberta:** o `frontend-fsliced.md` foi tocado, mas no parágrafo da catraca, não no da
-fronteira de tipo que fecharia o gatilho dela.
-
-Código morto mencionado, não deletado (é de fora deste bloco): `frontend/src/features/operation/components/.gitkeep`
-está com deleção **não commitada** no working tree do João desde o início da sessão — a pasta já tem
-arquivos reais desde o bloco de `operation`, então o `.gitkeep` é órfão de fato, mas é WIP dele
-(lição 9) e não entrou em nenhum commit deste fechamento.
-
-Arquivado: `plans/archive/2026-08-03-zerar-catraca-e-componentes-commercial.md` ·
-`specs/archive/2026-08-03-zerar-catraca-e-componentes-commercial-design.md` (sem context packet — a
-fonte foi o código de `features/commercial`, o `eslint.config.js` e o relatório do
-`/revisar-frontend` da mesma sessão).
-
-**Aberto, registrado, não resolvido:** o B-7 (`courses.data ?? []` no `QuoteWizard`) em §Débitos
-técnicos do `backlog.md`; P-25; e a régua de ~150 linhas do `frontend-fsliced.md`, agora atingida no
-`ClientDialog` (132).
