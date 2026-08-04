@@ -7,15 +7,58 @@
 
 ## Próximos blocos
 
-1. **Administração · Roles e permissões — redesenho de composição**
+1. **Hardening estrutural pré-Sprint 4**
+ — Notion: H.4.1–H.4.9 + H.3.1
+
+  Objetivo:
+  reduzir acoplamento estrutural e repetição antes da abertura do
+  domínio Certification, sem reestruturar o monólito nem introduzir
+  abstrações genéricas.
+
+  Bloqueantes antes da Sprint 4:
+  - matriz/guardrail de dependências entre domínios;
+  - guardrails frontend;
+  - ownership de rotas nested;
+  - infraestrutura mínima de teste das abstrações compartilhadas;
+  - SearchableTableFrame.
+
+  Pilotos / não bloqueantes:
+  - DTO sem service locator;
+  - helper multipart;
+  - paridade de traduções;
+  - builders de testes backend.
+
+  Fora de escopo:
+  - Repository sobre Eloquent;
+  - CRUD base genérico;
+  - tabela universal;
+  - split massivo de DTOs;
+  - split físico imediato dos locales.
+2. **Arquivados e restauração de soft-delete**
+
+    —  Notion: H.5.1–H.5.4
+
+    Objetivo:
+    tornar o lifecycle de archive/restore explícito e seguro por agregado.
+
+    Ordem:
+    1. semântica;
+    2. Actions;
+    3. endpoints;
+    4. UI.
+
+    Fora de escopo:
+    - forceDelete;
+    - exclusão permanente.
+3. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-2. **Bloco 7 · Sprint 4 · Certificação**
+4. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-3. **Hardening**
+5. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

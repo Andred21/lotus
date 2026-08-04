@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening-estrutural-pre-sprint-4
+active_work_item: hardening-estrutural-pre-sprint-4
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-catalog
-state_basis_commit: 088f20d
-updated_at: 2026-08-03T23:40:00-03:00
+state_basis_commit: bfe9051
+updated_at: 2026-08-03T23:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,25 @@ updated_at: 2026-08-03T23:40:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Bloco ativo — `hardening-estrutural-pre-sprint-4`
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-03** (`/planejar-bloco`
+com o escopo nomeado no argumento). O item entrou no `backlog.md` na mesma sessão, por edição dele;
+o commit desta transição carrega a edição do backlog junto para que o ponteiro do estado não aponte
+para item ausente no `HEAD`.
+
+**Rota `context_required`, decidida pelo João:** o item referencia as tasks Notion
+`H.4.1–H.4.9 + H.3.1`, fonte externa — o Context Packet é gerado pelo Codex (`lotus-context-packet`,
+sandbox read-only) antes de qualquer brainstorming. Diferente dos 4 blocos anteriores, todos sem
+packet por serem 100% frontend com fonte no próprio código.
+
+**Corte ainda não decidido, por decisão do João:** o item lista 5 bloqueantes (matriz/guardrail de
+dependências entre domínios, guardrails frontend, ownership de rotas nested, infra mínima de teste
+das abstrações compartilhadas, `SearchableTableFrame`) e 4 pilotos não bloqueantes (DTO sem service
+locator, helper multipart, paridade de traduções, builders de testes backend). Isso é sprint, não
+bloco. O corte é decisão do **brainstorming**, informada pelo packet — não do backlog nem deste
+arquivo.
 
 ## Último item fechado — 2026-08-03
 
