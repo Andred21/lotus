@@ -1,7 +1,7 @@
 ---
 schema_version: 1
-packet_id: hardening-estrutural-pre-sprint-4-restante
-block_id: hardening-estrutural-pre-sprint-4-restante
+packet_id: hardening-guardrails-e-transportes-pre-sprint-4
+block_id: hardening-guardrails-e-transportes-pre-sprint-4
 status: ready
 generated_at: 2026-08-04T02:05:10-03:00
 base_ref: main
@@ -17,9 +17,15 @@ spec_blob_sha: null
 word_budget: 1200
 ---
 
-# Context Packet — Hardening estrutural pré-Sprint 4 — restante
+# Context Packet — Hardening · guardrails e transportes pré-Sprint 4
 
 > Derived snapshot. Canonical source hierarchy and staleness rules remain authoritative.
+
+> **Renomeado em 2026-08-04**, de `hardening-estrutural-pre-sprint-4-restante`. Troca de **id**,
+> decidida pelo João na revisão da spec: com H.4.4, H.4.5 e H.4.9 seguindo abertos, "restante"
+> prometia o que o bloco não entrega. **Não é gatilho de staleness** — o escopo externo aqui
+> reconciliado (H.3.1 + H.4.4–H.4.9) não mudou; o corte de implementação é decisão da spec, e o
+> packet segue cobrindo o superconjunto.
 
 ## Scope
 

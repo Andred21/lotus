@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: hardening-estrutural-pre-sprint-4-restante
-active_work_item: hardening-estrutural-pre-sprint-4-restante
+active_feature: hardening-guardrails-e-transportes-pre-sprint-4
+active_work_item: hardening-guardrails-e-transportes-pre-sprint-4
 workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
-active_spec: docs/superpowers/specs/2026-08-04-hardening-estrutural-pre-sprint-4-restante-design.md
+active_spec: docs/superpowers/specs/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md
 active_plan: null
-context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4-restante.md
+context_packet: docs/superpowers/context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: 4c82921
-updated_at: 2026-08-04T03:00:00-03:00
+state_basis_commit: 6bd344a
+updated_at: 2026-08-04T03:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,15 @@ updated_at: 2026-08-04T03:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Bloco ativo — `hardening-estrutural-pre-sprint-4-restante`
+## Bloco ativo — `hardening-guardrails-e-transportes-pre-sprint-4`
+
+> **Renomeado em 2026-08-04, na revisão da spec pelo João.** Era
+> `hardening-estrutural-pre-sprint-4-restante`. Com H.4.4, **H.4.5** e H.4.9 seguindo abertos,
+> "restante" prometia o que o bloco não entrega — o mesmo defeito que o bloco anterior teve de
+> declarar no fechamento. O id novo descreve o corte. Renomeados juntos: `active_feature`,
+> `active_work_item`, o arquivo e o `block_id`/`packet_id` do packet, e o arquivo da spec. **A troca
+> de id não é gatilho de staleness do packet** — o escopo externo reconciliado (H.3.1 + H.4.4–H.4.9)
+> não mudou.
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
 sem argumento, com o estado em `idle`; a seleção veio da pergunta explícita, não do comando). É o
@@ -113,50 +121,94 @@ SKILL permite.
 alvos confirmados tratam ADRs, Certification ou setup. Ausência **confirmada** de novo nesta geração,
 não herdada do packet anterior.
 
-**Corte decidido no brainstorming de 2026-08-04, pelo João:** entram **H.3.1, H.4.5, H.4.6, H.4.7 e
-H.4.8**. Ficam fora **H.4.4** (`SearchableTableFrame`, 9 tabelas / 932 linhas) e **H.4.9** (builders
-de teste, 76 arquivos) — as duas únicas de porte. Critério: *fechar tudo que é barato e não precisa
-de prova visual*, isolando os dois refactors grandes num bloco próprio.
+**Corte final, depois da revisão da spec pelo João em 2026-08-04:** entram **H.3.1, H.4.6, H.4.7 e
+H.4.8**. Ficam fora **H.4.4** (`SearchableTableFrame`, 9 tabelas / 932 linhas), **H.4.9** (builders de
+teste, 76 arquivos) e **H.4.5** (retirado na revisão). Critério do brainstorming: *fechar o que é
+barato e não precisa de prova visual*, isolando os refactors grandes em blocos próprios.
 
-**A medição do código mudou três das cinco tasks antes de o corte ser feito.** O Notion descreve
-intenção; o repositório disse outra coisa:
+**A medição do código mudou três tasks antes de o corte ser feito.** O Notion descreve intenção; o
+repositório disse outra coisa:
 
-1. **H.3.1 não tinha o buraco que a task supõe.** Das 6 rotas com pai+filho na URL, **5 já estão
-   guardadas** (2 por `->scopeBindings()`, 3 por `abort_unless(...404)` manual) e a 6ª
-   (`turmas/{turma}/redatores/{redator}`) é **N:N** — redator não pertence à turma, não há posse a
-   checar. Os 3 recursos que a task nomeia (`addresses`, `contacts`, `templates`) têm rota **plana**
-   (`PUT /addresses/{address}`): o pai nem entra na URL, e a permissão é global. Sem furo de
-   privilégio. A task vira guardrail + unificação de mecanismo, com `git diff` de comportamento
-   observável vazio.
+1. **H.3.1 não tinha o buraco que a task supõe.** São **6 URI patterns / 7 rotas** com ≥2 bindings de
+   model; **5 já estão guardadas** (2 por `->scopeBindings()`, 3 por `abort_unless(...404)` manual) e
+   a restante (`turmas/{turma}/redatores/{redator}`, que responde POST **e** DELETE) é **N:N** —
+   redator não pertence à turma, não há posse a checar. Os 3 recursos que a task nomeia
+   (`addresses`, `contacts`, `templates`) têm rota **plana** (`PUT /addresses/{address}`): o pai nem
+   entra na URL, e a permissão é global. Sem furo de privilégio. A task vira guardrail + unificação
+   de mecanismo, com comportamento observável inalterado.
 2. **H.4.8 já estava em paridade perfeita** — 443 chaves em `en`/`es-CL`/`pt-BR`, zero diff em
    qualquer direção. Guardrail puro, zero correção. Mesma forma do H.4.1 do bloco anterior.
-3. **H.4.5 se resolveu ao contrário do que a task sugere.** Os 7 `useXPage` são aliases puros
-   idênticos de 6 linhas, mas **eliminá-los regrediria a fronteira de query-em-componente** zerada em
-   2026-08-03: `useCrudPage` chama `resource.useList()` por dentro, então matar o alias moveria a
-   query para 4 componentes de página — e **passaria no lint**, porque o seletor casa
-   `budgetsApi.useList()` e não `useCrudPage(budgetsApi)`. A task pede "eliminar ou justificar"; a
-   justificativa existe, só não é a que se imaginava (não é a lição 3, que trata de fronteira de
-   import proibido). Vira mecanismo: o escape é fechado no `eslint.config.js`.
+3. **H.4.5 se resolveu ao contrário do que a task sugere** — e por isso saiu do bloco sem perder a
+   conclusão (ver o parágrafo da revisão, abaixo).
 
 **Duas famílias no H.4.6, não 8 ocorrências soltas:** DTO calculando valor de domínio
 (`BudgetData`+`BudgetSummaryService`, `TurmaData`+`TurmaHabilitacaoService`) contra assinatura de URL
 na serialização (`photo_url` ×4, `download_url` ×2). O piloto é o `BudgetData` — dinheiro, 4 call
-sites, todos do próprio controller, sem cascata. A família 2 fica, com razão registrada.
+sites, todos do próprio controller, sem cascata. `TurmaData` tem destino explícito (D8) e a família 2
+fica, com razão registrada (D10).
 
 **Mecânicas conferidas antes de entrarem na spec, não supostas** (lição 13): `Budget::files()`,
 `Quote::files()`, `Redator::documents()` e `Turma::files()` existem e são `MorphMany`; e
-`Route::enforcesScopedBindings()` existe no Laravel 13.8 instalado — é ele que deixa o guardrail
-**ler** a rota em vez de inspecionar texto de controller, evitando o defeito de regex-que-atravessa-
-comentário do bloco anterior.
+`signatureParameters()`, `enforcesScopedBindings()` e `preventsScopedBindings()` existem no Laravel
+13.8 instalado. São eles que deixam o guardrail **ler** a rota — pela assinatura tipada, não por
+regex de URI nem por texto de controller, evitando o defeito de regex-que-atravessa-comentário do
+bloco anterior.
 
-**Risco único do bloco, isolado na spec §D12:** o H.4.7 toca 5 caminhos de upload de documento com
-peso legal, e a falha da lição 6 é **silenciosa** (`Content-Type` fixado → `File` vira `{}` → upload
-vazio com 201/204 de sucesso). Build e lint não veem. Exige upload real contra a API em 2 dos 5
-pontos.
+**Risco único do bloco, isolado na spec §D12:** o H.4.7 toca caminhos de upload de documento com peso
+legal, e a falha da lição 6 é **silenciosa** (`Content-Type` fixado → `File` vira `{}` → upload vazio
+com 201/204 de sucesso). Build e lint não veem. Exige teste direto do helper (D13b) **e** upload real
+contra a API em 2 dos 6 pontos adotados.
 
-**Spec aprovada pelo João em 2026-08-04**, 12 decisões (D1–D12), 8 invariantes de comportamento e o
-gate com item 0 próprio: os 3 guardrails vistos reprovando com sonda fresca, pelo motivo certo.
-Sem checkpoint visual — nenhuma tela muda de forma.
+**Revisão da spec pelo João em 2026-08-04 — 8 correções, e 3 delas eram erro meu de medição ou de
+mecânica.** A spec foi reescrita inteira; o corte caiu de 5 para 4 tasks.
+
+**As 3 factuais, conferidas antes de aplicadas:**
+
+1. **H.3.1 são 6 URI patterns / 7 rotas, não 6 rotas.** `turmas/{turma}/redatores/{redator}` responde
+   **POST e DELETE** — dois registros no roteador sobre o mesmo padrão. Confirmado por
+   `artisan route:list --json`, não pelo arquivo de rotas.
+2. **H.4.7 são 7 `new FormData()`, não 6** — 6 de forma simples + 1 complexo. Eu havia contado
+   `useCommercialFiles` (que tem 2) como um ponto na prosa e depois escrito "5 simples".
+3. **O guardrail identifica model por `signatureParameters()`, não por regex de URI.** Regex erraria
+   nos dois sentidos: `{file}` não diz que é model, e `users/{user}/photo` tem um binding só apesar
+   de parecer nested.
+
+**A correção de desenho mais importante — allowlist morre, silêncio reprova.** A isenção da rota N:N
+deixa de ser lista dentro do teste e vira **`->withoutScopedBindings()` na própria rota**, com o
+motivo em comentário ao lado. `preventsScopedBindings()` existe no Laravel 13.8 e distingue
+*declarado false* de *não declarado* — é isso que permite reprovar a rota que não declara **nenhuma**
+das duas. Allowlist envelheceria longe da rota; a declaração é lida por quem a edita. O gate ganhou
+prova nos dois sentidos: rota sem declaração reprova, a mesma rota com `withoutScopedBindings` passa.
+
+**H.4.5 saiu do bloco.** O mérito já estava resolvido no brainstorming e **não se perde**: eliminar os
+7 aliases regrediria a fronteira de query-em-componente e **passaria no lint**, porque o seletor não
+casa `useCrudPage(xApi)`. A resposta correta quando H.4.5 for executado é "justificar e fechar o
+escape do seletor", não "eliminar". **Obrigação de fechamento:** essa nota vai para o `backlog.md`
+junto do item — não foi escrita agora porque planejamento não edita backlog.
+
+**Três exigências novas que o gate não tinha:**
+
+- **D9 — decisão de saída do piloto (H.4.6), escrita antes de executá-lo.** Três sinais possíveis
+  (técnica paga / só empurra o locator para o chamador / inconclusivo), cada um com consequência
+  definida, inclusive **reverter a task**. O fechamento nomeia qual ocorreu — piloto sem critério de
+  saída é refactor com nome bonito. **D8** dá destino explícito ao `TurmaData`: fora deste bloco, e
+  decidido por D9, não por sessão futura sem critério.
+- **D13b — `postMultipart` ganha teste direto**, não só a prova de upload manual: corpo é
+  `FormData`, nenhum `Content-Type` fixado, chave `undefined` ausente. Sem ele a única guarda do
+  helper não rodaria em CI.
+- **D14 — H.4.3 é dependência real**, e o gate **confirma por grep** que `CLAUDE.md` §6 e a
+  `frontend-fsliced.md` ainda citam `pnpm test`. Se a citação sumiu, os testes deste bloco nascem
+  órfãos de gate.
+
+**Dois writes externos viram obrigação de fechamento, com texto aprovado pelo João antes de enviar**
+(por ID, base canônica): **D4b** — a task H.3.1 descreve `addresses`/`contacts`/`templates` como se
+tivessem risco de posse cruzada, e **três são rotas shallow** que não o representam; é a lição 13 numa
+fonte externa. **D11b** — registrar que as mutations de `delete` não entram em helper (não há
+transporte a centralizar) e que o recorte real foi 6 de 7 pontos.
+
+**Spec reescrita e aprovada pelo João em 2026-08-04**, 4 tasks, 17 decisões (D1–D14 com D4b/D11b/D13b),
+7 invariantes de comportamento e gate com item 0 próprio. Sem checkpoint visual — nenhuma tela muda
+de forma.
 
 ## Último item fechado — 2026-08-04
 
