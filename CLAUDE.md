@@ -128,12 +128,13 @@ Pint é a exceção: roda **no host, de dentro de `backend/`** (não precisa do 
 cd backend && ./vendor/bin/pint <arquivos>   # NUNCA sem argumento — reformata o repo inteiro
 ```
 
-Frontend (de `frontend/`, nativo no WSL — Node 22/pnpm, sem test runner ainda):
+Frontend (de `frontend/`, nativo no WSL — Node 22/pnpm):
 
 ```bash
 pnpm dev      # Vite dev server
 pnpm build    # tsc -b && vite build (type-check antes de bundlar)
 pnpm lint     # eslint .
+pnpm test     # vitest run (jsdom) — hooks de shared/; pnpm test:watch para iterar
 ```
 
 Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`

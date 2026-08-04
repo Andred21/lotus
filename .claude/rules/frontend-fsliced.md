@@ -141,6 +141,14 @@ exceção. Na dúvida, siga o vizinho da mesma
 
 ## Comandos
 
-De `frontend/` (nativo no WSL — Node 22/pnpm, sem test runner ainda):
-`pnpm dev` · `pnpm build` (tsc -b && vite build) · `pnpm lint`.
-Gate de verificação = `pnpm build` + `pnpm lint`.
+De `frontend/` (nativo no WSL — Node 22/pnpm):
+`pnpm dev` · `pnpm build` (tsc -b && vite build) · `pnpm lint` · `pnpm test` (vitest run, jsdom;
+`pnpm test:watch` para iterar).
+Gate de verificação = `pnpm build` + `pnpm lint` + `pnpm test`.
+
+**O runner existe desde 2026-08-03** (bloco `hardening-estrutural-pre-sprint-4`) e cobre os hooks de
+`shared/hooks/` — os de maior fan-out do projeto. Sem `globals`: cada teste importa
+`describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo `tsc -b`.
+Teste de componente com PrimeReact no jsdom segue **fora** do corte. Este parágrafo dizia "sem test
+runner ainda" por um bloco inteiro depois de o runner existir, e o gate omitia `pnpm test` — quem
+lesse fecharia a sprint sem rodar os testes recém-escritos (review de 2026-08-04, Q-3).

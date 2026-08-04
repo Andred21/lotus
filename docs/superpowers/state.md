@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4
 active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-03-hardening-estrutural-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-03-hardening-estrutural-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
@@ -148,6 +148,70 @@ sem alteração pendente; nenhum DTO tocado, logo sem `typescript:transform`.
 **Checkpoint visual (Task 7): aprovado pelo João em 2026-08-04**, Operação e Presupuestos, os 5
 pontos do plano (vazio sem filtro, cheio sem filtro, filtro sem resultado + Limpar filtros, busca
 sem resultado + Limpar busca, alternância Todos↔estado real).
+
+**Review em 2026-08-04 (`/revisar-sprint`, ALTO RISCO** — `executor: misto`, Tasks 1/2/5 no Codex, e
+o bloco toca `backend/`; lente Claude **+** revisão independente do Codex, `mcp__codex__codex`
+read-only, que dessa vez rodou sem o problema de socket porque review não precisa de docker). O
+Codex confirmou 4 achados meus e trouxe 2 novos, ambos verificados por sonda própria antes de
+aceitos; 2 achados dele foram descartados (`import()` dinâmico — zero ocorrências no repo; e
+`features/feedback` — mesmo achado do Q-5, fundido). Órfãos: nenhum. Leis §5: sem violação.
+Gate reconferido do zero, não aceito por relatório.
+
+**Os 3 guardrails tinham 4 buracos e 1 falso positivo — todos achados por sonda, não por leitura.**
+Q-1: `use App\Domains\Identity\Actions;` (import de NAMESPACE) escapava das Regras A e B em silêncio,
+dando acesso à camada interna inteira — a regex exigia 3 segmentos e essa forma tem 2; não estava na
+tabela de 5 formas da spec §D5b. Q-2: o comentário do `eslint.config.js` afirmava que
+`**/features/<outra>/**` cobria o caminho relativo, e não cobria — `no-restricted-imports` casa a
+STRING escrita, e `../../../commercial/…` não tem `features/` nenhum (de `shared/` funcionava, porque
+a subida atravessa `features/` à força; a cobertura era assimétrica). Q-4: `[^;]*` atravessava
+comentário, então um docblock que só CITAVA uma classe reprovava a suíte com a mensagem errada
+("group use"), sem import nenhum. Q-5: `arquivosDeDominio()` percorria as chaves de `ALLOWED` e
+`FEATURES` era literal — domínio/feature nova nascia sem guardrail, em silêncio.
+
+**Correções, todas reprovadas de novo com sonda depois do fix (lição 10):** import de namespace vira
+**violação de forma** própria, avaliada antes das Regras A/B (sem o nome da classe não há aresta a
+conferir) — mesmo tratamento do group use, banir em vez de fingir cobertura; a varredura passa a ser
+sobre o CÓDIGO, com comentários removidos por `token_get_all()`; o regex do group use aperta para
+`[A-Za-z0-9_\\]*\{`, que não cruza comentário; teste novo assere que os diretórios de `app/Domains/`
+são exatamente as chaves de `ALLOWED`; `FEATURES` passa a sair do disco (`fs.readdirSync`); e a
+fronteira 2 ganha os padrões de subida relativa (4 níveis, que cobrem toda a profundidade real de
+`src/features/`), com o comentário reescrito para dizer o que a regra **não** pega (subida acima de 4
+níveis e `import()` dinâmico, zero ocorrências das duas). As 3 provas originais do plano (Regra A via
+`use`, Regra A via FQN inline, Regra B) foram reconferidas e seguem reprovando cada uma pela regra
+certa; import relativo legítimo dentro da própria feature **não** dispara.
+
+**Q-3 — os docs negavam o runner que o próprio bloco instalou.** `CLAUDE.md` §6 e o §Comandos da
+`frontend-fsliced.md` seguiam em "sem test runner ainda", com o gate definido como `pnpm build` +
+`pnpm lint`. A rule é a que carrega sozinha ao tocar frontend: a próxima sessão fecharia sprint sem
+rodar os 14 testes. Os dois passam a citar `pnpm test`, e o gate da rule vira build + lint + test.
+
+**Q-6 — `filtering` media a presença do `where`, não o efeito dele.** `where !== undefined` faria uma
+tabela de escopo permanente (`where` sempre passado) nascer "filtrando para sempre" e mostrar o empty
+state de filtro sobre lista legitimamente vazia — o defeito que o bloco veio corrigir, de volta pela
+porta da frente. Passa a ser `term !== '' || scoped.length !== items.length`. **Atenção para o
+fechamento:** isto muda **um** caso do que o João aprovou no checkpoint — lista globalmente vazia
+**com** um estado selecionado no dropdown agora mostra "Nenhuma turma ainda" em vez de "Sem
+resultados para os filtros aplicados". Os 5 pontos do roteiro seguem valendo (o ponto 3 tem turmas na
+lista, só nenhuma do estado escolhido, e continua exibindo o empty state de filtro), mas este caso de
+borda **não foi visto na tela** e precisa de olhada no gate de fechamento.
+
+**Q-7 — o JSDoc de `startEdit` prometia guarda por entidade e guardava por id.** Depois de
+`openViewById` com o GET pendente, entrava em `edit` com `entity` nula; quem segurava era cada página
+(`PeoplePage.tsx:79` só renderiza o diálogo com `entity` truthy), não o hook. A guarda passa a ser a
+entidade, e o teste que se chamava "startEdit não entra em edit sem entidade" — e só exercitava
+`openCreate()`, provando outra coisa — foi partido em dois, um por invariante.
+
+**Revalidação pós-correção, tudo do zero:** suíte backend **375 passed (1365 assertions)** (374 + o
+teste novo de disco vs. matriz); `pnpm test` **14 passed** (12 + o de `filtering` sem corte + o de
+`startEdit` com deep link), os dois testes novos **vistos vermelhos** contra o comportamento antigo;
+`pnpm build` e `pnpm lint` verdes; Pint sem alteração pendente; diffs de `generated.ts`, locales,
+`backend/database/` e `backend/app/` seguem vazios; `filtering` com definição e exatamente 2
+consumidores; todas as sondas apagadas e árvore limpa.
+
+**Padrão reincidente registrado, não construído:** lição 13 apareceu 3 vezes neste review (Q-2, Q-3,
+Q-7) e foi o Q-1 do bloco anterior — duas sprints seguidas. A proposta de mecanismo (teste que
+confere os comandos citados nas rules contra os scripts reais) foi para §Débitos técnicos do
+`backlog.md`; o João aprovou os 7 achados, não o mecanismo.
 
 ## Último item fechado — 2026-08-03
 

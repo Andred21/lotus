@@ -83,6 +83,19 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Lição 13 é reincidente e ainda não tem mecanismo — proposta aguardando decisão do João.** O
+  padrão "texto afirmando o que o repositório não faz" apareceu **3 vezes** no review de
+  `hardening-estrutural-pre-sprint-4` (Q-2: o comentário do `eslint.config.js` afirmando cobrir
+  caminho relativo; Q-3: `CLAUDE.md` §6 e `frontend-fsliced.md` §Comandos negando o test runner
+  recém-instalado; Q-7: o JSDoc de `startEdit` prometendo guarda por entidade) e foi o Q-1 do bloco
+  anterior (`abstracao-componentes-catalog`: a régua de ~150 linhas que não existia em rule nenhuma).
+  Duas sprints consecutivas, mesma classe — pela cláusula de reincidência do `/revisar-sprint`, quer
+  mecanismo, não correção uma a uma. **Proposta:** um teste que asserte que todo comando citado nos
+  `§Comandos` das rules e no `CLAUDE.md` §6 existe como script em `package.json`/`composer.json`, e
+  vice-versa. Fecharia o Q-3 em definitivo e é a fatia verificável do problema; o resto da lição 13
+  (afirmação em prosa) não é automatizável e segue dependendo do review. Proposta feita em
+  2026-08-04, **não construída** — o João aprovou os 7 achados, não o mecanismo.
+
 - **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
   `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
   `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
