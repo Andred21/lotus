@@ -1,0 +1,181 @@
+<?php
+
+namespace Tests\Feature\Shared;
+
+use Tests\TestCase;
+
+/**
+ * A direção de dependência entre domínios era instrução em doc, não mecanismo —
+ * e o doc se contradizia sobre ela (`estrutura-monolito.md`, regra de ouro vs.
+ * regra acionável do backend). Este teste é a fonte única: o que não está na
+ * matriz não passa.
+ *
+ * `Certification` entra com ZERO arestas de propósito. Ele será escrito na
+ * Sprint 4, depois deste guardrail, e é o domínio que mais se beneficia de
+ * nascer sob a regra: cada import dele exige uma decisão explícita.
+ *
+ * A varredura é sobre o TEXTO do arquivo, não sobre as linhas `use`. Um teste
+ * que só lesse `use` seria contornável por FQN inline
+ * (`\App\Domains\X\Models\Y::find(1)`), e guardrail com escape conhecido é pior
+ * que nenhum — passa a impressão de cobertura que não existe.
+ */
+class DomainDependencyTest extends TestCase
+{
+    /** Camadas que um domínio expõe para os outros. As demais são internas. */
+    private const PUBLIC_LAYERS = ['Models', 'Enums', 'Services'];
+
+    /**
+     * Arestas permitidas, por classe alvo (spec D4). Lista que só encolhe por
+     * refactor consciente: ampliar é 1 linha + justificativa no commit.
+     *
+     * As 21 entradas cobrem os 42 imports cross-domain medidos em 2026-08-03 e
+     * classificados na spec §D2 — fluxo do processo (cotação -> turma ->
+     * matrícula), Identity como dono de pessoa, e relação Eloquent inversa que
+     * o ADR-02 permite.
+     */
+    private const ALLOWED = [
+        'Catalog' => [
+            'Identity\Models\Redator',
+        ],
+        'Certification' => [],
+        'Commercial' => [
+            'Catalog\Models\Course',
+            'Identity\Models\User',
+            'Identity\Services\UserPhotoService',
+            'Identity\Services\UserProvisioner',
+            'Operation\Models\Turma',
+        ],
+        'Identity' => [
+            'Catalog\Models\Course',
+            'Commercial\Models\Client',
+            'Operation\Enums\EnrollmentApprovalStatus',
+            'Operation\Models\Enrollment',
+        ],
+        'Operation' => [
+            'Catalog\Models\Course',
+            'Commercial\Enums\QuoteStatus',
+            'Commercial\Models\Client',
+            'Commercial\Models\Quote',
+            'Identity\Enums\RedatorDocumentType',
+            'Identity\Enums\StudentResolutionOutcome',
+            'Identity\Models\Redator',
+            'Identity\Models\Student',
+            'Identity\Services\StudentLookup',
+            'Identity\Services\StudentResolution',
+            'Identity\Services\StudentResolver',
+        ],
+    ];
+
+    public function test_dependencia_entre_dominios_respeita_a_matriz(): void
+    {
+        $violacoesDeSuperficie = [];
+        $violacoesDeAresta = [];
+
+        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
+            foreach ($arquivos as $arquivo) {
+                foreach ($this->referenciasCrossDomain($arquivo, $origem) as $ref) {
+                    [$alvo, $camada, $classe] = $ref;
+                    $fqcnRelativo = "{$alvo}\\{$camada}\\{$classe}";
+                    $local = str_replace(base_path().'/', '', $arquivo);
+
+                    if (! in_array($camada, self::PUBLIC_LAYERS, true)) {
+                        $violacoesDeSuperficie[] = "{$local}: {$origem} -> {$fqcnRelativo} (camada {$camada} é interna)";
+
+                        continue;
+                    }
+
+                    if (! in_array($fqcnRelativo, self::ALLOWED[$origem] ?? [], true)) {
+                        $violacoesDeAresta[] = "{$local}: {$origem} -> {$fqcnRelativo} (aresta não declarada)";
+                    }
+                }
+            }
+        }
+
+        $this->assertSame([], $violacoesDeSuperficie, implode("\n", array_merge(
+            ['Regra A — um domínio só enxerga '.implode('/', self::PUBLIC_LAYERS).' de outro:'],
+            $violacoesDeSuperficie,
+        )));
+
+        $this->assertSame([], $violacoesDeAresta, implode("\n", array_merge(
+            ['Regra B — aresta fora da matriz de DomainDependencyTest::ALLOWED:'],
+            $violacoesDeAresta,
+        )));
+    }
+
+    public function test_group_use_de_dominio_nao_e_suportado(): void
+    {
+        $encontrados = [];
+
+        foreach ($this->arquivosDeDominio() as $arquivos) {
+            foreach ($arquivos as $arquivo) {
+                if (preg_match('#App\\\\Domains\\\\[A-Za-z0-9_]+\\\\[^;]*\{#', (string) file_get_contents($arquivo))) {
+                    $encontrados[] = str_replace(base_path().'/', '', $arquivo);
+                }
+            }
+        }
+
+        // Group use (`use App\Domains\X\{Models\A, Enums\B};`) escaparia da
+        // varredura por classe. Zero ocorrências em 2026-08-03; proibir é mais
+        // honesto que fingir que a regex cobre.
+        $this->assertSame([], $encontrados, "Declare os imports um a um — group use de App\\Domains não é coberto pela matriz:\n".implode("\n", $encontrados));
+    }
+
+    /** @return array<string, list<string>> domínio => arquivos PHP */
+    private function arquivosDeDominio(): array
+    {
+        $raiz = base_path('app/Domains');
+        $porDominio = [];
+
+        foreach (array_keys(self::ALLOWED) as $dominio) {
+            $porDominio[$dominio] = [];
+            $pasta = "{$raiz}/{$dominio}";
+
+            if (! is_dir($pasta)) {
+                continue;
+            }
+
+            $iterador = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($pasta));
+
+            foreach ($iterador as $arquivo) {
+                if ($arquivo->isFile() && $arquivo->getExtension() === 'php') {
+                    $porDominio[$dominio][] = $arquivo->getPathname();
+                }
+            }
+        }
+
+        return $porDominio;
+    }
+
+    /**
+     * Toda referência a outro domínio no texto do arquivo: `use`, `use ... as`,
+     * FQN inline (`\App\Domains\...`) e string de classe (`'App\\Domains\\...'`).
+     *
+     * @return list<array{0: string, 1: string, 2: string}> [alvo, camada, classe]
+     */
+    private function referenciasCrossDomain(string $arquivo, string $origem): array
+    {
+        // Normaliza a barra dupla das strings PHP para a barra simples do código.
+        $conteudo = str_replace('\\\\', '\\', (string) file_get_contents($arquivo));
+
+        preg_match_all(
+            '#App\\\\Domains\\\\([A-Za-z0-9_]+)\\\\([A-Za-z0-9_]+)\\\\([A-Za-z0-9_]+)#',
+            $conteudo,
+            $matches,
+            PREG_SET_ORDER,
+        );
+
+        $refs = [];
+
+        foreach ($matches as $match) {
+            [, $alvo, $camada, $classe] = $match;
+
+            if ($alvo === $origem) {
+                continue;
+            }
+
+            $refs[] = [$alvo, $camada, $classe];
+        }
+
+        return $refs;
+    }
+}

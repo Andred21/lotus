@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4
 active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-08-03-hardening-estrutural-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-03-hardening-estrutural-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
