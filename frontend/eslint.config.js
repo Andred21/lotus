@@ -4,10 +4,34 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import fs from 'node:fs'
+import path from 'node:path'
 
-// As features do frontend. `certification` entra na lista mesmo sendo scaffold:
-// ele será escrito na Sprint 4 e é quem mais ganha em nascer sob a regra.
-const FEATURES = ['catalog', 'certification', 'commercial', 'identity', 'operation']
+// As features saem do DISCO, não de uma lista literal. Uma lista escrita à mão
+// deixa de fora a feature que nascer depois dela — e a que ficou de fora não
+// ganha guardrail nenhum, em silêncio. Era o caso do literal que ficou aqui até
+// 2026-08-04 (review, Q-5); o mesmo achado valia para a matriz do
+// `DomainDependencyTest`, que também enumerava os domínios à mão.
+// `certification` entra por já existir como scaffold — e é quem mais ganha em
+// nascer sob a regra, porque será escrito na Sprint 4.
+const FEATURES = fs
+  .readdirSync(path.resolve(import.meta.dirname, 'src/features'), { withFileTypes: true })
+  .filter((entrada) => entrada.isDirectory())
+  .map((entrada) => entrada.name)
+
+// Uma feature alcança outra por alias (`@features/x`) ou subindo de caminho
+// relativo. A subida não contém o segmento `features/`, então o padrão de alias
+// e o `**/features/x/**` passam ao largo dela: `no-restricted-imports` casa a
+// STRING escrita, não o caminho resolvido. Os 4 níveis cobrem toda a
+// profundidade real de `src/features/<f>/…` (`components/<Entidade>/X.tsx` é a
+// mais funda, com 3). Não há falso positivo possível: nenhuma feature tem
+// sub-pasta com nome de outra feature.
+const subidaRelativa = (outra) =>
+  ['../', '../../', '../../../', '../../../../'].flatMap((prefixo) => [
+    `${prefixo}${outra}`,
+    `${prefixo}${outra}/*`,
+    `${prefixo}${outra}/**`,
+  ])
 
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
@@ -101,9 +125,16 @@ export default defineConfig([
   // dois blocos separados) antes de consolidar num único bloco por feature.
   //
   // Uma feature não enxerga outra — nem para tipo. Um bloco por feature,
-  // proibindo as outras 4. O padrão `**/features/<outra>/**` cobre o caminho
-  // relativo, que hoje não existe (nenhum import em features/ sobe 2+ níveis)
-  // mas passaria despercebido pelo padrão de alias sozinho.
+  // proibindo as demais em três formas: alias (`@features/<outra>`), caminho
+  // que atravessa `features/` (o de quem está fora de `src/features/`) e subida
+  // relativa (`../../../<outra>/…`, o de quem está dentro).
+  //
+  // O que esta regra NÃO pega, dito aqui para ninguém supor cobertura que não
+  // existe: subida relativa acima de 4 níveis e `import()` dinâmico, que o
+  // `no-restricted-imports` não visita. Zero ocorrências das duas formas hoje.
+  // Até 2026-08-04 o comentário deste bloco afirmava que `**/features/<outra>/**`
+  // cobria o caminho relativo; não cobria — a string escrita não tem `features/`
+  // nenhum (review, Q-2).
   ...FEATURES.map((feature) => ({
     files: [`src/features/${feature}/**/*.{ts,tsx}`],
     rules: {
@@ -121,6 +152,7 @@ export default defineConfig([
                 `@features/${outra}`,
                 `@features/${outra}/*`,
                 `**/features/${outra}/**`,
+                ...subidaRelativa(outra),
               ]),
               message:
                 'Feature não importa de outra feature: a composição acontece em app/router, ou o dado vem da API (CLAUDE.md §5.6, ADR-05).',

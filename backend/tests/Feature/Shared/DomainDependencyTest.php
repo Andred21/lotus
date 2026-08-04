@@ -14,10 +14,21 @@ use Tests\TestCase;
  * Sprint 4, depois deste guardrail, e é o domínio que mais se beneficia de
  * nascer sob a regra: cada import dele exige uma decisão explícita.
  *
- * A varredura é sobre o TEXTO do arquivo, não sobre as linhas `use`. Um teste
+ * A varredura é sobre o CÓDIGO do arquivo, não sobre as linhas `use`. Um teste
  * que só lesse `use` seria contornável por FQN inline
  * (`\App\Domains\X\Models\Y::find(1)`), e guardrail com escape conhecido é pior
  * que nenhum — passa a impressão de cobertura que não existe.
+ *
+ * "Código", não "texto": os comentários são removidos por `token_get_all()`
+ * antes da varredura. Citar uma classe num docblock não é depender dela, e
+ * contar a menção reprovava a suíte por um vínculo que não existe (review de
+ * 2026-08-04, Q-4).
+ *
+ * Referenciar o NAMESPACE em vez da classe (`use App\Domains\X\Enums;` +
+ * `Enums\Y::CASE`) é violação de forma, não aresta: o import não diz qual
+ * classe será usada, então a matriz não tem o que conferir. Escapava das duas
+ * regras em silêncio até o review de 2026-08-04 (Q-1) — mesmo tratamento do
+ * group use, que é banido em vez de fingidamente coberto.
  */
 class DomainDependencyTest extends TestCase
 {
@@ -68,6 +79,7 @@ class DomainDependencyTest extends TestCase
 
     public function test_dependencia_entre_dominios_respeita_a_matriz(): void
     {
+        $violacoesDeForma = [];
         $violacoesDeSuperficie = [];
         $violacoesDeAresta = [];
 
@@ -75,8 +87,16 @@ class DomainDependencyTest extends TestCase
             foreach ($arquivos as $arquivo) {
                 foreach ($this->referenciasCrossDomain($arquivo, $origem) as $ref) {
                     [$alvo, $camada, $classe] = $ref;
-                    $fqcnRelativo = "{$alvo}\\{$camada}\\{$classe}";
                     $local = str_replace(base_path().'/', '', $arquivo);
+
+                    if ($camada === '' || $classe === '') {
+                        $parcial = rtrim("{$alvo}\\{$camada}", '\\');
+                        $violacoesDeForma[] = "{$local}: {$origem} -> {$parcial} (referência ao namespace; importe a classe)";
+
+                        continue;
+                    }
+
+                    $fqcnRelativo = "{$alvo}\\{$camada}\\{$classe}";
 
                     if (! in_array($camada, self::PUBLIC_LAYERS, true)) {
                         $violacoesDeSuperficie[] = "{$local}: {$origem} -> {$fqcnRelativo} (camada {$camada} é interna)";
@@ -91,6 +111,13 @@ class DomainDependencyTest extends TestCase
             }
         }
 
+        // Vem antes das Regras A e B porque um import de namespace as torna
+        // inconferíveis: sem o nome da classe não há aresta para comparar.
+        $this->assertSame([], $violacoesDeForma, implode("\n", array_merge(
+            ['Forma — importe a CLASSE, não o namespace do outro domínio:'],
+            $violacoesDeForma,
+        )));
+
         $this->assertSame([], $violacoesDeSuperficie, implode("\n", array_merge(
             ['Regra A — um domínio só enxerga '.implode('/', self::PUBLIC_LAYERS).' de outro:'],
             $violacoesDeSuperficie,
@@ -102,13 +129,38 @@ class DomainDependencyTest extends TestCase
         )));
     }
 
+    public function test_todo_dominio_em_disco_esta_declarado_na_matriz(): void
+    {
+        $emDisco = array_values(array_filter(
+            scandir(base_path('app/Domains')) ?: [],
+            fn (string $entrada) => $entrada !== '.' && $entrada !== '..'
+                && is_dir(base_path("app/Domains/{$entrada}")),
+        ));
+
+        $declarados = array_keys(self::ALLOWED);
+        sort($emDisco);
+        sort($declarados);
+
+        // `arquivosDeDominio()` percorre as CHAVES de ALLOWED. Domínio que nasce
+        // sem entrada aqui não seria varrido como origem — todas as dependências
+        // dele ficariam invisíveis, que é o oposto do que a matriz promete.
+        // Achado do review de 2026-08-04 (Q-5), provado com um Feedback/ de sonda
+        // importando camada interna de Identity sem reprovar nada.
+        $this->assertSame($declarados, $emDisco, 'Domínio em app/Domains/ sem entrada em DomainDependencyTest::ALLOWED (ou vice-versa) — declare a matriz dele, nem que seja com zero arestas, como Certification.');
+    }
+
     public function test_group_use_de_dominio_nao_e_suportado(): void
     {
         $encontrados = [];
 
         foreach ($this->arquivosDeDominio() as $arquivos) {
             foreach ($arquivos as $arquivo) {
-                if (preg_match('#App\\\\Domains\\\\[A-Za-z0-9_]+\\\\[^;]*\{#', (string) file_get_contents($arquivo))) {
+                // A classe de caractere só admite nome e barra: um `{` que venha
+                // depois de qualquer outra coisa (`match (\App\Domains\X\Enums\Y::C) {`,
+                // ou o `{` da classe várias linhas abaixo) não é group use. Com
+                // `[^;]*` era, e reprovava a suíte com o diagnóstico errado
+                // (review de 2026-08-04, Q-4).
+                if (preg_match('#App\\\\Domains\\\\[A-Za-z0-9_\\\\]*\{#', $this->codigoSemComentarios($arquivo))) {
                     $encontrados[] = str_replace(base_path().'/', '', $arquivo);
                 }
             }
@@ -147,18 +199,23 @@ class DomainDependencyTest extends TestCase
     }
 
     /**
-     * Toda referência a outro domínio no texto do arquivo: `use`, `use ... as`,
-     * FQN inline (`\App\Domains\...`) e string de classe (`'App\\Domains\\...'`).
+     * Toda referência a outro domínio no código do arquivo: `use`, `use ... as`,
+     * FQN inline (`\App\Domains\...`), string de classe (`'App\\Domains\\...'`)
+     * e import de namespace (`use App\Domains\X\Enums;`), que vem com camada ou
+     * classe vazias e é tratado como violação de forma pelo chamador.
      *
      * @return list<array{0: string, 1: string, 2: string}> [alvo, camada, classe]
      */
     private function referenciasCrossDomain(string $arquivo, string $origem): array
     {
         // Normaliza a barra dupla das strings PHP para a barra simples do código.
-        $conteudo = str_replace('\\\\', '\\', (string) file_get_contents($arquivo));
+        $conteudo = str_replace('\\\\', '\\', $this->codigoSemComentarios($arquivo));
 
+        // Camada e classe são OPCIONAIS: `use App\Domains\Identity\Actions;`
+        // não casava a regex de 3 segmentos e dava acesso à camada interna
+        // inteira sem reprovar nada (review de 2026-08-04, Q-1).
         preg_match_all(
-            '#App\\\\Domains\\\\([A-Za-z0-9_]+)\\\\([A-Za-z0-9_]+)\\\\([A-Za-z0-9_]+)#',
+            '#App\\\\Domains\\\\([A-Za-z0-9_]+)(?:\\\\([A-Za-z0-9_]+))?(?:\\\\([A-Za-z0-9_]+))?#',
             $conteudo,
             $matches,
             PREG_SET_ORDER,
@@ -167,15 +224,41 @@ class DomainDependencyTest extends TestCase
         $refs = [];
 
         foreach ($matches as $match) {
-            [, $alvo, $camada, $classe] = $match;
+            $alvo = $match[1];
 
             if ($alvo === $origem) {
                 continue;
             }
 
-            $refs[] = [$alvo, $camada, $classe];
+            $refs[] = [$alvo, $match[2] ?? '', $match[3] ?? ''];
         }
 
         return $refs;
+    }
+
+    /**
+     * O código do arquivo sem comentários nem docblocks. Citar uma classe num
+     * comentário não é depender dela — contar a menção reprovava a suíte por um
+     * vínculo inexistente (review de 2026-08-04, Q-4).
+     */
+    private function codigoSemComentarios(string $arquivo): string
+    {
+        $codigo = '';
+
+        foreach (token_get_all((string) file_get_contents($arquivo)) as $token) {
+            if (! is_array($token)) {
+                $codigo .= $token;
+
+                continue;
+            }
+
+            if ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+                continue;
+            }
+
+            $codigo .= $token[1];
+        }
+
+        return $codigo;
     }
 }
