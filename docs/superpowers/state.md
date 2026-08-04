@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening-guardrails-e-transportes-pre-sprint-4
 active_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md
@@ -286,8 +286,57 @@ corpo — a lição 6 quebraria isso em silêncio com 201 e arquivo vazio). **D1
 `backlog.md` a conclusão técnica do H.4.5; os 2 writes no Notion (D4b, D11b), com texto aprovado
 pelo João antes de enviar.
 
-**Por instrução explícita do `/executar-bloco`, review não foi iniciado nesta sessão** — a próxima
-instrução aciona a revisão do trabalho ativo.
+**Review em 2026-08-04 (`/revisar-sprint`, ALTO RISCO** — `executor: misto`, Tasks 1/4 no Codex, e o
+bloco toca `backend/` e caminhos de upload com peso legal; lente Claude **+** revisão independente do
+Codex, `mcp__codex__codex` read-only). Gate reconferido do zero, não aceito por relatório: backend
+**376 passed (1366 assertions)**, `pnpm test` **21 passed**, build e lint verdes, árvore limpa. Diff
+literal contra o plano nos 20 arquivos. Órfãos: nenhum — os `app()` restantes em DTO são exatamente a
+família 2 + `TurmaData` (D8/D10, registrados). Leis §5: sem violação. **5 achados; o João aprovou
+Q-1 e Q-5**, os outros 3 foram deferidos com destino registrado.
+
+**Q-1 🔴 — o mecanismo entregue nascia invisível para a próxima sessão.** O `postMultipart` passou a
+existir e o comentário da lição 6 saiu dos 5 consumidores, mas a `frontend-fsliced.md` seguia
+ensinando o padrão antigo ("monte o `FormData`, deixe o axios derivar") e **nada** impedia uma feature
+de montar `FormData` na mão — nem lint, nem teste, nem rule. É o Q-3 do review anterior outra vez
+(lição 13), com falha silenciosa em caminho de peso legal. Virou mecanismo (lição 14):
+`no-restricted-syntax` reprova `new FormData()` em `src/features/**`, com catraca de **um**
+(`useRedatorForm`, spec D11), mais o parágrafo correspondente na rule. **A armadilha do bloco
+anterior foi evitada de propósito:** flat config faz merge raso de `rules`, então o seletor novo entra
+no bloco de `components/` junto dos dois já existentes, e o bloco novo exclui `components/` por
+`ignores` — dois blocos sobrepostos apagariam os seletores de query-em-componente em silêncio, que
+foi exatamente o Q-2 do review passado. **Provado nos três pontos com sonda:** `FormData` em `api/`
+reprovou, `FormData` em `components/` reprovou, e a regra de query-em-componente **continuou**
+disparando no mesmo arquivo (prova de que a colisão não voltou); `useRedatorForm` ficou em silêncio,
+confirmando a catraca. Sondas removidas, árvore limpa.
+
+**Q-5 🟢 — o `flatten` do `parity.test.ts` media `typeof value === 'string'`** e tratava todo o resto
+como sub-árvore: `Object.entries(1)` devolve `[]`, então uma chave com valor numérico **sumia** da
+lista — acusada como faltando na locale que a tivesse com outro tipo, e invisível quando as três a
+tivessem assim; com `null`, `TypeError` sem dizer qual chave. Folha passa a ser tudo que não é
+objeto. **Visto reprovando antes** (chave numérica nas 3 locales acusava `Faltando:
+common.sondaNumero`, um falso positivo) e as duas direções reconferidas depois, com `null` e booleano.
+Locales restauradas por `git checkout`, diff de `locales/*.json` vazio.
+
+**Deferidos pelo João, registrados e não resolvidos:** Q-2 🟡 (o guardrail de rota escapa em silêncio
+se o parâmetro não for tipado como model — sonda com `int $item` numa rota nested **passou**) e
+Q-4 🟡 (o teste do `postMultipart` mocka o módulo `axios` inteiro, então a lição 6 na instância real
+segue guardada só por comentário) foram para §Débitos técnicos do `backlog.md`. Q-3 🟡 virou **P-26**
+em `pendencias.md`: a troca de `abort_unless` por `scopeBindings` mudou **403 → 404** para usuário sem
+a permissão da rota, porque `SubstituteBindings` roda antes do middleware `permission:` — provado por
+sonda — enquanto a spec §4 e os commits afirmam "nenhum comportamento observável muda". Dano prático
+baixo (~10 usuários staff, e 404 vaza menos que 403); o que fica aberto é a afirmação.
+
+**Divergência entre revisores, mostrada e não resolvida em silêncio:** o Codex lê a **D9** como
+**sinal 2**, porque `DtoTest.php:46` e `SoftDeletedRelationProjectionTest.php:118` obtêm o serviço via
+`app()` e o repassam. A execução fechou como **sinal 1**, com o argumento de que a produção ficou
+limpa em 1 nível e os testes são adaptação mecânica de assinatura. A leitura é do João no fechamento.
+**Descartados do Codex, verificados:** "controller declara o filho antes do pai" (o scoping usa a
+ordem da URI, não a assinatura; zero casos) e "falso positivo de model injetado por container"
+(decisão registrada em D6, zero casos hoje — a direção que morde é a oposta, o Q-2).
+
+**Revalidação pós-correção, tudo do zero:** backend **376 passed (1366 assertions)**, `pnpm test`
+**21 passed**, `pnpm build` e `pnpm lint` verdes; `generated.ts`, `locales/*.json` e
+`backend/database/` sem diff; 2 commits de correção (`161aa18`, `3a638ef`).
 
 ## Último item fechado — 2026-08-04
 

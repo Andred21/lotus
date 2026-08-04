@@ -99,6 +99,24 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (afirmação em prosa) não é automatizável e segue dependendo do review. Proposta feita em
   2026-08-04, **não construída** — o João aprovou os 7 achados, não o mecanismo.
 
+- **Q-2 — o `NestedRouteOwnershipTest` escapa em silêncio quando o parâmetro não é tipado como
+  model.** O guardrail nasceu em 2026-08-04 (`hardening-guardrails-e-transportes`) contando
+  `signatureParameters(['subClass' => Model::class])`, escolha da spec §D6 para não errar como
+  erraria um regex sobre a URI. O efeito colateral é que a saída do guardrail passa a ser **esquecer
+  de tipar**: sonda com `DELETE api/sonda/{course}/itens/{item}` e assinatura `(Course $course,
+  int $item)` **passou** — rota nested, zero posse checada, teste mudo. Hoje as 7 rotas com ≥2
+  parâmetros estão todas tipadas, então fechar o buraco não muda nada; amanhã muda. Saída: contar
+  também os segmentos `{}` da URI e reprovar quando houver ≥2 mas menos de 2 models tipados, pedindo
+  a tipagem ou a declaração explícita. Achado Q-2 do review de 2026-08-04, **deferido pelo João** —
+  ele aprovou Q-1 e Q-5.
+- **Q-4 — o teste do `postMultipart` mocka o módulo `axios` inteiro, então nada guarda a instância
+  real.** `postMultipart.test.ts:5` usa `vi.mock('./axios')`: os 4 casos provam o helper e nunca
+  visitam `shared/api/axios.ts`. Se alguém fixar `Content-Type` nos defaults da instância, os testes
+  seguem verdes e **todo** upload chega vazio com 201 — a lição 6, cuja única guarda permanente hoje
+  é o comentário no arquivo (lição 14: instrução onde cabe mecanismo). O D12 do bloco exigiu upload
+  real por isso, mas essa prova não roda de novo sozinha. Saída: um caso sem mock assertando que
+  `api.defaults.headers` não traz `Content-Type`. Achado Q-4 do review de 2026-08-04, **deferido pelo
+  João**.
 - **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
   `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
   `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
