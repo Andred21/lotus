@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-tabela-e-testes-pre-sprint-4
 active_work_item: hardening-tabela-e-testes-pre-sprint-4
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/hardening-tabela-e-testes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: ce2d2e4
-updated_at: 2026-08-04T17:25:00-03:00
+state_basis_commit: 54684fe
+updated_at: 2026-08-04T18:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -128,6 +128,48 @@ decisão do brainstorming.
 `max-lines` cita `StudentDialog` (189) e `RedatorDialog` (189), que são telas de tabela/diálogo na
 mesma vizinhança do H.4.4; e Q-2 (guardrail de rota escapa com parâmetro não tipado) e Q-4 (teste do
 `postMultipart` mocka o axios inteiro) seguem em §Débitos técnicos do `backlog.md`.
+
+**Corte decidido no brainstorming de 2026-08-04, pelo João: as 3 tasks entram** (H.4.4, H.4.5,
+H.4.9), e com elas o item 1 do backlog fecha por inteiro. Critério explicitamente diferente dos dois
+blocos anteriores ("fechar o barato, isolar o refactor grande"): o refactor grande é o que sobrou, e
+adiá-lo de novo não fecha o item. Alcances decididos na mesma sessão: **H.4.4 nas 5 tabelas busca-só**
+(não nas 2 nomeadas nem nas 7), **H.4.5 pelo argumento** (`<hook>(xxxApi)`, não pelo nome
+`useCrudPage`), **H.4.9 por trait** (não factories) e **só nos 2 padrões campeões**.
+
+**A medição do repositório mudou três coisas antes de o corte ser feito** — quinta ocorrência da
+lição 13 no projeto:
+
+1. **A dependência `H.4.5 → H.4.4` declarada no Notion não vale.** O que resta do H.4.5 é lint sobre
+   `features/*/hooks/`; o H.4.4 é markup em `features/*/components/`. Não se tocam; a ordem é livre.
+2. **H.4.4 não são "9 tabelas equivalentes".** São 3 grupos: **5** busca-só estruturalmente idênticas
+   (diff só em `searchable`, ícone, 3 chaves i18n e `footerCount`), **2** com dropdown
+   (`BudgetsTable`, `TurmasTable`) e **2** fora do padrão (`RolesTable` sem busca, `EnrollmentTable`
+   sem toolbar). Nenhuma passa da régua de 150 — a maior é `TurmasTable`, 148. Repetição entre
+   arquivos, não arquivo inchado.
+3. **H.4.9 é maior e mais limpo do que a task sugere.** União de **49 arquivos** (43 com o bloco
+   cliente+usuário, 34 com curso descartável, 28 em ambos), **20 helpers privados locais** morrem —
+   14 do bloco cliente com **4 nomes divergentes** (`client`, `clientId`, `makeClient`,
+   `makeClientWithPrimary`) e 6 `actingAdmin` que são repasse puro para o `actingAsAdmin()` do
+   `TestCase` (usado 132 vezes), dois deles declarando `: User` e quatro `: void` — a divergência de
+   assinatura prova que ninguém os lê como contrato.
+
+**A decisão de desenho mais importante — `shared/ui` continua apresentacional puro.** `shared/ui` e
+`shared/hooks` **não se importam em nenhuma direção hoje** (medido: zero import nos dois sentidos), e
+a moldura poderia ter criado a primeira aresta `ui → hooks` do projeto. Em vez disso ela recebe o
+`TableFilter<T>` já construído: a feature mantém uma linha, a `searchable` (vocabulário de domínio)
+fica onde já estava, e os 34 wrappers seguem todos da mesma natureza. O P-25 já registra tensão na
+direção inversa.
+
+**Spec escrita e aprovada pelo João em 2026-08-04**, 3 tasks, 14 decisões (D1–D14), 7 invariantes de
+comportamento e gate com item 0 próprio. **Com checkpoint visual** — diferente do bloco anterior: o
+H.4.4 muda markup de 5 telas de produção, duas delas de Personas (cadastro de peso legal).
+
+**Auto-review da spec achou dois defeitos nela mesma, corrigidos antes do commit:** o gate citava o
+grep de `pnpm test` com a justificativa "senão os testes deste bloco nascem órfãos", e este bloco
+**não cria teste novo em runner nenhum** — H.4.9 reescreve setup de teste existente, e é por isso
+que o placar tem de ficar idêntico; e faltava dizer como se concilia `TableFilter<T>` (paramétrico no
+item) com o `T extends DataTableValueArray` que o `AppDataTable` exige, lacuna que a execução
+resolveria inventando.
 
 ## Último item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
