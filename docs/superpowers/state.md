@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4
 active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-03-hardening-estrutural-pre-sprint-4-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-03-hardening-estrutural-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
 blocker: null
 resume_state: null
@@ -72,12 +72,37 @@ itens, mas o conjunto Notion referenciado tem **10** tasks. A que não aparece e
 listas é **`H.4.5` — revisar aliases `useXPage`, eliminando-os ou justificando orquestração real**
 (depende de H.4.4). Incluí-lo ou não é decisão do brainstorming.
 
-**Corte ainda não decidido, por decisão do João:** o item lista 5 bloqueantes (matriz/guardrail de
-dependências entre domínios, guardrails frontend, ownership de rotas nested, infra mínima de teste
-das abstrações compartilhadas, `SearchableTableFrame`) e 4 pilotos não bloqueantes (DTO sem service
-locator, helper multipart, paridade de traduções, builders de testes backend). Isso é sprint, não
-bloco. O corte é decisão do **brainstorming**, informada pelo packet — não do backlog nem deste
-arquivo.
+**Corte decidido no brainstorming de 2026-08-03, pelo João:** entram **H.4.1** (matriz de
+dependências entre domínios + `DomainDependencyTest`), **H.4.2** (as 3 fronteiras do frontend viram
+`no-restricted-imports`) e **H.4.3** (vitest + regressão de `useTableFilter` e `useCrudPage`).
+Critério escolhido: *o que fica caro de corrigir depois*, não *o que impede escrever Certification*.
+Ficam fora, nominalmente: H.3.1, H.4.4, H.4.5, H.4.6, H.4.7, H.4.8, H.4.9 — os sinais de aceite de
+cada um seguem no packet.
+
+**Decisões que moldaram o bloco.** A classificação dos 42 imports cross-domain (21 pares) **não
+achou acoplamento indevido** — todos são fluxo do processo, Identity como dono de pessoa, ou relação
+Eloquent inversa que o ADR-02 permite; então H.4.1 entrega teste + doc, e `git diff -- backend/app/`
+fica vazio. Descoberta que virou a espinha: os 42 imports atingem **3 das 10 camadas** (`Models` 29,
+`Services` 8, `Enums` 5), uma superfície pública de fato que nunca tinha sido declarada. Pest **não
+está instalado** (75 arquivos PHPUnit), então o Arch test é PHPUnit próprio; `eslint-boundaries`
+também fica fora — são 3 fronteiras, não uma hierarquia.
+
+**Achado do João durante o brainstorming, absorvido pelo bloco:** `TurmasTable` e `BudgetsTable`
+mostravam "Sem resultados para os filtros aplicados" com o dropdown em "Todos" e busca vazia. Causa
+**provada no source** do `primereact` instalado (`dropdown.cjs.js:1441`), não por hipótese: sem a
+prop `optionValue`, o `onChange` devolve o **objeto da opção** quando `option.value` é vazio por
+`ObjectUtils.isEmpty` — e `isEmpty(null)` é `true`. Isso derrubou a tese inicial de "zero pixel
+muda": o bloco volta a ter um checkpoint visual, pequeno (2 telas).
+
+**Spec revisada pelo João em 2026-08-03**, com 3 correções que viraram D5b (a detecção cobre FQN
+inline e group `use`, não só linhas `use`), D6b (H.4.1 corrige as 2 contradições de
+`estrutura-monolito.md` sobre a própria regra que automatiza) e D16 (`filtering` mudar de dono é
+mudança de contrato, e vai para o JSDoc e para a `frontend-fsliced.md`).
+
+**Plano:** 9 tasks (0 branch · 1 matriz · 2 docs+P-04 · 3 lint · 4 vitest+`useTableFilter` ·
+5 `useCrudPage` · 6 fix do empty state · **7 checkpoint visual do João** · 8 gate),
+`executor: claude` — a matriz é decisão de arquitetura, as sondas de lição 10 exigem julgar se a
+falha veio pelo motivo certo, e a Task 7 é gate humano.
 
 ## Último item fechado — 2026-08-03
 

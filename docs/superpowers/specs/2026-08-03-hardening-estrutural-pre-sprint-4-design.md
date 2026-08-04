@@ -222,10 +222,16 @@ contrato. Não é preciso `QueryClientProvider`, TanStack nem mock de rede.
 Componentes de `shared/ui` ficam fora: arrastariam PrimeReact para dentro do jsdom, com risco de o
 bloco virar briga com ambiente em vez de prova de comportamento.
 
-### D12 — O achado da §7 é reproduzido antes de corrigido
+### D12 — A causa da §7 foi provada por source, não por reprodução na tela
 
-Duas causas possíveis (§7). O fix não sai antes da reprodução nomear qual — `systematic-debugging`,
-não chute com duas hipóteses.
+A exigência era nomear a causa antes de corrigir. Ela foi cumprida **durante o planejamento**, e por
+um caminho mais forte que a reprodução manual: leitura do source do `primereact` instalado
+(`dropdown.cjs.js:1441-1442` + `utils.cjs.js:1841`), que é determinístico e citável. Nenhuma das
+duas hipóteses iniciais estava certa — o Dropdown não devolve `undefined` nem resto de seleção;
+devolve **o objeto da opção**. Detalhe na §7.
+
+Consequência para a execução: não há task de investigação. O fix entra direto, e o que ele precisa
+provar é o **comportamento na tela** (D13), não a causa.
 
 ### D13 — A prova visual volta, pequena
 
@@ -313,8 +319,9 @@ Cada item é comportamento provado, nunca pacote instalado (lei §5.8).
   silencioso.
 - **A regra da matriz espelhada em doc pode envelhecer** (lição 13). Mitigação: o doc aponta para o
   teste como fonte em vez de repetir a lista (D6).
-- **O fix da §7 pode ter causa diferente das duas hipóteses.** Por isso D12 exige reprodução antes
-  do fix; se a causa for uma terceira, a spec é atualizada antes de a task seguir.
+- **Risco da §7 fechado durante o planejamento.** A causa deixou de ser hipótese: está provada no
+  source do `primereact` instalado (D12/§7). O que resta é confirmar na tela que o fix produz o
+  empty state certo — item 5 do DoD.
 
 ---
 
@@ -331,12 +338,37 @@ Encontrado pelo João durante este brainstorming, com print da tela de Operaçã
 `status !== null` — enquanto a UI afirma que nenhum filtro de estado está ativo. **Estado e tela
 discordam.**
 
-**Duas causas possíveis, não decididas sem reprodução:**
+**Causa — provada por leitura do source do PrimeReact instalado, não por hipótese.**
+`node_modules/primereact/dropdown/dropdown.cjs.js:1441-1442`:
 
-1. o `onChange` do Dropdown entrega `undefined` (não `null`) ao selecionar "Todos". Aí
-   `status !== null` é `true` e o `where` passa a comparar `turmaDisplayStatus(turma) === undefined`,
-   que nenhuma linha satisfaz — o que produz exatamente o rodapé "0 turmas" do print;
-2. `status` guarda resto de seleção anterior que o Dropdown exibe como "Todos" por comparação frouxa.
+```js
+var optionValue = props.optionValue ? resolveFieldData(option, props.optionValue) : option ? option['value'] : …
+return props.optionValue || ObjectUtils.isNotEmpty(optionValue) ? optionValue : option;
+```
+
+Sem a prop `optionValue`, ele lê `option['value']` → `null` para a opção "Todos". Então avalia
+`props.optionValue || isNotEmpty(optionValue)`: o primeiro é `undefined`, e o segundo é `false`
+porque `ObjectUtils.isEmpty` (`utils.cjs.js:1841`) trata `null` como vazio —
+`value === null || value === undefined || value === '' || …`. O ternário cai no ramo **`: option`** e
+o `onChange` entrega o **objeto inteiro** `{ label: 'Todos', value: null }`.
+
+A cadeia completa, e ela explica cada pixel do print:
+
+1. `setStatus({ label: 'Todos', value: null })` — `status` vira **objeto**, não `null`
+2. `status !== null` é `true` → `filtering` `true` → ramo "Sem resultados para os filtros aplicados"
+3. `where` passa a ser `(turma) => turmaDisplayStatus(turma) === status`, comparando string com
+   objeto — **nenhuma linha satisfaz** → rodapé "0 turmas"
+4. o Dropdown ainda exibe "Todos" porque `isSelected` compara `props.value` com `getOptionValue(option)`,
+   e os dois são o mesmo objeto (`dropdown.cjs.js:1359`)
+
+**Alcance medido:** o defeito atinge opção cujo `value` seja `null`, `undefined`, `''`, `[]` ou `{}` —
+tudo que `isEmpty` considera vazio. Dos 10 `AppDropdown` do projeto, **exatamente 2** têm opção
+assim: `TurmasTable.tsx:34` e `BudgetsTable.tsx:47`. Nenhum outro está exposto hoje.
+
+**Antídoto já existe na casa:** `StaffUserDialog.tsx:101,106` passa `optionValue="value"`, o que torna
+`props.optionValue` truthy e faz o `return` devolver o valor resolvido — inclusive `null`. O fix é
+adotar o mesmo nos dois dropdowns, **não** mexer no wrapper `AppDropdown`, que serve 10 consumidores
+e cujo comportamento atual os outros 8 dependem.
 
 **O mesmo defeito existe em dois arquivos:** `TurmasTable.tsx:26-38` e `BudgetsTable.tsx:47`
 repetem `{ value: null }`, `status === null ? undefined : fn` e
@@ -347,10 +379,14 @@ comparação estrita** em duas telas, enquanto `useTableFilter` já tem a inform
 passado ou não). Subir `filtering` para o hook mata a duplicação e torna a invariante testável no
 nível do hook — dentro do corte da D11.
 
-**Entrega:** (a) reprodução nomeia a causa (D12); (b) normalização na fronteira do Dropdown nas
-duas telas; (c) `useTableFilter` expõe `filtering`, consumido pelas duas; (d) teste 7 de
-`useTableFilter`; (e) prova visual do João nas duas telas (D13); (f) a mudança de responsabilidade
-é documentada nos dois lugares que a descrevem (D16).
+**Entrega:** (a) `optionValue="value"` nos dois dropdowns, no molde do `StaffUserDialog`; (b)
+`useTableFilter` expõe `filtering`, consumido pelas duas telas no lugar do `status === null`
+reimplementado; (c) teste 7 de `useTableFilter`; (d) prova visual do João nas duas telas (D13);
+(e) a mudança de responsabilidade é documentada nos dois lugares que a descrevem (D16).
+
+**Por que (a) e (b) juntos, e não só (a):** o `optionValue` sozinho corrige o sintoma nestes dois
+arquivos e deixa de pé a construção que o permitiu — a tela decidindo "estou filtrando?" por conta
+própria. `filtering` no hook é o que impede a terceira ocorrência.
 
 ### D16 — `filtering` mudar de dono é mudança de contrato, e vai para o JSDoc e para a rule
 
