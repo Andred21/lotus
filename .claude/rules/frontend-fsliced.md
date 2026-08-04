@@ -47,6 +47,15 @@ a Zustand o que não cruza fronteira — é over-engineering.
   axios derivar: objeto → JSON; `FormData` → multipart+boundary. Fixar json faz todo `FormData`
   virar JSON e cada `File` virar `{}` — upload chega vazio, 201 silencioso (peso legal). `initCsrf()`
   (`shared/api/csrf.ts`) roda uma vez antes da 1ª mutação.
+- **Upload: `postMultipart` (`shared/api/postMultipart.ts`), nunca `new FormData()` na feature.**
+  `postMultipart<T>(url, fields)` sobre `Record<string, string | File | undefined>` é o único ponto
+  que monta multipart: chave `undefined` é **omitida** (não vira a string `"undefined"` numa coluna
+  de data) e a chamada ao axios não tem terceiro argumento — não há onde encaixar o `Content-Type`
+  do parágrafo acima. A mutation continua sendo da feature (query keys e invalidação próprias); só o
+  transporte é que mora num lugar. Mecanismo, não pedido: `no-restricted-syntax` reprova
+  `new FormData()` em `src/features/**`. Exceção única e declarada — `useRedatorForm`, que monta
+  array e chave polimórfica. Mutation de `delete` não entra em helper: é `api.delete(url)` de uma
+  linha, sem transporte a centralizar.
 - **Wrappers `shared/ui`:** features importam `AppButton`, nunca `Button` do pacote.
   Pasta-por-componente (`AppButton/AppButton.tsx` + `index.ts`), reexporta `AppXProps`
   (fecha a fronteira de tipo — a feature importa `AppButtonProps`, nunca `ButtonProps`). Barrel raiz

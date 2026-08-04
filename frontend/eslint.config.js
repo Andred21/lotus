@@ -33,6 +33,19 @@ const subidaRelativa = (outra) =>
     `${prefixo}${outra}/**`,
   ])
 
+// Transporte multipart tem UM lugar (`shared/api/postMultipart.ts`). O helper
+// nasceu em 2026-08-04 e o comentário da lição 6, que vivia copiado em 5
+// consumidores, saiu de todos eles — então o que impedia a próxima feature de
+// montar `FormData` na mão passou a ser nada. Fixar `Content-Type` num
+// `api.post` manual faz cada `File` virar `{}` e o upload chegar VAZIO com
+// 201/204 de sucesso, em caminho de documento com peso legal: build, lint e
+// suíte não veem. Instrução não segura isso (lição 14).
+const FORMDATA_FORA_DO_HELPER = {
+  selector: "NewExpression[callee.name='FormData']",
+  message:
+    'Upload de feature não monta FormData: use postMultipart de @shared/api/postMultipart, que é o único ponto onde o Content-Type não pode ser fixado (frontend-fsliced.md, lição 6).',
+}
+
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
   // à mão — lintá-lo só produz erro que não se pode corrigir na fonte certa.
@@ -75,7 +88,35 @@ export default defineConfig([
           message:
             'TanStack Query direto não vive em componente de feature: mova para features/<x>/api/ ou hooks/ (frontend-fsliced.md).',
         },
+        // Componente também não monta multipart. Mora AQUI, e não num bloco
+        // `src/features/**` próprio, porque flat config faz merge raso de
+        // `rules`: dois blocos que casam o mesmo arquivo e declaram
+        // `no-restricted-syntax` não concatenam os seletores — o último apaga o
+        // primeiro inteiro. Um bloco genérico apagaria os dois seletores acima
+        // em todo componente, em silêncio, que é o bug do review de 2026-08-04
+        // (Q-2, fronteiras 1 e 2 do `no-restricted-imports`). O bloco abaixo
+        // cobre o resto da feature e exclui `components/` por `ignores`, então
+        // os dois nunca se sobrepõem.
+        FORMDATA_FORA_DO_HELPER,
       ],
+    },
+  },
+  // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
+  // do `postMultipart` de fato vivem.
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    ignores: [
+      // Coberto pelo bloco acima, com os 3 seletores juntos.
+      'src/features/*/components/**/*.{ts,tsx}',
+      // Catraca de um: `useRedatorForm` monta array (`course_ids[]`) e chave
+      // polimórfica (`documents[type]`) e entrega o FormData pronto para uma
+      // mutation de CRUD alheia. Cobri-lo exigiria um serializador genérico de
+      // payload — forma de domínio vazando para o transporte (spec D11 do bloco
+      // `hardening-guardrails-e-transportes`). Exceção declarada, não esquecida.
+      'src/features/identity/hooks/useRedatorForm.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se

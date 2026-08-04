@@ -38,7 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('permission:identity.user.update')->group(function () {
         Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store']);
-        Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy']);
+        Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy'])
+            ->scopeBindings();   // {document} resolve por $redator->documents() — cross-redator = 404
 
         Route::post('users/{user}/photo', [UserPhotoController::class, 'store']);
         Route::delete('users/{user}/photo', [UserPhotoController::class, 'destroy']);

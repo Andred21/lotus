@@ -30,11 +30,9 @@ class QuoteFileController extends Controller
 
     public function destroy(Quote $quote, File $file): Response
     {
-        abort_unless(
-            $file->fileable_type === 'quote' && $file->fileable_id === $quote->id,
-            404,
-        );
-
+        // Posse garantida pelo `->scopeBindings()` da rota: o {file} é resolvido
+        // por $quote->files(), então arquivo de outra cotação — ou de outro
+        // fileable_type — nunca chega aqui (404 no binding).
         $file->delete();
 
         return response()->noContent();

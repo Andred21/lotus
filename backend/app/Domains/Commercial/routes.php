@@ -37,11 +37,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('permission:commercial.budget.update')->group(function () {
         Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store']);
-        Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy']);
+        Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy'])
+            ->scopeBindings();   // {file} resolve por $budget->files() — cross-budget = 404
     });
 
     Route::middleware('permission:commercial.quote.update')->group(function () {
         Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store']);
-        Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy']);
+        Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
+            ->scopeBindings();   // {file} resolve por $quote->files() — cross-quote = 404
     });
 });

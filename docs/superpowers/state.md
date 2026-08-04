@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: hardening-guardrails-e-transportes-pre-sprint-4
-active_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-workflow_state: ready_for_execution
-next_owner: claude
-next_action: execute_active_plan
-active_spec: docs/superpowers/specs/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md
-active_plan: docs/superpowers/plans/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md
-context_packet: docs/superpowers/context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: hardening-estrutural-pre-sprint-4
-state_basis_commit: f554244
-updated_at: 2026-08-04T04:00:00-03:00
+last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
+state_basis_commit: ade7981
+updated_at: 2026-08-04T16:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-04T04:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Bloco ativo — `hardening-guardrails-e-transportes-pre-sprint-4`
+## Último item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
 > **Renomeado em 2026-08-04, na revisão da spec pelo João.** Era
 > `hardening-estrutural-pre-sprint-4-restante`. Com H.4.4, **H.4.5** e H.4.9 seguindo abertos,
@@ -243,7 +243,161 @@ e classificá-la é decisão do João. Task 1 Step 7 — teste cross-pai vermelh
 conclusão técnica do H.4.5, e os dois writes no Notion (D4b e D11b), ambos por ID e com texto
 aprovado pelo João antes de enviar.
 
-## Último item fechado — 2026-08-04
+**Execução em 2026-08-04, `/executar-bloco` + `subagent-driven-development` (argumento explícito do
+João), `executor: misto`.** Branch `hardening/guardrails-e-transportes` a partir do `main`, sem
+worktree (D1/P-03 — toca `backend/`), 4 commits de conteúdo (`310c5ec`..`4e5882e`). Baseline da
+Task 0: backend 375 passed (1365 assertions), frontend 14 passed — batendo com o plano.
+
+**Tasks 1 e 4 no Codex** (`mcp__codex__codex`, `sandbox: danger-full-access` — desta vez sem o
+problema de socket do docker que forçou CLI direto no bloco anterior; o parâmetro de sandbox do
+próprio MCP tool resolveu). Nenhum commit feito pelo Codex — report + diff sempre revisados por
+Claude, que rodou a verificação do plano do zero antes de aceitar e commitou. Tasks 2 e 3 via
+implementer subagent (Sonnet) + task reviewer subagent, ambos aprovados sem achado bloqueante.
+
+**A medição da spec errou de novo, 2 vezes nesta execução — terceira e quarta ocorrência da lição 13
+no projeto.** Task 2 (H.4.6): a spec media 4 call sites de `BudgetData::fromModel`, todos no
+`BudgetController` — existiam **6**, 2 deles chamando `fromModel()` direto em teste
+(`DtoTest.php`, `SoftDeletedRelationProjectionTest.php`). O implementador parou e reportou
+corretamente (regra de parada do plano); João decidiu via pergunta explícita: atualizar os 2 testes
+(adaptação mecânica de assinatura via `app(BudgetSummaryService::class)`, não mudança de
+comportamento) em vez de reverter a task. **D9 fechou como sinal 1 (técnica paga)** — a produção
+ficou limpa em 1 nível, sem `app()`. Task 5 (gate): a sonda literal do plano para H.3.1(a) — rota
+apontando para `CourseTemplateController::destroy` — não reprovava, porque o método real só tipa 1
+model (`CourseCertificateTemplate $template`), não 2 como o plano supôs. Corrigida na hora com um
+closure tipando os 2 models; reprovou citando a rota certa, e com `->withoutScopedBindings()`
+passou — a prova nos dois sentidos ficou de pé, só a sonda mudou de forma.
+
+**Gate automatizado (Task 5), tudo do zero:** suíte backend **376 passed (1366 assertions)**
+(375 baseline + 1 do `NestedRouteOwnershipTest`); `pnpm test` **21 passed** (14 baseline + 4 do
+`postMultipart` + 3 do `parity`), `pnpm build` e `pnpm lint` verdes; os 4 guardrails/sondas do gate
+vistos reprovando pelo motivo certo (H.3.1 silêncio, H.3.1 saída explícita, H.4.8 excedente),
+sondas removidas, árvore limpa; `generated.ts`, `locales/*.json` e `backend/database/` sem diff;
+Pint limpo nos 11 arquivos `.php` tocados (guarda de lista vazia não disparou). Órfãos: nenhum —
+`postMultipart` com 5 arquivos consumidores (6 pontos) e exatamente 2 `new FormData()` no
+repositório (o helper + `useRedatorForm.ts`, D11, intocado).
+
+**D12 — prova de upload real contra a API com sessão Sanctum** (login `admin@lotus.cl`, curl com
+`Origin`+`Accept`+`X-XSRF-TOKEN`, lição 12): foto (`POST /api/users/1/photo` → 204; URL
+pré-assinada → 200 `image/png`) e documento (`POST /api/turmas/1/documents` → 201, `size: 48` no
+corpo — a lição 6 quebraria isso em silêncio com 201 e arquivo vazio). **D14** confirmado por grep:
+`CLAUDE.md:137` e `frontend-fsliced.md:145-147` citam `pnpm test`.
+
+**Pendências de fechamento, ainda não executadas** (ficam para o `/fechar-sprint`): levar ao
+`backlog.md` a conclusão técnica do H.4.5; os 2 writes no Notion (D4b, D11b), com texto aprovado
+pelo João antes de enviar.
+
+**Review em 2026-08-04 (`/revisar-sprint`, ALTO RISCO** — `executor: misto`, Tasks 1/4 no Codex, e o
+bloco toca `backend/` e caminhos de upload com peso legal; lente Claude **+** revisão independente do
+Codex, `mcp__codex__codex` read-only). Gate reconferido do zero, não aceito por relatório: backend
+**376 passed (1366 assertions)**, `pnpm test` **21 passed**, build e lint verdes, árvore limpa. Diff
+literal contra o plano nos 20 arquivos. Órfãos: nenhum — os `app()` restantes em DTO são exatamente a
+família 2 + `TurmaData` (D8/D10, registrados). Leis §5: sem violação. **5 achados; o João aprovou
+Q-1 e Q-5**, os outros 3 foram deferidos com destino registrado.
+
+**Q-1 🔴 — o mecanismo entregue nascia invisível para a próxima sessão.** O `postMultipart` passou a
+existir e o comentário da lição 6 saiu dos 5 consumidores, mas a `frontend-fsliced.md` seguia
+ensinando o padrão antigo ("monte o `FormData`, deixe o axios derivar") e **nada** impedia uma feature
+de montar `FormData` na mão — nem lint, nem teste, nem rule. É o Q-3 do review anterior outra vez
+(lição 13), com falha silenciosa em caminho de peso legal. Virou mecanismo (lição 14):
+`no-restricted-syntax` reprova `new FormData()` em `src/features/**`, com catraca de **um**
+(`useRedatorForm`, spec D11), mais o parágrafo correspondente na rule. **A armadilha do bloco
+anterior foi evitada de propósito:** flat config faz merge raso de `rules`, então o seletor novo entra
+no bloco de `components/` junto dos dois já existentes, e o bloco novo exclui `components/` por
+`ignores` — dois blocos sobrepostos apagariam os seletores de query-em-componente em silêncio, que
+foi exatamente o Q-2 do review passado. **Provado nos três pontos com sonda:** `FormData` em `api/`
+reprovou, `FormData` em `components/` reprovou, e a regra de query-em-componente **continuou**
+disparando no mesmo arquivo (prova de que a colisão não voltou); `useRedatorForm` ficou em silêncio,
+confirmando a catraca. Sondas removidas, árvore limpa.
+
+**Q-5 🟢 — o `flatten` do `parity.test.ts` media `typeof value === 'string'`** e tratava todo o resto
+como sub-árvore: `Object.entries(1)` devolve `[]`, então uma chave com valor numérico **sumia** da
+lista — acusada como faltando na locale que a tivesse com outro tipo, e invisível quando as três a
+tivessem assim; com `null`, `TypeError` sem dizer qual chave. Folha passa a ser tudo que não é
+objeto. **Visto reprovando antes** (chave numérica nas 3 locales acusava `Faltando:
+common.sondaNumero`, um falso positivo) e as duas direções reconferidas depois, com `null` e booleano.
+Locales restauradas por `git checkout`, diff de `locales/*.json` vazio.
+
+**Deferidos pelo João, registrados e não resolvidos:** Q-2 🟡 (o guardrail de rota escapa em silêncio
+se o parâmetro não for tipado como model — sonda com `int $item` numa rota nested **passou**) e
+Q-4 🟡 (o teste do `postMultipart` mocka o módulo `axios` inteiro, então a lição 6 na instância real
+segue guardada só por comentário) foram para §Débitos técnicos do `backlog.md`. Q-3 🟡 virou **P-26**
+em `pendencias.md`: a troca de `abort_unless` por `scopeBindings` mudou **403 → 404** para usuário sem
+a permissão da rota, porque `SubstituteBindings` roda antes do middleware `permission:` — provado por
+sonda — enquanto a spec §4 e os commits afirmam "nenhum comportamento observável muda". Dano prático
+baixo (~10 usuários staff, e 404 vaza menos que 403); o que fica aberto é a afirmação.
+
+**Divergência entre revisores, mostrada e não resolvida em silêncio:** o Codex lê a **D9** como
+**sinal 2**, porque `DtoTest.php:46` e `SoftDeletedRelationProjectionTest.php:118` obtêm o serviço via
+`app()` e o repassam. A execução fechou como **sinal 1**, com o argumento de que a produção ficou
+limpa em 1 nível e os testes são adaptação mecânica de assinatura. A leitura é do João no fechamento.
+**Descartados do Codex, verificados:** "controller declara o filho antes do pai" (o scoping usa a
+ordem da URI, não a assinatura; zero casos) e "falso positivo de model injetado por container"
+(decisão registrada em D6, zero casos hoje — a direção que morde é a oposta, o Q-2).
+
+**Revalidação pós-correção, tudo do zero:** backend **376 passed (1366 assertions)**, `pnpm test`
+**21 passed**, `pnpm build` e `pnpm lint` verdes; `generated.ts`, `locales/*.json` e
+`backend/database/` sem diff; 2 commits de correção (`161aa18`, `3a638ef`).
+
+**Gate de fechamento (2026-08-04).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+o bloco entrega guardrail e transporte, então a prova é reprovar os mecanismos de novo com sonda
+fresca (lição 10) **e** o upload real, não a suíte verde. Reconferido do zero, fora do que o review já
+tinha provado: sonda de rota nested com 2 bindings **sem** declaração reprovou o
+`NestedRouteOwnershipTest` citando `DELETE api/sondafech/{course}/itens/{template}`, e a **mesma**
+rota com `->withoutScopedBindings()` passou (a prova nos dois sentidos, que é o que distingue este
+guardrail de um teste que só sabe dizer "sim"); sonda de chave excedente em `pt-BR` reprovou o
+`parity` nomeando `common.sondaFech`; sonda de `new FormData()` em `features/operation/api/` reprovou
+o `no-restricted-syntax` nascido no Q-1. Todas as sondas removidas, árvore limpa nos três casos.
+
+**Prova e2e contra a API real, com sessão Sanctum** (lição 12 — `Origin` + `Accept` + `X-XSRF-TOKEN`;
+o login é `admin@lotus.cl`/`senha123`, do `DatabaseSeeder`): **foto** `POST /api/users/1/photo` → 204,
+e a URL pré-assinada devolveu **200 `image/png` com os 70 bytes** do PNG enviado; **documento de
+turma** `POST /api/turmas/8/documents` → 201 com `size: 69`, os bytes reais do PDF — é exatamente
+esse número que a lição 6 zera em silêncio, com 201 de sucesso. O dado de teste foi removido pela
+própria rota de DELETE, o que rendeu a terceira prova de graça: `DELETE /api/turmas/7/documents/40`
+(pai errado) → **404**, e `DELETE /api/turmas/8/documents/40` (dono) → **204**. O 404 cross-pai do
+H.3.1 passou a estar provado na API, não só em teste.
+
+Suíte backend **376 passed (1366 assertions)** reconferida; `pnpm test` **21 passed**, `pnpm build` e
+`pnpm lint` verdes; Pint (`--test`) `passed` nos **11** arquivos `.php` tocados, com a guarda de lista
+vazia que o auto-review do plano exigiu (lição 9); `typescript:transform` rodado porque o diff toca
+`BudgetData.php` — **`generated.ts` sem diff**, como esperado, já que `fromModel` é construção e
+nenhuma propriedade do DTO mudou; diffs de `locales/*.json` e `backend/database/` vazios. Código
+morto: nenhum — os 4 arquivos novos têm consumidor (`postMultipart` com 5 arquivos / 6 pontos, os 2
+testes rodam pelos runners, o guardrail é a suíte), nenhum `.gitkeep` ou placeholder criado aqui.
+Leis §5: sem violação — o bloco não toca DDD, auditoria, auth, RBAC ou financeiro; reforça a §5.6 com
+mecanismo novo.
+
+**Pendências:** nasceu **P-26** (a troca de `abort_unless` por `scopeBindings` mudou 403 → 404 para
+usuário sem a permissão da rota, contra a afirmação de "nenhum comportamento observável muda"). Nenhum
+gatilho vencido — P-04 é o mais próximo (2026-08-15). **P-25 segue aberta:** a `frontend-fsliced.md`
+foi tocada, mas no parágrafo de upload, não no da fronteira de tipo que fecharia o gatilho dela —
+mesma situação do fechamento anterior.
+
+Item 1 do backlog (**"Hardening estrutural pré-Sprint 4"**) não fechou por inteiro — restam **H.4.4,
+H.4.5 e H.4.9** dos 10 itens do conjunto Notion. Editado, não removido: os 4 entregues saem da lista,
+e o item passa a carregar a **conclusão técnica do H.4.5** (obrigação de fechamento do plano), para o
+próximo bloco não reabrir a análise e chegar à resposta errada — eliminar os aliases regrediria a
+fronteira de query-em-componente e **passaria no lint**.
+
+Arquivado: `plans/archive/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md` ·
+`specs/archive/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md` (não
+compartilhada por outro work item). Entrega registrada em `progress.md` (a mais antiga,
+`Hardening · Sincronização de documentação` de 2026-07-30, migrou para `progress-archive.md` para
+manter o teto de dez).
+
+**Os 2 writes externos foram enviados e conferidos por releitura**, com o texto aprovado pelo João
+antes do envio e por ID na base canônica (`collection://e64b7d57-d000-4433-b652-a410e75193cc`):
+**D4b** na task H.3.1 (`39dbc9603dfa81f39e52ec6033137656`) — as 3 rotas shallow não representam o
+risco que a task descreve, o recorte real foi `files`, e a nota de que o cruzado passou de 403 a 404
+sem permissão; **D11b** na task H.4.7 (`3b1bc9603dfa815c991bd10373d74cf6`) — recorte de 6 de 7 pontos
+e a decisão de as mutations de `delete` não entrarem em helper. **O `Status` das 4 tasks entregues
+segue `Backlog` por decisão do João no fechamento** — o plano previa só os textos, e mudar status era
+escopo novo que ele não autorizou.
+
+**Aberto, registrado, não resolvido:** Q-2 e Q-4 do review (§Débitos técnicos do `backlog.md`); P-26;
+P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; H.4.4, H.4.5 e H.4.9 no item 1 do backlog.
+
+## Penúltimo item fechado — 2026-08-04 (`hardening-estrutural-pre-sprint-4`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-03** (`/planejar-bloco`
 com o escopo nomeado no argumento). O item entrou no `backlog.md` na mesma sessão, por edição dele;
@@ -442,141 +596,3 @@ módulo` de 2026-07-27, migrou para `progress-archive.md` para manter o teto de 
 
 **Aberto, registrado, não resolvido:** o restante do item 1 do backlog (H.3.1, H.4.4–H.4.9); P-04
 para §5.1/§5.2 (reavaliar 2026-08-15); a lição 13 sem mecanismo (§Débitos técnicos do `backlog.md`).
-
-## Penúltimo item fechado — 2026-08-03
-
-`abstracao-componentes-catalog` — **item 4 do `backlog.md`, selecionado explicitamente pelo João em
-2026-08-03**, logo depois do `/revisar-frontend` de `features/catalog` da mesma sessão. Spec aprovada
-(D1–D10, §4 com 13 invariantes, §5 com o gate) e plano executado em **8 tasks** via `/executar-bloco`
-+ `executing-plans` inline (`executor: claude` — sem task delegada ao Codex: frontend sem test
-runner, DoD é comportamento idêntico provado na tela, cada extração exigiu decidir na hora se o
-markup era cópia literal).
-
-**Sem context packet** (`context_packet: null`): a fonte foi o código de
-`frontend/src/features/catalog/`, a rule `.claude/rules/frontend-fsliced.md` e o relatório do
-`/revisar-frontend` da mesma sessão — nada de Drive/Notion/Figma.
-
-**Escopo entregue (5 tasks de conteúdo).** Task 1 (C-3/C-4): `CoursesTable.tsx:87` — o template
-literal quebrado (`` `pi pi-book }` ``) virou `"pi pi-book"` e o hex `'#25A5E4'` hardcoded virou
-`BRAND_COLOR` de `@shared/config/brand`, ambos no-op visual por construção. Task 2 (B-1):
-`modulesTotal`/`hoursMismatch` subiram do `CourseDialog` para o `useCourseForm` — o `reduce` que
-vivia em componente agora mora no hook, dono de `form.modules`/`form.workload_hours`. Task 3 (C-1):
-o quadro de módulos (76 linhas, 5 campos por item) virou `ModuleFields` (lista, `key={i}`, add,
-totais) + `ModuleCard` (um módulo, `index` fechado nos handlers) — molde `ContactFields`/
-`ContactCard` do `ClientDialog`, `Fragment` no lugar de `<div>` (os filhos são irmãos diretos do
-`section` com `space-y-4`). Task 4 (B-2): a navegação do olho (`useNavigate`/`usePermissions`/
-`openRedator`) subiu para o `useCourseRedatores(enabledIds, onClose)`, que passou a expor
-`canOpenRedator` e `openRedator`; `onClose` roda antes do `navigate`. Task 5 (C-2): a seção de
-redatores (ternário de 4 ramos: loading > erro > create > view/edit) virou `CourseRedatoresSection`
-— não achatada em guarda sequencial, o 3º ramo é modo de diálogo, não estado de carga. B-3
-(`enabledIds` alias) desapareceu como efeito colateral da Task 5; os `r.id as number` ficaram
-concentrados no `CourseRedatoresSection` (ajuste da D8, fora do escopo mexer no `generated.ts`).
-
-`CourseDialog.tsx` foi de **251 para 96 linhas**.
-
-Branch `refactor/abstracao-componentes-catalog` a partir do `main` (D1, sem worktree — DoD provado
-na tela contra o `docker compose` do main tree), 5 commits de conteúdo (`9bc5973`..`c78d719`).
-
-**Prova visual em 1 checkpoint (D10), sem baseline capturada** (mesma limitação dos blocos
-anteriores — sem ferramenta de browser/screenshot na sessão; a checagem "na tela" de cada task
-individual foi substituída por revisão de diff literal linha a linha, com a prova real reservada
-para este checkpoint único): Cursos (busca, os 2 empty states, ícone na cor de marca), diálogo
-**create** (add/mover/remover módulo, total, aviso âmbar sem bloquear submit, grid de redatores
-selecionável), **view** (leitura, olho leva a `/personas?redator=<id>`, "sem redatores" quando
-vazio), **edit** (campos e módulos editáveis, redatores em leitura), **erro** de redatores com
-Reintentar (backend derrubado e restaurado) — **aprovado pelo João em 2026-08-03**.
-
-**Gate automatizado (Task 7):** `pnpm build` + `pnpm lint` verdes; diffs de `backend/`, `shared/`,
-`locales/` e `generated.ts` vazios; greps de query-em-componente, `primereact` direto,
-cross-feature, `#25A5E4` fora de `shared/config/brand.ts`, `pi-book }` quebrado e `reduce(` em
-componente — todos sem saída; `CourseDialog.tsx` em 96 linhas (abaixo de 100); nenhum órfão
-(`ModuleFields`, `ModuleCard`, `CourseRedatoresSection` com exatamente 1 consumidor cada;
-`modulesTotal`, `hoursMismatch`, `canOpenRedator`, `openRedator` todos com leitor); suíte backend
-**372 passed (1360 assertions)**, igual à baseline — sem regressão. Pint **n/a** (zero arquivo de
-`backend/` no diff); `typescript:transform` **n/a** (nenhum DTO tocado).
-
-**Review em 2026-08-03 (`/revisar-sprint`, baixo risco** — 100% frontend, zero arquivo de `backend/`,
-`generated.ts`, locales, auth, RBAC, schema ou dinheiro no diff, `executor: claude`; só lente Claude,
-sem Codex). Órfãos: nenhum — os 10 arquivos de `catalog` com consumidor, os 3 componentes novos com
-exatamente 1 cada. Leis §5: sem violação.
-
-**As extrações foram provadas literais, não assumidas.** Comparação normalizada do `main` contra os
-arquivos novos: `ModuleCard` é **idêntico byte a byte** às linhas 97-170 do `CourseDialog` original,
-com exatamente 4 linhas divergentes — todas previstas (`key={i}` migrou para o `.map`; `i === 0` /
-`i === length-1` viraram `isFirst`/`isLast`; os 3 handlers viraram props). `ModuleFields` preserva a
-ordem dos blocos (vazio → lista → add → total → aviso). `CourseRedatoresSection` difere do ternário
-original só pelas chaves `{...}` de interpolação JSX que somem ao virar `return` — os 4 ramos na
-mesma ordem, cada um produzindo um elemento, DOM sem nó novo. Fidelidade ao molde confirmada:
-`fieldErrors?: Record<string, string[]> | null` é a assinatura exata do `ContactCard`/`ContactFields`,
-e `ReturnType<typeof useCourseRedatores>` tem precedente em `RedatorDesignation.tsx`
-(`useRedatorPicker`), com os 7 campos do hook consumidos. Descartados antes de virar achado:
-`enabledIds` chegar ao hook e ao componente não pode divergir (mesma `form.redator_ids`, mesmo
-render, D3); derivação sem `useMemo` é o comportamento de antes.
-
-**1 achado 🟡, aprovado pelo João e corrigido na mesma sessão** (`58ce5d8`):
-
-- **Q-1 🟡** A **régua de ~150 linhas não existia.** A spec §1 deste bloco abre citando "251 linhas
-  … contra a régua de ~150 **da rule**", e o `state.md` do bloco anterior a cita igual — mas
-  `grep -niE "régua|~1[0-9]{2}|tamanho"` na `frontend-fsliced.md` voltava **vazio**, e
-  `pendencias.md` também não a registrava (lição 13: doc que descreve intenção não-construída).
-  Pior, o padrão que ela deveria conter — bloco coeso preso dentro de componente grande — custou
-  **três blocos consecutivos** de refactor: `abstracao-componentes-operation` (2026-08-02),
-  `zerar-catraca-e-componentes-commercial` e este. Pela cláusula de reincidência do `/revisar-sprint`
-  + lição 14, virou **mecanismo**: `max-lines` (150) em `eslint.config.js` sobre
-  `src/features/*/components/**`, mais o texto correspondente na rule (com os moldes
-  `ContactFields`/`ContactCard` e `ModuleFields`/`ModuleCard`, e a regra do `Fragment` na extração).
-  O limite saiu da distribuição real, não de chute: 53 dos 57 componentes de feature já ficavam
-  abaixo dele. Entrou com **catraca** de 4 legados (`StudentDialog` 189, `RedatorDialog` 189,
-  `RedatorDocumentSlot` 175, `BudgetDetailPage` 171), lista que só encolhe. **Bloco de config
-  separado** do `no-restricted-syntax` de propósito — `ignores` compartilhados reabririam em silêncio
-  a catraca de query-em-componente zerada em 2026-08-03.
-  **Provado nos dois sentidos (lição 10):** com a catraca esvaziada, reprovou exatamente os 4, com as
-  contagens batendo o `wc -l` (`File has too many lines (171|175|189|189). Maximum allowed is 150`);
-  sonda temporária de 160 linhas em `catalog/components/Course/` reprovou **com a catraca ativa**
-  (prova de que ela não acoberta arquivo novo); a **mesma** sonda movida para `catalog/hooks/` ficou
-  em silêncio, confirmando o escopo — hook longo é legítimo, componente inchado não. Sonda apagada,
-  árvore limpa.
-
-**Revalidação pós-correção:** `pnpm build` + `pnpm lint` verdes; todos os greps do DoD rerodados
-limpos; os 4 diffs proibidos (`backend/`, `shared/`, `locales/`, `generated.ts`) seguem vazios; placar
-da catraca reconferido em exatamente 4 arquivos, sem drift.
-
-**Divergência de DoD, resolvida pelo próprio Q-1:** `CoursesTable.tsx` ficou com 125 linhas — acima
-do "~110" que a spec §5 pedia. Não era dívida deste bloco (124 no `main` antes da Task 1; a +1 é o
-import do `BRAND_COLOR`, e o escopo era a linha 87, não a estrutura do arquivo). O número "~110" da
-spec era régua avulsa de um bloco; o mecanismo do Q-1 fixa a régua do projeto em **150**, e
-`CoursesTable` passa nela com folga. Não há dívida aberta aqui.
-
-**Gate de fechamento (2026-08-03).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
-o critério é comportamento idêntico na tela, provado pelo João no checkpoint único (D10), aprovado em
-2026-08-03; a única mudança depois dele foi `58ce5d8` (Q-1), que tocou **apenas** `eslint.config.js` e
-`.claude/rules/frontend-fsliced.md` — nenhum componente, confirmado por `git show --name-only` no
-fechamento — então a aprovação visual continua válida, diferente do bloco do redator, onde o markup
-mudou de forma e a prova teve de ser refeita. A metade mecanismo foi **reprovada de novo no próprio
-fechamento (lição 10)**: sonda de 160 linhas em `catalog/components/Course/` devolveu
-`File has too many lines (160). Maximum allowed is 150  max-lines` **com a catraca ativa** (ela não
-acoberta arquivo novo), e a **mesma** sonda em `catalog/hooks/` ficou em silêncio (escopo correto —
-hook longo é legítimo); sondas apagadas, árvore limpa. Placar da catraca reconferido pelo `wc -l`:
-exatamente os 4 arquivos de `ignores` acima de 150 (`StudentDialog` 189, `RedatorDialog` 189,
-`RedatorDocumentSlot` 175, `BudgetDetailPage` 171), sem drift; `CourseDialog` em 96 linhas.
-Suíte backend **372 passed (1360 assertions)** como regressão; `pnpm build` + `pnpm lint` verdes;
-Pint **n/a** (zero arquivo de `backend/` no diff); `generated.ts`, locales e `shared/` sem diff e
-nenhum DTO tocado, logo sem `typescript:transform`; greps das leis §5.6 (`primereact` direto,
-cross-feature) e do DoD (query-em-componente, `#25A5E4` em `features/`) sem saída; sem órfão — os 3
-componentes novos com exatamente 1 consumidor cada e os 4 campos novos de hook com leitor.
-Pendências: nenhum gatilho vencido (o mais próximo é P-04, 2026-08-15) e nenhuma pendência nova — a
-catraca de `max-lines` nascida aqui é item de código e foi para §Débitos técnicos do `backlog.md`,
-não para `pendencias.md`. **P-25 segue aberta:** o `frontend-fsliced.md` foi tocado, mas no parágrafo
-da régua de tamanho, não no da fronteira de tipo que fecharia o gatilho dela.
-
-Código morto: nenhum. O `frontend/src/features/operation/components/.gitkeep`, que o fechamento
-anterior registrou como órfão com deleção não commitada no working tree do João (lição 9), **foi
-deletado por ele em `e236aa0`**, commit anterior a esta branch — a pendência não existe mais.
-
-Arquivado: `plans/archive/2026-08-03-abstracao-componentes-catalog.md` ·
-`specs/archive/2026-08-03-abstracao-componentes-catalog-design.md` (sem context packet — a fonte foi
-o código de `features/catalog/`, a rule `frontend-fsliced.md` e o relatório do `/revisar-frontend` da
-mesma sessão).
-
-**Aberto, registrado, não resolvido:** a catraca de 4 legados do `max-lines` (§Débitos técnicos do
-`backlog.md`); o B-7 (`courses.data ?? []` no `QuoteWizard`); e P-25.
