@@ -100,9 +100,20 @@ inline e group `use`, não só linhas `use`), D6b (H.4.1 corrige as 2 contradiç
 mudança de contrato, e vai para o JSDoc e para a `frontend-fsliced.md`).
 
 **Plano:** 9 tasks (0 branch · 1 matriz · 2 docs+P-04 · 3 lint · 4 vitest+`useTableFilter` ·
-5 `useCrudPage` · 6 fix do empty state · **7 checkpoint visual do João** · 8 gate),
-`executor: claude` — a matriz é decisão de arquitetura, as sondas de lição 10 exigem julgar se a
-falha veio pelo motivo certo, e a Task 7 é gate humano.
+5 `useCrudPage` · 6 fix do empty state · **7 checkpoint visual do João** · 8 gate).
+
+**`executor: misto`, por decisão do João em 2026-08-03.** Tasks **1, 2 e 5** vão ao **Codex** —
+paths fechados, verificação executável e nenhuma decisão em aberto (matriz, texto dos docs e código
+dos testes estão literais no plano; o Codex transcreve e verifica). Tasks **0, 3, 4, 6, 8** ficam
+com **Claude**: a 3 toca a lei §5.6 e o `eslint.config.js` do repositório inteiro, a 4 escolhe
+versões de dependência, a 6 corrige duas telas de produção, a 8 julga o placar do gate. A **7 é do
+João**. Por camada: backend é só a Task 1; docs é a 2; frontend são 3, 4, 5 e 6.
+
+**Regra de parada que acompanha a delegação:** se o `DomainDependencyTest` reprovar no estado atual
+(Task 1, Step 2), o Codex **para e reporta** — não edita a matriz nem toca `app/Domains/`.
+Reprovação ali significa que a classificação da spec §D2 deixou passar um import, e reclassificar é
+decisão do João. As sondas de lição 10 exigem conferir que a falha veio **pelo motivo certo**;
+falha pelo motivo errado é `BLOCKED`, não prova.
 
 ## Último item fechado — 2026-08-03
 

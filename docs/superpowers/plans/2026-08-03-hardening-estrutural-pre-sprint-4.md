@@ -277,10 +277,27 @@ Esperado: `Tests:  2 passed`. Se reprovar, **a matriz está errada, não o códi
 
 - [ ] **Step 3: Ver reprovando — Regra A, via `use` (lição 10)**
 
-Introduza a sonda: em `backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php`, acrescente após a última linha `use`:
+**A sonda vive em arquivo próprio, nunca dentro de um arquivo de produção.** Um `git checkout` de
+arquivo real reverteria junto qualquer WIP que estivesse nele (lição 9); e sonda esquecida em
+`ConcludeTurmaAction` é dano permanente, enquanto sonda esquecida em arquivo dedicado é ruído óbvio.
+
+Create `backend/app/Domains/Operation/Actions/SondaArchTemporaria.php`:
 
 ```php
+<?php
+
+namespace App\Domains\Operation\Actions;
+
 use App\Domains\Identity\Actions\CreateStudentAction;
+
+/** SONDA TEMPORÁRIA — apagada no Step 6. Existe só para ver o guardrail reprovar. */
+class SondaArchTemporaria
+{
+    public function __invoke(): string
+    {
+        return CreateStudentAction::class;
+    }
+}
 ```
 
 ```bash
@@ -288,20 +305,25 @@ docker compose exec -T app php artisan test --filter=DomainDependencyTest
 ```
 
 Esperado: FALHA na Regra A, com a linha
-`app/Domains/Operation/Actions/ConcludeTurmaAction.php: Operation -> Identity\Actions\CreateStudentAction (camada Actions é interna)`.
+`app/Domains/Operation/Actions/SondaArchTemporaria.php: Operation -> Identity\Actions\CreateStudentAction (camada Actions é interna)`.
 
 - [ ] **Step 4: Ver reprovando — Regra A, via FQN inline (spec D5b, prova 1b do DoD)**
 
-Reverta a sonda anterior e ponha a mesma violação **sem nenhuma linha `use`**:
-
-```bash
-git checkout backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php
-```
-
-Agora, dentro do corpo do método `__invoke` do mesmo arquivo, acrescente como primeira linha:
+Substitua **todo** o conteúdo de `backend/app/Domains/Operation/Actions/SondaArchTemporaria.php` pela mesma violação **sem nenhuma linha `use`**:
 
 ```php
-        $sonda = \App\Domains\Identity\Actions\CreateStudentAction::class;
+<?php
+
+namespace App\Domains\Operation\Actions;
+
+/** SONDA TEMPORÁRIA — apagada no Step 6. Mesma violação do Step 3, agora só por FQN inline. */
+class SondaArchTemporaria
+{
+    public function __invoke(): string
+    {
+        return \App\Domains\Identity\Actions\CreateStudentAction::class;
+    }
+}
 ```
 
 ```bash
@@ -312,16 +334,23 @@ Esperado: **mesma falha do Step 3**. É esta prova que separa o teste de um `gre
 
 - [ ] **Step 5: Ver reprovando — Regra B (aresta não declarada)**
 
-Reverta e ponha uma classe de camada pública que **não** está na matriz:
-
-```bash
-git checkout backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php
-```
-
-Em `backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php`, acrescente após a última linha `use`:
+Substitua **todo** o conteúdo do mesmo arquivo por uma classe de camada **pública** que não está na matriz:
 
 ```php
+<?php
+
+namespace App\Domains\Operation\Actions;
+
 use App\Domains\Commercial\Models\Budget;
+
+/** SONDA TEMPORÁRIA — apagada no Step 6. Models é camada pública: quem reprova aqui é a matriz. */
+class SondaArchTemporaria
+{
+    public function __invoke(): string
+    {
+        return Budget::class;
+    }
+}
 ```
 
 ```bash
@@ -329,17 +358,17 @@ docker compose exec -T app php artisan test --filter=DomainDependencyTest
 ```
 
 Esperado: FALHA na Regra B, com
-`Operation -> Commercial\Models\Budget (aresta não declarada)`. Note que `Models` é camada pública — quem reprova aqui é a matriz, não a superfície.
+`Operation -> Commercial\Models\Budget (aresta não declarada)`. Note que `Models` é camada pública — quem reprova aqui é a matriz, não a superfície. Se esta falha vier na **Regra A**, o teste está classificando camada errado: pare e conserte antes de seguir.
 
-- [ ] **Step 6: Reverter a sonda e confirmar árvore limpa**
+- [ ] **Step 6: Apagar a sonda e confirmar árvore limpa**
 
 ```bash
-git checkout backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php
+rm backend/app/Domains/Operation/Actions/SondaArchTemporaria.php
 git status --short
 docker compose exec -T app php artisan test --filter=DomainDependencyTest
 ```
 
-Esperado: `git status --short` mostra **apenas** o arquivo de teste novo (untracked), e o teste volta a `2 passed`.
+Esperado: `git status --short` mostra **apenas** o arquivo de teste novo (untracked) — nenhum arquivo de `app/Domains/` modificado nem criado — e o teste volta a `2 passed`.
 
 - [ ] **Step 7: Pint e suíte completa**
 
@@ -1440,19 +1469,28 @@ Esperado: **os quatro sem saída**. O último é a prova de que H.4.1 não corri
 
 Repita, com sondas novas, uma prova de cada mecanismo:
 
-```bash
-# backend: FQN inline em domínio, sem use
-# (editar ConcludeTurmaAction.php acrescentando \App\Domains\Identity\Actions\CreateStudentAction::class)
-docker compose exec -T app php artisan test --filter=DomainDependencyTest
-git checkout backend/app/Domains/Operation/Actions/ConcludeTurmaAction.php
+**Backend** — recrie `backend/app/Domains/Operation/Actions/SondaArchTemporaria.php` com a versão de FQN inline do Step 4 da Task 1, depois:
 
-# frontend: import de outra feature
-# (editar CoursesTable.tsx acrescentando import de @features/commercial/...)
-cd frontend && pnpm lint 2>&1 | grep -c "no-restricted-imports"
-git checkout src/features/catalog/components/Course/CoursesTable.tsx
+```bash
+docker compose exec -T app php artisan test --filter=DomainDependencyTest
+rm backend/app/Domains/Operation/Actions/SondaArchTemporaria.php
 ```
 
-Esperado: o teste reprova; o lint conta ao menos 1 ocorrência. Sondas revertidas, `git status --short` limpo.
+Esperado: FALHA na Regra A citando `SondaArchTemporaria.php`, e o arquivo apagado em seguida.
+
+**Frontend** — acrescente como primeira linha de `frontend/src/features/catalog/components/Course/CoursesTable.tsx`:
+
+```ts
+import { ClientsTable } from '@features/commercial/components/Client/ClientsTable'
+```
+
+```bash
+cd frontend && pnpm lint 2>&1 | grep -c "no-restricted-imports"
+git checkout src/features/catalog/components/Course/CoursesTable.tsx
+cd /home/jvbat/projetos/lotus && git status --short
+```
+
+Esperado: o `grep -c` devolve ao menos `1`; `git status --short` volta vazio depois das duas reversões.
 
 - [ ] **Step 5: Nenhum órfão**
 
@@ -1488,16 +1526,69 @@ Se nada mudou nos steps acima, não há o que commitar. Reporte o placar do gate
 
 ## Handoff de execução
 
-**executor: claude**
+**executor: misto** — Tasks 1, 2 e 5 vão ao **Codex**; as demais ficam com **Claude**.
 
-Justificativa: o bloco tem três metades que exigem julgamento fora do plano.
+Divisão por camada, para leitura rápida: **backend** é só a Task 1; **docs** é a Task 2;
+**frontend** são as Tasks 3, 4, 5 e 6; a Task 7 é humana; a 0 e a 8 são git e gate.
 
-1. **A matriz da Task 1 é decisão de arquitetura.** Se o teste reprovar no Step 2, a resposta certa é quase sempre corrigir a matriz — mas *quase*: uma reprovação pode revelar um import que a classificação da spec não viu, e distinguir os dois casos é julgamento, não execução.
-2. **As sondas de lição 10** (Tasks 1, 3, 4, 5 e 8) exigem ler a mensagem de falha e decidir se ela reprova *pelo motivo certo*. Um teste que falha por `TypeError` onde deveria falhar por asserção é falso positivo de prova.
-3. **A Task 7 é checkpoint humano** e a Task 6 mexe em duas telas de produção com base numa causa lida em `node_modules` — se o comportamento na tela divergir do que o source diz, isso é achado, não ajuste mecânico.
+### executor: codex — Tasks 1, 2, 5
 
-Nenhuma task tem paths fechados o bastante e verificação puramente executável para ir ao Codex.
+Critério: paths fechados, verificação executável, e **nenhuma decisão em aberto** — a matriz das 21
+arestas, o texto dos dois docs e o código dos 5 testes estão escritos literalmente no plano. O Codex
+transcreve e verifica; não escolhe.
 
-**Ordem:** 0 → 1 → 2 → 3 → 4 → 5 → 6 → **7 (gate humano)** → 8.
+**`paths_autorizados`:**
 
-As Tasks 1-2 (backend/doc) e 3-5 (frontend) são independentes entre si e podem ser reordenadas; a Task 6 depende da 4, e a 7 depende da 6.
+```
+backend/tests/Feature/Shared/DomainDependencyTest.php
+backend/app/Domains/Operation/Actions/SondaArchTemporaria.php
+docs/estrutura-monolito.md
+docs/pendencias.md
+frontend/src/shared/hooks/useCrudPage.test.ts
+```
+
+Nada além disso. `backend/app/Domains/**` (exceto o arquivo de sonda, que é criado e apagado dentro
+da própria Task 1), `frontend/src/shared/hooks/useCrudPage.ts`, `eslint.config.js`, `vite.config.ts`,
+`package.json` e qualquer arquivo de feature estão **fora** — mudança necessária em qualquer um
+deles é `BLOCKED`, não ajuste.
+
+**Regras de parada, específicas destas tasks:**
+
+1. **Task 1, Step 2** — se `DomainDependencyTest` reprovar no estado atual, **pare e reporte as
+   violações**. Não edite a matriz `ALLOWED` e não toque em nenhum arquivo de `app/Domains/`. Uma
+   reprovação aqui significa que a classificação da spec §D2 não viu algum import, e reclassificar é
+   decisão de arquitetura — do João, não da execução.
+2. **Tasks 1 e 5, sondas** — cada passo de "ver reprovando" exige conferir que a falha vem **pelo
+   motivo certo**, não só que houve falha. Teste que quebra por `TypeError` onde deveria quebrar por
+   asserção não conta como prova (lição 10). Falha pelo motivo errado → `BLOCKED`.
+3. **Task 5 depende da Task 4** (infra do vitest). Não comece antes de `pnpm test` existir e rodar.
+4. **Task 2, Step 5** — se os dois `grep` de verificação não voltarem o esperado, pare: o texto foi
+   aplicado no lugar errado.
+5. Nunca rodar `./vendor/bin/pint` sem argumento, nunca tocar `generated.ts`, locales ou
+   `backend/database/`.
+
+### executor: claude — Tasks 0, 3, 4, 6, 7, 8
+
+- **Task 3** toca a lei §5.6 e o `eslint.config.js`, que vale para o repositório inteiro; a decisão
+  "violação encontrada é achado, não `ignores`" (spec D8) é julgamento, e `ignores` compartilhado
+  entre blocos já custou um achado de review neste projeto.
+- **Task 4** instala dependências e escolhe versões (`@testing-library/react` v16, fallback
+  `happy-dom` da spec §6) — decisão de infra, com efeito em `package.json` e lockfile.
+- **Task 6** corrige duas telas de produção com base numa causa lida em `node_modules`. Se o
+  comportamento divergir do que o source diz, isso é achado do bloco, não ajuste mecânico.
+- **Task 7** é gate humano; **Task 8** é o gate do bloco, que precisa julgar o placar.
+
+### Ordem
+
+```
+0 (claude)
+├── 1 (codex) ──┐
+├── 2 (codex) ──┤  independentes entre si
+├── 3 (claude) ─┤
+└── 4 (claude) ─┴── 5 (codex, depende da 4)
+                    └── 6 (claude, depende da 4)
+                        └── 7 (JOÃO) → 8 (claude)
+```
+
+As Tasks 1 e 2 não dependem de nada além da branch e podem rodar no Codex em paralelo ao frontend
+do Claude. A 5 espera a 4; a 6 espera a 4; a 7 espera a 6.
