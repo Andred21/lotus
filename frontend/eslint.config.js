@@ -95,8 +95,13 @@ export default defineConfig([
           // pelo nome do hook: banir `useCrudPage` fecharia só o caso conhecido
           // e `useOutraCoisa(clientsApi)` escaparia igual amanhã, que é como
           // este buraco nasceu (spec D5). Os `xxxApi.keys.all` dos 4 diálogos
-          // não são argumento de chamada e seguem passando.
-          selector: 'CallExpression[arguments.0.name=/Api$/]',
+          // são MemberExpression, não Identifier, e seguem passando.
+          //
+          // Casa QUALQUER posição de argumento, não só a primeira. Fixar
+          // `arguments.0` reproduzia o buraco que este seletor existe para
+          // fechar: `useEntityForm(mode, clientsApi)` escapava pela mesma
+          // lógica que motivou a regra (review de 2026-08-04, Q-2, sonda).
+          selector: 'CallExpression > Identifier.arguments[name=/Api$/]',
           message:
             'Recurso de API não entra em componente de feature nem como argumento: consuma um hook de features/<x>/hooks/ (frontend-fsliced.md).',
         },

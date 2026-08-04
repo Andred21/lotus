@@ -17,10 +17,18 @@ use App\Domains\Identity\Models\User;
  */
 trait CreatesDomainRecords
 {
-    /** Cliente com o User inativo que a RN-01 exige (cliente não loga). */
-    protected function makeClientWithUser(array $overrides = []): Client
+    /**
+     * Cliente com o User inativo que a RN-01 exige (cliente não loga).
+     *
+     * `$userOverrides` alcança o User, não só o Client. Sem ele, todo teste que
+     * precisava fixar um `rut` remendava depois com `$client->user()->update()`
+     * — mass update no query builder, que não dispara evento em model
+     * `Auditable` (ADR-08, lição 5) e ainda fazia o User nascer com `rut` nulo.
+     * Eram 11 sítios (review de 2026-08-04, Q-4).
+     */
+    protected function makeClientWithUser(array $overrides = [], array $userOverrides = []): Client
     {
-        return User::factory()->create(['type' => 'cliente', 'is_active' => false])
+        return User::factory()->create(['type' => 'cliente', 'is_active' => false, ...$userOverrides])
             ->client()->create(['legal_name' => 'ACME', 'type' => 'client', ...$overrides]);
     }
 

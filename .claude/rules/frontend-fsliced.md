@@ -78,8 +78,10 @@ exceção. Na dúvida, siga o vizinho da mesma
   **Isto é lint, não conselho:** `no-restricted-syntax` em `eslint.config.js` reprova
   `xxxApi.useAlgo()` e `useQuery`/`useMutation` diretos sob `src/features/*/components/**`.
   `useMutationErrors` continua liberado — é consumo de erro, não busca de dado.
-  O seletor casa também o **argumento**: `useCrudPage(budgetsApi)` dentro de um componente reprova,
-  porque a query mora dentro do `useCrudPage` do mesmo jeito. É por isso que os 7 aliases
+  O seletor casa também o **argumento, em qualquer posição**: `useCrudPage(budgetsApi)` e
+  `useEntityForm(mode, clientsApi)` reprovam dentro de um componente, porque a query mora dentro do
+  hook chamado do mesmo jeito. Nasceu casando só `arguments.0` e isso reproduzia o próprio buraco que
+  ele fecha — corrigido no review de 2026-08-04 (Q-2). É por isso que os 7 aliases
   `useXPage` existem em `features/<x>/hooks/` — eles não são delegação vazia, são o que mantém a
   query fora da página; eliminá-los regrediria a fronteira e o lint antigo não veria (2026-08-04).
   A regra nasceu de

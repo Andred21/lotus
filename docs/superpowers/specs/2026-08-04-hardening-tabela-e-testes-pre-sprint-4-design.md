@@ -111,9 +111,20 @@ contato principal na linha seguinte, explícito.
 `TestCase` e é usado 132 vezes. Dois deles declaram `: User` e quatro `: void` — a divergência de
 assinatura é a prova de que ninguém os lê como contrato.
 
+> **Corrigido no review (2026-08-04, Q-3):** a premissa vale para 5 dos 6. O de `PendingQuotesTest`
+> **não** era repasse — construía um user com a permissão única `operation.turma.create`, que é
+> exatamente a que gateia a rota sob teste. Matá-lo passou o único teste positivo da rota a rodar
+> como admin completo. O user estreito foi restaurado e ganhou uma guarda
+> (`test_permissao_vizinha_de_turma_nao_abre_a_rota`).
+
 **D13 — O placar da suíte é o gate do H.4.9.** Backend fecha em **376 passed / 1366 assertions**,
 idêntico ao baseline. Número diferente significa que a extração comeu asserção, e a saída é reverter
 o arquivo, não ajustar o número esperado.
+
+> **Estado final (2026-08-04):** a extração fechou em 376/1366 como exigido — o gate passou. O placar
+> hoje é **377/1367** por causa do teste acrescentado pelo Q-3 do review, decisão explícita do João
+> depois do gate. O limite de D13 continua valendo para extração; ele nunca proibiu cobertura nova.
+> Registrado aqui porque D13 sozinho faria um leitor futuro concluir que a extração foi lossy.
 
 **D14 — Nenhum arquivo de produção do backend entra no bloco.** `git diff main...HEAD -- backend/app/
 backend/database/` fica vazio. H.4.9 é `backend/tests/**` e nada mais.

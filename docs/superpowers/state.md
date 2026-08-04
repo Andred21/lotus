@@ -2,29 +2,16 @@
 schema_version: 1
 active_feature: hardening-tabela-e-testes-pre-sprint-4
 active_work_item: hardening-tabela-e-testes-pre-sprint-4
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-04-hardening-tabela-e-testes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-tabela-e-testes-pre-sprint-4.md
-blocker: >
-  Revisão de 2026-08-04 (Claude + revisão independente do Codex, bloco classificado alto risco por
-  Task 4 ter rodado com executor codex) devolveu 4 achados 🟡 aguardando decisão do João:
-  Q-1 SearchableTableFrame recalcula "estou filtrando?" com term === '' e omite `filtering` da
-  interface, contra a rule frontend-fsliced — inofensivo nos 5 consumidores atuais, errado por
-  construção para BudgetsTable/TurmasTable, cuja adoção é a pendência do fechamento; o plano
-  mandava literalmente term === '' (linha 159), então é conflito plano × rule.
-  Q-2 seletor ESLint novo casa só arguments.0 — sonda provou que useCrudPage('x', clientsApi) passa.
-  Q-3 D12 classificou PendingQuotesTest::actingAdmin como repasse puro e não era (criava user com
-  permissão única operation.turma.create); o único teste positivo da rota pendientes-configuracion
-  passou a rodar como admin completo e o gate D13 é cego a isso.
-  Q-4 makeClientWithUser não aceita override do User, o que gerou 11 remendos create-then-update,
-  8 deles via query builder sobre model Auditable.
-  Nenhum achado corrigido. Só achado aprovado pode ser corrigido; depois retomar reviewing.
-resume_state: reviewing
+blocker: null
+resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: 6e3f4bd
+state_basis_commit: f896b55
 updated_at: 2026-08-04T18:40:00-03:00
 ---
 

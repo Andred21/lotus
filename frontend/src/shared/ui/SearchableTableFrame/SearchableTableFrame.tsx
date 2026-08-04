@@ -15,6 +15,13 @@ import { AppButton } from '../AppButton'
 export interface SearchableTableState<T> {
   filter: string
   term: string
+  /** Resposta autoritativa para "empty state de filtro ou de lista vazia?".
+   * A moldura NÃO recalcula essa pergunta — quem sabe é o hook, porque mede o
+   * EFEITO do `where`, não a presença dele. Recalcular com `term === ''` foi o
+   * defeito que `TurmasTable` e `BudgetsTable` cometeram juntas em 2026-08-03,
+   * e omitir o campo daqui deixava a moldura errada por construção para elas
+   * (review de 2026-08-04, Q-1). */
+  filtering: boolean
   rows: T[]
   first: number
   onFilterChange: (value: string) => void
@@ -44,7 +51,14 @@ export interface SearchableTableFrameProps<T> {
  * diferiam só em `searchable`, ícone, 3 chaves i18n e `footerCount`.
  *
  * Não entram aqui: `BudgetsTable`/`TurmasTable` (dropdown de filtro por cima),
- * `RolesTable` (sem busca) e `EnrollmentTable` (sem toolbar) — spec D2. */
+ * `RolesTable` (sem busca) e `EnrollmentTable` (sem toolbar) — spec D2.
+ *
+ * QUEM FOR ADOTAR COM `where`: o `filtering` abaixo já escolhe o empty state
+ * certo, mas o TEXTO do vazio de filtro assume busca por termo. Uma tabela com
+ * dropdown precisa também da bifurcação de redação que `BudgetsTable` e
+ * `TurmasTable` têm hoje (`term === ''` → `common.noResultsFiltered` +
+ * `common.clearFilters`). Não está aqui porque nenhum consumidor atual passa
+ * `where` — construir agora seria especulativo (lição 3). */
 export function SearchableTableFrame<T>({
   table,
   searchPlaceholder,
@@ -58,17 +72,16 @@ export function SearchableTableFrame<T>({
 }: SearchableTableFrameProps<T>) {
   const { t } = useTranslation()
 
-  const empty =
-    table.term === '' ? (
-      emptyState
-    ) : (
-      <AppEmptyState
-        icon="pi pi-search"
-        title={t('common.noResults', { term: table.filter.trim() })}
-        description={t('common.noResultsHint')}
-        action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
-      />
-    )
+  const empty = table.filtering ? (
+    <AppEmptyState
+      icon="pi pi-search"
+      title={t('common.noResults', { term: table.filter.trim() })}
+      description={t('common.noResultsHint')}
+      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
+    />
+  ) : (
+    emptyState
+  )
 
   return (
     <>
