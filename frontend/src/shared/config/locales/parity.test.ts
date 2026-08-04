@@ -3,15 +3,25 @@ import en from './en.json'
 import esCL from './es-CL.json'
 import ptBR from './pt-BR.json'
 
-/** Um valor de locale é string (folha) ou um objeto aninhado de valores. */
-type LocaleTree = { [key: string]: string | LocaleTree }
+/** Um valor de locale é folha (string, nos 443 de hoje) ou um objeto aninhado. */
+type LocaleTree = { [key: string]: unknown }
+
+/** Folha é tudo que não é objeto de navegar. O teste anterior media
+ * `typeof value === 'string'`, e aí uma chave com valor numérico ou booleano
+ * era tratada como sub-árvore: `Object.entries(1)` devolve `[]` e a chave
+ * SUMIA da lista — presente nas 3 locales, acusada como faltando na que a
+ * tivesse com outro tipo, e invisível quando todas a tivessem assim. `null`
+ * era pior: `Object.entries(null)` estoura `TypeError` e a mensagem não diz
+ * qual chave. Comparar estrutura exige que toda chave apareça, qualquer que
+ * seja o tipo do valor. */
+const ehFolha = (valor: unknown): boolean => typeof valor !== 'object' || valor === null
 
 /** Achata em caminhos com ponto: `{ a: { b: 'x' } }` -> `['a.b']`. Compara
  * ESTRUTURA, não texto: chave presente em uma locale e ausente em outra é o
  * que renderiza a chave crua na tela do usuário chileno. */
 function flatten(tree: LocaleTree, prefix = ''): string[] {
   return Object.entries(tree).flatMap(([key, value]) =>
-    typeof value === 'string' ? [`${prefix}${key}`] : flatten(value, `${prefix}${key}.`),
+    ehFolha(value) ? [`${prefix}${key}`] : flatten(value as LocaleTree, `${prefix}${key}.`),
   )
 }
 
