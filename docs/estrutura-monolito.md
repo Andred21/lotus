@@ -4,8 +4,23 @@
 > Backend por DOMÍNIO (DDD-lite · ADR-02). Frontend em 3 camadas por ALCANCE (feature-based · ADR-05).
 > **Consulte antes de criar qualquer arquivo — para saber ONDE ele vai e que regra de importação segue.**
 
-## Regra de ouro (vale dos dois lados)
-Dependência só aponta **para baixo / para o compartilhado**. Um domínio (ou feature) **NUNCA** importa de outro domínio direto — sobe para a camada de cima ou usa a API. Violar isto é o "espaguete do feature-based ingênuo" — não fazer.
+## Regra de ouro (uma por lado — NÃO são a mesma regra)
+**Frontend — proibição absoluta.** Uma feature **NUNCA** importa de outra feature, nem para tipo, e
+`shared` **NUNCA** importa de feature. Composição acontece na camada `app`/rota. Lei §5.6 do
+`CLAUDE.md`; mecanismo em `frontend/eslint.config.js` (`no-restricted-imports`).
+
+**Backend — acoplamento controlado, não proibido.** Um domínio pode consumir outro, e consome: são
+42 referências cross-domain hoje. O que é proibido é *duplicar a regra* do outro domínio, importar
+camada interna dele, ou abrir aresta nova sem declarar. Mecanismo em
+`backend/tests/Feature/Shared/DomainDependencyTest.php`, que é a **fonte única** da matriz:
+
+- **superfície pública:** um domínio só enxerga `Models`, `Enums` e `Services` de outro; `Actions`,
+  `Data`, `Http`, `Exceptions`, `Policies`, `QueryBuilders` e `Support` são internos;
+- **arestas declaradas:** dentro da superfície, só os pares listados em `DomainDependencyTest::ALLOWED`.
+  `Certification` está com zero — todo import dele exige decisão explícita.
+
+Tratar as duas como a mesma regra foi o que fez este doc se contradizer até 2026-08-03: a regra de
+ouro dizia "NUNCA", a regra acionável do backend dizia "não proibido", e o código seguia a segunda.
 
 ---
 
@@ -27,7 +42,7 @@ backend/app/
 │   │   ├── Exceptions/         # exceção própria do domínio (só quando houver)
 │   │   ├── Http/Controllers/   # CRUD simples mora aqui direto (ADR-02)
 │   │   ├── Http/Requests/      # FormRequest, se não validar via Data
-│   │   └── routes.php          # rotas do domínio (agregadas pelo RouteServiceProvider)
+│   │   └── routes.php          # rotas do domínio (agregadas por glob() em routes/api.php)
 │   ├── Commercial/             # cliente/endereço/contato, orçamento, cotação, aprovação, anexos
 │   ├── Catalog/                # cursos, templates de certificado, habilitação redator-curso
 │   ├── Operation/              # turma, matrícula, designação redator, conclusão  [código real]
@@ -65,7 +80,11 @@ backend/routes/api.php          # só o esqueleto; delega aos routes.php dos dom
 - **PSR-4:** `App\Domains\` → `app/Domains/` no composer.json. Trade-off assumido: alguns `artisan make:*` precisam de stub custom.
 - **Migrations NÃO por domínio:** ficam em `database/migrations/` único. Migration é cronológica/global; FK cruza domínios (ex: `turmas.quote_id` → Commercial).
 - **routes.php por domínio:** cada domínio declara suas rotas; `routes/api.php` as agrega por `glob(app_path('Domains/*/routes.php'))` e fica só como esqueleto. Não existe `RouteServiceProvider` no repo — o `glob()` é o mecanismo real.
-- **Cruzamento de domínio:** ex. Operation consome Quote (Commercial) via Service/Action do Commercial OU lendo o Model — **nunca duplicando a regra**. Acoplamento controlado, não proibido.
+- **Cruzamento de domínio:** ex. Operation consome Quote (Commercial) via Service/Action do Commercial
+  OU lendo o Model — **nunca duplicando a regra**. Acoplamento controlado, não proibido; o que vale é
+  a superfície pública + as arestas de `backend/tests/Feature/Shared/DomainDependencyTest.php`. A
+  lista de arestas **não** é repetida aqui de propósito: doc que copia lista envelhece calado
+  (lição 13). Para saber o que é permitido, leia o teste — ele reprova.
 - **Criar estrutura de domínio só quando ele entra em desenvolvimento.** Não criar pastas vazias especulativas.
 
 ---
