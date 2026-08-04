@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: hardening-estrutural-pre-sprint-4
 active_work_item: hardening-estrutural-pre-sprint-4
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/hardening-estrutural-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: abstracao-componentes-catalog
@@ -59,6 +59,18 @@ para item ausente no `HEAD`.
 `H.4.1–H.4.9 + H.3.1`, fonte externa — o Context Packet é gerado pelo Codex (`lotus-context-packet`,
 sandbox read-only) antes de qualquer brainstorming. Diferente dos 4 blocos anteriores, todos sem
 packet por serem 100% frontend com fonte no próprio código.
+
+**Context Packet gerado pelo Codex em 2026-08-03** (`lotus-context-packet`, sandbox read-only,
+`base_commit` `563e78c`), `status: ready` — 7 fontes, todas `retrieved`, nenhuma `unavailable`:
+as 10 tasks Notion (`H.3.1` + `H.4.1`–`H.4.9`) pela base canônica por ID, mais 4 alvos do Drive.
+**O Drive não tem documento que delimite este hardening** — buscas dirigidas no V2 voltaram só
+ADRs, Certification e setup, então o detalhamento operacional mais recente é o do Notion, sujeito
+às restrições dos ADRs. Sem conflito Drive↔repo.
+
+**Achado do packet, não resolvido de propósito:** o backlog lista 5 bloqueantes + 4 pilotos = 9
+itens, mas o conjunto Notion referenciado tem **10** tasks. A que não aparece em nenhuma das duas
+listas é **`H.4.5` — revisar aliases `useXPage`, eliminando-os ou justificando orquestração real**
+(depende de H.4.4). Incluí-lo ou não é decisão do brainstorming.
 
 **Corte ainda não decidido, por decisão do João:** o item lista 5 bloqueantes (matriz/guardrail de
 dependências entre domínios, guardrails frontend, ownership de rotas nested, infra mínima de teste
