@@ -40,6 +40,7 @@ recusa refactor de conveniência.
 | **H.4.2** | As 3 fronteiras do frontend viram `no-restricted-imports`: `primereact` fora de `shared/ui`, feature→feature, `shared`→feature |
 | **H.4.3** | `vitest` + `jsdom` + Testing Library, com testes de regressão de `useTableFilter` e `useCrudPage` |
 | **Achado** | Empty state errado em `TurmasTable`/`BudgetsTable` (§7), encontrado pelo João durante este brainstorming |
+| **Docs** | As duas contradições de `estrutura-monolito.md` sobre a própria regra que H.4.1 automatiza (D6b); JSDoc de `useTableFilter` + parágrafo de tabela em card da `frontend-fsliced.md`, pela mudança de dono de `filtering` (D16) |
 
 **Fica fora, nominalmente:** H.3.1 (ownership de rotas nested), H.4.4 (`SearchableTableFrame`),
 H.4.5 (aliases `useXPage`), H.4.6 (DTO sem service locator), H.4.7 (helper multipart),
@@ -110,11 +111,33 @@ exatamente o alvo "antes da Sprint 4".
 
 Pest **não está instalado**: a suíte são 75 arquivos sob `phpunit/phpunit ^12.5`. Instalar Pest +
 `pest-plugin-arch` trocaria o runner do backend inteiro dentro de um bloco que já traz o vitest do
-outro lado. O teste é `backend/tests/Feature/Shared/DomainDependencyTest.php`, varrendo
-`app/Domains/**` por `^use App\Domains\`. Precedente exato na casa: `PermissionI18nParityTest` já
-varre arquivos do disco para guardar um invariante.
+outro lado. O teste é `backend/tests/Feature/Shared/DomainDependencyTest.php`. Precedente exato na
+casa: `PermissionI18nParityTest` já varre arquivos do disco para guardar um invariante.
 
 Consequência: P-04 nomeia "Pest Arch tests"; a substância é entregue por outro meio (D15).
+
+### D5b — A detecção cobre FQN, não só `use`
+
+Um teste que só lê `^use App\Domains\` tem um buraco pelo tamanho da regra: `\App\Domains\Identity\Models\User::find(1)`
+inline não é `use` nenhum e passa liso. Guardrail com escape conhecido é pior que nenhum — dá a
+impressão de cobertura. As formas que o teste **precisa** reconhecer:
+
+| Forma | Exemplo | Estado hoje |
+|---|---|---|
+| `use` simples | `use App\Domains\Identity\Models\User;` | 42 ocorrências — é tudo o que existe |
+| `use` com alias | `use App\Domains\...\User as IdentityUser;` | 0 |
+| group `use` | `use App\Domains\Identity\{Models\User, Enums\Type};` | 0 |
+| FQN inline | `\App\Domains\Identity\Models\User::find(1)` | 0 |
+| FQN em string | `'App\Domains\Identity\Models\User'` (morphMap, binding, config) | 0 dentro de `app/Domains/` |
+
+**Medido em 2026-08-03: só a primeira forma existe hoje** (`grep` por `\App\Domains\` fora de linhas
+`use` em `app/Domains/**` devolve zero). Isso não autoriza cobrir só ela — é exatamente o caminho
+por onde Certification escaparia da matriz sem ninguém notar, já que ele será escrito depois do
+guardrail. A detecção é sobre o texto do arquivo inteiro, não sobre as linhas `use`.
+
+O `Relation::enforceMorphMap()` de `AppServiceProvider.php` referencia 14 modelos de 4 domínios por
+`::class`, mas vive em `app/Providers/` — fora de `app/Domains/`, que é o escopo da regra. Providers
+compõem a aplicação, como o `app/router` do frontend (D9).
 
 ### D6 — A matriz mora no teste; o doc aponta para ela
 
@@ -122,6 +145,35 @@ Fonte única em código, dentro do `DomainDependencyTest`. `docs/estrutura-monol
 **regra** (superfície pública + arestas declaradas) e aponta para o teste como fonte da lista, em
 vez de repeti-la. Repetir a lista no doc reproduziria a lição 13 — doc que descreve intenção
 não-construída foi o Q-1 do bloco anterior.
+
+### D6b — H.4.1 corrige as contradições de `estrutura-monolito.md`
+
+O doc que o `CLAUDE.md` §3 manda consultar **antes de criar qualquer arquivo** se contradiz sobre
+justamente a regra que este bloco vai automatizar. Declarar a matriz sem corrigir o doc deixaria
+três textos discordantes sobre a mesma coisa — o teste, a regra de ouro e a regra acionável.
+
+**Contradição 1 — a de peso.** A "Regra de ouro (vale dos dois lados)" (`estrutura-monolito.md:8`)
+afirma: *"Um domínio (ou feature) **NUNCA** importa de outro domínio direto — sobe para a camada de
+cima ou usa a API"*. A regra acionável do backend (`:68`) afirma o oposto: *"**Cruzamento de
+domínio:** ex. Operation consome Quote (Commercial) via Service/Action do Commercial OU lendo o
+Model — nunca duplicando a regra. Acoplamento controlado, não proibido"*. Quem lê a primeira conclui
+que os 42 imports medidos na D2 são 42 violações da regra de ouro. **O código segue a segunda.**
+
+Correção: a proibição absoluta vale para o **frontend** (features, lei §5.6, e é verdade lá — 0
+cross-feature hoje). No backend a regra é acoplamento controlado, e o que este bloco acrescenta é
+*qual* acoplamento: superfície pública (D3) + arestas declaradas (D4). A "regra de ouro" deixa de
+dizer "vale dos dois lados" e passa a enunciar as duas regras distintas, cada uma com seu mecanismo.
+
+**Contradição 2 — interna ao mesmo doc.** A linha `:30` diz que `routes.php` é *"agregado pelo
+RouteServiceProvider"*; as linhas `:51` e `:67` dizem que o `RouteServiceProvider` **não existe no
+repo** e que o mecanismo real é `glob(app_path('Domains/*/routes.php'))`. As duas últimas estão
+certas (medido: `backend/app/Providers/` só tem `AppServiceProvider` e
+`TypeScriptTransformerServiceProvider`). Correção da `:30`.
+
+Fora do corte, registrado e **não corrigido**: o resto do doc é snapshot de 2026-07-04/2026-07-30 e
+não foi auditado por este bloco. Auditoria de doc é `/auditar-docs`, não este bloco — o que entra
+aqui é só a contradição sobre a regra que H.4.1 automatiza, mais a linha vizinha do mesmo bloco de
+regras.
 
 ### D7 — H.4.2 com `no-restricted-imports` nativo, sem `eslint-boundaries`
 
@@ -219,12 +271,15 @@ Cada item é comportamento provado, nunca pacote instalado (lei §5.8).
 | # | Prova |
 |---|---|
 | 1 | `DomainDependencyTest` **reprova** import proibido: sonda com `use App\Domains\Identity\Actions\CreateStudentAction` dentro de `Operation` (viola Regra A) e sonda com classe não declarada (viola Regra B). As duas revertidas, árvore limpa |
+| 1b | O mesmo teste **reprova a mesma violação escrita como FQN inline** — `\App\Domains\Identity\Actions\CreateStudentAction::class` no corpo de um arquivo de `Operation`, sem nenhuma linha `use`. Sonda revertida. Sem esta prova, a D5b é intenção não-construída (lição 13) |
 | 2 | O mesmo teste **passa** no estado atual, com os 42 imports batendo as 21 classes da matriz |
 | 3 | `pnpm lint` **reprova** as 3 sondas: `primereact` em `features/`, `@features/commercial` dentro de `catalog`, `@features/*` dentro de `shared/`. Nenhuma delas dispara em import legítimo (`@shared/ui` numa feature, `@features/*` em `app/router`). Sondas apagadas |
 | 4 | `pnpm test` verde, e **cada** teste visto vermelho contra o hook quebrado no ponto que ele guarda (clamp removido; `error:` fixado em `null`; `entity` congelada no `setDialog`) |
 | 5 | Empty state provado pelo João: lista vazia sem filtro → "Nenhuma turma ainda" / equivalente em Presupuestos; filtro real sem resultado → "Sem resultados para os filtros aplicados" |
 | 6 | Regressão: suíte backend **372 passed (1360 assertions)**, `pnpm build` + `pnpm lint` verdes, Pint nos arquivos PHP tocados |
 | 7 | `git diff main...HEAD` vazio para `generated.ts`, `locales/`, `backend/database/` |
+| 8 | `estrutura-monolito.md` sem as duas contradições da D6b: `grep -n "NUNCA importa de outro domínio"` não devolve mais um enunciado que valha para o backend, e nenhuma linha atribui a agregação de `routes.php` ao `RouteServiceProvider` — confirmado contra `ls backend/app/Providers/` |
+| 9 | JSDoc de `useTableFilter` sem a frase "saber se ele está ativo continua sendo da tela, não do hook", e o parágrafo de tabela em card da `frontend-fsliced.md` listando `filtering` entre o que vem do hook (D16) |
 
 **Testes de `useTableFilter`** (8 consumidores):
 
@@ -294,7 +349,30 @@ nível do hook — dentro do corte da D11.
 
 **Entrega:** (a) reprodução nomeia a causa (D12); (b) normalização na fronteira do Dropdown nas
 duas telas; (c) `useTableFilter` expõe `filtering`, consumido pelas duas; (d) teste 7 de
-`useTableFilter`; (e) prova visual do João nas duas telas (D13).
+`useTableFilter`; (e) prova visual do João nas duas telas (D13); (f) a mudança de responsabilidade
+é documentada nos dois lugares que a descrevem (D16).
+
+### D16 — `filtering` mudar de dono é mudança de contrato, e vai para o JSDoc e para a rule
+
+Decidir *se a tabela está filtrando* deixa de ser da tela e passa a ser do hook. Contrato novo, não
+detalhe de implementação: quem escrever a próxima tabela precisa saber que **não** deve recalcular a
+pergunta. Dois textos descrevem esse contrato hoje e os dois ficariam desatualizados no mesmo
+instante:
+
+1. **JSDoc de `shared/hooks/useTableFilter.ts`** — o bloco de comentário atual explica `searchable`
+   opcional e `where`, e diz que "saber se ele está ativo continua sendo da tela, não do hook".
+   **Essa frase passa a ser falsa** e é exatamente a que autorizou a duplicação. Ela é substituída
+   pelo contrato novo, com o motivo: a tela reimplementando a pergunta com comparação estrita foi o
+   que produziu o empty state errado em duas telas.
+2. **`.claude/rules/frontend-fsliced.md`**, parágrafo "Tabela em card = `useTableFilter` +
+   `AppCardToolbar` + `footerCount`" (linhas 119-128) — hoje lista o que vem do hook
+   (`busca`, `first` controlado, `clear()`) e o que a feature declara (`searchable`, `where`).
+   `filtering` entra na primeira lista, com a nota de que reescrever o bloco na feature já rendeu
+   defeito duas vezes: o `RolesTable` com paginador duplo (registrado no próprio parágrafo) e agora
+   o empty state de `TurmasTable`/`BudgetsTable`.
+
+Sem isso, o bloco corrige o sintoma em duas telas e deixa a instrução que o causou de pé — que é a
+lição 14 pela quarta vez.
 
 **O que este achado não é:** não é bug de `useTableFilter`. O hook recebe `where: undefined` ou
 `where: fn` e se comporta corretamente nos dois casos. Um teste de hook, sozinho, **não pegaria**
