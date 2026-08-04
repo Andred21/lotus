@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-tabela-e-testes-pre-sprint-4
 active_work_item: hardening-tabela-e-testes-pre-sprint-4
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/hardening-tabela-e-testes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: e7884c3
-updated_at: 2026-08-04T17:00:00-03:00
+state_basis_commit: ce2d2e4
+updated_at: 2026-08-04T17:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -91,6 +91,38 @@ o corte é do brainstorming, e o mérito técnico já está resolvido no backlog
 **satisfeita** (vitest desde 2026-08-04). H.4.9 dependia de H.4.6 — **satisfeita** desde o bloco de
 guardrails. Resta **uma interna ao bloco**: H.4.5 → H.4.4. Nenhuma task restante está bloqueada por
 algo fora deste bloco.
+
+**Context Packet gerado pelo Codex em 2026-08-04** (`lotus-context-packet`, `mcp__codex__codex`
+sandbox read-only), `base_commit` `ce2d2e4`, `status: ready` — 10 fontes, **nenhuma `unavailable`**:
+as 3 tasks Notion buscadas uma a uma pela base canônica por ID, 2 alvos do Drive revalidados de
+forma dirigida (sem busca ampla) e 5 chaves de repositório.
+
+**Validação do contrato, conferida e não aceita por relatório:** markers exatos sem prosa fora
+deles, frontmatter completo com `plan_*`/`spec_*` em `null` (os ponteiros do estado são nulos, e o
+contrato proíbe inventá-los), 7 key facts (teto 8), `RECOMMENDED_TRANSITION: ready_for_planning`,
+todo fato externo citando chave do registro, e nenhum gatilho de staleness citando hash de
+provenance, a transição promotora ou edição de campo de workflow. **Os 18 blob SHAs do packet foram
+recalculados aqui com `git hash-object` e batem todos** — `state.md`, `progress.md`, `backlog.md`,
+packet anterior, `package.json`, `RedatoresTable.tsx`, `StudentsTable.tsx`, `useTableFilter.ts`,
+`AppCard.tsx`, `AppDataTable.tsx`, `useCrudPage.ts`, os 7 aliases e `eslint.config.js`,
+`TestCase.php`.
+
+**O packet excedeu o teto de 5 artefatos externos** (6), declarando o motivo no próprio registro:
+as 3 páginas eram obrigatórias e a revalidação da ausência no Drive exigiu os 2 inventários mais o
+ADR. Aceito — o excesso está justificado, como a SKILL permite.
+
+**Três afirmações do packet sobre o repositório foram medidas aqui, não aceitas por leitura**
+(lição 13): os **7** aliases `useXPage` são delegação pura de **6 linhas** cada
+(`return useCrudPage(<x>Api)`, sem orquestração nenhuma) — o que sustenta a conclusão técnica do
+H.4.5; `TestCase.php` centraliza **só autenticação** (`actingAsAdmin`/`actingAsSuperadmin` +
+header `Referer` do Sanctum), sem factory de agregados, que é a superfície do H.4.9; e são **78**
+arquivos de teste em `backend/tests/`. `RedatoresTable` (96 linhas) e `StudentsTable` (98) estão
+ambas abaixo da régua de 150 do `max-lines` — o H.4.4 é repetição de moldura, não arquivo inchado.
+
+**A divergência do H.4.5 ficou registrada e não decidida**, como pedido: o packet põe na tabela de
+divergências o enunciado externo ("eliminados ou justificados") contra a decisão interna posterior
+("eliminar é a resposta errada"), com a base de resolução medida no código. O corte segue sendo
+decisão do brainstorming.
 
 **Débitos técnicos vizinhos, registrados e fora do corte até decisão contrária:** a catraca do
 `max-lines` cita `StudentDialog` (189) e `RedatorDialog` (189), que são telas de tabela/diálogo na
