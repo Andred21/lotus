@@ -2,16 +2,16 @@
 schema_version: 1
 active_feature: hardening-tabela-e-testes-pre-sprint-4
 active_work_item: hardening-tabela-e-testes-pre-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-04-hardening-tabela-e-testes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-tabela-e-testes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: 983086f
+state_basis_commit: c140e53
 updated_at: 2026-08-04T18:40:00-03:00
 ---
 
