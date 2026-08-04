@@ -30,11 +30,9 @@ class BudgetFileController extends Controller
 
     public function destroy(Budget $budget, File $file): Response
     {
-        abort_unless(
-            $file->fileable_type === 'budget' && $file->fileable_id === $budget->id,
-            404,
-        );
-
+        // Posse garantida pelo `->scopeBindings()` da rota: o {file} é resolvido
+        // por $budget->files(), então arquivo de outro budget — ou de outro
+        // fileable_type — nunca chega aqui (404 no binding).
         $file->delete();
 
         return response()->noContent();

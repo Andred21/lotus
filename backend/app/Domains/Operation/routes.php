@@ -13,8 +13,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('turmas/{turma}', [TurmaController::class, 'update']);
     Route::delete('turmas/{turma}', [TurmaController::class, 'destroy']);
     Route::post('quotes/{quote}/turma', [TurmaController::class, 'store']);
-    Route::post('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'designateRedator']);
-    Route::delete('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'removeRedator']);
+    // Redator NÃO pertence à turma: a relação é N:N (`turma_redator`). Não há
+    // posse a checar, e `scopeBindings` tentaria resolver `$turma->redator()`,
+    // que não existe. A isenção é explícita porque o guardrail
+    // (NestedRouteOwnershipTest) reprova rota que não declara nem uma nem outra.
+    Route::post('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'designateRedator'])
+        ->withoutScopedBindings();
+    Route::delete('turmas/{turma}/redatores/{redator}', [TurmaController::class, 'removeRedator'])
+        ->withoutScopedBindings();
     Route::post('turmas/{turma}/conclude', [TurmaController::class, 'conclude']);
     Route::get('turmas/{turma}/manual', [TurmaController::class, 'manual']);
 
