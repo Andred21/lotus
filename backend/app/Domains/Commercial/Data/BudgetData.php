@@ -46,10 +46,14 @@ class BudgetData extends Data
         ];
     }
 
-    public static function fromModel(Budget $budget): self
+    /**
+     * O serviço entra por parâmetro, não por `app()`: quem constrói o DTO é o
+     * controller, que já recebe dependência por injeção de método. Piloto da
+     * H.4.6 — a família de DTOs que assina URL (`photo_url`, `download_url`)
+     * segue com o container de propósito (spec D10).
+     */
+    public static function fromModel(Budget $budget, BudgetSummaryService $summary): self
     {
-        $summary = app(BudgetSummaryService::class);
-
         return new self(
             id: $budget->id,
             client_id: $budget->client_id,

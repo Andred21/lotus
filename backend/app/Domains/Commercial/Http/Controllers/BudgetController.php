@@ -6,6 +6,7 @@ use App\Domains\Commercial\Actions\CreateBudgetAction;
 use App\Domains\Commercial\Actions\DeleteBudgetAction;
 use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Models\Budget;
+use App\Domains\Commercial\Services\BudgetSummaryService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -25,32 +26,32 @@ class BudgetController extends Controller implements HasMiddleware
     }
 
     /** @return array<BudgetData> */
-    public function index(): array
+    public function index(BudgetSummaryService $summary): array
     {
         return Budget::with(['quotes.files', 'files'])
             ->get()
-            ->map(fn (Budget $b) => BudgetData::fromModel($b))
+            ->map(fn (Budget $b) => BudgetData::fromModel($b, $summary))
             ->all();
     }
 
-    public function store(BudgetData $data, CreateBudgetAction $action): BudgetData
+    public function store(BudgetData $data, CreateBudgetAction $action, BudgetSummaryService $summary): BudgetData
     {
-        return BudgetData::fromModel($action->execute($data)->load(['quotes.files', 'files']));
+        return BudgetData::fromModel($action->execute($data)->load(['quotes.files', 'files']), $summary);
     }
 
-    public function show(Budget $budget): BudgetData
+    public function show(Budget $budget, BudgetSummaryService $summary): BudgetData
     {
-        return BudgetData::fromModel($budget->load(['quotes.files', 'files']));
+        return BudgetData::fromModel($budget->load(['quotes.files', 'files']), $summary);
     }
 
-    public function update(BudgetData $data, Budget $budget): BudgetData
+    public function update(BudgetData $data, Budget $budget, BudgetSummaryService $summary): BudgetData
     {
         // `code` e `client_id` são imutáveis: só payment_terms muda por aqui.
         $budget->update([
             'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms,
         ]);
 
-        return BudgetData::fromModel($budget->load(['quotes.files', 'files']));
+        return BudgetData::fromModel($budget->load(['quotes.files', 'files']), $summary);
     }
 
     public function destroy(Budget $budget, DeleteBudgetAction $action): Response

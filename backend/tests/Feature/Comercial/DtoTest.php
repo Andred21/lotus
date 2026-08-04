@@ -8,6 +8,7 @@ use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Commercial\Services\BudgetSummaryService;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,7 +43,7 @@ class DtoTest extends TestCase
 
     public function test_budget_data_derives_status_and_totals(): void
     {
-        $data = BudgetData::fromModel($this->seedBudget());
+        $data = BudgetData::fromModel($this->seedBudget(), app(BudgetSummaryService::class));
 
         $this->assertSame(QuoteStatus::Approved, $data->status);   // ≥1 aprovada
         $this->assertSame('120.0000', $data->total_value_uf);

@@ -7,6 +7,7 @@ use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Services\BudgetSummaryService;
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Data\StudentDetailData;
@@ -114,7 +115,7 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
         $client->delete();
 
-        $data = BudgetData::fromModel($budget->fresh(['client', 'quotes', 'files']));
+        $data = BudgetData::fromModel($budget->fresh(['client', 'quotes', 'files']), app(BudgetSummaryService::class));
 
         $this->assertSame('PRE-9', $data->code);
     }
