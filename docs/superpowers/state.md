@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening-tabela-e-testes-pre-sprint-4
+active_work_item: hardening-tabela-e-testes-pre-sprint-4
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: ade7981
-updated_at: 2026-08-04T16:00:00-03:00
+state_basis_commit: e7884c3
+updated_at: 2026-08-04T17:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,55 @@ updated_at: 2026-08-04T16:00:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Bloco ativo — `hardening-tabela-e-testes-pre-sprint-4`
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
+com o escopo nomeado no argumento — "Hardening pré-Sprint 4" — e o estado em `idle`; o comando não
+promove item sozinho). É o **terceiro e último recorte** do mesmo item que dois blocos de 2026-08-04
+fecharam parcialmente: entregues H.4.1–H.4.3 pelo `hardening-estrutural-pre-sprint-4` e H.3.1,
+H.4.6, H.4.7, H.4.8 pelo `hardening-guardrails-e-transportes-pre-sprint-4`. Abertos: **H.4.4, H.4.5
+e H.4.9**. O backlog já registra esse recorte desde `3d7aca5`, então nenhuma edição dele acompanha
+esta transição.
+
+**O id não promete o item inteiro.** `hardening-tabela-e-testes-pre-sprint-4` descreve o conteúdo
+das três tasks (moldura de tabela + aliases de página; builders de teste no backend), não a posição
+na fila. Escolhido pelo João junto da seleção; renomeável na revisão da spec se o corte mudar, como
+ocorreu no bloco anterior.
+
+**Rota `context_required`, por gatilho de staleness — não por rotina.** O packet de 2026-08-04
+(`context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md`, `status: ready`,
+`base_commit` `7419c32`) cobre as 7 tasks daquele recorte, inclusive as 3 restantes, com os sinais
+de aceite de cada uma. **Ele está stale por dois dos seus próprios gatilhos declarados**
+(§Staleness triggers):
+
+1. **Mudança semântica no item do backlog** — H.3.1, H.4.6, H.4.7 e H.4.8 saíram da lista, e o item
+   passou a carregar a conclusão técnica do H.4.5, escrita no fechamento.
+2. **Decisão posterior do João sobre H.4.5 ou sobre o corte** — H.4.5 foi retirado do corte na
+   revisão da spec de 2026-08-04, e a conclusão técnica registrada **contradiz o sinal de aceite
+   externo que o próprio packet transcreve**: o packet diz "aliases sem valor são eliminados ou
+   justificados"; o backlog diz que **eliminar é a resposta errada**, porque `useCrudPage` chama
+   `resource.useList()` por dentro e matar os aliases moveria a query para as quatro páginas,
+   regredindo a fronteira zerada em 2026-08-03 — e **passaria no lint**, porque o seletor casa
+   `budgetsApi.useList()` e não `useCrudPage(budgetsApi)`.
+
+Some-se a isso que `base_commit` está 8 commits atrás do `HEAD` (`e7884c3`). Logo o packet **não é
+reaproveitado como está**; o Codex gera um novo, para as 3 tasks restantes.
+
+**Ponto de partida que o novo packet precisa reconciliar, não redescobrir:** o Drive V2 segue sem
+documento que delimite este hardening (confirmado duas vezes — buscas dirigidas voltaram só ADRs,
+Certification e setup); a contradição do H.4.5 acima é a divergência a registrar, **não a decidir** —
+o corte é do brainstorming, e o mérito técnico já está resolvido no backlog.
+
+**Dependências Notion, atualizadas pelo que os dois blocos entregaram:** H.4.4 dependia de H.4.3 —
+**satisfeita** (vitest desde 2026-08-04). H.4.9 dependia de H.4.6 — **satisfeita** desde o bloco de
+guardrails. Resta **uma interna ao bloco**: H.4.5 → H.4.4. Nenhuma task restante está bloqueada por
+algo fora deste bloco.
+
+**Débitos técnicos vizinhos, registrados e fora do corte até decisão contrária:** a catraca do
+`max-lines` cita `StudentDialog` (189) e `RedatorDialog` (189), que são telas de tabela/diálogo na
+mesma vizinhança do H.4.4; e Q-2 (guardrail de rota escapa com parâmetro não tipado) e Q-4 (teste do
+`postMultipart` mocka o axios inteiro) seguem em §Débitos técnicos do `backlog.md`.
 
 ## Último item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
