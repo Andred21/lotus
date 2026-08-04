@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening-guardrails-e-transportes-pre-sprint-4
 active_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md
@@ -242,6 +242,52 @@ e classificá-la é decisão do João. Task 1 Step 7 — teste cross-pai vermelh
 **Três pendências de fechamento registradas no plano, fora das tasks:** levar ao `backlog.md` a
 conclusão técnica do H.4.5, e os dois writes no Notion (D4b e D11b), ambos por ID e com texto
 aprovado pelo João antes de enviar.
+
+**Execução em 2026-08-04, `/executar-bloco` + `subagent-driven-development` (argumento explícito do
+João), `executor: misto`.** Branch `hardening/guardrails-e-transportes` a partir do `main`, sem
+worktree (D1/P-03 — toca `backend/`), 4 commits de conteúdo (`310c5ec`..`4e5882e`). Baseline da
+Task 0: backend 375 passed (1365 assertions), frontend 14 passed — batendo com o plano.
+
+**Tasks 1 e 4 no Codex** (`mcp__codex__codex`, `sandbox: danger-full-access` — desta vez sem o
+problema de socket do docker que forçou CLI direto no bloco anterior; o parâmetro de sandbox do
+próprio MCP tool resolveu). Nenhum commit feito pelo Codex — report + diff sempre revisados por
+Claude, que rodou a verificação do plano do zero antes de aceitar e commitou. Tasks 2 e 3 via
+implementer subagent (Sonnet) + task reviewer subagent, ambos aprovados sem achado bloqueante.
+
+**A medição da spec errou de novo, 2 vezes nesta execução — terceira e quarta ocorrência da lição 13
+no projeto.** Task 2 (H.4.6): a spec media 4 call sites de `BudgetData::fromModel`, todos no
+`BudgetController` — existiam **6**, 2 deles chamando `fromModel()` direto em teste
+(`DtoTest.php`, `SoftDeletedRelationProjectionTest.php`). O implementador parou e reportou
+corretamente (regra de parada do plano); João decidiu via pergunta explícita: atualizar os 2 testes
+(adaptação mecânica de assinatura via `app(BudgetSummaryService::class)`, não mudança de
+comportamento) em vez de reverter a task. **D9 fechou como sinal 1 (técnica paga)** — a produção
+ficou limpa em 1 nível, sem `app()`. Task 5 (gate): a sonda literal do plano para H.3.1(a) — rota
+apontando para `CourseTemplateController::destroy` — não reprovava, porque o método real só tipa 1
+model (`CourseCertificateTemplate $template`), não 2 como o plano supôs. Corrigida na hora com um
+closure tipando os 2 models; reprovou citando a rota certa, e com `->withoutScopedBindings()`
+passou — a prova nos dois sentidos ficou de pé, só a sonda mudou de forma.
+
+**Gate automatizado (Task 5), tudo do zero:** suíte backend **376 passed (1366 assertions)**
+(375 baseline + 1 do `NestedRouteOwnershipTest`); `pnpm test` **21 passed** (14 baseline + 4 do
+`postMultipart` + 3 do `parity`), `pnpm build` e `pnpm lint` verdes; os 4 guardrails/sondas do gate
+vistos reprovando pelo motivo certo (H.3.1 silêncio, H.3.1 saída explícita, H.4.8 excedente),
+sondas removidas, árvore limpa; `generated.ts`, `locales/*.json` e `backend/database/` sem diff;
+Pint limpo nos 11 arquivos `.php` tocados (guarda de lista vazia não disparou). Órfãos: nenhum —
+`postMultipart` com 5 arquivos consumidores (6 pontos) e exatamente 2 `new FormData()` no
+repositório (o helper + `useRedatorForm.ts`, D11, intocado).
+
+**D12 — prova de upload real contra a API com sessão Sanctum** (login `admin@lotus.cl`, curl com
+`Origin`+`Accept`+`X-XSRF-TOKEN`, lição 12): foto (`POST /api/users/1/photo` → 204; URL
+pré-assinada → 200 `image/png`) e documento (`POST /api/turmas/1/documents` → 201, `size: 48` no
+corpo — a lição 6 quebraria isso em silêncio com 201 e arquivo vazio). **D14** confirmado por grep:
+`CLAUDE.md:137` e `frontend-fsliced.md:145-147` citam `pnpm test`.
+
+**Pendências de fechamento, ainda não executadas** (ficam para o `/fechar-sprint`): levar ao
+`backlog.md` a conclusão técnica do H.4.5; os 2 writes no Notion (D4b, D11b), com texto aprovado
+pelo João antes de enviar.
+
+**Por instrução explícita do `/executar-bloco`, review não foi iniciado nesta sessão** — a próxima
+instrução aciona a revisão do trabalho ativo.
 
 ## Último item fechado — 2026-08-04
 
