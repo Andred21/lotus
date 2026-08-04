@@ -116,9 +116,13 @@ exceção. Na dúvida, siga o vizinho da mesma
   objeto); `useEntityForm` cuida de form + reset por prop + erros de mutação; moldes
   `ModulePage`/`CrudDialog`. Dialog unificado view=edit=create (campos vazios = cadastro); prop
   `onEdit` abre a edição a partir do view.
-- **Tabela em card = `useTableFilter` + `AppCardToolbar` + `footerCount`.** Busca, `first` controlado
-  e `clear()` vêm do hook (`shared/hooks/useTableFilter.ts`); a feature só declara `searchable` e,
-  quando tem filtro próprio, `where`. **O rodapé é o paginador:** passe `footerCount` ao
+- **Tabela em card = `useTableFilter` + `AppCardToolbar` + `footerCount`.** Busca, `first` controlado,
+  `clear()` **e `filtering`** vêm do hook (`shared/hooks/useTableFilter.ts`); a feature só declara
+  `searchable` e, quando tem filtro próprio, `where`. **Não recalcule "estou filtrando?" na tela:**
+  `TurmasTable` e `BudgetsTable` faziam isso com `status === null` e erravam o empty state juntas,
+  porque o Dropdown do PrimeReact devolve o OBJETO da opção quando `option.value` é vazio
+  (`dropdown.cjs.js:1441`; use `optionValue="value"` sempre que uma opção valer `null`/`''`).
+  **O rodapé é o paginador:** passe `footerCount` ao
   `AppDataTable` e não renderize `AppCardFooter` junto de tabela — o wrapper exibe a faixa sempre e
   os controles de página só quando passa de `rows` (spec D12). Reescrever o bloco na feature foi o
   que rendeu, em 6 cópias, um `RolesTable` com o paginador default ligado (duas faixas, contra a spec

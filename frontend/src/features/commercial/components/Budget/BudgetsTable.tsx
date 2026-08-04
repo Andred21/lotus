@@ -48,7 +48,7 @@ export function BudgetsTable({
     ...STATUSES.map((s) => ({ label: t(`quoteStatus.${s}`), value: s })),
   ]
 
-  const filtering = table.term !== '' || status !== null
+  const filtering = table.filtering
 
   const empty = filtering ? (
     <AppEmptyState
@@ -88,6 +88,7 @@ export function BudgetsTable({
               <AppDropdown
                 value={status}
                 options={statusOptions}
+                optionValue="value"
                 onChange={(e) => { setStatus(e.value as QuoteStatus | null); table.resetPage() }}
               />
             </div>

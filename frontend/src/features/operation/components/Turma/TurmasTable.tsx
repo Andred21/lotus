@@ -35,7 +35,7 @@ export function TurmasTable({
     ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
   ]
 
-  const filtering = table.term !== '' || status !== null
+  const filtering = table.filtering
 
   const empty = filtering ? (
     <AppEmptyState
@@ -75,6 +75,7 @@ export function TurmasTable({
               <AppDropdown
                 value={status}
                 options={statusOptions}
+                optionValue="value"
                 onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
               />
             </div>

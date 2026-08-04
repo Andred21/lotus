@@ -96,4 +96,22 @@ describe('useTableFilter', () => {
     expect(result.current.first).toBe(0)
     expect(result.current.rows).toHaveLength(3)
   })
+
+  it('filtering responde por termo e por where, e é falso sem nenhum dos dois', () => {
+    // Quem decide "estou filtrando?" é o hook. Duas telas reimplementavam a
+    // pergunta com `status === null` e erravam o empty state.
+    const semNada = renderHook(() => useTableFilter(rows, searchable))
+    expect(semNada.result.current.filtering).toBe(false)
+
+    act(() => semNada.result.current.onFilterChange('alta'))
+    expect(semNada.result.current.filtering).toBe(true)
+
+    act(() => semNada.result.current.clear())
+    expect(semNada.result.current.filtering).toBe(false)
+
+    const comWhere = renderHook(() =>
+      useTableFilter(rows, searchable, (row) => row.status === 'ativo'),
+    )
+    expect(comWhere.result.current.filtering).toBe(true)
+  })
 })

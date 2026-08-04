@@ -5,6 +5,10 @@ export interface TableFilter<T> {
   filter: string
   /** Termo normalizado (trim + lowercase); `''` quando não há busca. */
   term: string
+  /** `true` quando há busca ativa OU filtro próprio da tela (`where`). É a
+   * resposta autoritativa para "mostrar o empty state de filtro ou o de lista
+   * vazia?" — a tela não recalcula essa pergunta. */
+  filtering: boolean
   /** Linhas depois do `where` e da busca. */
   rows: T[]
   /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar).
@@ -37,8 +41,15 @@ export interface TableFilter<T> {
  * não tem, por decisão do protótipo) e ainda assim precisa do estado de página
  * e do clamp — sem isso o consumidor reimplementa o bloco, que é a duplicação
  * que este hook existe para matar. `where` é o filtro próprio da tela (estado,
- * tipo) e roda ANTES da busca; saber se ele está ativo continua sendo da tela,
- * não do hook.
+ * tipo) e roda ANTES da busca.
+ *
+ * **Saber se há filtro ativo é do hook, não da tela** (`filtering`). Era o
+ * contrário até 2026-08-03, e as duas telas que reimplementaram a pergunta
+ * erraram junto: `TurmasTable` e `BudgetsTable` comparavam o estado do
+ * dropdown com `=== null`, mas o PrimeReact devolve o OBJETO da opção quando
+ * `option.value` é vazio (`dropdown.cjs.js:1441`, `ObjectUtils.isEmpty(null)`
+ * é `true`). Com "Todos" selecionado a tela dizia "sem resultados para os
+ * filtros aplicados" sobre uma lista que só estava vazia.
  */
 export function useTableFilter<T>(
   items: T[],
@@ -74,6 +85,7 @@ export function useTableFilter<T>(
   return {
     filter,
     term,
+    filtering: term !== '' || where !== undefined,
     rows,
     first: first >= rows.length ? 0 : first,
     onFilterChange,
