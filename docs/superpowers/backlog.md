@@ -7,14 +7,28 @@
 
 ## Próximos blocos
 
-1. **Hardening estrutural pré-Sprint 4** — parcialmente concluído em 2026-08-04 pelo bloco
-   `hardening-estrutural-pre-sprint-4` (`progress.md`): entregou H.4.1 (matriz/guardrail de
-   dependências entre domínios, `DomainDependencyTest`) e H.4.2 (guardrails frontend, as 3
-   fronteiras via `no-restricted-imports`) dos bloqueantes, e H.4.3 (infraestrutura mínima de
-   teste — vitest instalado + regressão de `useTableFilter`/`useCrudPage`). H.3.1, H.4.4–H.4.9
-   ficaram de fora por decisão do João no brainstorming do bloco; seguem como o restante deste
-   item.
- — Notion: H.3.1, H.4.4–H.4.9
+1. **Hardening estrutural pré-Sprint 4** — parcialmente concluído em **dois** blocos de 2026-08-04
+   (`progress.md`). O primeiro, `hardening-estrutural-pre-sprint-4`, entregou H.4.1 (matriz/guardrail
+   de dependências entre domínios, `DomainDependencyTest`), H.4.2 (guardrails frontend, as 3
+   fronteiras via `no-restricted-imports`) e H.4.3 (infraestrutura mínima de teste — vitest instalado
+   + regressão de `useTableFilter`/`useCrudPage`). O segundo,
+   `hardening-guardrails-e-transportes-pre-sprint-4`, entregou **H.3.1** (posse em rota nested vira
+   declaração obrigatória, com os 3 `abort_unless` virando `->scopeBindings()`), **H.4.6** (piloto do
+   DTO sem service locator, `BudgetData`), **H.4.7** (`postMultipart`, 6 dos 7 pontos) e **H.4.8**
+   (paridade das 3 locales). Restam **H.4.4, H.4.5 e H.4.9**, fora por decisão do João nos
+   brainstormings — o critério foi *fechar o que é barato e não precisa de prova visual*, isolando os
+   refactors grandes em blocos próprios.
+ — Notion: H.4.4, H.4.5, H.4.9
+
+   **H.4.5 já tem a conclusão técnica, e ela contradiz o enunciado da task — não reabra a análise.**
+   A task pede "eliminar ou justificar" os 7 aliases `useXPage`; **eliminar é a resposta errada.**
+   `useCrudPage` chama `resource.useList()` por dentro, então matar os aliases moveria a query para
+   `CommercialPage`, `CatalogPage`, `PeoplePage` e `AdministracionPage` — regredindo a fronteira de
+   query-em-componente que foi zerada em 2026-08-03 — e **passaria no lint**, porque o seletor
+   `CallExpression[callee.object.name=/Api$/][callee.property.name=/^use[A-Z]/]` casa
+   `budgetsApi.useList()` mas não `useCrudPage(budgetsApi)`. A resposta correta é **justificar os
+   aliases e fechar o escape do seletor**. Registrado no fechamento de
+   `hardening-guardrails-e-transportes-pre-sprint-4` (spec §1); H.4.5 depende de H.4.4.
 
   Objetivo:
   reduzir acoplamento estrutural e repetição antes da abertura do
