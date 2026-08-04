@@ -3,6 +3,7 @@ import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { FileData } from '@shared/types/generated'
 import { budgetsApi } from '@shared/api/budgetsApi'
+import { postMultipart } from '@shared/api/postMultipart'
 
 /** Tipos aceitos pelo backend: orçamento = fatura/comprovante; cotação = documento. */
 export type BudgetFileType = 'invoice' | 'receipt'
@@ -12,18 +13,11 @@ function useInvalidate() {
   return () => qc.invalidateQueries({ queryKey: budgetsApi.keys.all })
 }
 
-/** O FormData NÃO leva Content-Type explícito: o axios deriva multipart+boundary
- * do payload. Fixar `application/json` fazia o transformRequest serializar o
- * FormData e o arquivo chegava VAZIO, com 201 silencioso (bug 3 da Sprint 1). */
 export function useUploadBudgetFile() {
   const invalidate = useInvalidate()
   return useMutation<FileData, ProblemDetails, { budgetId: number; type: BudgetFileType; file: File }>({
-    mutationFn: ({ budgetId, type, file }) => {
-      const fd = new FormData()
-      fd.append('type', type)
-      fd.append('file', file)
-      return api.post<FileData>(`/api/budgets/${budgetId}/files`, fd).then((r) => r.data)
-    },
+    mutationFn: ({ budgetId, type, file }) =>
+      postMultipart<FileData>(`/api/budgets/${budgetId}/files`, { type, file }),
     onSuccess: invalidate,
   })
 }
@@ -40,12 +34,8 @@ export function useRemoveBudgetFile() {
 export function useUploadQuoteFile() {
   const invalidate = useInvalidate()
   return useMutation<FileData, ProblemDetails, { quoteId: number; file: File }>({
-    mutationFn: ({ quoteId, file }) => {
-      const fd = new FormData()
-      fd.append('type', 'quote_document')
-      fd.append('file', file)
-      return api.post<FileData>(`/api/quotes/${quoteId}/files`, fd).then((r) => r.data)
-    },
+    mutationFn: ({ quoteId, file }) =>
+      postMultipart<FileData>(`/api/quotes/${quoteId}/files`, { type: 'quote_document', file }),
     onSuccess: invalidate,
   })
 }

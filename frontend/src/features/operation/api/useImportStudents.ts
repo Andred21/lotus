@@ -1,23 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
+import { postMultipart } from '@shared/api/postMultipart'
 import type { ImportResultData } from '@shared/types/generated'
 import { turmaKeys } from './useTurmas'
 import { enrollmentKeys } from './useEnrollments'
 
-/** Upload de planilha (xlsx/csv). NÃO fixa Content-Type: o axios deriva
- * multipart+boundary do FormData (fixar json faria o File virar {} — upload vazio,
- * 201 silencioso, peso legal — rule frontend-fsliced/axios). */
+/** Upload de planilha (xlsx/csv). */
 export function useImportStudents() {
   const qc = useQueryClient()
   return useMutation<ImportResultData, ProblemDetails, { turmaId: number; file: File }>({
-    mutationFn: ({ turmaId, file }) => {
-      const body = new FormData()
-      body.append('file', file)
-      return api
-        .post<ImportResultData>(`/api/turmas/${turmaId}/alunos/importar`, body)
-        .then((r) => r.data)
-    },
+    mutationFn: ({ turmaId, file }) =>
+      postMultipart<ImportResultData>(`/api/turmas/${turmaId}/alunos/importar`, { file }),
     onSuccess: (_data, { turmaId }) => {
       qc.invalidateQueries({ queryKey: enrollmentKeys.list(turmaId) })
       qc.invalidateQueries({ queryKey: turmaKeys.all })
