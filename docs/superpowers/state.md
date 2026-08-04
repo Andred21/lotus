@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: hardening-tabela-e-testes-pre-sprint-4
 active_work_item: hardening-tabela-e-testes-pre-sprint-4
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-04-hardening-tabela-e-testes-pre-sprint-4.md
 context_packet: docs/superpowers/context-packets/hardening-tabela-e-testes-pre-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-guardrails-e-transportes-pre-sprint-4
-state_basis_commit: 54684fe
-updated_at: 2026-08-04T18:10:00-03:00
+state_basis_commit: 983086f
+updated_at: 2026-08-04T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -170,6 +170,38 @@ grep de `pnpm test` com a justificativa "senão os testes deste bloco nascem ór
 que o placar tem de ficar idêntico; e faltava dizer como se concilia `TableFilter<T>` (paramétrico no
 item) com o `T extends DataTableValueArray` que o `AppDataTable` exige, lacuna que a execução
 resolveria inventando.
+
+**Plano em 7 tasks** (0 branch · 1 moldura + as 2 tabelas nomeadas · 2 as outras 3 · 3 H.4.5 ·
+4 H.4.9 · 5 checkpoint visual do João · 6 gate), TDD onde há mecanismo: na Task 3 a sonda entra
+**antes** do seletor e é vista **passando** — a prova de que o buraco existe hoje — e só então o
+seletor entra e ela reprova.
+
+**A escrita do plano refinou a D3 e ficou melhor que a spec.** A spec dizia que a moldura recebe o
+`TableFilter<T>`; importar esse tipo criaria justamente a aresta `shared/ui → shared/hooks` que a D3
+existe para evitar — de tipo, mas aresta. O plano declara `SearchableTableState<T>`
+**estruturalmente compatível**, sem import, seguindo o precedente do próprio `AppDataTable`, cujo
+`error` aceita `ProblemDetails` sem depender de `shared/api`.
+
+**Auto-review do plano achou uma lacuna própria:** as colunas mudam de pai nas 5 tabelas e nada
+provava que não mudaram de conteúdo. Entrou um passo que compara a contagem de `<AppColumn` de cada
+arquivo contra `main` — divergência **para** a task, porque coluna que some ou nasce é mudança de
+comportamento, não extração.
+
+**`executor: misto`.** **Task 4 (H.4.9) vai ao Codex** — migração mecânica, paths fechados
+(`backend/tests/**`), verificação que decide sozinha (o placar 376/1366) e alvos que saem de `grep`,
+não de julgamento. **Tasks 0, 1, 2, 3 e 6 ficam com Claude:** a 1 e a 2 mudam 5 telas de produção com
+prova visual, a 3 toca o `eslint.config.js` do repositório inteiro (a colisão de flat config já
+mordeu duas vezes), a 0 julga árvore suja e baseline divergente, a 6 julga o placar. **A 5 é do
+João.**
+
+**Regras de parada da delegação:** placar diferente de 376/1366 **para** e o arquivo é revertido, não
+o número esperado ajustado; diff em `backend/app/` ou `backend/database/` **para**; arquivo onde a
+extração exigiria mexer numa asserção fica **de fora**, com a razão reportada. Nenhum commit é feito
+pelo Codex sem diff revisado por Claude antes.
+
+**Duas pendências de fechamento registradas no plano, fora das tasks:** editar o item 1 do
+`backlog.md` (com as três entregues ele fecha por inteiro e sai da fila) e decidir se as 2 tabelas
+com dropdown ganham gatilho registrado para adotar a moldura quando houver slot de filtro.
 
 ## Último item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
