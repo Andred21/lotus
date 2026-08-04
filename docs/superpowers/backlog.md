@@ -7,51 +7,7 @@
 
 ## Próximos blocos
 
-1. **Hardening estrutural pré-Sprint 4** — parcialmente concluído em **dois** blocos de 2026-08-04
-   (`progress.md`). O primeiro, `hardening-estrutural-pre-sprint-4`, entregou H.4.1 (matriz/guardrail
-   de dependências entre domínios, `DomainDependencyTest`), H.4.2 (guardrails frontend, as 3
-   fronteiras via `no-restricted-imports`) e H.4.3 (infraestrutura mínima de teste — vitest instalado
-   + regressão de `useTableFilter`/`useCrudPage`). O segundo,
-   `hardening-guardrails-e-transportes-pre-sprint-4`, entregou **H.3.1** (posse em rota nested vira
-   declaração obrigatória, com os 3 `abort_unless` virando `->scopeBindings()`), **H.4.6** (piloto do
-   DTO sem service locator, `BudgetData`), **H.4.7** (`postMultipart`, 6 dos 7 pontos) e **H.4.8**
-   (paridade das 3 locales). Restam **H.4.4, H.4.5 e H.4.9**, fora por decisão do João nos
-   brainstormings — o critério foi *fechar o que é barato e não precisa de prova visual*, isolando os
-   refactors grandes em blocos próprios.
- — Notion: H.4.4, H.4.5, H.4.9
-
-   **H.4.5 já tem a conclusão técnica, e ela contradiz o enunciado da task — não reabra a análise.**
-   A task pede "eliminar ou justificar" os 7 aliases `useXPage`; **eliminar é a resposta errada.**
-   `useCrudPage` chama `resource.useList()` por dentro, então matar os aliases moveria a query para
-   `CommercialPage`, `CatalogPage`, `PeoplePage` e `AdministracionPage` — regredindo a fronteira de
-   query-em-componente que foi zerada em 2026-08-03 — e **passaria no lint**, porque o seletor
-   `CallExpression[callee.object.name=/Api$/][callee.property.name=/^use[A-Z]/]` casa
-   `budgetsApi.useList()` mas não `useCrudPage(budgetsApi)`. A resposta correta é **justificar os
-   aliases e fechar o escape do seletor**. Registrado no fechamento de
-   `hardening-guardrails-e-transportes-pre-sprint-4` (spec §1); H.4.5 depende de H.4.4.
-
-  Objetivo:
-  reduzir acoplamento estrutural e repetição antes da abertura do
-  domínio Certification, sem reestruturar o monólito nem introduzir
-  abstrações genéricas.
-
-  Bloqueantes antes da Sprint 4 (restantes):
-  - ownership de rotas nested;
-  - SearchableTableFrame.
-
-  Pilotos / não bloqueantes:
-  - DTO sem service locator;
-  - helper multipart;
-  - paridade de traduções;
-  - builders de testes backend.
-
-  Fora de escopo:
-  - Repository sobre Eloquent;
-  - CRUD base genérico;
-  - tabela universal;
-  - split massivo de DTOs;
-  - split físico imediato dos locales.
-2. **Arquivados e restauração de soft-delete**
+1. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -67,15 +23,15 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-3. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Bloco 7 · Sprint 4 · Certificação**
+3. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-5. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -99,6 +55,21 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   genérico depende de decisão e task no Notion.
 
 ## Débitos técnicos
+
+- **As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`, e adotar custa mais do que
+  trocar o markup.** `BudgetsTable` e `TurmasTable` ficaram fora do H.4.4 (2026-08-04, spec D2) por
+  terem um slot de filtro que as 5 busca-só não têm. O que a moldura **não** resolve para elas hoje é
+  a **redação** do empty state: ela só sabe dizer "sem resultados para `<termo>`" com ação
+  `common.clearSearch`, e essas duas precisam da bifurcação "filtros aplicados"
+  (`common.noResultsFiltered` / `common.clearFilters`), que existe hoje dentro de cada uma. A
+  bifurcação **não** foi construída na moldura de propósito — não há consumidor com `where`, e
+  construir para um consumidor hipotético é a lição 3. **O discriminador já está seguro:** o Q-1 do
+  review de 2026-08-04 fez a moldura consumir o `filtering` do `useTableFilter` em vez de recalcular
+  `term === ''`, que é exatamente o defeito que essas duas tabelas cometeram juntas em 2026-08-03
+  (o `Dropdown` do PrimeReact devolve o **objeto** da opção quando `option.value` é vazio). Saída:
+  a moldura ganha o slot de filtro **e** a bifurcação de redação no mesmo commit em que a primeira
+  das duas adotar — DoD é comportamento idêntico na tela, não lint verde. Decisão do João no
+  fechamento de 2026-08-04: registrar aqui em vez de gatilho datado em `pendencias.md`.
 
 - **Lição 13 é reincidente e ainda não tem mecanismo — proposta aguardando decisão do João.** O
   padrão "texto afirmando o que o repositório não faz" apareceu **3 vezes** no review de

@@ -19,8 +19,8 @@ sqlite `:memory:`, vitest (jsdom) no frontend.
 
 ## Global Constraints
 
-- **Spec:** `docs/superpowers/specs/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md`.
-  As decisões D1–D14 valem para todas as tasks.
+- **Spec:** `docs/superpowers/specs/archive/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md`
+  (arquivada no fechamento de 2026-08-04). As decisões D1–D14 valem para todas as tasks.
 - **Nenhum arquivo de produção do backend muda** (D14): `git diff main...HEAD -- backend/app/
   backend/database/` fica **vazio** no fim.
 - **Placar imutável** (D13): backend fecha em **376 passed (1366 assertions)**; `pnpm test` em
