@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: profundidade-form-crud-e-hidratacao-dto
 active_work_item: profundidade-form-crud-e-hidratacao-dto
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: aa715ad
-updated_at: 2026-08-05T09:00:00-03:00
+state_basis_commit: c3fbc87
+updated_at: 2026-08-05T10:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -76,9 +76,28 @@ e o brainstorming mede em vez de reconciliar. Um packet gerado agora só transcr
 que é a parte que o contrato do `lotus-context-packet` menos protege. Se o João preferir o packet
 mesmo assim, o estado volta a `context_required` sem custo.
 
-**Duas decisões ficaram abertas de propósito no grilling, para o brainstorming resolver:** se a
-guarda de divergência do `mapped` é teste vitest ou regra de lint; e a ordem entre os sub-blocos
-A e B.
+**Brainstorming de 2026-08-05 — as duas decisões abertas fecharam, e a medição mudou três coisas
+antes do desenho** (sexta ocorrência da lição 13 no projeto):
+
+1. **`Cast` é o lado errado do `spatie/laravel-data`.** `Cast::cast()` roda na criação; quem
+   transforma na saída é `Transformer::transform()`. Os 8 DTOs constroem por `fromModel` explícito e
+   os `::from([...])` do repositório recebem array, nunca model — um cast jamais dispararia. O
+   backlog escreveu "cast"; o mecanismo é `#[WithTransformer]`, escolhido pelo João entre três
+   opções (transformer, accessor no model, módulo de assinatura estático).
+2. **`TurmaData::fromModel` tem 4 call sites, não 2** — 2 no `TurmaController` e 2 em teste. É a
+   mesma forma que mordeu no H.4.6, onde a spec media 4 e existiam 6. O João manteve o serviço por
+   parâmetro, com o mesmo argumento que fechou a D9 como sinal 1.
+3. **`useTurmaConfigForm` não roda sobre `createCrudResource`** (a turma nasce em rota aninhada), e
+   por isso sai da lista de migração do sinal 1, que cai de 5 para 4.
+
+**A guarda do `mapped` não pode ser lint, e isso é medido:** `mapped` mora no JSX do diálogo e
+`toPayload` no hook — arquivos diferentes, e ESLint é por arquivo. O João escolheu subir `mapped`
+para junto do `toPayload` e pôr a invariante dentro do `useCrudForm`, provada em dois níveis. **A
+ordem ficou A (backend) antes de B (frontend)**, para o checkpoint visual ficar adjacente ao gate.
+
+**Duas decisões novas nasceram no desenho e estão na spec:** os métodos `UploadFileAction::temporaryUrl`
+e `UserPhotoService::urlFor` **morrem** (D5 — só têm esses 7 chamadores em produção), e a leitura em
+PHP da propriedade que passa a carregar path vira **mecanismo**, não docblock (D6).
 
 **O que já está decidido e não se reabre** (grilling de 2026-08-04, respostas explícitas do João):
 o cast para os 7 sítios de URL assinada e o parâmetro para o oitavo (`TurmaData`); `toPayload`
