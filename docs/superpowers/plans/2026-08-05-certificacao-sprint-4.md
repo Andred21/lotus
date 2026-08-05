@@ -60,8 +60,8 @@ Sem dependência nova. `simplesoftwareio/simple-qrcode` + `bacon/bacon-qr-code` 
 5. **ADR-10 — morph map.** Todo model Auditable novo entra em `enforceMorphMap`.
 6. **DoD comportamental.** Build verde não é DoD. Cada task declara o comportamento provado.
 7. **Placar de testes.** Baseline medido: backend **378 passed**, frontend **35 passed**. Cada
-   task backend declara o delta; ao final: **419 passed** no backend, **35** no frontend (o
-   projeto só testa unitariamente hooks de `shared/`).
+   task backend declara o delta; ao final: **418 passed + 1 skipped** no backend (D-P5), **35** no
+   frontend (o projeto só testa unitariamente hooks de `shared/`).
 8. **Migration verde em sqlite pode quebrar no MySQL** (lição 15). As tasks 2, 3 e 5 rodam
    `migrate:fresh` no MySQL real além da suíte.
 
@@ -87,6 +87,13 @@ consequência de medição feita ao planejar.
   parou corretamente ao ver o manifest sujo fora da autorização. Os dois sempre foram commitados
   juntos (`e6f54b9`, `d91c5da` são os precedentes) — o manifest é saída do mesmo comando, não
   edição de frontend. Vale para as tasks 1, 5, 6 e 8, que rodam o transform.
+- **D-P5 — o placar do backend fecha em `418 passed, 1 skipped`, não em `419 passed`** (achado na
+  execução da Task 3, 2026-08-05). O plano se contradiz: manda o caso de concorrência dar
+  `markTestSkipped` fora do MySQL **e** conta esse caso como `passed` no placar do run padrão
+  (sqlite). Os dois não podem valer juntos. O run padrão passa a declarar o skip explicitamente —
+  Task 3: `389 passed, 1 skipped`; alvo final da Task 14: **`418 passed, 1 skipped`**. O caso
+  skipado não é dívida: ele roda e passa contra o MySQL do compose, que é onde ele prova alguma
+  coisa. Esconder o skip num número redondo é que seria dívida.
 
 ---
 
@@ -327,11 +334,11 @@ public function next(int $year): string
       Se não existir um `.env.mysql_test`, criá-lo copiando `.env` e trocando a conexão para o
       MySQL do compose; ele entra no commit.
 - [ ] `docker compose exec -T app php artisan test --filter=CertificateNumberTest`
-      → `Tests:  3 passed` (o de concorrência skipa em sqlite e passa no run MySQL).
+      → `Tests:  2 passed, 1 skipped` em sqlite; o de concorrência passa no run MySQL (D-P5).
 - [ ] Pint.
 
 **DoD:** duas emissões concorrentes contra o MySQL do compose produzem `LOT-2026-1000` e
-`LOT-2026-1001` — nunca o mesmo código. **Placar 387 → 390.**
+`LOT-2026-1001` — nunca o mesmo código. **Placar 387 → 389 passed + 1 skipped (D-P5).**
 
 ---
 
@@ -375,7 +382,7 @@ return [
 - [ ] Pint.
 
 **DoD:** renomear o curso depois da emissão não muda o nome impresso no certificado.
-**Placar 390 → 394.**
+**Placar 389 → 393 passed + 1 skipped (D-P5).**
 
 ---
 
@@ -468,7 +475,7 @@ Route::middleware('auth:sanctum')->group(function () {
 - [ ] Pint.
 
 **DoD:** emitir duas vezes para a mesma matrícula devolve 422 com mensagem legível; emitir numa
-turma em andamento devolve 422 citando RN-08. **Placar 394 → 402.**
+turma em andamento devolve 422 citando RN-08. **Placar 393 → 401 passed + 1 skipped (D-P5).**
 
 ---
 
@@ -523,7 +530,7 @@ Route::post('certificates/{certificate}/revoke', [CertificateController::class, 
 
 **DoD:** `GET /api/certificates/issuable` esconde a matrícula assim que ela recebe certificado, e
 volta a mostrá-la depois de revogado; admin comum recebe 403 ao tentar revogar.
-**Placar 402 → 410.**
+**Placar 401 → 409 passed + 1 skipped (D-P5).**
 
 ---
 
@@ -570,7 +577,7 @@ $qr = base64_encode(QrCode::format('svg')->size(180)->margin(0)->generate($url))
 - [ ] Pint.
 
 **DoD:** o HTML enviado ao Gotenberg carrega o código do certificado e um QR cujo conteúdo é
-`<frontend_url>/validar/<uuid>` — provado por `Http::assertSent`. **Placar 410 → 415.**
+`<frontend_url>/validar/<uuid>` — provado por `Http::assertSent`. **Placar 409 → 414 passed + 1 skipped (D-P5).**
 
 ---
 
@@ -606,7 +613,7 @@ curl -s -i http://localhost:8080/api/publico/certificados/<uuid> -H 'Accept: app
 - [ ] Pint.
 
 **DoD:** um `curl` sem cookie e sem CSRF devolve 200 e o payload público; o mesmo payload não
-carrega RUT nem notas. **Placar 415 → 419** (backend fechado).
+carrega RUT nem notas. **Placar 414 → 418 passed + 1 skipped** (backend fechado, D-P5).
 
 ---
 
@@ -740,7 +747,7 @@ tasks 9–12, não como task nova.
 
 - [ ] **Item 0 (spec §5):** as 8 invariantes comportamentais da spec estão provadas por teste
       nomeado. Listar o teste de cada uma; invariante sem teste reprova o gate.
-- [ ] `docker compose exec -T app php artisan test` → `Tests:  419 passed`
+- [ ] `docker compose exec -T app php artisan test` → `Tests:  418 passed, 1 skipped` (D-P5)
 - [ ] `cd frontend && pnpm test` → `Tests  35 passed`; `pnpm build`; `pnpm lint`
 - [ ] `docker compose exec -T app php artisan test --filter=DomainDependencyTest` → 3 passed, com
       as **7** arestas declaradas — nenhuma a mais (D-P2).
