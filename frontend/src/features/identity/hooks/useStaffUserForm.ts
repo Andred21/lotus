@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { usersApi } from '@shared/api/usersApi'
@@ -38,43 +38,33 @@ export function useStaffUserForm(
         password: '',
       }
     : null
-  const { form, set, readOnly } = useEntityForm<StaffUserFormFields>(entity, mode, EMPTY, toFields)
 
-  const create = usersApi.useCreate()
-  const update = usersApi.useUpdate()
+  const crud = useCrudForm<StaffUserFormFields, UserData>(usersApi, {
+    entity,
+    mode,
+    empty: EMPTY,
+    toFields,
+    toPayload: (f, m) => {
+      const base = {
+        name: f.name,
+        email: f.email,
+        rut: f.rut || null,
+        phone: f.phone || null,
+        role: f.role,
+        is_active: f.is_active,
+      }
+      // No create a senha é obrigatória; no update, vazia significa "mantém a
+      // atual" e a chave não pode ir no corpo.
+      if (m === 'create') return { ...base, password: f.password }
+      return f.password ? { ...base, password: f.password } : base
+    },
+    mapped: ['name', 'rut', 'email', 'password', 'role'],
+    // `phone` (StaffUserDialog:83) e `is_active` (:105) TÊM input, mas nenhum
+    // passa `error=` ao FormField — quem mostra o 422 deles é o resumo.
+    summaryOnly: ['phone', 'is_active'],
+    onDone,
+    afterCreate,
+  })
 
-  function submit() {
-    const base = {
-      name: form.name,
-      email: form.email,
-      rut: form.rut || null,
-      phone: form.phone || null,
-      role: form.role,
-      is_active: form.is_active,
-    }
-
-    if (mode === 'create') {
-      create.mutate(
-        { ...base, password: form.password },
-        {
-          onSuccess: async (created) => {
-            await afterCreate?.(created)
-            onDone()
-          },
-        },
-      )
-      return
-    }
-
-    const payload = form.password ? { ...base, password: form.password } : base
-    update.mutate({ id: user!.id!, payload }, { onSuccess: onDone })
-  }
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
-
-  return {
-    form, set, readOnly, submit,
-    pending: create.isPending || update.isPending,
-    fieldErrors, generalError,
-  }
+  return crud
 }

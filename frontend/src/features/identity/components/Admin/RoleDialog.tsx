@@ -17,7 +17,7 @@ export function RoleDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, toggle, readOnly, submit, pending, fieldErrors, generalError } = useRoleForm(role, mode, onHide)
+  const { form, set, toggle, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = useRoleForm(role, mode, onHide)
   const catalog = usePermissionCatalog()
 
   const isSystem = role?.is_system ?? false
@@ -53,7 +53,7 @@ export function RoleDialog({
       {/* `name` mostra o próprio erro no FormField; um 422 keyed `permissions`
           (assertAssignable) ou `permissions.N` (DTO) não tem input onde pendurar
           — sem isto o save falha em silêncio. */}
-      <FormErrorSummary errors={fieldErrors} mapped={['name']} />
+      <FormErrorSummary errors={fieldErrors} {...errorSummary} />
 
       <section className="space-y-4">
         <FormField label={t('role.name')} error={fieldErrors?.name?.[0]}>
