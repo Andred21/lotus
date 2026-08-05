@@ -58,6 +58,12 @@ Feitas em `c43a2a1`, antes de qualquer decisão de desenho.
 - **A ordem dos callbacks pós-`201` diverge hoje.** `useStaffUserForm` e `useStudentForm` fazem
   `await afterCreate(created)` **antes** de `onDone()`; `useBudgetForm` chama `onDone()` **antes** de
   `onCreated(created)`.
+- **`FormErrorSummary` mostra exatamente as chaves que NÃO estão em `mapped`** (`FormField.tsx:73-77`).
+  Chave fora de `mapped` é exibida pelo resumo; chave dentro dele fica a cargo do input próprio. Logo
+  a falha silenciosa é a chave **listada em `mapped` sem input correspondente na tela** — some das
+  duas pontas. Dois casos corretos hoje provam a direção: `RoleDialog:56` tem `mapped={['name']}` com
+  payload `{name, permissions}`, e os checkboxes de permissão não mostram erro próprio; e
+  `ClientGeneralFields` não tem input de `phone`, embora o payload o envie.
 
 ## §2 · Decisões
 
@@ -126,13 +132,29 @@ mostrar, e o comentário do `ClientDialog` já avisa que `addresses.*` não pode
 medida e retirada. O custo de subir `mapped` para o hook está declarado: conhecimento de tela passa a
 morar ao lado do payload, e é isso que torna a guarda possível.
 
-**D12 — A guarda de divergência roda dentro do `useCrudForm`, provada em dois níveis.** Regra de lint
-foi **medida e descartada**: `mapped` mora no JSX do diálogo e `toPayload` no hook — arquivos
-diferentes, e ESLint é por arquivo. A invariante reprova chave de payload que não esteja em `mapped`
-nem coberta por `excludePrefixes`. Nível 1: teste do próprio module com config divergente, visto
-reprovando (lição 10). Nível 2: um teste por hook migrado que o renderiza, para o CI exercitar as
-configs reais — mora na própria feature, porque teste em `shared/` importando `features/` quebraria a
-lei §5.6.
+**D12 — A guarda exige classificação explícita de toda chave de payload, em três caixas.** Regra de
+lint foi **medida e descartada**: `mapped` mora no JSX do diálogo e `toPayload` no hook — arquivos
+diferentes, e ESLint é por arquivo.
+
+**A direção escrita no backlog estava errada, e reprovaria código correto.** "Reprovar chave que não
+está em `mapped` nem em `excludePrefixes`" acusa exatamente as chaves que o resumo **mostra** — o
+`RoleDialog` reprovaria no primeiro hook do piloto por causa de `permissions`, e o conserto induzido
+(pôr a chave em `mapped`) é a supressão silenciosa que a D11 existe para impedir. Achado ao escrever
+o plano, em 2026-08-05, com a evidência em §1; correção decidida pelo João na mesma sessão.
+
+Nasce `summaryOnly` ao lado de `mapped` e `excludePrefixes`, e a invariante passa a ser: **toda chave
+que o `toPayload` produz, nos dois modos, está em uma das três.** Chave nova no payload não entra em
+silêncio — quem a cria é obrigado a declarar quem mostra o 422 dela. `summaryOnly` é "quem mostra é o
+resumo", e isso cobre dois casos medidos: chave sem input nenhum (`phone` do cliente) e chave com
+input que não exibe erro próprio (`phone` e `is_active` do staff, `permissions` da role). `summaryOnly`
+**não** vai para o `FormErrorSummary`; ele existe só para a classificação ser explícita — mandá-lo
+junto sumiria com os erros que o componente existe para mostrar. `id` entra nele como qualquer outra
+chave, sem exceção embutida na guarda: exceção por nome envelhece calada.
+
+Provada em dois níveis. **Nível 1:** teste do próprio module com config divergente, visto reprovando
+(lição 10), e um caso simétrico provando que chave classificada **não** dispara falso positivo.
+**Nível 2:** um teste por hook migrado que o renderiza, para o CI exercitar as configs reais — mora na
+própria feature, porque teste em `shared/` importando `features/` quebraria a lei §5.6.
 
 **D13 — Piloto de 2, com os sinais de saída escritos antes de executar.** `useRoleForm` (48 linhas, o
 mais simples) e `useStaffUserForm` (80, payload divergente **e** `afterCreate`). **Sinal 1** — a
@@ -221,6 +243,7 @@ export function useCrudForm<F extends { id?: number }, T>(
     toFields?: (entity: F) => F
     toPayload: (form: F, mode: DialogMode) => Record<string, unknown>
     mapped: string[]
+    summaryOnly: string[]
     excludePrefixes?: string[]
     onDone: () => void
     afterCreate?: (created: T) => void | Promise<void>
@@ -243,7 +266,20 @@ export function useCrudForm<F extends { id?: number }, T>(
 que o `createCrudResource` já produz (`payload` e `{ id, payload }`).
 
 `errorSummary` sai pronto para o diálogo espalhar em `<FormErrorSummary errors={fieldErrors}
-{...errorSummary} />`, o que apaga duas props escritas à mão em cada tela.
+{...errorSummary} />`, o que apaga duas props escritas à mão em cada tela. Ele carrega **só** `mapped`
+e `excludePrefixes`; `summaryOnly` fica na guarda (D12) e nunca chega ao componente — mandá-lo junto
+inverteria o contrato do `FormErrorSummary` e sumiria com os erros que ele existe para mostrar.
+
+Classificação dos dois hooks do piloto, medida nos diálogos de hoje:
+
+| Hook | `mapped` | `summaryOnly` |
+|---|---|---|
+| `useRoleForm` | `['name']` | `['permissions']` |
+| `useStaffUserForm` | `['name','rut','email','password','role']` | `['is_active','phone']` |
+
+`phone` (`StaffUserDialog:83`) e `is_active` (`:105`) **têm** input, mas nenhum dos dois passa `error=`
+ao `FormField` — quem mostra o 422 deles é o resumo, e é por isso que estão em `summaryOnly`, não em
+`mapped`. A classificação descreve quem exibe, não quem existe.
 
 **Piloto (D13):** `useRoleForm` e `useStaffUserForm`. O `toggle` do `useRoleForm` **não** entra no
 module — é vocabulário de permissão, fica no hook da feature, sobre o `set` que o module devolve.
@@ -260,8 +296,9 @@ Cada uma é uma afirmação que o bloco não pode mudar, verificável.
    `Content-Type` do objeto. Disco errado no transformer produz string plausível e inútil.
 4. **`habilitada` e `missing_document_types` continuam com os mesmos valores** nas 2 rotas de turma,
    provado pelos testes de enriquecimento que já existem.
-5. **Os diálogos migrados mostram os mesmos erros 422 que mostram hoje**, inclusive os de campo sem
-   input na tela (`phone`, `addresses.*`, `contacts.*` no cliente).
+5. **Os diálogos migrados mostram os mesmos erros 422 que mostram hoje**, inclusive os das chaves que
+   nenhum campo exibe (`permissions` na role, `phone`/`is_active` no staff, `phone` e `addresses` no
+   cliente). A classificação da D12 não pode mover nenhuma chave para `mapped`.
 6. **`readOnly` continua desligando os campos no modo `view`**, e o reset por troca de entidade ou de
    modo continua acontecendo (`didReset`).
 7. **A foto escolhida no create continua subindo depois do 201** e o diálogo continua aberto quando
@@ -282,7 +319,8 @@ reprovando*:
 - **`habilitada` conferida na resposta real** de `GET /api/turmas` e `GET /api/turmas/{id}`.
 - **A guarda da D6 vista reprovando** com sonda fresca (leitura da propriedade em PHP), sonda
   removida, árvore limpa.
-- **A guarda do `mapped` vista reprovando** com config divergente, e depois verde.
+- **A guarda da D12 vista reprovando** com chave de payload não classificada, e o caso simétrico
+  provando que chave classificada não dispara falso positivo.
 - **Checkpoint visual do João** nos diálogos migrados, com os 422 exercitados na tela.
 
 **Automático:** suíte backend com placar declarado no plano (baseline medida na Task 0; o único
