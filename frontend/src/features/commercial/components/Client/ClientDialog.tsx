@@ -47,6 +47,7 @@ export function ClientDialog({
     pending,
     fieldErrors,
     generalError,
+    errorSummary,
     addr,
     setAddr,
     patchContact,
@@ -71,21 +72,7 @@ export function ClientDialog({
       submitLabel={mode === "create" ? t("client.create") : undefined}
     >
       <FormErrorBanner message={generalError} />
-      {/* `contacts.*` sai do resumo (cada contato mostra o próprio erro no
-          NestedField); `addresses.*` NÃO — hoje o backend não valida endereço,
-          mas quando validar o 422 não pode sumir da tela. */}
-      <FormErrorSummary
-        errors={fieldErrors}
-        mapped={[
-          "legal_name",
-          "name",
-          "rut",
-          "email",
-          "type",
-          "business_activity",
-        ]}
-        excludePrefixes={["contacts."]}
-      />
+      <FormErrorSummary errors={fieldErrors} {...errorSummary} />
       {photo.hasBufferedFailure && (
         <FormErrorBanner message={t("photo.createUploadFailed")} />
       )}

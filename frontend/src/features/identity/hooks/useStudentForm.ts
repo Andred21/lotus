@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { StudentData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { studentsApi } from '@shared/api/studentsApi'
@@ -23,39 +23,23 @@ export function useStudentForm(
     ? { id: student.id, name: student.name, rut: student.rut, email: student.email, phone: student.phone ?? null, client_id: student.current_client_id ?? null }
     : null
 
-  const { form, set, readOnly } = useEntityForm<StudentFormFields>(entity, mode, EMPTY)
+  const crud = useCrudForm<StudentFormFields, StudentData>(studentsApi, {
+    entity,
+    mode,
+    empty: EMPTY,
+    toPayload: (f, m) =>
+      m === 'create'
+        ? { name: f.name, rut: f.rut, email: f.email, phone: f.phone, client_id: f.client_id }
+        // client_id não vai no update: trocar de empresa é ato da matrícula (D3).
+        : { name: f.name, rut: f.rut, email: f.email, phone: f.phone },
+    mapped: ['name', 'rut', 'email', 'client_id'],
+    // `StudentDialog` não tem FormErrorSummary: um 422 em `phone` não aparece
+    // em lugar nenhum hoje. Classificar expõe a lacuna sem mudar a tela —
+    // construir o resumo que falta é débito registrado (spec D14).
+    summaryOnly: ['phone'],
+    onDone,
+    afterCreate,
+  })
 
-  const create = studentsApi.useCreate()
-  const update = studentsApi.useUpdate()
-
-  function submit() {
-    if (mode === 'create') {
-      create.mutate(
-        { name: form.name, rut: form.rut, email: form.email, phone: form.phone, client_id: form.client_id },
-        {
-          // A foto escolhida no create sobe DEPOIS do 201, quando o id existe
-          // (spec D10). `afterCreate` nunca lança — se o upload falhar, o
-          // diálogo continua aberto mostrando o motivo (spec D11).
-          onSuccess: async (created) => {
-            await afterCreate?.(created)
-            onDone()
-          },
-        },
-      )
-      return
-    }
-    // client_id não vai no update: trocar de empresa é ato da matrícula (D3).
-    update.mutate(
-      { id: student!.id as number, payload: { name: form.name, rut: form.rut, email: form.email, phone: form.phone } },
-      { onSuccess: onDone },
-    )
-  }
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
-
-  return {
-    form, set, readOnly, submit,
-    pending: create.isPending || update.isPending,
-    fieldErrors, generalError,
-  }
+  return crud
 }

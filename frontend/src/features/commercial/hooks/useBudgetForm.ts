@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { BudgetData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { budgetsApi } from '@shared/api/budgetsApi'
@@ -20,37 +20,26 @@ export function useBudgetForm(
   onDone: () => void,
   onCreated?: (created: BudgetData) => void,
 ) {
-  const { form, set, readOnly } = useEntityForm<BudgetFormFields>(budget, mode, EMPTY, toFields)
-  const create = budgetsApi.useCreate()
-  const update = budgetsApi.useUpdate()
+  // O orçamento nasce vazio (só cliente e forma de pagamento): cotação e
+  // documento são POSTs sob /budgets/{id}, então precisam do id que só existe
+  // depois deste create. Por isso `onCreated` entrega o orçamento a quem abriu
+  // o dialog — quem leva o usuário à página de detalhe, onde o cadastro de
+  // fato continua. `afterCreate` do `useCrudForm` é sempre esperado antes do
+  // `onDone`, então esta migração inverte a ordem: hoje `onDone()` e depois
+  // `onCreated()`, passa a ser `onCreated()` e depois `onDone()` (spec D15).
+  const crud = useCrudForm<BudgetFormFields, BudgetData>(budgetsApi, {
+    entity: budget,
+    mode,
+    empty: EMPTY,
+    toFields,
+    // Em edit o backend só aceita payment_terms; client_id vai junto porque o
+    // DTO o exige na validação, e o controller o ignora (imutável por construção).
+    toPayload: (f) => ({ client_id: f.client_id, payment_terms: f.payment_terms }),
+    mapped: ['client_id', 'payment_terms'],
+    summaryOnly: [],
+    onDone,
+    afterCreate: onCreated,
+  })
 
-  function submit() {
-    if (mode === 'create') {
-      // O orçamento nasce vazio (só cliente e forma de pagamento): cotação e
-      // documento são POSTs sob /budgets/{id}, então precisam do id que só
-      // existe depois deste create. Por isso `onCreated` entrega o orçamento a
-      // quem abriu o dialog — quem leva o usuário à página de detalhe, onde o
-      // cadastro de fato continua.
-      create.mutate(
-        { client_id: form.client_id, payment_terms: form.payment_terms },
-        {
-          onSuccess: (created) => {
-            onDone()
-            onCreated?.(created)
-          },
-        },
-      )
-      return
-    }
-    // Em edit o backend só aceita payment_terms; client_id vai junto porque o DTO
-    // o exige na validação, mas o controller o ignora (é imutável por construção).
-    update.mutate(
-      { id: budget!.id!, payload: { client_id: form.client_id, payment_terms: form.payment_terms } },
-      { onSuccess: onDone },
-    )
-  }
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
-
-  return { form, set, readOnly, submit, pending: create.isPending || update.isPending, fieldErrors, generalError }
+  return crud
 }
