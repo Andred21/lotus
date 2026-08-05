@@ -2,8 +2,9 @@
 
 namespace App\Shared\Files\Data;
 
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -21,6 +22,7 @@ class FileData extends Data
         public string $original_name,
         public ?string $mime,
         public int $size,
+        #[WithTransformer(SignedUrlTransformer::class, 10)]
         public string $download_url,
         public ?string $created_at,
     ) {}
@@ -33,7 +35,7 @@ class FileData extends Data
             original_name: $file->original_name,
             mime: $file->mime,
             size: $file->size,
-            download_url: app(UploadFileAction::class)->temporaryUrl($file),
+            download_url: $file->path,
             created_at: $file->created_at?->toIso8601String(),
         );
     }

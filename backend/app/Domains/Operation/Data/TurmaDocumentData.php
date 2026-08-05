@@ -2,8 +2,9 @@
 
 namespace App\Domains\Operation\Data;
 
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -23,6 +24,7 @@ class TurmaDocumentData extends Data
         public ?string $mime,
         public int $size,
         public string $created_at,
+        #[WithTransformer(SignedUrlTransformer::class, 10)]
         public string $download_url,
     ) {}
 
@@ -35,7 +37,7 @@ class TurmaDocumentData extends Data
             mime: $file->mime,
             size: $file->size,
             created_at: $file->created_at->toISOString(),
-            download_url: app(UploadFileAction::class)->temporaryUrl($file),
+            download_url: $file->path,
         );
     }
 }
