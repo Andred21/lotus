@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: profundidade-form-crud-e-hidratacao-dto
 active_work_item: profundidade-form-crud-e-hidratacao-dto
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md
 active_plan: docs/superpowers/plans/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: b12eee7
-updated_at: 2026-08-05T11:30:00-03:00
+state_basis_commit: 09118eb
+updated_at: 2026-08-05T11:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -137,6 +137,18 @@ o cast para os 7 sítios de URL assinada e o parâmetro para o oitavo (`TurmaDat
 recebendo o modo; `mapped` à mão com guarda, **não** derivado do payload; piloto de 2
 (`useRoleForm`, `useStaffUserForm`) com três sinais de saída; o trio da foto fora do corte; e a
 posição 1 na fila.
+
+**Gate (Task 11) fechado em 2026-08-05, commit `09118eb`.** Sinal 1 confirmado na Task 8 —
+`useStudentForm`, `useBudgetForm` e `useClientForm` migraram (Task 9), sem parar no piloto. Task 10
+(checkpoint visual, não delegável) aprovada pelo João, incluindo D15 em `useBudgetForm` sem
+regressão visível — fica migrado, sem reversão. E2e com sessão Sanctum real provou `download_url` e
+`photo_url` como URL assinada de verdade (200, `Content-Type` do objeto, não string plausível); as
+duas guardas de mecanismo (D6 leitura de propriedade, classificação obrigatória do `useCrudForm`)
+provadas reprovando com sonda fresca e voltando a passar. Placar final: backend 378 passed (1368
+assertions, caminho declarado no ledger), frontend 34 passed. Build/lint/Pint verdes, código morto
+zerado, leis §5 intactas. Detalhe task a task em `.superpowers/sdd/progress.md`. Pendências de
+fechamento (backlog, débitos técnicos, D10 do bloco anterior) ficam para o `/fechar-sprint` — não
+foram tratadas aqui.
 
 ## Último item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
