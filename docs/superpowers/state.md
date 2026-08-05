@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
-active_spec: null
+next_action: continue_active_planning
+active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: 492f8f8
-updated_at: 2026-08-05T14:22:00-03:00
+state_basis_commit: ba81a34
+updated_at: 2026-08-05T14:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -199,6 +199,54 @@ provenance ou a transição promotora. **Provenance recalculada aqui e batendo:*
 **lote**, não só individual (telas 8.2/8.3), e a `8.1.5` pede **PDF → S3 → URL temporária sem
 intermediário** — que casa com o transformer de URL assinada entregue no bloco anterior, e não com
 um endpoint que faça streaming pela app.
+
+### Brainstorming de 2026-08-05 — o corte, e as quatro medições que o antecederam
+
+**Sétima ocorrência da lição 13 no projeto.** Quatro fatos do repositório contrariam doc, ADR ou
+task, e todos mudaram o desenho antes de ele existir:
+
+1. **O gate acadêmico não tem escritor em produção.** `enrollments.approval_status` nasce `pendiente`
+   e **nada em `backend/app/` o escreve** — o `EnrollmentData` declara em docblock que "a escrita é
+   6d", e o 6d fechou sem entregar. O único escritor é o `OperationDemoSeeder`, que registra a
+   exceção no próprio docblock. Emissão gateada por `aprobado` **nunca dispararia em produção**, e o
+   DoD deste projeto não aceita prova contra dado de seed.
+2. **`spatie/laravel-pdf` ^2.12 e `simplesoftwareio/simple-qrcode` ^4.2 estão instalados com zero
+   uso** em `app/`, `config/`, `tests/` e `resources/`. O ADR-12 manda o primeiro; o único PDF de
+   produção chama o Gotenberg por `Http::attach` cru. Lição 1, agora com pacote pago em disco.
+3. **A entrega do PDF diverge em três fontes:** ADR-12 ("stream direto para S3"), task 8.1.5 ("S3 →
+   URL temporária sem intermediário") e o precedente real (`TurmaController::manual`, binário pela
+   app).
+4. **`course_certificate_templates` já existe desde 2026-07-08 e o `layout_config` não tem um único
+   consumidor** — nada renderiza aquele JSON, que é exatamente onde o documento oficial se mapeia.
+
+**Corte escolhido pelo João: fatia vertical fina** — emitir um certificado, baixar o PDF com QR,
+validar publicamente e revogar, com as telas mínimas. As alternativas (backend inteiro sem tela, ou
+só fundação) adiavam a única prova que importa num módulo cujo valor é o papel escaneado.
+
+**Quatro decisões do João no desenho:** o **escritor mínimo do resultado acadêmico entra** (sem ele o
+módulo é inalcançável em produção); o identificador público é **só o `uuid`**, e `qr_code_hash` não
+nasce — o argumento do hash é rotacionar URL, e URL impressa em papel não rotaciona; **`codigo` puro**
+`LOT-ANO-SEQ`, com a turma vivendo na relação e não dentro de uma coluna `UK` impressa para sempre;
+e a **revogação entra**, porque sem ela o valor `revocado` do enum nasceria sem produtor e a tela
+pública prometeria um estado inalcançável.
+
+**Três decisões nasceram no desenho e estão na spec:** `certificates` **sem soft delete** e
+`enrollment_id` **sem UK** — com UK estrito, certificado revogado por erro nunca poderia ser
+reemitido, e soft delete não libera índice (lição 8), então a unicidade vira "um certificado
+**vigente** por matrícula" por índice em coluna gerada, provado contra MySQL real (lição 15); a
+emissão exige **template do curso** (certificado sem template aprovado é narrativa inventada); e a
+**matriz de domínios abre pela primeira vez**, com 6 arestas justificadas uma a uma — o
+`DomainDependencyTest` declara `'Certification' => []` de propósito, dizendo em docblock que cada
+import exigiria decisão explícita.
+
+**Duas descobertas de fronteira que mudaram onde o código mora:** a emissão **não** cabe na tela da
+turma (`TurmaDetailPage` é `operation`, e chamar a API de certificação de lá quebra a lei §5.6), e o
+`SessionBootstrap` precisa **descer para dentro do router** — hoje ele envolve o `AppRouter` inteiro,
+então quem abre o QR pelo celular espera um `GET /api/me` que vai dar 401 antes de ver a validação.
+
+Spec: `docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md` — 21 decisões, 8
+invariantes de comportamento e gate com item 0 próprio (o QR escaneado abrindo a validação real,
+provado **sem cookie** na ponta pública). Aprovada pelo João em 2026-08-05.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
