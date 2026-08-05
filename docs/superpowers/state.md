@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: profundidade-form-crud-e-hidratacao-dto
+active_work_item: profundidade-form-crud-e-hidratacao-dto
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: 0e7ec59
-updated_at: 2026-08-04T19:20:00-03:00
+state_basis_commit: aa715ad
+updated_at: 2026-08-05T09:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,44 @@ updated_at: 2026-08-04T19:20:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). O item entrou no backlog em `aa715ad`, escrito no dia anterior a partir do review de
+arquitetura de 2026-08-04 e do grilling que o seguiu.
+
+**A árvore mudou antes de qualquer commit, e a divergência não foi resolvida por heurística.** A
+sessão começou em `/home/jvbat/projetos/fix-frontend`, na branch `fix/interface-modules` — que está
+**no mesmo commit que `main`** (`c43a2a1`) e não carrega conteúdo próprio. Os commits de
+planejamento dos três blocos anteriores entram **first-parent em `main`** (`ce2d2e4`, `54684fe`,
+`983086f`, `d17df21` são o exemplo mais recente), e o `/executar-bloco` cria a branch a partir de
+`main`; commitar spec e plano na branch antiga os deixaria invisíveis para a execução. Some-se a
+P-03: o sub-bloco A toca `backend/`, então a execução já exigiria o main tree. **Decisão do João:**
+a edição do `backlog.md` migrou para a worktree `/home/jvbat/projetos/lotus` (main), `fix-frontend`
+voltou limpa, e planejamento e execução acontecem no main tree.
+
+**Rota direta a `ready_for_planning`, sem Context Packet — por ausência medida de fonte externa,
+não por pressa.** Os três blocos anteriores passaram por `context_required` porque tinham tasks no
+Notion com sinais de aceite próprios e gatilhos de staleness a reconciliar. **Este item não tem
+task Notion** (o backlog registra isso na primeira linha) e não tem documento no Drive: as três
+gerações de packet de 2026-08-03/04 confirmaram, cada uma por busca dirigida, que o V2 não tem
+documento que delimite hardening estrutural, e este bloco é ainda mais interno — nasceu de um
+review de arquitetura sobre o próprio repositório. **Todo fato que o bloco precisa é medível aqui**,
+e o brainstorming mede em vez de reconciliar. Um packet gerado agora só transcreveria repositório,
+que é a parte que o contrato do `lotus-context-packet` menos protege. Se o João preferir o packet
+mesmo assim, o estado volta a `context_required` sem custo.
+
+**Duas decisões ficaram abertas de propósito no grilling, para o brainstorming resolver:** se a
+guarda de divergência do `mapped` é teste vitest ou regra de lint; e a ordem entre os sub-blocos
+A e B.
+
+**O que já está decidido e não se reabre** (grilling de 2026-08-04, respostas explícitas do João):
+o cast para os 7 sítios de URL assinada e o parâmetro para o oitavo (`TurmaData`); `toPayload`
+recebendo o modo; `mapped` à mão com guarda, **não** derivado do payload; piloto de 2
+(`useRoleForm`, `useStaffUserForm`) com três sinais de saída; o trio da foto fora do corte; e a
+posição 1 na fila.
 
 ## Último item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
