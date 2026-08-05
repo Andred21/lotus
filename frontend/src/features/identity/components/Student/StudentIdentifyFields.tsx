@@ -1,20 +1,20 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, FormField } from '@shared/ui'
-import type { RedatorFormFields } from '../../hooks/useRedatorForm'
+import type { StudentFormFields } from '../../hooks/useStudentForm'
 
-/** Os quatro campos de identificação do redator, no grid 2×2 de sempre.
+/** Os quatro campos de identificação do aluno, no grid 2×2 de sempre.
  *
  * Não é um `PersonFields` genérico de propósito: os grids de Redator, Aluno e
  * Staff divergem (o aluno tem nome em linha inteira e empresa ao lado do
  * telefone), e unificá-los mudaria o que três telas renderizam. */
-export function RedatorIdentityFields({
+export function StudentIdentityFields({
   form,
   set,
   readOnly,
   fieldErrors,
 }: {
-  form: RedatorFormFields
-  set: <K extends keyof RedatorFormFields>(key: K, value: RedatorFormFields[K]) => void
+  form: StudentFormFields
+  set: <K extends keyof StudentFormFields>(key: K, value: StudentFormFields[K]) => void
   readOnly: boolean
   fieldErrors?: Record<string, string[]> | null
 }) {
@@ -23,11 +23,11 @@ export function RedatorIdentityFields({
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-1">
-        <FormField label={t('redator.name')} error={fieldErrors?.name?.[0]}>
+      <FormField label={t("student.name")} error={fieldErrors?.name?.[0]}>
           <AppInputText
             value={form.name}
             disabled={readOnly}
-            onChange={(e) => set('name', e.target.value)}
+            onChange={(e) => set("name", e.target.value)}
             className="w-full"
           />
         </FormField>

@@ -1,3 +1,5 @@
+import { BRAND_COLOR } from "@/shared/config/brand"
+
 export interface FormSectionProps {
   title: string
   /** Espaço acima, para seções que não são a primeira do diálogo. */
@@ -13,8 +15,8 @@ export interface FormSectionProps {
 export function FormSection({ title, spaced }: FormSectionProps) {
   return (
     <h3
-      className={`text-xs font-semibold uppercase ${spaced ? 'pt-2' : ''}`}
-      style={{ color: 'var(--text-color-secondary)' }}
+      className={`text-sm font-bold uppercase ${spaced ? 'pt-2' : ''}`}
+      style={{ color: BRAND_COLOR }}
     >
       {title}
     </h3>

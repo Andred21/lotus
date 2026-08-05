@@ -20,7 +20,12 @@ import {
   useRedatorForm,
   type RedatorDialogMode,
 } from "../../hooks/useRedatorForm";
-import { DOC_TYPES, idoneidade, IDONEIDADE_SEVERITY, type DocType } from "@shared/lib";
+import {
+  DOC_TYPES,
+  idoneidade,
+  IDONEIDADE_SEVERITY,
+  type DocType,
+} from "@shared/lib";
 import { RedatorIdentityFields } from "./RedatorIdentityFields";
 import { RedatorCourseSelector } from "./RedatorCourseSelector";
 import { RedatorDocumentSlot } from "./RedatorDocumentSlot";
@@ -124,25 +129,30 @@ export function RedatorDialog({
       <section className="space-y-4">
         <FormSection title={t("redator.sectionUser")} />
 
-        <div className="flex justify-center">
-          <AppPhotoField
-            name={form.name}
-            url={photo.url}
-            readOnly={readOnly}
-            pending={photo.pending}
-            error={photo.error}
-            onSelect={photo.onSelect}
-            onRemove={photo.onRemove}
-            onSizeReject={photo.onSizeReject}
-            onRetry={photo.onRetry}
-          />
+        <div className="flex flex-col lg:flex-row justify-between">
+          <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
+            <AppPhotoField
+              name={form.name}
+              url={photo.url}
+              readOnly={readOnly}
+              pending={photo.pending}
+              error={photo.error}
+              onSelect={photo.onSelect}
+              onRemove={photo.onRemove}
+              onSizeReject={photo.onSizeReject}
+              onRetry={photo.onRetry}
+            />
+          </div>
+
+          <div className="flex flex-col gap-4 w-full">
+            <RedatorIdentityFields
+              form={form}
+              set={set}
+              readOnly={readOnly}
+              fieldErrors={fieldErrors}
+            />
+          </div>
         </div>
-        <RedatorIdentityFields
-          form={form}
-          set={set}
-          readOnly={readOnly}
-          fieldErrors={fieldErrors}
-        />
 
         <FormSection title={t("redator.sectionDocuments")} spaced />
         {upload.error && (

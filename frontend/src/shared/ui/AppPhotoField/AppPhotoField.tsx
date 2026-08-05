@@ -1,25 +1,25 @@
-import { useTranslation } from 'react-i18next'
-import { AppAvatar } from '../AppAvatar'
-import { AppButton } from '../AppButton'
-import { AppFileUpload } from '../AppFileUpload'
-import type { FileUploadHandlerEvent } from '../AppFileUpload'
-import { MAX_PHOTO_BYTES } from '@shared/lib/upload'
+import { useTranslation } from "react-i18next";
+import { AppAvatar } from "../AppAvatar";
+import { AppButton } from "../AppButton";
+import { AppFileUpload } from "../AppFileUpload";
+import type { FileUploadHandlerEvent } from "../AppFileUpload";
+import { MAX_PHOTO_BYTES } from "@shared/lib/upload";
 
 export interface AppPhotoFieldProps {
   /** Nome da pessoa/empresa — vira as duas iniciais quando não há foto. */
-  name: string
-  url?: string | null
-  readOnly?: boolean
-  pending?: boolean
+  name: string;
+  url?: string | null;
+  readOnly?: boolean;
+  pending?: boolean;
   /** Mensagem de erro do upload/remoção, já traduzida. */
-  error?: string | null
-  onSelect: (file: File) => void
-  onRemove: () => void
+  error?: string | null;
+  onSelect: (file: File) => void;
+  onRemove: () => void;
   /** Recebe a mensagem já traduzida quando o arquivo passa do teto, antes de
    * qualquer requisição. O hook a exibe no mesmo lugar do erro do backend. */
-  onSizeReject?: (message: string) => void
+  onSizeReject?: (message: string) => void;
   /** Quando presente, mostra "Reintentar" ao lado do erro. */
-  onRetry?: () => void
+  onRetry?: () => void;
 }
 
 /**
@@ -32,36 +32,45 @@ export interface AppPhotoFieldProps {
  * o único aviso disso na tela.
  */
 export function AppPhotoField({
-  name, url, readOnly = false, pending = false, error, onSelect, onRemove, onSizeReject, onRetry,
+  name,
+  url,
+  readOnly = false,
+  pending = false,
+  error,
+  onSelect,
+  onRemove,
+  onSizeReject,
+  onRetry,
 }: AppPhotoFieldProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   const handleUpload = (e: FileUploadHandlerEvent) => {
-    const file = e.files[0]
-    e.options.clear()
-    if (file) onSelect(file)
-  }
+    const file = e.files[0];
+    e.options.clear();
+    if (file) onSelect(file);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <AppAvatar name={name} image={url} size="xlarge"  />
+    <div className="flex flex-col items-center  ">
+      <div className="transform scale-200">
+        <AppAvatar name={name} image={url} size="xlarge" />
+      </div>
 
-      <div className="flex flex-col gap-2">
-      
+      <div className="flex flex-col gap-2 items-end">
         {!readOnly && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap  items-end gap-2 pt-10">
             <AppFileUpload
               accept="image/jpeg,image/png,image/webp"
               maxBytes={MAX_PHOTO_BYTES}
               disabled={pending}
-              chooseLabel={url ? t('photo.replace') : t('photo.select')}
-              chooseOptions={{ icon: 'pi pi-camera' }}
+              chooseLabel={url ? t("photo.replace") : t("photo.select")}
+              chooseOptions={{ icon: "pi pi-camera" }}
               uploadHandler={handleUpload}
               onSizeReject={onSizeReject}
             />
             {url && (
               <AppButton
-                label={t('photo.remove')}
+                label={t("photo.remove")}
                 icon="pi pi-trash"
                 text
                 disabled={pending}
@@ -74,13 +83,18 @@ export function AppPhotoField({
         {error && (
           <p
             className="flex items-center gap-2 text-xs"
-            style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}
+            style={{
+              color:
+                "color-mix(in srgb, var(--red-500) 70%, var(--text-color))",
+            }}
           >
             <span>{error}</span>
-            {onRetry && <AppButton label={t('common.retry')} text onClick={onRetry} />}
+            {onRetry && (
+              <AppButton label={t("common.retry")} text onClick={onRetry} />
+            )}
           </p>
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -78,26 +78,31 @@ export function ClientDialog({
       )}
       <section className="space-y-4 ">
         <FormSection title={t("client.sectionGeneral")} />
-        <div className="flex justify-center">
-          <AppPhotoField
-            name={form.legal_name}
-            url={photo.url}
-            readOnly={readOnly}
-            pending={photo.pending}
-            error={photo.error}
-            onSelect={photo.onSelect}
-            onRemove={photo.onRemove}
-            onSizeReject={photo.onSizeReject}
-            onRetry={photo.onRetry}
-          />
-        </div>
 
-        <ClientGeneralFields
-          form={form}
-          readOnly={readOnly}
-          fieldErrors={fieldErrors}
-          onChange={set}
-        />
+        <div className="flex flex-col lg:flex-row justify-between">
+          <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
+            <AppPhotoField
+              name={form.legal_name}
+              url={photo.url}
+              readOnly={readOnly}
+              pending={photo.pending}
+              error={photo.error}
+              onSelect={photo.onSelect}
+              onRemove={photo.onRemove}
+              onSizeReject={photo.onSizeReject}
+              onRetry={photo.onRetry}
+            />
+          </div>
+
+          <div className="flex flex-col gap-4 w-full">
+            <ClientGeneralFields
+              form={form}
+              readOnly={readOnly}
+              fieldErrors={fieldErrors}
+              onChange={set}
+            />
+          </div>
+        </div>
 
         <FormSection title={t("client.sectionAddress")} spaced />
         <AddressFields value={addr} readOnly={readOnly} onChange={setAddr} />
@@ -112,7 +117,6 @@ export function ClientDialog({
           onAdd={addContact}
           onRemove={removeContact}
         />
-        
       </section>
     </CrudDialog>
   );

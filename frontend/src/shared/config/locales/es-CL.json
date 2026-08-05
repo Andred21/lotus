@@ -199,6 +199,7 @@
     "street": "Calle",
     "complement": "Depto. / Oficina",
     "number": "Número",
+    "zipCode": "Código postal",
     "contactName": "Nombre",
     "contactJobTitle": "Cargo",
     "contactPrimary": "Contacto principal",

@@ -199,6 +199,7 @@
     "street": "Rua",
     "complement": "Complemento",
     "number": "Número",
+    "zipCode": "Código postal",
     "contactName": "Nome",
     "contactJobTitle": "Cargo",
     "contactPrimary": "Contato principal",
