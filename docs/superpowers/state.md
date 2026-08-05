@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: ba81a34
-updated_at: 2026-08-05T14:40:00-03:00
+state_basis_commit: 6c5a2c4
+updated_at: 2026-08-05T16:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -247,6 +247,43 @@ então quem abre o QR pelo celular espera um `GET /api/me` que vai dar 401 antes
 Spec: `docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md` — 21 decisões, 8
 invariantes de comportamento e gate com item 0 próprio (o QR escaneado abrindo a validação real,
 provado **sem cookie** na ponta pública). Aprovada pelo João em 2026-08-05.
+
+### Plano escrito em 2026-08-05 — 15 tasks, `executor: misto`
+
+`docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md`. Ordem: 0 baseline e branch · 1
+escritor do resultado acadêmico · 2 schema + models + matriz de domínios · 3 numeração atômica ·
+4 snapshot · 5 emissão com as 4 portas · 6 leitura/`issuable`/revogação · 7 PDF com QR · 8 rota
+pública · 9 `/validar/:uuid` · 10 histórico · 11 emissão/revogação/download · 12 resultado na tela
+da turma · 13 checkpoint visual do João · 14 gate.
+
+**Atribuição do João: backend → Codex (tasks 1–8), frontend → Claude (9–12).** Tasks 0 e 14 com
+Claude, 13 com o João. `paths_autorizados` do Codex fecha em `Certification/**`, os 4 arquivos de
+Operation do escritor acadêmico, `AppServiceProvider`, `config/app.php`, a migration, a view, os
+testes e `generated.ts` — **nada** em `frontend/src/features/**`, `frontend/src/app/**` ou `docs/`.
+
+**A escrita do plano achou três divergências contra a spec aprovada, todas declaradas no próprio
+plano em vez de silenciadas** (§Desvios):
+
+1. **A spec não previu de onde o diálogo de emissão tira os candidatos.** O diálogo mora em
+   `features/certification` (D18) e **não pode** importar `features/operation` (lei §5.6); sem
+   endpoint próprio a UI quebraria a lei ou re-derivaria as 4 portas no cliente. Entra
+   `GET /api/certificates/issuable`. O filtro "sem certificado vigente" roda **do lado de
+   Certification** (`pluck('enrollment_id')` + `whereNotIn`), porque uma relação
+   `Enrollment->certificate` seria aresta Operation → Certification, que não existe.
+2. **São 7 arestas de domínio, não 6.** O §5 da spec manda o gate provar "as 6 arestas declaradas —
+   nenhuma a mais", mas a porta 1 (turma concluída) exige `Operation\Enums\TurmaStatus`, que a lista
+   da spec omitiu. Com 6 a execução baterá numa contradição; a matriz nasce com 7.
+3. **`config/app.php` não tem `frontend_url`** (medido). O QR aponta para
+   `<FRONTEND_URL>/validar/{uuid}` e ler `env()` em runtime quebra com config cacheado — vira chave
+   de config, não `env()` solto.
+
+**Placar declarado, task a task:** backend 378 → 384 → 387 → 390 → 394 → 402 → 410 → 415 → **419**;
+frontend fica em **35** (o projeto só testa unitariamente hooks de `shared/`), e a Task 11 usa esse
+número como sinal: extrair `problemFromBlob` para `shared/api` não pode mudar a contagem.
+
+**Três provas que não aceitam sqlite** (lição 15): o índice único na coluna gerada (Task 2), a
+sequência sob `lockForUpdate` com duas conexões (Task 3) e a unicidade na emissão (Task 5) rodam
+também contra o MySQL do compose.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
