@@ -33,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('turmas/{turma}/alunos/preview', [EnrollmentController::class, 'preview']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
     Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import']);
+    Route::put('turmas/{turma}/alunos/{enrollment}/resultado', [EnrollmentController::class, 'result'])
+        ->scopeBindings();
     Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])
         ->scopeBindings();
 });

@@ -5,8 +5,10 @@ namespace App\Domains\Operation\Http\Controllers;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\ImportStudentsAction;
+use App\Domains\Operation\Actions\RecordEnrollmentResultAction;
 use App\Domains\Operation\Actions\RemoveEnrollmentAction;
 use App\Domains\Operation\Data\EnrollmentData;
+use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -24,7 +26,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview', 'result']),
         ];
     }
 
@@ -64,6 +66,15 @@ class EnrollmentController extends Controller implements HasMiddleware
         return $action->execute($turma, $validated['file'])
             ->toResponse(request())
             ->setStatusCode(200);
+    }
+
+    public function result(
+        EnrollmentResultData $data,
+        Turma $turma,
+        Enrollment $enrollment,
+        RecordEnrollmentResultAction $action,
+    ): EnrollmentData {
+        return EnrollmentData::fromModel($action->execute($enrollment, $data));
     }
 
     public function destroy(Turma $turma, Enrollment $enrollment, RemoveEnrollmentAction $action): Response

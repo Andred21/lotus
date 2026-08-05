@@ -94,6 +94,11 @@ approval_status: EnrollmentApprovalStatus | undefined,
 attendance_pct: undefined | string | null,
 grades: undefined | Array<any> | null,
 };
+export type EnrollmentResultData = {
+grades: Array<any> | null,
+attendance_pct: string | null,
+approval_status: EnrollmentApprovalStatus,
+};
 export type FileData = {
 id: number,
 type: string,

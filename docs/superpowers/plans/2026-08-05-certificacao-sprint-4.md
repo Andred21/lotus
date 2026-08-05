@@ -81,6 +81,12 @@ consequência de medição feita ao planejar.
 - **D-P3 — `config/app.php` ganha `frontend_url`.** O conteúdo do QR é
   `<FRONTEND_URL>/validar/{uuid}`. `config/app.php` não tem essa chave (medido) e ler `env()` em
   runtime quebra com config cacheado — então vira chave de config.
+- **D-P4 — `typescript-transformer-manifest.json` entra em `paths_autorizados`** (achado na
+  execução da Task 1, 2026-08-05). `php artisan typescript:transform` reescreve **dois** arquivos,
+  não um: `generated.ts` e o manifest ao lado. A lista original só previa o primeiro, então o Codex
+  parou corretamente ao ver o manifest sujo fora da autorização. Os dois sempre foram commitados
+  juntos (`e6f54b9`, `d91c5da` são os precedentes) — o manifest é saída do mesmo comando, não
+  edição de frontend. Vale para as tasks 1, 5, 6 e 8, que rodam o transform.
 
 ---
 
@@ -109,7 +115,7 @@ antes de escrever qualquer código (o plano inteiro conta deltas a partir daí).
 - `backend/app/Domains/Operation/Http/Controllers/EnrollmentController.php` (editar)
 - `backend/app/Domains/Operation/routes.php` (editar)
 - `backend/tests/Feature/Operation/EnrollmentResultTest.php` (novo)
-- `frontend/src/shared/types/generated.ts` (regenerado)
+- `frontend/src/shared/types/generated.ts` + `typescript-transformer-manifest.json` (regenerados, D-P4)
 
 **Interfaces:**
 - *Consumes:* `Enrollment`, `Turma::assertAcademicallyWritable()` (já existe, RN-15).
@@ -775,6 +781,7 @@ backend/tests/Feature/Operation/EnrollmentResultTest.php
 backend/tests/Feature/Shared/DomainDependencyTest.php
 backend/.env.example
 frontend/src/shared/types/generated.ts
+frontend/src/shared/types/typescript-transformer-manifest.json
 ```
 
 Fora desta lista o Codex **para e reporta** — em especial: nada de `frontend/src/features/**`,
