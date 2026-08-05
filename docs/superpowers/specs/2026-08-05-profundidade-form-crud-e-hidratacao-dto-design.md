@@ -58,6 +58,11 @@ Feitas em `c43a2a1`, antes de qualquer decisão de desenho.
 - **A ordem dos callbacks pós-`201` diverge hoje.** `useStaffUserForm` e `useStudentForm` fazem
   `await afterCreate(created)` **antes** de `onDone()`; `useBudgetForm` chama `onDone()` **antes** de
   `onCreated(created)`.
+- **Só 6 dos 9 diálogos têm `FormErrorSummary`.** Têm: role, staff, budget, cliente, curso, e os 3
+  não-CRUD (`QuoteWizard`, `EnrollStudentForm`, `TurmaConfigCard`). **Não têm:** `StudentDialog` e
+  `RedatorDialog` — só `FormErrorBanner` (erro geral) e `error=` por campo.
+- **`useRedatorForm:66-73` monta o create com `new FormData()`** — a catraca de um da regra
+  `no-restricted-syntax` nascida no review de 2026-08-04.
 - **`FormErrorSummary` mostra exatamente as chaves que NÃO estão em `mapped`** (`FormField.tsx:73-77`).
   Chave fora de `mapped` é exibida pelo resumo; chave dentro dele fica a cargo do input próprio. Logo
   a falha silenciosa é a chave **listada em `mapped` sem input correspondente na tela** — some das
@@ -164,9 +169,23 @@ razão no fechamento. **Sinal 3** — o consumidor fica maior ou menos claro: re
 fechamento **nomeia qual ocorreu**; piloto sem critério de saída é refactor com nome bonito. Desenho
 herdado da D9 do H.4.6.
 
-**D14 — A lista do sinal 1 é de 4, não de 5.** `useTurmaConfigForm` sai por medição (§1), pelo mesmo
-critério que tirou as 2 tabelas com dropdown da `SearchableTableFrame` em 2026-08-04. Migram
-`useStudentForm`, `useBudgetForm`, `useClientForm`, `useRedatorForm`.
+**D14 — A lista do sinal 1 é de 3, não de 5.** Duas saídas, ambas por medição, pelo mesmo critério que
+tirou as 2 tabelas com dropdown da `SearchableTableFrame` em 2026-08-04:
+
+- **`useTurmaConfigForm`** não roda sobre `createCrudResource` — a turma nasce em rota aninhada (§1).
+- **`useRedatorForm`** monta o create com `new FormData()` (`:66-73`), a catraca de um da regra
+  `no-restricted-syntax` (D11 do bloco de transportes). `toPayload` devolvendo objeto não modela
+  multipart, e `documents[tipo]`/`course_ids[]` não são chaves de payload no mesmo sentido. Alargar a
+  interface para o único consumidor multipart do repositório poria o piloto em cima de caminho de
+  upload — o motivo pelo qual o trio da foto já ficou fora.
+
+Migram **`useStudentForm`, `useBudgetForm` e `useClientForm`**.
+
+**`StudentDialog` não tem `FormErrorSummary`, e o aluno entra assim mesmo.** A lacuna é do diálogo,
+não do hook: hoje ele liga `error=` para `name`, `rut`, `email` e `client_id`, e um 422 em `phone`
+**não aparece em lugar nenhum**. A classificação obrigatória da D12 **expõe** essa chave sem mudar a
+tela — construir o resumo que falta é mudança de comportamento e vira débito registrado no
+fechamento, com a razão. `RedatorDialog` tem a mesma lacuna e sai por outro motivo, acima.
 
 **D15 — Um momento só de pós-create, e `useBudgetForm` só migra se a inversão for inofensiva.** O
 module expõe `afterCreate?: (created: T) => void | Promise<void>`, **aguardado antes** de `onDone` —
@@ -339,8 +358,11 @@ declarado da invariante 1; a §5.6 governa onde os testes da D12 moram.
 - **O trio da foto** (`useEntityPhoto` + `afterCreate` + `hasBufferedFailure` + `closeBlocked`,
   idêntico em 4 diálogos) — fica de propósito, débito registrado no `backlog.md`. Absorvê-lo poria o
   bloco em cima de upload com falha silenciosa (lição 6).
-- **`useCourseForm`** (145 linhas, módulos + `createdIdRef`), **`useQuoteForm`** (passo de wizard) e
-  **`useTurmaConfigForm`** (rota aninhada, D14).
+- **`useCourseForm`** (145 linhas, módulos + `createdIdRef`), **`useQuoteForm`** (passo de wizard),
+  **`useTurmaConfigForm`** (rota aninhada) e **`useRedatorForm`** (create multipart) — D14.
+- **Construir o `FormErrorSummary` que falta em `StudentDialog` e `RedatorDialog`.** É mudança de
+  comportamento (erro que hoje não aparece passa a aparecer) e não cabe num DoD de comportamento
+  idêntico. Vira débito registrado no fechamento, com a chave medida: `phone` no aluno.
 - **Os 3 `mapped=` que não vêm de diálogo CRUD:** `QuoteWizard`, `EnrollStudentForm`,
   `TurmaConfigCard`.
 - **Os outros 5 candidatos do review de arquitetura** — esqueleto da página CRUD, projeção de
