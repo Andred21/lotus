@@ -3,12 +3,13 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\User;
-use App\Domains\Identity\Services\UserPhotoService;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Required;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -40,6 +41,7 @@ class UserData extends Data
         public string|Optional $type = new Optional,
         public array|Optional $roles = new Optional,
         #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
     ) {}
 
@@ -69,7 +71,7 @@ class UserData extends Data
             is_active: $user->is_active,
             type: $user->type,
             roles: $user->getRoleNames()->all(),
-            photo_url: app(UserPhotoService::class)->urlFor($user->photo_path),
+            photo_url: $user->photo_path,
         );
     }
 }

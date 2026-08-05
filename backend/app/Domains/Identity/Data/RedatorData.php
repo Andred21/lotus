@@ -3,11 +3,12 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Services\UserPhotoService;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Required;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -40,6 +41,7 @@ class RedatorData extends Data
         #[Computed]
         public array $documents = [],
         #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
     ) {}
 
@@ -84,7 +86,7 @@ class RedatorData extends Data
             documents: $redator->documents->map(
                 fn ($f) => RedatorDocumentData::fromModel($f)
             )->all(),
-            photo_url: app(UserPhotoService::class)->urlFor($redator->user->photo_path),
+            photo_url: $redator->user->photo_path,
         );
     }
 }
