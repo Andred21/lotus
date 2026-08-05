@@ -7,7 +7,23 @@
 
 ## Próximos blocos
 
-1. **Arquivados e restauração de soft-delete**
+1. **Bloco 7 · Sprint 4 · Certificação**
+   — implementar a vertical de certificação do MVP: emissão, numeração, template oficial, geração de PDF sob demanda, histórico e validação pública por QR.
+
+   **Contexto obrigatório para o planejamento:**
+
+   * `docs/adrs.md` — ADRs aplicáveis à auditoria, PDF, storage e decisões de certificação;
+   * `docs/der-fisico.md` — `certificates`, `certificate_sequences` e relacionamentos previstos;
+   * documentação canônica do Drive sobre Certificação, Curso, Turma e regras de negócio;
+   * tasks 8.x da Sprint 4 no Notion;
+   * prints do protótipo das telas de emissão, histórico e validação;
+   * documentos oficiais/de exemplo fornecidos pela Lotus: **certificado** e **Manual de Classe**, usados como referência visual e para mapear campos fixos/dinâmicos.
+
+   **Decisões que devem ser fechadas antes da implementação:** contrato público do QR (`hash` × `UUID`), regra de vigência e mapeamento/versionamento do template oficial. Preservar geração de PDF sob demanda e snapshot dos dados/template relevantes no ato da emissão; financeiro nunca bloqueia certificação.
+
+   Os arquivos visuais e documentos de referência devem entrar no **Context Packet** deste bloco e ser confrontados com Drive, Notion e código atual antes da escrita da spec.
+
+2. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -23,14 +39,11 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-2. **Administração · Roles e permissões — redesenho de composição**
+3. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-3. **Bloco 7 · Sprint 4 · Certificação**
-   — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
-   (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
 4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 

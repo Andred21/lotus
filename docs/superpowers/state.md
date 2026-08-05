@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: certificacao-sprint-4
+active_work_item: certificacao-sprint-4
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: 577751b
-updated_at: 2026-08-05T13:20:00-03:00
+state_basis_commit: 8889e52
+updated_at: 2026-08-05T13:43:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,53 @@ updated_at: 2026-08-05T13:20:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Bloco ativo — `certificacao-sprint-4`
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
+com o item nomeado literalmente no argumento — "Bloco 7 · Sprint 4 · Certificação" — e o estado em
+`idle`; o comando não promove item sozinho). O item já estava na fila; a edição que o **promoveu da
+posição 3 para a 1** e reescreveu o corpo dele (contexto obrigatório, decisões a fechar, exigência
+de packet) é do João e estava na árvore sem commit — entra neste commit, porque é o artefato que
+prova a seleção.
+
+**O id não promete o corte.** `certificacao-sprint-4` nomeia a vertical, não o que sai numa branch:
+o item pede emissão, numeração, template oficial, PDF sob demanda, histórico e validação pública por
+QR. O corte é decisão do brainstorming; o id é renomeável na revisão da spec, como já ocorreu duas
+vezes.
+
+**Rota `context_required`, e desta vez o próprio item a exige.** Diferente do bloco anterior (que
+foi direto a `ready_for_planning` por ausência **medida** de fonte externa), aqui o backlog escreve
+que os arquivos visuais e documentos de referência **devem** entrar no packet: doc canônica do Drive
+sobre Certificação/Curso/Turma, tasks 8.x da Sprint 4 no Notion, prints do protótipo (emissão,
+histórico, validação) e os dois documentos oficiais da Lotus — **certificado** e **Manual de
+Classe** —, que fixam campos fixos × dinâmicos. Nenhuma dessas fontes é medível no repositório, e as
+três decisões abertas dependem delas.
+
+**Ponto de partida medido aqui, para o packet reconciliar e não redescobrir** (lição 13):
+
+1. **As duas tabelas não existem** — zero migration `certificates`/`certificate_sequences`;
+   `docs/der-fisico.md:73-74` as descreve como planejadas. O domínio
+   `backend/app/Domains/Certification/` **existe e está vazio** (7 pastas, nenhum arquivo).
+2. **O contrato público do QR já tem as duas colunas no papel, e é daí que a decisão nasce:** o DER
+   dá a `certificates` **`uuid UK` e `qr_code_hash UK` ao mesmo tempo**. `hash × UUID` não é escolha
+   entre desenhos rivais — é escolher qual dos dois campos previstos vira o identificador público.
+3. **Template de certificado já é feature entregue, e mora em `Catalog`, não em `Certification`:**
+   `CourseCertificateTemplate`, `CertificateTemplateData` e `CourseTemplateController` com 3 rotas
+   (`POST courses/{course}/templates`, `PUT|DELETE templates/{template}`); o DER dá à tabela
+   `version` (int) e `validity_months` (nullable). **Versionamento e vigência já têm coluna** — o
+   aberto é o snapshot no ato da emissão e o mapeamento do documento oficial no `layout_config`
+   (json).
+4. **PDF sob demanda pelo Gotenberg já roda em produção, e o precedente é do próprio Manual de
+   Classe:** `ManualPdfService` (RF-TUR-04) renderiza Blade e converte por HTTP, com docblock
+   declarando "**mesmo racional do certificado RF-CER-03**" — nada materializado. ADR-12 decide o
+   mecanismo; não há o que reabrir.
+5. **As 3 permissões já existem** no `PermissionCatalog` (`certification.certificate.view|issue|revoke`,
+   a última marcada como peso legal), a navegação já lista `/certificados` gateada por `view` e a
+   rota **aponta para `ModulePlaceholder`**. RBAC e entrada de UI não nascem neste bloco; a tela,
+   sim.
+
+**Toca `backend/` com migration nova → main tree, sem worktree (P-03).**
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
