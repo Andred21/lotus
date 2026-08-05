@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: profundidade-form-crud-e-hidratacao-dto
 active_work_item: profundidade-form-crud-e-hidratacao-dto
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 active_spec: docs/superpowers/specs/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md
 active_plan: docs/superpowers/plans/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: 09118eb
-updated_at: 2026-08-05T11:55:00-03:00
+state_basis_commit: 577751b
+updated_at: 2026-08-05T12:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -149,6 +149,59 @@ assertions, caminho declarado no ledger), frontend 34 passed. Build/lint/Pint ve
 zerado, leis §5 intactas. Detalhe task a task em `.superpowers/sdd/progress.md`. Pendências de
 fechamento (backlog, débitos técnicos, D10 do bloco anterior) ficam para o `/fechar-sprint` — não
 foram tratadas aqui.
+
+**Review em 2026-08-05 (`/revisar-sprint`, ALTO RISCO** — domínio §5.3, documentos de peso legal e
+`executor: misto` com as Tasks 2/3/5 no Codex; lente Claude **+** revisão independente do Codex,
+`mcp__codex__codex` read-only). **Gate reconferido do zero, não aceito por relatório:** backend
+**378 passed (1368 assertions)**, frontend **34 passed**, `pnpm lint` e `pnpm build` verdes, Pint
+`--test` `passed` nos **17** `.php` tocados, `generated.ts`/`locales/`/`backend/database/` sem diff.
+Órfãos: nenhum no backend — `->temporaryUrl(`, `->urlFor(`, `URL_MINUTES` e `FilesystemAdapter` sem
+uma ocorrência sobrevivente, `publicDiskFor()` e `disk()` ainda com chamador, `TurmaData::fromModel`
+em exatamente 4 call sites, `SignedUrlTransformer` em 7 DTOs. **Leis §5 intactas.**
+
+**A classificação foi conferida diálogo a diálogo, não aceita da spec:** `StudentDialog` passa
+`error=` nos 4 campos que declara em `mapped`, `BudgetDialog` nos 2, e os 4 `FormErrorSummary`
+recebem por `{...errorSummary}` exatamente o `mapped`/`excludePrefixes` que tinham à mão antes —
+zero mudança no que aparece na tela.
+
+**4 achados, nenhum 🔴. O João aprovou apenas o Q-1.**
+
+**Q-1 🟡 — o módulo devolvia `setForm`, e os 5 hooks devolvem o módulo inteiro.** `return crud` /
+`{ ...crud, toggle }` / `{ ...crud, addr, ... }`: qualquer chave dentro de `crud` chega ao diálogo
+por spread. Com isso `RoleDialog`, `StaffUserDialog`, `StudentDialog`, `BudgetDialog` e
+`ClientDialog` ganharam um setter que **nenhum deles tinha antes** (medido: zero uso em
+`features/*/components/`, antes e depois) — e a `frontend-fsliced.md` nomeia o
+`patchContact(setForm, ...)` do `ClientDialog` como contra-exemplo, não molde. Antes cada hook
+curava o próprio retorno; `useCourseForm` e `useRedatorForm`, que não migraram, seguem curando. O
+guardrail que existia por construção morreria justo no módulo desenhado para ser adotado por 9
+hooks. **Corrigido em `577751b`:** `useCrudForm` devolve `{ crud, setForm }`; quem só consome o
+formulário escreve `const { crud } = ...`, e `useClientForm` — único com coleção nested — nomeia
+`setForm` no destructuring. Fora do objeto, nenhum spread o carrega por acidente. **Provado nos dois
+sentidos:** diálogo tentando consumir `setForm` reprova no `tsc` (`TS2339`), e devolver a chave para
+dentro de `crud` reprova a asserção nova do teste do módulo. Sondas removidas, árvore limpa.
+Frontend passa a **35 passed** (34 + a asserção do Q-1); backend não foi tocado pelo fix
+(`git diff 09118eb..577751b -- backend/` vazio), então o placar 378/1368 não pode ter mexido.
+
+**Q-2, Q-3 e Q-4 não foram aprovados** e ficam registrados aqui, sem virar trabalho: **Q-2 🟢** — o
+barrel `shared/hooks/index.ts` exporta `unclassifiedPayloadKeys`, `MutableResource` e
+`CrudFormOptions` sem um consumidor (o teste importa por caminho relativo), e o primeiro é a válvula
+que a D12 existe para fechar. **Q-3 🟢** — chave declarada em `mapped` **e** `summaryOnly` ao mesmo
+tempo passa na guarda sem conflito, e `summaryOnly` é a única das três caixas sem consequência
+mecânica, logo a de custo zero para calar o mecanismo. **Q-4 🟢** — o fato medido em 2026-08-01
+(`PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData` desvia do
+`CannotSetComputedValue`) foi apagado junto do `submit` do `useClientForm` e não reapareceu, num
+bloco que **aumentou a aposta**: a propriedade deixou de carregar URL e passa a carregar path.
+Candidatos a §Débitos técnicos do `backlog.md` no `/fechar-sprint`, se o João quiser.
+
+**Divergência entre revisores: nenhuma.** O Codex fechou com zero achado e declarou limpas as cinco
+áreas que recebeu — leis §5, contrato JSON (`photo_url: null`, TTL 10/60, disco público), mutations e
+a inversão D15, escape de path interno, privilégio/422 e código morto. Os quatro achados são de
+convenção e superfície: abaixo do corte dele, dentro do gabarito deste projeto.
+
+**Sujeira de árvore que não é do bloco, reportada e não tocada:** `backend/resources/views/welcome.blade.php`
+apareceu modificado durante a sessão de review (a árvore estava limpa no início) com um codemod de
+classes Tailwind na página stock do Laravel — `max-w-[335px]` → `max-w-83.75`, `leading-[20px]` →
+`leading-5`, `w-[438px]` → `w-109.5`. Não entrou em commit nenhum; decidir o destino é do João.
 
 ## Último item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
