@@ -199,6 +199,7 @@
     "street": "Street",
     "complement": "Unit / Office",
     "number": "Number",
+    "zipCode": "ZIP code",
     "contactName": "Name",
     "contactJobTitle": "Job title",
     "contactPrimary": "Primary contact",
