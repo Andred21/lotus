@@ -2,26 +2,17 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 active_spec: null
 active_plan: null
 context_packet: null
-blocker: >-
-  O Context Packet voltou com `status: blocked` e três regras de negócio que
-  nenhuma fonte disponível fixa: (1) a regra exata de vigência — quantidade e
-  origem dos meses (curso × turma), se "sem vencimento" é permitido e como
-  `valido_ate` é calculado; (2) o padding do `LOT-ANO-SEQ` e o comportamento
-  após `LOT-ANO-999`; (3) como o certificado oficial representa uma turma com
-  múltiplos redatores, já que o documento traz `RELATOR` no singular e a turma
-  é N:N desde o Bloco 6b. Sem elas o planejamento inventaria regra de negócio
-  em documento de peso legal. Resolvidas pelo João, o packet é regerado (ou
-  emendado com a decisão registrada) e o estado volta a `context_required`.
-resume_state: context_required
+blocker: null
+resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: 8889e52
-updated_at: 2026-08-05T13:58:00-03:00
+state_basis_commit: c52eece
+updated_at: 2026-08-05T14:06:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -148,6 +139,40 @@ numeração e representação de múltiplos redatores no certificado. São **reg
 documento de peso legal** — o §3 do `CLAUDE.md` e a própria SKILL mandam bloquear em vez de supor.
 O `hash × UUID` **não** entra como bloqueio de packet: é decisão de desenho do João no
 brainstorming, e o packet já entrega os dois lados medidos.
+
+### Bloqueio resolvido pelo João em 2026-08-05 — três decisões de regra de negócio
+
+Respostas explícitas do João, que são fonte canônica de topo da hierarquia (instrução vigente vence
+snapshot de Drive). Elas desbloqueiam o packet; o estado volta a `context_required` para a
+regeração.
+
+**RN-CER-01 — vigência: o padrão é NÃO ter validade, e o campo existe para a exceção.** Certificado
+nasce sem vencimento; `valido_ate` fica nulo por padrão. O campo permanece porque algum certificado
+pode ter vigência — o que reconcilia as três leituras contraditórias das fontes: "tempo
+indeterminado" é o **padrão**, `valido_ate`/`vigencia_meses` é a **exceção**, e o estado "expirado"
+só existe para quem tem data. Isso também explica por que **nenhum dos três certificados oficiais
+exibe vigência**: eles são o caso padrão.
+
+**RN-CER-02 — numeração segue e passa de 3 dígitos sem tratamento especial:** depois de
+`LOT-ANO-999` vem `LOT-ANO-1000`. Não há teto nem rollover a desenhar — a sequência anual
+simplesmente cresce. O João acrescentou que **o código pode carregar referência à turma que o
+gerou**; isso muda o formato de `codigo` (coluna `UK`, visível no documento legal) e por isso é
+**decisão de desenho do brainstorming**, não fato de packet. Fica registrado que o único exemplo
+real medido é `LOT-2026-016`, com 3 dígitos zero-padded.
+
+**RN-CER-03 — um relator por certificado, escolhido pelo admin na emissão.** A operação do cliente é
+**1 redator por vez**; o N:N que o Bloco 6b introduziu existe para a **troca durante o curso**, e a
+auditoria guarda o histórico da troca. Quando a turma termina com mais de um redator associado e o
+sistema está pronto para emitir, **o admin escolhe a assinatura** — o `RELATOR` singular do
+documento oficial não é defasagem do documento, é o comportamento correto.
+
+**Observação do João, que é restrição de escopo:** as **assinaturas não serão indexadas ainda** —
+como viabilizar ainda será discutido com o cliente. O bloco deixa o caminho **preparado** para
+quando as assinaturas dos redatores existirem, sem construir o armazenamento agora (lição 3: não
+construir para consumidor hipotético; o que se preserva é o ponto de extensão, não a feature).
+
+**Segue aberto para o brainstorming, e não bloqueia o packet:** o contrato público do QR
+(`hash` × `UUID`, task 8.0.3) e o formato final do `codigo` com a referência de turma.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
