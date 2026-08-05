@@ -16,7 +16,7 @@ export function BudgetDialog({
   onCreated?: (created: BudgetData) => void
 }) {
   const { t } = useTranslation()
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError } = useBudgetForm(
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = useBudgetForm(
     budget, mode, onHide, onCreated,
   )
   const { clientOptions } = useCommercialClients()
@@ -34,7 +34,7 @@ export function BudgetDialog({
       submitLabel={isCreate ? t('budget.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
-      <FormErrorSummary errors={fieldErrors} mapped={['client_id', 'payment_terms']} />
+      <FormErrorSummary errors={fieldErrors} {...errorSummary} />
 
       <section className="space-y-4">
         {isCreate && (

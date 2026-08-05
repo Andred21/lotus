@@ -3,11 +3,12 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Student;
-use App\Domains\Identity\Services\UserPhotoService;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Required;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -43,6 +44,7 @@ class StudentData extends Data
         #[Computed]
         public int $enrollments_count = 0,
         #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
     ) {}
 
@@ -72,7 +74,7 @@ class StudentData extends Data
             // `enrollments_count` vem do withCount() do controller; o fallback
             // cobre a chamada direta (testes de unidade) sem gerar N+1 na lista.
             enrollments_count: $student->enrollments_count ?? $student->enrollments()->count(),
-            photo_url: app(UserPhotoService::class)->urlFor($student->user->photo_path),
+            photo_url: $student->user->photo_path,
         );
     }
 }

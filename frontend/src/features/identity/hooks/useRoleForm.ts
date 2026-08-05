@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { RoleData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { rolesApi } from '@shared/api/rolesApi'
@@ -15,34 +15,27 @@ export function useRoleForm(role: RoleData | null, mode: DialogMode, onDone: () 
   const entity: RoleFormFields | null = role
     ? { id: role.id, name: role.name, permissions: role.permissions }
     : null
-  const { form, set, readOnly } = useEntityForm<RoleFormFields>(entity, mode, EMPTY)
 
-  const create = rolesApi.useCreate()
-  const update = rolesApi.useUpdate()
+  const { crud } = useCrudForm<RoleFormFields, RoleData>(rolesApi, {
+    entity,
+    mode,
+    empty: EMPTY,
+    toPayload: (f) => ({ name: f.name, permissions: f.permissions }),
+    mapped: ['name'],
+    // Os checkboxes de permissão não passam `error=` ao FormField: quem mostra
+    // um 422 em `permissions` é o resumo.
+    summaryOnly: ['permissions'],
+    onDone,
+  })
 
   function toggle(name: string) {
-    set(
+    crud.set(
       'permissions',
-      form.permissions.includes(name)
-        ? form.permissions.filter((p) => p !== name)
-        : [...form.permissions, name],
+      crud.form.permissions.includes(name)
+        ? crud.form.permissions.filter((p) => p !== name)
+        : [...crud.form.permissions, name],
     )
   }
 
-  function submit() {
-    const payload = { name: form.name, permissions: form.permissions }
-    if (mode === 'create') {
-      create.mutate(payload, { onSuccess: onDone })
-    } else {
-      update.mutate({ id: form.id!, payload }, { onSuccess: onDone })
-    }
-  }
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
-
-  return {
-    form, set, toggle, readOnly, submit,
-    pending: create.isPending || update.isPending,
-    fieldErrors, generalError,
-  }
+  return { ...crud, toggle }
 }

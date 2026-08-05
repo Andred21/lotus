@@ -20,6 +20,7 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -190,7 +191,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
         $turma->quote->delete();
 
         $data = TurmaData::fromModel(
-            $turma->fresh(['quote.budget.client', 'course', 'redatores', 'files'])
+            $turma->fresh(['quote.budget.client', 'course', 'redatores', 'files']),
+            app(TurmaHabilitacaoService::class),
         );
 
         $this->assertSame('Alta Tensión', $data->course_name);

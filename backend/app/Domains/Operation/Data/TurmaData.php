@@ -53,10 +53,8 @@ class TurmaData extends Data
         ];
     }
 
-    public static function fromModel(Turma $turma): self
+    public static function fromModel(Turma $turma, TurmaHabilitacaoService $habilitacao): self
     {
-        $habilitacao = app(TurmaHabilitacaoService::class);
-
         return new self(
             id: $turma->id,
             quote_id: $turma->quote_id,

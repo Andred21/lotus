@@ -94,26 +94,6 @@ class UserPhotoTest extends TestCase
         $this->assertNull($user->refresh()->photo_path);
     }
 
-    public function test_url_for_devolve_null_sem_caminho(): void
-    {
-        Storage::fake('s3');
-
-        $this->assertNull(app(UserPhotoService::class)->urlFor(null));
-    }
-
-    public function test_url_for_devolve_url_temporaria(): void
-    {
-        Storage::fake('s3');
-        $user = User::factory()->create(['type' => 'admin']);
-        $service = app(UserPhotoService::class);
-        $service->store($user, UploadedFile::fake()->image('foto.png'));
-
-        $url = $service->urlFor($user->refresh()->photo_path);
-
-        $this->assertIsString($url);
-        $this->assertNotSame('', $url);
-    }
-
     public function test_troca_de_foto_gera_registro_de_auditoria(): void
     {
         Storage::fake('s3');

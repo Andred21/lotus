@@ -26,7 +26,7 @@ export function StaffUserDialog({
     invalidateKey: usersApi.keys.all,
   })
 
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError } =
+  const { form, set, readOnly, submit, pending, fieldErrors, generalError, errorSummary } =
     useStaffUserForm(user, mode, onHide, (created) => photo.flush(created.id as number))
   const { roleOptions } = useStaffRoleOptions()
 
@@ -49,7 +49,7 @@ export function StaffUserDialog({
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
-      <FormErrorSummary errors={fieldErrors} mapped={['name', 'rut', 'email', 'password', 'role']} />
+      <FormErrorSummary errors={fieldErrors} {...errorSummary} />
       {photo.hasBufferedFailure && <FormErrorBanner message={t('photo.createUploadFailed')} />}
 
       <section className="space-y-4">

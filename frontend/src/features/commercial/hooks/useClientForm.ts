@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { ClientAddressData, ClientData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { clientsApi } from '@shared/api/clientsApi'
@@ -27,9 +27,35 @@ export function useClientForm(
   onDone: () => void,
   afterCreate?: (created: ClientData) => Promise<void>,
 ) {
-  const { form, setForm, set, readOnly } = useEntityForm(client, mode, EMPTY)
-  const create = clientsApi.useCreate()
-  const update = clientsApi.useUpdate()
+  const { crud, setForm } = useCrudForm<ClientData, ClientData>(clientsApi, {
+    entity: client,
+    mode,
+    empty: EMPTY,
+    // Campos LISTADOS, não `...form`: `photo_url` é `#[Computed]` e não tem o
+    // que fazer num payload de escrita. Empresa não tem nome separado da razón
+    // social: `name` é sempre igual a `legal_name`.
+    toPayload: (f) => ({
+      id: f.id,
+      name: f.legal_name,
+      legal_name: f.legal_name,
+      rut: f.rut,
+      email: f.email,
+      phone: f.phone,
+      type: f.type,
+      business_activity: f.business_activity,
+      addresses: f.addresses,
+      contacts: f.contacts,
+    }),
+    mapped: ['legal_name', 'name', 'rut', 'email', 'type', 'business_activity'],
+    // `contacts.*` sai do resumo pelo prefixo (cada contato mostra o próprio
+    // erro no NestedField), mas a chave `contacts` — a lista inteira — não é
+    // coberta por ele. `addresses` NÃO entra em `mapped`: hoje o backend não
+    // valida endereço, e quando validar o 422 não pode sumir da tela.
+    summaryOnly: ['id', 'phone', 'addresses', 'contacts'],
+    excludePrefixes: ['contacts.'],
+    onDone,
+    afterCreate,
+  })
 
   // Só o primeiro endereço é editável nesta tela; os demais são preservados.
   // (O update do backend apaga-e-recria os nested; reconstruir o array com um
@@ -66,51 +92,17 @@ export function useClientForm(
       }
     })
 
-  function submit() {
-    // Empresa não tem nome separado da razón social: `name` (exigido pelo backend
-    // para o `users.name` do login provisionado) é sempre igual a `legal_name`.
-    //
-    // Campos LISTADOS, não `...form`: `photo_url` é `#[Computed]` e não tem o
-    // que fazer num payload de escrita — hoje o backend o ignora (a promoção
-    // no construtor do `ClientData` desvia do `CannotSetComputedValue`, medido
-    // em 2026-08-01: PUT com `photo_url` devolve 200), mas mandar campo de
-    // saída no corpo da escrita depende desse detalhe do pacote para não
-    // virar 500. Os outros 3 forms já montam o payload explícito.
-    const payload = {
-      id: form.id,
-      name: form.legal_name,
-      legal_name: form.legal_name,
-      rut: form.rut,
-      email: form.email,
-      phone: form.phone,
-      type: form.type,
-      business_activity: form.business_activity,
-      addresses: form.addresses,
-      contacts: form.contacts,
-    }
-    if (mode === 'create') {
-      create.mutate(payload, {
-        onSuccess: async (created) => {
-          await afterCreate?.(created)
-          onDone()
-        },
-      })
-      return
-    }
-    update.mutate({ id: client!.id!, payload }, { onSuccess: onDone })
-  }
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
-
   return {
-    form, set, readOnly, submit,
+    ...crud,
     // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para o
     // vazio em vez de quebrar ao ler `addr.region`. Resolvido aqui porque a
     // constante que define "endereço vazio" já mora neste arquivo; tê-la também
     // no componente eram duas fontes para o mesmo default.
-    addr: form.addresses[0] ?? EMPTY_ADDRESS,
-    setAddr, patchContact, setPrimaryContact, addContact, removeContact,
-    pending: create.isPending || update.isPending,
-    fieldErrors, generalError,
+    addr: crud.form.addresses[0] ?? EMPTY_ADDRESS,
+    setAddr,
+    patchContact,
+    setPrimaryContact,
+    addContact,
+    removeContact,
   }
 }

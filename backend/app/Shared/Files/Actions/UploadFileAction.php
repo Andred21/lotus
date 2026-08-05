@@ -5,7 +5,6 @@ namespace App\Shared\Files\Actions;
 use App\Shared\Files\Models\File;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -127,26 +126,6 @@ class UploadFileAction
                 'error' => $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * URL pré-assinada temporária. Funciona no driver s3 (S3 real ou MinIO);
-     * o driver `local` NÃO suporta — nesse caso o teste de expiração fica
-     * pendente para o ambiente com MinIO (ver spec §8).
-     *
-     * Assina contra {@see publicDiskFor()}, não contra `$disk` — em dev, o
-     * disco de escrita aponta pro hostname interno do Docker (`minio`),
-     * inalcançável pelo navegador; presign é assinatura local, não depende
-     * de conectividade real com o endpoint assinado.
-     */
-    public function temporaryUrl(File $file, int $minutes = 10, ?string $disk = null): string
-    {
-        $disk ??= config('filesystems.default');
-
-        /** @var FilesystemAdapter $storage */
-        $storage = Storage::disk(self::publicDiskFor($disk));
-
-        return $storage->temporaryUrl($file->path, now()->addMinutes($minutes));
     }
 
     /**

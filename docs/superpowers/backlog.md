@@ -56,6 +56,19 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **O trio da foto é idêntico em 4 dialogs e ficou fora do item 1 de propósito.**
+  `useEntityPhoto({resource, id, mode, url, invalidateKey})` + `afterCreate: (created) =>
+  photo.flush(created.id)` + `{photo.hasBufferedFailure && <FormErrorBanner …/>}` +
+  `closeBlocked={pending || photo.pending}` se repetem byte a byte em `ClientDialog`,
+  `StaffUserDialog`, `StudentDialog` e `RedatorDialog`. Absorvê-los no `useCrudForm` fecharia a
+  repetição inteira, mas põe o bloco em cima de caminho de upload com **falha silenciosa** (lição 6:
+  `Content-Type` fixado → `File` vira `{}` → 201 com arquivo vazio) e do buffer pós-`201`, que já
+  custou duas decisões de spec (D10/D11 do bloco de alunos) e a quarta saída do `CrudDialog`.
+  Decisão do João em 2026-08-04: fora do item 1. Saída: entra quando alguém tocar um desses 4
+  dialogs por outro motivo, e o commit que absorver paga junto a prova de upload real no gate —
+  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` (161 linhas, o module mais profundo
+  de `shared/hooks`) segue **sem teste**.
+
 - **As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`, e adotar custa mais do que
   trocar o markup.** `BudgetsTable` e `TurmasTable` ficaram fora do H.4.4 (2026-08-04, spec D2) por
   terem um slot de filtro que as 5 busca-só não têm. O que a moldura **não** resolve para elas hoje é
@@ -197,3 +210,39 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   **Alinhar de verdade exige decisão do João sobre RBAC/spec** — endpoint de clientes sob
   `identity.user.view`, permissão nova, ou aceitar o acoplamento. Levantado no `/revisar-sprint` do
   `bloco-alunos-modulo` (2026-07-27); movido para cá para não morrer no arquivamento do `state.md`.
+
+- **Os 4 hooks de formulário que ficaram fora do `useCrudForm`, com o critério de cada um.**
+  `useRedatorForm` monta o create com `new FormData()` — a exceção única e declarada da regra
+  `no-restricted-syntax` — e `toPayload` devolvendo objeto **não modela multipart**; entra quando
+  (e se) o transporte do redator deixar de ser multipart, ou quando o module aprender a devolver
+  `FormData`. `useTurmaConfigForm` **não roda sobre `createCrudResource`** (a turma nasce em rota
+  aninhada), então não satisfaz o `MutableResource`; entra se a turma ganhar recurso CRUD próprio.
+  `useCourseForm` e `useQuoteForm` são candidatos legítimos e ficaram fora só por corte de escopo —
+  ambos manipulam coleção nested (módulos, itens da cotação) e usam `setForm`, que o Q-1 do review
+  de 2026-08-05 tirou do retorno público: os dois leem `setForm` do par `{ crud, setForm }`.
+
+- **`StudentDialog` e `RedatorDialog` não têm `FormErrorSummary`, e no aluno isso tem chave
+  medida.** Dos 9 diálogos, só 6 têm o resumo. `useStudentForm` declara `summaryOnly: ['phone']` —
+  a classificação está correta e a guarda passa — mas **não existe resumo naquela tela**, então um
+  422 em `phone` não aparece em lugar nenhum. Medido e aceito no bloco de 2026-08-05 (spec D14): o
+  aluno migrou assim mesmo porque a classificação **expõe** a lacuna sem mudar a tela; construir o
+  resumo que falta é o débito. Saída: o commit que adicionar o `FormErrorSummary` aos dois paga
+  junto a conferência de que todo campo em `mapped` realmente passa `error=` ao `FormField` — DoD é
+  o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
+  do `max-lines` (189 linhas cada).
+
+- **Três achados do review de 2026-08-05 não foram aprovados pelo João e ficam registrados aqui,
+  todos 🟢 e todos de esforço P.** (Q-2) O barrel `shared/hooks/index.ts` exporta
+  `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions` sem um consumidor — o teste
+  importa por caminho relativo —, e o primeiro é a válvula que a D12 existe para fechar: público,
+  ele é o caminho para uma feature classificar por fora do module. (Q-3) Chave declarada em
+  `mapped` **e** em `summaryOnly` ao mesmo tempo passa na guarda sem conflito; `summaryOnly` é a
+  única das três caixas **sem consequência mecânica** (`mapped` some do resumo, `excludePrefixes`
+  filtra por prefixo), logo a de custo zero para calar o mecanismo. Detectar a interseção é a única
+  verificação barata que sobra — que exista um `FormErrorSummary` no diálogo o hook não pode saber.
+  (Q-4) O fato medido em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no
+  construtor do `ClientData` desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do
+  `useClientForm` e não reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de
+  carregar URL e passa a carregar path, então quem reintroduzir `...form` manda um caminho interno
+  de storage no corpo da escrita. Saída dos três: o próximo commit que tocar `useCrudForm` ou
+  `useClientForm` paga o que couber.

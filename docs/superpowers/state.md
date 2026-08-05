@@ -10,9 +10,9 @@ active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: 0e7ec59
-updated_at: 2026-08-04T19:20:00-03:00
+last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
+state_basis_commit: 577751b
+updated_at: 2026-08-05T13:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,229 @@ updated_at: 2026-08-04T19:20:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
+## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). O item entrou no backlog em `aa715ad`, escrito no dia anterior a partir do review de
+arquitetura de 2026-08-04 e do grilling que o seguiu.
+
+**A árvore mudou antes de qualquer commit, e a divergência não foi resolvida por heurística.** A
+sessão começou em `/home/jvbat/projetos/fix-frontend`, na branch `fix/interface-modules` — que está
+**no mesmo commit que `main`** (`c43a2a1`) e não carrega conteúdo próprio. Os commits de
+planejamento dos três blocos anteriores entram **first-parent em `main`** (`ce2d2e4`, `54684fe`,
+`983086f`, `d17df21` são o exemplo mais recente), e o `/executar-bloco` cria a branch a partir de
+`main`; commitar spec e plano na branch antiga os deixaria invisíveis para a execução. Some-se a
+P-03: o sub-bloco A toca `backend/`, então a execução já exigiria o main tree. **Decisão do João:**
+a edição do `backlog.md` migrou para a worktree `/home/jvbat/projetos/lotus` (main), `fix-frontend`
+voltou limpa, e planejamento e execução acontecem no main tree.
+
+**Rota direta a `ready_for_planning`, sem Context Packet — por ausência medida de fonte externa,
+não por pressa.** Os três blocos anteriores passaram por `context_required` porque tinham tasks no
+Notion com sinais de aceite próprios e gatilhos de staleness a reconciliar. **Este item não tem
+task Notion** (o backlog registra isso na primeira linha) e não tem documento no Drive: as três
+gerações de packet de 2026-08-03/04 confirmaram, cada uma por busca dirigida, que o V2 não tem
+documento que delimite hardening estrutural, e este bloco é ainda mais interno — nasceu de um
+review de arquitetura sobre o próprio repositório. **Todo fato que o bloco precisa é medível aqui**,
+e o brainstorming mede em vez de reconciliar. Um packet gerado agora só transcreveria repositório,
+que é a parte que o contrato do `lotus-context-packet` menos protege. Se o João preferir o packet
+mesmo assim, o estado volta a `context_required` sem custo.
+
+**Brainstorming de 2026-08-05 — as duas decisões abertas fecharam, e a medição mudou três coisas
+antes do desenho** (sexta ocorrência da lição 13 no projeto):
+
+1. **`Cast` é o lado errado do `spatie/laravel-data`.** `Cast::cast()` roda na criação; quem
+   transforma na saída é `Transformer::transform()`. Os 8 DTOs constroem por `fromModel` explícito e
+   os `::from([...])` do repositório recebem array, nunca model — um cast jamais dispararia. O
+   backlog escreveu "cast"; o mecanismo é `#[WithTransformer]`, escolhido pelo João entre três
+   opções (transformer, accessor no model, módulo de assinatura estático).
+2. **`TurmaData::fromModel` tem 4 call sites, não 2** — 2 no `TurmaController` e 2 em teste. É a
+   mesma forma que mordeu no H.4.6, onde a spec media 4 e existiam 6. O João manteve o serviço por
+   parâmetro, com o mesmo argumento que fechou a D9 como sinal 1.
+3. **`useTurmaConfigForm` não roda sobre `createCrudResource`** (a turma nasce em rota aninhada), e
+   por isso sai da lista de migração do sinal 1, que cai de 5 para 4.
+
+**A guarda do `mapped` não pode ser lint, e isso é medido:** `mapped` mora no JSX do diálogo e
+`toPayload` no hook — arquivos diferentes, e ESLint é por arquivo. O João escolheu subir `mapped`
+para junto do `toPayload` e pôr a invariante dentro do `useCrudForm`, provada em dois níveis. **A
+ordem ficou A (backend) antes de B (frontend)**, para o checkpoint visual ficar adjacente ao gate.
+
+**Duas decisões novas nasceram no desenho e estão na spec:** os métodos `UploadFileAction::temporaryUrl`
+e `UserPhotoService::urlFor` **morrem** (D5 — só têm esses 7 chamadores em produção), e a leitura em
+PHP da propriedade que passa a carregar path vira **mecanismo**, não docblock (D6).
+
+**A escrita do plano achou dois defeitos na spec aprovada, e os dois foram corrigidos antes da
+primeira task** (`eb7c702`, `b12eee7`):
+
+1. **A guarda do `mapped` estava com a direção invertida e reprovaria código correto.**
+   `FormErrorSummary` renderiza exatamente as chaves que **não** estão em `mapped` — logo chave fora
+   de `mapped` é a que **aparece**. A regra herdada do backlog acusaria `permissions` no `RoleDialog`,
+   ou seja, **o primeiro hook do piloto**, e o conserto que ela induz (pôr a chave em `mapped`) é a
+   supressão silenciosa que a D11 existe para impedir. Nasceu `summaryOnly`: toda chave de payload
+   tem de estar em uma das três caixas.
+2. **A lista de migração do sinal 1 caiu de 4 para 3.** `useRedatorForm` monta o create com
+   `new FormData()` — a catraca de um da regra `no-restricted-syntax` — e `toPayload` devolvendo
+   objeto não modela multipart. Medido junto: **só 6 dos 9 diálogos têm `FormErrorSummary`**;
+   `StudentDialog` e `RedatorDialog` não têm, e no aluno isso significa que um 422 em `phone` hoje
+   **não aparece em lugar nenhum**. O aluno migra assim mesmo, porque a classificação obrigatória
+   expõe a chave sem mudar a tela; construir o resumo que falta é débito.
+
+**Plano em 12 tasks** (0 baseline · 1 transformer com TDD · 2 os 3 `download_url` · 3 os 4
+`photo_url` · 4 guarda de leitura · 5 `TurmaData` · 6 `useCrudForm` · 7 piloto · 8 leitura do sinal ·
+9 os 3 restantes · 10 checkpoint visual do João · 11 gate). O placar do backend **cai** na Task 3 e
+fecha em 378/1368, com o caminho declarado — 2 testes são apagados de propósito junto do método morto,
+e um placar que sobe 1 esconderia isso.
+
+**A auto-revisão do plano corrigiu cinco coisas nele mesmo:** o teste do transformer exercitava
+`transform()` na mão fabricando um `DataProperty`, e passou a exercitar **pela serialização**, que é
+como a produção o alcança; a migração dos 2 testes de `urlFor` era um "decida e reporte" dentro de
+uma task delegada ao Codex, e virou instrução determinística; três chamadas de Pint montavam a lista
+por `git diff` com `&&`/`||` numa linha só, que mascara falha do Pint além de arriscar lista vazia
+(lição 9); e os placares intermediários estavam inconsistentes entre tasks.
+
+**`executor: misto`.** **Tasks 2, 3 e 5 vão ao Codex** — substituição literal, alvos que saem de
+`grep`, verificação que decide sozinha e 14 paths fechados. **Tasks 0, 1, 4, 6, 7, 8, 9 e 11 ficam
+com Claude**; a **10 é do João**.
+
+**O que já está decidido e não se reabre** (grilling de 2026-08-04, respostas explícitas do João):
+o cast para os 7 sítios de URL assinada e o parâmetro para o oitavo (`TurmaData`); `toPayload`
+recebendo o modo; `mapped` à mão com guarda, **não** derivado do payload; piloto de 2
+(`useRoleForm`, `useStaffUserForm`) com três sinais de saída; o trio da foto fora do corte; e a
+posição 1 na fila.
+
+**Gate (Task 11) fechado em 2026-08-05, commit `09118eb`.** Sinal 1 confirmado na Task 8 —
+`useStudentForm`, `useBudgetForm` e `useClientForm` migraram (Task 9), sem parar no piloto. Task 10
+(checkpoint visual, não delegável) aprovada pelo João, incluindo D15 em `useBudgetForm` sem
+regressão visível — fica migrado, sem reversão. E2e com sessão Sanctum real provou `download_url` e
+`photo_url` como URL assinada de verdade (200, `Content-Type` do objeto, não string plausível); as
+duas guardas de mecanismo (D6 leitura de propriedade, classificação obrigatória do `useCrudForm`)
+provadas reprovando com sonda fresca e voltando a passar. Placar final: backend 378 passed (1368
+assertions, caminho declarado no ledger), frontend 34 passed. Build/lint/Pint verdes, código morto
+zerado, leis §5 intactas. Detalhe task a task em `.superpowers/sdd/progress.md`. Pendências de
+fechamento (backlog, débitos técnicos, D10 do bloco anterior) ficam para o `/fechar-sprint` — não
+foram tratadas aqui.
+
+**Review em 2026-08-05 (`/revisar-sprint`, ALTO RISCO** — domínio §5.3, documentos de peso legal e
+`executor: misto` com as Tasks 2/3/5 no Codex; lente Claude **+** revisão independente do Codex,
+`mcp__codex__codex` read-only). **Gate reconferido do zero, não aceito por relatório:** backend
+**378 passed (1368 assertions)**, frontend **34 passed**, `pnpm lint` e `pnpm build` verdes, Pint
+`--test` `passed` nos **17** `.php` tocados, `generated.ts`/`locales/`/`backend/database/` sem diff.
+Órfãos: nenhum no backend — `->temporaryUrl(`, `->urlFor(`, `URL_MINUTES` e `FilesystemAdapter` sem
+uma ocorrência sobrevivente, `publicDiskFor()` e `disk()` ainda com chamador, `TurmaData::fromModel`
+em exatamente 4 call sites, `SignedUrlTransformer` em 7 DTOs. **Leis §5 intactas.**
+
+**A classificação foi conferida diálogo a diálogo, não aceita da spec:** `StudentDialog` passa
+`error=` nos 4 campos que declara em `mapped`, `BudgetDialog` nos 2, e os 4 `FormErrorSummary`
+recebem por `{...errorSummary}` exatamente o `mapped`/`excludePrefixes` que tinham à mão antes —
+zero mudança no que aparece na tela.
+
+**4 achados, nenhum 🔴. O João aprovou apenas o Q-1.**
+
+**Q-1 🟡 — o módulo devolvia `setForm`, e os 5 hooks devolvem o módulo inteiro.** `return crud` /
+`{ ...crud, toggle }` / `{ ...crud, addr, ... }`: qualquer chave dentro de `crud` chega ao diálogo
+por spread. Com isso `RoleDialog`, `StaffUserDialog`, `StudentDialog`, `BudgetDialog` e
+`ClientDialog` ganharam um setter que **nenhum deles tinha antes** (medido: zero uso em
+`features/*/components/`, antes e depois) — e a `frontend-fsliced.md` nomeia o
+`patchContact(setForm, ...)` do `ClientDialog` como contra-exemplo, não molde. Antes cada hook
+curava o próprio retorno; `useCourseForm` e `useRedatorForm`, que não migraram, seguem curando. O
+guardrail que existia por construção morreria justo no módulo desenhado para ser adotado por 9
+hooks. **Corrigido em `577751b`:** `useCrudForm` devolve `{ crud, setForm }`; quem só consome o
+formulário escreve `const { crud } = ...`, e `useClientForm` — único com coleção nested — nomeia
+`setForm` no destructuring. Fora do objeto, nenhum spread o carrega por acidente. **Provado nos dois
+sentidos:** diálogo tentando consumir `setForm` reprova no `tsc` (`TS2339`), e devolver a chave para
+dentro de `crud` reprova a asserção nova do teste do módulo. Sondas removidas, árvore limpa.
+Frontend passa a **35 passed** (34 + a asserção do Q-1); backend não foi tocado pelo fix
+(`git diff 09118eb..577751b -- backend/` vazio), então o placar 378/1368 não pode ter mexido.
+
+**Q-2, Q-3 e Q-4 não foram aprovados** e ficam registrados aqui, sem virar trabalho: **Q-2 🟢** — o
+barrel `shared/hooks/index.ts` exporta `unclassifiedPayloadKeys`, `MutableResource` e
+`CrudFormOptions` sem um consumidor (o teste importa por caminho relativo), e o primeiro é a válvula
+que a D12 existe para fechar. **Q-3 🟢** — chave declarada em `mapped` **e** `summaryOnly` ao mesmo
+tempo passa na guarda sem conflito, e `summaryOnly` é a única das três caixas sem consequência
+mecânica, logo a de custo zero para calar o mecanismo. **Q-4 🟢** — o fato medido em 2026-08-01
+(`PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData` desvia do
+`CannotSetComputedValue`) foi apagado junto do `submit` do `useClientForm` e não reapareceu, num
+bloco que **aumentou a aposta**: a propriedade deixou de carregar URL e passa a carregar path.
+Candidatos a §Débitos técnicos do `backlog.md` no `/fechar-sprint`, se o João quiser.
+
+**Divergência entre revisores: nenhuma.** O Codex fechou com zero achado e declarou limpas as cinco
+áreas que recebeu — leis §5, contrato JSON (`photo_url: null`, TTL 10/60, disco público), mutations e
+a inversão D15, escape de path interno, privilégio/422 e código morto. Os quatro achados são de
+convenção e superfície: abaixo do corte dele, dentro do gabarito deste projeto.
+
+**Sujeira de árvore que não é do bloco, reportada e não tocada:** `backend/resources/views/welcome.blade.php`
+apareceu modificado durante a sessão de review (a árvore estava limpa no início) com um codemod de
+classes Tailwind na página stock do Laravel — `max-w-[335px]` → `max-w-83.75`, `leading-[20px]` →
+`leading-5`, `w-[438px]` → `w-109.5`. Não entrou em commit nenhum; decidir o destino é do João.
+
+**Gate de fechamento (2026-08-05).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+o bloco jura que nenhum comportamento observável muda enquanto troca *quem* assina a URL, então a
+prova é *URL assinada de verdade contra a API real*, não suíte verde. **E2e com sessão Sanctum**
+(lição 12 — `Origin` + `Accept` + `X-XSRF-TOKEN`; login `admin@lotus.cl`): `photo_url` baixou **200
+`image/png`** (70 bytes) e `download_url` **200 `application/pdf`** (596 bytes) — objeto real, não
+string plausível, que é o modo de falhar quando o disco está errado e nenhum teste unitário vê. **Os
+dois TTLs preservados e medidos na própria URL:** `X-Amz-Expires=3600` na foto e `600` no documento,
+exatamente os 60 e 10 minutos que `UserPhotoService::URL_MINUTES` e `UploadFileAction::temporaryUrl`
+tinham antes de morrer. Assinadas contra `localhost:9000`, **não** `minio:9000` — o achado de
+2026-07-31 sobrevive à mudança de mecanismo. `photo_url` segue `null` para os 2 usuários sem foto
+(`TransformedDataResolver:102` curto-circuita antes do transformer). `habilitada` e
+`missing_document_types` presentes nas **8** turmas com valores reais (invariante 4). **E o nível 3
+do aninhamento saiu assinado** — `budget > quote > file` com `X-Amz-Expires=600` —, que é exatamente
+o que "serviço por parâmetro" não alcançava e o motivo medido de o mecanismo ser transformer e não
+threading.
+
+**Automático:** backend **378 passed (1368 assertions)** com o caminho declarado (`+2/+3` da Task 1,
+`−2/−3` da Task 3 apagando os 2 testes do `urlFor` morto, `+1/+1` da Task 4 — o placar **cai** de
+propósito no meio do bloco, e um número que só subisse 1 esconderia isso); frontend **35 passed**
+(34 do gate + a asserção do Q-1); `pnpm build` e `pnpm lint` verdes; Pint (`--test`) `passed` nos
+**17** `.php` tocados, com a guarda de lista vazia (lição 9); `generated.ts`, `locales/*.json` e
+`backend/database/` **sem diff** — `typescript:transform` rodou porque 8 DTOs mudaram, e o diff
+vazio é a invariante 1: o mecanismo trocou quem preenche o campo, não o tipo que o front lê.
+
+**O warning do `typescript:transform` foi medido, não suposto** (lição 13). `Tried replacing
+reference to class Spatie\\LaravelData\\Optional ... but it was not found in the transformed types`
+aparece na saída, e `UserData` — arquivo que este bloco tocou — está entre os citados. Conferido
+trocando o `UserData` pela versão anterior ao bloco e rodando de novo: são **80 ocorrências em ~14
+DTOs**, a maioria que o bloco nunca tocou (`QuoteData`, `CourseData`, `RoleData`, `EnrollmentData`,
+`ClientAddressData`…). Quirk pré-existente do `laravel-typescript-transformer` com `Optional`, sem
+relação com o bloco. Árvore restaurada.
+
+**Código morto: nenhum.** `->temporaryUrl(`, `->urlFor(`, `URL_MINUTES` e `FilesystemAdapter` com
+zero ocorrência; `publicDiskFor()` e `UserPhotoService::disk()` seguem com chamador; o
+`SignedUrlTransformer` tem 7 DTOs consumidores e o `useCrudForm`, 5 hooks. **Exceção declarada:** os
+3 exports órfãos do barrel (Q-2) ficam, porque o João não aprovou o achado — registrados em
+§Débitos técnicos do `backlog.md`. **Leis §5: sem violação** — zero `primereact` em `features/`, zero
+`@features/` em `shared/`, `generated.ts` nunca tocado pela sprint, nenhum `abort(422)` novo, nenhum
+Repository, nenhuma migration.
+
+**Pendências: nenhuma venceu, nenhuma fechou, nenhuma nasceu.** P-04 vence 2026-08-15; P-25, P-26 e
+P-23 revisam 2026-09-30; P-03 ganhou mais uma confirmação silenciosa (o bloco tocou `backend/` e
+rodou no main tree sem atrito), mas o gatilho dela é *dois blocos de backend em paralelo*, que não
+ocorreu. O que nasceu é débito de código e foi para o `backlog.md`, não para `pendencias.md`.
+
+**A D10 do bloco `hardening-guardrails-e-transportes` fechou** — "a família que assina URL segue com
+o container de propósito" deixou de descrever o repositório, porque a família não existe mais.
+Registrado aqui e na linha do `progress.md`, que é a saída que a própria D10 previa.
+
+**Item 1 do backlog (“Profundidade de module · formulário CRUD e hidratação de DTO”) fechou por
+inteiro e saiu da fila** — A e B entregues, sem resto. Os itens 2–5 foram renumerados para 1–4. Três
+débitos novos entraram em §Débitos técnicos: os 4 hooks que ficaram fora do `useCrudForm` com o
+critério de cada um, os 2 diálogos sem `FormErrorSummary` (com a chave `phone` do aluno medida), e os
+três achados 🟢 não aprovados (Q-2, Q-3, Q-4).
+
+Arquivado: `plans/archive/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md` ·
+`specs/archive/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md` (não compartilhada por
+outro work item). Entrega registrada em `progress.md`; a mais antiga (`Identidade visual ·
+Foto/avatar das entidades + contatos do cliente`, 2026-08-01) migrou para `progress-archive.md` para
+manter o teto de dez.
+
+**Aberto, registrado, não resolvido:** os 3 débitos novos acima; o trio da foto e as 2 tabelas com
+dropdown (§Débitos técnicos); Q-2 e Q-4 do review de guardrails, a catraca do `max-lines` (4
+legados), B-7, Q-16, Q-6; P-26; P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; e o
+`backend/resources/views/welcome.blade.php` sujo na árvore, que não é do bloco e não entrou em commit
+nenhum. **Nenhum item foi promovido** — a escolha do próximo é do João.
+
+## Penúltimo item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
 com o escopo nomeado no argumento — "Hardening pré-Sprint 4" — e o estado em `idle`; o comando não
@@ -311,7 +533,7 @@ não foi mexido** — o plano não previa write externo neste bloco, e mudar sta
 autorizou (mesma decisão do fechamento anterior).
 
 
-## Penúltimo item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
+## Antepenúltimo item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
 > **Renomeado em 2026-08-04, na revisão da spec pelo João.** Era
 > `hardening-estrutural-pre-sprint-4-restante`. Com H.4.4, **H.4.5** e H.4.9 seguindo abertos,

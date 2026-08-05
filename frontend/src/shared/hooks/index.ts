@@ -1,5 +1,7 @@
 export { useClock } from './useClock'
 export { useCrudPage } from './useCrudPage'
+export { useCrudForm, unclassifiedPayloadKeys } from './useCrudForm'
+export type { MutableResource, CrudFormOptions } from './useCrudForm'
 export { useEntityForm, useMutationErrors } from './useEntityForm'
 export { useEntityPhoto } from './useEntityPhoto'
 export type { UseEntityPhotoOptions } from './useEntityPhoto'
