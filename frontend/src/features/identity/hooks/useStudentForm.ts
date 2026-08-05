@@ -23,7 +23,7 @@ export function useStudentForm(
     ? { id: student.id, name: student.name, rut: student.rut, email: student.email, phone: student.phone ?? null, client_id: student.current_client_id ?? null }
     : null
 
-  const crud = useCrudForm<StudentFormFields, StudentData>(studentsApi, {
+  const { crud } = useCrudForm<StudentFormFields, StudentData>(studentsApi, {
     entity,
     mode,
     empty: EMPTY,

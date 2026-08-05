@@ -65,9 +65,22 @@ describe('useCrudForm', () => {
 
   it('não reprova quando toda chave está classificada', () => {
     const { result } = renderHook(() =>
-      useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' }),
+      useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' }).crud,
     )
     expect(result.current.readOnly).toBe(false)
+  })
+
+  it('`setForm` fica fora de `crud`, para nenhum spread levá-lo ao diálogo', () => {
+    // Os hooks de feature devolvem `crud` inteiro (`return crud`,
+    // `{ ...crud, toggle }`). `setForm` dentro dele chegaria aos 5 diálogos de
+    // graça — manipular coleção nested é do hook, não do componente
+    // (`.claude/rules/frontend-fsliced.md`). O `tsc` já reprova o acesso; esta
+    // asserção é a que reprova se alguém devolver a chave de volta.
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' }),
+    )
+    expect(Object.keys(result.current.crud)).not.toContain('setForm')
+    expect(typeof result.current.setForm).toBe('function')
   })
 
   it('o create manda o payload do modo create e aguarda o afterCreate antes do onDone', async () => {
@@ -83,7 +96,7 @@ describe('useCrudForm', () => {
           ordem.push('afterCreate')
         },
         onDone: () => ordem.push('onDone'),
-      }),
+      }).crud,
     )
 
     await act(async () => {
@@ -105,7 +118,7 @@ describe('useCrudForm', () => {
         ...base,
         entity: { id: 7, name: 'a', secret: '' },
         mode: 'edit',
-      }),
+      }).crud,
     )
 
     // O form carrega o id copiado; sujá-lo não pode mudar o alvo do PUT.

@@ -39,7 +39,7 @@ export function useStaffUserForm(
       }
     : null
 
-  const crud = useCrudForm<StaffUserFormFields, UserData>(usersApi, {
+  const { crud } = useCrudForm<StaffUserFormFields, UserData>(usersApi, {
     entity,
     mode,
     empty: EMPTY,

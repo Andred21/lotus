@@ -16,7 +16,7 @@ export function useRoleForm(role: RoleData | null, mode: DialogMode, onDone: () 
     ? { id: role.id, name: role.name, permissions: role.permissions }
     : null
 
-  const crud = useCrudForm<RoleFormFields, RoleData>(rolesApi, {
+  const { crud } = useCrudForm<RoleFormFields, RoleData>(rolesApi, {
     entity,
     mode,
     empty: EMPTY,

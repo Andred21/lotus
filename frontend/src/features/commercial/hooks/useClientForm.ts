@@ -27,7 +27,7 @@ export function useClientForm(
   onDone: () => void,
   afterCreate?: (created: ClientData) => Promise<void>,
 ) {
-  const crud = useCrudForm<ClientData, ClientData>(clientsApi, {
+  const { crud, setForm } = useCrudForm<ClientData, ClientData>(clientsApi, {
     entity: client,
     mode,
     empty: EMPTY,
@@ -56,8 +56,6 @@ export function useClientForm(
     onDone,
     afterCreate,
   })
-
-  const { setForm } = crud
 
   // Só o primeiro endereço é editável nesta tela; os demais são preservados.
   // (O update do backend apaga-e-recria os nested; reconstruir o array com um

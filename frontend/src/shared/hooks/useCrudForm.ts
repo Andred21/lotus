@@ -114,15 +114,24 @@ export function useCrudForm<F extends { id?: number }, T>(
   const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
 
   return {
-    form,
-    set,
+    // Tudo que o diálogo pode consumir vive AQUI dentro, porque os hooks de
+    // feature devolvem `crud` inteiro (`return crud`, `{ ...crud, toggle }`).
+    crud: {
+      form,
+      set,
+      readOnly,
+      didReset,
+      submit,
+      pending: create.isPending || update.isPending,
+      fieldErrors,
+      generalError,
+      errorSummary: { mapped, excludePrefixes },
+    },
+    // `setForm` fica FORA do objeto de propósito: quem manipula coleção nested
+    // é o hook (`useClientForm`), nunca o componente — a rule nomeia o
+    // `patchContact(setForm, ...)` do ClientDialog como contra-exemplo. Dentro
+    // de `crud` ele chegaria aos 5 diálogos por spread, de graça e sem ninguém
+    // pedir; aqui precisa ser nomeado no destructuring de quem realmente usa.
     setForm: setForm as Dispatch<SetStateAction<F>>,
-    readOnly,
-    didReset,
-    submit,
-    pending: create.isPending || update.isPending,
-    fieldErrors,
-    generalError,
-    errorSummary: { mapped, excludePrefixes },
   }
 }

@@ -27,7 +27,7 @@ export function useBudgetForm(
   // fato continua. `afterCreate` do `useCrudForm` é sempre esperado antes do
   // `onDone`, então esta migração inverte a ordem: hoje `onDone()` e depois
   // `onCreated()`, passa a ser `onCreated()` e depois `onDone()` (spec D15).
-  const crud = useCrudForm<BudgetFormFields, BudgetData>(budgetsApi, {
+  const { crud } = useCrudForm<BudgetFormFields, BudgetData>(budgetsApi, {
     entity: budget,
     mode,
     empty: EMPTY,
