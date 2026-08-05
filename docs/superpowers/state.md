@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: profundidade-form-crud-e-hidratacao-dto
-active_work_item: profundidade-form-crud-e-hidratacao-dto
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-active_spec: docs/superpowers/specs/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md
-active_plan: docs/superpowers/plans/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 resume_state: null
-last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
+last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 577751b
-updated_at: 2026-08-05T12:52:00-03:00
+updated_at: 2026-08-05T13:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-05T12:52:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
+## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -203,7 +203,74 @@ apareceu modificado durante a sessão de review (a árvore estava limpa no iníc
 classes Tailwind na página stock do Laravel — `max-w-[335px]` → `max-w-83.75`, `leading-[20px]` →
 `leading-5`, `w-[438px]` → `w-109.5`. Não entrou em commit nenhum; decidir o destino é do João.
 
-## Último item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
+**Gate de fechamento (2026-08-05).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
+o bloco jura que nenhum comportamento observável muda enquanto troca *quem* assina a URL, então a
+prova é *URL assinada de verdade contra a API real*, não suíte verde. **E2e com sessão Sanctum**
+(lição 12 — `Origin` + `Accept` + `X-XSRF-TOKEN`; login `admin@lotus.cl`): `photo_url` baixou **200
+`image/png`** (70 bytes) e `download_url` **200 `application/pdf`** (596 bytes) — objeto real, não
+string plausível, que é o modo de falhar quando o disco está errado e nenhum teste unitário vê. **Os
+dois TTLs preservados e medidos na própria URL:** `X-Amz-Expires=3600` na foto e `600` no documento,
+exatamente os 60 e 10 minutos que `UserPhotoService::URL_MINUTES` e `UploadFileAction::temporaryUrl`
+tinham antes de morrer. Assinadas contra `localhost:9000`, **não** `minio:9000` — o achado de
+2026-07-31 sobrevive à mudança de mecanismo. `photo_url` segue `null` para os 2 usuários sem foto
+(`TransformedDataResolver:102` curto-circuita antes do transformer). `habilitada` e
+`missing_document_types` presentes nas **8** turmas com valores reais (invariante 4). **E o nível 3
+do aninhamento saiu assinado** — `budget > quote > file` com `X-Amz-Expires=600` —, que é exatamente
+o que "serviço por parâmetro" não alcançava e o motivo medido de o mecanismo ser transformer e não
+threading.
+
+**Automático:** backend **378 passed (1368 assertions)** com o caminho declarado (`+2/+3` da Task 1,
+`−2/−3` da Task 3 apagando os 2 testes do `urlFor` morto, `+1/+1` da Task 4 — o placar **cai** de
+propósito no meio do bloco, e um número que só subisse 1 esconderia isso); frontend **35 passed**
+(34 do gate + a asserção do Q-1); `pnpm build` e `pnpm lint` verdes; Pint (`--test`) `passed` nos
+**17** `.php` tocados, com a guarda de lista vazia (lição 9); `generated.ts`, `locales/*.json` e
+`backend/database/` **sem diff** — `typescript:transform` rodou porque 8 DTOs mudaram, e o diff
+vazio é a invariante 1: o mecanismo trocou quem preenche o campo, não o tipo que o front lê.
+
+**O warning do `typescript:transform` foi medido, não suposto** (lição 13). `Tried replacing
+reference to class Spatie\\LaravelData\\Optional ... but it was not found in the transformed types`
+aparece na saída, e `UserData` — arquivo que este bloco tocou — está entre os citados. Conferido
+trocando o `UserData` pela versão anterior ao bloco e rodando de novo: são **80 ocorrências em ~14
+DTOs**, a maioria que o bloco nunca tocou (`QuoteData`, `CourseData`, `RoleData`, `EnrollmentData`,
+`ClientAddressData`…). Quirk pré-existente do `laravel-typescript-transformer` com `Optional`, sem
+relação com o bloco. Árvore restaurada.
+
+**Código morto: nenhum.** `->temporaryUrl(`, `->urlFor(`, `URL_MINUTES` e `FilesystemAdapter` com
+zero ocorrência; `publicDiskFor()` e `UserPhotoService::disk()` seguem com chamador; o
+`SignedUrlTransformer` tem 7 DTOs consumidores e o `useCrudForm`, 5 hooks. **Exceção declarada:** os
+3 exports órfãos do barrel (Q-2) ficam, porque o João não aprovou o achado — registrados em
+§Débitos técnicos do `backlog.md`. **Leis §5: sem violação** — zero `primereact` em `features/`, zero
+`@features/` em `shared/`, `generated.ts` nunca tocado pela sprint, nenhum `abort(422)` novo, nenhum
+Repository, nenhuma migration.
+
+**Pendências: nenhuma venceu, nenhuma fechou, nenhuma nasceu.** P-04 vence 2026-08-15; P-25, P-26 e
+P-23 revisam 2026-09-30; P-03 ganhou mais uma confirmação silenciosa (o bloco tocou `backend/` e
+rodou no main tree sem atrito), mas o gatilho dela é *dois blocos de backend em paralelo*, que não
+ocorreu. O que nasceu é débito de código e foi para o `backlog.md`, não para `pendencias.md`.
+
+**A D10 do bloco `hardening-guardrails-e-transportes` fechou** — "a família que assina URL segue com
+o container de propósito" deixou de descrever o repositório, porque a família não existe mais.
+Registrado aqui e na linha do `progress.md`, que é a saída que a própria D10 previa.
+
+**Item 1 do backlog (“Profundidade de module · formulário CRUD e hidratação de DTO”) fechou por
+inteiro e saiu da fila** — A e B entregues, sem resto. Os itens 2–5 foram renumerados para 1–4. Três
+débitos novos entraram em §Débitos técnicos: os 4 hooks que ficaram fora do `useCrudForm` com o
+critério de cada um, os 2 diálogos sem `FormErrorSummary` (com a chave `phone` do aluno medida), e os
+três achados 🟢 não aprovados (Q-2, Q-3, Q-4).
+
+Arquivado: `plans/archive/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md` ·
+`specs/archive/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md` (não compartilhada por
+outro work item). Entrega registrada em `progress.md`; a mais antiga (`Identidade visual ·
+Foto/avatar das entidades + contatos do cliente`, 2026-08-01) migrou para `progress-archive.md` para
+manter o teto de dez.
+
+**Aberto, registrado, não resolvido:** os 3 débitos novos acima; o trio da foto e as 2 tabelas com
+dropdown (§Débitos técnicos); Q-2 e Q-4 do review de guardrails, a catraca do `max-lines` (4
+legados), B-7, Q-16, Q-6; P-26; P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; e o
+`backend/resources/views/welcome.blade.php` sujo na árvore, que não é do bloco e não entrou em commit
+nenhum. **Nenhum item foi promovido** — a escolha do próximo é do João.
+
+## Penúltimo item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
 com o escopo nomeado no argumento — "Hardening pré-Sprint 4" — e o estado em `idle`; o comando não
@@ -466,7 +533,7 @@ não foi mexido** — o plano não previa write externo neste bloco, e mudar sta
 autorizou (mesma decisão do fechamento anterior).
 
 
-## Penúltimo item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
+## Antepenúltimo item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
 
 > **Renomeado em 2026-08-04, na revisão da spec pelo João.** Era
 > `hardening-estrutural-pre-sprint-4-restante`. Com H.4.4, **H.4.5** e H.4.9 seguindo abertos,

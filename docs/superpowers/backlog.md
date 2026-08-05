@@ -7,72 +7,7 @@
 
 ## Próximos blocos
 
-1. **Profundidade de module · formulário CRUD e hidratação de DTO**
-
-    — sem task Notion; nasceu do review de arquitetura de 2026-08-04 (candidatos 1 e 2), com o
-    corte decidido pelo João na mesma data. Dois candidatos, um bloco. **Está na posição 1 por
-    decisão explícita do João**, à frente do item de arquivados: archive/restore mexe em endpoint
-    e UI de todos os agregados e se beneficia do module de formulário já pronto — e os dois
-    candidatos chegam antes do Bloco 7, que criaria DTO de certificado com URL assinada e mais uma
-    montagem de formulário copiando o que existe hoje.
-
-    **A · A hidratação de DTO para de resolver serviço pelo container.**
-    `download_url`/`photo_url` deixam de ser assinados dentro do `fromModel`: o DTO carrega o path
-    e a assinatura vira **um cast** (`spatie/laravel-data`), num ponto só.
-    - **O motivo é medido, não estético:** `BudgetData::fromModel` já recebe `BudgetSummaryService`
-      por parâmetro (piloto H.4.6), mas chama `QuoteData::collect($budget->quotes->all())` na linha
-      66, e `QuoteData::fromModel` chama `FileData::fromModel`, que resolve
-      `app(UploadFileAction::class)`. O `collect()` do spatie não carrega argumento extra — logo
-      "serviço por parâmetro" **não atravessa** o aninhamento `Budget → Quote → File`. Threading
-      não é saída para esta família.
-    - **7 dos 8 sítios pelo cast:** `UserPhotoService::urlFor` e `UploadFileAction::temporaryUrl`
-      são a mesma operação (`Storage::disk(publicDiskFor(default))->temporaryUrl($path, ...)`),
-      diferindo em nullable e TTL. Sítios: `FileData:36`, `RedatorDocumentData:38`,
-      `TurmaDocumentData:38`, `ClientData:78`, `RedatorData:87`, `StudentData:75`, `UserData:72`.
-    - **O oitavo entra por parâmetro:** `TurmaData:58` resolve `TurmaHabilitacaoService` e deriva
-      `habilitada`/`missing_document_types`. Não é URL, o cast não alcança — e não há aninhamento a
-      atravessar (2 call sites, ambos no `TurmaController`, que já recebe dependência por injeção
-      de método). Fecha os 8 e o bloco não deixa resto.
-    - **Reabre a D10** da spec `2026-08-04-hardening-guardrails-e-transportes` ("a família que
-      assina URL segue com o container de propósito"). Motivo para reabrir: eram 6 sítios na
-      medição do piloto, são 8, e a D9 do mesmo bloco fechou como sinal 1 (a técnica paga).
-    - A medir no plano: `generated.ts` tem de continuar vendo `download_url: string` — o cast muda
-      quem preenche o campo, não o tipo que o front lê.
-
-    **B · Um module de formulário CRUD, no lugar de 10 montagens à mão.**
-    `useCrudForm(resource, { entity, mode, empty, toFields, toPayload(form, mode), onDone,
-    afterCreate })` absorve `useCreate`/`useUpdate`, a ramificação do `submit`, a origem do id, o
-    `pending` somado e a normalização RFC 7807. Hoje `useEntityForm` entra com ~5 das 61 linhas do
-    menor consumidor.
-    - `toPayload` **recebe o modo**: create e update divergem de verdade em 3 dos 9
-      (`useStudentForm` tira `client_id` no update; `useStaffUserForm` só manda `password` se
-      preenchido; `useBudgetForm` muda o conjunto).
-    - **`mapped` NÃO é derivado do payload — e isso é decisão, não omissão.** O contrato do
-      `FormErrorSummary` é "campos que TÊM input na tela", não "chaves do payload": o payload de
-      `useClientForm` tem `id`, `phone`, `addresses` e `contacts`, e o `mapped` do `ClientDialog`
-      tem seis chaves sem `phone` — derivar suprimiria esses 422 em silêncio, que é exatamente a
-      falha que o componente existe para impedir (o comentário no `ClientDialog` já avisa que
-      `addresses.*` não pode entrar em `excludePrefixes`). Em vez da derivação nasce uma **guarda**:
-      reprova quando o `toPayload` ganha chave que não está nem em `mapped` nem em
-      `excludePrefixes`. Se é teste vitest ou regra de lint, decide o `/planejar-bloco`.
-    - **Piloto de 2, com os sinais de saída escritos antes de executar** (desenho da D9 do H.4.6):
-      `useRoleForm` (48 linhas, o mais simples) e `useStaffUserForm` (80, payload divergente **e**
-      `afterCreate`). Sinal 1 (a técnica paga) migra `useStudentForm`, `useBudgetForm`,
-      `useClientForm`, `useRedatorForm` e `useTurmaConfigForm` no mesmo bloco; sinal 2 (só empurra a
-      montagem para o chamador) para no piloto e registra a razão; sinal 3 reverte a task.
-    - **Fora do corte por medição:** `useCourseForm` (145 linhas — módulos + `createdIdRef`) e
-      `useQuoteForm` (85 — passo de wizard). `useLoginForm` não usa `useEntityForm`.
-    - **O trio da foto fica fora de propósito:** `useEntityPhoto` + `afterCreate: (created) =>
-      photo.flush(created.id)` + `hasBufferedFailure` + `closeBlocked` são idênticos em 4 dialogs,
-      mas absorvê-los faria o bloco tocar caminho de upload com falha silenciosa (lição 6), que
-      exige prova de upload real no gate. Débito registrado abaixo.
-
-    **Fora de escopo:** os 3 `mapped=` que não vêm de dialog CRUD (`QuoteWizard`,
-    `EnrollStudentForm`, `TurmaConfigCard`); os outros 5 candidatos do review de arquitetura
-    (esqueleto da página CRUD, projeção de listagem, controllers de upload, confirmação destrutiva,
-    wrappers pass-through de `shared/ui`) — nenhum deles foi escolhido, e o de `shared/ui` reprovou
-    o deletion test, porque o seam sustenta a lei §5.6.
-2. **Arquivados e restauração de soft-delete**
+1. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -88,15 +23,15 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-3. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Bloco 7 · Sprint 4 · Certificação**
+3. **Bloco 7 · Sprint 4 · Certificação**
    — templates, PDF e endpoint público QR. Contexto: `adrs.md` (ADR-08/10), `der-fisico`
    (`certificates`, `certificate_sequences`) e lição sobre snapshot do template no ato da emissão.
-5. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -275,3 +210,39 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   **Alinhar de verdade exige decisão do João sobre RBAC/spec** — endpoint de clientes sob
   `identity.user.view`, permissão nova, ou aceitar o acoplamento. Levantado no `/revisar-sprint` do
   `bloco-alunos-modulo` (2026-07-27); movido para cá para não morrer no arquivamento do `state.md`.
+
+- **Os 4 hooks de formulário que ficaram fora do `useCrudForm`, com o critério de cada um.**
+  `useRedatorForm` monta o create com `new FormData()` — a exceção única e declarada da regra
+  `no-restricted-syntax` — e `toPayload` devolvendo objeto **não modela multipart**; entra quando
+  (e se) o transporte do redator deixar de ser multipart, ou quando o module aprender a devolver
+  `FormData`. `useTurmaConfigForm` **não roda sobre `createCrudResource`** (a turma nasce em rota
+  aninhada), então não satisfaz o `MutableResource`; entra se a turma ganhar recurso CRUD próprio.
+  `useCourseForm` e `useQuoteForm` são candidatos legítimos e ficaram fora só por corte de escopo —
+  ambos manipulam coleção nested (módulos, itens da cotação) e usam `setForm`, que o Q-1 do review
+  de 2026-08-05 tirou do retorno público: os dois leem `setForm` do par `{ crud, setForm }`.
+
+- **`StudentDialog` e `RedatorDialog` não têm `FormErrorSummary`, e no aluno isso tem chave
+  medida.** Dos 9 diálogos, só 6 têm o resumo. `useStudentForm` declara `summaryOnly: ['phone']` —
+  a classificação está correta e a guarda passa — mas **não existe resumo naquela tela**, então um
+  422 em `phone` não aparece em lugar nenhum. Medido e aceito no bloco de 2026-08-05 (spec D14): o
+  aluno migrou assim mesmo porque a classificação **expõe** a lacuna sem mudar a tela; construir o
+  resumo que falta é o débito. Saída: o commit que adicionar o `FormErrorSummary` aos dois paga
+  junto a conferência de que todo campo em `mapped` realmente passa `error=` ao `FormField` — DoD é
+  o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
+  do `max-lines` (189 linhas cada).
+
+- **Três achados do review de 2026-08-05 não foram aprovados pelo João e ficam registrados aqui,
+  todos 🟢 e todos de esforço P.** (Q-2) O barrel `shared/hooks/index.ts` exporta
+  `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions` sem um consumidor — o teste
+  importa por caminho relativo —, e o primeiro é a válvula que a D12 existe para fechar: público,
+  ele é o caminho para uma feature classificar por fora do module. (Q-3) Chave declarada em
+  `mapped` **e** em `summaryOnly` ao mesmo tempo passa na guarda sem conflito; `summaryOnly` é a
+  única das três caixas **sem consequência mecânica** (`mapped` some do resumo, `excludePrefixes`
+  filtra por prefixo), logo a de custo zero para calar o mecanismo. Detectar a interseção é a única
+  verificação barata que sobra — que exista um `FormErrorSummary` no diálogo o hook não pode saber.
+  (Q-4) O fato medido em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no
+  construtor do `ClientData` desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do
+  `useClientForm` e não reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de
+  carregar URL e passa a carregar path, então quem reintroduzir `...form` manda um caminho interno
+  de storage no corpo da escrita. Saída dos três: o próximo commit que tocar `useCrudForm` ou
+  `useClientForm` paga o que couber.
