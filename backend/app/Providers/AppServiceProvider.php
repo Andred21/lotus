@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
+use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             'course' => Course::class,
             'course_certificate_template' => CourseCertificateTemplate::class,
             'course_module' => CourseModule::class,
+            'certificate' => Certificate::class,
             'turma' => Turma::class,
             'enrollment' => Enrollment::class,
             'budget' => Budget::class,
