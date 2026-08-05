@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: profundidade-form-crud-e-hidratacao-dto
 active_work_item: profundidade-form-crud-e-hidratacao-dto
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 active_spec: docs/superpowers/specs/2026-08-05-profundidade-form-crud-e-hidratacao-dto-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-05-profundidade-form-crud-e-hidratacao-dto.md
 context_packet: null
 blocker: null
 resume_state: null
 last_completed_work_item: hardening-tabela-e-testes-pre-sprint-4
-state_basis_commit: c3fbc87
-updated_at: 2026-08-05T10:10:00-03:00
+state_basis_commit: b12eee7
+updated_at: 2026-08-05T11:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -98,6 +98,39 @@ ordem ficou A (backend) antes de B (frontend)**, para o checkpoint visual ficar 
 **Duas decisões novas nasceram no desenho e estão na spec:** os métodos `UploadFileAction::temporaryUrl`
 e `UserPhotoService::urlFor` **morrem** (D5 — só têm esses 7 chamadores em produção), e a leitura em
 PHP da propriedade que passa a carregar path vira **mecanismo**, não docblock (D6).
+
+**A escrita do plano achou dois defeitos na spec aprovada, e os dois foram corrigidos antes da
+primeira task** (`eb7c702`, `b12eee7`):
+
+1. **A guarda do `mapped` estava com a direção invertida e reprovaria código correto.**
+   `FormErrorSummary` renderiza exatamente as chaves que **não** estão em `mapped` — logo chave fora
+   de `mapped` é a que **aparece**. A regra herdada do backlog acusaria `permissions` no `RoleDialog`,
+   ou seja, **o primeiro hook do piloto**, e o conserto que ela induz (pôr a chave em `mapped`) é a
+   supressão silenciosa que a D11 existe para impedir. Nasceu `summaryOnly`: toda chave de payload
+   tem de estar em uma das três caixas.
+2. **A lista de migração do sinal 1 caiu de 4 para 3.** `useRedatorForm` monta o create com
+   `new FormData()` — a catraca de um da regra `no-restricted-syntax` — e `toPayload` devolvendo
+   objeto não modela multipart. Medido junto: **só 6 dos 9 diálogos têm `FormErrorSummary`**;
+   `StudentDialog` e `RedatorDialog` não têm, e no aluno isso significa que um 422 em `phone` hoje
+   **não aparece em lugar nenhum**. O aluno migra assim mesmo, porque a classificação obrigatória
+   expõe a chave sem mudar a tela; construir o resumo que falta é débito.
+
+**Plano em 12 tasks** (0 baseline · 1 transformer com TDD · 2 os 3 `download_url` · 3 os 4
+`photo_url` · 4 guarda de leitura · 5 `TurmaData` · 6 `useCrudForm` · 7 piloto · 8 leitura do sinal ·
+9 os 3 restantes · 10 checkpoint visual do João · 11 gate). O placar do backend **cai** na Task 3 e
+fecha em 378/1368, com o caminho declarado — 2 testes são apagados de propósito junto do método morto,
+e um placar que sobe 1 esconderia isso.
+
+**A auto-revisão do plano corrigiu cinco coisas nele mesmo:** o teste do transformer exercitava
+`transform()` na mão fabricando um `DataProperty`, e passou a exercitar **pela serialização**, que é
+como a produção o alcança; a migração dos 2 testes de `urlFor` era um "decida e reporte" dentro de
+uma task delegada ao Codex, e virou instrução determinística; três chamadas de Pint montavam a lista
+por `git diff` com `&&`/`||` numa linha só, que mascara falha do Pint além de arriscar lista vazia
+(lição 9); e os placares intermediários estavam inconsistentes entre tasks.
+
+**`executor: misto`.** **Tasks 2, 3 e 5 vão ao Codex** — substituição literal, alvos que saem de
+`grep`, verificação que decide sozinha e 14 paths fechados. **Tasks 0, 1, 4, 6, 7, 8, 9 e 11 ficam
+com Claude**; a **10 é do João**.
 
 **O que já está decidido e não se reabre** (grilling de 2026-08-04, respostas explícitas do João):
 o cast para os 7 sítios de URL assinada e o parâmetro para o oitavo (`TurmaData`); `toPayload`
