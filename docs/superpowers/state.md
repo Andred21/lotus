@@ -2,17 +2,26 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
 active_spec: null
 active_plan: null
 context_packet: null
-blocker: null
-resume_state: null
+blocker: >-
+  O Context Packet voltou com `status: blocked` e três regras de negócio que
+  nenhuma fonte disponível fixa: (1) a regra exata de vigência — quantidade e
+  origem dos meses (curso × turma), se "sem vencimento" é permitido e como
+  `valido_ate` é calculado; (2) o padding do `LOT-ANO-SEQ` e o comportamento
+  após `LOT-ANO-999`; (3) como o certificado oficial representa uma turma com
+  múltiplos redatores, já que o documento traz `RELATOR` no singular e a turma
+  é N:N desde o Bloco 6b. Sem elas o planejamento inventaria regra de negócio
+  em documento de peso legal. Resolvidas pelo João, o packet é regerado (ou
+  emendado com a decisão registrada) e o estado volta a `context_required`.
+resume_state: context_required
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 8889e52
-updated_at: 2026-08-05T13:43:00-03:00
+updated_at: 2026-08-05T13:58:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -94,6 +103,51 @@ três decisões abertas dependem delas.
    sim.
 
 **Toca `backend/` com migration nova → main tree, sem worktree (P-03).**
+
+### Packet gerado em 2026-08-05 pelo Codex — `status: blocked`
+
+**O packet existe e está salvo** em `docs/superpowers/context-packets/certificacao-sprint-4.md`,
+mas **`context_packet` segue `null` de propósito**: packet `blocked` não promove nada, e a
+invariante exige packet válido antes de `ready_for_planning`. O arquivo fica como evidência da
+varredura — 10 documentos do Drive por ID, 16 tasks do Notion pela base canônica
+(`e64b7d57-…`, a homônima obsoleta **não** foi consultada) e 1 fonte `unavailable` — para que a
+regeneração pós-decisão não repita o trabalho.
+
+**Contrato conferido, não aceito por relatório:** markers exatos, frontmatter completo com
+`plan_*`/`spec_*` em `null` (os ponteiros do estado são nulos), 8 key facts (no teto), o excesso de
+artefatos externos justificado no próprio registro, a fonte Figma marcada `unavailable` com a linha
+de erro (`INVALID_ARGUMENT: Invalid fileKey argument` — o Drive só tem o site publicado, sem
+fileKey/node ID), e nenhum gatilho de staleness citando hash de provenance ou a transição
+promotora. **Os 3 blob SHAs foram recalculados aqui com `git hash-object` e batem** — `base_commit`
+`e23c913`, `state.md` `4ce96f2`, `progress.md` `1043c4e`.
+
+**A medição local foi confirmada pelo packet** (key fact 8): migrations ausentes, `Certification`
+vazio, template versionado em `Catalog`, Gotenberg existente, 3 permissões e `/certificados` ainda
+`ModulePlaceholder`.
+
+**O que o packet trouxe e o repositório não sabia:**
+
+1. **A emissão é manual e o gate é só acadêmico** — matrícula aprovada em turma concluída; o
+   financeiro não entra, o que confirma a lei §5.7 no caminho mais sensível do produto.
+2. **A numeração externa é `LOT-ANO-SEQ`**, incremental e atômica por ano, com um único exemplo
+   real (`LOT-2026-016`).
+3. **Os campos fixos × dinâmicos dos dois documentos oficiais estão mapeados** — no certificado,
+   marca OTEC/RUT/cláusulas/narrativa/temário são fixos ou versionados, e `CodCert`, datas,
+   aluno/RUT, empresa/RUT, curso, horas, nota e relator são dinâmicos. **Nenhum dos três exemplares
+   oficiais exibe vigência ou placeholder de QR**, o que é fato contra a leitura antiga do Drive.
+4. **A divergência do QR é entre fontes externas, não entre Drive e código:** o Drive e a 8.1.9
+   prescrevem `qr_code_hash`; a 8.2.1 prescreve `/validar/{uuid}`. A task **8.0.3 existe
+   justamente para consolidar um contrato público único** — o packet registra e não decide, como
+   deve.
+5. **Uma divergência foi resolvida por hierarquia, não apagada:** o Drive antigo manda o download
+   usar os **dados atuais**; a instrução vigente no backlog manda **snapshot no ato da emissão**. A
+   instrução atual do João vence o snapshot antigo, e isso está na tabela.
+
+**Os 3 fatos que bloqueiam, e por que bloqueiam de verdade:** vigência, padding/overflow da
+numeração e representação de múltiplos redatores no certificado. São **regra de negócio em
+documento de peso legal** — o §3 do `CLAUDE.md` e a própria SKILL mandam bloquear em vez de supor.
+O `hash × UUID` **não** entra como bloqueio de packet: é decisão de desenho do João no
+brainstorming, e o packet já entrega os dois lados medidos.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
