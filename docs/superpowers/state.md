@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: c52eece
-updated_at: 2026-08-05T14:06:00-03:00
+state_basis_commit: 492f8f8
+updated_at: 2026-08-05T14:22:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -173,6 +173,32 @@ construir para consumidor hipotético; o que se preserva é o ponto de extensão
 
 **Segue aberto para o brainstorming, e não bloqueia o packet:** o contrato público do QR
 (`hash` × `UUID`, task 8.0.3) e o formato final do `codigo` com a referência de turma.
+
+### Packet regerado em 2026-08-05 — `status: partial`, promovido
+
+`docs/superpowers/context-packets/certificacao-sprint-4.md`, refresh do próprio packet anterior:
+o registry foi **reutilizado por ID**, sem refazer a varredura ampla, e as três decisões entraram
+como fonte `J-DEC` (instrução vigente do João + esta seção do `state.md`). As três linhas
+`unresolved` da tabela de divergências fecharam com base na instrução vigente, sem apagar o
+enunciado externo que elas contradizem.
+
+**`partial`, não `ready` — e o motivo é uma fonte só:** o Figma segue `unavailable`, com a mesma
+evidência admissível de antes (chamada feita, `INVALID_ARGUMENT: Invalid fileKey argument`; o Drive
+só guarda o site publicado, sem fileKey/node ID). Pela SKILL, `partial` prossegue e a fonte ausente
+vira limitação declarada do brainstorming: **as três telas terão comportamento vindo do Drive/Notion
+e composição visual sem referência recuperada** — o mesmo tipo de limitação que os blocos de
+2026-08-02/03 aceitaram para a prova visual, e que o checkpoint do João cobre.
+
+**Contrato reconferido:** 8 key facts (no teto), Open questions só com o que ainda pode mudar
+implementação e **nenhuma bloqueante**, restrição das assinaturas registrada em Constraints **e**
+Deferred (é limite de escopo, não pergunta), e nenhum gatilho de staleness citando hash de
+provenance ou a transição promotora. **Provenance recalculada aqui e batendo:** `base_commit`
+`492f8f8`, `state.md` `936f35e`, `progress.md` `1043c4e`.
+
+**Dois fatos do packet que mudam o ponto de partida do desenho, além das três RN:** a emissão aceita
+**lote**, não só individual (telas 8.2/8.3), e a `8.1.5` pede **PDF → S3 → URL temporária sem
+intermediário** — que casa com o transformer de URL assinada entregue no bloco anterior, e não com
+um endpoint que faça streaming pela app.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
