@@ -15,6 +15,7 @@ use App\Domains\Operation\Data\PendingQuoteData;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ManualPdfService;
+use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -35,16 +36,16 @@ class TurmaController extends Controller implements HasMiddleware
         ];
     }
 
-    public function store(TurmaData $data, Quote $quote, CreateTurmaAction $action): TurmaData
+    public function store(TurmaData $data, Quote $quote, CreateTurmaAction $action, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return $this->present($action->execute($quote, $data));
+        return $this->present($action->execute($quote, $data), $habilitacao);
     }
 
     /** @return array<TurmaData> */
-    public function index(): array
+    public function index(TurmaHabilitacaoService $habilitacao): array
     {
         return Turma::query()->withListingData()->latest()->get()
-            ->map(fn (Turma $t) => TurmaData::fromModel($t))
+            ->map(fn (Turma $t) => TurmaData::fromModel($t, $habilitacao))
             ->all();
     }
 
@@ -61,14 +62,14 @@ class TurmaController extends Controller implements HasMiddleware
             ->all();
     }
 
-    public function show(Turma $turma): TurmaData
+    public function show(Turma $turma, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return $this->present($turma);
+        return $this->present($turma, $habilitacao);
     }
 
-    public function update(TurmaData $data, Turma $turma, UpdateTurmaAction $action): TurmaData
+    public function update(TurmaData $data, Turma $turma, UpdateTurmaAction $action, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return $this->present($action->execute($turma, $data));
+        return $this->present($action->execute($turma, $data), $habilitacao);
     }
 
     public function destroy(Turma $turma, DeleteTurmaAction $action): Response
@@ -78,21 +79,21 @@ class TurmaController extends Controller implements HasMiddleware
         return response()->noContent();
     }
 
-    public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action): JsonResponse
+    public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma, $redator))
+        return $this->present($action->execute($turma, $redator), $habilitacao)
             ->toResponse(request())
             ->setStatusCode(200);
     }
 
-    public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action): TurmaData
+    public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return $this->present($action->execute($turma, $redator));
+        return $this->present($action->execute($turma, $redator), $habilitacao);
     }
 
-    public function conclude(Turma $turma, ConcludeTurmaAction $action): JsonResponse
+    public function conclude(Turma $turma, ConcludeTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma))
+        return $this->present($action->execute($turma), $habilitacao)
             ->toResponse(request())
             ->setStatusCode(200);
     }
@@ -105,8 +106,8 @@ class TurmaController extends Controller implements HasMiddleware
         ]);
     }
 
-    private function present(Turma $turma): TurmaData
+    private function present(Turma $turma, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return TurmaData::fromModel(Turma::query()->withListingData()->findOrFail($turma->id));
+        return TurmaData::fromModel(Turma::query()->withListingData()->findOrFail($turma->id), $habilitacao);
     }
 }

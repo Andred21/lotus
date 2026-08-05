@@ -8,6 +8,7 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -35,7 +36,10 @@ class TurmaDataEnrichmentTest extends TestCase
             ->student()->create()->id;
         Enrollment::create(['turma_id' => $turma->id, 'student_id' => $studentId, 'approval_status' => 'pendiente']);
 
-        $data = TurmaData::fromModel(Turma::query()->withListingData()->findOrFail($turma->id));
+        $data = TurmaData::fromModel(
+            Turma::query()->withListingData()->findOrFail($turma->id),
+            app(TurmaHabilitacaoService::class),
+        );
 
         $this->assertSame('Trabajos en líneas 220kV', $data->course_name);
         $this->assertSame('Subestación Norte S.A.', $data->client_name);
