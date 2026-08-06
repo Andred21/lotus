@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
@@ -325,11 +325,34 @@ teste nenhum e a da revogação só conta linhas; §4.7 PDF não materializado �
 teste não só deixa passar: ele **fixa o valor errado**, com fixture que separa de propósito
 `legal_name = 'Empresa Legal SpA'` de `user.name = 'Empresa Cliente'` e assere o segundo.
 
-Os demais achados (issuable sem as portas de cidade e redator, três `now()` na mesma emissão,
-revogação validando no controller em vez de `Data`, `abort(404)` único do projeto, `uuid` gerado na
-Action e não no model, DER descrevendo o schema rejeitado) estão no relatório da sessão, aguardando
-decisão do João. **O estado permanece `executing`**: mover para `ready_for_review` com o gate
-reprovado seria declarar um gate que falhou.
+**Decisão do João: corrigir o 🔴, os 🟡 e as duas lacunas do gate; os 🟢 viram débito.** Feito em
+`5158b16`. Além do A-1: **A-2** (`issuable` só encapsulava a porta do template e listava turma que o
+POST recusa com 422 — a regra da cidade virou `CertificateTemplateResolver::emissionCityFor`, fonte
+única da Action, do `issuable` e do snapshot, que tinha a terceira cópia; a porta do redator virou
+`whereHas('redatores')`), **A-3** (três `now()` numa emissão só, com o lock da sequência no meio: a
+virada do ano gravava `emitido_em` de 2027 num código `LOT-2026`) e **A-4** (`RevokeCertificateData`,
+porque a revogação validava por `$request->validate` enquanto todo o projeto valida em `Data`).
+
+**Débitos registrados, não corrigidos:** `abort(404)` é o único `abort()` de `backend/app/` e o
+route-model-binding `{certificate:uuid}` funcionaria; `uuid` gerado na Action e não no `booted()` do
+model, como faz `User` — morde quando a emissão em lote entrar; `der-fisico.md:73` ainda descreve
+`enrollment_id FK,UK` e `qr_code_hash UK`, os dois que a D3 recusou; e a corrida entre
+`RecordEnrollmentResultAction` e `ConcludeTurmaAction`, que o Codex marcou 🔴 e **não é achado deste
+bloco** — é a convenção pré-existente, idêntica em `StoreTurmaDocumentAction` e
+`DeleteTurmaDocumentAction`. **P-15 e P-21 estão satisfeitas** e fecham no `/fechar-sprint`.
+
+**Gate refeito e passando.** Suíte **432 passed, 1 skipped (1579 assertions)** — +6 sobre 426, um por
+teste novo; frontend **35 passed** inalterado; Pint, build e lint verdes; `generated.ts` com só o
+`RevokeCertificateData` a mais, no mesmo commit do Data. **Item 0 provado e2e contra a API real com
+sessão Sanctum** (lição 12): resultado acadêmico gravado, `issuable` escondendo a turma online sem
+cidade e mostrando-a depois do template com `city`, emissão `LOT-2026-1000/1001/1002` com `valido_ate`
+do template mais recente, PDF **200 `application/pdf` de 23.831 bytes** começando em `%PDF-1.4`,
+rota pública **sem cookie** devolvendo 200 sem RUT/id/nota/motivo, revogação sem motivo em 422 es-CL,
+a mesma URL passando a `revocado`, `uuid` inexistente em 404 e reemissão pós-revogação. **A D12 foi
+provada contra a API real, não só em teste:** com `legal_name` diferente de `user.name`, o
+`LOT-2026-1001` saiu com a razão social, e o snapshot sobreviveu ao rename posterior do cliente.
+
+Detalhe task a task e a íntegra do e2e em `.superpowers/sdd/progress.md`.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
