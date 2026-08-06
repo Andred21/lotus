@@ -9,6 +9,7 @@ use App\Domains\Certification\Data\IssuableTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
@@ -18,6 +19,7 @@ use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -26,7 +28,7 @@ class CertificateController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:certification.certificate.view', only: ['index', 'show']),
+            new Middleware('permission:certification.certificate.view', only: ['index', 'show', 'pdf']),
             new Middleware('permission:certification.certificate.issue', only: ['store', 'issuable']),
             new Middleware('permission:certification.certificate.revoke', only: ['revoke']),
         ];
@@ -45,6 +47,14 @@ class CertificateController extends Controller implements HasMiddleware
     public function show(Certificate $certificate): CertificateData
     {
         return CertificateData::fromModel($certificate);
+    }
+
+    public function pdf(Certificate $certificate, CertificatePdfService $pdf): Response
+    {
+        return response($pdf->render($certificate), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"certificado-{$certificate->codigo}.pdf\"",
+        ]);
     }
 
     /** @return array<IssuableTurmaData> */
