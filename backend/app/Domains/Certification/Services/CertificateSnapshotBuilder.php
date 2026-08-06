@@ -3,6 +3,7 @@
 namespace App\Domains\Certification\Services;
 
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
+use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use Carbon\CarbonInterface;
@@ -27,10 +28,24 @@ class CertificateSnapshotBuilder
                 'name' => $enrollment->student->user->name,
                 'rut' => $enrollment->student->user->rut,
             ],
+            // `description` e `modules` são a narrativa e o temário do documento
+            // oficial (D-P9). Congelam aqui pelo mesmo motivo do template: o
+            // certificado reimpresso em 2028 descreve a atividade de 2026, não
+            // o curso que o catálogo virou depois.
             'curso' => [
                 'name' => $enrollment->turma->course->name,
                 'technical_name' => $enrollment->turma->course->technical_name,
                 'workload_hours' => $enrollment->turma->course->workload_hours,
+                'description' => $enrollment->turma->course->description,
+                'modules' => $enrollment->turma->course->modules
+                    ->sortBy('sort_order')
+                    ->map(fn (CourseModule $module) => [
+                        'sort_order' => $module->sort_order,
+                        'name' => $module->name,
+                        'contents' => $module->contents,
+                    ])
+                    ->values()
+                    ->all(),
             ],
             'turma' => [
                 'id' => $enrollment->turma->id,

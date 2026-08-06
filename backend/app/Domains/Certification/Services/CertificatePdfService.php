@@ -19,6 +19,11 @@ class CertificatePdfService
         $html = view('certification.certificate', [
             'certificate' => $certificate,
             'qr' => $qr,
+            // Embutida como o QR, e pelo mesmo motivo: o Gotenberg recebe só o
+            // HTML, então referência a arquivo ou URL do frontend não resolve.
+            'logo' => base64_encode((string) file_get_contents(
+                resource_path('images/lotus-logo.png'),
+            )),
         ])->render();
 
         $response = Http::attach('files', $html, 'index.html')

@@ -61,7 +61,7 @@ Sem dependência nova. `simplesoftwareio/simple-qrcode` + `bacon/bacon-qr-code` 
 6. **DoD comportamental.** Build verde não é DoD. Cada task declara o comportamento provado.
 7. **Placar de testes.** Baseline medido: backend **378 passed**, frontend **35 passed**. Cada
    task backend declara o delta; ao final da Task 14: **432 passed + 1 skipped** no backend (426 do
-   D-P5 + D-P6/D-P7, mais os 6 do review de 2026-08-05); ao final da Task 15: **435 passed + 1
+   D-P5 + D-P6/D-P7, mais os 6 do review de 2026-08-05); ao final da Task 15: **436 passed + 1
    skipped** (D-P9). Frontend fica em **35** — inalterado, porque o frontend saiu do bloco (D-P8).
 8. **Migration verde em sqlite pode quebrar no MySQL** (lição 15). As tasks 2, 3 e 5 rodam
    `migrate:fresh` no MySQL real além da suíte.
@@ -184,7 +184,10 @@ duas artes de fundo extraídas como JPEG — e não por descrição de terceiro.
    descreve `contents` como "texto livre" e diz que "a numeração 1.1/1.2 é conteúdo autoral", que é
    literalmente a forma das 8 seções da página 2. Entra no snapshot como `curso.modules`, congelado
    pelo mesmo motivo. Sem módulos, a página 2 **não é impressa** — não se inventa temário vazio num
-   documento de peso legal.
+   documento de peso legal. **Isso abre a 8ª aresta da matriz** (`Catalog\Models\CourseModule`), e
+   ela é declarada em vez de contornada: bastaria não tipar o `fn ($module)` do `map` para o
+   `DomainDependencyTest` não ver nada, e guardrail com escape usado é pior que guardrail nenhum. O
+   item do gate passa de "7 arestas — nenhuma a mais" para **8**.
 3. **O certificado é retrato, fixo.** `layout_config.orientation` perde o único consumidor que tinha.
    Ele nunca foi requisito: nasceu do "layout genérico" que o D-P8 já nomeia como o defeito. O
    documento oficial é A4 retrato, e a página 2 do temário só fecha em retrato. `layout_config` fica
@@ -195,6 +198,13 @@ rubrica escaneada da Gerente OTEC e o carimbo SENCE; nada disso é indexado (res
 no packet e no `state.md`). O Blade imprime **nome sobre linha**, que é texto, não assinatura. A arte
 de fundo poligonal do original também não entra: o pedido do João é montar o cabeçalho com
 `frontend/src/assets/LogoLight.png`, e não replicar a papelaria.
+
+**Um desvio de forma achado na execução, contra o original:** o documento oficial encaixa a
+descrição **dentro** da frase (`La actividad realizada el día X, abordó las responsabilidades…`), o
+que só fecha se o texto do curso começar por verbo. `courses.description` é livre, e o dado real do
+projeto é sintagma nominal ("Fundamentos de seguridad eléctrica…") — a frase sairia agramatical. O
+Blade fecha a oração antes (`… abordó los siguientes contenidos:`) e imprime a descrição como
+parágrafo próprio. O verbo `abordó` do original permanece; o que muda é onde a frase termina.
 
 **O QR permanece, e é a diferença deliberada contra o original.** Nenhum dos três exemplares oficiais
 tem QR (fato do packet); a validação pública é o valor deste bloco. Ele ocupa o canto inferior
@@ -869,7 +879,7 @@ tasks 9–12, não como task nova.
 - [ ] `cd frontend && pnpm test` → `Tests  35 passed`; `pnpm build`; `pnpm lint` — placar
       **inalterado**, que é o sinal de que o frontend não foi tocado (D-P8)
 - [ ] `docker compose exec -T app php artisan test --filter=DomainDependencyTest` → 3 passed, com
-      as **7** arestas declaradas — nenhuma a mais (D-P2).
+      as **8** arestas declaradas — nenhuma a mais (D-P2 + a 8ª do D-P9).
 - [ ] `docker compose exec -T app php artisan migrate:fresh --seed` no MySQL sem erro.
 - [ ] `git status` limpo; `generated.ts` commitado junto do Data que o originou.
 - [ ] Atualizar `docs/superpowers/progress.md` com o resultado do bloco.
@@ -916,7 +926,7 @@ tasks 9–12, não como task nova.
       empresa do snapshot, a narrativa, o nº de registro, `Instructor`, a cláusula de rodapé e as
       seções do temário — todos **vindos do snapshot congelado**, nunca das relações vivas.
 - [ ] Certificado sem módulos e sem descrição → HTML **sem** `Temario del Curso`.
-- [ ] `docker compose exec -T app php artisan test` → **435 passed, 1 skipped**.
+- [ ] `docker compose exec -T app php artisan test` → **436 passed, 1 skipped**.
 - [ ] `cd backend && ./vendor/bin/pint <arquivos tocados>`.
 - [ ] **E2e contra a API real** (lição 12): `GET /api/certificates/{id}/pdf` devolve
       `application/pdf` de um certificado com módulos e descrição, e o PDF gerado é aberto e

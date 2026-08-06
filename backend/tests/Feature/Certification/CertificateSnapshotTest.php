@@ -64,6 +64,19 @@ class CertificateSnapshotTest extends TestCase
             'name' => 'Seguridad en Alta Tensión',
             'technical_name' => 'Operación Segura AT',
             'workload_hours' => 16,
+            'description' => 'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
+        ]);
+        $this->course->modules()->createMany([
+            [
+                'sort_order' => 2,
+                'name' => '2. Definiciones Clave',
+                'contents' => "Tipos de Tierras\nZona de Trabajo",
+            ],
+            [
+                'sort_order' => 1,
+                'name' => '1. Introducción y Marco General',
+                'contents' => 'Objetivos de seguridad y prevención de riesgos',
+            ],
         ]);
         $this->template = CourseCertificateTemplate::create([
             'course_id' => $this->course->id,
@@ -150,6 +163,22 @@ class CertificateSnapshotTest extends TestCase
                 'name' => 'Seguridad en Alta Tensión',
                 'technical_name' => 'Operación Segura AT',
                 'workload_hours' => 16,
+                // Narrativa e temário do documento oficial (D-P9). Os módulos
+                // saem por `sort_order`, não pela ordem de criação — a fixture
+                // os cria fora de ordem de propósito.
+                'description' => 'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
+                'modules' => [
+                    [
+                        'sort_order' => 1,
+                        'name' => '1. Introducción y Marco General',
+                        'contents' => 'Objetivos de seguridad y prevención de riesgos',
+                    ],
+                    [
+                        'sort_order' => 2,
+                        'name' => '2. Definiciones Clave',
+                        'contents' => "Tipos de Tierras\nZona de Trabajo",
+                    ],
+                ],
             ],
             'turma' => [
                 'id' => $this->turma->id,
@@ -312,6 +341,69 @@ class CertificateSnapshotTest extends TestCase
 
         $this->assertSame('Valparaíso', $snapshot['ciudad_emision']);
         $this->assertNotSame('Ciudad del Cliente', $snapshot['ciudad_emision']);
+    }
+
+    /**
+     * Mesma promessa da D12 que `test_template_persistido_…` faz pelo template:
+     * o temário impresso na página 2 é o do dia da emissão. Curso reescrito ou
+     * módulo arquivado depois não pode reescrever certificado já assinado.
+     */
+    public function test_temario_e_narrativa_persistidos_nao_mudam_quando_o_curso_e_reescrito(): void
+    {
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment,
+            $this->redator,
+            $this->template,
+            now(),
+            $this->emissionCity(),
+        );
+        $certificate = Certificate::create([
+            'uuid' => (string) Str::uuid(),
+            'enrollment_id' => $this->enrollment->id,
+            'course_id' => $this->course->id,
+            'redator_id' => $this->redator->id,
+            'codigo' => 'LOT-2026-1000',
+            'snapshot' => $snapshot,
+            'valido_ate' => null,
+            'status' => CertificateStatus::Emitido,
+            'revoked_at' => null,
+            'revocation_reason' => null,
+        ]);
+
+        $this->course->update(['description' => 'Narrativa reescrita después.']);
+        $this->course->modules()->where('sort_order', 1)->update(['name' => 'Módulo renombrado']);
+        $this->course->modules()->where('sort_order', 2)->first()->delete();
+
+        $reloaded = Certificate::query()->findOrFail($certificate->id);
+
+        $this->assertCount(1, $this->course->fresh()->modules);
+        $this->assertSame(
+            'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
+            $reloaded->snapshot['curso']['description'],
+        );
+        $this->assertCount(2, $reloaded->snapshot['curso']['modules']);
+        $this->assertSame(
+            '1. Introducción y Marco General',
+            $reloaded->snapshot['curso']['modules'][0]['name'],
+        );
+        $this->assertSame($snapshot, $reloaded->snapshot);
+    }
+
+    public function test_curso_sem_descricao_e_sem_modulos_congela_nulo_e_lista_vazia(): void
+    {
+        $this->course->update(['description' => null]);
+        $this->course->modules()->get()->each(fn ($module) => $module->delete());
+
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment->fresh(),
+            $this->redator,
+            $this->template,
+            now(),
+            $this->emissionCity(),
+        );
+
+        $this->assertNull($snapshot['curso']['description']);
+        $this->assertSame([], $snapshot['curso']['modules']);
     }
 
     public function test_notas_e_presenca_nulas_permanecem_nulas_no_snapshot(): void

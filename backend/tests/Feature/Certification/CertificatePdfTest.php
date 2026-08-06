@@ -88,6 +88,14 @@ class CertificatePdfTest extends TestCase
                     'name' => 'Seguridad Congelada',
                     'technical_name' => 'Operación Segura AT',
                     'workload_hours' => 16,
+                    'description' => 'abordó la narrativa congelada del curso.',
+                    'modules' => [
+                        [
+                            'sort_order' => 1,
+                            'name' => '1. Introducción Congelada',
+                            'contents' => "Objetivos congelados\nMarco congelado",
+                        ],
+                    ],
                 ],
                 'turma' => [
                     'id' => $turma->id,
@@ -153,6 +161,60 @@ class CertificatePdfTest extends TestCase
                 && ! str_contains($body, 'Curso Vivo')
                 && ! str_contains($body, 'Nota final:')
                 && ! str_contains($body, 'Asistencia:');
+        });
+    }
+
+    /**
+     * D-P9: o Blade é o documento oficial (`docs/templates/certificado.pdf`),
+     * não um layout genérico. Cada asserção aqui é um campo do original, e todos
+     * saem do snapshot congelado — nunca das relações vivas do setUp.
+     */
+    public function test_html_traz_os_campos_do_documento_oficial(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return str_contains($body, 'CERTIFICADO DE CAPACITACIÓN')
+                // Identidade fixa da OTEC emissora, com o RUT do documento.
+                && str_contains($body, '77.510.327-2')
+                && str_contains($body, 'Santiago')
+                // `{{RUTemp}}`: o RUT da empresa estava no snapshot e não era impresso.
+                && str_contains($body, '76.123.456-7')
+                && str_contains($body, 'abordó la narrativa congelada del curso.')
+                && str_contains($body, 'El N° de Registro de este documento es el')
+                && str_contains($body, 'Instructor')
+                && str_contains($body, 'María Relatora Congelada')
+                && str_contains($body, 'Temario del Curso')
+                && str_contains($body, '1. Introducción Congelada')
+                && str_contains($body, 'Objetivos congelados')
+                && str_contains($body, 'reconocimiento de relación jurídica alguna con la persona identificada')
+                // Marca no cabeçalho, embutida — o Gotenberg só recebe o HTML.
+                && str_contains($body, 'data:image/png;base64,');
+        });
+    }
+
+    public function test_html_omite_a_pagina_de_temario_quando_o_curso_nao_tem_modulos(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['curso']['description'] = null;
+        $snapshot['curso']['modules'] = [];
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return ! str_contains($body, 'Temario del Curso')
+                && ! str_contains($body, 'La actividad realizada')
+                && str_contains($body, 'CERTIFICADO DE CAPACITACIÓN');
         });
     }
 
