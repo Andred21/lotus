@@ -2,11 +2,11 @@
 
 namespace App\Domains\Certification\Actions;
 
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateNumberService;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
+use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
@@ -20,6 +20,7 @@ class IssueCertificateAction
     public function __construct(
         private readonly CertificateNumberService $numbers,
         private readonly CertificateSnapshotBuilder $snapshots,
+        private readonly CertificateTemplateResolver $templates,
     ) {}
 
     public function execute(Enrollment $enrollment, Redator $redator): Certificate
@@ -50,10 +51,7 @@ class IssueCertificateAction
                 ]);
             }
 
-            $template = CourseCertificateTemplate::query()
-                ->where('course_id', $turma->course_id)
-                ->orderByDesc('version')
-                ->first();
+            $template = $this->templates->latestForCourse($turma->course_id);
 
             if ($template === null) {
                 throw ValidationException::withMessages([

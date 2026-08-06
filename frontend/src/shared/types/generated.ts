@@ -136,6 +136,23 @@ export type ImportRowErrorData = {
 row: number,
 message: string,
 };
+export type IssuableEnrollmentData = {
+enrollment_id: number,
+student_name: string,
+student_rut: string,
+};
+export type IssuableRedatorData = {
+redator_id: number,
+name: string,
+};
+export type IssuableTurmaData = {
+turma_id: number,
+course_name: string,
+client_name: string,
+end_date: string,
+enrollments: IssuableEnrollmentData[],
+redatores: IssuableRedatorData[],
+};
 export type IssueCertificateData = {
 redator_id: number,
 };
