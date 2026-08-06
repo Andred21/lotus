@@ -11,6 +11,21 @@ quotes: QuoteData[],
 payment_terms: undefined | string | null,
 files: FileData[],
 };
+export type CertificateData = {
+id: number,
+uuid: string,
+codigo: string,
+enrollment_id: number,
+course_id: number,
+redator_id: number,
+status: CertificateStatus,
+valido_ate: string | null,
+revoked_at: string | null,
+revocation_reason: string | null,
+snapshot: Record<string, any>,
+created_at: string,
+};
+export type CertificateStatus = 'emitido' | 'revocado';
 export type CertificateTemplateData = {
 id: undefined | number,
 version: number,
@@ -120,6 +135,9 @@ contracted_count: number,
 export type ImportRowErrorData = {
 row: number,
 message: string,
+};
+export type IssueCertificateData = {
+redator_id: number,
 };
 export type MovedStudentData = {
 rut: string,
