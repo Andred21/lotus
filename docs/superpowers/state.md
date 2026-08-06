@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 6c5a2c4
-updated_at: 2026-08-06T09:10:00-03:00
+updated_at: 2026-08-06T11:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -380,6 +380,34 @@ D-P8 nomeia como o defeito, e `city` fica sendo a única chave viva do JSON.
 texto. A papelaria poligonal do original também não entra; o cabeçalho é montado com
 `frontend/src/assets/LogoLight.png`, copiada para `backend/resources/images/` porque a imagem do
 container `app` não carrega a árvore do frontend e o Gotenberg só recebe HTML.
+
+**Task 15 entregue em 2026-08-06, `cbb9e09` — e provada no PDF real, não na suíte.** Suíte
+**436 passed, 1 skipped (1590 assertions)**, +4 sobre 432, um por teste novo; Pint verde nos 5 `.php`
+tocados; frontend não tocado (`git status` sem uma linha em `frontend/`). **E2e com sessão Sanctum**
+contra `migrate:fresh --seed` no MySQL: `LOT-2026-1000/1001/1003` emitidos pela API real,
+`GET /api/certificates/{id}/pdf` devolvendo `application/pdf` de ~41 KB, e **o PDF baixado foi aberto
+e lido** — `pdftotext -layout` para conferir campo a campo e `pdftoppm` para ver as duas páginas.
+Estão no documento, nesta ordem: `N° LOT-2026-1001` · `Emisión: 06-08-2026` · a marca ·
+`CERTIFICADO DE CAPACITACIÓN` · `En Santiago a 06-08-2026, OTEC LOTUS SpA [77.510.327-2] certifica
+que:` · nome · RUT do aluno · razão social · `El trabajador de la empresa RUT: 77.555.333-2,
+participó en el curso:` · curso + nome técnico + horas · a narrativa · `El trabajador logró aprobar
+el curso con nota 6.4.` e `Asistencia registrada: 92.50%.` (no `LOT-2026-1003`, o único com
+resultado lançado) · vigência · `El N° de Registro…` · `Ana Reyes` sobre `Instructor` · QR ·
+cláusula de rodapé. **Página 2 com `Temario del Curso`**, os dois módulos e os bullets de
+`contents` — inclusive com o marcador `*` escrito à mão sendo removido na renderização. Certificado
+sem módulos e sem descrição não imprime a página 2, e isso tem teste nomeado.
+
+**Dois achados da execução, os dois declarados no plano em vez de silenciados:** a 8ª aresta da
+matriz (`Catalog\Models\CourseModule`) — bastava não tipar o closure do `map` para o
+`DomainDependencyTest` não ver nada, e guardrail com escape usado é pior que guardrail nenhum; e a
+frase da narrativa, que no original só fecha se `courses.description` começar por verbo, enquanto o
+dado real do projeto é sintagma nominal. A oração fecha antes (`… abordó los siguientes contenidos:`)
+e a descrição vira parágrafo próprio.
+
+**Nota de ambiente, não do produto:** `Read` não abre PDF aqui porque falta `poppler-utils`; ele foi
+instalado **no container `app` em runtime** (`apk add poppler-utils`) só para a leitura da prova.
+Não entrou em `Dockerfile` nem em dependência do projeto — some no próximo rebuild, e nada do código
+o usa.
 
 **O que o João deixou registrado como contexto e NÃO é trabalho deste bloco:** o Manual de Classe
 (aba de documentos da turma, PDF novo + botão de `.docx` para o redator, páginas 1/2/4 geradas) é
