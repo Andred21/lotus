@@ -2,14 +2,23 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: null
-resume_state: null
+blocker: >-
+  Review da Task 15 (ALTO RISCO, lente Claude + Codex read-only) devolveu 6 achados
+  aguardando decisao do Joao: Q-1 🔴 o periodo da capacitacao some do certificado quando
+  `courses.description` e null, e o teste fixa esse comportamento; Q-2 🟡 razao social e RUT
+  da OTEC emissora sao literais no Blade e nao congelam no snapshot (D12); Q-3 🟡 `description`
+  lida sem defesa enquanto `modules` usa `?? []`, na mesma leva; Q-4 🟡 `ltrim` com charlist
+  multibyte corrompe travessao no temario (provado por sonda); Q-5 🟡 as assercoes de omissao
+  do `CertificatePdfTest` viraram vacuidade apos a reescrita do Blade; Q-6 🟡 rodape/QR
+  absolutos sobre fluxo de tamanho ilimitado. Gate reconferido e verde (436 passed,
+  1 skipped, 1590 assertions; Pint passed nos 5 .php; frontend intocado).
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 6c5a2c4
 updated_at: 2026-08-06T11:05:00-03:00
