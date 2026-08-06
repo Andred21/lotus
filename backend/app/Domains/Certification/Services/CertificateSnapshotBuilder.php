@@ -5,13 +5,22 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
+use Carbon\CarbonInterface;
 
 class CertificateSnapshotBuilder
 {
+    /**
+     * `$emitidoEm` e `$ciudadEmision` chegam de fora de propósito: quem emite
+     * fixa o instante uma vez (todos os campos datados derivam dele) e já
+     * resolveu a cidade pelo `CertificateTemplateResolver`, que é a fonte única
+     * dessa regra — duplicá-la aqui deixaria a lista e a emissão discordarem.
+     */
     public function build(
         Enrollment $enrollment,
         Redator $redator,
         CourseCertificateTemplate $template,
+        CarbonInterface $emitidoEm,
+        string $ciudadEmision,
     ): array {
         return [
             'aluno' => [
@@ -29,8 +38,11 @@ class CertificateSnapshotBuilder
                 'end_date' => $enrollment->turma->end_date->format('Y-m-d'),
                 'modalidade' => $enrollment->turma->modalidade->value,
             ],
+            // Razão social (D12), não o nome do User de cadastro: é o
+            // `{{EMPRESA}}` do documento oficial, e é o que TurmaData,
+            // PendingQuoteData e IssuableTurmaData já projetam.
             'cliente' => [
-                'name' => $enrollment->turma->quote->budget->client->user->name,
+                'name' => $enrollment->turma->quote->budget->client->legal_name,
                 'rut' => $enrollment->turma->quote->budget->client->user->rut,
             ],
             'redator' => [
@@ -46,9 +58,8 @@ class CertificateSnapshotBuilder
                 'version' => $template->version,
                 'layout_config' => $template->layout_config,
             ],
-            'ciudad_emision' => $enrollment->turma->local_aplicacao
-                ?? $template->layout_config['city'],
-            'emitido_em' => now()->toDateString(),
+            'ciudad_emision' => $ciudadEmision,
+            'emitido_em' => $emitidoEm->toDateString(),
         ];
     }
 }

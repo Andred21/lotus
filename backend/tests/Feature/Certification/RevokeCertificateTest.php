@@ -128,15 +128,34 @@ class RevokeCertificateTest extends TestCase
             ->assertJsonPath('errors.certificate.0', 'El certificado ya fue revocado.');
     }
 
-    public function test_revogacao_aumenta_a_auditoria_do_certificado(): void
+    public function test_revogacao_sem_motivo_retorna_422_e_nao_revoga(): void
     {
         $this->actingAsSuperadmin();
+
+        $this->postJson($this->revokeUrl(), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reason');
+
+        $this->assertSame(CertificateStatus::Emitido, $this->certificate->fresh()->status);
+    }
+
+    public function test_revogacao_grava_auditoria_com_o_usuario_que_revogou(): void
+    {
+        $superadmin = $this->actingAsSuperadmin();
         $before = $this->certificate->audits()->count();
 
         $this->postJson($this->revokeUrl(), ['reason' => 'Documento emitido con datos incorrectos.'])
             ->assertOk();
 
         $this->assertGreaterThan($before, $this->certificate->fresh()->audits()->count());
+
+        // A invariante §4.5 nomeia `user_id`: contar linhas não a prova.
+        $audit = $this->certificate->audits()->latest('id')->first();
+
+        $this->assertSame('updated', $audit->event);
+        $this->assertSame($superadmin->id, $audit->user_id);
+        $this->assertSame('user', $audit->user_type);
+        $this->assertSame('revocado', $audit->new_values['status']);
     }
 
     private function revokeUrl(): string

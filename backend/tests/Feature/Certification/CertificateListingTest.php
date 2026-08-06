@@ -207,6 +207,57 @@ class CertificateListingTest extends TestCase
             ->assertJsonMissing(['turma_id' => $turmaWithoutTemplate->id]);
     }
 
+    /**
+     * O `issuable` existe para a UI não re-derivar as portas da emissão
+     * (D-P1). Listar uma turma que o POST recusa com 422 desfaz exatamente
+     * isso: o admin clica e leva erro numa tela que prometia sucesso.
+     */
+    public function test_issuable_oculta_turma_online_sem_cidade_valida_no_template(): void
+    {
+        $this->actingAsAdmin();
+        $courseOnline = $this->makeCourse(['name' => 'Curso online sin ciudad']);
+        CourseCertificateTemplate::create([
+            'course_id' => $courseOnline->id,
+            'version' => 1,
+            'layout_config' => [],
+            'validity_months' => null,
+        ]);
+        $turmaOnline = $this->createTurma(TurmaStatus::Concluida, 2, $courseOnline);
+        $turmaOnline->update([
+            'modalidade' => TurmaModalidade::Online,
+            'local_aplicacao' => null,
+        ]);
+        $turmaOnline->redatores()->attach($this->redator);
+        $this->createEnrollment(
+            $turmaOnline,
+            EnrollmentApprovalStatus::Aprobado,
+            'Alumno sin ciudad',
+            '44.444.444-4',
+        );
+
+        $this->getJson('/api/certificates/issuable')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.turma_id', $this->turma->id);
+    }
+
+    public function test_issuable_oculta_turma_sem_redator_designado(): void
+    {
+        $this->actingAsAdmin();
+        $turmaSemRedator = $this->createTurma(TurmaStatus::Concluida, 3);
+        $this->createEnrollment(
+            $turmaSemRedator,
+            EnrollmentApprovalStatus::Aprobado,
+            'Alumno sin relator',
+            '55.555.555-5',
+        );
+
+        $this->getJson('/api/certificates/issuable')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.turma_id', $this->turma->id);
+    }
+
     private function createTurma(
         TurmaStatus $status,
         int $seq,

@@ -17,6 +17,7 @@ use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\Support\CreatesDomainRecords;
@@ -174,6 +175,35 @@ class CertificatePdfTest extends TestCase
         ));
     }
 
+    /**
+     * Invariante §4.7 da spec: o PDF é sempre regerado do snapshot e não é
+     * materializado em lugar nenhum — nem disco, nem bucket, nem temporário.
+     * Um arquivo persistido envelheceria em silêncio contra o snapshot, que é
+     * a única fonte legal do documento.
+     */
+    public function test_pdf_nao_e_materializado_em_disco_bucket_nem_temporario(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+        Storage::fake('local');
+        Storage::fake('public');
+        Storage::fake('s3');
+        $tempBefore = $this->tempFiles();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertSame([], Storage::disk('public')->allFiles());
+        $this->assertSame([], Storage::disk('s3')->allFiles());
+        $this->assertSame($tempBefore, $this->tempFiles());
+        $this->assertSame(
+            ['snapshot'],
+            array_values(array_intersect(['snapshot', 'pdf_path', 'file_id'], array_keys(
+                $this->certificate->fresh()->getAttributes(),
+            ))),
+        );
+    }
+
     public function test_gotenberg_fora_do_ar_retorna_500(): void
     {
         $this->actingAsAdmin();
@@ -192,6 +222,15 @@ class CertificatePdfTest extends TestCase
         $this->getJson($this->pdfUrl())->assertForbidden();
 
         Http::assertNothingSent();
+    }
+
+    /** @return array<int, string> */
+    private function tempFiles(): array
+    {
+        $files = glob(sys_get_temp_dir().'/*') ?: [];
+        sort($files);
+
+        return $files;
     }
 
     private function fakeGotenberg(): void

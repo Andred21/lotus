@@ -235,6 +235,9 @@ created_at: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RevokeCertificateData = {
+reason: string,
+};
 export type RoleData = {
 name: string,
 permissions: string[],

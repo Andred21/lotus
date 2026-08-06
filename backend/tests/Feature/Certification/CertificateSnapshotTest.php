@@ -7,6 +7,7 @@ use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
+use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -120,12 +121,27 @@ class CertificateSnapshotTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * A cidade vem do resolver de propósito, não de um literal: é a mesma
+     * fonte que a emissão e o `issuable` consultam, e um literal aqui deixaria
+     * o teste passar enquanto a regra real divergisse.
+     */
+    private function emissionCity(): string
+    {
+        return app(CertificateTemplateResolver::class)->emissionCityFor(
+            $this->turma->fresh(),
+            $this->template,
+        );
+    }
+
     public function test_snapshot_tem_exatamente_as_chaves_e_valores_dos_models(): void
     {
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment,
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
 
         $this->assertSame([
@@ -141,7 +157,7 @@ class CertificateSnapshotTest extends TestCase
                 'end_date' => '2026-07-24',
                 'modalidade' => 'presencial',
             ],
-            'cliente' => ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
+            'cliente' => ['name' => 'Empresa Legal SpA', 'rut' => '76.123.456-7'],
             'redator' => ['name' => 'María Relatora', 'rut' => '9.876.543-3'],
             'resultado' => [
                 'grades' => ['final' => 6.2],
@@ -166,6 +182,8 @@ class CertificateSnapshotTest extends TestCase
             $this->enrollment,
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
         $certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),
@@ -195,6 +213,8 @@ class CertificateSnapshotTest extends TestCase
             $this->enrollment,
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
 
         $this->assertSame('2026-07-20', $snapshot['turma']['start_date']);
@@ -224,9 +244,11 @@ class CertificateSnapshotTest extends TestCase
             $freshEnrollment,
             $this->redator->fresh(),
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
 
-        $this->assertSame('Empresa Cliente', $snapshot['cliente']['name']);
+        $this->assertSame('Empresa Legal SpA', $snapshot['cliente']['name']);
         $this->assertSame('76.123.456-7', $snapshot['cliente']['rut']);
     }
 
@@ -236,6 +258,8 @@ class CertificateSnapshotTest extends TestCase
             $this->enrollment,
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
         $certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),
@@ -282,6 +306,8 @@ class CertificateSnapshotTest extends TestCase
             $this->enrollment->fresh(),
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
 
         $this->assertSame('Valparaíso', $snapshot['ciudad_emision']);
@@ -299,6 +325,8 @@ class CertificateSnapshotTest extends TestCase
             $this->enrollment->fresh(),
             $this->redator,
             $this->template,
+            now(),
+            $this->emissionCity(),
         );
 
         $this->assertNull($snapshot['resultado']['grades']);

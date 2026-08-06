@@ -7,6 +7,7 @@ use App\Domains\Certification\Actions\RevokeCertificateAction;
 use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\IssuableTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
+use App\Domains\Certification\Data\RevokeCertificateData;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificatePdfService;
@@ -18,7 +19,6 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -63,7 +63,7 @@ class CertificateController extends Controller implements HasMiddleware
         $activeEnrollmentIds = Certificate::query()
             ->where('status', CertificateStatus::Emitido)
             ->pluck('enrollment_id');
-        $courseIdsWithTemplate = $templates->courseIdsWithTemplate();
+        $latestTemplates = $templates->latestByCourse();
 
         $eligibleEnrollments = fn ($query) => $query
             ->where('approval_status', EnrollmentApprovalStatus::Aprobado)
@@ -71,7 +71,10 @@ class CertificateController extends Controller implements HasMiddleware
 
         return Turma::query()
             ->where('status', TurmaStatus::Concluida)
-            ->whereIn('course_id', $courseIdsWithTemplate)
+            ->whereIn('course_id', $latestTemplates->keys())
+            // Sem redator designado não existe assinatura possível (D11), e a
+            // emissão recusaria qualquer `redator_id` que a UI mandasse.
+            ->whereHas('redatores')
             ->whereHas('enrollments', $eligibleEnrollments)
             ->with([
                 'course',
@@ -81,7 +84,12 @@ class CertificateController extends Controller implements HasMiddleware
                     ->with('student.user'),
             ])
             ->get()
+            ->filter(fn (Turma $turma) => $templates->emissionCityFor(
+                $turma,
+                $latestTemplates[$turma->course_id],
+            ) !== null)
             ->map(fn (Turma $turma) => IssuableTurmaData::fromModel($turma))
+            ->values()
             ->all();
     }
 
@@ -99,16 +107,12 @@ class CertificateController extends Controller implements HasMiddleware
     }
 
     public function revoke(
-        Request $request,
+        RevokeCertificateData $data,
         Certificate $certificate,
         RevokeCertificateAction $action,
     ): JsonResponse {
-        $validated = $request->validate([
-            'reason' => ['required', 'string', 'max:255'],
-        ]);
-
-        return CertificateData::fromModel($action->execute($certificate, $validated['reason']))
-            ->toResponse($request)
+        return CertificateData::fromModel($action->execute($certificate, $data->reason))
+            ->toResponse(request())
             ->setStatusCode(200);
     }
 }

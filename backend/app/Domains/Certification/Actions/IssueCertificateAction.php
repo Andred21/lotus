@@ -26,6 +26,10 @@ class IssueCertificateAction
     public function execute(Enrollment $enrollment, Redator $redator): Certificate
     {
         return DB::transaction(function () use ($enrollment, $redator) {
+            // Um instante para a emissão inteira. A sequência espera pelo lock,
+            // e três `now()` separados deixam uma emissão da virada do ano
+            // gravar data de 2027 num código LOT-2026.
+            $now = now();
             $turma = $enrollment->turma;
 
             if ($turma->status !== TurmaStatus::Concluida) {
@@ -59,10 +63,9 @@ class IssueCertificateAction
                 ]);
             }
 
-            $templateCity = $template->layout_config['city'] ?? null;
+            $ciudadEmision = $this->templates->emissionCityFor($turma, $template);
 
-            if ($turma->local_aplicacao === null
-                && (! is_string($templateCity) || trim($templateCity) === '')) {
+            if ($ciudadEmision === null) {
                 throw ValidationException::withMessages([
                     'template' => 'La plantilla del curso no define una ciudad de emisión válida.',
                 ]);
@@ -76,15 +79,21 @@ class IssueCertificateAction
 
             $validoAte = $template->validity_months === null
                 ? null
-                : now()->addMonths((int) $template->validity_months)->toDateString();
+                : $now->copy()->addMonths((int) $template->validity_months)->toDateString();
 
             return Certificate::create([
                 'uuid' => (string) Str::uuid(),
                 'enrollment_id' => $enrollment->id,
                 'course_id' => $turma->course_id,
                 'redator_id' => $redator->id,
-                'codigo' => $this->numbers->next((int) now()->year),
-                'snapshot' => $this->snapshots->build($enrollment, $redator, $template),
+                'codigo' => $this->numbers->next((int) $now->year),
+                'snapshot' => $this->snapshots->build(
+                    $enrollment,
+                    $redator,
+                    $template,
+                    $now,
+                    $ciudadEmision,
+                ),
                 'valido_ate' => $validoAte,
                 'status' => CertificateStatus::Emitido,
                 'revoked_at' => null,

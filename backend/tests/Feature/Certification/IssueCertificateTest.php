@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\CertificateNumberService;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
@@ -281,6 +282,52 @@ class IssueCertificateTest extends TestCase
         $this->createTemplate(['layout_config' => ['city' => '']]);
 
         $this->assertInvalidTemplateCity();
+    }
+
+    /**
+     * A emissão espera pelo lock da sequência. Se cada campo consultar o
+     * relógio por conta própria, uma emissão que atravessa a virada do ano
+     * grava data de emissão de 2027 num código LOT-2026 — num documento legal.
+     */
+    public function test_emissao_que_atravessa_a_virada_do_ano_usa_um_instante_so(): void
+    {
+        $this->actingAsAdmin();
+        $this->createTemplate(['validity_months' => 12]);
+        Carbon::setTestNow('2026-12-31 23:59:59');
+
+        // Simula a espera no lockForUpdate: o relógio anda entre o instante em
+        // que a emissão começa e o instante em que a sequência responde.
+        $this->app->bind(CertificateNumberService::class, fn () => new class extends CertificateNumberService
+        {
+            public function next(int $year): string
+            {
+                Carbon::setTestNow(now()->addSeconds(2));
+
+                return sprintf('LOT-%d-1000', $year);
+            }
+        });
+
+        $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
+
+        $certificate = Certificate::query()->sole();
+
+        $this->assertSame('LOT-2026-1000', $certificate->codigo);
+        $this->assertSame('2026-12-31', $certificate->snapshot['emitido_em']);
+        $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
+    }
+
+    public function test_emissao_grava_auditoria_com_o_usuario_que_emitiu(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $this->createTemplate();
+
+        $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
+
+        $audit = Certificate::query()->sole()->audits()->sole();
+
+        $this->assertSame('created', $audit->event);
+        $this->assertSame($admin->id, $audit->user_id);
+        $this->assertSame('user', $audit->user_type);
     }
 
     /** @return array{redator_id: int} */
