@@ -176,6 +176,28 @@ description: string,
 group: string,
 segregated: boolean,
 };
+export type PublicCertificateData = {
+codigo: string,
+status: CertificateStatus,
+valido_ate: string | null,
+revoked_at: string | null,
+aluno: {
+name: string,
+},
+curso: {
+name: string,
+workload_hours: number,
+},
+turma: {
+end_date: string,
+},
+cliente: {
+name: string,
+},
+redator: {
+name: string,
+},
+};
 export type QuoteData = {
 id: undefined | number,
 budget_id: undefined | number,

@@ -1,7 +1,10 @@
 <?php
 
 use App\Domains\Certification\Http\Controllers\CertificateController;
+use App\Domains\Certification\Http\Controllers\PublicCertificateController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('publico/certificados/{uuid}', [PublicCertificateController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('enrollments/{enrollment}/certificate', [CertificateController::class, 'store']);
