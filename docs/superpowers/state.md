@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 6c5a2c4
-updated_at: 2026-08-05T16:20:00-03:00
+updated_at: 2026-08-05T22:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -284,6 +284,52 @@ número como sinal: extrair `problemFromBlob` para `shared/api` não pode mudar 
 **Três provas que não aceitam sqlite** (lição 15): o índice único na coluna gerada (Task 2), a
 sequência sob `lockForUpdate` com duas conexões (Task 3) e a unicidade na emissão (Task 5) rodam
 também contra o MySQL do compose.
+
+### Corte alterado em 2026-08-05 pelo João — o frontend vira bloco próprio (D-P8)
+
+Decisão tomada **depois da Task 8 e antes da Task 9**, com o backend inteiro entregue e commitado
+(`cfe37a0` … `cb30ba5`). Dois motivos novos, ambos externos ao repositório e nenhum deles conhecido
+quando a spec foi aprovada: os **dois documentos oficiais da Lotus** entraram na sessão (o
+certificado `Roles y Responsabilidades del Jefe de Faena` e o `Libro de Control de Clases`), e os
+**prints do protótipo Figma** vão entrar — a fonte que o packet declarou `unavailable` e que o
+brainstorming aceitou como limitação. O João registra também que **certificados tem módulo próprio
+na interface**, o que a spec não modelou.
+
+Tasks 9–13 **migram inteiras**, não são canceladas. Consequências declaradas no plano, não
+escondidas: `generated.ts` fica com DTOs sem consumidor até o bloco seguinte (dívida com prazo), a
+invariante §4.2 migra junto, e o item 0 do gate parte em dois — a cadeia até a API pública sem
+cookie continua exigida aqui; só a ponta renderizada no navegador migra.
+
+**Fila que o João desenhou:** (1) revisão em duas frentes do backend — feita, abaixo; (2) aproximar
+os Blades dos documentos oficiais, com o Manual de Classe recebendo melhoria além da cópia; (3)
+replanejar o frontend com os prints e o módulo próprio.
+
+### Revisão em duas frentes — 2026-08-05, backend do bloco
+
+Pedida pelo João: padronização contra as demais entidades, leis/rules, e conformidade com spec e
+plano. Frente Codex (`mcp__codex__codex`, read-only) e frente Claude, independentes.
+
+**Limpo nas duas frentes, medido aqui e não aceito por relatório:** leis §5 sem violação (zero
+Repository, zero `abort(422)`, alias `certificate` no morph map, `generated.ts` gerado); rota
+pública sem RUT/id/nota/motivo; PDF sem materialização; unicidade do vigente, reemissão pós-revogação
+e terminalidade da revogação implementadas; suíte **426 passed + 1 skipped**, matriz com as 7
+arestas, Pint verde nos 36 arquivos, `migrate:fresh --seed` no MySQL.
+
+**O gate reprova por duas invariantes sem teste** (§4.5 auditoria com `user_id` — a emissão não tem
+teste nenhum e a da revogação só conta linhas; §4.7 PDF não materializado — nenhum teste afirma).
+
+**Achado 🔴 confirmado: o certificado imprime o nome errado da empresa.**
+`CertificateSnapshotBuilder` congela `client->user->name`; a D12 pede **razão social**, que é
+`clients.legal_name` — comentada `// razón social` na própria migration e usada por
+`TurmaData`, `PendingQuoteData`, `StudentData` e pelo `IssuableTurmaData` **deste mesmo bloco**. O
+teste não só deixa passar: ele **fixa o valor errado**, com fixture que separa de propósito
+`legal_name = 'Empresa Legal SpA'` de `user.name = 'Empresa Cliente'` e assere o segundo.
+
+Os demais achados (issuable sem as portas de cidade e redator, três `now()` na mesma emissão,
+revogação validando no controller em vez de `Data`, `abort(404)` único do projeto, `uuid` gerado na
+Action e não no model, DER descrevendo o schema rejeitado) estão no relatório da sessão, aguardando
+decisão do João. **O estado permanece `executing`**: mover para `ready_for_review` com o gate
+reprovado seria declarar um gate que falhou.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 

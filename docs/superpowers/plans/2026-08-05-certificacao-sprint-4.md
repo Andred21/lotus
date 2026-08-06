@@ -60,8 +60,8 @@ Sem dependência nova. `simplesoftwareio/simple-qrcode` + `bacon/bacon-qr-code` 
 5. **ADR-10 — morph map.** Todo model Auditable novo entra em `enforceMorphMap`.
 6. **DoD comportamental.** Build verde não é DoD. Cada task declara o comportamento provado.
 7. **Placar de testes.** Baseline medido: backend **378 passed**, frontend **35 passed**. Cada
-   task backend declara o delta; ao final: **418 passed + 1 skipped** no backend (D-P5), **35** no
-   frontend (o projeto só testa unitariamente hooks de `shared/`).
+   task backend declara o delta; ao final: **426 passed + 1 skipped** no backend (D-P5 + os casos
+   novos de D-P6/D-P7), **35** no frontend — inalterado, porque o frontend saiu do bloco (D-P8).
 8. **Migration verde em sqlite pode quebrar no MySQL** (lição 15). As tasks 2, 3 e 5 rodam
    `migrate:fresh` no MySQL real além da suíte.
 
@@ -116,6 +116,37 @@ próprio plano. **Não são refinamentos: são divergências**, e o João decidi
   plano não transcreveu: vem de `turma.local_aplicacao`; turma `online` não tem local e cai para a
   cidade fixa declarada no `layout_config` do template — **nunca** derivada de endereço do cliente.
   Nota e presença nulas entram nulas, e o Blade **omite a linha** em vez de imprimir zero.
+
+### D-P8 — o bloco fecha no backend; o frontend vira bloco próprio
+
+Decisão do João em 2026-08-05, depois da Task 8 e **antes** da Task 9. O corte aprovado no
+brainstorming era fatia vertical fina (backend + 3 telas mínimas). O João mudou o corte com dois
+motivos novos, ambos externos ao repositório e nenhum deles conhecido quando a spec foi aprovada:
+
+1. **Os dois documentos oficiais da Lotus entraram na sessão** — o certificado real
+   (`202#[MAO] - Roles y Responsabilidades del Jefe de Faena`) e o `Libro de Control de Clases`. O
+   Blade da Task 7 foi escrito contra o `layout_config` genérico, não contra o documento; aproximá-lo
+   do original é trabalho de conteúdo, não de tela, e vem antes do frontend.
+2. **Os prints do protótipo Figma vão entrar** — a fonte que o packet declarou `unavailable` e que o
+   brainstorming aceitou como limitação. Com ela disponível, a composição das telas deixa de ser
+   invenção; e o João registra que **certificados tem módulo próprio na interface**, o que a spec
+   não modelou (ela previa histórico + diálogo + página pública, não um módulo).
+
+**O que sai deste bloco:** Tasks 9, 10, 11, 12 e 13. Elas não são canceladas — migram inteiras para
+um bloco de frontend a ser planejado com o packet regenerado (Figma + módulo próprio).
+
+**Três consequências que este desvio cria e não esconde:**
+
+- **`generated.ts` fica com `CertificateData`, `EnrollmentResultData` e afins sem consumidor no
+  frontend** até o bloco seguinte. A Global Constraint 2 (lição 11) manda tipo e consumidor no mesmo
+  commit; aqui o consumidor não existe ainda. Isso é dívida declarada, com prazo: o bloco de frontend
+  a quita. Não há como evitá-la sem manter o corte antigo.
+- **A invariante §4.2 da spec** ("`generated.ts` muda e os consumidores entram no mesmo commit")
+  **migra para o gate do bloco de frontend** — ela não é provável aqui pelo motivo acima.
+- **O item 0 do gate parte em dois.** A cadeia até `GET /api/publico/certificados/{uuid}` **sem
+  cookie** é provável agora e continua exigida. O que migra é só a ponta renderizada: o QR escaneado
+  abrindo a página `/validar/:uuid` no navegador. `/certificados` segue `ModulePlaceholder`, e o
+  checkpoint visual do João (Task 13) vai junto.
 
 ---
 
@@ -770,14 +801,17 @@ tasks 9–12, não como task nova.
 
 ---
 
-## Task 14 — Gate do bloco
+## Task 14 — Gate do bloco (backend, D-P8)
 
 **Executor:** claude
 
-- [ ] **Item 0 (spec §5):** as 8 invariantes comportamentais da spec estão provadas por teste
-      nomeado. Listar o teste de cada uma; invariante sem teste reprova o gate.
-- [ ] `docker compose exec -T app php artisan test` → `Tests:  418 passed, 1 skipped` (D-P5)
-- [ ] `cd frontend && pnpm test` → `Tests  35 passed`; `pnpm build`; `pnpm lint`
+- [ ] **Item 0 (spec §5):** as invariantes comportamentais da spec estão provadas por teste
+      nomeado — **7 das 8**, porque a §4.2 migrou para o bloco de frontend (D-P8). Listar o teste de
+      cada uma; invariante sem teste reprova o gate.
+- [ ] `docker compose exec -T app php artisan test` → `Tests:  426 passed, 1 skipped` (D-P5; o
+      número subiu de 418 para 426 porque D-P6 e D-P7 acrescentaram casos que o plano não previa)
+- [ ] `cd frontend && pnpm test` → `Tests  35 passed`; `pnpm build`; `pnpm lint` — placar
+      **inalterado**, que é o sinal de que o frontend não foi tocado (D-P8)
 - [ ] `docker compose exec -T app php artisan test --filter=DomainDependencyTest` → 3 passed, com
       as **7** arestas declaradas — nenhuma a mais (D-P2).
 - [ ] `docker compose exec -T app php artisan migrate:fresh --seed` no MySQL sem erro.
@@ -796,9 +830,9 @@ tasks 9–12, não como task nova.
 | --- | --- | --- |
 | 0 | claude | baseline e branch |
 | 1–8 | codex | mecânicas, verificação executável, paths fechados |
-| 9–12 | claude | frontend (atribuição do João); 9 e 11 ainda tocam lei §5.6 e composição do router |
-| 13 | joao | checkpoint visual |
-| 14 | claude | gate |
+| ~~9–12~~ | — | **migradas para o bloco de frontend (D-P8)** |
+| ~~13~~ | — | **migrada para o bloco de frontend (D-P8)** |
+| 14 | claude | gate, reescopado para o backend (D-P8) |
 
 **`paths_autorizados` do Codex (tasks 1–8):**
 
