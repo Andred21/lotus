@@ -3,6 +3,7 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
@@ -36,6 +37,8 @@ class CertificateSnapshotTest extends TestCase
 
     private Course $course;
 
+    private CourseCertificateTemplate $template;
+
     private Turma $turma;
 
     private Enrollment $enrollment;
@@ -60,6 +63,15 @@ class CertificateSnapshotTest extends TestCase
             'name' => 'Seguridad en Alta Tensión',
             'technical_name' => 'Operación Segura AT',
             'workload_hours' => 16,
+        ]);
+        $this->template = CourseCertificateTemplate::create([
+            'course_id' => $this->course->id,
+            'version' => 2,
+            'layout_config' => [
+                'orientation' => 'landscape',
+                'city' => 'Valparaíso',
+            ],
+            'validity_months' => null,
         ]);
         $this->quote = Quote::create([
             'budget_id' => $this->budget->id,
@@ -110,7 +122,11 @@ class CertificateSnapshotTest extends TestCase
 
     public function test_snapshot_tem_exatamente_as_chaves_e_valores_dos_models(): void
     {
-        $snapshot = app(CertificateSnapshotBuilder::class)->build($this->enrollment, $this->redator);
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment,
+            $this->redator,
+            $this->template,
+        );
 
         $this->assertSame([
             'aluno' => ['name' => 'Juan Pérez', 'rut' => '12.345.678-5'],
@@ -125,16 +141,32 @@ class CertificateSnapshotTest extends TestCase
                 'end_date' => '2026-07-24',
                 'modalidade' => 'presencial',
             ],
-            'cliente' => ['name' => 'Empresa Cliente'],
+            'cliente' => ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
             'redator' => ['name' => 'María Relatora', 'rut' => '9.876.543-3'],
-            'resultado' => ['approval_status' => 'aprobado', 'attendance_pct' => '87.50'],
+            'resultado' => [
+                'grades' => ['final' => 6.2],
+                'approval_status' => 'aprobado',
+                'attendance_pct' => '87.50',
+            ],
+            'template' => [
+                'version' => 2,
+                'layout_config' => [
+                    'orientation' => 'landscape',
+                    'city' => 'Valparaíso',
+                ],
+            ],
+            'ciudad_emision' => 'Santiago',
             'emitido_em' => '2026-08-05',
         ], $snapshot);
     }
 
     public function test_snapshot_persistido_nao_muda_quando_curso_e_renomeado_depois(): void
     {
-        $snapshot = app(CertificateSnapshotBuilder::class)->build($this->enrollment, $this->redator);
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment,
+            $this->redator,
+            $this->template,
+        );
         $certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),
             'enrollment_id' => $this->enrollment->id,
@@ -159,7 +191,11 @@ class CertificateSnapshotTest extends TestCase
 
     public function test_datas_do_snapshot_sao_strings_em_y_m_d(): void
     {
-        $snapshot = app(CertificateSnapshotBuilder::class)->build($this->enrollment, $this->redator);
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment,
+            $this->redator,
+            $this->template,
+        );
 
         $this->assertSame('2026-07-20', $snapshot['turma']['start_date']);
         $this->assertSame('2026-07-24', $snapshot['turma']['end_date']);
@@ -184,8 +220,88 @@ class CertificateSnapshotTest extends TestCase
         $this->assertSoftDeleted('users', ['id' => $clientUserId]);
 
         $freshEnrollment = Enrollment::query()->findOrFail($this->enrollment->id);
-        $snapshot = app(CertificateSnapshotBuilder::class)->build($freshEnrollment, $this->redator->fresh());
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $freshEnrollment,
+            $this->redator->fresh(),
+            $this->template,
+        );
 
         $this->assertSame('Empresa Cliente', $snapshot['cliente']['name']);
+        $this->assertSame('76.123.456-7', $snapshot['cliente']['rut']);
+    }
+
+    public function test_template_persistido_nao_muda_quando_template_e_editado_e_arquivado(): void
+    {
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment,
+            $this->redator,
+            $this->template,
+        );
+        $certificate = Certificate::create([
+            'uuid' => (string) Str::uuid(),
+            'enrollment_id' => $this->enrollment->id,
+            'course_id' => $this->course->id,
+            'redator_id' => $this->redator->id,
+            'codigo' => 'LOT-2026-1000',
+            'snapshot' => $snapshot,
+            'valido_ate' => null,
+            'status' => CertificateStatus::Emitido,
+            'revoked_at' => null,
+            'revocation_reason' => null,
+        ]);
+
+        $this->template->update([
+            'version' => 3,
+            'layout_config' => ['orientation' => 'portrait', 'city' => 'Temuco'],
+        ]);
+        $this->template->delete();
+
+        $reloaded = Certificate::query()->findOrFail($certificate->id);
+
+        $this->assertSoftDeleted('course_certificate_templates', ['id' => $this->template->id]);
+        $this->assertSame(2, $reloaded->snapshot['template']['version']);
+        $this->assertSame([
+            'orientation' => 'landscape',
+            'city' => 'Valparaíso',
+        ], $reloaded->snapshot['template']['layout_config']);
+        $this->assertSame($snapshot, $reloaded->snapshot);
+    }
+
+    public function test_turma_online_usa_cidade_fixa_do_template_e_nao_endereco_do_cliente(): void
+    {
+        $this->client->addresses()->create([
+            'city' => 'Ciudad del Cliente',
+            'is_primary' => true,
+        ]);
+        $this->turma->update([
+            'modalidade' => TurmaModalidade::Online,
+            'local_aplicacao' => null,
+        ]);
+
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment->fresh(),
+            $this->redator,
+            $this->template,
+        );
+
+        $this->assertSame('Valparaíso', $snapshot['ciudad_emision']);
+        $this->assertNotSame('Ciudad del Cliente', $snapshot['ciudad_emision']);
+    }
+
+    public function test_notas_e_presenca_nulas_permanecem_nulas_no_snapshot(): void
+    {
+        $this->enrollment->update([
+            'grades' => null,
+            'attendance_pct' => null,
+        ]);
+
+        $snapshot = app(CertificateSnapshotBuilder::class)->build(
+            $this->enrollment->fresh(),
+            $this->redator,
+            $this->template,
+        );
+
+        $this->assertNull($snapshot['resultado']['grades']);
+        $this->assertNull($snapshot['resultado']['attendance_pct']);
     }
 }

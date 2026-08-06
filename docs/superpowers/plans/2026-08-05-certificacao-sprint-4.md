@@ -95,6 +95,28 @@ consequência de medição feita ao planejar.
   skipado não é dívida: ele roda e passa contra o MySQL do compose, que é onde ele prova alguma
   coisa. Esconder o skip num número redondo é que seria dívida.
 
+### D-P6 e D-P7 — dois pontos onde este plano tinha estreitado a spec aprovada
+
+Achados na execução da Task 5 (2026-08-05), ao conferir a Action contra a spec em vez de contra o
+próprio plano. **Não são refinamentos: são divergências**, e o João decidiu pela spec nas duas.
+
+- **D-P6 — a porta "o curso tem template" volta. São 5 portas, não 4.** A spec D10 lista
+  turma `concluida` · matrícula `aprobado` · **o curso tem template** · nenhum vigente, e chama a
+  terceira de decisão nova, com o motivo escrito: *certificado sem template aprovado é documento
+  legal com narrativa inventada*. Este plano trocou essa porta por "redator da turma" e escreveu um
+  caso de teste afirmando o **oposto** — `sem template → 201 com valido_ate null`. A porta do
+  redator é guarda legítima (decorre da D11) e **fica**; a do template **volta**, e o caso 8 do
+  teste inverte: sem template é **422**, não 201. Nada medido na execução refutou o argumento da
+  spec.
+- **D-P7 — o snapshot congela `template_version`, a cópia do `layout_config`, a cidade de emissão e
+  o RUT da empresa.** A spec D12 exige os quatro; a Task 4 deste plano listou 7 chaves e omitiu
+  todos. Sem eles a Task 7 não consegue cumprir o próprio DoD ("o Blade lê **só** o snapshot"): o
+  layout teria que vir do template vivo, que é exatamente o vazamento que a D12 existe para
+  impedir, e a promessa de reimpressão idêntica em 2028 morre. Regra da cidade, que a spec fixa e o
+  plano não transcreveu: vem de `turma.local_aplicacao`; turma `online` não tem local e cai para a
+  cidade fixa declarada no `layout_config` do template — **nunca** derivada de endereço do cliente.
+  Nota e presença nulas entram nulas, e o Blade **omite a linha** em vez de imprimir zero.
+
 ---
 
 ## Task 0 — Baseline e branch
@@ -364,9 +386,11 @@ return [
     'aluno' => ['name' => ..., 'rut' => ...],
     'curso' => ['name' => ..., 'technical_name' => ..., 'workload_hours' => ...],
     'turma' => ['id' => ..., 'start_date' => 'Y-m-d', 'end_date' => 'Y-m-d', 'modalidade' => ...],
-    'cliente' => ['name' => ...],
+    'cliente' => ['name' => ..., 'rut' => ...],                  // RUT exigido pela D12 (D-P7)
     'redator' => ['name' => ..., 'rut' => ...],
     'resultado' => ['approval_status' => ..., 'attendance_pct' => ...],
+    'template' => ['version' => ..., 'layout_config' => [...]],  // D12 (D-P7)
+    'ciudad_emision' => ...,                                     // D12 (D-P7)
     'emitido_em' => now()->toDateString(),
 ];
 ```
@@ -403,7 +427,8 @@ return [
 - *Produces:* `POST /api/enrollments/{enrollment}/certificate` (`certification.certificate.issue`)
   → 201 `CertificateData`.
 
-- [ ] As 4 portas, nesta ordem, cada uma com sua mensagem:
+- [ ] As **5** portas (D-P6), nesta ordem, cada uma com sua mensagem. A do template entra **depois**
+      da de vigente e **antes** da do redator; sem template é **422**, nunca 201:
 
 ```php
 return DB::transaction(function () use ($enrollment, $redator) {
@@ -466,7 +491,8 @@ Route::middleware('auth:sanctum')->group(function () {
 - [ ] Teste, 8 casos: caminho feliz (201, `codigo` `LOT-<ano>-1000`, snapshot preenchido) · turma
       em andamento → 422 · aluno reprovado → 422 · já existe vigente → 422 · redator de outra
       turma → 422 · sem permissão → 403 · template com `validity_months=12` → `valido_ate`
-      preenchido · sem template → `valido_ate` null.
+      preenchido · **sem template → 422** (D-P6: a porta da spec D10, não 201 com `valido_ate` null)
+      · template com `validity_months` null → `valido_ate` null (o padrão do produto, RN-CER-01).
 - [ ] `docker compose exec -T app php artisan typescript:transform` (commit junto, lição 11).
 - [ ] `docker compose exec -T app php artisan test --filter=IssueCertificateTest`
       → `Tests:  8 passed`
@@ -475,7 +501,10 @@ Route::middleware('auth:sanctum')->group(function () {
 - [ ] Pint.
 
 **DoD:** emitir duas vezes para a mesma matrícula devolve 422 com mensagem legível; emitir numa
-turma em andamento devolve 422 citando RN-08. **Placar 393 → 401 passed + 1 skipped (D-P5).**
+turma em andamento devolve 422 citando RN-08, e emitir sem template do curso também devolve 422
+(D-P6). **Placar: parte de 393 e sobe pelo número real de casos; D-P6 e D-P7 acrescentam casos que
+o plano original não contava, então os alvos das tasks seguintes são reconciliados pelo número
+medido, não pelo número escrito antes.**
 
 ---
 

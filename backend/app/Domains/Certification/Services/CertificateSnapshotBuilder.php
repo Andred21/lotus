@@ -2,13 +2,17 @@
 
 namespace App\Domains\Certification\Services;
 
+use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 
 class CertificateSnapshotBuilder
 {
-    public function build(Enrollment $enrollment, Redator $redator): array
-    {
+    public function build(
+        Enrollment $enrollment,
+        Redator $redator,
+        CourseCertificateTemplate $template,
+    ): array {
         return [
             'aluno' => [
                 'name' => $enrollment->student->user->name,
@@ -27,15 +31,23 @@ class CertificateSnapshotBuilder
             ],
             'cliente' => [
                 'name' => $enrollment->turma->quote->budget->client->user->name,
+                'rut' => $enrollment->turma->quote->budget->client->user->rut,
             ],
             'redator' => [
                 'name' => $redator->user->name,
                 'rut' => $redator->user->rut,
             ],
             'resultado' => [
+                'grades' => $enrollment->grades,
                 'approval_status' => $enrollment->approval_status->value,
                 'attendance_pct' => $enrollment->attendance_pct,
             ],
+            'template' => [
+                'version' => $template->version,
+                'layout_config' => $template->layout_config,
+            ],
+            'ciudad_emision' => $enrollment->turma->local_aplicacao
+                ?? $template->layout_config['city'],
             'emitido_em' => now()->toDateString(),
         ];
     }
