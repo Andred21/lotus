@@ -60,8 +60,9 @@ Sem dependência nova. `simplesoftwareio/simple-qrcode` + `bacon/bacon-qr-code` 
 5. **ADR-10 — morph map.** Todo model Auditable novo entra em `enforceMorphMap`.
 6. **DoD comportamental.** Build verde não é DoD. Cada task declara o comportamento provado.
 7. **Placar de testes.** Baseline medido: backend **378 passed**, frontend **35 passed**. Cada
-   task backend declara o delta; ao final: **426 passed + 1 skipped** no backend (D-P5 + os casos
-   novos de D-P6/D-P7), **35** no frontend — inalterado, porque o frontend saiu do bloco (D-P8).
+   task backend declara o delta; ao final da Task 14: **432 passed + 1 skipped** no backend (426 do
+   D-P5 + D-P6/D-P7, mais os 6 do review de 2026-08-05); ao final da Task 15: **435 passed + 1
+   skipped** (D-P9). Frontend fica em **35** — inalterado, porque o frontend saiu do bloco (D-P8).
 8. **Migration verde em sqlite pode quebrar no MySQL** (lição 15). As tasks 2, 3 e 5 rodam
    `migrate:fresh` no MySQL real além da suíte.
 
@@ -147,6 +148,61 @@ um bloco de frontend a ser planejado com o packet regenerado (Figma + módulo pr
   cookie** é provável agora e continua exigida. O que migra é só a ponta renderizada: o QR escaneado
   abrindo a página `/validar/:uuid` no navegador. `/certificados` segue `ModulePlaceholder`, e o
   checkpoint visual do João (Task 13) vai junto.
+
+### D-P9 — o Blade do certificado passa a ser o documento oficial, e não um layout genérico
+
+Item 2 da fila que o próprio D-P8 desenhou ("aproximar os Blades dos documentos oficiais"), com o
+`certificado.pdf` agora **no repositório** (`docs/templates/certificado.pdf`) em vez de anexo de
+prompt. O documento foi lido campo a campo — texto posicionado extraído dos content streams e as
+duas artes de fundo extraídas como JPEG — e não por descrição de terceiro.
+
+**O que o documento oficial tem e o Blade da Task 7 não tinha:**
+
+| Campo do documento | Origem | Situação antes |
+| --- | --- | --- |
+| `N° {{CodCert}}` · `Emisión: {{FEMI}}` | `codigo` · `emitido_em` | existia, sem a forma do original |
+| `CERTIFICADO DE CAPACITACIÓN` | fixo | o Blade dizia só `CERTIFICADO` |
+| `En {{Ciudad}} a {{FEM}}, OTEC LOTUS SpA [77.510.327-2] certifica que:` | `ciudad_emision` + identidade fixa da OTEC | a identidade da OTEC não aparecia em lugar nenhum |
+| `{{nombre}}` · `{{RUTalum}}` · `{{EMPRESA}}` | `aluno.*` · `cliente.name` | existia |
+| `El trabajador de la empresa RUT: {{RUTemp}}` | `cliente.rut` | **no snapshot, nunca impresso** |
+| nome do curso em destaque | `curso.name` | existia dentro de uma frase corrida |
+| narrativa `La actividad realizada el día …, abordó …` | **`courses.description`** | **não estava no snapshot** |
+| `logró aprobar el curso con nota {{NOTA}}` | `resultado.grades.final` | existia como linha solta `Nota final:` |
+| `El N° de Registro de este documento es el : {{CodCert}};` | `codigo` | não existia |
+| `{{RELATOR}}` sobre a linha `Instructor` | `redator.name` | existia, sem o rótulo do original |
+| **página 2 — `Temario del Curso`** | **`course_modules`** | **não existia** |
+| cláusula de rodapé (não implica relação jurídica) | fixo | não existia |
+| marca LOTUS OTEC no topo | `LogoLight.png` | não existia |
+
+**Três decisões, e nenhuma delas cria coluna nova:**
+
+1. **A narrativa é `courses.description`** — coluna que existe desde `2026_07_08_172639_courses`
+   (`text nullable`) e que **nenhum consumidor lia**. É exatamente o texto que o documento imprime.
+   Entra no snapshot como `curso.description` e é congelada: certificado reimpresso em 2028 não pode
+   herdar descrição reescrita depois (D12).
+2. **O temário é `course_modules`** — `name` + `contents`, ordenados por `sort_order`. A migration já
+   descreve `contents` como "texto livre" e diz que "a numeração 1.1/1.2 é conteúdo autoral", que é
+   literalmente a forma das 8 seções da página 2. Entra no snapshot como `curso.modules`, congelado
+   pelo mesmo motivo. Sem módulos, a página 2 **não é impressa** — não se inventa temário vazio num
+   documento de peso legal.
+3. **O certificado é retrato, fixo.** `layout_config.orientation` perde o único consumidor que tinha.
+   Ele nunca foi requisito: nasceu do "layout genérico" que o D-P8 já nomeia como o defeito. O
+   documento oficial é A4 retrato, e a página 2 do temário só fecha em retrato. `layout_config` fica
+   com **`city` como única chave viva** — o snapshot continua congelando o JSON inteiro.
+
+**O que fica de fora, por decisão explícita do João:** **assinaturas.** A arte original traz a
+rubrica escaneada da Gerente OTEC e o carimbo SENCE; nada disso é indexado (restrição já registrada
+no packet e no `state.md`). O Blade imprime **nome sobre linha**, que é texto, não assinatura. A arte
+de fundo poligonal do original também não entra: o pedido do João é montar o cabeçalho com
+`frontend/src/assets/LogoLight.png`, e não replicar a papelaria.
+
+**O QR permanece, e é a diferença deliberada contra o original.** Nenhum dos três exemplares oficiais
+tem QR (fato do packet); a validação pública é o valor deste bloco. Ele ocupa o canto inferior
+esquerdo, onde o original tinha a rubrica que não vamos indexar.
+
+**Consequência sobre a Global Constraint 7:** o placar sobe de 432 para o número declarado na Task 15
+— o Blade passa a ter conteúdo verificável (campos do documento oficial), e cada campo novo do
+snapshot é asserção.
 
 ---
 
@@ -822,6 +878,55 @@ tasks 9–12, não como task nova.
 
 ---
 
+## Task 15 — O Blade do certificado contra o documento oficial (D-P9)
+
+**Executor:** claude
+
+**Arquivos:**
+
+- `backend/app/Domains/Certification/Services/CertificateSnapshotBuilder.php`
+- `backend/app/Domains/Certification/Services/CertificatePdfService.php`
+- `backend/resources/views/certification/certificate.blade.php`
+- `backend/resources/images/lotus-logo.png` (novo — cópia de `frontend/src/assets/LogoLight.png`)
+- `backend/tests/Feature/Certification/CertificateSnapshotTest.php`
+- `backend/tests/Feature/Certification/CertificatePdfTest.php`
+
+**Passos (TDD — cada asserção nova vista RED antes do código):**
+
+1. **Snapshot ganha narrativa e temário.** `curso.description` (string|null) e `curso.modules`
+   (lista de `{sort_order, name, contents}`, por `sort_order`). O teste de chaves exatas passa a
+   exigi-los, e um teste novo prova que **editar/arquivar módulo depois não muda o snapshot** — é a
+   mesma promessa da D12 que `test_template_persistido_nao_muda_…` já faz para o template.
+2. **Logo vai para o backend.** `resource_path('images/lotus-logo.png')` embutida em base64 pelo
+   `CertificatePdfService`, como já é feito com o QR. O Blade recebe `$logo`; não lê arquivo.
+   Copiar, e não apontar para `frontend/src/assets/`: a imagem do container `app` não carrega a
+   árvore do frontend, e o Gotenberg só recebe o HTML — URL externa não resolveria.
+3. **Blade reescrito contra o documento**, na ordem do original: cabeçalho (`N°`/`Emisión` +
+   marca) · `CERTIFICADO DE CAPACITACIÓN` · a frase da OTEC com cidade e data · nome · RUT ·
+   empresa · a frase com o **RUT da empresa** · curso em destaque · narrativa · nota · nº de
+   registro · `{{RELATOR}}` sobre `Instructor` · QR · cláusula de rodapé. Página 2 com
+   `Temario del Curso` só quando há módulos. Retrato fixo (D-P9.3).
+4. **Nulo continua omitindo linha** (D-P7): sem nota, sem presença, sem vigência, sem descrição e
+   sem módulos, nenhuma dessas linhas é impressa — e o teste que já prova isso continua valendo.
+
+**Verificação:**
+
+- [ ] `docker compose exec -T app php artisan test --filter=Certification` verde.
+- [ ] O HTML enviado ao Gotenberg contém `CERTIFICADO DE CAPACITACIÓN`, `77.510.327-2`, o RUT da
+      empresa do snapshot, a narrativa, o nº de registro, `Instructor`, a cláusula de rodapé e as
+      seções do temário — todos **vindos do snapshot congelado**, nunca das relações vivas.
+- [ ] Certificado sem módulos e sem descrição → HTML **sem** `Temario del Curso`.
+- [ ] `docker compose exec -T app php artisan test` → **435 passed, 1 skipped**.
+- [ ] `cd backend && ./vendor/bin/pint <arquivos tocados>`.
+- [ ] **E2e contra a API real** (lição 12): `GET /api/certificates/{id}/pdf` devolve
+      `application/pdf` de um certificado com módulos e descrição, e o PDF gerado é aberto e
+      conferido contra `docs/templates/certificado.pdf` campo a campo.
+
+**DoD:** o PDF real, extraído e lido, traz cada campo da tabela do D-P9 no lugar do original — não
+"o teste passou".
+
+---
+
 ## Handoff de execução
 
 `executor: misto` — atribuição do João: **backend → Codex, frontend → Claude.**
@@ -833,6 +938,7 @@ tasks 9–12, não como task nova.
 | ~~9–12~~ | — | **migradas para o bloco de frontend (D-P8)** |
 | ~~13~~ | — | **migrada para o bloco de frontend (D-P8)** |
 | 14 | claude | gate, reescopado para o backend (D-P8) |
+| 15 | claude | conteúdo de documento legal contra o original (D-P9) — não delegável |
 
 **`paths_autorizados` do Codex (tasks 1–8):**
 

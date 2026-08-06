@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: ready_for_review
+workflow_state: executing
 next_owner: claude
-next_action: request_code_review
+next_action: continue_active_plan
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
@@ -12,7 +12,7 @@ blocker: null
 resume_state: null
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 6c5a2c4
-updated_at: 2026-08-05T22:40:00-03:00
+updated_at: 2026-08-06T09:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -353,6 +353,37 @@ provada contra a API real, não só em teste:** com `legal_name` diferente de `u
 `LOT-2026-1001` saiu com a razão social, e o snapshot sobreviveu ao rename posterior do cliente.
 
 Detalhe task a task e a íntegra do e2e em `.superpowers/sdd/progress.md`.
+
+### Volta a `executing` em 2026-08-06 — Task 15, o Blade contra o documento oficial (D-P9)
+
+**Não é reabertura por heurística: é o item 2 da fila que o próprio D-P8 escreveu** ("aproximar os
+Blades dos documentos oficiais"), e o D-P8 já dizia que isso "vem antes do frontend". O que mudou em
+2026-08-06 é que os templates deixaram de ser anexo de prompt e entraram no repositório —
+`docs/templates/certificado.pdf`, `manual.pdf` e `manual.docx` —, então o trabalho passou a ser
+executável em vez de descrito. O estado sai de `ready_for_review` porque **o review tem de ver o
+Blade final**, não um Blade que já se sabe que vai mudar.
+
+**O documento foi lido, não parafraseado.** `Read` não renderiza PDF neste ambiente (poppler-utils
+ausente no host e no container `app`), então o `certificado.pdf` foi aberto por extração direta:
+texto posicionado dos content streams (`x`, `y`, fonte, corpo) e as duas artes de fundo extraídas
+como JPEG e vistas. É daí que sai a tabela campo-a-campo do D-P9 — inclusive os três campos que o
+Blade da Task 7 não tinha de onde tirar.
+
+**As três decisões do D-P9, e o motivo de nenhuma criar coluna:** a narrativa é `courses.description`
+(coluna que existe desde 2026-07-08 e **não tinha um único consumidor**); o temário é
+`course_modules` (`name` + `contents`, cuja própria migration descreve o conteúdo autoral numerado
+que a página 2 imprime); e o certificado passa a ser **retrato fixo**, com
+`layout_config.orientation` perdendo o único consumidor — ele era parte do "layout genérico" que o
+D-P8 nomeia como o defeito, e `city` fica sendo a única chave viva do JSON.
+
+**Restrição do João mantida:** assinaturas continuam fora — o Blade imprime nome sobre linha, que é
+texto. A papelaria poligonal do original também não entra; o cabeçalho é montado com
+`frontend/src/assets/LogoLight.png`, copiada para `backend/resources/images/` porque a imagem do
+container `app` não carrega a árvore do frontend e o Gotenberg só recebe HTML.
+
+**O que o João deixou registrado como contexto e NÃO é trabalho deste bloco:** o Manual de Classe
+(aba de documentos da turma, PDF novo + botão de `.docx` para o redator, páginas 1/2/4 geradas) é
+para ser planejado **com o bloco de frontend** — instrução literal dele. Fica fora da Task 15.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
