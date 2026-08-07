@@ -10,9 +10,9 @@ use Tests\TestCase;
  * regra acionável do backend). Este teste é a fonte única: o que não está na
  * matriz não passa.
  *
- * `Certification` entra com ZERO arestas de propósito. Ele será escrito na
- * Sprint 4, depois deste guardrail, e é o domínio que mais se beneficia de
- * nascer sob a regra: cada import dele exige uma decisão explícita.
+ * `Certification` entrou com ZERO arestas de propósito e nasceu sob este
+ * guardrail na Sprint 4: cada import dele exigiu uma decisão explícita antes
+ * de abrir a matriz.
  *
  * A varredura é sobre o CÓDIGO do arquivo, não sobre as linhas `use`. Um teste
  * que só lesse `use` seria contornável por FQN inline
@@ -39,16 +39,28 @@ class DomainDependencyTest extends TestCase
      * Arestas permitidas, por classe alvo (spec D4). Lista que só encolhe por
      * refactor consciente: ampliar é 1 linha + justificativa no commit.
      *
-     * As 21 entradas cobrem os 42 imports cross-domain medidos em 2026-08-03 e
-     * classificados na spec §D2 — fluxo do processo (cotação -> turma ->
-     * matrícula), Identity como dono de pessoa, e relação Eloquent inversa que
-     * o ADR-02 permite.
+     * As 28 entradas combinam as 21 classes-alvo que cobriam os 42 imports
+     * medidos em 2026-08-03 com as 7 de Certification abertas neste plano —
+     * fluxo do processo (cotação -> turma -> matrícula), Identity como dono de
+     * pessoa, e relação Eloquent inversa que o ADR-02 permite.
      */
     private const ALLOWED = [
         'Catalog' => [
             'Identity\Models\Redator',
         ],
-        'Certification' => [],
+        // D-P2 do plano: TurmaStatus é a 7ª aresta exigida pela porta de conclusão.
+        // D-P9: CourseModule é a 8ª — o temário da página 2 do documento oficial
+        // é `course_modules`, e o snapshot precisa congelá-lo no ato da emissão.
+        'Certification' => [
+            'Catalog\Models\Course',
+            'Catalog\Models\CourseCertificateTemplate',
+            'Catalog\Models\CourseModule',
+            'Identity\Models\Redator',
+            'Operation\Enums\EnrollmentApprovalStatus',
+            'Operation\Enums\TurmaStatus',
+            'Operation\Models\Enrollment',
+            'Operation\Models\Turma',
+        ],
         'Commercial' => [
             'Catalog\Models\Course',
             'Identity\Models\User',

@@ -137,6 +137,16 @@ pnpm lint     # eslint .
 pnpm test     # vitest run (jsdom) — hooks de shared/; pnpm test:watch para iterar
 ```
 
+Inspeção visual de PDF (Poppler disponível no host e no container `app`):
+
+```bash
+pdfinfo <documento.pdf>                                      # metadados e número de páginas
+pdftoppm -png -r 144 -f 1 -l 1 <documento.pdf> /tmp/pdf-page # gera /tmp/pdf-page-1.png
+```
+
+Gere somente as páginas necessárias e sempre em `/tmp`, sem materializar derivados ao lado do
+documento fonte. Claude lê os PNGs gerados com `Read`; Codex os abre com `view_image`.
+
 Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`
 (PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev) e
 `createbuckets` (job de bootstrap do bucket do MinIO; sobe, cria e sai).

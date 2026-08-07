@@ -1,18 +1,19 @@
 ---
 schema_version: 1
-active_feature: certificacao-sprint-4
-active_work_item: certificacao-sprint-4
-workflow_state: planning
-next_owner: claude
-next_action: continue_active_planning
-active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
-active_plan: null
-context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: null
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: ba81a34
-updated_at: 2026-08-05T14:40:00-03:00
+active_spec: null
+active_plan: null
+context_packet: null
+blocker: null
+review_findings_approved: null
+last_completed_work_item: certificacao-sprint-4
+state_basis_commit: 089d005
+updated_at: 2026-08-07T23:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +49,43 @@ updated_at: 2026-08-05T14:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Bloco ativo — `certificacao-sprint-4`
+## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
+
+### Gate de fechamento — 2026-08-07
+
+**O item 0 foi provado contra a API real, não pela suíte** (lição 12; o D-P8 partiu o item em dois e
+deixou aqui a cadeia até a API pública). Sessão Sanctum por cookie → `GET /api/certificates/issuable`
+(1 turma, 9 matrículas) → `POST /api/enrollments/25/certificate` **201, `LOT-2026-1004`** →
+`GET .../pdf` **200 `application/pdf`, 44.570 bytes**, `pdfinfo` diz **A4 (594.96 × 841.92 pts)** →
+`POST .../revoke` **200**, e o **MD5 da coluna `snapshot` é idêntico antes e depois**
+(`f46b7cb2…`) → `GET /api/publico/certificados/<uuid>` **sem cookie, 200**, com o payload público e
+`status: revocado`.
+
+**As correções Q-1 a Q-4 foram provadas na mesma passada, contra o MySQL e o PDF real:** a sonda que
+demonstrou o 🔴 (ler o snapshot, salvar outro campo) agora responde **`REESCREVEU? NAO`** com
+`layout_config`/`orientation` intactos; o PDF traz **"El trabajador logró aprobar el curso con nota
+6,4."** — a nota que o filtro `is_numeric` apagava; e corromper `aluno.name` na coluna faz a rota
+pública do QR devolver **500 RFC 7807** em vez de 200 dizendo `emitido` com nome vazio.
+
+**Achado do gate, registrado e NÃO tocado:** o certificado de uma turma cujo curso tem
+`description` de **3.689 caracteres** (o seed de demo repete o parágrafo ~20×) sai em **3 páginas**,
+com o rodapé/QR/assinatura transbordando para a página 2. É o Q-6 do review da Task 15 — rodapé e QR
+absolutos sobre fluxo de tamanho ilimitado —, não regressão deste bloco: o certificado 2, com
+descrição normal, continua em **2 páginas e 41.766 bytes**, exatamente como a Task 16 mediu. Herdado
+pelo bloco de frontend, junto com o Manual de Classe em Letter.
+
+**Demais itens do gate:** suíte 457 passed, 1 skipped (1655 assertions) · `pnpm lint` e `pnpm build`
+verdes · Pint `passed` nos 16 arquivos · `typescript:transform` sem diff · matriz de domínios com as
+8 arestas · 7 rotas de certificação no `route:list` · zero `abort(4xx)` fora do 404 de recurso
+inexistente · alias `certificate` no morph map.
+
+**Pendências revisadas:** P-15 e P-21 tiveram o gatilho vencido por este bloco e foram reescritas —
+a P-21 agora espera **decisão do João sobre o formato do registro** do `simple-qrcode` (ADR próprio
+ou nota), mesma decisão pendente do P-20. Nenhuma pendência fechou; nenhuma nasceu.
+
+**Arquivamento assimétrico, de propósito:** o plano foi para `plans/archive/`, a **spec não** — as
+Tasks 9–13 migraram inteiras para o bloco de frontend da certificação (D-P8), que é o último
+consumidor dela. O item 1 do backlog não saiu: **encolheu** para o frontend que sobrou.
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
 com o item nomeado literalmente no argumento — "Bloco 7 · Sprint 4 · Certificação" — e o estado em
@@ -248,7 +285,352 @@ Spec: `docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md` — 21
 invariantes de comportamento e gate com item 0 próprio (o QR escaneado abrindo a validação real,
 provado **sem cookie** na ponta pública). Aprovada pelo João em 2026-08-05.
 
-## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
+### Plano escrito em 2026-08-05 — 15 tasks, `executor: misto`
+
+`docs/superpowers/plans/archive/2026-08-05-certificacao-sprint-4.md` (arquivado no fechamento de
+2026-08-07). Ordem: 0 baseline e branch · 1
+escritor do resultado acadêmico · 2 schema + models + matriz de domínios · 3 numeração atômica ·
+4 snapshot · 5 emissão com as 4 portas · 6 leitura/`issuable`/revogação · 7 PDF com QR · 8 rota
+pública · 9 `/validar/:uuid` · 10 histórico · 11 emissão/revogação/download · 12 resultado na tela
+da turma · 13 checkpoint visual do João · 14 gate.
+
+**Atribuição do João: backend → Codex (tasks 1–8), frontend → Claude (9–12).** Tasks 0 e 14 com
+Claude, 13 com o João. `paths_autorizados` do Codex fecha em `Certification/**`, os 4 arquivos de
+Operation do escritor acadêmico, `AppServiceProvider`, `config/app.php`, a migration, a view, os
+testes e `generated.ts` — **nada** em `frontend/src/features/**`, `frontend/src/app/**` ou `docs/`.
+
+**A escrita do plano achou três divergências contra a spec aprovada, todas declaradas no próprio
+plano em vez de silenciadas** (§Desvios):
+
+1. **A spec não previu de onde o diálogo de emissão tira os candidatos.** O diálogo mora em
+   `features/certification` (D18) e **não pode** importar `features/operation` (lei §5.6); sem
+   endpoint próprio a UI quebraria a lei ou re-derivaria as 4 portas no cliente. Entra
+   `GET /api/certificates/issuable`. O filtro "sem certificado vigente" roda **do lado de
+   Certification** (`pluck('enrollment_id')` + `whereNotIn`), porque uma relação
+   `Enrollment->certificate` seria aresta Operation → Certification, que não existe.
+2. **São 7 arestas de domínio, não 6.** O §5 da spec manda o gate provar "as 6 arestas declaradas —
+   nenhuma a mais", mas a porta 1 (turma concluída) exige `Operation\Enums\TurmaStatus`, que a lista
+   da spec omitiu. Com 6 a execução baterá numa contradição; a matriz nasce com 7.
+3. **`config/app.php` não tem `frontend_url`** (medido). O QR aponta para
+   `<FRONTEND_URL>/validar/{uuid}` e ler `env()` em runtime quebra com config cacheado — vira chave
+   de config, não `env()` solto.
+
+**Placar declarado, task a task:** backend 378 → 384 → 387 → 390 → 394 → 402 → 410 → 415 → **419**;
+frontend fica em **35** (o projeto só testa unitariamente hooks de `shared/`), e a Task 11 usa esse
+número como sinal: extrair `problemFromBlob` para `shared/api` não pode mudar a contagem.
+
+**Três provas que não aceitam sqlite** (lição 15): o índice único na coluna gerada (Task 2), a
+sequência sob `lockForUpdate` com duas conexões (Task 3) e a unicidade na emissão (Task 5) rodam
+também contra o MySQL do compose.
+
+### Corte alterado em 2026-08-05 pelo João — o frontend vira bloco próprio (D-P8)
+
+Decisão tomada **depois da Task 8 e antes da Task 9**, com o backend inteiro entregue e commitado
+(`cfe37a0` … `cb30ba5`). Dois motivos novos, ambos externos ao repositório e nenhum deles conhecido
+quando a spec foi aprovada: os **dois documentos oficiais da Lotus** entraram na sessão (o
+certificado `Roles y Responsabilidades del Jefe de Faena` e o `Libro de Control de Clases`), e os
+**prints do protótipo Figma** vão entrar — a fonte que o packet declarou `unavailable` e que o
+brainstorming aceitou como limitação. O João registra também que **certificados tem módulo próprio
+na interface**, o que a spec não modelou.
+
+Tasks 9–13 **migram inteiras**, não são canceladas. Consequências declaradas no plano, não
+escondidas: `generated.ts` fica com DTOs sem consumidor até o bloco seguinte (dívida com prazo), a
+invariante §4.2 migra junto, e o item 0 do gate parte em dois — a cadeia até a API pública sem
+cookie continua exigida aqui; só a ponta renderizada no navegador migra.
+
+**Fila que o João desenhou:** (1) revisão em duas frentes do backend — feita, abaixo; (2) aproximar
+os Blades dos documentos oficiais, com o Manual de Classe recebendo melhoria além da cópia; (3)
+replanejar o frontend com os prints e o módulo próprio.
+
+### Revisão em duas frentes — 2026-08-05, backend do bloco
+
+Pedida pelo João: padronização contra as demais entidades, leis/rules, e conformidade com spec e
+plano. Frente Codex (`mcp__codex__codex`, read-only) e frente Claude, independentes.
+
+**Limpo nas duas frentes, medido aqui e não aceito por relatório:** leis §5 sem violação (zero
+Repository, zero `abort(422)`, alias `certificate` no morph map, `generated.ts` gerado); rota
+pública sem RUT/id/nota/motivo; PDF sem materialização; unicidade do vigente, reemissão pós-revogação
+e terminalidade da revogação implementadas; suíte **426 passed + 1 skipped**, matriz com as 7
+arestas, Pint verde nos 36 arquivos, `migrate:fresh --seed` no MySQL.
+
+**O gate reprova por duas invariantes sem teste** (§4.5 auditoria com `user_id` — a emissão não tem
+teste nenhum e a da revogação só conta linhas; §4.7 PDF não materializado — nenhum teste afirma).
+
+**Achado 🔴 confirmado: o certificado imprime o nome errado da empresa.**
+`CertificateSnapshotBuilder` congela `client->user->name`; a D12 pede **razão social**, que é
+`clients.legal_name` — comentada `// razón social` na própria migration e usada por
+`TurmaData`, `PendingQuoteData`, `StudentData` e pelo `IssuableTurmaData` **deste mesmo bloco**. O
+teste não só deixa passar: ele **fixa o valor errado**, com fixture que separa de propósito
+`legal_name = 'Empresa Legal SpA'` de `user.name = 'Empresa Cliente'` e assere o segundo.
+
+**Decisão do João: corrigir o 🔴, os 🟡 e as duas lacunas do gate; os 🟢 viram débito.** Feito em
+`5158b16`. Além do A-1: **A-2** (`issuable` só encapsulava a porta do template e listava turma que o
+POST recusa com 422 — a regra da cidade virou `CertificateTemplateResolver::emissionCityFor`, fonte
+única da Action, do `issuable` e do snapshot, que tinha a terceira cópia; a porta do redator virou
+`whereHas('redatores')`), **A-3** (três `now()` numa emissão só, com o lock da sequência no meio: a
+virada do ano gravava `emitido_em` de 2027 num código `LOT-2026`) e **A-4** (`RevokeCertificateData`,
+porque a revogação validava por `$request->validate` enquanto todo o projeto valida em `Data`).
+
+**Débitos registrados, não corrigidos:** `abort(404)` é o único `abort()` de `backend/app/` e o
+route-model-binding `{certificate:uuid}` funcionaria; `uuid` gerado na Action e não no `booted()` do
+model, como faz `User` — morde quando a emissão em lote entrar; `der-fisico.md:73` ainda descreve
+`enrollment_id FK,UK` e `qr_code_hash UK`, os dois que a D3 recusou; e a corrida entre
+`RecordEnrollmentResultAction` e `ConcludeTurmaAction`, que o Codex marcou 🔴 e **não é achado deste
+bloco** — é a convenção pré-existente, idêntica em `StoreTurmaDocumentAction` e
+`DeleteTurmaDocumentAction`. **P-15 e P-21 estão satisfeitas** e fecham no `/fechar-sprint`.
+
+**Gate refeito e passando.** Suíte **432 passed, 1 skipped (1579 assertions)** — +6 sobre 426, um por
+teste novo; frontend **35 passed** inalterado; Pint, build e lint verdes; `generated.ts` com só o
+`RevokeCertificateData` a mais, no mesmo commit do Data. **Item 0 provado e2e contra a API real com
+sessão Sanctum** (lição 12): resultado acadêmico gravado, `issuable` escondendo a turma online sem
+cidade e mostrando-a depois do template com `city`, emissão `LOT-2026-1000/1001/1002` com `valido_ate`
+do template mais recente, PDF **200 `application/pdf` de 23.831 bytes** começando em `%PDF-1.4`,
+rota pública **sem cookie** devolvendo 200 sem RUT/id/nota/motivo, revogação sem motivo em 422 es-CL,
+a mesma URL passando a `revocado`, `uuid` inexistente em 404 e reemissão pós-revogação. **A D12 foi
+provada contra a API real, não só em teste:** com `legal_name` diferente de `user.name`, o
+`LOT-2026-1001` saiu com a razão social, e o snapshot sobreviveu ao rename posterior do cliente.
+
+Detalhe task a task e a íntegra do e2e em `.superpowers/sdd/progress.md`.
+
+### Volta a `executing` em 2026-08-06 — Task 15, o Blade contra o documento oficial (D-P9)
+
+**Não é reabertura por heurística: é o item 2 da fila que o próprio D-P8 escreveu** ("aproximar os
+Blades dos documentos oficiais"), e o D-P8 já dizia que isso "vem antes do frontend". O que mudou em
+2026-08-06 é que os templates deixaram de ser anexo de prompt e entraram no repositório —
+`docs/templates/certificado.pdf`, `manual.pdf` e `manual.docx` —, então o trabalho passou a ser
+executável em vez de descrito. O estado sai de `ready_for_review` porque **o review tem de ver o
+Blade final**, não um Blade que já se sabe que vai mudar.
+
+**O documento foi lido, não parafraseado.** `Read` não renderiza PDF neste ambiente (poppler-utils
+ausente no host e no container `app`), então o `certificado.pdf` foi aberto por extração direta:
+texto posicionado dos content streams (`x`, `y`, fonte, corpo) e as duas artes de fundo extraídas
+como JPEG e vistas. É daí que sai a tabela campo-a-campo do D-P9 — inclusive os três campos que o
+Blade da Task 7 não tinha de onde tirar.
+
+**As três decisões do D-P9, e o motivo de nenhuma criar coluna:** a narrativa é `courses.description`
+(coluna que existe desde 2026-07-08 e **não tinha um único consumidor**); o temário é
+`course_modules` (`name` + `contents`, cuja própria migration descreve o conteúdo autoral numerado
+que a página 2 imprime); e o certificado passa a ser **retrato fixo**, com
+`layout_config.orientation` perdendo o único consumidor — ele era parte do "layout genérico" que o
+D-P8 nomeia como o defeito, e `city` fica sendo a única chave viva do JSON.
+
+**Restrição do João mantida:** assinaturas continuam fora — o Blade imprime nome sobre linha, que é
+texto. A papelaria poligonal do original também não entra; o cabeçalho é montado com
+`frontend/src/assets/LogoLight.png`, copiada para `backend/resources/images/` porque a imagem do
+container `app` não carrega a árvore do frontend e o Gotenberg só recebe HTML.
+
+**Task 15 entregue em 2026-08-06, `cbb9e09` — e provada no PDF real, não na suíte.** Suíte
+**436 passed, 1 skipped (1590 assertions)**, +4 sobre 432, um por teste novo; Pint verde nos 5 `.php`
+tocados; frontend não tocado (`git status` sem uma linha em `frontend/`). **E2e com sessão Sanctum**
+contra `migrate:fresh --seed` no MySQL: `LOT-2026-1000/1001/1003` emitidos pela API real,
+`GET /api/certificates/{id}/pdf` devolvendo `application/pdf` de ~41 KB, e **o PDF baixado foi aberto
+e lido** — `pdftotext -layout` para conferir campo a campo e `pdftoppm` para ver as duas páginas.
+Estão no documento, nesta ordem: `N° LOT-2026-1001` · `Emisión: 06-08-2026` · a marca ·
+`CERTIFICADO DE CAPACITACIÓN` · `En Santiago a 06-08-2026, OTEC LOTUS SpA [77.510.327-2] certifica
+que:` · nome · RUT do aluno · razão social · `El trabajador de la empresa RUT: 77.555.333-2,
+participó en el curso:` · curso + nome técnico + horas · a narrativa · `El trabajador logró aprobar
+el curso con nota 6.4.` e `Asistencia registrada: 92.50%.` (no `LOT-2026-1003`, o único com
+resultado lançado) · vigência · `El N° de Registro…` · `Ana Reyes` sobre `Instructor` · QR ·
+cláusula de rodapé. **Página 2 com `Temario del Curso`**, os dois módulos e os bullets de
+`contents` — inclusive com o marcador `*` escrito à mão sendo removido na renderização. Certificado
+sem módulos e sem descrição não imprime a página 2, e isso tem teste nomeado.
+
+**Dois achados da execução, os dois declarados no plano em vez de silenciados:** a 8ª aresta da
+matriz (`Catalog\Models\CourseModule`) — bastava não tipar o closure do `map` para o
+`DomainDependencyTest` não ver nada, e guardrail com escape usado é pior que guardrail nenhum; e a
+frase da narrativa, que no original só fecha se `courses.description` começar por verbo, enquanto o
+dado real do projeto é sintagma nominal. A oração fecha antes (`… abordó los siguientes contenidos:`)
+e a descrição vira parágrafo próprio.
+
+**Nota de ambiente, não do produto:** `Read` não abre PDF aqui porque falta `poppler-utils`; ele foi
+instalado **no container `app` em runtime** (`apk add poppler-utils`) só para a leitura da prova.
+Não entrou em `Dockerfile` nem em dependência do projeto — some no próximo rebuild, e nada do código
+o usa.
+
+**O que o João deixou registrado como contexto e NÃO é trabalho deste bloco:** o Manual de Classe
+(aba de documentos da turma, PDF novo + botão de `.docx` para o redator, páginas 1/2/4 geradas) é
+para ser planejado **com o bloco de frontend** — instrução literal dele. Fica fora da Task 15.
+
+### Review da Task 15 — 6 achados aprovados, corrigidos pelo Codex e provados aqui (2026-08-06)
+
+Review em duas frentes (lente Claude + Codex read-only, ALTO RISCO por ser documento de peso legal).
+Os seis achados foram **aprovados pelo João**, a correção **delegada ao Codex** e a revisão das
+correções feita com Claude. **Todos provados, e o gate reconferido aqui — não aceito por relatório:**
+suíte **441 passed, 1 skipped (1604 assertions)**, +5 sobre 436; Pint `passed` nos 5 `.php` tocados;
+frontend intocado. RED visto para os testes novos; **Q-5 provado não-vacuoso por mutação**; Q-1, Q-2,
+Q-4 e Q-6 provados **no PDF real** pela API com sessão Sanctum.
+
+O que cada um era, e o que a correção fez:
+
+- **Q-1 🔴 — o período da capacitação sumia do certificado quando `courses.description` é null**, e o
+  teste fixava esse comportamento. O `$periodo` vivia dentro do `@if ($description)`; agora tem
+  ramo próprio (`La actividad fue realizada {periodo}.`) e o `$periodo` vira `null` explícito quando
+  falta data, em vez de imprimir frase quebrada.
+- **Q-2 🟡 — razão social e RUT da OTEC emissora eram literais no Blade** e não congelavam no
+  snapshot, violando a D12 no mesmo campo que o A-1 já tinha corrigido para o cliente. Nasce
+  `snapshot.emissor` no `CertificateSnapshotBuilder`, alimentado por `config('app.certificate_issuer')`
+  (chave nova, com `env()` — nunca `env()` em runtime), e o Blade lê o snapshot com a config só como
+  fallback para os certificados já emitidos.
+- **Q-3 🟡 — `description` era lido sem defesa** enquanto `modules` usava `?? []`, na mesma leva.
+  Toda leitura de snapshot no Blade passa a `data_get` com default.
+- **Q-4 🟡 — `ltrim` com charlist multibyte corrompia o travessão no temário** (provado por sonda):
+  `ltrim($line, "*-•\t ")` opera byte a byte e comia pedaço de `•`/`–`. Virou `preg_replace` com
+  `/u` e lookahead, que só remove marcador seguido de espaço ou fim de linha.
+- **Q-5 🟡 — as asserções de omissão do `CertificatePdfTest` viraram vacuidade** depois da reescrita
+  do Blade. Reescritas para falhar de verdade; a não-vacuidade foi provada por mutação.
+- **Q-6 🟡 — rodapé e QR eram `position: absolute` sobre fluxo de tamanho ilimitado**: descrição ou
+  temário longos passavam por baixo da assinatura. A página vira flex column com
+  `.certificate-footer` em `margin-top: auto`.
+
+**Achado NOVO da revisão, fora dos seis, e por isso a decisão do João foi separada:** o Gotenberg
+**não recebe tamanho de papel** e devolve **Letter (612×792 pt)**, enquanto o Blade declara
+`@page size: A4` e o Q-6 calibra `min-height: 297mm` — documento legal chileno saindo em papel
+errado. **Defeito pré-existente da Task 7**, não introduzido pelas correções.
+
+**Decisão do João em 2026-08-06:** commitar as correções dos seis achados, e **tratar o A4 dentro
+deste bloco** — não vira débito. O papel errado é a Task 16; o bloco só volta a `ready_for_review`
+depois dela, porque o review tem de ver o PDF no papel certo.
+
+Correções commitadas em `cd457bc`, com o gate reconferido antes do commit.
+
+### Task 16 — o papel do certificado (2026-08-06)
+
+**O tamanho já estava declarado; quem não o lia era o Gotenberg.** O Blade tem
+`@page { size: A4 portrait; margin: 0 }` desde a Task 15, mas o Chromium só honra o `@page` do CSS
+quando recebe `preferCssPageSize`; sem ele imprime no default do Gotenberg, **Letter**. A correção é
+uma linha no `CertificatePdfService` — `preferCssPageSize=true` no multipart —, e não duplica o A4
+no PHP de propósito: **o tamanho continua declarado uma vez só, no CSS do documento**, que é onde o
+`min-height: 297mm` do `.page` já estava calibrado.
+
+**Provado nos dois sentidos.** O teste novo (`test_gotenberg_recebe_o_tamanho_de_papel_declarado_no_css`)
+foi visto reprovando contra o serviço antigo com a **regex final** — o primeiro RED tinha regex
+errada e não valia como prova. Suíte **442 passed, 1 skipped (1606 assertions)**, +1 sobre 441; Pint
+`passed` nos 2 `.php` tocados; frontend intocado.
+
+**Prova no PDF real, não na suíte** (lição 12): `GET /api/certificates/2/pdf` com sessão Sanctum
+devolveu **200 `application/pdf`, 41.766 bytes**, e o `pdfinfo` do arquivo baixado diz
+**`594.96 x 841.92 pts (A4)`, 2 páginas** — antes era Letter (612×792). As duas páginas foram
+**renderizadas e vistas**: rodapé, QR e assinatura assentam no fim da página 1 (Q-6 continua de pé
+no papel certo), a página 2 traz o temário, e nenhuma terceira página órfã aparece. O Q-4 também
+aparece no papel: `-5 kV nominal` e `–5 kV a 15 kV` chegam íntegros enquanto os marcadores `*`/`•`
+somem.
+
+**Achado registrado e NÃO tocado:** `manual-turma.blade.php` não declara `@page` nenhum e o
+`ManualPdfService` também não manda tamanho — o Manual de Classe sai em Letter pelo mesmo motivo.
+É o layout genérico que o D-P8 já nomeia como defeito, e o João mandou planejar o Manual **com o
+bloco de frontend**. Fica como contexto para aquele bloco, não como trabalho deste.
+
+### R-1 a R-5 aplicados e três refatorações de arquitetura (2026-08-07) — `28ac6a3`…`e7626b4`
+
+**Os cinco achados do review das correções, aprovados pelo João, foram corrigidos em `28ac6a3`.**
+R-1 🟡 o `data_get(..., [])` do Q-3 não cobria valor `null` — o default do `data_get` só vale para
+chave **ausente**, então `curso.modules: null` entrava no `@foreach` e derrubava o PDF em 500
+(provado pela API real antes do fix). R-2 🟡 o A4 não tinha guarda; R-3 🟡 a origem em `config` do
+emissor não era guardada, porque o teste fixava os mesmos valores do default — os overrides passaram
+a usar valores **diferentes** de `config/app.php`; R-4 🟢 a "descrição longa" do teste de rodapé era
+decorativa; R-5 🟢 `.env.example` sem `CERTIFICATE_ISSUER_NAME`/`RUT`.
+
+**Depois disso o João trouxe uma revisão paralela de arquitetura** (skill `improve-codebase-
+architecture`, executada por ele fora desta sessão) e mandou aplicar **só o backend, e só o que toca
+o bloco ativo** — B4–B7 e C1–C7 do relatório ficam fora por escopo, não por discordância. **As três
+alegações foram conferidas no código antes de qualquer edição**, e uma sub-alegação foi medida como
+**falsa e registrada como falsa**: o relatório dizia que `layout_config.orientation` era "gravado e
+nunca lido", e o `grep` não acha uma ocorrência sequer da chave em lugar nenhum do repositório —
+ela já não existe desde a Task 15 (D-P9).
+
+- **B3 (`eccf0ee`) — o transporte do Gotenberg estava escrito duas vezes e as duas cópias já haviam
+  divergido:** `CertificatePdfService` recebeu `preferCssPageSize` na Task 16 e `ManualPdfService`
+  não. Nasce `App\Shared\Pdf` — `HtmlToPdf` (interface), `GotenbergHtmlToPdf` (o único lugar que
+  conhece multipart), `PageOptions` e `FakeHtmlToPdf`. O teste do certificado deixou de ser regex
+  sobre corpo multipart; **um teste só** (`Tests\Feature\Shared\HtmlToPdfTest`) conhece o formato do
+  transporte. O Manual segue em `PageOptions::converterDefault()` **de propósito** — ele não declara
+  `@page`, e mudar o papel dele é trabalho do bloco de frontend, não deste.
+- **B2 (`a33d793`) — o snapshot congelado era `array` sem contrato**, com dois leitores de política
+  oposta (o Blade defendia com `data_get`, os testes indexavam cru) e `Record<string, any>` no
+  `generated.ts`. Vira `CertificateSnapshotData` (+6 DTOs aninhados) com `CURRENT_VERSION = 2` e um
+  `fromArray` **tolerante que nunca estoura**: certificado emitido em 2026 tem de continuar
+  renderizando em 2030, mesmo com chave que o código atual não conhece. O `CertificateSnapshotCast`
+  aceita DTO **ou array cru** — é assim que o teste simula o schema versão 1 sem falsificar o
+  caminho de produção. `generated.ts` regenerado no mesmo commit; a regra da vigência e a leitura de
+  `city` no formato legado (`template.layout_config.city`) continuam funcionando.
+- **B1 (`e7626b4`) — as seis portas da emissão estavam escritas duas vezes:** guardas em PHP na
+  `IssueCertificateAction`, restrições em Eloquent no `CertificateController::issuable`. É a mesma
+  classe de bug que já custou A-2 e D-P8 — **a lista promete um certificado que o POST recusa com
+  422**. Nasce `CertificateEligibility`, com cada porta como par adjacente `assert*`/`constrain*` e
+  a mensagem escrita uma vez; a Action recebe o `IssuanceContext` já resolvido e não reconsulta
+  template nem cidade. `CertificateTemplateResolver::latestForCourse()` deixa de ter query própria e
+  deriva de `latestByCourse()`, então "template vigente" também volta a ter uma implementação só.
+
+**A invariante do B1 tem teste nos dois sentidos, e o RED foi visto** (lição 10):
+`CertificateEligibilityTest` prova que tudo que `issuableTurmas()` mostra passa em `assert()` e que
+uma turma por porta fechada some da lista **e** leva 422 na emissão. Removendo
+`constrainRedatorDesignado` da face 2, o teste falha nomeando a porta que divergiu.
+
+**Gate reconferido aqui, não aceito por relatório:** suíte **449 passed, 1 skipped (1634
+assertions)**, +7 sobre 442; Pint `passed` nos 6 `.php` do B1; `pnpm build`, `pnpm lint` e **35
+passed** no frontend; `typescript:transform` rodado de novo **sem diff** (o `generated.ts` do B2 já
+está commitado com ele).
+
+**E2e com sessão Sanctum contra a API real** (lição 12): `GET /api/certificates/issuable` devolveu
+a turma 3 com 10 matrículas; `POST /api/enrollments/24/certificate` emitiu **`LOT-2026-1003`** com
+`snapshot.schema_version = 2`, `template.city = Santiago` e `emissor` vindo da config; a mesma
+matrícula **sumiu da lista** na chamada seguinte (a porta 3 fechando nas duas faces, provada no
+banco real); e `GET /api/certificates/4/pdf` devolveu **200 `application/pdf`, 44.292 bytes**, com
+`pdfinfo` em **`594.96 x 841.92 pts (A4)`**. As três páginas foram **renderizadas e vistas**: o
+documento traz emissor, razão social, narrativa, QR, assinatura sobre `Instructor` e o temário com
+`-5 kV nominal` / `–5 kV a 15 kV` íntegros (Q-4 de pé), rodapé no fluxo (Q-6 de pé).
+
+**O que ainda NÃO aconteceu, e por isso o estado é `reviewing` e não `ready_for_closure`:** as três
+refatorações são código novo e substancial, e **nenhuma passou por uma lente de review** — só pelo
+gate. O próximo passo é repetir o `/revisar-sprint` sobre `28ac6a3..e7626b4`.
+
+### Correções do review — 2026-08-07, Q-1 a Q-7 aplicados
+
+O João aprovou os sete. **Suíte após as correções: 457 passed, 1 skipped, 1655 assertions**; Pint
+`passed` nos 16 arquivos; `typescript:transform` sem diff no `generated.ts` (só métodos mudaram, não
+a forma dos DTOs). **Cada um dos 8 testes novos foi visto reprovar contra o código antigo**
+(`git stash` do arquivo de produção, roda, `stash pop`) — lição 10.
+
+Duas correções mudam comportamento de propósito e ficam registradas aqui:
+
+- **Q-3 — nota não-numérica volta a ser impressa.** `finalGrade()` filtrava por `is_numeric` e
+  apagava `"6,4"` do documento em silêncio; `enrollments.grades` é validado só como `array`, então a
+  nota chega como o redator lançou, vírgula inclusive. Agora omite apenas o que não dá para
+  imprimir — array, objeto, booleano, string vazia (D-P7 preservado). O `AcademicResult` tipado
+  segue como B6 no backlog; isto é a defesa até lá.
+- **Q-4 — `schema_version` passou a governar a leitura, e snapshot corrompido falha alto.** Só a
+  versão 1 cai para `config('app.certificate_issuer')` quando falta `emissor`; da 2 em diante o
+  emissor é o congelado, senão a OTEC de HOJE entraria num documento antigo. E `aluno.name`,
+  `curso.name` e `emissor.name` em branco viram `CorruptedSnapshotException` (500 pelo handler RFC
+  7807) nos dois consumidores legais — PDF e rota pública do QR. Um 200 dizendo `status: emitido`
+  com nome vazio é prova falsa; erro visível vira chamado.
+
+Três testes que comparavam `assertEquals($snapshot, $reloaded->snapshot)` passaram a comparar
+`toArray()`: sem o cache de casts, cada leitura reconstrói o DTO, e a comparação objeto a objeto
+batia no `_dataContext` do spatie — escrituração da biblioteca, não conteúdo do documento.
+
+### Review das três refatorações — 2026-08-07, 7 achados aguardando o João
+
+Duas frentes (lente Claude + `mcp__codex__codex` read-only), ALTO RISCO por documento de peso legal.
+Suíte reconferida aqui, não aceita por relatório: **449 passed, 1 skipped, 1634 assertions**.
+
+**O 🔴 foi provado por sonda, não deduzido.** `CertificateSnapshotCast` é um cast de objeto, e o
+Eloquent guarda o valor no cache de casts: `Model::save()` chama `mergeAttributesFromCachedCasts()`
+antes de qualquer coisa, então **ler `$certificate->snapshot` e salvar o mesmo model reescreve a
+coluna** a partir do DTO. Rodado no MySQL de dev dentro de `beginTransaction`/`rollBack` com um
+snapshot da versão 1: `template.layout_config` (com `orientation`) **sumiu**, `emissor` **da config
+atual** entrou num documento de 2026 — a mesma classe de defeito que o A-1 e o Q-2 já corrigiram —
+e `schema_version: 1` foi carimbado numa estrutura versão 2. Nenhum caminho de produção dispara
+hoje: `RevokeCertificateAction` recarrega o model com `lockForUpdate` e não lê o snapshot antes do
+`update`. O bloco de frontend, que lê certificado em toda tela, é quem encosta nisso.
+
+**A divergência entre os revisores foi mostrada, não resolvida em silêncio:** o Codex marcou a troca
+de `template.layout_config` por `template.city` como perda de dado congelado. Conferido no código —
+`orientation` não existe em lugar nenhum desde o D-P9 e a `city` nomeada é a decisão do próprio B2,
+com teste atualizado de propósito. **Não é achado.** O risco real que sobra é o Q-1: é ele que apaga
+o `layout_config` dos snapshots v1 que ainda o carregam.
+
+## Penúltimo item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -470,7 +852,7 @@ legados), B-7, Q-16, Q-6; P-26; P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-
 `backend/resources/views/welcome.blade.php` sujo na árvore, que não é do bloco e não entrou em commit
 nenhum. **Nenhum item foi promovido** — a escolha do próximo é do João.
 
-## Penúltimo item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
+## Antepenúltimo item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
 com o escopo nomeado no argumento — "Hardening pré-Sprint 4" — e o estado em `idle`; o comando não
@@ -731,353 +1113,3 @@ manter o teto de dez.
 P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; **o `Status` das tasks H.4.4/H.4.5/H.4.9 no Notion
 não foi mexido** — o plano não previa write externo neste bloco, e mudar status é escopo que o João não
 autorizou (mesma decisão do fechamento anterior).
-
-
-## Antepenúltimo item fechado — 2026-08-04 (`hardening-guardrails-e-transportes-pre-sprint-4`)
-
-> **Renomeado em 2026-08-04, na revisão da spec pelo João.** Era
-> `hardening-estrutural-pre-sprint-4-restante`. Com H.4.4, **H.4.5** e H.4.9 seguindo abertos,
-> "restante" prometia o que o bloco não entrega — o mesmo defeito que o bloco anterior teve de
-> declarar no fechamento. O id novo descreve o corte. Renomeados juntos: `active_feature`,
-> `active_work_item`, o arquivo e o `block_id`/`packet_id` do packet, e o arquivo da spec. **A troca
-> de id não é gatilho de staleness do packet** — o escopo externo reconciliado (H.3.1 + H.4.4–H.4.9)
-> não mudou.
-
-**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
-sem argumento, com o estado em `idle`; a seleção veio da pergunta explícita, não do comando). É o
-**restante** do mesmo item que o bloco `hardening-estrutural-pre-sprint-4` fechou parcialmente em
-2026-08-04: entregues H.4.1, H.4.2 e H.4.3; abertos **H.3.1 e H.4.4–H.4.9**. O backlog já registra
-esse recorte desde `cc24cf2`, então nenhuma edição dele acompanha esta transição.
-
-**Rota `context_required`, por gatilho de staleness — não por rotina.** O packet de 2026-08-03
-(`context-packets/hardening-estrutural-pre-sprint-4.md`, `status: ready`, `base_commit` `563e78c`)
-cobre as 10 tasks Notion, inclusive as 7 restantes, com os sinais de aceite de cada uma. **Ele está
-stale por dois dos seus próprios gatilhos declarados** (§Staleness triggers, linhas 89 e 91):
-
-1. **Mudança semântica no item 1 do backlog** — H.4.1/H.4.2/H.4.3 saíram da lista e o restante
-   passou a ser citado por ID do Notion.
-2. **Decisão posterior do João que alterou o corte** — o brainstorming de 2026-08-03 escolheu 3 dos
-   10; o corte que o packet declarava "ainda aberto" foi decidido e consumido.
-
-Some-se a isso que `base_commit`, `state_blob_sha` e `progress_blob_sha` do packet apontam para um
-`HEAD` anterior a 6 commits de conteúdo + review. Logo o packet **não é reaproveitado como está**;
-o Codex gera um novo, para o escopo restante.
-
-**Ponto de partida que o novo packet precisa reconciliar, não redescobrir:** o packet antigo já
-registrou que **o Drive não tem documento que delimite este hardening** (buscas dirigidas no V2
-voltaram só ADRs, Certification e setup) e que **H.4.5 nunca apareceu em nenhuma das duas listas do
-backlog** — só no conjunto Notion. Com H.4.4 agora explicitamente no escopo e H.4.5 dependendo dele,
-a inclusão do H.4.5 volta a ser decisão do brainstorming, pela segunda vez.
-
-**Dependências Notion que sobrevivem ao corte anterior** (do packet antigo, §Constraints): H.4.4
-dependia de H.4.3 — **satisfeita**, o vitest existe desde 2026-08-04. H.4.6 dependia de H.4.1 —
-**satisfeita**. H.4.7/H.4.8 dependiam de H.4.2 — **satisfeitas**. Restam internas: H.4.5→H.4.4 e
-H.4.9→H.4.6. Nenhum item restante está bloqueado por algo fora deste bloco.
-
-**Context Packet gerado pelo Codex em 2026-08-04** (`lotus-context-packet`, `mcp__codex__codex`
-sandbox read-only — sem o problema de socket do docker do bloco anterior, porque geração de packet
-não precisa de container), `base_commit` `7419c32`, `status: ready` — 14 fontes, nenhuma
-`unavailable`: as 7 tasks Notion buscadas **uma a uma** pela base canônica por ID, 4 alvos do Drive
-reconfirmados, 1 falso positivo de busca ampla descartado explicitamente
-(`Planilha_Projetos_Integrada`, fora do V2) e 2 chaves de repositório.
-
-**Validação do contrato, conferida e não aceita por relatório:** markers exatos, frontmatter completo
-com `plan_*`/`spec_*` em `null` (os ponteiros do estado são nulos, e o contrato proíbe inventá-los),
-exatamente 8 key facts (no teto), `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum gatilho de
-staleness citando hash de provenance ou a própria transição promotora. **Os 7 blob SHAs do packet
-foram recalculados aqui com `git hash-object` e batem todos** — `state.md`, `progress.md`,
-`backlog.md`, `DomainDependencyTest.php`, `eslint.config.js`, `package.json`, `vite.config.ts`.
-
-**O packet excedeu de propósito o teto de 5 artefatos externos**, declarando o motivo no próprio
-registro de fontes: a instrução exigia reconsulta individual das 7 páginas, mais a revalidação dos
-alvos de Drive que sustentavam a ausência. Aceito — o excesso está justificado no packet, como a
-SKILL permite.
-
-**Dois fatos que o packet confirmou, e que mudam o ponto de partida do brainstorming:**
-
-1. **As 7 tasks seguem `Status: Backlog` no Notion** — nenhuma foi marcada concluída pelo bloco
-   anterior, e nenhuma mudou de conteúdo desde `2026-08-03T21:49`. O escopo externo é o mesmo.
-2. **A leitura do H.4.5 mudou.** O packet antigo dizia que ele não aparecia em lista nenhuma; agora
-   o backlog cita o intervalo `H.4.4–H.4.9` por ID, que **o alcança** — mas as listas em prosa
-   (2 bloqueantes + 4 pilotos) somam 6 e não o enumeram. A contradição continua, só mudou de forma.
-   O packet registra e **não decide**: a inclusão do H.4.5 volta ao brainstorming pela segunda vez.
-
-**Reconciliado, não redescoberto:** o Drive V2 segue sem documento que delimite este hardening — os
-alvos confirmados tratam ADRs, Certification ou setup. Ausência **confirmada** de novo nesta geração,
-não herdada do packet anterior.
-
-**Corte final, depois da revisão da spec pelo João em 2026-08-04:** entram **H.3.1, H.4.6, H.4.7 e
-H.4.8**. Ficam fora **H.4.4** (`SearchableTableFrame`, 9 tabelas / 932 linhas), **H.4.9** (builders de
-teste, 76 arquivos) e **H.4.5** (retirado na revisão). Critério do brainstorming: *fechar o que é
-barato e não precisa de prova visual*, isolando os refactors grandes em blocos próprios.
-
-**A medição do código mudou três tasks antes de o corte ser feito.** O Notion descreve intenção; o
-repositório disse outra coisa:
-
-1. **H.3.1 não tinha o buraco que a task supõe.** São **6 URI patterns / 7 rotas** com ≥2 bindings de
-   model; **5 já estão guardadas** (2 por `->scopeBindings()`, 3 por `abort_unless(...404)` manual) e
-   a restante (`turmas/{turma}/redatores/{redator}`, que responde POST **e** DELETE) é **N:N** —
-   redator não pertence à turma, não há posse a checar. Os 3 recursos que a task nomeia
-   (`addresses`, `contacts`, `templates`) têm rota **plana** (`PUT /addresses/{address}`): o pai nem
-   entra na URL, e a permissão é global. Sem furo de privilégio. A task vira guardrail + unificação
-   de mecanismo, com comportamento observável inalterado.
-2. **H.4.8 já estava em paridade perfeita** — 443 chaves em `en`/`es-CL`/`pt-BR`, zero diff em
-   qualquer direção. Guardrail puro, zero correção. Mesma forma do H.4.1 do bloco anterior.
-3. **H.4.5 se resolveu ao contrário do que a task sugere** — e por isso saiu do bloco sem perder a
-   conclusão (ver o parágrafo da revisão, abaixo).
-
-**Duas famílias no H.4.6, não 8 ocorrências soltas:** DTO calculando valor de domínio
-(`BudgetData`+`BudgetSummaryService`, `TurmaData`+`TurmaHabilitacaoService`) contra assinatura de URL
-na serialização (`photo_url` ×4, `download_url` ×2). O piloto é o `BudgetData` — dinheiro, 4 call
-sites, todos do próprio controller, sem cascata. `TurmaData` tem destino explícito (D8) e a família 2
-fica, com razão registrada (D10).
-
-**Mecânicas conferidas antes de entrarem na spec, não supostas** (lição 13): `Budget::files()`,
-`Quote::files()`, `Redator::documents()` e `Turma::files()` existem e são `MorphMany`; e
-`signatureParameters()`, `enforcesScopedBindings()` e `preventsScopedBindings()` existem no Laravel
-13.8 instalado. São eles que deixam o guardrail **ler** a rota — pela assinatura tipada, não por
-regex de URI nem por texto de controller, evitando o defeito de regex-que-atravessa-comentário do
-bloco anterior.
-
-**Risco único do bloco, isolado na spec §D12:** o H.4.7 toca caminhos de upload de documento com peso
-legal, e a falha da lição 6 é **silenciosa** (`Content-Type` fixado → `File` vira `{}` → upload vazio
-com 201/204 de sucesso). Build e lint não veem. Exige teste direto do helper (D13b) **e** upload real
-contra a API em 2 dos 6 pontos adotados.
-
-**Revisão da spec pelo João em 2026-08-04 — 8 correções, e 3 delas eram erro meu de medição ou de
-mecânica.** A spec foi reescrita inteira; o corte caiu de 5 para 4 tasks.
-
-**As 3 factuais, conferidas antes de aplicadas:**
-
-1. **H.3.1 são 6 URI patterns / 7 rotas, não 6 rotas.** `turmas/{turma}/redatores/{redator}` responde
-   **POST e DELETE** — dois registros no roteador sobre o mesmo padrão. Confirmado por
-   `artisan route:list --json`, não pelo arquivo de rotas.
-2. **H.4.7 são 7 `new FormData()`, não 6** — 6 de forma simples + 1 complexo. Eu havia contado
-   `useCommercialFiles` (que tem 2) como um ponto na prosa e depois escrito "5 simples".
-3. **O guardrail identifica model por `signatureParameters()`, não por regex de URI.** Regex erraria
-   nos dois sentidos: `{file}` não diz que é model, e `users/{user}/photo` tem um binding só apesar
-   de parecer nested.
-
-**A correção de desenho mais importante — allowlist morre, silêncio reprova.** A isenção da rota N:N
-deixa de ser lista dentro do teste e vira **`->withoutScopedBindings()` na própria rota**, com o
-motivo em comentário ao lado. `preventsScopedBindings()` existe no Laravel 13.8 e distingue
-*declarado false* de *não declarado* — é isso que permite reprovar a rota que não declara **nenhuma**
-das duas. Allowlist envelheceria longe da rota; a declaração é lida por quem a edita. O gate ganhou
-prova nos dois sentidos: rota sem declaração reprova, a mesma rota com `withoutScopedBindings` passa.
-
-**H.4.5 saiu do bloco.** O mérito já estava resolvido no brainstorming e **não se perde**: eliminar os
-7 aliases regrediria a fronteira de query-em-componente e **passaria no lint**, porque o seletor não
-casa `useCrudPage(xApi)`. A resposta correta quando H.4.5 for executado é "justificar e fechar o
-escape do seletor", não "eliminar". **Obrigação de fechamento:** essa nota vai para o `backlog.md`
-junto do item — não foi escrita agora porque planejamento não edita backlog.
-
-**Três exigências novas que o gate não tinha:**
-
-- **D9 — decisão de saída do piloto (H.4.6), escrita antes de executá-lo.** Três sinais possíveis
-  (técnica paga / só empurra o locator para o chamador / inconclusivo), cada um com consequência
-  definida, inclusive **reverter a task**. O fechamento nomeia qual ocorreu — piloto sem critério de
-  saída é refactor com nome bonito. **D8** dá destino explícito ao `TurmaData`: fora deste bloco, e
-  decidido por D9, não por sessão futura sem critério.
-- **D13b — `postMultipart` ganha teste direto**, não só a prova de upload manual: corpo é
-  `FormData`, nenhum `Content-Type` fixado, chave `undefined` ausente. Sem ele a única guarda do
-  helper não rodaria em CI.
-- **D14 — H.4.3 é dependência real**, e o gate **confirma por grep** que `CLAUDE.md` §6 e a
-  `frontend-fsliced.md` ainda citam `pnpm test`. Se a citação sumiu, os testes deste bloco nascem
-  órfãos de gate.
-
-**Dois writes externos viram obrigação de fechamento, com texto aprovado pelo João antes de enviar**
-(por ID, base canônica): **D4b** — a task H.3.1 descreve `addresses`/`contacts`/`templates` como se
-tivessem risco de posse cruzada, e **três são rotas shallow** que não o representam; é a lição 13 numa
-fonte externa. **D11b** — registrar que as mutations de `delete` não entram em helper (não há
-transporte a centralizar) e que o recorte real foi 6 de 7 pontos.
-
-**Spec reescrita e aprovada pelo João em 2026-08-04**, 4 tasks, 17 decisões (D1–D14 com D4b/D11b/D13b),
-7 invariantes de comportamento e gate com item 0 próprio. Sem checkpoint visual — nenhuma tela muda
-de forma.
-
-**Plano em 6 tasks** (0 branch · 1 H.3.1 · 2 H.4.6 · 3 H.4.7 · 4 H.4.8 · 5 gate), TDD em todas as
-que produzem mecanismo: o teste entra antes, é visto reprovando, e só então o código muda.
-
-**A rede de regressão do H.3.1 já existia e foi localizada, não escrita:**
-`test_delete_cross_tipo_arquivo_de_budget_pela_rota_de_quote_404` exige 404 **pelo tipo**
-(arquivo de budget pela rota de quote, mesmo id), e `test_remove_documento_de_outro_redator_da_404`
-cobre o redator. Como `$quote->files()` é `MorphMany` filtrada por `fileable_type`, o
-`scopeBindings` preserva as duas garantias — mas o plano manda rodar os dois **antes de aceitar** a
-troca, com regra de parada explícita: teste vermelho ali significa que a relação não filtra o que o
-`abort_unless` filtrava, e a saída **não** é reintroduzir o check manual.
-
-**Auto-review do plano achou um bug no próprio plano:** o passo de Pint do gate montava a lista de
-arquivos por `git diff` e a passava direto — se o diff viesse vazio, `./vendor/bin/pint` rodaria
-**sem argumento** e reformataria o repositório inteiro, que é exatamente a lição 9. Corrigido com
-guarda de lista vazia antes da chamada.
-
-**`executor: misto`.** **Tasks 1 e 4 vão ao Codex** — código literal, verificação executável, paths
-fechados, e no caso da 1 a rede de regressão já existe. **Tasks 0, 2, 3 e 5 ficam com Claude:** a 2
-exige *ler* o resultado do piloto pela D9 (inclusive a hipótese de reverter a task, o que não se
-delega), a 3 toca 6 caminhos de upload com peso legal e falha silenciosa (D12), a 0 julga árvore suja
-e baseline divergente, e a 5 julga o placar e a prova de upload real.
-
-**Regras de parada da delegação:** Task 1 Step 2 — se a lista de rotas indefinidas não for exatamente
-as 5 previstas, o Codex **para**; rota a mais significa que a medição da spec deixou passar um caso,
-e classificá-la é decisão do João. Task 1 Step 7 — teste cross-pai vermelho **para**, não se
-"conserta" reintroduzindo o `abort_unless`. Task 4 Steps 3-5 — as sondas editam arquivo de locale;
-`git status` que não volte limpo **para**, porque locale sujo é diff proibido no gate. Nenhum commit
-é feito pelo Codex sem diff revisado por Claude antes.
-
-**Três pendências de fechamento registradas no plano, fora das tasks:** levar ao `backlog.md` a
-conclusão técnica do H.4.5, e os dois writes no Notion (D4b e D11b), ambos por ID e com texto
-aprovado pelo João antes de enviar.
-
-**Execução em 2026-08-04, `/executar-bloco` + `subagent-driven-development` (argumento explícito do
-João), `executor: misto`.** Branch `hardening/guardrails-e-transportes` a partir do `main`, sem
-worktree (D1/P-03 — toca `backend/`), 4 commits de conteúdo (`310c5ec`..`4e5882e`). Baseline da
-Task 0: backend 375 passed (1365 assertions), frontend 14 passed — batendo com o plano.
-
-**Tasks 1 e 4 no Codex** (`mcp__codex__codex`, `sandbox: danger-full-access` — desta vez sem o
-problema de socket do docker que forçou CLI direto no bloco anterior; o parâmetro de sandbox do
-próprio MCP tool resolveu). Nenhum commit feito pelo Codex — report + diff sempre revisados por
-Claude, que rodou a verificação do plano do zero antes de aceitar e commitou. Tasks 2 e 3 via
-implementer subagent (Sonnet) + task reviewer subagent, ambos aprovados sem achado bloqueante.
-
-**A medição da spec errou de novo, 2 vezes nesta execução — terceira e quarta ocorrência da lição 13
-no projeto.** Task 2 (H.4.6): a spec media 4 call sites de `BudgetData::fromModel`, todos no
-`BudgetController` — existiam **6**, 2 deles chamando `fromModel()` direto em teste
-(`DtoTest.php`, `SoftDeletedRelationProjectionTest.php`). O implementador parou e reportou
-corretamente (regra de parada do plano); João decidiu via pergunta explícita: atualizar os 2 testes
-(adaptação mecânica de assinatura via `app(BudgetSummaryService::class)`, não mudança de
-comportamento) em vez de reverter a task. **D9 fechou como sinal 1 (técnica paga)** — a produção
-ficou limpa em 1 nível, sem `app()`. Task 5 (gate): a sonda literal do plano para H.3.1(a) — rota
-apontando para `CourseTemplateController::destroy` — não reprovava, porque o método real só tipa 1
-model (`CourseCertificateTemplate $template`), não 2 como o plano supôs. Corrigida na hora com um
-closure tipando os 2 models; reprovou citando a rota certa, e com `->withoutScopedBindings()`
-passou — a prova nos dois sentidos ficou de pé, só a sonda mudou de forma.
-
-**Gate automatizado (Task 5), tudo do zero:** suíte backend **376 passed (1366 assertions)**
-(375 baseline + 1 do `NestedRouteOwnershipTest`); `pnpm test` **21 passed** (14 baseline + 4 do
-`postMultipart` + 3 do `parity`), `pnpm build` e `pnpm lint` verdes; os 4 guardrails/sondas do gate
-vistos reprovando pelo motivo certo (H.3.1 silêncio, H.3.1 saída explícita, H.4.8 excedente),
-sondas removidas, árvore limpa; `generated.ts`, `locales/*.json` e `backend/database/` sem diff;
-Pint limpo nos 11 arquivos `.php` tocados (guarda de lista vazia não disparou). Órfãos: nenhum —
-`postMultipart` com 5 arquivos consumidores (6 pontos) e exatamente 2 `new FormData()` no
-repositório (o helper + `useRedatorForm.ts`, D11, intocado).
-
-**D12 — prova de upload real contra a API com sessão Sanctum** (login `admin@lotus.cl`, curl com
-`Origin`+`Accept`+`X-XSRF-TOKEN`, lição 12): foto (`POST /api/users/1/photo` → 204; URL
-pré-assinada → 200 `image/png`) e documento (`POST /api/turmas/1/documents` → 201, `size: 48` no
-corpo — a lição 6 quebraria isso em silêncio com 201 e arquivo vazio). **D14** confirmado por grep:
-`CLAUDE.md:137` e `frontend-fsliced.md:145-147` citam `pnpm test`.
-
-**Pendências de fechamento, ainda não executadas** (ficam para o `/fechar-sprint`): levar ao
-`backlog.md` a conclusão técnica do H.4.5; os 2 writes no Notion (D4b, D11b), com texto aprovado
-pelo João antes de enviar.
-
-**Review em 2026-08-04 (`/revisar-sprint`, ALTO RISCO** — `executor: misto`, Tasks 1/4 no Codex, e o
-bloco toca `backend/` e caminhos de upload com peso legal; lente Claude **+** revisão independente do
-Codex, `mcp__codex__codex` read-only). Gate reconferido do zero, não aceito por relatório: backend
-**376 passed (1366 assertions)**, `pnpm test` **21 passed**, build e lint verdes, árvore limpa. Diff
-literal contra o plano nos 20 arquivos. Órfãos: nenhum — os `app()` restantes em DTO são exatamente a
-família 2 + `TurmaData` (D8/D10, registrados). Leis §5: sem violação. **5 achados; o João aprovou
-Q-1 e Q-5**, os outros 3 foram deferidos com destino registrado.
-
-**Q-1 🔴 — o mecanismo entregue nascia invisível para a próxima sessão.** O `postMultipart` passou a
-existir e o comentário da lição 6 saiu dos 5 consumidores, mas a `frontend-fsliced.md` seguia
-ensinando o padrão antigo ("monte o `FormData`, deixe o axios derivar") e **nada** impedia uma feature
-de montar `FormData` na mão — nem lint, nem teste, nem rule. É o Q-3 do review anterior outra vez
-(lição 13), com falha silenciosa em caminho de peso legal. Virou mecanismo (lição 14):
-`no-restricted-syntax` reprova `new FormData()` em `src/features/**`, com catraca de **um**
-(`useRedatorForm`, spec D11), mais o parágrafo correspondente na rule. **A armadilha do bloco
-anterior foi evitada de propósito:** flat config faz merge raso de `rules`, então o seletor novo entra
-no bloco de `components/` junto dos dois já existentes, e o bloco novo exclui `components/` por
-`ignores` — dois blocos sobrepostos apagariam os seletores de query-em-componente em silêncio, que
-foi exatamente o Q-2 do review passado. **Provado nos três pontos com sonda:** `FormData` em `api/`
-reprovou, `FormData` em `components/` reprovou, e a regra de query-em-componente **continuou**
-disparando no mesmo arquivo (prova de que a colisão não voltou); `useRedatorForm` ficou em silêncio,
-confirmando a catraca. Sondas removidas, árvore limpa.
-
-**Q-5 🟢 — o `flatten` do `parity.test.ts` media `typeof value === 'string'`** e tratava todo o resto
-como sub-árvore: `Object.entries(1)` devolve `[]`, então uma chave com valor numérico **sumia** da
-lista — acusada como faltando na locale que a tivesse com outro tipo, e invisível quando as três a
-tivessem assim; com `null`, `TypeError` sem dizer qual chave. Folha passa a ser tudo que não é
-objeto. **Visto reprovando antes** (chave numérica nas 3 locales acusava `Faltando:
-common.sondaNumero`, um falso positivo) e as duas direções reconferidas depois, com `null` e booleano.
-Locales restauradas por `git checkout`, diff de `locales/*.json` vazio.
-
-**Deferidos pelo João, registrados e não resolvidos:** Q-2 🟡 (o guardrail de rota escapa em silêncio
-se o parâmetro não for tipado como model — sonda com `int $item` numa rota nested **passou**) e
-Q-4 🟡 (o teste do `postMultipart` mocka o módulo `axios` inteiro, então a lição 6 na instância real
-segue guardada só por comentário) foram para §Débitos técnicos do `backlog.md`. Q-3 🟡 virou **P-26**
-em `pendencias.md`: a troca de `abort_unless` por `scopeBindings` mudou **403 → 404** para usuário sem
-a permissão da rota, porque `SubstituteBindings` roda antes do middleware `permission:` — provado por
-sonda — enquanto a spec §4 e os commits afirmam "nenhum comportamento observável muda". Dano prático
-baixo (~10 usuários staff, e 404 vaza menos que 403); o que fica aberto é a afirmação.
-
-**Divergência entre revisores, mostrada e não resolvida em silêncio:** o Codex lê a **D9** como
-**sinal 2**, porque `DtoTest.php:46` e `SoftDeletedRelationProjectionTest.php:118` obtêm o serviço via
-`app()` e o repassam. A execução fechou como **sinal 1**, com o argumento de que a produção ficou
-limpa em 1 nível e os testes são adaptação mecânica de assinatura. A leitura é do João no fechamento.
-**Descartados do Codex, verificados:** "controller declara o filho antes do pai" (o scoping usa a
-ordem da URI, não a assinatura; zero casos) e "falso positivo de model injetado por container"
-(decisão registrada em D6, zero casos hoje — a direção que morde é a oposta, o Q-2).
-
-**Revalidação pós-correção, tudo do zero:** backend **376 passed (1366 assertions)**, `pnpm test`
-**21 passed**, `pnpm build` e `pnpm lint` verdes; `generated.ts`, `locales/*.json` e
-`backend/database/` sem diff; 2 commits de correção (`161aa18`, `3a638ef`).
-
-**Gate de fechamento (2026-08-04).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
-o bloco entrega guardrail e transporte, então a prova é reprovar os mecanismos de novo com sonda
-fresca (lição 10) **e** o upload real, não a suíte verde. Reconferido do zero, fora do que o review já
-tinha provado: sonda de rota nested com 2 bindings **sem** declaração reprovou o
-`NestedRouteOwnershipTest` citando `DELETE api/sondafech/{course}/itens/{template}`, e a **mesma**
-rota com `->withoutScopedBindings()` passou (a prova nos dois sentidos, que é o que distingue este
-guardrail de um teste que só sabe dizer "sim"); sonda de chave excedente em `pt-BR` reprovou o
-`parity` nomeando `common.sondaFech`; sonda de `new FormData()` em `features/operation/api/` reprovou
-o `no-restricted-syntax` nascido no Q-1. Todas as sondas removidas, árvore limpa nos três casos.
-
-**Prova e2e contra a API real, com sessão Sanctum** (lição 12 — `Origin` + `Accept` + `X-XSRF-TOKEN`;
-o login é `admin@lotus.cl`/`senha123`, do `DatabaseSeeder`): **foto** `POST /api/users/1/photo` → 204,
-e a URL pré-assinada devolveu **200 `image/png` com os 70 bytes** do PNG enviado; **documento de
-turma** `POST /api/turmas/8/documents` → 201 com `size: 69`, os bytes reais do PDF — é exatamente
-esse número que a lição 6 zera em silêncio, com 201 de sucesso. O dado de teste foi removido pela
-própria rota de DELETE, o que rendeu a terceira prova de graça: `DELETE /api/turmas/7/documents/40`
-(pai errado) → **404**, e `DELETE /api/turmas/8/documents/40` (dono) → **204**. O 404 cross-pai do
-H.3.1 passou a estar provado na API, não só em teste.
-
-Suíte backend **376 passed (1366 assertions)** reconferida; `pnpm test` **21 passed**, `pnpm build` e
-`pnpm lint` verdes; Pint (`--test`) `passed` nos **11** arquivos `.php` tocados, com a guarda de lista
-vazia que o auto-review do plano exigiu (lição 9); `typescript:transform` rodado porque o diff toca
-`BudgetData.php` — **`generated.ts` sem diff**, como esperado, já que `fromModel` é construção e
-nenhuma propriedade do DTO mudou; diffs de `locales/*.json` e `backend/database/` vazios. Código
-morto: nenhum — os 4 arquivos novos têm consumidor (`postMultipart` com 5 arquivos / 6 pontos, os 2
-testes rodam pelos runners, o guardrail é a suíte), nenhum `.gitkeep` ou placeholder criado aqui.
-Leis §5: sem violação — o bloco não toca DDD, auditoria, auth, RBAC ou financeiro; reforça a §5.6 com
-mecanismo novo.
-
-**Pendências:** nasceu **P-26** (a troca de `abort_unless` por `scopeBindings` mudou 403 → 404 para
-usuário sem a permissão da rota, contra a afirmação de "nenhum comportamento observável muda"). Nenhum
-gatilho vencido — P-04 é o mais próximo (2026-08-15). **P-25 segue aberta:** a `frontend-fsliced.md`
-foi tocada, mas no parágrafo de upload, não no da fronteira de tipo que fecharia o gatilho dela —
-mesma situação do fechamento anterior.
-
-Item 1 do backlog (**"Hardening estrutural pré-Sprint 4"**) não fechou por inteiro — restam **H.4.4,
-H.4.5 e H.4.9** dos 10 itens do conjunto Notion. Editado, não removido: os 4 entregues saem da lista,
-e o item passa a carregar a **conclusão técnica do H.4.5** (obrigação de fechamento do plano), para o
-próximo bloco não reabrir a análise e chegar à resposta errada — eliminar os aliases regrediria a
-fronteira de query-em-componente e **passaria no lint**.
-
-Arquivado: `plans/archive/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4.md` ·
-`specs/archive/2026-08-04-hardening-guardrails-e-transportes-pre-sprint-4-design.md` (não
-compartilhada por outro work item). Entrega registrada em `progress.md` (a mais antiga,
-`Hardening · Sincronização de documentação` de 2026-07-30, migrou para `progress-archive.md` para
-manter o teto de dez).
-
-**Os 2 writes externos foram enviados e conferidos por releitura**, com o texto aprovado pelo João
-antes do envio e por ID na base canônica (`collection://e64b7d57-d000-4433-b652-a410e75193cc`):
-**D4b** na task H.3.1 (`39dbc9603dfa81f39e52ec6033137656`) — as 3 rotas shallow não representam o
-risco que a task descreve, o recorte real foi `files`, e a nota de que o cruzado passou de 403 a 404
-sem permissão; **D11b** na task H.4.7 (`3b1bc9603dfa815c991bd10373d74cf6`) — recorte de 6 de 7 pontos
-e a decisão de as mutations de `delete` não entrarem em helper. **O `Status` das 4 tasks entregues
-segue `Backlog` por decisão do João no fechamento** — o plano previa só os textos, e mudar status era
-escopo novo que ele não autorizou.
-
-**Aberto, registrado, não resolvido:** Q-2 e Q-4 do review (§Débitos técnicos do `backlog.md`); P-26;
-P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; H.4.4, H.4.5 e H.4.9 no item 1 do backlog.

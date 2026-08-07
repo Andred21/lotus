@@ -7,23 +7,56 @@
 
 ## Próximos blocos
 
-1. **Bloco 7 · Sprint 4 · Certificação**
-   — implementar a vertical de certificação do MVP: emissão, numeração, template oficial, geração de PDF sob demanda, histórico e validação pública por QR.
+1. **Certificação · frontend (módulo próprio)**
+   — o que sobrou do Bloco 7 depois do **D-P8**, decisão do João em 2026-08-05: o backend da
+   certificação foi entregue e fechado em 2026-08-07 (emissão, numeração `LOT-ANO-SEQ`, snapshot
+   congelado, `issuable`, revogação, PDF sob demanda e rota pública de validação por UUID), e o
+   frontend virou bloco próprio. As **Tasks 9–13** do plano arquivado
+   (`plans/archive/2026-08-05-certificacao-sprint-4.md`) migraram inteiras e serão **replanejadas**,
+   não copiadas: certificados ganham módulo próprio na interface, coisa que a spec não modelou.
 
-   **Contexto obrigatório para o planejamento:**
+   **Contexto obrigatório para o replanejamento:**
 
-   * `docs/adrs.md` — ADRs aplicáveis à auditoria, PDF, storage e decisões de certificação;
-   * `docs/der-fisico.md` — `certificates`, `certificate_sequences` e relacionamentos previstos;
-   * documentação canônica do Drive sobre Certificação, Curso, Turma e regras de negócio;
-   * tasks 8.x da Sprint 4 no Notion;
-   * prints do protótipo das telas de emissão, histórico e validação;
-   * documentos oficiais/de exemplo fornecidos pela Lotus: **certificado** e **Manual de Classe**, usados como referência visual e para mapear campos fixos/dinâmicos.
+   * `specs/2026-08-05-certificacao-sprint-4-design.md` — **spec ainda ativa**, este bloco é o
+     último consumidor dela (a invariante §4.2 migrou junto);
+   * prints do protótipo Figma das telas de emissão, histórico e validação — a fonte que o packet
+     declarou `unavailable` e que o João disse que entraria;
+   * `Libro de Control de Clases`, o documento oficial da Lotus para o **Manual de Classe**;
+   * `context-packets/certificacao-sprint-4.md`, para não repetir a varredura de Drive e Notion.
 
-   **Decisões que devem ser fechadas antes da implementação:** contrato público do QR (`hash` × `UUID`), regra de vigência e mapeamento/versionamento do template oficial. Preservar geração de PDF sob demanda e snapshot dos dados/template relevantes no ato da emissão; financeiro nunca bloqueia certificação.
+   **Dívidas com prazo que este bloco herda:** os DTOs de certificação em `generated.ts` seguem sem
+   consumidor até aqui; o Manual de Classe sai em **Letter** porque a Blade não declara `@page`
+   (mesmo defeito que o certificado teve na Task 16, com a correção já provada do outro lado); e o
+   rodapé/QR absolutos transbordam de página quando `courses.description` é longa — reproduzido no
+   gate de fechamento de 2026-08-07 com uma descrição de 3.689 caracteres.
 
-   Os arquivos visuais e documentos de referência devem entrar no **Context Packet** deste bloco e ser confrontados com Drive, Notion e código atual antes da escrita da spec.
+2. **Profundidade de module · backend B4–B7**
+   — continuação do review de arquitetura de 2026-08-07 (skill `improve-codebase-architecture`);
+   B1–B3 já aplicados dentro do bloco 7 (`eccf0ee`, `a33d793`, `e7626b4`). Quatro candidatos, em
+   ordem de dependência:
 
-2. **Arquivados e restauração de soft-delete**
+   * **B4 (Strong)** — a cadeia `turma->quote->budget->client` está soletrada em ~8 lugares de 3
+     domínios e escapa do `DomainDependencyTest` (propriedade dinâmica não deixa FQCN). Seam:
+     `Turma::contratante(): ContratanteData` (razão social D12 + RUT num lugar só); avaliar
+     estender o guardrail para varrer strings de relation path.
+   * **B5 (Worth)** — a pré-condição de eager-load de `XData::fromModel()` é invisível e cada
+     controller repete a lista (`EnrollmentController::result` já esquece — lazy load silencioso).
+     Aprofundar o lado da projeção com builder/`present()` por model, padrão já provado no
+     `TurmaQueryBuilder`. Não criar Actions-invólucro: o deletion test reprova esse lado.
+   * **B6 (Worth)** — `enrollments.grades` é `['nullable','array']` e `grades.final` imprime a
+     nota no certificado (documento legal) via snapshot; `approval_status` é declarado pelo
+     cliente HTTP. Value object `AcademicResult` tipado. **Decisão de negócio do João antes de
+     executar:** aprovação derivada das notas × declarada pelo admin.
+   * **B7 (Worth)** — o setup de ~9 models está copiado em 7 testes de Certification (55-85
+     linhas cada). Builder de cenário nomeado pelas portas do `CertificateEligibility`
+     (`IssuableEnrollment::make()->semRedator()->templateSemCidade()`). Fazer **depois** de B4 —
+     provavelmente encolhe sozinho.
+
+   Só backend; os candidatos C1–C7 (frontend) do mesmo review já têm os itens correlatos nos
+   débitos (trio da foto, tabelas com dropdown) ou entram no replanejamento do frontend da
+   certificação.
+
+3. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -39,12 +72,12 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-3. **Administração · Roles e permissões — redesenho de composição**
+4. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Hardening**
+5. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

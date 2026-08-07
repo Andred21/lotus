@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
+use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
@@ -16,6 +17,8 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
+use App\Shared\Pdf\GotenbergHtmlToPdf;
+use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,7 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Conversor de PDF (ADR-12): um adapter para os dois documentos. Nos
+        // testes o binding troca pelo `FakeHtmlToPdf`, que guarda o HTML.
+        $this->app->bind(HtmlToPdf::class, GotenbergHtmlToPdf::class);
     }
 
     /**
@@ -44,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
             'course' => Course::class,
             'course_certificate_template' => CourseCertificateTemplate::class,
             'course_module' => CourseModule::class,
+            'certificate' => Certificate::class,
             'turma' => Turma::class,
             'enrollment' => Enrollment::class,
             'budget' => Budget::class,
