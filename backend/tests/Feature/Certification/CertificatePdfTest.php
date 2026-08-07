@@ -144,6 +144,25 @@ class CertificatePdfTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
+    /**
+     * O Gotenberg não lê o `@page` do CSS por conta própria: sem
+     * `preferCssPageSize`, ele imprime no default dele — Letter (612×792 pt) —
+     * e o certificado, que é documento de peso legal chileno, sai em papel
+     * errado, com o `min-height: 297mm` do Blade estourando a paginação.
+     */
+    public function test_gotenberg_recebe_o_tamanho_de_papel_declarado_no_css(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => (bool) preg_match(
+            '/name="preferCssPageSize"\r?\n(?:[^\r\n]+\r?\n)*\r?\ntrue\r?\n/',
+            (string) $request->body(),
+        ));
+    }
+
     public function test_html_usa_snapshot_e_omite_nota_presenca_e_vigencia_nulas(): void
     {
         $this->actingAsAdmin();

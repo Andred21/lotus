@@ -2,10 +2,10 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: fix_certificate_paper_size_a4
-resume_state: reviewing
+next_action: request_code_review
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
@@ -462,6 +462,35 @@ errado. **Defeito pré-existente da Task 7**, não introduzido pelas correções
 **Decisão do João em 2026-08-06:** commitar as correções dos seis achados, e **tratar o A4 dentro
 deste bloco** — não vira débito. O papel errado é a Task 16; o bloco só volta a `ready_for_review`
 depois dela, porque o review tem de ver o PDF no papel certo.
+
+Correções commitadas em `cd457bc`, com o gate reconferido antes do commit.
+
+### Task 16 — o papel do certificado (2026-08-06)
+
+**O tamanho já estava declarado; quem não o lia era o Gotenberg.** O Blade tem
+`@page { size: A4 portrait; margin: 0 }` desde a Task 15, mas o Chromium só honra o `@page` do CSS
+quando recebe `preferCssPageSize`; sem ele imprime no default do Gotenberg, **Letter**. A correção é
+uma linha no `CertificatePdfService` — `preferCssPageSize=true` no multipart —, e não duplica o A4
+no PHP de propósito: **o tamanho continua declarado uma vez só, no CSS do documento**, que é onde o
+`min-height: 297mm` do `.page` já estava calibrado.
+
+**Provado nos dois sentidos.** O teste novo (`test_gotenberg_recebe_o_tamanho_de_papel_declarado_no_css`)
+foi visto reprovando contra o serviço antigo com a **regex final** — o primeiro RED tinha regex
+errada e não valia como prova. Suíte **442 passed, 1 skipped (1606 assertions)**, +1 sobre 441; Pint
+`passed` nos 2 `.php` tocados; frontend intocado.
+
+**Prova no PDF real, não na suíte** (lição 12): `GET /api/certificates/2/pdf` com sessão Sanctum
+devolveu **200 `application/pdf`, 41.766 bytes**, e o `pdfinfo` do arquivo baixado diz
+**`594.96 x 841.92 pts (A4)`, 2 páginas** — antes era Letter (612×792). As duas páginas foram
+**renderizadas e vistas**: rodapé, QR e assinatura assentam no fim da página 1 (Q-6 continua de pé
+no papel certo), a página 2 traz o temário, e nenhuma terceira página órfã aparece. O Q-4 também
+aparece no papel: `-5 kV nominal` e `–5 kV a 15 kV` chegam íntegros enquanto os marcadores `*`/`•`
+somem.
+
+**Achado registrado e NÃO tocado:** `manual-turma.blade.php` não declara `@page` nenhum e o
+`ManualPdfService` também não manda tamanho — o Manual de Classe sai em Letter pelo mesmo motivo.
+É o layout genérico que o D-P8 já nomeia como defeito, e o João mandou planejar o Manual **com o
+bloco de frontend**. Fica como contexto para aquele bloco, não como trabalho deste.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 

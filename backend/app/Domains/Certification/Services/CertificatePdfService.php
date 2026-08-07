@@ -27,7 +27,14 @@ class CertificatePdfService
         ])->render();
 
         $response = Http::attach('files', $html, 'index.html')
-            ->post(rtrim(config('services.gotenberg.url'), '/').'/forms/chromium/convert/html');
+            // Sem isto o Gotenberg ignora o `@page size: A4` do Blade e imprime
+            // no default dele, Letter — papel errado num documento de peso
+            // legal, e paginação estourada, porque o `.page` mede 297mm. O
+            // tamanho fica declarado UMA vez, no CSS do próprio documento.
+            ->post(
+                rtrim(config('services.gotenberg.url'), '/').'/forms/chromium/convert/html',
+                ['preferCssPageSize' => 'true'],
+            );
 
         if ($response->failed()) {
             throw new RuntimeException(
