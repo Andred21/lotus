@@ -7,21 +7,28 @@
 
 ## Próximos blocos
 
-1. **Bloco 7 · Sprint 4 · Certificação**
-   — implementar a vertical de certificação do MVP: emissão, numeração, template oficial, geração de PDF sob demanda, histórico e validação pública por QR.
+1. **Certificação · frontend (módulo próprio)**
+   — o que sobrou do Bloco 7 depois do **D-P8**, decisão do João em 2026-08-05: o backend da
+   certificação foi entregue e fechado em 2026-08-07 (emissão, numeração `LOT-ANO-SEQ`, snapshot
+   congelado, `issuable`, revogação, PDF sob demanda e rota pública de validação por UUID), e o
+   frontend virou bloco próprio. As **Tasks 9–13** do plano arquivado
+   (`plans/archive/2026-08-05-certificacao-sprint-4.md`) migraram inteiras e serão **replanejadas**,
+   não copiadas: certificados ganham módulo próprio na interface, coisa que a spec não modelou.
 
-   **Contexto obrigatório para o planejamento:**
+   **Contexto obrigatório para o replanejamento:**
 
-   * `docs/adrs.md` — ADRs aplicáveis à auditoria, PDF, storage e decisões de certificação;
-   * `docs/der-fisico.md` — `certificates`, `certificate_sequences` e relacionamentos previstos;
-   * documentação canônica do Drive sobre Certificação, Curso, Turma e regras de negócio;
-   * tasks 8.x da Sprint 4 no Notion;
-   * prints do protótipo das telas de emissão, histórico e validação;
-   * documentos oficiais/de exemplo fornecidos pela Lotus: **certificado** e **Manual de Classe**, usados como referência visual e para mapear campos fixos/dinâmicos.
+   * `specs/2026-08-05-certificacao-sprint-4-design.md` — **spec ainda ativa**, este bloco é o
+     último consumidor dela (a invariante §4.2 migrou junto);
+   * prints do protótipo Figma das telas de emissão, histórico e validação — a fonte que o packet
+     declarou `unavailable` e que o João disse que entraria;
+   * `Libro de Control de Clases`, o documento oficial da Lotus para o **Manual de Classe**;
+   * `context-packets/certificacao-sprint-4.md`, para não repetir a varredura de Drive e Notion.
 
-   **Decisões que devem ser fechadas antes da implementação:** contrato público do QR (`hash` × `UUID`), regra de vigência e mapeamento/versionamento do template oficial. Preservar geração de PDF sob demanda e snapshot dos dados/template relevantes no ato da emissão; financeiro nunca bloqueia certificação.
-
-   Os arquivos visuais e documentos de referência devem entrar no **Context Packet** deste bloco e ser confrontados com Drive, Notion e código atual antes da escrita da spec.
+   **Dívidas com prazo que este bloco herda:** os DTOs de certificação em `generated.ts` seguem sem
+   consumidor até aqui; o Manual de Classe sai em **Letter** porque a Blade não declara `@page`
+   (mesmo defeito que o certificado teve na Task 16, com a correção já provada do outro lado); e o
+   rodapé/QR absolutos transbordam de página quando `courses.description` é longa — reproduzido no
+   gate de fechamento de 2026-08-07 com uma descrição de 3.689 caracteres.
 
 2. **Profundidade de module · backend B4–B7**
    — continuação do review de arquitetura de 2026-08-07 (skill `improve-codebase-architecture`);
