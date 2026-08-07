@@ -14,8 +14,9 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Pdf\FakeHtmlToPdf;
+use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,6 +30,8 @@ class CertificatePdfTest extends TestCase
     use RefreshDatabase;
 
     private Certificate $certificate;
+
+    private FakeHtmlToPdf $pdf;
 
     protected function setUp(): void
     {
@@ -127,7 +130,7 @@ class CertificatePdfTest extends TestCase
         ]);
     }
 
-    public function test_pdf_devolve_conteudo_do_gotenberg(): void
+    public function test_pdf_devolve_os_bytes_do_conversor(): void
     {
         $this->actingAsAdmin();
         $this->fakeGotenberg();
@@ -146,27 +149,24 @@ class CertificatePdfTest extends TestCase
 
     /**
      * O A4 nasce de DUAS peças e as duas ficam guardadas aqui: o `@page` do
-     * Blade, que declara o tamanho, e o `preferCssPageSize` do multipart, sem o
-     * qual o Gotenberg imprime no default dele — Letter (612×792 pt). Apagar
+     * Blade, que declara o tamanho, e o `preferCssPageSize`, sem o qual o
+     * Chromium imprime no default do conversor — Letter (612×792 pt). Apagar
      * qualquer uma devolve o documento de peso legal ao papel errado, e antes
      * desta asserção apagar o `@page` mantinha a suíte inteira verde (R-2).
+     * Que a opção vire campo do multipart é prova do `HtmlToPdfTest`.
      */
-    public function test_gotenberg_recebe_o_tamanho_de_papel_declarado_no_css(): void
+    public function test_certificado_declara_a4_no_css_e_pede_o_papel_do_css(): void
     {
         $this->actingAsAdmin();
         $this->fakeGotenberg();
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return preg_match(
-                '/name="preferCssPageSize"\r?\n(?:[^\r\n]+\r?\n)*\r?\ntrue\r?\n/',
-                $body,
-            ) === 1
-                && preg_match('/@page\s*\{[^}]*size:\s*A4\s+portrait;/s', $body) === 1;
-        });
+        $this->assertTrue($this->pdf->lastOptions()->preferCssPageSize);
+        $this->assertHtml(fn (string $html): bool => preg_match(
+            '/@page\s*\{[^}]*size:\s*A4\s+portrait;/s',
+            $html,
+        ) === 1);
     }
 
     public function test_html_usa_snapshot_e_omite_nota_presenca_e_vigencia_nulas(): void
@@ -176,17 +176,15 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'LOT-2026-1000')
-                && str_contains($body, 'Juan Pérez Congelado')
-                && str_contains($body, 'Seguridad Congelada')
-                && ! str_contains($body, 'Alumno Vivo')
-                && ! str_contains($body, 'Curso Vivo')
-                && ! str_contains($body, 'El trabajador logró aprobar el curso con nota')
-                && ! str_contains($body, 'Asistencia registrada:')
-                && ! str_contains($body, 'Este certificado es válido hasta el');
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'LOT-2026-1000')
+                && str_contains($html, 'Juan Pérez Congelado')
+                && str_contains($html, 'Seguridad Congelada')
+                && ! str_contains($html, 'Alumno Vivo')
+                && ! str_contains($html, 'Curso Vivo')
+                && ! str_contains($html, 'El trabajador logró aprobar el curso con nota')
+                && ! str_contains($html, 'Asistencia registrada:')
+                && ! str_contains($html, 'Este certificado es válido hasta el');
         });
 
         // Controle positivo: prende as negativas aos rótulos que o Blade usa
@@ -201,13 +199,11 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'El trabajador logró aprobar el curso con nota 6.2.')
-                && str_contains($body, 'Asistencia registrada: 87.50%.')
-                && str_contains($body, 'Este certificado es válido hasta el')
-                && str_contains($body, '05-08-2027');
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'El trabajador logró aprobar el curso con nota 6.2.')
+                && str_contains($html, 'Asistencia registrada: 87.50%.')
+                && str_contains($html, 'Este certificado es válido hasta el')
+                && str_contains($html, '05-08-2027');
         });
     }
 
@@ -223,25 +219,23 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'CERTIFICADO DE CAPACITACIÓN')
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'CERTIFICADO DE CAPACITACIÓN')
                 // Identidade fixa da OTEC emissora, com o RUT do documento.
-                && str_contains($body, '77.510.327-2')
-                && str_contains($body, 'Santiago')
+                && str_contains($html, '77.510.327-2')
+                && str_contains($html, 'Santiago')
                 // `{{RUTemp}}`: o RUT da empresa estava no snapshot e não era impresso.
-                && str_contains($body, '76.123.456-7')
-                && str_contains($body, 'abordó la narrativa congelada del curso.')
-                && str_contains($body, 'El N° de Registro de este documento es el')
-                && str_contains($body, 'Instructor')
-                && str_contains($body, 'María Relatora Congelada')
-                && str_contains($body, 'Temario del Curso')
-                && str_contains($body, '1. Introducción Congelada')
-                && str_contains($body, 'Objetivos congelados')
-                && str_contains($body, 'reconocimiento de relación jurídica alguna con la persona identificada')
+                && str_contains($html, '76.123.456-7')
+                && str_contains($html, 'abordó la narrativa congelada del curso.')
+                && str_contains($html, 'El N° de Registro de este documento es el')
+                && str_contains($html, 'Instructor')
+                && str_contains($html, 'María Relatora Congelada')
+                && str_contains($html, 'Temario del Curso')
+                && str_contains($html, '1. Introducción Congelada')
+                && str_contains($html, 'Objetivos congelados')
+                && str_contains($html, 'reconocimiento de relación jurídica alguna con la persona identificada')
                 // Marca no cabeçalho, embutida — o Gotenberg só recebe o HTML.
-                && str_contains($body, 'data:image/png;base64,');
+                && str_contains($html, 'data:image/png;base64,');
         });
     }
 
@@ -256,16 +250,14 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return ! str_contains($body, 'Temario del Curso')
+        $this->assertHtml(function (string $html): bool {
+            return ! str_contains($html, 'Temario del Curso')
                 && str_contains(
-                    $body,
+                    $html,
                     'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
                 )
-                && ! str_contains($body, 'abordó los siguientes contenidos:')
-                && str_contains($body, 'CERTIFICADO DE CAPACITACIÓN');
+                && ! str_contains($html, 'abordó los siguientes contenidos:')
+                && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN');
         });
     }
 
@@ -280,12 +272,10 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return ! str_contains($body, 'La actividad realizada')
-                && ! str_contains($body, 'La actividad fue realizada')
-                && str_contains($body, 'abordó la narrativa congelada del curso.');
+        $this->assertHtml(function (string $html): bool {
+            return ! str_contains($html, 'La actividad realizada')
+                && ! str_contains($html, 'La actividad fue realizada')
+                && str_contains($html, 'abordó la narrativa congelada del curso.');
         });
     }
 
@@ -306,13 +296,11 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'OTEC Histórica SpA [76.000.000-1] certifica que:')
-                && str_contains($body, 'por parte de OTEC Histórica SpA')
-                && ! str_contains($body, 'OTEC Nova SpA')
-                && ! str_contains($body, '77.999.999-9');
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'OTEC Histórica SpA [76.000.000-1] certifica que:')
+                && str_contains($html, 'por parte de OTEC Histórica SpA')
+                && ! str_contains($html, 'OTEC Nova SpA')
+                && ! str_contains($html, '77.999.999-9');
         });
     }
 
@@ -336,19 +324,17 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'OTEC Config Legado SpA [77.111.111-1] certifica que:')
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'OTEC Config Legado SpA [77.111.111-1] certifica que:')
                 && str_contains(
-                    $body,
+                    $html,
                     'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
                 )
-                && ! str_contains($body, 'Nombre técnico vivo')
-                && ! str_contains($body, 'Operación Segura AT')
-                && ! str_contains($body, 'El trabajador de la empresa RUT:')
-                && ! str_contains($body, 'abordó los siguientes contenidos:')
-                && ! str_contains($body, 'Temario del Curso');
+                && ! str_contains($html, 'Nombre técnico vivo')
+                && ! str_contains($html, 'Operación Segura AT')
+                && ! str_contains($html, 'El trabajador de la empresa RUT:')
+                && ! str_contains($html, 'abordó los siguientes contenidos:')
+                && ! str_contains($html, 'Temario del Curso');
         });
     }
 
@@ -375,13 +361,11 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return str_contains($body, 'OTEC Fallback SpA [77.222.222-2] certifica que:')
-                && ! str_contains($body, 'Temario del Curso')
-                && ! str_contains($body, 'El trabajador de la empresa RUT:')
-                && str_contains($body, 'CERTIFICADO DE CAPACITACIÓN');
+        $this->assertHtml(function (string $html): bool {
+            return str_contains($html, 'OTEC Fallback SpA [77.222.222-2] certifica que:')
+                && ! str_contains($html, 'Temario del Curso')
+                && ! str_contains($html, 'El trabajador de la empresa RUT:')
+                && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN');
         });
     }
 
@@ -403,18 +387,16 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-
-            return preg_match('//u', $body) === 1
-                && ! str_contains($body, '�')
-                && str_contains($body, '<li>Asterisco</li>')
-                && str_contains($body, '<li>Hífen</li>')
-                && str_contains($body, '<li>Bullet</li>')
-                && str_contains($body, '<li>Alcance del procedimiento</li>')
-                && str_contains($body, '<li>Tensión de prueba</li>')
-                && str_contains($body, '<li>-5 kV nominal</li>')
-                && str_contains($body, '<li>–5 kV a 15 kV</li>');
+        $this->assertHtml(function (string $html): bool {
+            return preg_match('//u', $html) === 1
+                && ! str_contains($html, '�')
+                && str_contains($html, '<li>Asterisco</li>')
+                && str_contains($html, '<li>Hífen</li>')
+                && str_contains($html, '<li>Bullet</li>')
+                && str_contains($html, '<li>Alcance del procedimiento</li>')
+                && str_contains($html, '<li>Tensión de prueba</li>')
+                && str_contains($html, '<li>-5 kV nominal</li>')
+                && str_contains($html, '<li>–5 kV a 15 kV</li>');
         });
     }
 
@@ -435,17 +417,16 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(function (Request $request): bool {
-            $body = (string) $request->body();
-            $descriptionPosition = strpos($body, 'Contenido técnico extenso.');
-            $footerPosition = strpos($body, 'class="certificate-footer"');
+        $this->assertHtml(function (string $html): bool {
+            $descriptionPosition = strpos($html, 'Contenido técnico extenso.');
+            $footerPosition = strpos($html, 'class="certificate-footer"');
 
             return $descriptionPosition !== false
                 && $footerPosition !== false
                 && $descriptionPosition < $footerPosition
-                && preg_match('/\.page\s*\{[^}]*display:\s*flex;/s', $body) === 1
-                && preg_match('/\.certificate-footer\s*\{[^}]*margin-top:\s*auto;/s', $body) === 1
-                && preg_match('/\.(?:signature|qr|disclaimer)\s*\{[^}]*position:\s*absolute;/s', $body) === 0;
+                && preg_match('/\.page\s*\{[^}]*display:\s*flex;/s', $html) === 1
+                && preg_match('/\.certificate-footer\s*\{[^}]*margin-top:\s*auto;/s', $html) === 1
+                && preg_match('/\.(?:signature|qr|disclaimer)\s*\{[^}]*position:\s*absolute;/s', $html) === 0;
         });
     }
 
@@ -462,8 +443,8 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(fn (Request $request): bool => str_contains(
-            (string) $request->body(),
+        $this->assertHtml(fn (string $html): bool => str_contains(
+            $html,
             "data:image/svg+xml;base64,{$expectedQr}",
         ));
     }
@@ -497,7 +478,7 @@ class CertificatePdfTest extends TestCase
         );
     }
 
-    public function test_gotenberg_fora_do_ar_retorna_500(): void
+    public function test_conversor_fora_do_ar_retorna_500(): void
     {
         $this->actingAsAdmin();
         Http::preventStrayRequests();
@@ -526,10 +507,24 @@ class CertificatePdfTest extends TestCase
         return $files;
     }
 
+    /**
+     * Troca o conversor pelo fake e guarda o HTML que o documento mandou. É o
+     * que deixa cada asserção falar do documento — string HTML — em vez de
+     * caçar texto dentro de um corpo multipart (B3).
+     */
     private function fakeGotenberg(): void
     {
         Http::preventStrayRequests();
-        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF-fake')]);
+        $this->pdf = new FakeHtmlToPdf;
+        $this->app->instance(HtmlToPdf::class, $this->pdf);
+    }
+
+    private function assertHtml(callable $assertion): void
+    {
+        $this->assertTrue(
+            $assertion($this->pdf->lastHtml()),
+            'O HTML do certificado não corresponde ao esperado.',
+        );
     }
 
     private function pdfUrl(): string

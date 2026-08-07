@@ -17,6 +17,8 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
+use App\Shared\Pdf\GotenbergHtmlToPdf;
+use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,7 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Conversor de PDF (ADR-12): um adapter para os dois documentos. Nos
+        // testes o binding troca pelo `FakeHtmlToPdf`, que guarda o HTML.
+        $this->app->bind(HtmlToPdf::class, GotenbergHtmlToPdf::class);
     }
 
     /**

@@ -3,45 +3,37 @@
 namespace App\Domains\Certification\Services;
 
 use App\Domains\Certification\Models\Certificate;
-use Illuminate\Support\Facades\Http;
-use RuntimeException;
+use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\Pdf\PageOptions;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificatePdfService
 {
+    public function __construct(private readonly HtmlToPdf $pdf) {}
+
     public function render(Certificate $certificate): string
+    {
+        // `fromCss`: o tamanho do papel é declarado UMA vez, no `@page` do
+        // Blade, onde o `min-height: 297mm` do documento já está calibrado.
+        return $this->pdf->render($this->html($certificate), PageOptions::fromCss());
+    }
+
+    public function html(Certificate $certificate): string
     {
         $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
         $qr = base64_encode((string) QrCode::format('svg')
             ->size(180)
             ->margin(0)
             ->generate($url));
-        $html = view('certification.certificate', [
+
+        return view('certification.certificate', [
             'certificate' => $certificate,
             'qr' => $qr,
-            // Embutida como o QR, e pelo mesmo motivo: o Gotenberg recebe só o
+            // Embutida como o QR, e pelo mesmo motivo: o conversor recebe só o
             // HTML, então referência a arquivo ou URL do frontend não resolve.
             'logo' => base64_encode((string) file_get_contents(
                 resource_path('images/lotus-logo.png'),
             )),
         ])->render();
-
-        $response = Http::attach('files', $html, 'index.html')
-            // Sem isto o Gotenberg ignora o `@page size: A4` do Blade e imprime
-            // no default dele, Letter — papel errado num documento de peso
-            // legal, e paginação estourada, porque o `.page` mede 297mm. O
-            // tamanho fica declarado UMA vez, no CSS do próprio documento.
-            ->post(
-                rtrim(config('services.gotenberg.url'), '/').'/forms/chromium/convert/html',
-                ['preferCssPageSize' => 'true'],
-            );
-
-        if ($response->failed()) {
-            throw new RuntimeException(
-                "Gotenberg falhou ao converter o certificado (HTTP {$response->status()}).",
-            );
-        }
-
-        return $response->body();
     }
 }
