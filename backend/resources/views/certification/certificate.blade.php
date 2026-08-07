@@ -8,20 +8,17 @@
      */
     $snapshot = $certificate->snapshot;
     $curso = $snapshot['curso'];
+    // `?? ` em vez do default do `data_get`: o default só cobre chave AUSENTE,
+    // e snapshot antigo pode trazer a chave com `null` — foi assim que
+    // `curso.modules: null` derrubou o PDF em 500 (R-1).
     $description = data_get($snapshot, 'curso.description');
-    $modules = data_get($snapshot, 'curso.modules', []);
+    $modules = data_get($snapshot, 'curso.modules') ?? [];
     $technicalName = data_get($snapshot, 'curso.technical_name');
     $clienteRut = data_get($snapshot, 'cliente.rut');
-    $emissorName = data_get(
-        $snapshot,
-        'emissor.name',
-        config('app.certificate_issuer.name'),
-    );
-    $emissorRut = data_get(
-        $snapshot,
-        'emissor.rut',
-        config('app.certificate_issuer.rut'),
-    );
+    $emissorName = data_get($snapshot, 'emissor.name')
+        ?? config('app.certificate_issuer.name');
+    $emissorRut = data_get($snapshot, 'emissor.rut')
+        ?? config('app.certificate_issuer.rut');
     $grade = data_get($snapshot, 'resultado.grades.final');
     $attendance = data_get($snapshot, 'resultado.attendance_pct');
 
@@ -263,10 +260,10 @@
         </table>
 
         @foreach ($modules as $module)
-            <div class="temario-section">{{ $module['name'] }}</div>
-            @if ($bullets($module['contents']) !== [])
+            <div class="temario-section">{{ data_get($module, 'name') }}</div>
+            @if ($bullets(data_get($module, 'contents')) !== [])
                 <ul class="temario-list">
-                    @foreach ($bullets($module['contents']) as $item)
+                    @foreach ($bullets(data_get($module, 'contents')) as $item)
                         <li>{{ $item }}</li>
                     @endforeach
                 </ul>

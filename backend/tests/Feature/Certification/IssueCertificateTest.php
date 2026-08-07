@@ -43,6 +43,12 @@ class IssueCertificateTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-08-05 14:30:00');
+        // Diferente do default de `config/app.php` de propósito: é o que prova
+        // que a identidade da OTEC congelada vem da config, não de literal (R-3).
+        config([
+            'app.certificate_issuer.name' => 'OTEC Configurada SpA',
+            'app.certificate_issuer.rut' => '76.900.900-9',
+        ]);
 
         $client = $this->makeClientWithUser(
             ['legal_name' => 'Empresa Legal SpA'],
@@ -118,8 +124,8 @@ class IssueCertificateTest extends TestCase
             ->assertJsonPath('snapshot.aluno.name', 'Juan Pérez')
             ->assertJsonPath('snapshot.curso.name', 'Seguridad en Alta Tensión')
             ->assertJsonPath('snapshot.cliente.rut', '76.123.456-7')
-            ->assertJsonPath('snapshot.emissor.name', 'OTEC LOTUS SpA')
-            ->assertJsonPath('snapshot.emissor.rut', '77.510.327-2')
+            ->assertJsonPath('snapshot.emissor.name', 'OTEC Configurada SpA')
+            ->assertJsonPath('snapshot.emissor.rut', '76.900.900-9')
             ->assertJsonPath('snapshot.redator.name', 'María Relatora')
             ->assertJsonPath('snapshot.template.version', 1)
             ->assertJsonPath('snapshot.template.layout_config.city', 'Santiago')

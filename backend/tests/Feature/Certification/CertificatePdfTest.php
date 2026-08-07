@@ -145,10 +145,11 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
-     * O Gotenberg não lê o `@page` do CSS por conta própria: sem
-     * `preferCssPageSize`, ele imprime no default dele — Letter (612×792 pt) —
-     * e o certificado, que é documento de peso legal chileno, sai em papel
-     * errado, com o `min-height: 297mm` do Blade estourando a paginação.
+     * O A4 nasce de DUAS peças e as duas ficam guardadas aqui: o `@page` do
+     * Blade, que declara o tamanho, e o `preferCssPageSize` do multipart, sem o
+     * qual o Gotenberg imprime no default dele — Letter (612×792 pt). Apagar
+     * qualquer uma devolve o documento de peso legal ao papel errado, e antes
+     * desta asserção apagar o `@page` mantinha a suíte inteira verde (R-2).
      */
     public function test_gotenberg_recebe_o_tamanho_de_papel_declarado_no_css(): void
     {
@@ -157,10 +158,15 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        Http::assertSent(fn (Request $request): bool => (bool) preg_match(
-            '/name="preferCssPageSize"\r?\n(?:[^\r\n]+\r?\n)*\r?\ntrue\r?\n/',
-            (string) $request->body(),
-        ));
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return preg_match(
+                '/name="preferCssPageSize"\r?\n(?:[^\r\n]+\r?\n)*\r?\ntrue\r?\n/',
+                $body,
+            ) === 1
+                && preg_match('/@page\s*\{[^}]*size:\s*A4\s+portrait;/s', $body) === 1;
+        });
     }
 
     public function test_html_usa_snapshot_e_omite_nota_presenca_e_vigencia_nulas(): void
@@ -346,6 +352,39 @@ class CertificatePdfTest extends TestCase
         });
     }
 
+    /**
+     * Chave PRESENTE com valor `null` é caso diferente de chave ausente, e o
+     * default do `data_get` não cobre o primeiro: com `curso.modules: null` o
+     * `@foreach` estourava e o PDF vinha 500 (R-1). O emissor `null` cai no
+     * fallback de config em vez de imprimir o documento sem a OTEC emissora.
+     */
+    public function test_html_tolera_chaves_do_snapshot_com_valor_null(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['curso']['modules'] = null;
+        $snapshot['curso']['description'] = null;
+        $snapshot['cliente']['rut'] = null;
+        $snapshot['emissor'] = ['name' => null, 'rut' => null];
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config([
+            'app.certificate_issuer.name' => 'OTEC Fallback SpA',
+            'app.certificate_issuer.rut' => '77.222.222-2',
+        ]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return str_contains($body, 'OTEC Fallback SpA [77.222.222-2] certifica que:')
+                && ! str_contains($body, 'Temario del Curso')
+                && ! str_contains($body, 'El trabajador de la empresa RUT:')
+                && str_contains($body, 'CERTIFICADO DE CAPACITACIÓN');
+        });
+    }
+
     public function test_temario_remove_marcadores_unicode_sem_corromper_sinais_tecnicos(): void
     {
         $snapshot = $this->certificate->snapshot;
@@ -379,7 +418,14 @@ class CertificatePdfTest extends TestCase
         });
     }
 
-    public function test_html_mantem_rodape_no_fluxo_depois_de_descricao_longa(): void
+    /**
+     * O nome diz o que as asserções provam: o rodapé sai do fluxo do documento
+     * ou não sai. **Comprimento de texto aqui é cenário, não asserção** — o
+     * teste passa igual com uma frase curta (medido), porque HTML falso não
+     * pagina. Que a descrição longa não empurre o rodapé para fora da página só
+     * se prova no PDF real, e essa prova é do gate (R-4).
+     */
+    public function test_rodape_e_qr_ficam_no_fluxo_e_nao_em_posicao_absoluta(): void
     {
         $snapshot = $this->certificate->snapshot;
         $snapshot['curso']['description'] = str_repeat('Contenido técnico extenso. ', 140);
