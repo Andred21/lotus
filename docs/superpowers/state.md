@@ -2,25 +2,14 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: reviewing
+next_owner: claude
+next_action: rerun_review_after_corrections
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: >-
-  Review de `cbb9e09..0c28d91` (ALTO RISCO, lente Claude + Codex read-only) devolveu 5 achados,
-  nenhum 🔴, os cinco provados por sonda executada e aguardando decisao do Joao: R-1 🟡 o
-  `data_get(..., [])` do Q-3 nao cobre valor `null` -- snapshot com `curso.modules: null` derruba
-  o PDF em 500 (provado pela API real), enquanto o `?? []` anterior renderizava; R-2 🟡 o A4 nao
-  tem guarda -- apagar a linha `@page` do Blade mantem os 58 testes de Certification verdes e o
-  PDF real volta a Letter 612x792 (provado); R-3 🟡 a origem em `config` do emissor nao e guardada
-  -- literais no builder mantem a suite verde, porque o teste fixa os mesmos valores do default;
-  R-4 🟢 a "descricao longa" do teste de rodape e decorativa (passa com 1x); R-5 🟢
-  `.env.example` sem `CERTIFICATE_ISSUER_NAME`/`RUT`, enquanto `FRONTEND_URL` do mesmo bloco esta
-  la. Gate reconferido e verde (442 passed, 1 skipped, 1606 assertions; Pint passed nos 6 .php;
-  frontend intocado; `generated.ts` sem diff, `snapshot` e `array` no DTO).
+blocker: null
 review_findings_approved: >-
   Joao aprovou Q-1 a Q-6 em 2026-08-06, com a correcao delegada ao Codex e a revisao das
   correcoes com Claude. Achados: Q-1 🔴 o periodo da capacitacao some do certificado quando
@@ -32,8 +21,8 @@ review_findings_approved: >-
   absolutos sobre fluxo de tamanho ilimitado. Gate pre-correcao reconferido e verde
   (436 passed, 1 skipped, 1590 assertions; Pint passed nos 5 .php; frontend intocado).
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
-state_basis_commit: 6c5a2c4
-updated_at: 2026-08-06T11:05:00-03:00
+state_basis_commit: e7626b4
+updated_at: 2026-08-07T19:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -502,6 +491,70 @@ somem.
 `ManualPdfService` também não manda tamanho — o Manual de Classe sai em Letter pelo mesmo motivo.
 É o layout genérico que o D-P8 já nomeia como defeito, e o João mandou planejar o Manual **com o
 bloco de frontend**. Fica como contexto para aquele bloco, não como trabalho deste.
+
+### R-1 a R-5 aplicados e três refatorações de arquitetura (2026-08-07) — `28ac6a3`…`e7626b4`
+
+**Os cinco achados do review das correções, aprovados pelo João, foram corrigidos em `28ac6a3`.**
+R-1 🟡 o `data_get(..., [])` do Q-3 não cobria valor `null` — o default do `data_get` só vale para
+chave **ausente**, então `curso.modules: null` entrava no `@foreach` e derrubava o PDF em 500
+(provado pela API real antes do fix). R-2 🟡 o A4 não tinha guarda; R-3 🟡 a origem em `config` do
+emissor não era guardada, porque o teste fixava os mesmos valores do default — os overrides passaram
+a usar valores **diferentes** de `config/app.php`; R-4 🟢 a "descrição longa" do teste de rodapé era
+decorativa; R-5 🟢 `.env.example` sem `CERTIFICATE_ISSUER_NAME`/`RUT`.
+
+**Depois disso o João trouxe uma revisão paralela de arquitetura** (skill `improve-codebase-
+architecture`, executada por ele fora desta sessão) e mandou aplicar **só o backend, e só o que toca
+o bloco ativo** — B4–B7 e C1–C7 do relatório ficam fora por escopo, não por discordância. **As três
+alegações foram conferidas no código antes de qualquer edição**, e uma sub-alegação foi medida como
+**falsa e registrada como falsa**: o relatório dizia que `layout_config.orientation` era "gravado e
+nunca lido", e o `grep` não acha uma ocorrência sequer da chave em lugar nenhum do repositório —
+ela já não existe desde a Task 15 (D-P9).
+
+- **B3 (`eccf0ee`) — o transporte do Gotenberg estava escrito duas vezes e as duas cópias já haviam
+  divergido:** `CertificatePdfService` recebeu `preferCssPageSize` na Task 16 e `ManualPdfService`
+  não. Nasce `App\Shared\Pdf` — `HtmlToPdf` (interface), `GotenbergHtmlToPdf` (o único lugar que
+  conhece multipart), `PageOptions` e `FakeHtmlToPdf`. O teste do certificado deixou de ser regex
+  sobre corpo multipart; **um teste só** (`Tests\Feature\Shared\HtmlToPdfTest`) conhece o formato do
+  transporte. O Manual segue em `PageOptions::converterDefault()` **de propósito** — ele não declara
+  `@page`, e mudar o papel dele é trabalho do bloco de frontend, não deste.
+- **B2 (`a33d793`) — o snapshot congelado era `array` sem contrato**, com dois leitores de política
+  oposta (o Blade defendia com `data_get`, os testes indexavam cru) e `Record<string, any>` no
+  `generated.ts`. Vira `CertificateSnapshotData` (+6 DTOs aninhados) com `CURRENT_VERSION = 2` e um
+  `fromArray` **tolerante que nunca estoura**: certificado emitido em 2026 tem de continuar
+  renderizando em 2030, mesmo com chave que o código atual não conhece. O `CertificateSnapshotCast`
+  aceita DTO **ou array cru** — é assim que o teste simula o schema versão 1 sem falsificar o
+  caminho de produção. `generated.ts` regenerado no mesmo commit; a regra da vigência e a leitura de
+  `city` no formato legado (`template.layout_config.city`) continuam funcionando.
+- **B1 (`e7626b4`) — as seis portas da emissão estavam escritas duas vezes:** guardas em PHP na
+  `IssueCertificateAction`, restrições em Eloquent no `CertificateController::issuable`. É a mesma
+  classe de bug que já custou A-2 e D-P8 — **a lista promete um certificado que o POST recusa com
+  422**. Nasce `CertificateEligibility`, com cada porta como par adjacente `assert*`/`constrain*` e
+  a mensagem escrita uma vez; a Action recebe o `IssuanceContext` já resolvido e não reconsulta
+  template nem cidade. `CertificateTemplateResolver::latestForCourse()` deixa de ter query própria e
+  deriva de `latestByCourse()`, então "template vigente" também volta a ter uma implementação só.
+
+**A invariante do B1 tem teste nos dois sentidos, e o RED foi visto** (lição 10):
+`CertificateEligibilityTest` prova que tudo que `issuableTurmas()` mostra passa em `assert()` e que
+uma turma por porta fechada some da lista **e** leva 422 na emissão. Removendo
+`constrainRedatorDesignado` da face 2, o teste falha nomeando a porta que divergiu.
+
+**Gate reconferido aqui, não aceito por relatório:** suíte **449 passed, 1 skipped (1634
+assertions)**, +7 sobre 442; Pint `passed` nos 6 `.php` do B1; `pnpm build`, `pnpm lint` e **35
+passed** no frontend; `typescript:transform` rodado de novo **sem diff** (o `generated.ts` do B2 já
+está commitado com ele).
+
+**E2e com sessão Sanctum contra a API real** (lição 12): `GET /api/certificates/issuable` devolveu
+a turma 3 com 10 matrículas; `POST /api/enrollments/24/certificate` emitiu **`LOT-2026-1003`** com
+`snapshot.schema_version = 2`, `template.city = Santiago` e `emissor` vindo da config; a mesma
+matrícula **sumiu da lista** na chamada seguinte (a porta 3 fechando nas duas faces, provada no
+banco real); e `GET /api/certificates/4/pdf` devolveu **200 `application/pdf`, 44.292 bytes**, com
+`pdfinfo` em **`594.96 x 841.92 pts (A4)`**. As três páginas foram **renderizadas e vistas**: o
+documento traz emissor, razão social, narrativa, QR, assinatura sobre `Instructor` e o temário com
+`-5 kV nominal` / `–5 kV a 15 kV` íntegros (Q-4 de pé), rodapé no fluxo (Q-6 de pé).
+
+**O que ainda NÃO aconteceu, e por isso o estado é `reviewing` e não `ready_for_closure`:** as três
+refatorações são código novo e substancial, e **nenhuma passou por uma lente de review** — só pelo
+gate. O próximo passo é repetir o `/revisar-sprint` sobre `28ac6a3..e7626b4`.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
