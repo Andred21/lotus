@@ -8,13 +8,10 @@ use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\IssuableTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
-use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\CertificateEligibility;
 use App\Domains\Certification\Services\CertificatePdfService;
-use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
@@ -58,38 +55,10 @@ class CertificateController extends Controller implements HasMiddleware
     }
 
     /** @return array<IssuableTurmaData> */
-    public function issuable(CertificateTemplateResolver $templates): array
+    public function issuable(CertificateEligibility $eligibility): array
     {
-        $activeEnrollmentIds = Certificate::query()
-            ->where('status', CertificateStatus::Emitido)
-            ->pluck('enrollment_id');
-        $latestTemplates = $templates->latestByCourse();
-
-        $eligibleEnrollments = fn ($query) => $query
-            ->where('approval_status', EnrollmentApprovalStatus::Aprobado)
-            ->whereNotIn('id', $activeEnrollmentIds);
-
-        return Turma::query()
-            ->where('status', TurmaStatus::Concluida)
-            ->whereIn('course_id', $latestTemplates->keys())
-            // Sem redator designado não existe assinatura possível (D11), e a
-            // emissão recusaria qualquer `redator_id` que a UI mandasse.
-            ->whereHas('redatores')
-            ->whereHas('enrollments', $eligibleEnrollments)
-            ->with([
-                'course',
-                'quote.budget.client',
-                'redatores.user',
-                'enrollments' => fn ($query) => $eligibleEnrollments($query)
-                    ->with('student.user'),
-            ])
-            ->get()
-            ->filter(fn (Turma $turma) => $templates->emissionCityFor(
-                $turma,
-                $latestTemplates[$turma->course_id],
-            ) !== null)
+        return $eligibility->issuableTurmas()
             ->map(fn (Turma $turma) => IssuableTurmaData::fromModel($turma))
-            ->values()
             ->all();
     }
 

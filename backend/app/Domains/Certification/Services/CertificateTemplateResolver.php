@@ -9,12 +9,15 @@ use Illuminate\Support\Collection;
 
 class CertificateTemplateResolver
 {
+    /**
+     * Derivado do `latestByCourse` de propósito: "template vigente" tinha duas
+     * implementações — `orderByDesc + first` aqui, `orderBy + keyBy` ali — e
+     * duas implementações da mesma regra são duas respostas esperando para
+     * divergir num documento de peso legal (B1).
+     */
     public function latestForCourse(int $courseId): ?CourseCertificateTemplate
     {
-        return $this->availableTemplates()
-            ->where('course_id', $courseId)
-            ->orderByDesc('version')
-            ->first();
+        return $this->latestByCourse()->get($courseId);
     }
 
     /**
