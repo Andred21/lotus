@@ -73,10 +73,17 @@ class CertificateEligibility
     {
         $templates = $this->templates->latestByCourse();
 
-        $enrollments = function (Builder|Relation $query): Builder|Relation {
+        // Resolvido UMA vez: o mesmo closure filtra o `whereHas` e o
+        // eager-load, e recalcular a lista entre os dois consultava
+        // `certificates` duas vezes por chamada — e abria a janela para a
+        // turma aparecer na tela com `enrollments` vazio, se um certificado
+        // fosse emitido no meio.
+        $comCertificadoVigente = $this->enrollmentsComCertificadoVigente();
+
+        $enrollments = function (Builder|Relation $query) use ($comCertificadoVigente): Builder|Relation {
             $this->constrainMatriculaAprovada($query);
 
-            return $this->constrainSemCertificadoVigente($query);
+            return $this->constrainSemCertificadoVigente($query, $comCertificadoVigente);
         };
 
         return Turma::query()
@@ -140,9 +147,12 @@ class CertificateEligibility
         }
     }
 
-    private function constrainSemCertificadoVigente(Builder|Relation $enrollments): Builder|Relation
-    {
-        return $enrollments->whereNotIn('id', $this->enrollmentsComCertificadoVigente());
+    /** @param  Collection<int, int>  $comCertificadoVigente */
+    private function constrainSemCertificadoVigente(
+        Builder|Relation $enrollments,
+        Collection $comCertificadoVigente,
+    ): Builder|Relation {
+        return $enrollments->whereNotIn('id', $comCertificadoVigente);
     }
 
     // ── PORTA 4 — curso com template disponível ──────────────────────────

@@ -27,8 +27,11 @@ class SnapshotCourseData extends Data
     {
         // Snapshot anterior ao D-P9 não tem `description` nem `modules`, e
         // snapshot com a chave em `null` é caso diferente de chave ausente —
-        // foi um `modules: null` que derrubou o PDF em 500 (R-1).
-        $modules = data_get($raw, 'modules') ?? [];
+        // foi um `modules: null` que derrubou o PDF em 500 (R-1). Escalar cai
+        // no mesmo balde: `array_values` de um `string` é TypeError, e aqui
+        // nenhum caminho pode estourar.
+        $modules = data_get($raw, 'modules');
+        $modules = is_array($modules) ? $modules : [];
 
         return new self(
             name: (string) data_get($raw, 'name', ''),

@@ -7,6 +7,7 @@ use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateEligibility;
+use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -18,8 +19,10 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\CreatesDomainRecords;
@@ -203,6 +206,33 @@ class CertificateEligibilityTest extends TestCase
             $reprovada->id,
             $turma->enrollments->pluck('id')->all(),
         );
+    }
+
+    /**
+     * O template vigente de UM curso se resolve pela mesma fonte da lista, mas
+     * filtrando no SQL: a emissão roda dentro da transação, e carregar a tabela
+     * inteira de templates ali era o preço escondido da fonte única (B1).
+     */
+    public function test_template_de_um_curso_e_filtrado_na_consulta_e_nao_em_php(): void
+    {
+        $outro = $this->makeCourse(['name' => 'Otro Curso']);
+        CourseCertificateTemplate::create([
+            'course_id' => $outro->id,
+            'version' => 1,
+            'layout_config' => ['city' => 'Valparaíso'],
+        ]);
+        $carregados = [];
+        DB::listen(function (QueryExecuted $query) use (&$carregados): void {
+            if (str_contains($query->sql, 'from "course_certificate_templates"')) {
+                $carregados[] = $query->sql;
+            }
+        });
+
+        $template = app(CertificateTemplateResolver::class)->latestForCourse($this->course->id);
+
+        $this->assertSame($this->course->id, $template->course_id);
+        $this->assertCount(1, $carregados);
+        $this->assertStringContainsString('"course_id" = ?', $carregados[0]);
     }
 
     private function makeTurma(?Course $course = null, bool $designaRedator = true): Turma

@@ -21,6 +21,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -242,7 +243,7 @@ class CertificateSnapshotTest extends TestCase
 
         $this->assertSame('Nombre Alterado Después', $this->course->fresh()->name);
         $this->assertSame('Seguridad en Alta Tensión', $reloaded->snapshot->curso->name);
-        $this->assertEquals($snapshot, $reloaded->snapshot);
+        $this->assertEquals($snapshot->toArray(), $reloaded->snapshot->toArray());
     }
 
     public function test_datas_do_snapshot_sao_strings_em_y_m_d(): void
@@ -323,7 +324,7 @@ class CertificateSnapshotTest extends TestCase
         $this->assertSoftDeleted('course_certificate_templates', ['id' => $this->template->id]);
         $this->assertSame(2, $reloaded->snapshot->template->version);
         $this->assertSame('Valparaíso', $reloaded->snapshot->template->city);
-        $this->assertEquals($snapshot, $reloaded->snapshot);
+        $this->assertEquals($snapshot->toArray(), $reloaded->snapshot->toArray());
     }
 
     public function test_turma_online_usa_cidade_fixa_do_template_e_nao_endereco_do_cliente(): void
@@ -392,7 +393,7 @@ class CertificateSnapshotTest extends TestCase
             '1. Introducción y Marco General',
             $reloaded->snapshot->curso->modules[0]->name,
         );
-        $this->assertEquals($snapshot, $reloaded->snapshot);
+        $this->assertEquals($snapshot->toArray(), $reloaded->snapshot->toArray());
     }
 
     public function test_curso_sem_descricao_e_sem_modulos_congela_nulo_e_lista_vazia(): void
@@ -429,5 +430,55 @@ class CertificateSnapshotTest extends TestCase
 
         $this->assertNull($snapshot->resultado->grades);
         $this->assertNull($snapshot->resultado->attendance_pct);
+    }
+
+    /**
+     * O snapshot é congelado no ato da emissão e não se reescreve depois —
+     * nem de raspão. O cast de objeto entrava no cache de casts do Eloquent, e
+     * `save()` de QUALQUER campo devolvia o DTO pela `set()`: bastava ler o
+     * documento e revogar o certificado para o JSON histórico ser reserializado
+     * na forma de hoje, perdendo `template.layout_config`, ganhando o `emissor`
+     * da config atual e saindo com `schema_version` errado.
+     */
+    public function test_salvar_outro_campo_depois_de_ler_o_snapshot_nao_reescreve_o_documento(): void
+    {
+        $certificate = Certificate::create([
+            'uuid' => (string) Str::uuid(),
+            'enrollment_id' => $this->enrollment->id,
+            'course_id' => $this->course->id,
+            'redator_id' => $this->redator->id,
+            'codigo' => 'LOT-2026-2000',
+            'snapshot' => [],
+            'valido_ate' => null,
+            'status' => CertificateStatus::Emitido,
+            'revoked_at' => null,
+            'revocation_reason' => null,
+        ]);
+
+        // Um documento da versão 1, com a forma que o banco guardava antes de
+        // o tipo existir: sem `schema_version`, sem `emissor`, com o
+        // `layout_config` inteiro dentro de `template`.
+        $congelado = json_encode([
+            'aluno' => ['name' => 'Juan Histórico', 'rut' => '12.345.678-5'],
+            'curso' => ['name' => 'Curso Histórico', 'workload_hours' => 8],
+            'turma' => ['id' => 1, 'start_date' => '2026-01-05', 'end_date' => '2026-01-09'],
+            'cliente' => ['name' => 'Empresa Histórica SpA', 'rut' => '76.123.456-7'],
+            'redator' => ['name' => 'María Histórica', 'rut' => '11.111.111-1'],
+            'resultado' => ['grades' => ['final' => 6.2], 'approval_status' => 'aprobado'],
+            'template' => ['version' => 1, 'layout_config' => ['city' => 'Arica']],
+            'ciudad_emision' => 'Arica',
+            'emitido_em' => '2026-01-09',
+        ], JSON_UNESCAPED_UNICODE);
+        DB::table('certificates')->where('id', $certificate->id)->update(['snapshot' => $congelado]);
+
+        $reloaded = Certificate::query()->findOrFail($certificate->id);
+        $this->assertSame('Juan Histórico', $reloaded->snapshot->aluno->name);
+
+        $reloaded->update(['revocation_reason' => 'Emitido por engano']);
+
+        $this->assertSame(
+            $congelado,
+            (string) DB::table('certificates')->where('id', $certificate->id)->value('snapshot'),
+        );
     }
 }

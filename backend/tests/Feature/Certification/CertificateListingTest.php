@@ -18,8 +18,10 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -172,6 +174,28 @@ class CertificateListingTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1)
             ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id);
+    }
+
+    /**
+     * As matrículas com certificado vigente se resolvem UMA vez por chamada. O
+     * mesmo closure filtra o `whereHas` e o eager-load, e recalcular a lista
+     * entre os dois não só consultava `certificates` de novo como abria a
+     * janela para a turma sair na tela com `enrollments` vazio, se um
+     * certificado fosse emitido no meio.
+     */
+    public function test_issuable_consulta_os_certificados_vigentes_uma_vez_so(): void
+    {
+        $this->actingAsSuperadmin();
+        $consultas = 0;
+        DB::listen(function (QueryExecuted $query) use (&$consultas): void {
+            if (str_contains($query->sql, 'from "certificates"')) {
+                $consultas++;
+            }
+        });
+
+        $this->getJson('/api/certificates/issuable')->assertOk()->assertJsonCount(1);
+
+        $this->assertSame(1, $consultas);
     }
 
     public function test_issuable_sem_permissao_de_emissao_retorna_403(): void

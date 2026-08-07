@@ -198,6 +198,24 @@ class PublicCertificateTest extends TestCase
             ->assertJsonMissingPath('revocation_reason');
     }
 
+    /**
+     * Esta rota é o que o fiscalizador abre pelo QR. A leitura do snapshot é
+     * tolerante de propósito — campo que nasceu depois pode faltar —, mas
+     * tolerância não pode virar um 200 dizendo `status: emitido` com o nome do
+     * aluno em branco. Sem o que nomear, o documento não se apresenta.
+     */
+    public function test_snapshot_sem_o_nome_do_aluno_nao_e_apresentado_como_valido(): void
+    {
+        $snapshot = json_decode((string) $this->certificate->getRawOriginal('snapshot'), true);
+        $snapshot['aluno']['name'] = '';
+        $this->certificate->update(['snapshot' => $snapshot]);
+
+        $response = $this->getJson($this->publicUrl());
+
+        $response->assertStatus(500);
+        $this->assertNotSame('emitido', $response->json('status'));
+    }
+
     private function publicUrl(): string
     {
         return "/api/publico/certificados/{$this->certificate->uuid}";

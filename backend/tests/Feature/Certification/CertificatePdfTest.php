@@ -14,7 +14,6 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
-use App\Shared\Pdf\FakeHtmlToPdf;
 use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -22,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Pdf\FakeHtmlToPdf;
 use Tests\TestCase;
 
 class CertificatePdfTest extends TestCase
@@ -341,8 +341,9 @@ class CertificatePdfTest extends TestCase
     /**
      * Chave PRESENTE com valor `null` é caso diferente de chave ausente, e o
      * default do `data_get` não cobre o primeiro: com `curso.modules: null` o
-     * `@foreach` estourava e o PDF vinha 500 (R-1). O emissor `null` cai no
-     * fallback de config em vez de imprimir o documento sem a OTEC emissora.
+     * `@foreach` estourava e o PDF vinha 500 (R-1). Num documento da versão 1
+     * o emissor `null` cai no fallback de config, em vez de imprimir o
+     * certificado sem a OTEC emissora.
      */
     public function test_html_tolera_chaves_do_snapshot_com_valor_null(): void
     {
@@ -367,6 +368,101 @@ class CertificatePdfTest extends TestCase
                 && ! str_contains($html, 'El trabajador de la empresa RUT:')
                 && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN');
         });
+    }
+
+    /**
+     * `modules` escalar é a mesma classe do R-1 por outro caminho: a chave
+     * existe, o valor não é lista, e `array_values` de uma string é TypeError.
+     * A leitura do snapshot não pode estourar — o documento é histórico e não
+     * se conserta depois de emitido.
+     */
+    public function test_html_tolera_modules_do_snapshot_gravado_como_escalar(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['curso']['modules'] = 'Módulo único';
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'Temario del Curso')
+            && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN'));
+    }
+
+    /**
+     * `enrollments.grades` é validado só como `array`, então a nota chega como
+     * o redator a lançou — inclusive `"6,4"`, que é como se escreve nota no
+     * Chile. Filtrar por `is_numeric` apagava a nota do documento em silêncio.
+     */
+    public function test_html_imprime_nota_lancada_com_virgula_e_omite_a_ilegivel(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['resultado']['grades'] = ['final' => '6,4'];
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => str_contains(
+            $html,
+            'El trabajador logró aprobar el curso con nota 6,4.',
+        ));
+
+        // O que não dá para imprimir continua omitindo a linha inteira (D-P7).
+        $snapshot['resultado']['grades'] = ['final' => ['parcial' => 5]];
+        $this->certificate->update(['snapshot' => $snapshot]);
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => ! str_contains(
+            $html,
+            'El trabajador logró aprobar el curso con nota',
+        ));
+    }
+
+    /**
+     * O fallback de config existe para reconstruir a OTEC de um documento da
+     * versão 1, que não congelava emissor. Da versão 2 em diante ele carimbaria
+     * a OTEC de HOJE num certificado antigo: o snapshot está corrompido, e o
+     * documento não sai.
+     */
+    public function test_documento_da_versao_2_sem_emissor_recusa_em_vez_de_usar_a_config(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        // A fixture desta classe é um documento da versão 1 — sem
+        // `schema_version` —, e é a versão que decide se o fallback vale.
+        $snapshot['schema_version'] = 2;
+        $snapshot['emissor'] = ['name' => null, 'rut' => null];
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config(['app.certificate_issuer.name' => 'OTEC Nova SpA']);
+        $this->actingAsAdmin();
+        // O conversor responde: se o documento chegasse a ser montado, a rota
+        // devolveria 200. O 500 abaixo só existe porque a recusa vem antes.
+        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF')]);
+
+        $this->getJson($this->pdfUrl())->assertStatus(500);
+
+        Http::assertNothingSent();
+    }
+
+    /**
+     * Certificado sem nome de aluno não é documento incompleto — é documento
+     * que atesta o que ninguém sabe. Falhar alto vira chamado e conserto; a
+     * linha em branco viraria prova falsa.
+     */
+    public function test_pdf_recusa_snapshot_sem_o_nome_do_aluno(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['aluno']['name'] = '';
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF')]);
+
+        $this->getJson($this->pdfUrl())->assertStatus(500);
+
+        Http::assertNothingSent();
     }
 
     public function test_temario_remove_marcadores_unicode_sem_corromper_sinais_tecnicos(): void
@@ -454,11 +550,16 @@ class CertificatePdfTest extends TestCase
      * materializado em lugar nenhum — nem disco, nem bucket, nem temporário.
      * Um arquivo persistido envelheceria em silêncio contra o snapshot, que é
      * a única fonte legal do documento.
+     *
+     * Este é o único teste do documento que NÃO troca o conversor pelo fake: a
+     * invariante é sobre a requisição inteira, e o `GotenbergHtmlToPdf` — que
+     * manipula os bytes do PDF — precisa estar no caminho para ser provado.
      */
     public function test_pdf_nao_e_materializado_em_disco_bucket_nem_temporario(): void
     {
         $this->actingAsAdmin();
-        $this->fakeGotenberg();
+        Http::preventStrayRequests();
+        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF-1.4 real')]);
         Storage::fake('local');
         Storage::fake('public');
         Storage::fake('s3');
@@ -466,6 +567,12 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
+        // Prende a invariante ao adapter real: sem isto ela passaria por
+        // vacuidade se o documento deixasse de atravessar o conversor.
+        Http::assertSent(fn ($request): bool => str_contains(
+            $request->url(),
+            '/forms/chromium/convert/html',
+        ));
         $this->assertSame([], Storage::disk('local')->allFiles());
         $this->assertSame([], Storage::disk('public')->allFiles());
         $this->assertSame([], Storage::disk('s3')->allFiles());

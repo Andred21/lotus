@@ -2,27 +2,30 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: rerun_review_after_corrections
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: >-
-  Joao aprovou Q-1 a Q-6 em 2026-08-06, com a correcao delegada ao Codex e a revisao das
-  correcoes com Claude. Achados: Q-1 🔴 o periodo da capacitacao some do certificado quando
-  `courses.description` e null, e o teste fixa esse comportamento; Q-2 🟡 razao social e RUT
-  da OTEC emissora sao literais no Blade e nao congelam no snapshot (D12); Q-3 🟡 `description`
-  lida sem defesa enquanto `modules` usa `?? []`, na mesma leva; Q-4 🟡 `ltrim` com charlist
-  multibyte corrompe travessao no temario (provado por sonda); Q-5 🟡 as assercoes de omissao
-  do `CertificatePdfTest` viraram vacuidade apos a reescrita do Blade; Q-6 🟡 rodape/QR
-  absolutos sobre fluxo de tamanho ilimitado. Gate pre-correcao reconferido e verde
-  (436 passed, 1 skipped, 1590 assertions; Pint passed nos 5 .php; frontend intocado).
+  Joao aprovou Q-1 a Q-7 do review de `28ac6a3..e7626b4` em 2026-08-07, e as sete correcoes foram
+  aplicadas nesta sessao. Q-1 `withoutObjectCaching` no `CertificateSnapshotCast` — snapshot
+  congelado deixa de ser reescrito por `save()` posterior a uma leitura. Q-2 `modules` escalar nao
+  estoura mais. Q-3 `finalGrade()` volta a imprimir nota escalar (inclusive `"6,4"`), omitindo so o
+  que nao da para imprimir. Q-4 `schema_version` passa a governar a leitura (fallback de config so
+  na versao 1) e campo obrigatorio em branco vira `CorruptedSnapshotException` (500) no PDF e na
+  rota publica do QR — mudanca deliberada, 200 com nome vazio era prova falsa. Q-5 `pluck` de
+  certificados vigentes resolvido uma vez por chamada e `latestForCourse` filtrando no SQL. Q-6 a
+  prova §4.7 de nao-materializacao volta a atravessar o `GotenbergHtmlToPdf`. Q-7 `html()` privado
+  nos dois services, `renderCount()` removido, `FakeHtmlToPdf` movido para `tests/Support/Pdf/`.
+  Oito testes novos, cada um visto reprovar contra o codigo antigo (licao 10). Gate pos-correcao:
+  457 passed, 1 skipped, 1655 assertions; Pint passed nos 16 arquivos; `generated.ts` sem diff.
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: e7626b4
-updated_at: 2026-08-07T19:45:00-03:00
+updated_at: 2026-08-07T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -555,6 +558,52 @@ documento traz emissor, razão social, narrativa, QR, assinatura sobre `Instruct
 **O que ainda NÃO aconteceu, e por isso o estado é `reviewing` e não `ready_for_closure`:** as três
 refatorações são código novo e substancial, e **nenhuma passou por uma lente de review** — só pelo
 gate. O próximo passo é repetir o `/revisar-sprint` sobre `28ac6a3..e7626b4`.
+
+### Correções do review — 2026-08-07, Q-1 a Q-7 aplicados
+
+O João aprovou os sete. **Suíte após as correções: 457 passed, 1 skipped, 1655 assertions**; Pint
+`passed` nos 16 arquivos; `typescript:transform` sem diff no `generated.ts` (só métodos mudaram, não
+a forma dos DTOs). **Cada um dos 8 testes novos foi visto reprovar contra o código antigo**
+(`git stash` do arquivo de produção, roda, `stash pop`) — lição 10.
+
+Duas correções mudam comportamento de propósito e ficam registradas aqui:
+
+- **Q-3 — nota não-numérica volta a ser impressa.** `finalGrade()` filtrava por `is_numeric` e
+  apagava `"6,4"` do documento em silêncio; `enrollments.grades` é validado só como `array`, então a
+  nota chega como o redator lançou, vírgula inclusive. Agora omite apenas o que não dá para
+  imprimir — array, objeto, booleano, string vazia (D-P7 preservado). O `AcademicResult` tipado
+  segue como B6 no backlog; isto é a defesa até lá.
+- **Q-4 — `schema_version` passou a governar a leitura, e snapshot corrompido falha alto.** Só a
+  versão 1 cai para `config('app.certificate_issuer')` quando falta `emissor`; da 2 em diante o
+  emissor é o congelado, senão a OTEC de HOJE entraria num documento antigo. E `aluno.name`,
+  `curso.name` e `emissor.name` em branco viram `CorruptedSnapshotException` (500 pelo handler RFC
+  7807) nos dois consumidores legais — PDF e rota pública do QR. Um 200 dizendo `status: emitido`
+  com nome vazio é prova falsa; erro visível vira chamado.
+
+Três testes que comparavam `assertEquals($snapshot, $reloaded->snapshot)` passaram a comparar
+`toArray()`: sem o cache de casts, cada leitura reconstrói o DTO, e a comparação objeto a objeto
+batia no `_dataContext` do spatie — escrituração da biblioteca, não conteúdo do documento.
+
+### Review das três refatorações — 2026-08-07, 7 achados aguardando o João
+
+Duas frentes (lente Claude + `mcp__codex__codex` read-only), ALTO RISCO por documento de peso legal.
+Suíte reconferida aqui, não aceita por relatório: **449 passed, 1 skipped, 1634 assertions**.
+
+**O 🔴 foi provado por sonda, não deduzido.** `CertificateSnapshotCast` é um cast de objeto, e o
+Eloquent guarda o valor no cache de casts: `Model::save()` chama `mergeAttributesFromCachedCasts()`
+antes de qualquer coisa, então **ler `$certificate->snapshot` e salvar o mesmo model reescreve a
+coluna** a partir do DTO. Rodado no MySQL de dev dentro de `beginTransaction`/`rollBack` com um
+snapshot da versão 1: `template.layout_config` (com `orientation`) **sumiu**, `emissor` **da config
+atual** entrou num documento de 2026 — a mesma classe de defeito que o A-1 e o Q-2 já corrigiram —
+e `schema_version: 1` foi carimbado numa estrutura versão 2. Nenhum caminho de produção dispara
+hoje: `RevokeCertificateAction` recarrega o model com `lockForUpdate` e não lê o snapshot antes do
+`update`. O bloco de frontend, que lê certificado em toda tela, é quem encosta nisso.
+
+**A divergência entre os revisores foi mostrada, não resolvida em silêncio:** o Codex marcou a troca
+de `template.layout_config` por `template.city` como perda de dado congelado. Conferido no código —
+`orientation` não existe em lugar nenhum desde o D-P9 e a `city` nomeada é a decisão do próprio B2,
+com teste atualizado de propósito. **Não é achado.** O risco real que sobra é o Q-1: é ele que apaga
+o `layout_config` dos snapshots v1 que ainda o carregam.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 

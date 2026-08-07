@@ -35,14 +35,26 @@ class SnapshotResultData extends Data
 
     /**
      * A nota impressa no documento, ou `null` — que OMITE a linha (D-P7).
-     * Aceita a nota numérica gravada como número ou como string; qualquer
-     * outra coisa omite, porque documento legal não imprime lixo.
+     *
+     * `enrollments.grades` é validado só como `array`, então a nota chega como
+     * o redator a lançou: `6.4`, `"6.4"` ou `"6,4"` com vírgula, que é como se
+     * escreve nota no Chile. Filtrar por `is_numeric` apagava a última do
+     * documento em silêncio. Omitir só o que não dá para imprimir — array,
+     * objeto, booleano, string vazia.
      */
     public function finalGrade(): int|float|string|null
     {
         $grade = data_get($this->grades, 'final');
 
-        return is_numeric($grade) ? $grade : null;
+        if (is_int($grade) || is_float($grade)) {
+            return $grade;
+        }
+
+        if (! is_string($grade)) {
+            return null;
+        }
+
+        return trim($grade) === '' ? null : trim($grade);
     }
 
     private static function nullableString(mixed $value): ?string

@@ -17,7 +17,7 @@ class CertificateTemplateResolver
      */
     public function latestForCourse(int $courseId): ?CourseCertificateTemplate
     {
-        return $this->latestByCourse()->get($courseId);
+        return $this->latestByCourse($courseId)->get($courseId);
     }
 
     /**
@@ -25,13 +25,18 @@ class CertificateTemplateResolver
      * só: o `issuable` precisa da chave (o curso tem template?) e do próprio
      * template (a cidade é válida?) na mesma passada.
      *
+     * `$courseId` estreita a MESMA consulta em vez de filtrar em PHP: a
+     * emissão pergunta por um curso só, dentro da transação, e varrer a tabela
+     * inteira ali era o preço escondido da fonte única.
+     *
      * @return Collection<int, CourseCertificateTemplate>
      */
-    public function latestByCourse(): Collection
+    public function latestByCourse(?int $courseId = null): Collection
     {
         // Ascendente + keyBy: em chave repetida o `keyBy` guarda a ÚLTIMA,
         // que aqui é a maior `version`.
         return $this->availableTemplates()
+            ->when($courseId !== null, fn (Builder $query) => $query->where('course_id', $courseId))
             ->orderBy('course_id')
             ->orderBy('version')
             ->get()

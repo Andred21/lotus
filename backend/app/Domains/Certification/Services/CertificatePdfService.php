@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Services;
 
+use App\Domains\Certification\Exceptions\CorruptedSnapshotException;
 use App\Domains\Certification\Models\Certificate;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\Pdf\PageOptions;
@@ -18,8 +19,16 @@ class CertificatePdfService
         return $this->pdf->render($this->html($certificate), PageOptions::fromCss());
     }
 
-    public function html(Certificate $certificate): string
+    private function html(Certificate $certificate): string
     {
+        $missing = $certificate->snapshot->missingRequiredFields();
+
+        // Um certificado com o nome do aluno em branco não é um certificado
+        // incompleto — é um documento que atesta o que ninguém sabe.
+        if ($missing !== []) {
+            throw CorruptedSnapshotException::missingFields($certificate->codigo, $missing);
+        }
+
         $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
         $qr = base64_encode((string) QrCode::format('svg')
             ->size(180)

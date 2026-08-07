@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Shared\Pdf;
+namespace Tests\Support\Pdf;
 
+use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\Pdf\PageOptions;
 use LogicException;
 
 /**
@@ -31,11 +33,6 @@ class FakeHtmlToPdf implements HtmlToPdf
     public function lastOptions(): PageOptions
     {
         return $this->lastCall()['options'];
-    }
-
-    public function renderCount(): int
-    {
-        return count($this->calls);
     }
 
     /** @return array{html: string, options: PageOptions} */

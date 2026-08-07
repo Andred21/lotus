@@ -25,7 +25,7 @@ class ManualPdfService
         return $this->pdf->render($this->html($turma), PageOptions::converterDefault());
     }
 
-    public function html(Turma $turma): string
+    private function html(Turma $turma): string
     {
         $turma->load(['course.modules', 'quote.budget.client', 'redatores.user', 'enrollments.student.user']);
 

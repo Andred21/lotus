@@ -20,6 +20,10 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  *
  * Snapshot já gravado **não é reescrito**: a leitura aceita as duas versões, e
  * é isso que faz um certificado de 2026 continuar imprimindo igual em 2028.
+ *
+ * A versão **governa** a leitura, não é decoração: só a 1 cai para a config
+ * quando falta `emissor`. Tolerância cega no lugar disso injetaria a OTEC de
+ * hoje num documento de ontem.
  */
 #[TypeScript]
 class CertificateSnapshotData extends Data
@@ -48,27 +52,68 @@ class CertificateSnapshotData extends Data
      */
     public static function fromArray(?array $raw): self
     {
+        $version = (int) (data_get($raw, 'schema_version') ?? 1);
+
         return new self(
-            schema_version: (int) (data_get($raw, 'schema_version') ?? 1),
+            schema_version: $version,
             aluno: SnapshotPartyData::fromArray(self::section($raw, 'aluno')),
             curso: SnapshotCourseData::fromArray(self::section($raw, 'curso')),
             turma: SnapshotTurmaData::fromArray(self::section($raw, 'turma')),
             cliente: SnapshotPartyData::fromArray(self::section($raw, 'cliente')),
-            // Sem `emissor` no snapshot (versão 1) — ou com a chave presente e
-            // `null` —, a identidade da OTEC vem da config. É o mesmo fallback
-            // que o Blade fazia antes de existir tipo, agora num lugar só.
-            emissor: SnapshotPartyData::fromArray([
-                'name' => data_get($raw, 'emissor.name')
-                    ?? config('app.certificate_issuer.name'),
-                'rut' => data_get($raw, 'emissor.rut')
-                    ?? config('app.certificate_issuer.rut'),
-            ]),
+            emissor: self::emissor($raw, $version),
             redator: SnapshotPartyData::fromArray(self::section($raw, 'redator')),
             resultado: SnapshotResultData::fromArray(self::section($raw, 'resultado')),
             template: SnapshotTemplateData::fromArray(self::section($raw, 'template')),
             ciudad_emision: self::nullableString(data_get($raw, 'ciudad_emision')),
             emitido_em: self::nullableString(data_get($raw, 'emitido_em')),
         );
+    }
+
+    /**
+     * Os campos que um certificado não pode apresentar em branco: quem, o quê
+     * e quem atesta. Vazio aqui não é ausência tolerável de campo novo — é
+     * snapshot corrompido, e a leitura tolerante não pode disfarçá-lo de
+     * documento válido.
+     *
+     * @return list<string>
+     */
+    public function missingRequiredFields(): array
+    {
+        $required = [
+            'aluno.name' => $this->aluno->name,
+            'curso.name' => $this->curso->name,
+            'emissor.name' => $this->emissor->name,
+        ];
+
+        return array_keys(array_filter(
+            $required,
+            fn (string $value) => trim($value) === '',
+        ));
+    }
+
+    /**
+     * A identidade da OTEC emissora, com `schema_version` mandando.
+     *
+     * A versão 1 não tinha `emissor` — a OTEC era literal no Blade —, e a
+     * config é o que reconstrói a identidade daquela época. Da versão 2 em
+     * diante o emissor está congelado no documento, e cair na config
+     * carimbaria a OTEC de HOJE num certificado antigo. Faltando ali, o
+     * snapshot está corrompido e quem apresenta o documento recusa.
+     *
+     * @param  array<string, mixed>|null  $raw
+     */
+    private static function emissor(?array $raw, int $version): SnapshotPartyData
+    {
+        $frozen = self::section($raw, 'emissor');
+
+        if ($version >= 2) {
+            return SnapshotPartyData::fromArray($frozen);
+        }
+
+        return SnapshotPartyData::fromArray([
+            'name' => data_get($frozen, 'name') ?? config('app.certificate_issuer.name'),
+            'rut' => data_get($frozen, 'rut') ?? config('app.certificate_issuer.rut'),
+        ]);
     }
 
     /**
