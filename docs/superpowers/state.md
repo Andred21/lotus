@@ -2,14 +2,25 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: null
+blocker: >-
+  Review de `cbb9e09..0c28d91` (ALTO RISCO, lente Claude + Codex read-only) devolveu 5 achados,
+  nenhum 🔴, os cinco provados por sonda executada e aguardando decisao do Joao: R-1 🟡 o
+  `data_get(..., [])` do Q-3 nao cobre valor `null` -- snapshot com `curso.modules: null` derruba
+  o PDF em 500 (provado pela API real), enquanto o `?? []` anterior renderizava; R-2 🟡 o A4 nao
+  tem guarda -- apagar a linha `@page` do Blade mantem os 58 testes de Certification verdes e o
+  PDF real volta a Letter 612x792 (provado); R-3 🟡 a origem em `config` do emissor nao e guardada
+  -- literais no builder mantem a suite verde, porque o teste fixa os mesmos valores do default;
+  R-4 🟢 a "descricao longa" do teste de rodape e decorativa (passa com 1x); R-5 🟢
+  `.env.example` sem `CERTIFICATE_ISSUER_NAME`/`RUT`, enquanto `FRONTEND_URL` do mesmo bloco esta
+  la. Gate reconferido e verde (442 passed, 1 skipped, 1606 assertions; Pint passed nos 6 .php;
+  frontend intocado; `generated.ts` sem diff, `snapshot` e `array` no DTO).
 review_findings_approved: >-
   Joao aprovou Q-1 a Q-6 em 2026-08-06, com a correcao delegada ao Codex e a revisao das
   correcoes com Claude. Achados: Q-1 🔴 o periodo da capacitacao some do certificado quando

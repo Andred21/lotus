@@ -19,7 +19,7 @@ class PublicCertificateData extends Data
         public array $aluno,
         /** @var array{name: string, workload_hours: int} */
         public array $curso,
-        /** @var array{end_date: string} */
+        /** @var array{end_date: string|null} */
         public array $turma,
         /** @var array{name: string} */
         public array $cliente,
@@ -36,14 +36,14 @@ class PublicCertificateData extends Data
             status: $certificate->status,
             valido_ate: $certificate->valido_ate?->toDateString(),
             revoked_at: $certificate->revoked_at?->toISOString(),
-            aluno: ['name' => $snapshot['aluno']['name']],
+            aluno: ['name' => $snapshot->aluno->name],
             curso: [
-                'name' => $snapshot['curso']['name'],
-                'workload_hours' => $snapshot['curso']['workload_hours'],
+                'name' => $snapshot->curso->name,
+                'workload_hours' => $snapshot->curso->workload_hours,
             ],
-            turma: ['end_date' => $snapshot['turma']['end_date']],
-            cliente: ['name' => $snapshot['cliente']['name']],
-            redator: ['name' => $snapshot['redator']['name']],
+            turma: ['end_date' => $snapshot->turma->end_date],
+            cliente: ['name' => $snapshot->cliente->name],
+            redator: ['name' => $snapshot->redator->name],
         );
     }
 }

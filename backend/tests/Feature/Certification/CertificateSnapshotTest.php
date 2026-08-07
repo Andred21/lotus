@@ -165,6 +165,7 @@ class CertificateSnapshotTest extends TestCase
         );
 
         $this->assertSame([
+            'schema_version' => 2,
             'aluno' => ['name' => 'Juan Pérez', 'rut' => '12.345.678-5'],
             'curso' => [
                 'name' => 'Seguridad en Alta Tensión',
@@ -201,16 +202,16 @@ class CertificateSnapshotTest extends TestCase
                 'approval_status' => 'aprobado',
                 'attendance_pct' => '87.50',
             ],
+            // Do `layout_config` só a `city` tem consumidor desde o D-P9, e é
+            // ela que congela nomeada (B2). Snapshot da versão 1 guardava o
+            // JSON inteiro, e a leitura aceita as duas formas.
             'template' => [
                 'version' => 2,
-                'layout_config' => [
-                    'orientation' => 'landscape',
-                    'city' => 'Valparaíso',
-                ],
+                'city' => 'Valparaíso',
             ],
             'ciudad_emision' => 'Santiago',
             'emitido_em' => '2026-08-05',
-        ], $snapshot);
+        ], $snapshot->toArray());
     }
 
     public function test_snapshot_persistido_nao_muda_quando_curso_e_renomeado_depois(): void
@@ -240,8 +241,8 @@ class CertificateSnapshotTest extends TestCase
         $reloaded = Certificate::query()->findOrFail($certificate->id);
 
         $this->assertSame('Nombre Alterado Después', $this->course->fresh()->name);
-        $this->assertSame('Seguridad en Alta Tensión', $reloaded->snapshot['curso']['name']);
-        $this->assertSame($snapshot, $reloaded->snapshot);
+        $this->assertSame('Seguridad en Alta Tensión', $reloaded->snapshot->curso->name);
+        $this->assertEquals($snapshot, $reloaded->snapshot);
     }
 
     public function test_datas_do_snapshot_sao_strings_em_y_m_d(): void
@@ -254,12 +255,12 @@ class CertificateSnapshotTest extends TestCase
             $this->emissionCity(),
         );
 
-        $this->assertSame('2026-07-20', $snapshot['turma']['start_date']);
-        $this->assertSame('2026-07-24', $snapshot['turma']['end_date']);
-        $this->assertSame('2026-08-05', $snapshot['emitido_em']);
-        $this->assertIsString($snapshot['turma']['start_date']);
-        $this->assertIsString($snapshot['turma']['end_date']);
-        $this->assertIsString($snapshot['emitido_em']);
+        $this->assertSame('2026-07-20', $snapshot->turma->start_date);
+        $this->assertSame('2026-07-24', $snapshot->turma->end_date);
+        $this->assertSame('2026-08-05', $snapshot->emitido_em);
+        $this->assertIsString($snapshot->turma->start_date);
+        $this->assertIsString($snapshot->turma->end_date);
+        $this->assertIsString($snapshot->emitido_em);
     }
 
     public function test_cliente_com_user_e_caminho_arquivados_ainda_resolve_o_nome(): void
@@ -285,8 +286,8 @@ class CertificateSnapshotTest extends TestCase
             $this->emissionCity(),
         );
 
-        $this->assertSame('Empresa Legal SpA', $snapshot['cliente']['name']);
-        $this->assertSame('76.123.456-7', $snapshot['cliente']['rut']);
+        $this->assertSame('Empresa Legal SpA', $snapshot->cliente->name);
+        $this->assertSame('76.123.456-7', $snapshot->cliente->rut);
     }
 
     public function test_template_persistido_nao_muda_quando_template_e_editado_e_arquivado(): void
@@ -320,12 +321,9 @@ class CertificateSnapshotTest extends TestCase
         $reloaded = Certificate::query()->findOrFail($certificate->id);
 
         $this->assertSoftDeleted('course_certificate_templates', ['id' => $this->template->id]);
-        $this->assertSame(2, $reloaded->snapshot['template']['version']);
-        $this->assertSame([
-            'orientation' => 'landscape',
-            'city' => 'Valparaíso',
-        ], $reloaded->snapshot['template']['layout_config']);
-        $this->assertSame($snapshot, $reloaded->snapshot);
+        $this->assertSame(2, $reloaded->snapshot->template->version);
+        $this->assertSame('Valparaíso', $reloaded->snapshot->template->city);
+        $this->assertEquals($snapshot, $reloaded->snapshot);
     }
 
     public function test_turma_online_usa_cidade_fixa_do_template_e_nao_endereco_do_cliente(): void
@@ -347,8 +345,8 @@ class CertificateSnapshotTest extends TestCase
             $this->emissionCity(),
         );
 
-        $this->assertSame('Valparaíso', $snapshot['ciudad_emision']);
-        $this->assertNotSame('Ciudad del Cliente', $snapshot['ciudad_emision']);
+        $this->assertSame('Valparaíso', $snapshot->ciudad_emision);
+        $this->assertNotSame('Ciudad del Cliente', $snapshot->ciudad_emision);
     }
 
     /**
@@ -387,14 +385,14 @@ class CertificateSnapshotTest extends TestCase
         $this->assertCount(1, $this->course->fresh()->modules);
         $this->assertSame(
             'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
-            $reloaded->snapshot['curso']['description'],
+            $reloaded->snapshot->curso->description,
         );
-        $this->assertCount(2, $reloaded->snapshot['curso']['modules']);
+        $this->assertCount(2, $reloaded->snapshot->curso->modules);
         $this->assertSame(
             '1. Introducción y Marco General',
-            $reloaded->snapshot['curso']['modules'][0]['name'],
+            $reloaded->snapshot->curso->modules[0]->name,
         );
-        $this->assertSame($snapshot, $reloaded->snapshot);
+        $this->assertEquals($snapshot, $reloaded->snapshot);
     }
 
     public function test_curso_sem_descricao_e_sem_modulos_congela_nulo_e_lista_vazia(): void
@@ -410,8 +408,8 @@ class CertificateSnapshotTest extends TestCase
             $this->emissionCity(),
         );
 
-        $this->assertNull($snapshot['curso']['description']);
-        $this->assertSame([], $snapshot['curso']['modules']);
+        $this->assertNull($snapshot->curso->description);
+        $this->assertSame([], $snapshot->curso->modules);
     }
 
     public function test_notas_e_presenca_nulas_permanecem_nulas_no_snapshot(): void
@@ -429,7 +427,7 @@ class CertificateSnapshotTest extends TestCase
             $this->emissionCity(),
         );
 
-        $this->assertNull($snapshot['resultado']['grades']);
-        $this->assertNull($snapshot['resultado']['attendance_pct']);
+        $this->assertNull($snapshot->resultado->grades);
+        $this->assertNull($snapshot->resultado->attendance_pct);
     }
 }

@@ -5,42 +5,17 @@
      * Documento oficial da Lotus (`docs/templates/certificado.pdf`), montado a
      * partir do snapshot congelado — nunca das relações vivas (D12, §4.7). Todo
      * campo ausente OMITE a linha em vez de imprimir zero ou vazio (D-P7).
+     *
+     * O snapshot chega tipado (`CertificateSnapshotData`): a tolerância a
+     * versão antiga do schema mora nele, não em defesa espalhada por aqui.
      */
     $snapshot = $certificate->snapshot;
-    $curso = $snapshot['curso'];
-    // `?? ` em vez do default do `data_get`: o default só cobre chave AUSENTE,
-    // e snapshot antigo pode trazer a chave com `null` — foi assim que
-    // `curso.modules: null` derrubou o PDF em 500 (R-1).
-    $description = data_get($snapshot, 'curso.description');
-    $modules = data_get($snapshot, 'curso.modules') ?? [];
-    $technicalName = data_get($snapshot, 'curso.technical_name');
-    $clienteRut = data_get($snapshot, 'cliente.rut');
-    $emissorName = data_get($snapshot, 'emissor.name')
-        ?? config('app.certificate_issuer.name');
-    $emissorRut = data_get($snapshot, 'emissor.rut')
-        ?? config('app.certificate_issuer.rut');
-    $grade = data_get($snapshot, 'resultado.grades.final');
-    $attendance = data_get($snapshot, 'resultado.attendance_pct');
+    $curso = $snapshot->curso;
+    $periodo = $snapshot->turma->periodo();
+    $grade = $snapshot->resultado->finalGrade();
+    $attendance = $snapshot->resultado->attendance_pct;
 
     $fecha = fn (?string $iso) => $iso === null ? null : Carbon::parse($iso)->format('d-m-Y');
-    $inicio = $fecha(data_get($snapshot, 'turma.start_date'));
-    $termino = $fecha(data_get($snapshot, 'turma.end_date'));
-    $periodo = $inicio !== null && $termino !== null
-        ? ($inicio === $termino
-            ? "el día {$inicio}"
-            : "entre el {$inicio} y el {$termino}")
-        : null;
-
-    // `contents` é texto livre autoral (migration de `course_modules`): cada
-    // linha é um item do temário, com ou sem marcador escrito à mão.
-    $bullets = fn (?string $contents) => collect(preg_split('/\R/', (string) $contents))
-        ->map(fn (string $line) => preg_replace(
-            '/^[ \t]*(?:[*•–—-](?=[ \t]|$))[ \t]*/u',
-            '',
-            trim($line),
-        ) ?? trim($line))
-        ->filter()
-        ->all();
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -160,7 +135,7 @@
 
     <div class="meta">
         N° {{ $certificate->codigo }}<br>
-        Emisión: {{ $fecha($snapshot['emitido_em']) }}
+        Emisión: {{ $fecha($snapshot->emitido_em) }}
     </div>
 
     <div class="brand">
@@ -170,30 +145,30 @@
     <h1>CERTIFICADO DE CAPACITACIÓN</h1>
 
     <p class="lead">
-        En {{ $snapshot['ciudad_emision'] }} a {{ $fecha($snapshot['emitido_em']) }},
-        {{ $emissorName }} [{{ $emissorRut }}] certifica que:
+        En {{ $snapshot->ciudad_emision }} a {{ $fecha($snapshot->emitido_em) }},
+        {{ $snapshot->emissor->name }} [{{ $snapshot->emissor->rut }}] certifica que:
     </p>
 
-    <div class="name">{{ $snapshot['aluno']['name'] }}</div>
-    <div class="rut">{{ $snapshot['aluno']['rut'] }}</div>
-    <div class="company">{{ $snapshot['cliente']['name'] }}</div>
+    <div class="name">{{ $snapshot->aluno->name }}</div>
+    <div class="rut">{{ $snapshot->aluno->rut }}</div>
+    <div class="company">{{ $snapshot->cliente->name }}</div>
 
-    @if ($clienteRut)
+    @if ($snapshot->cliente->rut)
         <p class="lead">
-            El trabajador de la empresa RUT: {{ $clienteRut }},
+            El trabajador de la empresa RUT: {{ $snapshot->cliente->rut }},
             participó en el curso:
         </p>
     @endif
 
     <div class="course">
-        {{ $curso['name'] }}
-        @if ($technicalName)
-            <small>{{ $technicalName }}</small>
+        {{ $curso->name }}
+        @if ($curso->technical_name)
+            <small>{{ $curso->technical_name }}</small>
         @endif
-        <small>{{ $curso['workload_hours'] }} horas cronológicas</small>
+        <small>{{ $curso->workload_hours }} horas cronológicas</small>
     </div>
 
-    @if ($description)
+    @if ($curso->description)
         {{-- O original encaixa a descrição DENTRO da frase ("…, abordó las
              responsabilidades…"), o que só fecha se o texto do curso começar por
              verbo. `courses.description` é livre e costuma ser sintagma nominal,
@@ -202,7 +177,7 @@
         @if ($periodo !== null)
             <p class="narrative">La actividad realizada {{ $periodo }} abordó los siguientes contenidos:</p>
         @endif
-        <p class="narrative">{{ $description }}</p>
+        <p class="narrative">{{ $curso->description }}</p>
     @elseif ($periodo !== null)
         <p class="narrative">La actividad fue realizada {{ $periodo }}.</p>
     @endif
@@ -230,13 +205,13 @@
             </div>
 
             <div class="signature">
-                <div class="signature-name">{{ $snapshot['redator']['name'] }}</div>
+                <div class="signature-name">{{ $snapshot->redator->name }}</div>
                 <div class="signature-line">Instructor</div>
             </div>
         </div>
 
         <p class="disclaimer">
-            El otorgamiento del presente documento por parte de {{ $emissorName }}, no implica un
+            El otorgamiento del presente documento por parte de {{ $snapshot->emissor->name }}, no implica un
             reconocimiento de relación jurídica alguna con la persona identificada en él.
         </p>
     </div>
@@ -244,7 +219,7 @@
     <div class="accent accent-bottom"></div>
 </section>
 
-@if ($modules !== [])
+@if ($curso->modules !== [])
     <section class="page">
         <div class="accent accent-top"></div>
 
@@ -255,15 +230,15 @@
         <table class="temario-head">
             <tr>
                 <td>Temario del Curso:</td>
-                <td>{{ $curso['name'] }}</td>
+                <td>{{ $curso->name }}</td>
             </tr>
         </table>
 
-        @foreach ($modules as $module)
-            <div class="temario-section">{{ data_get($module, 'name') }}</div>
-            @if ($bullets(data_get($module, 'contents')) !== [])
+        @foreach ($curso->modules as $module)
+            <div class="temario-section">{{ $module->name }}</div>
+            @if ($module->bullets() !== [])
                 <ul class="temario-list">
-                    @foreach ($bullets(data_get($module, 'contents')) as $item)
+                    @foreach ($module->bullets() as $item)
                         <li>{{ $item }}</li>
                     @endforeach
                 </ul>
@@ -272,7 +247,7 @@
 
         <div class="certificate-footer certificate-footer--disclaimer">
             <p class="disclaimer">
-                El otorgamiento del presente documento por parte de {{ $emissorName }}, no implica un
+                El otorgamiento del presente documento por parte de {{ $snapshot->emissor->name }}, no implica un
                 reconocimiento de relación jurídica alguna con la persona identificada en él.
             </p>
         </div>

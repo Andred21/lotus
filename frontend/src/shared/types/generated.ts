@@ -22,8 +22,21 @@ status: CertificateStatus,
 valido_ate: string | null,
 revoked_at: string | null,
 revocation_reason: string | null,
-snapshot: Record<string, any>,
+snapshot: CertificateSnapshotData,
 created_at: string,
+};
+export type CertificateSnapshotData = {
+schema_version: number,
+aluno: SnapshotPartyData,
+curso: SnapshotCourseData,
+turma: SnapshotTurmaData,
+cliente: SnapshotPartyData,
+emissor: SnapshotPartyData,
+redator: SnapshotPartyData,
+resultado: SnapshotResultData,
+template: SnapshotTemplateData,
+ciudad_emision: string | null,
+emitido_em: string | null,
 };
 export type CertificateStatus = 'emitido' | 'revocado';
 export type CertificateTemplateData = {
@@ -189,7 +202,7 @@ name: string,
 workload_hours: number,
 },
 turma: {
-end_date: string,
+end_date: string | null,
 },
 cliente: {
 name: string,
@@ -253,6 +266,37 @@ type: string,
 is_active: boolean,
 roles: string[],
 permissions: string[],
+};
+export type SnapshotCourseData = {
+name: string,
+technical_name: string | null,
+workload_hours: number,
+description: string | null,
+modules: SnapshotModuleData[],
+};
+export type SnapshotModuleData = {
+sort_order: number,
+name: string,
+contents: string | null,
+};
+export type SnapshotPartyData = {
+name: string,
+rut: string | null,
+};
+export type SnapshotResultData = {
+grades: Record<string, any> | null,
+approval_status: string | null,
+attendance_pct: string | null,
+};
+export type SnapshotTemplateData = {
+version: number | null,
+city: string | null,
+};
+export type SnapshotTurmaData = {
+id: number | null,
+start_date: string | null,
+end_date: string | null,
+modalidade: string | null,
 };
 export type StudentClientLogData = {
 id: number,

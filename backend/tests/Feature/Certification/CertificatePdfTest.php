@@ -189,7 +189,7 @@ class CertificatePdfTest extends TestCase
 
         // Controle positivo: prende as negativas aos rótulos que o Blade usa
         // de fato, para elas não voltarem a passar por vacuidade após reescrita.
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['resultado']['grades'] = ['final' => 6.2];
         $snapshot['resultado']['attendance_pct'] = '87.50';
         $this->certificate->update([
@@ -241,7 +241,7 @@ class CertificatePdfTest extends TestCase
 
     public function test_html_imprime_periodo_sem_descricao_e_omite_temario_sem_modulos(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['curso']['description'] = null;
         $snapshot['curso']['modules'] = [];
         $this->certificate->update(['snapshot' => $snapshot]);
@@ -263,7 +263,7 @@ class CertificatePdfTest extends TestCase
 
     public function test_html_omite_linha_do_periodo_quando_snapshot_nao_tem_datas(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['turma']['start_date'] = null;
         $snapshot['turma']['end_date'] = null;
         $this->certificate->update(['snapshot' => $snapshot]);
@@ -281,7 +281,7 @@ class CertificatePdfTest extends TestCase
 
     public function test_html_usa_identidade_do_emissor_congelada_no_snapshot(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['emissor'] = [
             'name' => 'OTEC Histórica SpA',
             'rut' => '76.000.000-1',
@@ -306,7 +306,7 @@ class CertificatePdfTest extends TestCase
 
     public function test_html_tolera_snapshot_anterior_ao_schema_do_documento_oficial(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         unset(
             $snapshot['curso']['description'],
             $snapshot['curso']['modules'],
@@ -346,7 +346,7 @@ class CertificatePdfTest extends TestCase
      */
     public function test_html_tolera_chaves_do_snapshot_com_valor_null(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['curso']['modules'] = null;
         $snapshot['curso']['description'] = null;
         $snapshot['cliente']['rut'] = null;
@@ -371,7 +371,7 @@ class CertificatePdfTest extends TestCase
 
     public function test_temario_remove_marcadores_unicode_sem_corromper_sinais_tecnicos(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['curso']['modules'][0]['contents'] = implode("\n", [
             '* Asterisco',
             '- Hífen',
@@ -409,7 +409,7 @@ class CertificatePdfTest extends TestCase
      */
     public function test_rodape_e_qr_ficam_no_fluxo_e_nao_em_posicao_absoluta(): void
     {
-        $snapshot = $this->certificate->snapshot;
+        $snapshot = $this->rawSnapshot();
         $snapshot['curso']['description'] = str_repeat('Contenido técnico extenso. ', 140);
         $this->certificate->update(['snapshot' => $snapshot]);
         $this->actingAsAdmin();
@@ -517,6 +517,21 @@ class CertificatePdfTest extends TestCase
         Http::preventStrayRequests();
         $this->pdf = new FakeHtmlToPdf;
         $this->app->instance(HtmlToPdf::class, $this->pdf);
+    }
+
+    /**
+     * O snapshot CRU, como o banco guarda. Os testes escrevem array por aqui
+     * de propósito: é o que simula documento emitido antes de o tipo existir,
+     * e o que prova que a leitura tolera a versão 1 do schema.
+     *
+     * @return array<string, mixed>
+     */
+    private function rawSnapshot(): array
+    {
+        return json_decode(
+            (string) $this->certificate->getRawOriginal('snapshot'),
+            true,
+        );
     }
 
     private function assertHtml(callable $assertion): void

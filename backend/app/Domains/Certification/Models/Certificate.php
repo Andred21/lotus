@@ -3,6 +3,7 @@
 namespace App\Domains\Certification\Models;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Certification\Casts\CertificateSnapshotCast;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
@@ -42,7 +43,7 @@ class Certificate extends Model implements AuditableContract
     ];
 
     protected $casts = [
-        'snapshot' => 'array',
+        'snapshot' => CertificateSnapshotCast::class,
         'valido_ate' => 'date',
         'revoked_at' => 'datetime',
         'status' => CertificateStatus::class,

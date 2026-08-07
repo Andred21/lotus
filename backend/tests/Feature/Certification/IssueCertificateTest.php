@@ -127,8 +127,9 @@ class IssueCertificateTest extends TestCase
             ->assertJsonPath('snapshot.emissor.name', 'OTEC Configurada SpA')
             ->assertJsonPath('snapshot.emissor.rut', '76.900.900-9')
             ->assertJsonPath('snapshot.redator.name', 'María Relatora')
+            ->assertJsonPath('snapshot.schema_version', 2)
             ->assertJsonPath('snapshot.template.version', 1)
-            ->assertJsonPath('snapshot.template.layout_config.city', 'Santiago')
+            ->assertJsonPath('snapshot.template.city', 'Santiago')
             ->assertJsonPath('snapshot.ciudad_emision', 'Santiago')
             ->assertJsonPath('snapshot.resultado.grades.final', 6.2)
             ->assertJsonPath('snapshot.resultado.approval_status', 'aprobado')
@@ -136,7 +137,7 @@ class IssueCertificateTest extends TestCase
 
         $certificate = Certificate::query()->sole();
 
-        $this->assertSame('Juan Pérez', $certificate->snapshot['aluno']['name']);
+        $this->assertSame('Juan Pérez', $certificate->snapshot->aluno->name);
         $this->assertSame($this->enrollment->id, $certificate->enrollment_id);
         $this->assertSame($this->course->id, $certificate->course_id);
         $this->assertSame($this->redator->id, $certificate->redator_id);
@@ -320,7 +321,7 @@ class IssueCertificateTest extends TestCase
         $certificate = Certificate::query()->sole();
 
         $this->assertSame('LOT-2026-1000', $certificate->codigo);
-        $this->assertSame('2026-12-31', $certificate->snapshot['emitido_em']);
+        $this->assertSame('2026-12-31', $certificate->snapshot->emitido_em);
         $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
     }
 

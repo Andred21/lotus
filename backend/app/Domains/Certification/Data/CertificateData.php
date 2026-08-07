@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Data;
 
+use App\Domains\Certification\Data\Snapshot\CertificateSnapshotData;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use Spatie\LaravelData\Data;
@@ -21,8 +22,7 @@ class CertificateData extends Data
         public ?string $valido_ate,
         public ?string $revoked_at,
         public ?string $revocation_reason,
-        /** @var array<string, mixed> */
-        public array $snapshot,
+        public CertificateSnapshotData $snapshot,
         public string $created_at,
     ) {}
 
