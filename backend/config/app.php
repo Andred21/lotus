@@ -56,6 +56,11 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
+    'certificate_issuer' => [
+        'name' => env('CERTIFICATE_ISSUER_NAME', 'OTEC LOTUS SpA'),
+        'rut' => env('CERTIFICATE_ISSUER_RUT', '77.510.327-2'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

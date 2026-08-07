@@ -8,21 +8,40 @@
      */
     $snapshot = $certificate->snapshot;
     $curso = $snapshot['curso'];
-    $modules = $curso['modules'] ?? [];
+    $description = data_get($snapshot, 'curso.description');
+    $modules = data_get($snapshot, 'curso.modules', []);
+    $technicalName = data_get($snapshot, 'curso.technical_name');
+    $clienteRut = data_get($snapshot, 'cliente.rut');
+    $emissorName = data_get(
+        $snapshot,
+        'emissor.name',
+        config('app.certificate_issuer.name'),
+    );
+    $emissorRut = data_get(
+        $snapshot,
+        'emissor.rut',
+        config('app.certificate_issuer.rut'),
+    );
     $grade = data_get($snapshot, 'resultado.grades.final');
     $attendance = data_get($snapshot, 'resultado.attendance_pct');
 
     $fecha = fn (?string $iso) => $iso === null ? null : Carbon::parse($iso)->format('d-m-Y');
-    $inicio = $fecha($snapshot['turma']['start_date']);
-    $termino = $fecha($snapshot['turma']['end_date']);
-    $periodo = $inicio === $termino
-        ? "el día {$inicio}"
-        : "entre el {$inicio} y el {$termino}";
+    $inicio = $fecha(data_get($snapshot, 'turma.start_date'));
+    $termino = $fecha(data_get($snapshot, 'turma.end_date'));
+    $periodo = $inicio !== null && $termino !== null
+        ? ($inicio === $termino
+            ? "el día {$inicio}"
+            : "entre el {$inicio} y el {$termino}")
+        : null;
 
     // `contents` é texto livre autoral (migration de `course_modules`): cada
     // linha é um item do temário, com ou sem marcador escrito à mão.
     $bullets = fn (?string $contents) => collect(preg_split('/\R/', (string) $contents))
-        ->map(fn (string $line) => ltrim(trim($line), "*-•\t "))
+        ->map(fn (string $line) => preg_replace(
+            '/^[ \t]*(?:[*•–—-](?=[ \t]|$))[ \t]*/u',
+            '',
+            trim($line),
+        ) ?? trim($line))
         ->filter()
         ->all();
 @endphp
@@ -43,8 +62,10 @@
             margin: 0;
         }
         .page {
+            display: flex;
+            flex-direction: column;
             min-height: 297mm;
-            padding: 14mm 16mm 20mm;
+            padding: 14mm 16mm 8mm;
             page-break-after: always;
             position: relative;
         }
@@ -90,29 +111,38 @@
         .narrative { line-height: 1.7; margin: 0 0 4mm; text-align: justify; }
         .registro { margin-top: 6mm; text-align: center; }
 
+        .certificate-footer {
+            break-inside: avoid;
+            margin-top: auto;
+            page-break-inside: avoid;
+            padding-top: 6mm;
+        }
+        .footer-main {
+            align-items: flex-end;
+            display: flex;
+            justify-content: space-between;
+            min-height: 40mm;
+        }
         .signature {
-            bottom: 46mm;
-            position: absolute;
-            right: 16mm;
+            margin-bottom: 16mm;
             text-align: center;
             width: 70mm;
         }
         .signature-name { font-weight: bold; margin-bottom: 1mm; }
         .signature-line { border-top: 1px solid #3f3f3f; padding-top: 1mm; }
 
-        .qr { bottom: 30mm; left: 16mm; position: absolute; width: 46mm; }
+        .qr { width: 46mm; }
         .qr img { display: block; height: 32mm; width: 32mm; }
         .qr span { display: block; font-size: 8px; line-height: 1.4; margin-top: 1mm; }
 
         .disclaimer {
-            bottom: 8mm;
             font-size: 8px;
-            left: 16mm;
             line-height: 1.5;
-            position: absolute;
-            right: 16mm;
+            margin: 15mm 0 0;
             text-align: justify;
         }
+        .certificate-footer--disclaimer { padding-top: 8mm; }
+        .certificate-footer--disclaimer .disclaimer { margin-top: 0; }
 
         .temario-head {
             border: 1px solid #c9c9c9;
@@ -144,34 +174,40 @@
 
     <p class="lead">
         En {{ $snapshot['ciudad_emision'] }} a {{ $fecha($snapshot['emitido_em']) }},
-        OTEC LOTUS SpA [77.510.327-2] certifica que:
+        {{ $emissorName }} [{{ $emissorRut }}] certifica que:
     </p>
 
     <div class="name">{{ $snapshot['aluno']['name'] }}</div>
     <div class="rut">{{ $snapshot['aluno']['rut'] }}</div>
     <div class="company">{{ $snapshot['cliente']['name'] }}</div>
 
-    <p class="lead">
-        El trabajador de la empresa RUT: {{ $snapshot['cliente']['rut'] }},
-        participó en el curso:
-    </p>
+    @if ($clienteRut)
+        <p class="lead">
+            El trabajador de la empresa RUT: {{ $clienteRut }},
+            participó en el curso:
+        </p>
+    @endif
 
     <div class="course">
         {{ $curso['name'] }}
-        @if ($curso['technical_name'])
-            <small>{{ $curso['technical_name'] }}</small>
+        @if ($technicalName)
+            <small>{{ $technicalName }}</small>
         @endif
         <small>{{ $curso['workload_hours'] }} horas cronológicas</small>
     </div>
 
-    @if ($curso['description'])
+    @if ($description)
         {{-- O original encaixa a descrição DENTRO da frase ("…, abordó las
              responsabilidades…"), o que só fecha se o texto do curso começar por
              verbo. `courses.description` é livre e costuma ser sintagma nominal,
              então a frase se fecha antes e a descrição vira parágrafo próprio —
              o verbo "abordó" do original permanece. --}}
-        <p class="narrative">La actividad realizada {{ $periodo }} abordó los siguientes contenidos:</p>
-        <p class="narrative">{{ $curso['description'] }}</p>
+        @if ($periodo !== null)
+            <p class="narrative">La actividad realizada {{ $periodo }} abordó los siguientes contenidos:</p>
+        @endif
+        <p class="narrative">{{ $description }}</p>
+    @elseif ($periodo !== null)
+        <p class="narrative">La actividad fue realizada {{ $periodo }}.</p>
     @endif
 
     @if ($grade !== null)
@@ -189,20 +225,24 @@
         El N° de Registro de este documento es el : {{ $certificate->codigo }};
     </p>
 
-    <div class="signature">
-        <div class="signature-name">{{ $snapshot['redator']['name'] }}</div>
-        <div class="signature-line">Instructor</div>
-    </div>
+    <div class="certificate-footer">
+        <div class="footer-main">
+            <div class="qr">
+                <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
+                <span>Verifique la autenticidad de este certificado escaneando el código.</span>
+            </div>
 
-    <div class="qr">
-        <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
-        <span>Verifique la autenticidad de este certificado escaneando el código.</span>
-    </div>
+            <div class="signature">
+                <div class="signature-name">{{ $snapshot['redator']['name'] }}</div>
+                <div class="signature-line">Instructor</div>
+            </div>
+        </div>
 
-    <p class="disclaimer">
-        El otorgamiento del presente documento por parte de OTEC LOTUS SpA, no implica un
-        reconocimiento de relación jurídica alguna con la persona identificada en él.
-    </p>
+        <p class="disclaimer">
+            El otorgamiento del presente documento por parte de {{ $emissorName }}, no implica un
+            reconocimiento de relación jurídica alguna con la persona identificada en él.
+        </p>
+    </div>
 
     <div class="accent accent-bottom"></div>
 </section>
@@ -233,10 +273,12 @@
             @endif
         @endforeach
 
-        <p class="disclaimer">
-            El otorgamiento del presente documento por parte de OTEC LOTUS SpA, no implica un
-            reconocimiento de relación jurídica alguna con la persona identificada en él.
-        </p>
+        <div class="certificate-footer certificate-footer--disclaimer">
+            <p class="disclaimer">
+                El otorgamiento del presente documento por parte de {{ $emissorName }}, no implica un
+                reconocimiento de relación jurídica alguna con la persona identificada en él.
+            </p>
+        </div>
 
         <div class="accent accent-bottom"></div>
     </section>

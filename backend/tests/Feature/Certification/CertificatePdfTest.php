@@ -144,7 +144,7 @@ class CertificatePdfTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
-    public function test_html_usa_snapshot_e_omite_nota_e_presenca_nulas(): void
+    public function test_html_usa_snapshot_e_omite_nota_presenca_e_vigencia_nulas(): void
     {
         $this->actingAsAdmin();
         $this->fakeGotenberg();
@@ -159,8 +159,30 @@ class CertificatePdfTest extends TestCase
                 && str_contains($body, 'Seguridad Congelada')
                 && ! str_contains($body, 'Alumno Vivo')
                 && ! str_contains($body, 'Curso Vivo')
-                && ! str_contains($body, 'Nota final:')
-                && ! str_contains($body, 'Asistencia:');
+                && ! str_contains($body, 'El trabajador logró aprobar el curso con nota')
+                && ! str_contains($body, 'Asistencia registrada:')
+                && ! str_contains($body, 'Este certificado es válido hasta el');
+        });
+
+        // Controle positivo: prende as negativas aos rótulos que o Blade usa
+        // de fato, para elas não voltarem a passar por vacuidade após reescrita.
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['resultado']['grades'] = ['final' => 6.2];
+        $snapshot['resultado']['attendance_pct'] = '87.50';
+        $this->certificate->update([
+            'snapshot' => $snapshot,
+            'valido_ate' => '2027-08-05',
+        ]);
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return str_contains($body, 'El trabajador logró aprobar el curso con nota 6.2.')
+                && str_contains($body, 'Asistencia registrada: 87.50%.')
+                && str_contains($body, 'Este certificado es válido hasta el')
+                && str_contains($body, '05-08-2027');
         });
     }
 
@@ -198,7 +220,7 @@ class CertificatePdfTest extends TestCase
         });
     }
 
-    public function test_html_omite_a_pagina_de_temario_quando_o_curso_nao_tem_modulos(): void
+    public function test_html_imprime_periodo_sem_descricao_e_omite_temario_sem_modulos(): void
     {
         $snapshot = $this->certificate->snapshot;
         $snapshot['curso']['description'] = null;
@@ -213,8 +235,152 @@ class CertificatePdfTest extends TestCase
             $body = (string) $request->body();
 
             return ! str_contains($body, 'Temario del Curso')
-                && ! str_contains($body, 'La actividad realizada')
+                && str_contains(
+                    $body,
+                    'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
+                )
+                && ! str_contains($body, 'abordó los siguientes contenidos:')
                 && str_contains($body, 'CERTIFICADO DE CAPACITACIÓN');
+        });
+    }
+
+    public function test_html_omite_linha_do_periodo_quando_snapshot_nao_tem_datas(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['turma']['start_date'] = null;
+        $snapshot['turma']['end_date'] = null;
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return ! str_contains($body, 'La actividad realizada')
+                && ! str_contains($body, 'La actividad fue realizada')
+                && str_contains($body, 'abordó la narrativa congelada del curso.');
+        });
+    }
+
+    public function test_html_usa_identidade_do_emissor_congelada_no_snapshot(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['emissor'] = [
+            'name' => 'OTEC Histórica SpA',
+            'rut' => '76.000.000-1',
+        ];
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config([
+            'app.certificate_issuer.name' => 'OTEC Nova SpA',
+            'app.certificate_issuer.rut' => '77.999.999-9',
+        ]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return str_contains($body, 'OTEC Histórica SpA [76.000.000-1] certifica que:')
+                && str_contains($body, 'por parte de OTEC Histórica SpA')
+                && ! str_contains($body, 'OTEC Nova SpA')
+                && ! str_contains($body, '77.999.999-9');
+        });
+    }
+
+    public function test_html_tolera_snapshot_anterior_ao_schema_do_documento_oficial(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        unset(
+            $snapshot['curso']['description'],
+            $snapshot['curso']['modules'],
+            $snapshot['curso']['technical_name'],
+            $snapshot['cliente']['rut'],
+            $snapshot['emissor'],
+        );
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config([
+            'app.certificate_issuer.name' => 'OTEC Config Legado SpA',
+            'app.certificate_issuer.rut' => '77.111.111-1',
+        ]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return str_contains($body, 'OTEC Config Legado SpA [77.111.111-1] certifica que:')
+                && str_contains(
+                    $body,
+                    'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
+                )
+                && ! str_contains($body, 'Nombre técnico vivo')
+                && ! str_contains($body, 'Operación Segura AT')
+                && ! str_contains($body, 'El trabajador de la empresa RUT:')
+                && ! str_contains($body, 'abordó los siguientes contenidos:')
+                && ! str_contains($body, 'Temario del Curso');
+        });
+    }
+
+    public function test_temario_remove_marcadores_unicode_sem_corromper_sinais_tecnicos(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['curso']['modules'][0]['contents'] = implode("\n", [
+            '* Asterisco',
+            '- Hífen',
+            '• Bullet',
+            '— Alcance del procedimiento',
+            '– Tensión de prueba',
+            '-5 kV nominal',
+            '–5 kV a 15 kV',
+        ]);
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+
+            return preg_match('//u', $body) === 1
+                && ! str_contains($body, '�')
+                && str_contains($body, '<li>Asterisco</li>')
+                && str_contains($body, '<li>Hífen</li>')
+                && str_contains($body, '<li>Bullet</li>')
+                && str_contains($body, '<li>Alcance del procedimiento</li>')
+                && str_contains($body, '<li>Tensión de prueba</li>')
+                && str_contains($body, '<li>-5 kV nominal</li>')
+                && str_contains($body, '<li>–5 kV a 15 kV</li>');
+        });
+    }
+
+    public function test_html_mantem_rodape_no_fluxo_depois_de_descricao_longa(): void
+    {
+        $snapshot = $this->certificate->snapshot;
+        $snapshot['curso']['description'] = str_repeat('Contenido técnico extenso. ', 140);
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        Http::assertSent(function (Request $request): bool {
+            $body = (string) $request->body();
+            $descriptionPosition = strpos($body, 'Contenido técnico extenso.');
+            $footerPosition = strpos($body, 'class="certificate-footer"');
+
+            return $descriptionPosition !== false
+                && $footerPosition !== false
+                && $descriptionPosition < $footerPosition
+                && preg_match('/\.page\s*\{[^}]*display:\s*flex;/s', $body) === 1
+                && preg_match('/\.certificate-footer\s*\{[^}]*margin-top:\s*auto;/s', $body) === 1
+                && preg_match('/\.(?:signature|qr|disclaimer)\s*\{[^}]*position:\s*absolute;/s', $body) === 0;
         });
     }
 

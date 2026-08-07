@@ -51,6 +51,10 @@ class CertificateSnapshotTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-08-05 14:30:00');
+        config([
+            'app.certificate_issuer.name' => 'OTEC LOTUS SpA',
+            'app.certificate_issuer.rut' => '77.510.327-2',
+        ]);
 
         $this->client = $this->makeClientWithUser(
             ['legal_name' => 'Empresa Legal SpA'],
@@ -187,6 +191,7 @@ class CertificateSnapshotTest extends TestCase
                 'modalidade' => 'presencial',
             ],
             'cliente' => ['name' => 'Empresa Legal SpA', 'rut' => '76.123.456-7'],
+            'emissor' => ['name' => 'OTEC LOTUS SpA', 'rut' => '77.510.327-2'],
             'redator' => ['name' => 'María Relatora', 'rut' => '9.876.543-3'],
             'resultado' => [
                 'grades' => ['final' => 6.2],

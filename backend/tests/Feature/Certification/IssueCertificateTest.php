@@ -118,6 +118,8 @@ class IssueCertificateTest extends TestCase
             ->assertJsonPath('snapshot.aluno.name', 'Juan Pérez')
             ->assertJsonPath('snapshot.curso.name', 'Seguridad en Alta Tensión')
             ->assertJsonPath('snapshot.cliente.rut', '76.123.456-7')
+            ->assertJsonPath('snapshot.emissor.name', 'OTEC LOTUS SpA')
+            ->assertJsonPath('snapshot.emissor.rut', '77.510.327-2')
             ->assertJsonPath('snapshot.redator.name', 'María Relatora')
             ->assertJsonPath('snapshot.template.version', 1)
             ->assertJsonPath('snapshot.template.layout_config.city', 'Santiago')

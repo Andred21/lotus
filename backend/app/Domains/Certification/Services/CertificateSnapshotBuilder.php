@@ -60,6 +60,10 @@ class CertificateSnapshotBuilder
                 'name' => $enrollment->turma->quote->budget->client->legal_name,
                 'rut' => $enrollment->turma->quote->budget->client->user->rut,
             ],
+            'emissor' => [
+                'name' => (string) config('app.certificate_issuer.name'),
+                'rut' => (string) config('app.certificate_issuer.rut'),
+            ],
             'redator' => [
                 'name' => $redator->user->name,
                 'rut' => $redator->user->rut,

@@ -2,23 +2,24 @@
 schema_version: 1
 active_feature: certificacao-sprint-4
 active_work_item: certificacao-sprint-4
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
+workflow_state: executing
+next_owner: claude
+next_action: fix_certificate_paper_size_a4
 resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: docs/superpowers/plans/2026-08-05-certificacao-sprint-4.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: >-
-  Review da Task 15 (ALTO RISCO, lente Claude + Codex read-only) devolveu 6 achados
-  aguardando decisao do Joao: Q-1 🔴 o periodo da capacitacao some do certificado quando
+blocker: null
+review_findings_approved: >-
+  Joao aprovou Q-1 a Q-6 em 2026-08-06, com a correcao delegada ao Codex e a revisao das
+  correcoes com Claude. Achados: Q-1 🔴 o periodo da capacitacao some do certificado quando
   `courses.description` e null, e o teste fixa esse comportamento; Q-2 🟡 razao social e RUT
   da OTEC emissora sao literais no Blade e nao congelam no snapshot (D12); Q-3 🟡 `description`
   lida sem defesa enquanto `modules` usa `?? []`, na mesma leva; Q-4 🟡 `ltrim` com charlist
   multibyte corrompe travessao no temario (provado por sonda); Q-5 🟡 as assercoes de omissao
   do `CertificatePdfTest` viraram vacuidade apos a reescrita do Blade; Q-6 🟡 rodape/QR
-  absolutos sobre fluxo de tamanho ilimitado. Gate reconferido e verde (436 passed,
-  1 skipped, 1590 assertions; Pint passed nos 5 .php; frontend intocado).
+  absolutos sobre fluxo de tamanho ilimitado. Gate pre-correcao reconferido e verde
+  (436 passed, 1 skipped, 1590 assertions; Pint passed nos 5 .php; frontend intocado).
 last_completed_work_item: profundidade-form-crud-e-hidratacao-dto
 state_basis_commit: 6c5a2c4
 updated_at: 2026-08-06T11:05:00-03:00
@@ -421,6 +422,46 @@ o usa.
 **O que o João deixou registrado como contexto e NÃO é trabalho deste bloco:** o Manual de Classe
 (aba de documentos da turma, PDF novo + botão de `.docx` para o redator, páginas 1/2/4 geradas) é
 para ser planejado **com o bloco de frontend** — instrução literal dele. Fica fora da Task 15.
+
+### Review da Task 15 — 6 achados aprovados, corrigidos pelo Codex e provados aqui (2026-08-06)
+
+Review em duas frentes (lente Claude + Codex read-only, ALTO RISCO por ser documento de peso legal).
+Os seis achados foram **aprovados pelo João**, a correção **delegada ao Codex** e a revisão das
+correções feita com Claude. **Todos provados, e o gate reconferido aqui — não aceito por relatório:**
+suíte **441 passed, 1 skipped (1604 assertions)**, +5 sobre 436; Pint `passed` nos 5 `.php` tocados;
+frontend intocado. RED visto para os testes novos; **Q-5 provado não-vacuoso por mutação**; Q-1, Q-2,
+Q-4 e Q-6 provados **no PDF real** pela API com sessão Sanctum.
+
+O que cada um era, e o que a correção fez:
+
+- **Q-1 🔴 — o período da capacitação sumia do certificado quando `courses.description` é null**, e o
+  teste fixava esse comportamento. O `$periodo` vivia dentro do `@if ($description)`; agora tem
+  ramo próprio (`La actividad fue realizada {periodo}.`) e o `$periodo` vira `null` explícito quando
+  falta data, em vez de imprimir frase quebrada.
+- **Q-2 🟡 — razão social e RUT da OTEC emissora eram literais no Blade** e não congelavam no
+  snapshot, violando a D12 no mesmo campo que o A-1 já tinha corrigido para o cliente. Nasce
+  `snapshot.emissor` no `CertificateSnapshotBuilder`, alimentado por `config('app.certificate_issuer')`
+  (chave nova, com `env()` — nunca `env()` em runtime), e o Blade lê o snapshot com a config só como
+  fallback para os certificados já emitidos.
+- **Q-3 🟡 — `description` era lido sem defesa** enquanto `modules` usava `?? []`, na mesma leva.
+  Toda leitura de snapshot no Blade passa a `data_get` com default.
+- **Q-4 🟡 — `ltrim` com charlist multibyte corrompia o travessão no temário** (provado por sonda):
+  `ltrim($line, "*-•\t ")` opera byte a byte e comia pedaço de `•`/`–`. Virou `preg_replace` com
+  `/u` e lookahead, que só remove marcador seguido de espaço ou fim de linha.
+- **Q-5 🟡 — as asserções de omissão do `CertificatePdfTest` viraram vacuidade** depois da reescrita
+  do Blade. Reescritas para falhar de verdade; a não-vacuidade foi provada por mutação.
+- **Q-6 🟡 — rodapé e QR eram `position: absolute` sobre fluxo de tamanho ilimitado**: descrição ou
+  temário longos passavam por baixo da assinatura. A página vira flex column com
+  `.certificate-footer` em `margin-top: auto`.
+
+**Achado NOVO da revisão, fora dos seis, e por isso a decisão do João foi separada:** o Gotenberg
+**não recebe tamanho de papel** e devolve **Letter (612×792 pt)**, enquanto o Blade declara
+`@page size: A4` e o Q-6 calibra `min-height: 297mm` — documento legal chileno saindo em papel
+errado. **Defeito pré-existente da Task 7**, não introduzido pelas correções.
+
+**Decisão do João em 2026-08-06:** commitar as correções dos seis achados, e **tratar o A4 dentro
+deste bloco** — não vira débito. O papel errado é a Task 16; o bloco só volta a `ready_for_review`
+depois dela, porque o review tem de ver o PDF no papel certo.
 
 ## Último item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
