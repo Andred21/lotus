@@ -3,11 +3,13 @@
 namespace App\Domains\Operation\Models;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
+use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,6 +76,17 @@ class Turma extends Model implements Auditable
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /** A travessia da cadeia comercial mora AQUI (e a catraca garante). */
+    public function contratanteClient(): Client
+    {
+        return $this->quote->budget->client;
+    }
+
+    public function contratante(): ContratanteData
+    {
+        return $this->contratanteClient()->contratante();
     }
 
     /**

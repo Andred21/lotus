@@ -5,6 +5,7 @@ namespace App\Domains\Commercial\Models;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -78,5 +79,10 @@ class Quote extends Model implements Auditable
     public function turma(): HasOne
     {
         return $this->hasOne(Turma::class);
+    }
+
+    public function contratante(): ContratanteData
+    {
+        return $this->budget->client->contratante();
     }
 }
