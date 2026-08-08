@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
+active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: 454d09b
-updated_at: 2026-08-08T00:32:00-03:00
+state_basis_commit: 4620cee
+updated_at: 2026-08-08T00:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -77,6 +77,26 @@ fixa o que deles vira contrato. (3) O packet `certificacao-sprint-4.md` (`status
 absolutos transbordando de página com `courses.description` longa.
 
 **Toca `frontend/` e Blades de `backend/resources/views` → main tree, sem worktree (P-03).**
+
+### Brainstorming de 2026-08-08 — decisões do João e spec aprovada
+
+**Cinco decisões explícitas do João:** as **4 frentes num bloco** (módulo `/certificados`,
+validação pública + D19, resultado acadêmico na turma, Blades herdados); **Reemitir só para
+Revocado** — Vencido fica sem reemissão (o botão do protótipo colide com o índice único do D8;
+renovação de vencido é capacitação nova); **"Por vencer" = 30 dias**; **lote = endpoint batch no
+backend com relatório por item** (cada matrícula na própria transação); e **validação/resultado
+sem print** — composição sem referência, checkpoint dele cobre.
+
+**Nove medições moldaram o desenho antes dele existir** (destaques): `issuable` não sustenta a
+tela do protótipo (só emissíveis, 3 campos) e vira `emission-panel` com todos os alunos e os DTOs
+`Issuable*` mortos no mesmo commit; turma **não tem código** — o "TR-43" do protótipo não existe
+no schema; `IssueCertificateData` exige `redator_id` e o protótipo omite o seletor que a D11
+manda existir; o "Confirmar emisión" mostra código pré-emissão que a D9 torna impossível; e a
+`frontend-fsliced.md` ainda afirma "validação QR fora da SPA", contra a D14 aprovada — a rule é
+corrigida no bloco (lição 13).
+
+Design aprovado em 8 seções em 2026-08-08. Spec:
+`docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md`.
 
 ## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
 
