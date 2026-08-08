@@ -30,7 +30,7 @@ class ImportStudentsActionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $client = $this->makeClientWithUser();
+        $client = $this->makeClientWithUser([], ['rut' => '22.333.444-K']);
         $this->otherClient = $this->makeClientWithUser(['legal_name' => 'OTRA']);
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
         $course = $this->makeCourse();

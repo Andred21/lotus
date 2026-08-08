@@ -26,7 +26,7 @@ class TurmaDesignationTest extends TestCase
 
     private function setUpTurma(): void
     {
-        $clientId = $this->makeClientWithUser()->id;
+        $clientId = $this->makeClientWithUser([], ['rut' => '66.777.888-3'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $this->course = $this->makeCourse();
         $quote = Quote::create([

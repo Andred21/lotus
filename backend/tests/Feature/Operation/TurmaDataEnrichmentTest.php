@@ -20,7 +20,7 @@ class TurmaDataEnrichmentTest extends TestCase
 
     public function test_from_model_projeta_curso_cliente_codigos_e_contagem(): void
     {
-        $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'], ['rut' => '55.666.777-2'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 7']);
         $courseId = $this->makeCourse(['name' => 'Trabajos en líneas 220kV', 'workload_hours' => 24])->id;
         $quote = Quote::create([

@@ -18,7 +18,7 @@ class TurmaCrudTest extends TestCase
 
     private function makeQuote(string $status = 'approved'): Quote
     {
-        $clientId = $this->makeClientWithUser()->id;
+        $clientId = $this->makeClientWithUser([], ['rut' => '44.555.666-1'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $this->courseId = $this->makeCourse()->id;
 

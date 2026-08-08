@@ -22,7 +22,7 @@ class ManualTurmaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $clientId = $this->makeClientWithUser(['legal_name' => 'ACME Chile'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => 'ACME Chile'], ['rut' => '33.444.555-0'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $course = $this->makeCourse(['name' => 'Alta Tensión', 'workload_hours' => 8]);
         $course->modules()->create([
