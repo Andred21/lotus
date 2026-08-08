@@ -5,6 +5,7 @@ namespace App\Domains\Operation\Models;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\QueryBuilders\EnrollmentQueryBuilder;
+use App\Domains\Operation\Services\AcademicResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -54,6 +55,16 @@ class Enrollment extends Model implements AuditableContract
     public function loadListingData(): static
     {
         return $this->load(EnrollmentQueryBuilder::LISTING);
+    }
+
+    /**
+     * O resultado acadêmico com dono (B6) — quem lê a nota/presença/status
+     * para além da própria matrícula (ex.: CertificateSnapshotBuilder) passa
+     * por aqui, não pelas colunas cruas.
+     */
+    public function academicResult(): AcademicResult
+    {
+        return AcademicResult::fromEnrollment($this);
     }
 
     /** @param  QueryBuilder  $query */

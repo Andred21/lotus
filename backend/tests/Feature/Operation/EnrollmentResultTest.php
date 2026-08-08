@@ -17,6 +17,7 @@ use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -211,6 +212,75 @@ class EnrollmentResultTest extends TestCase
         $this->actingAs($user, 'web');
 
         $this->putJson($this->resultUrl(), $this->validPayload())->assertForbidden();
+    }
+
+    /**
+     * B6 — o que não dá para imprimir no certificado é recusado NA ESCRITA,
+     * não só filtrado na leitura do snapshot (`SnapshotResultData::finalGrade`).
+     *
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function notaNaoImprimivelProvider(): iterable
+    {
+        yield 'array' => [['parcial' => 5]];
+        yield 'booleano false' => [false];
+        yield 'booleano true' => [true];
+        yield 'string vazia' => [''];
+        yield 'string só espaço' => ['   '];
+        yield 'null explícito' => [null];
+    }
+
+    #[DataProvider('notaNaoImprimivelProvider')]
+    public function test_nota_final_nao_imprimivel_reprova_a_escrita(mixed $notaNaoImprimivel): void
+    {
+        $this->actingAsAdmin();
+
+        $this->putJson($this->resultUrl(), [
+            ...$this->validPayload(),
+            'grades' => ['final' => $notaNaoImprimivel],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'grades.final' => 'La nota final debe ser un número o un texto no vacío.',
+            ]);
+    }
+
+    /**
+     * B6 — a vírgula chilena (`"6,4"`) continua aceita, junto com float e int:
+     * a regra é sobre IMPRIMIBILIDADE, não sobre um formato numérico único.
+     *
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function notaImprimivelProvider(): iterable
+    {
+        yield 'string com vírgula chilena' => ['6,4'];
+        yield 'float' => [6.4];
+        yield 'int' => [6];
+    }
+
+    #[DataProvider('notaImprimivelProvider')]
+    public function test_nota_final_imprimivel_aceita_virgula_chilena_float_e_int(mixed $notaImprimivel): void
+    {
+        $this->actingAsAdmin();
+
+        $this->putJson($this->resultUrl(), [
+            ...$this->validPayload(),
+            'grades' => ['final' => $notaImprimivel],
+        ])->assertOk();
+    }
+
+    /**
+     * `grades` é nullable/opcional (RN do 6d): faltar por inteiro continua
+     * válido — só quando `final` é ENVIADO explicitamente a regra entra.
+     */
+    public function test_resultado_sem_grades_permanece_valido(): void
+    {
+        $this->actingAsAdmin();
+
+        $payload = $this->validPayload();
+        unset($payload['grades']);
+
+        $this->putJson($this->resultUrl(), $payload)->assertOk();
     }
 
     /** @return array{grades: array{final: float}, attendance_pct: string, approval_status: string} */

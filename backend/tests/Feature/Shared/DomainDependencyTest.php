@@ -60,6 +60,9 @@ class DomainDependencyTest extends TestCase
             'Operation\Enums\TurmaStatus',
             'Operation\Models\Enrollment',
             'Operation\Models\Turma',
+            // B6: o resultado acadêmico tem dono em Operation; o snapshot congela a
+            // partir do VO, não das colunas cruas da matrícula.
+            'Operation\Services\AcademicResult',
         ],
         'Commercial' => [
             'Catalog\Models\Course',
