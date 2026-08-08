@@ -35,16 +35,21 @@
      *   palavras uniformes de 28/30/32 ......... 622 / 657 / 694
      *
      * Não é monotônico: a capacidade despenca quando o comprimento da palavra
-     * cai logo acima de um divisor da linha e sobra um vão morto por linha. O
-     * piso medido é 567 (palavras de 25 caracteres, a ordem das palavras mais
-     * longas do espanhol real). Daí 80 × 7 = 560, logo abaixo do piso — errar
-     * para baixo custa tipografia (600 caracteres de prosa comum caberiam a
-     * 11px e saem a 9px); errar para cima custa texto.
+     * cai logo acima de um divisor da linha e sobra um vão morto por linha.
+     * 567 é o piso DENTRO do espanhol real — palavras de 25 caracteres, a
+     * ordem das mais longas do idioma —, não o piso absoluto. Daí 80 × 7 = 560,
+     * logo abaixo dele: errar para baixo custa tipografia (600 caracteres de
+     * prosa comum caberiam a 11px e saem a 9px), errar para cima custa texto.
      *
-     * O limiar é ajuste de QUALIDADE, não de segurança: acima de ~33 caracteres
-     * por palavra o modelo para de valer (capacidade 508) e a descrição volta a
-     * ser elidida a 11px — mas elidida COM reticências. Quem garante que nada
-     * some calado são o clamp inteiro e o `min-height` da folha, não este número.
+     * Fora desse perfil o modelo não vale e o limiar não protege: com palavras
+     * de 33 caracteres a capacidade cai para 508 (remedido em 2026-08-08 no PDF
+     * real — 508 caracteres saem inteiros, 509 já saem elididos), abaixo dos
+     * 560, e a descrição é elidida ainda a 11px. Este é o mesmo 508 citado no
+     * `CertificatePdfTest`; não há duas medições, há uma com faixa de validade.
+     *
+     * O limiar é, portanto, ajuste de QUALIDADE e não de segurança: quem
+     * garante que nada some calado são o clamp inteiro e o `min-height` da
+     * folha, não este número — a elisão fora do perfil continua COM reticências.
      *
      * Acima do limiar o tier de 9px comporta ~1.370 (técnica) a ~1.430 (prosa)
      * caracteres; só o que passar disso vira reticências.
@@ -84,7 +89,27 @@
            Com `min-height` a folha cresce e a paginação normal leva o excedente
            para uma página limpa: feio, porém íntegro. Nada é recortado nem
            sobreposto — e o que sobra de conteúdo com peso legal (nomes de
-           aluno, curso e cliente) continua legível por inteiro. */
+           aluno, curso e cliente) continua legível por inteiro.
+
+           QUANDO ela cresce, medido no PDF real em 2026-08-08 com a descrição
+           de 3.689 caracteres do cenário do gate:
+
+             pior caso (nota + assistência + vigência) — a página 1 fecha com
+             ~2 pt de folga, ou seja ZERO linha extra. O nome do curso a 17px
+             cabe em uma linha até 67 caracteres; na primeira quebra para a
+             segunda linha o rodapé inteiro cai para uma página 2 (penhasco em
+             68 caracteres na prosa medida; 67 com palavras longas, 70 com
+             palavras curtas). O nome técnico a 10px só quebra além de 130.
+
+             cenário do gate (só vigência) — a folga é ~52 pt, e nem um nome de
+             255 caracteres (o limite da coluna) estoura a folha.
+
+           O maior `courses.name` real hoje tem 36 caracteres e o maior
+           `technical_name`, 65 — ambos com folga. Mas a coluna é `string(255)`
+           e não há validação de comprimento: um título regulatório extenso
+           alcança o penhasco com dado que o schema aceita. Encolher o clamp em
+           função do nome exigiria modelar quebra de linha em PHP; o que cortar
+           é decisão de negócio, e está com o João. */
         .page {
             display: flex;
             flex-direction: column;
@@ -102,6 +127,14 @@
             right: 0;
         }
         .accent-top { top: 0; }
+        /* A barra é absoluta dentro do `.page`, que é `position: relative`:
+           ela ancora no pé do BLOCO, não no pé da folha impressa. Quando o
+           bloco pagina (ver o comentário de `.page`), a página 1 sai SEM a
+           barra de fechamento e a barra reaparece no meio da página 2, sobre
+           uma folha em branco — render conferido em 2026-08-08 com nome de
+           curso de 68 caracteres. É falha de integridade VISÍVEL num documento
+           com peso legal, herdada de antes da Task 3 e ainda em aberto; o
+           conteúdo em si continua íntegro, o que quebra é o enquadramento. */
         .accent-bottom { bottom: 0; }
 
         .meta { font-size: 9px; line-height: 1.6; }
