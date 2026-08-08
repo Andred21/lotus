@@ -6,12 +6,16 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Actions\EnrollStudentAction;
+use App\Domains\Operation\Actions\RecordEnrollmentResultAction;
+use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\Http\Controllers\EnrollmentController;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -76,6 +80,62 @@ class EnrollmentResultTest extends TestCase
         $this->assertSame(['final' => 6.5], $fresh->grades);
         $this->assertSame('92.50', $fresh->attendance_pct);
         $this->assertSame(EnrollmentApprovalStatus::Aprobado, $fresh->approval_status);
+    }
+
+    /**
+     * B5 — `refresh()` dentro de `RecordEnrollmentResultAction` derruba as
+     * relações carregadas, e o `result` nunca re-carregava `turma`/
+     * `student.user` antes de montar o DTO. Em produção isso lazy-loada em
+     * silêncio (o teste HTTP acima passa mesmo com o bug); é exatamente o
+     * tipo de N+1 silencioso que o projeto quer pegar.
+     *
+     * Por isso este teste chama o controller diretamente (em vez de
+     * `putJson`): o `Model::preventLazyLoading()` do Eloquent só marca
+     * `preventsLazyLoading = true` na instância quando ela vem de um
+     * `hydrate()` com MAIS de uma linha (`Builder::hydrate()`, condicional a
+     * `count($items) > 1` — ver vendor/laravel/framework
+     * .../Eloquent/Builder.php:477). Um fetch singular — como o
+     * route-model-binding de `{enrollment}` deste endpoint, sempre 1 linha —
+     * nunca ativa a proteção, então via HTTP puro o teste nunca reproduziria
+     * o bug (confirmado empiricamente: passa igual nos dois estados do
+     * código). Aqui a matrícula é hidratada via `get()` com >1 linha — o
+     * mesmo padrão que dispararia a proteção num cenário real de N+1 em
+     * lote — antes de entrar no MESMO caminho de código do controller.
+     */
+    public function test_result_nao_lazy_loada_apos_refresh(): void
+    {
+        $this->actingAsAdmin();
+
+        // Segunda matrícula só para o hydrate() abaixo vir com >1 linha.
+        app(EnrollStudentAction::class)->execute(
+            $this->turma,
+            '22.222.222-2',
+            'Pedro Diaz',
+            'pedro@acme.cl',
+            null,
+        );
+
+        Model::preventLazyLoading();
+
+        try {
+            $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
+
+            $result = app(EnrollmentController::class)->result(
+                new EnrollmentResultData(
+                    grades: ['final' => 6.5],
+                    attendance_pct: '92.50',
+                    approval_status: EnrollmentApprovalStatus::Aprobado,
+                ),
+                $this->turma,
+                $enrollment,
+                app(RecordEnrollmentResultAction::class),
+            );
+
+            $this->assertSame('Juan Soto', $result->name);
+            $this->assertSame('11.111.111-1', $result->rut);
+        } finally {
+            Model::preventLazyLoading(false);
+        }
     }
 
     public function test_turma_concluida_recusa_resultado_com_rn15(): void

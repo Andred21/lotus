@@ -4,9 +4,11 @@ namespace App\Domains\Operation\Models;
 
 use App\Domains\Identity\Models\Student;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
+use App\Domains\Operation\QueryBuilders\EnrollmentQueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
@@ -47,5 +49,16 @@ class Enrollment extends Model implements AuditableContract
         // Arquivamento não apaga: a projeção de leitura precisa do registro
         // mesmo soft-deletado (ver .claude/rules/backend-ddd.md).
         return $this->belongsTo(Student::class)->withTrashed();
+    }
+
+    public function loadListingData(): static
+    {
+        return $this->load(EnrollmentQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): EnrollmentQueryBuilder
+    {
+        return new EnrollmentQueryBuilder($query);
     }
 }
