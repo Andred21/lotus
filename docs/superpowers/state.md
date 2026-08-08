@@ -3,7 +3,7 @@ schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
 workflow_state: executing
-next_owner: claude
+next_owner: joao
 next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
@@ -12,8 +12,8 @@ context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: 3d7ee5c
-updated_at: 2026-08-08T01:40:00-03:00
+state_basis_commit: be58466
+updated_at: 2026-08-08T08:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -110,6 +110,59 @@ não emissível agora **aparece bloqueada**, mudança deliberada; D-P4 — `prob
 (a task antiga que o extrairia migrou para cá) — o PDF reusa o padrão do `useTurmaManual` e a
 extração só acontece se virar duplicação. Review de bloco declarado **alto risco** (peso legal +
 rota pública + `generated.ts`) → duas frentes quando chegar em `ready_for_review`.
+
+### Execução de 2026-08-08 — Tasks 0–10 entregues, Task 11 parada no checkpoint do João
+
+Branch `feature/certificacao-frontend`, a partir de `3d7ee5c`. As **onze primeiras tasks estão
+entregues e revisadas** (uma revisão de task por entrega, fix dispatchado para todo Critical e
+Important, Minor acumulado para o review final). Placar: backend **492 passed, 1 skipped (1831
+assertions)**; frontend **13 arquivos / 47 testes**, `pnpm lint` limpo, `pnpm build` verde. Pint
+`passed` nos 23 `.php` vivos do bloco, `typescript:transform` **sem diff** em `generated.ts`, e os
+seis greps de lei do Step 4 do gate todos limpos.
+
+**Task 10 adotou o WIP do João em vez de reescrever.** Os cinco arquivos do resultado acadêmico já
+estavam na working tree sem commit quando a task abriu; a disciplina do `/executar-bloco` manda o
+working tree existente vencer, então o subagente completou o que estava lá. O commit `1023c5b` sai
+assinado por ele.
+
+**Dois defeitos de peso legal foram achados por review e vistos falhando antes do fix** (lição 10):
+o relatório do lote perdia o **nome** de exatamente quem recebeu o certificado, porque `pendientes`
+era derivado da turma viva e a invalidação do painel repintava por baixo do diálogo aberto
+(`6c57888`); e `grades` vazio ia como `{}` em vez de `null`, gravando `[]` na coluna e escrevendo
+uma mudança de nota que não houve na auditoria da matrícula (`b85b736`).
+
+**O mutante que o plano previu para o lote não mata.** Envolver o loop do
+`CertificateController::batch` num `DB::transaction` deixa os nove testes do `BatchIssueTest`
+verdes — o teste de número contíguo fala de contiguidade, não de isolamento. O comentário do
+controller afirma "não há transação externa" e nada guardava isso. Guarda nova em `be58466`: item
+já emitido tem de sobreviver a uma falha inesperada no item seguinte; contra o mutante,
+`Entries found: 0`.
+
+**O que o gate provou sem browser:** manual em **A4, 1 página** com os 15 participantes (dívida de
+Letter paga); certificado em **2 páginas A4** com `description` de 3.814 caracteres, descrição
+clampada com **reticências visíveis** e QR/assinatura/disclaimer todos ancorados na página 1;
+validação pública **sem cookie, sem CSRF e sem `Origin`** devolvendo 200 para emitido e para
+revogado, com `revoked_at` presente e `revocation_reason` **ausente** do DTO público, e 404 para
+uuid inexistente; e o QR do PDF codificando `frontend_url + /validar/{uuid}`, a rota que a Task 9
+criou.
+
+**Task 11 não fecha nesta sessão, e o motivo não é escolha:**
+
+1. `migrate:fresh --seed`, pré-requisito do Step 1, foi **negado pelo classificador de permissão**.
+   Não foi contornado. O banco de dev segue com o estado acumulado da execução.
+2. O Step 1 na tela real e o Step 5 inteiro precisam de browser, e o host WSL **não tem as
+   bibliotecas de sistema** dos browsers do Playwright (`libasound.so.2` ausente; firefox e webkit
+   reprovam no mesmo check; não há Chrome de sistema). Instalar exige root.
+3. O Step 5 sempre foi **não delegável** — é o checkpoint visual do João, escrito assim no plano.
+
+**Duas questões para o checkpoint visual, além do roteiro do plano:** o botão **Revocar** não
+aparece para o admin do seed, porque `certification.certificate.revoke` é superadmin-only no
+`RolePermissionSeeder` — se a intenção era o admin revogar, é decisão de permissão, não de
+frontend; e o ramo **expirado** da página pública mostra só o cabeçalho, sem curso nem aluno, o que
+é leitura literal do brief mas pode não ser o que um fiscalizador precisa ver.
+
+Evidência completa, task a task, com os Minor acumulados para o review final:
+`.superpowers/sdd/progress.md`.
 
 ## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
 
