@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Certification;
 
+use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -252,6 +253,35 @@ class BatchIssueTest extends TestCase
         );
 
         $this->assertDatabaseCount('certificates', 0);
+    }
+
+    public function test_falha_inesperada_no_meio_do_lote_preserva_o_que_ja_saiu(): void
+    {
+        $this->actingAsAdmin();
+        $enrollmentB = $this->segundaMatricula();
+
+        // O lote roda item a item, SEM transação externa — está escrito no
+        // comentário do `CertificateController::batch` e é o que faz um item
+        // recusado virar linha do relatório em vez de derrubar o request.
+        // Esta guarda existe porque o resto da suíte não vê a diferença:
+        // envolver o loop inteiro num `DB::transaction` deixa os nove testes
+        // verdes (medido em 2026-08-08, no gate do bloco) e ainda assim apaga
+        // um certificado já emitido quando o item seguinte estoura — um
+        // documento com peso legal desaparecendo em silêncio.
+        $real = app(IssueCertificateAction::class);
+        $fake = \Mockery::mock(IssueCertificateAction::class);
+        $fake->shouldReceive('execute')->once()->ordered()
+            ->andReturnUsing(fn (Enrollment $e, Redator $r) => $real->execute($e, $r));
+        $fake->shouldReceive('execute')->once()->ordered()
+            ->andThrow(new \RuntimeException('falha inesperada no meio do lote'));
+        $this->instance(IssueCertificateAction::class, $fake);
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id, $enrollmentB->id],
+            'redator_id' => $this->redator->id,
+        ])->assertStatus(500);
+
+        $this->assertDatabaseCount('certificates', 1);
     }
 
     private function emitirIndividualmente(Enrollment $enrollment): void
