@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { CertificateData } from '@shared/types/generated'
-import { useCertificates, useEmissionPanel } from '../api/certificatesApi'
+import { useCertificate, useEmissionPanel } from '../api/certificatesApi'
 import { rowCertKind } from '../lib/certStatus'
 
 /**
@@ -8,20 +7,20 @@ import { rowCertKind } from '../lib/certStatus'
  * refletir na rota) + as derivações que `EmissionPanel`/`EmissionStudentsTable`
  * consomem prontas — contagens e opções do dropdown.
  *
- * Também traz `useCertificates()` (Task 5), fora do que o brief desta task
- * pedia explicitamente: a ação "Ver" de uma linha já emitida precisa do
- * `CertificateData` completo (`created_at` para `issuedBy`) para alimentar o
- * MESMO `IssuedDialog` que aparece pós-emissão — o painel só devolve
- * `{id, codigo, status}` por matrícula (`EmissionPanelCertificateData`), sem
- * data. `certificateById` resolve isso por lookup, sem inventar campo nenhum
- * de DTO. A key de `useCertificates()` já é invalidada junto da do painel em
- * toda mutação de emissão/revogação (`certificatesApi.ts`), então o lookup
- * fica fresco sem invalidação própria.
+ * O "Ver" de uma linha já emitida abre o MESMO `IssuedDialog` que aparece
+ * pós-emissão, mas o painel só devolve `{id, codigo, status}` por matrícula
+ * (`EmissionPanelCertificateData`), sem `created_at`. Em vez de puxar
+ * `useCertificates()` inteiro — o histórico é um arquivo legal que só cresce,
+ * sem teto — `viewingCertificateId` + `useCertificate(id)` buscam o UM
+ * certificado pontual. A query mora aqui, não no componente:
+ * `no-restricted-syntax` reprova `useQuery`/`useMutation` sob
+ * `features/*\/components/**`.
  */
 export function useEmissionPanelState() {
   const panel = useEmissionPanel()
-  const certificates = useCertificates()
   const [turmaId, setTurmaId] = useState<number | null>(null)
+  const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
+  const viewingCertificate = useCertificate(viewingCertificateId)
 
   const turmas = useMemo(() => panel.data ?? [], [panel.data])
 
@@ -42,19 +41,18 @@ export function useEmissionPanelState() {
     }
   }, [selected])
 
-  const certificateById = useMemo(() => {
-    const map = new Map<number, CertificateData>()
-    for (const c of certificates.data ?? []) map.set(c.id, c)
-    return map
-  }, [certificates.data])
-
   return {
     options,
     turmaId,
     setTurmaId,
     selected,
     counts,
-    certificateById,
+    viewingCertificateId,
+    setViewingCertificateId,
+    viewingCertificate: viewingCertificate.data ?? null,
+    viewingCertificateLoading: viewingCertificate.isLoading,
+    viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
+    reloadViewingCertificate: () => { void viewingCertificate.refetch() },
     loading: panel.isLoading,
     loadError: panel.isError ? (panel.error ?? null) : null,
     reload: () => { void panel.refetch() },

@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
-import type { CertificateData, EmissionPanelEnrollmentData } from '@shared/types/generated'
+import type { EmissionPanelEnrollmentData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
 
-type Viewing = { certificate: CertificateData; studentName: string; courseName: string }
+/** Metadados de exibição do `IssuedDialog` — não vêm do `CertificateData`
+ * (`snapshot` tem outro formato). O certificado em si (`s.viewingCertificate`)
+ * é resolvido por `s.viewingCertificateId`, no hook. */
+type Viewing = { studentName: string; courseName: string }
 
 export function EmissionPanel() {
   const { t } = useTranslation()
@@ -17,6 +20,11 @@ export function EmissionPanel() {
   const [viewing, setViewing] = useState<Viewing | null>(null)
 
   const turma = s.selected
+
+  const closeViewing = () => {
+    setViewing(null)
+    s.setViewingCertificateId(null)
+  }
 
   if (s.loadError) {
     return (
@@ -88,8 +96,9 @@ export function EmissionPanel() {
               blocked={turma.emission_blocked !== null}
               onEmit={setIssuing}
               onView={(enrollment) => {
-                const cert = enrollment.certificate ? s.certificateById.get(enrollment.certificate.id) : undefined
-                if (cert) setViewing({ certificate: cert, studentName: enrollment.student_name, courseName: turma.course_name })
+                if (!enrollment.certificate) return
+                setViewing({ studentName: enrollment.student_name, courseName: turma.course_name })
+                s.setViewingCertificateId(enrollment.certificate.id)
               }}
             />
           </AppCard>
@@ -103,17 +112,22 @@ export function EmissionPanel() {
           onHide={() => setIssuing(null)}
           onIssued={(certificate) => {
             setIssuing(null)
-            setViewing({ certificate, studentName: issuing.student_name, courseName: turma.course_name })
+            setViewing({ studentName: issuing.student_name, courseName: turma.course_name })
+            s.setViewingCertificateId(certificate.id)
           }}
         />
       )}
 
-      {viewing && (
+      {viewing && s.viewingCertificateId !== null && (
         <IssuedDialog
-          certificate={viewing.certificate}
+          certificateId={s.viewingCertificateId}
+          certificate={s.viewingCertificate}
+          loading={s.viewingCertificateLoading}
+          error={s.viewingCertificateError}
+          onRetry={s.reloadViewingCertificate}
           studentName={viewing.studentName}
           courseName={viewing.courseName}
-          onHide={() => setViewing(null)}
+          onHide={closeViewing}
         />
       )}
     </div>

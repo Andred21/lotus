@@ -10,6 +10,7 @@ import type {
 
 const panelKey = ['certificates', 'emission-panel'] as const
 const listKey = ['certificates', 'list'] as const
+const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
 export function useEmissionPanel() {
   return useQuery<EmissionPanelTurmaData[], ProblemDetails>({
@@ -22,6 +23,19 @@ export function useCertificates() {
   return useQuery<CertificateData[], ProblemDetails>({
     queryKey: listKey,
     queryFn: () => api.get<CertificateData[]>('/api/certificates').then((r) => r.data),
+  })
+}
+
+/** Certificado pontual por id — o `Ver` de uma linha já emitida
+ * (`useEmissionPanelState`) só recebe `{id, codigo, status}` do painel
+ * (`EmissionPanelCertificateData`), sem `created_at`. Busca UM certificado
+ * (`GET /api/certificates/{id}`) em vez de puxar `useCertificates()` inteiro —
+ * o histórico é um arquivo legal que só cresce, sem teto. */
+export function useCertificate(id: number | null) {
+  return useQuery<CertificateData, ProblemDetails>({
+    queryKey: id === null ? (['certificates', 'detail', 'none'] as const) : detailKey(id),
+    queryFn: () => api.get<CertificateData>(`/api/certificates/${id}`).then((r) => r.data),
+    enabled: id !== null,
   })
 }
 
@@ -38,12 +52,19 @@ function useInvalidate() {
 
 export function useIssueCertificate() {
   const invalidate = useInvalidate()
+  const qc = useQueryClient()
   return useMutation<CertificateData, ProblemDetails, { enrollmentId: number; redatorId: number }>({
     mutationFn: ({ enrollmentId, redatorId }) =>
       api
         .post<CertificateData>(`/api/enrollments/${enrollmentId}/certificate`, { redator_id: redatorId })
         .then((r) => r.data),
-    onSuccess: invalidate,
+    // A resposta do POST já É o certificado — semeia a key de detalhe com ela
+    // para o `IssuedDialog` pós-emissão abrir sem round-trip extra por um dado
+    // que acabou de chegar (mesma key que `useCertificate` lê).
+    onSuccess: (certificate) => {
+      qc.setQueryData(detailKey(certificate.id), certificate)
+      invalidate()
+    },
   })
 }
 
