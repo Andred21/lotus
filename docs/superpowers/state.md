@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: profundidade-backend-b4-b7
+active_work_item: profundidade-backend-b4-b7
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-sprint-4
-state_basis_commit: 089d005
-updated_at: 2026-08-07T23:55:00-03:00
+state_basis_commit: 9ed46cc
+updated_at: 2026-08-07T21:00:23-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,34 @@ updated_at: 2026-08-07T23:55:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-07 (`profundidade-backend-b4-b7`)
+
+**Item 2 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-07** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). Rota direta a `ready_for_planning` **sem packet, por ausência medida de fonte externa**
+(mesmo caso do bloco `profundidade-form-crud`): as fontes são o repositório e o relatório local do
+review de arquitetura de 2026-08-07 — nada de Drive/Notion/Figma. O João declarou a dispensa no
+próprio argumento do comando.
+
+**Passo 0 executado antes da seleção, na mesma sessão:** a skill `improve-codebase-architecture`
+não existe nesta máquina (o João a rodou fora), então a re-verificação foi manual, alegação por
+alegação, contra o código real. Resultado: B1–B3 confirmados resolvidos (`CertificateEligibility`,
+`Data/Snapshot/` com `schema_version`, `App\Shared\Pdf`); **B4–B7 todos ainda válidos** — B4 com 8
+sítios medidos da cadeia em 3 domínios, B5 com o lazy load do `result` confirmado, B6 com `grades`
+ainda `['nullable','array']` e action pass-through, B7 com setUps de 40–98 linhas em 8 arquivos
+(cresceu desde o relatório). Nada novo material no backend. O merge do bloco anterior já estava
+feito pelo João (PR #31); `main` local avançou por fast-forward para `9ed46cc`.
+
+**Brainstorming de 2026-08-07 — decisões do João:** B6 fica **declarada pelo admin** (derivar
+exigiria inventar regra de corte sem fonte; a leitura futura da nota do docx de evaluación é
+deferred com bloco próprio, muda ADR/RN); B4 ganha **catraca da cadeia** (teste-grep, não
+reflection — mini-framework rejeitado); B5 cobre **os 4 models medidos** (Enrollment, Quote,
+Client, Course — nem só o bug, nem todos os models). Corte e ordem definidos por ele na abertura:
+B4 → catraca → B5 → B6 → B7 → gate, um bloco. Design aprovado em 6 seções; spec em
+`docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md`.
+
+**Backend-only, main tree (P-03), zero schema — ADR/DER não abrem.**
 
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
