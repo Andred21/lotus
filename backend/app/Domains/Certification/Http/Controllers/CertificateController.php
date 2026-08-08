@@ -4,6 +4,8 @@ namespace App\Domains\Certification\Http\Controllers;
 
 use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Actions\RevokeCertificateAction;
+use App\Domains\Certification\Data\BatchIssueData;
+use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
@@ -18,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 
 class CertificateController extends Controller implements HasMiddleware
 {
@@ -25,7 +28,7 @@ class CertificateController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:certification.certificate.view', only: ['index', 'show', 'pdf']),
-            new Middleware('permission:certification.certificate.issue', only: ['store', 'emissionPanel']),
+            new Middleware('permission:certification.certificate.issue', only: ['store', 'emissionPanel', 'batch']),
             new Middleware('permission:certification.certificate.revoke', only: ['revoke']),
         ];
     }
@@ -80,5 +83,44 @@ class CertificateController extends Controller implements HasMiddleware
         return CertificateData::fromModel($action->execute($certificate, $data->reason))
             ->toResponse(request())
             ->setStatusCode(200);
+    }
+
+    /**
+     * Relatório por item, não transação: cada `execute()` já é a sua própria
+     * transação (portas + D9 + auditoria). Abrir uma transação por fora faria
+     * um item falho reverter os que já tinham sido commitados — e, pior,
+     * consumir um número de sequência que nunca vira certificado.
+     *
+     * @return array<BatchIssueItemResultData>
+     */
+    public function batch(BatchIssueData $data, IssueCertificateAction $action): array
+    {
+        $redator = Redator::query()->findOrFail($data->redator_id);
+
+        return collect($data->enrollment_ids)
+            ->map(function (int $enrollmentId) use ($action, $redator): BatchIssueItemResultData {
+                $enrollment = Enrollment::query()->findOrFail($enrollmentId);
+
+                try {
+                    $certificate = $action->execute($enrollment, $redator);
+
+                    return new BatchIssueItemResultData(
+                        enrollment_id: $enrollmentId,
+                        ok: true,
+                        codigo: $certificate->codigo,
+                        certificate_id: $certificate->id,
+                        error: null,
+                    );
+                } catch (ValidationException $e) {
+                    return new BatchIssueItemResultData(
+                        enrollment_id: $enrollmentId,
+                        ok: false,
+                        codigo: null,
+                        certificate_id: null,
+                        error: collect($e->errors())->flatten()->first(),
+                    );
+                }
+            })
+            ->all();
     }
 }

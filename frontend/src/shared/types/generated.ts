@@ -1,3 +1,14 @@
+export type BatchIssueData = {
+enrollment_ids: number[],
+redator_id: number,
+};
+export type BatchIssueItemResultData = {
+enrollment_id: number,
+ok: boolean,
+codigo: string | null,
+certificate_id: number | null,
+error: string | null,
+};
 export type BudgetData = {
 id: undefined | number,
 client_id: number,
