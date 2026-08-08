@@ -152,7 +152,7 @@ class BatchIssueTest extends TestCase
         $this->postJson($this->batchUrl(), [
             'enrollment_ids' => [],
             'redator_id' => $this->redator->id,
-        ])->assertUnprocessable();
+        ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids');
     }
 
     public function test_enrollment_id_inexistente_retorna_422(): void
@@ -162,7 +162,57 @@ class BatchIssueTest extends TestCase
         $this->postJson($this->batchUrl(), [
             'enrollment_ids' => [999999],
             'redator_id' => $this->redator->id,
-        ])->assertUnprocessable();
+        ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids.0');
+    }
+
+    public function test_redator_id_inexistente_retorna_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id],
+            'redator_id' => 999999,
+        ])->assertStatus(422)->assertJsonValidationErrors('redator_id');
+    }
+
+    /**
+     * Discriminante do Finding 1: `exists:enrollments,id` consulta a tabela
+     * crua e não respeita soft delete — a matrícula soft-deletada ainda
+     * "existe" para a regra do DTO, mas `Enrollment::query()` (com o global
+     * scope do `SoftDeletes`) não a encontra. Contra o controller sem o
+     * fix, isso estoura `ModelNotFoundException` dentro do `map()`, sem
+     * `catch`, e a exceção sobe como 404 — escondendo o certificado do item
+     * 1, que JÁ foi commitado (não há transação externa). O relatório por
+     * item existe exatamente para impedir isto.
+     */
+    public function test_lote_com_enrollment_id_soft_deletado_reporta_falha_do_item_sem_impedir_o_outro(): void
+    {
+        $this->actingAsAdmin();
+        $enrollmentDeletada = $this->segundaMatricula();
+        $enrollmentDeletada->delete();
+
+        $response = $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id, $enrollmentDeletada->id],
+            'redator_id' => $this->redator->id,
+        ])->assertOk();
+
+        $response->assertJsonPath('0.ok', true)
+            ->assertJsonPath('0.enrollment_id', $this->enrollmentA->id)
+            ->assertJsonPath('1.ok', false)
+            ->assertJsonPath('1.enrollment_id', $enrollmentDeletada->id)
+            ->assertJsonPath('1.codigo', null)
+            ->assertJsonPath('1.certificate_id', null);
+
+        $this->assertSame('LOT-2026-1000', $response->json('0.codigo'));
+        $this->assertNotNull($response->json('1.error'));
+
+        // O item 1 já foi commitado (sem transação externa) e deve estar
+        // visível no relatório e no banco, mesmo com o item 2 irresolúvel.
+        $this->assertDatabaseCount('certificates', 1);
+        $this->assertDatabaseHas('certificates', [
+            'enrollment_id' => $this->enrollmentA->id,
+            'codigo' => 'LOT-2026-1000',
+        ]);
     }
 
     public function test_usuario_sem_permissao_issue_retorna_403(): void

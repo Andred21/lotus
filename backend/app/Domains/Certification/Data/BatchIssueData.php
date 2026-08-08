@@ -19,7 +19,7 @@ class BatchIssueData extends Data
         return [
             'enrollment_ids' => ['required', 'array', 'min:1'],
             'enrollment_ids.*' => ['integer', 'exists:enrollments,id'],
-            'redator_id' => ['required', 'integer'],
+            'redator_id' => ['required', 'integer', 'exists:redatores,id'],
         ];
     }
 }

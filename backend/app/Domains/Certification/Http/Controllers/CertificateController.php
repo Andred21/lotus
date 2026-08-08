@@ -99,9 +99,26 @@ class CertificateController extends Controller implements HasMiddleware
 
         return collect($data->enrollment_ids)
             ->map(function (int $enrollmentId) use ($action, $redator): BatchIssueItemResultData {
-                $enrollment = Enrollment::query()->findOrFail($enrollmentId);
-
                 try {
+                    // Resolvida AQUI, dentro do try: `exists:enrollments,id`
+                    // do DTO consulta a tabela crua e não respeita soft
+                    // delete, então um id soft-deletado passa a validação e
+                    // só falha aqui. Se isto estourasse fora do try (como
+                    // `findOrFail`), a `ModelNotFoundException` subiria sem
+                    // `catch`, virando 404 pro request inteiro — escondendo
+                    // itens anteriores já commitados (não há transação
+                    // externa). Por isso vira `ValidationException`: mesmo
+                    // formato de recusa das seis portas, capturado pelo
+                    // `catch` abaixo e reportado como item, não como falha
+                    // da requisição.
+                    $enrollment = Enrollment::query()->find($enrollmentId);
+
+                    if ($enrollment === null) {
+                        throw ValidationException::withMessages([
+                            'enrollment' => 'La matrícula no existe.',
+                        ]);
+                    }
+
                     $certificate = $action->execute($enrollment, $redator);
 
                     return new BatchIssueItemResultData(
