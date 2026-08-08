@@ -7,30 +7,7 @@
 
 ## Próximos blocos
 
-1. **Certificação · frontend (módulo próprio)**
-   — o que sobrou do Bloco 7 depois do **D-P8**, decisão do João em 2026-08-05: o backend da
-   certificação foi entregue e fechado em 2026-08-07 (emissão, numeração `LOT-ANO-SEQ`, snapshot
-   congelado, `issuable`, revogação, PDF sob demanda e rota pública de validação por UUID), e o
-   frontend virou bloco próprio. As **Tasks 9–13** do plano arquivado
-   (`plans/archive/2026-08-05-certificacao-sprint-4.md`) migraram inteiras e serão **replanejadas**,
-   não copiadas: certificados ganham módulo próprio na interface, coisa que a spec não modelou.
-
-   **Contexto obrigatório para o replanejamento:**
-
-   * `specs/2026-08-05-certificacao-sprint-4-design.md` — **spec ainda ativa**, este bloco é o
-     último consumidor dela (a invariante §4.2 migrou junto);
-   * prints do protótipo Figma das telas de emissão, histórico e validação — a fonte que o packet
-     declarou `unavailable` e que o João disse que entraria;
-   * `Libro de Control de Clases`, o documento oficial da Lotus para o **Manual de Classe**;
-   * `context-packets/certificacao-sprint-4.md`, para não repetir a varredura de Drive e Notion.
-
-   **Dívidas com prazo que este bloco herda:** os DTOs de certificação em `generated.ts` seguem sem
-   consumidor até aqui; o Manual de Classe sai em **Letter** porque a Blade não declara `@page`
-   (mesmo defeito que o certificado teve na Task 16, com a correção já provada do outro lado); e o
-   rodapé/QR absolutos transbordam de página quando `courses.description` é longa — reproduzido no
-   gate de fechamento de 2026-08-07 com uma descrição de 3.689 caracteres.
-
-2. **Arquivados e restauração de soft-delete**
+1. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -46,12 +23,12 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-3. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Hardening**
+3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
@@ -62,7 +39,9 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 - **Dashboard** — protótipo tem 4 KPIs, gráfico de turmas, gráfico de certificados, tarefas
   pendentes, alertas recentes e estados sem dados. Real: saudação + subtítulo (17 linhas).
 - **Pessoas · Alunos**~~ — entregue em 2026-07-27 (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
-- **Certificados** — já coberto pelo Bloco 7.
+- **Certificados** — entregue: backend no Bloco 7 (2026-08-07,
+  `plans/archive/2026-08-05-certificacao-sprint-4.md`) e frontend em 2026-08-08
+  (`plans/archive/2026-08-08-certificacao-frontend.md`).
 - **Perfil do Usuário** - página dedicada para usuário (administrativo e redator), visualizando seu perfil e dados.
 
 ## Futuros dependentes de decisão

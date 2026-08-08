@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDataTable, AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
-import { useTableFilter } from '@shared/hooks'
+import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
+import { RegisterResultDialog } from './RegisterResultDialog'
 
 type Props = {
+  turmaId: number
   enrollments: EnrollmentData[]
   loading: boolean
   onRemove: (enrollmentId: number, options?: { onSuccess?: () => void }) => void
@@ -20,10 +22,18 @@ type Props = {
 // cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
 // (§3), não uma lacuna.
 export function EnrollmentTable({
-  enrollments, loading, onRemove, removing, removeError, onResetRemove, error, onRetry,
+  turmaId, enrollments, loading, onRemove, removing, removeError, onResetRemove, error, onRetry,
 }: Props) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
   const [pending, setPending] = useState<EnrollmentData | null>(null)
+  // Alvo do diálogo de resultado: estado local, igual ao `pending` da
+  // remoção acima — os dois são ação por LINHA, então a linha que abre o
+  // diálogo é quem sabe qual matrícula está em jogo (EnrollmentSection só
+  // guarda o estado dos diálogos que não dependem de uma linha: Agregar e
+  // Importar).
+  const [resultTarget, setResultTarget] = useState<EnrollmentData | null>(null)
+  const canManage = can('operation.enrollment.manage')
   // Aba sem busca (decisão do protótipo): o hook entra pelo estado de página e
   // pelo clamp, que estavam copiados aqui linha a linha.
   const table = useTableFilter(enrollments)
@@ -70,17 +80,28 @@ export function EnrollmentTable({
         />
         <AppColumn
           body={(e: EnrollmentData) => (
-            <AppButton
-              icon="pi pi-times"
-              text
-              rounded
-              severity="danger"
-              disabled={removing}
-              aria-label={t('operation.enrollment.remove')}
-              onClick={() => setPending(e)}
-            />
+            <div className="flex items-center justify-end gap-1">
+              {canManage && (
+                <AppButton
+                  icon="pi pi-pencil"
+                  text
+                  rounded
+                  aria-label={t('certificate.result.action')}
+                  onClick={() => setResultTarget(e)}
+                />
+              )}
+              <AppButton
+                icon="pi pi-times"
+                text
+                rounded
+                severity="danger"
+                disabled={removing}
+                aria-label={t('operation.enrollment.remove')}
+                onClick={() => setPending(e)}
+              />
+            </div>
           )}
-          style={{ width: '4rem' }}
+          style={{ width: '6rem' }}
         />
       </AppDataTable>
 
@@ -100,6 +121,13 @@ export function EnrollmentTable({
           onResetRemove()
           setPending(null)
         }}
+      />
+
+      <RegisterResultDialog
+        turmaId={turmaId}
+        enrollment={resultTarget}
+        visible={resultTarget !== null}
+        onHide={() => setResultTarget(null)}
       />
     </>
   )

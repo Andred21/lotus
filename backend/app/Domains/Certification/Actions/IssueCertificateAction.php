@@ -28,8 +28,9 @@ class IssueCertificateAction
             // gravar data de 2027 num código LOT-2026.
             $now = now();
 
-            // As seis portas — as mesmas que o `issuable` usa para montar a
-            // lista, e por isso a lista não promete o que aqui recusa.
+            // As seis portas. A decisão mora nelas; o painel de emissão só
+            // REPORTA os mesmos motivos (`EmissionPanelQuery`), e por isso a
+            // tela não promete o que aqui se recusa.
             $context = $this->eligibility->assert($enrollment, $redator);
 
             $validoAte = $context->template->validity_months === null

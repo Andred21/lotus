@@ -1,3 +1,14 @@
+export type BatchIssueData = {
+enrollment_ids: number[],
+redator_id: number,
+};
+export type BatchIssueItemResultData = {
+enrollment_id: number,
+ok: boolean,
+codigo: string | null,
+certificate_id: number | null,
+error: string | null,
+};
 export type BudgetData = {
 id: undefined | number,
 client_id: number,
@@ -101,6 +112,35 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
+export type EmissionPanelCertificateData = {
+id: number,
+codigo: string,
+status: CertificateStatus,
+};
+export type EmissionPanelEnrollmentData = {
+enrollment_id: number,
+student_name: string,
+student_rut: string,
+approval_status: EnrollmentApprovalStatus,
+attendance_pct: string | null,
+nota_final: string | null,
+certificate: EmissionPanelCertificateData | null,
+};
+export type EmissionPanelRedatorData = {
+redator_id: number,
+name: string,
+};
+export type EmissionPanelTurmaData = {
+turma_id: number,
+course_name: string,
+client_name: string,
+end_date: string,
+template_validity_months: number | null,
+emission_blocked: EmissionBlockReason | null,
+enrollments: EmissionPanelEnrollmentData[],
+redatores: EmissionPanelRedatorData[],
+};
 export type EnrollPreviewData = {
 exists: boolean,
 name: string | null,
@@ -148,23 +188,6 @@ contracted_count: number,
 export type ImportRowErrorData = {
 row: number,
 message: string,
-};
-export type IssuableEnrollmentData = {
-enrollment_id: number,
-student_name: string,
-student_rut: string,
-};
-export type IssuableRedatorData = {
-redator_id: number,
-name: string,
-};
-export type IssuableTurmaData = {
-turma_id: number,
-course_name: string,
-client_name: string,
-end_date: string,
-enrollments: IssuableEnrollmentData[],
-redatores: IssuableRedatorData[],
 };
 export type IssueCertificateData = {
 redator_id: number,

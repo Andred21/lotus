@@ -7,7 +7,7 @@ use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
-class IssuableRedatorData extends Data
+class EmissionPanelRedatorData extends Data
 {
     public function __construct(
         public int $redator_id,

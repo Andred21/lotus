@@ -43,6 +43,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
       </div>
 
       <EnrollmentTable
+        turmaId={turma.id!}
         enrollments={s.enrollments}
         loading={s.loading}
         onRemove={s.remove}

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import type { EnrollmentData } from '@shared/types/generated'
+import type { EnrollmentData, EnrollmentResultData } from '@shared/types/generated'
 import { turmaKeys } from './useTurmas'
 
 export const enrollmentKeys = {
@@ -34,6 +34,21 @@ export function useEnrollStudent() {
     onSuccess: (_data, { turmaId }) => {
       qc.invalidateQueries({ queryKey: enrollmentKeys.list(turmaId) })
       qc.invalidateQueries({ queryKey: turmaKeys.all })
+    },
+  })
+}
+
+/** Registra o resultado acadêmico (Task 10) — o que torna a matrícula
+ * elegível a certificado (D-B6). Invalida a MESMA key que o `index` dos
+ * alunos usa: é ela quem faz o badge de estado na tabela mudar depois do
+ * save, e é a lacuna que este endpoint existia sem UI até esta task. */
+export function useRecordResult(turmaId: number) {
+  const qc = useQueryClient()
+  return useMutation<EnrollmentData, ProblemDetails, { enrollmentId: number; body: EnrollmentResultData }>({
+    mutationFn: async (p) =>
+      (await api.put<EnrollmentData>(`/api/turmas/${turmaId}/alunos/${p.enrollmentId}/resultado`, p.body)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: enrollmentKeys.list(turmaId) })
     },
   })
 }

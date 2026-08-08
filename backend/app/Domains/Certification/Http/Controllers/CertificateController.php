@@ -4,21 +4,23 @@ namespace App\Domains\Certification\Http\Controllers;
 
 use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Actions\RevokeCertificateAction;
+use App\Domains\Certification\Data\BatchIssueData;
+use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
-use App\Domains\Certification\Data\IssuableTurmaData;
+use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
 use App\Domains\Certification\Models\Certificate;
-use App\Domains\Certification\Services\CertificateEligibility;
 use App\Domains\Certification\Services\CertificatePdfService;
+use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
-use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 
 class CertificateController extends Controller implements HasMiddleware
 {
@@ -26,7 +28,7 @@ class CertificateController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:certification.certificate.view', only: ['index', 'show', 'pdf']),
-            new Middleware('permission:certification.certificate.issue', only: ['store', 'issuable']),
+            new Middleware('permission:certification.certificate.issue', only: ['store', 'emissionPanel', 'batch']),
             new Middleware('permission:certification.certificate.revoke', only: ['revoke']),
         ];
     }
@@ -54,12 +56,10 @@ class CertificateController extends Controller implements HasMiddleware
         ]);
     }
 
-    /** @return array<IssuableTurmaData> */
-    public function issuable(CertificateEligibility $eligibility): array
+    /** @return array<EmissionPanelTurmaData> */
+    public function emissionPanel(EmissionPanelQuery $panel): array
     {
-        return $eligibility->issuableTurmas()
-            ->map(fn (Turma $turma) => IssuableTurmaData::fromModel($turma))
-            ->all();
+        return $panel->get();
     }
 
     public function store(
@@ -83,5 +83,61 @@ class CertificateController extends Controller implements HasMiddleware
         return CertificateData::fromModel($action->execute($certificate, $data->reason))
             ->toResponse(request())
             ->setStatusCode(200);
+    }
+
+    /**
+     * Relatório por item, não transação: cada `execute()` já é a sua própria
+     * transação (portas + D9 + auditoria). Abrir uma transação por fora faria
+     * um item falho reverter os que já tinham sido commitados — e, pior,
+     * consumir um número de sequência que nunca vira certificado.
+     *
+     * @return array<BatchIssueItemResultData>
+     */
+    public function batch(BatchIssueData $data, IssueCertificateAction $action): array
+    {
+        $redator = Redator::query()->findOrFail($data->redator_id);
+
+        return collect($data->enrollment_ids)
+            ->map(function (int $enrollmentId) use ($action, $redator): BatchIssueItemResultData {
+                try {
+                    // Resolvida AQUI, dentro do try: `exists:enrollments,id`
+                    // do DTO consulta a tabela crua e não respeita soft
+                    // delete, então um id soft-deletado passa a validação e
+                    // só falha aqui. Se isto estourasse fora do try (como
+                    // `findOrFail`), a `ModelNotFoundException` subiria sem
+                    // `catch`, virando 404 pro request inteiro — escondendo
+                    // itens anteriores já commitados (não há transação
+                    // externa). Por isso vira `ValidationException`: mesmo
+                    // formato de recusa das seis portas, capturado pelo
+                    // `catch` abaixo e reportado como item, não como falha
+                    // da requisição.
+                    $enrollment = Enrollment::query()->find($enrollmentId);
+
+                    if ($enrollment === null) {
+                        throw ValidationException::withMessages([
+                            'enrollment' => 'La matrícula no existe.',
+                        ]);
+                    }
+
+                    $certificate = $action->execute($enrollment, $redator);
+
+                    return new BatchIssueItemResultData(
+                        enrollment_id: $enrollmentId,
+                        ok: true,
+                        codigo: $certificate->codigo,
+                        certificate_id: $certificate->id,
+                        error: null,
+                    );
+                } catch (ValidationException $e) {
+                    return new BatchIssueItemResultData(
+                        enrollment_id: $enrollmentId,
+                        ok: false,
+                        codigo: null,
+                        certificate_id: null,
+                        error: collect($e->errors())->flatten()->first(),
+                    );
+                }
+            })
+            ->all();
     }
 }

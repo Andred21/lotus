@@ -4,10 +4,13 @@ namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
+use App\Domains\Certification\Data\EmissionPanelEnrollmentData;
+use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateEligibility;
 use App\Domains\Certification\Services\CertificateTemplateResolver;
+use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -26,9 +29,11 @@ use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
- * A prova de que as duas faces das seis portas concordam (B1). Não é teste de
- * endpoint: é a invariante que mata a classe de bug "a lista promete um
- * certificado que o POST recusa com 422", nos DOIS sentidos.
+ * A prova de que a tela e a emissão concordam (B1). Não é teste de endpoint:
+ * é a invariante que mata a classe de bug "a lista promete um certificado que
+ * o POST recusa com 422", nos DOIS sentidos — o que o `EmissionPanelQuery`
+ * apresenta como emissível passa nas portas de `CertificateEligibility`, e o
+ * que as portas recusam nunca aparece emissível no painel.
  */
 class CertificateEligibilityTest extends TestCase
 {
@@ -136,42 +141,42 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
-     * Sentido 1 — o que a lista promete, a emissão cumpre. Sem isto o admin
-     * clica numa turma que a tela ofereceu e leva 422.
+     * Sentido 1 — o que o painel apresenta como emissível, a emissão cumpre.
+     * Sem isto o admin clica no Emitir que a tela ofereceu e leva 422.
      */
-    public function test_toda_matricula_listada_passa_nas_portas_da_emissao(): void
+    public function test_toda_matricula_emissivel_no_painel_passa_nas_portas_da_emissao(): void
     {
         $eligibility = app(CertificateEligibility::class);
-        $turmas = $eligibility->issuableTurmas();
+        $emissiveis = $this->matriculasEmissiveisNoPainel();
 
-        $this->assertCount(1, $turmas);
-        $this->assertSame($this->emitivel->id, $turmas->first()->id);
+        $this->assertSame([$this->emitivel->enrollments()->sole()->id], $emissiveis);
 
-        foreach ($turmas as $turma) {
-            $this->assertNotEmpty($turma->enrollments);
+        foreach ($emissiveis as $enrollmentId) {
+            $context = $eligibility->assert(Enrollment::query()->findOrFail($enrollmentId), $this->redator);
 
-            foreach ($turma->enrollments as $enrollment) {
-                $context = $eligibility->assert($enrollment, $this->redator);
-
-                $this->assertSame($turma->id, $context->turma->id);
-                $this->assertSame('Santiago', $context->ciudadEmision);
-            }
+            $this->assertSame($this->emitivel->id, $context->turma->id);
+            $this->assertSame('Santiago', $context->ciudadEmision);
         }
     }
 
     /**
-     * Sentido 2 — o que a emissão recusa, a lista esconde. Uma turma por porta,
-     * para uma porta esquecida numa das faces aparecer como falha nomeada.
+     * Sentido 2 — o que a emissão recusa, o painel nunca apresenta como
+     * emissível. Uma turma por porta, para uma porta esquecida num dos lados
+     * aparecer como falha nomeada.
      */
-    public function test_toda_turma_que_a_emissao_recusa_fica_fora_da_lista(): void
+    public function test_toda_matricula_que_a_emissao_recusa_nao_aparece_emissivel_no_painel(): void
     {
         $eligibility = app(CertificateEligibility::class);
-        $listadas = $eligibility->issuableTurmas()->pluck('id')->all();
+        $emissiveis = $this->matriculasEmissiveisNoPainel();
 
         foreach ($this->reprovadas as $porta => $turma) {
-            $this->assertNotContains($turma->id, $listadas, "A lista mostrou a turma que fecha a porta: {$porta}.");
-
             $enrollment = $turma->enrollments()->sole();
+
+            $this->assertNotContains(
+                $enrollment->id,
+                $emissiveis,
+                "O painel apresentou como emissível a matrícula da porta: {$porta}.",
+            );
 
             try {
                 $eligibility->assert($enrollment, $this->redator);
@@ -190,19 +195,21 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
-     * A lista devolve a turma, mas só com as matrículas emitíveis dentro: uma
-     * matrícula reprovada na mesma turma não pode chegar à tela de emissão.
+     * A matrícula reprovada da turma emitível APARECE no painel (D-P3: linha
+     * ausente não explica nada), mas nunca como emissível.
      */
-    public function test_lista_traz_a_turma_sem_as_matriculas_que_nao_passam(): void
+    public function test_painel_mostra_a_matricula_reprovada_sem_apresenta_la_como_emissivel(): void
     {
         $reprovada = $this->makeEnrollment($this->emitivel, EnrollmentApprovalStatus::Reprobado);
 
-        $turma = app(CertificateEligibility::class)->issuableTurmas()->sole();
+        $turma = collect(app(EmissionPanelQuery::class)->get())
+            ->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $this->emitivel->id);
 
-        $this->assertNotContains(
+        $this->assertContains(
             $reprovada->id,
-            $turma->enrollments->pluck('id')->all(),
+            array_map(fn (EmissionPanelEnrollmentData $e) => $e->enrollment_id, $turma->enrollments),
         );
+        $this->assertNotContains($reprovada->id, $this->matriculasEmissiveisNoPainel());
     }
 
     /**
@@ -233,16 +240,44 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
-     * Cada reprovada nasce da própria cadeia via o builder — só o RUT sai
-     * nulo, para não colidir com o índice único de `users.rut` entre os sete
-     * cenários criados neste setUp (o default do builder repetiria o mesmo
-     * RUT em cada instância).
+     * O que o painel apresenta como EMISSÍVEL — o contrato que o botão Emitir
+     * da tela lê (`rowCertKind` no front): turma sem `emission_blocked`,
+     * matrícula aprovada e sem certificado vigente. É contra ISTO que as
+     * portas têm de concordar; o resto do painel é reporte, não promessa.
+     *
+     * @return array<int> `enrollment_id`s
+     */
+    private function matriculasEmissiveisNoPainel(): array
+    {
+        return collect(app(EmissionPanelQuery::class)->get())
+            ->filter(fn (EmissionPanelTurmaData $turma) => $turma->emission_blocked === null)
+            ->flatMap(fn (EmissionPanelTurmaData $turma) => collect($turma->enrollments)
+                ->filter(fn (EmissionPanelEnrollmentData $e) => $e->approval_status === EnrollmentApprovalStatus::Aprobado
+                    && $e->certificate === null)
+                ->map(fn (EmissionPanelEnrollmentData $e) => $e->enrollment_id))
+            ->values()
+            ->all();
+    }
+
+    /** Um RUT de aluno por cadeia reprovada — ver `reprovadaBuilder`. */
+    private int $studentRutSeq = 0;
+
+    /**
+     * Cada reprovada nasce da própria cadeia via o builder. Cliente e redator
+     * saem com RUT nulo para não colidir com o índice único de `users.rut`
+     * entre os sete cenários deste setUp (o default do builder repetiria o
+     * mesmo RUT em cada instância). O ALUNO não pode: o `EmissionPanelQuery`
+     * projeta toda turma concluída — as reprovadas inclusive — e
+     * `EmissionPanelEnrollmentData::$student_rut` é `string` não-nulo, então
+     * cada cadeia ganha um RUT próprio, sequencial.
      */
     private function reprovadaBuilder(): IssuableEnrollmentBuilder
     {
+        $seq = ++$this->studentRutSeq;
+
         return IssuableEnrollmentBuilder::make()
             ->client([], ['rut' => null])
-            ->student(['rut' => null])
+            ->student(['rut' => sprintf('66.666.66%d-%d', $seq, $seq)])
             ->redatorUser(['rut' => null]);
     }
 
@@ -252,7 +287,9 @@ class CertificateEligibilityTest extends TestCase
         EnrollmentApprovalStatus $status = EnrollmentApprovalStatus::Aprobado,
     ): Enrollment {
         $student = Student::create([
-            'user_id' => User::factory()->aluno()->create()->id,
+            // RUT presente pelo mesmo motivo do `reprovadaBuilder`: a projeção
+            // do painel exige `student_rut` string.
+            'user_id' => User::factory()->aluno()->create(['rut' => '77.777.777-7'])->id,
             'current_client_id' => $this->client->id,
         ]);
 

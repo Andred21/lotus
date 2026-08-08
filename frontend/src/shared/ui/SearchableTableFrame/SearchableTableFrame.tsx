@@ -38,6 +38,12 @@ export interface SearchableTableFrameProps<T> {
    * genérico nas 5 tabelas e a moldura monta sozinha (spec D4). */
   emptyState: ReactNode
   footerCount: ReactNode
+  /** Filtro próprio da tabela (dropdown, chips), renderizado na toolbar depois
+   * do input de busca. Quem passa isto passa também um `clear` COMPOSTO no
+   * `table`: o `clear` do `useTableFilter` limpa só a busca, e o vazio de filtro
+   * abaixo oferece `common.clearFilters` — se o filtro próprio não for limpo
+   * junto, o botão não devolve a lista. `HistorialTable` é o primeiro caso. */
+  filterSlot?: ReactNode
   actions?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
@@ -53,17 +59,14 @@ export interface SearchableTableFrameProps<T> {
  * Não entram aqui: `BudgetsTable`/`TurmasTable` (dropdown de filtro por cima),
  * `RolesTable` (sem busca) e `EnrollmentTable` (sem toolbar) — spec D2.
  *
- * QUEM FOR ADOTAR COM `where`: o `filtering` abaixo já escolhe o empty state
- * certo, mas o TEXTO do vazio de filtro assume busca por termo. Uma tabela com
- * dropdown precisa também da bifurcação de redação que `BudgetsTable` e
- * `TurmasTable` têm hoje (`term === ''` → `common.noResultsFiltered` +
- * `common.clearFilters`). Não está aqui porque nenhum consumidor atual passa
- * `where` — construir agora seria especulativo (lição 3). */
+ * Tabela com filtro próprio entra pelo `filterSlot`: o vazio abaixo bifurca a
+ * redação por `term`, como `BudgetsTable` e `TurmasTable` já faziam à mão. */
 export function SearchableTableFrame<T>({
   table,
   searchPlaceholder,
   emptyState,
   footerCount,
+  filterSlot,
   actions,
   loading,
   error,
@@ -72,12 +75,22 @@ export function SearchableTableFrame<T>({
 }: SearchableTableFrameProps<T>) {
   const { t } = useTranslation()
 
+  // Filtrando sem termo de busca = só o `filterSlot` está estreitando a lista;
+  // oferecer "limpar busca" ali mandaria o usuário apagar um campo já vazio.
+  const filteredBySearch = table.term !== ''
   const empty = table.filtering ? (
     <AppEmptyState
       icon="pi pi-search"
-      title={t('common.noResults', { term: table.filter.trim() })}
-      description={t('common.noResultsHint')}
-      action={<AppButton label={t('common.clearSearch')} icon="pi pi-times" text onClick={table.clear} />}
+      title={filteredBySearch ? t('common.noResults', { term: table.filter.trim() }) : t('common.noResultsFiltered')}
+      description={filteredBySearch ? t('common.noResultsHint') : t('common.noResultsFilteredHint')}
+      action={
+        <AppButton
+          label={filteredBySearch ? t('common.clearSearch') : t('common.clearFilters')}
+          icon="pi pi-times"
+          text
+          onClick={table.clear}
+        />
+      }
     />
   ) : (
     emptyState
@@ -87,13 +100,16 @@ export function SearchableTableFrame<T>({
     <>
       <AppCardToolbar
         start={
-          <div className="min-w-64 flex-1">
-            <AppInputText
-              leftIcon="pi pi-search"
-              placeholder={searchPlaceholder}
-              value={table.filter}
-              onChange={(e) => table.onFilterChange(e.target.value)}
-            />
+          <div className="flex min-w-64 flex-1 items-center gap-3">
+            <div className="min-w-64 flex-1">
+              <AppInputText
+                leftIcon="pi pi-search"
+                placeholder={searchPlaceholder}
+                value={table.filter}
+                onChange={(e) => table.onFilterChange(e.target.value)}
+              />
+            </div>
+            {filterSlot}
           </div>
         }
         end={error ? undefined : actions}

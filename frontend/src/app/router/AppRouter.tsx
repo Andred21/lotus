@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { LoginPage } from '@features/identity/components/Login/LoginPage'
 import { ProtectedRoute } from './ProtectedRoute'
+import { SessionBootstrap } from '@app/SessionBootstrap'
 import { AppLayout } from '@app/layouts/AppLayout'
 import { DashboardPage } from '@app/pages/DashboardPage'
 import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
@@ -13,6 +14,8 @@ import { CatalogPage } from '@features/catalog/components/CatalogPage'
 import { OperationPage } from '@features/operation/components/OperationPage'
 import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetailPage'
 import { TurmaCreatePage } from '@features/operation/components/Turma/TurmaCreatePage'
+import { CertificatesPage } from '@features/certification/components/CertificatesPage'
+import { ValidationPage } from '@features/certification/components/Validation/ValidationPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -24,16 +27,32 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginRoute />} />
+        {/* Validação pública por QR (spec D14/D19): sem conta, sem cookie. Fora do
+            SessionBootstrap de propósito — quem escaneia o QR nunca deve disparar
+            `GET /api/me`. */}
+        <Route path="/validar/:uuid" element={<ValidationPage />} />
+
+        {/* Login segue sob o bootstrap: o redirect "já autenticado" depende do
+            `GET /api/me` já ter resolvido a sessão. */}
+        <Route
+          path="/login"
+          element={
+            <SessionBootstrap>
+              <LoginRoute />
+            </SessionBootstrap>
+          }
+        />
 
         {/* Filtro de permissão do Sidebar é só de exibição (RBAC visual); a API é a
             fronteira de acesso autoritativa. Guard de rota por módulo é follow-up
             quando páginas reais substituírem os ModulePlaceholder. */}
         <Route
           element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
+            <SessionBootstrap>
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            </SessionBootstrap>
           }
         >
           <Route path="/" element={<DashboardPage />} />
@@ -43,7 +62,7 @@ export function AppRouter() {
           <Route path="/operacion/turmas/nueva/:quoteId" element={<TurmaCreatePage />} />
           <Route path="/operacion/turmas/:id" element={<TurmaDetailPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
-          <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
+          <Route path="/certificados" element={<CertificatesPage />} />
           <Route path="/personas" element={<PeoplePage />} />
           <Route path="/administracion" element={<AdministracionPage />} />
           <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />
