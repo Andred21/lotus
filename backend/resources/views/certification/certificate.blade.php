@@ -81,6 +81,38 @@
         }
         .course small { color: #3f3f3f; display: block; font-size: 10px; font-weight: normal; }
         .narrative { line-height: 1.7; margin: 0 0 4mm; text-align: justify; }
+        /* Altura FIXA, não mínima. Com `min-height` a folha crescia junto com a
+           descrição do curso e levava o rodapé para a página seguinte — com
+           3.689 caracteres o certificado saía em 3 páginas, rodapé/QR/assinatura
+           na página 2 (gate de 2026-08-07). `flex-shrink: 0` em tudo menos na
+           descrição declara QUEM cede espaço quando falta, e o rodapé
+           (`margin-top: auto`) volta a ancorar no pé da folha em qualquer
+           combinação de conteúdo. Esta é a garantia estrutural; o clamp abaixo
+           é só o aviso visível. */
+        .page--certificado { height: 297mm; }
+        .page--certificado > * { flex-shrink: 0; }
+
+        /* `courses.description` é o único campo de tamanho livre do documento —
+           por isso é ele que cede. O limite mora AQUI e não em `.narrative`
+           porque nota, assistência e vigência também são `.narrative`, e essas
+           NUNCA podem ser cortadas.
+
+           `-webkit-line-clamp` com inteiro é o único mecanismo que este
+           Chromium (m149) marca com reticências: medido, `line-clamp: auto`,
+           `block-ellipsis` e `text-overflow` cortam mudos no meio da linha. Daí
+           o inteiro, calibrado no pior caso (nota + assistência + vigência
+           presentes) contra o PDF real: 7 linhas a 11px, 10 a 9px. */
+        .narrative--contenidos {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 7;
+            flex-shrink: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* Acima do limiar o corpo cai para 9px e cabem ~1.300 caracteres em vez
+           de ~700 — só o que passar disso vira reticências. */
+        .narrative--compact { font-size: 9px; line-height: 1.5; -webkit-line-clamp: 10; }
         .registro { margin-top: 6mm; text-align: center; }
 
         .certificate-footer {
@@ -130,7 +162,7 @@
     </style>
 </head>
 <body>
-<section class="page">
+<section class="page page--certificado">
     <div class="accent accent-top"></div>
 
     <div class="meta">
@@ -177,7 +209,11 @@
         @if ($periodo !== null)
             <p class="narrative">La actividad realizada {{ $periodo }} abordó los siguientes contenidos:</p>
         @endif
-        <p class="narrative">{{ $curso->description }}</p>
+        {{-- 700 = as 7 linhas do clamp a 11px (~100 caracteres por linha nos
+             178mm úteis). Abaixo do limiar o clamp nunca morde e o parágrafo
+             sai idêntico ao que sempre saiu; acima, 9px preserva mais texto. --}}
+        @php $narrativeCompact = mb_strlen($curso->description) > 700; @endphp
+        <p class="narrative narrative--contenidos {{ $narrativeCompact ? 'narrative--compact' : '' }}">{{ $curso->description }}</p>
     @elseif ($periodo !== null)
         <p class="narrative">La actividad fue realizada {{ $periodo }}.</p>
     @endif

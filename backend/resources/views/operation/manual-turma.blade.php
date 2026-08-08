@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <title>Manual de Clases — {{ $turma->course->name }}</title>
 <style>
+    /* O Libro de Control de Clases é arquivado pelo cliente em A4, como todo
+       documento oficial da Lotus (D4). O `margin: 32px` do `body` segue sendo a
+       margem visual; o conversor só honra este `@page` com `preferCssPageSize`,
+       ligado no `ManualPdfService`. */
+    @page { size: A4 portrait; margin: 0; }
     body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color: #111; margin: 32px; }
     h1 { font-size: 20px; border-bottom: 2px solid #111; padding-bottom: 8px; }
     h2 { font-size: 15px; margin-top: 24px; }

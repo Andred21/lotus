@@ -17,12 +17,11 @@ class ManualPdfService
 
     public function render(Turma $turma): string
     {
-        // `converterDefault` preserva o comportamento atual: a Blade do manual
-        // não declara `@page`, então não há tamanho próprio a honrar. Quando o
-        // manual virar documento oficial (bloco do frontend), ela declara o
-        // papel e esta linha vira `fromCss()` — o resto do transporte já está
-        // pronto.
-        return $this->pdf->render($this->html($turma), PageOptions::converterDefault());
+        // `fromCss`: a Blade do manual declara `@page { size: A4 portrait }`, e
+        // sem esta opção o Chromium ignora o CSS e imprime no papel default do
+        // conversor (Letter) — o mesmo defeito que o certificado já pagou
+        // (`CertificatePdfService`). A4 é o papel que o cliente arquiva.
+        return $this->pdf->render($this->html($turma), PageOptions::fromCss());
     }
 
     private function html(Turma $turma): string

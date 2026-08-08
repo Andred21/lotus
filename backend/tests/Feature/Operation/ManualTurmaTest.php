@@ -62,6 +62,33 @@ class ManualTurmaTest extends TestCase
         });
     }
 
+    /**
+     * O A4 do Libro de Control de Clases nasce de DUAS peças, e as duas ficam
+     * guardadas aqui: o `@page` do Blade, que declara o tamanho, e o
+     * `preferCssPageSize`, sem o qual o Chromium imprime no default do
+     * conversor — Letter (612×792 pt), que foi o que o manual saiu até
+     * 2026-08-08. Apagar qualquer uma devolve o documento ao papel errado.
+     * Espelha a guarda do certificado (`CertificatePdfTest`, lição R-2).
+     */
+    public function test_manual_declara_a4_no_css_e_pede_o_papel_do_css(): void
+    {
+        $this->actingAsAdmin();
+        Http::preventStrayRequests();
+        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF-fake')]);
+
+        $this->get("/api/turmas/{$this->turma->id}/manual")->assertOk();
+
+        Http::assertSent(function ($request) {
+            $body = (string) $request->body();
+
+            return preg_match('/@page\s*\{[^}]*size:\s*A4\s+portrait;/s', $body) === 1
+                && preg_match(
+                    '/name="preferCssPageSize"\r?\n(?:[^\r\n]+\r?\n)*\r?\ntrue\r?\n/',
+                    $body,
+                ) === 1;
+        });
+    }
+
     public function test_gotenberg_fora_do_ar_500_rfc7807(): void
     {
         $this->actingAsAdmin();
