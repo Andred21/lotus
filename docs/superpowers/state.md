@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: profundidade-backend-b4-b7
 active_work_item: profundidade-backend-b4-b7
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md
 context_packet: null
 blocker: null
 review_findings_approved: null
@@ -76,6 +76,20 @@ B4 → catraca → B5 → B6 → B7 → gate, um bloco. Design aprovado em 6 se�
 `docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md`.
 
 **Backend-only, main tree (P-03), zero schema — ADR/DER não abrem.**
+
+**Plano escrito em 2026-08-07 — 10 tasks (0–9), `executor: claude` (SDD).**
+`docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md`. A escrita do plano achou
+**quatro desvios contra a spec aprovada, declarados no §Desvios em vez de silenciados** (lição 13):
+D-P1 — `ContratanteData` não pode morar em `Commercial/Data` como a spec D2 pedia, porque a Regra A
+do `DomainDependencyTest` só expõe `Models/Enums/Services`; vai para `App\Shared\Data`, a D12 mora
+em `Client::contratante()` e a dependência Certification→Commercial some por mediação (Operation)
+em vez de virar aresta — e `generated.ts` **não muda**. D-P2 — `AcademicResult` vai para
+`Operation\Services` (mesma Regra A; precedente `IssuanceContext`), com a aresta
+`Certification → Operation\Services\AcademicResult` declarada na matriz. D-P3 — os sítios da cadeia
+são 10, não 8: `EnrollStudentAction:31` precisa do **model** (`Turma::contratanteClient()` nasce) e
+`manual-turma.blade.php:21` está fora de `app/` (a catraca varre blades; strings de eager-load
+ficam fora por serem carga, não projeção). D-P4 — o builder de cenário não tem `->jaEmitido()`:
+emissão é ato do teste, não setup.
 
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
