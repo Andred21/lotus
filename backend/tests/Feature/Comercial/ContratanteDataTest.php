@@ -126,7 +126,7 @@ class ContratanteDataTest extends TestCase
     /**
      * `users.rut` é nullable no schema, e a razão social é legível sem ele. O
      * seam não pode transformar RUT ausente em TypeError: quem lê só o `name`
-     * (TurmaData, PendingQuoteData, IssuableTurmaData, ImportStudentsAction e
+     * (TurmaData, PendingQuoteData, EmissionPanelTurmaData, ImportStudentsAction e
      * o Blade do manual) passou a atravessar o `User` por causa do B4, e antes
      * dele essas cinco projeções nunca o tocavam.
      */

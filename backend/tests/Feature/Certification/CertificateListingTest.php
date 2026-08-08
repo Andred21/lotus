@@ -97,68 +97,126 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('snapshot.aluno.name', 'Nombre Congelado');
     }
 
-    public function test_issuable_filtra_e_faz_matricula_reaparecer_depois_da_revogacao(): void
+    /**
+     * O painel de emissão é a projeção de LISTAGEM: toda turma concluída
+     * aparece, com todos os alunos — aprovado, reprovado e pendente — e o
+     * `emission_blocked` diz por que a emissão recusaria. Turma em andamento
+     * não é assunto dele (porta 1 / RN-08).
+     */
+    public function test_panel_lista_turma_concluida_com_todos_os_alunos(): void
     {
-        $this->actingAsSuperadmin();
+        $this->actingAsAdmin();
 
-        $inProgress = $this->createTurma(TurmaStatus::EmAndamento, 2);
+        $emAndamento = $this->createTurma(TurmaStatus::EmAndamento, 2);
         $this->createEnrollment(
-            $inProgress,
+            $emAndamento,
             EnrollmentApprovalStatus::Aprobado,
             'Alumno En Curso',
             '11.111.111-1',
         );
 
-        $withRejectedStudent = $this->createTurma(TurmaStatus::Concluida, 3);
-        $this->createEnrollment(
-            $withRejectedStudent,
+        $reprobado = $this->createEnrollment(
+            $this->turma,
             EnrollmentApprovalStatus::Reprobado,
             'Alumno Reprobado',
             '22.222.222-2',
         );
+        $pendiente = $this->createEnrollment(
+            $this->turma,
+            EnrollmentApprovalStatus::Pendiente,
+            'Alumno Pendiente',
+            '33.333.333-3',
+        );
 
-        $this->getJson('/api/certificates/issuable')
+        // A vigência sai do template MAIS NOVO do curso: o setUp cria a v1 com
+        // `validity_months` null, então 24 só aparece se a v2 vencer.
+        CourseCertificateTemplate::create([
+            'course_id' => $this->course->id,
+            'version' => 2,
+            'layout_config' => ['city' => 'Santiago'],
+            'validity_months' => 24,
+        ]);
+
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
             ->assertJsonCount(1)
+            ->assertJsonStructure(['*' => [
+                'turma_id', 'course_name', 'client_name', 'end_date',
+                'template_validity_months', 'emission_blocked',
+                'enrollments' => ['*' => [
+                    'enrollment_id', 'student_name', 'student_rut',
+                    'approval_status', 'attendance_pct', 'nota_final', 'certificate',
+                ]],
+                'redatores' => ['*' => ['redator_id', 'name']],
+            ]])
             ->assertJsonPath('0.turma_id', $this->turma->id)
             ->assertJsonPath('0.course_name', 'Seguridad en Alta Tensión')
             ->assertJsonPath('0.client_name', 'Empresa Legal SpA')
             ->assertJsonPath('0.end_date', '2026-07-24')
+            ->assertJsonPath('0.template_validity_months', 24)
+            ->assertJsonPath('0.emission_blocked', null)
+            ->assertJsonCount(3, '0.enrollments')
             ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id)
             ->assertJsonPath('0.enrollments.0.student_name', 'Juan Pérez')
             ->assertJsonPath('0.enrollments.0.student_rut', '12.345.678-5')
+            ->assertJsonPath('0.enrollments.0.approval_status', 'aprobado')
+            ->assertJsonPath('0.enrollments.0.nota_final', '6.2')
+            ->assertJsonPath('0.enrollments.0.attendance_pct', '87.50')
+            ->assertJsonPath('0.enrollments.0.certificate', null)
+            ->assertJsonPath('0.enrollments.1.enrollment_id', $reprobado->id)
+            ->assertJsonPath('0.enrollments.1.approval_status', 'reprobado')
+            ->assertJsonPath('0.enrollments.2.enrollment_id', $pendiente->id)
+            ->assertJsonPath('0.enrollments.2.approval_status', 'pendiente')
             ->assertJsonPath('0.redatores.0.redator_id', $this->redator->id)
             ->assertJsonPath('0.redatores.0.name', 'María Relatora');
+    }
 
-        $certificateId = $this->postJson(
+    /**
+     * A matrícula não some do painel quando ganha certificado: ela passa a
+     * exibir o VIGENTE, e a revogação zera o campo de volta — que é como o
+     * admin vê que pode reemitir.
+     */
+    public function test_panel_expoe_o_certificado_vigente_e_o_zera_depois_da_revogacao(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $this->getJson('/api/certificates/emission-panel')
+            ->assertOk()
+            ->assertJsonPath('0.enrollments.0.certificate', null);
+
+        $emitido = $this->postJson(
             "/api/enrollments/{$this->enrollment->id}/certificate",
             ['redator_id' => $this->redator->id],
         )
             ->assertCreated()
-            ->json('id');
+            ->json();
 
-        $this->getJson('/api/certificates/issuable')
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
-            ->assertJsonCount(0);
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id)
+            ->assertJsonPath('0.enrollments.0.certificate.id', $emitido['id'])
+            ->assertJsonPath('0.enrollments.0.certificate.codigo', $emitido['codigo'])
+            ->assertJsonPath('0.enrollments.0.certificate.status', 'emitido');
 
-        $this->postJson("/api/certificates/{$certificateId}/revoke", [
+        $this->postJson("/api/certificates/{$emitido['id']}/revoke", [
             'reason' => 'Error en los datos del documento.',
         ])->assertOk();
 
-        $this->getJson('/api/certificates/issuable')
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
             ->assertJsonCount(1)
-            ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id);
+            ->assertJsonStructure(['*' => ['enrollments' => ['*' => ['certificate']]]])
+            ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id)
+            ->assertJsonPath('0.enrollments.0.certificate', null);
     }
 
     /**
-     * As matrículas com certificado vigente se resolvem UMA vez por chamada. O
-     * mesmo closure filtra o `whereHas` e o eager-load, e recalcular a lista
-     * entre os dois não só consultava `certificates` de novo como abria a
-     * janela para a turma sair na tela com `enrollments` vazio, se um
-     * certificado fosse emitido no meio.
+     * Os certificados vigentes se resolvem UMA vez por chamada. Resolvê-los por
+     * turma (ou por matrícula) devolve o N+1 numa tela que lista o histórico
+     * inteiro de turmas concluídas.
      */
-    public function test_issuable_consulta_os_certificados_vigentes_uma_vez_so(): void
+    public function test_panel_consulta_os_certificados_vigentes_uma_vez_so(): void
     {
         $this->actingAsSuperadmin();
         $consultas = 0;
@@ -168,22 +226,27 @@ class CertificateListingTest extends TestCase
             }
         });
 
-        $this->getJson('/api/certificates/issuable')->assertOk()->assertJsonCount(1);
+        $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(1);
 
         $this->assertSame(1, $consultas);
     }
 
-    public function test_issuable_sem_permissao_de_emissao_retorna_403(): void
+    public function test_panel_sem_permissao_de_emissao_retorna_403(): void
     {
         $this->seed(RolePermissionSeeder::class);
         $viewer = User::factory()->create(['type' => 'admin', 'is_active' => true]);
         $viewer->givePermissionTo('certification.certificate.view');
         $this->actingAs($viewer, 'web');
 
-        $this->getJson('/api/certificates/issuable')->assertForbidden();
+        $this->getJson('/api/certificates/emission-panel')->assertForbidden();
     }
 
-    public function test_issuable_oculta_turma_cujo_curso_nao_tem_template(): void
+    /**
+     * D-P3: a turma sem template APARECE bloqueada, não some. Ocultá-la deixava
+     * o admin sem nada para clicar e sem nada para ler — falha visível ganha de
+     * turma escondida.
+     */
+    public function test_panel_mostra_turma_sem_template_bloqueada(): void
     {
         $this->actingAsAdmin();
         $courseWithoutTemplate = $this->makeCourse(['name' => 'Curso sin plantilla']);
@@ -191,27 +254,31 @@ class CertificateListingTest extends TestCase
             TurmaStatus::Concluida,
             2,
             $courseWithoutTemplate,
+            '2026-07-25',
         );
-        $this->createEnrollment(
+        // O redator entra para que só a porta do TEMPLATE fique fechada: com
+        // duas fechadas, `sin_plantilla` continuaria saindo por precedência e o
+        // cenário deixaria de provar qual porta o painel reportou.
+        $turmaWithoutTemplate->redatores()->attach($this->redator);
+        $matricula = $this->createEnrollment(
             $turmaWithoutTemplate,
             EnrollmentApprovalStatus::Aprobado,
             'Alumno sin plantilla',
             '33.333.333-3',
         );
 
-        $this->getJson('/api/certificates/issuable')
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.turma_id', $this->turma->id)
-            ->assertJsonMissing(['turma_id' => $turmaWithoutTemplate->id]);
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.turma_id', $turmaWithoutTemplate->id)
+            ->assertJsonPath('0.emission_blocked', 'sin_plantilla')
+            ->assertJsonPath('0.template_validity_months', null)
+            ->assertJsonPath('0.enrollments.0.enrollment_id', $matricula->id)
+            ->assertJsonPath('1.turma_id', $this->turma->id)
+            ->assertJsonPath('1.emission_blocked', null);
     }
 
-    /**
-     * O `issuable` existe para a UI não re-derivar as portas da emissão
-     * (D-P1). Listar uma turma que o POST recusa com 422 desfaz exatamente
-     * isso: o admin clica e leva erro numa tela que prometia sucesso.
-     */
-    public function test_issuable_oculta_turma_online_sem_cidade_valida_no_template(): void
+    public function test_panel_mostra_turma_online_sem_cidade_bloqueada(): void
     {
         $this->actingAsAdmin();
         $courseOnline = $this->makeCourse(['name' => 'Curso online sin ciudad']);
@@ -221,7 +288,7 @@ class CertificateListingTest extends TestCase
             'layout_config' => [],
             'validity_months' => null,
         ]);
-        $turmaOnline = $this->createTurma(TurmaStatus::Concluida, 2, $courseOnline);
+        $turmaOnline = $this->createTurma(TurmaStatus::Concluida, 2, $courseOnline, '2026-07-25');
         $turmaOnline->update([
             'modalidade' => TurmaModalidade::Online,
             'local_aplicacao' => null,
@@ -234,16 +301,19 @@ class CertificateListingTest extends TestCase
             '44.444.444-4',
         );
 
-        $this->getJson('/api/certificates/issuable')
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.turma_id', $this->turma->id);
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.turma_id', $turmaOnline->id)
+            ->assertJsonPath('0.emission_blocked', 'plantilla_sin_ciudad')
+            ->assertJsonPath('1.turma_id', $this->turma->id)
+            ->assertJsonPath('1.emission_blocked', null);
     }
 
-    public function test_issuable_oculta_turma_sem_redator_designado(): void
+    public function test_panel_mostra_turma_sem_redator_bloqueada(): void
     {
         $this->actingAsAdmin();
-        $turmaSemRedator = $this->createTurma(TurmaStatus::Concluida, 3);
+        $turmaSemRedator = $this->createTurma(TurmaStatus::Concluida, 3, null, '2026-07-25');
         $this->createEnrollment(
             $turmaSemRedator,
             EnrollmentApprovalStatus::Aprobado,
@@ -251,16 +321,20 @@ class CertificateListingTest extends TestCase
             '55.555.555-5',
         );
 
-        $this->getJson('/api/certificates/issuable')
+        $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.turma_id', $this->turma->id);
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.turma_id', $turmaSemRedator->id)
+            ->assertJsonPath('0.emission_blocked', 'sin_redactor')
+            ->assertJsonPath('1.turma_id', $this->turma->id)
+            ->assertJsonPath('1.emission_blocked', null);
     }
 
     private function createTurma(
         TurmaStatus $status,
         int $seq,
         ?Course $course = null,
+        string $endDate = '2026-07-24',
     ): Turma {
         $course ??= $this->course;
         $quote = Quote::create([
@@ -278,7 +352,7 @@ class CertificateListingTest extends TestCase
             'modalidade' => TurmaModalidade::Presencial,
             'local_aplicacao' => 'Santiago',
             'start_date' => '2026-07-20',
-            'end_date' => '2026-07-24',
+            'end_date' => $endDate,
             'status' => $status,
         ]);
     }

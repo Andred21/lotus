@@ -5,15 +5,14 @@ namespace App\Domains\Certification\Http\Controllers;
 use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Actions\RevokeCertificateAction;
 use App\Domains\Certification\Data\CertificateData;
-use App\Domains\Certification\Data\IssuableTurmaData;
+use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
 use App\Domains\Certification\Models\Certificate;
-use App\Domains\Certification\Services\CertificateEligibility;
 use App\Domains\Certification\Services\CertificatePdfService;
+use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
-use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -26,7 +25,7 @@ class CertificateController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:certification.certificate.view', only: ['index', 'show', 'pdf']),
-            new Middleware('permission:certification.certificate.issue', only: ['store', 'issuable']),
+            new Middleware('permission:certification.certificate.issue', only: ['store', 'emissionPanel']),
             new Middleware('permission:certification.certificate.revoke', only: ['revoke']),
         ];
     }
@@ -54,12 +53,10 @@ class CertificateController extends Controller implements HasMiddleware
         ]);
     }
 
-    /** @return array<IssuableTurmaData> */
-    public function issuable(CertificateEligibility $eligibility): array
+    /** @return array<EmissionPanelTurmaData> */
+    public function emissionPanel(EmissionPanelQuery $panel): array
     {
-        return $eligibility->issuableTurmas()
-            ->map(fn (Turma $turma) => IssuableTurmaData::fromModel($turma))
-            ->all();
+        return $panel->get();
     }
 
     public function store(

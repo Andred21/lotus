@@ -63,7 +63,7 @@ class ContratanteEagerLoadTest extends TestCase
         $this->getJson('/api/turmas/pendientes-configuracion')->assertOk()->assertJsonCount(2);
     }
 
-    public function test_lista_de_emitiveis_nao_lazy_loada_o_user_do_contratante(): void
+    public function test_painel_de_emissao_nao_lazy_loada_o_user_do_contratante(): void
     {
         $this->actingAsAdmin();
         $this->makeEmitivel();
@@ -71,7 +71,7 @@ class ContratanteEagerLoadTest extends TestCase
 
         Model::preventLazyLoading();
 
-        $this->getJson('/api/certificates/issuable')->assertOk()->assertJsonCount(2);
+        $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(2);
     }
 
     /** Cadeia comercial completa e distinta das demais (RUT é `unique`). */
