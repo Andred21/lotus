@@ -102,6 +102,19 @@ para o domínio Comercial, que já tem 40+ testes em `tests/Feature/Comercial/` 
 aplicado e re-review aprovado. Placar: 458 passed, 1 skipped (1658 assertions). Commits
 `d926faf`…`06f869b`.
 
+**Task 2** (seams `Turma::contratanteClient()`/`contratante()`, `Quote::contratante()`) aprovada
+sem achados. Placar: 461 passed, 1 skipped (1665 assertions). Commit `55ccb1d`.
+
+**Task 3** (migração dos 8 sítios) expôs um gap real: `Client::contratante()` exige `user->rut`
+não-nulo, e ~8 arquivos de teste em `tests/Feature/Operation/` nunca setavam `rut` (só liam
+`legal_name`/`client_name`) porque a decisão Q-4 (2026-08-04) deixa o trait compartilhado
+`CreatesDomainRecords::makeClientWithUser` sem default de `rut` de propósito. O subagente parou
+(`BLOCKED`) em vez de escolher sozinho entre nullable na VO, accessor mais leve ou default no
+trait. **Decisão do João: fixtures explícitas** — os ~8 arquivos de teste passam a setar `rut` via
+`$userOverrides`, mesmo padrão que Q-4 já estabelece; `ContratanteData`, `Client`, `Turma`, `Quote`
+e o trait compartilhado ficam intocados. Fix aplicado, re-review aprovado, placar de volta ao
+baseline exato: 461 passed, 1 skipped (1665 assertions). Commits `3f8b671`…`4f89f2f`.
+
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
 ### Gate de fechamento — 2026-08-07
