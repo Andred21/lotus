@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-08-certificacao-frontend.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
@@ -97,6 +97,19 @@ corrigida no bloco (lição 13).
 
 Design aprovado em 8 seções em 2026-08-08. Spec:
 `docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md`.
+
+### Plano escrito em 2026-08-08 — 12 tasks (0–11), `executor: claude` (SDD)
+
+`docs/superpowers/plans/2026-08-08-certificacao-frontend.md`. A escrita do plano achou **quatro
+desvios contra a spec aprovada, declarados no §Desvios** (lição 13): D-P1 — o motivo de bloqueio
+da turma no painel é **calculado no servidor** (`emission_blocked`), porque as portas 5/6 (cidade,
+redator) não são deriváveis do payload que a spec listou, e re-derivar porta no cliente é a classe
+de bug que o docblock do `CertificateEligibility` documenta; D-P2 — as portas são **6, não 4** (a
+spec base envelheceu); D-P3 — os 3 testes de **ocultação** do `issuable` migram de contrato: turma
+não emissível agora **aparece bloqueada**, mudança deliberada; D-P4 — `problemFromBlob` não existe
+(a task antiga que o extrairia migrou para cá) — o PDF reusa o padrão do `useTurmaManual` e a
+extração só acontece se virar duplicação. Review de bloco declarado **alto risco** (peso legal +
+rota pública + `generated.ts`) → duas frentes quando chegar em `ready_for_review`.
 
 ## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
 
