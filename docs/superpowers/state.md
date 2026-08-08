@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: certificacao-frontend
+active_work_item: certificacao-frontend
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-05-certificacao-sprint-4-design.md
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: 8a62536
-updated_at: 2026-08-08T01:00:00-03:00
+state_basis_commit: 454d09b
+updated_at: 2026-08-08T00:32:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,35 @@ updated_at: 2026-08-08T01:00:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-08 (`certificacao-frontend`)
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-08** (`/planejar-bloco`
+com o item nomeado literalmente no argumento — "Certificação · frontend (módulo próprio)" — e o
+estado em `idle`; o comando não promove item sozinho). É o que sobrou do Bloco 7 depois do D-P8:
+as Tasks 9–13 do plano arquivado migraram inteiras e serão **replanejadas**, não copiadas —
+certificados ganham módulo próprio na interface.
+
+**Rota direta a `ready_for_planning`, sem regeração de packet — motivo medido, não pressa:** o
+próprio item do backlog fixa o contexto obrigatório, e as quatro fontes estão disponíveis sem
+varredura nova. (1) A spec `2026-08-05-certificacao-sprint-4-design.md` **segue ativa** — este
+bloco é o último consumidor dela (a invariante §4.2 migrou junto). (2) Os **prints do protótipo
+Figma** — a única fonte `unavailable` do packet, e gatilho de staleness declarado — entraram na
+própria seleção: o João anexou 5 telas ao argumento do comando (Emisión vazia; Emisión com turma
+concluída e tabela de alunos com nota/asistencia/estado acadêmico/ação Emitir + botão de lote
+"Emitir todos los pendientes"; diálogo "Confirmar emisión"; diálogo "Certificado emitido" com
+Descargar PDF; Historial com busca, filtro de estado e estados Vigente/Por vencer/Vencido/Revocado
+com ações Ver/Revocar/Reemitir). São instrução vigente de topo de hierarquia; a spec/plano do bloco
+fixa o que deles vira contrato. (3) O packet `certificacao-sprint-4.md` (`status: partial`) é
+**reutilizado por ponteiro**, como o backlog manda, para não repetir a varredura de Drive/Notion.
+(4) O `Libro de Control de Clases` não é espelhado no repo; o packet o registra como
+`D-OFFICIAL-MANUAL` (Drive `1VE89_MEiRlY574NqPaWvB7IkdAA0zo0T`), consultável se o desenho precisar.
+
+**Dívidas com prazo que o bloco herda (do próprio backlog):** DTOs de certificação em
+`generated.ts` sem consumidor; Manual de Classe saindo em **Letter** (Blade sem `@page`); rodapé/QR
+absolutos transbordando de página com `courses.description` longa.
+
+**Toca `frontend/` e Blades de `backend/resources/views` → main tree, sem worktree (P-03).**
 
 ## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
 
