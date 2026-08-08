@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppCard } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import { EmissionPanel } from './Emission/EmissionPanel'
+import { HistorialTable } from './Historial/HistorialTable'
 
-/** Historial (Task 8) ainda é stub — a aba já existe (gate por `can()`), o
- * conteúdo real entra quando `HistorialTable` nascer. */
 export function CertificatesPage() {
   const { t } = useTranslation()
   const { can } = usePermissions()
@@ -22,9 +21,7 @@ export function CertificatesPage() {
           )}
           {can('certification.certificate.view') && (
             <ModuleTab header={t('certificate.tabHistorial')}>
-              <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-                {t('placeholder.module')}
-              </p>
+              <HistorialTable />
             </ModuleTab>
           )}
         </ModuleTabs>

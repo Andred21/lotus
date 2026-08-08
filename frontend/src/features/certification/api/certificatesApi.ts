@@ -84,10 +84,19 @@ export function useIssueBatch() {
 
 export function useRevokeCertificate() {
   const invalidate = useInvalidate()
+  const qc = useQueryClient()
   return useMutation<CertificateData, ProblemDetails, { certificateId: number; reason: string }>({
     mutationFn: ({ certificateId, reason }) =>
       api.post<CertificateData>(`/api/certificates/${certificateId}/revoke`, { reason }).then((r) => r.data),
-    onSuccess: invalidate,
+    // Sem isto, um certificado visto (`Ver`) e depois revogado (Historial,
+    // Task 8) segue mostrando o detalhe pré-revogação: `panelKey`/`listKey`
+    // não cobrem `detailKey`, e a query pontual do `Ver` (`useCertificate`)
+    // fica presa no cache antigo. Era inofensivo enquanto a revogação não
+    // tinha UI — deixa de ser no mesmo commit que a ganha.
+    onSuccess: (certificate) => {
+      qc.invalidateQueries({ queryKey: detailKey(certificate.id) })
+      invalidate()
+    },
   })
 }
 
