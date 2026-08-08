@@ -69,8 +69,14 @@ export function useRegisterResult(turmaId: number, enrollment: EnrollmentData | 
     if (form.finalGrade.trim() !== '') grades.final = form.finalGrade
     else delete grades.final
 
+    // Mapa sem nenhuma chave vira `null`, não `{}`: o `?array` do backend
+    // grava `[]` na coluna, e `grades` está no `auditInclude` da matrícula —
+    // salvar só o estado de aprovação escreveria uma mudança de nota falsa na
+    // auditoria de um registro com peso legal.
+    const hasGrades = Object.keys(grades).length > 0
+
     return {
-      grades: grades as unknown as EnrollmentResultData['grades'],
+      grades: hasGrades ? (grades as unknown as EnrollmentResultData['grades']) : null,
       attendance_pct: form.attendance_pct.trim() === '' ? null : form.attendance_pct,
       approval_status: form.approval_status,
     }

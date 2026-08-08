@@ -69,4 +69,20 @@ describe('useRegisterResult', () => {
     expect(body.grades.comentario).toBe('recuperación')
     expect(body.approval_status).toBe('aprobado')
   })
+
+  it('manda `grades` nulo quando a matrícula não tem nota nenhuma e a nota fica vazia', async () => {
+    put.mockResolvedValue({ data: {} })
+    const enrollment = enrollmentWith(null)
+
+    const { result } = renderHook(() => useRegisterResult(1, enrollment, true), { wrapper })
+
+    act(() => result.current.setStatus('reprobado'))
+    act(() => result.current.submit())
+
+    await waitFor(() => expect(put).toHaveBeenCalled())
+    const body = put.mock.calls[0][1] as { grades: unknown }
+    // `{}` gravaria `[]` na coluna e sujaria a auditoria da matrícula com uma
+    // mudança de nota que não houve.
+    expect(body.grades).toBeNull()
+  })
 })
