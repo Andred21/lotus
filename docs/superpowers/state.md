@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: profundidade-backend-b4-b7
 active_work_item: profundidade-backend-b4-b7
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
 active_plan: docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-sprint-4
-state_basis_commit: 9ed46cc
-updated_at: 2026-08-07T21:00:23-03:00
+state_basis_commit: 06f869b
+updated_at: 2026-08-07T22:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -90,6 +90,17 @@ são 10, não 8: `EnrollStudentAction:31` precisa do **model** (`Turma::contrata
 `manual-turma.blade.php:21` está fora de `app/` (a catraca varre blades; strings de eager-load
 ficam fora por serem carga, não projeção). D-P4 — o builder de cenário não tem `->jaEmitido()`:
 emissão é ato do teste, não setup.
+
+### Execução iniciada em 2026-08-07 — `/executar-bloco`, `subagent-driven-development`
+
+Branch `refactor/profundidade-backend-b4-b7` a partir de `main` (`1474f6b`). **Task 0** confirmou o
+baseline exato do plano: 457 passed, 1 skipped (1655 assertions). **Task 1** (`ContratanteData` +
+`Client::contratante()`) entregue e aprovada no review de task, com um achado Importante do próprio
+brief: o caminho do teste (`tests/Feature/Commercial/`, grafia inglesa) criava uma segunda pasta
+para o domínio Comercial, que já tem 40+ testes em `tests/Feature/Comercial/` (grafia portuguesa).
+**Decisão do João:** o teste migra para a pasta existente — `Comercial/`, não `Commercial/`. Fix
+aplicado e re-review aprovado. Placar: 458 passed, 1 skipped (1658 assertions). Commits
+`d926faf`…`06f869b`.
 
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
