@@ -32,24 +32,24 @@ class QuoteController extends Controller implements HasMiddleware
     /** @return array<QuoteData> */
     public function index(Budget $budget): array
     {
-        return $budget->quotes()->with('files')->get()
+        return $budget->quotes()->withListingData()->get()
             ->map(fn (Quote $q) => QuoteData::fromModel($q))
             ->all();
     }
 
     public function store(QuoteData $data, Budget $budget, CreateQuoteAction $action): QuoteData
     {
-        return QuoteData::fromModel($action->execute($budget, $data)->load('files'));
+        return QuoteData::fromModel($action->execute($budget, $data)->loadListingData());
     }
 
     public function show(Quote $quote): QuoteData
     {
-        return QuoteData::fromModel($quote->load('files'));
+        return QuoteData::fromModel($quote->loadListingData());
     }
 
     public function update(QuoteData $data, Quote $quote, UpdateQuoteAction $action): QuoteData
     {
-        return QuoteData::fromModel($action->execute($quote, $data)->load('files'));
+        return QuoteData::fromModel($action->execute($quote, $data)->loadListingData());
     }
 
     public function destroy(Quote $quote, DeleteQuoteAction $action): Response
@@ -64,14 +64,14 @@ class QuoteController extends Controller implements HasMiddleware
     // já existente — força 200 explicitamente.
     public function approve(Quote $quote, ApproveQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->load('files'))
+        return QuoteData::fromModel($action->execute($quote)->loadListingData())
             ->toResponse(request())
             ->setStatusCode(Response::HTTP_OK);
     }
 
     public function reject(Quote $quote, RejectQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->load('files'))
+        return QuoteData::fromModel($action->execute($quote)->loadListingData())
             ->toResponse(request())
             ->setStatusCode(Response::HTTP_OK);
     }

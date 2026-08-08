@@ -2,11 +2,13 @@
 
 namespace App\Domains\Catalog\Models;
 
+use App\Domains\Catalog\QueryBuilders\CourseQueryBuilder;
 use App\Domains\Identity\Models\Redator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -57,5 +59,16 @@ class Course extends Model implements Auditable
     public function redatores(): BelongsToMany
     {
         return $this->belongsToMany(Redator::class, 'course_redator')->withTimestamps();
+    }
+
+    public function loadListingData(): static
+    {
+        return $this->load(CourseQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): CourseQueryBuilder
+    {
+        return new CourseQueryBuilder($query);
     }
 }
