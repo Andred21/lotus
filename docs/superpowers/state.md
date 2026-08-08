@@ -2,26 +2,18 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: blocked
-next_owner: joao
-next_action: decide_review_open_items
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-08-certificacao-frontend.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: >-
-  Correções Q-1..Q-9 do review aplicadas e provadas em 2026-08-08 (backend 493 passed /
-  1 skipped / 1833 assertions; frontend lint, build e 47 testes verdes; Pint passed;
-  generated.ts sem diff). Aguardam decisão do João: a proposta de regra do padrão
-  reincidente vivo×congelado para frontend-fsliced.md (texto proposto na sessão, não
-  aplicado sem aprovação) e as 4 decisões de negócio abertas (elisão da descrição,
-  penhasco do nome do curso/accent-bottom, permissão revoke superadmin-only, ramo
-  expired da página pública). Rejeições dos 3 achados do Codex mantidas — a aprovação
-  cobriu exatamente Q-1..Q-9.
+blocker: null
 review_findings_approved: Q-1..Q-9 (2026-08-08, todas corrigidas)
 last_completed_work_item: profundidade-backend-b4-b7
 state_basis_commit: '3884101'
-updated_at: 2026-08-08T09:05:00-03:00
+updated_at: 2026-08-08T09:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -218,12 +210,16 @@ mantendo as rejeições.
 asserções), o do `distinct`. Frontend 13 arquivos / 47 testes, `pnpm lint` e `pnpm build` verdes.
 Pint `passed` nos 7 `.php` tocados. `typescript:transform` **sem diff** em `generated.ts`.
 
-**O que segue aberto para o João e trava o fechamento:** a proposta de regra do padrão
-reincidente (tela que exibe certificado emitido lê `certificate.snapshot`, nunca projeção viva —
-4ª ocorrência; texto proposto para `frontend-fsliced.md`, não aplicado sem aprovação) e as 4
-decisões de negócio (elisão da descrição do curso, penhasco dos 68 chars no nome +
-accent-bottom, `revoke` superadmin-only, ramo `expired` da página pública). O checkpoint visual
-do módulo segue pendente como limitação declarada do gate.
+**Decisões do João — 2026-08-08, fecham o review:** a regra proposta para o padrão
+vivo×congelado (tela que exibe certificado emitido lê `certificate.snapshot`, nunca projeção
+viva — 4ª ocorrência) **não se aplica, por decisão explícita dele** — `frontend-fsliced.md` fica
+intocada e a proposta fica registrada aqui como decisão consciente, não como pendência. As 4
+decisões de negócio fecharam todas em "ok como está": a elisão da descrição longa fica; o
+penhasco dos 68 chars no nome do curso + accent-bottom fica sem guard-rail; `revoke` segue
+superadmin-only; e o ramo `expired` da página pública segue só com o cabeçalho. Nada foi
+deferido para `backlog.md` nem para `pendencias.md` — não há trabalho pendente nem divergência
+documental nascendo aqui. O checkpoint visual do módulo segue como limitação declarada do gate,
+herdada pelo fechamento.
 
 **Fechamento do gate — 2026-08-08, decisão do João.** Ele aprovou o bloco com os Steps 1 (tela
 real) e 5 (checkpoint visual) **não executados**, pelas três razões acima. Fica registrado sem
