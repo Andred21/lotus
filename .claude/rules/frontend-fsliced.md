@@ -25,8 +25,9 @@ sincronizados.
 **Regra de dependência:** só aponta para baixo. Feature usa shared; shared NUNCA usa feature;
 feature NÃO importa outra feature — **nem para tipo** (union compartilhado vai para `shared/lib`).
 Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi` read-only em
-`shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é rota Laravel
-(domínio Certification), fora desta SPA — não criar `public/validate/` no front.
+`shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é a rota
+`/validar/:uuid` desta SPA, fora do ramo protegido e do `SessionBootstrap` (spec D14/D19 da
+certificação); a API pública `/api/publico/certificados/{uuid}` responde sem cookie.
 
 **server vs client state (ADR-05):** dado de servidor → TanStack Query; UI/sessão → Zustand.
 Não misturar. **Onde mora o dado de servidor (ADR-18):** o cliente REST (`createCrudResource`)
