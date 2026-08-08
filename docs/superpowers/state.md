@@ -2,18 +2,26 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: decide_review_open_items
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-08-certificacao-frontend.md
 context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
-blocker: null
-review_findings_approved: null
+blocker: >-
+  Correções Q-1..Q-9 do review aplicadas e provadas em 2026-08-08 (backend 493 passed /
+  1 skipped / 1833 assertions; frontend lint, build e 47 testes verdes; Pint passed;
+  generated.ts sem diff). Aguardam decisão do João: a proposta de regra do padrão
+  reincidente vivo×congelado para frontend-fsliced.md (texto proposto na sessão, não
+  aplicado sem aprovação) e as 4 decisões de negócio abertas (elisão da descrição,
+  penhasco do nome do curso/accent-bottom, permissão revoke superadmin-only, ramo
+  expired da página pública). Rejeições dos 3 achados do Codex mantidas — a aprovação
+  cobriu exatamente Q-1..Q-9.
+review_findings_approved: Q-1..Q-9 (2026-08-08, todas corrigidas)
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: bbe1f39
-updated_at: 2026-08-08T08:40:00-03:00
+state_basis_commit: '3884101'
+updated_at: 2026-08-08T09:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,6 +171,59 @@ frontend; e o ramo **expirado** da página pública mostra só o cabeçalho, sem
 
 Evidência completa, task a task, com os Minor acumulados para o review final:
 `.superpowers/sdd/progress.md`.
+
+### Review de sprint — 2026-08-08: duas frentes, 9 achados aprovados e corrigidos
+
+**ALTO RISCO declarado no plano** (documento de peso legal + rota pública + `generated.ts`) →
+lente Claude com o gabarito do projeto + Codex read-only sobre `3d7ee5c..bbe1f39`. Da fusão saíram
+**9 achados (3 🟡, 6 🟢)** — 6 vistos primeiro pelo Codex, todos verificados no código antes de
+entrar — e **3 achados do Codex rejeitados com evidência** (relógio do `certStatus` no render é o
+design literal do plano; DST só desloca o badge `por_vencer` ±1 dia na direção conservadora;
+`generated.ts` antes dos consumidores era o agendamento do plano com zero consumidor existente).
+O accent-bottom deduplicou com o item 3 do ledger — decisão de negócio já registrada, não achado
+novo. Órfãos: zero, fora a face morta que virou o Q-3. O João aprovou **exatamente Q-1..Q-9**,
+mantendo as rejeições.
+
+**As correções (commits `c02f29e` backend, `3884101` frontend):**
+
+- **Q-1 🟡** `IssuedDialog` lia nome vivo do painel mesmo com o snapshot carregado — 4ª ocorrência
+  da classe vivo×congelado. Agora lê `certificate.snapshot.aluno/curso.name` e o canal de dado
+  vivo morreu inteiro: props `studentName`/`courseName` e o estado `Viewing` do `EmissionPanel`
+  saíram do código.
+- **Q-2 🟡** `useIssueBatch` invalidava só em `onSuccess`; o 500 no meio do lote (o caminho que
+  `be58466` prova existir) deixava o painel prometendo `sin_emitir` para matrícula já
+  certificada. `onSettled`.
+- **Q-3 🟡** A face de lista morta (`issuableTurmas` + 6 `constrain*`) saiu do
+  `CertificateEligibility`, com o `enrollmentIdsComVigente` que só ela consumia. Os 3 testes de
+  invariante migraram para o alvo de produção real: o que o `EmissionPanelQuery` apresenta como
+  emissível (bloqueio nulo + `aprobado` + sem vigente — o espelho do `rowCertKind` do front)
+  passa nas portas, e o que as portas recusam nunca aparece emissível. As cadeias reprovadas do
+  setUp ganharam RUT de aluno próprio: o painel projeta toda turma concluída e
+  `EmissionPanelEnrollmentData::$student_rut` é `string` não-nulo.
+- **Q-4 🟢** `useHistorial` só dispara `emission-panel` com permissão de `issue` (`enabled`) — o
+  usuário só-`view` não colhe mais um 403 no mount da aba.
+- **Q-5 🟢** `enrollment_ids.*` ganhou `distinct` + teste novo (id duplicado → 422).
+- **Q-6 🟢** Os 3 docblocks que citavam o contrato morto do `issuable` reescritos para o painel
+  real (lição 13).
+- **Q-7 🟢** `STATUS_SEVERITY` unificado em `lib/certStatus.ts`; chave `fieldRelator` →
+  `fieldRedator` nas 3 locales e nos 2 diálogos (vocabulário do backend).
+- **Q-8 🟢** `RegisterResultDialog` trava fechar durante o PUT em voo (gate do
+  `ConfirmIssueDialog`), matando o `onSuccess` velho que fechava o diálogo reaberto para outra
+  matrícula.
+- **Q-9 🟢** Fallback do `problemFromBlob` traduzido pelo i18n (`common.unexpectedError` +
+  `unexpectedErrorHint`, chave nova nas 3 locales) — era pt-BR fixo herdado do `useTurmas`, agora
+  em `shared/` com 2 consumidores e usuário-alvo chileno.
+
+**Placar pós-correção: backend 493 passed, 1 skipped (1833 assertions)** — +1 teste (+2
+asserções), o do `distinct`. Frontend 13 arquivos / 47 testes, `pnpm lint` e `pnpm build` verdes.
+Pint `passed` nos 7 `.php` tocados. `typescript:transform` **sem diff** em `generated.ts`.
+
+**O que segue aberto para o João e trava o fechamento:** a proposta de regra do padrão
+reincidente (tela que exibe certificado emitido lê `certificate.snapshot`, nunca projeção viva —
+4ª ocorrência; texto proposto para `frontend-fsliced.md`, não aplicado sem aprovação) e as 4
+decisões de negócio (elisão da descrição do curso, penhasco dos 68 chars no nome +
+accent-bottom, `revoke` superadmin-only, ramo `expired` da página pública). O checkpoint visual
+do módulo segue pendente como limitação declarada do gate.
 
 **Fechamento do gate — 2026-08-08, decisão do João.** Ele aprovou o bloco com os Steps 1 (tela
 real) e 5 (checkpoint visual) **não executados**, pelas três razões acima. Fica registrado sem
