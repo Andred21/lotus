@@ -28,7 +28,7 @@ class EnrollStudentAction
         }
 
         return DB::transaction(function () use ($turma, $rut, $name, $email, $phone) {
-            $client = $turma->quote->budget->client; // RF-TUR-03: cliente da cotação
+            $client = $turma->contratanteClient(); // RF-TUR-03: cliente da cotação
             $resolution = $this->resolver->resolveByRut($rut, $name, $email, $phone, $client);
 
             $enrollment = Enrollment::withTrashed()

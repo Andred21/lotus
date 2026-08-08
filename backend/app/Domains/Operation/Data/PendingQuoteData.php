@@ -28,7 +28,7 @@ class PendingQuoteData extends Data
             quote_id: $quote->id,
             quote_code: $quote->code,
             budget_code: $quote->budget->code,
-            client_name: $quote->budget->client->legal_name,
+            client_name: $quote->contratante()->name,
             course_name: $quote->course->name,
             student_count: $quote->student_count,
         );

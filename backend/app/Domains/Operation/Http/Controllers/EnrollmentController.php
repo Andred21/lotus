@@ -44,7 +44,7 @@ class EnrollmentController extends Controller implements HasMiddleware
 
         return EnrollPreviewData::fromLookup(
             $resolver->previewByRut($validated['rut']),
-            $turma->quote->budget->client,
+            $turma->contratanteClient(),
         );
     }
 

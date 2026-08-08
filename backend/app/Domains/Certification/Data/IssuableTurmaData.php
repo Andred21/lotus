@@ -27,7 +27,7 @@ class IssuableTurmaData extends Data
         return new self(
             turma_id: $turma->id,
             course_name: $turma->course->name,
-            client_name: $turma->quote->budget->client->legal_name,
+            client_name: $turma->contratante()->name,
             end_date: $turma->end_date->toDateString(),
             enrollments: $turma->enrollments
                 ->map(fn (Enrollment $enrollment) => IssuableEnrollmentData::fromModel($enrollment))

@@ -32,6 +32,7 @@ class CertificateSnapshotBuilder
     ): CertificateSnapshotData {
         $turma = $enrollment->turma;
         $course = $turma->course;
+        $contratante = $turma->contratante();
 
         return new CertificateSnapshotData(
             schema_version: CertificateSnapshotData::CURRENT_VERSION,
@@ -64,12 +65,9 @@ class CertificateSnapshotBuilder
                 end_date: $turma->end_date->format('Y-m-d'),
                 modalidade: $turma->modalidade->value,
             ),
-            // Razão social (D12), não o nome do User de cadastro: é o
-            // `{{EMPRESA}}` do documento oficial, e é o que TurmaData,
-            // PendingQuoteData e IssuableTurmaData já projetam.
             cliente: new SnapshotPartyData(
-                name: $turma->quote->budget->client->legal_name,
-                rut: $turma->quote->budget->client->user->rut,
+                name: $contratante->name,
+                rut: $contratante->rut,
             ),
             emissor: new SnapshotPartyData(
                 name: (string) config('app.certificate_issuer.name'),

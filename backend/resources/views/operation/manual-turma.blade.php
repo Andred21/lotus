@@ -18,7 +18,7 @@
 
     <h2>Datos de la clase</h2>
     <table class="meta">
-        <tr><td>Cliente</td><td>{{ $turma->quote->budget->client->legal_name }}</td></tr>
+        <tr><td>Cliente</td><td>{{ $turma->contratante()->name }}</td></tr>
         <tr><td>Curso</td><td>{{ $turma->course->name }} ({{ $turma->course->workload_hours }} h)</td></tr>
         <tr><td>Modalidad</td><td>{{ $turma->modalidade->value }}</td></tr>
         @if ($turma->local_aplicacao)
