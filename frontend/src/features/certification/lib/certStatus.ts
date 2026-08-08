@@ -18,6 +18,11 @@ export function certStatus(
   if (c.status === 'revocado') return 'revocado'
   if (!c.valido_ate) return 'vigente'
   const limit = new Date(`${c.valido_ate}T00:00:00`)
+  // Data que não parseia é `Invalid Date`: TODA comparação abaixo daria falso e
+  // a função cairia em `vigente`. Direção conservadora obrigatória em documento
+  // com peso legal — `vencido` (regra `frontend-fsliced.md`, mesma política do
+  // `valid_until` de documento de redator).
+  if (Number.isNaN(limit.getTime())) return 'vencido'
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   if (limit < start) return 'vencido'
   const days = Math.floor((limit.getTime() - start.getTime()) / 86_400_000)
