@@ -48,9 +48,6 @@ final class IssuableEnrollmentBuilder
     private array $studentUserOverrides = [];
 
     /** @var array<string, mixed> */
-    private array $enrollmentOverrides = [];
-
-    /** @var array<string, mixed> */
     private array $redatorUserOverrides = [];
 
     /** @var array<string, mixed> */
@@ -156,13 +153,6 @@ final class IssuableEnrollmentBuilder
         return $this;
     }
 
-    public function enrollment(array $overrides = []): self
-    {
-        $this->enrollmentOverrides = $overrides;
-
-        return $this;
-    }
-
     public function redatorUser(array $userOverrides = []): self
     {
         $this->redatorUserOverrides = $userOverrides;
@@ -181,6 +171,8 @@ final class IssuableEnrollmentBuilder
 
     public function create(): self
     {
+        $this->assertSemColisaoDePorta();
+
         $this->client = $this->makeClientWithUser(
             ['legal_name' => 'Empresa Legal SpA', ...$this->clientOverrides],
             ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7', ...$this->clientUserOverrides],
@@ -239,7 +231,6 @@ final class IssuableEnrollmentBuilder
             'approval_status' => $this->matriculaAprovada
                 ? EnrollmentApprovalStatus::Aprobado
                 : EnrollmentApprovalStatus::Pendiente,
-            ...$this->enrollmentOverrides,
         ]);
 
         $this->redator = Redator::create([
@@ -267,6 +258,26 @@ final class IssuableEnrollmentBuilder
         }
 
         return $this;
+    }
+
+    /**
+     * Override e desvio de porta escrevem a MESMA chave, e o override é
+     * aplicado por último — `->turmaNaoConcluida()->turma(['status' => X])`
+     * desligava a porta em silêncio, e o teste passava a provar outra coisa.
+     * Colisão vira erro alto: o cenário se declara por um caminho só.
+     */
+    private function assertSemColisaoDePorta(): void
+    {
+        $colisoes = [
+            'turmaNaoConcluida()' => ! $this->turmaConcluida && array_key_exists('status', $this->turmaOverrides),
+            'templateSemCidade()' => ! $this->templateComCidade && array_key_exists('layout_config', $this->templateOverrides),
+        ];
+
+        foreach (array_filter($colisoes) as $desvio => $_) {
+            throw new \LogicException(
+                "IssuableEnrollmentBuilder: {$desvio} já define essa chave; o override a sobrescreveria em silêncio. Use um dos dois.",
+            );
+        }
     }
 
     // ── acessores pós-create ────────────────────────────────────────────────

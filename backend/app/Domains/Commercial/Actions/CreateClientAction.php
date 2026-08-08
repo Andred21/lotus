@@ -51,7 +51,7 @@ class CreateClientAction
             $this->primaryAddresses->ensureSingle($client);
             $this->primaryContacts->ensureSingle($client);
 
-            return $client->load(['user', 'addresses', 'contacts']);
+            return $client->loadListingData();
         });
     }
 }

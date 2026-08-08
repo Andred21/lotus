@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: profundidade-backend-b4-b7
 active_work_item: profundidade-backend-b4-b7
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
 active_plan: docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: 'Q-1..Q-7 (todos) — aprovados pelo João em 2026-08-08'
 last_completed_work_item: certificacao-sprint-4
 state_basis_commit: 5787f94
-updated_at: 2026-08-07T23:45:00-03:00
+updated_at: 2026-08-08T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -198,6 +198,65 @@ que reextrair do cookie jar.
 Placar task a task, os desvios e os **6 achados Minor** acumulados nas Tasks 4–8 ficam registrados em
 `.superpowers/sdd/progress.md`, para triagem do review final whole-branch. Nenhum Minor foi corrigido
 por decisão própria: o review final decide o que entra antes do merge.
+
+### Review de sprint — 2026-08-08, 7 achados aprovados e corrigidos
+
+**ALTO RISCO** (documento de peso legal, matriz de domínios, validação RFC 7807): duas frentes
+independentes — lente Claude + `mcp__codex__codex` read-only. Suíte reconferida na abertura do
+review, não aceita por relatório: 473 passed, 1 skipped (1690 assertions), idêntico ao gate.
+
+**O Codex viu dois achados que a lente Claude não viu, e nenhum dos dois foi aceito por relatório —
+os dois foram provados por MUTAÇÃO aqui, nos dois sentidos** (versão migrada verde, versão do `main`
+vermelha sob o mesmo mutante). É o argumento vivo para a segunda lente em bloco de alto risco.
+
+**Q-1 🔴 — o seam do B4 introduziu N+1 em 4 listagens.** `Client::contratante()` lê `user->rut`, e
+nenhum dos sítios carregava `client.user`: `TurmaQueryBuilder`, `TurmaController::pending`,
+`CertificateEligibility::issuableTurmas` e `ManualPdfService`. Medido no MySQL de dev com
+`DB::listen`: 4 turmas custavam **11 queries**, sendo 4 `select * from users` — com `.user` no
+eager-load, **7**. Ironia registrada: o bloco cujo B5 existe para matar lazy-load silencioso
+**adicionou** quatro, e o gate provou `/alunos` sem nunca medir `/turmas`. Guarda nova:
+`tests/Feature/Shared/ContratanteEagerLoadTest.php`, companheiro de runtime da catraca estática —
+visto RED nos 3 cenários com a mensagem exata (`lazy load [user] on model [Client]`) antes do fix.
+
+**Q-2 🔴 — a migração do B7 apagou o poder discriminante de dois testes de peso legal.** Mesma
+causa raiz, duas ocorrências:
+(A) `CertificateEligibilityTest` só exigia `errors()` não-vazio, nunca qual porta recusou. Como o
+builder dá **redator próprio** a cada reprovada, a porta 6 passou a recusar todas. Mutante
+(porta 1 fora do `assert()`): migrado **4 passed**, `main` **1 failed**. Corrigido com
+`MENSAGEM_DA_PORTA` — a porta nomeada tem de ser a que recusou; mutante agora reprova dizendo
+"A recusa não veio da porta: turma não concluída".
+(B) `PublicCertificateTest` — os defaults do builder ficaram byte-idênticos ao snapshot congelado.
+Mutante (rota pública do QR lendo `$certificate->course->name` vivo em vez de
+`$snapshot->curso->name`): migrado **5 passed**, `main` **1 failed**. Corrigida a cadeia viva para
+voltar a divergir campo a campo; o mutante agora reprova com o diff `-"Seguridad en Alta Tensión"
++"Curso Vivo"`.
+
+**Q-3 🟡 — `LISTING` não era fonte única:** 5 sítios ainda soletravam o array (`Create/UpdateClientAction`,
+`Create/UpdateCourseAction`, `CourseRedatorController`) e migraram para `loadListingData()`. O 6º
+(`CertificateEligibility`, `student.user`) fechou por `withListingData()` — **chamada de método, não
+import**: a Regra A do `DomainDependencyTest` não expõe `QueryBuilders`, e aqui não precisa expor.
+
+**Q-4 🟡 — `ContratanteData::$rut` virou `?string`.** `users.rut` é nullable no schema e as cinco
+projeções que leem só o `name` passaram a estourar `TypeError` com RUT ausente — provado no MySQL
+em transação com rollback. `SnapshotPartyData::$rut` já era nullable, então nada foi empurrado
+para a emissão.
+
+**Q-5/Q-6/Q-7 🟢:** a chave `'matrícula reprovada'` virou `'matrícula não aprovada'` (o desvio grava
+`Pendiente`; `Reprobado` segue coberto em outro teste do mesmo arquivo); o builder perdeu o método
+órfão `enrollment()` (zero consumidores) e ganhou `assertSemColisaoDePorta()`, que transforma
+`->turmaNaoConcluida()->turma(['status' => …])` em `LogicException` alta em vez de override
+silencioso — **visto disparando** nos dois casos por sonda temporária, removida depois; e o
+`$rotulo` morto saiu do `ContratanteSeamTest`.
+
+**Padrão reincidente virou regra, não só refactor** (3ª ocorrência da mesma classe): três parágrafos
+novos em `.claude/rules/backend-ddd.md` §Testes — guarda de snapshot com cadeia viva distinta,
+guarda de porta múltipla asserindo qual porta recusou, e seam que lê relação nova atualizando o
+eager-load no mesmo commit.
+
+**Placar depois das correções: 477 passed, 1 skipped (1698 assertions)** — +4 testes e +8 asserções
+sobre 473/1690, exatamente os testes novos (3 do eager-load + 1 do RUT ausente). Pint `passed` nos
+16 `.php` tocados, zero reescrita. `typescript:transform` sem diff em `generated.ts` (D-P1 segue
+valendo: `?string` num VO interno não vaza para o front). `frontend/` sem uma linha de diff.
 
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 

@@ -78,17 +78,17 @@ class ContratanteSeamTest extends TestCase
     /** @return list<string> */
     private function arquivosPhp(string $raiz): array
     {
-        return $this->arquivosComExtensao($raiz, 'php', fn (string $nome) => str_ends_with($nome, '.php'));
+        return $this->arquivosComExtensao($raiz, fn (string $nome) => str_ends_with($nome, '.php'));
     }
 
     /** @return list<string> */
     private function arquivosBlade(string $raiz): array
     {
-        return $this->arquivosComExtensao($raiz, 'blade.php', fn (string $nome) => str_ends_with($nome, '.blade.php'));
+        return $this->arquivosComExtensao($raiz, fn (string $nome) => str_ends_with($nome, '.blade.php'));
     }
 
     /** @return list<string> */
-    private function arquivosComExtensao(string $raiz, string $rotulo, callable $aceita): array
+    private function arquivosComExtensao(string $raiz, callable $aceita): array
     {
         if (! is_dir($raiz)) {
             return [];

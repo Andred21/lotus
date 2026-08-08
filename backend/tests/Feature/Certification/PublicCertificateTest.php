@@ -24,7 +24,23 @@ class PublicCertificateTest extends TestCase
 
         // A cadeia viva só existe para satisfazer as FKs: o payload público
         // sai do snapshot congelado abaixo, não das relações vivas.
-        $builder = IssuableEnrollmentBuilder::make()->create();
+        //
+        // TODO campo que a rota pública projeta tem valor vivo DIFERENTE do
+        // congelado. Não é decoração: com os defaults do builder — que
+        // coincidem com o snapshot abaixo — a rota podia voltar a montar o
+        // payload pelas relações vivas e este teste continuava verde. Provado
+        // em 2026-08-08 lendo `$certificate->course->name` no lugar de
+        // `$snapshot->curso->name`: 5 passed com o regresso presente.
+        $builder = IssuableEnrollmentBuilder::make()
+            ->course([
+                'name' => 'Curso Vivo',
+                'technical_name' => 'Nombre técnico vivo',
+                'workload_hours' => 8,
+            ])
+            ->turma(['end_date' => '2026-07-31'])
+            ->student(['name' => 'Alumno Vivo'])
+            ->redatorUser(['name' => 'Relator Vivo'])
+            ->create();
 
         $this->certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),

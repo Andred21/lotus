@@ -51,7 +51,7 @@ class UpdateCourseAction
                 }
             }
 
-            return $course->fresh()->load(['certificateTemplates', 'redatores', 'modules']);
+            return $course->fresh()->loadListingData();
         });
     }
 }

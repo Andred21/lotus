@@ -42,7 +42,7 @@ class CreateCourseAction
                 }
             }
 
-            return $course->load(['certificateTemplates', 'redatores', 'modules']);
+            return $course->loadListingData();
         });
     }
 }

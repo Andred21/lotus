@@ -110,3 +110,26 @@ backlog, não como regra já aplicada.
 Integração sqlite `:memory:`, não mock (ADR-02). Teste de regressão só vale depois de você o ver
 **reprovar contra o código antigo** (`git stash` no fix, rode, `git stash pop`) — teste que passa nos
 dois estados prova nada.
+
+**Guarda de snapshot: a cadeia VIVA fica diferente do valor CONGELADO.** Onde o teste prova que a
+leitura vem do snapshot e não das relações, todo campo asserido tem valor vivo distinto do
+congelado — igualdade acidental faz o teste passar com o regresso presente. Vale também para o
+e2e contra o seed. Três ocorrências já: o A-1 (2026-08-05) foi um teste que *fixava* o valor errado
+(`user.name` no lugar de `clients.legal_name`); o `OperationDemoSeeder` grava `name == legal_name`,
+então o e2e do gate precisou diferenciá-los à mão; e o `IssuableEnrollmentBuilder` (B7) nasceu com
+defaults iguais ao snapshot do `PublicCertificateTest` — provado em 2026-08-08 fazendo a rota
+pública do QR ler o curso vivo, com o teste continuando verde. **Builder de cenário compartilhado
+nunca entrega default igual ao que um consumidor congela.**
+
+**Guarda de porta múltipla assere QUAL porta recusou.** Cenário que fecha uma porta entre várias
+não pode se contentar com "alguma exceção subiu": basta uma segunda porta fechar junto para a
+primeira virar indiferente. Asserir a mensagem nomeada. Provado em 2026-08-08 no
+`CertificateEligibilityTest`: removida a porta 1 de `CertificateEligibility::assert()`, o teste
+seguia verde porque a porta 6 recusava em seguida.
+
+**Seam que passa a ler uma relação nova atualiza o eager-load no mesmo commit.** Concentrar a
+travessia num VO (ex.: `Client::contratante()`, que lê `user->rut`) troca duplicação visível por
+N+1 invisível se a carga ficar para trás — medido em 2026-08-08: 4 turmas, 4 SELECTs extras em
+`users`. Guarda de runtime com `Model::preventLazyLoading()` e **duas ou mais** linhas hidratadas
+(`Builder::hydrate()` só liga o flag com `count($items) > 1`); ref.:
+`tests/Feature/Shared/ContratanteEagerLoadTest.php`.

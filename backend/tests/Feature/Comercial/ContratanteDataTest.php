@@ -122,4 +122,24 @@ class ContratanteDataTest extends TestCase
         $this->assertSame('Quote Empresa SpA', $contratante->name);
         $this->assertSame('22222222-2', $contratante->rut);
     }
+
+    /**
+     * `users.rut` é nullable no schema, e a razão social é legível sem ele. O
+     * seam não pode transformar RUT ausente em TypeError: quem lê só o `name`
+     * (TurmaData, PendingQuoteData, IssuableTurmaData, ImportStudentsAction e
+     * o Blade do manual) passou a atravessar o `User` por causa do B4, e antes
+     * dele essas cinco projeções nunca o tocavam.
+     */
+    public function test_contratante_sobrevive_a_rut_ausente_no_cadastro(): void
+    {
+        $client = $this->makeClientWithUser(
+            ['legal_name' => 'Sin RUT SpA'],
+            ['rut' => null],
+        );
+
+        $contratante = $client->contratante();
+
+        $this->assertSame('Sin RUT SpA', $contratante->name);
+        $this->assertNull($contratante->rut);
+    }
 }

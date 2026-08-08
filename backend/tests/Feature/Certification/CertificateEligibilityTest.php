@@ -44,6 +44,24 @@ class CertificateEligibilityTest extends TestCase
     /** @var array<string, Turma> */
     private array $reprovadas = [];
 
+    /**
+     * A mensagem que CADA porta escreve ao recusar. Sem isto o teste só sabia
+     * que "alguma" ValidationException subiu, e passava a ser vacuoso assim que
+     * duas portas fechassem no mesmo cenário: provado em 2026-08-08 removendo
+     * `assertTurmaConcluida()` da face de emissão — o teste continuava verde,
+     * porque a porta 6 (redator não designado) recusava em seguida.
+     *
+     * @var array<string, string>
+     */
+    private const MENSAGEM_DA_PORTA = [
+        'turma não concluída' => 'La clase aún no fue concluida: no se puede emitir el certificado (RN-08).',
+        'matrícula não aprovada' => 'El alumno no fue aprobado: no se puede emitir el certificado.',
+        'certificado vigente' => 'Ya existe un certificado vigente para esta matrícula.',
+        'curso sem template' => 'El curso no tiene una plantilla de certificado aprobada.',
+        'sem cidade de emissão' => 'La plantilla del curso no define una ciudad de emisión válida.',
+        'sem redator designado' => 'El redactor no está designado en esta clase.',
+    ];
+
     private Turma $emitivel;
 
     protected function setUp(): void
@@ -69,7 +87,10 @@ class CertificateEligibilityTest extends TestCase
             ->create()
             ->turmaModel();
 
-        $this->reprovadas['matrícula reprovada'] = $this->reprovadaBuilder()
+        // Não "reprovada": o desvio grava `Pendiente`, e a porta 2 recusa os
+        // dois. `Reprobado` segue coberto em
+        // `test_lista_traz_a_turma_sem_as_matriculas_que_nao_passam`.
+        $this->reprovadas['matrícula não aprovada'] = $this->reprovadaBuilder()
             ->resultadoPendiente()
             ->create()
             ->turmaModel();
@@ -156,7 +177,14 @@ class CertificateEligibilityTest extends TestCase
                 $eligibility->assert($enrollment, $this->redator);
                 $this->fail("A emissão aceitou a turma que fecha a porta: {$porta}.");
             } catch (ValidationException $exception) {
-                $this->assertNotEmpty($exception->errors());
+                // A porta NOMEADA tem de ser a que recusou. Aceitar qualquer
+                // ValidationException deixa outra porta mascarar a que o
+                // cenário existe para provar.
+                $this->assertContains(
+                    self::MENSAGEM_DA_PORTA[$porta],
+                    array_merge(...array_values($exception->errors())),
+                    "A recusa não veio da porta: {$porta}.",
+                );
             }
         }
     }
