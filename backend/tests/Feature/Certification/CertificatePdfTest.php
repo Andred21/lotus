@@ -4,29 +4,19 @@ namespace Tests\Feature\Certification;
 
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
-use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
-use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
-use App\Domains\Operation\Enums\TurmaModalidade;
-use App\Domains\Operation\Enums\TurmaStatus;
-use App\Domains\Operation\Models\Enrollment;
-use App\Domains\Operation\Models\Turma;
 use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\Pdf\FakeHtmlToPdf;
 use Tests\TestCase;
 
 class CertificatePdfTest extends TestCase
 {
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Certificate $certificate;
@@ -37,53 +27,16 @@ class CertificatePdfTest extends TestCase
     {
         parent::setUp();
 
-        $client = $this->makeClientWithUser(
-            ['legal_name' => 'Empresa Viva SpA'],
-            ['name' => 'Empresa Viva'],
-        );
-        $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
-        $course = $this->makeCourse([
-            'name' => 'Curso Vivo',
-            'technical_name' => 'Nombre técnico vivo',
-            'workload_hours' => 8,
-        ]);
-        $quote = Quote::create([
-            'budget_id' => $budget->id,
-            'course_id' => $course->id,
-            'seq_in_budget' => 1,
-            'student_count' => 1,
-            'value_uf' => 10,
-            'status' => 'approved',
-        ]);
-        $turma = Turma::create([
-            'quote_id' => $quote->id,
-            'course_id' => $course->id,
-            'modalidade' => TurmaModalidade::Presencial,
-            'local_aplicacao' => 'Ciudad viva',
-            'start_date' => '2026-07-20',
-            'end_date' => '2026-07-24',
-            'status' => TurmaStatus::Concluida,
-        ]);
-        $student = Student::create([
-            'user_id' => User::factory()->aluno()->create(['name' => 'Alumno Vivo'])->id,
-            'current_client_id' => $client->id,
-        ]);
-        $enrollment = Enrollment::create([
-            'turma_id' => $turma->id,
-            'student_id' => $student->id,
-            'grades' => ['final' => 4.0],
-            'attendance_pct' => '50.00',
-            'approval_status' => EnrollmentApprovalStatus::Aprobado,
-        ]);
-        $redator = Redator::create([
-            'user_id' => User::factory()->redator()->create(['name' => 'Relator Vivo'])->id,
-        ]);
+        // A cadeia viva só existe para satisfazer as FKs: cada asserção deste
+        // arquivo lê do snapshot congelado abaixo, nunca das relações vivas
+        // (D-P9) — os valores da cadeia em si não entram em nenhuma asserção.
+        $builder = IssuableEnrollmentBuilder::make()->create();
 
         $this->certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),
-            'enrollment_id' => $enrollment->id,
-            'course_id' => $course->id,
-            'redator_id' => $redator->id,
+            'enrollment_id' => $builder->enrollmentModel()->id,
+            'course_id' => $builder->courseModel()->id,
+            'redator_id' => $builder->redatorModel()->id,
             'codigo' => 'LOT-2026-1000',
             'snapshot' => [
                 'aluno' => ['name' => 'Juan Pérez Congelado', 'rut' => '12.345.678-5'],
@@ -101,7 +54,7 @@ class CertificatePdfTest extends TestCase
                     ],
                 ],
                 'turma' => [
-                    'id' => $turma->id,
+                    'id' => $builder->turmaModel()->id,
                     'start_date' => '2026-07-20',
                     'end_date' => '2026-07-24',
                     'modalidade' => 'presencial',

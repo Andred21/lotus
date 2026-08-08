@@ -12,23 +12,18 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\Student;
-use App\Domains\Identity\Models\User;
-use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaModalidade;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\TestCase;
 
 class CertificateSnapshotTest extends TestCase
 {
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Client $client;
@@ -60,20 +55,31 @@ class CertificateSnapshotTest extends TestCase
             'app.certificate_issuer.rut' => '76.900.900-9',
         ]);
 
-        $this->client = $this->makeClientWithUser(
-            ['legal_name' => 'Empresa Legal SpA'],
-            ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
-        );
-        $this->budget = Budget::create([
-            'client_id' => $this->client->id,
-            'code' => 'Scap 1',
-        ]);
-        $this->course = $this->makeCourse([
-            'name' => 'Seguridad en Alta Tensión',
-            'technical_name' => 'Operación Segura AT',
-            'workload_hours' => 16,
-            'description' => 'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
-        ]);
+        $builder = IssuableEnrollmentBuilder::make()
+            ->course([
+                'name' => 'Seguridad en Alta Tensión',
+                'technical_name' => 'Operación Segura AT',
+                'workload_hours' => 16,
+                'description' => 'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
+            ])
+            ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Santiago'])
+            ->template([
+                'version' => 2,
+                'layout_config' => ['orientation' => 'landscape', 'city' => 'Valparaíso'],
+            ])
+            ->create();
+
+        $this->client = $builder->clientModel();
+        $this->course = $builder->courseModel();
+        $this->template = $builder->templateModel();
+        $this->turma = $builder->turmaModel();
+        $this->quote = $this->turma->quote;
+        $this->budget = $this->quote->budget;
+        $this->enrollment = $builder->enrollmentModel();
+        $this->redator = $builder->redatorModel();
+
+        // Módulos fora de ordem de propósito (D-P9): o temário sai por
+        // `sort_order`, não pela ordem de criação.
         $this->course->modules()->createMany([
             [
                 'sort_order' => 2,
@@ -85,53 +91,6 @@ class CertificateSnapshotTest extends TestCase
                 'name' => '1. Introducción y Marco General',
                 'contents' => 'Objetivos de seguridad y prevención de riesgos',
             ],
-        ]);
-        $this->template = CourseCertificateTemplate::create([
-            'course_id' => $this->course->id,
-            'version' => 2,
-            'layout_config' => [
-                'orientation' => 'landscape',
-                'city' => 'Valparaíso',
-            ],
-            'validity_months' => null,
-        ]);
-        $this->quote = Quote::create([
-            'budget_id' => $this->budget->id,
-            'course_id' => $this->course->id,
-            'seq_in_budget' => 1,
-            'student_count' => 1,
-            'value_uf' => 10,
-            'status' => 'approved',
-        ]);
-        $this->turma = Turma::create([
-            'quote_id' => $this->quote->id,
-            'course_id' => $this->course->id,
-            'modalidade' => TurmaModalidade::Presencial,
-            'local_aplicacao' => 'Santiago',
-            'start_date' => '2026-07-20',
-            'end_date' => '2026-07-24',
-            'status' => TurmaStatus::Concluida,
-        ]);
-
-        $student = Student::create([
-            'user_id' => User::factory()->aluno()->create([
-                'name' => 'Juan Pérez',
-                'rut' => '12.345.678-5',
-            ])->id,
-            'current_client_id' => $this->client->id,
-        ]);
-        $this->enrollment = Enrollment::create([
-            'turma_id' => $this->turma->id,
-            'student_id' => $student->id,
-            'grades' => ['final' => 6.2],
-            'attendance_pct' => '87.50',
-            'approval_status' => EnrollmentApprovalStatus::Aprobado,
-        ]);
-        $this->redator = Redator::create([
-            'user_id' => User::factory()->redator()->create([
-                'name' => 'María Relatora',
-                'rut' => '9.876.543-3',
-            ])->id,
         ]);
     }
 

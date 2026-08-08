@@ -4,25 +4,14 @@ namespace Tests\Feature\Certification;
 
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
-use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Quote;
-use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\Student;
-use App\Domains\Identity\Models\User;
-use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
-use App\Domains\Operation\Enums\TurmaModalidade;
-use App\Domains\Operation\Enums\TurmaStatus;
-use App\Domains\Operation\Models\Enrollment;
-use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\TestCase;
 
 class PublicCertificateTest extends TestCase
 {
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Certificate $certificate;
@@ -33,51 +22,15 @@ class PublicCertificateTest extends TestCase
 
         Carbon::setTestNow('2026-08-05 14:30:00');
 
-        $client = $this->makeClientWithUser(
-            ['legal_name' => 'Empresa Legal SpA'],
-            ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
-        );
-        $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
-        $course = $this->makeCourse([
-            'name' => 'Curso Vivo',
-            'technical_name' => 'Nombre técnico vivo',
-            'workload_hours' => 8,
-        ]);
-        $quote = Quote::create([
-            'budget_id' => $budget->id,
-            'course_id' => $course->id,
-            'seq_in_budget' => 1,
-            'student_count' => 1,
-            'value_uf' => 10,
-            'status' => 'approved',
-        ]);
-        $turma = Turma::create([
-            'quote_id' => $quote->id,
-            'course_id' => $course->id,
-            'modalidade' => TurmaModalidade::Presencial,
-            'local_aplicacao' => 'Santiago',
-            'start_date' => '2026-07-20',
-            'end_date' => '2026-07-24',
-            'status' => TurmaStatus::Concluida,
-        ]);
-        $student = Student::create([
-            'user_id' => User::factory()->aluno()->create()->id,
-            'current_client_id' => $client->id,
-        ]);
-        $enrollment = Enrollment::create([
-            'turma_id' => $turma->id,
-            'student_id' => $student->id,
-            'approval_status' => EnrollmentApprovalStatus::Aprobado,
-        ]);
-        $redator = Redator::create([
-            'user_id' => User::factory()->redator()->create()->id,
-        ]);
+        // A cadeia viva só existe para satisfazer as FKs: o payload público
+        // sai do snapshot congelado abaixo, não das relações vivas.
+        $builder = IssuableEnrollmentBuilder::make()->create();
 
         $this->certificate = Certificate::create([
             'uuid' => (string) Str::uuid(),
-            'enrollment_id' => $enrollment->id,
-            'course_id' => $course->id,
-            'redator_id' => $redator->id,
+            'enrollment_id' => $builder->enrollmentModel()->id,
+            'course_id' => $builder->courseModel()->id,
+            'redator_id' => $builder->redatorModel()->id,
             'codigo' => 'LOT-2026-1000',
             'snapshot' => [
                 'aluno' => [

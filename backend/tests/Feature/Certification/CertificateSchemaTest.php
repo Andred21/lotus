@@ -5,25 +5,17 @@ namespace Tests\Feature\Certification;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
-use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\Student;
-use App\Domains\Identity\Models\User;
-use App\Domains\Operation\Enums\TurmaModalidade;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
-use App\Domains\Operation\Models\Turma;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\TestCase;
 
 class CertificateSchemaTest extends TestCase
 {
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Course $course;
@@ -36,36 +28,10 @@ class CertificateSchemaTest extends TestCase
     {
         parent::setUp();
 
-        $client = $this->makeClientWithUser();
-        $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
-        $this->course = $this->makeCourse();
-        $quote = Quote::create([
-            'budget_id' => $budget->id,
-            'course_id' => $this->course->id,
-            'seq_in_budget' => 1,
-            'student_count' => 1,
-            'value_uf' => 10,
-            'status' => 'approved',
-        ]);
-        $turma = Turma::create([
-            'quote_id' => $quote->id,
-            'course_id' => $this->course->id,
-            'modalidade' => TurmaModalidade::Online,
-            'local_aplicacao' => null,
-            'start_date' => '2026-08-01',
-            'end_date' => '2026-08-10',
-            'status' => TurmaStatus::Concluida,
-        ]);
-        $student = Student::create([
-            'user_id' => User::factory()->create(['type' => 'aluno', 'is_active' => false])->id,
-        ]);
-        $this->enrollment = Enrollment::create([
-            'turma_id' => $turma->id,
-            'student_id' => $student->id,
-        ]);
-        $this->redator = Redator::create([
-            'user_id' => User::factory()->redator()->create()->id,
-        ]);
+        $builder = IssuableEnrollmentBuilder::make()->create();
+        $this->course = $builder->courseModel();
+        $this->enrollment = $builder->enrollmentModel();
+        $this->redator = $builder->redatorModel();
     }
 
     public function test_banco_recusa_segundo_certificado_vigente_da_mesma_matricula(): void
