@@ -9,24 +9,13 @@ import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
 import { BatchIssueDialog } from './BatchIssueDialog'
 
-/** Metadados de exibição do `IssuedDialog` — não vêm do `CertificateData`
- * (`snapshot` tem outro formato). O certificado em si (`s.viewingCertificate`)
- * é resolvido por `s.viewingCertificateId`, no hook. */
-type Viewing = { studentName: string; courseName: string }
-
 export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
   const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
-  const [viewing, setViewing] = useState<Viewing | null>(null)
   const [batchIssuing, setBatchIssuing] = useState(false)
 
   const turma = s.selected
-
-  const closeViewing = () => {
-    setViewing(null)
-    s.setViewingCertificateId(null)
-  }
 
   if (s.loadError) {
     return (
@@ -97,7 +86,6 @@ export function EmissionPanel() {
               onEmit={setIssuing}
               onView={(enrollment) => {
                 if (!enrollment.certificate) return
-                setViewing({ studentName: enrollment.student_name, courseName: turma.course_name })
                 s.setViewingCertificateId(enrollment.certificate.id)
               }}
             />
@@ -112,22 +100,19 @@ export function EmissionPanel() {
           onHide={() => setIssuing(null)}
           onIssued={(certificate) => {
             setIssuing(null)
-            setViewing({ studentName: issuing.student_name, courseName: turma.course_name })
             s.setViewingCertificateId(certificate.id)
           }}
         />
       )}
 
-      {viewing && s.viewingCertificateId !== null && (
+      {s.viewingCertificateId !== null && (
         <IssuedDialog
           certificateId={s.viewingCertificateId}
           certificate={s.viewingCertificate}
           loading={s.viewingCertificateLoading}
           error={s.viewingCertificateError}
           onRetry={s.reloadViewingCertificate}
-          studentName={viewing.studentName}
-          courseName={viewing.courseName}
-          onHide={closeViewing}
+          onHide={() => s.setViewingCertificateId(null)}
         />
       )}
 

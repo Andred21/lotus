@@ -45,7 +45,8 @@
     "retry": "Retry",
     "networkError": "Cannot reach the server",
     "networkErrorHint": "Check your connection and try again.",
-    "unexpectedError": "Unexpected error"
+    "unexpectedError": "Unexpected error",
+    "unexpectedErrorHint": "Could not process the server response."
   },
   "module": {
     "comercial": {
@@ -581,7 +582,7 @@
     "fieldRut": "RUT",
     "fieldCurso": "Course",
     "fieldVigencia": "Validity",
-    "fieldRelator": "Redator",
+    "fieldRedator": "Redator",
     "vigenciaIndefinida": "Indefinite",
     "vigenciaMeses": "{{count}} months",
     "confirmEmit": "Confirm issuance",

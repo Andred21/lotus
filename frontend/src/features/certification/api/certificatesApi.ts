@@ -12,10 +12,14 @@ const panelKey = ['certificates', 'emission-panel'] as const
 const listKey = ['certificates', 'list'] as const
 const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
-export function useEmissionPanel() {
+/** `enabled` porque o endpoint exige `certification.certificate.issue`:
+ * consumidor que pode montar sem essa permissão (Historial, que só a usa para
+ * o Reemitir) desliga a query em vez de colher um 403 garantido. */
+export function useEmissionPanel(enabled = true) {
   return useQuery<EmissionPanelTurmaData[], ProblemDetails>({
     queryKey: panelKey,
     queryFn: () => api.get<EmissionPanelTurmaData[]>('/api/certificates/emission-panel').then((r) => r.data),
+    enabled,
   })
 }
 
@@ -78,7 +82,12 @@ export function useIssueBatch() {
           redator_id: redatorId,
         })
         .then((r) => r.data),
-    onSuccess: invalidate,
+    // `onSettled`, não `onSuccess`: cada item do lote tem transação própria, e
+    // um 500 no meio deixa certificados já commitados (guarda em
+    // `BatchIssueTest::test_falha_inesperada_no_meio_do_lote_preserva_o_que_ja_saiu`).
+    // Invalidar só no sucesso deixava o painel mostrando `sin_emitir` para
+    // matrícula já certificada.
+    onSettled: invalidate,
   })
 }
 

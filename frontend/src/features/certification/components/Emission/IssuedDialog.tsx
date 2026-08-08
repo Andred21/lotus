@@ -16,8 +16,6 @@ type Props = {
   loading: boolean
   error: ProblemDetails | null
   onRetry: () => void
-  studentName: string
-  courseName: string
   onHide: () => void
 }
 
@@ -25,15 +23,17 @@ type Props = {
  * emitida — mesmo componente nos dois casos). O `Ver` busca por id
  * (`useCertificate` em `useEmissionPanelState`), então este diálogo precisa
  * dos três estados de uma query: carregando, erro (com retry, não clique
- * morto) e carregado — nunca "nada aparece" num sistema de arquivo legal. */
+ * morto) e carregado — nunca "nada aparece" num sistema de arquivo legal.
+ *
+ * Aluno e curso saem do `snapshot`, nunca da linha viva do painel: aluno
+ * renomeado pós-emissão divergiria do PDF legal, e `CertificateViewDialog`/
+ * `RevokeDialog` já leem o congelado (D12). */
 export function IssuedDialog({
   certificateId,
   certificate,
   loading,
   error,
   onRetry,
-  studentName,
-  courseName,
   onHide,
 }: Props) {
   const { t } = useTranslation()
@@ -75,8 +75,8 @@ export function IssuedDialog({
             >
               {t('certificate.issuedHeading')}
             </p>
-            <p className="mt-2 text-lg font-semibold">{studentName}</p>
-            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{courseName}</p>
+            <p className="mt-2 text-lg font-semibold">{certificate.snapshot.aluno.name}</p>
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{certificate.snapshot.curso.name}</p>
             <p className="mt-3 font-mono text-base">{certificate.codigo}</p>
             <p className="mt-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
               {t('certificate.issuedBy', { date: formatDate(new Date(certificate.created_at)) })}

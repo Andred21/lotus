@@ -45,7 +45,8 @@
     "retry": "Reintentar",
     "networkError": "Sin conexión con el servidor",
     "networkErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
-    "unexpectedError": "Error inesperado"
+    "unexpectedError": "Error inesperado",
+    "unexpectedErrorHint": "No se pudo procesar la respuesta del servidor."
   },
   "module": {
     "comercial": {
@@ -581,7 +582,7 @@
     "fieldRut": "RUT",
     "fieldCurso": "Curso",
     "fieldVigencia": "Vigencia",
-    "fieldRelator": "Redactor",
+    "fieldRedator": "Redactor",
     "vigenciaIndefinida": "Indefinida",
     "vigenciaMeses": "{{count}} meses",
     "confirmEmit": "Confirmar emisión",

@@ -5,6 +5,15 @@ export const POR_VENCER_DIAS = 30
 
 export type CertDerivedStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado'
 
+/** Severidade do `AppTag` por status derivado — usada por `HistorialTable` e
+ * `CertificateViewDialog`; mora junto do `certStatus` que a indexa. */
+export const STATUS_SEVERITY: Record<CertDerivedStatus, 'success' | 'warning' | 'secondary' | 'danger'> = {
+  vigente: 'success',
+  por_vencer: 'warning',
+  vencido: 'secondary',
+  revocado: 'danger',
+}
+
 /** Deriva o status de exibição a partir de `status` (2 valores, do backend) e
  * `valido_ate` (data, ou `null` para vigência indefinida). `revocado` tem
  * precedência sobre qualquer data (peso legal: um certificado revogado nunca

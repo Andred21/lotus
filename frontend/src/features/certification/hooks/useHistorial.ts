@@ -17,8 +17,10 @@ export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: Em
  */
 export function useHistorial() {
   const certificates = useCertificates()
-  const panel = useEmissionPanel()
   const { can } = usePermissions()
+  // O painel só alimenta o Reemitir, que já exige `issue` — para quem só tem
+  // `view`, a query desligada evita um 403 garantido no mount da aba.
+  const panel = useEmissionPanel(can('certification.certificate.issue'))
 
   const [statusFilter, setStatusFilterState] = useState<CertDerivedStatus | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)

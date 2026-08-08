@@ -4,7 +4,7 @@ import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
 import { formatDate } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
-import { certStatus, type CertDerivedStatus } from '../../lib/certStatus'
+import { certStatus, STATUS_SEVERITY } from '../../lib/certStatus'
 
 type Props = {
   /** Sempre conhecido de imediato (vem da linha clicada) — o PDF abre pelo id,
@@ -20,13 +20,6 @@ type Props = {
   error: ProblemDetails | null
   onRetry: () => void
   onHide: () => void
-}
-
-const STATUS_SEVERITY: Record<CertDerivedStatus, 'success' | 'warning' | 'secondary' | 'danger'> = {
-  vigente: 'success',
-  por_vencer: 'warning',
-  vencido: 'secondary',
-  revocado: 'danger',
 }
 
 /** Detalhe de UM certificado do Historial: resumo do snapshot + Descargar

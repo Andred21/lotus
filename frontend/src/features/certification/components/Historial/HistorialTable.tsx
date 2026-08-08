@@ -3,20 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, SearchableTableFrame } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
-import { certStatus, type CertDerivedStatus } from '../../lib/certStatus'
+import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
 import { useHistorial } from '../../hooks/useHistorial'
 import { CertificateViewDialog } from './CertificateViewDialog'
 import { RevokeDialog } from './RevokeDialog'
 import { ReissueDialog } from './ReissueDialog'
 
 const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
-
-const STATUS_SEVERITY: Record<CertDerivedStatus, 'success' | 'warning' | 'secondary' | 'danger'> = {
-  vigente: 'success',
-  por_vencer: 'warning',
-  vencido: 'secondary',
-  revocado: 'danger',
-}
 
 /** Aba Historial: tabela de todos os certificados emitidos, com busca, filtro
  * de estado, Ver/Revocar/Reemitir por linha. Estado e queries vivem em

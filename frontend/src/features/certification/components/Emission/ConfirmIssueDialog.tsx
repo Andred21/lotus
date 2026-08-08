@@ -69,13 +69,13 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
           <AppInputText value={vigencia} disabled readOnly />
         </FormField>
 
-        <FormField label={t('certificate.fieldRelator')} error={fieldErrors?.redator_id?.[0]}>
+        <FormField label={t('certificate.fieldRedator')} error={fieldErrors?.redator_id?.[0]}>
           <AppDropdown
             value={redatorId}
             options={turma.redatores.map((r) => ({ label: r.name, value: r.redator_id }))}
             optionLabel="label"
             optionValue="value"
-            placeholder={t('certificate.fieldRelator')}
+            placeholder={t('certificate.fieldRedator')}
             onChange={(e) => setRedatorId(e.value)}
           />
         </FormField>

@@ -17,13 +17,18 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, onHide }: P
   const { t } = useTranslation()
   const r = useRegisterResult(turmaId, enrollment, visible)
 
+  // Fechar fica bloqueado com o PUT em voo (mesmo gate do `ConfirmIssueDialog`
+  // e do `closeBlocked` do CrudDialog): cancelar durante o pending e reabrir
+  // para OUTRA matrícula deixava o `onSuccess` antigo fechar o diálogo novo,
+  // descartando o rascunho — o guard cobre também ESC/click-out.
   const close = () => {
+    if (r.submitting) return
     r.reset()
     onHide()
   }
 
   return (
-    <AppDialog visible={visible} header={t('certificate.result.title')} onHide={close}>
+    <AppDialog visible={visible} header={t('certificate.result.title')} onHide={close} closable={!r.submitting}>
       <div className="space-y-4">
         <FormErrorBanner message={r.message} />
 
@@ -40,7 +45,7 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, onHide }: P
         </FormField>
 
         <div className="flex justify-end gap-2">
-          <AppButton label={t('common.cancel')} outlined onClick={close} />
+          <AppButton label={t('common.cancel')} outlined disabled={r.submitting} onClick={close} />
           <AppButton
             label={t('common.save')}
             disabled={r.submitting}
