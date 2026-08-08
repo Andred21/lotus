@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Models;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Data\ContratanteData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -59,5 +60,12 @@ class Client extends Model implements Auditable
     public function contacts(): HasMany
     {
         return $this->hasMany(ClientContact::class);
+    }
+
+    public function contratante(): ContratanteData
+    {
+        // Razão social (D12), não o nome do User de cadastro: é o `{{EMPRESA}}`
+        // do documento oficial.
+        return new ContratanteData(name: $this->legal_name, rut: $this->user->rut);
     }
 }
