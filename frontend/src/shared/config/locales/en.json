@@ -552,6 +552,7 @@
     "concludedAt": "Concluded on {{date}}",
     "emptyPanelTitle": "Select a class to see certifiable students",
     "emptyPanelHint": "Only classes with Concluded status are shown.",
+    "emptyStudents": "There are no students in this class.",
     "financialNote": "Issuance does not depend on financial status. It only requires a concluded class and an approved student.",
     "emitAllPending": "Issue all pending ({{count}})",
     "studentsCount": "{{total}} students · {{approved}} approved",

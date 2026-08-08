@@ -13,6 +13,7 @@ import { CatalogPage } from '@features/catalog/components/CatalogPage'
 import { OperationPage } from '@features/operation/components/OperationPage'
 import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetailPage'
 import { TurmaCreatePage } from '@features/operation/components/Turma/TurmaCreatePage'
+import { CertificatesPage } from '@features/certification/components/CertificatesPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -43,7 +44,7 @@ export function AppRouter() {
           <Route path="/operacion/turmas/nueva/:quoteId" element={<TurmaCreatePage />} />
           <Route path="/operacion/turmas/:id" element={<TurmaDetailPage />} />
           <Route path="/cursos" element={<CatalogPage />} />
-          <Route path="/certificados" element={<ModulePlaceholder titleKey="nav.certificados" />} />
+          <Route path="/certificados" element={<CertificatesPage />} />
           <Route path="/personas" element={<PeoplePage />} />
           <Route path="/administracion" element={<AdministracionPage />} />
           <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />

@@ -552,6 +552,7 @@
     "concludedAt": "Concluida el {{date}}",
     "emptyPanelTitle": "Selecciona una turma para ver los alumnos certificables",
     "emptyPanelHint": "Solo se muestran turmas con estado Concluida.",
+    "emptyStudents": "No hay alumnos en esta turma.",
     "financialNote": "La emisión no depende del estado financiero. Solo requiere turma concluida y alumno aprobado.",
     "emitAllPending": "Emitir todos los pendientes ({{count}})",
     "studentsCount": "{{total}} alumnos · {{approved}} aprobados",
