@@ -27,7 +27,7 @@ class ManualPdfService
 
     private function html(Turma $turma): string
     {
-        $turma->load(['course.modules', 'quote.budget.client', 'redatores.user', 'enrollments.student.user']);
+        $turma->load(['course.modules', 'quote.budget.client.user', 'redatores.user', 'enrollments.student.user']);
 
         return view('operation.manual-turma', ['turma' => $turma])->render();
     }

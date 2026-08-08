@@ -57,7 +57,7 @@ class UpdateClientAction
             $this->primaryAddresses->ensureSingle($client);
             $this->primaryContacts->ensureSingle($client);
 
-            return $client->fresh()->load(['user', 'addresses', 'contacts']);
+            return $client->fresh()->loadListingData();
         });
     }
 }

@@ -15,7 +15,7 @@ builders no molde `TurmaQueryBuilder::withListingData()`; VO acadêmico em `Oper
 **Tech Stack:** Laravel 13 / PHP 8.3, PHPUnit, spatie/laravel-data (não usado nos VOs novos — ver
 Desvios), MySQL 8 (suíte em sqlite :memory:).
 
-**Spec:** `docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-07-profundidade-backend-b4-b7-design.md`
 
 ## Global Constraints
 

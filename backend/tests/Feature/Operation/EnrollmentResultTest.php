@@ -6,13 +6,18 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Actions\EnrollStudentAction;
+use App\Domains\Operation\Actions\RecordEnrollmentResultAction;
+use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\Http\Controllers\EnrollmentController;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -76,6 +81,62 @@ class EnrollmentResultTest extends TestCase
         $this->assertSame(['final' => 6.5], $fresh->grades);
         $this->assertSame('92.50', $fresh->attendance_pct);
         $this->assertSame(EnrollmentApprovalStatus::Aprobado, $fresh->approval_status);
+    }
+
+    /**
+     * B5 — `refresh()` dentro de `RecordEnrollmentResultAction` derruba as
+     * relações carregadas, e o `result` nunca re-carregava `turma`/
+     * `student.user` antes de montar o DTO. Em produção isso lazy-loada em
+     * silêncio (o teste HTTP acima passa mesmo com o bug); é exatamente o
+     * tipo de N+1 silencioso que o projeto quer pegar.
+     *
+     * Por isso este teste chama o controller diretamente (em vez de
+     * `putJson`): o `Model::preventLazyLoading()` do Eloquent só marca
+     * `preventsLazyLoading = true` na instância quando ela vem de um
+     * `hydrate()` com MAIS de uma linha (`Builder::hydrate()`, condicional a
+     * `count($items) > 1` — ver vendor/laravel/framework
+     * .../Eloquent/Builder.php:477). Um fetch singular — como o
+     * route-model-binding de `{enrollment}` deste endpoint, sempre 1 linha —
+     * nunca ativa a proteção, então via HTTP puro o teste nunca reproduziria
+     * o bug (confirmado empiricamente: passa igual nos dois estados do
+     * código). Aqui a matrícula é hidratada via `get()` com >1 linha — o
+     * mesmo padrão que dispararia a proteção num cenário real de N+1 em
+     * lote — antes de entrar no MESMO caminho de código do controller.
+     */
+    public function test_result_nao_lazy_loada_apos_refresh(): void
+    {
+        $this->actingAsAdmin();
+
+        // Segunda matrícula só para o hydrate() abaixo vir com >1 linha.
+        app(EnrollStudentAction::class)->execute(
+            $this->turma,
+            '22.222.222-2',
+            'Pedro Diaz',
+            'pedro@acme.cl',
+            null,
+        );
+
+        Model::preventLazyLoading();
+
+        try {
+            $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
+
+            $result = app(EnrollmentController::class)->result(
+                new EnrollmentResultData(
+                    grades: ['final' => 6.5],
+                    attendance_pct: '92.50',
+                    approval_status: EnrollmentApprovalStatus::Aprobado,
+                ),
+                $this->turma,
+                $enrollment,
+                app(RecordEnrollmentResultAction::class),
+            );
+
+            $this->assertSame('Juan Soto', $result->name);
+            $this->assertSame('11.111.111-1', $result->rut);
+        } finally {
+            Model::preventLazyLoading(false);
+        }
     }
 
     public function test_turma_concluida_recusa_resultado_com_rn15(): void
@@ -151,6 +212,75 @@ class EnrollmentResultTest extends TestCase
         $this->actingAs($user, 'web');
 
         $this->putJson($this->resultUrl(), $this->validPayload())->assertForbidden();
+    }
+
+    /**
+     * B6 — o que não dá para imprimir no certificado é recusado NA ESCRITA,
+     * não só filtrado na leitura do snapshot (`SnapshotResultData::finalGrade`).
+     *
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function notaNaoImprimivelProvider(): iterable
+    {
+        yield 'array' => [['parcial' => 5]];
+        yield 'booleano false' => [false];
+        yield 'booleano true' => [true];
+        yield 'string vazia' => [''];
+        yield 'string só espaço' => ['   '];
+        yield 'null explícito' => [null];
+    }
+
+    #[DataProvider('notaNaoImprimivelProvider')]
+    public function test_nota_final_nao_imprimivel_reprova_a_escrita(mixed $notaNaoImprimivel): void
+    {
+        $this->actingAsAdmin();
+
+        $this->putJson($this->resultUrl(), [
+            ...$this->validPayload(),
+            'grades' => ['final' => $notaNaoImprimivel],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'grades.final' => 'La nota final debe ser un número o un texto no vacío.',
+            ]);
+    }
+
+    /**
+     * B6 — a vírgula chilena (`"6,4"`) continua aceita, junto com float e int:
+     * a regra é sobre IMPRIMIBILIDADE, não sobre um formato numérico único.
+     *
+     * @return iterable<string, array{0: mixed}>
+     */
+    public static function notaImprimivelProvider(): iterable
+    {
+        yield 'string com vírgula chilena' => ['6,4'];
+        yield 'float' => [6.4];
+        yield 'int' => [6];
+    }
+
+    #[DataProvider('notaImprimivelProvider')]
+    public function test_nota_final_imprimivel_aceita_virgula_chilena_float_e_int(mixed $notaImprimivel): void
+    {
+        $this->actingAsAdmin();
+
+        $this->putJson($this->resultUrl(), [
+            ...$this->validPayload(),
+            'grades' => ['final' => $notaImprimivel],
+        ])->assertOk();
+    }
+
+    /**
+     * `grades` é nullable/opcional (RN do 6d): faltar por inteiro continua
+     * válido — só quando `final` é ENVIADO explicitamente a regra entra.
+     */
+    public function test_resultado_sem_grades_permanece_valido(): void
+    {
+        $this->actingAsAdmin();
+
+        $payload = $this->validPayload();
+        unset($payload['grades']);
+
+        $this->putJson($this->resultUrl(), $payload)->assertOk();
     }
 
     /** @return array{grades: array{final: float}, attendance_pct: string, approval_status: string} */

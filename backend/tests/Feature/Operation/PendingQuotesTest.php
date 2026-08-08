@@ -16,9 +16,17 @@ class PendingQuotesTest extends TestCase
     use CreatesDomainRecords;
     use RefreshDatabase;
 
+    private int $rutSeq = 0;
+
+    /** RUT único por cliente — approvedQuote() cria mais de um client no mesmo teste. */
+    private function nextRut(): string
+    {
+        return '1.000.'.str_pad((string) ++$this->rutSeq, 3, '0', STR_PAD_LEFT).'-0';
+    }
+
     private function approvedQuote(string $client, string $course, int $students): Quote
     {
-        $clientId = $this->makeClientWithUser(['legal_name' => $client])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => $client], ['rut' => $this->nextRut()])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap '.fake()->unique()->numberBetween(1, 9999)]);
         $courseId = $this->makeCourse(['name' => $course, 'workload_hours' => 8])->id;
 

@@ -15,7 +15,10 @@ class TurmaQueryBuilder extends Builder
     public function withListingData(): static
     {
         return $this
-            ->with(['redatores.user', 'course', 'quote.budget.client'])
+            // `.client.user`, não só `.client`: o seam `Turma::contratante()`
+            // lê o RUT do User do contratante (B4). Parar em `.client` deixa um
+            // SELECT por turma — guarda em `ContratanteEagerLoadTest`.
+            ->with(['redatores.user', 'course', 'quote.budget.client.user'])
             ->withCount('enrollments');
     }
 }

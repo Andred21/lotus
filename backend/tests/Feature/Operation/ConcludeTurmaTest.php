@@ -27,7 +27,7 @@ class ConcludeTurmaTest extends TestCase
     {
         parent::setUp();
         Storage::fake();
-        $clientId = $this->makeClientWithUser()->id;
+        $clientId = $this->makeClientWithUser([], ['rut' => '11.222.333-9'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
         $quote = Quote::create([

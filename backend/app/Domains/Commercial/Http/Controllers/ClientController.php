@@ -26,7 +26,7 @@ class ClientController extends Controller implements HasMiddleware
     /** @return array<ClientData> */
     public function index(): array
     {
-        return Client::with(['user', 'addresses', 'contacts'])
+        return Client::query()->withListingData()
             ->get()
             ->map(fn (Client $c) => ClientData::fromModel($c))
             ->all();
@@ -39,7 +39,7 @@ class ClientController extends Controller implements HasMiddleware
 
     public function show(Client $client): ClientData
     {
-        return ClientData::fromModel($client->load(['user', 'addresses', 'contacts']));
+        return ClientData::fromModel($client->loadListingData());
     }
 
     public function update(ClientData $data, Client $client, UpdateClientAction $action): ClientData

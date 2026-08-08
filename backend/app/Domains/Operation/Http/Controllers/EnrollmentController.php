@@ -33,7 +33,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     /** @return array<EnrollmentData> */
     public function index(Turma $turma): array
     {
-        return $turma->enrollments()->with('student.user')->get()
+        return $turma->enrollments()->withListingData()->get()
             ->map(fn (Enrollment $e) => EnrollmentData::fromModel($e))
             ->all();
     }
@@ -44,7 +44,7 @@ class EnrollmentController extends Controller implements HasMiddleware
 
         return EnrollPreviewData::fromLookup(
             $resolver->previewByRut($validated['rut']),
-            $turma->quote->budget->client,
+            $turma->contratanteClient(),
         );
     }
 
@@ -52,7 +52,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         $outcome = $action->execute($turma, $data->rut, $data->name, $data->email, $data->phone);
 
-        return EnrollmentData::fromModel($outcome->enrollment->load('student.user'))
+        return EnrollmentData::fromModel($outcome->enrollment->loadListingData())
             ->toResponse(request())
             ->setStatusCode(201);
     }
@@ -74,7 +74,9 @@ class EnrollmentController extends Controller implements HasMiddleware
         Enrollment $enrollment,
         RecordEnrollmentResultAction $action,
     ): EnrollmentData {
-        return EnrollmentData::fromModel($action->execute($enrollment, $data));
+        $enrollment->setRelation('turma', $turma); // o binding aninhado não seta o pai
+
+        return EnrollmentData::fromModel($action->execute($enrollment, $data)->loadListingData());
     }
 
     public function destroy(Turma $turma, Enrollment $enrollment, RemoveEnrollmentAction $action): Response

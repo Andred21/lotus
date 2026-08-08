@@ -28,7 +28,7 @@ class TurmaShowTest extends TestCase
 
     public function test_show_projeta_turma_enriquecida(): void
     {
-        $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'])->id;
+        $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'], ['rut' => '77.888.999-4'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 9']);
         $courseId = $this->makeCourse(['name' => 'Trabajos en líneas 220kV', 'workload_hours' => 24])->id;
         $quote = Quote::create([

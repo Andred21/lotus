@@ -7,13 +7,9 @@ use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateNumberService;
-use App\Domains\Commercial\Models\Budget;
-use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
-use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
-use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -22,12 +18,11 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\TestCase;
 
 class IssueCertificateTest extends TestCase
 {
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Course $course;
@@ -50,55 +45,13 @@ class IssueCertificateTest extends TestCase
             'app.certificate_issuer.rut' => '76.900.900-9',
         ]);
 
-        $client = $this->makeClientWithUser(
-            ['legal_name' => 'Empresa Legal SpA'],
-            ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
-        );
-        $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
-        $this->course = $this->makeCourse([
-            'name' => 'Seguridad en Alta Tensión',
-            'technical_name' => 'Operación Segura AT',
-            'workload_hours' => 16,
-        ]);
-        $quote = Quote::create([
-            'budget_id' => $budget->id,
-            'course_id' => $this->course->id,
-            'seq_in_budget' => 1,
-            'student_count' => 1,
-            'value_uf' => 10,
-            'status' => 'approved',
-        ]);
-        $this->turma = Turma::create([
-            'quote_id' => $quote->id,
-            'course_id' => $this->course->id,
-            'modalidade' => TurmaModalidade::Online,
-            'local_aplicacao' => null,
-            'start_date' => '2026-07-20',
-            'end_date' => '2026-07-24',
-            'status' => TurmaStatus::Concluida,
-        ]);
-
-        $student = Student::create([
-            'user_id' => User::factory()->aluno()->create([
-                'name' => 'Juan Pérez',
-                'rut' => '12.345.678-5',
-            ])->id,
-            'current_client_id' => $client->id,
-        ]);
-        $this->enrollment = Enrollment::create([
-            'turma_id' => $this->turma->id,
-            'student_id' => $student->id,
-            'grades' => ['final' => 6.2],
-            'attendance_pct' => '87.50',
-            'approval_status' => EnrollmentApprovalStatus::Aprobado,
-        ]);
-        $this->redator = Redator::create([
-            'user_id' => User::factory()->redator()->create([
-                'name' => 'María Relatora',
-                'rut' => '9.876.543-3',
-            ])->id,
-        ]);
-        $this->turma->redatores()->attach($this->redator);
+        // Sem template: cada teste decide a própria via `createTemplate()`
+        // (inclusive `test_sem_template_retorna_422`, que exige a ausência).
+        $builder = IssuableEnrollmentBuilder::make()->semTemplate()->create();
+        $this->course = $builder->courseModel();
+        $this->turma = $builder->turmaModel();
+        $this->enrollment = $builder->enrollmentModel();
+        $this->redator = $builder->redatorModel();
     }
 
     protected function tearDown(): void

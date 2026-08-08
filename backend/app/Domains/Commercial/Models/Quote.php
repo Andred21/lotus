@@ -4,13 +4,16 @@ namespace App\Domains\Commercial\Models;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
+use App\Domains\Commercial\QueryBuilders\QuoteQueryBuilder;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -78,5 +81,21 @@ class Quote extends Model implements Auditable
     public function turma(): HasOne
     {
         return $this->hasOne(Turma::class);
+    }
+
+    public function contratante(): ContratanteData
+    {
+        return $this->budget->client->contratante();
+    }
+
+    public function loadListingData(): static
+    {
+        return $this->load(QuoteQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): QuoteQueryBuilder
+    {
+        return new QuoteQueryBuilder($query);
     }
 }

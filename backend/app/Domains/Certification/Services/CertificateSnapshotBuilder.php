@@ -13,6 +13,7 @@ use App\Domains\Certification\Data\Snapshot\SnapshotTemplateData;
 use App\Domains\Certification\Data\Snapshot\SnapshotTurmaData;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
+use App\Domains\Operation\Services\AcademicResult;
 use Carbon\CarbonInterface;
 
 class CertificateSnapshotBuilder
@@ -32,6 +33,7 @@ class CertificateSnapshotBuilder
     ): CertificateSnapshotData {
         $turma = $enrollment->turma;
         $course = $turma->course;
+        $contratante = $turma->contratante();
 
         return new CertificateSnapshotData(
             schema_version: CertificateSnapshotData::CURRENT_VERSION,
@@ -64,12 +66,9 @@ class CertificateSnapshotBuilder
                 end_date: $turma->end_date->format('Y-m-d'),
                 modalidade: $turma->modalidade->value,
             ),
-            // Razão social (D12), não o nome do User de cadastro: é o
-            // `{{EMPRESA}}` do documento oficial, e é o que TurmaData,
-            // PendingQuoteData e IssuableTurmaData já projetam.
             cliente: new SnapshotPartyData(
-                name: $turma->quote->budget->client->legal_name,
-                rut: $turma->quote->budget->client->user->rut,
+                name: $contratante->name,
+                rut: $contratante->rut,
             ),
             emissor: new SnapshotPartyData(
                 name: (string) config('app.certificate_issuer.name'),
@@ -79,17 +78,27 @@ class CertificateSnapshotBuilder
                 name: $redator->user->name,
                 rut: $redator->user->rut,
             ),
-            resultado: new SnapshotResultData(
-                grades: $enrollment->grades,
-                approval_status: $enrollment->approval_status->value,
-                attendance_pct: $enrollment->attendance_pct,
-            ),
+            resultado: $this->resultadoSnapshot($enrollment->academicResult()),
             template: new SnapshotTemplateData(
                 version: (int) $template->version,
                 city: data_get($template->layout_config, 'city'),
             ),
             ciudad_emision: $ciudadEmision,
             emitido_em: $emitidoEm->toDateString(),
+        );
+    }
+
+    /**
+     * B6: o resultado congela a partir do VO tipado (`Enrollment::academicResult()`),
+     * não das colunas cruas da matrícula — é a aresta que a matriz de
+     * `DomainDependencyTest` abre para `Operation\Services\AcademicResult`.
+     */
+    private function resultadoSnapshot(AcademicResult $resultado): SnapshotResultData
+    {
+        return new SnapshotResultData(
+            grades: $resultado->grades,
+            approval_status: $resultado->approvalStatus->value,
+            attendance_pct: $resultado->attendancePct,
         );
     }
 }

@@ -54,7 +54,7 @@ class ImportStudentsAction
                         rut: $outcome->resolution->student->user->rut,
                         name: $outcome->resolution->student->user->name,
                         previous_client: $outcome->resolution->previousClient?->legal_name,
-                        client: $turma->quote->budget->client->legal_name,
+                        client: $turma->contratante()->name,
                     ),
                 };
             } catch (ValidationException $e) {

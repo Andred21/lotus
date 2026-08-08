@@ -30,33 +30,7 @@
    rodapé/QR absolutos transbordam de página quando `courses.description` é longa — reproduzido no
    gate de fechamento de 2026-08-07 com uma descrição de 3.689 caracteres.
 
-2. **Profundidade de module · backend B4–B7**
-   — continuação do review de arquitetura de 2026-08-07 (skill `improve-codebase-architecture`);
-   B1–B3 já aplicados dentro do bloco 7 (`eccf0ee`, `a33d793`, `e7626b4`). Quatro candidatos, em
-   ordem de dependência:
-
-   * **B4 (Strong)** — a cadeia `turma->quote->budget->client` está soletrada em ~8 lugares de 3
-     domínios e escapa do `DomainDependencyTest` (propriedade dinâmica não deixa FQCN). Seam:
-     `Turma::contratante(): ContratanteData` (razão social D12 + RUT num lugar só); avaliar
-     estender o guardrail para varrer strings de relation path.
-   * **B5 (Worth)** — a pré-condição de eager-load de `XData::fromModel()` é invisível e cada
-     controller repete a lista (`EnrollmentController::result` já esquece — lazy load silencioso).
-     Aprofundar o lado da projeção com builder/`present()` por model, padrão já provado no
-     `TurmaQueryBuilder`. Não criar Actions-invólucro: o deletion test reprova esse lado.
-   * **B6 (Worth)** — `enrollments.grades` é `['nullable','array']` e `grades.final` imprime a
-     nota no certificado (documento legal) via snapshot; `approval_status` é declarado pelo
-     cliente HTTP. Value object `AcademicResult` tipado. **Decisão de negócio do João antes de
-     executar:** aprovação derivada das notas × declarada pelo admin.
-   * **B7 (Worth)** — o setup de ~9 models está copiado em 7 testes de Certification (55-85
-     linhas cada). Builder de cenário nomeado pelas portas do `CertificateEligibility`
-     (`IssuableEnrollment::make()->semRedator()->templateSemCidade()`). Fazer **depois** de B4 —
-     provavelmente encolhe sozinho.
-
-   Só backend; os candidatos C1–C7 (frontend) do mesmo review já têm os itens correlatos nos
-   débitos (trio da foto, tabelas com dropdown) ou entram no replanejamento do frontend da
-   certificação.
-
-3. **Arquivados e restauração de soft-delete**
+2. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -72,12 +46,12 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-4. **Administração · Roles e permissões — redesenho de composição**
+3. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-5. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

@@ -93,9 +93,14 @@ class CertificateEligibility
             ->whereHas('enrollments', $enrollments)
             ->with([
                 'course',
-                'quote.budget.client',
+                'quote.budget.client.user',
                 'redatores.user',
-                'enrollments' => fn ($query) => $enrollments($query)->with('student.user'),
+                // `withListingData()` e não `with('student.user')`: a lista do
+                // que a projeção de matrícula carrega é do `EnrollmentQueryBuilder`
+                // (B5). Chamada de método, não import — a Regra A do
+                // `DomainDependencyTest` não expõe `QueryBuilders`, e aqui não
+                // precisa: nenhuma referência de classe nova atravessa a fronteira.
+                'enrollments' => fn ($query) => $enrollments($query)->withListingData(),
             ])
             ->get()
             ->filter(fn (Turma $turma) => $this->constrainCidadeDeEmissao(

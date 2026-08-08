@@ -69,7 +69,7 @@ class TurmaData extends Data
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
             course_name: $turma->course->name,
-            client_name: $turma->quote->budget->client->legal_name,
+            client_name: $turma->contratante()->name,
             enrolled_count: $turma->enrollments_count ?? $turma->enrollments()->count(),
             quote_code: $turma->quote->code,
             budget_code: $turma->quote->budget->code,

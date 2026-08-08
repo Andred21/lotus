@@ -55,7 +55,7 @@ class TurmaController extends Controller implements HasMiddleware
         return Quote::query()
             ->where('status', QuoteStatus::Approved)
             ->whereDoesntHave('turma')
-            ->with(['budget.client', 'course'])
+            ->with(['budget.client.user', 'course'])
             ->latest()
             ->get()
             ->map(fn (Quote $q) => PendingQuoteData::fromModel($q))

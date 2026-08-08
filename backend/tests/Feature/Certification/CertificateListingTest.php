@@ -23,6 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -49,39 +50,13 @@ class CertificateListingTest extends TestCase
 
         Carbon::setTestNow('2026-08-05 10:00:00');
 
-        $this->client = $this->makeClientWithUser(
-            ['legal_name' => 'Empresa Legal SpA'],
-            ['name' => 'Empresa Cliente', 'rut' => '76.123.456-7'],
-        );
-        $this->budget = Budget::create([
-            'client_id' => $this->client->id,
-            'code' => 'Scap 1',
-        ]);
-        $this->course = $this->makeCourse([
-            'name' => 'Seguridad en Alta Tensión',
-            'technical_name' => 'Operación Segura AT',
-            'workload_hours' => 16,
-        ]);
-        $this->turma = $this->createTurma(TurmaStatus::Concluida, 1);
-        $this->enrollment = $this->createEnrollment(
-            $this->turma,
-            EnrollmentApprovalStatus::Aprobado,
-            'Juan Pérez',
-            '12.345.678-5',
-        );
-        $this->redator = Redator::create([
-            'user_id' => User::factory()->redator()->create([
-                'name' => 'María Relatora',
-                'rut' => '9.876.543-3',
-            ])->id,
-        ]);
-        $this->turma->redatores()->attach($this->redator);
-        CourseCertificateTemplate::create([
-            'course_id' => $this->course->id,
-            'version' => 1,
-            'layout_config' => ['city' => 'Santiago'],
-            'validity_months' => null,
-        ]);
+        $builder = IssuableEnrollmentBuilder::make()->create();
+        $this->client = $builder->clientModel();
+        $this->course = $builder->courseModel();
+        $this->turma = $builder->turmaModel();
+        $this->enrollment = $builder->enrollmentModel();
+        $this->redator = $builder->redatorModel();
+        $this->budget = $this->turma->quote->budget;
     }
 
     protected function tearDown(): void
