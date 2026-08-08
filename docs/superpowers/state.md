@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: profundidade-backend-b4-b7
 active_work_item: profundidade-backend-b4-b7
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
 active_plan: docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-sprint-4
-state_basis_commit: 06f869b
-updated_at: 2026-08-07T22:15:00-03:00
+state_basis_commit: 5787f94
+updated_at: 2026-08-07T23:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -114,6 +114,90 @@ trait. **Decisão do João: fixtures explícitas** — os ~8 arquivos de teste p
 `$userOverrides`, mesmo padrão que Q-4 já estabelece; `ContratanteData`, `Client`, `Turma`, `Quote`
 e o trait compartilhado ficam intocados. Fix aplicado, re-review aprovado, placar de volta ao
 baseline exato: 461 passed, 1 skipped (1665 assertions). Commits `3f8b671`…`4f89f2f`.
+
+**Task 4** (catraca `ContratanteSeamTest`) aprovada. O regex varre acesso a propriedade
+`->budget->client` em `app/Domains/**` (comentários strippados por `token_get_all`, mesma técnica do
+`DomainDependencyTest`) e em `resources/views/**` (RAW — Blade não passa pelo tokenizer do PHP puro),
+com allowlist dos dois donos do seam. String de eager-load (`'quote.budget.client'`) fica fora de
+propósito (D-P3): é carga de query, concern dos builders, não travessia de código. Placar: 462/1/1666.
+Commit `efeda0a`.
+
+**Task 5** (`EnrollmentQueryBuilder` + o lazy-load do `result`) aprovada com um desvio de RED
+documentado e verificado duas vezes. A abordagem literal do brief (`Model::preventLazyLoading(true)` +
+`putJson`) **não conseguia reproduzir o bug**: `Illuminate\Database\Eloquent\Builder::hydrate()` só
+liga o flag `preventsLazyLoading` por instância quando `count($items) > 1`, e busca singular
+(route-model-binding, `find`, `firstOrFail`) nunca satisfaz isso. O subagente investigou em vez de
+chutar, provou no `tinker`, e passou a chamar `EnrollmentController::result()` direto contra um
+`Enrollment` hidratado com 2 linhas. Conferido de forma independente por mim contra o fonte real do
+vendor, e de novo pelo revisor. Placar: 463/1/1668. Commit `f10e3ee`.
+
+**Task 6** (builders de Quote/Client/Course) aprovada, refactor puro, placar idêntico ao da Task 5.
+Commit `90deba0`.
+
+**Task 7** (`AcademicResult` + `PrintableGrade` na escrita + snapshot lendo do VO) aprovada com um
+segundo desvio documentado, este imposto pelo Pint: a forma literal do brief (`$resultado =
+$enrollment->academicResult();` como variável solta) deixava o `use ...\AcademicResult` sem nenhum
+type-hint no arquivo, e o fixer `no_unused_imports` **removeria o import — quebrando em silêncio
+justamente a aresta que o `DomainDependencyTest` precisa provar**. Resolvido extraindo um método
+privado tipado `resultadoSnapshot(AcademicResult $resultado)`. O revisor reproduziu o conflito num
+arquivo de sonda isolado antes de aceitar. Placar: 473/1/1690. Commit `cedb633`.
+
+**Task 8** (`IssuableEnrollmentBuilder` + migração dos 8 setUps de Certification) aprovada, com
+contagem antes/depois idêntica em cada um dos 8 arquivos. `->jaEmitido()` **não** entrou no builder
+(D-P4 respeitado). Duas colisões de índice único apareceram só em `CertificateEligibilityTest`, que
+materializa 7 cadeias no mesmo `setUp`: `budgets.code` (resolvido com `null` no builder, que nunca
+expõe o Budget) e `users.rut` (resolvido **no arquivo consumidor**, com um helper local que anula os
+RUTs das 6 cadeias reprovadas — sem expandir a interface do builder). O efeito colateral (cada
+cenário reprovado deixa de compartilhar client/course/redator com o emitível) foi verificado como são
+contra a ordem real de execução das portas do `CertificateEligibility`. Placar: 473/1/1690, idêntico
+ao da Task 7. Commit `5787f94`.
+
+### Task 9 — o gate (2026-08-07)
+
+Executado por mim direto, não por subagente: é a prova do DoD do bloco inteiro, e o DoD pede
+comportamento provado contra a API real, não mais uma camada de alegação reportada.
+
+**Ferramentas.** Suíte backend **473 passed, 1 skipped (1690 assertions)**. Frontend sem regressão:
+`pnpm test` 10 arquivos / 35 testes, `pnpm lint` limpo, `pnpm build` OK. Pint `passed` nos **44**
+`.php` tocados do bloco, zero reescrita. `typescript:transform` rodou e `generated.ts` ficou **sem
+diff** — a prova do **D-P1**: `ContratanteData` e `AcademicResult` são VOs internos e **não vazaram**
+para o front.
+
+**Mecanismos vistos reprovando (lição 10), com sondas frescas.** A catraca foi provada nos **dois**
+modos de varredura, em arquivos diferentes dos da Task 4: `EnrollStudentAction.php:22` (PHP) e
+`certificate.blade.php:262` (Blade). Reprovou nomeando os dois com a linha exata; sondas removidas,
+árvore limpa, verde de novo. A aresta do B6 foi provada removendo a linha
+`'Operation\Services\AcademicResult'` da matriz — reprova nomeando `CertificateSnapshotBuilder.php`
+— e repondo.
+
+**E2e contra a API real**, `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie + CSRF
+(lição 12). Duas armadilhas que valem para o próximo e2e: sem `Origin: http://localhost:5173` o
+`statefulApi()` não liga a sessão e o login devolve **500 "Session store not set on request."**; e o
+`XSRF-TOKEN` **rotaciona no login** (regeneração de sessão anti session-fixation), então reusar o
+token do `/sanctum/csrf-cookie` depois do `POST /api/login` dá **419 "CSRF token mismatch"** — tem
+que reextrair do cookie jar.
+
+1. `PUT .../resultado` com `grades.final = "6,9"` → **200**; com `grades.final = []` → **422** RFC
+   7807, `"La nota final debe ser un número o un texto no vacío."` (es-CL).
+2. `GET /api/certificates/issuable` → turma listada, `client_name` = razão social.
+3. `POST /api/enrollments/{id}/certificate` → **201**. **A prova viva do seam foi conferida no MySQL
+   com SQL cru**, não pela projeção do model: `snapshot.cliente.name` = `clients.legal_name`
+   (`Enel Distribucion Chile S.A.`), enquanto o `users.name` do mesmo cliente é `USUARIO-EMPRESA
+   Enel`. **Os dois textos precisaram ser deixados diferentes à mão no fixture** — o
+   `OperationDemoSeeder` grava `name == legal_name` de propósito (comentário no próprio seeder), e
+   com eles iguais o e2e passaria mesmo se o regresso A-1 tivesse voltado. Nota para o próximo gate
+   que tocar esse caminho: **o cenário de demo não distingue as duas colunas; quem for provar o seam
+   tem que diferenciá-las antes.**
+4. `GET /api/certificates/{id}/pdf` → **200 `application/pdf`**, `pdfinfo` 2 páginas, **A4**
+   (594.96 x 841.92 pts). Inspeção visual da página 1: o documento **imprime a razão social**, não o
+   `user.name` — o seam chega intacto ao papel com peso legal.
+5. `GET /api/turmas/{id}/alunos` → **200**, 15 matrículas, todas com o aluno aninhado — o
+   `EnrollmentQueryBuilder` em produção, sem lazy-load. (A rota real é `/alunos`; o brief a chamava
+   de `/enrollments`.)
+
+Placar task a task, os desvios e os **6 achados Minor** acumulados nas Tasks 4–8 ficam registrados em
+`.superpowers/sdd/progress.md`, para triagem do review final whole-branch. Nenhum Minor foi corrigido
+por decisão própria: o review final decide o que entra antes do merge.
 
 ## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
