@@ -16,6 +16,44 @@
     $attendance = $snapshot->resultado->attendance_pct;
 
     $fecha = fn (?string $iso) => $iso === null ? null : Carbon::parse($iso)->format('d-m-Y');
+
+    /**
+     * Elisão da descrição do curso. Os três números moram JUNTOS porque são um
+     * ajuste só: o clamp é impresso no CSS a partir daqui e o limiar é o produto
+     * dos outros dois. Antes o clamp estava no `<style>` e o limiar 120 linhas
+     * abaixo, ligados só por prosa — divergiam em silêncio.
+     *
+     * O limiar troca o tier de 11px pelo de 9px ANTES de o clamp de 11px morder.
+     * Ele precisa ficar abaixo da MENOR capacidade das 7 linhas de 11px, e essa
+     * capacidade depende de como o texto quebra. Medido no PDF real, varrendo o
+     * comprimento da descrição até as reticências aparecerem (2026-08-08):
+     *
+     *   prosa espanhola comum .................. 806 chars
+     *   prosa técnica real (palavra ~12,6) ..... 771
+     *   palavras uniformes de 12/16/18/20 ...... 726 / 712 / 671 / 604
+     *   palavras uniformes de 22/24/25/26 ...... 652 / 700 / 567 / 586
+     *   palavras uniformes de 28/30/32 ......... 622 / 657 / 694
+     *
+     * Não é monotônico: a capacidade despenca quando o comprimento da palavra
+     * cai logo acima de um divisor da linha e sobra um vão morto por linha. O
+     * piso medido é 567 (palavras de 25 caracteres, a ordem das palavras mais
+     * longas do espanhol real). Daí 80 × 7 = 560, logo abaixo do piso — errar
+     * para baixo custa tipografia (600 caracteres de prosa comum caberiam a
+     * 11px e saem a 9px); errar para cima custa texto.
+     *
+     * O limiar é ajuste de QUALIDADE, não de segurança: acima de ~33 caracteres
+     * por palavra o modelo para de valer (capacidade 508) e a descrição volta a
+     * ser elidida a 11px — mas elidida COM reticências. Quem garante que nada
+     * some calado são o clamp inteiro e o `min-height` da folha, não este número.
+     *
+     * Acima do limiar o tier de 9px comporta ~1.370 (técnica) a ~1.430 (prosa)
+     * caracteres; só o que passar disso vira reticências.
+     */
+    $narrativeLines = 7;
+    $narrativeLinesCompact = 10;
+    $narrativeCharsPerLine = 80;
+    $narrativeCompact = mb_strlen($curso->description ?? '')
+        > $narrativeLines * $narrativeCharsPerLine;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -33,6 +71,20 @@
             font-size: 11px;
             margin: 0;
         }
+        /* `min-height`, NUNCA `height` — isto é regra de segurança, não estilo.
+
+           Com altura DEFINIDA a folha vira uma caixa que não pagina: o Chromium
+           pinta o excedente POR CIMA da página seguinte. Medido em 2026-08-08,
+           com nome de curso de 147, nome técnico de 179 e nome de cliente de
+           100 caracteres: QR, assinatura e aviso legal do certificado saíram
+           sobrepostos ao temário — QR sobre o logo, assinatura sobre o
+           cabeçalho, disclaimer atravessando a tabela. Documento corrompido, e
+           sem nenhum aviso.
+
+           Com `min-height` a folha cresce e a paginação normal leva o excedente
+           para uma página limpa: feio, porém íntegro. Nada é recortado nem
+           sobreposto — e o que sobra de conteúdo com peso legal (nomes de
+           aluno, curso e cliente) continua legível por inteiro. */
         .page {
             display: flex;
             flex-direction: column;
@@ -81,17 +133,6 @@
         }
         .course small { color: #3f3f3f; display: block; font-size: 10px; font-weight: normal; }
         .narrative { line-height: 1.7; margin: 0 0 4mm; text-align: justify; }
-        /* Altura FIXA, não mínima. Com `min-height` a folha crescia junto com a
-           descrição do curso e levava o rodapé para a página seguinte — com
-           3.689 caracteres o certificado saía em 3 páginas, rodapé/QR/assinatura
-           na página 2 (gate de 2026-08-07). `flex-shrink: 0` em tudo menos na
-           descrição declara QUEM cede espaço quando falta, e o rodapé
-           (`margin-top: auto`) volta a ancorar no pé da folha em qualquer
-           combinação de conteúdo. Esta é a garantia estrutural; o clamp abaixo
-           é só o aviso visível. */
-        .page--certificado { height: 297mm; }
-        .page--certificado > * { flex-shrink: 0; }
-
         /* `courses.description` é o único campo de tamanho livre do documento —
            por isso é ele que cede. O limite mora AQUI e não em `.narrative`
            porque nota, assistência e vigência também são `.narrative`, e essas
@@ -99,20 +140,22 @@
 
            `-webkit-line-clamp` com inteiro é o único mecanismo que este
            Chromium (m149) marca com reticências: medido, `line-clamp: auto`,
-           `block-ellipsis` e `text-overflow` cortam mudos no meio da linha. Daí
-           o inteiro, calibrado no pior caso (nota + assistência + vigência
-           presentes) contra o PDF real: 7 linhas a 11px, 10 a 9px. */
+           `block-ellipsis` e `text-overflow` cortam mudos no meio da linha.
+
+           O clamp é o que impede a descrição de empurrar o rodapé para fora da
+           folha — e impede COM aviso. Os números vêm do `@php` do topo, junto
+           do limiar que eles derivam. */
         .narrative--contenidos {
             display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 7;
-            flex-shrink: 1;
-            min-height: 0;
+            -webkit-line-clamp: {{ $narrativeLines }};
             overflow: hidden;
         }
-        /* Acima do limiar o corpo cai para 9px e cabem ~1.300 caracteres em vez
-           de ~700 — só o que passar disso vira reticências. */
-        .narrative--compact { font-size: 9px; line-height: 1.5; -webkit-line-clamp: 10; }
+        .narrative--compact {
+            font-size: 9px;
+            line-height: 1.5;
+            -webkit-line-clamp: {{ $narrativeLinesCompact }};
+        }
         .registro { margin-top: 6mm; text-align: center; }
 
         .certificate-footer {
@@ -162,7 +205,7 @@
     </style>
 </head>
 <body>
-<section class="page page--certificado">
+<section class="page">
     <div class="accent accent-top"></div>
 
     <div class="meta">
@@ -209,10 +252,9 @@
         @if ($periodo !== null)
             <p class="narrative">La actividad realizada {{ $periodo }} abordó los siguientes contenidos:</p>
         @endif
-        {{-- 700 = as 7 linhas do clamp a 11px (~100 caracteres por linha nos
-             178mm úteis). Abaixo do limiar o clamp nunca morde e o parágrafo
-             sai idêntico ao que sempre saiu; acima, 9px preserva mais texto. --}}
-        @php $narrativeCompact = mb_strlen($curso->description) > 700; @endphp
+        {{-- Abaixo do limiar (ver o `@php` do topo) o clamp nunca morde e o
+             parágrafo sai idêntico ao que sempre saiu; acima, 9px preserva
+             mais texto antes das reticências. --}}
         <p class="narrative narrative--contenidos {{ $narrativeCompact ? 'narrative--compact' : '' }}">{{ $curso->description }}</p>
     @elseif ($periodo !== null)
         <p class="narrative">La actividad fue realizada {{ $periodo }}.</p>

@@ -479,6 +479,120 @@ class CertificatePdfTest extends TestCase
         });
     }
 
+    /**
+     * A folha do certificado NUNCA pode ter altura definida. Com `height` em vez
+     * de `min-height` ela vira uma caixa que não pagina, e o Chromium pinta o
+     * excedente POR CIMA da página seguinte: medido em 2026-08-08 com nome de
+     * curso de 148 caracteres, o QR, a assinatura e o aviso legal saíram
+     * sobrepostos ao temário. Documento corrompido, sem nenhum aviso.
+     *
+     * A asserção negativa é a que importa e por isso é explícita: `min-height`
+     * CONTÉM a substring `height`, então só um limite de declaração distingue as
+     * duas — foi exatamente essa confusão que deixou a regressão passar.
+     */
+    public function test_folha_do_certificado_nunca_tem_altura_definida(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(function (string $html): bool {
+            preg_match('/\.page\s*\{([^}]*)\}/s', $html, $rule);
+            $body = $rule[1] ?? '';
+
+            return preg_match('/min-height:\s*297mm;/', $body) === 1
+                && preg_match('/(?<![a-z-])height:/', $body) === 0;
+        });
+    }
+
+    /**
+     * A elisão da descrição é o único corte tolerado no documento, e tem de ser
+     * VISÍVEL. `-webkit-line-clamp` com inteiro é o único mecanismo que este
+     * Chromium marca com reticências (medido: `line-clamp: auto`,
+     * `block-ellipsis` e `text-overflow` cortam mudos, no meio do glifo).
+     *
+     * O clamp mora em `.narrative--contenidos`, NÃO em `.narrative`: nota,
+     * assistência e vigência também são `.narrative` e nenhuma delas pode ser
+     * cortada. Mover o clamp para a classe genérica é uma regressão de peso
+     * legal, e a última asserção é o que a pega.
+     */
+    public function test_so_a_descricao_do_curso_e_elidida_e_a_elisao_e_marcada(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['resultado']['grades'] = ['final' => '6,4'];
+        $snapshot['resultado']['attendance_pct'] = '95.00';
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(function (string $html): bool {
+            preg_match('/\.narrative--contenidos\s*\{([^}]*)\}/s', $html, $clamped);
+            preg_match('/\.narrative\s*\{([^}]*)\}/s', $html, $generic);
+
+            return preg_match('/-webkit-line-clamp:\s*\d+;/', $clamped[1] ?? '') === 1
+                && preg_match('/display:\s*-webkit-box;/', $clamped[1] ?? '') === 1
+                && preg_match('/overflow:\s*hidden;/', $clamped[1] ?? '') === 1
+                // a descrição do curso é o único parágrafo que leva o clamp
+                && preg_match_all('/class="narrative narrative--contenidos/', $html) === 1
+                // nota e assistência saem, e saem SEM clamp
+                && str_contains($html, 'nota 6,4')
+                && str_contains($html, 'Asistencia registrada: 95.00%')
+                && preg_match('/-webkit-line-clamp|overflow:\s*hidden/', $generic[1] ?? '') === 0;
+        });
+    }
+
+    /**
+     * O clamp (CSS) e o limiar de caracteres (PHP) são UM ajuste só: o limiar
+     * troca o corpo para 9px antes de o clamp de 11px morder. Se divergirem, uma
+     * descrição logo abaixo do limiar é clampada a 11px e perde texto que o tier
+     * de 9px mostraria inteiro.
+     *
+     * Os números estão fixados aqui de propósito. 560 = 7 linhas × 80 caracteres,
+     * e o 80 saiu de medição no PDF real (varredura do comprimento da descrição
+     * até as reticências aparecerem, 2026-08-08): a MENOR capacidade das 7 linhas
+     * de 11px é 567 caracteres (palavras de 25, o pior perfil de quebra do
+     * espanhol real); prosa comum comporta 806. Mexer no clamp ou no limiar sem
+     * remedir quebra este teste — que é o ponto.
+     */
+    public function test_limiar_troca_o_corpo_antes_de_o_clamp_de_11px_morder(): void
+    {
+        $this->actingAsAdmin();
+
+        $noLimiar = $this->renderComDescricaoDe(560);
+        $acimaDoLimiar = $this->renderComDescricaoDe(561);
+
+        // o clamp impresso no CSS é o mesmo que deriva o limiar
+        $this->assertMatchesRegularExpression(
+            '/\.narrative--contenidos\s*\{[^}]*-webkit-line-clamp:\s*7;/s',
+            $noLimiar,
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.narrative--compact\s*\{[^}]*-webkit-line-clamp:\s*10;/s',
+            $noLimiar,
+        );
+        $this->assertStringNotContainsString('narrative--compact"', $noLimiar);
+        $this->assertStringContainsString('narrative--compact"', $acimaDoLimiar);
+    }
+
+    private function renderComDescricaoDe(int $chars): string
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['curso']['description'] = mb_substr(
+            str_repeat('Contenido técnico del curso de alta tensión. ', 40),
+            0,
+            $chars,
+        );
+        $this->certificate->update(['snapshot' => $snapshot]);
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        return $this->pdf->lastHtml();
+    }
+
     public function test_qr_aponta_para_frontend_url_e_uuid(): void
     {
         $this->actingAsAdmin();
