@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Commercial;
+namespace Tests\Feature\Comercial;
 
 use App\Domains\Commercial\Models\Client;
 use App\Shared\Data\ContratanteData;
