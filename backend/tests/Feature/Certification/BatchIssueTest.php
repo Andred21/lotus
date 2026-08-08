@@ -166,6 +166,21 @@ class BatchIssueTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids.0');
     }
 
+    /**
+     * A UI nunca manda id repetido; a API crua manda. Sem `distinct`, o
+     * duplicado emitia no primeiro item e falhava no segundo — relatório com o
+     * mesmo `enrollment_id` duas vezes.
+     */
+    public function test_enrollment_id_duplicado_retorna_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id, $this->enrollmentA->id],
+            'redator_id' => $this->redator->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids.0');
+    }
+
     public function test_redator_id_inexistente_retorna_422(): void
     {
         $this->actingAsAdmin();

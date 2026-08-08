@@ -11,15 +11,15 @@ use Illuminate\Support\Collection;
  * O que conta como "certificado VIGENTE de uma matrícula" — num lugar só.
  *
  * A regra tinha três implementações (a porta 3 do `CertificateEligibility`, a
- * face de lista dele e o painel de emissão), todas repetindo
- * `where('status', Emitido)`. Três implementações da mesma regra são três
+ * antiga face de lista dele e o painel de emissão), todas repetindo
+ * `where('status', Emitido)`. Implementações repetidas da mesma regra são
  * respostas esperando para divergir num documento de peso legal — o mesmo
  * motivo pelo qual o `CertificateTemplateResolver` existe (B1).
  *
  * A divergência aqui é concreta, não hipotética: no dia em que "vigente" passar
  * a significar "emitido **e** dentro do `valido_ate`", as portas mudam e o
  * painel continua exibindo um certificado vencido como atual — a lista
- * prometendo o que o POST recusa. Mudar `vigentes()` muda os três de uma vez.
+ * prometendo o que o POST recusa. Mudar `vigentes()` muda todos de uma vez.
  */
 class CertificateVigenciaResolver
 {
@@ -38,17 +38,6 @@ class CertificateVigenciaResolver
             ->whereIn('enrollment_id', $enrollmentIds)
             ->get()
             ->keyBy('enrollment_id');
-    }
-
-    /**
-     * Só os `enrollment_id` que já têm vigente — o que a face de lista precisa
-     * para excluir a matrícula da consulta, sem carregar o documento.
-     *
-     * @return Collection<int, int>
-     */
-    public function enrollmentIdsComVigente(): Collection
-    {
-        return $this->vigentes()->pluck('enrollment_id');
     }
 
     /**

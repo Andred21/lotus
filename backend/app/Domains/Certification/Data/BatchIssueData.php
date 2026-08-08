@@ -18,7 +18,10 @@ class BatchIssueData extends Data
     {
         return [
             'enrollment_ids' => ['required', 'array', 'min:1'],
-            'enrollment_ids.*' => ['integer', 'exists:enrollments,id'],
+            // `distinct`: a UI nunca manda id repetido, mas a API crua manda —
+            // e um duplicado renderia o item duas vezes no relatório (emitido +
+            // "ya existe un certificado vigente"), com `key` React duplicada.
+            'enrollment_ids.*' => ['integer', 'distinct', 'exists:enrollments,id'],
             'redator_id' => ['required', 'integer', 'exists:redatores,id'],
         ];
     }
