@@ -3,8 +3,6 @@
 namespace App\Domains\Certification\Services;
 
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
-use App\Domains\Certification\Enums\CertificateStatus;
-use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
@@ -41,6 +39,7 @@ class CertificateEligibility
 {
     public function __construct(
         private readonly CertificateTemplateResolver $templates,
+        private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
     /**
@@ -78,7 +77,7 @@ class CertificateEligibility
         // `certificates` duas vezes por chamada — e abria a janela para a
         // turma aparecer na tela com `enrollments` vazio, se um certificado
         // fosse emitido no meio.
-        $comCertificadoVigente = $this->enrollmentsComCertificadoVigente();
+        $comCertificadoVigente = $this->vigencia->enrollmentIdsComVigente();
 
         $enrollments = function (Builder|Relation $query) use ($comCertificadoVigente): Builder|Relation {
             $this->constrainMatriculaAprovada($query);
@@ -142,12 +141,10 @@ class CertificateEligibility
 
     private function assertSemCertificadoVigente(Enrollment $enrollment): void
     {
-        $vigente = Certificate::where('enrollment_id', $enrollment->id)
-            ->where('status', CertificateStatus::Emitido)
-            ->lockForUpdate()
-            ->exists();
-
-        if ($vigente) {
+        // O critério de "vigente" é do `CertificateVigenciaResolver`, não daqui:
+        // a mesma regra vale para esta porta, para a face de lista e para o
+        // painel de emissão.
+        if ($this->vigencia->existeVigenteForUpdate($enrollment->id)) {
             $this->refuse('enrollment', 'Ya existe un certificado vigente para esta matrícula.');
         }
     }
@@ -218,14 +215,6 @@ class CertificateEligibility
     private function constrainRedatorDesignado(Builder $turmas): Builder
     {
         return $turmas->whereHas('redatores');
-    }
-
-    /** @return Collection<int, int> */
-    private function enrollmentsComCertificadoVigente(): Collection
-    {
-        return Certificate::query()
-            ->where('status', CertificateStatus::Emitido)
-            ->pluck('enrollment_id');
     }
 
     private function refuse(string $field, string $message): never

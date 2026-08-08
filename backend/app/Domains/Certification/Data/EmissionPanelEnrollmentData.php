@@ -39,7 +39,12 @@ class EmissionPanelEnrollmentData extends Data
             // `enrollments.grades` é array livre (o tipo da nota é decisão de
             // negócio do Operation, ainda em aberto): a projeção entrega o que
             // o redator lançou como texto, e não inventa um formato.
-            nota_final: isset($enrollment->grades['final'])
+            //
+            // `is_scalar` porque JSON livre também aceita objeto e lista: sem a
+            // guarda, um `grades.final` estruturado emite `Array to string
+            // conversion` e escreve a palavra "Array" numa listagem de peso
+            // legal. Não-escalar vira `null` — ausência honesta em vez de lixo.
+            nota_final: isset($enrollment->grades['final']) && is_scalar($enrollment->grades['final'])
                 ? (string) $enrollment->grades['final']
                 : null,
             certificate: $vigente === null ? null : EmissionPanelCertificateData::fromModel($vigente),

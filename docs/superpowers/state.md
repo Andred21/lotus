@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-08-certificacao-frontend.md
@@ -12,8 +12,8 @@ context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: 4620cee
-updated_at: 2026-08-08T00:55:00-03:00
+state_basis_commit: 3d7ee5c
+updated_at: 2026-08-08T01:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2

@@ -156,17 +156,20 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('0.template_validity_months', 24)
             ->assertJsonPath('0.emission_blocked', null)
             ->assertJsonCount(3, '0.enrollments')
-            ->assertJsonPath('0.enrollments.0.enrollment_id', $this->enrollment->id)
-            ->assertJsonPath('0.enrollments.0.student_name', 'Juan Pérez')
-            ->assertJsonPath('0.enrollments.0.student_rut', '12.345.678-5')
-            ->assertJsonPath('0.enrollments.0.approval_status', 'aprobado')
-            ->assertJsonPath('0.enrollments.0.nota_final', '6.2')
-            ->assertJsonPath('0.enrollments.0.attendance_pct', '87.50')
-            ->assertJsonPath('0.enrollments.0.certificate', null)
+            // Alunos em ordem de NOME, não de inserção: 'Alumno Pendiente' <
+            // 'Alumno Reprobado' < 'Juan Pérez'. É a ordem que a tabela da tela
+            // lê, e sem ORDER BY ela mudava entre dois requests.
+            ->assertJsonPath('0.enrollments.0.enrollment_id', $pendiente->id)
+            ->assertJsonPath('0.enrollments.0.approval_status', 'pendiente')
             ->assertJsonPath('0.enrollments.1.enrollment_id', $reprobado->id)
             ->assertJsonPath('0.enrollments.1.approval_status', 'reprobado')
-            ->assertJsonPath('0.enrollments.2.enrollment_id', $pendiente->id)
-            ->assertJsonPath('0.enrollments.2.approval_status', 'pendiente')
+            ->assertJsonPath('0.enrollments.2.enrollment_id', $this->enrollment->id)
+            ->assertJsonPath('0.enrollments.2.student_name', 'Juan Pérez')
+            ->assertJsonPath('0.enrollments.2.student_rut', '12.345.678-5')
+            ->assertJsonPath('0.enrollments.2.approval_status', 'aprobado')
+            ->assertJsonPath('0.enrollments.2.nota_final', '6.2')
+            ->assertJsonPath('0.enrollments.2.attendance_pct', '87.50')
+            ->assertJsonPath('0.enrollments.2.certificate', null)
             ->assertJsonPath('0.redatores.0.redator_id', $this->redator->id)
             ->assertJsonPath('0.redatores.0.name', 'María Relatora');
     }
@@ -215,10 +218,31 @@ class CertificateListingTest extends TestCase
      * Os certificados vigentes se resolvem UMA vez por chamada. Resolvê-los por
      * turma (ou por matrícula) devolve o N+1 numa tela que lista o histórico
      * inteiro de turmas concluídas.
+     *
+     * O cenário precisa de DUAS turmas e TRÊS matrículas: o custo do N+1 é
+     * proporcional ao tamanho do cenário, e com uma turma de uma matrícula
+     * `assertSame(1, ...)` passaria também numa implementação que consultasse
+     * por turma ou por matrícula — a guarda não morderia nada.
      */
     public function test_panel_consulta_os_certificados_vigentes_uma_vez_so(): void
     {
         $this->actingAsSuperadmin();
+
+        $this->createEnrollment(
+            $this->turma,
+            EnrollmentApprovalStatus::Aprobado,
+            'Alumno Dos',
+            '22.222.222-2',
+        );
+        $segundaTurma = $this->createTurma(TurmaStatus::Concluida, 2, null, '2026-07-25');
+        $segundaTurma->redatores()->attach($this->redator);
+        $this->createEnrollment(
+            $segundaTurma,
+            EnrollmentApprovalStatus::Aprobado,
+            'Alumno Tres',
+            '33.333.333-3',
+        );
+
         $consultas = 0;
         DB::listen(function (QueryExecuted $query) use (&$consultas): void {
             if (str_contains($query->sql, 'from "certificates"')) {
@@ -226,7 +250,7 @@ class CertificateListingTest extends TestCase
             }
         });
 
-        $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(1);
+        $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(2);
 
         $this->assertSame(1, $consultas);
     }

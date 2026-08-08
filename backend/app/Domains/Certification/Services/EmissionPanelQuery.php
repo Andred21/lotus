@@ -4,7 +4,7 @@ namespace App\Domains\Certification\Services;
 
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
-use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -26,6 +26,7 @@ class EmissionPanelQuery
 {
     public function __construct(
         private readonly CertificateTemplateResolver $templates,
+        private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
     /** @return array<EmissionPanelTurmaData> */
@@ -44,9 +45,16 @@ class EmissionPanelQuery
                 'redatores.user',
                 // `withListingData()` e não `with('student.user')`: a lista do
                 // que a projeção de matrícula carrega é do `EnrollmentQueryBuilder`.
-                'enrollments' => fn ($query) => $query->withListingData(),
+                // `orderByStudentName()` pelo mesmo motivo — a travessia
+                // matrícula→aluno→user é de Operation, e ordenar no ORDER BY do
+                // eager-load não custa consulta nenhuma a mais.
+                'enrollments' => fn ($query) => $query->withListingData()->orderByStudentName(),
             ])
             ->orderByDesc('end_date')
+            // Desempate: turmas concluídas no mesmo dia sairiam em ordem
+            // indefinida do banco e podiam trocar de posição entre dois
+            // requests da mesma tela. `id` desc mantém a mais recente no topo.
+            ->orderByDesc('id')
             ->get();
 
         $vigentes = $this->certificadosVigentes($turmas);
@@ -73,18 +81,18 @@ class EmissionPanelQuery
      * As portas por MATRÍCULA (aprovação, certificado vigente) não entram aqui —
      * elas são visíveis linha a linha, em `approval_status` e `certificate`.
      */
-    private function emissionBlockedFor(Turma $turma, ?CourseCertificateTemplate $template): ?string
+    private function emissionBlockedFor(Turma $turma, ?CourseCertificateTemplate $template): ?EmissionBlockReason
     {
         if ($template === null) {
-            return 'sin_plantilla';
+            return EmissionBlockReason::SinPlantilla;
         }
 
         if ($this->templates->emissionCityFor($turma, $template) === null) {
-            return 'plantilla_sin_ciudad';
+            return EmissionBlockReason::PlantillaSinCiudad;
         }
 
         if ($turma->redatores->isEmpty()) {
-            return 'sin_redactor';
+            return EmissionBlockReason::SinRedactor;
         }
 
         return null;
@@ -95,6 +103,12 @@ class EmissionPanelQuery
      * só. Resolver por turma devolveria o N+1 numa tela que lista o histórico
      * inteiro de turmas concluídas.
      *
+     * O critério de "vigente" NÃO mora aqui: é do `CertificateVigenciaResolver`,
+     * o mesmo que a porta 3 do `CertificateEligibility` consulta. Reimplementá-lo
+     * era a terceira cópia da regra — e no dia em que "vigente" passar a incluir
+     * a validade, o painel exibiria como atual um certificado que o POST já
+     * considera vencido.
+     *
      * @param  Collection<int, Turma>  $turmas
      * @return Collection<int, Certificate> keyBy `enrollment_id`
      */
@@ -104,10 +118,6 @@ class EmissionPanelQuery
             ->flatMap(fn (Turma $turma) => $turma->enrollments->pluck('id'))
             ->all();
 
-        return Certificate::query()
-            ->where('status', CertificateStatus::Emitido)
-            ->whereIn('enrollment_id', $enrollmentIds)
-            ->get()
-            ->keyBy('enrollment_id');
+        return $this->vigencia->byEnrollment($enrollmentIds);
     }
 }

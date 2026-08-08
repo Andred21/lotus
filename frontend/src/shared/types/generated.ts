@@ -101,6 +101,7 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {
 id: number,
 codigo: string,
@@ -125,7 +126,7 @@ course_name: string,
 client_name: string,
 end_date: string,
 template_validity_months: number | null,
-emission_blocked: string | null,
+emission_blocked: EmissionBlockReason | null,
 enrollments: EmissionPanelEnrollmentData[],
 redatores: EmissionPanelRedatorData[],
 };

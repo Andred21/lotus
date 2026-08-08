@@ -3,6 +3,7 @@
 namespace App\Domains\Certification\Data;
 
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
+use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
@@ -30,8 +31,8 @@ class EmissionPanelTurmaData extends Data
         public string $client_name,
         public string $end_date,
         public ?int $template_validity_months,
-        /** `null` | `sin_plantilla` | `plantilla_sin_ciudad` | `sin_redactor` */
-        public ?string $emission_blocked,
+        /** `null` quando a turma é emitível; o motivo da porta fechada quando não. */
+        public ?EmissionBlockReason $emission_blocked,
         /** @var array<EmissionPanelEnrollmentData> */
         public array $enrollments,
         /** @var array<EmissionPanelRedatorData> */
@@ -42,7 +43,7 @@ class EmissionPanelTurmaData extends Data
     public static function fromModel(
         Turma $turma,
         ?CourseCertificateTemplate $template,
-        ?string $emissionBlocked,
+        ?EmissionBlockReason $emissionBlocked,
         Collection $vigentesPorEnrollment,
     ): self {
         return new self(
