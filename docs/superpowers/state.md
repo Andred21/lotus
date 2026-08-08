@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-frontend
 active_work_item: certificacao-frontend
-workflow_state: executing
-next_owner: joao
-next_action: continue_active_plan
+workflow_state: ready_for_review
+next_owner: claude
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-08-certificacao-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-08-certificacao-frontend.md
@@ -12,8 +12,8 @@ context_packet: docs/superpowers/context-packets/certificacao-sprint-4.md
 blocker: null
 review_findings_approved: null
 last_completed_work_item: profundidade-backend-b4-b7
-state_basis_commit: be58466
-updated_at: 2026-08-08T08:15:00-03:00
+state_basis_commit: bbe1f39
+updated_at: 2026-08-08T08:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,6 +163,14 @@ frontend; e o ramo **expirado** da página pública mostra só o cabeçalho, sem
 
 Evidência completa, task a task, com os Minor acumulados para o review final:
 `.superpowers/sdd/progress.md`.
+
+**Fechamento do gate — 2026-08-08, decisão do João.** Ele aprovou o bloco com os Steps 1 (tela
+real) e 5 (checkpoint visual) **não executados**, pelas três razões acima. Fica registrado sem
+maquiagem: o bloco entra em `ready_for_review` com a prova visual pendente, e nenhuma tela deste
+módulo foi vista renderizada por ninguém até aqui — a evidência é de API real, PDF inspecionado
+página a página, suíte e lint. Quem fizer o review de sprint herda isso como limitação declarada,
+não como item silenciosamente cumprido. O review é **alto risco** por decisão do plano (documento
+de peso legal + rota pública + `generated.ts`) → duas frentes, lente Claude + Codex read-only.
 
 ## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
 
