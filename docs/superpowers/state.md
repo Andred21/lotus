@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: profundidade-backend-b4-b7
-active_work_item: profundidade-backend-b4-b7
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md
-active_plan: docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: 'Q-1..Q-7 (todos) — aprovados pelo João em 2026-08-08'
-last_completed_work_item: certificacao-sprint-4
-state_basis_commit: 5787f94
-updated_at: 2026-08-08T00:00:00-03:00
+review_findings_approved: null
+last_completed_work_item: profundidade-backend-b4-b7
+state_basis_commit: 8a62536
+updated_at: 2026-08-08T01:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,59 @@ updated_at: 2026-08-08T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-07 (`profundidade-backend-b4-b7`)
+## Último item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
+
+### Gate de fechamento — 2026-08-08
+
+**O item 0 foi refeito, não herdado.** O e2e da Task 9 provou uma árvore que deixou de existir: as
+correções Q-1..Q-7 entraram depois dele e mexeram exatamente nos caminhos de listagem. O gate rodou
+contra `migrate:fresh --seed` no MySQL, com sessão Sanctum por cookie + CSRF (lição 12; `Origin` e
+`Accept` obrigatórios, e o `XSRF-TOKEN` reextraído do cookie jar depois do login, que o rotaciona).
+
+**Os três itens do §Gate da spec:**
+
+1. `PUT /api/turmas/1/alunos/1/resultado` com `grades.final = "6,9"` → **200**, e a resposta devolve
+   `"final":"6,9"` — a vírgula chilena sobrevive à escrita. Com `grades.final = []` → **422** RFC
+   7807 es-CL, `"La nota final debe ser un número o un texto no vacío."`
+2. Emissão `LOT-2026-1000` **201** com o seam conferido em **SQL cru**, não pela projeção do model:
+   `snapshot.cliente.name` = `clients.legal_name` = `Enel Distribución`, enquanto `users.name` do
+   mesmo cliente é `USUARIO-EMPRESA Enel`. **Os dois textos foram diferenciados à mão antes do teste**
+   — o `OperationDemoSeeder` grava `name == legal_name` de propósito, e com eles iguais o e2e passaria
+   mesmo se o regresso A-1 tivesse voltado (a mesma armadilha registrada no gate da Task 9).
+   `GET /api/certificates/{id}/pdf` → **200 `application/pdf`**, `pdfinfo` 2 páginas, **A4
+   (594.96 × 841.92 pts)**, e a página 1 imprime `Enel Distribución`.
+3. `GET /api/turmas/3/alunos` → **200**, 15 matrículas, **todas** com o aluno aninhado — o
+   `EnrollmentQueryBuilder` em produção.
+
+**Os 4 sítios do Q-1 exercitados na API real, que é o que faltou no gate anterior:**
+`GET /api/turmas` **200** (4 turmas, `client_name` = razão social), `GET
+/api/turmas/pendientes-configuracion` **200**, `GET /api/certificates/issuable` **200** e `GET
+/api/turmas/3/manual` **200 `application/pdf`** (25.880 bytes). **O Q-4 foi provado no mesmo passe:**
+`users.rut` posto em **NULL** num cliente que aparece nas duas listagens, e nenhuma delas estourou —
+era exatamente o `TypeError` que o `?string` fechou.
+
+**Demais itens:** suíte **477 passed, 1 skipped (1698 assertions)** · `pnpm lint` e `pnpm build`
+verdes · Pint `passed` nos 16 `.php` do commit de correção · `typescript:transform` **sem diff** em
+`generated.ts` (D-P1 segue valendo) · `git diff main...HEAD` vazio em `frontend/` e em
+`backend/database/` (zero schema, como a spec previu) · leis §5 sem violação (zero `Repository`, o
+único `abort()` de `app/` é o 404 pré-existente do `PublicCertificateController`).
+
+**Triagem dos 6 Minor acumulados nas Tasks 4–8:** cinco fecharam no review — o `$rotulo` morto (Q-7),
+os 5 sítios de `LISTING` (Q-3), o label `'reprovada'` (Q-5), o footgun de ordem do builder (Q-6) e o
+desvio do Pint na Task 7, que era desvio documentado e não defeito. **O sexto não foi corrigido e não
+virou débito:** "o comentário do teste poderia explicar melhor a ordem turma→student" é cosmético e
+não faz doc nem mecanismo divergir da realidade, que é o critério do `pendencias.md`.
+
+**Pendências revisadas:** nenhuma venceu gatilho, nenhuma fechou, nenhuma nasceu. P-04 segue com
+reavaliação marcada para **2026-08-15** (§5.1 e §5.2 continuam sem mecanismo — este bloco entregou
+catraca de cadeia e de eager-load, que são outra fronteira). P-03 ganha mais um bloco de backend em
+main tree sem atrito, mas o gatilho dela é dois blocos de backend em paralelo, que não ocorreu.
+
+**Estado do banco de dev:** ficou com o `migrate:fresh --seed` do gate mais as mutações do e2e
+(template do curso 2, resultado da matrícula 1, certificado `LOT-2026-1000`, `users.name` do cliente 3
+diferenciado e `users.rut` do cliente 1 nulo). Nada disso é fixture de código; quem precisar do
+cenário canônico roda `migrate:fresh --seed` de novo.
+
 
 **Item 2 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-07** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -73,12 +125,12 @@ deferred com bloco próprio, muda ADR/RN); B4 ganha **catraca da cadeia** (teste
 reflection — mini-framework rejeitado); B5 cobre **os 4 models medidos** (Enrollment, Quote,
 Client, Course — nem só o bug, nem todos os models). Corte e ordem definidos por ele na abertura:
 B4 → catraca → B5 → B6 → B7 → gate, um bloco. Design aprovado em 6 seções; spec em
-`docs/superpowers/specs/2026-08-07-profundidade-backend-b4-b7-design.md`.
+`docs/superpowers/specs/archive/2026-08-07-profundidade-backend-b4-b7-design.md`.
 
 **Backend-only, main tree (P-03), zero schema — ADR/DER não abrem.**
 
 **Plano escrito em 2026-08-07 — 10 tasks (0–9), `executor: claude` (SDD).**
-`docs/superpowers/plans/2026-08-07-profundidade-backend-b4-b7.md`. A escrita do plano achou
+`docs/superpowers/plans/archive/2026-08-07-profundidade-backend-b4-b7.md`. A escrita do plano achou
 **quatro desvios contra a spec aprovada, declarados no §Desvios em vez de silenciados** (lição 13):
 D-P1 — `ContratanteData` não pode morar em `Commercial/Data` como a spec D2 pedia, porque a Regra A
 do `DomainDependencyTest` só expõe `Models/Enums/Services`; vai para `App\Shared\Data`, a D12 mora
@@ -258,7 +310,7 @@ sobre 473/1690, exatamente os testes novos (3 do eager-load + 1 do RUT ausente).
 16 `.php` tocados, zero reescrita. `typescript:transform` sem diff em `generated.ts` (D-P1 segue
 valendo: `?string` num VO interno não vaza para o front). `frontend/` sem uma linha de diff.
 
-## Último item fechado — 2026-08-07 (`certificacao-sprint-4`)
+## Penúltimo item fechado — 2026-08-07 (`certificacao-sprint-4`)
 
 ### Gate de fechamento — 2026-08-07
 
@@ -839,7 +891,7 @@ de `template.layout_config` por `template.city` como perda de dado congelado. Co
 com teste atualizado de propósito. **Não é achado.** O risco real que sobra é o Q-1: é ele que apaga
 o `layout_config` dos snapshots v1 que ainda o carregam.
 
-## Penúltimo item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
+## Antepenúltimo item fechado — 2026-08-05 (`profundidade-form-crud-e-hidratacao-dto`)
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-05** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -1060,265 +1112,3 @@ dropdown (§Débitos técnicos); Q-2 e Q-4 do review de guardrails, a catraca do
 legados), B-7, Q-16, Q-6; P-26; P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; e o
 `backend/resources/views/welcome.blade.php` sujo na árvore, que não é do bloco e não entrou em commit
 nenhum. **Nenhum item foi promovido** — a escolha do próximo é do João.
-
-## Antepenúltimo item fechado — 2026-08-04 (`hardening-tabela-e-testes-pre-sprint-4`)
-
-**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-04** (`/planejar-bloco`
-com o escopo nomeado no argumento — "Hardening pré-Sprint 4" — e o estado em `idle`; o comando não
-promove item sozinho). É o **terceiro e último recorte** do mesmo item que dois blocos de 2026-08-04
-fecharam parcialmente: entregues H.4.1–H.4.3 pelo `hardening-estrutural-pre-sprint-4` e H.3.1,
-H.4.6, H.4.7, H.4.8 pelo `hardening-guardrails-e-transportes-pre-sprint-4`. Abertos: **H.4.4, H.4.5
-e H.4.9**. O backlog já registra esse recorte desde `3d7aca5`, então nenhuma edição dele acompanha
-esta transição.
-
-**O id não promete o item inteiro.** `hardening-tabela-e-testes-pre-sprint-4` descreve o conteúdo
-das três tasks (moldura de tabela + aliases de página; builders de teste no backend), não a posição
-na fila. Escolhido pelo João junto da seleção; renomeável na revisão da spec se o corte mudar, como
-ocorreu no bloco anterior.
-
-**Rota `context_required`, por gatilho de staleness — não por rotina.** O packet de 2026-08-04
-(`context-packets/hardening-guardrails-e-transportes-pre-sprint-4.md`, `status: ready`,
-`base_commit` `7419c32`) cobre as 7 tasks daquele recorte, inclusive as 3 restantes, com os sinais
-de aceite de cada uma. **Ele está stale por dois dos seus próprios gatilhos declarados**
-(§Staleness triggers):
-
-1. **Mudança semântica no item do backlog** — H.3.1, H.4.6, H.4.7 e H.4.8 saíram da lista, e o item
-   passou a carregar a conclusão técnica do H.4.5, escrita no fechamento.
-2. **Decisão posterior do João sobre H.4.5 ou sobre o corte** — H.4.5 foi retirado do corte na
-   revisão da spec de 2026-08-04, e a conclusão técnica registrada **contradiz o sinal de aceite
-   externo que o próprio packet transcreve**: o packet diz "aliases sem valor são eliminados ou
-   justificados"; o backlog diz que **eliminar é a resposta errada**, porque `useCrudPage` chama
-   `resource.useList()` por dentro e matar os aliases moveria a query para as quatro páginas,
-   regredindo a fronteira zerada em 2026-08-03 — e **passaria no lint**, porque o seletor casa
-   `budgetsApi.useList()` e não `useCrudPage(budgetsApi)`.
-
-Some-se a isso que `base_commit` está 8 commits atrás do `HEAD` (`e7884c3`). Logo o packet **não é
-reaproveitado como está**; o Codex gera um novo, para as 3 tasks restantes.
-
-**Ponto de partida que o novo packet precisa reconciliar, não redescobrir:** o Drive V2 segue sem
-documento que delimite este hardening (confirmado duas vezes — buscas dirigidas voltaram só ADRs,
-Certification e setup); a contradição do H.4.5 acima é a divergência a registrar, **não a decidir** —
-o corte é do brainstorming, e o mérito técnico já está resolvido no backlog.
-
-**Dependências Notion, atualizadas pelo que os dois blocos entregaram:** H.4.4 dependia de H.4.3 —
-**satisfeita** (vitest desde 2026-08-04). H.4.9 dependia de H.4.6 — **satisfeita** desde o bloco de
-guardrails. Resta **uma interna ao bloco**: H.4.5 → H.4.4. Nenhuma task restante está bloqueada por
-algo fora deste bloco.
-
-**Context Packet gerado pelo Codex em 2026-08-04** (`lotus-context-packet`, `mcp__codex__codex`
-sandbox read-only), `base_commit` `ce2d2e4`, `status: ready` — 10 fontes, **nenhuma `unavailable`**:
-as 3 tasks Notion buscadas uma a uma pela base canônica por ID, 2 alvos do Drive revalidados de
-forma dirigida (sem busca ampla) e 5 chaves de repositório.
-
-**Validação do contrato, conferida e não aceita por relatório:** markers exatos sem prosa fora
-deles, frontmatter completo com `plan_*`/`spec_*` em `null` (os ponteiros do estado são nulos, e o
-contrato proíbe inventá-los), 7 key facts (teto 8), `RECOMMENDED_TRANSITION: ready_for_planning`,
-todo fato externo citando chave do registro, e nenhum gatilho de staleness citando hash de
-provenance, a transição promotora ou edição de campo de workflow. **Os 18 blob SHAs do packet foram
-recalculados aqui com `git hash-object` e batem todos** — `state.md`, `progress.md`, `backlog.md`,
-packet anterior, `package.json`, `RedatoresTable.tsx`, `StudentsTable.tsx`, `useTableFilter.ts`,
-`AppCard.tsx`, `AppDataTable.tsx`, `useCrudPage.ts`, os 7 aliases e `eslint.config.js`,
-`TestCase.php`.
-
-**O packet excedeu o teto de 5 artefatos externos** (6), declarando o motivo no próprio registro:
-as 3 páginas eram obrigatórias e a revalidação da ausência no Drive exigiu os 2 inventários mais o
-ADR. Aceito — o excesso está justificado, como a SKILL permite.
-
-**Três afirmações do packet sobre o repositório foram medidas aqui, não aceitas por leitura**
-(lição 13): os **7** aliases `useXPage` são delegação pura de **6 linhas** cada
-(`return useCrudPage(<x>Api)`, sem orquestração nenhuma) — o que sustenta a conclusão técnica do
-H.4.5; `TestCase.php` centraliza **só autenticação** (`actingAsAdmin`/`actingAsSuperadmin` +
-header `Referer` do Sanctum), sem factory de agregados, que é a superfície do H.4.9; e são **78**
-arquivos de teste em `backend/tests/`. `RedatoresTable` (96 linhas) e `StudentsTable` (98) estão
-ambas abaixo da régua de 150 do `max-lines` — o H.4.4 é repetição de moldura, não arquivo inchado.
-
-**A divergência do H.4.5 ficou registrada e não decidida**, como pedido: o packet põe na tabela de
-divergências o enunciado externo ("eliminados ou justificados") contra a decisão interna posterior
-("eliminar é a resposta errada"), com a base de resolução medida no código. O corte segue sendo
-decisão do brainstorming.
-
-**Débitos técnicos vizinhos, registrados e fora do corte até decisão contrária:** a catraca do
-`max-lines` cita `StudentDialog` (189) e `RedatorDialog` (189), que são telas de tabela/diálogo na
-mesma vizinhança do H.4.4; e Q-2 (guardrail de rota escapa com parâmetro não tipado) e Q-4 (teste do
-`postMultipart` mocka o axios inteiro) seguem em §Débitos técnicos do `backlog.md`.
-
-**Corte decidido no brainstorming de 2026-08-04, pelo João: as 3 tasks entram** (H.4.4, H.4.5,
-H.4.9), e com elas o item 1 do backlog fecha por inteiro. Critério explicitamente diferente dos dois
-blocos anteriores ("fechar o barato, isolar o refactor grande"): o refactor grande é o que sobrou, e
-adiá-lo de novo não fecha o item. Alcances decididos na mesma sessão: **H.4.4 nas 5 tabelas busca-só**
-(não nas 2 nomeadas nem nas 7), **H.4.5 pelo argumento** (`<hook>(xxxApi)`, não pelo nome
-`useCrudPage`), **H.4.9 por trait** (não factories) e **só nos 2 padrões campeões**.
-
-**A medição do repositório mudou três coisas antes de o corte ser feito** — quinta ocorrência da
-lição 13 no projeto:
-
-1. **A dependência `H.4.5 → H.4.4` declarada no Notion não vale.** O que resta do H.4.5 é lint sobre
-   `features/*/hooks/`; o H.4.4 é markup em `features/*/components/`. Não se tocam; a ordem é livre.
-2. **H.4.4 não são "9 tabelas equivalentes".** São 3 grupos: **5** busca-só estruturalmente idênticas
-   (diff só em `searchable`, ícone, 3 chaves i18n e `footerCount`), **2** com dropdown
-   (`BudgetsTable`, `TurmasTable`) e **2** fora do padrão (`RolesTable` sem busca, `EnrollmentTable`
-   sem toolbar). Nenhuma passa da régua de 150 — a maior é `TurmasTable`, 148. Repetição entre
-   arquivos, não arquivo inchado.
-3. **H.4.9 é maior e mais limpo do que a task sugere.** União de **49 arquivos** (43 com o bloco
-   cliente+usuário, 34 com curso descartável, 28 em ambos), **20 helpers privados locais** morrem —
-   14 do bloco cliente com **4 nomes divergentes** (`client`, `clientId`, `makeClient`,
-   `makeClientWithPrimary`) e 6 `actingAdmin` que são repasse puro para o `actingAsAdmin()` do
-   `TestCase` (usado 132 vezes), dois deles declarando `: User` e quatro `: void` — a divergência de
-   assinatura prova que ninguém os lê como contrato.
-
-**A decisão de desenho mais importante — `shared/ui` continua apresentacional puro.** `shared/ui` e
-`shared/hooks` **não se importam em nenhuma direção hoje** (medido: zero import nos dois sentidos), e
-a moldura poderia ter criado a primeira aresta `ui → hooks` do projeto. Em vez disso ela recebe o
-`TableFilter<T>` já construído: a feature mantém uma linha, a `searchable` (vocabulário de domínio)
-fica onde já estava, e os 34 wrappers seguem todos da mesma natureza. O P-25 já registra tensão na
-direção inversa.
-
-**Spec escrita e aprovada pelo João em 2026-08-04**, 3 tasks, 14 decisões (D1–D14), 7 invariantes de
-comportamento e gate com item 0 próprio. **Com checkpoint visual** — diferente do bloco anterior: o
-H.4.4 muda markup de 5 telas de produção, duas delas de Personas (cadastro de peso legal).
-
-**Auto-review da spec achou dois defeitos nela mesma, corrigidos antes do commit:** o gate citava o
-grep de `pnpm test` com a justificativa "senão os testes deste bloco nascem órfãos", e este bloco
-**não cria teste novo em runner nenhum** — H.4.9 reescreve setup de teste existente, e é por isso
-que o placar tem de ficar idêntico; e faltava dizer como se concilia `TableFilter<T>` (paramétrico no
-item) com o `T extends DataTableValueArray` que o `AppDataTable` exige, lacuna que a execução
-resolveria inventando.
-
-**Plano em 7 tasks** (0 branch · 1 moldura + as 2 tabelas nomeadas · 2 as outras 3 · 3 H.4.5 ·
-4 H.4.9 · 5 checkpoint visual do João · 6 gate), TDD onde há mecanismo: na Task 3 a sonda entra
-**antes** do seletor e é vista **passando** — a prova de que o buraco existe hoje — e só então o
-seletor entra e ela reprova.
-
-**A escrita do plano refinou a D3 e ficou melhor que a spec.** A spec dizia que a moldura recebe o
-`TableFilter<T>`; importar esse tipo criaria justamente a aresta `shared/ui → shared/hooks` que a D3
-existe para evitar — de tipo, mas aresta. O plano declara `SearchableTableState<T>`
-**estruturalmente compatível**, sem import, seguindo o precedente do próprio `AppDataTable`, cujo
-`error` aceita `ProblemDetails` sem depender de `shared/api`.
-
-**Auto-review do plano achou uma lacuna própria:** as colunas mudam de pai nas 5 tabelas e nada
-provava que não mudaram de conteúdo. Entrou um passo que compara a contagem de `<AppColumn` de cada
-arquivo contra `main` — divergência **para** a task, porque coluna que some ou nasce é mudança de
-comportamento, não extração.
-
-**`executor: misto`.** **Task 4 (H.4.9) vai ao Codex** — migração mecânica, paths fechados
-(`backend/tests/**`), verificação que decide sozinha (o placar 376/1366) e alvos que saem de `grep`,
-não de julgamento. **Tasks 0, 1, 2, 3 e 6 ficam com Claude:** a 1 e a 2 mudam 5 telas de produção com
-prova visual, a 3 toca o `eslint.config.js` do repositório inteiro (a colisão de flat config já
-mordeu duas vezes), a 0 julga árvore suja e baseline divergente, a 6 julga o placar. **A 5 é do
-João.**
-
-**Regras de parada da delegação:** placar diferente de 376/1366 **para** e o arquivo é revertido, não
-o número esperado ajustado; diff em `backend/app/` ou `backend/database/` **para**; arquivo onde a
-extração exigiria mexer numa asserção fica **de fora**, com a razão reportada. Nenhum commit é feito
-pelo Codex sem diff revisado por Claude antes.
-
-**Duas pendências de fechamento registradas no plano, fora das tasks:** editar o item 1 do
-`backlog.md` (com as três entregues ele fecha por inteiro e sai da fila) e decidir se as 2 tabelas
-com dropdown ganham gatilho registrado para adotar a moldura quando houver slot de filtro.
-
-**Execução em 2026-08-04, `/executar-bloco` + `subagent-driven-development` (argumento explícito do
-João), `executor: misto`.** Branch `hardening/tabela-e-testes` a partir do `main`, sem worktree
-(D1/P-03 — toca `backend/tests/`), 5 commits de conteúdo (`2653dff`..`c140e53`) + 1 de correção de
-review (`0e7ec59`). Baseline da Task 0: backend **376 passed (1366 assertions)**, frontend
-**21 passed** — batendo com o plano.
-
-**Task 4 (H.4.9) no Codex** (`mcp__codex__codex`, paths fechados em `backend/tests/**`). Nenhum commit
-feito pelo Codex — report + diff revisados por Claude, que rodou a verificação do plano do zero antes
-de aceitar. Tasks 0, 1, 2, 3 e 6 por Claude; a **5 foi do João** (checkpoint visual das 5 telas,
-aprovado).
-
-**A moldura nasceu melhor que a spec, e o plano tinha razão:** `SearchableTableState<T>` é declarado
-**estruturalmente compatível** com o `TableFilter<T>` do `useTableFilter`, sem import — importar o tipo
-criaria a primeira aresta `shared/ui → shared/hooks` do projeto (D3), que é de tipo mas é aresta. As 5
-tabelas mantêm a linha do `useTableFilter` e entregam o estado pronto.
-
-**Review em 2026-08-04 (`/revisar-sprint`, ALTO RISCO** — `executor: misto` com a Task 4 no Codex;
-lente Claude **+** revisão independente do Codex, `mcp__codex__codex` read-only). Gate reconferido do
-zero, não aceito por relatório. **4 achados, todos aprovados pelo João:**
-
-**Q-1 🔴 — a moldura recalculava a pergunta que o hook já respondia.** O empty state era escolhido por
-`term === ''` em vez do `filtering` do `useTableFilter`, que mede o **efeito** do `where` e não a
-presença do termo. É **o mesmo defeito** que `BudgetsTable` e `TurmasTable` cometeram juntas em
-2026-08-03 (o `Dropdown` do PrimeReact devolve o **objeto** da opção quando `option.value` é vazio):
-a moldura nasceria errada por construção para qualquer adotante com filtro. `filtering` entrou na
-interface. A bifurcação de **redação** do vazio (`common.noResultsFiltered` / `common.clearFilters`)
-**não** foi construída — não há consumidor com `where` hoje (lição 3), e o que falta está escrito no
-docblock da moldura.
-
-**Q-2 🔴 — o guardrail novo reproduzia o buraco que existe para fechar.** O seletor casava só
-`arguments.0`, então `useEntityForm(mode, clientsApi)` escapava exatamente como `useCrudPage(budgetsApi)`
-escapava do seletor antigo. Corrigido para `CallExpression > Identifier.arguments[name=/Api$/]`, que
-casa qualquer posição. **Provado com sonda nas 4 direções:** argumento em posição 0 reprova, em posição
-1 reprova, o seletor antigo de `xxxApi.useAlgo()` **continua** disparando no mesmo arquivo (prova de que
-a colisão de merge raso do flat config não voltou) e `{ queryKey: clientsApi.keys.all }` **não** dá
-falso positivo, porque é `MemberExpression`.
-
-**Q-3 🟡 (achado do Codex, verificado no código antes de aceito) — o placar é cego a escopo de
-permissão.** A D12 tratou os 6 `actingAdmin` como repasse puro; um não era. `PendingQuotesTest` tinha um
-user com **exatamente** `operation.turma.create`, a permissão que gateia a rota, e a migração o trocou
-por `actingAsAdmin()`, que tem todas — trocar a permissão exigida na rota passaria verde. **O placar
-376/1366 não se moveu**, porque setup não é asserção. O user voltou, e nasceu a guarda
-`test_permissao_vizinha_de_turma_nao_abre_a_rota`.
-
-**Q-4 🟡 — 11 sítios remendavam o `rut` depois de criar.** `$client->user()->update([...])` é mass update
-no query builder: **não dispara evento** em model `Auditable` (ADR-08, lição 5) e ainda fazia o `User`
-nascer com `rut` nulo. O trait ganhou `$userOverrides` e a criação voltou a ser atômica nos 11.
-
-**Divergência entre revisores, mostrada e não resolvida em silêncio:** o Codex declarou H.4.4 e H.4.5
-**limpos** onde a lente Claude achou Q-1 e Q-2 — o Q-2 provado com sonda executada, o Q-1 lendo a
-interface contra o `useTableFilter`. Q-3 nasceu no Codex e só foi aceito depois de conferir os 6
-`actingAdmin` por `git show`; Q-4 as duas lentes acharam.
-
-**Gate de fechamento (2026-08-04).** **Item 0 — critério de aceite do bloco, não higiene genérica:**
-o bloco extrai markup e setup sem mudar comportamento, então a prova é *comportamento idêntico contra
-dado real* e *mecanismo visto reprovando*, não suíte verde. **Prova e2e contra a API real com sessão
-Sanctum** (lição 12 — `Origin` + `Accept` + `X-XSRF-TOKEN`; login `admin@lotus.cl`): os **5** endpoints
-de lista que as tabelas migradas consomem responderam **200** com dado real (`courses` 3, `clients` 4,
-`users` 3, `redatores` 7, `students` 59) e **todos os campos `searchable` presentes no payload** —
-`name`/`technical_name`, `legal_name`/`rut`, `name`/`email`, `name`/`rut`, `name`/`rut`. A contagem de
-`<AppColumn` de cada uma das 5 bate com `main` (5, 6, 4, 5, 5): coluna que some ou nasce é mudança de
-comportamento, não extração. **Sonda fresca do H.4.5** em `catalog` (feature e recurso diferentes das
-sondas da Task 3 e do plano, de propósito) reprovou nas **duas** posições de argumento, com a mensagem
-do seletor novo; removida, árvore limpa.
-
-**O placar mudou de propósito, por decisão explícita do João:** backend **377 passed (1367 assertions)**
-contra a baseline 376/1366 — a asserção a mais é a guarda do Q-3, **vista reprovando** com
-`operation.turma.create` antes de virar verde (lição 10), provada sem tocar `backend/app/` (D14, e o
-classificador bloqueia o caminho de qualquer forma). Registrado na D13 da spec: sem essa nota, quem
-reler concluiria que a extração comeu asserção. `pnpm test` **21 passed**, `pnpm build` e `pnpm lint`
-verdes; Pint (`--test`) `passed` nos **51** arquivos `.php` tocados, com a guarda de lista vazia
-(lição 9); `backend/app/`, `backend/database/`, `generated.ts` e `locales/*.json` **sem diff** —
-`typescript:transform` não rodou porque nenhum DTO foi tocado. Código morto: nenhum — o trait tem **48**
-arquivos consumidores, a moldura **5**, e os **20** helpers privados locais que morreram não deixaram
-órfão (`makeClient`, `clientId`, `makeClientWithPrimary`, `actingAdmin`: zero ocorrências). Leis §5: sem
-violação — o bloco não toca DDD, auth, RBAC, migration ou financeiro; reforça a §5.6 com o seletor por
-argumento e o Q-4 **desfez** 11 mass updates que contrariavam a §5.2/ADR-08 dentro dos testes.
-
-**Pendências:** nenhuma nasceu. **P-25 ganhou a segunda ocorrência medida, na direção inversa** — a D3
-manteve `shared/ui` sem importar tipo de `shared/hooks`, mesmo princípio do constraint ausente em
-`useFilePreview`; são dois casos no código e **nenhuma linha na rule**, e o bloco tocou a
-`frontend-fsliced.md` no parágrafo de query-em-componente, não no de fronteira de tipo. Nenhum gatilho
-venceu — P-04 é o mais próximo (2026-08-15).
-
-**Item 1 do backlog (“Hardening estrutural pré-Sprint 4”) fechou por inteiro e saiu da fila** — as 10
-tasks do conjunto Notion saíram em 3 blocos de 2026-08-04. Os itens 2–5 foram renumerados para 1–4. A
-segunda pendência de fechamento do plano virou **débito técnico registrado, por decisão do João**: as 2
-tabelas com dropdown adotam a moldura quando alguém as tocar, e o commit que adotar paga junto a
-bifurcação de redação do empty state.
-
-**Sobreviveu e não foi tocado, para o João decidir:** o item 4 do backlog (“Hardening — ownership em
-rotas nested e política de retenção documental”) promete metade do que o `hardening-guardrails-e-transportes`
-já entregou em H.3.1; a outra metade é a P-02, aberta. Editar item alheio não é remoção do item
-concluído, então ficou como está, reportado.
-
-Arquivado: `plans/archive/2026-08-04-hardening-tabela-e-testes-pre-sprint-4.md` ·
-`specs/archive/2026-08-04-hardening-tabela-e-testes-pre-sprint-4-design.md` (não compartilhada por
-outro work item). Entrega registrada em `progress.md`; a mais antiga
-(`Hardening · Upload e visualização de arquivos`, 2026-07-31) migrou para `progress-archive.md` para
-manter o teto de dez.
-
-**Aberto, registrado, não resolvido:** Q-2 e Q-4 do review de guardrails, a catraca do `max-lines`
-(4 legados), B-7, Q-16, Q-6 e as 2 tabelas com dropdown (§Débitos técnicos do `backlog.md`); P-26;
-P-04 para §5.1/§5.2 (reavaliar 2026-08-15); P-25; **o `Status` das tasks H.4.4/H.4.5/H.4.9 no Notion
-não foi mexido** — o plano não previa write externo neste bloco, e mudar status é escopo que o João não
-autorizou (mesma decisão do fechamento anterior).
