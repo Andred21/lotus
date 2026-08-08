@@ -589,6 +589,10 @@
     "issuedHeading": "CERTIFICADO DE APROBACIÓN",
     "issuedBy": "Emitido por Lotus · {{date}}",
     "downloadPdf": "Descargar PDF",
+    "batchConfirmTitle": "Emitir en lote",
+    "batchConfirmBody": "Se generará y registrará un certificado para cada uno de los {{count}} alumnos pendientes.",
+    "batchResultTitle": "Resultado de la emisión en lote",
+    "batchResultSummary": "{{ok}} emitidos · {{failed}} con error",
     "status": {
       "vigente": "Vigente",
       "por_vencer": "Por vencer",

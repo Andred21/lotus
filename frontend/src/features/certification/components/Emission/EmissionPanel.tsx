@@ -7,6 +7,7 @@ import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
+import { BatchIssueDialog } from './BatchIssueDialog'
 
 /** Metadados de exibição do `IssuedDialog` — não vêm do `CertificateData`
  * (`snapshot` tem outro formato). O certificado em si (`s.viewingCertificate`)
@@ -18,6 +19,7 @@ export function EmissionPanel() {
   const s = useEmissionPanelState()
   const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
   const [viewing, setViewing] = useState<Viewing | null>(null)
+  const [batchIssuing, setBatchIssuing] = useState(false)
 
   const turma = s.selected
 
@@ -78,14 +80,12 @@ export function EmissionPanel() {
           )}
 
           <div className="flex justify-end">
-            {/* onClick fica sem handler nesta task — Task 7 liga o botão via
-                useBatchIssue (a EmissionPanel do brief não pede o diálogo de
-                lote aqui, só a contagem/desabilitação). */}
             <AppButton
               variant="brandIcon"
               icon="pi pi-verified"
               label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
               disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
+              onClick={() => setBatchIssuing(true)}
             />
           </div>
 
@@ -130,6 +130,8 @@ export function EmissionPanel() {
           onHide={closeViewing}
         />
       )}
+
+      {batchIssuing && turma && <BatchIssueDialog turma={turma} onHide={() => setBatchIssuing(false)} />}
     </div>
   )
 }

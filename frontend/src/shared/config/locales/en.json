@@ -589,6 +589,10 @@
     "issuedHeading": "CERTIFICATE OF COMPLETION",
     "issuedBy": "Issued by Lotus · {{date}}",
     "downloadPdf": "Download PDF",
+    "batchConfirmTitle": "Batch issue",
+    "batchConfirmBody": "A certificate will be generated and registered for each of the {{count}} pending students.",
+    "batchResultTitle": "Batch issuance result",
+    "batchResultSummary": "{{ok}} issued · {{failed}} failed",
     "status": {
       "vigente": "Valid",
       "por_vencer": "Expiring",
