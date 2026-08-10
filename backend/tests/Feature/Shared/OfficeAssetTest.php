@@ -51,4 +51,40 @@ class OfficeAssetTest extends TestCase
             'O fundo passou do peso do mesmo fundo dentro do certificado aprovado.',
         );
     }
+
+    /**
+     * As fontes do `docs/templates/certificado.pdf`, identificadas pelo `name`
+     * table dos programas embutidos (o Word ofusca os nomes como
+     * `___WRD_EMBED_SUB_1235`): Lexend é a família dominante — três dos oito
+     * subsets — e Montserrat ExtraBold é o título. Ambas OFL.
+     *
+     * São VARIÁVEIS: o Google Fonts serve a mesma URL para 400, 700 e 800 do
+     * Lexend, então dois arquivos cobrem os quatro pesos que o documento usa.
+     * Reproduzir (no host, de `backend/`):
+     *
+     *   curl -sA "Mozilla/5.0 … Chrome/120 …" -o resources/fonts/lexend-latin.woff2 \
+     *     https://fonts.gstatic.com/s/lexend/v26/wlpwgwvFAVdoq2_v-6QU.woff2
+     *   curl -sA "Mozilla/5.0 … Chrome/120 …" -o resources/fonts/montserrat-800-latin.woff2 \
+     *     https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCvr73w5aXo.woff2
+     *
+     * As URLs saem do bloco `/* latin *\/` de
+     * `https://fonts.googleapis.com/css2?family=Lexend:wght@400;700;800&family=Montserrat:wght@800`
+     * — já subsetadas em `U+0000-00FF` mais pontuação, que cobre o espanhol.
+     */
+    public function test_fontes_do_certificado_estao_versionadas_com_licenca(): void
+    {
+        foreach ([
+            'fonts/lexend-latin.woff2' => 60_000,
+            'fonts/montserrat-800-latin.woff2' => 40_000,
+        ] as $relative => $ceiling) {
+            $path = resource_path($relative);
+            $this->assertFileExists($path);
+            $this->assertSame('wOF2', file_get_contents($path, length: 4), "{$relative} não é WOFF2.");
+            $this->assertLessThan($ceiling, filesize($path), "{$relative} passou do subset latino.");
+        }
+
+        // Fonte OFL sem o texto da licença ao lado é distribuição irregular.
+        $this->assertFileExists(resource_path('fonts/lexend-OFL.txt'));
+        $this->assertFileExists(resource_path('fonts/montserrat-OFL.txt'));
+    }
 }
