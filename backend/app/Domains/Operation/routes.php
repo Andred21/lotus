@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->withoutScopedBindings();
     Route::post('turmas/{turma}/conclude', [TurmaController::class, 'conclude']);
     Route::get('turmas/{turma}/manual', [TurmaController::class, 'manual']);
+    Route::get('turmas/{turma}/manual/docx', [TurmaController::class, 'manualDocx']);
 
     Route::get('turmas/{turma}/documents', [TurmaDocumentController::class, 'index']);
     Route::post('turmas/{turma}/documents', [TurmaDocumentController::class, 'store']);

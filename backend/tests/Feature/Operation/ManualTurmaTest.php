@@ -79,6 +79,37 @@ class ManualTurmaTest extends TestCase
         $this->actingAs($user, 'web');
 
         $this->getJson("/api/turmas/{$this->turma->id}/manual")->assertForbidden();
+        $this->getJson("/api/turmas/{$this->turma->id}/manual/docx")->assertForbidden();
+    }
+
+    public function test_manual_docx_devolve_o_pacote_para_download(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->get("/api/turmas/{$this->turma->id}/manual/docx");
+
+        $response->assertOk()->assertHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        );
+        $this->assertSame(
+            "attachment; filename=\"manual-turma-{$this->turma->id}.docx\"",
+            $response->headers->get('Content-Disposition'),
+        );
+        $this->assertStringStartsWith('PK', $response->getContent());
+    }
+
+    /**
+     * O DOCX é o pacote, não uma conversão dele: conversor fora do ar não pode
+     * derrubar o download. `preventStrayRequests` sem nenhum `fake` prova isso
+     * — qualquer chamada HTTP faria o teste estourar.
+     */
+    public function test_docx_nao_depende_do_conversor(): void
+    {
+        $this->actingAsAdmin();
+        Http::preventStrayRequests();
+
+        $this->get("/api/turmas/{$this->turma->id}/manual/docx")->assertOk();
     }
 
     /** DoD 3: o `.docx` é um pacote OOXML válido, no papel do template. */
