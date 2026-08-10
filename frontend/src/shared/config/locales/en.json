@@ -610,6 +610,7 @@
     "colIssuedAt": "Issue date",
     "colValidUntil": "Valid until",
     "colStatus": "Status",
+    "snapshotCorrupted": "Corrupted document",
     "viewTitle": "Certificate detail",
     "fieldCodigo": "Code",
     "fieldEstado": "Status",

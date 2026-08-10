@@ -34,6 +34,7 @@ valido_ate: string | null,
 revoked_at: string | null,
 revocation_reason: string | null,
 snapshot: CertificateSnapshotData,
+snapshot_ok: boolean,
 created_at: string,
 };
 export type CertificateSnapshotData = {

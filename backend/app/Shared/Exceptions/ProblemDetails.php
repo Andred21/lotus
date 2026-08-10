@@ -55,10 +55,16 @@ class ProblemDetails
 
     /**
      * Em 500 sem debug, não vaza mensagem interna. Nos demais, mostra a mensagem.
+     *
+     * A exceção à exceção é `PublicDetail`: mensagem escrita para quem lê a
+     * resposta atravessa o mascaramento, porque sem ela o operador em produção
+     * recebe "erro inesperado" onde o desenho prometeu o certificado e o campo
+     * que falta. O default segue sendo mascarar — só quem declara a interface
+     * passa.
      */
     private static function detailFor(Throwable $e, int $status): string
     {
-        if ($status === 500 && ! config('app.debug')) {
+        if ($status === 500 && ! config('app.debug') && ! $e instanceof PublicDetail) {
             return 'Ocorreu um erro inesperado. Tente novamente.';
         }
 

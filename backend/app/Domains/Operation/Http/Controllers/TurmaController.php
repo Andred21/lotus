@@ -108,6 +108,6 @@ class TurmaController extends Controller implements HasMiddleware
 
     private function present(Turma $turma, TurmaHabilitacaoService $habilitacao): TurmaData
     {
-        return TurmaData::fromModel(Turma::query()->withListingData()->findOrFail($turma->id), $habilitacao);
+        return TurmaData::fromModel($turma->loadListingData(), $habilitacao);
     }
 }

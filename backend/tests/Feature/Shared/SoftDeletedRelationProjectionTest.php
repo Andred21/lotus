@@ -191,7 +191,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
         $turma->quote->delete();
 
         $data = TurmaData::fromModel(
-            $turma->fresh(['quote.budget.client', 'course', 'redatores', 'files']),
+            $turma->fresh(['quote.budget.client', 'course', 'redatores', 'documentacaoObrigatoria'])
+                ->loadCount('enrollments'),
             app(TurmaHabilitacaoService::class),
         );
 

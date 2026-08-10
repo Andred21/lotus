@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Actions\ConcludeTurmaAction;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
@@ -13,6 +14,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -95,6 +97,35 @@ class ConcludeTurmaTest extends TestCase
 
         // terminal (D5): segunda chamada recusa
         $this->postJson("/api/turmas/{$this->turma->id}/conclude")->assertStatus(422);
+    }
+
+    /**
+     * O gate da RN-16 decide sobre o banco, não sobre a relação que o model já
+     * trazia carregada. `loadListingData()` carrega `documentacaoObrigatoria`,
+     * e sem a leitura fresca dentro da transação um documento arquivado depois
+     * dessa carga deixaria o cache dizer "completa" — concluindo, em escrita
+     * TERMINAL, uma turma sem documentação obrigatória.
+     */
+    public function test_gate_rn16_le_documentacao_fresca_e_nao_a_relacao_em_cache(): void
+    {
+        $this->completarDocs();
+
+        $turma = Turma::findOrFail($this->turma->id)->loadListingData();
+        $turma->documentacaoObrigatoria
+            ->firstWhere('type', TurmaDocumentType::MANUAL->value)
+            ->delete();
+
+        try {
+            app(ConcludeTurmaAction::class)->execute($turma);
+            $this->fail('A conclusão deveria recusar: o MANUAL foi arquivado depois da carga.');
+        } catch (ValidationException $e) {
+            $this->assertSame(
+                'Documentación obligatoria incompleta (RN-16). Falta: MANUAL.',
+                $e->errors()['documents'][0],
+            );
+        }
+
+        $this->assertSame('em_andamento', $turma->fresh()->status->value);
     }
 
     public function test_rn15_upload_e_delete_apos_conclusao_422(): void

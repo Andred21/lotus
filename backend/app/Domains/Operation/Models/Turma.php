@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
@@ -73,6 +74,20 @@ class Turma extends Model implements Auditable
         return $this->morphMany(File::class, 'fileable');
     }
 
+    /**
+     * Os documentos que a RN-16 exige — `files()` restrita aos tipos do
+     * `TurmaDocumentType`. Relação NOMEADA e não `whereIn` solto por dois
+     * motivos: a pergunta tinha duas cópias (o service da habilitação e a
+     * listagem de documentos), e `with()`/`LISTING` só aceitam nome de relação
+     * — é o que deixa a documentação obrigatória entrar no eager-load da
+     * listagem e matar o N+1. Soft-delete fica de fora pelo default do
+     * `morphMany`: doc arquivada não conta (RN-16).
+     */
+    public function documentacaoObrigatoria(): MorphMany
+    {
+        return $this->files()->whereIn('type', TurmaDocumentType::values());
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
@@ -102,6 +117,17 @@ class Turma extends Model implements Auditable
                 'turma' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
             ]);
         }
+    }
+
+    /**
+     * Contraparte de instância do `withListingData()` — o mesmo molde de
+     * `Client`, `Quote`, `Course` e `Enrollment`. É daqui que o `present()` do
+     * controller carrega, e por isso as Actions não pré-carregam nada: a carga
+     * da projeção tem um dono só.
+     */
+    public function loadListingData(): static
+    {
+        return $this->load(TurmaQueryBuilder::LISTING)->loadCount('enrollments');
     }
 
     /** @param  QueryBuilder  $query */

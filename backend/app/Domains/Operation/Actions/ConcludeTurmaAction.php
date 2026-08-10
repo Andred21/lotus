@@ -26,7 +26,14 @@ class ConcludeTurmaAction
                 ]);
             }
 
-            $missing = $this->habilitacao->missingTypes($turma);
+            // Leitura fresca DENTRO da transação, e declarada aqui: o `for()`
+            // lê a relação como propriedade, então um model que já chegou
+            // carregado (é o que `loadListingData()` faz) decidiria sobre o
+            // cache — e um documento arquivado depois daquela carga concluiria
+            // a turma, em escrita terminal, sem a documentação da RN-16.
+            $turma->load('documentacaoObrigatoria');
+
+            $missing = $this->habilitacao->for($turma)->missingTypes();
             if ($missing !== []) {
                 throw ValidationException::withMessages([
                     'documents' => 'Documentación obligatoria incompleta (RN-16). Falta: '.implode(', ', $missing).'.',

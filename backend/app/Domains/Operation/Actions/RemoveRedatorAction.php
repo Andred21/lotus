@@ -12,6 +12,6 @@ class RemoveRedatorAction
     {
         $turma->redatores()->detach($redator->id);
 
-        return $turma->load('redatores.user');
+        return $turma;
     }
 }
