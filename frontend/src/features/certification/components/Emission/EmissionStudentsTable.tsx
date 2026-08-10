@@ -3,9 +3,13 @@ import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState } from '@shar
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
+import type { EmissionCounts } from '../../hooks/useEmissionPanelState'
 
 type Props = {
   enrollments: EmissionPanelEnrollmentData[]
+  /** Vem derivado de `useEmissionPanelState` — o rodapé não recalcula
+   * `total`/`aprobados` a partir de `enrollments`. */
+  counts: EmissionCounts
   loading: boolean
   /** `emission_blocked !== null` da turma selecionada — desabilita `Emitir`
    * mesmo em linha `sin_emitir` (a porta que falta é da turma, não do aluno). */
@@ -22,7 +26,7 @@ const STATUS_SEVERITY: Record<EnrollmentApprovalStatus, 'success' | 'danger' | '
 
 /** Molde `EnrollmentTable`: `AppDataTable` sem toolbar própria (a seleção de
  * turma e as ações de lote vivem em `EmissionPanel`, que é quem monta o card). */
-export function EmissionStudentsTable({ enrollments, loading, blocked, onEmit, onView }: Props) {
+export function EmissionStudentsTable({ enrollments, counts, loading, blocked, onEmit, onView }: Props) {
   const { t } = useTranslation()
   const table = useTableFilter(enrollments)
 
@@ -32,10 +36,7 @@ export function EmissionStudentsTable({ enrollments, loading, blocked, onEmit, o
       loading={loading}
       first={table.first}
       onPage={table.onPage}
-      footerCount={t('certificate.studentsCount', {
-        total: enrollments.length,
-        approved: enrollments.filter((e) => e.approval_status === 'aprobado').length,
-      })}
+      footerCount={t('certificate.studentsCount', { total: counts.total, approved: counts.aprobados })}
       emptyMessage={<AppEmptyState icon="pi pi-users" title={t('certificate.emptyStudents')} />}
     >
       <AppColumn header={t('certificate.colName')} field="student_name" />

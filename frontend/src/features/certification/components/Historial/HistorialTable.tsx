@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, SearchableTableFrame } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
@@ -17,8 +16,6 @@ const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revo
 export function HistorialTable() {
   const { t } = useTranslation()
   const h = useHistorial()
-  const [revoking, setRevoking] = useState<CertificateData | null>(null)
-  const [reissuing, setReissuing] = useState<CertificateData | null>(null)
 
   const statusOptions = [
     { label: t('certificate.filterAll'), value: null },
@@ -28,7 +25,7 @@ export function HistorialTable() {
   return (
     <>
       <SearchableTableFrame
-        table={{ ...h.table, clear: h.clearAll }}
+        table={h.table}
         searchPlaceholder={t('certificate.searchPlaceholder')}
         filterSlot={
           <div className="w-48">
@@ -75,13 +72,11 @@ export function HistorialTable() {
           // sustenta nem o nome do aluno. A tag de defeito ocupa o lugar da de
           // estado, e NÃO vira um quinto `CertDerivedStatus` — isso contaminaria
           // o filtro, os contadores do rodapé e o `CertificateViewDialog`.
-          body={(c: CertificateData) =>
-            c.snapshot_ok ? (
-              <AppTag severity={STATUS_SEVERITY[certStatus(c)]} value={t(`certificate.status.${certStatus(c)}`)} />
-            ) : (
-              <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
-            )
-          }
+          body={(c: CertificateData) => {
+            if (!c.snapshot_ok) return <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
+            const status = certStatus(c)
+            return <AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />
+          }}
         />
         <AppColumn
           body={(c: CertificateData) => {
@@ -90,10 +85,10 @@ export function HistorialTable() {
               <div className="flex gap-2">
                 <AppButton label={t('certificate.view')} text onClick={() => h.setViewingCertificateId(c.id)} />
                 {h.canRevoke && (status === 'vigente' || status === 'por_vencer') && (
-                  <AppButton label={t('certificate.revoke')} text onClick={() => setRevoking(c)} />
+                  <AppButton label={t('certificate.revoke')} text onClick={() => h.setRevoking(c)} />
                 )}
                 {h.canReissue && status === 'revocado' && (
-                  <AppButton label={t('certificate.reissue')} text onClick={() => setReissuing(c)} />
+                  <AppButton label={t('certificate.reissue')} text onClick={() => h.setReissuing(c)} />
                 )}
               </div>
             )
@@ -113,21 +108,22 @@ export function HistorialTable() {
         />
       )}
 
-      {revoking && (
-        <RevokeDialog certificate={revoking} onHide={() => setRevoking(null)} onRevoked={() => setRevoking(null)} />
+      {h.revoking && (
+        <RevokeDialog
+          certificate={h.revoking}
+          onHide={() => h.setRevoking(null)}
+          onRevoked={() => h.setRevoking(null)}
+        />
       )}
 
-      {reissuing && (
+      {h.reissuing && (
         <ReissueDialog
-          target={h.findReissueTarget(reissuing)}
+          target={h.findReissueTarget(h.reissuing)}
           panelLoading={h.reissuePanelLoading}
           panelError={h.reissuePanelError}
           onRetryPanel={h.reissuePanelReload}
-          onHide={() => setReissuing(null)}
-          onIssued={(certificate) => {
-            setReissuing(null)
-            h.setViewingCertificateId(certificate.id)
-          }}
+          onHide={() => h.setReissuing(null)}
+          onIssued={h.openIssuedCertificate}
         />
       )}
     </>

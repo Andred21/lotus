@@ -61,8 +61,12 @@ describe('useBatchIssue', () => {
     // invalida a query do painel, que está ativa (o diálogo de resultado
     // continua aberto por cima dela) — o refetch chega com as matrículas
     // recém-emitidas já fora de `sin_emitir`, e o join do relatório por
-    // `enrollment_id` (`BatchIssueDialog.tsx:75`) passa a falhar
-    // exatamente nas linhas `ok: true`, perdendo o nome do aluno.
+    // `enrollment_id` passa a falhar exatamente nas linhas `ok: true`,
+    // perdendo o nome do aluno.
+    //
+    // A asserção é sobre `report`, que é o que `BatchIssueDialog` renderiza:
+    // enquanto o join morava no JSX, este teste tinha de reimplementá-lo para
+    // poder asseverar, e provava o insumo em vez do resultado.
     post.mockResolvedValue({
       data: [
         { enrollment_id: 1, ok: true, codigo: 'CERT-1', certificate_id: 10, error: null },
@@ -76,7 +80,7 @@ describe('useBatchIssue', () => {
     })
 
     act(() => result.current.submit())
-    await waitFor(() => expect(result.current.results).not.toBeNull())
+    await waitFor(() => expect(result.current.report).not.toBeNull())
 
     // O painel refaz o fetch com o diálogo ainda aberto: as duas matrículas
     // saem de `sin_emitir` porque já têm `certificate`.
@@ -87,10 +91,8 @@ describe('useBatchIssue', () => {
       ]),
     })
 
-    const linha1 = result.current.pendientes.find((e) => e.enrollment_id === 1)
-    const linha2 = result.current.pendientes.find((e) => e.enrollment_id === 2)
-
-    expect(linha1?.student_name).toBe('Ana Pérez')
-    expect(linha2?.student_name).toBe('Bruno Silva')
+    expect(result.current.report?.map((r) => r.studentName)).toEqual(['Ana Pérez', 'Bruno Silva'])
+    expect(result.current.okCount).toBe(2)
+    expect(result.current.failedCount).toBe(0)
   })
 })

@@ -1,6 +1,18 @@
 import { useMemo, useState } from 'react'
+import type { CertificateData, EmissionPanelEnrollmentData } from '@shared/types/generated'
 import { useCertificate, useEmissionPanel } from '../api/certificatesApi'
 import { rowCertKind } from '../lib/certStatus'
+
+/** Contagens da turma selecionada, derivadas UMA vez aqui. `total` e
+ * `aprobados` alimentam o rodapé de `EmissionStudentsTable`, que os recalculava
+ * do próprio `enrollments` no JSX — a mesma pergunta respondida em dois
+ * lugares, com a resposta canônica sem consumidor. */
+export type EmissionCounts = {
+  total: number
+  aprobados: number
+  emitidos: number
+  pendientes: number
+}
 
 /**
  * Estado da aba Emisión: a query do painel + a turma selecionada (local, sem
@@ -20,7 +32,17 @@ export function useEmissionPanelState() {
   const panel = useEmissionPanel()
   const [turmaId, setTurmaId] = useState<number | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
+  const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
+  const [batchIssuing, setBatchIssuing] = useState(false)
   const viewingCertificate = useCertificate(viewingCertificateId)
+
+  /** Emissão concluída: fecha a confirmação e abre o diálogo do certificado
+   * novo. É UMA transição — enquanto `issuing` morava no componente e
+   * `viewingCertificateId` aqui, ela vivia metade no JSX e metade no hook. */
+  const openIssuedCertificate = (certificate: CertificateData) => {
+    setIssuing(null)
+    setViewingCertificateId(certificate.id)
+  }
 
   const turmas = useMemo(() => panel.data ?? [], [panel.data])
 
@@ -31,7 +53,7 @@ export function useEmissionPanelState() {
 
   const selected = useMemo(() => turmas.find((t) => t.turma_id === turmaId), [turmas, turmaId])
 
-  const counts = useMemo(() => {
+  const counts = useMemo<EmissionCounts>(() => {
     const enrollments = selected?.enrollments ?? []
     return {
       total: enrollments.length,
@@ -47,6 +69,11 @@ export function useEmissionPanelState() {
     setTurmaId,
     selected,
     counts,
+    issuing,
+    setIssuing,
+    batchIssuing,
+    setBatchIssuing,
+    openIssuedCertificate,
     viewingCertificateId,
     setViewingCertificateId,
     viewingCertificate: viewingCertificate.data ?? null,

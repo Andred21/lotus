@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppTextarea, AppInputText, FormField, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, AppTextarea, FormField, FormErrorBanner } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useRevokeCertificate } from '../../api/certificatesApi'
+import { CertificateIdentityFields } from './CertificateIdentityFields'
 
 type Props = {
   certificate: CertificateData
@@ -53,12 +54,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
         <FormErrorBanner message={message} />
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('certificate.revokeBody')}</p>
 
-        <FormField label={t('certificate.fieldCodigo')}>
-          <AppInputText value={certificate.codigo} disabled readOnly />
-        </FormField>
-        <FormField label={t('certificate.fieldAlumno')}>
-          <AppInputText value={certificate.snapshot.aluno.name} disabled readOnly />
-        </FormField>
+        <CertificateIdentityFields certificate={certificate} />
 
         <FormField label={t('certificate.revokeReason')} error={fieldErrors?.reason?.[0]}>
           <AppTextarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} autoResize className="w-full" />

@@ -5,6 +5,7 @@ import type { ProblemDetails } from '@shared/api/axios'
 import { formatDate } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
 import { certStatus, STATUS_SEVERITY } from '../../lib/certStatus'
+import { CertificateIdentityFields } from './CertificateIdentityFields'
 
 type Props = {
   /** Sempre conhecido de imediato (vem da linha clicada) — o PDF abre pelo id,
@@ -60,12 +61,7 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
 
       {certificate && status && (
         <div className="space-y-4">
-          <FormField label={t('certificate.fieldCodigo')}>
-            <AppInputText value={certificate.codigo} disabled readOnly />
-          </FormField>
-          <FormField label={t('certificate.fieldAlumno')}>
-            <AppInputText value={certificate.snapshot.aluno.name} disabled readOnly />
-          </FormField>
+          <CertificateIdentityFields certificate={certificate} />
           <FormField label={t('certificate.fieldRut')}>
             <AppInputText value={certificate.snapshot.aluno.rut ?? '—'} disabled readOnly />
           </FormField>

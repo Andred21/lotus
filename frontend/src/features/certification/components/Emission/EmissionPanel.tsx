@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
-import type { EmissionPanelEnrollmentData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
@@ -12,8 +10,6 @@ import { BatchIssueDialog } from './BatchIssueDialog'
 export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
-  const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
-  const [batchIssuing, setBatchIssuing] = useState(false)
 
   const turma = s.selected
 
@@ -74,16 +70,17 @@ export function EmissionPanel() {
               icon="pi pi-verified"
               label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
               disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
-              onClick={() => setBatchIssuing(true)}
+              onClick={() => s.setBatchIssuing(true)}
             />
           </div>
 
           <AppCard>
             <EmissionStudentsTable
               enrollments={turma.enrollments}
+              counts={s.counts}
               loading={s.loading}
               blocked={turma.emission_blocked !== null}
-              onEmit={setIssuing}
+              onEmit={s.setIssuing}
               onView={(enrollment) => {
                 if (!enrollment.certificate) return
                 s.setViewingCertificateId(enrollment.certificate.id)
@@ -93,15 +90,12 @@ export function EmissionPanel() {
         </>
       )}
 
-      {issuing && turma && (
+      {s.issuing && turma && (
         <ConfirmIssueDialog
-          enrollment={issuing}
+          enrollment={s.issuing}
           turma={turma}
-          onHide={() => setIssuing(null)}
-          onIssued={(certificate) => {
-            setIssuing(null)
-            s.setViewingCertificateId(certificate.id)
-          }}
+          onHide={() => s.setIssuing(null)}
+          onIssued={s.openIssuedCertificate}
         />
       )}
 
@@ -116,7 +110,7 @@ export function EmissionPanel() {
         />
       )}
 
-      {batchIssuing && turma && <BatchIssueDialog turma={turma} onHide={() => setBatchIssuing(false)} />}
+      {s.batchIssuing && turma && <BatchIssueDialog turma={turma} onHide={() => s.setBatchIssuing(false)} />}
     </div>
   )
 }
