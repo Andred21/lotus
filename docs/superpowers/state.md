@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
 active_plan: docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: 8ee1d9e
-updated_at: 2026-08-10T22:10:00-03:00
+state_basis_commit: ee285df
+updated_at: 2026-08-10T23:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -228,6 +228,75 @@ render → olhar → ajustar que exige leitura de imagem a cada iteração. Main
 **Task 0 provada em `8ee1d9e`:** backend **503 passed, 1 skipped (1868 assertions)** — bate com o
 baseline do plano; `typescript:transform` sem diff em `generated.ts`; `pnpm lint` e `pnpm build`
 verdes; `git status --porcelain` vazio.
+
+### Tasks 1–9 entregues — 2026-08-10
+
+Commits, do base `8ee1d9e`: `7d4a85f` (fundo JPEG), `90a353a` (fontes WOFF2), `11f75d5` (fundo
+aplicado, morte do `.accent`), `042c2f2` (tipografia e remedição do limiar), `5037f24` (QR e bloco
+de identificação no topo), `fc6c996` (`App\Shared\Office\`), `af046f6` (manual em Blade OOXML),
+`2d815cb` (rota do DOCX), `86d81dc` (frontend com os dois formatos). Evidência task a task, e os
+doze desvios declarados (D-E1..D-E12), em `.superpowers/sdd/progress.md`.
+
+**Três desvios mudam o que o plano dizia, não só como foi feito.** **D-E6** — `Xml::lines()` nasceu
+emitindo `<w:br/>` **dentro** do `<w:t>`, que é bem-formado e **inválido** contra o schema
+(`CT_Text` é tipo simples); o separador passou a fechar e reabrir o `<w:t>`. **D-E7** — as fontes,
+bordas e margens de cada tabela saíram **medidas do `docs/templates/manual.docx`**, tabela a tabela,
+em vez do `sz 13/17` uniforme que o plano supunha. **D-E11** — `@else@xml(...)` **não compila**: o
+regex de diretiva do Blade exige `\B@`, e o `e` de `@else` colado no `@` é fronteira de palavra; a
+diretiva saía literal dentro do documento. O flag `$lineas` morreu e toda célula usa `@xmlLines`.
+
+### Task 10 — o gate do bloco (2026-08-10)
+
+**Ferramentas.** Backend **519 passed, 1 skipped (1950 assertions)** — contra os 520 projetados pelo
+plano; a diferença é a Task 5, que substituiu asserções em vez de somar teste. `typescript:transform`
+**sem diff** em `generated.ts` (nenhum DTO mudou de forma). `git diff` de `backend/database/`
+**vazio** — zero schema, como o plano exige. Pint `passed` nos arquivos do bloco. Frontend: `pnpm
+lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**.
+
+**E2e contra a API real**, sessão Sanctum por cookie + CSRF. `GET /api/turmas/1/manual` → **200**
+`application/pdf` + `inline; filename="manual-turma-1.pdf"`; `GET /api/turmas/1/manual/docx` → **200**
+`…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`. `pdfinfo` do manual:
+**`Pages: 5`**, **`Page size: 1008 x 612 pts`**. Pesos: certificado **199.820 B** (linha de base
+40.119, teto do plano 251.450), manual `.docx` **19.259 B**, manual `.pdf` **52.966 B**, template de
+referência 444.830 B.
+
+**Contrato do certificado intacto:** `snapshot_ok` **False** só no `LOT-2026-1001`, que segue
+corrompido de propósito no banco de dev como evidência viva do checkpoint visual pendente do João.
+`migrate:fresh --seed` **não** foi rodado, pelo mesmo motivo do bloco anterior. 51 consumidores das
+classes de `App\Shared\Office\`; zero `Repository`; a única ocorrência da varredura de sobra é
+`CertificatePdfTest.php:737`, que é a guarda `assertStringNotContainsString('class="qr"', $html)` —
+asserção de **ausência**, não referência sobrevivente.
+
+**O que o gate NÃO provou, sem maquiagem:** fidelidade **pixel a pixel** contra os templates — a
+comparação foi de grade, cor e posição, página a página, com os PNGs de 144 dpi lado a lado;
+comportamento de turma sem alunos ou sem módulos além do que os testes cobrem; e o manual aberto no
+**Word do cliente** — a conversão foi validada pelo LibreOffice do Gotenberg, que é o mesmo motor
+que gera o PDF, não um segundo leitor independente.
+
+**Três decisões do João no checkpoint visual, todas registradas:**
+
+1. **QR do certificado muda de lado.** A `§3.4` da spec pedia topo **direito**, e a Task 5 entregou
+   assim; o gate mostrou que o `docs/templates/certificado.pdf` abre a folha com o retângulo do QR à
+   **esquerda**. Ele decidiu pelo template. Corrigido em `ee285df` (`align-self: flex-start`), com o
+   lado **assertado no teste** — a divergência veio de uma releitura da spec, e sem guarda a próxima
+   releitura reverteria em silêncio uma decisão tomada contra ela.
+2. **Fundo do certificado: aceitar agora, tratar depois** → **P-28**. Faltam as cunhas diagonais das
+   quinas da página 1 (são **vetor** no PDF aprovado; o raster versionado não as contém) e a faixa
+   azul/preta se repete na página 2, onde o aprovado é cinza limpo. Nenhuma das duas estava nas
+   exclusões aceitas da §7 da spec, por isso viraram pendência em vez de silêncio.
+3. **ADR: nota no ADR-12, não ADR novo.** `App\Shared\Office\` e a rota LibreOffice são a segunda
+   porta do **mesmo** Gotenberg do certificado, com o mesmo racional de transporte. A nota está
+   escrita. Isso **venceu o gatilho da P-20** (o bloco tocou `docs/adrs.md`) e resolveu metade da
+   **P-21** — as duas foram **atualizadas, não fechadas**: o hospedeiro do `openspout` segue sendo
+   escolha dele, e o `simple-qrcode` pertence a um bloco de Certification, não a este.
+
+**Pendências revisadas:** a **P-08** não disparou (o manual continua Blade única padronizada, agora
+em OOXML) e a **P-03** não fechou (um bloco de backend só). Nasceu a **P-28**. P-04 reavalia
+**2026-08-15**; P-15, P-23, P-25, P-26 e a nova P-28 revisam **2026-09-30**.
+
+**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
+bloco **para** em `ready_for_review`; review, fechamento, push e PR não rodam automaticamente.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 

@@ -82,6 +82,18 @@
 ## ADR-12 — PDF: Spatie Laravel PDF + Gotenberg (Chromium headless)
 **Regra:** Spatie Laravel PDF com driver **Gotenberg** (container separado). Geração **sob demanda**, stream direto para S3, sem escrever em `/tmp`. **Porquê:** renderização fiel de CSS moderno e QR; isola a carga pesada de PDF do servidor da app (evita memory exhausted do DomPDF em lote). Descartados: DomPDF (CSS limitado, estoura memória), Snappy/wkhtmltopdf (defasado).
 
+**Nota (2026-08-10) — documento editável usa a SEGUNDA porta do mesmo Gotenberg.** Documento que o
+cliente edita (hoje o manual de classe) não nasce de HTML: é **OOXML autorado em Blade** e
+empacotado em OPC (`.docx`) por `App\Shared\Office\` — `Xml` (escape e `<w:br/>`), `OoxmlPackager`
+(ZIP com `[Content_Types].xml` primeiro) e `LibreOfficeConverter`, que fala com
+`/forms/libreoffice/convert` do **mesmo container Gotenberg** do certificado. O PDF do manual é a
+conversão do próprio `.docx` entregue, não um segundo render: os dois formatos saem da mesma fonte,
+então não podem divergir. Não há ADR separado porque a decisão de transporte é a desta: um serviço
+externo do compose converte documento, e a rota Chromium e a rota LibreOffice são duas portas dele.
+Descartado: PhpWord (abstrai o OOXML e some com o controle fino de grade/medida que o template
+exige) e template `.docx` com marcadores substituídos (linha de tabela variável — 31 dias, N alunos
+— não se resolve por substituição de string).
+
 ## ADR-13 — Containerização: Docker Compose artesanal + multi-stage, sem Laradock
 **Regra:** `docker-compose.yml` artesanal (só serviços usados); imagem de produção via multi-stage build (Composer → Node/Vite → final Alpine enxuto). Serviços: PHP-FPM + Nginx; MySQL via RDS em prod (não em container). **Porquê:** Compose enxuto é proporcional ao porte e ensina as peças. Descartados: Laradock (over-engineering), Sail (só dev), FrankenPHP (adiado — dominar o clássico primeiro).
 
