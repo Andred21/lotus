@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
-workflow_state: ready_for_execution
-next_owner: joao
-next_action: execute_active_plan
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
 active_plan: docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: a703a26
-updated_at: 2026-08-10T21:40:00-03:00
+state_basis_commit: 8ee1d9e
+updated_at: 2026-08-10T22:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -217,6 +217,17 @@ review não roda automaticamente ao fim da Task 10.
 LibreOffice são decisão de arquitetura de transporte. A recomendação do plano é **nota no ADR-12**,
 não ADR novo — a rota LibreOffice é uma segunda porta do **mesmo** serviço do compose, com o mesmo
 racional de "o transporte mora num lugar só".
+
+### Execução iniciada — 2026-08-10
+
+O João autorizou com `/executar-bloco documentos-oficiais-template-e-docx`. Execução no **thread
+principal** conforme o `## Handoff de execução` do plano (`executor: claude`): metade das tasks
+(3, 4, 5, 7 e 10) fecha por comparação visual página a página contra os templates, num laço
+render → olhar → ajustar que exige leitura de imagem a cada iteração. Main tree, sem worktree (P-03).
+
+**Task 0 provada em `8ee1d9e`:** backend **503 passed, 1 skipped (1868 assertions)** — bate com o
+baseline do plano; `typescript:transform` sem diff em `generated.ts`; `pnpm lint` e `pnpm build`
+verdes; `git status --porcelain` vazio.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
