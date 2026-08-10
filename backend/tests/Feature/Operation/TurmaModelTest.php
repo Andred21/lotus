@@ -6,6 +6,7 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -100,5 +101,34 @@ class TurmaModelTest extends TestCase
             'modalidade' => TurmaModalidade::Online, 'local_aplicacao' => null,
             'start_date' => '2026-09-01', 'end_date' => '2026-09-10',
         ]);
+    }
+
+    public function test_documentacao_obrigatoria_filtra_tipo_fora_do_enum_e_doc_arquivada(): void
+    {
+        $quote = $this->makeApprovedQuote();
+        $turma = Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $quote->course_id,
+            'modalidade' => TurmaModalidade::Online, 'local_aplicacao' => null,
+            'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
+        ]);
+
+        foreach (TurmaDocumentType::cases() as $type) {
+            $turma->files()->create([
+                'type' => $type->value, 'path' => 'x.pdf', 'original_name' => 'x.pdf',
+                'mime' => 'application/pdf', 'size' => 10,
+            ]);
+        }
+        // Tipo livre na `files` polimórfica: NÃO é documentação obrigatória da turma.
+        $turma->files()->create([
+            'type' => 'OTRO', 'path' => 'y.pdf', 'original_name' => 'y.pdf',
+            'mime' => 'application/pdf', 'size' => 10,
+        ]);
+        $turma->files()->where('type', TurmaDocumentType::PRUEBAS->value)
+            ->get()->each(fn ($f) => $f->delete());   // lição 5: por instância
+
+        $tipos = $turma->documentacaoObrigatoria()->pluck('type')->all();
+
+        sort($tipos);
+        $this->assertSame(['EVALUACION_REDATOR', 'MANUAL'], $tipos);
     }
 }

@@ -53,8 +53,16 @@ class TurmaData extends Data
         ];
     }
 
+    /**
+     * EXIGE a turma com a projeção de listagem carregada — `withListingData()`
+     * na query ou `loadListingData()` na instância. `enrolled_count` lê o
+     * `enrollments_count` do `loadCount` sem fallback (D-B3): sem a carga o
+     * construtor recusa `null` em vez de pagar uma query por turma em silêncio.
+     */
     public static function fromModel(Turma $turma, TurmaHabilitacaoService $habilitacao): self
     {
+        $habilitacaoStatus = $habilitacao->for($turma);
+
         return new self(
             id: $turma->id,
             quote_id: $turma->quote_id,
@@ -64,13 +72,13 @@ class TurmaData extends Data
             start_date: $turma->start_date->toDateString(),
             end_date: $turma->end_date->toDateString(),
             status: $turma->status,
-            habilitada: $habilitacao->isHabilitada($turma),
-            missing_document_types: $habilitacao->missingTypes($turma),
+            habilitada: $habilitacaoStatus->isHabilitada(),
+            missing_document_types: $habilitacaoStatus->missingTypes(),
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
             course_name: $turma->course->name,
             client_name: $turma->contratante()->name,
-            enrolled_count: $turma->enrollments_count ?? $turma->enrollments()->count(),
+            enrolled_count: $turma->enrollments_count,
             quote_code: $turma->quote->code,
             budget_code: $turma->quote->budget->code,
             budget_id: $turma->quote->budget->id,

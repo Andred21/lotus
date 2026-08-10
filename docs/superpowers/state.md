@@ -11,9 +11,9 @@ active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
-last_completed_work_item: certificacao-lote-e-snapshot
-state_basis_commit: d01c279
-updated_at: 2026-08-10T14:40:00-03:00
+last_completed_work_item: turma-habilitacao-listagem
+state_basis_commit: a8ddb80
+updated_at: 2026-08-10T20:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,354 @@ updated_at: 2026-08-10T14:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
+## Último item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
+
+**Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). Backend puro, aprofundamento do Operation nascido da **revisão de arquitetura de
+2026-08-09**, com 5 decisões já tomadas por ele. Toca `backend/` → **main tree, sem worktree (P-03)**.
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa** (mesmo caso
+de `profundidade-backend-b4-b7` e `profundidade-form-crud`): o item não cita Drive, Notion nem
+Figma, e as fontes são o repositório mais as 5 decisões escritas. Dispensa confirmada pelo João na
+abertura.
+
+### Quatro medições contra o texto do item, feitas antes de desenhar
+
+1. **O 2N+1 é real e o N foi medido na API:** `GET /api/turmas` no banco de dev custa **15 queries
+   para 4 turmas** — 8 de carga (o `withListingData` faz o trabalho dele) e **7 em `files`**. Não é
+   2N exato: `isHabilitada()` curto-circuita em `status !== EmAndamento`, então turma **em
+   andamento** custa 2 queries (a mesma pergunta feita duas vezes, uma por `habilitada` e outra por
+   `missing_document_types`) e turma **concluída** custa 1.
+2. **A decisão 1, ao pé da letra, muda comportamento.** Hoje `isHabilitada()` é
+   `status === EmAndamento && missingTypes() === []`; o item escreve "literalmente
+   `missingTypes() === []`". Sem o gate de status, **toda turma concluída passaria a responder
+   `habilitada: true`** (concluir exige documentação completa, então são todas), contra o teste vivo
+   `TurmaHabilitacaoServiceTest::test_turma_concluida_nao_e_habilitada`.
+3. **O front sobreviveria à mudança, mas o payload não:** `turmaDisplayStatus` checa `concluida`
+   primeiro e `ConcludePanel`/`TurmaDocuments` guardam por `!concluida` antes de ler `habilitada` —
+   nenhuma tela muda. O contrato HTTP mudaria de valor, e o item promete que nada muda.
+4. **`preventLazyLoading` não enxerga este N+1** (a decisão 5 está certa): `$turma->files()->…` é
+   query **na relação**, não lazy-load de relação, e é por isso que o `ContratanteEagerLoadTest`
+   passa hoje com o 2N+1 vivo.
+
+**Decisão do João na abertura (D-B1): `habilitada` de turma concluída continua `false`.** O VO
+carrega o status junto e a pergunta segue sendo `status === EmAndamento && missing === []` — "uma
+pergunta, uma resposta" passa a significar que a **resposta é o VO**, não que o gate de status
+desaparece. Zero mudança de payload; o teste vivo continua sendo guarda de regressão.
+
+### Brainstorming de 2026-08-10 — spec aprovada, duas decisões novas
+
+As 5 decisões do item entraram sem reabertura. Três pontos estavam abertos e o João fechou os três:
+**D-B1** (acima); **D-B2** — a guarda da decisão 5 é **contagem de queries** (`DB::listen` sobre
+`from "files"` no `GET /api/turmas`, molde do `CertificateListingTest:368`), não
+`preventLazyLoading`, porque contagem pega duas classes de regressão em vez de uma — perder o
+eager-load **e** reintroduzir query por linha por outro caminho; **D-B3** — o
+`?? $turma->enrollments()->count()` do `enrolled_count` **entra no corte** e morre, com
+`loadListingData()` garantindo o `loadCount`. É a mesma classe de defeito do 2N+1 principal (query
+por linha escondida atrás de um fallback), no mesmo `fromModel`.
+
+**Uma medição a mais, achada ao ler o código e não prevista pelo item:** o `whereIn` dos três tipos
+obrigatórios está soletrado em **dois** lugares — `TurmaHabilitacaoService::missingTypes()` e
+`TurmaDocumentController::index()`. A relação nomeada da decisão 2 não serve só ao eager-load; ela
+dá dono único à pergunta, e o `index` do controller de documentos passa a consumi-la.
+
+Spec: `docs/superpowers/specs/archive/2026-08-10-turma-habilitacao-listagem-design.md`. Review declarado
+**BAIXO RISCO** (zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e rota pública;
+`executor: claude`) → só lente Claude, sem segunda frente do Codex. Backend puro → **main tree, sem
+worktree (P-03)**; zero schema, ADR/DER não abrem.
+
+### Plano escrito em 2026-08-10 — 6 tasks (0–5), `executor: claude`
+
+`docs/superpowers/plans/archive/2026-08-10-turma-habilitacao-listagem.md`. Branch
+`refactor/turma-habilitacao-listagem`, já criada a partir de `4ae4c91`, com os commits de seleção
+(`31576c7`) e da spec (`cb4c626`) dentro dela.
+
+**Baseline reconferida no próprio `4ae4c91`, não herdada do state anterior:** backend **500 passed,
+1 skipped (1858 assertions)** — o mesmo placar de `d01c279`, como esperado de um merge sem código.
+
+Ordem das tasks: 0 baseline → 1 `Turma::documentacaoObrigatoria()` + `TurmaDocumentController::index`
+consumindo a relação (morre a 2ª cópia do `whereIn`) → 2 `HabilitacaoStatus` + `for()`, com os dois
+chamadores migrados e a API pública antiga morta → 3 seam de listagem (`LISTING`,
+`loadListingData()`, `present()` sem `findOrFail`, `UpdateTurmaAction` sem carga parcial,
+`enrolled_count` sem `??`) → 4 guarda de contagem com dois mutantes → 5 gate contra a API real.
+
+A escrita do plano fixou **dois pontos que a spec deixava em aberto, declarados no §Desvios** em vez
+de silenciados (lição 13):
+
+- **D-P1 — o mutante do "chamar `for()` duas vezes" NÃO reproduz, e o plano diz isso.** Com a
+  relação eager-loaded a segunda leitura é de memória e não custa query: a classe de defeito deixou
+  de existir em vez de passar a ser vigiada. A guarda de contagem protege o **eager-load**, que é o
+  que pode regredir. O segundo mutante do plano é outro: tirar o `loadCount` do `loadListingData()`
+  faz o `TurmaShowTest` **reprovar alto** — sem a D-B3 esse mesmo mutante ficaria verde pagando uma
+  query por turma em silêncio, e é essa diferença que a D-B3 compra.
+- **D-P2 — a guarda mora no `TurmaQueryBuilderTest`**, não em arquivo novo: o assunto do arquivo é a
+  projeção de listagem, e é o precedente do `CertificateListingTest`, que guarda a contagem dentro
+  do próprio arquivo da listagem.
+
+### Execução iniciada em 2026-08-10 — `/executar-bloco`, `subagent-driven-development`
+
+Main tree, sem worktree (P-03). **Task 0 provada em `a4f550a`:** backend **500 passed, 1 skipped
+(1858 assertions)** — bate com o baseline do plano; `typescript:transform` sem diff em
+`generated.ts`; `git status --porcelain` vazio.
+
+**Um achado do pré-flight, aritmético, resolvido sem reabrir o plano (D-E1):** os placares esperados
+das Tasks 2 e 3 (`500 passed`) e da Task 4 (`501 passed, 1865 assertions`) **não somam o teste que a
+própria Task 1 acrescenta** ao `TurmaModelTest` (+1 teste, +1 asserção). Os números corretos passam a
+ser **501 passed / 1859 assertions** nas Tasks 1–3 e **502 passed / 1866 assertions** na Task 4 e no
+gate. Nenhuma asserção, nenhum teste e nenhum comportamento do plano muda — só a conta.
+
+### Tasks 1–4 entregues — uma revisão de task por entrega
+
+Commits, do base `a4f550a`: `4d202e8` (a relação nomeada `documentacaoObrigatoria`, com o
+`TurmaDocumentController::index` consumindo-a e a 2ª cópia do `whereIn` morta), `80d5c24` (o VO
+`HabilitacaoStatus` e o `for()` como única API pública do service), `2fe0c71` (o seam de listagem:
+`LISTING`, `loadListingData()`, `present()` sem `findOrFail`, `enrolled_count` sem `??`) + `c97b373`
+(fix do review da Task 3), `a23e5d3` (a guarda de contagem).
+
+**Um desvio de ordenação, decidido pelo João no meio da Task 2 (D-E2).** A linha
+`'documentacaoObrigatoria'` do eager-load foi **antecipada** da Task 3 para a Task 2. O motivo foi
+medido, não suposto: o service passou a ler a relação como **propriedade**, e sem a carga a listagem
+viola `Model::preventLazyLoading()` no `ContratanteEagerLoadTest` (RED visto; causa confirmada por
+`git stash`, não por leitura). O resto do seam ficou na Task 3, como o plano previa.
+
+**Consequência que corrige a medição 4 da abertura, e é ganho:** `preventLazyLoading` **não**
+enxergava a forma antiga (`$turma->files()->…`, query feita **na** relação); enxerga a forma nova.
+O bloco ganha uma segunda guarda de graça, além da contagem da Task 4.
+
+**Um achado Important do review da Task 3, aceito e corrigido em `c97b373`:** o DoD literal da task
+("nenhuma Action pré-carrega relação") e o docblock novo do `loadListingData()` eram **falsos** —
+`DesignateRedatorAction` e `RemoveRedatorAction` ainda faziam `load('redatores.user')`, que são
+exatamente "as duas rotas de redator" que o próprio DoD nomeia. O plano esqueceu de listar os 2
+arquivos. Seguro porque `present()` recarrega pelo `LISTING` com `load()` (não `loadMissing()`) e
+nenhum consumidor dependia da carga — o único outro chamador, `OperationDemoSeeder:502`, descarta o
+retorno.
+
+**Os dois mutantes da Task 4 foram vistos vermelhos com a mensagem literal, pelo implementador e de
+novo pelo revisor**, e revertidos sem resíduo: sem `'documentacaoObrigatoria'` no `LISTING`,
+`Failed asserting that 2 is identical to 1.`; sem o `loadCount('enrollments')`,
+`TurmaData::__construct(): Argument #15 ($enrolled_count) must be of type
+Spatie\LaravelData\Optional|int, null given` — a diferença que a D-B3 compra.
+
+### Task 5 — o gate do bloco (2026-08-10)
+
+Executado por mim direto: é a prova do DoD, e o DoD pede comportamento contra a API real.
+
+**Ferramentas.** Backend **502 passed, 1 skipped (1866 assertions)** — +2 testes / +8 asserções sobre
+o baseline 500/1858 de `4ae4c91`, e exatamente o número que a D-E1 previu. `typescript:transform`
+rodado de novo: `generated.ts` **sem diff** — nenhum DTO mudou de forma, então o frontend não é
+tocado. `git diff main...HEAD -- backend/database/` **vazio** (zero schema) e
+`git diff main...HEAD -- frontend/` **vazio**. Pint `--test` **`passed`** nos **15** `.php` do bloco
+(a lista do plano tinha 13; os 2 que faltavam são `Designate/RemoveRedatorAction`, que só entraram
+no diff com o `c97b373`).
+
+**Código morto e leis §5.** A API antiga do service morreu — `grep` por `isHabilitada($`/
+`missingTypes($` em `backend/app/` devolve **vazio**. O `whereIn` dos três tipos obrigatórios tem
+**um dono só**: um único hit, dentro da própria relação (`Turma.php:88`). Zero `Repository` real
+(o único hit é o comentário `não Repository — ADR-02` do `TurmaQueryBuilder`), zero `abort(` em
+`Domains/Operation/`.
+
+**E2e contra a API real**, sessão Sanctum por cookie + CSRF (lição 12: `Origin` e `Accept`
+obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login, que o rotaciona).
+
+1. **`GET /api/turmas` → 200, 4 turmas**, cada uma coerente com os documentos que o seed criou,
+   conferidos antes na tabela `files`: turma 1 (só `MANUAL`) `habilitada: false`,
+   `missing: ['PRUEBAS','EVALUACION_REDATOR']`; turma 2 (os 3 tipos, em andamento) `true`, `[]`;
+   turma 4 (`MANUAL`+`PRUEBAS`) `false`, `['EVALUACION_REDATOR']`.
+2. **A D-B1 medida onde o usuário vive:** a turma **3** — concluída, com os três tipos presentes —
+   responde **`habilitada: false`** com `missing_document_types: []`. É o valor que o gate de status
+   dentro do VO preserva, e a prova de que o contrato não mudou de valor.
+3. **A contagem medida na API, não só na suíte.** `general_log` do MySQL ligado em `TABLE`, truncado,
+   um `GET /api/turmas`: **1 query em `files`** para as 4 turmas —
+   `select * from files where type in ('MANUAL','PRUEBAS','EVALUACION_REDATOR') and
+   files.fileable_id in (1,2,3,4) …`. As demais consultas da listagem são **8** (turmas, redatores,
+   users, courses, quotes, budgets, clients, users), então **8 + 1 = 9**, contra os **8 + 7 = 15**
+   medidos na abertura no **mesmo banco**. A decomposição bate com a da spec linha a linha.
+4. **`GET /api/turmas/4` → 200** com `enrolled_count: 10` **inteiro** — o caminho sem o `??`, que a
+   D-B3 matou.
+5. **`GET /api/turmas/4/documents` → 200** com `[(16,'MANUAL'), (17,'PRUEBAS')]`, e a turma 3 com os
+   4 registros dela (incluindo o `PRUEBAS` duplicado do seed) — a relação substituiu o `whereIn` do
+   controller sem mudar uma linha da resposta.
+6. **`POST /api/turmas/4/documents` com o `EVALUACION_REDATOR` que faltava → 201**, e o
+   `GET /api/turmas` seguinte mostra a turma 4 em **`habilitada: true`, `missing: []`**. A leitura
+   pela relação **não congelou** a resposta.
+
+**Prova extra, de graça:** o `DELETE` do documento recém-subido devolveu **204** e a listagem voltou
+a `habilitada: false`, `['EVALUACION_REDATOR']` — soft-delete não conta, medido na API real e não só
+no teste. Serviu também para devolver o banco ao cenário canônico de habilitação.
+
+**Desvio declarado contra o Step 3 do plano — o `migrate:fresh --seed` NÃO foi rodado.** O banco de
+dev carrega o `LOT-2026-1001` com o `aluno.name` **corrompido de propósito**, deixado pelo bloco
+anterior para o **checkpoint visual do João**, que segue pendente; recriar o cenário custaria um
+`UPDATE … JSON_SET` a mais, mas apagá-lo sem pedir seria destruir trabalho dele. As 4 turmas e os
+documentos foram conferidos direto na tabela **antes** do e2e e estavam no cenário canônico do seed,
+e é **este mesmo banco** onde os 7 da abertura foram medidos — não lavar torna a comparação mais
+forte, não mais fraca.
+
+**Um erro do plano, achado ao executar:** o Step 3 escreve `GET /api/turmas/{id}/documentos`; a rota
+real é `documents` (`Domains/Operation/routes.php:27`). Erro de texto do plano, não do código —
+`documentos` devolve 404 porque nunca existiu.
+
+**O que o gate NÃO provou, sem maquiagem:** nada foi visto renderizado. O bloco é backend puro e não
+tocou uma linha de `frontend/` — o contrato HTTP saiu idêntico em forma e em valor, então não há
+tela nova a conferir. A `general_log` foi desligada e truncada ao fim da medição.
+
+**Pendências revisadas:** nenhuma venceu gatilho, nenhuma fechou, nenhuma nasceu. P-03 (main tree)
+segue sem dois blocos de backend em paralelo e o bloco a respeitou; P-04 reavalia **2026-08-15**;
+P-15, P-23, P-25 e P-26 revisam **2026-09-30**. **Anotado sem virar pendência:** a P-09 (3 tipos de
+documento contra os 4 do Figma) fica **mais barata de fechar** por causa deste bloco — o `whereIn`
+dos tipos obrigatórios saiu de dois lugares para um, dentro da relação; a decisão de negócio
+continua com a Lotus e o gatilho segue de pé.
+
+**Estado do banco de dev:** cenário do seed, mais as mutações do bloco anterior (template v1 do curso
+2, certificados `LOT-2026-1000`…`1003` com o `LOT-2026-1001` corrompido de propósito), mais o
+arquivo `18` da turma 4 **soft-deletado** com o objeto correspondente vivo no MinIO — que é o
+comportamento prescrito (`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket).
+
+**Minor abertos, para o review final do branch triar:**
+
+- **M-1** — `HabilitacaoStatus` tem as propriedades `private` mas não `readonly`: o VO é imutável por
+  convenção, não pela engine.
+- **M-2** — o docblock do `HabilitacaoStatus` perdeu a nota "(soft-delete não conta)" que o service
+  antigo carregava; o comportamento continua certo e agora está provado na API, mas o texto sumiu.
+- **M-3** — `TurmaQueryBuilderTest`: `private int $seq = 0;` declarado no meio da classe, não no topo.
+- **M-4** — `makeTurmaComDocs()` duplica quase inteira a cadeia comercial de
+  `ContratanteEagerLoadTest::makeCadeia()`. Com duas ocorrências, WET é razoável; numa terceira, vale
+  extrair um builder (precedente: `IssuableEnrollmentBuilder`).
+
+Evidência task a task em `.superpowers/sdd/progress.md`. Review declarado **BAIXO RISCO** pela spec
+(zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e rota pública) → **uma frente só, lente
+Claude**, sem segunda frente do Codex.
+
+**Divergência de nomenclatura resolvida:** o Step 5 do plano escreve
+`next_action: request_block_review`; o `/executar-bloco` e o precedente dos blocos anteriores usam
+`request_code_review`, que é o valor gravado aqui.
+
+### Review de sprint — 2026-08-10: uma frente, 4 achados, todos aprovados e corrigidos
+
+**BAIXO RISCO** conforme o §8 da spec (zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e
+rota pública; `executor: claude`) → **lente Claude com o gabarito do projeto, sem segunda frente do
+Codex**. Escopo: os 15 `.php` de `main...HEAD`. Ferramentas **reconferidas antes de revisar, não
+herdadas do gate**: suíte **502 passed, 1 skipped (1866 assertions)**, Pint `--test` **`passed`** nos
+15. **Órfãos zero** — `HabilitacaoStatus` 2 consumidores (via `for()`), `for()` 2,
+`documentacaoObrigatoria` 3 (`LISTING`, service, `TurmaDocumentController::index`),
+`loadListingData()` 1, `LISTING` 2; a API antiga do service morta (`grep` por
+`isHabilitada($`/`missingTypes($` em `app/` vazio). **Leis §5 limpas.**
+
+**O achado que o gate não podia ter pego (Q-1 🟡)** — o gate da RN-16 no `ConcludeTurmaAction`
+decidia sobre a relação **em cache**. O bloco trocou "query na relação" por "leitura de relação", e
+`for()` lê `documentacaoObrigatoria` como **propriedade**: com o model já carregado (é exatamente o
+que `loadListingData()` faz, no mesmo request), um documento arquivado depois daquela carga deixava o
+cache dizer "completa" e **concluía a turma** — escrita **TERMINAL** (D5), que habilita emissão de
+certificado. **Provado nos dois sentidos com sonda temporária (lição 10)**: com o código do bloco a
+conclusão passa; com os dois arquivos vindos de `main`, recusa com `Documentación obligatoria
+incompleta (RN-16). Falta: MANUAL.` **Não era bug vivo** — os 2 chamadores (route-binding do
+`conclude`, `OperationDemoSeeder:509`) entregam turma sem a relação —, mas é regressão latente a uma
+linha de distância. O §5 da spec declarava o cache do VO como consequência de **leitura**
+("perguntar de novo no mesmo objeto"); o impacto medido é de **escrita**, e essa parte não estava
+coberta pela decisão registrada. Corrigido com `$turma->load('documentacaoObrigatoria')` **dentro da
+transação**, declarado no ponto que exige a leitura fresca, mais guarda nova no `ConcludeTurmaTest`
+**vista vermelha primeiro** (`A conclusão deveria recusar: o MANUAL foi arquivado depois da carga.`).
+O docblock do service, que afirmava ser a relação não-carregada o mecanismo da leitura fresca do
+`conclude`, virou falso com o fix e foi reescrito junto.
+
+**Os outros três, todos 🟢:**
+
+- **Q-2** (o M-1 herdado) — as propriedades do `HabilitacaoStatus` eram `private` sem `readonly`: VO
+  imutável por convenção, não pela engine. Agora `private readonly`, como o precedente
+  `AcademicResult`/`EnrollOutcome`.
+- **Q-3** — o bloco matou a 2ª cópia do `whereIn`, mas deixou a 2ª cópia da **lista**:
+  `array_column(TurmaDocumentType::cases(), 'value')` em `Turma.php:88` **e**
+  `TurmaHabilitacaoService:26`. Nasce `TurmaDocumentType::values(): array<string>`, e a lista canônica
+  passa a ter um dono só — o mesmo movimento que a relação nomeada fez pela pergunta.
+- **Q-4** — a D-B3 matou o `?? $turma->enrollments()->count()` de propósito (falhar alto), mas o
+  contrato novo não estava escrito em lugar nenhum: quem projetar por caminho que não passe por
+  `withListingData()`/`loadListingData()` leva `TypeError` em runtime sem saber a causa. Docblock no
+  `fromModel` nomeando os dois.
+
+**Não viraram achado, com o motivo medido:** a nota "(soft-delete não conta)" **existe** — mudou de
+dono junto com a regra, para o docblock de `Turma::documentacaoObrigatoria()` (era o M-2); o
+`private int $seq = 0;` no meio do `TurmaQueryBuilderTest` é estilo, e o Pint passa (M-3); o
+`makeTurmaComDocs()` duplicando o `ContratanteEagerLoadTest::makeCadeia()` é **decisão registrada** —
+o `CreatesDomainRecords` documenta que Budget/Quote/Turma ficam fora de propósito (H.4.9, spec D8), e
+o critério já fixado é "duas ocorrências, WET razoável; na terceira, extrair" (M-4); e o cache do VO
+no caminho de **leitura** (`GET`) é consequência declarada no §5 da spec.
+
+**Placar pós-correção: 503 passed, 1 skipped (1868 assertions)** — +1 teste / +2 asserções sobre os
+502/1866 que eu reconferi antes de revisar. Pint `passed` nos 7 arquivos do fix;
+`typescript:transform` rodado de novo, `generated.ts` **sem diff**. Correções no commit `a8ddb80`.
+
+### Gate de fechamento — 2026-08-10
+
+**O item 0 foi refeito contra a API real, não herdado do gate de execução:** as correções Q-1..Q-4
+entraram em `a8ddb80`, depois do e2e da Task 5, e o Q-1 mexeu exatamente no caminho que o gate
+exercita — o `conclude`. Sessão Sanctum por cookie + CSRF (lição 12: `Origin` e `Accept`
+obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login).
+
+1. **`GET /api/turmas` → 200, 4 turmas**, cada uma coerente com a tabela `files` conferida **antes**
+   da chamada: turma 1 (só `MANUAL`) `habilitada: false` / `['PRUEBAS','EVALUACION_REDATOR']`; turma 2
+   (os 3 tipos, em andamento) `true` / `[]`; turma 4 (`MANUAL`+`PRUEBAS`) `false` /
+   `['EVALUACION_REDATOR']`. `enrolled_count` inteiro nas quatro — o caminho sem o `??` (D-B3).
+2. **A D-B1 medida onde o usuário vive:** a turma **3** — concluída, com os três tipos presentes —
+   responde **`habilitada: false`** com `missing_document_types: []`.
+3. **A contagem medida na API, não só na suíte.** `general_log` do MySQL em `TABLE`, truncada, um
+   `GET /api/turmas`: **1 query em `files`** para as 4 turmas — `select * from files where type in
+   ('MANUAL','PRUEBAS','EVALUACION_REDATOR') and files.fileable_id in (1,2,3,4) …`. A listagem
+   inteira são **9** (turmas, redatores, users, courses, quotes, budgets, clients, users, files),
+   contra os **15** medidos na abertura **no mesmo banco**; a decomposição bate com a da spec linha a
+   linha. **Achado de método, registrado:** o `general_log` grava as queries do Laravel como
+   `Prepare`/`Execute`, não como `command_type='Query'` — filtrar por `Query` devolve zero e leria
+   como "nenhuma consulta", que é falso negativo perfeito.
+4. **O caminho que a Q-1 tocou, exercitado nos dois sentidos pela API:** `POST /api/turmas/1/conclude`
+   → **422** `application/problem+json` com `Documentación obligatoria incompleta (RN-16). Falta:
+   PRUEBAS, EVALUACION_REDATOR.`; `POST /api/turmas/2/conclude` (documentação completa) → **200**
+   com `status: concluida`, `habilitada: false`, `concluded_at` preenchido e `enrolled_count: 8`. O
+   `load()` novo dentro da transação não fechou o caminho feliz.
+5. **`GET /api/turmas/{id}/documents` → 200** pela relação: turma 3 com os 4 registros dela
+   (incluindo o `PRUEBAS` duplicado do seed) e turma 4 com `[(16,'MANUAL'), (17,'PRUEBAS')]` — o
+   arquivo `18`, soft-deletado, continua fora.
+
+**Demais itens:** suíte **503 passed, 1 skipped (1868 assertions)** · `pnpm lint` e `pnpm build`
+verdes · Pint `--test` **`passed`** nos **17** `.php` do bloco (eram 15 no review; o fix acrescentou
+`TurmaDocumentType.php` e `ConcludeTurmaTest.php`) · `typescript:transform` **sem diff** em
+`generated.ts` · `git diff main...HEAD -- frontend/` e `-- backend/database/` **vazios** · código
+morto zero (o único arquivo novo é `HabilitacaoStatus.php`, com consumidor; nenhum `TODO`/`FIXME`
+novo) · leis §5 limpas (zero `Repository`, zero `abort(` em `Domains/Operation/`, zero delete por
+query builder no diff, `generated.ts` intocado).
+
+**O que o gate NÃO provou, sem maquiagem:** **nada foi visto renderizado.** O bloco é backend puro,
+não tocou uma linha de `frontend/`, e o contrato HTTP saiu idêntico em forma e em valor — não há tela
+nova a conferir. E a Q-1 em si **não é alcançável por HTTP**: o `conclude` recebe o model do
+route-binding, sem relação carregada, então a prova do defeito e do fix vive na suíte (sonda + guarda
+vista vermelha); o que a API prova é que o gate segue correto nos dois sentidos depois da mudança.
+
+**Duas mutações declaradas no banco de dev.** O `migrate:fresh --seed` **não** foi rodado: o banco
+carrega o `LOT-2026-1001` com o `aluno.name` corrompido de propósito, deixado para o **checkpoint
+visual do João**, que segue pendente — e é **este mesmo banco** onde os 7 da abertura foram medidos,
+o que torna a comparação mais forte, não mais fraca. A turma 2, concluída pela API no item 4, foi
+devolvida a `em_andamento` por `UPDATE` direto: a conclusão é **terminal** e não tem rota de
+reversão, então a auditoria guarda o rastro da conclusão e **não** o da reversão. O `general_log` foi
+desligado e truncado ao fim da medição.
+
+**Pendências revisadas:** nenhuma venceu gatilho (P-04 reavalia **2026-08-15**; P-03 segue sem dois
+blocos de backend em paralelo e o bloco a respeitou; P-15, P-23, P-25 e P-26 revisam **2026-09-30**),
+nenhuma fechou, nenhuma nasceu. **Uma foi corrigida por ter ficado imprecisa por causa deste bloco:**
+a P-09 dizia que mudar de 3 para 4 tipos de documento exige alterar o `TurmaHabilitacaoService` — não
+exige mais, porque o service consome `TurmaDocumentType::values()`; o custo virou uma linha no enum, e
+a decisão de negócio segue com a Lotus.
+
+**Arquivamento:** plano → `plans/archive/2026-08-10-turma-habilitacao-listagem.md`; spec →
+`specs/archive/2026-08-10-turma-habilitacao-listagem-design.md` (não é compartilhada: nenhum item do
+backlog a consome). Entrega registrada no `progress.md` (a de 2026-08-03/`zerar-catraca` desceu ao
+`progress-archive.md` para manter dez); item 4 removido do `backlog.md`, que fica com 3 itens.
+
+**Estado do banco de dev:** cenário do seed, mais as mutações do bloco anterior (template v1 do curso
+2, certificados `LOT-2026-1000`…`1003` com o `LOT-2026-1001` corrompido de propósito), mais o arquivo
+`18` da turma 4 **soft-deletado** com o objeto correspondente vivo no MinIO — comportamento prescrito
+(`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket). As 4 turmas voltaram ao
+cenário canônico. `migrate:fresh --seed` devolve tudo.
+
+## Penúltimo item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
 ### Gate de fechamento — 2026-08-10
 
@@ -414,7 +761,7 @@ reformatá-lo inteiro seria ruído de diff (lição 9), então ficou. `pnpm lint
 `pnpm test` (13 arquivos / 47 testes) verdes; `typescript:transform` **sem diff** em `generated.ts` —
 nenhum DTO mudou de forma. Correções no commit `d01c279`.
 
-## Penúltimo item fechado — 2026-08-08 (`certificacao-frontend`)
+## Antepenúltimo item fechado — 2026-08-08 (`certificacao-frontend`)
 
 ### Gate de fechamento — 2026-08-08
 
@@ -662,264 +1009,3 @@ módulo foi vista renderizada por ninguém até aqui — a evidência é de API 
 página a página, suíte e lint. Quem fizer o review de sprint herda isso como limitação declarada,
 não como item silenciosamente cumprido. O review é **alto risco** por decisão do plano (documento
 de peso legal + rota pública + `generated.ts`) → duas frentes, lente Claude + Codex read-only.
-
-## Antepenúltimo item fechado — 2026-08-08 (`profundidade-backend-b4-b7`)
-
-### Gate de fechamento — 2026-08-08
-
-**O item 0 foi refeito, não herdado.** O e2e da Task 9 provou uma árvore que deixou de existir: as
-correções Q-1..Q-7 entraram depois dele e mexeram exatamente nos caminhos de listagem. O gate rodou
-contra `migrate:fresh --seed` no MySQL, com sessão Sanctum por cookie + CSRF (lição 12; `Origin` e
-`Accept` obrigatórios, e o `XSRF-TOKEN` reextraído do cookie jar depois do login, que o rotaciona).
-
-**Os três itens do §Gate da spec:**
-
-1. `PUT /api/turmas/1/alunos/1/resultado` com `grades.final = "6,9"` → **200**, e a resposta devolve
-   `"final":"6,9"` — a vírgula chilena sobrevive à escrita. Com `grades.final = []` → **422** RFC
-   7807 es-CL, `"La nota final debe ser un número o un texto no vacío."`
-2. Emissão `LOT-2026-1000` **201** com o seam conferido em **SQL cru**, não pela projeção do model:
-   `snapshot.cliente.name` = `clients.legal_name` = `Enel Distribución`, enquanto `users.name` do
-   mesmo cliente é `USUARIO-EMPRESA Enel`. **Os dois textos foram diferenciados à mão antes do teste**
-   — o `OperationDemoSeeder` grava `name == legal_name` de propósito, e com eles iguais o e2e passaria
-   mesmo se o regresso A-1 tivesse voltado (a mesma armadilha registrada no gate da Task 9).
-   `GET /api/certificates/{id}/pdf` → **200 `application/pdf`**, `pdfinfo` 2 páginas, **A4
-   (594.96 × 841.92 pts)**, e a página 1 imprime `Enel Distribución`.
-3. `GET /api/turmas/3/alunos` → **200**, 15 matrículas, **todas** com o aluno aninhado — o
-   `EnrollmentQueryBuilder` em produção.
-
-**Os 4 sítios do Q-1 exercitados na API real, que é o que faltou no gate anterior:**
-`GET /api/turmas` **200** (4 turmas, `client_name` = razão social), `GET
-/api/turmas/pendientes-configuracion` **200**, `GET /api/certificates/issuable` **200** e `GET
-/api/turmas/3/manual` **200 `application/pdf`** (25.880 bytes). **O Q-4 foi provado no mesmo passe:**
-`users.rut` posto em **NULL** num cliente que aparece nas duas listagens, e nenhuma delas estourou —
-era exatamente o `TypeError` que o `?string` fechou.
-
-**Demais itens:** suíte **477 passed, 1 skipped (1698 assertions)** · `pnpm lint` e `pnpm build`
-verdes · Pint `passed` nos 16 `.php` do commit de correção · `typescript:transform` **sem diff** em
-`generated.ts` (D-P1 segue valendo) · `git diff main...HEAD` vazio em `frontend/` e em
-`backend/database/` (zero schema, como a spec previu) · leis §5 sem violação (zero `Repository`, o
-único `abort()` de `app/` é o 404 pré-existente do `PublicCertificateController`).
-
-**Triagem dos 6 Minor acumulados nas Tasks 4–8:** cinco fecharam no review — o `$rotulo` morto (Q-7),
-os 5 sítios de `LISTING` (Q-3), o label `'reprovada'` (Q-5), o footgun de ordem do builder (Q-6) e o
-desvio do Pint na Task 7, que era desvio documentado e não defeito. **O sexto não foi corrigido e não
-virou débito:** "o comentário do teste poderia explicar melhor a ordem turma→student" é cosmético e
-não faz doc nem mecanismo divergir da realidade, que é o critério do `pendencias.md`.
-
-**Pendências revisadas:** nenhuma venceu gatilho, nenhuma fechou, nenhuma nasceu. P-04 segue com
-reavaliação marcada para **2026-08-15** (§5.1 e §5.2 continuam sem mecanismo — este bloco entregou
-catraca de cadeia e de eager-load, que são outra fronteira). P-03 ganha mais um bloco de backend em
-main tree sem atrito, mas o gatilho dela é dois blocos de backend em paralelo, que não ocorreu.
-
-**Estado do banco de dev:** ficou com o `migrate:fresh --seed` do gate mais as mutações do e2e
-(template do curso 2, resultado da matrícula 1, certificado `LOT-2026-1000`, `users.name` do cliente 3
-diferenciado e `users.rut` do cliente 1 nulo). Nada disso é fixture de código; quem precisar do
-cenário canônico roda `migrate:fresh --seed` de novo.
-
-
-**Item 2 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-07** (`/planejar-bloco`
-com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
-sozinho). Rota direta a `ready_for_planning` **sem packet, por ausência medida de fonte externa**
-(mesmo caso do bloco `profundidade-form-crud`): as fontes são o repositório e o relatório local do
-review de arquitetura de 2026-08-07 — nada de Drive/Notion/Figma. O João declarou a dispensa no
-próprio argumento do comando.
-
-**Passo 0 executado antes da seleção, na mesma sessão:** a skill `improve-codebase-architecture`
-não existe nesta máquina (o João a rodou fora), então a re-verificação foi manual, alegação por
-alegação, contra o código real. Resultado: B1–B3 confirmados resolvidos (`CertificateEligibility`,
-`Data/Snapshot/` com `schema_version`, `App\Shared\Pdf`); **B4–B7 todos ainda válidos** — B4 com 8
-sítios medidos da cadeia em 3 domínios, B5 com o lazy load do `result` confirmado, B6 com `grades`
-ainda `['nullable','array']` e action pass-through, B7 com setUps de 40–98 linhas em 8 arquivos
-(cresceu desde o relatório). Nada novo material no backend. O merge do bloco anterior já estava
-feito pelo João (PR #31); `main` local avançou por fast-forward para `9ed46cc`.
-
-**Brainstorming de 2026-08-07 — decisões do João:** B6 fica **declarada pelo admin** (derivar
-exigiria inventar regra de corte sem fonte; a leitura futura da nota do docx de evaluación é
-deferred com bloco próprio, muda ADR/RN); B4 ganha **catraca da cadeia** (teste-grep, não
-reflection — mini-framework rejeitado); B5 cobre **os 4 models medidos** (Enrollment, Quote,
-Client, Course — nem só o bug, nem todos os models). Corte e ordem definidos por ele na abertura:
-B4 → catraca → B5 → B6 → B7 → gate, um bloco. Design aprovado em 6 seções; spec em
-`docs/superpowers/specs/archive/2026-08-07-profundidade-backend-b4-b7-design.md`.
-
-**Backend-only, main tree (P-03), zero schema — ADR/DER não abrem.**
-
-**Plano escrito em 2026-08-07 — 10 tasks (0–9), `executor: claude` (SDD).**
-`docs/superpowers/plans/archive/2026-08-07-profundidade-backend-b4-b7.md`. A escrita do plano achou
-**quatro desvios contra a spec aprovada, declarados no §Desvios em vez de silenciados** (lição 13):
-D-P1 — `ContratanteData` não pode morar em `Commercial/Data` como a spec D2 pedia, porque a Regra A
-do `DomainDependencyTest` só expõe `Models/Enums/Services`; vai para `App\Shared\Data`, a D12 mora
-em `Client::contratante()` e a dependência Certification→Commercial some por mediação (Operation)
-em vez de virar aresta — e `generated.ts` **não muda**. D-P2 — `AcademicResult` vai para
-`Operation\Services` (mesma Regra A; precedente `IssuanceContext`), com a aresta
-`Certification → Operation\Services\AcademicResult` declarada na matriz. D-P3 — os sítios da cadeia
-são 10, não 8: `EnrollStudentAction:31` precisa do **model** (`Turma::contratanteClient()` nasce) e
-`manual-turma.blade.php:21` está fora de `app/` (a catraca varre blades; strings de eager-load
-ficam fora por serem carga, não projeção). D-P4 — o builder de cenário não tem `->jaEmitido()`:
-emissão é ato do teste, não setup.
-
-### Execução iniciada em 2026-08-07 — `/executar-bloco`, `subagent-driven-development`
-
-Branch `refactor/profundidade-backend-b4-b7` a partir de `main` (`1474f6b`). **Task 0** confirmou o
-baseline exato do plano: 457 passed, 1 skipped (1655 assertions). **Task 1** (`ContratanteData` +
-`Client::contratante()`) entregue e aprovada no review de task, com um achado Importante do próprio
-brief: o caminho do teste (`tests/Feature/Commercial/`, grafia inglesa) criava uma segunda pasta
-para o domínio Comercial, que já tem 40+ testes em `tests/Feature/Comercial/` (grafia portuguesa).
-**Decisão do João:** o teste migra para a pasta existente — `Comercial/`, não `Commercial/`. Fix
-aplicado e re-review aprovado. Placar: 458 passed, 1 skipped (1658 assertions). Commits
-`d926faf`…`06f869b`.
-
-**Task 2** (seams `Turma::contratanteClient()`/`contratante()`, `Quote::contratante()`) aprovada
-sem achados. Placar: 461 passed, 1 skipped (1665 assertions). Commit `55ccb1d`.
-
-**Task 3** (migração dos 8 sítios) expôs um gap real: `Client::contratante()` exige `user->rut`
-não-nulo, e ~8 arquivos de teste em `tests/Feature/Operation/` nunca setavam `rut` (só liam
-`legal_name`/`client_name`) porque a decisão Q-4 (2026-08-04) deixa o trait compartilhado
-`CreatesDomainRecords::makeClientWithUser` sem default de `rut` de propósito. O subagente parou
-(`BLOCKED`) em vez de escolher sozinho entre nullable na VO, accessor mais leve ou default no
-trait. **Decisão do João: fixtures explícitas** — os ~8 arquivos de teste passam a setar `rut` via
-`$userOverrides`, mesmo padrão que Q-4 já estabelece; `ContratanteData`, `Client`, `Turma`, `Quote`
-e o trait compartilhado ficam intocados. Fix aplicado, re-review aprovado, placar de volta ao
-baseline exato: 461 passed, 1 skipped (1665 assertions). Commits `3f8b671`…`4f89f2f`.
-
-**Task 4** (catraca `ContratanteSeamTest`) aprovada. O regex varre acesso a propriedade
-`->budget->client` em `app/Domains/**` (comentários strippados por `token_get_all`, mesma técnica do
-`DomainDependencyTest`) e em `resources/views/**` (RAW — Blade não passa pelo tokenizer do PHP puro),
-com allowlist dos dois donos do seam. String de eager-load (`'quote.budget.client'`) fica fora de
-propósito (D-P3): é carga de query, concern dos builders, não travessia de código. Placar: 462/1/1666.
-Commit `efeda0a`.
-
-**Task 5** (`EnrollmentQueryBuilder` + o lazy-load do `result`) aprovada com um desvio de RED
-documentado e verificado duas vezes. A abordagem literal do brief (`Model::preventLazyLoading(true)` +
-`putJson`) **não conseguia reproduzir o bug**: `Illuminate\Database\Eloquent\Builder::hydrate()` só
-liga o flag `preventsLazyLoading` por instância quando `count($items) > 1`, e busca singular
-(route-model-binding, `find`, `firstOrFail`) nunca satisfaz isso. O subagente investigou em vez de
-chutar, provou no `tinker`, e passou a chamar `EnrollmentController::result()` direto contra um
-`Enrollment` hidratado com 2 linhas. Conferido de forma independente por mim contra o fonte real do
-vendor, e de novo pelo revisor. Placar: 463/1/1668. Commit `f10e3ee`.
-
-**Task 6** (builders de Quote/Client/Course) aprovada, refactor puro, placar idêntico ao da Task 5.
-Commit `90deba0`.
-
-**Task 7** (`AcademicResult` + `PrintableGrade` na escrita + snapshot lendo do VO) aprovada com um
-segundo desvio documentado, este imposto pelo Pint: a forma literal do brief (`$resultado =
-$enrollment->academicResult();` como variável solta) deixava o `use ...\AcademicResult` sem nenhum
-type-hint no arquivo, e o fixer `no_unused_imports` **removeria o import — quebrando em silêncio
-justamente a aresta que o `DomainDependencyTest` precisa provar**. Resolvido extraindo um método
-privado tipado `resultadoSnapshot(AcademicResult $resultado)`. O revisor reproduziu o conflito num
-arquivo de sonda isolado antes de aceitar. Placar: 473/1/1690. Commit `cedb633`.
-
-**Task 8** (`IssuableEnrollmentBuilder` + migração dos 8 setUps de Certification) aprovada, com
-contagem antes/depois idêntica em cada um dos 8 arquivos. `->jaEmitido()` **não** entrou no builder
-(D-P4 respeitado). Duas colisões de índice único apareceram só em `CertificateEligibilityTest`, que
-materializa 7 cadeias no mesmo `setUp`: `budgets.code` (resolvido com `null` no builder, que nunca
-expõe o Budget) e `users.rut` (resolvido **no arquivo consumidor**, com um helper local que anula os
-RUTs das 6 cadeias reprovadas — sem expandir a interface do builder). O efeito colateral (cada
-cenário reprovado deixa de compartilhar client/course/redator com o emitível) foi verificado como são
-contra a ordem real de execução das portas do `CertificateEligibility`. Placar: 473/1/1690, idêntico
-ao da Task 7. Commit `5787f94`.
-
-### Task 9 — o gate (2026-08-07)
-
-Executado por mim direto, não por subagente: é a prova do DoD do bloco inteiro, e o DoD pede
-comportamento provado contra a API real, não mais uma camada de alegação reportada.
-
-**Ferramentas.** Suíte backend **473 passed, 1 skipped (1690 assertions)**. Frontend sem regressão:
-`pnpm test` 10 arquivos / 35 testes, `pnpm lint` limpo, `pnpm build` OK. Pint `passed` nos **44**
-`.php` tocados do bloco, zero reescrita. `typescript:transform` rodou e `generated.ts` ficou **sem
-diff** — a prova do **D-P1**: `ContratanteData` e `AcademicResult` são VOs internos e **não vazaram**
-para o front.
-
-**Mecanismos vistos reprovando (lição 10), com sondas frescas.** A catraca foi provada nos **dois**
-modos de varredura, em arquivos diferentes dos da Task 4: `EnrollStudentAction.php:22` (PHP) e
-`certificate.blade.php:262` (Blade). Reprovou nomeando os dois com a linha exata; sondas removidas,
-árvore limpa, verde de novo. A aresta do B6 foi provada removendo a linha
-`'Operation\Services\AcademicResult'` da matriz — reprova nomeando `CertificateSnapshotBuilder.php`
-— e repondo.
-
-**E2e contra a API real**, `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie + CSRF
-(lição 12). Duas armadilhas que valem para o próximo e2e: sem `Origin: http://localhost:5173` o
-`statefulApi()` não liga a sessão e o login devolve **500 "Session store not set on request."**; e o
-`XSRF-TOKEN` **rotaciona no login** (regeneração de sessão anti session-fixation), então reusar o
-token do `/sanctum/csrf-cookie` depois do `POST /api/login` dá **419 "CSRF token mismatch"** — tem
-que reextrair do cookie jar.
-
-1. `PUT .../resultado` com `grades.final = "6,9"` → **200**; com `grades.final = []` → **422** RFC
-   7807, `"La nota final debe ser un número o un texto no vacío."` (es-CL).
-2. `GET /api/certificates/issuable` → turma listada, `client_name` = razão social.
-3. `POST /api/enrollments/{id}/certificate` → **201**. **A prova viva do seam foi conferida no MySQL
-   com SQL cru**, não pela projeção do model: `snapshot.cliente.name` = `clients.legal_name`
-   (`Enel Distribucion Chile S.A.`), enquanto o `users.name` do mesmo cliente é `USUARIO-EMPRESA
-   Enel`. **Os dois textos precisaram ser deixados diferentes à mão no fixture** — o
-   `OperationDemoSeeder` grava `name == legal_name` de propósito (comentário no próprio seeder), e
-   com eles iguais o e2e passaria mesmo se o regresso A-1 tivesse voltado. Nota para o próximo gate
-   que tocar esse caminho: **o cenário de demo não distingue as duas colunas; quem for provar o seam
-   tem que diferenciá-las antes.**
-4. `GET /api/certificates/{id}/pdf` → **200 `application/pdf`**, `pdfinfo` 2 páginas, **A4**
-   (594.96 x 841.92 pts). Inspeção visual da página 1: o documento **imprime a razão social**, não o
-   `user.name` — o seam chega intacto ao papel com peso legal.
-5. `GET /api/turmas/{id}/alunos` → **200**, 15 matrículas, todas com o aluno aninhado — o
-   `EnrollmentQueryBuilder` em produção, sem lazy-load. (A rota real é `/alunos`; o brief a chamava
-   de `/enrollments`.)
-
-Placar task a task, os desvios e os **6 achados Minor** acumulados nas Tasks 4–8 ficam registrados em
-`.superpowers/sdd/progress.md`, para triagem do review final whole-branch. Nenhum Minor foi corrigido
-por decisão própria: o review final decide o que entra antes do merge.
-
-### Review de sprint — 2026-08-08, 7 achados aprovados e corrigidos
-
-**ALTO RISCO** (documento de peso legal, matriz de domínios, validação RFC 7807): duas frentes
-independentes — lente Claude + `mcp__codex__codex` read-only. Suíte reconferida na abertura do
-review, não aceita por relatório: 473 passed, 1 skipped (1690 assertions), idêntico ao gate.
-
-**O Codex viu dois achados que a lente Claude não viu, e nenhum dos dois foi aceito por relatório —
-os dois foram provados por MUTAÇÃO aqui, nos dois sentidos** (versão migrada verde, versão do `main`
-vermelha sob o mesmo mutante). É o argumento vivo para a segunda lente em bloco de alto risco.
-
-**Q-1 🔴 — o seam do B4 introduziu N+1 em 4 listagens.** `Client::contratante()` lê `user->rut`, e
-nenhum dos sítios carregava `client.user`: `TurmaQueryBuilder`, `TurmaController::pending`,
-`CertificateEligibility::issuableTurmas` e `ManualPdfService`. Medido no MySQL de dev com
-`DB::listen`: 4 turmas custavam **11 queries**, sendo 4 `select * from users` — com `.user` no
-eager-load, **7**. Ironia registrada: o bloco cujo B5 existe para matar lazy-load silencioso
-**adicionou** quatro, e o gate provou `/alunos` sem nunca medir `/turmas`. Guarda nova:
-`tests/Feature/Shared/ContratanteEagerLoadTest.php`, companheiro de runtime da catraca estática —
-visto RED nos 3 cenários com a mensagem exata (`lazy load [user] on model [Client]`) antes do fix.
-
-**Q-2 🔴 — a migração do B7 apagou o poder discriminante de dois testes de peso legal.** Mesma
-causa raiz, duas ocorrências:
-(A) `CertificateEligibilityTest` só exigia `errors()` não-vazio, nunca qual porta recusou. Como o
-builder dá **redator próprio** a cada reprovada, a porta 6 passou a recusar todas. Mutante
-(porta 1 fora do `assert()`): migrado **4 passed**, `main` **1 failed**. Corrigido com
-`MENSAGEM_DA_PORTA` — a porta nomeada tem de ser a que recusou; mutante agora reprova dizendo
-"A recusa não veio da porta: turma não concluída".
-(B) `PublicCertificateTest` — os defaults do builder ficaram byte-idênticos ao snapshot congelado.
-Mutante (rota pública do QR lendo `$certificate->course->name` vivo em vez de
-`$snapshot->curso->name`): migrado **5 passed**, `main` **1 failed**. Corrigida a cadeia viva para
-voltar a divergir campo a campo; o mutante agora reprova com o diff `-"Seguridad en Alta Tensión"
-+"Curso Vivo"`.
-
-**Q-3 🟡 — `LISTING` não era fonte única:** 5 sítios ainda soletravam o array (`Create/UpdateClientAction`,
-`Create/UpdateCourseAction`, `CourseRedatorController`) e migraram para `loadListingData()`. O 6º
-(`CertificateEligibility`, `student.user`) fechou por `withListingData()` — **chamada de método, não
-import**: a Regra A do `DomainDependencyTest` não expõe `QueryBuilders`, e aqui não precisa expor.
-
-**Q-4 🟡 — `ContratanteData::$rut` virou `?string`.** `users.rut` é nullable no schema e as cinco
-projeções que leem só o `name` passaram a estourar `TypeError` com RUT ausente — provado no MySQL
-em transação com rollback. `SnapshotPartyData::$rut` já era nullable, então nada foi empurrado
-para a emissão.
-
-**Q-5/Q-6/Q-7 🟢:** a chave `'matrícula reprovada'` virou `'matrícula não aprovada'` (o desvio grava
-`Pendiente`; `Reprobado` segue coberto em outro teste do mesmo arquivo); o builder perdeu o método
-órfão `enrollment()` (zero consumidores) e ganhou `assertSemColisaoDePorta()`, que transforma
-`->turmaNaoConcluida()->turma(['status' => …])` em `LogicException` alta em vez de override
-silencioso — **visto disparando** nos dois casos por sonda temporária, removida depois; e o
-`$rotulo` morto saiu do `ContratanteSeamTest`.
-
-**Padrão reincidente virou regra, não só refactor** (3ª ocorrência da mesma classe): três parágrafos
-novos em `.claude/rules/backend-ddd.md` §Testes — guarda de snapshot com cadeia viva distinta,
-guarda de porta múltipla asserindo qual porta recusou, e seam que lê relação nova atualizando o
-eager-load no mesmo commit.
-
-**Placar depois das correções: 477 passed, 1 skipped (1698 assertions)** — +4 testes e +8 asserções
-sobre 473/1690, exatamente os testes novos (3 do eager-load + 1 do RUT ausente). Pint `passed` nos
-16 `.php` tocados, zero reescrita. `typescript:transform` sem diff em `generated.ts` (D-P1 segue
-valendo: `?string` num VO interno não vaza para o front). `frontend/` sem uma linha de diff.
