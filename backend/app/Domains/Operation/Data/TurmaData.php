@@ -55,6 +55,8 @@ class TurmaData extends Data
 
     public static function fromModel(Turma $turma, TurmaHabilitacaoService $habilitacao): self
     {
+        $habilitacaoStatus = $habilitacao->for($turma);
+
         return new self(
             id: $turma->id,
             quote_id: $turma->quote_id,
@@ -64,8 +66,8 @@ class TurmaData extends Data
             start_date: $turma->start_date->toDateString(),
             end_date: $turma->end_date->toDateString(),
             status: $turma->status,
-            habilitada: $habilitacao->isHabilitada($turma),
-            missing_document_types: $habilitacao->missingTypes($turma),
+            habilitada: $habilitacaoStatus->isHabilitada(),
+            missing_document_types: $habilitacaoStatus->missingTypes(),
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
             course_name: $turma->course->name,

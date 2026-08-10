@@ -26,7 +26,7 @@ class ConcludeTurmaAction
                 ]);
             }
 
-            $missing = $this->habilitacao->missingTypes($turma);
+            $missing = $this->habilitacao->for($turma)->missingTypes();
             if ($missing !== []) {
                 throw ValidationException::withMessages([
                     'documents' => 'Documentación obligatoria incompleta (RN-16). Falta: '.implode(', ', $missing).'.',

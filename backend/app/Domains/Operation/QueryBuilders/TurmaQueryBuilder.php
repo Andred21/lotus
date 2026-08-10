@@ -18,7 +18,12 @@ class TurmaQueryBuilder extends Builder
             // `.client.user`, não só `.client`: o seam `Turma::contratante()`
             // lê o RUT do User do contratante (B4). Parar em `.client` deixa um
             // SELECT por turma — guarda em `ContratanteEagerLoadTest`.
-            ->with(['redatores.user', 'course', 'quote.budget.client.user'])
+            //
+            // `documentacaoObrigatoria`: o TurmaHabilitacaoService passou a ler
+            // essa relação como propriedade (`for()`); sem a carga aqui, a
+            // listagem faz lazy-load por turma e viola o
+            // `Model::preventLazyLoading()` da mesma guarda acima.
+            ->with(['redatores.user', 'course', 'quote.budget.client.user', 'documentacaoObrigatoria'])
             ->withCount('enrollments');
     }
 }

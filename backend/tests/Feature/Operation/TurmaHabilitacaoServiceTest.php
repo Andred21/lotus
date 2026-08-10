@@ -51,11 +51,10 @@ class TurmaHabilitacaoServiceTest extends TestCase
 
     public function test_sem_docs_lista_os_3_tipos_faltantes(): void
     {
-        $this->assertFalse($this->service->isHabilitada($this->turma));
-        $this->assertSame(
-            ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'],
-            $this->service->missingTypes($this->turma),
-        );
+        $status = $this->service->for($this->turma);
+
+        $this->assertFalse($status->isHabilitada());
+        $this->assertSame(['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'], $status->missingTypes());
     }
 
     public function test_doc_parcial_lista_so_o_que_falta(): void
@@ -63,8 +62,10 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $this->addDoc(TurmaDocumentType::MANUAL);
         $this->addDoc(TurmaDocumentType::PRUEBAS);
 
-        $this->assertFalse($this->service->isHabilitada($this->turma));
-        $this->assertSame(['EVALUACION_REDATOR'], $this->service->missingTypes($this->turma));
+        $status = $this->service->for($this->turma);
+
+        $this->assertFalse($status->isHabilitada());
+        $this->assertSame(['EVALUACION_REDATOR'], $status->missingTypes());
     }
 
     public function test_3_tipos_presentes_habilita(): void
@@ -73,8 +74,10 @@ class TurmaHabilitacaoServiceTest extends TestCase
             $this->addDoc($type);
         }
 
-        $this->assertTrue($this->service->isHabilitada($this->turma));
-        $this->assertSame([], $this->service->missingTypes($this->turma));
+        $status = $this->service->for($this->turma);
+
+        $this->assertTrue($status->isHabilitada());
+        $this->assertSame([], $status->missingTypes());
     }
 
     public function test_doc_soft_deletada_nao_conta(): void
@@ -85,8 +88,10 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $this->turma->files()->where('type', TurmaDocumentType::MANUAL->value)
             ->get()->each(fn (File $f) => $f->delete());   // lição #5: por instância
 
-        $this->assertFalse($this->service->isHabilitada($this->turma->fresh()));
-        $this->assertSame(['MANUAL'], $this->service->missingTypes($this->turma->fresh()));
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertFalse($status->isHabilitada());
+        $this->assertSame(['MANUAL'], $status->missingTypes());
     }
 
     public function test_turma_concluida_nao_e_habilitada(): void
@@ -97,6 +102,9 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $this->turma->status = TurmaStatus::Concluida;
         $this->turma->save();
 
-        $this->assertFalse($this->service->isHabilitada($this->turma->fresh()));
+        // D-B1: documentação completa NÃO habilita turma concluída. Esta é a
+        // guarda que trava o gate de status dentro do VO — se ele sair de lá,
+        // este teste reprova.
+        $this->assertFalse($this->service->for($this->turma->fresh())->isHabilitada());
     }
 }
