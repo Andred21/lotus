@@ -38,6 +38,13 @@ class CertificatePdfService
             'logo' => base64_encode((string) file_get_contents(
                 resource_path('images/lotus-logo.png'),
             )),
+            // Embutida como o QR e o logo, e pelo mesmo motivo: o conversor
+            // recebe só o HTML. JPEG e não PNG — o mesmo fundo, nas mesmas
+            // dimensões, pesa 98.258 bytes dentro do certificado aprovado pela
+            // Lotus contra 1.245.172 do PNG entregue.
+            'fundo' => base64_encode((string) file_get_contents(
+                resource_path('images/fundo-certificado.jpg'),
+            )),
         ])->render();
     }
 }

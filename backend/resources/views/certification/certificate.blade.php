@@ -111,6 +111,14 @@
            função do nome exigiria modelar quebra de linha em PHP; o que cortar
            é decisão de negócio, e está com o João. */
         .page {
+            background-image: url("data:image/jpeg;base64,{{ $fundo }}");
+            background-origin: border-box;
+            background-position: top center;
+            /* `repeat-y` com slab de 297mm, NUNCA `100% 100%`: a folha usa
+               `min-height` e pode crescer: esticar deformaria as barras, e
+               repetir dá à página excedente o fundo dela. */
+            background-repeat: repeat-y;
+            background-size: 100% 297mm;
             display: flex;
             flex-direction: column;
             min-height: 297mm;
@@ -119,23 +127,6 @@
             position: relative;
         }
         .page:last-child { page-break-after: auto; }
-        .accent {
-            background: linear-gradient(90deg, #29a3e0 0%, #29a3e0 55%, #9aa0a6 55%, #9aa0a6 100%);
-            height: 4mm;
-            left: 0;
-            position: absolute;
-            right: 0;
-        }
-        .accent-top { top: 0; }
-        /* A barra é absoluta dentro do `.page`, que é `position: relative`:
-           ela ancora no pé do BLOCO, não no pé da folha impressa. Quando o
-           bloco pagina (ver o comentário de `.page`), a página 1 sai SEM a
-           barra de fechamento e a barra reaparece no meio da página 2, sobre
-           uma folha em branco — render conferido em 2026-08-08 com nome de
-           curso de 68 caracteres. É falha de integridade VISÍVEL num documento
-           com peso legal, herdada de antes da Task 3 e ainda em aberto; o
-           conteúdo em si continua íntegro, o que quebra é o enquadramento. */
-        .accent-bottom { bottom: 0; }
 
         .meta { font-size: 9px; line-height: 1.6; }
         .brand { margin: 2mm 0 6mm; text-align: center; }
@@ -239,8 +230,6 @@
 </head>
 <body>
 <section class="page">
-    <div class="accent accent-top"></div>
-
     <div class="meta">
         N° {{ $certificate->codigo }}<br>
         Emisión: {{ $fecha($snapshot->emitido_em) }}
@@ -326,14 +315,10 @@
             reconocimiento de relación jurídica alguna con la persona identificada en él.
         </p>
     </div>
-
-    <div class="accent accent-bottom"></div>
 </section>
 
 @if ($curso->modules !== [])
     <section class="page">
-        <div class="accent accent-top"></div>
-
         <div class="brand">
             <img src="data:image/png;base64,{{ $logo }}" alt="LOTUS OTEC">
         </div>
@@ -362,8 +347,6 @@
                 reconocimiento de relación jurídica alguna con la persona identificada en él.
             </p>
         </div>
-
-        <div class="accent accent-bottom"></div>
     </section>
 @endif
 </body>

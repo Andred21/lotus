@@ -683,6 +683,47 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
+     * O base64 do fundo aparece UMA vez. Duas ocorrências dobram o HTML, e é
+     * exatamente essa classe de excesso que produziu o "visualizador travado".
+     * `background-image` num `.page` compartilhado é o que garante a unicidade;
+     * um `<img>` por página a quebraria — e reintroduziria a ancoragem absoluta
+     * que a `.accent-bottom` já provou frágil.
+     */
+    public function test_fundo_embutido_uma_unica_vez(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $jpeg = base64_encode((string) file_get_contents(resource_path('images/fundo-certificado.jpg')));
+
+        $this->assertSame(
+            1,
+            substr_count($this->pdf->lastHtml(), $jpeg),
+            'O fundo foi embutido mais de uma vez.',
+        );
+        $this->assertHtml(fn (string $html): bool => str_contains($html, 'background-repeat: repeat-y')
+            && str_contains($html, 'background-size: 100% 297mm'));
+    }
+
+    /**
+     * A barra `.accent` era desenhada em CSS porque o fundo antigo não a tinha.
+     * O fundo novo traz as duas. Manter a barra a duplicaria sobre si mesma —
+     * e manteria viva a falha de enquadramento de `:130-138`.
+     */
+    public function test_barras_accent_morreram_com_o_fundo_novo(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'accent')
+            && ! str_contains($html, 'linear-gradient'));
+    }
+
+    /**
      * Renderiza o documento com uma descrição de comprimento exato, para o
      * teste do limiar poder falar em caracteres.
      */
