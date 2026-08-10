@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: turma-habilitacao-listagem
 active_work_item: turma-habilitacao-listagem
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md
 active_plan: docs/superpowers/plans/2026-08-10-turma-habilitacao-listagem.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-lote-e-snapshot
-state_basis_commit: 4ae4c91
-updated_at: 2026-08-10T17:05:00-03:00
+state_basis_commit: a23e5d3
+updated_at: 2026-08-10T19:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -145,6 +145,132 @@ das Tasks 2 e 3 (`500 passed`) e da Task 4 (`501 passed, 1865 assertions`) **nã
 própria Task 1 acrescenta** ao `TurmaModelTest` (+1 teste, +1 asserção). Os números corretos passam a
 ser **501 passed / 1859 assertions** nas Tasks 1–3 e **502 passed / 1866 assertions** na Task 4 e no
 gate. Nenhuma asserção, nenhum teste e nenhum comportamento do plano muda — só a conta.
+
+### Tasks 1–4 entregues — uma revisão de task por entrega
+
+Commits, do base `a4f550a`: `4d202e8` (a relação nomeada `documentacaoObrigatoria`, com o
+`TurmaDocumentController::index` consumindo-a e a 2ª cópia do `whereIn` morta), `80d5c24` (o VO
+`HabilitacaoStatus` e o `for()` como única API pública do service), `2fe0c71` (o seam de listagem:
+`LISTING`, `loadListingData()`, `present()` sem `findOrFail`, `enrolled_count` sem `??`) + `c97b373`
+(fix do review da Task 3), `a23e5d3` (a guarda de contagem).
+
+**Um desvio de ordenação, decidido pelo João no meio da Task 2 (D-E2).** A linha
+`'documentacaoObrigatoria'` do eager-load foi **antecipada** da Task 3 para a Task 2. O motivo foi
+medido, não suposto: o service passou a ler a relação como **propriedade**, e sem a carga a listagem
+viola `Model::preventLazyLoading()` no `ContratanteEagerLoadTest` (RED visto; causa confirmada por
+`git stash`, não por leitura). O resto do seam ficou na Task 3, como o plano previa.
+
+**Consequência que corrige a medição 4 da abertura, e é ganho:** `preventLazyLoading` **não**
+enxergava a forma antiga (`$turma->files()->…`, query feita **na** relação); enxerga a forma nova.
+O bloco ganha uma segunda guarda de graça, além da contagem da Task 4.
+
+**Um achado Important do review da Task 3, aceito e corrigido em `c97b373`:** o DoD literal da task
+("nenhuma Action pré-carrega relação") e o docblock novo do `loadListingData()` eram **falsos** —
+`DesignateRedatorAction` e `RemoveRedatorAction` ainda faziam `load('redatores.user')`, que são
+exatamente "as duas rotas de redator" que o próprio DoD nomeia. O plano esqueceu de listar os 2
+arquivos. Seguro porque `present()` recarrega pelo `LISTING` com `load()` (não `loadMissing()`) e
+nenhum consumidor dependia da carga — o único outro chamador, `OperationDemoSeeder:502`, descarta o
+retorno.
+
+**Os dois mutantes da Task 4 foram vistos vermelhos com a mensagem literal, pelo implementador e de
+novo pelo revisor**, e revertidos sem resíduo: sem `'documentacaoObrigatoria'` no `LISTING`,
+`Failed asserting that 2 is identical to 1.`; sem o `loadCount('enrollments')`,
+`TurmaData::__construct(): Argument #15 ($enrolled_count) must be of type
+Spatie\LaravelData\Optional|int, null given` — a diferença que a D-B3 compra.
+
+### Task 5 — o gate do bloco (2026-08-10)
+
+Executado por mim direto: é a prova do DoD, e o DoD pede comportamento contra a API real.
+
+**Ferramentas.** Backend **502 passed, 1 skipped (1866 assertions)** — +2 testes / +8 asserções sobre
+o baseline 500/1858 de `4ae4c91`, e exatamente o número que a D-E1 previu. `typescript:transform`
+rodado de novo: `generated.ts` **sem diff** — nenhum DTO mudou de forma, então o frontend não é
+tocado. `git diff main...HEAD -- backend/database/` **vazio** (zero schema) e
+`git diff main...HEAD -- frontend/` **vazio**. Pint `--test` **`passed`** nos **15** `.php` do bloco
+(a lista do plano tinha 13; os 2 que faltavam são `Designate/RemoveRedatorAction`, que só entraram
+no diff com o `c97b373`).
+
+**Código morto e leis §5.** A API antiga do service morreu — `grep` por `isHabilitada($`/
+`missingTypes($` em `backend/app/` devolve **vazio**. O `whereIn` dos três tipos obrigatórios tem
+**um dono só**: um único hit, dentro da própria relação (`Turma.php:88`). Zero `Repository` real
+(o único hit é o comentário `não Repository — ADR-02` do `TurmaQueryBuilder`), zero `abort(` em
+`Domains/Operation/`.
+
+**E2e contra a API real**, sessão Sanctum por cookie + CSRF (lição 12: `Origin` e `Accept`
+obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login, que o rotaciona).
+
+1. **`GET /api/turmas` → 200, 4 turmas**, cada uma coerente com os documentos que o seed criou,
+   conferidos antes na tabela `files`: turma 1 (só `MANUAL`) `habilitada: false`,
+   `missing: ['PRUEBAS','EVALUACION_REDATOR']`; turma 2 (os 3 tipos, em andamento) `true`, `[]`;
+   turma 4 (`MANUAL`+`PRUEBAS`) `false`, `['EVALUACION_REDATOR']`.
+2. **A D-B1 medida onde o usuário vive:** a turma **3** — concluída, com os três tipos presentes —
+   responde **`habilitada: false`** com `missing_document_types: []`. É o valor que o gate de status
+   dentro do VO preserva, e a prova de que o contrato não mudou de valor.
+3. **A contagem medida na API, não só na suíte.** `general_log` do MySQL ligado em `TABLE`, truncado,
+   um `GET /api/turmas`: **1 query em `files`** para as 4 turmas —
+   `select * from files where type in ('MANUAL','PRUEBAS','EVALUACION_REDATOR') and
+   files.fileable_id in (1,2,3,4) …`. As demais consultas da listagem são **8** (turmas, redatores,
+   users, courses, quotes, budgets, clients, users), então **8 + 1 = 9**, contra os **8 + 7 = 15**
+   medidos na abertura no **mesmo banco**. A decomposição bate com a da spec linha a linha.
+4. **`GET /api/turmas/4` → 200** com `enrolled_count: 10` **inteiro** — o caminho sem o `??`, que a
+   D-B3 matou.
+5. **`GET /api/turmas/4/documents` → 200** com `[(16,'MANUAL'), (17,'PRUEBAS')]`, e a turma 3 com os
+   4 registros dela (incluindo o `PRUEBAS` duplicado do seed) — a relação substituiu o `whereIn` do
+   controller sem mudar uma linha da resposta.
+6. **`POST /api/turmas/4/documents` com o `EVALUACION_REDATOR` que faltava → 201**, e o
+   `GET /api/turmas` seguinte mostra a turma 4 em **`habilitada: true`, `missing: []`**. A leitura
+   pela relação **não congelou** a resposta.
+
+**Prova extra, de graça:** o `DELETE` do documento recém-subido devolveu **204** e a listagem voltou
+a `habilitada: false`, `['EVALUACION_REDATOR']` — soft-delete não conta, medido na API real e não só
+no teste. Serviu também para devolver o banco ao cenário canônico de habilitação.
+
+**Desvio declarado contra o Step 3 do plano — o `migrate:fresh --seed` NÃO foi rodado.** O banco de
+dev carrega o `LOT-2026-1001` com o `aluno.name` **corrompido de propósito**, deixado pelo bloco
+anterior para o **checkpoint visual do João**, que segue pendente; recriar o cenário custaria um
+`UPDATE … JSON_SET` a mais, mas apagá-lo sem pedir seria destruir trabalho dele. As 4 turmas e os
+documentos foram conferidos direto na tabela **antes** do e2e e estavam no cenário canônico do seed,
+e é **este mesmo banco** onde os 7 da abertura foram medidos — não lavar torna a comparação mais
+forte, não mais fraca.
+
+**Um erro do plano, achado ao executar:** o Step 3 escreve `GET /api/turmas/{id}/documentos`; a rota
+real é `documents` (`Domains/Operation/routes.php:27`). Erro de texto do plano, não do código —
+`documentos` devolve 404 porque nunca existiu.
+
+**O que o gate NÃO provou, sem maquiagem:** nada foi visto renderizado. O bloco é backend puro e não
+tocou uma linha de `frontend/` — o contrato HTTP saiu idêntico em forma e em valor, então não há
+tela nova a conferir. A `general_log` foi desligada e truncada ao fim da medição.
+
+**Pendências revisadas:** nenhuma venceu gatilho, nenhuma fechou, nenhuma nasceu. P-03 (main tree)
+segue sem dois blocos de backend em paralelo e o bloco a respeitou; P-04 reavalia **2026-08-15**;
+P-15, P-23, P-25 e P-26 revisam **2026-09-30**. **Anotado sem virar pendência:** a P-09 (3 tipos de
+documento contra os 4 do Figma) fica **mais barata de fechar** por causa deste bloco — o `whereIn`
+dos tipos obrigatórios saiu de dois lugares para um, dentro da relação; a decisão de negócio
+continua com a Lotus e o gatilho segue de pé.
+
+**Estado do banco de dev:** cenário do seed, mais as mutações do bloco anterior (template v1 do curso
+2, certificados `LOT-2026-1000`…`1003` com o `LOT-2026-1001` corrompido de propósito), mais o
+arquivo `18` da turma 4 **soft-deletado** com o objeto correspondente vivo no MinIO — que é o
+comportamento prescrito (`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket).
+
+**Minor abertos, para o review final do branch triar:**
+
+- **M-1** — `HabilitacaoStatus` tem as propriedades `private` mas não `readonly`: o VO é imutável por
+  convenção, não pela engine.
+- **M-2** — o docblock do `HabilitacaoStatus` perdeu a nota "(soft-delete não conta)" que o service
+  antigo carregava; o comportamento continua certo e agora está provado na API, mas o texto sumiu.
+- **M-3** — `TurmaQueryBuilderTest`: `private int $seq = 0;` declarado no meio da classe, não no topo.
+- **M-4** — `makeTurmaComDocs()` duplica quase inteira a cadeia comercial de
+  `ContratanteEagerLoadTest::makeCadeia()`. Com duas ocorrências, WET é razoável; numa terceira, vale
+  extrair um builder (precedente: `IssuableEnrollmentBuilder`).
+
+Evidência task a task em `.superpowers/sdd/progress.md`. Review declarado **BAIXO RISCO** pela spec
+(zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e rota pública) → **uma frente só, lente
+Claude**, sem segunda frente do Codex.
+
+**Divergência de nomenclatura resolvida:** o Step 5 do plano escreve
+`next_action: request_block_review`; o `/executar-bloco` e o precedente dos blocos anteriores usam
+`request_code_review`, que é o valor gravado aqui.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
