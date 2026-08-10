@@ -203,6 +203,25 @@ idêntica, então nada de histórico se perdeu. `last_completed_work_item` passa
 o último artefato durável quando elas foram commitadas. `pendencias.md` e `backlog.md` mesclaram
 sem conflito.
 
+### DoD item 3 reprovou no gate e foi corrigido — 2026-08-10
+
+O gate de fechamento rodou o teste literal do plano (Task 4, Step 4) e ele **reprovou**: o adaptador
+`.claude/skills/lotus-ui-review/SKILL.md` tinha **18 linhas** contra o teto de 15. Nenhuma correção
+do review foi indevida — o estouro veio de Q-2 (justificativa da allowlist) e Q-10 (lente
+`frontend-design` e precedência rule-vence-skill), ambas aprovadas pelo João. O que sobrou foi
+prosa, não substância.
+
+**Decisão do João: resolver, não registrar desvio.** O adaptador foi comprimido para **15 linhas**
+sem perder nenhuma das duas cláusulas — a allowlist continua mapeada passo a passo ao workflow que
+roteia, e a precedência da rule sobre `frontend-design` continua explícita. O teto era proxy de
+"adaptador fino"; a compressão restaura o número **e** a intenção. Gate refeito depois da correção:
+`-le 15` PASS, roteamento PASS, `Condição A|B|C|UI-01` ausente, e a fonte canônica segue
+`Skill is valid!`.
+
+Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude/skills/lotus-ui-review/`
+por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
+adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.
+
 ## Último item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
 
 **Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`

@@ -6,13 +6,10 @@ disable-model-invocation: true
 allowed-tools: Read, Glob, Grep, Write, Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(mkdir:*), Bash(playwright-cli:*), Bash(.agents/skills/lotus-ui-review/scripts/preflight.sh:*)
 ---
 
-Leia integralmente `../../../.agents/skills/lotus-ui-review/SKILL.md` e siga a fonte canônica.
-Leia cada referência que ela exigir. As extensões deste frontmatter apenas controlam a invocação
-no Claude Code; não alteram o workflow canônico. A allowlist cobre exatamente o que o workflow
-canônico exige: ler o código, registrar Git (passo 3), rodar o preflight (passo 5), criar o
-diretório da run (passo 6), dirigir o browser (passos 7–12) e gravar `report.txt` (passo 14).
-Nenhuma escrita em código ou dado da aplicação é autorizada aqui.
+Leia integralmente `../../../.agents/skills/lotus-ui-review/SKILL.md` e cada referência que ela exigir;
+siga a fonte canônica. Este frontmatter só controla a invocação no Claude Code. A allowlist cobre o
+workflow canônico — ler código, registrar Git (3), preflight (5), criar a run (6), dirigir o browser
+(7–12), gravar `report.txt` (14) — e não autoriza escrita em código ou dado da aplicação.
 
-A skill `frontend-design` é lente estética complementar, nunca dona do fluxo: quem decide
-classificação é `references/review-rubric.md`. Onde `frontend-design` conflitar com uma rule de
-`.claude/rules/`, **a rule ganha e o conflito é avisado ao João** — não resolvido em silêncio.
+`frontend-design` é lente estética complementar: quem classifica é `references/review-rubric.md`. Se
+ela conflitar com uma rule de `.claude/rules/`, **a rule ganha e o conflito é avisado ao João**.
