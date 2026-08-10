@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: turma-habilitacao-listagem
 active_work_item: turma-habilitacao-listagem
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md
 active_plan: docs/superpowers/plans/2026-08-10-turma-habilitacao-listagem.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: "Q-1, Q-2, Q-3, Q-4 — todos aprovados pelo João em 2026-08-10."
 last_completed_work_item: certificacao-lote-e-snapshot
-state_basis_commit: a23e5d3
-updated_at: 2026-08-10T19:20:00-03:00
+state_basis_commit: a8ddb80
+updated_at: 2026-08-10T20:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -271,6 +271,60 @@ Claude**, sem segunda frente do Codex.
 **Divergência de nomenclatura resolvida:** o Step 5 do plano escreve
 `next_action: request_block_review`; o `/executar-bloco` e o precedente dos blocos anteriores usam
 `request_code_review`, que é o valor gravado aqui.
+
+### Review de sprint — 2026-08-10: uma frente, 4 achados, todos aprovados e corrigidos
+
+**BAIXO RISCO** conforme o §8 da spec (zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e
+rota pública; `executor: claude`) → **lente Claude com o gabarito do projeto, sem segunda frente do
+Codex**. Escopo: os 15 `.php` de `main...HEAD`. Ferramentas **reconferidas antes de revisar, não
+herdadas do gate**: suíte **502 passed, 1 skipped (1866 assertions)**, Pint `--test` **`passed`** nos
+15. **Órfãos zero** — `HabilitacaoStatus` 2 consumidores (via `for()`), `for()` 2,
+`documentacaoObrigatoria` 3 (`LISTING`, service, `TurmaDocumentController::index`),
+`loadListingData()` 1, `LISTING` 2; a API antiga do service morta (`grep` por
+`isHabilitada($`/`missingTypes($` em `app/` vazio). **Leis §5 limpas.**
+
+**O achado que o gate não podia ter pego (Q-1 🟡)** — o gate da RN-16 no `ConcludeTurmaAction`
+decidia sobre a relação **em cache**. O bloco trocou "query na relação" por "leitura de relação", e
+`for()` lê `documentacaoObrigatoria` como **propriedade**: com o model já carregado (é exatamente o
+que `loadListingData()` faz, no mesmo request), um documento arquivado depois daquela carga deixava o
+cache dizer "completa" e **concluía a turma** — escrita **TERMINAL** (D5), que habilita emissão de
+certificado. **Provado nos dois sentidos com sonda temporária (lição 10)**: com o código do bloco a
+conclusão passa; com os dois arquivos vindos de `main`, recusa com `Documentación obligatoria
+incompleta (RN-16). Falta: MANUAL.` **Não era bug vivo** — os 2 chamadores (route-binding do
+`conclude`, `OperationDemoSeeder:509`) entregam turma sem a relação —, mas é regressão latente a uma
+linha de distância. O §5 da spec declarava o cache do VO como consequência de **leitura**
+("perguntar de novo no mesmo objeto"); o impacto medido é de **escrita**, e essa parte não estava
+coberta pela decisão registrada. Corrigido com `$turma->load('documentacaoObrigatoria')` **dentro da
+transação**, declarado no ponto que exige a leitura fresca, mais guarda nova no `ConcludeTurmaTest`
+**vista vermelha primeiro** (`A conclusão deveria recusar: o MANUAL foi arquivado depois da carga.`).
+O docblock do service, que afirmava ser a relação não-carregada o mecanismo da leitura fresca do
+`conclude`, virou falso com o fix e foi reescrito junto.
+
+**Os outros três, todos 🟢:**
+
+- **Q-2** (o M-1 herdado) — as propriedades do `HabilitacaoStatus` eram `private` sem `readonly`: VO
+  imutável por convenção, não pela engine. Agora `private readonly`, como o precedente
+  `AcademicResult`/`EnrollOutcome`.
+- **Q-3** — o bloco matou a 2ª cópia do `whereIn`, mas deixou a 2ª cópia da **lista**:
+  `array_column(TurmaDocumentType::cases(), 'value')` em `Turma.php:88` **e**
+  `TurmaHabilitacaoService:26`. Nasce `TurmaDocumentType::values(): array<string>`, e a lista canônica
+  passa a ter um dono só — o mesmo movimento que a relação nomeada fez pela pergunta.
+- **Q-4** — a D-B3 matou o `?? $turma->enrollments()->count()` de propósito (falhar alto), mas o
+  contrato novo não estava escrito em lugar nenhum: quem projetar por caminho que não passe por
+  `withListingData()`/`loadListingData()` leva `TypeError` em runtime sem saber a causa. Docblock no
+  `fromModel` nomeando os dois.
+
+**Não viraram achado, com o motivo medido:** a nota "(soft-delete não conta)" **existe** — mudou de
+dono junto com a regra, para o docblock de `Turma::documentacaoObrigatoria()` (era o M-2); o
+`private int $seq = 0;` no meio do `TurmaQueryBuilderTest` é estilo, e o Pint passa (M-3); o
+`makeTurmaComDocs()` duplicando o `ContratanteEagerLoadTest::makeCadeia()` é **decisão registrada** —
+o `CreatesDomainRecords` documenta que Budget/Quote/Turma ficam fora de propósito (H.4.9, spec D8), e
+o critério já fixado é "duas ocorrências, WET razoável; na terceira, extrair" (M-4); e o cache do VO
+no caminho de **leitura** (`GET`) é consequência declarada no §5 da spec.
+
+**Placar pós-correção: 503 passed, 1 skipped (1868 assertions)** — +1 teste / +2 asserções sobre os
+502/1866 que eu reconferi antes de revisar. Pint `passed` nos 7 arquivos do fix;
+`typescript:transform` rodado de novo, `generated.ts` **sem diff**. Correções no commit `a8ddb80`.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
