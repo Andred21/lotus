@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: hardening
-active_work_item: hardening-revisao-ui-assistida
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
-active_plan: docs/superpowers/plans/2026-08-10-hardening-revisao-ui-assistida.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: Q-1..Q-10 (todos, aprovados pelo João em 2026-08-10)
-last_completed_work_item: turma-habilitacao-listagem
-state_basis_commit: e01f198
-updated_at: 2026-08-10T17:05:00-03:00
+review_findings_approved: null
+last_completed_work_item: hardening-revisao-ui-assistida
+state_basis_commit: 6e2ccc7
+updated_at: 2026-08-10T17:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,51 @@ updated_at: 2026-08-10T17:05:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-09 (`hardening-revisao-ui-assistida`)
+## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
+
+### Gate de fechamento — 2026-08-10
+
+**O item 0 foi refeito, não herdado do gate técnico.** As correções Q-4 e Q-6 mexeram no
+`preflight.sh` *depois* dele, então os nove modos foram exercitados de novo, com o Lotus local de
+pé: `bash -n` limpo; `BLOCKED: non-local` para URL de produção; `BLOCKED: unreachable` para porta
+morta em loopback; `BLOCKED: non-local` **mesmo com o `curl` fora do `PATH`** — a prova de que a
+validação roda antes de qualquer requisição, que é o ponto da Q-4; `BLOCKED: unhealthy ...
+status=503` contra servidor sintético; `BLOCKED: missing command: playwright-cli`; e `PREFLIGHT_OK`
+com `frontend=200 backend=200`. `4xx` continua passando de propósito.
+
+**O gate reprovou um item do DoD e a reprovação não foi maquiada.** O teste literal do plano
+(Task 4, Step 4) acusou o adaptador com **18 linhas** contra o teto de 15 do DoD item 3 — estouro
+vindo das próprias Q-2 e Q-10, aprovadas. Resolvido por decisão do João: comprimido para 15 linhas
+sem perder cláusula, e o gate refeito passou. Detalhe em §"DoD item 3 reprovou no gate".
+
+**Demais itens:** suíte backend **503 passed, 1 skipped (1868 assertions)** — rodada no tree
+central, cujo `backend/` é byte a byte idêntico ao desta branch, com checksum de `app/` + `tests/`
+igual antes e depois; frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes na
+árvore já mesclada; Pint e `typescript:transform` **N/A** (zero `.php`, zero DTO, `generated.ts`
+sem diff); código morto zero; leis §5 sem superfície de contato — o bloco não toca schema, auth,
+auditoria, RBAC nem código de aplicação.
+
+**Pendências:** a **P-27 fechou** — o enum final é `used|complementary_unavailable|not-needed`, com
+a nota no `progress.md` da entrega; o plano aprovado não foi reescrito retroativamente e os
+relatórios em `.artifacts/` ficam como registro de auditoria. Nenhuma outra venceu gatilho (P-04
+reavalia 2026-08-15; P-15 e P-26 em 2026-09-30) e nenhuma nasceu. A P-03 **não** disparou: o
+gatilho é dois blocos de **backend** em paralelo, e este não é backend.
+
+**Divergência achada e não corrigida, por ser de outro bloco:** a linha do
+`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
+`Spatie\LaravelData\Optional|int`, o que parte a tabela naquela linha. Veio da main no merge; fica
+registrada aqui em vez de corrigida em silêncio.
+
+**Arquivamento:** plano → `plans/archive/2026-08-10-hardening-revisao-ui-assistida.md`; spec →
+`specs/archive/2026-08-10-hardening-revisao-ui-assistida-design.md` (não é compartilhada com nenhum
+item futuro registrado). A referência interna do plano à spec foi reapontada para o path arquivado,
+e a P-27 encerrada aponta para o plano arquivado. Entrega registrada no `progress.md`, com a de
+2026-08-03 (`abstracao-componentes-catalog`) descendo para o `progress-archive.md` para manter dez.
+Item 1 removido do `backlog.md`, com renumeração dos seguintes; os três débitos do piloto ficam.
+
+**Estado do ambiente:** nenhuma mutação. O bloco nunca escreveu em banco — o piloto e a aceitação
+são read-only por contrato, com `git status --short` antes e depois em cada run. O Vite dedicado
+subiu só para o `PREFLIGHT_OK` do gate e foi encerrado; o Compose central seguiu ativo e intocado.
 
 **Item 1 do `backlog.md`, selecionado explicitamente pelo João no Gate 4 e confirmado após a
 reconciliação da fila.** O bloco cria a infraestrutura local e a skill compartilhada de revisão
@@ -222,7 +266,7 @@ Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude
 por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
 adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.
 
-## Último item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
+## Penúltimo item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
 
 **Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -569,7 +613,7 @@ backlog a consome). Entrega registrada no `progress.md` (a de 2026-08-03/`zerar-
 (`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket). As 4 turmas voltaram ao
 cenário canônico. `migrate:fresh --seed` devolve tudo.
 
-## Penúltimo item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
+## Antepenúltimo item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
 ### Gate de fechamento — 2026-08-10
 
@@ -933,252 +977,3 @@ mesma lista de fixers. É dívida de estilo pré-existente num arquivo que o blo
 reformatá-lo inteiro seria ruído de diff (lição 9), então ficou. `pnpm lint`, `pnpm build` e
 `pnpm test` (13 arquivos / 47 testes) verdes; `typescript:transform` **sem diff** em `generated.ts` —
 nenhum DTO mudou de forma. Correções no commit `d01c279`.
-
-## Antepenúltimo item fechado — 2026-08-08 (`certificacao-frontend`)
-
-### Gate de fechamento — 2026-08-08
-
-**O item 0 foi refeito contra a API real, não herdado do gate de execução:** as correções
-Q-1..Q-9 entraram depois do e2e da Task 11 e mexeram exatamente nos caminhos do painel e do lote
-(o Q-3 reapontou os testes de invariante para o `EmissionPanelQuery`; o Q-5 mudou o contrato do
-batch). `migrate:fresh --seed` no MySQL — desta vez sem a negação de permissão que travou a
-Task 11 —, sessão Sanctum por cookie + CSRF (lição 12: `Origin` e `Accept` obrigatórios, XSRF
-reextraído do cookie jar pós-login).
-
-**A cadeia inteira do §5 da spec, pela API:**
-
-1. **As portas do painel destravadas uma a uma:** o seed fresco não tem template no curso 2 e o
-   painel respondeu `emission_blocked: 'sin_plantilla'` com a turma 3 **visível** (o contrato
-   D-P3); `POST /api/courses/2/templates` moveu o bloqueio para `plantilla_sin_ciudad` (porta 5);
-   `layout_config.city = 'Santiago'` zerou (`null`). Motivo sempre calculado no servidor (D-P1) —
-   o cliente nunca re-derivou porta. Os 15 alunos no painel, todos com RUT string não-nulo (Q-3).
-2. **Resultado acadêmico:** `PUT /api/turmas/4/alunos/36/resultado` com `"6,9"` → **200** com a
-   vírgula chilena de volta na resposta; `grades.final = []` → **422** RFC 7807 es-CL
-   (`La nota final debe ser un número o un texto no vacío.`); e a turma **concluída** recusando
-   com **RN-15** — o primeiro ensaio contra a turma 3 levou 422 por comportamento correto, não
-   por defeito.
-3. **Emissão individual** com `redator_id` (D11) → **201 `LOT-2026-1000`**, snapshot congelado
-   com a razão social (`Enel Distribución`).
-4. **PDF com `description` de 3.689 chars** (alongada pela própria API de curso, preservando o
-   template — coleção `Optional` intocada): **200 `application/pdf`, 2 páginas, A4
-   (594.96 × 841.92 pts)**; `pdftoppm` da página 1 inspecionada — descrição clampada com
-   reticências visíveis, QR + assinatura (Ana Reyes) + disclaimer ancorados na página 1.
-5. **Historial → Revocar → Reemitir:** listagem 200; `POST .../revoke` com motivo → **200
-   revocado**; a rota pública passou a dizer `revocado` com `revoked_at` presente e
-   `revocation_reason` **ausente**; reemissão no mesmo enrollment → **201 `LOT-2026-1002`**,
-   uuid novo — só possível por ser revocado (D8).
-6. **Batch `[26, 23, 31]`** com a falha provocada (31 já tinha vigente) → **200** com relatório
-   por item: os dois emitidos com números **contíguos** `LOT-2026-1003`/`1004` (a falha não
-   consumiu número — invariante §4.5) e a falha **nomeada**
-   (`Ya existe un certificado vigente para esta matrícula.`); `[26, 26]` → **422** — o
-   `distinct` do Q-5 vivo na API.
-7. **Validação pública sem cookie, sem CSRF e sem `Origin`:** 200 para emitido e para revocado;
-   **404 RFC 7807** para uuid inexistente.
-8. **Manual da turma 3:** **200 `application/pdf`, 1 página, A4** — a dívida do Letter segue paga.
-
-**Demais itens:** suíte **493 passed, 1 skipped (1833 assertions)**, idêntica ao placar declarado
-· frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes · Pint `passed` nos
-**26** `.php` vivos do bloco · `typescript:transform` **sem diff** em `generated.ts` · código
-morto zero (sem `.gitkeep`/TODO novos; `/certificados` não referencia mais `ModulePlaceholder`) ·
-leis §5 limpas (o único hit do grep cross-feature é docblock; zero import real).
-
-**O que o gate NÃO provou, herdando a decisão do João:** os Steps 1 (tela real) e 5 (checkpoint
-visual) seguem não executados — nenhuma tela do módulo foi vista renderizada por ninguém. O
-conteúdo do QR (`frontend_url + /validar/{uuid}`) fica com a prova do gate de execução: não há
-decodificador de QR no host (`zbarimg`/`cv2` ausentes) e nenhum Q tocou o Blade.
-
-**Pendências revisadas:** a **P-15 teve o gatilho vencido e foi reescrita** — o bloco entregou o
-módulo próprio e **não tocou** listagem/detalhe do aluno; a decisão de expor coluna/card lá segue
-com o João (revisar 2026-09-30). Nenhuma outra venceu (P-04 reavalia 2026-08-15; P-03 sem dois
-backends em paralelo), nenhuma fechou, nenhuma nasceu.
-
-**Arquivamento:** plano → `plans/archive/2026-08-08-certificacao-frontend.md`; spec do bloco →
-`specs/archive/2026-08-08-certificacao-frontend-design.md`; e a spec base
-`2026-08-05-certificacao-sprint-4-design.md` **arquivada junto** — este bloco era o último
-consumidor dela, fechando o arquivamento assimétrico de 2026-08-07. Entrega registrada no
-`progress.md` (a de 2026-08-02/redator desceu ao `progress-archive.md` para manter dez); item 1
-removido do `backlog.md` com renumeração dos seguintes, e a linha "Certificados" dos módulos
-marcada entregue.
-
-**Estado do banco de dev:** `migrate:fresh --seed` do gate + mutações do e2e (template v1 do
-curso 2 com `city: Santiago`, `description` do curso 2 alongada para 3.689 chars, resultado da
-matrícula 36, certificados `LOT-2026-1000`…`1004` com o 1000 revocado). Nada é fixture de código;
-o cenário canônico volta com `migrate:fresh --seed`.
-
-**Item 1 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-08** (`/planejar-bloco`
-com o item nomeado literalmente no argumento — "Certificação · frontend (módulo próprio)" — e o
-estado em `idle`; o comando não promove item sozinho). É o que sobrou do Bloco 7 depois do D-P8:
-as Tasks 9–13 do plano arquivado migraram inteiras e serão **replanejadas**, não copiadas —
-certificados ganham módulo próprio na interface.
-
-**Rota direta a `ready_for_planning`, sem regeração de packet — motivo medido, não pressa:** o
-próprio item do backlog fixa o contexto obrigatório, e as quatro fontes estão disponíveis sem
-varredura nova. (1) A spec `2026-08-05-certificacao-sprint-4-design.md` **segue ativa** — este
-bloco é o último consumidor dela (a invariante §4.2 migrou junto). (2) Os **prints do protótipo
-Figma** — a única fonte `unavailable` do packet, e gatilho de staleness declarado — entraram na
-própria seleção: o João anexou 5 telas ao argumento do comando (Emisión vazia; Emisión com turma
-concluída e tabela de alunos com nota/asistencia/estado acadêmico/ação Emitir + botão de lote
-"Emitir todos los pendientes"; diálogo "Confirmar emisión"; diálogo "Certificado emitido" com
-Descargar PDF; Historial com busca, filtro de estado e estados Vigente/Por vencer/Vencido/Revocado
-com ações Ver/Revocar/Reemitir). São instrução vigente de topo de hierarquia; a spec/plano do bloco
-fixa o que deles vira contrato. (3) O packet `certificacao-sprint-4.md` (`status: partial`) é
-**reutilizado por ponteiro**, como o backlog manda, para não repetir a varredura de Drive/Notion.
-(4) O `Libro de Control de Clases` não é espelhado no repo; o packet o registra como
-`D-OFFICIAL-MANUAL` (Drive `1VE89_MEiRlY574NqPaWvB7IkdAA0zo0T`), consultável se o desenho precisar.
-
-**Dívidas com prazo que o bloco herda (do próprio backlog):** DTOs de certificação em
-`generated.ts` sem consumidor; Manual de Classe saindo em **Letter** (Blade sem `@page`); rodapé/QR
-absolutos transbordando de página com `courses.description` longa.
-
-**Toca `frontend/` e Blades de `backend/resources/views` → main tree, sem worktree (P-03).**
-
-### Brainstorming de 2026-08-08 — decisões do João e spec aprovada
-
-**Cinco decisões explícitas do João:** as **4 frentes num bloco** (módulo `/certificados`,
-validação pública + D19, resultado acadêmico na turma, Blades herdados); **Reemitir só para
-Revocado** — Vencido fica sem reemissão (o botão do protótipo colide com o índice único do D8;
-renovação de vencido é capacitação nova); **"Por vencer" = 30 dias**; **lote = endpoint batch no
-backend com relatório por item** (cada matrícula na própria transação); e **validação/resultado
-sem print** — composição sem referência, checkpoint dele cobre.
-
-**Nove medições moldaram o desenho antes dele existir** (destaques): `issuable` não sustenta a
-tela do protótipo (só emissíveis, 3 campos) e vira `emission-panel` com todos os alunos e os DTOs
-`Issuable*` mortos no mesmo commit; turma **não tem código** — o "TR-43" do protótipo não existe
-no schema; `IssueCertificateData` exige `redator_id` e o protótipo omite o seletor que a D11
-manda existir; o "Confirmar emisión" mostra código pré-emissão que a D9 torna impossível; e a
-`frontend-fsliced.md` ainda afirma "validação QR fora da SPA", contra a D14 aprovada — a rule é
-corrigida no bloco (lição 13).
-
-Design aprovado em 8 seções em 2026-08-08. Spec:
-`docs/superpowers/specs/archive/2026-08-08-certificacao-frontend-design.md`.
-
-### Plano escrito em 2026-08-08 — 12 tasks (0–11), `executor: claude` (SDD)
-
-`docs/superpowers/plans/archive/2026-08-08-certificacao-frontend.md`. A escrita do plano achou **quatro
-desvios contra a spec aprovada, declarados no §Desvios** (lição 13): D-P1 — o motivo de bloqueio
-da turma no painel é **calculado no servidor** (`emission_blocked`), porque as portas 5/6 (cidade,
-redator) não são deriváveis do payload que a spec listou, e re-derivar porta no cliente é a classe
-de bug que o docblock do `CertificateEligibility` documenta; D-P2 — as portas são **6, não 4** (a
-spec base envelheceu); D-P3 — os 3 testes de **ocultação** do `issuable` migram de contrato: turma
-não emissível agora **aparece bloqueada**, mudança deliberada; D-P4 — `problemFromBlob` não existe
-(a task antiga que o extrairia migrou para cá) — o PDF reusa o padrão do `useTurmaManual` e a
-extração só acontece se virar duplicação. Review de bloco declarado **alto risco** (peso legal +
-rota pública + `generated.ts`) → duas frentes quando chegar em `ready_for_review`.
-
-### Execução de 2026-08-08 — Tasks 0–10 entregues, Task 11 parada no checkpoint do João
-
-Branch `feature/certificacao-frontend`, a partir de `3d7ee5c`. As **onze primeiras tasks estão
-entregues e revisadas** (uma revisão de task por entrega, fix dispatchado para todo Critical e
-Important, Minor acumulado para o review final). Placar: backend **492 passed, 1 skipped (1831
-assertions)**; frontend **13 arquivos / 47 testes**, `pnpm lint` limpo, `pnpm build` verde. Pint
-`passed` nos 23 `.php` vivos do bloco, `typescript:transform` **sem diff** em `generated.ts`, e os
-seis greps de lei do Step 4 do gate todos limpos.
-
-**Task 10 adotou o WIP do João em vez de reescrever.** Os cinco arquivos do resultado acadêmico já
-estavam na working tree sem commit quando a task abriu; a disciplina do `/executar-bloco` manda o
-working tree existente vencer, então o subagente completou o que estava lá. O commit `1023c5b` sai
-assinado por ele.
-
-**Dois defeitos de peso legal foram achados por review e vistos falhando antes do fix** (lição 10):
-o relatório do lote perdia o **nome** de exatamente quem recebeu o certificado, porque `pendientes`
-era derivado da turma viva e a invalidação do painel repintava por baixo do diálogo aberto
-(`6c57888`); e `grades` vazio ia como `{}` em vez de `null`, gravando `[]` na coluna e escrevendo
-uma mudança de nota que não houve na auditoria da matrícula (`b85b736`).
-
-**O mutante que o plano previu para o lote não mata.** Envolver o loop do
-`CertificateController::batch` num `DB::transaction` deixa os nove testes do `BatchIssueTest`
-verdes — o teste de número contíguo fala de contiguidade, não de isolamento. O comentário do
-controller afirma "não há transação externa" e nada guardava isso. Guarda nova em `be58466`: item
-já emitido tem de sobreviver a uma falha inesperada no item seguinte; contra o mutante,
-`Entries found: 0`.
-
-**O que o gate provou sem browser:** manual em **A4, 1 página** com os 15 participantes (dívida de
-Letter paga); certificado em **2 páginas A4** com `description` de 3.814 caracteres, descrição
-clampada com **reticências visíveis** e QR/assinatura/disclaimer todos ancorados na página 1;
-validação pública **sem cookie, sem CSRF e sem `Origin`** devolvendo 200 para emitido e para
-revogado, com `revoked_at` presente e `revocation_reason` **ausente** do DTO público, e 404 para
-uuid inexistente; e o QR do PDF codificando `frontend_url + /validar/{uuid}`, a rota que a Task 9
-criou.
-
-**Task 11 não fecha nesta sessão, e o motivo não é escolha:**
-
-1. `migrate:fresh --seed`, pré-requisito do Step 1, foi **negado pelo classificador de permissão**.
-   Não foi contornado. O banco de dev segue com o estado acumulado da execução.
-2. O Step 1 na tela real e o Step 5 inteiro precisam de browser, e o host WSL **não tem as
-   bibliotecas de sistema** dos browsers do Playwright (`libasound.so.2` ausente; firefox e webkit
-   reprovam no mesmo check; não há Chrome de sistema). Instalar exige root.
-3. O Step 5 sempre foi **não delegável** — é o checkpoint visual do João, escrito assim no plano.
-
-**Duas questões para o checkpoint visual, além do roteiro do plano:** o botão **Revocar** não
-aparece para o admin do seed, porque `certification.certificate.revoke` é superadmin-only no
-`RolePermissionSeeder` — se a intenção era o admin revogar, é decisão de permissão, não de
-frontend; e o ramo **expirado** da página pública mostra só o cabeçalho, sem curso nem aluno, o que
-é leitura literal do brief mas pode não ser o que um fiscalizador precisa ver.
-
-Evidência completa, task a task, com os Minor acumulados para o review final:
-`.superpowers/sdd/progress.md`.
-
-### Review de sprint — 2026-08-08: duas frentes, 9 achados aprovados e corrigidos
-
-**ALTO RISCO declarado no plano** (documento de peso legal + rota pública + `generated.ts`) →
-lente Claude com o gabarito do projeto + Codex read-only sobre `3d7ee5c..bbe1f39`. Da fusão saíram
-**9 achados (3 🟡, 6 🟢)** — 6 vistos primeiro pelo Codex, todos verificados no código antes de
-entrar — e **3 achados do Codex rejeitados com evidência** (relógio do `certStatus` no render é o
-design literal do plano; DST só desloca o badge `por_vencer` ±1 dia na direção conservadora;
-`generated.ts` antes dos consumidores era o agendamento do plano com zero consumidor existente).
-O accent-bottom deduplicou com o item 3 do ledger — decisão de negócio já registrada, não achado
-novo. Órfãos: zero, fora a face morta que virou o Q-3. O João aprovou **exatamente Q-1..Q-9**,
-mantendo as rejeições.
-
-**As correções (commits `c02f29e` backend, `3884101` frontend):**
-
-- **Q-1 🟡** `IssuedDialog` lia nome vivo do painel mesmo com o snapshot carregado — 4ª ocorrência
-  da classe vivo×congelado. Agora lê `certificate.snapshot.aluno/curso.name` e o canal de dado
-  vivo morreu inteiro: props `studentName`/`courseName` e o estado `Viewing` do `EmissionPanel`
-  saíram do código.
-- **Q-2 🟡** `useIssueBatch` invalidava só em `onSuccess`; o 500 no meio do lote (o caminho que
-  `be58466` prova existir) deixava o painel prometendo `sin_emitir` para matrícula já
-  certificada. `onSettled`.
-- **Q-3 🟡** A face de lista morta (`issuableTurmas` + 6 `constrain*`) saiu do
-  `CertificateEligibility`, com o `enrollmentIdsComVigente` que só ela consumia. Os 3 testes de
-  invariante migraram para o alvo de produção real: o que o `EmissionPanelQuery` apresenta como
-  emissível (bloqueio nulo + `aprobado` + sem vigente — o espelho do `rowCertKind` do front)
-  passa nas portas, e o que as portas recusam nunca aparece emissível. As cadeias reprovadas do
-  setUp ganharam RUT de aluno próprio: o painel projeta toda turma concluída e
-  `EmissionPanelEnrollmentData::$student_rut` é `string` não-nulo.
-- **Q-4 🟢** `useHistorial` só dispara `emission-panel` com permissão de `issue` (`enabled`) — o
-  usuário só-`view` não colhe mais um 403 no mount da aba.
-- **Q-5 🟢** `enrollment_ids.*` ganhou `distinct` + teste novo (id duplicado → 422).
-- **Q-6 🟢** Os 3 docblocks que citavam o contrato morto do `issuable` reescritos para o painel
-  real (lição 13).
-- **Q-7 🟢** `STATUS_SEVERITY` unificado em `lib/certStatus.ts`; chave `fieldRelator` →
-  `fieldRedator` nas 3 locales e nos 2 diálogos (vocabulário do backend).
-- **Q-8 🟢** `RegisterResultDialog` trava fechar durante o PUT em voo (gate do
-  `ConfirmIssueDialog`), matando o `onSuccess` velho que fechava o diálogo reaberto para outra
-  matrícula.
-- **Q-9 🟢** Fallback do `problemFromBlob` traduzido pelo i18n (`common.unexpectedError` +
-  `unexpectedErrorHint`, chave nova nas 3 locales) — era pt-BR fixo herdado do `useTurmas`, agora
-  em `shared/` com 2 consumidores e usuário-alvo chileno.
-
-**Placar pós-correção: backend 493 passed, 1 skipped (1833 assertions)** — +1 teste (+2
-asserções), o do `distinct`. Frontend 13 arquivos / 47 testes, `pnpm lint` e `pnpm build` verdes.
-Pint `passed` nos 7 `.php` tocados. `typescript:transform` **sem diff** em `generated.ts`.
-
-**Decisões do João — 2026-08-08, fecham o review:** a regra proposta para o padrão
-vivo×congelado (tela que exibe certificado emitido lê `certificate.snapshot`, nunca projeção
-viva — 4ª ocorrência) **não se aplica, por decisão explícita dele** — `frontend-fsliced.md` fica
-intocada e a proposta fica registrada aqui como decisão consciente, não como pendência. As 4
-decisões de negócio fecharam todas em "ok como está": a elisão da descrição longa fica; o
-penhasco dos 68 chars no nome do curso + accent-bottom fica sem guard-rail; `revoke` segue
-superadmin-only; e o ramo `expired` da página pública segue só com o cabeçalho. Nada foi
-deferido para `backlog.md` nem para `pendencias.md` — não há trabalho pendente nem divergência
-documental nascendo aqui. O checkpoint visual do módulo segue como limitação declarada do gate,
-herdada pelo fechamento.
-
-**Fechamento do gate — 2026-08-08, decisão do João.** Ele aprovou o bloco com os Steps 1 (tela
-real) e 5 (checkpoint visual) **não executados**, pelas três razões acima. Fica registrado sem
-maquiagem: o bloco entra em `ready_for_review` com a prova visual pendente, e nenhuma tela deste
-módulo foi vista renderizada por ninguém até aqui — a evidência é de API real, PDF inspecionado
-página a página, suíte e lint. Quem fizer o review de sprint herda isso como limitação declarada,
-não como item silenciosamente cumprido. O review é **alto risco** por decisão do plano (documento
-de peso legal + rota pública + `generated.ts`) → duas frentes, lente Claude + Codex read-only.

@@ -10,7 +10,7 @@ uma única tela ou jornada do Lotus com Playwright CLI, evidência visual e sina
 **Architecture:** a fonte canônica agent-neutral vive em `.agents/skills/lotus-ui-review/`, com
 um script determinístico e duas referências carregadas sob demanda. Claude Code recebe apenas um
 adaptador fino e o comando legado `/revisar-ui` passa a rotear para a mesma fonte; evidências ficam
-fora do Git. Spec: `docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md`.
+fora do Git. Spec: `docs/superpowers/specs/archive/2026-08-10-hardening-revisao-ui-assistida-design.md`.
 
 **Tech Stack:** Markdown/YAML · Bash · Playwright CLI 0.1.18 · Node.js 22 · Docker Compose · Git ·
 Chrome DevTools MCP 1.6.0 opcional.
