@@ -30,23 +30,6 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **`turma-habilitacao-listagem`** — aprofundamento do Operation (mesma revisão). Backend puro,
-   nenhum contrato HTTP muda.
-
-    Objetivo:
-    matar o 2N+1 do `GET /api/turmas` e terminar o seam de listagem que a Turma não tem.
-
-    Decisões fechadas:
-    1. `HabilitacaoStatus` + `TurmaHabilitacaoService::for(Turma)` — uma pergunta, uma resposta
-       (`isHabilitada()` é literalmente `missingTypes() === []`).
-    2. Relação nomeada `Turma::documentacaoObrigatoria()` com o `whereIn` embutido, para o
-       `const LISTING` continuar array de strings como nos outros quatro models.
-    3. `Turma::loadListingData()` (com `loadCount('enrollments')`) chamado pelo `present()` do
-       controller, não pelas 5 Actions; some o `findOrFail` do `TurmaController:111`.
-    4. `TurmaData::fromModel(Turma, TurmaHabilitacaoService)` mantém a assinatura.
-    5. Guarda de contagem de query espelhando o `ContratanteEagerLoadTest` — `preventLazyLoading`
-       não enxerga query de relação.
-
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
