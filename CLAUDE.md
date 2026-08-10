@@ -74,7 +74,8 @@ igual, com `/`, mas não são a mesma coisa: comando é prompt fixo, skill carre
 | --- | --- | --- |
 | `/planejar-bloco` | comando | entrada do bloco (brainstorming → spec → plano) |
 | `/executar-bloco` | comando | execução, com a mecânica de gate e disciplina git |
-| `/revisar-frontend` · `/revisar-ui` | comando | revisões focadas de frontend e de UI |
+| `/revisar-frontend` | comando | revisão estrutural focada do frontend |
+| `/lotus-ui-review` | skill | revisão UI/UX de uma tela local pelo navegador (`/revisar-ui` é a entrada legada) |
 | `/revisar-sprint` | skill | review do bloco contra o padrão do projeto |
 | `/fechar-sprint` | skill | gate de fechamento |
 | `/auditar-docs` | skill | auditoria de doc vs. código (reporta, não corrige) |

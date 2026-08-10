@@ -54,6 +54,37 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 
 ## Débitos técnicos
 
+- **Piloto UI Clientes — tabela e estado vazio perdem a faixa visível em tablet/mobile.**
+  Reproduzido por Codex e Claude Code em 2026-08-10: em `1024x768` e `390x844`, a coluna de ação
+  `View` começa fora da área visível e exige rolagem horizontal; em `390x844`, após pesquisar um
+  termo inexistente, o título, a orientação e a ação `Clear search` ficam cortados. No run Codex,
+  o wrapper do estado sem resultado mediu `452px` de conteúdo para `276px` visíveis. Evidências:
+  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{tablet,mobile}` e
+  `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/{06,07,09,10}-*.png`. Saída: preservar
+  os dados, mas manter a ação necessária e os estados vazio/erro aderentes à faixa visível pela
+  fronteira `shared/ui`; validar a mesma jornada nas três viewports.
+
+- **Piloto UI Clientes — o diálogo perde contexto de foco e expõe maximização sem nome.**
+  Reproduzido por Codex e Claude Code em desktop, tablet e mobile em 2026-08-10: ao fechar a
+  visualização por `Escape`, `document.activeElement` passa a `BODY` em vez de retornar ao botão
+  `View` (Codex nas três viewports; Claude em desktop e mobile); o primeiro controle no ciclo do
+  diálogo é o botão de maximizar, cujo HTML não contém `aria-label`, `aria-labelledby` nem `title`.
+  Evidências:
+  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{desktop,tablet,mobile}` e screenshots
+  `03`/`04`/`08`/`11` de `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/`. Saída:
+  restaurar o disparador ao fechar e nomear o controle de maximização de forma localizada na
+  fronteira compartilhada `AppDialog`/`CrudDialog`.
+
+- **Piloto UI Clientes — campos desabilitados truncam valores no modo visualização.**
+  Reproduzido por Codex e Claude Code nas três viewports em 2026-08-10: `Email` e
+  `Business activity` exibem apenas parte do valor em inputs desabilitados, que não recebem foco
+  nem oferecem um mecanismo evidente para ler ou copiar o conteúdo integral; o contraste reduzido
+  também foi medido no run Claude. Evidências:
+  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{desktop,tablet,mobile}/*dialog-open.png` e
+  `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/{04,08,11}-*.png`. Saída: no modo
+  read-only, expor o valor completo com leitura e seleção acessíveis, preservando os inputs no
+  modo edit.
+
 - **O trio da foto é idêntico em 4 dialogs e ficou fora do item 1 de propósito.**
   `useEntityPhoto({resource, id, mode, url, invalidateKey})` + `afterCreate: (created) =>
   photo.flush(created.id)` + `{photo.hasBufferedFailure && <FormErrorBanner …/>}` +
