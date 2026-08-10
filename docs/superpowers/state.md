@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: documentos-oficiais
+active_work_item: documentos-oficiais-template-e-docx
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: 6e2ccc7
-updated_at: 2026-08-10T17:30:00-03:00
+state_basis_commit: 72505f5
+updated_at: 2026-08-10T18:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,67 @@ updated_at: 2026-08-10T17:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `documentos-oficiais-template-e-docx`
+
+### Seleção — 2026-08-10
+
+**Item 1 do `backlog.md`, escrito e selecionado explicitamente pelo João na mesma instrução.** Ele
+descreveu o escopo em detalhe (fundo do certificado, realocação do QR, fidelidade tipográfica ao
+template, manual conforme `manual.pdf` preenchido automaticamente, saída DOCX e botão na UI),
+mandou abstrair no backlog e percorrer o workflow. O backlog foi escrito a partir dessa descrição;
+ele não promoveu nada sozinho.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `turma-habilitacao-listagem` e `profundidade-backend-b4-b7`): o item não cita Drive,
+Notion nem Figma. As fontes são o repositório e os três templates **já versionados no repo** —
+`docs/templates/certificado.pdf`, `docs/templates/manual.pdf` e `docs/templates/fundo-certificado.png`,
+este último entregue pelo João junto da instrução. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** O bloco mexe em
+`backend/resources/views/certification/certificate.blade.php`,
+`backend/resources/views/operation/manual-turma.blade.php`, `ManualPdfService`, `TurmaController` e
+no frontend (`features/operation/components/Document/`). Nenhum outro `active_work_item` de backend
+está aberto, então o gatilho de fechamento da P-03 continua não vencido.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **Os dois documentos já existem e já são Blade** — o bloco é refatoração, não construção:
+   `certificate.blade.php` (2 páginas: certificado + temário) e `manual-turma.blade.php` (A4 retrato,
+   3 tabelas), ambos via Gotenberg (`Shared/Pdf/GotenbergHtmlToPdf`). O manual já tem rota
+   (`GET turmas/{turma}/manual`, `Operation/routes.php:25`), serviço (`ManualPdfService`) e botão
+   (`features/operation/components/Document/ManualButton.tsx`, consumido por `TurmaDocuments.tsx:41`).
+   O que não existe é **DOCX** — nenhuma ocorrência no repo.
+2. **O manual do template não é o manual de hoje, nem em forma nem em conteúdo.** `manual.pdf` tem
+   **5 páginas em ofício paisagem (1009×612 pt)** — Dados de la clase, Antecedentes Participantes,
+   Control de Asistencia de Participantes (grade de 31 dias), Temas de La Capacitación, Evaluaciones.
+   A Blade atual tem **3 tabelas em A4 retrato**, e o `@page { size: A4 portrait }` dela é decisão
+   registrada (D4 do bloco 6d, com `preferCssPageSize` ligado no serviço). Mudar a orientação
+   contradiz uma decisão escrita — o brainstorming tem de reabri-la explicitamente com o João, não
+   sobrescrevê-la em silêncio.
+3. **O fundo é pesado e o peso é o critério do próprio João.** `fundo-certificado.png` é
+   **1414×2000, RGBA 8-bit, 1,2 MB** — proporção exatamente A4. Em base64 são ~1,66 MB **por página**
+   que o embutir; o certificado tem 2 páginas e o manual, 5. O PDF são de hoje mede **40.119 bytes**
+   (medido no gate de `certificacao-lote-e-snapshot`), e é essa a linha de base contra a qual o
+   "visualizador travado" tem de ser medido.
+4. **O QR e o par código/emissão trocam de lugar, não de existência.** Hoje `.meta` (`N°` + `Emisión`)
+   abre a página 1 no canto superior **esquerdo** (`certificate.blade.php:244-247`) e o QR vive no
+   rodapé dentro de `.footer-main` a 32mm (`:214-216`, `:313-316`). O template e a foto que o João
+   anexou põem os três juntos no canto superior **direito**, QR menor com o par embaixo.
+5. **O layout do certificado carrega guardas pagas com defeito medido em 2026-08-08** e documentadas
+   no próprio arquivo: `min-height` em vez de `height` (com `height`, QR, assinatura e aviso legal
+   saíram **sobrepostos** ao temário — documento corrompido sem aviso), o clamp
+   `-webkit-line-clamp` da descrição e o limiar 80×7 que troca o tier de 11px pelo de 9px. Quem
+   mexer no layout responde por elas; o `.accent-bottom` já tem falha de enquadramento **em aberto**
+   declarada no arquivo (`:130-138`).
+6. **DOCX via Blade é a pergunta aberta do bloco, e é decisão de arquitetura.** Não há biblioteca de
+   escritório no `composer.json`; Gotenberg converte DOCX→PDF, nunca o contrário. O caminho a
+   investigar no brainstorming é Blade renderizando WordprocessingML empacotado como OOXML; recorrer
+   a biblioteca de terceiros é ADR, não escolha de implementação.
+
+**Pendências tocadas pelo escopo, nenhuma vencida:** a **P-08** (RF-CUR-04 promete manual por curso;
+implementado é Blade única) **não** dispara — o bloco continua com Blade única padronizada. A
+**P-03** não fecha: um bloco de backend só.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
