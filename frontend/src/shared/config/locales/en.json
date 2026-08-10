@@ -502,7 +502,8 @@
     },
     "documents": {
       "title": "Class documentation",
-      "manual": "Open manual (PDF)",
+      "manualPdf": "Open manual (PDF)",
+      "manualDocx": "Download manual (DOCX)",
       "popupBlocked": "The browser blocked the manual from opening. Allow pop-ups and try again.",
       "progress": "{{done}} of {{total}} documents complete",
       "type": {

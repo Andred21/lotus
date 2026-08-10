@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutationErrors } from '@shared/hooks'
-import { useTurmaManual } from '../api/useTurmas'
+import { useTurmaManual, useTurmaManualDocx } from '../api/useTurmas'
 
 /**
  * Abre o manual da turma numa aba nova. O PDF é buscado como blob (a rota exige
@@ -12,10 +12,16 @@ import { useTurmaManual } from '../api/useTurmas'
  *
  * O `useEffect` daqui é liberação de recurso no unmount — não é sincronização
  * de estado, então não cai na proibição de `useEffect` + `setState` da rule.
+ *
+ * O DOCX baixa em vez de abrir: navegador não renderiza WordprocessingML, e
+ * uma aba com `about:blank` esperando um blob que ele não sabe exibir é pior
+ * que nenhum feedback. Os dois formatos dividem o mesmo `problemFromBlob`, o
+ * mesmo `pending` e a mesma revogação de objectURL — daí um hook só.
  */
 export function useTurmaManualOpener(turmaId: number) {
   const manual = useTurmaManual()
-  const { message } = useMutationErrors([manual.error])
+  const docx = useTurmaManualDocx()
+  const { message } = useMutationErrors([manual.error, docx.error])
   const urlRef = useRef<string | null>(null)
   const tabRef = useRef<Window | null>(null)
   const [popupBlocked, setPopupBlocked] = useState(false)
@@ -28,7 +34,7 @@ export function useTurmaManualOpener(turmaId: number) {
     [],
   )
 
-  const open = () => {
+  const openPdf = () => {
     setPopupBlocked(false)
     const tab = window.open('about:blank', '_blank')
     if (!tab) {
@@ -52,5 +58,25 @@ export function useTurmaManualOpener(turmaId: number) {
     })
   }
 
-  return { open, pending: manual.isPending, popupBlocked, message }
+  const downloadDocx = () => {
+    setPopupBlocked(false)
+    docx.mutate(turmaId, {
+      onSuccess: (blob) => {
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `manual-turma-${turmaId}.docx`
+        anchor.click()
+        URL.revokeObjectURL(url)
+      },
+    })
+  }
+
+  return {
+    openPdf,
+    downloadDocx,
+    pending: manual.isPending || docx.isPending,
+    popupBlocked,
+    message,
+  }
 }

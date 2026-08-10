@@ -502,7 +502,8 @@
     },
     "documents": {
       "title": "Documentación de la turma",
-      "manual": "Abrir manual (PDF)",
+      "manualPdf": "Abrir manual (PDF)",
+      "manualDocx": "Descargar manual (DOCX)",
       "popupBlocked": "El navegador bloqueó la apertura del manual. Habilita las ventanas emergentes e inténtalo de nuevo.",
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
