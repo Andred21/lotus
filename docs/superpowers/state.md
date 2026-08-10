@@ -6,14 +6,14 @@ workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-lote-e-snapshot
 state_basis_commit: 4ae4c91
-updated_at: 2026-08-10T15:20:00-03:00
+updated_at: 2026-08-10T15:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -84,6 +84,27 @@ abertura.
 carrega o status junto e a pergunta segue sendo `status === EmAndamento && missing === []` — "uma
 pergunta, uma resposta" passa a significar que a **resposta é o VO**, não que o gate de status
 desaparece. Zero mudança de payload; o teste vivo continua sendo guarda de regressão.
+
+### Brainstorming de 2026-08-10 — spec aprovada, duas decisões novas
+
+As 5 decisões do item entraram sem reabertura. Três pontos estavam abertos e o João fechou os três:
+**D-B1** (acima); **D-B2** — a guarda da decisão 5 é **contagem de queries** (`DB::listen` sobre
+`from "files"` no `GET /api/turmas`, molde do `CertificateListingTest:368`), não
+`preventLazyLoading`, porque contagem pega duas classes de regressão em vez de uma — perder o
+eager-load **e** reintroduzir query por linha por outro caminho; **D-B3** — o
+`?? $turma->enrollments()->count()` do `enrolled_count` **entra no corte** e morre, com
+`loadListingData()` garantindo o `loadCount`. É a mesma classe de defeito do 2N+1 principal (query
+por linha escondida atrás de um fallback), no mesmo `fromModel`.
+
+**Uma medição a mais, achada ao ler o código e não prevista pelo item:** o `whereIn` dos três tipos
+obrigatórios está soletrado em **dois** lugares — `TurmaHabilitacaoService::missingTypes()` e
+`TurmaDocumentController::index()`. A relação nomeada da decisão 2 não serve só ao eager-load; ela
+dá dono único à pergunta, e o `index` do controller de documentos passa a consumi-la.
+
+Spec: `docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md`. Review declarado
+**BAIXO RISCO** (zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e rota pública;
+`executor: claude`) → só lente Claude, sem segunda frente do Codex. Backend puro → **main tree, sem
+worktree (P-03)**; zero schema, ADR/DER não abrem.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
