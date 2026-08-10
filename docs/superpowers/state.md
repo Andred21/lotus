@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-revisao-ui-assistida
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
 active_plan: docs/superpowers/plans/2026-08-10-hardening-revisao-ui-assistida.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: e076ebd
-updated_at: 2026-08-10T11:14:04-03:00
+state_basis_commit: 36d5f203
+updated_at: 2026-08-10T11:51:32-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -82,6 +82,13 @@ ativo decompõe a fundação, a skill canônica, os adaptadores, a matriz, os Ga
 dois agentes e o gate técnico final. O handoff fixa `executor: codex` e limita a execução aos paths
 aprovados; nenhuma implementação foi iniciada durante o planejamento. O estado transiciona para
 `ready_for_execution` no mesmo commit do plano.
+
+### Execução delegada ao Codex — 2026-08-10
+
+O João autorizou literalmente `APROVADO — executar o plano ativo até o Gate 5.` O Codex inicia as
+Tasks 0–5 do plano aprovado e deve parar antes do piloto. A transição para `executing` entra no
+mesmo commit do primeiro artefato durável, mantendo `next_owner: claude` e
+`next_action: continue_active_plan`.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
