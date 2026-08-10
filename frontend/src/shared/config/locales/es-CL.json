@@ -610,6 +610,7 @@
     "colIssuedAt": "Fecha emisión",
     "colValidUntil": "Vigencia hasta",
     "colStatus": "Estado",
+    "snapshotCorrupted": "Documento corrupto",
     "viewTitle": "Detalle del certificado",
     "fieldCodigo": "Código",
     "fieldEstado": "Estado",
