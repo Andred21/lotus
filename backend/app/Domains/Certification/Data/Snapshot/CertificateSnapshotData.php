@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Data\Snapshot;
 
+use App\Domains\Certification\Exceptions\CorruptedSnapshotException;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -70,14 +71,43 @@ class CertificateSnapshotData extends Data
     }
 
     /**
+     * O documento pode ser apresentado? Companheiro booleano do
+     * `assertPresentable()`, adjacente de propósito — mesmo par
+     * pergunta/imposição do `CertificateEligibility` (B1). Quem lista usa este;
+     * quem apresenta usa o outro.
+     */
+    public function isPresentable(): bool
+    {
+        return $this->missingRequiredFields() === [];
+    }
+
+    /**
+     * A política de apresentação, num lugar só. Era copiada no
+     * `CertificatePdfService` e no `PublicCertificateData` — dois consumidores
+     * com a chance de divergir sobre o que é um documento apresentável.
+     */
+    public function assertPresentable(string $codigo): void
+    {
+        $missing = $this->missingRequiredFields();
+
+        if ($missing !== []) {
+            throw CorruptedSnapshotException::missingFields($codigo, $missing);
+        }
+    }
+
+    /**
      * Os campos que um certificado não pode apresentar em branco: quem, o quê
      * e quem atesta. Vazio aqui não é ausência tolerável de campo novo — é
      * snapshot corrompido, e a leitura tolerante não pode disfarçá-lo de
      * documento válido.
      *
+     * Privado: fora daqui ninguém precisa da LISTA, só do sim/não
+     * (`isPresentable`) ou da recusa (`assertPresentable`); a lista continua
+     * viva na mensagem da exceção, que é onde o suporte a lê.
+     *
      * @return list<string>
      */
-    public function missingRequiredFields(): array
+    private function missingRequiredFields(): array
     {
         $required = [
             'aluno.name' => $this->aluno->name,
