@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: certificacao-lote-e-snapshot
+active_work_item: certificacao-lote-e-snapshot
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: '3884101'
-updated_at: 2026-08-08T09:30:00-03:00
+state_basis_commit: '032332b'
+updated_at: 2026-08-10T11:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,52 @@ updated_at: 2026-08-08T09:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-10 (`certificacao-lote-e-snapshot`)
+
+**Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). O item nasceu da **revisão de arquitetura de 2026-08-09**, com as decisões já tomadas por
+ele na entrevista — a edição do `backlog.md` que criou os itens 4 e 5 estava na árvore sem commit e
+entra no commit da seleção, porque é o artefato que a prova.
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa** (mesmo caso
+de `profundidade-backend-b4-b7` e `profundidade-form-crud`): o item não cita Drive, Notion nem
+Figma, e as fontes são o repositório mais as decisões escritas. Dispensa confirmada pelo João na
+abertura.
+
+**Uma divergência do item foi levantada e fechada antes do desenho:** o texto diz "13 decisões já
+tomadas na entrevista", e o backlog escreve 6 aqui (mais 5 no item 5, total 11). **Decisão do João:
+as 6 escritas são tudo** — o "13" contava a entrevista inteira, incluindo o que virou recorte e
+fora-de-escopo. Nenhuma decisão perdida; a spec desenha sobre as 6 mais o que o código mediu.
+
+**Cinco medições contra o texto do item, feitas antes de desenhar:** (1) `missingRequiredFields()`
+tem exatamente 2 consumidores, ambos com a política copiada — a D4 bate com o repo; (2) **`show` não
+checa snapshot hoje**, então "falha alto" é comportamento novo, não refactor, e `index` idem; (3) a
+D3 muda comportamento no lote (`->first()` vira `implode(' ')`; hoje as 6 portas lançam uma mensagem
+cada, então a diferença só aparece com recusa de 2+ razões); (4) `App\Shared\Validation` não existe;
+(5) o Action da D1 fica **sem `DB::transaction`** de propósito — exceção declarada à regra de Action
+da `backend-ddd.md`, e é o ponto do bloco.
+
+### Brainstorming de 2026-08-10 — spec aprovada, três decisões novas
+
+As 6 decisões da entrevista entraram sem reabertura. Só três pontos estavam abertos, e o João
+fechou os três: **D7** — `missingRequiredFields()` vira privado, com `isPresentable(): bool` e
+`assertPresentable(string $codigo)` adjacentes no molde `assert*`/`constrain*` do
+`CertificateEligibility` (B1); **D8** — a linha corrompida **mantém o botão Ver**, que cai no estado
+de erro já existente do `CertificateViewDialog` — é onde o suporte lê quais campos faltam; **D9** —
+a marcação é **tag de estado** (`AppTag severity="danger"` no lugar do Vigente/Vencido), porque com
+o documento corrompido o estado da linha é justamente o que não dá para afirmar.
+
+**Consequência declarada na spec, não descoberta depois:** "corrompido" **não** vira um quinto
+`CertDerivedStatus` — promovê-lo contaminaria o dropdown de filtro, os quatro contadores do rodapé e
+o `CertificateViewDialog`. Filtrar por "Vigente" continua trazendo a linha corrompida cujas datas
+dizem vigente. Corrupção é defeito do documento, não estado dele.
+
+Spec: `docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md`. Review declarado
+**ALTO RISCO** (peso legal + rota pública + `generated.ts`) → duas frentes em `ready_for_review`.
+Backend mais um arquivo de frontend → **main tree, sem worktree (P-03)**; zero schema, ADR/DER não
+abrem.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
