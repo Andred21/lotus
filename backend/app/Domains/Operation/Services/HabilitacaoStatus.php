@@ -18,8 +18,8 @@ final class HabilitacaoStatus
 {
     /** @param  array<string>  $missingTypes  valores de TurmaDocumentType sem doc ativo. */
     public function __construct(
-        private TurmaStatus $status,
-        private array $missingTypes,
+        private readonly TurmaStatus $status,
+        private readonly array $missingTypes,
     ) {}
 
     public function isHabilitada(): bool

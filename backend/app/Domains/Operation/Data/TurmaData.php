@@ -53,6 +53,12 @@ class TurmaData extends Data
         ];
     }
 
+    /**
+     * EXIGE a turma com a projeção de listagem carregada — `withListingData()`
+     * na query ou `loadListingData()` na instância. `enrolled_count` lê o
+     * `enrollments_count` do `loadCount` sem fallback (D-B3): sem a carga o
+     * construtor recusa `null` em vez de pagar uma query por turma em silêncio.
+     */
     public static function fromModel(Turma $turma, TurmaHabilitacaoService $habilitacao): self
     {
         $habilitacaoStatus = $habilitacao->for($turma);

@@ -14,18 +14,19 @@ use App\Domains\Operation\Models\Turma;
  * dois métodos públicos anteriores eram lidos em sequência pelo `TurmaData` e
  * abriam uma query cada — 2 por turma na listagem.
  *
- * Lê `documentacaoObrigatoria` como RELAÇÃO: carregada (listagem, `present()`),
- * custa zero; não carregada (`ConcludeTurmaAction`, que recebe o model do
- * route-binding), o Eloquent busca — que é a leitura fresca que o gate de
- * conclusão precisa ter dentro da transação.
+ * Lê `documentacaoObrigatoria` como PROPRIEDADE: carregada (listagem,
+ * `present()`), custa zero; não carregada, o Eloquent busca. A consequência é
+ * que a resposta herda o cache da relação — quem precisa de leitura fresca
+ * declara a carga antes de perguntar, e é o que o `ConcludeTurmaAction` faz
+ * dentro da transação (o gate da RN-16 não pode decidir sobre estado velho).
  */
 class TurmaHabilitacaoService
 {
     public function for(Turma $turma): HabilitacaoStatus
     {
-        $all = array_column(TurmaDocumentType::cases(), 'value');
         $present = $turma->documentacaoObrigatoria->pluck('type')->unique()->all();
+        $missing = array_diff(TurmaDocumentType::values(), $present);
 
-        return new HabilitacaoStatus($turma->status, array_values(array_diff($all, $present)));
+        return new HabilitacaoStatus($turma->status, array_values($missing));
     }
 }

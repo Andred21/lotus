@@ -85,7 +85,7 @@ class Turma extends Model implements Auditable
      */
     public function documentacaoObrigatoria(): MorphMany
     {
-        return $this->files()->whereIn('type', array_column(TurmaDocumentType::cases(), 'value'));
+        return $this->files()->whereIn('type', TurmaDocumentType::values());
     }
 
     public function enrollments(): HasMany
