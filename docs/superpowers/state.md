@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-lote-e-snapshot
 active_work_item: certificacao-lote-e-snapshot
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md
 active_plan: docs/superpowers/plans/2026-08-10-certificacao-lote-e-snapshot.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: eca31e4
-updated_at: 2026-08-10T12:05:00-03:00
+state_basis_commit: 7227d04
+updated_at: 2026-08-10T12:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -123,6 +123,38 @@ Ordem das tasks: 0 baseline → 1 `ValidationMessages::squash()` com os dois ada
 `BatchIssueCertificatesAction` → 3 gate único do snapshot → 4 `snapshot_ok` + `show` falhando alto +
 docblock do D6 + `generated.ts` → 5 tag no `HistorialTable` + chave nas 3 locales → 6 gate do bloco
 contra a API real.
+
+### Execução iniciada em 2026-08-10 — `/executar-bloco`, `subagent-driven-development`
+
+Branch `refactor/certificacao-lote-e-snapshot` a partir de `7227d04` — **não de `eca31e4`** como o
+plano escreveu: `7227d04` é o próprio commit do plano, docs-only (plano + `state.md`, zero código),
+e branchar antes dele deixaria o plano fora da branch que ele governa. Main tree, sem worktree
+(P-03).
+
+**Task 0** confirmou o baseline exato do plano: backend **493 passed, 1 skipped (1833 assertions)**;
+frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes; `typescript:transform` sem
+diff em `generated.ts`.
+
+**O pré-flight do plano achou um conflito medido, decidido pelo João antes de qualquer edição
+(D-E1).** O fixture do `CertificateListingTest` **não produz snapshot apresentável**: o default de
+`createCertificate` é `['aluno' => ['name' => 'Juan Pérez']]`, sem a seção `curso`, e
+`SnapshotCourseData::fromArray(null)` põe `name: ''` — medido no tinker,
+`missingRequiredFields()` devolve `["curso.name"]`. Duas consequências contra o texto do plano: o
+teste novo da Task 4 afirmaria `snapshot_ok === true` sobre um certificado que mede `false` (as duas
+linhas dariam `false`, e o teste não distinguiria corrompido de são); e
+`test_show_devolve_o_snapshot_persistido:84`, que passa outro snapshot igualmente sem `curso`,
+viraria **500** assim que o `show` chamasse `assertPresentable()`.
+
+**Não é uma quinta mudança de comportamento.** `show` em 500 sobre snapshot sem `curso.name` é o
+item 1 da lista fechada do §5 — o fixture já era corrompido pela definição que o projeto tem hoje
+(`CertificatePdfService` e `PublicCertificateData` já estouram nele; `CertificatePdfTest:43` monta a
+seção `curso` justamente por isso). A listagem só nunca exercitou essas rotas. O único
+`assertExactJson` do domínio é sobre `PublicCertificateData`, que não ganha campo.
+
+**Decisão do João: reparar o fixture** — o default do `createCertificate` e o snapshot do
+`test_show_devolve_o_snapshot_persistido` ganham `'curso' => ['name' => …]`. Edição **só de
+fixture**: nenhuma asserção muda, os 9 testes existentes seguem provando o que provavam, e os 2
+testes novos passam a isolar `aluno.name` como a única corrupção — que é a história da spec.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 

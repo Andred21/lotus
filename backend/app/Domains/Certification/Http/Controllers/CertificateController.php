@@ -16,6 +16,7 @@ use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use App\Http\Controllers\Controller;
+use App\Shared\Validation\ValidationMessages;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -134,7 +135,7 @@ class CertificateController extends Controller implements HasMiddleware
                         ok: false,
                         codigo: null,
                         certificate_id: null,
-                        error: collect($e->errors())->flatten()->first(),
+                        error: ValidationMessages::squash($e),
                     );
                 }
             })

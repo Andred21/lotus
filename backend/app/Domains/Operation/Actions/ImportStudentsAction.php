@@ -9,6 +9,7 @@ use App\Domains\Operation\Data\MovedStudentData;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\SpreadsheetRowReader;
+use App\Shared\Validation\ValidationMessages;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
@@ -60,7 +61,7 @@ class ImportStudentsAction
             } catch (ValidationException $e) {
                 $errors[] = new ImportRowErrorData(
                     row: $line['row'],
-                    message: collect($e->errors())->flatten()->implode(' '),
+                    message: ValidationMessages::squash($e),
                 );
             }
         }
