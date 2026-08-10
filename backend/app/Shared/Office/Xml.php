@@ -27,11 +27,20 @@ final class Xml
         return htmlspecialchars((string) $clean, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
-    /** Quebra de linha só existe em OOXML como `<w:br/>`. */
+    /**
+     * Quebra de linha só existe em OOXML como `<w:br/>` — e `<w:br/>` é IRMÃO
+     * de `<w:t>`, nunca filho: `CT_Text` é tipo simples e não aceita elemento
+     * dentro. Por isso o separador fecha e reabre o `<w:t>`: a diretiva se usa
+     * DENTRO de `<w:t xml:space="preserve">`, e o resultado continua válido
+     * contra o schema, não só bem-formado.
+     */
     public static function lines(?string $value): string
     {
         $lines = preg_split('/\R/u', (string) $value) ?: [];
 
-        return implode('<w:br/>', array_map(self::text(...), $lines));
+        return implode(
+            '</w:t><w:br/><w:t xml:space="preserve">',
+            array_map(self::text(...), $lines),
+        );
     }
 }

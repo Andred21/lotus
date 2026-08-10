@@ -22,11 +22,17 @@ class OoxmlPackagerTest extends TestCase
         $this->assertSame('', Xml::text(null));
     }
 
-    /** Quebra de linha em OOXML é `<w:br/>`; um `\n` cru dentro de `<w:t>` some. */
+    /**
+     * Quebra de linha em OOXML é `<w:br/>`; um `\n` cru dentro de `<w:t>` some.
+     * E `<w:br/>` não pode ficar DENTRO do `<w:t>` — o separador fecha e reabre
+     * a tag, senão o pacote sai bem-formado mas inválido contra o schema.
+     */
     public function test_quebra_de_linha_vira_br_do_ooxml(): void
     {
-        $this->assertSame('a<w:br/>b<w:br/>c', Xml::lines("a\nb\r\nc"));
-        $this->assertSame('a &amp; b<w:br/>c', Xml::lines("a & b\nc"));
+        $quebra = '</w:t><w:br/><w:t xml:space="preserve">';
+
+        $this->assertSame("a{$quebra}b{$quebra}c", Xml::lines("a\nb\r\nc"));
+        $this->assertSame("a &amp; b{$quebra}c", Xml::lines("a & b\nc"));
     }
 
     public function test_pacote_abre_como_zip_com_as_parts_entregues(): void
