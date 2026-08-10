@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-revisao-ui-assistida
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
 active_plan: docs/superpowers/plans/2026-08-10-hardening-revisao-ui-assistida.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: Q-1..Q-10 (todos, aprovados pelo João em 2026-08-10)
 last_completed_work_item: certificacao-frontend
 state_basis_commit: f62885b
-updated_at: 2026-08-10T15:21:39-03:00
+updated_at: 2026-08-10T16:58:04-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -112,6 +112,73 @@ final refez Clientes nas três viewports, com console `0` erros/`0` warnings, so
 nenhuma mutação e Chrome DevTools registrado como `complementary_unavailable`. O Vite dedicado foi
 encerrado e o Compose central permaneceu ativo. O bloco para em `ready_for_review`; não inicia
 review, fechamento, push ou PR automaticamente.
+
+### Review de sprint — 2026-08-10: duas lentes, 10 achados, todos aprovados e corrigidos
+
+**ALTO RISCO por `executor: codex`** (o bloco não toca schema, `generated.ts`, auth, auditoria,
+RBAC, dinheiro nem documento legal; o gatilho é a execução delegada). Lente Claude com o gabarito
+do projeto + `mcp__codex__codex` read-only sobre `032332b..HEAD`. Escopo: só os 11 arquivos do
+intervalo. Órfãos: zero — os quatro artefatos canônicos têm consumidor declarado e provado
+(preflight chamado pelos dois pilotos e pela aceitação; rubrica e template citados nos cinco
+relatórios; adaptador e comando resolvidos em sessão nova na Task 5).
+
+**Higiene do diff reconferida, não aceita por relatório:** `git diff --check` limpo;
+`frontend/`, `backend/`, `.mcp.json` e `.codex/config.toml` sem uma linha de diff; `git status`
+limpo; `preflight.sh` versionado com modo `100755`; `state_basis_commit: f62885b` é de fato o
+commit durável anterior a `62bf9c9`.
+
+**O achado 🔴 é de lei, não de estilo.** A matriz da Task 5 declara PASS em quatro linhas cuja
+evidência é a citação do texto que o próprio bloco acabou de escrever. Duas delas sustentam
+cláusulas do DoD §10 da spec: "solicitação de backend não invoca a skill" (evidência: o frontmatter
+diz `not for backend review`) e "Figma não recuperado não produz comparação inventada" (evidência:
+`SKILL.md:71-72` e rubrica `:257` mandam não inventar). É §5.8 e lição 10 na mesma frase. As linhas
+de maior risco **têm** prova comportamental real e não estão em questão: escopo amplo e pedido de
+correção automática (`scope-response.txt`), URL de produção com fallback de browser
+(`production-response.txt`), preflight contra porta morta e contra `PATH` sem `playwright-cli`, e a
+sonda WIP com checksum idêntico antes/depois.
+
+**Divergências entre as lentes, mostradas em vez de resolvidas em silêncio:** o Codex classificou o
+GREEN inteiro da Task 3 como não discriminante por ter rodado em sandbox read-only; verifiquei os
+três arquivos de resposta e isso vale só para `local-response.txt` (a jornada feliz), não para
+escopo e produção, que recusaram por decisão da skill e foram reprovados de novo pelos pilotos
+reais. O Codex também reportou a ausência de mecanismo que force read-only após o login e o
+`none` fixo no rodapé do template; rejeitei os dois — o primeiro é a decisão §11.4 da spec
+(execução manual na v0.1) e o segundo é contrariado por `SKILL.md:91-92`, que prevê o run
+não conforme.
+
+**Correções — o João aprovou Q-1..Q-10 na íntegra; todas entraram no mesmo dia.**
+
+O 🔴 (Q-1) foi corrigido pela raiz: as duas cláusulas do DoD §10 item 6 foram refeitas como sonda
+comportamental em contexto novo, **com frontend e backend em 200** para que nenhuma recusa pudesse
+ser atribuída ao ambiente. O agente respondeu `BLOCKED` ao pedido de revisão do backend de
+certificação, declarando não ter inspecionado os arquivos; e, ao pedido de comparação com "o Figma
+do projeto" sem `fileKey`/`node ID`, recusou explicitamente produzir ou alegar a comparação, sem
+listar divergência alguma. Evidência em `.artifacts/ui-review/2026-08-10-task5-probes/`. A linha do
+Chrome DevTools na matriz deixou de citar a skill e passou a apontar os três relatórios reais que
+registraram a degradação.
+
+Mecanismo (Q-4, Q-6): `preflight.sh` ganhou validação de loopback antes de qualquer `curl` — host
+fora de `localhost`/`127.0.0.0/8`/`::1`/`0.0.0.0` retorna `BLOCKED: non-local <label> url`, inclusive
+quando `curl` não existe — e passou a reprovar `5xx` como `BLOCKED: unhealthy`. `4xx` continua
+passando de propósito: a raiz do backend pode responder `404` num serviço saudável, e bloquear aí
+criaria falso positivo. Provado nos quatro modos: ambiente real, URL de produção, loopback saudável
+e servidor `503` sintético.
+
+Contrato (Q-3, Q-7, Q-8): enum único `used|complementary_unavailable|not-needed`; separadora GFM na
+tabela `## Coverage`; o passo 14 passou a mandar gravar `<run-dir>/report.txt` a partir de uma cópia
+do template, nunca editando o arquivo versionado. Q-9: login manual saiu de pré-requisito de
+entrada e virou credencial disponível para o passo 7, que é quem o solicita. Q-2: a allowlist do
+adaptador e do comando passou a cobrir o workflow que ela roteia (`git branch`, `git rev-parse`,
+`mkdir`, `Write`), sem autorizar escrita em código ou dado. Q-10: a lente `frontend-design` e a
+precedência "rule vence skill, e o conflito é avisado" voltaram — no adaptador Claude, não na fonte
+canônica, porque `frontend-design` é plugin do Claude Code e o Codex não a tem. Q-5: `CLAUDE.md` §4
+lista `/lotus-ui-review` como skill, com `/revisar-ui` marcado como entrada legada.
+
+Relatórios antigos em `.artifacts/` **não foram reescritos**: são registro de auditoria, incluindo o
+`not-needed` incorreto de `2026-08-10T12-40-35-codex-final/report.txt:9`, que é justamente a prova de
+que o enum duplo confundia.
+
+**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
