@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: 72505f5
-updated_at: 2026-08-10T18:10:00-03:00
+state_basis_commit: 9cbcb2b
+updated_at: 2026-08-10T18:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -109,6 +109,52 @@ está aberto, então o gatilho de fechamento da P-03 continua não vencido.
 **Pendências tocadas pelo escopo, nenhuma vencida:** a **P-08** (RF-CUR-04 promete manual por curso;
 implementado é Blade única) **não** dispara — o bloco continua com Blade única padronizada. A
 **P-03** não fecha: um bloco de backend só.
+
+### Brainstorming e spec — 2026-08-10
+
+O João aprovou o desenho com a instrução literal `Aprovado — gravar e commitar a spec.` O estado
+entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até a aprovação humana
+deste documento e a escrita posterior do plano.
+
+**Quatro decisões de abertura, respondidas por ele ANTES de a spec existir** (D1–D4 da §2):
+manual com fonte de verdade única em Blade WordprocessingML, com o PDF saindo do mesmo `.docx` pela
+rota LibreOffice; ofício paisagem igual ao template; fundo em JPEG de ~100 KB só no certificado; e
+tipografia do certificado por fonte versionada com `@font-face`.
+
+**A D2 reabre explicitamente a D4/D6 do bloco 6d** — o A4 retrato do manual, justificado na própria
+Blade com "o cliente arquiva em A4, como todo documento oficial da Lotus". Não foi sobrescrita em
+silêncio: as três saídas foram apresentadas e o João escolheu fidelidade literal ao arquivo aprovado
+pela Lotus. O manual passa a ser o único documento oficial fora do A4.
+
+**Três medições que mudaram o desenho, feitas antes de escrever:**
+
+1. **O fundo entregue é limpo, e o peso tem referência própria.** `fundo-certificado.png`
+   (1414×2000 RGBA, **1.245.172 bytes**) não tem logo, assinatura nem carimbos — é textura mais as
+   barras azul/preta. O **mesmo fundo dentro do `certificado.pdf` aprovado** é um JPEG de
+   **98.258 bytes** nas mesmas dimensões: 12,7× mais leve. O teto do bloco deixou de ser palpite.
+2. **As fontes do template foram identificadas apesar da ofuscação do Word.** `pdffonts` só devolve
+   `___WRD_EMBED_SUB_1235`; descomprimindo os oito programas de fonte e lendo o `name` table
+   (`nameID 6`) saem **Lexend** (Regular/Bold/ExtraBold — três dos oito subsets), **Montserrat
+   ExtraBold**, Comfortaa, Roboto e ArialMT. Lexend/Montserrat/Comfortaa são OFL e Roboto é
+   Apache 2.0: nenhuma trava para versionar.
+3. **A rota LibreOffice foi provada antes de virar decisão, não depois.** Pacote OOXML mínimo montado
+   à mão (**1.207 bytes**) → `/forms/libreoffice/convert` → **`http=200`**, PDF de **18.671 bytes**,
+   **`Page size: 1008 × 612 pts`** contra os 1009×612 do template, `LiberationSans-Bold` embutida e
+   a célula com `w:shd w:fill="29A3E0"` no azul da Lotus. A D1 e a D2 repousam sobre medição.
+
+**A contradição aparente entre D1 e D4 foi resolvida por medição, não por prosa** (§2.1 da spec):
+`@font-face` é CSS e o manual deixa de passar por CSS, mas o texto do `manual.pdf` **é Liberation
+Sans**, que o Gotenberg já tem — o probe a embutiu sem nenhuma instalação. D4 vale só para o
+certificado.
+
+**Um achado que a leitura do template produziu e o item do backlog não previa:** os títulos de página
+do manual (`Libro de Control de Clases`, `Antecedentes Participantes`…) **não são texto** —
+`pdftotext` da página 1 devolve só o conteúdo das células. Eles vivem dentro da faixa de cabeçalho
+rasterizada (4205×378). Com a D3 deixando o manual sem fundo raster, os títulos passam a ser texto em
+Liberation Sans Bold.
+
+**Risco de review declarado ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
