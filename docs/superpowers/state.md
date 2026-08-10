@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-revisao-ui-assistida
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-10-hardening-revisao-ui-assistida.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: a81c41c
-updated_at: 2026-08-10T09:46:16-03:00
+state_basis_commit: e076ebd
+updated_at: 2026-08-10T11:14:04-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -74,6 +74,14 @@ A spec ativa materializa as decisões fechadas, a ordem temporal reconciliada, o
 read-only, a degradação do Chrome DevTools e o DoD do bloco. O estado entra em `planning` no mesmo
 commit da spec; `active_plan` permanece `null` até a aprovação humana deste documento e a escrita
 posterior do plano.
+
+### Aprovação da spec e plano — 2026-08-10
+
+O João aprovou a spec com a instrução literal `Aprovada a SPEC. Siga com o writing-plans`. O plano
+ativo decompõe a fundação, a skill canônica, os adaptadores, a matriz, os Gates 5/6, o piloto nos
+dois agentes e o gate técnico final. O handoff fixa `executor: codex` e limita a execução aos paths
+aprovados; nenhuma implementação foi iniciada durante o planejamento. O estado transiciona para
+`ready_for_execution` no mesmo commit do plano.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
