@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Http\Controllers;
 
+use App\Domains\Certification\Actions\BatchIssueCertificatesAction;
 use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Actions\RevokeCertificateAction;
 use App\Domains\Certification\Data\BatchIssueData;
@@ -20,7 +21,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Validation\ValidationException;
 
 class CertificateController extends Controller implements HasMiddleware
 {
@@ -45,6 +45,11 @@ class CertificateController extends Controller implements HasMiddleware
 
     public function show(Certificate $certificate): CertificateData
     {
+        // A listagem degrada marcando a linha; o detalhe, não. Aqui o
+        // documento é apresentado por inteiro, e apresentar um snapshot sem
+        // nome de aluno é atestar o que ninguém sabe.
+        $certificate->snapshot->assertPresentable($certificate->codigo);
+
         return CertificateData::fromModel($certificate);
     }
 
@@ -85,59 +90,9 @@ class CertificateController extends Controller implements HasMiddleware
             ->setStatusCode(200);
     }
 
-    /**
-     * Relatório por item, não transação: cada `execute()` já é a sua própria
-     * transação (portas + D9 + auditoria). Abrir uma transação por fora faria
-     * um item falho reverter os que já tinham sido commitados — e, pior,
-     * consumir um número de sequência que nunca vira certificado.
-     *
-     * @return array<BatchIssueItemResultData>
-     */
-    public function batch(BatchIssueData $data, IssueCertificateAction $action): array
+    /** @return array<BatchIssueItemResultData> */
+    public function batch(BatchIssueData $data, BatchIssueCertificatesAction $action): array
     {
-        $redator = Redator::query()->findOrFail($data->redator_id);
-
-        return collect($data->enrollment_ids)
-            ->map(function (int $enrollmentId) use ($action, $redator): BatchIssueItemResultData {
-                try {
-                    // Resolvida AQUI, dentro do try: `exists:enrollments,id`
-                    // do DTO consulta a tabela crua e não respeita soft
-                    // delete, então um id soft-deletado passa a validação e
-                    // só falha aqui. Se isto estourasse fora do try (como
-                    // `findOrFail`), a `ModelNotFoundException` subiria sem
-                    // `catch`, virando 404 pro request inteiro — escondendo
-                    // itens anteriores já commitados (não há transação
-                    // externa). Por isso vira `ValidationException`: mesmo
-                    // formato de recusa das seis portas, capturado pelo
-                    // `catch` abaixo e reportado como item, não como falha
-                    // da requisição.
-                    $enrollment = Enrollment::query()->find($enrollmentId);
-
-                    if ($enrollment === null) {
-                        throw ValidationException::withMessages([
-                            'enrollment' => 'La matrícula no existe.',
-                        ]);
-                    }
-
-                    $certificate = $action->execute($enrollment, $redator);
-
-                    return new BatchIssueItemResultData(
-                        enrollment_id: $enrollmentId,
-                        ok: true,
-                        codigo: $certificate->codigo,
-                        certificate_id: $certificate->id,
-                        error: null,
-                    );
-                } catch (ValidationException $e) {
-                    return new BatchIssueItemResultData(
-                        enrollment_id: $enrollmentId,
-                        ok: false,
-                        codigo: null,
-                        certificate_id: null,
-                        error: collect($e->errors())->flatten()->first(),
-                    );
-                }
-            })
-            ->all();
+        return $action->execute($data);
     }
 }

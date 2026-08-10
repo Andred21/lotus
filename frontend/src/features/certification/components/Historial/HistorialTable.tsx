@@ -70,9 +70,18 @@ export function HistorialTable() {
         />
         <AppColumn
           header={t('certificate.colStatus')}
-          body={(c: CertificateData) => (
-            <AppTag severity={STATUS_SEVERITY[certStatus(c)]} value={t(`certificate.status.${certStatus(c)}`)} />
-          )}
+          // Documento corrompido não tem estado a afirmar: `certStatus` derivaria
+          // "vigente" das datas, que continuam válidas, sobre um snapshot que não
+          // sustenta nem o nome do aluno. A tag de defeito ocupa o lugar da de
+          // estado, e NÃO vira um quinto `CertDerivedStatus` — isso contaminaria
+          // o filtro, os contadores do rodapé e o `CertificateViewDialog`.
+          body={(c: CertificateData) =>
+            c.snapshot_ok ? (
+              <AppTag severity={STATUS_SEVERITY[certStatus(c)]} value={t(`certificate.status.${certStatus(c)}`)} />
+            ) : (
+              <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
+            )
+          }
         />
         <AppColumn
           body={(c: CertificateData) => {

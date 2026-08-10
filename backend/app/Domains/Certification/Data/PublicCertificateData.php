@@ -3,7 +3,6 @@
 namespace App\Domains\Certification\Data;
 
 use App\Domains\Certification\Enums\CertificateStatus;
-use App\Domains\Certification\Exceptions\CorruptedSnapshotException;
 use App\Domains\Certification\Models\Certificate;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -31,13 +30,10 @@ class PublicCertificateData extends Data
     public static function fromModel(Certificate $certificate): self
     {
         $snapshot = $certificate->snapshot;
-        $missing = $snapshot->missingRequiredFields();
 
         // A rota do QR é o que o fiscalizador abre no celular. Responder 200
         // com nome em branco e `status: emitido` é pior que falhar.
-        if ($missing !== []) {
-            throw CorruptedSnapshotException::missingFields($certificate->codigo, $missing);
-        }
+        $snapshot->assertPresentable($certificate->codigo);
 
         return new self(
             codigo: $certificate->codigo,

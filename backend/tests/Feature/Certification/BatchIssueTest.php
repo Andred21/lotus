@@ -13,6 +13,7 @@ use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\TestCase;
 
@@ -297,6 +298,41 @@ class BatchIssueTest extends TestCase
         ])->assertStatus(500);
 
         $this->assertDatabaseCount('certificates', 1);
+    }
+
+    /**
+     * O relatório do lote tem UMA linha por item e nenhum lugar onde pendurar
+     * um error-bag por campo — por isso o adapter achata a recusa com
+     * `ValidationMessages::squash()` (`implode(' ')`), e não com `->first()`.
+     *
+     * Hoje nenhuma das seis portas emite duas razões, então nenhum caminho de
+     * produção separa as duas formas: o unit test do seam prova o `squash`,
+     * mas a FIAÇÃO dele no Action não tinha guarda nenhuma. Voltar aquela
+     * linha para `->first()` deixava a suíte inteira verde e a recusa pela
+     * metade — o operador corrige o primeiro problema e o item falha de novo.
+     */
+    public function test_recusa_com_duas_razoes_chega_inteira_ao_relatorio(): void
+    {
+        $this->actingAsAdmin();
+
+        $fake = \Mockery::mock(IssueCertificateAction::class);
+        $fake->shouldReceive('execute')->once()->andThrow(ValidationException::withMessages([
+            'enrollment' => 'La clase no está concluida.',
+            'redator_id' => 'El redactor no está designado en esta clase.',
+        ]));
+        $this->instance(IssueCertificateAction::class, $fake);
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id],
+            'redator_id' => $this->redator->id,
+        ])
+            ->assertOk()
+            ->assertJsonPath('0.ok', false)
+            ->assertJsonPath('0.codigo', null)
+            ->assertJsonPath(
+                '0.error',
+                'La clase no está concluida. El redactor no está designado en esta clase.',
+            );
     }
 
     private function emitirIndividualmente(Enrollment $enrollment): void
