@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: turma-habilitacao-listagem
+active_work_item: turma-habilitacao-listagem
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-lote-e-snapshot
-state_basis_commit: d01c279
-updated_at: 2026-08-10T14:40:00-03:00
+state_basis_commit: 4ae4c91
+updated_at: 2026-08-10T15:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,42 @@ updated_at: 2026-08-10T14:40:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Bloco ativo — `turma-habilitacao-listagem` (2026-08-10)
+
+**Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
+com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
+sozinho). Backend puro, aprofundamento do Operation nascido da **revisão de arquitetura de
+2026-08-09**, com 5 decisões já tomadas por ele. Toca `backend/` → **main tree, sem worktree (P-03)**.
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa** (mesmo caso
+de `profundidade-backend-b4-b7` e `profundidade-form-crud`): o item não cita Drive, Notion nem
+Figma, e as fontes são o repositório mais as 5 decisões escritas. Dispensa confirmada pelo João na
+abertura.
+
+### Quatro medições contra o texto do item, feitas antes de desenhar
+
+1. **O 2N+1 é real e o N foi medido na API:** `GET /api/turmas` no banco de dev custa **15 queries
+   para 4 turmas** — 8 de carga (o `withListingData` faz o trabalho dele) e **7 em `files`**. Não é
+   2N exato: `isHabilitada()` curto-circuita em `status !== EmAndamento`, então turma **em
+   andamento** custa 2 queries (a mesma pergunta feita duas vezes, uma por `habilitada` e outra por
+   `missing_document_types`) e turma **concluída** custa 1.
+2. **A decisão 1, ao pé da letra, muda comportamento.** Hoje `isHabilitada()` é
+   `status === EmAndamento && missingTypes() === []`; o item escreve "literalmente
+   `missingTypes() === []`". Sem o gate de status, **toda turma concluída passaria a responder
+   `habilitada: true`** (concluir exige documentação completa, então são todas), contra o teste vivo
+   `TurmaHabilitacaoServiceTest::test_turma_concluida_nao_e_habilitada`.
+3. **O front sobreviveria à mudança, mas o payload não:** `turmaDisplayStatus` checa `concluida`
+   primeiro e `ConcludePanel`/`TurmaDocuments` guardam por `!concluida` antes de ler `habilitada` —
+   nenhuma tela muda. O contrato HTTP mudaria de valor, e o item promete que nada muda.
+4. **`preventLazyLoading` não enxerga este N+1** (a decisão 5 está certa): `$turma->files()->…` é
+   query **na relação**, não lazy-load de relação, e é por isso que o `ContratanteEagerLoadTest`
+   passa hoje com o 2N+1 vivo.
+
+**Decisão do João na abertura (D-B1): `habilitada` de turma concluída continua `false`.** O VO
+carrega o status junto e a pergunta segue sendo `status === EmAndamento && missing === []` — "uma
+pergunta, uma resposta" passa a significar que a **resposta é o VO**, não que o gate de status
+desaparece. Zero mudança de payload; o teste vivo continua sendo guarda de regressão.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
