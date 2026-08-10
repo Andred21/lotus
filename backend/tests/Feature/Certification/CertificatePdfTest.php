@@ -709,10 +709,14 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
-     * O QR sobe para o topo direito e leva o par código/emissão junto — mudança
+     * O QR sobe para o topo ESQUERDO e leva o par código/emissão junto — mudança
      * de LUGAR, não de conteúdo. O que a rota pública valida é o UUID dentro do
      * QR, e ele não muda; esta guarda existe para que a realocação não apague
      * silenciosamente um dos dois campos de identificação.
+     *
+     * O lado é assertado porque foi decisão do João no gate visual, contra a
+     * `§3.4` da spec: quem manda é o `docs/templates/certificado.pdf`, e nele o
+     * retângulo do QR abre a folha à esquerda, não à direita.
      */
     public function test_qr_e_identificacao_formam_um_bloco_no_topo(): void
     {
@@ -728,6 +732,9 @@ class CertificatePdfTest extends TestCase
 
         // O QR encolheu: 32mm no rodapé viram 22mm no topo.
         $this->assertMatchesRegularExpression('/\.identificacion img\s*\{[^}]*width:\s*22mm;/s', $html);
+
+        // Lado esquerdo: o bloco é filho flex da folha, então o lado é o `align-self`.
+        $this->assertMatchesRegularExpression('/\.identificacion\s*\{[^}]*align-self:\s*flex-start;/s', $html);
 
         // O bloco abre a folha, antes do logo; o rodapé fica só com a assinatura.
         $this->assertLessThan(

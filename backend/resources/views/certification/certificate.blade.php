@@ -149,13 +149,15 @@
         }
         .page:last-child { page-break-after: auto; }
 
-        /* QR e identificação viajam JUNTOS para o topo direito, como no
-           `docs/templates/certificado.pdf` e na referência que o João anexou.
-           O bloco é estático no fluxo, não absoluto: absoluto foi o que fez a
-           barra de fechamento do rodapé, morta na Task 3, ancorar no pé do
-           BLOCO em vez do da folha e reaparecer no meio da página 2. */
+        /* QR e identificação viajam JUNTOS para o topo ESQUERDO, como no
+           `docs/templates/certificado.pdf`. A `§3.4` da spec pedia direito, e o
+           gate visual mostrou que o documento aprovado abre à esquerda: o João
+           decidiu pelo template. O bloco é estático no fluxo, não absoluto:
+           absoluto foi o que fez a barra de fechamento do rodapé, morta na
+           Task 3, ancorar no pé do BLOCO em vez do da folha e reaparecer no
+           meio da página 2. */
         .identificacion {
-            align-self: flex-end;
+            align-self: flex-start;
             font-size: 9px;
             line-height: 1.5;
             text-align: center;
