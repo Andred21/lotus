@@ -7,7 +7,16 @@
 
 ## Próximos blocos
 
-1. **Arquivados e restauração de soft-delete**
+1. **Hardening · revisão UI/UX assistida por navegador**
+   — infraestrutura local e skill compartilhada para revisar uma tela/jornada real com Playwright
+   CLI, evidência visual, console/rede e Chrome DevTools opcional. Não inclui E2E versionado nem
+   correção dos achados do piloto.
+
+   **Ordem reconciliada em 2026-08-09:** o plano-mestre previa este bloco antes de
+   “Certificação · frontend”, mas a certificação já estava entregue e removida da fila quando o
+   Gate 4 foi aprovado. Por seleção explícita do João, o hardening entra agora no topo, antes de
+   soft-delete; a spec deve registrar a divergência histórica em vez de repetir a ordem obsoleta.
+2. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -23,12 +32,12 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-2. **Administração · Roles e permissões — redesenho de composição**
+3. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-3. **Hardening**
+4. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)

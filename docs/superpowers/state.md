@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: hardening-revisao-ui-assistida
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: '3884101'
-updated_at: 2026-08-08T09:30:00-03:00
+state_basis_commit: 032332b
+updated_at: 2026-08-09T23:46:24-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,24 @@ updated_at: 2026-08-08T09:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-09 (`hardening-revisao-ui-assistida`)
+
+**Item 1 do `backlog.md`, selecionado explicitamente pelo João no Gate 4 e confirmado após a
+reconciliação da fila.** O bloco cria a infraestrutura local e a skill compartilhada de revisão
+UI/UX assistida por navegador. Playwright CLI é o mecanismo obrigatório; Chrome DevTools MCP é
+complementar e degradável. Não inclui E2E versionado nem correção dos achados do piloto.
+
+**Divergência temporal resolvida antes da seleção:** o plano-mestre de 2026-08-08 posicionava o
+hardening antes de “Certificação · frontend”, mas esse bloco já estava entregue e fechado quando a
+implementação formal começou. Por decisão explícita do João em 2026-08-09, o hardening foi
+promovido agora, antes de “Arquivados e restauração de soft-delete”; a spec deve descrever a ordem
+real e não repetir a premissa obsoleta. Não há regra de negócio externa a recuperar, portanto a
+rota segue sem Context Packet (`context_packet: null`).
+
+**Isolamento:** worktree `/home/jvbat/projetos/fix-frontend`, branch
+`chore/hardening-ui-review`, criada a partir de `032332b` e sincronizada com `origin/main` na
+seleção.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
@@ -1139,4 +1157,3 @@ de `template.layout_config` por `template.city` como perda de dado congelado. Co
 `orientation` não existe em lugar nenhum desde o D-P9 e a `city` nomeada é a decisão do próprio B2,
 com teste atualizado de propósito. **Não é achado.** O risco real que sobra é o Q-1: é ele que apaga
 o `layout_config` dos snapshots v1 que ainda o carregam.
-
