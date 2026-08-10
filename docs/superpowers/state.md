@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-revisao-ui-assistida
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
 active_plan: docs/superpowers/plans/2026-08-10-hardening-revisao-ui-assistida.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: 36d5f203
-updated_at: 2026-08-10T11:51:32-03:00
+state_basis_commit: f62885b
+updated_at: 2026-08-10T15:21:39-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -89,6 +89,29 @@ O João autorizou literalmente `APROVADO — executar o plano ativo até o Gate 
 Tasks 0–5 do plano aprovado e deve parar antes do piloto. A transição para `executing` entra no
 mesmo commit do primeiro artefato durável, mantendo `next_owner: claude` e
 `next_action: continue_active_plan`.
+
+### Pilotos, gate final e handoff — 2026-08-10
+
+O João retomou a execução com a instrução literal `vamos continuar entao com plano até chegar na
+parte de review, depois complementamos a skill conforme a ideia inicial.` A instrução atual
+autorizou concluir os Gates 5/6 e a Task 7; a complementação da skill ficou explicitamente adiada
+para depois do review e não foi misturada neste diff.
+
+O piloto de Clientes foi executado em runs separadas no Codex e no Claude Code, com o mesmo escopo
+read-only, `1440x900`, `1024x768` e `390x844`, snapshots, screenshots, console, rede e Git
+antes/depois. Os agentes concordaram nos cinco fatos reproduzíveis centrais; divergências de
+severidade e achados complementares ficaram registradas nas evidências ignoradas. Três grupos B/C
+reproduzidos por ambos foram adicionados ao backlog, sem correção de frontend.
+
+Gate final fresco: skill e shell válidos; preflight `200/200` com `PREFLIGHT_OK`; frontend `13`
+arquivos e `47` testes, lint e build verdes; backend `501 passed`, `1 skipped`, `1859 assertions`.
+A primeira passagem do backend viu um estado intermediário do WIP da main central — o teste foi
+salvo às `15:09:35` e o método correspondente às `15:10:01` — e falhou uma vez; o teste isolado
+passou `5/5`, e a suíte completa passou no rerun com checksums idênticos antes/depois. A aceitação
+final refez Clientes nas três viewports, com console `0` erros/`0` warnings, somente GETs `200`,
+nenhuma mutação e Chrome DevTools registrado como `complementary_unavailable`. O Vite dedicado foi
+encerrado e o Compose central permaneceu ativo. O bloco para em `ready_for_review`; não inicia
+review, fechamento, push ou PR automaticamente.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
