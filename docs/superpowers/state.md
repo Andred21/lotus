@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: certificacao-lote-e-snapshot
 active_work_item: certificacao-lote-e-snapshot
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md
 active_plan: docs/superpowers/plans/2026-08-10-certificacao-lote-e-snapshot.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: "Q-1..Q-6 (todos), aprovados pelo João em 2026-08-10"
 last_completed_work_item: certificacao-frontend
-state_basis_commit: 144c857
-updated_at: 2026-08-10T13:45:00-03:00
+state_basis_commit: d01c279
+updated_at: 2026-08-10T14:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -256,6 +256,72 @@ linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cen
 Evidência task a task em `.superpowers/sdd/progress.md`. Review **ALTO RISCO** pela spec (peso legal
 + rota pública + `generated.ts`) → duas frentes: lente Claude com o gabarito do projeto + Codex
 read-only sobre `7227d04..HEAD`.
+
+### Review de sprint — 2026-08-10: duas frentes, 6 achados, todos aprovados e corrigidos
+
+**ALTO RISCO** conforme a spec → lente Claude com o gabarito do projeto + `mcp__codex__codex`
+read-only sobre `7227d04..HEAD`. Órfãos **zero** (`missingRequiredFields` privado com 2 chamadores
+internos, `isPresentable` 1, `assertPresentable` 3, `ValidationMessages` 2, o Action do lote 1, e os
+imports `Redator`/`Enrollment` do controller seguem usados pelo `store`). Leis §5 limpas. **Sem
+divergência de fato entre os revisores**: o Codex viu 5 dos 6 e eu confirmei cada um no código antes
+de aceitar — com o escopo do Q-3 corrigido (ele disse "`curso.name` ou `emissor.name`"; medi, e
+`emissor.name` já tem quem o mate). O Q-1 nenhuma das duas lentes tinha visto antes desta rodada.
+
+**O achado que o gate não podia ter pego (Q-1 🟡)** — `ProblemDetails::detailFor()` troca o `detail`
+de **todo 500** por `'Ocorreu um erro inesperado. Tente novamente.'` quando `app.debug` é falso. A
+D8 promete o contrário: a linha corrompida mantém **Ver**, o `CertificateViewDialog` imprime
+`error.detail` no `AppErrorState`, "é onde o suporte lê quais campos faltam". Em produção o suporte
+lia "erro inesperado" — sem código, sem campo. **Nem a suíte nem o e2e viam**, e o motivo foi
+medido: `backend/.env` tem `APP_DEBUG=true` e **não existe `.env.testing`**, então os dois provaram a
+D8 num caminho que a produção não percorre. Nasce `App\Shared\Exceptions\PublicDetail`, interface
+marcadora para a exceção cuja mensagem foi escrita para quem lê a resposta; o default segue
+mascarando e só quem declara passa. No mesmo achado, a mensagem saiu de **PT-BR** para **es-CL** —
+ela agora chega à tela de um usuário chileno, e todas as recusas irmãs deste diff já estavam em
+espanhol. Guarda nova com `config(['app.debug' => false])`, **vista vermelha primeiro**, com o
+diff literal `+'Ocorreu um erro inesperado. Tente novamente.'`.
+
+**Os outros cinco:**
+
+- **Q-2 🟡** (lição 13, o Minor-2 herdado) — o docblock afirmava "**a listagem é a exceção
+  deliberada, e é a única**", e `store()`/`revoke()` também projetam `CertificateData` sem gate. O
+  texto vinha **verbatim do plano, linha 793**; com a aprovação do João foi corrigido, nomeando os
+  dois e o motivo de ficarem fora (são eco de escrita, não apresentação do documento — quem
+  apresenta é `show`, o PDF e o QR), sem virar a quinta mudança de comportamento.
+- **Q-3 🟡** — a política obrigatória tem três campos e **`curso.name` não tinha quem o matasse**:
+  `aluno.name` morre em 3 testes, `emissor.name` no `CertificatePdfTest:384`, e remover `curso.name`
+  deixava a **suíte inteira** verde. A terceira linha do teste da listagem (a revogada **e**
+  corrompida, que existe para quebrar a correlação `status`×`snapshot_ok`) passa a corromper
+  `curso.name` em vez de `aluno.name` — fecha o buraco sem teste novo e sem perder o poder
+  discriminante. Mutante **visto vermelho** (`Failed asserting that true is identical to false.`),
+  revertido em seguida.
+- **Q-4 🟢** (o Minor-3 herdado) — `CertificateData::fromModel` lia `$certificate->snapshot` duas
+  vezes; com `withoutObjectCaching` no cast são dois decodes de JSON por linha de uma listagem que
+  não pagina. Variável local; não reabre o bug do cache de casts, que era do Eloquent e não da
+  variável.
+- **Q-5 🟢** — `test_show_de_snapshot_corrompido_falha_alto` afirmava só status e content-type;
+  passa a afirmar o `detail` que nomeia o certificado e o campo, que é exatamente o texto de que a
+  D8 depende.
+- **Q-6 🟢** — o seam `ValidationMessages::squash()` tinha unit test, a **fiação** dele no Action do
+  lote não tinha nenhuma: voltar para `->first()` ficava verde. Teste novo com recusa de duas
+  razões; mutante **visto vermelho** (`-'La clase no está concluida. El redactor no está designado
+  en esta clase.'` / `+'La clase no está concluida.'`), revertido em seguida. Não é bug vivo — as
+  seis portas emitem uma mensagem cada —, é guarda contra a regressão.
+
+**Não viraram achado, por serem decisão consciente registrada:** o **Minor-4** (o `IssuedDialog` lê
+o certificado por caminho não-gateado, porque `useIssueCertificate` semeia `detailKey` com a resposta
+do POST — fechar seria a quinta mudança de comportamento); a **tag não vista renderizada**, que é
+limitação declarada do gate e segue com o João; e o corrompido **não** virar um quinto
+`CertDerivedStatus`, com filtro e contadores continuando a classificar a linha pelas datas —
+consequência declarada na spec.
+
+**Placar pós-correção: 500 passed, 1 skipped (1858 assertions)** — +2 testes / +8 asserções sobre os
+498/1850 do gate, que eu reconferi antes de revisar em vez de herdar do relatório. Pint `passed` nos
+5 arquivos novos/editados do fix. **Uma exceção honesta:** `ProblemDetails.php` reprova no Pint, e
+**já reprovava antes desta edição** — conferido rodando `pint --test` sobre a versão de `HEAD`, com a
+mesma lista de fixers. É dívida de estilo pré-existente num arquivo que o bloco não tinha tocado;
+reformatá-lo inteiro seria ruído de diff (lição 9), então ficou. `pnpm lint`, `pnpm build` e
+`pnpm test` (13 arquivos / 47 testes) verdes; `typescript:transform` **sem diff** em `generated.ts` —
+nenhum DTO mudou de forma. Correções no commit `d01c279`.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
