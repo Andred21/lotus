@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: turma-habilitacao-listagem
 active_work_item: turma-habilitacao-listagem
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md
 active_plan: docs/superpowers/plans/2026-08-10-turma-habilitacao-listagem.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-lote-e-snapshot
 state_basis_commit: 4ae4c91
-updated_at: 2026-08-10T16:10:00-03:00
+updated_at: 2026-08-10T17:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -133,6 +133,18 @@ de silenciados (lição 13):
 - **D-P2 — a guarda mora no `TurmaQueryBuilderTest`**, não em arquivo novo: o assunto do arquivo é a
   projeção de listagem, e é o precedente do `CertificateListingTest`, que guarda a contagem dentro
   do próprio arquivo da listagem.
+
+### Execução iniciada em 2026-08-10 — `/executar-bloco`, `subagent-driven-development`
+
+Main tree, sem worktree (P-03). **Task 0 provada em `a4f550a`:** backend **500 passed, 1 skipped
+(1858 assertions)** — bate com o baseline do plano; `typescript:transform` sem diff em
+`generated.ts`; `git status --porcelain` vazio.
+
+**Um achado do pré-flight, aritmético, resolvido sem reabrir o plano (D-E1):** os placares esperados
+das Tasks 2 e 3 (`500 passed`) e da Task 4 (`501 passed, 1865 assertions`) **não somam o teste que a
+própria Task 1 acrescenta** ao `TurmaModelTest` (+1 teste, +1 asserção). Os números corretos passam a
+ser **501 passed / 1859 assertions** nas Tasks 1–3 e **502 passed / 1866 assertions** na Task 4 e no
+gate. Nenhuma asserção, nenhum teste e nenhum comportamento do plano muda — só a conta.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
