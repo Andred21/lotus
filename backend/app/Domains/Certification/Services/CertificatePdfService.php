@@ -45,6 +45,14 @@ class CertificatePdfService
             'fundo' => base64_encode((string) file_get_contents(
                 resource_path('images/fundo-certificado.jpg'),
             )),
+            // Fontes VARIÁVEIS: um arquivo cobre 400/700/800 do Lexend, então
+            // são duas faces e não quatro. Subset latino (~39 KB + ~19 KB).
+            'lexend' => base64_encode((string) file_get_contents(
+                resource_path('fonts/lexend-latin.woff2'),
+            )),
+            'montserrat' => base64_encode((string) file_get_contents(
+                resource_path('fonts/montserrat-800-latin.woff2'),
+            )),
         ])->render();
     }
 }
