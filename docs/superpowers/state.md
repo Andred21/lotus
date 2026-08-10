@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: certificacao-lote-e-snapshot
 active_work_item: certificacao-lote-e-snapshot
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-10-certificacao-lote-e-snapshot.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: '032332b'
-updated_at: 2026-08-10T11:40:00-03:00
+state_basis_commit: eca31e4
+updated_at: 2026-08-10T12:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -94,6 +94,35 @@ Spec: `docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md`
 **ALTO RISCO** (peso legal + rota pública + `generated.ts`) → duas frentes em `ready_for_review`.
 Backend mais um arquivo de frontend → **main tree, sem worktree (P-03)**; zero schema, ADR/DER não
 abrem.
+
+### Plano escrito em 2026-08-10 — 7 tasks (0–6), `executor: claude`
+
+`docs/superpowers/plans/2026-08-10-certificacao-lote-e-snapshot.md`. Branch prevista:
+`refactor/certificacao-lote-e-snapshot`, a partir de `eca31e4`.
+
+A escrita do plano achou **quatro desvios contra a spec aprovada, declarados no §Desvios** em vez de
+silenciados (lição 13):
+
+- **D-P1** — o §6 da spec descreve "uma fixture, quatro provas"; medido, **duas já são testes
+  vivos** (`CertificatePdfTest.php:398,416` e `PublicCertificateTest.php:184`, ambos em 500). O
+  plano cria **dois** testes (`index` marcando, `show` em 500) e trata os dois existentes como
+  regressão que tem de ficar verde **sem edição** — duplicá-los seria cobertura falsa.
+- **D-P2** — o guard `test_falha_inesperada_no_meio_do_lote_preserva_o_que_ja_saiu` sobrevive à
+  mudança de casa **por construção, conferido e não suposto**: o dublê entra por
+  `$this->instance(IssueCertificateAction::class, …)` e o Action novo recebe o
+  `IssueCertificateAction` pelo construtor, do container. Por isso o arquivo de teste fica com zero
+  linhas de diff, e o mutante (`DB::transaction` em volta do laço) é reprovado no endereço novo.
+- **D-P3** — `App\Shared\Validation` **não cria aresta** na matriz: o `DomainDependencyTest` governa
+  só `App\Domains\* → App\Domains\*`; `App\Shared\*` é transversal e já é consumido por domínios
+  (precedente `App\Shared\Data\ContratanteData`, do B4).
+- **D-P4** — o teste de `squash()` estende `Tests\TestCase`, não o `PHPUnit\Framework\TestCase` do
+  vizinho `RutTest`: `ValidationException::withMessages()` monta um validador pela facade e precisa
+  do container. Sem `RefreshDatabase` — nada toca banco.
+
+Ordem das tasks: 0 baseline → 1 `ValidationMessages::squash()` com os dois adapters → 2
+`BatchIssueCertificatesAction` → 3 gate único do snapshot → 4 `snapshot_ok` + `show` falhando alto +
+docblock do D6 + `generated.ts` → 5 tag no `HistorialTable` + chave nas 3 locales → 6 gate do bloco
+contra a API real.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
