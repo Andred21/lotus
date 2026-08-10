@@ -10,20 +10,17 @@ type Props = {
 
 /** Confirmação + relatório de emissão em lote. Ao contrário do
  * `ConfirmIssueDialog`, o diálogo NÃO fecha após o POST — a resposta vira o
- * próprio corpo: uma linha por item (nome do aluno, via join com
- * `pendientes` por `enrollment_id`), `AppTag` ✓código quando `ok`, severity
- * danger com o `error` cru do backend (já es-CL — não traduzir, não
- * envolver em `t()`) quando não. Lote parcial (alguns emitidos, outros
- * rejeitados) é o caso normal, não um erro — a invalidação do painel
- * (`useIssueBatch`) já repintou a tabela atrás deste diálogo. */
+ * próprio corpo: uma linha por item do `report` (nome do aluno já resolvido
+ * pelo hook), `AppTag` ✓código quando `ok`, severity danger com o `error`
+ * cru do backend (já es-CL — não traduzir, não envolver em `t()`) quando
+ * não. Lote parcial (alguns emitidos, outros rejeitados) é o caso normal,
+ * não um erro — a invalidação do painel (`useIssueBatch`) já repintou a
+ * tabela atrás deste diálogo. */
 export function BatchIssueDialog({ turma, onHide }: Props) {
   const { t } = useTranslation()
   const batch = useBatchIssue(turma)
 
-  const okCount = batch.results?.filter((r) => r.ok).length ?? 0
-  const failedCount = (batch.results?.length ?? 0) - okCount
-
-  const footer = batch.results ? (
+  const footer = batch.report ? (
     <div className="flex justify-end">
       <AppButton label={t('common.close')} onClick={onHide} />
     </div>
@@ -43,12 +40,12 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
   return (
     <AppDialog
       visible
-      header={t(batch.results ? 'certificate.batchResultTitle' : 'certificate.batchConfirmTitle')}
+      header={t(batch.report ? 'certificate.batchResultTitle' : 'certificate.batchConfirmTitle')}
       onHide={onHide}
       footer={footer}
       closable={!batch.pending}
     >
-      {!batch.results ? (
+      {!batch.report ? (
         <div className="space-y-4">
           <FormErrorBanner message={batch.message} />
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
@@ -68,22 +65,19 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
       ) : (
         <div className="space-y-4">
           <p className="text-sm font-medium">
-            {t('certificate.batchResultSummary', { ok: okCount, failed: failedCount })}
+            {t('certificate.batchResultSummary', { ok: batch.okCount, failed: batch.failedCount })}
           </p>
           <div className="space-y-2">
-            {batch.results.map((item) => {
-              const student = batch.pendientes.find((e) => e.enrollment_id === item.enrollment_id)
-              return (
-                <div key={item.enrollment_id} className="flex items-center justify-between gap-3">
-                  <span className="text-sm">{student?.student_name ?? String(item.enrollment_id)}</span>
-                  {item.ok ? (
-                    <AppTag severity="success" value={`✓ ${item.codigo}`} />
-                  ) : (
-                    <AppTag severity="danger" value={item.error ?? ''} />
-                  )}
-                </div>
-              )
-            })}
+            {batch.report.map((row) => (
+              <div key={row.enrollmentId} className="flex items-center justify-between gap-3">
+                <span className="text-sm">{row.studentName}</span>
+                {row.ok ? (
+                  <AppTag severity="success" value={`✓ ${row.codigo}`} />
+                ) : (
+                  <AppTag severity="danger" value={row.error ?? ''} />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

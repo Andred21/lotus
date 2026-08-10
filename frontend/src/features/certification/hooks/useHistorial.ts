@@ -24,7 +24,17 @@ export function useHistorial() {
 
   const [statusFilter, setStatusFilterState] = useState<CertDerivedStatus | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
+  const [revoking, setRevoking] = useState<CertificateData | null>(null)
+  const [reissuing, setReissuing] = useState<CertificateData | null>(null)
   const viewingCertificate = useCertificate(viewingCertificateId)
+
+  /** Reemissão concluída: fecha a confirmação e abre o diálogo do certificado
+   * novo. É UMA transição — enquanto `reissuing` morava no componente e
+   * `viewingCertificateId` aqui, ela vivia metade no JSX e metade no hook. */
+  const openIssuedCertificate = (certificate: CertificateData) => {
+    setReissuing(null)
+    setViewingCertificateId(certificate.id)
+  }
 
   const rows = certificates.data ?? []
   const table = useTableFilter(
@@ -45,7 +55,8 @@ export function useHistorial() {
   // Contrato do `filterSlot` (SearchableTableFrame): quem passa um filtro
   // próprio devolve um `clear` COMPOSTO — o `table.clear()` do
   // `useTableFilter` limpa só a busca, e o vazio de filtro da moldura oferece
-  // "limpiar filtros" sobre os dois (busca + estado).
+  // "limpiar filtros" sobre os dois (busca + estado). A composição sai daqui
+  // pronta: montá-la no JSX da tela era pedir que a tela soubesse do contrato.
   const clearAll = () => {
     table.clear()
     setStatusFilterState(null)
@@ -72,8 +83,7 @@ export function useHistorial() {
   }
 
   return {
-    table,
-    clearAll,
+    table: { ...table, clear: clearAll },
     statusFilter,
     setStatusFilter,
     statusSummary,
@@ -85,6 +95,11 @@ export function useHistorial() {
     canReissue: can('certification.certificate.issue'),
     viewingCertificateId,
     setViewingCertificateId,
+    revoking,
+    setRevoking,
+    reissuing,
+    setReissuing,
+    openIssuedCertificate,
     viewingCertificate: viewingCertificate.data ?? null,
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
