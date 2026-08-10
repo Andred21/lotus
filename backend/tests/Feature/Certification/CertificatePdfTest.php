@@ -709,6 +709,35 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
+     * O QR sobe para o topo direito e leva o par código/emissão junto — mudança
+     * de LUGAR, não de conteúdo. O que a rota pública valida é o UUID dentro do
+     * QR, e ele não muda; esta guarda existe para que a realocação não apague
+     * silenciosamente um dos dois campos de identificação.
+     */
+    public function test_qr_e_identificacao_formam_um_bloco_no_topo(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $html = $this->pdf->lastHtml();
+
+        $this->assertStringContainsString('class="identificacion"', $html);
+        $this->assertStringContainsString('N° LOT-2026-1000', $html);
+        $this->assertStringContainsString('Emisión:', $html);
+
+        // O QR encolheu: 32mm no rodapé viram 22mm no topo.
+        $this->assertMatchesRegularExpression('/\.identificacion img\s*\{[^}]*width:\s*22mm;/s', $html);
+
+        // O bloco abre a folha, antes do logo; o rodapé fica só com a assinatura.
+        $this->assertLessThan(
+            strpos($html, 'class="brand"'),
+            strpos($html, 'class="identificacion"'),
+        );
+        $this->assertStringNotContainsString('class="qr"', $html);
+    }
+
+    /**
      * A tipografia do documento aprovado, embutida e não instalada: um conversor
      * sem a fonte degrada em SILÊNCIO para um fallback, e falha muda em
      * documento com peso legal é o que a decisão D4 recusou.

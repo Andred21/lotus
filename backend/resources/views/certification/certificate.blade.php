@@ -149,7 +149,21 @@
         }
         .page:last-child { page-break-after: auto; }
 
-        .meta { font-size: 9px; line-height: 1.6; }
+        /* QR e identificação viajam JUNTOS para o topo direito, como no
+           `docs/templates/certificado.pdf` e na referência que o João anexou.
+           O bloco é estático no fluxo, não absoluto: absoluto foi o que fez a
+           barra de fechamento do rodapé, morta na Task 3, ancorar no pé do
+           BLOCO em vez do da folha e reaparecer no meio da página 2. */
+        .identificacion {
+            align-self: flex-end;
+            font-size: 9px;
+            line-height: 1.5;
+            text-align: center;
+            width: 30mm;
+        }
+        .identificacion img { display: block; height: 22mm; width: 22mm; }
+        .identificacion .codigo { font-weight: 700; margin-top: 1mm; }
+        .identificacion .aviso { font-size: 7px; line-height: 1.3; margin-top: 1mm; }
         .brand { margin: 2mm 0 6mm; text-align: center; }
         .brand img { height: 26mm; }
 
@@ -232,7 +246,9 @@
         .footer-main {
             align-items: flex-end;
             display: flex;
-            justify-content: space-between;
+            /* Sem o QR à esquerda, `space-between` deixaria a assinatura colada
+               na margem: o rodapé fica só com ela, alinhada à direita. */
+            justify-content: flex-end;
             min-height: 40mm;
         }
         .signature {
@@ -242,10 +258,6 @@
         }
         .signature-name { font-weight: 700; margin-bottom: 1mm; }
         .signature-line { border-top: 1px solid #3f3f3f; padding-top: 1mm; }
-
-        .qr { width: 46mm; }
-        .qr img { display: block; height: 32mm; width: 32mm; }
-        .qr span { display: block; font-size: 8px; line-height: 1.4; margin-top: 1mm; }
 
         .disclaimer {
             font-size: 8px;
@@ -271,9 +283,11 @@
 </head>
 <body>
 <section class="page">
-    <div class="meta">
-        N° {{ $certificate->codigo }}<br>
-        Emisión: {{ $fecha($snapshot->emitido_em) }}
+    <div class="identificacion">
+        <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
+        <div class="codigo">N° {{ $certificate->codigo }}</div>
+        <div>Emisión: {{ $fecha($snapshot->emitido_em) }}</div>
+        <div class="aviso">Verifique la autenticidad de este certificado escaneando el código.</div>
     </div>
 
     <div class="brand">
@@ -340,11 +354,6 @@
 
     <div class="certificate-footer">
         <div class="footer-main">
-            <div class="qr">
-                <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
-                <span>Verifique la autenticidad de este certificado escaneando el código.</span>
-            </div>
-
             <div class="signature">
                 <div class="signature-name">{{ $snapshot->redator->name }}</div>
                 <div class="signature-line">Instructor</div>
