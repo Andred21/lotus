@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: joao
-next_action: approve_active_spec
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: 9cbcb2b
-updated_at: 2026-08-10T18:25:00-03:00
+state_basis_commit: a703a26
+updated_at: 2026-08-10T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -157,10 +157,66 @@ Liberation Sans Bold.
 nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
 
 **A sessão parou no gate de leitura da spec, por escolha do João.** Ele optou por ler o documento
-antes do `writing-plans`, então `next_owner` volta para ele e a próxima ação é `approve_active_spec`.
-`active_plan` continua `null` e **nenhuma linha de implementação foi escrita**. Uma sessão nova não
-deve ler `workflow_state: planning` como autorização para escrever o plano: o plano só nasce depois
-da aprovação explícita da spec.
+antes do `writing-plans`, então `next_owner` voltou para ele e a ação foi `approve_active_spec`.
+Nenhuma linha de implementação foi escrita nessa etapa.
+
+### Aprovação da spec e plano — 2026-08-10
+
+O João aprovou a spec com a instrução literal `Spec aprovada, escreva o plano`. O plano ativo
+(`docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md`) decompõe o bloco em
+**11 tasks (0–10)**: baseline; fundo JPEG e fontes WOFF2 versionados; três tasks de certificado
+(fundo, tipografia com remedição do limiar, QR); `App\Shared\Office\`; manual em Blade OOXML com o
+PDF saindo do pacote; rota do DOCX; frontend; gate. O handoff fixa **`executor: claude`** — metade
+das tasks fecha por comparação visual página a página com os templates, num laço de
+render → olhar → ajustar. Nenhuma implementação foi iniciada durante o planejamento; o estado
+transiciona para `ready_for_execution` no mesmo commit do plano.
+
+**Baseline reconferido em `a703a26`, não herdado:** backend **503 passed, 1 skipped (1868
+assertions)** — o mesmo placar do fechamento do `hardening-revisao-ui-assistida`, como esperado de
+três commits só de documentação. O plano projeta **520 passed** ao fim do bloco (+17).
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano), em vez
+de silenciá-los. Os que mudam decisão da spec:
+
+1. **`docs/templates/manual.docx` existe no repo** — a spec só tinha lido o PDF. Dele saíram o papel
+   exato (`w:pgSz w:w="20183" w:h="12246"`, contra os 20160×12240 do probe), o `w:pgMar`, as larguras
+   de coluna das cinco tabelas, a cor institucional **`25A5E4`** (e não `29A3E0`) e a descoberta de
+   que o template declara **Arial** — Liberation Sans é a substituição métrica do LibreOffice, não a
+   fonte pedida. Declarar Arial acerta o conversor **e** o Word do cliente (D-P3, D-P4).
+2. **A conversão PNG→JPEG saiu sem mudança de infra.** A alternativa era `libjpeg-turbo-dev` no
+   `docker/php/Dockerfile`; foi recusada por trocar imagem de produção para converter um asset uma
+   vez. A rota `/forms/chromium/screenshot/html` do Gotenberg foi provada: JPEG **1414×2000 de 74.604
+   bytes** com `quality=92`, contra os 98.258 do mesmo fundo dentro do certificado aprovado (D-P1).
+3. **São duas faces WOFF2, não quatro** (a spec §3.3 dizia quatro): Lexend e Montserrat são fontes
+   **variáveis**, e o Google Fonts serve a mesma URL para 400/700/800 do Lexend. 39.680 + 19.012
+   bytes cobrem os quatro pesos (D-P2).
+4. **`short_open_tag` está `On` no container**, então uma Blade que abra com o `<?xml …?>` literal
+   morre em `Parse error: syntax error, unexpected identifier "version"` — confirmado executando os
+   dois casos lado a lado. As quatro Blades do pacote abrem por uma diretiva `@xmlDecl`; `{!! … !!}`
+   foi recusado por reintroduzir a interpolação crua que a guarda de escape proíbe (D-P9).
+5. **`printBackground` não é necessário** — medido antes de aplicar o fundo: os PDFs com e sem o
+   campo saem byte a byte do mesmo tamanho. `PageOptions` e `GotenbergHtmlToPdf`, que são
+   compartilhados com o certificado, **não mudam** (D-P7).
+6. **As grades do manual são formulário impresso com linha fixa** (22/20/20), e o plano fixa
+   `max(N, fixas)`: turma pequena mantém as linhas em branco, turma grande estende a grade. Truncar
+   esconderia aluno (D-P5).
+
+A auto-revisão do plano contra a spec ainda achou seis erros no próprio rascunho e os corrigiu antes
+de gravar: `makeStudentWithUser` não existe no `CreatesDomainRecords` (o idioma real é
+`Student::create` sobre `User::factory()`); o `CertificatePdfTest` já tem `fakeGotenberg()`/
+`assertHtml()` e não precisava de um helper novo; a guarda "sem `{{`" reprovaria o próprio comentário
+Blade; duas asserções de contagem eram ambíguas (`<w:tr ` com espaço nunca casa; `6` e `10` também
+são número de linha); a rota pública é `publico/certificados`, não `public/certificates`; e a troca
+do controller precisava entrar na Task 7, senão um commit ficaria com a rota do manual quebrada.
+
+**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
+review não roda automaticamente ao fim da Task 10.
+
+**Uma pergunta fica aberta para o João, no Step 7 da Task 10:** `App\Shared\Office\` e a rota
+LibreOffice são decisão de arquitetura de transporte. A recomendação do plano é **nota no ADR-12**,
+não ADR novo — a rota LibreOffice é uma segunda porta do **mesmo** serviço do compose, com o mesmo
+racional de "o transporte mora num lugar só".
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
