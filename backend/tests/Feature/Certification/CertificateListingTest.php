@@ -123,13 +123,32 @@ class CertificateListingTest extends TestCase
             ],
         );
 
+        // Terceira linha REVOGADA E corrompida: sem ela, `status` seria um proxy
+        // perfeito de `snapshot_ok` neste cenário, e um `snapshot_ok` derivado
+        // do status — fonte inteiramente errada — passaria verde. Com ela,
+        // `Revocado` mapeia para os DOIS valores e só o snapshot decide.
+        Carbon::setTestNow('2026-08-05 12:00:00');
+        $revogadoCorrompido = $this->createCertificate(
+            CertificateStatus::Revocado,
+            'LOT-2026-1002',
+            [
+                'aluno' => ['name' => ''],
+                'curso' => ['name' => 'Seguridad en Alta Tensión'],
+            ],
+        );
+
         $this->getJson('/api/certificates')
             ->assertOk()
-            ->assertJsonCount(2)
-            ->assertJsonPath('0.id', $corrompido->id)
+            ->assertJsonCount(3)
+            ->assertJsonPath('0.id', $revogadoCorrompido->id)
+            ->assertJsonPath('0.status', 'revocado')
             ->assertJsonPath('0.snapshot_ok', false)
-            ->assertJsonPath('1.id', $sao->id)
-            ->assertJsonPath('1.snapshot_ok', true);
+            ->assertJsonPath('1.id', $corrompido->id)
+            ->assertJsonPath('1.status', 'emitido')
+            ->assertJsonPath('1.snapshot_ok', false)
+            ->assertJsonPath('2.id', $sao->id)
+            ->assertJsonPath('2.status', 'revocado')
+            ->assertJsonPath('2.snapshot_ok', true);
     }
 
     /**
@@ -149,7 +168,9 @@ class CertificateListingTest extends TestCase
             ],
         );
 
-        $this->getJson("/api/certificates/{$certificate->id}")->assertStatus(500);
+        $this->getJson("/api/certificates/{$certificate->id}")
+            ->assertStatus(500)
+            ->assertHeader('content-type', 'application/problem+json');
     }
 
     /**
