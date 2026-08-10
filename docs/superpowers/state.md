@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: certificacao-lote-e-snapshot
 active_work_item: certificacao-lote-e-snapshot
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-certificacao-lote-e-snapshot-design.md
 active_plan: docs/superpowers/plans/2026-08-10-certificacao-lote-e-snapshot.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: 7227d04
-updated_at: 2026-08-10T12:20:00-03:00
+state_basis_commit: 144c857
+updated_at: 2026-08-10T13:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -155,6 +155,107 @@ seção `curso` justamente por isso). A listagem só nunca exercitou essas rotas
 `test_show_devolve_o_snapshot_persistido` ganham `'curso' => ['name' => …]`. Edição **só de
 fixture**: nenhuma asserção muda, os 9 testes existentes seguem provando o que provavam, e os 2
 testes novos passam a isolar `aluno.name` como a única corrupção — que é a história da spec.
+
+### Tasks 1–5 entregues — uma revisão de task por entrega
+
+Commits, do base `7227d04`: `66e0911` (seam `ValidationMessages::squash()` com os dois adapters),
+`c7fb9bf` (`BatchIssueCertificatesAction`), `8299921` (gate único do snapshot), `70c0167`
+(`snapshot_ok` + `show` falhando alto + `generated.ts`) + `b2a5028` (fix do review da Task 4),
+`144c857` (tag da linha corrompida no Historial + chave nas 3 locales).
+
+**Dois mecanismos foram vistos reprovando em primeira mão, não aceitos por relatório (lição 10):**
+
+1. **A ausência de `DB::transaction` no Action do lote.** O revisor da Task 2 foi barrado pelo
+   classificador de permissão ao tentar reproduzir o mutante, e disse isso em vez de mascarar.
+   Envolvi o laço do `BatchIssueCertificatesAction` num `DB::transaction` eu mesmo:
+   `BatchIssueTest.php:299` reprovou com `Failed asserting that table [certificates] matches
+   expected entries count of 1. Entries found: 0.` Mutante revertido, árvore limpa, verde de volta.
+   O guard sobreviveu à mudança de casa com **zero linhas de diff** no arquivo de teste, que era o
+   critério do refactor (D-P2 confirmado).
+2. **A fonte do `snapshot_ok`.** Achado **Importante** do review da Task 4, provado pelo próprio
+   revisor: com o certificado são `Revocado` e o corrompido `Emitido`, `status` era proxy
+   **perfeito** de `snapshot_ok`, e o mutante `snapshot_ok: $certificate->status !==
+   CertificateStatus::Emitido` — campo derivado de fonte inteiramente errada — deixava o teste **e a
+   suíte inteira** verdes. É a "igualdade acidental" da `backend-ddd.md` §Testes, num campo que a
+   Task 5 consome na UI. Corrigido em `b2a5028` com uma terceira linha **revogada E corrompida**, de
+   modo que `Revocado` mapeia para os dois valores; mutante revisto **vermelho** (`Failed asserting
+   that true is identical to false.` em `CertificateListingTest.php:145`), revertido em seguida.
+
+**Um desvio forçado pelo schema (D-E2):** o cenário do `index` não pode ter dois `Emitido` na mesma
+matrícula — `certificates_active_enrollment_unique`, sobre a coluna gerada `active_enrollment_id`,
+recusa antes de a listagem responder (o primeiro RED foi `UniqueConstraintViolationException`). O
+são virou `Revocado`, seguindo o precedente do próprio arquivo. Revogado produz `NULL` na coluna
+gerada, e `NULL` não colide — é o que permite as duas linhas revogadas do fix acima.
+
+### Task 6 — o gate do bloco (2026-08-10)
+
+Executado por mim direto: é a prova do DoD do bloco, e o DoD pede comportamento contra a API real.
+
+**Ferramentas.** Backend **498 passed, 1 skipped (1850 assertions)** — +5 testes / +17 asserções
+sobre o baseline 493/1833. Frontend **13 arquivos / 47 testes**, `pnpm lint` limpo, `pnpm build`
+verde. Pint `--test` **`passed`** nos **11** `.php` vivos do bloco (lista conferida antes, para o
+`--test` nunca cair sem argumento — lição 9). `typescript:transform` rodado de novo: `generated.ts`
+**sem diff** depois do commit da Task 4, e `git diff main...HEAD -- backend/database/` **vazio** —
+zero schema, como a spec previu.
+
+**E2e contra a API real**, `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie + CSRF
+(`Origin` e `Accept` obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login, que o rotaciona).
+
+1. **Portas destravadas pela própria API:** o seed fresco deixa a turma 3 com
+   `emission_blocked: 'sin_plantilla'`; `PUT /api/courses/2` criando o template v1 com
+   `layout_config.city = 'Santiago'` e `validity_months: 24` zerou o bloqueio (`null`). A turma é
+   `online` com `local_aplicacao: null`, então a cidade do template era mesmo obrigatória. Os
+   `modules` foram **omitidos** do payload de propósito — coleção nested `Optional`, ausente não
+   mexe — e voltaram intactos.
+2. **Emissão individual** em `enrollments/21` → **201 `LOT-2026-1000`**, `snapshot_ok: true`.
+3. **Lote `[22, 21, 23, 24]`** com a falha provocada (21 já tinha vigente) → **200** com relatório
+   por item: `LOT-2026-1001`/`1002`/`1003` **contíguos**, sem buraco onde o item falho ficou — a
+   recusa **não consumiu número de sequência** —, e a falha **nomeada**
+   (`Ya existe un certificado vigente para esta matrícula.`). `[25, 25]` → **422** problem+json, o
+   `distinct` vivo.
+4. **`aluno.name` corrompido direto na coluna** do certificado 2 (`UPDATE … JSON_SET`), com o resto
+   do JSON conferido byte a byte como intacto. As seis chamadas:
+
+   | Chamada | Resultado |
+   |---|---|
+   | `GET /api/certificates` | **200**, `snapshot_ok: false` **só** na linha corrompida |
+   | `GET /api/certificates/2` (corrompido) | **500** `application/problem+json`, `detail` nomeando `LOT-2026-1001` **e o campo faltante** |
+   | `GET /api/certificates/2/pdf` | **500** problem+json, mesmo `detail` |
+   | `GET /api/publico/certificados/{uuid}` **sem cookie** | **500** problem+json, mesmo `detail` |
+   | `GET /api/certificates/1` (são) | **200**, `snapshot_ok: true` |
+   | `GET /api/certificates/1/pdf` (são) | **200 `application/pdf`** |
+
+   Controle extra: a rota pública do certificado **são**, sem cookie, segue **200**. E a página 1 do
+   PDF são foi inspecionada com `pdftoppm` — nome, RUT, cliente, curso, vigência, QR e assinatura
+   todos impressos. O gate único não fechou o caminho feliz.
+
+**O que o gate NÃO provou, sem maquiagem:** **a tag da linha corrompida não foi vista renderizada.**
+O host WSL não tem browser utilizável (Playwright sem as bibliotecas de sistema, limitação herdada
+de 2026-08-08). A prova aqui é o `snapshot_ok` na API real, o `pnpm build`/`pnpm lint` e a paridade
+das três locales; **o checkpoint visual fica com o João.**
+
+**Estado do banco de dev:** `migrate:fresh --seed` do gate mais as mutações do e2e (template v1 do
+curso 2 com `city: Santiago`, certificados `LOT-2026-1000`…`1003`, e o `aluno.name` do
+`LOT-2026-1001` **deixado corrompido de propósito** para o checkpoint visual do João encontrar a
+linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cenário canônico.
+
+### Três Minor abertos, dois deles decisão do João, para o review herdar
+
+- **Minor-2 (decisão do João — o plano manda o texto).**
+  `CorruptedSnapshotException.php:18` afirma "**A listagem é a exceção deliberada, e é a única.**" A
+  frase é **falsa**: `store()` e `revoke()` também projetam `CertificateData` sem passar pelo gate.
+  O texto está mandado **verbatim pelo plano, na linha 793**, então a contradição é do plano, não da
+  implementação — não corrigi unilateralmente.
+- **Minor-4 (decisão do João — escopo).** `certificatesApi.ts:68-71` / `IssuedDialog` consomem o
+  certificado por um caminho que **não passa pelo `show` gateado**. Fechar isso seria uma **quinta**
+  mudança de comportamento, e o §5 da spec é lista **fechada** de quatro.
+- **Minor-3 (técnico, sem decisão pendente).** `CertificateData.php:49-50` acessa
+  `$certificate->snapshot` duas vezes; com `withoutObjectCaching` no cast, são dois decodes do JSON
+  por certificado listado.
+
+Evidência task a task em `.superpowers/sdd/progress.md`. Review **ALTO RISCO** pela spec (peso legal
++ rota pública + `generated.ts`) → duas frentes: lente Claude com o gabarito do projeto + Codex
+read-only sobre `7227d04..HEAD`.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
