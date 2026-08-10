@@ -127,13 +127,20 @@ class CertificateListingTest extends TestCase
         // perfeito de `snapshot_ok` neste cenário, e um `snapshot_ok` derivado
         // do status — fonte inteiramente errada — passaria verde. Com ela,
         // `Revocado` mapeia para os DOIS valores e só o snapshot decide.
+        //
+        // E o campo que falta aqui é o `curso.name`, não o `aluno.name`: a
+        // política obrigatória tem TRÊS campos e cada um precisa de quem o
+        // mate. `aluno.name` já tem três testes; `emissor.name` tem o
+        // `CertificatePdfTest::test_documento_da_versao_2_sem_emissor_recusa_
+        // em_vez_de_usar_a_config`; `curso.name` não tinha nenhum, e removê-lo
+        // da lista de obrigatórios deixava a suíte inteira verde.
         Carbon::setTestNow('2026-08-05 12:00:00');
         $revogadoCorrompido = $this->createCertificate(
             CertificateStatus::Revocado,
             'LOT-2026-1002',
             [
-                'aluno' => ['name' => ''],
-                'curso' => ['name' => 'Seguridad en Alta Tensión'],
+                'aluno' => ['name' => 'Ana Torres'],
+                'curso' => ['name' => ''],
             ],
         );
 
@@ -170,7 +177,45 @@ class CertificateListingTest extends TestCase
 
         $this->getJson("/api/certificates/{$certificate->id}")
             ->assertStatus(500)
-            ->assertHeader('content-type', 'application/problem+json');
+            ->assertHeader('content-type', 'application/problem+json')
+            // O `detail` é o produto da recusa, não um enfeite dela: é o que o
+            // `CertificateViewDialog` imprime no `AppErrorState` quando o
+            // suporte clica em Ver na linha marcada (D8). Sem esta asserção,
+            // trocar o texto por um genérico — ou passar o `uuid` no lugar do
+            // `codigo` ao gate — fica verde.
+            ->assertJsonPath(
+                'detail',
+                'El certificado LOT-2026-1002 no puede presentarse: su documento congelado no tiene los campos aluno.name.',
+            );
+    }
+
+    /**
+     * A recusa tem de nomear o certificado e o campo **em produção**, que é
+     * onde o suporte a lê. `ProblemDetails` troca o `detail` de todo 500 por
+     * um genérico quando `app.debug` é falso, e nem a suíte nem o e2e do gate
+     * viam isso: o `.env` do projeto tem `APP_DEBUG=true` e não existe
+     * `.env.testing`. Com o debug ligado, a D8 se prova num caminho que a
+     * produção não percorre.
+     */
+    public function test_o_detalhe_da_recusa_sobrevive_ao_debug_desligado(): void
+    {
+        config(['app.debug' => false]);
+        $this->actingAsAdmin();
+        $certificate = $this->createCertificate(
+            CertificateStatus::Emitido,
+            'LOT-2026-1003',
+            [
+                'aluno' => ['name' => ''],
+                'curso' => ['name' => ''],
+            ],
+        );
+
+        $this->getJson("/api/certificates/{$certificate->id}")
+            ->assertStatus(500)
+            ->assertJsonPath(
+                'detail',
+                'El certificado LOT-2026-1003 no puede presentarse: su documento congelado no tiene los campos aluno.name, curso.name.',
+            );
     }
 
     /**

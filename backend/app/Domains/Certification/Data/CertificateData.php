@@ -35,6 +35,13 @@ class CertificateData extends Data
 
     public static function fromModel(Certificate $certificate): self
     {
+        // Lido UMA vez: o cast do snapshot tem `withoutObjectCaching` (para
+        // que nenhum `save()` reescreva o documento congelado), então cada
+        // acesso à propriedade decodifica o JSON e remonta a árvore de DTOs de
+        // novo. A listagem não pagina — o histórico é arquivo legal e só
+        // cresce —, e ler duas vezes aqui custava dois decodes por linha.
+        $snapshot = $certificate->snapshot;
+
         return new self(
             id: $certificate->id,
             uuid: $certificate->uuid,
@@ -46,8 +53,8 @@ class CertificateData extends Data
             valido_ate: $certificate->valido_ate?->toDateString(),
             revoked_at: $certificate->revoked_at?->toISOString(),
             revocation_reason: $certificate->revocation_reason,
-            snapshot: $certificate->snapshot,
-            snapshot_ok: $certificate->snapshot->isPresentable(),
+            snapshot: $snapshot,
+            snapshot_ok: $snapshot->isPresentable(),
             created_at: $certificate->created_at->toISOString(),
         );
     }
