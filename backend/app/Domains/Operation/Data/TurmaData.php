@@ -72,7 +72,7 @@ class TurmaData extends Data
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
             course_name: $turma->course->name,
             client_name: $turma->contratante()->name,
-            enrolled_count: $turma->enrollments_count ?? $turma->enrollments()->count(),
+            enrolled_count: $turma->enrollments_count,
             quote_code: $turma->quote->code,
             budget_code: $turma->quote->budget->code,
             budget_id: $turma->quote->budget->id,

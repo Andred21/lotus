@@ -119,6 +119,17 @@ class Turma extends Model implements Auditable
         }
     }
 
+    /**
+     * Contraparte de instância do `withListingData()` — o mesmo molde de
+     * `Client`, `Quote`, `Course` e `Enrollment`. É daqui que o `present()` do
+     * controller carrega, e por isso as Actions não pré-carregam nada: a carga
+     * da projeção tem um dono só.
+     */
+    public function loadListingData(): static
+    {
+        return $this->load(TurmaQueryBuilder::LISTING)->loadCount('enrollments');
+    }
+
     /** @param  QueryBuilder  $query */
     public function newEloquentBuilder($query): TurmaQueryBuilder
     {

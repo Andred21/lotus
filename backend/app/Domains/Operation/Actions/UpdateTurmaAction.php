@@ -20,6 +20,6 @@ class UpdateTurmaAction
             'end_date' => $data->end_date,
         ]);
 
-        return $turma->load('redatores.user');
+        return $turma;
     }
 }
