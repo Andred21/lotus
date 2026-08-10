@@ -3,8 +3,8 @@ schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
 workflow_state: planning
-next_owner: claude
-next_action: continue_active_planning
+next_owner: joao
+next_action: approve_active_spec
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
 active_plan: null
@@ -155,6 +155,12 @@ Liberation Sans Bold.
 
 **Risco de review declarado ALTO** (§8 da spec): documento com peso legal mais dependência de infra
 nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
+
+**A sessão parou no gate de leitura da spec, por escolha do João.** Ele optou por ler o documento
+antes do `writing-plans`, então `next_owner` volta para ele e a próxima ação é `approve_active_spec`.
+`active_plan` continua `null` e **nenhuma linha de implementação foi escrita**. Uma sessão nova não
+deve ler `workflow_state: planning` como autorização para escrever o plano: o plano só nasce depois
+da aprovação explícita da spec.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
