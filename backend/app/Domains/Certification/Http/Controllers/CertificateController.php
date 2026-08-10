@@ -45,6 +45,11 @@ class CertificateController extends Controller implements HasMiddleware
 
     public function show(Certificate $certificate): CertificateData
     {
+        // A listagem degrada marcando a linha; o detalhe, não. Aqui o
+        // documento é apresentado por inteiro, e apresentar um snapshot sem
+        // nome de aluno é atestar o que ninguém sabe.
+        $certificate->snapshot->assertPresentable($certificate->codigo);
+
         return CertificateData::fromModel($certificate);
     }
 

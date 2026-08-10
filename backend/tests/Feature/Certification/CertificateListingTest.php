@@ -87,7 +87,10 @@ class CertificateListingTest extends TestCase
         $certificate = $this->createCertificate(
             CertificateStatus::Emitido,
             'LOT-2026-1000',
-            ['aluno' => ['name' => 'Nombre Congelado']],
+            [
+                'aluno' => ['name' => 'Nombre Congelado'],
+                'curso' => ['name' => 'Seguridad en Alta Tensión'],
+            ],
         );
 
         $this->getJson("/api/certificates/{$certificate->id}")
@@ -95,6 +98,58 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('id', $certificate->id)
             ->assertJsonPath('codigo', 'LOT-2026-1000')
             ->assertJsonPath('snapshot.aluno.name', 'Nombre Congelado');
+    }
+
+    /**
+     * A listagem é a exceção deliberada ao "falhar alto": um registro
+     * corrompido não pode derrubar a tabela inteira de quem só quer ver o
+     * histórico. Ela marca a linha e segue.
+     */
+    public function test_index_marca_o_snapshot_corrompido_sem_derrubar_a_listagem(): void
+    {
+        $this->actingAsAdmin();
+        // O são é o REVOGADO porque `active_enrollment_id` só admite um emitido
+        // por matrícula: dois emitidos aqui colidem no índice antes de a
+        // listagem responder. Quem interessa manter emitido é o corrompido.
+        $sao = $this->createCertificate(CertificateStatus::Revocado, 'LOT-2026-1000');
+
+        Carbon::setTestNow('2026-08-05 11:00:00');
+        $corrompido = $this->createCertificate(
+            CertificateStatus::Emitido,
+            'LOT-2026-1001',
+            [
+                'aluno' => ['name' => ''],
+                'curso' => ['name' => 'Seguridad en Alta Tensión'],
+            ],
+        );
+
+        $this->getJson('/api/certificates')
+            ->assertOk()
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.id', $corrompido->id)
+            ->assertJsonPath('0.snapshot_ok', false)
+            ->assertJsonPath('1.id', $sao->id)
+            ->assertJsonPath('1.snapshot_ok', true);
+    }
+
+    /**
+     * `show` alimenta a tela de detalhe do certificado. Devolver 200 com
+     * `aluno.name: ""` ali é a mesma prova falsa que a rota pública e o PDF já
+     * recusam — documento de peso legal não atesta o que não sabe.
+     */
+    public function test_show_de_snapshot_corrompido_falha_alto(): void
+    {
+        $this->actingAsAdmin();
+        $certificate = $this->createCertificate(
+            CertificateStatus::Emitido,
+            'LOT-2026-1002',
+            [
+                'aluno' => ['name' => ''],
+                'curso' => ['name' => 'Seguridad en Alta Tensión'],
+            ],
+        );
+
+        $this->getJson("/api/certificates/{$certificate->id}")->assertStatus(500);
     }
 
     /**
@@ -408,7 +463,10 @@ class CertificateListingTest extends TestCase
     private function createCertificate(
         CertificateStatus $status,
         string $codigo,
-        array $snapshot = ['aluno' => ['name' => 'Juan Pérez']],
+        array $snapshot = [
+            'aluno' => ['name' => 'Juan Pérez'],
+            'curso' => ['name' => 'Seguridad en Alta Tensión'],
+        ],
     ): Certificate {
         return Certificate::create([
             'uuid' => (string) Str::uuid(),
