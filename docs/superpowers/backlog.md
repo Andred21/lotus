@@ -30,33 +30,7 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **`certificacao-lote-e-snapshot`** — aprofundamento do Certification (revisão de arquitetura de
-   2026-08-09; 13 decisões já tomadas pelo João na entrevista, a spec não reabre nenhuma).
-
-    Objetivo:
-    tirar de comentário as 4 regras de ordenação/transação do lote e dar um gate único ao
-    "este snapshot é apresentável?".
-
-    Decisões fechadas:
-    1. `BatchIssueCertificatesAction::execute(BatchIssueData): array<BatchIssueItemResultData>`;
-       o controller vira 4 linhas e o Action resolve o relator uma vez, dentro dele.
-    2. Sem transação externa; id de matrícula arquivada continua virando `ValidationException`
-       **dentro** do `try` (a corrida entre validar e executar sobrevive a qualquer rule mais
-       apertada — `exists` fica como está).
-    3. `App\Shared\Validation\ValidationMessages::squash()` com `implode(' ')`, e o
-       `ImportStudentsAction:63` migra **no mesmo commit** — o seam nasce com dois adapters.
-    4. `CertificateSnapshotData::assertPresentable(string $codigo)`; `CertificatePdfService` e
-       `PublicCertificateData` perdem a cópia da política.
-    5. `CertificateData` ganha `snapshot_ok: bool`, `snapshot` continua não-nulo. `index` degrada
-       marcando a linha; `show`, `pdf` e rota pública do QR falham alto. Regenera `generated.ts`,
-       marca a linha no `HistorialTable` e cria a chave i18n nos 3 locales — mesmo commit.
-    6. Docblock do `CorruptedSnapshotException` reescrito: a listagem passa a ser exceção
-       deliberada ao "falhar alto".
-
-    Fora de escopo:
-    - o lado Operação (item 5 abaixo);
-    - qualquer mudança na política de vigência ou nas 6 portas do `CertificateEligibility`.
-5. **`turma-habilitacao-listagem`** — aprofundamento do Operation (mesma revisão). Backend puro,
+4. **`turma-habilitacao-listagem`** — aprofundamento do Operation (mesma revisão). Backend puro,
    nenhum contrato HTTP muda.
 
     Objetivo:
