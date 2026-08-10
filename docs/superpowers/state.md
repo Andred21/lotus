@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: hardening-revisao-ui-assistida
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-10-hardening-revisao-ui-assistida-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-frontend
-state_basis_commit: 032332b
-updated_at: 2026-08-09T23:46:24-03:00
+state_basis_commit: a81c41c
+updated_at: 2026-08-10T09:46:16-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -66,6 +66,14 @@ rota segue sem Context Packet (`context_packet: null`).
 **Isolamento:** worktree `/home/jvbat/projetos/fix-frontend`, branch
 `chore/hardening-ui-review`, criada a partir de `032332b` e sincronizada com `origin/main` na
 seleção.
+
+### Brainstorming e spec — 2026-08-10
+
+O João aprovou o desenho com a instrução literal `APROVADO O DESENHO — gravar e commitar a spec.`
+A spec ativa materializa as decisões fechadas, a ordem temporal reconciliada, o protocolo
+read-only, a degradação do Chrome DevTools e o DoD do bloco. O estado entra em `planning` no mesmo
+commit da spec; `active_plan` permanece `null` até a aprovação humana deste documento e a escrita
+posterior do plano.
 
 ## Último item fechado — 2026-08-08 (`certificacao-frontend`)
 
