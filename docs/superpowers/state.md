@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: turma-habilitacao-listagem
 active_work_item: turma-habilitacao-listagem
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-10-turma-habilitacao-listagem.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: certificacao-lote-e-snapshot
 state_basis_commit: 4ae4c91
-updated_at: 2026-08-10T15:45:00-03:00
+updated_at: 2026-08-10T16:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -105,6 +105,34 @@ Spec: `docs/superpowers/specs/2026-08-10-turma-habilitacao-listagem-design.md`. 
 **BAIXO RISCO** (zero `generated.ts`, locales, auth/RBAC, schema, dinheiro e rota pública;
 `executor: claude`) → só lente Claude, sem segunda frente do Codex. Backend puro → **main tree, sem
 worktree (P-03)**; zero schema, ADR/DER não abrem.
+
+### Plano escrito em 2026-08-10 — 6 tasks (0–5), `executor: claude`
+
+`docs/superpowers/plans/2026-08-10-turma-habilitacao-listagem.md`. Branch
+`refactor/turma-habilitacao-listagem`, já criada a partir de `4ae4c91`, com os commits de seleção
+(`31576c7`) e da spec (`cb4c626`) dentro dela.
+
+**Baseline reconferida no próprio `4ae4c91`, não herdada do state anterior:** backend **500 passed,
+1 skipped (1858 assertions)** — o mesmo placar de `d01c279`, como esperado de um merge sem código.
+
+Ordem das tasks: 0 baseline → 1 `Turma::documentacaoObrigatoria()` + `TurmaDocumentController::index`
+consumindo a relação (morre a 2ª cópia do `whereIn`) → 2 `HabilitacaoStatus` + `for()`, com os dois
+chamadores migrados e a API pública antiga morta → 3 seam de listagem (`LISTING`,
+`loadListingData()`, `present()` sem `findOrFail`, `UpdateTurmaAction` sem carga parcial,
+`enrolled_count` sem `??`) → 4 guarda de contagem com dois mutantes → 5 gate contra a API real.
+
+A escrita do plano fixou **dois pontos que a spec deixava em aberto, declarados no §Desvios** em vez
+de silenciados (lição 13):
+
+- **D-P1 — o mutante do "chamar `for()` duas vezes" NÃO reproduz, e o plano diz isso.** Com a
+  relação eager-loaded a segunda leitura é de memória e não custa query: a classe de defeito deixou
+  de existir em vez de passar a ser vigiada. A guarda de contagem protege o **eager-load**, que é o
+  que pode regredir. O segundo mutante do plano é outro: tirar o `loadCount` do `loadListingData()`
+  faz o `TurmaShowTest` **reprovar alto** — sem a D-B3 esse mesmo mutante ficaria verde pagando uma
+  query por turma em silêncio, e é essa diferença que a D-B3 compra.
+- **D-P2 — a guarda mora no `TurmaQueryBuilderTest`**, não em arquivo novo: o assunto do arquivo é a
+  projeção de listagem, e é o precedente do `CertificateListingTest`, que guarda a contagem dentro
+  do próprio arquivo da listagem.
 
 ## Último item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
 
