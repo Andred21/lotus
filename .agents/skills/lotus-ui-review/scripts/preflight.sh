@@ -11,13 +11,49 @@ require_command() {
   fi
 }
 
+url_host() {
+  local host="${1#*://}"
+  host="${host%%/*}"
+  host="${host%%\?*}"
+  host="${host##*@}"
+  if [[ "$host" == \[*\]* ]]; then
+    host="${host#\[}"
+    host="${host%%\]*}"
+  else
+    host="${host%%:*}"
+  fi
+  printf '%s' "$host"
+}
+
+is_loopback_host() {
+  local host="$1"
+  [[ "$host" == "localhost" || "$host" == "::1" || "$host" == "0.0.0.0" ]] && return 0
+  [[ "$host" =~ ^127(\.[0-9]{1,3}){3}$ ]] && return 0
+  return 1
+}
+
+require_local_url() {
+  local label="$1"
+  local url="$2"
+  local host
+  host="$(url_host "$url")"
+  if [[ -z "$host" ]] || ! is_loopback_host "$host"; then
+    problems+=("non-local ${label} url: ${url}")
+    return 1
+  fi
+  return 0
+}
+
 probe_url() {
   local label="$1"
   local url="$2"
   local code
+  require_local_url "$label" "$url" || return
   code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "$url" 2>/dev/null || true)"
   if [[ -z "$code" || "$code" == "000" ]]; then
     problems+=("unreachable ${label}: ${url}")
+  elif [[ "$code" == 5* ]]; then
+    problems+=("unhealthy ${label}: ${url} status=${code}")
   else
     printf '%s_url=%s status=%s\n' "$label" "$url" "$code"
   fi
@@ -47,6 +83,9 @@ fi
 if command -v curl >/dev/null 2>&1; then
   probe_url frontend "$frontend_url"
   probe_url backend "$backend_url"
+else
+  require_local_url frontend "$frontend_url" || true
+  require_local_url backend "$backend_url" || true
 fi
 
 if (( ${#problems[@]} > 0 )); then

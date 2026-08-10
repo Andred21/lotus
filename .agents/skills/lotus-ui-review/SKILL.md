@@ -19,12 +19,12 @@ Require all of the following before starting:
 - a local URL on `localhost`, `127.0.0.1` or an equivalent loopback address;
 - the Lotus frontend and shared backend reachable locally;
 - Playwright CLI available;
-- manual login completed when authentication is required.
+- credentials available for the manual login required by step 7 when the surface is authenticated.
 
 Return `BLOCKED: <reason>` and stop when the surface is absent or broad, anchors diverge, a required
 service is unreachable, Playwright CLI is unavailable, the URL is not local, the journey requires
-an unauthorized mutation, or manual login is not completed. Do not substitute another browser
-mechanism when Playwright CLI is missing.
+an unauthorized mutation, or the manual login requested in step 7 is not completed. Do not
+substitute another browser mechanism when Playwright CLI is missing.
 
 Chrome DevTools MCP is complementary. When unavailable, record `complementary_unavailable` and
 continue with Playwright if the review remains possible.
@@ -53,8 +53,9 @@ continue with Playwright if the review remains possible.
 12. Use Chrome DevTools only when available and needed for complementary console, network, or
     performance diagnosis. Its absence must not replace or invalidate Playwright evidence.
 13. Read `references/review-rubric.md` completely immediately before classifying observations.
-14. Fill `references/report-template.md` exactly. Report no more than ten findings; give every B/C
-    its own reproduction and evidence.
+14. Write the report to `<run-dir>/report.txt`, filling a copy of `references/report-template.md`
+    exactly — keep every field and marker, and never edit the versioned template itself. Report no
+    more than ten findings; give every B/C its own reproduction and evidence.
 15. Record Git again and compare it with the initial state. Declare every mutation and code change;
     a conforming read-only run declares both as `none`.
 16. Return the report and wait for explicit approval. Do not correct UI, documentation, data, or

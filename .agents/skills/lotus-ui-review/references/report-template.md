@@ -1,6 +1,7 @@
 # Contrato do relatório de revisão UI/UX
 
-Preencher o bloco abaixo sem remover campos nem markers.
+Preencher uma cópia do bloco abaixo em `<run-dir>/report.txt`, sem remover campos nem markers.
+Este arquivo é o contrato versionado: nunca editá-lo durante uma revisão.
 
 ```text
 BEGIN LOTUS UI REVIEW REPORT
@@ -11,11 +12,12 @@ Branch/commit:
 Date/time:
 Agent:
 Playwright CLI:
-Chrome DevTools: used|unavailable|not-needed
+Chrome DevTools: used|complementary_unavailable|not-needed
 Git working tree before/after:
 
 ## Coverage
 | Journey step | Desktop | Tablet | Mobile | Evidence |
+|---|---|---|---|---|
 
 ## Technical signals
 Console:

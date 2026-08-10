@@ -1,7 +1,7 @@
 ---
 description: Revisa uma tela ou jornada read-only do Lotus local e encaminha ao protocolo canônico.
 argument-hint: [tela ou jornada local]
-allowed-tools: Read, Glob, Grep, Bash(git status:*), Bash(playwright-cli:*), Bash(.agents/skills/lotus-ui-review/scripts/preflight.sh:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(mkdir:*), Bash(playwright-cli:*), Bash(.agents/skills/lotus-ui-review/scripts/preflight.sh:*)
 disable-model-invocation: true
 ---
 
