@@ -2,18 +2,20 @@
 schema_version: 1
 active_feature: documentos-oficiais
 active_work_item: documentos-oficiais-template-e-docx
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
 active_plan: docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: >-
+  Q-1..Q-7, todos, aprovados pelo João em 2026-08-10 com a instrução literal `Todos de Q-1 a Q-7`.
+  Corrigidos em `96d7256`.
 last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: ee285df
-updated_at: 2026-08-10T23:55:00-03:00
+state_basis_commit: 96d7256
+updated_at: 2026-08-11T00:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -297,6 +299,81 @@ em OOXML) e a **P-03** não fechou (um bloco de backend só). Nasceu a **P-28**.
 **Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
 nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
 bloco **para** em `ready_for_review`; review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-10: duas lentes, 7 achados, todos aprovados e corrigidos
+
+**ALTO RISCO** pela §8 da spec (documento com peso legal + dependência de infra nova em caminho de
+produção). Lente Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre
+`8ee1d9e..HEAD` (11 commits, 38 arquivos). **Órfãos: zero** — `ManualPdfService` morreu sem
+referência sobrevivente, as cinco classes de `App\Shared\Office\` têm consumidor e a chave de locale
+`documents.manual` não sobrou em nenhuma das três locales. **Leis §5 limpas:** zero `abort(` em
+`Domains/Operation/`, zero Repository, `generated.ts` sem diff, `git diff` de `backend/database/`
+vazio, controller fino, `ManualButton` só via `shared/ui`, permissão nas duas rotas com teste de 403.
+
+**Uma divergência entre as lentes, mostrada em vez de resolvida em silêncio.** O achado nº 1 do
+Codex — `w:tcPr` emitindo `vAlign`/`tcMar`/`shd`/`tcBorders` fora da sequência ECMA-376 — foi
+**REJEITADO por medição**: descompactado, o `docs/templates/manual.docx` escrito pelo Word usa
+exatamente a mesma ordem (`tcW, vAlign, tcMar, …, shd, tcBorders` ×706; `trHeight, cantSplit` ×81).
+Sobrou dele só a parte confirmada em separado, que virou a Q-1. Também **não** foi reportada a
+ausência de validação do corpo do PDF no `GotenbergDocxToPdf` (Codex nº 4): é o comportamento
+idêntico do `GotenbergHtmlToPdf` já em produção pelo ADR-12, e apertar só um lado criaria assimetria
+entre as duas portas do mesmo serviço.
+
+**O João aprovou Q-1..Q-7 na íntegra** (`Todos de Q-1 a Q-7`); todos entraram em `96d7256`.
+
+**Documento (Q-1, Q-2), com o template como árbitro.** O cabeçalho é um partial incluído cinco
+vezes e escrevia `wp:docPr id="1"` nas cinco — o Word identifica figura pelo id e pede reparo do
+arquivo quando ele repete, e o gate havia declarado, sem maquiagem, que o manual **nunca foi aberto
+no Word do cliente**. O template aprovado numera os seus dez desenhos **1..10** e escreve
+`pic:cNvPr id="0"` nos dez; as duas convenções foram medidas e seguidas (contador no `@include`,
+`cNvPr` fixo em 0). A Q-2 trocou o `load('enrollments…')` por `orderByStudentName()`: as três grades
+numeram linha a linha e são **assinadas** por linha, e PDF e DOCX são dois requests — sem ORDER BY a
+mesma turma podia sair com duas numerações. O `EnrollmentQueryBuilder` já documentava o defeito para
+a tela; aqui ele tinha peso de documento.
+
+**Mecanismo (Q-3), com uma correção ao próprio achado.** O `OoxmlPackager` passou a conferir
+`tempnam`, `open`, `addFromString`, `close` e a leitura, a apagar o temporário num `finally` e a
+recusar pacote sem nenhum byte com `OfficeRenderException`. **O achado dizia "HTTP 200 com zero
+byte" e isso não se reproduz:** sob o handler de erro do Laravel, o `file_get_contents` de um arquivo
+ausente vira `ErrorException`. O que foi medido no vermelho do teste é pior de outro jeito — 500 sem
+tipo de domínio, com o caminho `/tmp/ooxmlXXXXXX` dentro do `detail` e o `unlink` pulado. A porta
+que devolveria bytes vazios em silêncio é o `open()` falhando, que deixa para trás o arquivo de zero
+byte do `tempnam`; é ela que a checagem de `open` fecha.
+
+**Teste (Q-4):** o `500_rfc7807` afirmava só o status — um 500 em HTML puro passaria. Passou a
+afirmar `content-type`, `type`, `title`, `status` e o `detail` que nomeia o conversor. É guarda,
+não conserto: o comportamento já estava certo, faltava a asserção.
+
+**Doc (Q-5):** a nota do ADR-12 citava `LibreOfficeConverter`, classe que nunca existiu (lição 13);
+agora nomeia `DocxToPdf` e `GotenbergDocxToPdf`, com o paralelo explícito ao `GotenbergHtmlToPdf`.
+
+**Frontend (Q-6, Q-7):** o download do DOCX revogava o objectURL no mesmo stack do `click()` de uma
+âncora **nunca anexada ao DOM** — duas causas conhecidas de download que não começa, e assimetria
+com o caminho do PDF ao lado, que fazia certo. A âncora passou a ser anexada e o objectURL a viver
+no `urlRef` até a próxima geração ou o unmount, com os dois formatos usando o mesmo `keepUrl`. A Q-7
+separou o estado: `useMutationErrors` devolve o **primeiro** erro truthy e só a mutação disparada
+reseta o próprio erro, então o erro do PDF sobrevivia a um DOCX baixado com sucesso; e o `pending`
+fundido girava os dois botões juntos, anunciando o Word quando o pedido tinha sido o PDF.
+
+**Verificação depois das correções, refeita e não herdada:** backend **522 passed, 1 skipped (1961
+assertions)** — +3 testes / +10 asserções sobre o 519/1951 do gate, e os três testes novos foram
+**vistos vermelhos** antes da correção (ids `1,1,1,1,1`; ordem `Zoe, Ana, Bruno`; `ErrorException` no
+lugar da `OfficeRenderException`). Pint `passed`; `typescript:transform` sem diff em `generated.ts`;
+`git diff` de `backend/database/` vazio; frontend `pnpm lint` limpo, `pnpm build` verde, **13
+arquivos / 47 testes**. E2e contra o documento real da turma do seed: `.docx` de **19.269 B** com
+`docPr=1,2,3,4,5`, `cNvPr=0,0,0,0,0` e as doze matrículas em ordem alfabética; PDF convertido de
+**52.954 B**, **`Pages: 5`**, **`Page size: 1008 x 612 pts`**, página 2 conferida na imagem.
+
+**O que continua não provado, sem maquiagem:** o manual **aberto no Word do cliente**. A Q-1 remove
+a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor independente
+continua sendo o do João. A Q-6 tem correção sem teste: o corte do runner do frontend cobre os hooks
+de `shared/`, e hook de feature com DOM segue fora dele — dizer o contrário seria cobertura fantasma
+(lição 10).
+
+**Uma divergência numérica registrada, sem consequência:** o gate do bloco anotou **1950**
+asserções; a suíte na mesma árvore mede **1951**. O número do gate está errado por um.
+
+**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
 
 ## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
