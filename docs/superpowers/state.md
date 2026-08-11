@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: b29f3b9
-updated_at: 2026-08-11T17:05:00-03:00
+updated_at: 2026-08-11T17:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -80,6 +80,19 @@ brainstorming, como nos precedentes.
 **Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
 branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
 `fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
+
+### Brainstorming e spec — 2026-08-11
+
+Dispensa do packet confirmada pelo João na abertura (D1). Entrevista fechou 8 decisões (D1–D8 da
+spec): fontes self-hosted em 3 famílias via `@fontsource`; UI-06 fica no BD-3; UI-07 entra;
+mecanismo do tema = `brand-theme.css` estático sobre o Lara (abordagem A, contra tema compilado e
+runtime JS); botão primário celeste com texto azul-poste por AA medido (~2.6:1 de branco sobre
+celeste reprova); radius 6→4px; review em duas frentes por tocar `locales/`. O João aprovou o
+design por seções (§1+§2, depois §3+§4) com a instrução literal `APROVADO — gravar spec`. A spec
+ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanças de shell mapeadas
+1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
+O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
+revisar a spec escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
