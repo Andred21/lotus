@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: integridade-e-concorrencia-backend
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
-state_basis_commit: eec8075
-updated_at: 2026-08-11T11:05:00-03:00
+state_basis_commit: 09a11d9
+updated_at: 2026-08-11T12:14:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,51 @@ updated_at: 2026-08-11T11:05:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `integridade-e-concorrencia-backend`
+
+### Seleção — 2026-08-11
+
+**BD-2 do `backlog.md`, promovido explicitamente pelo João.** Ele abriu a sessão com
+`/planejar-bloco ### BD-2 · Integridade e concorrência no backend`; o gate do comando **reprovou**
+pelo mesmo motivo do BD-1 na véspera — estado `idle`, `active_work_item` `null` e argumento que é
+título de seção, não slug promovido. A promoção veio da resposta dele ao gate, com uma escolha
+registrada: **manter os quatro itens do BD-2 na íntegra**, contra o recorte alternativo que teria
+deixado só os itens 1 e 2 (concorrência) e devolvido a dedução do `getRoleNames()` e os quatro
+testes ao backlog.
+
+**Nada precisou ser commitado antes de promover** — ao contrário do BD-1, cuja proposta nasceu no
+mesmo dia. O BD-2 já era durável em `ec3ad2a` e a árvore estava limpa em `09a11d9`, o merge do
+PR #38, que passa a ser o `state_basis_commit`.
+
+**BD-2 não é o item 1 de `## Próximos blocos`** — ali segue `Arquivados e restauração de
+soft-delete`, intocado desde o BD-1. A fila **não** foi renumerada: os BDs vivem na seção de dívida,
+paralela a `Próximos blocos`, e a ordem escrita entre eles (BD-2 → BD-7) está sendo seguida.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `guardas-que-faltam`, `turma-habilitacao-listagem`, `profundidade-backend-b4-b7` e
+`documentos-oficiais-template-e-docx`): nenhum dos quatro itens cita Drive, Notion ou Figma. As
+fontes são o próprio repositório e documentos versionados — `Q-16` em `backlog.md:302`, os débitos
+"Bloco 5.2a/5.2b (minors do review final)" em `backlog.md:356` e `:360`, e as specs arquivadas
+`specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` e
+`specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md`. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** Nenhum outro `active_work_item` de backend está
+aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
+`hardening/integridade-e-concorrencia-backend`, criada de `09a11d9`, no padrão de
+`hardening/guardas-que-faltam`.
+
+**Escopo, na ordem escrita do BD-2:** (1) `lockForUpdate()` no `Client` — não só na coleção — antes
+do `ensureSingle()`, nos **dois** serviços (`PrimaryContactService`, `PrimaryAddressService`) no
+mesmo commit; (2) unicidade de RUT/email do `UpdateStaffUserAction` para **dentro** da
+`DB::transaction`; (3) `UserData::fromModel` chamando `getRoleNames()` duas vezes; (4) os quatro
+testes que faltam — `SuperadminGuard` com outro superadmin **inativo**, auto-colisão de RUT/email no
+próprio update, o 422 de `role: redator` afirmando a **chave** e o error-bag de
+`CreateRoleAction`/`UpdateRoleAction`. **DoD do item 1 é sonda de concorrência real** (dois writes
+competindo), não teste sequencial verde.
+
+**Fora de escopo, declarado pelo próprio item:** a decisão do 5.2b sobre `GET /api/roles` enumerar
+permissão de superadmin — é do João, e está travada em `backlog.md:173`.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
