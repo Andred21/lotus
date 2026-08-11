@@ -813,6 +813,31 @@ dois últimos mudavam o construído e foram **decididos pelo João** antes de qu
   `:focus-visible` com outline 2px celeste sólido + offset: só teclado, os dois temas, somada ao
   anel do Lara em vez de substituí-lo.
 
+### Emendas achadas DURANTE a Task 2 (2026-08-11)
+
+Duas coisas só apareceram com o script rodando e o arquivo gerado na mão. Nenhuma delas reabre
+decisão do João — as duas são a implementação correta do que ele já decidiu.
+
+- **D-P10 — a D-P8 alcança também quem herda o fundo da primária.** A regra "mesmo bloco" que a
+  D-P8 descreve pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em **outro**.
+  Medidas mais **7 declarações** que ficavam brancas sobre celeste: `.p-checkbox-icon` (o check,
+  2×), `.p-radiobutton-icon` (o ponto, via `background-color`), os ícones de `.p-selectbutton` e
+  `.p-togglebutton` em `.p-highlight` (4×) e `.p-progressbar-label`. Do que o app usa hoje, isso é
+  o `AppCheckbox` (1 arquivo) e o `AppRadioButton` (2) — o resto nem tem wrapper. Mais o token
+  `--primary-color-text`, que mora no `:root` e por isso nenhuma regra de bloco alcança: ele
+  **declara** "texto sobre a primária" e saía `#ffffff`, contradizendo a D6 dentro do próprio
+  arquivo que a implementa. Preenchimento **decorativo** fica branco de propósito e está declarado
+  no script: a bolinha do `inputswitch` e o handle do `slider` são o idioma universal do controle,
+  e navy ali lê como defeito.
+- **D-P5, correção do mecanismo — a escala nomeada é rampa, não re-ancoramento.** A escala celeste
+  nasceu re-ancorando cada azul do Lara pela luminância (o que preserva o ritmo do tema e é o certo
+  para as cores **compiladas**). Aplicado à escala **nomeada**, colapsou: a luminância do celeste
+  cai *entre* os degraus 400 e 500 do Lara, então `--primary-400` e `--primary-500` saíram com o
+  mesmo hex — dois degraus publicados com a mesma cor, e o primeiro `bg-primary-400` futuro saindo
+  errado. A escala nomeada passou a ser rampa de degraus fixos de mistura, que é o que a spec §4
+  chama de "escala via `color-mix`". **O teste não pegou isso — a inspeção do arquivo gerado pegou**
+  —, então virou guarda: 10 degraus distintos e monótonos, nas duas famílias e nos dois temas.
+
 ## Desvios declarados (lição 13)
 
 - **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara
