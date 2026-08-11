@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: integridade-e-concorrencia-backend
-workflow_state: ready_for_planning
-next_owner: claude
-next_action: plan_active_work_item
+workflow_state: planning
+next_owner: joao
+next_action: approve_active_spec
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: 09a11d9
-updated_at: 2026-08-11T12:14:00-03:00
+updated_at: 2026-08-11T12:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -93,6 +93,58 @@ competindo), não teste sequencial verde.
 
 **Fora de escopo, declarado pelo próprio item:** a decisão do 5.2b sobre `GET /api/roles` enumerar
 permissão de superadmin — é do João, e está travada em `backlog.md:173`.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **`lockForUpdate()` é no-op silencioso na suíte.** `SQLiteGrammar::compileLock()` devolve `''`
+   (conferido no vendor) — nenhum teste sqlite pode provar serialização. O repo já sabia disso: o
+   `DeleteClientContactAction` (Q-5) escreve exatamente isso no comentário do lock que já carrega.
+2. **O repo já tem sonda de concorrência real, automatizada e versionada.**
+   `CertificateNumberTest:44` pula fora do MySQL, clona a conexão, sobe **dois processos** com
+   `Symfony\Process`, alinha os dois num gate e confirma pelo `performance_schema.data_lock_waits`
+   que ambos esperam pelo mesmo lock antes de commitar. É o `1 skipped` que a suíte reporta há
+   blocos. **Medido neste terreno, não herdado:** contra MySQL real (`lotus_test`), o arquivo dá
+   **3 passed (20 assertions)**, com o caso concorrente em 0,31s.
+3. **Os seis chamadores dos dois serviços de principal já abrem `DB::transaction`**
+   (`Create`/`UpdateClientAction`, `Create`/`UpdateClientContactAction`,
+   `Create`/`UpdateClientAddressAction`) — o lock nasce com efeito, sem tocar Action nenhuma.
+4. **O item 2 tem três sítios, não um.** Além do `UpdateStaffUserAction:34-38` que o débito nomeia,
+   `UpdateClientAction:29` e `UpdateRedatorAction:33` chamam `ensureRutAvailable` antes de abrir a
+   transação. Os irmãos `CreateStaffUserAction`, `UpdateStudentAction` e `CreateStudentAction` já
+   chamam de dentro — a inconsistência é entre Actions irmãs, não um caso isolado.
+5. **O item 3 não economiza query.** `getRoleNames()` faz `loadMissing('roles')` e a segunda chamada
+   lê a relação em cache (conferido no vendor do spatie). É dedução de `pluck`, não de `SELECT`, e a
+   spec diz isso em vez de vender ganho inexistente.
+6. **O banco de dev segue com o `LOT-2026-1001` corrompido de propósito** (`snapshot.aluno.name`
+   vazio, conferido em SQL cru), esperando o checkpoint visual do João. Nenhum passe deste bloco
+   roda `migrate:fresh --seed`.
+
+### Brainstorming e spec — 2026-08-11
+
+O João aprovou o desenho com a instrução literal `Aprovado`. O estado entra em `planning` no mesmo
+commit da spec; `active_plan` segue `null` até a leitura humana do documento e a escrita posterior do
+plano.
+
+**A medição que mudou o desenho, feita antes de escrever:** sonda contra o MySQL de dev
+(`REPEATABLE-READ`) mostrando que, depois de acordar do `lockForUpdate()` no `Client`, o `SELECT`
+comum de `ensureSingle()` **continua lendo o snapshot** — não enxerga o principal que a transação
+concorrente já commitou (`leitura comum: [..., "SONDA-A"]` contra `leitura com lock: [..., "SONDA-A",
+"SONDA-B"]`). O Q-16, ao pé da letra, entregaria mecanismo que promete e não fecha: a transação
+contaria 1 principal, faria o early-return e os dois sobreviveriam. O mutex é necessário e não
+suficiente.
+
+**Três decisões dele, respondidas antes de a spec existir** (D1, D2 e D3 da §2): o lock é **duplo**
+(mutex no `Client` mais leitura travada da coleção); a prova é **teste MySQL-only com o harness
+extraído** para `tests/Support/`, consumido também pelo `CertificateNumberTest` sem mudança de
+comportamento; e o item 2 entra nos **três** sítios medidos, com a conversão de violação de índice
+único em 422 **recusada** e registrada como limitação (a corrida de RUT/email segue subindo 500).
+
+**Efeito declarado no placar:** a suíte em sqlite passa de **1 para 3 skipped** — skip aqui é sinal
+honesto de caso que existe e roda onde o lock existe.
+
+**Risco de review declarado MÉDIO** (§8 da spec): nenhum gatilho de ALTO se aplica (sem schema,
+`generated.ts`, Sanctum, RBAC em produção, dinheiro, documento legal; `executor: claude`). Os dois
+gatilhos próprios são caminho de escrita auditado e concorrência que a suíte anula por construção.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
