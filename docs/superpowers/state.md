@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: guardas-que-faltam
-workflow_state: ready_for_execution
+workflow_state: ready_for_review
 next_owner: claude
-next_action: execute_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md
 active_plan: docs/superpowers/plans/2026-08-10-guardas-que-faltam.md
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: documentos-oficiais-template-e-docx
-state_basis_commit: ef01351
-updated_at: 2026-08-11T00:20:00-03:00
+state_basis_commit: d885738
+updated_at: 2026-08-11T10:06:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -182,6 +182,55 @@ corrigiu antes de gravar: o total de casos da Task 3 (9, não 8), a projeção d
 
 **Risco de review continua MÉDIO.** O foco é um só: para cada guarda, existe uma forma de violar a
 lei que ela não pega? O review não roda automaticamente ao fim da Task 9.
+
+### Execução — 2026-08-11: as oito entregues, oito commits
+
+O João autorizou com `/executar-bloco guardas-que-faltam`. Thread principal, main tree, sem worktree
+(P-03), do base `4ff7621`. **Task 0 reconferida, não herdada:** backend **522 passed, 1 skipped
+(1961 assertions)**, frontend **13 arquivos / 47 testes**, lint e build verdes, árvore limpa — bate
+com o plano.
+
+Commits, na ordem do plano: `d5e53b0` (leis §5.1/§5.2 + trait), `e868076` (ownership de rota),
+`60fc520` (instância do axios), `c45226a` (recíproca da classificação), `1a630a4` (barrel),
+`a4d2d2d` (seis casos da foto), `e42ae30` (referência de doc), `d885738` (a rule). Evidência task a
+task e os cinco desvios (D-E1..D-E5) em `.superpowers/sdd/progress.md`.
+
+**Duas medições mudaram a guarda, não só a implementação.** **D-E1** — o regex da §5.2 nascia com
+`->\s*unprepared\s*\(` e **não** pegava `DB::unprepared(`, que é a forma idiomática e a que a lei
+nomeia; a sonda do próprio plano o denunciou ao produzir uma linha em vez de duas (reprovava pelo
+texto `CREATE TRIGGER`, não pela chamada). É o risco da §7 aparecendo dentro do bloco que existe
+para eliminá-lo. **D-E2** — a guarda do axios afirma o **valor** fixado, não a presença da chave: o
+próprio axios escreve `Content-Type: undefined` em `defaults.headers.common`, e a medição do plano,
+feita com `JSON.stringify`, não o via. Assertar ausência de chave reprovaria o estado correto.
+
+**O escape da guarda 2 foi provado, não afirmado:** com a sonda no lugar, o teste **antigo** (por
+`git stash` do arquivo) **passa** e o novo reprova. Mesma disciplina na §5.1, onde a exceção de
+`QueryBuilders/` foi provada com sonda dentro e fora da pasta.
+
+**A guarda 4 confere 87 referências em 10 docs — o número exato que o plano mediu** — e as 3 que não
+resolvem são as 3 exceções declaradas. A guarda-da-guarda foi vista vermelha comentando o `push` do
+extrator (`expected 0 to be greater than 60`), com o caso principal passando **em silêncio** com
+zero referências conferidas.
+
+**Gate da Task 9:** backend **524 passed, 1 skipped (1963 assertions)** — os 524 projetados; Pint
+`passed`; frontend **16 arquivos / 79 testes**, os 16 do plano (D-P2). `git diff main...HEAD` de
+`backend/database/` **vazio**; `typescript:transform` sem diff em `generated.ts`; e
+`git diff main...HEAD --stat -- backend/app/ frontend/src/features/` **vazio** — nenhuma sonda ficou
+para trás e o bloco não toca domínio nem feature.
+
+**Uma etapa de processo foi pulada e fica registrada:** o estado não passou por `executing` no
+commit da primeira task durável, como o `/executar-bloco` manda. Ele foi de `ready_for_execution`
+direto para `ready_for_review` neste commit. Nenhum trabalho se perdeu — os oito commits são a prova
+da execução —, mas se a sessão tivesse caído no meio, o `state.md` estaria mentindo sobre a fase.
+
+**O que o gate NÃO provou, sem maquiagem:** as cinco guardas de varredura têm escape por construção,
+e os três medidos estão nomeados no ledger — a guarda 4 só vê token entre crases que **pareça path**,
+então classe citada sem `/` (o caso `LibreOfficeConverter`, uma das três reincidências que a
+motivaram) segue fora do universo; a guarda 1 casa por **sufixo de nome de arquivo**; e a guarda 2
+exige **declaração**, não correção, então `withoutScopedBindings()` escrito por engano a satisfaz.
+São o foco do review pela §7 da spec.
+
+**Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
