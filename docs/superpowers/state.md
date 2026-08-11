@@ -1,10 +1,10 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: estilizacao-adr16-shell-tipografia
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
-state_basis_commit: eec8075
-updated_at: 2026-08-11T11:05:00-03:00
+state_basis_commit: b29f3b9
+updated_at: 2026-08-11T17:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,38 @@ updated_at: 2026-08-11T11:05:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-11 (`estilizacao-adr16-shell-tipografia`)
+
+### Seleção — 2026-08-11
+
+**Item 4 de "Próximos blocos" do `backlog.md`, promovido explicitamente pelo João** via
+`/planejar-bloco item 4 — Estilização · tema custom (ADR-16), shell e tipografia` com o estado em
+`idle` — o precedente é o de `turma-habilitacao-listagem` (item nomeado literalmente no argumento;
+o comando não promove sozinho). Como no BD-1, o item era proposta ainda não commitada, nascida na
+mesma sessão por instrução literal dele (`quero melhorar a estilização … e depois adicionamos no
+backlog e seguimos`): **a proposta foi commitada antes da promoção** (`b29f3b9`), sobre a base
+fresca de `origin/main` (`09a11d9`) — a edição original estava sobre base velha na branch
+`fix/detalhes-tabelas-interface` e foi portada, não mesclada (guardada em stash).
+
+**Escopo:** fechar o ADR-16 com tema custom sobre o Lara nos dois modos; shell com dono único de
+título, sidebar navy fixa, header responsivo, toggle oculto em compact; tipografia em 3 papéis;
+neutros numa família só e fim dos hex hardcoded. Evidência: review de UI do AppLayout de
+2026-08-11 (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt`, 2 C + 5 B) +
+análise de estilização com a lente `frontend-design`. **O item é a decisão que faltava** aos
+débitos "Shell fora de conformidade com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de
+1024px" (seção "Fora dos BDs" ganhou o ponteiro; as linhas de origem ficam até o fechamento).
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa:** as
+fontes são o repositório, o report em `.artifacts/`, o ADR-16 em `docs/adrs.md` e a direção
+registrada na memória da sessão de 2026-08-11 — o item não cita Drive, Notion nem Figma. O Figma
+**não** é fonte deste bloco de propósito: a direção é identidade própria aceita pelo João em
+2026-08-11, não implementação de protótipo. Dispensa a confirmar por ele na abertura do
+brainstorming, como nos precedentes.
+
+**Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
+branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
+`fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
