@@ -49,4 +49,25 @@ class SuperadminGuardTest extends TestCase
 
         $this->assertTrue(true); // não lançou
     }
+
+    /**
+     * O `->where('is_active', true)` do guard é o que impede o lock-out real:
+     * um superadmin inativo não loga (RN-01), então ele não é saída de
+     * emergência nenhuma. Sem este caso, remover o filtro deixa a suíte inteira
+     * verde e o sistema pode ficar sem NENHUM superadmin capaz de entrar.
+     */
+    public function test_outro_superadmin_inativo_nao_conta_como_ativo(): void
+    {
+        $sa1 = User::factory()->create();
+        $sa1->assignRole('superadmin');
+        $sa2 = User::factory()->inactive()->create();
+        $sa2->assignRole('superadmin');
+
+        try {
+            app(SuperadminGuard::class)->assertNotLastActiveSuperadmin($sa1);
+            $this->fail('esperava ValidationException: o outro superadmin está inativo');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('role', $e->errors());
+        }
+    }
 }

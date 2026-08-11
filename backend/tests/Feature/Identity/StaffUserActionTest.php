@@ -5,6 +5,7 @@ namespace Tests\Feature\Identity;
 use App\Domains\Identity\Actions\CreateStaffUserAction;
 use App\Domains\Identity\Actions\UpdateStaffUserAction;
 use App\Domains\Identity\Data\UserData;
+use App\Domains\Identity\Models\Role;
 use App\Domains\Identity\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,17 +93,58 @@ class StaffUserActionTest extends TestCase
         app(CreateStaffUserAction::class)->execute($data);
     }
 
+    /**
+     * O próprio usuário não colide consigo mesmo. Mutante: remover o
+     * `when($exceptUserId !== null, ...)` do `UserProvisioner` — todo update que
+     * mantém RUT e e-mail passaria a dar 422, e a tela de edição travaria para
+     * qualquer usuário que só troca o nome.
+     */
+    public function test_update_com_o_proprio_rut_e_email_nao_colide(): void
+    {
+        $user = User::factory()->create(['rut' => '12.345.678-5', 'email' => 'ana@lotus.cl']);
+        $user->assignRole('admin');
+
+        app(UpdateStaffUserAction::class)->execute($user, UserData::from([
+            'name' => 'Ana Renomeada',
+            'email' => 'ana@lotus.cl',
+            'rut' => '12.345.678-5',
+            'role' => 'admin',
+            'is_active' => true,
+        ]));
+
+        $fresh = $user->fresh();
+        $this->assertSame('Ana Renomeada', $fresh->name);
+        $this->assertSame('12.345.678-5', $fresh->rut);
+        $this->assertSame('ana@lotus.cl', $fresh->email);
+    }
+
     public function test_role_redator_rejeitada_na_validacao(): void
     {
         // validateAndCreate (não from): config('data.validation_strategy') é
         // 'only_requests' (default do pacote) — from() com array puro não roda
         // rules(), só um Request de verdade dispara (fluxo real do controller).
         // validateAndCreate força a validação aqui para provar UserData::rules().
-        $this->expectException(ValidationException::class);
-        UserData::validateAndCreate([
-            'name' => 'X', 'email' => 'x@lotus.cl',
-            'password' => 'secret123', 'role' => 'redator',
-        ]);
+        //
+        // Guarda de porta múltipla (`.claude/rules/backend-ddd.md`): `role` tem
+        // TRÊS regras — `required`, `exists:roles,name` e `notIn` — e as três
+        // reprovam com a mesma chave E a mesma mensagem do Laravel. Afirmar a
+        // chave não discrimina nada. O que discrimina é provar que a role
+        // `redator` EXISTE: isso fecha a porta do `exists` e deixa só o `notIn`
+        // podendo recusar.
+        $this->assertTrue(
+            Role::where('name', 'redator')->exists(),
+            'o seeder não criou a role redator; o exists reprovaria no lugar do notIn',
+        );
+
+        try {
+            UserData::validateAndCreate([
+                'name' => 'X', 'email' => 'x@lotus.cl',
+                'password' => 'secret123', 'role' => 'redator',
+            ]);
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('role', $e->errors());
+        }
     }
 
     public function test_update_sem_senha_mantem_a_atual(): void

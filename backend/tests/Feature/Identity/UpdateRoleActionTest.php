@@ -62,7 +62,7 @@ class UpdateRoleActionTest extends TestCase
 
     public function test_rejeita_colisao_de_nome_com_outra_role(): void
     {
-        $coordinador = app(CreateRoleAction::class)->execute(
+        app(CreateRoleAction::class)->execute(
             RoleData::from(['name' => 'coordinador', 'permissions' => []]),
         );
 
@@ -70,10 +70,31 @@ class UpdateRoleActionTest extends TestCase
             RoleData::from(['name' => 'supervisor', 'permissions' => []]),
         );
 
-        $this->expectException(ValidationException::class);
-        app(UpdateRoleAction::class)->execute(
-            $supervisor,
+        try {
+            app(UpdateRoleAction::class)->execute(
+                $supervisor,
+                RoleData::from(['name' => 'coordinador', 'permissions' => []]),
+            );
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('name', $e->errors());
+        }
+    }
+
+    public function test_rejeita_permissao_segregada(): void
+    {
+        $role = app(CreateRoleAction::class)->execute(
             RoleData::from(['name' => 'coordinador', 'permissions' => []]),
         );
+
+        try {
+            app(UpdateRoleAction::class)->execute(
+                $role,
+                RoleData::from(['name' => 'coordinador', 'permissions' => ['identity.access.manage']]),
+            );
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('permissions', $e->errors());
+        }
     }
 }
