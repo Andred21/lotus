@@ -11,9 +11,9 @@ active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
-last_completed_work_item: hardening-revisao-ui-assistida
-state_basis_commit: 6e2ccc7
-updated_at: 2026-08-10T17:30:00-03:00
+last_completed_work_item: documentos-oficiais-template-e-docx
+state_basis_commit: 96d7256
+updated_at: 2026-08-10T22:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,420 @@ updated_at: 2026-08-10T17:30:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
+## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
+
+### Seleção — 2026-08-10
+
+**Item 1 do `backlog.md`, escrito e selecionado explicitamente pelo João na mesma instrução.** Ele
+descreveu o escopo em detalhe (fundo do certificado, realocação do QR, fidelidade tipográfica ao
+template, manual conforme `manual.pdf` preenchido automaticamente, saída DOCX e botão na UI),
+mandou abstrair no backlog e percorrer o workflow. O backlog foi escrito a partir dessa descrição;
+ele não promoveu nada sozinho.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `turma-habilitacao-listagem` e `profundidade-backend-b4-b7`): o item não cita Drive,
+Notion nem Figma. As fontes são o repositório e os três templates **já versionados no repo** —
+`docs/templates/certificado.pdf`, `docs/templates/manual.pdf` e `docs/templates/fundo-certificado.png`,
+este último entregue pelo João junto da instrução. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** O bloco mexe em
+`backend/resources/views/certification/certificate.blade.php`,
+`backend/resources/views/operation/manual-turma.blade.php`, `ManualPdfService`, `TurmaController` e
+no frontend (`features/operation/components/Document/`). Nenhum outro `active_work_item` de backend
+está aberto, então o gatilho de fechamento da P-03 continua não vencido.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **Os dois documentos já existem e já são Blade** — o bloco é refatoração, não construção:
+   `certificate.blade.php` (2 páginas: certificado + temário) e `manual-turma.blade.php` (A4 retrato,
+   3 tabelas), ambos via Gotenberg (`Shared/Pdf/GotenbergHtmlToPdf`). O manual já tem rota
+   (`GET turmas/{turma}/manual`, `Operation/routes.php:25`), serviço (`ManualPdfService`) e botão
+   (`features/operation/components/Document/ManualButton.tsx`, consumido por `TurmaDocuments.tsx:41`).
+   O que não existe é **DOCX** — nenhuma ocorrência no repo.
+2. **O manual do template não é o manual de hoje, nem em forma nem em conteúdo.** `manual.pdf` tem
+   **5 páginas em ofício paisagem (1009×612 pt)** — Dados de la clase, Antecedentes Participantes,
+   Control de Asistencia de Participantes (grade de 31 dias), Temas de La Capacitación, Evaluaciones.
+   A Blade atual tem **3 tabelas em A4 retrato**, e o `@page { size: A4 portrait }` dela é decisão
+   registrada (D4 do bloco 6d, com `preferCssPageSize` ligado no serviço). Mudar a orientação
+   contradiz uma decisão escrita — o brainstorming tem de reabri-la explicitamente com o João, não
+   sobrescrevê-la em silêncio.
+3. **O fundo é pesado e o peso é o critério do próprio João.** `fundo-certificado.png` é
+   **1414×2000, RGBA 8-bit, 1,2 MB** — proporção exatamente A4. Em base64 são ~1,66 MB **por página**
+   que o embutir; o certificado tem 2 páginas e o manual, 5. O PDF são de hoje mede **40.119 bytes**
+   (medido no gate de `certificacao-lote-e-snapshot`), e é essa a linha de base contra a qual o
+   "visualizador travado" tem de ser medido.
+4. **O QR e o par código/emissão trocam de lugar, não de existência.** Hoje `.meta` (`N°` + `Emisión`)
+   abre a página 1 no canto superior **esquerdo** (`certificate.blade.php:244-247`) e o QR vive no
+   rodapé dentro de `.footer-main` a 32mm (`:214-216`, `:313-316`). O template e a foto que o João
+   anexou põem os três juntos no canto superior **direito**, QR menor com o par embaixo.
+5. **O layout do certificado carrega guardas pagas com defeito medido em 2026-08-08** e documentadas
+   no próprio arquivo: `min-height` em vez de `height` (com `height`, QR, assinatura e aviso legal
+   saíram **sobrepostos** ao temário — documento corrompido sem aviso), o clamp
+   `-webkit-line-clamp` da descrição e o limiar 80×7 que troca o tier de 11px pelo de 9px. Quem
+   mexer no layout responde por elas; o `.accent-bottom` já tem falha de enquadramento **em aberto**
+   declarada no arquivo (`:130-138`).
+6. **DOCX via Blade é a pergunta aberta do bloco, e é decisão de arquitetura.** Não há biblioteca de
+   escritório no `composer.json`; Gotenberg converte DOCX→PDF, nunca o contrário. O caminho a
+   investigar no brainstorming é Blade renderizando WordprocessingML empacotado como OOXML; recorrer
+   a biblioteca de terceiros é ADR, não escolha de implementação.
+
+**Pendências tocadas pelo escopo, nenhuma vencida:** a **P-08** (RF-CUR-04 promete manual por curso;
+implementado é Blade única) **não** dispara — o bloco continua com Blade única padronizada. A
+**P-03** não fecha: um bloco de backend só.
+
+### Brainstorming e spec — 2026-08-10
+
+O João aprovou o desenho com a instrução literal `Aprovado — gravar e commitar a spec.` O estado
+entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até a aprovação humana
+deste documento e a escrita posterior do plano.
+
+**Quatro decisões de abertura, respondidas por ele ANTES de a spec existir** (D1–D4 da §2):
+manual com fonte de verdade única em Blade WordprocessingML, com o PDF saindo do mesmo `.docx` pela
+rota LibreOffice; ofício paisagem igual ao template; fundo em JPEG de ~100 KB só no certificado; e
+tipografia do certificado por fonte versionada com `@font-face`.
+
+**A D2 reabre explicitamente a D4/D6 do bloco 6d** — o A4 retrato do manual, justificado na própria
+Blade com "o cliente arquiva em A4, como todo documento oficial da Lotus". Não foi sobrescrita em
+silêncio: as três saídas foram apresentadas e o João escolheu fidelidade literal ao arquivo aprovado
+pela Lotus. O manual passa a ser o único documento oficial fora do A4.
+
+**Três medições que mudaram o desenho, feitas antes de escrever:**
+
+1. **O fundo entregue é limpo, e o peso tem referência própria.** `fundo-certificado.png`
+   (1414×2000 RGBA, **1.245.172 bytes**) não tem logo, assinatura nem carimbos — é textura mais as
+   barras azul/preta. O **mesmo fundo dentro do `certificado.pdf` aprovado** é um JPEG de
+   **98.258 bytes** nas mesmas dimensões: 12,7× mais leve. O teto do bloco deixou de ser palpite.
+2. **As fontes do template foram identificadas apesar da ofuscação do Word.** `pdffonts` só devolve
+   `___WRD_EMBED_SUB_1235`; descomprimindo os oito programas de fonte e lendo o `name` table
+   (`nameID 6`) saem **Lexend** (Regular/Bold/ExtraBold — três dos oito subsets), **Montserrat
+   ExtraBold**, Comfortaa, Roboto e ArialMT. Lexend/Montserrat/Comfortaa são OFL e Roboto é
+   Apache 2.0: nenhuma trava para versionar.
+3. **A rota LibreOffice foi provada antes de virar decisão, não depois.** Pacote OOXML mínimo montado
+   à mão (**1.207 bytes**) → `/forms/libreoffice/convert` → **`http=200`**, PDF de **18.671 bytes**,
+   **`Page size: 1008 × 612 pts`** contra os 1009×612 do template, `LiberationSans-Bold` embutida e
+   a célula com `w:shd w:fill="29A3E0"` no azul da Lotus. A D1 e a D2 repousam sobre medição.
+
+**A contradição aparente entre D1 e D4 foi resolvida por medição, não por prosa** (§2.1 da spec):
+`@font-face` é CSS e o manual deixa de passar por CSS, mas o texto do `manual.pdf` **é Liberation
+Sans**, que o Gotenberg já tem — o probe a embutiu sem nenhuma instalação. D4 vale só para o
+certificado.
+
+**Um achado que a leitura do template produziu e o item do backlog não previa:** os títulos de página
+do manual (`Libro de Control de Clases`, `Antecedentes Participantes`…) **não são texto** —
+`pdftotext` da página 1 devolve só o conteúdo das células. Eles vivem dentro da faixa de cabeçalho
+rasterizada (4205×378). Com a D3 deixando o manual sem fundo raster, os títulos passam a ser texto em
+Liberation Sans Bold.
+
+**Risco de review declarado ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
+
+**A sessão parou no gate de leitura da spec, por escolha do João.** Ele optou por ler o documento
+antes do `writing-plans`, então `next_owner` voltou para ele e a ação foi `approve_active_spec`.
+Nenhuma linha de implementação foi escrita nessa etapa.
+
+### Aprovação da spec e plano — 2026-08-10
+
+O João aprovou a spec com a instrução literal `Spec aprovada, escreva o plano`. O plano ativo
+(`docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md`) decompõe o bloco em
+**11 tasks (0–10)**: baseline; fundo JPEG e fontes WOFF2 versionados; três tasks de certificado
+(fundo, tipografia com remedição do limiar, QR); `App\Shared\Office\`; manual em Blade OOXML com o
+PDF saindo do pacote; rota do DOCX; frontend; gate. O handoff fixa **`executor: claude`** — metade
+das tasks fecha por comparação visual página a página com os templates, num laço de
+render → olhar → ajustar. Nenhuma implementação foi iniciada durante o planejamento; o estado
+transiciona para `ready_for_execution` no mesmo commit do plano.
+
+**Baseline reconferido em `a703a26`, não herdado:** backend **503 passed, 1 skipped (1868
+assertions)** — o mesmo placar do fechamento do `hardening-revisao-ui-assistida`, como esperado de
+três commits só de documentação. O plano projeta **520 passed** ao fim do bloco (+17).
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano), em vez
+de silenciá-los. Os que mudam decisão da spec:
+
+1. **`docs/templates/manual.docx` existe no repo** — a spec só tinha lido o PDF. Dele saíram o papel
+   exato (`w:pgSz w:w="20183" w:h="12246"`, contra os 20160×12240 do probe), o `w:pgMar`, as larguras
+   de coluna das cinco tabelas, a cor institucional **`25A5E4`** (e não `29A3E0`) e a descoberta de
+   que o template declara **Arial** — Liberation Sans é a substituição métrica do LibreOffice, não a
+   fonte pedida. Declarar Arial acerta o conversor **e** o Word do cliente (D-P3, D-P4).
+2. **A conversão PNG→JPEG saiu sem mudança de infra.** A alternativa era `libjpeg-turbo-dev` no
+   `docker/php/Dockerfile`; foi recusada por trocar imagem de produção para converter um asset uma
+   vez. A rota `/forms/chromium/screenshot/html` do Gotenberg foi provada: JPEG **1414×2000 de 74.604
+   bytes** com `quality=92`, contra os 98.258 do mesmo fundo dentro do certificado aprovado (D-P1).
+3. **São duas faces WOFF2, não quatro** (a spec §3.3 dizia quatro): Lexend e Montserrat são fontes
+   **variáveis**, e o Google Fonts serve a mesma URL para 400/700/800 do Lexend. 39.680 + 19.012
+   bytes cobrem os quatro pesos (D-P2).
+4. **`short_open_tag` está `On` no container**, então uma Blade que abra com o `<?xml …?>` literal
+   morre em `Parse error: syntax error, unexpected identifier "version"` — confirmado executando os
+   dois casos lado a lado. As quatro Blades do pacote abrem por uma diretiva `@xmlDecl`; `{!! … !!}`
+   foi recusado por reintroduzir a interpolação crua que a guarda de escape proíbe (D-P9).
+5. **`printBackground` não é necessário** — medido antes de aplicar o fundo: os PDFs com e sem o
+   campo saem byte a byte do mesmo tamanho. `PageOptions` e `GotenbergHtmlToPdf`, que são
+   compartilhados com o certificado, **não mudam** (D-P7).
+6. **As grades do manual são formulário impresso com linha fixa** (22/20/20), e o plano fixa
+   `max(N, fixas)`: turma pequena mantém as linhas em branco, turma grande estende a grade. Truncar
+   esconderia aluno (D-P5).
+
+A auto-revisão do plano contra a spec ainda achou seis erros no próprio rascunho e os corrigiu antes
+de gravar: `makeStudentWithUser` não existe no `CreatesDomainRecords` (o idioma real é
+`Student::create` sobre `User::factory()`); o `CertificatePdfTest` já tem `fakeGotenberg()`/
+`assertHtml()` e não precisava de um helper novo; a guarda "sem `{{`" reprovaria o próprio comentário
+Blade; duas asserções de contagem eram ambíguas (`<w:tr ` com espaço nunca casa; `6` e `10` também
+são número de linha); a rota pública é `publico/certificados`, não `public/certificates`; e a troca
+do controller precisava entrar na Task 7, senão um commit ficaria com a rota do manual quebrada.
+
+**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
+review não roda automaticamente ao fim da Task 10.
+
+**Uma pergunta fica aberta para o João, no Step 7 da Task 10:** `App\Shared\Office\` e a rota
+LibreOffice são decisão de arquitetura de transporte. A recomendação do plano é **nota no ADR-12**,
+não ADR novo — a rota LibreOffice é uma segunda porta do **mesmo** serviço do compose, com o mesmo
+racional de "o transporte mora num lugar só".
+
+### Execução iniciada — 2026-08-10
+
+O João autorizou com `/executar-bloco documentos-oficiais-template-e-docx`. Execução no **thread
+principal** conforme o `## Handoff de execução` do plano (`executor: claude`): metade das tasks
+(3, 4, 5, 7 e 10) fecha por comparação visual página a página contra os templates, num laço
+render → olhar → ajustar que exige leitura de imagem a cada iteração. Main tree, sem worktree (P-03).
+
+**Task 0 provada em `8ee1d9e`:** backend **503 passed, 1 skipped (1868 assertions)** — bate com o
+baseline do plano; `typescript:transform` sem diff em `generated.ts`; `pnpm lint` e `pnpm build`
+verdes; `git status --porcelain` vazio.
+
+### Tasks 1–9 entregues — 2026-08-10
+
+Commits, do base `8ee1d9e`: `7d4a85f` (fundo JPEG), `90a353a` (fontes WOFF2), `11f75d5` (fundo
+aplicado, morte do `.accent`), `042c2f2` (tipografia e remedição do limiar), `5037f24` (QR e bloco
+de identificação no topo), `fc6c996` (`App\Shared\Office\`), `af046f6` (manual em Blade OOXML),
+`2d815cb` (rota do DOCX), `86d81dc` (frontend com os dois formatos). Evidência task a task, e os
+doze desvios declarados (D-E1..D-E12), em `.superpowers/sdd/progress.md`.
+
+**Três desvios mudam o que o plano dizia, não só como foi feito.** **D-E6** — `Xml::lines()` nasceu
+emitindo `<w:br/>` **dentro** do `<w:t>`, que é bem-formado e **inválido** contra o schema
+(`CT_Text` é tipo simples); o separador passou a fechar e reabrir o `<w:t>`. **D-E7** — as fontes,
+bordas e margens de cada tabela saíram **medidas do `docs/templates/manual.docx`**, tabela a tabela,
+em vez do `sz 13/17` uniforme que o plano supunha. **D-E11** — `@else@xml(...)` **não compila**: o
+regex de diretiva do Blade exige `\B@`, e o `e` de `@else` colado no `@` é fronteira de palavra; a
+diretiva saía literal dentro do documento. O flag `$lineas` morreu e toda célula usa `@xmlLines`.
+
+### Task 10 — o gate do bloco (2026-08-10)
+
+**Ferramentas.** Backend **519 passed, 1 skipped (1950 assertions)** — contra os 520 projetados pelo
+plano; a diferença é a Task 5, que substituiu asserções em vez de somar teste. `typescript:transform`
+**sem diff** em `generated.ts` (nenhum DTO mudou de forma). `git diff` de `backend/database/`
+**vazio** — zero schema, como o plano exige. Pint `passed` nos arquivos do bloco. Frontend: `pnpm
+lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**.
+
+**E2e contra a API real**, sessão Sanctum por cookie + CSRF. `GET /api/turmas/1/manual` → **200**
+`application/pdf` + `inline; filename="manual-turma-1.pdf"`; `GET /api/turmas/1/manual/docx` → **200**
+`…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`. `pdfinfo` do manual:
+**`Pages: 5`**, **`Page size: 1008 x 612 pts`**. Pesos: certificado **199.820 B** (linha de base
+40.119, teto do plano 251.450), manual `.docx` **19.259 B**, manual `.pdf` **52.966 B**, template de
+referência 444.830 B.
+
+**Contrato do certificado intacto:** `snapshot_ok` **False** só no `LOT-2026-1001`, que segue
+corrompido de propósito no banco de dev como evidência viva do checkpoint visual pendente do João.
+`migrate:fresh --seed` **não** foi rodado, pelo mesmo motivo do bloco anterior. 51 consumidores das
+classes de `App\Shared\Office\`; zero `Repository`; a única ocorrência da varredura de sobra é
+`CertificatePdfTest.php:737`, que é a guarda `assertStringNotContainsString('class="qr"', $html)` —
+asserção de **ausência**, não referência sobrevivente.
+
+**O que o gate NÃO provou, sem maquiagem:** fidelidade **pixel a pixel** contra os templates — a
+comparação foi de grade, cor e posição, página a página, com os PNGs de 144 dpi lado a lado;
+comportamento de turma sem alunos ou sem módulos além do que os testes cobrem; e o manual aberto no
+**Word do cliente** — a conversão foi validada pelo LibreOffice do Gotenberg, que é o mesmo motor
+que gera o PDF, não um segundo leitor independente.
+
+**Três decisões do João no checkpoint visual, todas registradas:**
+
+1. **QR do certificado muda de lado.** A `§3.4` da spec pedia topo **direito**, e a Task 5 entregou
+   assim; o gate mostrou que o `docs/templates/certificado.pdf` abre a folha com o retângulo do QR à
+   **esquerda**. Ele decidiu pelo template. Corrigido em `ee285df` (`align-self: flex-start`), com o
+   lado **assertado no teste** — a divergência veio de uma releitura da spec, e sem guarda a próxima
+   releitura reverteria em silêncio uma decisão tomada contra ela.
+2. **Fundo do certificado: aceitar agora, tratar depois** → **P-28**. Faltam as cunhas diagonais das
+   quinas da página 1 (são **vetor** no PDF aprovado; o raster versionado não as contém) e a faixa
+   azul/preta se repete na página 2, onde o aprovado é cinza limpo. Nenhuma das duas estava nas
+   exclusões aceitas da §7 da spec, por isso viraram pendência em vez de silêncio.
+3. **ADR: nota no ADR-12, não ADR novo.** `App\Shared\Office\` e a rota LibreOffice são a segunda
+   porta do **mesmo** Gotenberg do certificado, com o mesmo racional de transporte. A nota está
+   escrita. Isso **venceu o gatilho da P-20** (o bloco tocou `docs/adrs.md`) e resolveu metade da
+   **P-21** — as duas foram **atualizadas, não fechadas**: o hospedeiro do `openspout` segue sendo
+   escolha dele, e o `simple-qrcode` pertence a um bloco de Certification, não a este.
+
+**Pendências revisadas:** a **P-08** não disparou (o manual continua Blade única padronizada, agora
+em OOXML) e a **P-03** não fechou (um bloco de backend só). Nasceu a **P-28**. P-04 reavalia
+**2026-08-15**; P-15, P-23, P-25, P-26 e a nova P-28 revisam **2026-09-30**.
+
+**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
+nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
+bloco **para** em `ready_for_review`; review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-10: duas lentes, 7 achados, todos aprovados e corrigidos
+
+**ALTO RISCO** pela §8 da spec (documento com peso legal + dependência de infra nova em caminho de
+produção). Lente Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre
+`8ee1d9e..HEAD` (11 commits, 38 arquivos). **Órfãos: zero** — `ManualPdfService` morreu sem
+referência sobrevivente, as cinco classes de `App\Shared\Office\` têm consumidor e a chave de locale
+`documents.manual` não sobrou em nenhuma das três locales. **Leis §5 limpas:** zero `abort(` em
+`Domains/Operation/`, zero Repository, `generated.ts` sem diff, `git diff` de `backend/database/`
+vazio, controller fino, `ManualButton` só via `shared/ui`, permissão nas duas rotas com teste de 403.
+
+**Uma divergência entre as lentes, mostrada em vez de resolvida em silêncio.** O achado nº 1 do
+Codex — `w:tcPr` emitindo `vAlign`/`tcMar`/`shd`/`tcBorders` fora da sequência ECMA-376 — foi
+**REJEITADO por medição**: descompactado, o `docs/templates/manual.docx` escrito pelo Word usa
+exatamente a mesma ordem (`tcW, vAlign, tcMar, …, shd, tcBorders` ×706; `trHeight, cantSplit` ×81).
+Sobrou dele só a parte confirmada em separado, que virou a Q-1. Também **não** foi reportada a
+ausência de validação do corpo do PDF no `GotenbergDocxToPdf` (Codex nº 4): é o comportamento
+idêntico do `GotenbergHtmlToPdf` já em produção pelo ADR-12, e apertar só um lado criaria assimetria
+entre as duas portas do mesmo serviço.
+
+**O João aprovou Q-1..Q-7 na íntegra** (`Todos de Q-1 a Q-7`); todos entraram em `96d7256`.
+
+**Documento (Q-1, Q-2), com o template como árbitro.** O cabeçalho é um partial incluído cinco
+vezes e escrevia `wp:docPr id="1"` nas cinco — o Word identifica figura pelo id e pede reparo do
+arquivo quando ele repete, e o gate havia declarado, sem maquiagem, que o manual **nunca foi aberto
+no Word do cliente**. O template aprovado numera os seus dez desenhos **1..10** e escreve
+`pic:cNvPr id="0"` nos dez; as duas convenções foram medidas e seguidas (contador no `@include`,
+`cNvPr` fixo em 0). A Q-2 trocou o `load('enrollments…')` por `orderByStudentName()`: as três grades
+numeram linha a linha e são **assinadas** por linha, e PDF e DOCX são dois requests — sem ORDER BY a
+mesma turma podia sair com duas numerações. O `EnrollmentQueryBuilder` já documentava o defeito para
+a tela; aqui ele tinha peso de documento.
+
+**Mecanismo (Q-3), com uma correção ao próprio achado.** O `OoxmlPackager` passou a conferir
+`tempnam`, `open`, `addFromString`, `close` e a leitura, a apagar o temporário num `finally` e a
+recusar pacote sem nenhum byte com `OfficeRenderException`. **O achado dizia "HTTP 200 com zero
+byte" e isso não se reproduz:** sob o handler de erro do Laravel, o `file_get_contents` de um arquivo
+ausente vira `ErrorException`. O que foi medido no vermelho do teste é pior de outro jeito — 500 sem
+tipo de domínio, com o caminho `/tmp/ooxmlXXXXXX` dentro do `detail` e o `unlink` pulado. A porta
+que devolveria bytes vazios em silêncio é o `open()` falhando, que deixa para trás o arquivo de zero
+byte do `tempnam`; é ela que a checagem de `open` fecha.
+
+**Teste (Q-4):** o `500_rfc7807` afirmava só o status — um 500 em HTML puro passaria. Passou a
+afirmar `content-type`, `type`, `title`, `status` e o `detail` que nomeia o conversor. É guarda,
+não conserto: o comportamento já estava certo, faltava a asserção.
+
+**Doc (Q-5):** a nota do ADR-12 citava `LibreOfficeConverter`, classe que nunca existiu (lição 13);
+agora nomeia `DocxToPdf` e `GotenbergDocxToPdf`, com o paralelo explícito ao `GotenbergHtmlToPdf`.
+
+**Frontend (Q-6, Q-7):** o download do DOCX revogava o objectURL no mesmo stack do `click()` de uma
+âncora **nunca anexada ao DOM** — duas causas conhecidas de download que não começa, e assimetria
+com o caminho do PDF ao lado, que fazia certo. A âncora passou a ser anexada e o objectURL a viver
+no `urlRef` até a próxima geração ou o unmount, com os dois formatos usando o mesmo `keepUrl`. A Q-7
+separou o estado: `useMutationErrors` devolve o **primeiro** erro truthy e só a mutação disparada
+reseta o próprio erro, então o erro do PDF sobrevivia a um DOCX baixado com sucesso; e o `pending`
+fundido girava os dois botões juntos, anunciando o Word quando o pedido tinha sido o PDF.
+
+**Verificação depois das correções, refeita e não herdada:** backend **522 passed, 1 skipped (1961
+assertions)** — +3 testes / +10 asserções sobre o 519/1951 do gate, e os três testes novos foram
+**vistos vermelhos** antes da correção (ids `1,1,1,1,1`; ordem `Zoe, Ana, Bruno`; `ErrorException` no
+lugar da `OfficeRenderException`). Pint `passed`; `typescript:transform` sem diff em `generated.ts`;
+`git diff` de `backend/database/` vazio; frontend `pnpm lint` limpo, `pnpm build` verde, **13
+arquivos / 47 testes**. E2e contra o documento real da turma do seed: `.docx` de **19.269 B** com
+`docPr=1,2,3,4,5`, `cNvPr=0,0,0,0,0` e as doze matrículas em ordem alfabética; PDF convertido de
+**52.954 B**, **`Pages: 5`**, **`Page size: 1008 x 612 pts`**, página 2 conferida na imagem.
+
+**O que continua não provado, sem maquiagem:** o manual **aberto no Word do cliente**. A Q-1 remove
+a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor independente
+continua sendo o do João. A Q-6 tem correção sem teste: o corte do runner do frontend cobre os hooks
+de `shared/`, e hook de feature com DOM segue fora dele — dizer o contrário seria cobertura fantasma
+(lição 10).
+
+**Uma divergência numérica registrada, sem consequência:** o gate do bloco anotou **1950**
+asserções; a suíte na mesma árvore mede **1951**. O número do gate está errado por um.
+
+**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
+
+### Gate de fechamento — 2026-08-10
+
+**O item 0 foi refeito, não herdado.** As correções Q-1..Q-7 entraram depois do e2e da Task 10 e
+mexeram no documento (ids do `wp:docPr`, ordem das matrículas), no `OoxmlPackager` e no frontend —
+então o critério de aceite do bloco foi provado de novo contra a API real, e não pelo relatório do
+gate anterior.
+
+**Ferramentas.** Backend **522 passed, 1 skipped (1961 assertions)** — o mesmo placar da verificação
+pós-review, contra os 520 que o plano projetava. Pint `--test` **`passed`** nos **22** `.php` vivos
+do bloco. `typescript:transform` executado: **sem diff** em `generated.ts`, `git status --porcelain`
+vazio depois de rodar. `git diff main...HEAD -- backend/database/` **vazio** (zero schema). Frontend:
+`pnpm lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**. As três locales com **538 chaves
+cada e zero diff** entre si.
+
+**E2E com sessão Sanctum por cookie + CSRF, só GETs — nenhuma mutação no banco de dev.**
+`GET /api/turmas/1/manual` → **200** `application/pdf` + `inline; filename="manual-turma-1.pdf"`,
+`pdfinfo` dizendo **`Pages: 5`** e **`Page size: 1008 x 612 pts`**; `GET /api/turmas/1/manual/docx` →
+**200** `…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`.
+
+**O pacote foi aberto, não suposto.** As cinco parts (`[Content_Types].xml`, `_rels/.rels`,
+`word/document.xml`, `word/_rels/document.xml.rels`, `word/media/lotus-logo.png`),
+`w:pgSz w:w="20183" w:h="12246" w:orient="landscape"` **idêntico ao `docs/templates/manual.docx`**,
+`wp:docPr` numerado **1,2,3,4,5** e `pic:cNvPr id="0"` cinco vezes — as duas convenções da Q-1
+vivas no documento entregue, e não só no teste.
+
+**Preenchimento por contagem (DoD 4):** turma de **12 matrículas**, cada nome aparecendo **3 vezes**
+(uma por grade), grades em 23/21/21 linhas (cabeçalho mais as 22/20/20 fixas) — com N=12 o
+`max(N, fixas)` da D-P5 mantém as linhas em branco, como o formulário impresso. Rodapé de horas
+fechando com a soma dos módulos: 8+6+4 = **18 T**, 4+10+8 = **22 P**.
+
+**Pesos (DoD 1):** manual `.docx` **19.269 B**, manual `.pdf` **52.954 B** (template de referência
+444.830 B), certificado **199.830 B** contra a linha de base **40.119 B** e o teto **251.450 B** do
+documento aprovado pela Lotus.
+
+**Fonte de verdade única (DoD 9), conferida no código:** `ManualDocumentService::pdf()` é
+`converter->render($this->docx($turma))`. Não há segundo caminho de montagem.
+
+**Contrato do certificado (DoD 7):** `GET /api/certificates` **200** com os treze campos de sempre e
+`snapshot_ok` **false só** no `LOT-2026-1001`; `show` do são **200**; rota pública **sem cookie**
+**200**; o corrompido devolve **500 `application/problem+json`** no `show` e no `pdf`, nomeando
+`LOT-2026-1001` **e** o campo `aluno.name`.
+
+**Visto renderizado (DoD 8):** 14 PNGs comparados página a página. As **cinco** páginas do manual
+batem com o template em grade, colunas, cores e contagem de linhas; no certificado as únicas
+divergências são as já declaradas — assinatura da gerente e carimbos SENCE/NCH pela §7 da spec,
+cunhas das quinas e faixa na página 2 pela **P-28** —, confirmadas na imagem em vez de assumidas.
+
+**Órfãos e leis §5:** 54 consumidores das classes de `App\Shared\Office\`; zero sobra de
+`ManualPdfService`, `manual-turma.blade`, `class="accent"` ou `class="meta"` (os únicos hits são um
+comentário que explica a renomeação e a asserção de **ausência** de `class="qr"`); zero `abort(` em
+`Domains/Operation/`; zero Repository; nenhum import de PrimeReact direto nem cross-feature nos três
+arquivos de frontend do bloco.
+
+**Pendências:** nenhuma nasceu neste gate e nenhuma fechou. A **P-28** já entrou no gate técnico; a
+**P-20** e a **P-21** foram atualizadas, não fechadas (o hospedeiro do `openspout` e a nota do
+`simple-qrcode` seguem com o João). A **P-08** não disparou (manual continua Blade única
+padronizada, agora em OOXML) e a **P-03** não fechou (um bloco de backend só). P-04 reavalia
+**2026-08-15**; P-15, P-23, P-25, P-26 e P-28 revisam **2026-09-30**.
+
+**Uma imprecisão do plano, registrada em vez de corrigida retroativamente:** o Step 2 da Task 10
+escreve `"password":"password"` como credencial do seed, e a senha real é `senha123` — todos os
+outros planos do repositório escrevem certo. O plano aprovado **não** foi reescrito (precedente da
+P-27) e o e2e deste gate rodou com a credencial correta.
+
+**Divergência de outro bloco, achada e não corrigida pelo segundo gate seguido:** a linha do
+`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
+`Spatie\LaravelData\Optional|int`, que parte a tabela naquela linha. O fechamento do
+`hardening-revisao-ui-assistida` já a registrou sem tocar; reverter aquela decisão sem o João seria
+a mesma deriva silenciosa que o gate existe para impedir.
+
+**Arquivamento:** plano → `plans/archive/2026-08-10-documentos-oficiais-template-e-docx.md`; spec →
+`specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md` (não é compartilhada com
+nenhum item futuro registrado). A referência interna do plano à spec foi reapontada para o path
+arquivado. Entrega registrada no `progress.md`, com a de 2026-08-04
+(`hardening-estrutural-pre-sprint-4`) descendo para o `progress-archive.md` para manter dez. Item 1
+removido do `backlog.md`, com renumeração dos seguintes.
+
+**Estado do ambiente:** `migrate:fresh --seed` **não** foi rodado — o banco de dev segue carregando
+o `LOT-2026-1001` corrompido de propósito para o checkpoint visual do João, que é justamente a
+evidência viva que o DoD 7 usa. O e2e deste gate foi read-only.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o manual **aberto no Word do cliente** (a Q-1
+remove a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor
+independente continua sendo o do João); fidelidade **pixel a pixel** — a comparação foi de grade,
+cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre os hooks de `shared/`
+e hook de feature com DOM está fora dele (lição 10).
+
+**Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.
+
+## Penúltimo item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
 ### Gate de fechamento — 2026-08-10
 
@@ -266,7 +679,7 @@ Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude
 por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
 adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.
 
-## Penúltimo item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
+## Antepenúltimo item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
 
 **Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -612,368 +1025,3 @@ backlog a consome). Entrega registrada no `progress.md` (a de 2026-08-03/`zerar-
 `18` da turma 4 **soft-deletado** com o objeto correspondente vivo no MinIO — comportamento prescrito
 (`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket). As 4 turmas voltaram ao
 cenário canônico. `migrate:fresh --seed` devolve tudo.
-
-## Antepenúltimo item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito contra a API real, não herdado do gate de execução:** as correções Q-1..Q-6
-entraram em `d01c279`, depois do e2e da Task 6, e mexeram exatamente nos caminhos que o gate exercita
-— `show`, listagem e `ProblemDetails`. `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie +
-CSRF (lição 12: `Origin` e `Accept` obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login).
-
-**A cadeia do §6 da spec, pela API:**
-
-1. **Porta destravada pela própria API:** o seed fresco deixa a turma 3 com
-   `emission_blocked: 'sin_plantilla'`; `PUT /api/courses/2` criando o template v1 com
-   `layout_config.city = 'Santiago'` e `validity_months: 24` zerou o bloqueio (`null`). Os `modules`
-   foram **omitidos** do payload de propósito — coleção nested `Optional`, ausente não mexe — e os 2
-   voltaram intactos. O primeiro ensaio de emissão levou **422** por comportamento correto, não por
-   defeito: `redator_id: 1` não é o designado da turma (`El redactor no está designado en esta
-   clase.`), e o painel diz que o designado é o 3.
-2. **Emissão individual** em `enrollments/21` → **201 `LOT-2026-1000`**, `snapshot_ok: true`.
-3. **Lote `[22, 21, 23, 24]`** com a falha provocada (21 já tinha vigente) → **200** com relatório
-   por item: `LOT-2026-1001`/`1002`/`1003` **contíguos**, sem buraco onde o item falho ficou — a
-   recusa **não consumiu número de sequência** —, e a falha **nomeada** (`Ya existe un certificado
-   vigente para esta matrícula.`). `[26, 26]` → **422** problem+json, o `distinct` vivo.
-4. **`aluno.name` corrompido direto na coluna** do certificado 2 (`UPDATE … JSON_SET`), com o resto
-   do JSON conferido por **MD5 antes e depois** como byte-idêntico (`JSON_REMOVE` do campo mexido dá
-   o mesmo hash nos dois lados). As seis chamadas:
-
-   | Chamada | Resultado |
-   |---|---|
-   | `GET /api/certificates` | **200**, `snapshot_ok: false` **só** na linha corrompida (as outras 3 em `true`) |
-   | `GET /api/certificates/2` (corrompido) | **500** `application/problem+json`, `detail` nomeando `LOT-2026-1001` **e** o campo faltante |
-   | `GET /api/certificates/2/pdf` | **500** problem+json, mesmo `detail` |
-   | `GET /api/publico/certificados/{uuid}` **sem cookie** | **500** problem+json, mesmo `detail` |
-   | `GET /api/certificates/1` (são) | **200**, `snapshot_ok: true` |
-   | `GET /api/certificates/1/pdf` (são) | **200 `application/pdf`**, 40.119 bytes |
-
-   Controle extra: a rota pública do certificado **são**, sem cookie, segue **200** com o payload
-   completo. O gate único não fechou o caminho feliz.
-
-**A prova que nenhum gate anterior tinha feito, e que o Q-1 obrigou — `APP_DEBUG=false`.** O achado
-existe porque `backend/.env` tem `APP_DEBUG=true` e não há `.env.testing`: suíte e e2e provavam a D8
-num caminho que a produção não percorre. Com o `.env` posto em `APP_DEBUG=false` e `config:clear`,
-medido **nos dois sentidos** (lição 10):
-
-- `GET /api/certificates/2` e a rota pública sem cookie seguem devolvendo o `detail` **inteiro**
-  (`El certificado LOT-2026-1001 no puede presentarse: su documento congelado no tiene los campos
-  aluno.name.`) — o `PublicDetail` atravessa a máscara, que é a promessa da D8;
-- um 500 **comum**, provocado parando o container `gotenberg` e pedindo o PDF do certificado **são**,
-  continua **mascarado** com `Ocorreu um erro inesperado. Tente novamente.` — o default não foi
-  afrouxado para todo mundo.
-
-`gotenberg` religado e `.env` restaurado no mesmo passe, com o PDF são voltando a **200
-`application/pdf`, 40.119 bytes**; `git status` limpo (o `.env` é ignorado, e foi conferido).
-
-**Demais itens:** suíte **500 passed, 1 skipped (1858 assertions)** · frontend **13 arquivos / 47
-testes**, `pnpm lint` e `pnpm build` verdes · `typescript:transform` **sem diff** em `generated.ts` ·
-`git diff 7227d04..HEAD -- backend/database/` **vazio** (zero schema, como a spec previu) · código
-morto zero (nenhum `.gitkeep`, nenhum `TODO`/`FIXME` novo; os 6 símbolos nascidos no bloco todos com
-consumidor) · leis §5 limpas (zero `Repository`, zero import cross-feature, zero PrimeReact direto em
-`features/`; o único `abort()` de `app/` é o 404 pré-existente do `PublicCertificateController`, que
-o bloco não tocou).
-
-**Pint com uma exceção honesta:** `passed` em 13 dos 14 `.php` do bloco. `ProblemDetails.php`
-reprova, e **já reprovava na versão base** — conferido rodando `pint --test` sobre o arquivo extraído
-de `7227d04`, com a mesma lista de 6 fixers (`ordered_imports`, `binary_operator_spaces`,
-`single_blank_line_at_eof`, …). É dívida de estilo pré-existente num arquivo que o bloco só tocou em
-8 linhas; reformatá-lo inteiro seria ruído de diff (lição 9).
-
-**O que o gate NÃO provou, sem maquiagem:** **a tag da linha corrompida não foi vista renderizada.**
-O host WSL não tem browser utilizável (Playwright sem as bibliotecas de sistema, limitação herdada de
-2026-08-08). A prova aqui é o `snapshot_ok` na API real, o `pnpm build`/`pnpm lint` e a paridade das
-três locales; **o checkpoint visual fica com o João.**
-
-**Pendências revisadas:** nenhuma venceu gatilho (P-04 reavalia **2026-08-15**; P-03 segue sem dois
-blocos de backend em paralelo; P-15, P-23, P-25 e P-26 revisam **2026-09-30**), nenhuma fechou,
-nenhuma nasceu — o bloco não deixou doc nem mecanismo afirmando o que o código não faz. **Fica
-anotado para decisão do João, sem virar pendência:** a suíte roda com `APP_DEBUG=true` herdado do
-`.env`, e a única guarda do caminho mascarado é o `config(['app.debug' => false])` que o Q-1 escreveu
-dentro do próprio teste; um `.env.testing` fixando o modo produção é decisão de infra dele, não do
-agente.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-certificacao-lote-e-snapshot.md`; spec →
-`specs/archive/2026-08-10-certificacao-lote-e-snapshot-design.md` (não é compartilhada: o item 5 do
-backlog, `turma-habilitacao-listagem`, tem decisões próprias e não a consome). Entrega registrada no
-`progress.md` (a de 2026-08-02/`operation` desceu ao `progress-archive.md` para manter dez); item 4
-removido do `backlog.md`, com o `turma-habilitacao-listagem` renumerado para 4.
-
-**Estado do banco de dev:** `migrate:fresh --seed` do gate mais as mutações do e2e (template v1 do
-curso 2 com `city: Santiago` e `validity_months: 24`, certificados `LOT-2026-1000`…`1003`, e o
-`aluno.name` do `LOT-2026-1001` **deixado corrompido de propósito** para o checkpoint visual do João
-encontrar a linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cenário
-canônico.
-
-**Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
-com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
-sozinho). O item nasceu da **revisão de arquitetura de 2026-08-09**, com as decisões já tomadas por
-ele na entrevista — a edição do `backlog.md` que criou os itens 4 e 5 estava na árvore sem commit e
-entra no commit da seleção, porque é o artefato que a prova.
-
-**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa** (mesmo caso
-de `profundidade-backend-b4-b7` e `profundidade-form-crud`): o item não cita Drive, Notion nem
-Figma, e as fontes são o repositório mais as decisões escritas. Dispensa confirmada pelo João na
-abertura.
-
-**Uma divergência do item foi levantada e fechada antes do desenho:** o texto diz "13 decisões já
-tomadas na entrevista", e o backlog escreve 6 aqui (mais 5 no item 5, total 11). **Decisão do João:
-as 6 escritas são tudo** — o "13" contava a entrevista inteira, incluindo o que virou recorte e
-fora-de-escopo. Nenhuma decisão perdida; a spec desenha sobre as 6 mais o que o código mediu.
-
-**Cinco medições contra o texto do item, feitas antes de desenhar:** (1) `missingRequiredFields()`
-tem exatamente 2 consumidores, ambos com a política copiada — a D4 bate com o repo; (2) **`show` não
-checa snapshot hoje**, então "falha alto" é comportamento novo, não refactor, e `index` idem; (3) a
-D3 muda comportamento no lote (`->first()` vira `implode(' ')`; hoje as 6 portas lançam uma mensagem
-cada, então a diferença só aparece com recusa de 2+ razões); (4) `App\Shared\Validation` não existe;
-(5) o Action da D1 fica **sem `DB::transaction`** de propósito — exceção declarada à regra de Action
-da `backend-ddd.md`, e é o ponto do bloco.
-
-### Brainstorming de 2026-08-10 — spec aprovada, três decisões novas
-
-As 6 decisões da entrevista entraram sem reabertura. Só três pontos estavam abertos, e o João
-fechou os três: **D7** — `missingRequiredFields()` vira privado, com `isPresentable(): bool` e
-`assertPresentable(string $codigo)` adjacentes no molde `assert*`/`constrain*` do
-`CertificateEligibility` (B1); **D8** — a linha corrompida **mantém o botão Ver**, que cai no estado
-de erro já existente do `CertificateViewDialog` — é onde o suporte lê quais campos faltam; **D9** —
-a marcação é **tag de estado** (`AppTag severity="danger"` no lugar do Vigente/Vencido), porque com
-o documento corrompido o estado da linha é justamente o que não dá para afirmar.
-
-**Consequência declarada na spec, não descoberta depois:** "corrompido" **não** vira um quinto
-`CertDerivedStatus` — promovê-lo contaminaria o dropdown de filtro, os quatro contadores do rodapé e
-o `CertificateViewDialog`. Filtrar por "Vigente" continua trazendo a linha corrompida cujas datas
-dizem vigente. Corrupção é defeito do documento, não estado dele.
-
-Spec: `docs/superpowers/specs/archive/2026-08-10-certificacao-lote-e-snapshot-design.md`. Review declarado
-**ALTO RISCO** (peso legal + rota pública + `generated.ts`) → duas frentes em `ready_for_review`.
-Backend mais um arquivo de frontend → **main tree, sem worktree (P-03)**; zero schema, ADR/DER não
-abrem.
-
-### Plano escrito em 2026-08-10 — 7 tasks (0–6), `executor: claude`
-
-`docs/superpowers/plans/archive/2026-08-10-certificacao-lote-e-snapshot.md`. Branch prevista:
-`refactor/certificacao-lote-e-snapshot`, a partir de `eca31e4`.
-
-A escrita do plano achou **quatro desvios contra a spec aprovada, declarados no §Desvios** em vez de
-silenciados (lição 13):
-
-- **D-P1** — o §6 da spec descreve "uma fixture, quatro provas"; medido, **duas já são testes
-  vivos** (`CertificatePdfTest.php:398,416` e `PublicCertificateTest.php:184`, ambos em 500). O
-  plano cria **dois** testes (`index` marcando, `show` em 500) e trata os dois existentes como
-  regressão que tem de ficar verde **sem edição** — duplicá-los seria cobertura falsa.
-- **D-P2** — o guard `test_falha_inesperada_no_meio_do_lote_preserva_o_que_ja_saiu` sobrevive à
-  mudança de casa **por construção, conferido e não suposto**: o dublê entra por
-  `$this->instance(IssueCertificateAction::class, …)` e o Action novo recebe o
-  `IssueCertificateAction` pelo construtor, do container. Por isso o arquivo de teste fica com zero
-  linhas de diff, e o mutante (`DB::transaction` em volta do laço) é reprovado no endereço novo.
-- **D-P3** — `App\Shared\Validation` **não cria aresta** na matriz: o `DomainDependencyTest` governa
-  só `App\Domains\* → App\Domains\*`; `App\Shared\*` é transversal e já é consumido por domínios
-  (precedente `App\Shared\Data\ContratanteData`, do B4).
-- **D-P4** — o teste de `squash()` estende `Tests\TestCase`, não o `PHPUnit\Framework\TestCase` do
-  vizinho `RutTest`: `ValidationException::withMessages()` monta um validador pela facade e precisa
-  do container. Sem `RefreshDatabase` — nada toca banco.
-
-Ordem das tasks: 0 baseline → 1 `ValidationMessages::squash()` com os dois adapters → 2
-`BatchIssueCertificatesAction` → 3 gate único do snapshot → 4 `snapshot_ok` + `show` falhando alto +
-docblock do D6 + `generated.ts` → 5 tag no `HistorialTable` + chave nas 3 locales → 6 gate do bloco
-contra a API real.
-
-### Execução iniciada em 2026-08-10 — `/executar-bloco`, `subagent-driven-development`
-
-Branch `refactor/certificacao-lote-e-snapshot` a partir de `7227d04` — **não de `eca31e4`** como o
-plano escreveu: `7227d04` é o próprio commit do plano, docs-only (plano + `state.md`, zero código),
-e branchar antes dele deixaria o plano fora da branch que ele governa. Main tree, sem worktree
-(P-03).
-
-**Task 0** confirmou o baseline exato do plano: backend **493 passed, 1 skipped (1833 assertions)**;
-frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes; `typescript:transform` sem
-diff em `generated.ts`.
-
-**O pré-flight do plano achou um conflito medido, decidido pelo João antes de qualquer edição
-(D-E1).** O fixture do `CertificateListingTest` **não produz snapshot apresentável**: o default de
-`createCertificate` é `['aluno' => ['name' => 'Juan Pérez']]`, sem a seção `curso`, e
-`SnapshotCourseData::fromArray(null)` põe `name: ''` — medido no tinker,
-`missingRequiredFields()` devolve `["curso.name"]`. Duas consequências contra o texto do plano: o
-teste novo da Task 4 afirmaria `snapshot_ok === true` sobre um certificado que mede `false` (as duas
-linhas dariam `false`, e o teste não distinguiria corrompido de são); e
-`test_show_devolve_o_snapshot_persistido:84`, que passa outro snapshot igualmente sem `curso`,
-viraria **500** assim que o `show` chamasse `assertPresentable()`.
-
-**Não é uma quinta mudança de comportamento.** `show` em 500 sobre snapshot sem `curso.name` é o
-item 1 da lista fechada do §5 — o fixture já era corrompido pela definição que o projeto tem hoje
-(`CertificatePdfService` e `PublicCertificateData` já estouram nele; `CertificatePdfTest:43` monta a
-seção `curso` justamente por isso). A listagem só nunca exercitou essas rotas. O único
-`assertExactJson` do domínio é sobre `PublicCertificateData`, que não ganha campo.
-
-**Decisão do João: reparar o fixture** — o default do `createCertificate` e o snapshot do
-`test_show_devolve_o_snapshot_persistido` ganham `'curso' => ['name' => …]`. Edição **só de
-fixture**: nenhuma asserção muda, os 9 testes existentes seguem provando o que provavam, e os 2
-testes novos passam a isolar `aluno.name` como a única corrupção — que é a história da spec.
-
-### Tasks 1–5 entregues — uma revisão de task por entrega
-
-Commits, do base `7227d04`: `66e0911` (seam `ValidationMessages::squash()` com os dois adapters),
-`c7fb9bf` (`BatchIssueCertificatesAction`), `8299921` (gate único do snapshot), `70c0167`
-(`snapshot_ok` + `show` falhando alto + `generated.ts`) + `b2a5028` (fix do review da Task 4),
-`144c857` (tag da linha corrompida no Historial + chave nas 3 locales).
-
-**Dois mecanismos foram vistos reprovando em primeira mão, não aceitos por relatório (lição 10):**
-
-1. **A ausência de `DB::transaction` no Action do lote.** O revisor da Task 2 foi barrado pelo
-   classificador de permissão ao tentar reproduzir o mutante, e disse isso em vez de mascarar.
-   Envolvi o laço do `BatchIssueCertificatesAction` num `DB::transaction` eu mesmo:
-   `BatchIssueTest.php:299` reprovou com `Failed asserting that table [certificates] matches
-   expected entries count of 1. Entries found: 0.` Mutante revertido, árvore limpa, verde de volta.
-   O guard sobreviveu à mudança de casa com **zero linhas de diff** no arquivo de teste, que era o
-   critério do refactor (D-P2 confirmado).
-2. **A fonte do `snapshot_ok`.** Achado **Importante** do review da Task 4, provado pelo próprio
-   revisor: com o certificado são `Revocado` e o corrompido `Emitido`, `status` era proxy
-   **perfeito** de `snapshot_ok`, e o mutante `snapshot_ok: $certificate->status !==
-   CertificateStatus::Emitido` — campo derivado de fonte inteiramente errada — deixava o teste **e a
-   suíte inteira** verdes. É a "igualdade acidental" da `backend-ddd.md` §Testes, num campo que a
-   Task 5 consome na UI. Corrigido em `b2a5028` com uma terceira linha **revogada E corrompida**, de
-   modo que `Revocado` mapeia para os dois valores; mutante revisto **vermelho** (`Failed asserting
-   that true is identical to false.` em `CertificateListingTest.php:145`), revertido em seguida.
-
-**Um desvio forçado pelo schema (D-E2):** o cenário do `index` não pode ter dois `Emitido` na mesma
-matrícula — `certificates_active_enrollment_unique`, sobre a coluna gerada `active_enrollment_id`,
-recusa antes de a listagem responder (o primeiro RED foi `UniqueConstraintViolationException`). O
-são virou `Revocado`, seguindo o precedente do próprio arquivo. Revogado produz `NULL` na coluna
-gerada, e `NULL` não colide — é o que permite as duas linhas revogadas do fix acima.
-
-### Task 6 — o gate do bloco (2026-08-10)
-
-Executado por mim direto: é a prova do DoD do bloco, e o DoD pede comportamento contra a API real.
-
-**Ferramentas.** Backend **498 passed, 1 skipped (1850 assertions)** — +5 testes / +17 asserções
-sobre o baseline 493/1833. Frontend **13 arquivos / 47 testes**, `pnpm lint` limpo, `pnpm build`
-verde. Pint `--test` **`passed`** nos **11** `.php` vivos do bloco (lista conferida antes, para o
-`--test` nunca cair sem argumento — lição 9). `typescript:transform` rodado de novo: `generated.ts`
-**sem diff** depois do commit da Task 4, e `git diff main...HEAD -- backend/database/` **vazio** —
-zero schema, como a spec previu.
-
-**E2e contra a API real**, `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie + CSRF
-(`Origin` e `Accept` obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login, que o rotaciona).
-
-1. **Portas destravadas pela própria API:** o seed fresco deixa a turma 3 com
-   `emission_blocked: 'sin_plantilla'`; `PUT /api/courses/2` criando o template v1 com
-   `layout_config.city = 'Santiago'` e `validity_months: 24` zerou o bloqueio (`null`). A turma é
-   `online` com `local_aplicacao: null`, então a cidade do template era mesmo obrigatória. Os
-   `modules` foram **omitidos** do payload de propósito — coleção nested `Optional`, ausente não
-   mexe — e voltaram intactos.
-2. **Emissão individual** em `enrollments/21` → **201 `LOT-2026-1000`**, `snapshot_ok: true`.
-3. **Lote `[22, 21, 23, 24]`** com a falha provocada (21 já tinha vigente) → **200** com relatório
-   por item: `LOT-2026-1001`/`1002`/`1003` **contíguos**, sem buraco onde o item falho ficou — a
-   recusa **não consumiu número de sequência** —, e a falha **nomeada**
-   (`Ya existe un certificado vigente para esta matrícula.`). `[25, 25]` → **422** problem+json, o
-   `distinct` vivo.
-4. **`aluno.name` corrompido direto na coluna** do certificado 2 (`UPDATE … JSON_SET`), com o resto
-   do JSON conferido byte a byte como intacto. As seis chamadas:
-
-   | Chamada | Resultado |
-   |---|---|
-   | `GET /api/certificates` | **200**, `snapshot_ok: false` **só** na linha corrompida |
-   | `GET /api/certificates/2` (corrompido) | **500** `application/problem+json`, `detail` nomeando `LOT-2026-1001` **e o campo faltante** |
-   | `GET /api/certificates/2/pdf` | **500** problem+json, mesmo `detail` |
-   | `GET /api/publico/certificados/{uuid}` **sem cookie** | **500** problem+json, mesmo `detail` |
-   | `GET /api/certificates/1` (são) | **200**, `snapshot_ok: true` |
-   | `GET /api/certificates/1/pdf` (são) | **200 `application/pdf`** |
-
-   Controle extra: a rota pública do certificado **são**, sem cookie, segue **200**. E a página 1 do
-   PDF são foi inspecionada com `pdftoppm` — nome, RUT, cliente, curso, vigência, QR e assinatura
-   todos impressos. O gate único não fechou o caminho feliz.
-
-**O que o gate NÃO provou, sem maquiagem:** **a tag da linha corrompida não foi vista renderizada.**
-O host WSL não tem browser utilizável (Playwright sem as bibliotecas de sistema, limitação herdada
-de 2026-08-08). A prova aqui é o `snapshot_ok` na API real, o `pnpm build`/`pnpm lint` e a paridade
-das três locales; **o checkpoint visual fica com o João.**
-
-**Estado do banco de dev:** `migrate:fresh --seed` do gate mais as mutações do e2e (template v1 do
-curso 2 com `city: Santiago`, certificados `LOT-2026-1000`…`1003`, e o `aluno.name` do
-`LOT-2026-1001` **deixado corrompido de propósito** para o checkpoint visual do João encontrar a
-linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cenário canônico.
-
-### Três Minor abertos, dois deles decisão do João, para o review herdar
-
-- **Minor-2 (decisão do João — o plano manda o texto).**
-  `CorruptedSnapshotException.php:18` afirma "**A listagem é a exceção deliberada, e é a única.**" A
-  frase é **falsa**: `store()` e `revoke()` também projetam `CertificateData` sem passar pelo gate.
-  O texto está mandado **verbatim pelo plano, na linha 793**, então a contradição é do plano, não da
-  implementação — não corrigi unilateralmente.
-- **Minor-4 (decisão do João — escopo).** `certificatesApi.ts:68-71` / `IssuedDialog` consomem o
-  certificado por um caminho que **não passa pelo `show` gateado**. Fechar isso seria uma **quinta**
-  mudança de comportamento, e o §5 da spec é lista **fechada** de quatro.
-- **Minor-3 (técnico, sem decisão pendente).** `CertificateData.php:49-50` acessa
-  `$certificate->snapshot` duas vezes; com `withoutObjectCaching` no cast, são dois decodes do JSON
-  por certificado listado.
-
-Evidência task a task em `.superpowers/sdd/progress.md`. Review **ALTO RISCO** pela spec (peso legal
-+ rota pública + `generated.ts`) → duas frentes: lente Claude com o gabarito do projeto + Codex
-read-only sobre `7227d04..HEAD`.
-
-### Review de sprint — 2026-08-10: duas frentes, 6 achados, todos aprovados e corrigidos
-
-**ALTO RISCO** conforme a spec → lente Claude com o gabarito do projeto + `mcp__codex__codex`
-read-only sobre `7227d04..HEAD`. Órfãos **zero** (`missingRequiredFields` privado com 2 chamadores
-internos, `isPresentable` 1, `assertPresentable` 3, `ValidationMessages` 2, o Action do lote 1, e os
-imports `Redator`/`Enrollment` do controller seguem usados pelo `store`). Leis §5 limpas. **Sem
-divergência de fato entre os revisores**: o Codex viu 5 dos 6 e eu confirmei cada um no código antes
-de aceitar — com o escopo do Q-3 corrigido (ele disse "`curso.name` ou `emissor.name`"; medi, e
-`emissor.name` já tem quem o mate). O Q-1 nenhuma das duas lentes tinha visto antes desta rodada.
-
-**O achado que o gate não podia ter pego (Q-1 🟡)** — `ProblemDetails::detailFor()` troca o `detail`
-de **todo 500** por `'Ocorreu um erro inesperado. Tente novamente.'` quando `app.debug` é falso. A
-D8 promete o contrário: a linha corrompida mantém **Ver**, o `CertificateViewDialog` imprime
-`error.detail` no `AppErrorState`, "é onde o suporte lê quais campos faltam". Em produção o suporte
-lia "erro inesperado" — sem código, sem campo. **Nem a suíte nem o e2e viam**, e o motivo foi
-medido: `backend/.env` tem `APP_DEBUG=true` e **não existe `.env.testing`**, então os dois provaram a
-D8 num caminho que a produção não percorre. Nasce `App\Shared\Exceptions\PublicDetail`, interface
-marcadora para a exceção cuja mensagem foi escrita para quem lê a resposta; o default segue
-mascarando e só quem declara passa. No mesmo achado, a mensagem saiu de **PT-BR** para **es-CL** —
-ela agora chega à tela de um usuário chileno, e todas as recusas irmãs deste diff já estavam em
-espanhol. Guarda nova com `config(['app.debug' => false])`, **vista vermelha primeiro**, com o
-diff literal `+'Ocorreu um erro inesperado. Tente novamente.'`.
-
-**Os outros cinco:**
-
-- **Q-2 🟡** (lição 13, o Minor-2 herdado) — o docblock afirmava "**a listagem é a exceção
-  deliberada, e é a única**", e `store()`/`revoke()` também projetam `CertificateData` sem gate. O
-  texto vinha **verbatim do plano, linha 793**; com a aprovação do João foi corrigido, nomeando os
-  dois e o motivo de ficarem fora (são eco de escrita, não apresentação do documento — quem
-  apresenta é `show`, o PDF e o QR), sem virar a quinta mudança de comportamento.
-- **Q-3 🟡** — a política obrigatória tem três campos e **`curso.name` não tinha quem o matasse**:
-  `aluno.name` morre em 3 testes, `emissor.name` no `CertificatePdfTest:384`, e remover `curso.name`
-  deixava a **suíte inteira** verde. A terceira linha do teste da listagem (a revogada **e**
-  corrompida, que existe para quebrar a correlação `status`×`snapshot_ok`) passa a corromper
-  `curso.name` em vez de `aluno.name` — fecha o buraco sem teste novo e sem perder o poder
-  discriminante. Mutante **visto vermelho** (`Failed asserting that true is identical to false.`),
-  revertido em seguida.
-- **Q-4 🟢** (o Minor-3 herdado) — `CertificateData::fromModel` lia `$certificate->snapshot` duas
-  vezes; com `withoutObjectCaching` no cast são dois decodes de JSON por linha de uma listagem que
-  não pagina. Variável local; não reabre o bug do cache de casts, que era do Eloquent e não da
-  variável.
-- **Q-5 🟢** — `test_show_de_snapshot_corrompido_falha_alto` afirmava só status e content-type;
-  passa a afirmar o `detail` que nomeia o certificado e o campo, que é exatamente o texto de que a
-  D8 depende.
-- **Q-6 🟢** — o seam `ValidationMessages::squash()` tinha unit test, a **fiação** dele no Action do
-  lote não tinha nenhuma: voltar para `->first()` ficava verde. Teste novo com recusa de duas
-  razões; mutante **visto vermelho** (`-'La clase no está concluida. El redactor no está designado
-  en esta clase.'` / `+'La clase no está concluida.'`), revertido em seguida. Não é bug vivo — as
-  seis portas emitem uma mensagem cada —, é guarda contra a regressão.
-
-**Não viraram achado, por serem decisão consciente registrada:** o **Minor-4** (o `IssuedDialog` lê
-o certificado por caminho não-gateado, porque `useIssueCertificate` semeia `detailKey` com a resposta
-do POST — fechar seria a quinta mudança de comportamento); a **tag não vista renderizada**, que é
-limitação declarada do gate e segue com o João; e o corrompido **não** virar um quinto
-`CertDerivedStatus`, com filtro e contadores continuando a classificar a linha pelas datas —
-consequência declarada na spec.
-
-**Placar pós-correção: 500 passed, 1 skipped (1858 assertions)** — +2 testes / +8 asserções sobre os
-498/1850 do gate, que eu reconferi antes de revisar em vez de herdar do relatório. Pint `passed` nos
-5 arquivos novos/editados do fix. **Uma exceção honesta:** `ProblemDetails.php` reprova no Pint, e
-**já reprovava antes desta edição** — conferido rodando `pint --test` sobre a versão de `HEAD`, com a
-mesma lista de fixers. É dívida de estilo pré-existente num arquivo que o bloco não tinha tocado;
-reformatá-lo inteiro seria ruído de diff (lição 9), então ficou. `pnpm lint`, `pnpm build` e
-`pnpm test` (13 arquivos / 47 testes) verdes; `typescript:transform` **sem diff** em `generated.ts` —
-nenhum DTO mudou de forma. Correções no commit `d01c279`.

@@ -8,16 +8,27 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <AppButton
-        label={t('operation.documents.manual')}
-        icon="pi pi-file-pdf"
-        outlined
-        loading={manual.pending}
-        onClick={manual.open}
-      />
-      {(manual.popupBlocked || manual.message) && (
+      <div className="flex flex-wrap gap-2">
+        <AppButton
+          label={t('operation.documents.manualPdf')}
+          icon="pi pi-file-pdf"
+          outlined
+          loading={manual.pdfPending}
+          onClick={manual.openPdf}
+        />
+        <AppButton
+          label={t('operation.documents.manualDocx')}
+          icon="pi pi-file-word"
+          outlined
+          loading={manual.docxPending}
+          onClick={manual.downloadDocx}
+        />
+      </div>
+      {(manual.popupBlocked || manual.pdfError || manual.docxError) && (
         <p className="text-sm text-red-600">
-          {manual.popupBlocked ? t('operation.documents.popupBlocked') : manual.message}
+          {manual.popupBlocked
+            ? t('operation.documents.popupBlocked')
+            : (manual.pdfError ?? manual.docxError)}
         </p>
       )}
     </div>

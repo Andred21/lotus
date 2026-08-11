@@ -573,22 +573,23 @@ class CertificatePdfTest extends TestCase
      * descrição logo abaixo do limiar é clampada a 11px e perde texto que o tier
      * de 9px mostraria inteiro.
      *
-     * Os números estão fixados aqui de propósito. 560 = 7 linhas × 80 caracteres,
-     * e o 80 saiu de medição no PDF real (varredura do comprimento da descrição
-     * até as reticências aparecerem, 2026-08-08): DENTRO do espanhol real a menor
-     * capacidade das 7 linhas de 11px é 567 caracteres (palavras de 25, a ordem
-     * das mais longas do idioma); prosa comum comporta 806. Fora desse perfil o
-     * modelo não vale — com palavras de 33 caracteres a capacidade é 508 e a
-     * descrição é elidida ainda a 11px, com reticências —, e o Blade registra
-     * essa faixa de validade junto do número. Mexer no clamp ou no limiar sem
+     * Os números estão fixados aqui de propósito. 546 = 7 linhas × 78 caracteres,
+     * e o 78 saiu de medição no PDF real (busca binária do comprimento da
+     * descrição até as reticências aparecerem, 2026-08-10, com o corpo já em
+     * Lexend): DENTRO do espanhol real a menor capacidade das 7 linhas de 11px é
+     * 548 caracteres (palavras de 24; 25, a ordem das mais longas do idioma,
+     * comporta 566); prosa comum comporta 871. Fora desse perfil o modelo não
+     * vale — com palavras de 33 caracteres a capacidade é 505 e a descrição é
+     * elidida ainda a 11px, com reticências —, e o Blade registra essa faixa de
+     * validade junto do número. Mexer no clamp, na fonte ou no limiar sem
      * remedir quebra este teste, que é o ponto.
      */
     public function test_limiar_troca_o_corpo_antes_de_o_clamp_de_11px_morder(): void
     {
         $this->actingAsAdmin();
 
-        $noLimiar = $this->renderComDescricaoDe(560);
-        $acimaDoLimiar = $this->renderComDescricaoDe(561);
+        $noLimiar = $this->renderComDescricaoDe(546);
+        $acimaDoLimiar = $this->renderComDescricaoDe(547);
 
         // o clamp impresso no CSS é o mesmo que deriva o limiar
         $this->assertMatchesRegularExpression(
@@ -680,6 +681,106 @@ class CertificatePdfTest extends TestCase
         $this->getJson($this->pdfUrl())->assertForbidden();
 
         Http::assertNothingSent();
+    }
+
+    /**
+     * O base64 do fundo aparece UMA vez. Duas ocorrências dobram o HTML, e é
+     * exatamente essa classe de excesso que produziu o "visualizador travado".
+     * `background-image` num `.page` compartilhado é o que garante a unicidade;
+     * um `<img>` por página a quebraria — e reintroduziria a ancoragem absoluta
+     * que a `.accent-bottom` já provou frágil.
+     */
+    public function test_fundo_embutido_uma_unica_vez(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $jpeg = base64_encode((string) file_get_contents(resource_path('images/fundo-certificado.jpg')));
+
+        $this->assertSame(
+            1,
+            substr_count($this->pdf->lastHtml(), $jpeg),
+            'O fundo foi embutido mais de uma vez.',
+        );
+        $this->assertHtml(fn (string $html): bool => str_contains($html, 'background-repeat: repeat-y')
+            && str_contains($html, 'background-size: 100% 297mm'));
+    }
+
+    /**
+     * O QR sobe para o topo ESQUERDO e leva o par código/emissão junto — mudança
+     * de LUGAR, não de conteúdo. O que a rota pública valida é o UUID dentro do
+     * QR, e ele não muda; esta guarda existe para que a realocação não apague
+     * silenciosamente um dos dois campos de identificação.
+     *
+     * O lado é assertado porque foi decisão do João no gate visual, contra a
+     * `§3.4` da spec: quem manda é o `docs/templates/certificado.pdf`, e nele o
+     * retângulo do QR abre a folha à esquerda, não à direita.
+     */
+    public function test_qr_e_identificacao_formam_um_bloco_no_topo(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $html = $this->pdf->lastHtml();
+
+        $this->assertStringContainsString('class="identificacion"', $html);
+        $this->assertStringContainsString('N° LOT-2026-1000', $html);
+        $this->assertStringContainsString('Emisión:', $html);
+
+        // O QR encolheu: 32mm no rodapé viram 22mm no topo.
+        $this->assertMatchesRegularExpression('/\.identificacion img\s*\{[^}]*width:\s*22mm;/s', $html);
+
+        // Lado esquerdo: o bloco é filho flex da folha, então o lado é o `align-self`.
+        $this->assertMatchesRegularExpression('/\.identificacion\s*\{[^}]*align-self:\s*flex-start;/s', $html);
+
+        // O bloco abre a folha, antes do logo; o rodapé fica só com a assinatura.
+        $this->assertLessThan(
+            strpos($html, 'class="brand"'),
+            strpos($html, 'class="identificacion"'),
+        );
+        $this->assertStringNotContainsString('class="qr"', $html);
+    }
+
+    /**
+     * A tipografia do documento aprovado, embutida e não instalada: um conversor
+     * sem a fonte degrada em SILÊNCIO para um fallback, e falha muda em
+     * documento com peso legal é o que a decisão D4 recusou.
+     */
+    public function test_fontes_do_template_embutidas_por_font_face(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $html = $this->pdf->lastHtml();
+
+        foreach (['fonts/lexend-latin.woff2', 'fonts/montserrat-800-latin.woff2'] as $font) {
+            $b64 = base64_encode((string) file_get_contents(resource_path($font)));
+            $this->assertSame(1, substr_count($html, $b64), "{$font} não foi embutida uma única vez.");
+        }
+
+        $this->assertHtml(fn (string $h): bool => str_contains($h, "font-family: 'Lexend'")
+            && str_contains($h, "font-family: 'Montserrat'")
+            && ! str_contains($h, 'DejaVu Sans'));
+    }
+
+    /**
+     * A barra `.accent` era desenhada em CSS porque o fundo antigo não a tinha.
+     * O fundo novo traz as duas. Manter a barra a duplicaria sobre si mesma —
+     * e manteria viva a falha de enquadramento de `:130-138`.
+     */
+    public function test_barras_accent_morreram_com_o_fundo_novo(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'accent')
+            && ! str_contains($html, 'linear-gradient'));
     }
 
     /**

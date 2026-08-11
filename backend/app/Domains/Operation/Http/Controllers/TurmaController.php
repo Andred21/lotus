@@ -14,7 +14,7 @@ use App\Domains\Operation\Actions\UpdateTurmaAction;
 use App\Domains\Operation\Data\PendingQuoteData;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Turma;
-use App\Domains\Operation\Services\ManualPdfService;
+use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +27,7 @@ class TurmaController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual']),
+            new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual', 'manualDocx']),
             new Middleware('permission:operation.turma.create', only: ['store', 'pending']),
             new Middleware('permission:operation.turma.update', only: ['update']),
             new Middleware('permission:operation.turma.delete', only: ['destroy']),
@@ -98,11 +98,23 @@ class TurmaController extends Controller implements HasMiddleware
             ->setStatusCode(200);
     }
 
-    public function manual(Turma $turma, ManualPdfService $manual): Response
+    public function manual(Turma $turma, ManualDocumentService $manual): Response
     {
-        return response($manual->render($turma), 200, [
+        return response($manual->pdf($turma), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "inline; filename=\"manual-turma-{$turma->id}.pdf\"",
+        ]);
+    }
+
+    /**
+     * `attachment` e não `inline`: navegador não renderiza WordprocessingML, e
+     * `inline` viraria um download com o nome do arquivo perdido.
+     */
+    public function manualDocx(Turma $turma, ManualDocumentService $manual): Response
+    {
+        return response($manual->docx($turma), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => "attachment; filename=\"manual-turma-{$turma->id}.docx\"",
         ]);
     }
 

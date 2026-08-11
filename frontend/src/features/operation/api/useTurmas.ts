@@ -107,3 +107,15 @@ export function useTurmaManual() {
         }),
   })
 }
+
+export function useTurmaManualDocx() {
+  return useMutation<Blob, ProblemDetails, number>({
+    mutationFn: (turmaId) =>
+      api
+        .get<Blob>(`/api/turmas/${turmaId}/manual/docx`, { responseType: 'blob' })
+        .then((r) => r.data)
+        .catch(async (error: unknown) => {
+          throw await problemFromBlob(error)
+        }),
+  })
+}

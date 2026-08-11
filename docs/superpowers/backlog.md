@@ -48,6 +48,10 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 - **FUT-1:** templates de documento de turma gerados via código — o redator baixa o template
   pré-preenchido com dados da turma/alunos, preenche online ou à mão e sobe. Depende de desenho com
   a Lotus; abrir task no Notion e avaliar documentação Drive/local quando definido.
+  **Interseção com o item 1 dos próximos blocos:** o manual em PDF/DOCX pré-preenchido é
+  exatamente a fatia "baixa, preenche à mão, sobe" para o tipo `MANUAL`. O que continua futuro é
+  o mecanismo genérico para os outros tipos (`PRUEBAS`, `EVALUACION_REDATOR`) e o preenchimento
+  online.
 - **FUT-2:** refino de ancoragem cross-módulo — link de dado compartilhado leva à página do módulo
   dono com a entidade selecionada, ou a exibe inline. O caso turma→orçamento já existe; o mecanismo
   genérico depende de decisão e task no Notion.

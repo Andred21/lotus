@@ -25,38 +25,43 @@
      *
      * O limiar troca o tier de 11px pelo de 9px ANTES de o clamp de 11px morder.
      * Ele precisa ficar abaixo da MENOR capacidade das 7 linhas de 11px, e essa
-     * capacidade depende de como o texto quebra. Medido no PDF real, varrendo o
-     * comprimento da descrição até as reticências aparecerem (2026-08-08):
+     * capacidade depende de como o texto quebra. REMEDIDO no PDF real em
+     * 2026-08-10, com o corpo em **Lexend** (a fonte do documento aprovado, que
+     * substituiu a DejaVu Sans da medição anterior — métrica diferente, número
+     * diferente), por busca binária do comprimento em que as reticências
+     * aparecem na página 1:
      *
-     *   prosa espanhola comum .................. 806 chars
-     *   prosa técnica real (palavra ~12,6) ..... 771
-     *   palavras uniformes de 12/16/18/20 ...... 726 / 712 / 671 / 604
-     *   palavras uniformes de 22/24/25/26 ...... 652 / 700 / 567 / 586
-     *   palavras uniformes de 28/30/32 ......... 622 / 657 / 694
+     *   prosa espanhola comum .................. 871 chars
+     *   prosa técnica real ..................... 789
+     *   palavras uniformes de 12/16/18/20 ...... 646 / 609 / 669 / 602
+     *   palavras uniformes de 22/24/25/26 ...... 650 / 548 / 566 / 584
+     *   palavras uniformes de 28/30/32 ......... 620 / 656 / 493
      *
      * Não é monotônico: a capacidade despenca quando o comprimento da palavra
      * cai logo acima de um divisor da linha e sobra um vão morto por linha.
-     * 567 é o piso DENTRO do espanhol real — palavras de 25 caracteres, a
-     * ordem das mais longas do idioma —, não o piso absoluto. Daí 80 × 7 = 560,
-     * logo abaixo dele: errar para baixo custa tipografia (600 caracteres de
-     * prosa comum caberiam a 11px e saem a 9px), errar para cima custa texto.
+     * 548 é o piso DENTRO do espanhol real — palavras de 24 caracteres; 25, a
+     * ordem das mais longas do idioma, comporta 566 —, não o piso absoluto.
+     * Daí 78 × 7 = 546, logo abaixo dele: errar para baixo custa tipografia
+     * (600 caracteres de prosa comum caberiam a 11px e saem a 9px), errar para
+     * cima custa texto.
      *
      * Fora desse perfil o modelo não vale e o limiar não protege: com palavras
-     * de 33 caracteres a capacidade cai para 508 (remedido em 2026-08-08 no PDF
-     * real — 508 caracteres saem inteiros, 509 já saem elididos), abaixo dos
-     * 560, e a descrição é elidida ainda a 11px. Este é o mesmo 508 citado no
+     * de 33 caracteres a capacidade cai para 505 (remedido em 2026-08-10 no PDF
+     * real — 505 caracteres saem inteiros, 506 já saem elididos), abaixo dos
+     * 546, e a descrição é elidida ainda a 11px. Este é o mesmo 505 citado no
      * `CertificatePdfTest`; não há duas medições, há uma com faixa de validade.
      *
      * O limiar é, portanto, ajuste de QUALIDADE e não de segurança: quem
      * garante que nada some calado são o clamp inteiro e o `min-height` da
      * folha, não este número — a elisão fora do perfil continua COM reticências.
      *
-     * Acima do limiar o tier de 9px comporta ~1.370 (técnica) a ~1.430 (prosa)
-     * caracteres; só o que passar disso vira reticências.
+     * Acima do limiar o tier de 9px comporta 1.020 (palavras de 24) a 1.512
+     * (prosa comum) caracteres — medido na mesma varredura; só o que passar
+     * disso vira reticências.
      */
     $narrativeLines = 7;
     $narrativeLinesCompact = 10;
-    $narrativeCharsPerLine = 80;
+    $narrativeCharsPerLine = 78;
     $narrativeCompact = mb_strlen($curso->description ?? '')
         > $narrativeLines * $narrativeCharsPerLine;
 @endphp
@@ -66,13 +71,29 @@
     <meta charset="UTF-8">
     <title>Certificado {{ $certificate->codigo }}</title>
     <style>
+        /* Lexend é a família dominante do `docs/templates/certificado.pdf` —
+           três dos oito subsets embutidos — e Montserrat ExtraBold é o título.
+           `font-weight: 100 900` porque as duas são variáveis: o navegador
+           interpola o peso do MESMO arquivo. */
+        @font-face {
+            font-family: 'Lexend';
+            font-style: normal;
+            font-weight: 100 900;
+            src: url("data:font/woff2;base64,{{ $lexend }}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            font-style: normal;
+            font-weight: 800;
+            src: url("data:font/woff2;base64,{{ $montserrat }}") format('woff2');
+        }
         /* O documento oficial é A4 retrato, e a página do temário só fecha
            nessa orientação — por isso ela é fixa (D-P9). */
         @page { size: A4 portrait; margin: 0; }
         * { box-sizing: border-box; }
         body {
             color: #3f3f3f;
-            font-family: DejaVu Sans, Arial, sans-serif;
+            font-family: 'Lexend', Arial, sans-serif;
             font-size: 11px;
             margin: 0;
         }
@@ -111,6 +132,14 @@
            função do nome exigiria modelar quebra de linha em PHP; o que cortar
            é decisão de negócio, e está com o João. */
         .page {
+            background-image: url("data:image/jpeg;base64,{{ $fundo }}");
+            background-origin: border-box;
+            background-position: top center;
+            /* `repeat-y` com slab de 297mm, NUNCA `100% 100%`: a folha usa
+               `min-height` e pode crescer: esticar deformaria as barras, e
+               repetir dá à página excedente o fundo dela. */
+            background-repeat: repeat-y;
+            background-size: 100% 297mm;
             display: flex;
             flex-direction: column;
             min-height: 297mm;
@@ -119,48 +148,62 @@
             position: relative;
         }
         .page:last-child { page-break-after: auto; }
-        .accent {
-            background: linear-gradient(90deg, #29a3e0 0%, #29a3e0 55%, #9aa0a6 55%, #9aa0a6 100%);
-            height: 4mm;
-            left: 0;
-            position: absolute;
-            right: 0;
-        }
-        .accent-top { top: 0; }
-        /* A barra é absoluta dentro do `.page`, que é `position: relative`:
-           ela ancora no pé do BLOCO, não no pé da folha impressa. Quando o
-           bloco pagina (ver o comentário de `.page`), a página 1 sai SEM a
-           barra de fechamento e a barra reaparece no meio da página 2, sobre
-           uma folha em branco — render conferido em 2026-08-08 com nome de
-           curso de 68 caracteres. É falha de integridade VISÍVEL num documento
-           com peso legal, herdada de antes da Task 3 e ainda em aberto; o
-           conteúdo em si continua íntegro, o que quebra é o enquadramento. */
-        .accent-bottom { bottom: 0; }
 
-        .meta { font-size: 9px; line-height: 1.6; }
+        /* QR e identificação viajam JUNTOS para o topo ESQUERDO, como no
+           `docs/templates/certificado.pdf`. A `§3.4` da spec pedia direito, e o
+           gate visual mostrou que o documento aprovado abre à esquerda: o João
+           decidiu pelo template. O bloco é estático no fluxo, não absoluto:
+           absoluto foi o que fez a barra de fechamento do rodapé, morta na
+           Task 3, ancorar no pé do BLOCO em vez do da folha e reaparecer no
+           meio da página 2. */
+        .identificacion {
+            align-self: flex-start;
+            font-size: 9px;
+            line-height: 1.5;
+            text-align: center;
+            width: 30mm;
+        }
+        .identificacion img { display: block; height: 22mm; width: 22mm; }
+        .identificacion .codigo { font-weight: 700; margin-top: 1mm; }
+        .identificacion .aviso { font-size: 7px; line-height: 1.3; margin-top: 1mm; }
         .brand { margin: 2mm 0 6mm; text-align: center; }
         .brand img { height: 26mm; }
 
         h1 {
             color: #3f3f3f;
-            font-size: 24px;
-            letter-spacing: 1px;
+            /* Montserrat ExtraBold já é largo: com o `letter-spacing: 1px` que
+               a escala antiga usava, o título estoura a linha única no A4. */
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 27px;
+            font-weight: 800;
+            letter-spacing: 0;
             margin: 0 0 7mm;
             text-align: center;
         }
         .lead { font-size: 12px; margin: 0 0 6mm; text-align: center; }
         .name {
             font-size: 20px;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 2mm;
             text-align: center;
         }
-        .rut { font-size: 15px; margin-bottom: 5mm; text-align: center; }
-        .company { font-size: 13px; font-weight: bold; margin-bottom: 5mm; text-align: center; }
-        .course {
+        .rut { font-size: 15px; font-weight: 700; margin-bottom: 5mm; text-align: center; }
+        /* Empresa azul entre duas réguas e nome do curso escuro: no documento
+           aprovado a cor está assim, e o CSS antigo tinha as duas invertidas. */
+        .company {
+            border-bottom: 1px solid #c9c9c9;
+            border-top: 1px solid #c9c9c9;
             color: #29a3e0;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5mm;
+            padding: 3mm 0;
+            text-align: center;
+        }
+        .course {
+            color: #3f3f3f;
             font-size: 17px;
-            font-weight: bold;
+            font-weight: 700;
             margin: 3mm 0 5mm;
             text-align: center;
         }
@@ -189,7 +232,12 @@
             line-height: 1.5;
             -webkit-line-clamp: {{ $narrativeLinesCompact }};
         }
-        .registro { margin-top: 6mm; text-align: center; }
+        .registro {
+            border-bottom: 1px solid #c9c9c9;
+            margin-top: 6mm;
+            padding-bottom: 3mm;
+            text-align: center;
+        }
 
         .certificate-footer {
             break-inside: avoid;
@@ -200,7 +248,9 @@
         .footer-main {
             align-items: flex-end;
             display: flex;
-            justify-content: space-between;
+            /* Sem o QR à esquerda, `space-between` deixaria a assinatura colada
+               na margem: o rodapé fica só com ela, alinhada à direita. */
+            justify-content: flex-end;
             min-height: 40mm;
         }
         .signature {
@@ -208,12 +258,8 @@
             text-align: center;
             width: 70mm;
         }
-        .signature-name { font-weight: bold; margin-bottom: 1mm; }
+        .signature-name { font-weight: 700; margin-bottom: 1mm; }
         .signature-line { border-top: 1px solid #3f3f3f; padding-top: 1mm; }
-
-        .qr { width: 46mm; }
-        .qr img { display: block; height: 32mm; width: 32mm; }
-        .qr span { display: block; font-size: 8px; line-height: 1.4; margin-top: 1mm; }
 
         .disclaimer {
             font-size: 8px;
@@ -239,11 +285,11 @@
 </head>
 <body>
 <section class="page">
-    <div class="accent accent-top"></div>
-
-    <div class="meta">
-        N° {{ $certificate->codigo }}<br>
-        Emisión: {{ $fecha($snapshot->emitido_em) }}
+    <div class="identificacion">
+        <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
+        <div class="codigo">N° {{ $certificate->codigo }}</div>
+        <div>Emisión: {{ $fecha($snapshot->emitido_em) }}</div>
+        <div class="aviso">Verifique la autenticidad de este certificado escaneando el código.</div>
     </div>
 
     <div class="brand">
@@ -310,11 +356,6 @@
 
     <div class="certificate-footer">
         <div class="footer-main">
-            <div class="qr">
-                <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">
-                <span>Verifique la autenticidad de este certificado escaneando el código.</span>
-            </div>
-
             <div class="signature">
                 <div class="signature-name">{{ $snapshot->redator->name }}</div>
                 <div class="signature-line">Instructor</div>
@@ -326,14 +367,10 @@
             reconocimiento de relación jurídica alguna con la persona identificada en él.
         </p>
     </div>
-
-    <div class="accent accent-bottom"></div>
 </section>
 
 @if ($curso->modules !== [])
     <section class="page">
-        <div class="accent accent-top"></div>
-
         <div class="brand">
             <img src="data:image/png;base64,{{ $logo }}" alt="LOTUS OTEC">
         </div>
@@ -362,8 +399,6 @@
                 reconocimiento de relación jurídica alguna con la persona identificada en él.
             </p>
         </div>
-
-        <div class="accent accent-bottom"></div>
     </section>
 @endif
 </body>
