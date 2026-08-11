@@ -2,10 +2,17 @@
 // via prop `variant` no call site — mantém o JSX limpo e a estilização
 // centralizada (fora da renderização).
 
-// Visual de marca: contorno #25A5E4 sobre branco no claro; preenchido no escuro.
+// Visual de marca: contorno celeste sobre superfície no claro; preenchido no
+// escuro. O anel de foco é o do tema (celeste no Lara-Lotus) somado ao outline
+// da camada de marca — não zerar: `ring-0` aqui deixou o foco de teclado
+// invisível (UI-03 do review de 2026-08-11).
+//
+// No escuro o rótulo é navy, não branco: é celeste preenchido, e a D6 vale em
+// qualquer superfície celeste (branco sobre ela mede 2,77:1). A borda branca
+// fica — é traço decorativo, não texto (D-P10/D-P11).
 const brandOutline =
-  'bg-[var(--surface-card)] text-[#25A5E4] border-2 border-[#25A5E4] ring-0 hover:text-[var(--text-color)] ' +
-  'dark:bg-[#25A5E4] dark:border-2 dark:border-white dark:text-white dark:hover:text-[var(--surface-card)]'
+  'bg-[var(--surface-card)] text-[var(--brand)] border-2 border-[var(--brand)] hover:text-[var(--text-color)] ' +
+  'dark:bg-[var(--brand)] dark:border-2 dark:border-white dark:text-[var(--brand-navy)] dark:hover:text-[var(--surface-card)]'
 
 export const appButtonStyles = {
   /** Marca, com rótulo (ex.: seletor de idioma "EN"). */

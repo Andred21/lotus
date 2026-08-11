@@ -1,0 +1,38 @@
+/* Camada fina de marca sobre o tema gerado (ADR-16 §5, spec §4).
+ * Entra no bundle do Vite — depois do <link id="prime-theme"> no head,
+ * então vence o tema por ordem de cascata. Cores SÓ dos 6 tokens da spec.
+ *
+ * O que a D6 (texto navy sobre a primária) pedia AQUI mora hoje no tema
+ * gerado, por decisão do João (D-P8): a cadeia de `:not()` do rascunho cobria
+ * só `.p-button` e seria uma segunda fonte de verdade. */
+:root {
+  --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
+  --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
+}
+
+/* Fundo claro = humo (spec §4). A var é consumida pelo shell (AppLayout);
+ * escopada ao claro para não vazar sobre o noche do tema dark gerado. */
+html:not(.dark) {
+  --surface-ground: #f1f5f9;
+}
+
+/* D-P9: o foco do Lara é só um box-shadow tingido (`#b2dff5`, ~1,4:1 sobre
+ * branco) — o DoD passaria verde com o foco praticamente invisível, que é
+ * literalmente o UI-03. Este outline SOMA ao anel do tema em vez de
+ * substituí-lo, e `:focus-visible` mantém a regra no teclado (clique de mouse
+ * não acende).
+ *
+ * `:root ` na frente é especificidade, não escopo: o Lara zera o outline em 79
+ * regras da forma `.p-button:focus { outline: 0 none }` (0,2,0), e `*:focus-
+ * visible` (0,1,0) perderia. Com 0,2,0 empatamos e a ordem de origem decide —
+ * este arquivo é do bundle, que entra depois do <link> do tema. */
+:root :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Dado técnico alinha em coluna (spec §5): tabular-nums em toda célula de
+ * tabela — só afeta a largura dos algarismos, texto comum não muda. */
+.p-datatable .p-datatable-tbody > tr > td {
+  font-variant-numeric: tabular-nums;
+}

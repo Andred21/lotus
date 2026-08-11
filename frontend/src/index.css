@@ -23,6 +23,10 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Camada fina de marca (tokens --brand/--brand-navy, foco visível). Fora de
+ * layer de propósito: precisa vencer o tema PrimeReact, que vem por <link>. */
+@import "./shared/styles/brand-theme.css";
+
 /* box-sizing previsível para as utilities de tamanho do Tailwind (w-*, p-*),
  * sem reintroduzir o reset de form controls que quebra o PrimeReact. */
 *,
