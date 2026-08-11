@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: integridade-e-concorrencia-backend
-workflow_state: planning
-next_owner: joao
-next_action: approve_active_spec
+workflow_state: ready_for_execution
+next_owner: claude
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: 09a11d9
-updated_at: 2026-08-11T12:52:00-03:00
+updated_at: 2026-08-11T13:16:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -145,6 +145,62 @@ honesto de caso que existe e roda onde o lock existe.
 **Risco de review declarado MÉDIO** (§8 da spec): nenhum gatilho de ALTO se aplica (sem schema,
 `generated.ts`, Sanctum, RBAC em produção, dinheiro, documento legal; `executor: claude`). Os dois
 gatilhos próprios são caminho de escrita auditado e concorrência que a suíte anula por construção.
+
+### Aprovação da spec e plano — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. O plano ativo
+(`docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md`) decompõe o bloco em
+**7 tasks (0–6)**: baseline; harness extraído para `tests/Support/`; o lock (item 1) num commit só;
+unicidade dentro da transação nos três sítios (item 2); a dedução do `getRoleNames()` (item 3); os
+quatro testes que faltam (item 4); gate. O handoff fixa **`executor: claude`** — a Task 2 fecha por
+laço de medição contra MySQL com alinhamento de processos, e o modo de falha do desenho é um
+**deadlock**, que aparece como exit code do filho e precisa ser lido como sintoma de ordem de lock,
+não como flakiness a contornar com retry.
+
+**Baseline reconferido, não herdado:** backend **524 passed, 1 skipped (1963 assertions)**; contra
+MySQL real (`lotus_test`), `CertificateNumberTest` **3 passed (20 assertions)**. O plano projeta
+**532 passed / 3 skipped** em sqlite e **7 passed** no recorte de MySQL. O total de assertions é
+declarado como **registrado no gate, não projetado** — casos com laço de espera não têm contagem
+previsível.
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano). Os
+três que mudam decisão da spec:
+
+1. **O mutex sai do `ensureSingle` e vai para as Actions — cinco Actions mudam, não zero** (D-P1). A
+   §3.2 da spec põe as duas peças do lock dentro do serviço e afirma "Nenhuma Action muda". Medido
+   contra MySQL: nessa forma o mutex é tomado **depois** de a Action já ter escrito, o que inverte a
+   ordem dos locks e produz `SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying
+   to get lock` em `select * from clients ... for update`, matando um dos processos (exit 255) — em
+   produção, 500 para o perdedor. Com o mutex antes de qualquer escrita: 2 processos esperando, os
+   dois com exit 0, exatamente 1 principal. `CreateClientAction` fica de fora com a razão escrita no
+   código — o cliente nasce ali, não há concorrente disputando um id ainda não gerado.
+2. **O alinhamento é por `performance_schema`, não por marcador dentro do filho** (D-P3). Os dois
+   candidatos que a §3.3 nomeia não sobrevivem à exigência de o filho exercitar a **Action real**:
+   não há onde emitir marcador entre o mutex e a escrita, porque as duas coisas estão dentro de uma
+   chamada só. A saída medida: iniciar P1, esperar até ele estar **bloqueado** (o que só acontece
+   depois de ele ter tomado o mutex) e só então iniciar P2. Daí o harness ganhar mínimo explícito e
+   filtro de tabela opcional (D-P2) — P1 espera em `client_contacts` e P2 espera em `clients`.
+3. **O teste de `role: redator` prova a porta abrindo as outras, não afirmando a chave** (D-P9). A
+   §6 diz que ele "afirma a chave `role`"; medido no código, as três regras de `role` (`required`,
+   `exists:roles,name`, `Rule::notIn`) reprovam com a **mesma chave** e a **mesma mensagem** do
+   Laravel. Afirmar a chave não discrimina porta nenhuma — seria o defeito que o item 4 existe para
+   corrigir, reintroduzido dentro da correção. O que discrimina é asserir que a role `redator`
+   **existe** em `roles`, o que fecha a porta do `exists` e deixa só o `notIn` podendo recusar.
+
+**Nenhuma guarda extra nasce para a ordem dos locks, e a razão é medida** (D-P4): a própria sonda já
+reprova nas duas formas de quebrar o mecanismo — apagar o mutex deixa dois principais (a asserção
+final reprova) e movê-lo para depois da escrita mata o filho por deadlock (a asserção de exit code
+reprova). Varredura de código que tentasse provar a ordem seria promessa que a varredura não
+entrega, que é o risco central da §8.
+
+A auto-revisão do plano contra a spec ainda achou dois erros no próprio rascunho e os corrigiu antes
+de gravar: o Pint do gate alimentado por substituição de comando (lista vazia vira Pint sem
+argumento, que reformata o repositório inteiro) e a conferência do banco de dev lendo
+`certificates.number`, coluna que não existe — o nome real é `codigo`, conferido no schema.
+
+**Risco de review continua MÉDIO.** O foco é um só: a sonda realmente disputa, o vermelho foi visto
+sem o lock, e o harness extraído não afrouxou o caso do certificado. O review não roda
+automaticamente ao fim da Task 6.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
