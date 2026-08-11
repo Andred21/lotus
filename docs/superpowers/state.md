@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: guardas-que-faltam
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: documentos-oficiais-template-e-docx
-state_basis_commit: 96d7256
-updated_at: 2026-08-10T22:05:00-03:00
+state_basis_commit: ec3ad2a
+updated_at: 2026-08-10T23:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,62 @@ updated_at: 2026-08-10T22:05:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `guardas-que-faltam`
+
+### Seleção — 2026-08-10
+
+**BD-1 do `backlog.md`, promovido explicitamente pelo João.** Ele abriu a sessão com
+`/planejar-bloco ### BD-1 · Guardas que faltam (mecanismo, zero mudança de comportamento)`; o gate
+do comando **reprovou** — o estado era `idle`, `active_work_item` era `null` e o argumento era o
+título de uma seção escrita no mesmo dia, não um slug promovido. A promoção veio da resposta dele ao
+gate, com duas escolhas registradas: **commitar a proposta antes de promover** (feito em `ec3ad2a`,
+que é o `state_basis_commit`) e **manter os 8 itens do BD-1 na íntegra**, incluindo a P-25, que eu
+havia enfileirado por conta própria.
+
+**BD-1 não é o item 1 de `## Próximos blocos`** — ali segue `Arquivados e restauração de
+soft-delete`. A fila **não** foi renumerada: os BDs vivem na seção de dívida do `backlog.md`, que é
+paralela a `Próximos blocos`, e o João pulou a ordem escrita conscientemente.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `turma-habilitacao-listagem`, `profundidade-backend-b4-b7` e
+`documentos-oficiais-template-e-docx`): nenhum dos 8 itens cita Drive, Notion ou Figma. A fonte é o
+repositório — testes, ESLint e `.claude/rules/`. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** Os itens 1 e 2 mexem em `backend/tests/`
+(guarda de §5.1/§5.2 e `NestedRouteOwnershipTest`). Nenhum outro `active_work_item` de backend está
+aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
+`hardening/guardas-que-faltam`, criada de `7e76db4`, no padrão de
+`hardening/guardrails-e-transportes`.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **A superfície das duas leis já está limpa** — zero classe `Repository` em `backend/app/` (o
+   único hit de `grep` é `TurmaQueryBuilder`, que não é uma) e zero `CREATE TRIGGER`/`DB::unprepared`
+   em `backend/database/`. A guarda da **P-04** nasce verde: é custo de escrita, não de correção. É
+   também o gatilho mais próximo do bloco — a P-04 reavalia em **2026-08-15**.
+2. **`NestedRouteOwnershipTest` filtra por assinatura, não por URI** (`Q-2`): ele lê
+   `$route->signatureParameters(['subClass' => Model::class])` e faz `continue` quando encontra menos
+   de dois models tipados. Rota com dois segmentos `{}` e binding não tipado sai do universo do teste
+   em silêncio — o mecanismo entregue em 2026-08-04 tem essa porta aberta desde o primeiro dia.
+3. **`postMultipart.test.ts` mocka o próprio transporte** (`Q-4`): o arquivo abre com
+   `vi.mock('./axios', () => ({ api: { post: vi.fn(...) } }))`, então nenhum caso exercita o axios
+   real. A afirmação que interessa — que o `Content-Type` **não** é fixado à mão — não é testada por
+   nada hoje.
+4. **O barrel de `shared/hooks` exporta três símbolos de uso interno** (`Q-2` de 2026-08-05):
+   `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions`. Conferido em 2026-08-10: o único
+   consumidor é `useCrudForm.test.ts`, **por caminho relativo** — a remoção do barrel não quebra
+   ninguém.
+5. **`useEntityPhoto` tem 161 linhas e nenhum teste**, sendo o module de maior fan-out de
+   `shared/hooks`. É o item de maior custo do bloco e o único que não é guarda de guarda.
+6. **A P-25 é uma linha ausente numa rule**, não código: `.claude/rules/frontend-fsliced.md` segue
+   sem a cláusula "hook genérico não importa tipo de `shared/ui`", conferido em 2026-08-10, com os
+   dois casos já medidos (`useFilePreview`, `SearchableTableFrame`). Entra no bloco porque o item 4
+   já abre as rules pelo mecanismo da lição 13.
+
+**O que o planejamento tem de decidir e ainda não está decidido:** a forma do teste dos itens 1 e 4.
+Guarda de arquitetura em PHP e parser de comando dentro de arquivo Markdown são as duas peças sem
+precedente no repositório — o resto do bloco tem molde pronto ao lado.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
