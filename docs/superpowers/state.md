@@ -1,19 +1,19 @@
 ---
 schema_version: 1
-active_feature: hardening
-active_work_item: integridade-e-concorrencia-backend
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: run_fechar_sprint
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
-active_plan: docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: 'Q-1 a Q-6, todos (Joao, 2026-08-11). Corrigidos e reprovados contra o codigo antigo um a um; suite 538 passed / 5 skipped e as sondas MySQL (9 casos) verdes.'
-last_completed_work_item: guardas-que-faltam
-state_basis_commit: 09a11d9
-updated_at: 2026-08-11T20:45:00-03:00
+review_findings_approved: null
+last_completed_work_item: integridade-e-concorrencia-backend
+state_basis_commit: e2a251c
+updated_at: 2026-08-11T17:58:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,7 @@ updated_at: 2026-08-11T20:45:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — `integridade-e-concorrencia-backend`
+## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
 ### Seleção — 2026-08-11
 
@@ -342,7 +342,72 @@ cliente VIVO no binding de rota e só descobre o arquivamento depois. Por isso `
 cliente arquivado: é uma decisão só, no único ponto por onde todos os escritores passam, em vez das
 quatro linhas repetidas em seis Actions que o Q-4 acabara de punir.
 
-## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
+### Gate de fechamento — 2026-08-11
+
+**Item 0 — o critério de aceite deste bloco, provado contra a API real e não herdado do review.** O
+DoD escrito é "dois writes competindo", então suíte verde não fecha item nenhum. O e2e rodou contra
+o banco de dev (MySQL), com sessão Sanctum por cookie e CSRF:
+
+| Prova | Resultado |
+|---|---|
+| cliente criado com **dois** contatos `is_primary=true` | **201** com **um** principal (o último por id, a regra escrita) |
+| rota nested `POST /clients/5/contacts` com principal já existente | **201**, o anterior rebaixado; SQL cru confirma 1 principal |
+| **20 `PUT` concorrentes** (10 rodadas, dois contatos do mesmo cliente disputando) | **200 nos 20**, invariante em **1 principal** em todas as rodadas |
+| espera de lock no caminho HTTP | `Innodb_row_lock_waits` **116 → 127** (delta **11** em 10 rodadas) e `SHOW ENGINE INNODB STATUS` **sem** seção de deadlock |
+| coleção de **endereços** (a subclasse nova do Q-4) | dois `POST` principais → 1 principal, mesma regra, um dono só |
+| **Q-2** — `DELETE /clients/6` concorrente com `POST .../contacts` | **204** e **422** `application/problem+json` (`Este cliente foi arquivado e não aceita mais alterações.`); **0 contatos vivos** sob o cliente arquivado em SQL cru |
+| **item 2** — `PUT /users/71` com o RUT de outro | **422** com `errors.rut`; SQL cru mostra o `name` **não** escrito (zero escrita parcial) |
+| item 2 — auto-colisão com o próprio RUT | **200** |
+| **Q-1** — `DELETE /users/1` (único superadmin) | **422** `Não é possível deixar o sistema sem superadmin ativo.` |
+| Q-1 — rebaixar o superadmin ativo com outro superadmin **inativo** no banco | **422**; role intacta em SQL — é o caso do item 4, medido onde o usuário vive |
+| **item 3** — projeção de roles | `role: "admin"` e `roles: ["admin"]` coerentes em todas as respostas de usuário |
+
+**A medição de espera de lock é o que separa este e2e de um teste sequencial disfarçado:** 20 writes
+paralelos que nunca se cruzassem passariam igual. As 11 esperas dizem que houve disputa real no
+caminho HTTP completo, e a ausência de deadlock diz que a ordem de locks da D-P1 se sustenta fora do
+harness.
+
+**Itens 1–5.** Backend **538 passed, 5 skipped (1999 assertions)** em sqlite. Contra MySQL real
+(`lotus_test`), `CertificateNumberTest|PrimaryConcurrencyTest` → **9 passed (48 assertions)**. Pint
+`{"tool":"pint","result":"passed"}` nos **29** `.php` do bloco (lista conferida contra `git diff
+--name-only main...HEAD -- '*.php'`, nunca por substituição de comando). `pnpm lint` limpo e `pnpm
+build` verde — o bloco não toca `frontend/`, e o diff vazio é a prova. `typescript:transform` **sem
+diff** em `generated.ts`. Código morto zero: `ProbesMysqlConcurrency` tem os dois consumidores
+previstos, `Client::lockForWrite()` tem **sete chamadores** — as sete Actions que escrevem sob cliente já
+existente, com `CreateClientAction` de fora carregando a razão escrita no código —,
+`PrimaryCollectionService` tem as duas subclasses, `DeleteClientAction`
+e `DeleteStaffUserAction` estão fiados nos controllers; `git status --porcelain` vazio e nenhuma
+sonda `SONDA`/`dd(`/`dump(` no diff de `backend/app/`.
+
+**Item 6 — leis.** Nenhuma contrariada: zero classe `Repository` em `backend/app/`, zero
+`CREATE TRIGGER`/`DB::unprepared` (as duas guardas do BD-1 seguem verdes), auditoria só na aplicação
+— o rebaixamento continua por instância, nunca por query builder —, `generated.ts` gerado e sem
+diff, Sanctum intocado, financeiro fora do bloco.
+
+**Item 7 — pendências.** Nenhum gatilho venceu: a **P-03** exige dois `active_work_item` de backend
+em paralelo (só houve um) ou 2026-10-31, e a **P-04** revisa em 2026-08-15. Nasceu a **P-29**: a
+corrida de unicidade **entre transações distintas** segue subindo 500, recusa registrada na D3 da
+spec e agora com gatilho próprio. Uma divergência de formato foi **reportada e não corrigida** — o
+ID `P-28` aparece **duas vezes** em `docs/pendencias.md` (a guarda da lição 13 e o fundo do
+certificado); renumerar quebra referência e é decisão do João.
+
+**O que o gate NÃO provou, sem maquiagem:** nada foi visto renderizado — o bloco é backend puro e o
+contrato HTTP saiu idêntico, então não há tela nova a conferir; a corrida de RUT/e-mail entre
+transações distintas continua em 500 (P-29); e a suíte em sqlite segue cega para lock
+(`SQLiteGrammar::compileLock()` é no-op), então **tudo** que prova o item 1 é MySQL-only — os 5
+skipped são isso, não cobertura ausente.
+
+**Duas mutações declaradas no banco de dev:** os registros criados pelo e2e (2 clientes, 3 usuários
+staff) foram removidos com `forceDelete` ao fim — `clients` vivos voltou a **4**, zero usuário
+`gate.*` —, restando **15** linhas de `audits` apontando para ids que não existem mais; e o
+`LOT-2026-1001` corrompido de propósito **segue lá**, conferido antes e depois, esperando o
+checkpoint visual do João. Nenhum passe rodou `migrate:fresh`. Registrado também que o João estava
+**usando a aplicação no navegador durante o gate** (foto e `PUT` no cliente 1, visto no log do
+nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre registros próprios.
+
+**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+## Penúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
 
 ### Seleção — 2026-08-10
 
@@ -691,7 +756,7 @@ absorção segue no BD-5.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
+## Antepenúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
 ### Seleção — 2026-08-10
 
@@ -1103,220 +1168,3 @@ cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre 
 e hook de feature com DOM está fora dele (lição 10).
 
 **Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.
-
-## Antepenúltimo item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito, não herdado do gate técnico.** As correções Q-4 e Q-6 mexeram no
-`preflight.sh` *depois* dele, então os nove modos foram exercitados de novo, com o Lotus local de
-pé: `bash -n` limpo; `BLOCKED: non-local` para URL de produção; `BLOCKED: unreachable` para porta
-morta em loopback; `BLOCKED: non-local` **mesmo com o `curl` fora do `PATH`** — a prova de que a
-validação roda antes de qualquer requisição, que é o ponto da Q-4; `BLOCKED: unhealthy ...
-status=503` contra servidor sintético; `BLOCKED: missing command: playwright-cli`; e `PREFLIGHT_OK`
-com `frontend=200 backend=200`. `4xx` continua passando de propósito.
-
-**O gate reprovou um item do DoD e a reprovação não foi maquiada.** O teste literal do plano
-(Task 4, Step 4) acusou o adaptador com **18 linhas** contra o teto de 15 do DoD item 3 — estouro
-vindo das próprias Q-2 e Q-10, aprovadas. Resolvido por decisão do João: comprimido para 15 linhas
-sem perder cláusula, e o gate refeito passou. Detalhe em §"DoD item 3 reprovou no gate".
-
-**Demais itens:** suíte backend **503 passed, 1 skipped (1868 assertions)** — rodada no tree
-central, cujo `backend/` é byte a byte idêntico ao desta branch, com checksum de `app/` + `tests/`
-igual antes e depois; frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes na
-árvore já mesclada; Pint e `typescript:transform` **N/A** (zero `.php`, zero DTO, `generated.ts`
-sem diff); código morto zero; leis §5 sem superfície de contato — o bloco não toca schema, auth,
-auditoria, RBAC nem código de aplicação.
-
-**Pendências:** a **P-27 fechou** — o enum final é `used|complementary_unavailable|not-needed`, com
-a nota no `progress.md` da entrega; o plano aprovado não foi reescrito retroativamente e os
-relatórios em `.artifacts/` ficam como registro de auditoria. Nenhuma outra venceu gatilho (P-04
-reavalia 2026-08-15; P-15 e P-26 em 2026-09-30) e nenhuma nasceu. A P-03 **não** disparou: o
-gatilho é dois blocos de **backend** em paralelo, e este não é backend.
-
-**Divergência achada e não corrigida, por ser de outro bloco:** a linha do
-`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
-`Spatie\LaravelData\Optional|int`, o que parte a tabela naquela linha. Veio da main no merge; fica
-registrada aqui em vez de corrigida em silêncio.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-hardening-revisao-ui-assistida.md`; spec →
-`specs/archive/2026-08-10-hardening-revisao-ui-assistida-design.md` (não é compartilhada com nenhum
-item futuro registrado). A referência interna do plano à spec foi reapontada para o path arquivado,
-e a P-27 encerrada aponta para o plano arquivado. Entrega registrada no `progress.md`, com a de
-2026-08-03 (`abstracao-componentes-catalog`) descendo para o `progress-archive.md` para manter dez.
-Item 1 removido do `backlog.md`, com renumeração dos seguintes; os três débitos do piloto ficam.
-
-**Estado do ambiente:** nenhuma mutação. O bloco nunca escreveu em banco — o piloto e a aceitação
-são read-only por contrato, com `git status --short` antes e depois em cada run. O Vite dedicado
-subiu só para o `PREFLIGHT_OK` do gate e foi encerrado; o Compose central seguiu ativo e intocado.
-
-**Item 1 do `backlog.md`, selecionado explicitamente pelo João no Gate 4 e confirmado após a
-reconciliação da fila.** O bloco cria a infraestrutura local e a skill compartilhada de revisão
-UI/UX assistida por navegador. Playwright CLI é o mecanismo obrigatório; Chrome DevTools MCP é
-complementar e degradável. Não inclui E2E versionado nem correção dos achados do piloto.
-
-**Divergência temporal resolvida antes da seleção:** o plano-mestre de 2026-08-08 posicionava o
-hardening antes de “Certificação · frontend”, mas esse bloco já estava entregue e fechado quando a
-implementação formal começou. Por decisão explícita do João em 2026-08-09, o hardening foi
-promovido agora, antes de “Arquivados e restauração de soft-delete”; a spec deve descrever a ordem
-real e não repetir a premissa obsoleta. Não há regra de negócio externa a recuperar, portanto a
-rota segue sem Context Packet (`context_packet: null`).
-
-**Isolamento:** worktree `/home/jvbat/projetos/fix-frontend`, branch
-`chore/hardening-ui-review`, criada a partir de `032332b` e sincronizada com `origin/main` na
-seleção.
-
-### Brainstorming e spec — 2026-08-10
-
-O João aprovou o desenho com a instrução literal `APROVADO O DESENHO — gravar e commitar a spec.`
-A spec ativa materializa as decisões fechadas, a ordem temporal reconciliada, o protocolo
-read-only, a degradação do Chrome DevTools e o DoD do bloco. O estado entra em `planning` no mesmo
-commit da spec; `active_plan` permanece `null` até a aprovação humana deste documento e a escrita
-posterior do plano.
-
-### Aprovação da spec e plano — 2026-08-10
-
-O João aprovou a spec com a instrução literal `Aprovada a SPEC. Siga com o writing-plans`. O plano
-ativo decompõe a fundação, a skill canônica, os adaptadores, a matriz, os Gates 5/6, o piloto nos
-dois agentes e o gate técnico final. O handoff fixa `executor: codex` e limita a execução aos paths
-aprovados; nenhuma implementação foi iniciada durante o planejamento. O estado transiciona para
-`ready_for_execution` no mesmo commit do plano.
-
-### Execução delegada ao Codex — 2026-08-10
-
-O João autorizou literalmente `APROVADO — executar o plano ativo até o Gate 5.` O Codex inicia as
-Tasks 0–5 do plano aprovado e deve parar antes do piloto. A transição para `executing` entra no
-mesmo commit do primeiro artefato durável, mantendo `next_owner: claude` e
-`next_action: continue_active_plan`.
-
-### Pilotos, gate final e handoff — 2026-08-10
-
-O João retomou a execução com a instrução literal `vamos continuar entao com plano até chegar na
-parte de review, depois complementamos a skill conforme a ideia inicial.` A instrução atual
-autorizou concluir os Gates 5/6 e a Task 7; a complementação da skill ficou explicitamente adiada
-para depois do review e não foi misturada neste diff.
-
-O piloto de Clientes foi executado em runs separadas no Codex e no Claude Code, com o mesmo escopo
-read-only, `1440x900`, `1024x768` e `390x844`, snapshots, screenshots, console, rede e Git
-antes/depois. Os agentes concordaram nos cinco fatos reproduzíveis centrais; divergências de
-severidade e achados complementares ficaram registradas nas evidências ignoradas. Três grupos B/C
-reproduzidos por ambos foram adicionados ao backlog, sem correção de frontend.
-
-Gate final fresco: skill e shell válidos; preflight `200/200` com `PREFLIGHT_OK`; frontend `13`
-arquivos e `47` testes, lint e build verdes; backend `501 passed`, `1 skipped`, `1859 assertions`.
-A primeira passagem do backend viu um estado intermediário do WIP da main central — o teste foi
-salvo às `15:09:35` e o método correspondente às `15:10:01` — e falhou uma vez; o teste isolado
-passou `5/5`, e a suíte completa passou no rerun com checksums idênticos antes/depois. A aceitação
-final refez Clientes nas três viewports, com console `0` erros/`0` warnings, somente GETs `200`,
-nenhuma mutação e Chrome DevTools registrado como `complementary_unavailable`. O Vite dedicado foi
-encerrado e o Compose central permaneceu ativo. O bloco para em `ready_for_review`; não inicia
-review, fechamento, push ou PR automaticamente.
-
-### Review de sprint — 2026-08-10: duas lentes, 10 achados, todos aprovados e corrigidos
-
-**ALTO RISCO por `executor: codex`** (o bloco não toca schema, `generated.ts`, auth, auditoria,
-RBAC, dinheiro nem documento legal; o gatilho é a execução delegada). Lente Claude com o gabarito
-do projeto + `mcp__codex__codex` read-only sobre `032332b..HEAD`. Escopo: só os 11 arquivos do
-intervalo. Órfãos: zero — os quatro artefatos canônicos têm consumidor declarado e provado
-(preflight chamado pelos dois pilotos e pela aceitação; rubrica e template citados nos cinco
-relatórios; adaptador e comando resolvidos em sessão nova na Task 5).
-
-**Higiene do diff reconferida, não aceita por relatório:** `git diff --check` limpo;
-`frontend/`, `backend/`, `.mcp.json` e `.codex/config.toml` sem uma linha de diff; `git status`
-limpo; `preflight.sh` versionado com modo `100755`; `state_basis_commit: f62885b` é de fato o
-commit durável anterior a `62bf9c9`.
-
-**O achado 🔴 é de lei, não de estilo.** A matriz da Task 5 declara PASS em quatro linhas cuja
-evidência é a citação do texto que o próprio bloco acabou de escrever. Duas delas sustentam
-cláusulas do DoD §10 da spec: "solicitação de backend não invoca a skill" (evidência: o frontmatter
-diz `not for backend review`) e "Figma não recuperado não produz comparação inventada" (evidência:
-`SKILL.md:71-72` e rubrica `:257` mandam não inventar). É §5.8 e lição 10 na mesma frase. As linhas
-de maior risco **têm** prova comportamental real e não estão em questão: escopo amplo e pedido de
-correção automática (`scope-response.txt`), URL de produção com fallback de browser
-(`production-response.txt`), preflight contra porta morta e contra `PATH` sem `playwright-cli`, e a
-sonda WIP com checksum idêntico antes/depois.
-
-**Divergências entre as lentes, mostradas em vez de resolvidas em silêncio:** o Codex classificou o
-GREEN inteiro da Task 3 como não discriminante por ter rodado em sandbox read-only; verifiquei os
-três arquivos de resposta e isso vale só para `local-response.txt` (a jornada feliz), não para
-escopo e produção, que recusaram por decisão da skill e foram reprovados de novo pelos pilotos
-reais. O Codex também reportou a ausência de mecanismo que force read-only após o login e o
-`none` fixo no rodapé do template; rejeitei os dois — o primeiro é a decisão §11.4 da spec
-(execução manual na v0.1) e o segundo é contrariado por `SKILL.md:91-92`, que prevê o run
-não conforme.
-
-**Correções — o João aprovou Q-1..Q-10 na íntegra; todas entraram no mesmo dia.**
-
-O 🔴 (Q-1) foi corrigido pela raiz: as duas cláusulas do DoD §10 item 6 foram refeitas como sonda
-comportamental em contexto novo, **com frontend e backend em 200** para que nenhuma recusa pudesse
-ser atribuída ao ambiente. O agente respondeu `BLOCKED` ao pedido de revisão do backend de
-certificação, declarando não ter inspecionado os arquivos; e, ao pedido de comparação com "o Figma
-do projeto" sem `fileKey`/`node ID`, recusou explicitamente produzir ou alegar a comparação, sem
-listar divergência alguma. Evidência em `.artifacts/ui-review/2026-08-10-task5-probes/`. A linha do
-Chrome DevTools na matriz deixou de citar a skill e passou a apontar os três relatórios reais que
-registraram a degradação.
-
-Mecanismo (Q-4, Q-6): `preflight.sh` ganhou validação de loopback antes de qualquer `curl` — host
-fora de `localhost`/`127.0.0.0/8`/`::1`/`0.0.0.0` retorna `BLOCKED: non-local <label> url`, inclusive
-quando `curl` não existe — e passou a reprovar `5xx` como `BLOCKED: unhealthy`. `4xx` continua
-passando de propósito: a raiz do backend pode responder `404` num serviço saudável, e bloquear aí
-criaria falso positivo. Provado nos quatro modos: ambiente real, URL de produção, loopback saudável
-e servidor `503` sintético.
-
-Contrato (Q-3, Q-7, Q-8): enum único `used|complementary_unavailable|not-needed`; separadora GFM na
-tabela `## Coverage`; o passo 14 passou a mandar gravar `<run-dir>/report.txt` a partir de uma cópia
-do template, nunca editando o arquivo versionado. Q-9: login manual saiu de pré-requisito de
-entrada e virou credencial disponível para o passo 7, que é quem o solicita. Q-2: a allowlist do
-adaptador e do comando passou a cobrir o workflow que ela roteia (`git branch`, `git rev-parse`,
-`mkdir`, `Write`), sem autorizar escrita em código ou dado. Q-10: a lente `frontend-design` e a
-precedência "rule vence skill, e o conflito é avisado" voltaram — no adaptador Claude, não na fonte
-canônica, porque `frontend-design` é plugin do Claude Code e o Codex não a tem. Q-5: `CLAUDE.md` §4
-lista `/lotus-ui-review` como skill, com `/revisar-ui` marcado como entrada legada.
-
-Relatórios antigos em `.artifacts/` **não foram reescritos**: são registro de auditoria, incluindo o
-`not-needed` incorreto de `2026-08-10T12-40-35-codex-final/report.txt:9`, que é justamente a prova de
-que o enum duplo confundia.
-
-**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
-
-### Sincronização com a main — 2026-08-10
-
-O gate de fechamento parou antes de qualquer arquivamento ao encontrar **dois `active_work_item` em
-`ready_for_closure` no mesmo repositório**: este bloco, na worktree `fix-frontend`, e
-`turma-habilitacao-listagem`, na worktree central, com uma sessão paralela fechando o segundo em
-tempo real. A invariante "existe no máximo um `active_work_item`" estava quebrada e a divergência
-não foi resolvida por heurística.
-
-**Decisão do João:** o outro bloco fecha primeiro. Ele fechou e entrou na main pelo PR #34
-(`f1d72c5`); esta branch então absorveu a main por merge, preservando o arquivo da main e
-reinserindo apenas o que é deste bloco.
-
-Resolução do conflito de `state.md`, campo a campo: a janela rolante de itens fechados é a da main
-(`turma-habilitacao-listagem` / `certificacao-lote-e-snapshot` / `certificacao-frontend`), e as
-cópias que esta branch carregava de `profundidade-backend-b4-b7` e `certificacao-sprint-4` saíram
-por terem rolado para fora da janela — a seção `certificacao-frontend` das duas versões era
-idêntica, então nada de histórico se perdeu. `last_completed_work_item` passa a
-`turma-habilitacao-listagem`, o fato mais recente. A seção do item ativo, o
-`review_findings_approved` e os ponteiros de spec/plano são deste bloco.
-`state_basis_commit` passa a `e01f198`, o commit das correções Q-1..Q-10 — `f62885b` deixou de ser
-o último artefato durável quando elas foram commitadas. `pendencias.md` e `backlog.md` mesclaram
-sem conflito.
-
-### DoD item 3 reprovou no gate e foi corrigido — 2026-08-10
-
-O gate de fechamento rodou o teste literal do plano (Task 4, Step 4) e ele **reprovou**: o adaptador
-`.claude/skills/lotus-ui-review/SKILL.md` tinha **18 linhas** contra o teto de 15. Nenhuma correção
-do review foi indevida — o estouro veio de Q-2 (justificativa da allowlist) e Q-10 (lente
-`frontend-design` e precedência rule-vence-skill), ambas aprovadas pelo João. O que sobrou foi
-prosa, não substância.
-
-**Decisão do João: resolver, não registrar desvio.** O adaptador foi comprimido para **15 linhas**
-sem perder nenhuma das duas cláusulas — a allowlist continua mapeada passo a passo ao workflow que
-roteia, e a precedência da rule sobre `frontend-design` continua explícita. O teto era proxy de
-"adaptador fino"; a compressão restaura o número **e** a intenção. Gate refeito depois da correção:
-`-le 15` PASS, roteamento PASS, `Condição A|B|C|UI-01` ausente, e a fonte canônica segue
-`Skill is valid!`.
-
-Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude/skills/lotus-ui-review/`
-por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
-adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.

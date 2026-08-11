@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3 · PHPUnit sobre `Tests\TestCase` (sqlite `:memory:` no container `app`) · MySQL 8 InnoDB `REPEATABLE READ` para as sondas (`performance_schema.data_lock_waits`) · `Symfony\Component\Process` para os processos concorrentes.
 
-**Spec:** `docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-11-integridade-e-concorrencia-backend-design.md`
 
 ## Global Constraints
 
