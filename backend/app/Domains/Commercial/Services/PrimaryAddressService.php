@@ -16,6 +16,9 @@ use App\Domains\Commercial\Models\ClientAddress;
  * a este serviço) — sem `winner`, um PUT que marca um endereço menos recente
  * como principal seria sobrescrito pelo "último por id" e o usuário veria o
  * endereço errado como principal, em silêncio.
+ *
+ * Concorrência: este serviço NÃO serializa nada sozinho. Quem chama abre a
+ * transação E toma `Client::lockForWrite()` antes de qualquer escrita.
  */
 class PrimaryAddressService
 {
@@ -30,6 +33,13 @@ class PrimaryAddressService
         $primaries = $client->addresses()
             ->where('is_primary', true)
             ->orderBy('id')
+            // Leitura TRAVADA, não comum: em REPEATABLE READ o SELECT comum volta
+            // do snapshot da transação e NÃO enxerga o principal que a transação
+            // concorrente já commitou. A contagem daria 1, o early-return abaixo
+            // dispararia e os dois principais sobreviveriam — medido em
+            // 2026-08-11. Isto faz a transação ENXERGAR; quem SERIALIZA é o
+            // `Client::lockForWrite()` que a Action toma antes de escrever.
+            ->lockForUpdate()
             ->get();
 
         if ($primaries->count() <= 1) {

@@ -26,6 +26,8 @@ class CreateClientAction
     public function execute(ClientData $data): Client
     {
         return DB::transaction(function () use ($data) {
+            // Sem `Client::lockForWrite()`: o cliente nasce aqui. Não existe
+            // transação concorrente disputando um id que ainda não foi gerado.
             $user = $this->users->provision(
                 type: 'cliente',
                 name: $data->name,

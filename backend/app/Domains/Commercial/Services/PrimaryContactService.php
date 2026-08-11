@@ -10,6 +10,9 @@ use App\Domains\Commercial\Models\ClientContact;
  * aplicação, nunca em trigger (ADR-02/ADR-08: trigger enxerga a conexão, não o
  * usuário autenticado — a auditoria perderia o autor).
  * Cliente SEM principal é estado válido: o serviço não promove ninguém.
+ *
+ * Concorrência: este serviço NÃO serializa nada sozinho. Quem chama abre a
+ * transação E toma `Client::lockForWrite()` antes de qualquer escrita.
  */
 class PrimaryContactService
 {
@@ -24,6 +27,13 @@ class PrimaryContactService
         $primaries = $client->contacts()
             ->where('is_primary', true)
             ->orderBy('id')
+            // Leitura TRAVADA, não comum: em REPEATABLE READ o SELECT comum volta
+            // do snapshot da transação e NÃO enxerga o principal que a transação
+            // concorrente já commitou. A contagem daria 1, o early-return abaixo
+            // dispararia e os dois principais sobreviveriam — medido em
+            // 2026-08-11. Isto faz a transação ENXERGAR; quem SERIALIZA é o
+            // `Client::lockForWrite()` que a Action toma antes de escrever.
+            ->lockForUpdate()
             ->get();
 
         if ($primaries->count() <= 1) {

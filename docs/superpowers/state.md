@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: integridade-e-concorrencia-backend
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
 active_plan: docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: 09a11d9
-updated_at: 2026-08-11T13:16:00-03:00
+updated_at: 2026-08-11T13:44:00-03:00
 ---
 
 # Estado operacional — Lotus v2

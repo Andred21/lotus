@@ -76,6 +76,24 @@ class Client extends Model implements Auditable
         return $this->load(ClientQueryBuilder::LISTING);
     }
 
+    /**
+     * Mutex por cliente: serializa as regiões críticas que decidem qual contato
+     * ou endereço fica `is_primary`. Tem de ser tomado ANTES de qualquer escrita
+     * da transação — tomá-lo depois inverte a ordem dos locks e produz
+     * `SQLSTATE[40001] ... 1213 Deadlock found when trying to get lock`, medido
+     * em 2026-08-11 contra MySQL real.
+     *
+     * `withTrashed()` porque isto não é consulta: cliente arquivado não pode
+     * virar "sem mutex" em silêncio.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Quem prova que ele funciona é `PrimaryConcurrencyTest`, em MySQL.
+     */
+    public static function lockForWrite(int $clientId): void
+    {
+        static::withTrashed()->whereKey($clientId)->lockForUpdate()->first();
+    }
+
     /** @param  QueryBuilder  $query */
     public function newEloquentBuilder($query): ClientQueryBuilder
     {
