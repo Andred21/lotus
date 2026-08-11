@@ -4,8 +4,9 @@
 
 // Visual de marca: contorno celeste sobre superfície no claro; preenchido no
 // escuro. O anel de foco é o do tema (celeste no Lara-Lotus) somado ao outline
-// da camada de marca — não zerar: `ring-0` aqui deixou o foco de teclado
-// invisível (UI-03 do review de 2026-08-11).
+// da camada de marca — não zerar o anel: zerá-lo aqui deixou o foco de teclado
+// invisível (UI-03 do review de 2026-08-11). A classe não é nomeada de
+// propósito: o scanner do Tailwind lê comentário e emitiria a utility morta.
 //
 // No escuro o rótulo é navy, não branco: é celeste preenchido, e a D6 vale em
 // qualquer superfície celeste (branco sobre ela mede 2,77:1). A borda branca
