@@ -71,12 +71,23 @@ class PersistenceLawsTest extends TestCase
      * ela reprovou pelo texto `CREATE TRIGGER`, não pela chamada. Guarda que
      * promete cobrir uma forma e não cobre é o defeito que este bloco existe
      * para não repetir.
+     *
+     * As DUAS pastas entram na varredura, e é a mesma correção de novo. Esta
+     * guarda nasceu varrendo só `database/` — migration e seeder são o caminho
+     * provável, não o único —, e a lei §5.2 não tem escopo: um trigger criado
+     * de dentro de `app/` (Action, Service, comando de console) viola igual e
+     * passava verde. Provado por sonda no review de 2026-08-11 (Q-3), com a
+     * §5.1 logo acima já varrendo `app/` inteiro.
      */
     public function test_nenhum_trigger_de_banco(): void
     {
         $encontrados = [];
+        $arquivos = array_merge(
+            $this->arquivosPhp(base_path('database')),
+            $this->arquivosPhp(base_path('app')),
+        );
 
-        foreach ($this->arquivosPhp(base_path('database')) as $arquivo) {
+        foreach ($arquivos as $arquivo) {
             $codigo = $this->codigoSemComentarios($arquivo);
             $local = str_replace(base_path().'/', '', $arquivo);
 
@@ -88,6 +99,8 @@ class PersistenceLawsTest extends TestCase
                 $encontrados[] = "{$local}: unprepared()";
             }
         }
+
+        sort($encontrados);
 
         $this->assertSame([], $encontrados, implode("\n", array_merge(
             [
