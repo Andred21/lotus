@@ -838,6 +838,20 @@ decisão do João — as duas são a implementação correta do que ele já deci
   chama de "escala via `color-mix`". **O teste não pegou isso — a inspeção do arquivo gerado pegou**
   —, então virou guarda: 10 degraus distintos e monótonos, nas duas famílias e nos dois temas.
 
+### Emendas achadas DURANTE a Task 3 (2026-08-11)
+
+- **D-P11 — a D6 alcança o código NOSSO que pinta branco sobre celeste, não só o tema.** A D-P8
+  varreu o tema gerado; sobravam duas ocorrências no `src/`, e o próprio Step 6 da Task 3 não as
+  previa (ele espera "só `SidebarItem.tsx`", e o grep devolve **três** arquivos):
+  `AppAvatar.tsx:43` pinta `backgroundColor: '#25A5E4', color: '#fff'` inline num wrapper de
+  `shared/ui`, e o `brandOutline` do `AppButton` faz `dark:bg-[var(--brand)] dark:text-white` — os
+  dois são **2,77:1**, exatamente o par que a spec D6 nomeia ("branco sobre celeste dá ~2.6:1 e
+  reprova"). O `AppAvatar` não estava na lista de arquivos de nenhuma task: a spec §7 cita
+  `SidebarItem.tsx` e `AppButton/style.ts` e parou aí. Corrigidos na Task 3, que é a task da higiene
+  de hex: hex → `var(--brand)`, branco → `var(--brand-navy)` (5,29:1). Não é decisão nova — é a D6
+  onde ela vale, como a D-P10. A **borda** branca do `brandOutline` no escuro fica: é traço
+  decorativo, e a D-P10 já declarou que preenchimento decorativo não vira navy.
+
 ## Desvios declarados (lição 13)
 
 - **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara
