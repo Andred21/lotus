@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Shared;
 
+use Tests\Support\ScansPhpSource;
 use Tests\TestCase;
 
 /**
@@ -32,6 +33,8 @@ use Tests\TestCase;
  */
 class DomainDependencyTest extends TestCase
 {
+    use ScansPhpSource;
+
     /** Camadas que um domínio expõe para os outros. As demais são internas. */
     private const PUBLIC_LAYERS = ['Models', 'Enums', 'Services'];
 
@@ -249,31 +252,5 @@ class DomainDependencyTest extends TestCase
         }
 
         return $refs;
-    }
-
-    /**
-     * O código do arquivo sem comentários nem docblocks. Citar uma classe num
-     * comentário não é depender dela — contar a menção reprovava a suíte por um
-     * vínculo inexistente (review de 2026-08-04, Q-4).
-     */
-    private function codigoSemComentarios(string $arquivo): string
-    {
-        $codigo = '';
-
-        foreach (token_get_all((string) file_get_contents($arquivo)) as $token) {
-            if (! is_array($token)) {
-                $codigo .= $token;
-
-                continue;
-            }
-
-            if ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
-                continue;
-            }
-
-            $codigo .= $token[1];
-        }
-
-        return $codigo;
     }
 }
