@@ -31,7 +31,7 @@
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 
-## Blocos de execução de dívida — BD-1..BD-7 (proposta de 2026-08-10)
+## Blocos de execução de dívida — BD-2..BD-7 (proposta de 2026-08-10)
 
 > Agrupamento dos **débitos técnicos** desta página e das **pendências de código** de
 > `docs/pendencias.md`, conferidos contra o código em 2026-08-10 (não herdados de relatório).
@@ -46,43 +46,9 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-1 → BD-2 → BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. A ordem dentro de cada
+> Ordem entre blocos: **BD-2 → BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. O **BD-1** foi entregue
+> em 2026-08-11 e saiu desta lista (`progress.md`). A ordem dentro de cada
 > bloco é parte do bloco, não sugestão.
-
-### BD-1 · Guardas que faltam (mecanismo, zero mudança de comportamento)
-
-Primeiro por três razões medidas: nenhum item muda comportamento, todos nascem verdes, e o gatilho
-da **P-04** reavalia em **2026-08-15**.
-
-Cobre: **P-04** (§5.1 e §5.2) · **Q-2** (`NestedRouteOwnershipTest`) · **Q-4** (`postMultipart`) ·
-**Q-3** e **Q-2** dos três achados de 2026-08-05 (`mapped`×`summaryOnly`; barrel de `shared/hooks`) ·
-**"Lição 13 é reincidente e ainda não tem mecanismo"** · **"O trio da foto…"** (só a parte do teste
-ausente do `useEntityPhoto`) · **P-25**.
-
-Ordem:
-1. §5.1 (sem Repository sobre Eloquent) e §5.2 (auditoria nunca em trigger de banco) como teste.
-   **Medido em 2026-08-10: a superfície está limpa** — zero classe `Repository` em `backend/app/`
-   (o único hit de `grep` é `TurmaQueryBuilder`, que não é) e zero `CREATE TRIGGER`/`DB::unprepared`
-   em `backend/database/`. É custo de escrita, não de correção;
-2. **Q-2** — contar também os segmentos `{}` da URI e reprovar rota com ≥2 segmentos e <2 models
-   tipados; hoje `signatureParameters(['subClass' => Model::class])` deixa passar quem esquece de
-   tipar;
-3. **Q-4** — caso **sem** `vi.mock('./axios')` assertando que `api.defaults.headers` não traz
-   `Content-Type`;
-4. **Lição 13** — teste de que todo comando citado nos `§Comandos` das rules e no `CLAUDE.md` §6
-   existe como script em `package.json`/`composer.json`, e vice-versa;
-5. **Q-3** — `useCrudForm` reprova chave declarada em `mapped` **e** em `summaryOnly` ao mesmo tempo;
-6. **Q-2 (barrel)** — tirar `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions` de
-   `shared/hooks/index.ts`: conferido em 2026-08-10, o único consumidor é o próprio teste, por
-   caminho relativo;
-7. teste do `useEntityPhoto` — 161 linhas, o module de maior fan-out de `shared/hooks`, ainda sem
-   nenhum;
-8. **P-25** — a linha "hook genérico não importa tipo de `shared/ui`" em
-   `.claude/rules/frontend-fsliced.md`, com os dois casos já medidos (`useFilePreview`,
-   `SearchableTableFrame`). Entra aqui porque o bloco já toca rules pelo item 4.
-
-DoD: cada guarda **vista vermelha** antes de passar (sonda deliberada), suíte no placar de sempre,
-zero mudança de comportamento em runtime.
 
 ### BD-2 · Integridade e concorrência no backend
 
@@ -159,7 +125,7 @@ DoD: comportamento idêntico na tela; o 422 de `phone` aparecendo; `ignores` vaz
 Depois do BD-4 por gatilho declarado: o débito do trio da foto entra "quando alguém tocar um desses
 4 diálogos por outro motivo", e é o BD-4 que paga esse gatilho.
 
-Cobre: **"O trio da foto é idêntico em 4 dialogs"** (a absorção; o teste já foi no BD-1) · **"Os 4
+Cobre: **"O trio da foto é idêntico em 4 dialogs"** (a absorção; o teste saiu no bloco `guardas-que-faltam`, entregue em 2026-08-11) · **"Os 4
 hooks de formulário que ficaram fora do `useCrudForm`"** · **Q-4** dos três achados de 2026-08-05
 (`photo_url`/`photo_path` no corpo da escrita).
 
@@ -240,7 +206,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 ## Débitos técnicos
 
 > Cada linha continua sendo o registro canônico do seu débito. A cobertura por bloco está mapeada
-> em `## Blocos de execução de dívida — BD-1..BD-7`; entrar num BD **não** move nem apaga a linha
+> em `## Blocos de execução de dívida — BD-2..BD-7`; entrar num BD **não** move nem apaga a linha
 > daqui — a remoção acontece só depois do bloco aplicado e do `/fechar-sprint` correspondente.
 
 - **Piloto UI Clientes — tabela e estado vazio perdem a faixa visível em tablet/mobile.**
@@ -284,8 +250,8 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   custou duas decisões de spec (D10/D11 do bloco de alunos) e a quarta saída do `CrudDialog`.
   Decisão do João em 2026-08-04: fora do item 1. Saída: entra quando alguém tocar um desses 4
   dialogs por outro motivo, e o commit que absorver paga junto a prova de upload real no gate —
-  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` (161 linhas, o module mais profundo
-  de `shared/hooks`) segue **sem teste**.
+  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` **ganhou teste** em 2026-08-11 (bloco
+  `guardas-que-faltam`, seis casos); o que segue aberto aqui é só a **absorção**.
 
 - **As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`, e adotar custa mais do que
   trocar o markup.** `BudgetsTable` e `TurmasTable` ficaram fora do H.4.4 (2026-08-04, spec D2) por
@@ -306,37 +272,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (2026-08-08), para a `HistorialTable` da certificação — fora da adoção que a "Saída" previa. Resta
   só adotar nas duas tabelas, que hoje seguem sem importar a moldura. Coberto pelo **BD-4**.
 
-- **Lição 13 é reincidente e ainda não tem mecanismo — proposta aguardando decisão do João.** O
-  padrão "texto afirmando o que o repositório não faz" apareceu **3 vezes** no review de
-  `hardening-estrutural-pre-sprint-4` (Q-2: o comentário do `eslint.config.js` afirmando cobrir
-  caminho relativo; Q-3: `CLAUDE.md` §6 e `frontend-fsliced.md` §Comandos negando o test runner
-  recém-instalado; Q-7: o JSDoc de `startEdit` prometendo guarda por entidade) e foi o Q-1 do bloco
-  anterior (`abstracao-componentes-catalog`: a régua de ~150 linhas que não existia em rule nenhuma).
-  Duas sprints consecutivas, mesma classe — pela cláusula de reincidência do `/revisar-sprint`, quer
-  mecanismo, não correção uma a uma. **Proposta:** um teste que asserte que todo comando citado nos
-  `§Comandos` das rules e no `CLAUDE.md` §6 existe como script em `package.json`/`composer.json`, e
-  vice-versa. Fecharia o Q-3 em definitivo e é a fatia verificável do problema; o resto da lição 13
-  (afirmação em prosa) não é automatizável e segue dependendo do review. Proposta feita em
-  2026-08-04, **não construída** — o João aprovou os 7 achados, não o mecanismo.
-
-- **Q-2 — o `NestedRouteOwnershipTest` escapa em silêncio quando o parâmetro não é tipado como
-  model.** O guardrail nasceu em 2026-08-04 (`hardening-guardrails-e-transportes`) contando
-  `signatureParameters(['subClass' => Model::class])`, escolha da spec §D6 para não errar como
-  erraria um regex sobre a URI. O efeito colateral é que a saída do guardrail passa a ser **esquecer
-  de tipar**: sonda com `DELETE api/sonda/{course}/itens/{item}` e assinatura `(Course $course,
-  int $item)` **passou** — rota nested, zero posse checada, teste mudo. Hoje as 7 rotas com ≥2
-  parâmetros estão todas tipadas, então fechar o buraco não muda nada; amanhã muda. Saída: contar
-  também os segmentos `{}` da URI e reprovar quando houver ≥2 mas menos de 2 models tipados, pedindo
-  a tipagem ou a declaração explícita. Achado Q-2 do review de 2026-08-04, **deferido pelo João** —
-  ele aprovou Q-1 e Q-5.
-- **Q-4 — o teste do `postMultipart` mocka o módulo `axios` inteiro, então nada guarda a instância
-  real.** `postMultipart.test.ts:5` usa `vi.mock('./axios')`: os 4 casos provam o helper e nunca
-  visitam `shared/api/axios.ts`. Se alguém fixar `Content-Type` nos defaults da instância, os testes
-  seguem verdes e **todo** upload chega vazio com 201 — a lição 6, cuja única guarda permanente hoje
-  é o comentário no arquivo (lição 14: instrução onde cabe mecanismo). O D12 do bloco exigiu upload
-  real por isso, mas essa prova não roda de novo sozinha. Saída: um caso sem mock assertando que
-  `api.defaults.headers` não traz `Content-Type`. Achado Q-4 do review de 2026-08-04, **deferido pelo
-  João**.
 - **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
   `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
   `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
@@ -462,18 +397,12 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
   do `max-lines` (189 linhas cada).
 
-- **Três achados do review de 2026-08-05 não foram aprovados pelo João e ficam registrados aqui,
-  todos 🟢 e todos de esforço P.** (Q-2) O barrel `shared/hooks/index.ts` exporta
-  `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions` sem um consumidor — o teste
-  importa por caminho relativo —, e o primeiro é a válvula que a D12 existe para fechar: público,
-  ele é o caminho para uma feature classificar por fora do module. (Q-3) Chave declarada em
-  `mapped` **e** em `summaryOnly` ao mesmo tempo passa na guarda sem conflito; `summaryOnly` é a
-  única das três caixas **sem consequência mecânica** (`mapped` some do resumo, `excludePrefixes`
-  filtra por prefixo), logo a de custo zero para calar o mecanismo. Detectar a interseção é a única
-  verificação barata que sobra — que exista um `FormErrorSummary` no diálogo o hook não pode saber.
-  (Q-4) O fato medido em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no
-  construtor do `ClientData` desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do
-  `useClientForm` e não reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de
-  carregar URL e passa a carregar path, então quem reintroduzir `...form` manda um caminho interno
-  de storage no corpo da escrita. Saída dos três: o próximo commit que tocar `useCrudForm` ou
-  `useClientForm` paga o que couber.
+- **Um dos três achados do review de 2026-08-05 segue aberto — 🟢, esforço P.** (Q-4) O fato medido
+  em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData`
+  desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do `useClientForm` e não
+  reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de carregar URL e passa a
+  carregar path, então quem reintroduzir `...form` manda um caminho interno de storage no corpo da
+  escrita. Saída: o próximo commit que tocar `useCrudForm` ou `useClientForm` paga o que couber.
+  **Os outros dois foram fechados pelo bloco `guardas-que-faltam` em 2026-08-11:** (Q-2) o barrel
+  `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`, `MutableResource` e
+  `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly` passou a reprovar.

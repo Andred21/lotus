@@ -8,7 +8,7 @@
 
 **Tech Stack:** PHPUnit sobre `Tests\TestCase` (sqlite `:memory:`, dentro do container `app`) · vitest 4 + jsdom + `@testing-library/react` (nativo no WSL, de `frontend/`) · `token_get_all()` para varredura de PHP sem comentário · `Route::getRoutes()` para o universo de rotas.
 
-**Spec:** [`docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md`](../specs/2026-08-10-guardas-que-faltam-design.md)
+**Spec:** `docs/superpowers/specs/archive/2026-08-10-guardas-que-faltam-design.md`
 
 ## Global Constraints
 
