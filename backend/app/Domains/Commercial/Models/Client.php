@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -40,6 +41,12 @@ class Client extends Model implements Auditable
         static::deleting(function (Client $client) {
             if (! $client->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
+                //
+                // ENUMERA-E-APAGA: sem transação e sem mutex isto é check-then-act
+                // — um contato criado depois do `get()` sobrevive ATIVO sob um
+                // cliente arquivado. Quem fecha a janela é a `DeleteClientAction`,
+                // que abre a transação e toma `Client::lockForWrite()` antes de
+                // chamar `$client->delete()`. Não arquive cliente por fora dela.
                 $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
                 $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
                 $client->user?->delete();
@@ -77,21 +84,41 @@ class Client extends Model implements Auditable
     }
 
     /**
-     * Mutex por cliente: serializa as regiões críticas que decidem qual contato
-     * ou endereço fica `is_primary`. Tem de ser tomado ANTES de qualquer escrita
-     * da transação — tomá-lo depois inverte a ordem dos locks e produz
+     * Mutex por cliente: serializa TODA região crítica que escreve o cliente ou
+     * sua coleção nested. Tem de ser tomado ANTES de qualquer escrita da
+     * transação — tomá-lo depois inverte a ordem dos locks e produz
      * `SQLSTATE[40001] ... 1213 Deadlock found when trying to get lock`, medido
-     * em 2026-08-11 contra MySQL real.
+     * em 2026-08-11 contra MySQL real. Vale para o replace-total do cadastro, as
+     * rotas nested (create/update/delete) E o arquivamento do próprio cliente:
+     * escritor que não passa por aqui é escritor fora do mutex, e um só já
+     * reabre a janela (review de 2026-08-11, Q-2).
      *
-     * `withTrashed()` porque isto não é consulta: cliente arquivado não pode
-     * virar "sem mutex" em silêncio.
+     * Devolve o cliente TRAVADO, não `void`: quem chama precisa do estado lido
+     * sob o lock, e um retorno descartado tornava o mutex um no-op indetectável
+     * — `first()` devolvendo null passava batido (Q-5).
+     *
+     * `withTrashed()` porque o lock tem de ser tomado mesmo sobre cliente
+     * arquivado: pular a linha faria a operação seguir SEM mutex nenhum. Mas
+     * seguir escrevendo sob ele é outra coisa — o binding de rota resolveu um
+     * cliente VIVO, e descobrir sob o lock que ele foi arquivado no meio do
+     * caminho significa que a escrita não pode prosseguir (senão o filho nasce
+     * ativo sob pai arquivado).
      *
      * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
      * Quem prova que ele funciona é `PrimaryConcurrencyTest`, em MySQL.
      */
-    public static function lockForWrite(int $clientId): void
+    public static function lockForWrite(int $clientId): static
     {
-        static::withTrashed()->whereKey($clientId)->lockForUpdate()->first();
+        /** @var static $client */
+        $client = static::withTrashed()->whereKey($clientId)->lockForUpdate()->firstOrFail();
+
+        if ($client->trashed()) {
+            throw ValidationException::withMessages([
+                'client' => 'Este cliente foi arquivado e não aceita mais alterações.',
+            ]);
+        }
+
+        return $client;
     }
 
     /** @param  QueryBuilder  $query */

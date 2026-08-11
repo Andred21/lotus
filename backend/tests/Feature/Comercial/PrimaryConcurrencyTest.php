@@ -35,12 +35,61 @@ use Tests\TestCase;
  * (a asserção final reprova), e tomá-lo DEPOIS da escrita inverte a ordem dos
  * locks e produz `SQLSTATE[40001] ... 1213 Deadlock found when trying to get
  * lock` (o filho morre e a asserção de exit code reprova).
+ *
+ * Há uma terceira forma, achada no review de 2026-08-11 (Q-2): um escritor que
+ * simplesmente NÃO pede o mutex. As promoções acima não o pegam — quem o pega
+ * são os `test_*_espera_pelo_mutex_do_cliente_no_mysql`, que asseram ONDE o
+ * processo travou, não só que travou.
  */
 class PrimaryConcurrencyTest extends TestCase
 {
     use CreatesDomainRecords;
     use ProbesMysqlConcurrency;
     use RefreshDatabase;
+
+    /**
+     * O que difere entre a sonda de contato e a de endereço é SÓ isto — a regra
+     * sob teste é a mesma, e escrevê-la duas vezes já deixou o par divergir
+     * (review de 2026-08-11, Q-4).
+     */
+    private const PROBES = [
+        'contato' => [
+            'connection' => 'primary_contact_gate',
+            'table' => 'client_contacts',
+            'column' => 'name',
+            'email' => 'sonda-contato@lotus.cl',
+            'legal' => 'SONDA-CONTATO',
+            'rotulo' => 'contato',
+            'model' => ClientContact::class,
+            'action' => UpdateClientContactAction::class,
+            'data' => ClientContactData::class,
+        ],
+        'endereco' => [
+            'connection' => 'primary_address_gate',
+            'table' => 'client_addresses',
+            'column' => 'line1',
+            'email' => 'sonda-endereco@lotus.cl',
+            'legal' => 'SONDA-ENDERECO',
+            'rotulo' => 'endereço',
+            'model' => ClientAddress::class,
+            'action' => UpdateClientAddressAction::class,
+            'data' => ClientAddressData::class,
+        ],
+        'exclusao' => [
+            'connection' => 'delete_contact_gate',
+            'table' => 'client_contacts',
+            'column' => 'name',
+            'email' => 'sonda-exclusao@lotus.cl',
+            'legal' => 'SONDA-EXCLUSAO',
+        ],
+        'arquivamento' => [
+            'connection' => 'archive_client_gate',
+            'table' => 'client_contacts',
+            'column' => 'name',
+            'email' => 'sonda-arquivamento@lotus.cl',
+            'legal' => 'SONDA-ARQUIVAMENTO',
+        ],
+    ];
 
     public function test_rebaixamento_de_contato_roda_dentro_de_transacao(): void
     {
@@ -96,34 +145,140 @@ class PrimaryConcurrencyTest extends TestCase
 
     public function test_promocoes_concorrentes_de_contato_deixam_um_unico_principal_no_mysql(): void
     {
+        $this->assertPromocoesConcorrentesDeixamUmUnicoPrincipal(self::PROBES['contato']);
+    }
+
+    public function test_promocoes_concorrentes_de_endereco_deixam_um_unico_principal_no_mysql(): void
+    {
+        $this->assertPromocoesConcorrentesDeixamUmUnicoPrincipal(self::PROBES['endereco']);
+    }
+
+    /**
+     * A `DeleteClientContactAction` era a única escritora que ia direto na
+     * coleção sem pedir o mutex — ordem invertida em relação às outras cinco,
+     * ciclo de lock possível, `SQLSTATE[40001] ... 1213` virando 500
+     * (review de 2026-08-11, Q-2).
+     *
+     * Sem o `Client::lockForWrite()` na Action, o filho não pede nada em
+     * `clients`, termina antes do commit do gate e a sonda reprova com
+     * "processo terminou antes do commit do gate".
+     */
+    public function test_exclusao_de_contato_espera_pelo_mutex_do_cliente_no_mysql(): void
+    {
         $this->skipUnlessMysql();
 
-        $gate = $this->mysqlGateConnection('primary_contact_gate');
+        $probe = self::PROBES['exclusao'];
+        $gate = $this->mysqlGateConnection($probe['connection']);
         $processes = [];
 
         try {
-            [$clientId, $ids] = $this->seedContactProbe($gate);
+            [$clientId, $ids] = $this->seedProbe($gate, $probe);
+            $processes = [$this->childProcess(<<<'PHP'
+$contact = App\Domains\Commercial\Models\ClientContact::findOrFail((int) $argv[2]);
+$app->make(App\Domains\Commercial\Actions\DeleteClientContactAction::class)->execute($contact);
+fwrite(STDOUT, "DONE\n");
+PHP, [(string) $ids['C']])];
+
+            $this->runBlockedOnClientMutex($gate, $clientId, $processes[0]);
+
+            $vivos = $gate->table('client_contacts')
+                ->where('client_id', $clientId)
+                ->whereNull('deleted_at')
+                ->orderBy('id')
+                ->pluck('name')
+                ->all();
+
+            $this->assertSame(['SONDA-A', 'SONDA-B'], $vivos, 'a exclusão não apagou exatamente o contato alvo');
+        } finally {
+            $this->tearDownProbe($gate, $processes, $probe['connection'], fn () => $this->cleanProbe($gate, $probe));
+        }
+    }
+
+    /**
+     * O arquivamento do cliente enumera-e-apaga a coleção no hook `deleting` do
+     * model. Sem a `DeleteClientAction` (transação + mutex), cada `delete()`
+     * autocommitava e um contato criado entre a enumeração e o fim sobrevivia
+     * ATIVO sob cliente arquivado (review de 2026-08-11, Q-2).
+     *
+     * A prova é a mesma da exclusão de contato: o escritor tem de PARAR no
+     * mutex, em `clients`, antes de tocar em qualquer coisa.
+     */
+    public function test_arquivamento_de_cliente_espera_pelo_mutex_no_mysql(): void
+    {
+        $this->skipUnlessMysql();
+
+        $probe = self::PROBES['arquivamento'];
+        $gate = $this->mysqlGateConnection($probe['connection']);
+        $processes = [];
+
+        try {
+            [$clientId] = $this->seedProbe($gate, $probe);
+            $processes = [$this->childProcess(<<<'PHP'
+$client = App\Domains\Commercial\Models\Client::findOrFail((int) $argv[2]);
+$app->make(App\Domains\Commercial\Actions\DeleteClientAction::class)->execute($client);
+fwrite(STDOUT, "DONE\n");
+PHP, [(string) $clientId])];
+
+            $this->runBlockedOnClientMutex($gate, $clientId, $processes[0], function () use ($gate, $clientId): void {
+                // O escritor está parado no mutex. Se a cascata já tivesse
+                // começado, os contatos apareceriam apagados AQUI, na conexão do
+                // gate — sem transação, cada `delete()` do hook autocommita e a
+                // janela do Q-2 está aberta. Com o mutex tomado antes de tudo,
+                // ele ainda não tocou em nada.
+                $this->assertSame(
+                    3,
+                    $gate->table('client_contacts')->where('client_id', $clientId)->whereNull('deleted_at')->count(),
+                    'a cascata começou ANTES do mutex: o hook apagou contatos enquanto o escritor ainda esperava',
+                );
+            });
+
+            $this->assertSame(
+                0,
+                $gate->table('client_contacts')->where('client_id', $clientId)->whereNull('deleted_at')->count(),
+                'contato sobreviveu ativo sob cliente arquivado',
+            );
+            $this->assertSame(
+                0,
+                $gate->table('clients')->where('id', $clientId)->whereNull('deleted_at')->count(),
+                'o cliente não foi arquivado',
+            );
+        } finally {
+            $this->tearDownProbe($gate, $processes, $probe['connection'], fn () => $this->cleanProbe($gate, $probe));
+        }
+    }
+
+    /** @param array<string, string> $probe */
+    private function assertPromocoesConcorrentesDeixamUmUnicoPrincipal(array $probe): void
+    {
+        $this->skipUnlessMysql();
+
+        $gate = $this->mysqlGateConnection($probe['connection']);
+        $processes = [];
+
+        try {
+            [$clientId, $ids] = $this->seedProbe($gate, $probe);
             $processes = [
-                $this->contactProbeProcess($ids['B']),
-                $this->contactProbeProcess($ids['C']),
+                $this->promoteProcess($probe, $ids['B']),
+                $this->promoteProcess($probe, $ids['C']),
             ];
 
             $gate->beginTransaction();
             // O gate segura as duas linhas que os filhos vão promover: P1 entra
             // na região crítica (toma o mutex do cliente) e para no próprio
             // UPDATE; P2, iniciado depois, para ANTES, no mutex que P1 segura.
-            $gate->table('client_contacts')
+            $gate->table($probe['table'])
                 ->whereIn('id', [$ids['B'], $ids['C']])
                 ->lockForUpdate()
                 ->get();
 
             $this->startAndBudget($processes[0], 'primeiro');
-            // P1 bloqueado = mutex do cliente JÁ tomado. Iniciar P2 antes disso
-            // deixaria a ordem dos locks ao acaso, e a sonda deixaria de ser
-            // determinística.
-            $this->waitUntilProcessesAreWaitingForMysqlLock($gate, [$processes[0]], 1);
+            // P1 bloqueado NA COLEÇÃO = ele já passou pelo mutex do cliente e o
+            // está segurando. Iniciar P2 antes disso deixaria a ordem dos locks
+            // ao acaso, e a sonda deixaria de ser determinística.
+            $this->waitUntilProcessesAreWaitingForMysqlLock($gate, [$processes[0]], 1, $probe['table']);
 
             $this->startAndBudget($processes[1], 'segundo');
+            // Sem tabela: P1 espera na coleção e P2 espera em `clients`.
             $waiting = $this->waitUntilProcessesAreWaitingForMysqlLock($gate, $processes, 2);
             $this->assertGreaterThanOrEqual(2, $waiting, 'os dois processos não chegaram a disputar lock nenhum');
 
@@ -135,67 +290,49 @@ class PrimaryConcurrencyTest extends TestCase
                 $this->assertSame(0, $process->wait(), "processo {$index}:\n".$process->getErrorOutput());
             }
 
-            $primaries = $gate->table('client_contacts')
+            $primaries = $gate->table($probe['table'])
                 ->where('client_id', $clientId)
                 ->where('is_primary', true)
                 ->whereNull('deleted_at')
                 ->orderBy('id')
-                ->pluck('name')
+                ->pluck($probe['column'])
                 ->all();
 
             // P2 é o último a entrar na região crítica, porque só entra quando
             // P1 commita e solta o mutex — a ordem é construída, não sorteada.
-            $this->assertSame(['SONDA-C'], $primaries, 'mais de um contato principal sobreviveu à disputa');
+            $this->assertSame(['SONDA-C'], $primaries, "mais de um {$probe['rotulo']} principal sobreviveu à disputa");
         } finally {
-            $this->tearDownProbe($gate, $processes, 'primary_contact_gate', fn () => $this->cleanContactProbe($gate));
+            $this->tearDownProbe($gate, $processes, $probe['connection'], fn () => $this->cleanProbe($gate, $probe));
         }
     }
 
-    public function test_promocoes_concorrentes_de_endereco_deixam_um_unico_principal_no_mysql(): void
-    {
-        $this->skipUnlessMysql();
+    /**
+     * Prova que o escritor PAROU no mutex do cliente antes de tocar em qualquer
+     * outra coisa: o gate segura a linha de `clients` e a sonda exige que a
+     * espera do filho seja em `clients` — não em outra tabela, não em nenhuma.
+     */
+    private function runBlockedOnClientMutex(
+        Connection $gate,
+        int $clientId,
+        Process $process,
+        ?callable $enquantoBloqueado = null,
+    ): void {
+        $gate->beginTransaction();
+        $gate->table('clients')->where('id', $clientId)->lockForUpdate()->first();
 
-        $gate = $this->mysqlGateConnection('primary_address_gate');
-        $processes = [];
+        $this->startAndBudget($process, 'escritor');
+        $this->waitUntilProcessesAreWaitingForMysqlLock($gate, [$process], 1, 'clients');
 
-        try {
-            [$clientId, $ids] = $this->seedAddressProbe($gate);
-            $processes = [
-                $this->addressProbeProcess($ids['B']),
-                $this->addressProbeProcess($ids['C']),
-            ];
-
-            $gate->beginTransaction();
-            $gate->table('client_addresses')
-                ->whereIn('id', [$ids['B'], $ids['C']])
-                ->lockForUpdate()
-                ->get();
-
-            $this->startAndBudget($processes[0], 'primeiro');
-            $this->waitUntilProcessesAreWaitingForMysqlLock($gate, [$processes[0]], 1);
-
-            $this->startAndBudget($processes[1], 'segundo');
-            $waiting = $this->waitUntilProcessesAreWaitingForMysqlLock($gate, $processes, 2);
-            $this->assertGreaterThanOrEqual(2, $waiting, 'os dois processos não chegaram a disputar lock nenhum');
-
-            $gate->commit();
-
-            foreach ($processes as $index => $process) {
-                $this->assertSame(0, $process->wait(), "processo {$index}:\n".$process->getErrorOutput());
-            }
-
-            $primaries = $gate->table('client_addresses')
-                ->where('client_id', $clientId)
-                ->where('is_primary', true)
-                ->whereNull('deleted_at')
-                ->orderBy('id')
-                ->pluck('line1')
-                ->all();
-
-            $this->assertSame(['SONDA-C'], $primaries, 'mais de um endereço principal sobreviveu à disputa');
-        } finally {
-            $this->tearDownProbe($gate, $processes, 'primary_address_gate', fn () => $this->cleanAddressProbe($gate));
+        // Janela para asserir o que o escritor JÁ tinha feito quando parou. É
+        // aqui que se separa "parou no mutex, antes de tudo" de "parou no
+        // próprio UPDATE de `clients`, depois de já ter mexido na coleção".
+        if ($enquantoBloqueado !== null) {
+            $enquantoBloqueado();
         }
+
+        $gate->commit();
+
+        $this->assertSame(0, $process->wait(), $process->getErrorOutput());
     }
 
     private function startAndBudget(Process $process, string $rotulo): void
@@ -203,7 +340,7 @@ class PrimaryConcurrencyTest extends TestCase
         $process->start();
 
         $this->assertTrue(
-            $process->waitUntil(fn (string $type, string $output): bool => str_contains($output, "READY\n")),
+            $process->waitUntil(fn (): bool => preg_match($this->mysqlReadyPattern(), $process->getOutput()) === 1),
             "{$rotulo} processo não bootou:\n"
             ."stdout:\n{$process->getOutput()}\n"
             ."stderr:\n{$process->getErrorOutput()}",
@@ -236,38 +373,19 @@ class PrimaryConcurrencyTest extends TestCase
      * A fixture nasce pela conexão do GATE, não por factory: o que a transação
      * do `RefreshDatabase` cria, os processos filhos não enxergam.
      *
+     * @param  array<string, string>  $probe
      * @return array{0: int, 1: array<string, int>}
      */
-    private function seedContactProbe(Connection $gate): array
+    private function seedProbe(Connection $gate, array $probe): array
     {
-        $this->cleanContactProbe($gate);
-        $clientId = $this->insertProbeClient($gate, 'SONDA-CONTATO', 'sonda-contato@lotus.cl');
+        $this->cleanProbe($gate, $probe);
+        $clientId = $this->insertProbeClient($gate, $probe['legal'], $probe['email']);
         $ids = [];
 
         foreach ([['A', 1], ['B', 0], ['C', 0]] as [$sufixo, $primary]) {
-            $ids[$sufixo] = $gate->table('client_contacts')->insertGetId([
+            $ids[$sufixo] = $gate->table($probe['table'])->insertGetId([
                 'client_id' => $clientId,
-                'name' => "SONDA-{$sufixo}",
-                'is_primary' => $primary,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return [$clientId, $ids];
-    }
-
-    /** @return array{0: int, 1: array<string, int>} */
-    private function seedAddressProbe(Connection $gate): array
-    {
-        $this->cleanAddressProbe($gate);
-        $clientId = $this->insertProbeClient($gate, 'SONDA-ENDERECO', 'sonda-endereco@lotus.cl');
-        $ids = [];
-
-        foreach ([['A', 1], ['B', 0], ['C', 0]] as [$sufixo, $primary]) {
-            $ids[$sufixo] = $gate->table('client_addresses')->insertGetId([
-                'client_id' => $clientId,
-                'line1' => "SONDA-{$sufixo}",
+                $probe['column'] => "SONDA-{$sufixo}",
                 'is_primary' => $primary,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -299,57 +417,34 @@ class PrimaryConcurrencyTest extends TestCase
         ]);
     }
 
-    private function cleanContactProbe(Connection $gate): void
+    /** @param  array<string, string>  $probe */
+    private function cleanProbe(Connection $gate, array $probe): void
     {
-        $gate->table('users')->where('email', 'sonda-contato@lotus.cl')->delete();
+        $gate->table('users')->where('email', $probe['email'])->delete();
     }
 
-    private function cleanAddressProbe(Connection $gate): void
+    /**
+     * Promove o item a principal pela Action nested da própria entidade. Classes
+     * e coluna chegam por `$argv` em vez de interpolação: o script é nowdoc, o
+     * mesmo texto para contato e endereço.
+     *
+     * @param  array<string, string>  $probe
+     */
+    private function promoteProcess(array $probe, int $id): Process
     {
-        $gate->table('users')->where('email', 'sonda-endereco@lotus.cl')->delete();
-    }
-
-    private function contactProbeProcess(int $contactId): Process
-    {
-        $script = <<<'PHP'
-require $argv[1].'/vendor/autoload.php';
-$app = require $argv[1].'/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-Illuminate\Support\Facades\DB::purge();
-Illuminate\Support\Facades\DB::connection()->getPdo();
-Illuminate\Support\Facades\DB::statement('SET SESSION innodb_lock_wait_timeout = 90');
-fwrite(STDOUT, "READY\n");
-fflush(STDOUT);
-$contact = App\Domains\Commercial\Models\ClientContact::findOrFail((int) $argv[2]);
-$app->make(App\Domains\Commercial\Actions\UpdateClientContactAction::class)->execute(
-    $contact,
-    App\Domains\Commercial\Data\ClientContactData::from(['name' => $contact->name, 'is_primary' => true]),
+        return $this->childProcess(<<<'PHP'
+$item = $argv[3]::findOrFail((int) $argv[2]);
+$app->make($argv[4])->execute(
+    $item,
+    $argv[5]::from([$argv[6] => $item->{$argv[6]}, 'is_primary' => true]),
 );
 fwrite(STDOUT, "DONE\n");
-PHP;
-
-        return $this->mysqlChildProcess($script, [(string) $contactId]);
+PHP, [(string) $id, $probe['model'], $probe['action'], $probe['data'], $probe['column']]);
     }
 
-    private function addressProbeProcess(int $addressId): Process
+    /** @param  array<int, string>  $args */
+    private function childProcess(string $regiaoCritica, array $args): Process
     {
-        $script = <<<'PHP'
-require $argv[1].'/vendor/autoload.php';
-$app = require $argv[1].'/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-Illuminate\Support\Facades\DB::purge();
-Illuminate\Support\Facades\DB::connection()->getPdo();
-Illuminate\Support\Facades\DB::statement('SET SESSION innodb_lock_wait_timeout = 90');
-fwrite(STDOUT, "READY\n");
-fflush(STDOUT);
-$address = App\Domains\Commercial\Models\ClientAddress::findOrFail((int) $argv[2]);
-$app->make(App\Domains\Commercial\Actions\UpdateClientAddressAction::class)->execute(
-    $address,
-    App\Domains\Commercial\Data\ClientAddressData::from(['line1' => $address->line1, 'is_primary' => true]),
-);
-fwrite(STDOUT, "DONE\n");
-PHP;
-
-        return $this->mysqlChildProcess($script, [(string) $addressId]);
+        return $this->mysqlChildProcess($this->mysqlChildPreamble().$regiaoCritica, $args);
     }
 }

@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: integridade-e-concorrencia-backend
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: run_fechar_sprint
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
 active_plan: docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: 'Q-1 a Q-6, todos (Joao, 2026-08-11). Corrigidos e reprovados contra o codigo antigo um a um; suite 538 passed / 5 skipped e as sondas MySQL (9 casos) verdes.'
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: 09a11d9
-updated_at: 2026-08-11T14:12:00-03:00
+updated_at: 2026-08-11T20:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -246,6 +246,101 @@ da spec, recusa registrada). E a suíte em sqlite segue sem enxergar lock nenhum
 `SQLiteGrammar::compileLock()` é no-op, então tudo que prova o lock do item 1 é MySQL-only.
 
 **Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-11: ALTO risco, duas lentes, 6 achados
+
+**ALTO RISCO pelo gate da skill, e a classificação divergiu da spec de propósito.** A §8 da spec
+declarou MÉDIO na escala dela, afirmando "sem RBAC em produção". O `/revisar-sprint` é binário e
+**três** gatilhos de ALTO se aplicam: o bloco toca RBAC (`UserData::fromModel` projetando
+`getRoleNames()`, as duas Role Actions, o `SuperadminGuard`), toca auth/identidade
+(`UpdateStaffUserAction`) e toca caminho de escrita auditado (as cinco Actions de Commercial). Duas
+lentes, portanto: Claude mais revisão independente do Codex.
+
+**Gate reproduzido, não herdado do relatório de execução:** backend em sqlite **3 skipped, 532
+passed (1983 assertions)** — bate com o registro da execução.
+
+**Órfãos: zero.** `ProbesMysqlConcurrency` tem os dois consumidores previstos (`CertificateNumberTest`,
+`PrimaryConcurrencyTest`); `Client::lockForWrite()` tem os cinco chamadores que a spec nomeia, e a
+sexta Action (`CreateClientAction`) carrega a razão escrita de não tomar o mutex; nenhuma sonda
+`SONDA-*` sobreviveu no diff de `backend/app/`.
+
+**A extração do harness não afrouxou nada.** Conferido linha a linha contra `09a11d9`: o
+`CertificateNumberTest` passa `count($processes)` e `'certificate_sequences'`, que reproduz o
+`WHERE ... OBJECT_NAME = 'certificate_sequences'` e o `>= count($processes)` da versão anterior. O
+`assertGreaterThanOrEqual(2, $waitingCount)` continua no arquivo.
+
+**Uma medição que NÃO virou achado, porque o código está certo.** O `lockForUpdate()` de
+`ensureSingle` **não escala para linhas de outros clientes** — era o risco real de o item 1
+serializar o sistema inteiro: sem índice, `SELECT ... WHERE client_id = ? AND is_primary = 1 FOR
+UPDATE` em InnoDB trava tudo que varre. Conferido no schema de `lotus_test`:
+`client_contacts_client_id_foreign` e `client_addresses_client_id_foreign` existem, então o lock fica
+na faixa do cliente.
+
+**A lente do Codex rodou em análise estática apenas** — o sandbox negou acesso ao Docker, então ele
+não executou suíte nenhuma. As duas lentes convergiram no Q-1 e no Q-5. O Codex achou sozinho o Q-2 e
+o Q-6; o Claude achou sozinho o Q-3 e o Q-4. Nenhum achado do Codex foi aceito sem conferência
+própria no código, e **duas sub-afirmações dele foram recusadas** (registradas abaixo do Q-5).
+
+**Uma conclusão da lente Claude estava errada e é corrigida aqui, não apagada.** A primeira passagem
+descartou `DeleteClientContactAction` como fonte de deadlock com o argumento de que ela nunca pede
+lock em `clients`, logo não fecha ciclo. O argumento ignora que o `lockForUpdate` dela adquire as
+linhas de `client_contacts` **incrementalmente durante a varredura**: ela pode segurar parte da
+coleção e bloquear no meio, numa linha que a outra transação já travou. Aí o ciclo existe. O Codex
+apontou, a releitura confirmou, e o achado entrou como Q-2. A leitura sobre `ClientController::destroy`
+continua válida no que ela afirmava (sem transação explícita, cada statement autocommita), mas isso
+não a inocenta — ver a segunda ocorrência do Q-2.
+
+**Os seis achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — o guard de lock-out de superadmin continua **check-then-act fora da
+   transação** (`UpdateStaffUserAction:30-32`, e `UserController:62` sem transação nenhuma), no mesmo
+   commit que moveu a unicidade para dentro pela razão oposta.
+2. **Q-2 🔴** *(Codex, verificado)* — **o mutex tem dois escritores que o ignoram**, e os dois estão
+   fora da lista de cinco Actions que o bloco tocou. `DeleteClientContactAction:32` trava a coleção
+   sem tomar o mutex antes: ordem invertida contra as Actions novas, com ciclo real por aquisição
+   incremental de lock, e o perdedor sai em `SQLSTATE[40001] ... 1213` (500). É **regressão do
+   bloco** — antes dele ninguém travava `clients`, então a inversão não existia. E o hook
+   `Client::booted deleting:40-47`, chamado por `ClientController::destroy:52` sem transação nem
+   mutex, enumera os filhos e apaga um a um: um `CreateClientContactAction` concorrente insere depois
+   da enumeração e o contato fica **ativo sob cliente arquivado**.
+3. **Q-3 🟡** *(Claude)* — a D-P7 do plano afirma que `RedatorDocumentRollbackTest` prova o descarte do
+   binário no caminho novo; o teste só injeta `RuntimeException` no segundo insert de `files`, depois
+   do check de RUT. O caminho que o bloco criou não tem caso.
+4. **Q-4 🟡** *(Claude)* — `PrimaryContactService` e `PrimaryAddressService` são idênticos byte a byte
+   depois de normalizar o nome da entidade, e o bloco acrescentou as **mesmas** dez linhas aos dois.
+5. **Q-5 🟢** *(Claude + Codex)* — `Client::lockForWrite()` devolve `void` e descarta o `->first()`: o
+   mutex é no-op indetectável quando o id não casa, além do no-op já documentado em sqlite.
+   **Duas sub-afirmações do Codex recusadas:** `null` produzindo `TypeError` é inalcançável pelos
+   quatro sítios de chamada — `client_id` é `foreignId()->constrained()`, NOT NULL; e o `withTrashed()`
+   aceitando cliente arquivado é a intenção escrita no docblock, não defeito do mutex.
+6. **Q-6 🟢** *(Codex, verificado)* — `ProbesMysqlConcurrency:104`: com `$table === null` o `WHERE` fica
+   só em `OBJECT_SCHEMA`, contando **qualquer** transação em espera no schema, sem correlação com os
+   processos filhos. As duas chamadas de `PrimaryConcurrencyTest` passam `null`, inclusive a de
+   `$minimum = 1` que existe para garantir que P1 já tomou o mutex antes de P2 subir.
+
+**Decisão do João (2026-08-11): os seis entram.** Corrigidos na mesma sessão do review.
+
+**Como cada correção foi provada — cada teste novo foi visto REPROVAR contra o código antigo,**
+um a um, revertendo só a linha que ele guarda:
+
+| Achado | Correção | Prova de que o teste discrimina |
+|---|---|---|
+| Q-1 | guard passa para dentro da `DB::transaction` da `UpdateStaffUserAction` e ganha `DeleteStaffUserAction`; `SuperadminGuard` troca `where('id','!=')->exists()` por `pluck` **travado do conjunto inteiro** — excluir o alvo do `FOR UPDATE` quebrava o mutex (T1 trava {B}, T2 trava {A}, sem conflito) | com o guard de volta para fora: `Failed asserting that 1 is identical to 2` no nível de transação |
+| Q-2 | `Client::lockForWrite()` na `DeleteClientContactAction`; `ClientController::destroy` passa por uma `DeleteClientAction` nova (transação + mutex) | sem o mutex no delete de contato, o filho **termina antes do commit do gate**; com `$client->delete()` cru, a sonda mede **0 contatos vivos** enquanto o escritor ainda espera — a cascata já tinha autocommitado, que é exatamente a janela do achado |
+| Q-3 | caso novo cobrindo a `ValidationException` de RUT duplicado no update do redator | trocando `catch (Throwable)` por `catch (RuntimeException)`: "objeto órfão ficou no bucket", com os outros três casos verdes |
+| Q-4 | regra única em `PrimaryCollectionService`; os dois services viram três linhas cada; `PrimaryConcurrencyTest` perde os três pares de helper e as duas cópias do caso MySQL | sem teste próprio — é estrutura, e a prova é a suíte inteira seguir verde com **uma** implementação |
+| Q-5 | `lockForWrite()` devolve o cliente travado, com `firstOrFail()`, e recusa cliente arquivado | com `first()`/`void` de volta: três casos do `ClientArchiveIntegrityTest` reprovam |
+| Q-6 | a sonda correlaciona por `PROCESSLIST_ID`, lido do `CONNECTION_ID()` que o filho imprime no handshake `READY` | **medido**: com uma sessão `mysql` CLI alheia bloqueada em `lotus_test`, a consulta antiga devolveu `1` e a correlacionada devolveu `0` |
+
+**Gate depois das correções:** sqlite **538 passed, 5 skipped (1999 assertions)**; MySQL real, os nove
+casos de sonda verdes (`PrimaryConcurrencyTest` com seis, `CertificateNumberTest` com três). Pint
+limpo nos arquivos tocados. Nenhum DTO mudou — `typescript:transform` não era necessário.
+
+**Uma consequência do Q-2 que exigiu fechar a outra ponta:** o mutex torna o arquivamento atômico,
+mas sozinho não impede o filho de nascer sob pai já arquivado — a requisição concorrente resolveu um
+cliente VIVO no binding de rota e só descobre o arquivamento depois. Por isso `lockForWrite()` recusa
+cliente arquivado: é uma decisão só, no único ponto por onde todos os escritores passam, em vez das
+quatro linhas repetidas em seis Actions que o Q-4 acabara de punir.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 

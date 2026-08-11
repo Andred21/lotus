@@ -3,10 +3,10 @@
 namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\CreateStaffUserAction;
+use App\Domains\Identity\Actions\DeleteStaffUserAction;
 use App\Domains\Identity\Actions\UpdateStaffUserAction;
 use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
-use App\Domains\Identity\Services\SuperadminGuard;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -55,12 +55,11 @@ class UserController extends Controller implements HasMiddleware
         return UserData::fromModel($action->execute($user, $data));
     }
 
-    public function destroy(User $user, SuperadminGuard $guard): Response
+    public function destroy(User $user, DeleteStaffUserAction $action): Response
     {
         abort_unless($user->type === 'admin', 404);
 
-        $guard->assertNotLastActiveSuperadmin($user);
-        $user->delete();
+        $action->execute($user);
 
         return response()->noContent();
     }

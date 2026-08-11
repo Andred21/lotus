@@ -76,7 +76,7 @@ class CertificateNumberTest extends TestCase
                     ."stderr:\n{$process->getErrorOutput()}",
                 );
 
-                $this->assertStringContainsString("READY\n", $process->getOutput());
+                $this->assertMatchesRegularExpression($this->mysqlReadyPattern(), $process->getOutput());
                 // Depois do bootstrap e da conexão, o lock ganha orçamento
                 // próprio. Idle timeout ainda detecta processo pendurado.
                 $process->setTimeout(null);
@@ -127,15 +127,7 @@ class CertificateNumberTest extends TestCase
 
     private function certificateNumberProcess(int $year): Process
     {
-        $script = <<<'PHP'
-require $argv[1].'/vendor/autoload.php';
-$app = require $argv[1].'/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-Illuminate\Support\Facades\DB::purge();
-Illuminate\Support\Facades\DB::connection()->getPdo();
-Illuminate\Support\Facades\DB::statement('SET SESSION innodb_lock_wait_timeout = 90');
-fwrite(STDOUT, "READY\n");
-fflush(STDOUT);
+        $script = $this->mysqlChildPreamble().<<<'PHP'
 fwrite(STDOUT, "ENTERING_NEXT\n");
 fflush(STDOUT);
 fwrite(STDOUT, $app->make(App\Domains\Certification\Services\CertificateNumberService::class)->next((int) $argv[2])."\n");
