@@ -26,9 +26,14 @@ class UpdateClientAction
 
     public function execute(Client $client, ClientData $data): Client
     {
-        $rut = $this->users->ensureRutAvailable($data->rut, $client->user_id);
+        return DB::transaction(function () use ($client, $data) {
+            // Mutex ANTES de qualquer escrita: depois inverteria a ordem dos
+            // locks e produziria deadlock (ver Client::lockForWrite).
+            Client::lockForWrite($client->id);
 
-        return DB::transaction(function () use ($client, $data, $rut) {
+            // Unicidade DENTRO da transação que escreve.
+            $rut = $this->users->ensureRutAvailable($data->rut, $client->user_id);
+
             $client->user->update([
                 'name' => $data->name,
                 'rut' => $rut,

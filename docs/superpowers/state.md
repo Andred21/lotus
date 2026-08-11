@@ -11,9 +11,9 @@ active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
-last_completed_work_item: guardas-que-faltam
-state_basis_commit: eec8075
-updated_at: 2026-08-11T11:05:00-03:00
+last_completed_work_item: integridade-e-concorrencia-backend
+state_basis_commit: e2a251c
+updated_at: 2026-08-11T17:58:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,365 @@ updated_at: 2026-08-11T11:05:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
+## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
+
+### Seleção — 2026-08-11
+
+**BD-2 do `backlog.md`, promovido explicitamente pelo João.** Ele abriu a sessão com
+`/planejar-bloco ### BD-2 · Integridade e concorrência no backend`; o gate do comando **reprovou**
+pelo mesmo motivo do BD-1 na véspera — estado `idle`, `active_work_item` `null` e argumento que é
+título de seção, não slug promovido. A promoção veio da resposta dele ao gate, com uma escolha
+registrada: **manter os quatro itens do BD-2 na íntegra**, contra o recorte alternativo que teria
+deixado só os itens 1 e 2 (concorrência) e devolvido a dedução do `getRoleNames()` e os quatro
+testes ao backlog.
+
+**Nada precisou ser commitado antes de promover** — ao contrário do BD-1, cuja proposta nasceu no
+mesmo dia. O BD-2 já era durável em `ec3ad2a` e a árvore estava limpa em `09a11d9`, o merge do
+PR #38, que passa a ser o `state_basis_commit`.
+
+**BD-2 não é o item 1 de `## Próximos blocos`** — ali segue `Arquivados e restauração de
+soft-delete`, intocado desde o BD-1. A fila **não** foi renumerada: os BDs vivem na seção de dívida,
+paralela a `Próximos blocos`, e a ordem escrita entre eles (BD-2 → BD-7) está sendo seguida.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `guardas-que-faltam`, `turma-habilitacao-listagem`, `profundidade-backend-b4-b7` e
+`documentos-oficiais-template-e-docx`): nenhum dos quatro itens cita Drive, Notion ou Figma. As
+fontes são o próprio repositório e documentos versionados — `Q-16` em `backlog.md:302`, os débitos
+"Bloco 5.2a/5.2b (minors do review final)" em `backlog.md:356` e `:360`, e as specs arquivadas
+`specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` e
+`specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md`. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** Nenhum outro `active_work_item` de backend está
+aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
+`hardening/integridade-e-concorrencia-backend`, criada de `09a11d9`, no padrão de
+`hardening/guardas-que-faltam`.
+
+**Escopo, na ordem escrita do BD-2:** (1) `lockForUpdate()` no `Client` — não só na coleção — antes
+do `ensureSingle()`, nos **dois** serviços (`PrimaryContactService`, `PrimaryAddressService`) no
+mesmo commit; (2) unicidade de RUT/email do `UpdateStaffUserAction` para **dentro** da
+`DB::transaction`; (3) `UserData::fromModel` chamando `getRoleNames()` duas vezes; (4) os quatro
+testes que faltam — `SuperadminGuard` com outro superadmin **inativo**, auto-colisão de RUT/email no
+próprio update, o 422 de `role: redator` afirmando a **chave** e o error-bag de
+`CreateRoleAction`/`UpdateRoleAction`. **DoD do item 1 é sonda de concorrência real** (dois writes
+competindo), não teste sequencial verde.
+
+**Fora de escopo, declarado pelo próprio item:** a decisão do 5.2b sobre `GET /api/roles` enumerar
+permissão de superadmin — é do João, e está travada em `backlog.md:173`.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **`lockForUpdate()` é no-op silencioso na suíte.** `SQLiteGrammar::compileLock()` devolve `''`
+   (conferido no vendor) — nenhum teste sqlite pode provar serialização. O repo já sabia disso: o
+   `DeleteClientContactAction` (Q-5) escreve exatamente isso no comentário do lock que já carrega.
+2. **O repo já tem sonda de concorrência real, automatizada e versionada.**
+   `CertificateNumberTest:44` pula fora do MySQL, clona a conexão, sobe **dois processos** com
+   `Symfony\Process`, alinha os dois num gate e confirma pelo `performance_schema.data_lock_waits`
+   que ambos esperam pelo mesmo lock antes de commitar. É o `1 skipped` que a suíte reporta há
+   blocos. **Medido neste terreno, não herdado:** contra MySQL real (`lotus_test`), o arquivo dá
+   **3 passed (20 assertions)**, com o caso concorrente em 0,31s.
+3. **Os seis chamadores dos dois serviços de principal já abrem `DB::transaction`**
+   (`Create`/`UpdateClientAction`, `Create`/`UpdateClientContactAction`,
+   `Create`/`UpdateClientAddressAction`) — o lock nasce com efeito, sem tocar Action nenhuma.
+4. **O item 2 tem três sítios, não um.** Além do `UpdateStaffUserAction:34-38` que o débito nomeia,
+   `UpdateClientAction:29` e `UpdateRedatorAction:33` chamam `ensureRutAvailable` antes de abrir a
+   transação. Os irmãos `CreateStaffUserAction`, `UpdateStudentAction` e `CreateStudentAction` já
+   chamam de dentro — a inconsistência é entre Actions irmãs, não um caso isolado.
+5. **O item 3 não economiza query.** `getRoleNames()` faz `loadMissing('roles')` e a segunda chamada
+   lê a relação em cache (conferido no vendor do spatie). É dedução de `pluck`, não de `SELECT`, e a
+   spec diz isso em vez de vender ganho inexistente.
+6. **O banco de dev segue com o `LOT-2026-1001` corrompido de propósito** (`snapshot.aluno.name`
+   vazio, conferido em SQL cru), esperando o checkpoint visual do João. Nenhum passe deste bloco
+   roda `migrate:fresh --seed`.
+
+### Brainstorming e spec — 2026-08-11
+
+O João aprovou o desenho com a instrução literal `Aprovado`. O estado entra em `planning` no mesmo
+commit da spec; `active_plan` segue `null` até a leitura humana do documento e a escrita posterior do
+plano.
+
+**A medição que mudou o desenho, feita antes de escrever:** sonda contra o MySQL de dev
+(`REPEATABLE-READ`) mostrando que, depois de acordar do `lockForUpdate()` no `Client`, o `SELECT`
+comum de `ensureSingle()` **continua lendo o snapshot** — não enxerga o principal que a transação
+concorrente já commitou (`leitura comum: [..., "SONDA-A"]` contra `leitura com lock: [..., "SONDA-A",
+"SONDA-B"]`). O Q-16, ao pé da letra, entregaria mecanismo que promete e não fecha: a transação
+contaria 1 principal, faria o early-return e os dois sobreviveriam. O mutex é necessário e não
+suficiente.
+
+**Três decisões dele, respondidas antes de a spec existir** (D1, D2 e D3 da §2): o lock é **duplo**
+(mutex no `Client` mais leitura travada da coleção); a prova é **teste MySQL-only com o harness
+extraído** para `tests/Support/`, consumido também pelo `CertificateNumberTest` sem mudança de
+comportamento; e o item 2 entra nos **três** sítios medidos, com a conversão de violação de índice
+único em 422 **recusada** e registrada como limitação (a corrida de RUT/email segue subindo 500).
+
+**Efeito declarado no placar:** a suíte em sqlite passa de **1 para 3 skipped** — skip aqui é sinal
+honesto de caso que existe e roda onde o lock existe.
+
+**Risco de review declarado MÉDIO** (§8 da spec): nenhum gatilho de ALTO se aplica (sem schema,
+`generated.ts`, Sanctum, RBAC em produção, dinheiro, documento legal; `executor: claude`). Os dois
+gatilhos próprios são caminho de escrita auditado e concorrência que a suíte anula por construção.
+
+### Aprovação da spec e plano — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. O plano ativo
+(`docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md`) decompõe o bloco em
+**7 tasks (0–6)**: baseline; harness extraído para `tests/Support/`; o lock (item 1) num commit só;
+unicidade dentro da transação nos três sítios (item 2); a dedução do `getRoleNames()` (item 3); os
+quatro testes que faltam (item 4); gate. O handoff fixa **`executor: claude`** — a Task 2 fecha por
+laço de medição contra MySQL com alinhamento de processos, e o modo de falha do desenho é um
+**deadlock**, que aparece como exit code do filho e precisa ser lido como sintoma de ordem de lock,
+não como flakiness a contornar com retry.
+
+**Baseline reconferido, não herdado:** backend **524 passed, 1 skipped (1963 assertions)**; contra
+MySQL real (`lotus_test`), `CertificateNumberTest` **3 passed (20 assertions)**. O plano projeta
+**532 passed / 3 skipped** em sqlite e **7 passed** no recorte de MySQL. O total de assertions é
+declarado como **registrado no gate, não projetado** — casos com laço de espera não têm contagem
+previsível.
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano). Os
+três que mudam decisão da spec:
+
+1. **O mutex sai do `ensureSingle` e vai para as Actions — cinco Actions mudam, não zero** (D-P1). A
+   §3.2 da spec põe as duas peças do lock dentro do serviço e afirma "Nenhuma Action muda". Medido
+   contra MySQL: nessa forma o mutex é tomado **depois** de a Action já ter escrito, o que inverte a
+   ordem dos locks e produz `SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying
+   to get lock` em `select * from clients ... for update`, matando um dos processos (exit 255) — em
+   produção, 500 para o perdedor. Com o mutex antes de qualquer escrita: 2 processos esperando, os
+   dois com exit 0, exatamente 1 principal. `CreateClientAction` fica de fora com a razão escrita no
+   código — o cliente nasce ali, não há concorrente disputando um id ainda não gerado.
+2. **O alinhamento é por `performance_schema`, não por marcador dentro do filho** (D-P3). Os dois
+   candidatos que a §3.3 nomeia não sobrevivem à exigência de o filho exercitar a **Action real**:
+   não há onde emitir marcador entre o mutex e a escrita, porque as duas coisas estão dentro de uma
+   chamada só. A saída medida: iniciar P1, esperar até ele estar **bloqueado** (o que só acontece
+   depois de ele ter tomado o mutex) e só então iniciar P2. Daí o harness ganhar mínimo explícito e
+   filtro de tabela opcional (D-P2) — P1 espera em `client_contacts` e P2 espera em `clients`.
+3. **O teste de `role: redator` prova a porta abrindo as outras, não afirmando a chave** (D-P9). A
+   §6 diz que ele "afirma a chave `role`"; medido no código, as três regras de `role` (`required`,
+   `exists:roles,name`, `Rule::notIn`) reprovam com a **mesma chave** e a **mesma mensagem** do
+   Laravel. Afirmar a chave não discrimina porta nenhuma — seria o defeito que o item 4 existe para
+   corrigir, reintroduzido dentro da correção. O que discrimina é asserir que a role `redator`
+   **existe** em `roles`, o que fecha a porta do `exists` e deixa só o `notIn` podendo recusar.
+
+**Nenhuma guarda extra nasce para a ordem dos locks, e a razão é medida** (D-P4): a própria sonda já
+reprova nas duas formas de quebrar o mecanismo — apagar o mutex deixa dois principais (a asserção
+final reprova) e movê-lo para depois da escrita mata o filho por deadlock (a asserção de exit code
+reprova). Varredura de código que tentasse provar a ordem seria promessa que a varredura não
+entrega, que é o risco central da §8.
+
+A auto-revisão do plano contra a spec ainda achou dois erros no próprio rascunho e os corrigiu antes
+de gravar: o Pint do gate alimentado por substituição de comando (lista vazia vira Pint sem
+argumento, que reformata o repositório inteiro) e a conferência do banco de dev lendo
+`certificates.number`, coluna que não existe — o nome real é `codigo`, conferido no schema.
+
+**Risco de review continua MÉDIO.** O foco é um só: a sonda realmente disputa, o vermelho foi visto
+sem o lock, e o harness extraído não afrouxou o caso do certificado. O review não roda
+automaticamente ao fim da Task 6.
+
+### Execução — 2026-08-11
+
+O João autorizou com `/executar-bloco integridade-e-concorrencia-backend`. Thread principal, main
+tree, sem worktree (P-03), do base `44db6ca`. Sete tasks (0–6), commit por task, revisão de task
+após cada commit delegável.
+
+Commits, na ordem do plano: `542e3cc` (Task 1, harness extraído para `tests/Support/`), `1c27647`
+(Task 2, o lock — Q-16), `2cf0250` (Task 3, unicidade dentro da transação nos três sítios),
+`2f0d756` (Task 4, `getRoleNames()` uma vez), `15f9fff` (Task 5, os quatro testes que faltam).
+Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Vermelho visto antes de cada correção, texto exato:**
+- Task 2 — sondas MySQL de `PrimaryConcurrencyTest`: `2 failed, 2 passed`, o array final
+  `['SONDA-B','SONDA-C']` contra o esperado `['SONDA-C']` — dois principais sobreviveram.
+- Task 3 — os três casos de `UniquenessInsideTransactionTest`: `3 failed`, `a unicidade de rut foi
+  checada FORA da transação que escreve`, `Failed asserting that 1 is identical to 2`.
+- Task 5 — quatro mutantes, quatro vermelhos: superadmin inativo, `esperava ValidationException: o
+  outro superadmin está inativo`; auto-colisão de RUT, `ValidationException: Este RUT já está
+  cadastrado.`; porta `redator`, `esperava ValidationException`; as duas Role Actions, `4 failed`,
+  `Failed asserting that an array has the key 'name'`/`'permissions'`.
+
+**Um desvio de execução, não de plano.** O implementador da Task 3 (subagent) morreu no meio do
+trabalho — a sessão anterior encerrou antes de ele rodar a verificação final e commitar. O
+controller recuperou o working tree (edições já feitas, sem commit), conferiu que batia byte a
+byte com o brief, e reproduziu o vermelho por conta própria via `git stash` das três Actions antes
+de aceitar o fix — não herdou a prova de ninguém. A Task 4 teve uma imprecisão do texto do plano: o
+Step 2 projetava `11 passed` para `StaffUserActionTest`, e o real, estável antes e depois da
+edição, é `10 passed (17 assertions)` — a task não toca arquivo de teste, então a contagem do plano
+estava simplesmente errada, não o código.
+
+**Gate reproduzido, Steps 1 e 2:** backend em sqlite `3 skipped, 532 passed (1983 assertions)`;
+contra MySQL real, filtro `CertificateNumberTest|PrimaryConcurrencyTest`, `7 passed (40
+assertions)`. Pint `passed` nos 20 arquivos fechados do bloco (conferidos contra `git diff
+--name-only main...HEAD -- '*.php'`, mesma lista). `typescript:transform` sem diff em
+`generated.ts`; `git diff main...HEAD` de `backend/database/` e `frontend/` vazio. Nenhuma sonda
+sobrevivente (`git status --porcelain` vazio, nenhum `SONDA`/`dd(`/`dump(` no diff de
+`backend/app/`). Banco de dev intocado: `LOT-2026-1001` segue corrompido.
+
+**O que o gate NÃO provou, sem maquiagem:** a corrida de unicidade de RUT/e-mail continua aberta —
+duas escritas concorrentes com o mesmo valor ainda colidem no índice único e sobem 500, não 422 (D3
+da spec, recusa registrada). E a suíte em sqlite segue sem enxergar lock nenhum:
+`SQLiteGrammar::compileLock()` é no-op, então tudo que prova o lock do item 1 é MySQL-only.
+
+**Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-11: ALTO risco, duas lentes, 6 achados
+
+**ALTO RISCO pelo gate da skill, e a classificação divergiu da spec de propósito.** A §8 da spec
+declarou MÉDIO na escala dela, afirmando "sem RBAC em produção". O `/revisar-sprint` é binário e
+**três** gatilhos de ALTO se aplicam: o bloco toca RBAC (`UserData::fromModel` projetando
+`getRoleNames()`, as duas Role Actions, o `SuperadminGuard`), toca auth/identidade
+(`UpdateStaffUserAction`) e toca caminho de escrita auditado (as cinco Actions de Commercial). Duas
+lentes, portanto: Claude mais revisão independente do Codex.
+
+**Gate reproduzido, não herdado do relatório de execução:** backend em sqlite **3 skipped, 532
+passed (1983 assertions)** — bate com o registro da execução.
+
+**Órfãos: zero.** `ProbesMysqlConcurrency` tem os dois consumidores previstos (`CertificateNumberTest`,
+`PrimaryConcurrencyTest`); `Client::lockForWrite()` tem os cinco chamadores que a spec nomeia, e a
+sexta Action (`CreateClientAction`) carrega a razão escrita de não tomar o mutex; nenhuma sonda
+`SONDA-*` sobreviveu no diff de `backend/app/`.
+
+**A extração do harness não afrouxou nada.** Conferido linha a linha contra `09a11d9`: o
+`CertificateNumberTest` passa `count($processes)` e `'certificate_sequences'`, que reproduz o
+`WHERE ... OBJECT_NAME = 'certificate_sequences'` e o `>= count($processes)` da versão anterior. O
+`assertGreaterThanOrEqual(2, $waitingCount)` continua no arquivo.
+
+**Uma medição que NÃO virou achado, porque o código está certo.** O `lockForUpdate()` de
+`ensureSingle` **não escala para linhas de outros clientes** — era o risco real de o item 1
+serializar o sistema inteiro: sem índice, `SELECT ... WHERE client_id = ? AND is_primary = 1 FOR
+UPDATE` em InnoDB trava tudo que varre. Conferido no schema de `lotus_test`:
+`client_contacts_client_id_foreign` e `client_addresses_client_id_foreign` existem, então o lock fica
+na faixa do cliente.
+
+**A lente do Codex rodou em análise estática apenas** — o sandbox negou acesso ao Docker, então ele
+não executou suíte nenhuma. As duas lentes convergiram no Q-1 e no Q-5. O Codex achou sozinho o Q-2 e
+o Q-6; o Claude achou sozinho o Q-3 e o Q-4. Nenhum achado do Codex foi aceito sem conferência
+própria no código, e **duas sub-afirmações dele foram recusadas** (registradas abaixo do Q-5).
+
+**Uma conclusão da lente Claude estava errada e é corrigida aqui, não apagada.** A primeira passagem
+descartou `DeleteClientContactAction` como fonte de deadlock com o argumento de que ela nunca pede
+lock em `clients`, logo não fecha ciclo. O argumento ignora que o `lockForUpdate` dela adquire as
+linhas de `client_contacts` **incrementalmente durante a varredura**: ela pode segurar parte da
+coleção e bloquear no meio, numa linha que a outra transação já travou. Aí o ciclo existe. O Codex
+apontou, a releitura confirmou, e o achado entrou como Q-2. A leitura sobre `ClientController::destroy`
+continua válida no que ela afirmava (sem transação explícita, cada statement autocommita), mas isso
+não a inocenta — ver a segunda ocorrência do Q-2.
+
+**Os seis achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — o guard de lock-out de superadmin continua **check-then-act fora da
+   transação** (`UpdateStaffUserAction:30-32`, e `UserController:62` sem transação nenhuma), no mesmo
+   commit que moveu a unicidade para dentro pela razão oposta.
+2. **Q-2 🔴** *(Codex, verificado)* — **o mutex tem dois escritores que o ignoram**, e os dois estão
+   fora da lista de cinco Actions que o bloco tocou. `DeleteClientContactAction:32` trava a coleção
+   sem tomar o mutex antes: ordem invertida contra as Actions novas, com ciclo real por aquisição
+   incremental de lock, e o perdedor sai em `SQLSTATE[40001] ... 1213` (500). É **regressão do
+   bloco** — antes dele ninguém travava `clients`, então a inversão não existia. E o hook
+   `Client::booted deleting:40-47`, chamado por `ClientController::destroy:52` sem transação nem
+   mutex, enumera os filhos e apaga um a um: um `CreateClientContactAction` concorrente insere depois
+   da enumeração e o contato fica **ativo sob cliente arquivado**.
+3. **Q-3 🟡** *(Claude)* — a D-P7 do plano afirma que `RedatorDocumentRollbackTest` prova o descarte do
+   binário no caminho novo; o teste só injeta `RuntimeException` no segundo insert de `files`, depois
+   do check de RUT. O caminho que o bloco criou não tem caso.
+4. **Q-4 🟡** *(Claude)* — `PrimaryContactService` e `PrimaryAddressService` são idênticos byte a byte
+   depois de normalizar o nome da entidade, e o bloco acrescentou as **mesmas** dez linhas aos dois.
+5. **Q-5 🟢** *(Claude + Codex)* — `Client::lockForWrite()` devolve `void` e descarta o `->first()`: o
+   mutex é no-op indetectável quando o id não casa, além do no-op já documentado em sqlite.
+   **Duas sub-afirmações do Codex recusadas:** `null` produzindo `TypeError` é inalcançável pelos
+   quatro sítios de chamada — `client_id` é `foreignId()->constrained()`, NOT NULL; e o `withTrashed()`
+   aceitando cliente arquivado é a intenção escrita no docblock, não defeito do mutex.
+6. **Q-6 🟢** *(Codex, verificado)* — `ProbesMysqlConcurrency:104`: com `$table === null` o `WHERE` fica
+   só em `OBJECT_SCHEMA`, contando **qualquer** transação em espera no schema, sem correlação com os
+   processos filhos. As duas chamadas de `PrimaryConcurrencyTest` passam `null`, inclusive a de
+   `$minimum = 1` que existe para garantir que P1 já tomou o mutex antes de P2 subir.
+
+**Decisão do João (2026-08-11): os seis entram.** Corrigidos na mesma sessão do review.
+
+**Como cada correção foi provada — cada teste novo foi visto REPROVAR contra o código antigo,**
+um a um, revertendo só a linha que ele guarda:
+
+| Achado | Correção | Prova de que o teste discrimina |
+|---|---|---|
+| Q-1 | guard passa para dentro da `DB::transaction` da `UpdateStaffUserAction` e ganha `DeleteStaffUserAction`; `SuperadminGuard` troca `where('id','!=')->exists()` por `pluck` **travado do conjunto inteiro** — excluir o alvo do `FOR UPDATE` quebrava o mutex (T1 trava {B}, T2 trava {A}, sem conflito) | com o guard de volta para fora: `Failed asserting that 1 is identical to 2` no nível de transação |
+| Q-2 | `Client::lockForWrite()` na `DeleteClientContactAction`; `ClientController::destroy` passa por uma `DeleteClientAction` nova (transação + mutex) | sem o mutex no delete de contato, o filho **termina antes do commit do gate**; com `$client->delete()` cru, a sonda mede **0 contatos vivos** enquanto o escritor ainda espera — a cascata já tinha autocommitado, que é exatamente a janela do achado |
+| Q-3 | caso novo cobrindo a `ValidationException` de RUT duplicado no update do redator | trocando `catch (Throwable)` por `catch (RuntimeException)`: "objeto órfão ficou no bucket", com os outros três casos verdes |
+| Q-4 | regra única em `PrimaryCollectionService`; os dois services viram três linhas cada; `PrimaryConcurrencyTest` perde os três pares de helper e as duas cópias do caso MySQL | sem teste próprio — é estrutura, e a prova é a suíte inteira seguir verde com **uma** implementação |
+| Q-5 | `lockForWrite()` devolve o cliente travado, com `firstOrFail()`, e recusa cliente arquivado | com `first()`/`void` de volta: três casos do `ClientArchiveIntegrityTest` reprovam |
+| Q-6 | a sonda correlaciona por `PROCESSLIST_ID`, lido do `CONNECTION_ID()` que o filho imprime no handshake `READY` | **medido**: com uma sessão `mysql` CLI alheia bloqueada em `lotus_test`, a consulta antiga devolveu `1` e a correlacionada devolveu `0` |
+
+**Gate depois das correções:** sqlite **538 passed, 5 skipped (1999 assertions)**; MySQL real, os nove
+casos de sonda verdes (`PrimaryConcurrencyTest` com seis, `CertificateNumberTest` com três). Pint
+limpo nos arquivos tocados. Nenhum DTO mudou — `typescript:transform` não era necessário.
+
+**Uma consequência do Q-2 que exigiu fechar a outra ponta:** o mutex torna o arquivamento atômico,
+mas sozinho não impede o filho de nascer sob pai já arquivado — a requisição concorrente resolveu um
+cliente VIVO no binding de rota e só descobre o arquivamento depois. Por isso `lockForWrite()` recusa
+cliente arquivado: é uma decisão só, no único ponto por onde todos os escritores passam, em vez das
+quatro linhas repetidas em seis Actions que o Q-4 acabara de punir.
+
+### Gate de fechamento — 2026-08-11
+
+**Item 0 — o critério de aceite deste bloco, provado contra a API real e não herdado do review.** O
+DoD escrito é "dois writes competindo", então suíte verde não fecha item nenhum. O e2e rodou contra
+o banco de dev (MySQL), com sessão Sanctum por cookie e CSRF:
+
+| Prova | Resultado |
+|---|---|
+| cliente criado com **dois** contatos `is_primary=true` | **201** com **um** principal (o último por id, a regra escrita) |
+| rota nested `POST /clients/5/contacts` com principal já existente | **201**, o anterior rebaixado; SQL cru confirma 1 principal |
+| **20 `PUT` concorrentes** (10 rodadas, dois contatos do mesmo cliente disputando) | **200 nos 20**, invariante em **1 principal** em todas as rodadas |
+| espera de lock no caminho HTTP | `Innodb_row_lock_waits` **116 → 127** (delta **11** em 10 rodadas) e `SHOW ENGINE INNODB STATUS` **sem** seção de deadlock |
+| coleção de **endereços** (a subclasse nova do Q-4) | dois `POST` principais → 1 principal, mesma regra, um dono só |
+| **Q-2** — `DELETE /clients/6` concorrente com `POST .../contacts` | **204** e **422** `application/problem+json` (`Este cliente foi arquivado e não aceita mais alterações.`); **0 contatos vivos** sob o cliente arquivado em SQL cru |
+| **item 2** — `PUT /users/71` com o RUT de outro | **422** com `errors.rut`; SQL cru mostra o `name` **não** escrito (zero escrita parcial) |
+| item 2 — auto-colisão com o próprio RUT | **200** |
+| **Q-1** — `DELETE /users/1` (único superadmin) | **422** `Não é possível deixar o sistema sem superadmin ativo.` |
+| Q-1 — rebaixar o superadmin ativo com outro superadmin **inativo** no banco | **422**; role intacta em SQL — é o caso do item 4, medido onde o usuário vive |
+| **item 3** — projeção de roles | `role: "admin"` e `roles: ["admin"]` coerentes em todas as respostas de usuário |
+
+**A medição de espera de lock é o que separa este e2e de um teste sequencial disfarçado:** 20 writes
+paralelos que nunca se cruzassem passariam igual. As 11 esperas dizem que houve disputa real no
+caminho HTTP completo, e a ausência de deadlock diz que a ordem de locks da D-P1 se sustenta fora do
+harness.
+
+**Itens 1–5.** Backend **538 passed, 5 skipped (1999 assertions)** em sqlite. Contra MySQL real
+(`lotus_test`), `CertificateNumberTest|PrimaryConcurrencyTest` → **9 passed (48 assertions)**. Pint
+`{"tool":"pint","result":"passed"}` nos **29** `.php` do bloco (lista conferida contra `git diff
+--name-only main...HEAD -- '*.php'`, nunca por substituição de comando). `pnpm lint` limpo e `pnpm
+build` verde — o bloco não toca `frontend/`, e o diff vazio é a prova. `typescript:transform` **sem
+diff** em `generated.ts`. Código morto zero: `ProbesMysqlConcurrency` tem os dois consumidores
+previstos, `Client::lockForWrite()` tem **sete chamadores** — as sete Actions que escrevem sob cliente já
+existente, com `CreateClientAction` de fora carregando a razão escrita no código —,
+`PrimaryCollectionService` tem as duas subclasses, `DeleteClientAction`
+e `DeleteStaffUserAction` estão fiados nos controllers; `git status --porcelain` vazio e nenhuma
+sonda `SONDA`/`dd(`/`dump(` no diff de `backend/app/`.
+
+**Item 6 — leis.** Nenhuma contrariada: zero classe `Repository` em `backend/app/`, zero
+`CREATE TRIGGER`/`DB::unprepared` (as duas guardas do BD-1 seguem verdes), auditoria só na aplicação
+— o rebaixamento continua por instância, nunca por query builder —, `generated.ts` gerado e sem
+diff, Sanctum intocado, financeiro fora do bloco.
+
+**Item 7 — pendências.** Nenhum gatilho venceu: a **P-03** exige dois `active_work_item` de backend
+em paralelo (só houve um) ou 2026-10-31, e a **P-04** revisa em 2026-08-15. Nasceu a **P-29**: a
+corrida de unicidade **entre transações distintas** segue subindo 500, recusa registrada na D3 da
+spec e agora com gatilho próprio. Uma divergência de formato foi **reportada e não corrigida** — o
+ID `P-28` aparece **duas vezes** em `docs/pendencias.md` (a guarda da lição 13 e o fundo do
+certificado); renumerar quebra referência e é decisão do João.
+
+**O que o gate NÃO provou, sem maquiagem:** nada foi visto renderizado — o bloco é backend puro e o
+contrato HTTP saiu idêntico, então não há tela nova a conferir; a corrida de RUT/e-mail entre
+transações distintas continua em 500 (P-29); e a suíte em sqlite segue cega para lock
+(`SQLiteGrammar::compileLock()` é no-op), então **tudo** que prova o item 1 é MySQL-only — os 5
+skipped são isso, não cobertura ausente.
+
+**Duas mutações declaradas no banco de dev:** os registros criados pelo e2e (2 clientes, 3 usuários
+staff) foram removidos com `forceDelete` ao fim — `clients` vivos voltou a **4**, zero usuário
+`gate.*` —, restando **15** linhas de `audits` apontando para ids que não existem mais; e o
+`LOT-2026-1001` corrompido de propósito **segue lá**, conferido antes e depois, esperando o
+checkpoint visual do João. Nenhum passe rodou `migrate:fresh`. Registrado também que o João estava
+**usando a aplicação no navegador durante o gate** (foto e `PUT` no cliente 1, visto no log do
+nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre registros próprios.
+
+**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+## Penúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
 
 ### Seleção — 2026-08-10
 
@@ -398,7 +756,7 @@ absorção segue no BD-5.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
+## Antepenúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
 ### Seleção — 2026-08-10
 
@@ -810,220 +1168,3 @@ cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre 
 e hook de feature com DOM está fora dele (lição 10).
 
 **Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.
-
-## Antepenúltimo item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito, não herdado do gate técnico.** As correções Q-4 e Q-6 mexeram no
-`preflight.sh` *depois* dele, então os nove modos foram exercitados de novo, com o Lotus local de
-pé: `bash -n` limpo; `BLOCKED: non-local` para URL de produção; `BLOCKED: unreachable` para porta
-morta em loopback; `BLOCKED: non-local` **mesmo com o `curl` fora do `PATH`** — a prova de que a
-validação roda antes de qualquer requisição, que é o ponto da Q-4; `BLOCKED: unhealthy ...
-status=503` contra servidor sintético; `BLOCKED: missing command: playwright-cli`; e `PREFLIGHT_OK`
-com `frontend=200 backend=200`. `4xx` continua passando de propósito.
-
-**O gate reprovou um item do DoD e a reprovação não foi maquiada.** O teste literal do plano
-(Task 4, Step 4) acusou o adaptador com **18 linhas** contra o teto de 15 do DoD item 3 — estouro
-vindo das próprias Q-2 e Q-10, aprovadas. Resolvido por decisão do João: comprimido para 15 linhas
-sem perder cláusula, e o gate refeito passou. Detalhe em §"DoD item 3 reprovou no gate".
-
-**Demais itens:** suíte backend **503 passed, 1 skipped (1868 assertions)** — rodada no tree
-central, cujo `backend/` é byte a byte idêntico ao desta branch, com checksum de `app/` + `tests/`
-igual antes e depois; frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes na
-árvore já mesclada; Pint e `typescript:transform` **N/A** (zero `.php`, zero DTO, `generated.ts`
-sem diff); código morto zero; leis §5 sem superfície de contato — o bloco não toca schema, auth,
-auditoria, RBAC nem código de aplicação.
-
-**Pendências:** a **P-27 fechou** — o enum final é `used|complementary_unavailable|not-needed`, com
-a nota no `progress.md` da entrega; o plano aprovado não foi reescrito retroativamente e os
-relatórios em `.artifacts/` ficam como registro de auditoria. Nenhuma outra venceu gatilho (P-04
-reavalia 2026-08-15; P-15 e P-26 em 2026-09-30) e nenhuma nasceu. A P-03 **não** disparou: o
-gatilho é dois blocos de **backend** em paralelo, e este não é backend.
-
-**Divergência achada e não corrigida, por ser de outro bloco:** a linha do
-`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
-`Spatie\LaravelData\Optional|int`, o que parte a tabela naquela linha. Veio da main no merge; fica
-registrada aqui em vez de corrigida em silêncio.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-hardening-revisao-ui-assistida.md`; spec →
-`specs/archive/2026-08-10-hardening-revisao-ui-assistida-design.md` (não é compartilhada com nenhum
-item futuro registrado). A referência interna do plano à spec foi reapontada para o path arquivado,
-e a P-27 encerrada aponta para o plano arquivado. Entrega registrada no `progress.md`, com a de
-2026-08-03 (`abstracao-componentes-catalog`) descendo para o `progress-archive.md` para manter dez.
-Item 1 removido do `backlog.md`, com renumeração dos seguintes; os três débitos do piloto ficam.
-
-**Estado do ambiente:** nenhuma mutação. O bloco nunca escreveu em banco — o piloto e a aceitação
-são read-only por contrato, com `git status --short` antes e depois em cada run. O Vite dedicado
-subiu só para o `PREFLIGHT_OK` do gate e foi encerrado; o Compose central seguiu ativo e intocado.
-
-**Item 1 do `backlog.md`, selecionado explicitamente pelo João no Gate 4 e confirmado após a
-reconciliação da fila.** O bloco cria a infraestrutura local e a skill compartilhada de revisão
-UI/UX assistida por navegador. Playwright CLI é o mecanismo obrigatório; Chrome DevTools MCP é
-complementar e degradável. Não inclui E2E versionado nem correção dos achados do piloto.
-
-**Divergência temporal resolvida antes da seleção:** o plano-mestre de 2026-08-08 posicionava o
-hardening antes de “Certificação · frontend”, mas esse bloco já estava entregue e fechado quando a
-implementação formal começou. Por decisão explícita do João em 2026-08-09, o hardening foi
-promovido agora, antes de “Arquivados e restauração de soft-delete”; a spec deve descrever a ordem
-real e não repetir a premissa obsoleta. Não há regra de negócio externa a recuperar, portanto a
-rota segue sem Context Packet (`context_packet: null`).
-
-**Isolamento:** worktree `/home/jvbat/projetos/fix-frontend`, branch
-`chore/hardening-ui-review`, criada a partir de `032332b` e sincronizada com `origin/main` na
-seleção.
-
-### Brainstorming e spec — 2026-08-10
-
-O João aprovou o desenho com a instrução literal `APROVADO O DESENHO — gravar e commitar a spec.`
-A spec ativa materializa as decisões fechadas, a ordem temporal reconciliada, o protocolo
-read-only, a degradação do Chrome DevTools e o DoD do bloco. O estado entra em `planning` no mesmo
-commit da spec; `active_plan` permanece `null` até a aprovação humana deste documento e a escrita
-posterior do plano.
-
-### Aprovação da spec e plano — 2026-08-10
-
-O João aprovou a spec com a instrução literal `Aprovada a SPEC. Siga com o writing-plans`. O plano
-ativo decompõe a fundação, a skill canônica, os adaptadores, a matriz, os Gates 5/6, o piloto nos
-dois agentes e o gate técnico final. O handoff fixa `executor: codex` e limita a execução aos paths
-aprovados; nenhuma implementação foi iniciada durante o planejamento. O estado transiciona para
-`ready_for_execution` no mesmo commit do plano.
-
-### Execução delegada ao Codex — 2026-08-10
-
-O João autorizou literalmente `APROVADO — executar o plano ativo até o Gate 5.` O Codex inicia as
-Tasks 0–5 do plano aprovado e deve parar antes do piloto. A transição para `executing` entra no
-mesmo commit do primeiro artefato durável, mantendo `next_owner: claude` e
-`next_action: continue_active_plan`.
-
-### Pilotos, gate final e handoff — 2026-08-10
-
-O João retomou a execução com a instrução literal `vamos continuar entao com plano até chegar na
-parte de review, depois complementamos a skill conforme a ideia inicial.` A instrução atual
-autorizou concluir os Gates 5/6 e a Task 7; a complementação da skill ficou explicitamente adiada
-para depois do review e não foi misturada neste diff.
-
-O piloto de Clientes foi executado em runs separadas no Codex e no Claude Code, com o mesmo escopo
-read-only, `1440x900`, `1024x768` e `390x844`, snapshots, screenshots, console, rede e Git
-antes/depois. Os agentes concordaram nos cinco fatos reproduzíveis centrais; divergências de
-severidade e achados complementares ficaram registradas nas evidências ignoradas. Três grupos B/C
-reproduzidos por ambos foram adicionados ao backlog, sem correção de frontend.
-
-Gate final fresco: skill e shell válidos; preflight `200/200` com `PREFLIGHT_OK`; frontend `13`
-arquivos e `47` testes, lint e build verdes; backend `501 passed`, `1 skipped`, `1859 assertions`.
-A primeira passagem do backend viu um estado intermediário do WIP da main central — o teste foi
-salvo às `15:09:35` e o método correspondente às `15:10:01` — e falhou uma vez; o teste isolado
-passou `5/5`, e a suíte completa passou no rerun com checksums idênticos antes/depois. A aceitação
-final refez Clientes nas três viewports, com console `0` erros/`0` warnings, somente GETs `200`,
-nenhuma mutação e Chrome DevTools registrado como `complementary_unavailable`. O Vite dedicado foi
-encerrado e o Compose central permaneceu ativo. O bloco para em `ready_for_review`; não inicia
-review, fechamento, push ou PR automaticamente.
-
-### Review de sprint — 2026-08-10: duas lentes, 10 achados, todos aprovados e corrigidos
-
-**ALTO RISCO por `executor: codex`** (o bloco não toca schema, `generated.ts`, auth, auditoria,
-RBAC, dinheiro nem documento legal; o gatilho é a execução delegada). Lente Claude com o gabarito
-do projeto + `mcp__codex__codex` read-only sobre `032332b..HEAD`. Escopo: só os 11 arquivos do
-intervalo. Órfãos: zero — os quatro artefatos canônicos têm consumidor declarado e provado
-(preflight chamado pelos dois pilotos e pela aceitação; rubrica e template citados nos cinco
-relatórios; adaptador e comando resolvidos em sessão nova na Task 5).
-
-**Higiene do diff reconferida, não aceita por relatório:** `git diff --check` limpo;
-`frontend/`, `backend/`, `.mcp.json` e `.codex/config.toml` sem uma linha de diff; `git status`
-limpo; `preflight.sh` versionado com modo `100755`; `state_basis_commit: f62885b` é de fato o
-commit durável anterior a `62bf9c9`.
-
-**O achado 🔴 é de lei, não de estilo.** A matriz da Task 5 declara PASS em quatro linhas cuja
-evidência é a citação do texto que o próprio bloco acabou de escrever. Duas delas sustentam
-cláusulas do DoD §10 da spec: "solicitação de backend não invoca a skill" (evidência: o frontmatter
-diz `not for backend review`) e "Figma não recuperado não produz comparação inventada" (evidência:
-`SKILL.md:71-72` e rubrica `:257` mandam não inventar). É §5.8 e lição 10 na mesma frase. As linhas
-de maior risco **têm** prova comportamental real e não estão em questão: escopo amplo e pedido de
-correção automática (`scope-response.txt`), URL de produção com fallback de browser
-(`production-response.txt`), preflight contra porta morta e contra `PATH` sem `playwright-cli`, e a
-sonda WIP com checksum idêntico antes/depois.
-
-**Divergências entre as lentes, mostradas em vez de resolvidas em silêncio:** o Codex classificou o
-GREEN inteiro da Task 3 como não discriminante por ter rodado em sandbox read-only; verifiquei os
-três arquivos de resposta e isso vale só para `local-response.txt` (a jornada feliz), não para
-escopo e produção, que recusaram por decisão da skill e foram reprovados de novo pelos pilotos
-reais. O Codex também reportou a ausência de mecanismo que force read-only após o login e o
-`none` fixo no rodapé do template; rejeitei os dois — o primeiro é a decisão §11.4 da spec
-(execução manual na v0.1) e o segundo é contrariado por `SKILL.md:91-92`, que prevê o run
-não conforme.
-
-**Correções — o João aprovou Q-1..Q-10 na íntegra; todas entraram no mesmo dia.**
-
-O 🔴 (Q-1) foi corrigido pela raiz: as duas cláusulas do DoD §10 item 6 foram refeitas como sonda
-comportamental em contexto novo, **com frontend e backend em 200** para que nenhuma recusa pudesse
-ser atribuída ao ambiente. O agente respondeu `BLOCKED` ao pedido de revisão do backend de
-certificação, declarando não ter inspecionado os arquivos; e, ao pedido de comparação com "o Figma
-do projeto" sem `fileKey`/`node ID`, recusou explicitamente produzir ou alegar a comparação, sem
-listar divergência alguma. Evidência em `.artifacts/ui-review/2026-08-10-task5-probes/`. A linha do
-Chrome DevTools na matriz deixou de citar a skill e passou a apontar os três relatórios reais que
-registraram a degradação.
-
-Mecanismo (Q-4, Q-6): `preflight.sh` ganhou validação de loopback antes de qualquer `curl` — host
-fora de `localhost`/`127.0.0.0/8`/`::1`/`0.0.0.0` retorna `BLOCKED: non-local <label> url`, inclusive
-quando `curl` não existe — e passou a reprovar `5xx` como `BLOCKED: unhealthy`. `4xx` continua
-passando de propósito: a raiz do backend pode responder `404` num serviço saudável, e bloquear aí
-criaria falso positivo. Provado nos quatro modos: ambiente real, URL de produção, loopback saudável
-e servidor `503` sintético.
-
-Contrato (Q-3, Q-7, Q-8): enum único `used|complementary_unavailable|not-needed`; separadora GFM na
-tabela `## Coverage`; o passo 14 passou a mandar gravar `<run-dir>/report.txt` a partir de uma cópia
-do template, nunca editando o arquivo versionado. Q-9: login manual saiu de pré-requisito de
-entrada e virou credencial disponível para o passo 7, que é quem o solicita. Q-2: a allowlist do
-adaptador e do comando passou a cobrir o workflow que ela roteia (`git branch`, `git rev-parse`,
-`mkdir`, `Write`), sem autorizar escrita em código ou dado. Q-10: a lente `frontend-design` e a
-precedência "rule vence skill, e o conflito é avisado" voltaram — no adaptador Claude, não na fonte
-canônica, porque `frontend-design` é plugin do Claude Code e o Codex não a tem. Q-5: `CLAUDE.md` §4
-lista `/lotus-ui-review` como skill, com `/revisar-ui` marcado como entrada legada.
-
-Relatórios antigos em `.artifacts/` **não foram reescritos**: são registro de auditoria, incluindo o
-`not-needed` incorreto de `2026-08-10T12-40-35-codex-final/report.txt:9`, que é justamente a prova de
-que o enum duplo confundia.
-
-**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
-
-### Sincronização com a main — 2026-08-10
-
-O gate de fechamento parou antes de qualquer arquivamento ao encontrar **dois `active_work_item` em
-`ready_for_closure` no mesmo repositório**: este bloco, na worktree `fix-frontend`, e
-`turma-habilitacao-listagem`, na worktree central, com uma sessão paralela fechando o segundo em
-tempo real. A invariante "existe no máximo um `active_work_item`" estava quebrada e a divergência
-não foi resolvida por heurística.
-
-**Decisão do João:** o outro bloco fecha primeiro. Ele fechou e entrou na main pelo PR #34
-(`f1d72c5`); esta branch então absorveu a main por merge, preservando o arquivo da main e
-reinserindo apenas o que é deste bloco.
-
-Resolução do conflito de `state.md`, campo a campo: a janela rolante de itens fechados é a da main
-(`turma-habilitacao-listagem` / `certificacao-lote-e-snapshot` / `certificacao-frontend`), e as
-cópias que esta branch carregava de `profundidade-backend-b4-b7` e `certificacao-sprint-4` saíram
-por terem rolado para fora da janela — a seção `certificacao-frontend` das duas versões era
-idêntica, então nada de histórico se perdeu. `last_completed_work_item` passa a
-`turma-habilitacao-listagem`, o fato mais recente. A seção do item ativo, o
-`review_findings_approved` e os ponteiros de spec/plano são deste bloco.
-`state_basis_commit` passa a `e01f198`, o commit das correções Q-1..Q-10 — `f62885b` deixou de ser
-o último artefato durável quando elas foram commitadas. `pendencias.md` e `backlog.md` mesclaram
-sem conflito.
-
-### DoD item 3 reprovou no gate e foi corrigido — 2026-08-10
-
-O gate de fechamento rodou o teste literal do plano (Task 4, Step 4) e ele **reprovou**: o adaptador
-`.claude/skills/lotus-ui-review/SKILL.md` tinha **18 linhas** contra o teto de 15. Nenhuma correção
-do review foi indevida — o estouro veio de Q-2 (justificativa da allowlist) e Q-10 (lente
-`frontend-design` e precedência rule-vence-skill), ambas aprovadas pelo João. O que sobrou foi
-prosa, não substância.
-
-**Decisão do João: resolver, não registrar desvio.** O adaptador foi comprimido para **15 linhas**
-sem perder nenhuma das duas cláusulas — a allowlist continua mapeada passo a passo ao workflow que
-roteia, e a precedência da rule sobre `frontend-design` continua explícita. O teto era proxy de
-"adaptador fino"; a compressão restaura o número **e** a intenção. Gate refeito depois da correção:
-`-le 15` PASS, roteamento PASS, `Condição A|B|C|UI-01` ausente, e a fonte canônica segue
-`Skill is valid!`.
-
-Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude/skills/lotus-ui-review/`
-por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
-adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.

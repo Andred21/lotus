@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\CreateClientAction;
+use App\Domains\Commercial\Actions\DeleteClientAction;
 use App\Domains\Commercial\Actions\UpdateClientAction;
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
@@ -47,9 +48,9 @@ class ClientController extends Controller implements HasMiddleware
         return ClientData::fromModel($action->execute($client, $data));
     }
 
-    public function destroy(Client $client): Response
+    public function destroy(Client $client, DeleteClientAction $action): Response
     {
-        $client->delete();
+        $action->execute($client);
 
         return response()->noContent();
     }

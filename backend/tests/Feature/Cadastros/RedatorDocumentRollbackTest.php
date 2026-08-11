@@ -15,6 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -149,6 +150,47 @@ class RedatorDocumentRollbackTest extends TestCase
             $this->fail('esperava RuntimeException');
         } catch (RuntimeException) {
             // esperado
+        }
+
+        $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
+        $this->assertDatabaseCount('files', 0);
+    }
+
+    /**
+     * A outra saída da transação, e a que o bloco de 2026-08-11 abriu: a
+     * unicidade de RUT passou para DENTRO da transação, então um RUT duplicado
+     * agora aborta DEPOIS de os binários já terem subido. Os casos acima só
+     * injetam `RuntimeException` no insert de `File` — o caminho da
+     * `ValidationException` ficava afirmado no plano (D-P7) e não provado
+     * (review de 2026-08-11, Q-3).
+     *
+     * Sem o `catch (Throwable)` da Action — com um `catch` só de RuntimeException,
+     * por exemplo — este caso reprova e os outros três continuam verdes.
+     */
+    public function test_rut_duplicado_no_update_descarta_os_binarios_ja_enviados(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        config(['filesystems.default' => 's3']);
+
+        // O RUT já pertence a outro usuário: o ensureRutAvailable recusa DENTRO
+        // da transação, com os dois binários já no bucket.
+        User::factory()->create(['rut' => '13.456.789-9']);
+        $redator = $this->redator();
+        $data = RedatorData::from([
+            'name' => $redator->user->name,
+            'rut' => '13.456.789-9',
+            'email' => $redator->user->email,
+        ]);
+
+        try {
+            app(UpdateRedatorAction::class)->execute($redator, $data, [
+                'CV' => UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'),
+                'REUF' => UploadedFile::fake()->create('reuf.pdf', 10, 'application/pdf'),
+            ]);
+            $this->fail('esperava ValidationException: o RUT já está cadastrado');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('rut', $e->errors());
         }
 
         $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');

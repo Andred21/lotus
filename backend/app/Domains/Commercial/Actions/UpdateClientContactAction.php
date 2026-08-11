@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Actions;
 
 use App\Domains\Commercial\Data\ClientContactData;
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Commercial\Services\PrimaryContactService;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ class UpdateClientContactAction
     public function execute(ClientContact $contact, ClientContactData $data): ClientContact
     {
         return DB::transaction(function () use ($contact, $data) {
+            Client::lockForWrite($contact->client_id);
+
             $contact->update($data->toArray());
 
             $this->primaryContacts->ensureSingle($contact->client, $contact);
