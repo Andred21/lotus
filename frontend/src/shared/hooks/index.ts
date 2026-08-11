@@ -1,7 +1,10 @@
 export { useClock } from './useClock'
 export { useCrudPage } from './useCrudPage'
-export { useCrudForm, unclassifiedPayloadKeys } from './useCrudForm'
-export type { MutableResource, CrudFormOptions } from './useCrudForm'
+// `unclassifiedPayloadKeys`, `classificationConflicts`, `MutableResource` e
+// `CrudFormOptions` NÃO saem daqui: são o mecanismo interno da guarda de
+// classificação, e o único consumidor é o teste ao lado, por caminho relativo
+// (Q-2 do review de 2026-08-05). Barrel é fronteira pública.
+export { useCrudForm } from './useCrudForm'
 export { useEntityForm, useMutationErrors } from './useEntityForm'
 export { useEntityPhoto } from './useEntityPhoto'
 export type { UseEntityPhotoOptions } from './useEntityPhoto'

@@ -36,6 +36,11 @@ export function unclassifiedPayloadKeys(
   )
 }
 
+/** Chaves classificadas nas DUAS caixas. Ver `useCrudForm` para o porquê. */
+export function classificationConflicts(mapped: string[], summaryOnly: string[]): string[] {
+  return [...new Set(mapped.filter((k) => summaryOnly.includes(k)))].sort()
+}
+
 export type CrudFormOptions<F extends { id?: number }, T> = {
   entity: F | null
   mode: DialogMode
@@ -84,6 +89,16 @@ export function useCrudForm<F extends { id?: number }, T>(
       ]),
     ]
     const leaked = unclassifiedPayloadKeys(keys, mapped, summaryOnly, excludePrefixes)
+    const conflicting = classificationConflicts(mapped, summaryOnly)
+
+    if (conflicting.length > 0) {
+      throw new Error(
+        `useCrudForm: chave classificada em \`mapped\` E em \`summaryOnly\`: ${conflicting.join(', ')}. ` +
+          'As duas se contradizem — o resumo mostra exatamente o que NÃO está em ' +
+          '`mapped`, então a chave some do resumo e continua prometida por ele. ' +
+          'Escolha uma.',
+      )
+    }
 
     if (leaked.length > 0) {
       throw new Error(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useCrudForm, unclassifiedPayloadKeys } from './useCrudForm'
+import { useCrudForm, unclassifiedPayloadKeys, classificationConflicts } from './useCrudForm'
 
 type Fields = { id?: number; name: string; secret: string }
 
@@ -54,11 +54,43 @@ describe('unclassifiedPayloadKeys', () => {
   })
 })
 
+describe('classificationConflicts', () => {
+  it('não acusa nada quando as listas são disjuntas', () => {
+    expect(classificationConflicts(['name'], ['phone'])).toEqual([])
+  })
+
+  it('acusa a chave declarada nas duas caixas', () => {
+    // Declarar nas duas é contradição, não redundância: `mapped` diz que o
+    // campo mostra o próprio erro, e o resumo mostra exatamente o que NÃO
+    // está em `mapped`. A chave nas duas some do resumo por causa da
+    // primeira lista e continua prometida pela segunda.
+    expect(classificationConflicts(['name', 'phone'], ['phone'])).toEqual(['phone'])
+  })
+
+  it('devolve as duas em ordem estável', () => {
+    expect(classificationConflicts(['b', 'a'], ['a', 'b'])).toEqual(['a', 'b'])
+  })
+})
+
 describe('useCrudForm', () => {
   it('reprova config em que uma chave de payload não foi classificada', () => {
     expect(() =>
       renderHook(() =>
         useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create', summaryOnly: [] }),
+      ),
+    ).toThrow(/secret/)
+  })
+
+  it('reprova config em que uma chave está em `mapped` e em `summaryOnly`', () => {
+    expect(() =>
+      renderHook(() =>
+        useCrudForm(fakeResource(), {
+          ...base,
+          entity: null,
+          mode: 'create',
+          mapped: ['name', 'secret'],
+          summaryOnly: ['secret'],
+        }),
       ),
     ).toThrow(/secret/)
   })

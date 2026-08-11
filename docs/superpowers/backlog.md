@@ -30,6 +30,153 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
+
+## Blocos de execução de dívida — BD-2..BD-7 (proposta de 2026-08-10)
+
+> Agrupamento dos **débitos técnicos** desta página e das **pendências de código** de
+> `docs/pendencias.md`, conferidos contra o código em 2026-08-10 (não herdados de relatório).
+> Isto é fila, não autorização: nenhum BD executa sem promoção explícita em `state.md`.
+>
+> **Nada sai do lugar de origem ao entrar num bloco.** A linha do débito em `## Débitos técnicos`
+> e a linha da pendência em `docs/pendencias.md` continuam onde estão, com o mesmo ID; só são
+> removidas ou encerradas **depois** do bloco aplicado e do `/fechar-sprint` correspondente. Até
+> lá, o BD é o ponteiro, não o novo dono do registro.
+>
+> Débito que já tem ID (`Q-*`, `B-*`, `P-*`) é citado pelo ID. Débito sem ID é citado pelo título
+> em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
+> de formato do João, não do agente.
+>
+> Ordem entre blocos: **BD-2 → BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. O **BD-1** foi entregue
+> em 2026-08-11 e saiu desta lista (`progress.md`). A ordem dentro de cada
+> bloco é parte do bloco, não sugestão.
+
+### BD-2 · Integridade e concorrência no backend
+
+Independente do frontend. O item 1 é o único defeito de dado desta lista inteira.
+
+Cobre: **Q-16** (`PrimaryContactService`/`PrimaryAddressService`) · **"Bloco 5.2a (minors do review
+final)"** · **"Bloco 5.2b (minors do review final)"**, só a parte de teste.
+
+Ordem:
+1. **Q-16** — `lockForUpdate()` no `Client` (não só na coleção) antes do `ensureSingle()`, nos
+   **dois** serviços no mesmo commit; conferido em 2026-08-10: nenhum dos dois trava nada hoje;
+2. unicidade de RUT/email do `UpdateStaffUserAction` para **dentro** da `DB::transaction` — hoje
+   `ensureRutAvailable`/`ensureEmailAvailable` rodam antes de abrir a transação;
+3. `UserData::fromModel` chama `getRoleNames()` duas vezes (linhas 70 e 73);
+4. os testes que faltam: `SuperadminGuard` com outro superadmin **inativo** (os 3 casos existentes
+   cobrem ativo, outro-ativo e não-superadmin); auto-colisão de RUT/email no próprio update; o 422
+   de `role: redator` afirmando a **chave** (hoje só `expectException`); error-bag de
+   `CreateRoleAction`/`UpdateRoleAction`.
+
+DoD: sonda de concorrência real no item 1 (dois writes competindo), não só teste sequencial verde.
+Fora: a decisão do 5.2b sobre `GET /api/roles` enumerar permissão de superadmin — é do João.
+
+### BD-3 · Faixa visível e acessibilidade dos diálogos (fronteira `shared/ui`)
+
+Antes do BD-4 de propósito: mexe nos mesmos arquivos que o BD-4 vai fatiar, e extrair duas vezes é
+desperdício.
+
+Cobre: os **três débitos do piloto UI de Clientes** (tabela/estado vazio; foco e maximização sem
+nome; campos desabilitados truncados) · **Q-14** (`AppErrorState`) · **Q-15** (`AppDataTable`) ·
+**"Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`)"** (CTA duplicado) · **"Cor fora do corte do
+D18"**.
+
+Ordem:
+1. `AppDialog` — restaurar o foco ao disparador no `onHide` e nomear o controle de maximizar;
+   conferido em 2026-08-10: o wrapper é uma linha (`<Dialog maximizable …/>`), sem `aria-label` e
+   sem restauração. Corrige os 9 diálogos de uma vez;
+2. modo leitura — valor completo legível e copiável em campo desabilitado (`ClientGeneralFields` e
+   irmãos usam `disabled={readOnly}` puro), preservando os inputs no modo edit;
+3. tabela e estado vazio dentro da faixa visível em `1024x768` e `390x844`, pela fronteira
+   `shared/ui`;
+4. **CTA duplicado** — escolher um lugar só; hoje `ClientsTable` passa o mesmo `actions` para o
+   `emptyState` **e** para a toolbar da `SearchableTableFrame`, e `BudgetsTable` repete o padrão;
+5. **Q-14** e **Q-15** no mesmo commit — os dois são estado de carregamento mentindo na tela
+   (botão Reintentar sem feedback; paginador ligado com `footerCount` mesmo em `loading`);
+6. cor Tailwind hardcoded nos diálogos de feature (**D18**), por variável do tema (ADR-16).
+
+DoD: `/lotus-ui-review` nas três viewports fecha os seis de uma passada — comportamento na tela,
+não lint verde.
+Fora: o shell (`Sidebar`/`AppLayout`/`AppHeader`) — é exceção aprovada pelo João em 2026-07-26.
+
+### BD-4 · Catraca do `max-lines` e adoção da moldura
+
+**A premissa do débito da moldura venceu.** Conferido em 2026-08-10: a `SearchableTableFrame` **já
+tem** o `filterSlot` e a bifurcação `noResultsFiltered`/`clearFilters`, entregues em `3c7cc20`
+(2026-08-08) para a `HistorialTable`. O débito dizia que isso só aconteceria no mesmo commit da
+primeira adoção; sobrou só adotar, e ficou barato.
+
+Cobre: **"As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`"** · **"Catraca do
+`max-lines`"** · **"`StudentDialog` e `RedatorDialog` não têm `FormErrorSummary`"**.
+
+Ordem (a adoção vem antes porque tira linha das tabelas antes de medir os diálogos):
+1. `BudgetsTable` adota a moldura pelo `filterSlot`;
+2. `TurmasTable` idem;
+3. `StudentDialog` abaixo de 150 linhas, **pagando junto** o `FormErrorSummary` que falta — hoje o
+   `summaryOnly: ['phone']` classifica certo e o 422 não aparece em tela nenhuma;
+4. `RedatorDialog` abaixo de 150, mesmo pagamento;
+5. `RedatorDocumentSlot` (175) e `BudgetDetailPage` (171);
+6. cada arquivo sai dos `ignores` do `eslint.config.js` **no mesmo commit** da extração.
+
+DoD: comportamento idêntico na tela; o 422 de `phone` aparecendo; `ignores` vazio ao fim.
+
+### BD-5 · `useCrudForm` mais fundo
+
+Depois do BD-4 por gatilho declarado: o débito do trio da foto entra "quando alguém tocar um desses
+4 diálogos por outro motivo", e é o BD-4 que paga esse gatilho.
+
+Cobre: **"O trio da foto é idêntico em 4 dialogs"** (a absorção; o teste saiu no bloco `guardas-que-faltam`, entregue em 2026-08-11) · **"Os 4
+hooks de formulário que ficaram fora do `useCrudForm`"** · **Q-4** dos três achados de 2026-08-05
+(`photo_url`/`photo_path` no corpo da escrita).
+
+Ordem:
+1. absorver o trio (`useEntityPhoto` + `afterCreate: photo.flush` + `FormErrorBanner` de falha
+   bufferizada + `closeBlocked`) nos 4 diálogos;
+2. migrar `useCourseForm` e `useQuoteForm`, os dois candidatos legítimos que ficaram fora por corte
+   de escopo;
+3. **Q-4** — guarda contra `...form` reintroduzir `photo_path` (hoje é path interno de storage, não
+   URL) no corpo da escrita.
+
+DoD: **foto real chegando no S3**, não lint verde — o caminho tem falha silenciosa conhecida
+(lição 6). Fora por critério, não por escopo: `useRedatorForm` (multipart com chave polimórfica) e
+`useTurmaConfigForm` (rota aninhada, não roda sobre `createCrudResource`).
+
+### BD-6 · Falha que se disfarça de lista vazia
+
+Bloco separado porque **muda comportamento de propósito** — nenhum DoD de "comportamento idêntico"
+cabe aqui, que é exatamente por que o João o manteve fora do bloco de origem.
+
+Cobre: **B-7**.
+
+Ordem:
+1. distinguir loading / erro-com-Reintentar / vazio de verdade no passo 1 do wizard de cotação;
+2. os dois `?? '—'` da versão branda do mesmo padrão.
+
+**Atualização de referência (2026-08-10, sem remover a original):** o `?? []` saiu de
+`QuoteWizard.tsx:23` e hoje vive em `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que
+documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
+não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
+
+### BD-7 · `last_login`
+
+Cobre: **"`last_login` não existe"**.
+
+Feature de backend, não limpeza — por isso fica por último e não se mistura com os anteriores:
+coluna nova, captura no login, campo no `UserData`, regeneração de tipos e exposição na tela de
+Usuários. Conferido em 2026-08-10: zero ocorrência em `backend/app/` e em
+`backend/database/migrations/`.
+
+### Fora dos BDs — travado em decisão do João
+
+Não entram em bloco porque executar sem decisão é escolher no lugar dele: **Q-6** (idioma canônico
+das `ValidationException` — PT em Commercial, ES em Operation, medido); **"Alunos · o dropdown de
+empresa depende de uma permissão de outro módulo"** (RBAC/spec); a decisão do **5.2b** sobre
+`GET /api/roles`; **"Toggle da sidebar sem efeito abaixo de 1024px"** (mantido por decisão de
+2026-07-27); **"Shell fora de conformidade com o ADR-16 §4"** (exceção aprovada); **"Decidir
+assimetria entre camadas"** (zero principais); **P-28** (fundo do certificado, aceito como está);
+**P-02** (retenção da auditoria) e **P-05** (consolidar migrations), os dois com gatilho "antes de
+subir para produção".
+
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
@@ -57,6 +204,10 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   genérico depende de decisão e task no Notion.
 
 ## Débitos técnicos
+
+> Cada linha continua sendo o registro canônico do seu débito. A cobertura por bloco está mapeada
+> em `## Blocos de execução de dívida — BD-2..BD-7`; entrar num BD **não** move nem apaga a linha
+> daqui — a remoção acontece só depois do bloco aplicado e do `/fechar-sprint` correspondente.
 
 - **Piloto UI Clientes — tabela e estado vazio perdem a faixa visível em tablet/mobile.**
   Reproduzido por Codex e Claude Code em 2026-08-10: em `1024x768` e `390x844`, a coluna de ação
@@ -99,8 +250,8 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   custou duas decisões de spec (D10/D11 do bloco de alunos) e a quarta saída do `CrudDialog`.
   Decisão do João em 2026-08-04: fora do item 1. Saída: entra quando alguém tocar um desses 4
   dialogs por outro motivo, e o commit que absorver paga junto a prova de upload real no gate —
-  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` (161 linhas, o module mais profundo
-  de `shared/hooks`) segue **sem teste**.
+  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` **ganhou teste** em 2026-08-11 (bloco
+  `guardas-que-faltam`, seis casos); o que segue aberto aqui é só a **absorção**.
 
 - **As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`, e adotar custa mais do que
   trocar o markup.** `BudgetsTable` e `TurmasTable` ficaram fora do H.4.4 (2026-08-04, spec D2) por
@@ -116,38 +267,11 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   a moldura ganha o slot de filtro **e** a bifurcação de redação no mesmo commit em que a primeira
   das duas adotar — DoD é comportamento idêntico na tela, não lint verde. Decisão do João no
   fechamento de 2026-08-04: registrar aqui em vez de gatilho datado em `pendencias.md`.
+  **Atualização medida em 2026-08-10 (a linha acima fica; o fato mudou):** a moldura **já ganhou**
+  o `filterSlot` e a bifurcação `common.noResultsFiltered`/`common.clearFilters` em `3c7cc20`
+  (2026-08-08), para a `HistorialTable` da certificação — fora da adoção que a "Saída" previa. Resta
+  só adotar nas duas tabelas, que hoje seguem sem importar a moldura. Coberto pelo **BD-4**.
 
-- **Lição 13 é reincidente e ainda não tem mecanismo — proposta aguardando decisão do João.** O
-  padrão "texto afirmando o que o repositório não faz" apareceu **3 vezes** no review de
-  `hardening-estrutural-pre-sprint-4` (Q-2: o comentário do `eslint.config.js` afirmando cobrir
-  caminho relativo; Q-3: `CLAUDE.md` §6 e `frontend-fsliced.md` §Comandos negando o test runner
-  recém-instalado; Q-7: o JSDoc de `startEdit` prometendo guarda por entidade) e foi o Q-1 do bloco
-  anterior (`abstracao-componentes-catalog`: a régua de ~150 linhas que não existia em rule nenhuma).
-  Duas sprints consecutivas, mesma classe — pela cláusula de reincidência do `/revisar-sprint`, quer
-  mecanismo, não correção uma a uma. **Proposta:** um teste que asserte que todo comando citado nos
-  `§Comandos` das rules e no `CLAUDE.md` §6 existe como script em `package.json`/`composer.json`, e
-  vice-versa. Fecharia o Q-3 em definitivo e é a fatia verificável do problema; o resto da lição 13
-  (afirmação em prosa) não é automatizável e segue dependendo do review. Proposta feita em
-  2026-08-04, **não construída** — o João aprovou os 7 achados, não o mecanismo.
-
-- **Q-2 — o `NestedRouteOwnershipTest` escapa em silêncio quando o parâmetro não é tipado como
-  model.** O guardrail nasceu em 2026-08-04 (`hardening-guardrails-e-transportes`) contando
-  `signatureParameters(['subClass' => Model::class])`, escolha da spec §D6 para não errar como
-  erraria um regex sobre a URI. O efeito colateral é que a saída do guardrail passa a ser **esquecer
-  de tipar**: sonda com `DELETE api/sonda/{course}/itens/{item}` e assinatura `(Course $course,
-  int $item)` **passou** — rota nested, zero posse checada, teste mudo. Hoje as 7 rotas com ≥2
-  parâmetros estão todas tipadas, então fechar o buraco não muda nada; amanhã muda. Saída: contar
-  também os segmentos `{}` da URI e reprovar quando houver ≥2 mas menos de 2 models tipados, pedindo
-  a tipagem ou a declaração explícita. Achado Q-2 do review de 2026-08-04, **deferido pelo João** —
-  ele aprovou Q-1 e Q-5.
-- **Q-4 — o teste do `postMultipart` mocka o módulo `axios` inteiro, então nada guarda a instância
-  real.** `postMultipart.test.ts:5` usa `vi.mock('./axios')`: os 4 casos provam o helper e nunca
-  visitam `shared/api/axios.ts`. Se alguém fixar `Content-Type` nos defaults da instância, os testes
-  seguem verdes e **todo** upload chega vazio com 201 — a lição 6, cuja única guarda permanente hoje
-  é o comentário no arquivo (lição 14: instrução onde cabe mecanismo). O D12 do bloco exigiu upload
-  real por isso, mas essa prova não roda de novo sozinha. Saída: um caso sem mock assertando que
-  `api.defaults.headers` não traz `Content-Type`. Achado Q-4 do review de 2026-08-04, **deferido pelo
-  João**.
 - **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
   `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
   `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
@@ -157,6 +281,10 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   o lint. Saída: extrair o bloco coeso de cada um nos moldes já provados
   (`ContactFields`/`ContactCard`, `ModuleFields`/`ModuleCard`), um arquivo por commit, saindo dos
   `ignores` no mesmo commit — DoD é comportamento idêntico na tela, não lint verde.
+  **Remedido em 2026-08-10 (os números de origem ficam registrados acima):** a catraca **piorou** —
+  `StudentDialog` foi de 189 para **283** linhas e `RedatorDialog` de 189 para **199**, os dois em
+  `501b731` (2026-08-05), com o lint verde o tempo todo porque estão nos `ignores`.
+  `RedatorDocumentSlot` (175) e `BudgetDetailPage` (171) seguem iguais. Coberto pelo **BD-4**.
 - **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
   `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
   sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
@@ -166,6 +294,11 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (2026-08-03), **mantido fora do bloco por decisão do João**: muda comportamento de propósito e não
   cabe num DoD de "comportamento idêntico". Saída: distinguir loading / erro-com-Reintentar / vazio
   de verdade, como já se faz nas tabelas.
+  **Atualização de referência em 2026-08-10 (as citações originais ficam):** o `?? []` migrou de
+  `QuoteWizard.tsx:23` para `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que documenta
+  este débito no próprio arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33` não
+  existe mais — o `?? '—'` vive em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
+  Coberto pelo **BD-6**.
 - **Q-16 — `PrimaryContactService`/`PrimaryAddressService` sem lock: dois writes concorrentes podem
   deixar dois principais.** `ensureSingle()` lê os principais com `SELECT` comum (sem `lockForUpdate`)
   e sem travar o `Client`. Dois `PUT`/`POST` concorrentes promovendo endereços/contatos distintos
@@ -264,18 +397,12 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
   do `max-lines` (189 linhas cada).
 
-- **Três achados do review de 2026-08-05 não foram aprovados pelo João e ficam registrados aqui,
-  todos 🟢 e todos de esforço P.** (Q-2) O barrel `shared/hooks/index.ts` exporta
-  `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions` sem um consumidor — o teste
-  importa por caminho relativo —, e o primeiro é a válvula que a D12 existe para fechar: público,
-  ele é o caminho para uma feature classificar por fora do module. (Q-3) Chave declarada em
-  `mapped` **e** em `summaryOnly` ao mesmo tempo passa na guarda sem conflito; `summaryOnly` é a
-  única das três caixas **sem consequência mecânica** (`mapped` some do resumo, `excludePrefixes`
-  filtra por prefixo), logo a de custo zero para calar o mecanismo. Detectar a interseção é a única
-  verificação barata que sobra — que exista um `FormErrorSummary` no diálogo o hook não pode saber.
-  (Q-4) O fato medido em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no
-  construtor do `ClientData` desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do
-  `useClientForm` e não reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de
-  carregar URL e passa a carregar path, então quem reintroduzir `...form` manda um caminho interno
-  de storage no corpo da escrita. Saída dos três: o próximo commit que tocar `useCrudForm` ou
-  `useClientForm` paga o que couber.
+- **Um dos três achados do review de 2026-08-05 segue aberto — 🟢, esforço P.** (Q-4) O fato medido
+  em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData`
+  desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do `useClientForm` e não
+  reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de carregar URL e passa a
+  carregar path, então quem reintroduzir `...form` manda um caminho interno de storage no corpo da
+  escrita. Saída: o próximo commit que tocar `useCrudForm` ou `useClientForm` paga o que couber.
+  **Os outros dois foram fechados pelo bloco `guardas-que-faltam` em 2026-08-11:** (Q-2) o barrel
+  `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`, `MutableResource` e
+  `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly` passou a reprovar.
