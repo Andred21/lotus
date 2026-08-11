@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: guardas-que-faltam
-workflow_state: planning
-next_owner: joao
-next_action: approve_active_spec
+workflow_state: ready_for_execution
+next_owner: claude
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-10-guardas-que-faltam.md
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: documentos-oficiais-template-e-docx
-state_basis_commit: 9c683b6
-updated_at: 2026-08-10T23:45:00-03:00
+state_basis_commit: ef01351
+updated_at: 2026-08-11T00:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -145,6 +145,43 @@ foi reescrito — é histórico, pelo precedente da P-27.
 **Risco de review declarado MÉDIO** (§7 da spec): nenhum gatilho de ALTO se aplica (sem schema, auth,
 RBAC, dinheiro, documento legal, `generated.ts`, sem execução delegada). O risco próprio é guarda que
 promete cobrir e não cobre — cinco das oito são varredura, e varredura tem escape por construção.
+
+### Aprovação da spec e plano — 2026-08-11
+
+O João aprovou a spec com a instrução literal `pode prosseguir`. O plano ativo
+(`docs/superpowers/plans/2026-08-10-guardas-que-faltam.md`) decompõe o bloco em **10 tasks (0–9)**:
+baseline; as duas leis como teste; ownership de rota; a instância do axios; a recíproca da
+classificação; o barrel; os seis casos da foto; a guarda de referência de doc; a rule; gate. O
+handoff fixa **`executor: claude`** — as Tasks 1, 6 e 7 fecham por laço de ajuste contra medição, e o
+risco declarado da §7 (guarda que promete cobrir e não cobre) não é detectável por execução linear.
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano). Os que
+mudam decisão da spec:
+
+1. **A guarda 2 conta segmentos e exige declaração, não binding tipado** (D-P1). A spec pedia
+   reprovar "≥2 segmentos com <2 models tipados, com a instrução de tipar o binding". O docblock do
+   próprio teste já carregava a objeção certa contra ler a URI — `{file}` não diz que é model —, e a
+   saída é a válvula que o teste já usa: `withoutScopedBindings()` com o motivo ao lado. Medido: **8**
+   rotas com ≥2 segmentos, todas já declarando, **0** reprovando.
+2. **A guarda 3 é arquivo novo** (D-P2). `postMultipart.test.ts` abre com `vi.mock('./axios')`, que é
+   hoisted e vale para o arquivo inteiro: "caso sem mock" ali dentro não existe. Vai para
+   `axios.test.ts`, e o DoD do frontend passa de **15 para 16** arquivos.
+3. **`codigoSemComentarios` vira trait compartilhado** (D-P5). A guarda §5.2 precisa da mesma
+   varredura sem comentário que o `DomainDependencyTest` tinha em método privado; duplicar
+   reintroduziria o defeito da Q-4 de 2026-08-04 em dois lugares.
+4. **A guarda §5.1 exclui `QueryBuilders/`, e a exclusão é provada com sonda** (D-P6), não afirmada
+   em comentário: `TurmaQueryBuilder` é o padrão aprovado pelo ADR-02 e uma varredura por sufixo o
+   reprovaria.
+5. **A guarda 4 ganha duas guardas de si mesma** (D-P8): piso de volume de referências e conferência
+   de que cada citação deliberada ainda está no doc que a declara. Extrator que pare de casar
+   deixaria o teste verde com zero referências conferidas.
+
+A auto-revisão do plano contra a spec ainda achou três erros de contagem no próprio rascunho e os
+corrigiu antes de gravar: o total de casos da Task 3 (9, não 8), a projeção de arquivos do frontend
+(16, não 15) e uma contagem absoluta na Task 4 que ignorava os testes da Task 3.
+
+**Risco de review continua MÉDIO.** O foco é um só: para cada guarda, existe uma forma de violar a
+lei que ela não pega? O review não roda automaticamente ao fim da Task 9.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
