@@ -147,6 +147,11 @@ exceção. Na dúvida, siga o vizinho da mesma
   `AppDataTable`, não do chamador — **não** reintroduzir `emptyMessage={loading ? undefined : empty}`,
   que cai no default inglês do PrimeReact (`No available options`). Nunca fatiar a página fora do
   `DataTable`: com coluna `sortable`, ordenar a página em vez do conjunto é regressão silenciosa.
+- **Hook genérico não importa tipo de `shared/ui`.** `shared/hooks/` é lógica; `shared/ui/` é
+  apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
+  `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
+  consome `useTableFilter` sem que o hook saiba da moldura). Hook que precisa do tipo de um
+  componente está desenhado ao contrário — quem depende é o componente. (P-25)
 - **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
   no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
   Sem documento obrigatório → `no_idoneo`.
@@ -163,9 +168,15 @@ De `frontend/` (nativo no WSL — Node 22/pnpm):
 `pnpm test:watch` para iterar).
 Gate de verificação = `pnpm build` + `pnpm lint` + `pnpm test`.
 
-**O runner existe desde 2026-08-03** (bloco `hardening-estrutural-pre-sprint-4`) e cobre os hooks de
-`shared/hooks/` — os de maior fan-out do projeto. Sem `globals`: cada teste importa
-`describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo `tsc -b`.
-Teste de componente com PrimeReact no jsdom segue **fora** do corte. Este parágrafo dizia "sem test
-runner ainda" por um bloco inteiro depois de o runner existir, e o gate omitia `pnpm test` — quem
-lesse fecharia a sprint sem rodar os testes recém-escritos (review de 2026-08-04, Q-3).
+**O runner existe desde 2026-08-03** (bloco `hardening-estrutural-pre-sprint-4`) e o corte cresceu:
+cobre os hooks de `shared/hooks/` — os de maior fan-out do projeto — **e** hooks de feature, por
+`renderHook` + `QueryClientProvider`, com o teste morando na própria feature (teste em `shared/`
+importando `features/` quebraria a lei §5.6). Desde 2026-08-11 cobre também o **repositório**, em
+`frontend/tests/`: `repo-docs-refs.test.ts` confere que todo path citado em doc normativo existe, e
+mora aqui porque o container `app` monta só `./backend` e `./frontend`, então PHPUnit não lê a raiz.
+Teste de componente com PrimeReact no jsdom segue **fora** do corte. Sem `globals`: cada teste
+importa `describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo
+`tsc -b`. Este parágrafo dizia "sem test runner ainda" por um bloco inteiro depois de o runner
+existir (review de 2026-08-04, Q-3), e depois afirmou por mais quatro dias que o corte era só
+`shared/` quando já havia oito testes de hook de feature — a mesma lição 13, no mesmo arquivo, duas
+vezes.
