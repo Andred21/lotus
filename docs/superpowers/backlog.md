@@ -7,54 +7,7 @@
 
 ## Próximos blocos
 
-1. **Documentos oficiais · fidelidade ao template e saída DOCX do manual**
-
-    — Templates de referência: `docs/templates/certificado.pdf`, `docs/templates/manual.pdf`,
-    `docs/templates/fundo-certificado.png`. Os templates são **referência visual para escrever
-    Blade**, nunca artefato a embutir, converter ou sobrepor.
-
-    Objetivo:
-    aproximar os dois documentos gerados dos templates aprovados pela Lotus, e disponibilizar o
-    manual de classe também em DOCX.
-
-    Ordem:
-    1. **Certificado — fundo e tipografia.** `fundo-certificado.png` como fundo de **todas** as
-       páginas de `certification/certificate.blade.php`; tipografia, famílias e pesos aproximados
-       do `certificado.pdf`.
-    2. **Certificado — bloco de identificação.** QR menor, realocado ao canto superior direito da
-       página 1, com `N° <código>` e `Emisión: <data>` logo **abaixo** dele (hoje esse par ocupa
-       sozinho o canto superior esquerdo e o QR vive no rodapé). Nada é excluído: os dois campos
-       mudam de lugar, não de existência.
-    3. **Manual — conteúdo e forma.** `operation/manual-turma.blade.php` reescrita conforme
-       `manual.pdf` (5 seções: dados da classe, antecedentes de participantes, controle de
-       assistência, temas da capacitação, avaliações), **preenchida automaticamente** com os dados
-       da turma. O template é ofício paisagem (1009×612 pt), não o A4 retrato de hoje.
-    4. **Manual — saída DOCX.** Mesma fonte Blade servindo PDF e DOCX; `ManualPdfService` ganha par
-       ou vira serviço de duas saídas.
-    5. **UI.** Na configuração de turma, seção de documentos, o `ManualButton` atual passa a
-       oferecer **PDF e DOCX**.
-
-    Restrições que o desenho tem de responder (não são decisões tomadas):
-    - **Via Blade, sem gambiarra** — inclusive o DOCX. Investigar se a Blade pode render
-      WordprocessingML empacotado como OOXML, e **decidir explicitamente** antes de recorrer a
-      biblioteca de terceiros; se recorrer, é ADR.
-    - **Peso.** `fundo-certificado.png` tem 1414×2000 RGBA e **1,2 MB**; embutido em base64 por
-      página, multiplica o tamanho do PDF. A 1ª tentativa de manual deixou o visualizador com
-      sensação de "travado" — o bloco só fecha com peso do arquivo e metadados medidos, não
-      estimados.
-    - **Contrato do certificado intocado.** O documento é montado do snapshot congelado (D12,
-      §4.7), tem peso legal e a rota pública de validação depende dele: muda a apresentação, não
-      o dado, não o snapshot, não a resposta da API.
-    - As guardas já pagas no `certificate.blade.php` (clamp da descrição, `min-height` em vez de
-      `height`, elisão com reticências) existem por defeito medido em 2026-08-08 — quem mexer no
-      layout responde por elas.
-
-    Fora de escopo:
-    - alterar o schema do snapshot ou o conteúdo do certificado;
-    - assinatura digital, carimbo ou selo de resolução;
-    - preenchimento de assistência/avaliação pelo sistema — as grades do manual saem em branco
-      para preenchimento em sala, como no template.
-2. **Arquivados e restauração de soft-delete**
+1. **Arquivados e restauração de soft-delete**
 
     —  Notion: H.5.1–H.5.4
 
@@ -70,12 +23,12 @@
     Fora de escopo:
     - forceDelete;
     - exclusão permanente.
-3. **Administração · Roles e permissões — redesenho de composição**
+2. **Administração · Roles e permissões — redesenho de composição**
    — o protótipo tem layout dividido (lista de roles à esquerda; detalhe + matriz de permissões à
    direita, com marcação de permissão essencial); o real tem tabela + diálogo. **Não é refinamento
    visual, é redesenho de tela** — exige brainstorming. Task Notion relacionada: "Tela de
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
-4. **Hardening**
+3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
 ## Módulos ainda não implementados (feature, não ajuste visual)
 

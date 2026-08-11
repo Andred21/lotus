@@ -1,21 +1,19 @@
 ---
 schema_version: 1
-active_feature: documentos-oficiais
-active_work_item: documentos-oficiais-template-e-docx
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md
-active_plan: docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: >-
-  Q-1..Q-7, todos, aprovados pelo João em 2026-08-10 com a instrução literal `Todos de Q-1 a Q-7`.
-  Corrigidos em `96d7256`.
-last_completed_work_item: hardening-revisao-ui-assistida
+review_findings_approved: null
+last_completed_work_item: documentos-oficiais-template-e-docx
 state_basis_commit: 96d7256
-updated_at: 2026-08-11T00:25:00-03:00
+updated_at: 2026-08-10T22:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -51,7 +49,7 @@ updated_at: 2026-08-11T00:25:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — `documentos-oficiais-template-e-docx`
+## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
 ### Seleção — 2026-08-10
 
@@ -375,7 +373,96 @@ asserções; a suíte na mesma árvore mede **1951**. O número do gate está er
 
 **Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
 
-## Último item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
+### Gate de fechamento — 2026-08-10
+
+**O item 0 foi refeito, não herdado.** As correções Q-1..Q-7 entraram depois do e2e da Task 10 e
+mexeram no documento (ids do `wp:docPr`, ordem das matrículas), no `OoxmlPackager` e no frontend —
+então o critério de aceite do bloco foi provado de novo contra a API real, e não pelo relatório do
+gate anterior.
+
+**Ferramentas.** Backend **522 passed, 1 skipped (1961 assertions)** — o mesmo placar da verificação
+pós-review, contra os 520 que o plano projetava. Pint `--test` **`passed`** nos **22** `.php` vivos
+do bloco. `typescript:transform` executado: **sem diff** em `generated.ts`, `git status --porcelain`
+vazio depois de rodar. `git diff main...HEAD -- backend/database/` **vazio** (zero schema). Frontend:
+`pnpm lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**. As três locales com **538 chaves
+cada e zero diff** entre si.
+
+**E2E com sessão Sanctum por cookie + CSRF, só GETs — nenhuma mutação no banco de dev.**
+`GET /api/turmas/1/manual` → **200** `application/pdf` + `inline; filename="manual-turma-1.pdf"`,
+`pdfinfo` dizendo **`Pages: 5`** e **`Page size: 1008 x 612 pts`**; `GET /api/turmas/1/manual/docx` →
+**200** `…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`.
+
+**O pacote foi aberto, não suposto.** As cinco parts (`[Content_Types].xml`, `_rels/.rels`,
+`word/document.xml`, `word/_rels/document.xml.rels`, `word/media/lotus-logo.png`),
+`w:pgSz w:w="20183" w:h="12246" w:orient="landscape"` **idêntico ao `docs/templates/manual.docx`**,
+`wp:docPr` numerado **1,2,3,4,5** e `pic:cNvPr id="0"` cinco vezes — as duas convenções da Q-1
+vivas no documento entregue, e não só no teste.
+
+**Preenchimento por contagem (DoD 4):** turma de **12 matrículas**, cada nome aparecendo **3 vezes**
+(uma por grade), grades em 23/21/21 linhas (cabeçalho mais as 22/20/20 fixas) — com N=12 o
+`max(N, fixas)` da D-P5 mantém as linhas em branco, como o formulário impresso. Rodapé de horas
+fechando com a soma dos módulos: 8+6+4 = **18 T**, 4+10+8 = **22 P**.
+
+**Pesos (DoD 1):** manual `.docx` **19.269 B**, manual `.pdf` **52.954 B** (template de referência
+444.830 B), certificado **199.830 B** contra a linha de base **40.119 B** e o teto **251.450 B** do
+documento aprovado pela Lotus.
+
+**Fonte de verdade única (DoD 9), conferida no código:** `ManualDocumentService::pdf()` é
+`converter->render($this->docx($turma))`. Não há segundo caminho de montagem.
+
+**Contrato do certificado (DoD 7):** `GET /api/certificates` **200** com os treze campos de sempre e
+`snapshot_ok` **false só** no `LOT-2026-1001`; `show` do são **200**; rota pública **sem cookie**
+**200**; o corrompido devolve **500 `application/problem+json`** no `show` e no `pdf`, nomeando
+`LOT-2026-1001` **e** o campo `aluno.name`.
+
+**Visto renderizado (DoD 8):** 14 PNGs comparados página a página. As **cinco** páginas do manual
+batem com o template em grade, colunas, cores e contagem de linhas; no certificado as únicas
+divergências são as já declaradas — assinatura da gerente e carimbos SENCE/NCH pela §7 da spec,
+cunhas das quinas e faixa na página 2 pela **P-28** —, confirmadas na imagem em vez de assumidas.
+
+**Órfãos e leis §5:** 54 consumidores das classes de `App\Shared\Office\`; zero sobra de
+`ManualPdfService`, `manual-turma.blade`, `class="accent"` ou `class="meta"` (os únicos hits são um
+comentário que explica a renomeação e a asserção de **ausência** de `class="qr"`); zero `abort(` em
+`Domains/Operation/`; zero Repository; nenhum import de PrimeReact direto nem cross-feature nos três
+arquivos de frontend do bloco.
+
+**Pendências:** nenhuma nasceu neste gate e nenhuma fechou. A **P-28** já entrou no gate técnico; a
+**P-20** e a **P-21** foram atualizadas, não fechadas (o hospedeiro do `openspout` e a nota do
+`simple-qrcode` seguem com o João). A **P-08** não disparou (manual continua Blade única
+padronizada, agora em OOXML) e a **P-03** não fechou (um bloco de backend só). P-04 reavalia
+**2026-08-15**; P-15, P-23, P-25, P-26 e P-28 revisam **2026-09-30**.
+
+**Uma imprecisão do plano, registrada em vez de corrigida retroativamente:** o Step 2 da Task 10
+escreve `"password":"password"` como credencial do seed, e a senha real é `senha123` — todos os
+outros planos do repositório escrevem certo. O plano aprovado **não** foi reescrito (precedente da
+P-27) e o e2e deste gate rodou com a credencial correta.
+
+**Divergência de outro bloco, achada e não corrigida pelo segundo gate seguido:** a linha do
+`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
+`Spatie\LaravelData\Optional|int`, que parte a tabela naquela linha. O fechamento do
+`hardening-revisao-ui-assistida` já a registrou sem tocar; reverter aquela decisão sem o João seria
+a mesma deriva silenciosa que o gate existe para impedir.
+
+**Arquivamento:** plano → `plans/archive/2026-08-10-documentos-oficiais-template-e-docx.md`; spec →
+`specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md` (não é compartilhada com
+nenhum item futuro registrado). A referência interna do plano à spec foi reapontada para o path
+arquivado. Entrega registrada no `progress.md`, com a de 2026-08-04
+(`hardening-estrutural-pre-sprint-4`) descendo para o `progress-archive.md` para manter dez. Item 1
+removido do `backlog.md`, com renumeração dos seguintes.
+
+**Estado do ambiente:** `migrate:fresh --seed` **não** foi rodado — o banco de dev segue carregando
+o `LOT-2026-1001` corrompido de propósito para o checkpoint visual do João, que é justamente a
+evidência viva que o DoD 7 usa. O e2e deste gate foi read-only.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o manual **aberto no Word do cliente** (a Q-1
+remove a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor
+independente continua sendo o do João); fidelidade **pixel a pixel** — a comparação foi de grade,
+cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre os hooks de `shared/`
+e hook de feature com DOM está fora dele (lição 10).
+
+**Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.
+
+## Penúltimo item fechado — 2026-08-10 (`hardening-revisao-ui-assistida`)
 
 ### Gate de fechamento — 2026-08-10
 
@@ -592,7 +679,7 @@ Nota para quem for validar o adaptador: `quick_validate.py` **reprova** `.claude
 por `argument-hint` e `disable-model-invocation`, que não pertencem ao formato canônico. Isso é o
 adaptador cumprindo seu papel, não regressão — o DoD item 2 valida a fonte em `.agents/skills/`.
 
-## Penúltimo item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
+## Antepenúltimo item fechado — 2026-08-10 (`turma-habilitacao-listagem`)
 
 **Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
 com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
@@ -938,368 +1025,3 @@ backlog a consome). Entrega registrada no `progress.md` (a de 2026-08-03/`zerar-
 `18` da turma 4 **soft-deletado** com o objeto correspondente vivo no MinIO — comportamento prescrito
 (`migrations.md`: delete de doc apaga o metadado, o arquivo fica no bucket). As 4 turmas voltaram ao
 cenário canônico. `migrate:fresh --seed` devolve tudo.
-
-## Antepenúltimo item fechado — 2026-08-10 (`certificacao-lote-e-snapshot`)
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito contra a API real, não herdado do gate de execução:** as correções Q-1..Q-6
-entraram em `d01c279`, depois do e2e da Task 6, e mexeram exatamente nos caminhos que o gate exercita
-— `show`, listagem e `ProblemDetails`. `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie +
-CSRF (lição 12: `Origin` e `Accept` obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login).
-
-**A cadeia do §6 da spec, pela API:**
-
-1. **Porta destravada pela própria API:** o seed fresco deixa a turma 3 com
-   `emission_blocked: 'sin_plantilla'`; `PUT /api/courses/2` criando o template v1 com
-   `layout_config.city = 'Santiago'` e `validity_months: 24` zerou o bloqueio (`null`). Os `modules`
-   foram **omitidos** do payload de propósito — coleção nested `Optional`, ausente não mexe — e os 2
-   voltaram intactos. O primeiro ensaio de emissão levou **422** por comportamento correto, não por
-   defeito: `redator_id: 1` não é o designado da turma (`El redactor no está designado en esta
-   clase.`), e o painel diz que o designado é o 3.
-2. **Emissão individual** em `enrollments/21` → **201 `LOT-2026-1000`**, `snapshot_ok: true`.
-3. **Lote `[22, 21, 23, 24]`** com a falha provocada (21 já tinha vigente) → **200** com relatório
-   por item: `LOT-2026-1001`/`1002`/`1003` **contíguos**, sem buraco onde o item falho ficou — a
-   recusa **não consumiu número de sequência** —, e a falha **nomeada** (`Ya existe un certificado
-   vigente para esta matrícula.`). `[26, 26]` → **422** problem+json, o `distinct` vivo.
-4. **`aluno.name` corrompido direto na coluna** do certificado 2 (`UPDATE … JSON_SET`), com o resto
-   do JSON conferido por **MD5 antes e depois** como byte-idêntico (`JSON_REMOVE` do campo mexido dá
-   o mesmo hash nos dois lados). As seis chamadas:
-
-   | Chamada | Resultado |
-   |---|---|
-   | `GET /api/certificates` | **200**, `snapshot_ok: false` **só** na linha corrompida (as outras 3 em `true`) |
-   | `GET /api/certificates/2` (corrompido) | **500** `application/problem+json`, `detail` nomeando `LOT-2026-1001` **e** o campo faltante |
-   | `GET /api/certificates/2/pdf` | **500** problem+json, mesmo `detail` |
-   | `GET /api/publico/certificados/{uuid}` **sem cookie** | **500** problem+json, mesmo `detail` |
-   | `GET /api/certificates/1` (são) | **200**, `snapshot_ok: true` |
-   | `GET /api/certificates/1/pdf` (são) | **200 `application/pdf`**, 40.119 bytes |
-
-   Controle extra: a rota pública do certificado **são**, sem cookie, segue **200** com o payload
-   completo. O gate único não fechou o caminho feliz.
-
-**A prova que nenhum gate anterior tinha feito, e que o Q-1 obrigou — `APP_DEBUG=false`.** O achado
-existe porque `backend/.env` tem `APP_DEBUG=true` e não há `.env.testing`: suíte e e2e provavam a D8
-num caminho que a produção não percorre. Com o `.env` posto em `APP_DEBUG=false` e `config:clear`,
-medido **nos dois sentidos** (lição 10):
-
-- `GET /api/certificates/2` e a rota pública sem cookie seguem devolvendo o `detail` **inteiro**
-  (`El certificado LOT-2026-1001 no puede presentarse: su documento congelado no tiene los campos
-  aluno.name.`) — o `PublicDetail` atravessa a máscara, que é a promessa da D8;
-- um 500 **comum**, provocado parando o container `gotenberg` e pedindo o PDF do certificado **são**,
-  continua **mascarado** com `Ocorreu um erro inesperado. Tente novamente.` — o default não foi
-  afrouxado para todo mundo.
-
-`gotenberg` religado e `.env` restaurado no mesmo passe, com o PDF são voltando a **200
-`application/pdf`, 40.119 bytes**; `git status` limpo (o `.env` é ignorado, e foi conferido).
-
-**Demais itens:** suíte **500 passed, 1 skipped (1858 assertions)** · frontend **13 arquivos / 47
-testes**, `pnpm lint` e `pnpm build` verdes · `typescript:transform` **sem diff** em `generated.ts` ·
-`git diff 7227d04..HEAD -- backend/database/` **vazio** (zero schema, como a spec previu) · código
-morto zero (nenhum `.gitkeep`, nenhum `TODO`/`FIXME` novo; os 6 símbolos nascidos no bloco todos com
-consumidor) · leis §5 limpas (zero `Repository`, zero import cross-feature, zero PrimeReact direto em
-`features/`; o único `abort()` de `app/` é o 404 pré-existente do `PublicCertificateController`, que
-o bloco não tocou).
-
-**Pint com uma exceção honesta:** `passed` em 13 dos 14 `.php` do bloco. `ProblemDetails.php`
-reprova, e **já reprovava na versão base** — conferido rodando `pint --test` sobre o arquivo extraído
-de `7227d04`, com a mesma lista de 6 fixers (`ordered_imports`, `binary_operator_spaces`,
-`single_blank_line_at_eof`, …). É dívida de estilo pré-existente num arquivo que o bloco só tocou em
-8 linhas; reformatá-lo inteiro seria ruído de diff (lição 9).
-
-**O que o gate NÃO provou, sem maquiagem:** **a tag da linha corrompida não foi vista renderizada.**
-O host WSL não tem browser utilizável (Playwright sem as bibliotecas de sistema, limitação herdada de
-2026-08-08). A prova aqui é o `snapshot_ok` na API real, o `pnpm build`/`pnpm lint` e a paridade das
-três locales; **o checkpoint visual fica com o João.**
-
-**Pendências revisadas:** nenhuma venceu gatilho (P-04 reavalia **2026-08-15**; P-03 segue sem dois
-blocos de backend em paralelo; P-15, P-23, P-25 e P-26 revisam **2026-09-30**), nenhuma fechou,
-nenhuma nasceu — o bloco não deixou doc nem mecanismo afirmando o que o código não faz. **Fica
-anotado para decisão do João, sem virar pendência:** a suíte roda com `APP_DEBUG=true` herdado do
-`.env`, e a única guarda do caminho mascarado é o `config(['app.debug' => false])` que o Q-1 escreveu
-dentro do próprio teste; um `.env.testing` fixando o modo produção é decisão de infra dele, não do
-agente.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-certificacao-lote-e-snapshot.md`; spec →
-`specs/archive/2026-08-10-certificacao-lote-e-snapshot-design.md` (não é compartilhada: o item 5 do
-backlog, `turma-habilitacao-listagem`, tem decisões próprias e não a consome). Entrega registrada no
-`progress.md` (a de 2026-08-02/`operation` desceu ao `progress-archive.md` para manter dez); item 4
-removido do `backlog.md`, com o `turma-habilitacao-listagem` renumerado para 4.
-
-**Estado do banco de dev:** `migrate:fresh --seed` do gate mais as mutações do e2e (template v1 do
-curso 2 com `city: Santiago` e `validity_months: 24`, certificados `LOT-2026-1000`…`1003`, e o
-`aluno.name` do `LOT-2026-1001` **deixado corrompido de propósito** para o checkpoint visual do João
-encontrar a linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cenário
-canônico.
-
-**Item 4 do `backlog.md`, selecionado explicitamente pelo João em 2026-08-10** (`/planejar-bloco`
-com o item nomeado literalmente no argumento e o estado em `idle`; o comando não promove item
-sozinho). O item nasceu da **revisão de arquitetura de 2026-08-09**, com as decisões já tomadas por
-ele na entrevista — a edição do `backlog.md` que criou os itens 4 e 5 estava na árvore sem commit e
-entra no commit da seleção, porque é o artefato que a prova.
-
-**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa** (mesmo caso
-de `profundidade-backend-b4-b7` e `profundidade-form-crud`): o item não cita Drive, Notion nem
-Figma, e as fontes são o repositório mais as decisões escritas. Dispensa confirmada pelo João na
-abertura.
-
-**Uma divergência do item foi levantada e fechada antes do desenho:** o texto diz "13 decisões já
-tomadas na entrevista", e o backlog escreve 6 aqui (mais 5 no item 5, total 11). **Decisão do João:
-as 6 escritas são tudo** — o "13" contava a entrevista inteira, incluindo o que virou recorte e
-fora-de-escopo. Nenhuma decisão perdida; a spec desenha sobre as 6 mais o que o código mediu.
-
-**Cinco medições contra o texto do item, feitas antes de desenhar:** (1) `missingRequiredFields()`
-tem exatamente 2 consumidores, ambos com a política copiada — a D4 bate com o repo; (2) **`show` não
-checa snapshot hoje**, então "falha alto" é comportamento novo, não refactor, e `index` idem; (3) a
-D3 muda comportamento no lote (`->first()` vira `implode(' ')`; hoje as 6 portas lançam uma mensagem
-cada, então a diferença só aparece com recusa de 2+ razões); (4) `App\Shared\Validation` não existe;
-(5) o Action da D1 fica **sem `DB::transaction`** de propósito — exceção declarada à regra de Action
-da `backend-ddd.md`, e é o ponto do bloco.
-
-### Brainstorming de 2026-08-10 — spec aprovada, três decisões novas
-
-As 6 decisões da entrevista entraram sem reabertura. Só três pontos estavam abertos, e o João
-fechou os três: **D7** — `missingRequiredFields()` vira privado, com `isPresentable(): bool` e
-`assertPresentable(string $codigo)` adjacentes no molde `assert*`/`constrain*` do
-`CertificateEligibility` (B1); **D8** — a linha corrompida **mantém o botão Ver**, que cai no estado
-de erro já existente do `CertificateViewDialog` — é onde o suporte lê quais campos faltam; **D9** —
-a marcação é **tag de estado** (`AppTag severity="danger"` no lugar do Vigente/Vencido), porque com
-o documento corrompido o estado da linha é justamente o que não dá para afirmar.
-
-**Consequência declarada na spec, não descoberta depois:** "corrompido" **não** vira um quinto
-`CertDerivedStatus` — promovê-lo contaminaria o dropdown de filtro, os quatro contadores do rodapé e
-o `CertificateViewDialog`. Filtrar por "Vigente" continua trazendo a linha corrompida cujas datas
-dizem vigente. Corrupção é defeito do documento, não estado dele.
-
-Spec: `docs/superpowers/specs/archive/2026-08-10-certificacao-lote-e-snapshot-design.md`. Review declarado
-**ALTO RISCO** (peso legal + rota pública + `generated.ts`) → duas frentes em `ready_for_review`.
-Backend mais um arquivo de frontend → **main tree, sem worktree (P-03)**; zero schema, ADR/DER não
-abrem.
-
-### Plano escrito em 2026-08-10 — 7 tasks (0–6), `executor: claude`
-
-`docs/superpowers/plans/archive/2026-08-10-certificacao-lote-e-snapshot.md`. Branch prevista:
-`refactor/certificacao-lote-e-snapshot`, a partir de `eca31e4`.
-
-A escrita do plano achou **quatro desvios contra a spec aprovada, declarados no §Desvios** em vez de
-silenciados (lição 13):
-
-- **D-P1** — o §6 da spec descreve "uma fixture, quatro provas"; medido, **duas já são testes
-  vivos** (`CertificatePdfTest.php:398,416` e `PublicCertificateTest.php:184`, ambos em 500). O
-  plano cria **dois** testes (`index` marcando, `show` em 500) e trata os dois existentes como
-  regressão que tem de ficar verde **sem edição** — duplicá-los seria cobertura falsa.
-- **D-P2** — o guard `test_falha_inesperada_no_meio_do_lote_preserva_o_que_ja_saiu` sobrevive à
-  mudança de casa **por construção, conferido e não suposto**: o dublê entra por
-  `$this->instance(IssueCertificateAction::class, …)` e o Action novo recebe o
-  `IssueCertificateAction` pelo construtor, do container. Por isso o arquivo de teste fica com zero
-  linhas de diff, e o mutante (`DB::transaction` em volta do laço) é reprovado no endereço novo.
-- **D-P3** — `App\Shared\Validation` **não cria aresta** na matriz: o `DomainDependencyTest` governa
-  só `App\Domains\* → App\Domains\*`; `App\Shared\*` é transversal e já é consumido por domínios
-  (precedente `App\Shared\Data\ContratanteData`, do B4).
-- **D-P4** — o teste de `squash()` estende `Tests\TestCase`, não o `PHPUnit\Framework\TestCase` do
-  vizinho `RutTest`: `ValidationException::withMessages()` monta um validador pela facade e precisa
-  do container. Sem `RefreshDatabase` — nada toca banco.
-
-Ordem das tasks: 0 baseline → 1 `ValidationMessages::squash()` com os dois adapters → 2
-`BatchIssueCertificatesAction` → 3 gate único do snapshot → 4 `snapshot_ok` + `show` falhando alto +
-docblock do D6 + `generated.ts` → 5 tag no `HistorialTable` + chave nas 3 locales → 6 gate do bloco
-contra a API real.
-
-### Execução iniciada em 2026-08-10 — `/executar-bloco`, `subagent-driven-development`
-
-Branch `refactor/certificacao-lote-e-snapshot` a partir de `7227d04` — **não de `eca31e4`** como o
-plano escreveu: `7227d04` é o próprio commit do plano, docs-only (plano + `state.md`, zero código),
-e branchar antes dele deixaria o plano fora da branch que ele governa. Main tree, sem worktree
-(P-03).
-
-**Task 0** confirmou o baseline exato do plano: backend **493 passed, 1 skipped (1833 assertions)**;
-frontend **13 arquivos / 47 testes**, `pnpm lint` e `pnpm build` verdes; `typescript:transform` sem
-diff em `generated.ts`.
-
-**O pré-flight do plano achou um conflito medido, decidido pelo João antes de qualquer edição
-(D-E1).** O fixture do `CertificateListingTest` **não produz snapshot apresentável**: o default de
-`createCertificate` é `['aluno' => ['name' => 'Juan Pérez']]`, sem a seção `curso`, e
-`SnapshotCourseData::fromArray(null)` põe `name: ''` — medido no tinker,
-`missingRequiredFields()` devolve `["curso.name"]`. Duas consequências contra o texto do plano: o
-teste novo da Task 4 afirmaria `snapshot_ok === true` sobre um certificado que mede `false` (as duas
-linhas dariam `false`, e o teste não distinguiria corrompido de são); e
-`test_show_devolve_o_snapshot_persistido:84`, que passa outro snapshot igualmente sem `curso`,
-viraria **500** assim que o `show` chamasse `assertPresentable()`.
-
-**Não é uma quinta mudança de comportamento.** `show` em 500 sobre snapshot sem `curso.name` é o
-item 1 da lista fechada do §5 — o fixture já era corrompido pela definição que o projeto tem hoje
-(`CertificatePdfService` e `PublicCertificateData` já estouram nele; `CertificatePdfTest:43` monta a
-seção `curso` justamente por isso). A listagem só nunca exercitou essas rotas. O único
-`assertExactJson` do domínio é sobre `PublicCertificateData`, que não ganha campo.
-
-**Decisão do João: reparar o fixture** — o default do `createCertificate` e o snapshot do
-`test_show_devolve_o_snapshot_persistido` ganham `'curso' => ['name' => …]`. Edição **só de
-fixture**: nenhuma asserção muda, os 9 testes existentes seguem provando o que provavam, e os 2
-testes novos passam a isolar `aluno.name` como a única corrupção — que é a história da spec.
-
-### Tasks 1–5 entregues — uma revisão de task por entrega
-
-Commits, do base `7227d04`: `66e0911` (seam `ValidationMessages::squash()` com os dois adapters),
-`c7fb9bf` (`BatchIssueCertificatesAction`), `8299921` (gate único do snapshot), `70c0167`
-(`snapshot_ok` + `show` falhando alto + `generated.ts`) + `b2a5028` (fix do review da Task 4),
-`144c857` (tag da linha corrompida no Historial + chave nas 3 locales).
-
-**Dois mecanismos foram vistos reprovando em primeira mão, não aceitos por relatório (lição 10):**
-
-1. **A ausência de `DB::transaction` no Action do lote.** O revisor da Task 2 foi barrado pelo
-   classificador de permissão ao tentar reproduzir o mutante, e disse isso em vez de mascarar.
-   Envolvi o laço do `BatchIssueCertificatesAction` num `DB::transaction` eu mesmo:
-   `BatchIssueTest.php:299` reprovou com `Failed asserting that table [certificates] matches
-   expected entries count of 1. Entries found: 0.` Mutante revertido, árvore limpa, verde de volta.
-   O guard sobreviveu à mudança de casa com **zero linhas de diff** no arquivo de teste, que era o
-   critério do refactor (D-P2 confirmado).
-2. **A fonte do `snapshot_ok`.** Achado **Importante** do review da Task 4, provado pelo próprio
-   revisor: com o certificado são `Revocado` e o corrompido `Emitido`, `status` era proxy
-   **perfeito** de `snapshot_ok`, e o mutante `snapshot_ok: $certificate->status !==
-   CertificateStatus::Emitido` — campo derivado de fonte inteiramente errada — deixava o teste **e a
-   suíte inteira** verdes. É a "igualdade acidental" da `backend-ddd.md` §Testes, num campo que a
-   Task 5 consome na UI. Corrigido em `b2a5028` com uma terceira linha **revogada E corrompida**, de
-   modo que `Revocado` mapeia para os dois valores; mutante revisto **vermelho** (`Failed asserting
-   that true is identical to false.` em `CertificateListingTest.php:145`), revertido em seguida.
-
-**Um desvio forçado pelo schema (D-E2):** o cenário do `index` não pode ter dois `Emitido` na mesma
-matrícula — `certificates_active_enrollment_unique`, sobre a coluna gerada `active_enrollment_id`,
-recusa antes de a listagem responder (o primeiro RED foi `UniqueConstraintViolationException`). O
-são virou `Revocado`, seguindo o precedente do próprio arquivo. Revogado produz `NULL` na coluna
-gerada, e `NULL` não colide — é o que permite as duas linhas revogadas do fix acima.
-
-### Task 6 — o gate do bloco (2026-08-10)
-
-Executado por mim direto: é a prova do DoD do bloco, e o DoD pede comportamento contra a API real.
-
-**Ferramentas.** Backend **498 passed, 1 skipped (1850 assertions)** — +5 testes / +17 asserções
-sobre o baseline 493/1833. Frontend **13 arquivos / 47 testes**, `pnpm lint` limpo, `pnpm build`
-verde. Pint `--test` **`passed`** nos **11** `.php` vivos do bloco (lista conferida antes, para o
-`--test` nunca cair sem argumento — lição 9). `typescript:transform` rodado de novo: `generated.ts`
-**sem diff** depois do commit da Task 4, e `git diff main...HEAD -- backend/database/` **vazio** —
-zero schema, como a spec previu.
-
-**E2e contra a API real**, `migrate:fresh --seed` no MySQL, sessão Sanctum por cookie + CSRF
-(`Origin` e `Accept` obrigatórios, `XSRF-TOKEN` reextraído do jar depois do login, que o rotaciona).
-
-1. **Portas destravadas pela própria API:** o seed fresco deixa a turma 3 com
-   `emission_blocked: 'sin_plantilla'`; `PUT /api/courses/2` criando o template v1 com
-   `layout_config.city = 'Santiago'` e `validity_months: 24` zerou o bloqueio (`null`). A turma é
-   `online` com `local_aplicacao: null`, então a cidade do template era mesmo obrigatória. Os
-   `modules` foram **omitidos** do payload de propósito — coleção nested `Optional`, ausente não
-   mexe — e voltaram intactos.
-2. **Emissão individual** em `enrollments/21` → **201 `LOT-2026-1000`**, `snapshot_ok: true`.
-3. **Lote `[22, 21, 23, 24]`** com a falha provocada (21 já tinha vigente) → **200** com relatório
-   por item: `LOT-2026-1001`/`1002`/`1003` **contíguos**, sem buraco onde o item falho ficou — a
-   recusa **não consumiu número de sequência** —, e a falha **nomeada**
-   (`Ya existe un certificado vigente para esta matrícula.`). `[25, 25]` → **422** problem+json, o
-   `distinct` vivo.
-4. **`aluno.name` corrompido direto na coluna** do certificado 2 (`UPDATE … JSON_SET`), com o resto
-   do JSON conferido byte a byte como intacto. As seis chamadas:
-
-   | Chamada | Resultado |
-   |---|---|
-   | `GET /api/certificates` | **200**, `snapshot_ok: false` **só** na linha corrompida |
-   | `GET /api/certificates/2` (corrompido) | **500** `application/problem+json`, `detail` nomeando `LOT-2026-1001` **e o campo faltante** |
-   | `GET /api/certificates/2/pdf` | **500** problem+json, mesmo `detail` |
-   | `GET /api/publico/certificados/{uuid}` **sem cookie** | **500** problem+json, mesmo `detail` |
-   | `GET /api/certificates/1` (são) | **200**, `snapshot_ok: true` |
-   | `GET /api/certificates/1/pdf` (são) | **200 `application/pdf`** |
-
-   Controle extra: a rota pública do certificado **são**, sem cookie, segue **200**. E a página 1 do
-   PDF são foi inspecionada com `pdftoppm` — nome, RUT, cliente, curso, vigência, QR e assinatura
-   todos impressos. O gate único não fechou o caminho feliz.
-
-**O que o gate NÃO provou, sem maquiagem:** **a tag da linha corrompida não foi vista renderizada.**
-O host WSL não tem browser utilizável (Playwright sem as bibliotecas de sistema, limitação herdada
-de 2026-08-08). A prova aqui é o `snapshot_ok` na API real, o `pnpm build`/`pnpm lint` e a paridade
-das três locales; **o checkpoint visual fica com o João.**
-
-**Estado do banco de dev:** `migrate:fresh --seed` do gate mais as mutações do e2e (template v1 do
-curso 2 com `city: Santiago`, certificados `LOT-2026-1000`…`1003`, e o `aluno.name` do
-`LOT-2026-1001` **deixado corrompido de propósito** para o checkpoint visual do João encontrar a
-linha marcada). Nada é fixture de código; `migrate:fresh --seed` devolve o cenário canônico.
-
-### Três Minor abertos, dois deles decisão do João, para o review herdar
-
-- **Minor-2 (decisão do João — o plano manda o texto).**
-  `CorruptedSnapshotException.php:18` afirma "**A listagem é a exceção deliberada, e é a única.**" A
-  frase é **falsa**: `store()` e `revoke()` também projetam `CertificateData` sem passar pelo gate.
-  O texto está mandado **verbatim pelo plano, na linha 793**, então a contradição é do plano, não da
-  implementação — não corrigi unilateralmente.
-- **Minor-4 (decisão do João — escopo).** `certificatesApi.ts:68-71` / `IssuedDialog` consomem o
-  certificado por um caminho que **não passa pelo `show` gateado**. Fechar isso seria uma **quinta**
-  mudança de comportamento, e o §5 da spec é lista **fechada** de quatro.
-- **Minor-3 (técnico, sem decisão pendente).** `CertificateData.php:49-50` acessa
-  `$certificate->snapshot` duas vezes; com `withoutObjectCaching` no cast, são dois decodes do JSON
-  por certificado listado.
-
-Evidência task a task em `.superpowers/sdd/progress.md`. Review **ALTO RISCO** pela spec (peso legal
-+ rota pública + `generated.ts`) → duas frentes: lente Claude com o gabarito do projeto + Codex
-read-only sobre `7227d04..HEAD`.
-
-### Review de sprint — 2026-08-10: duas frentes, 6 achados, todos aprovados e corrigidos
-
-**ALTO RISCO** conforme a spec → lente Claude com o gabarito do projeto + `mcp__codex__codex`
-read-only sobre `7227d04..HEAD`. Órfãos **zero** (`missingRequiredFields` privado com 2 chamadores
-internos, `isPresentable` 1, `assertPresentable` 3, `ValidationMessages` 2, o Action do lote 1, e os
-imports `Redator`/`Enrollment` do controller seguem usados pelo `store`). Leis §5 limpas. **Sem
-divergência de fato entre os revisores**: o Codex viu 5 dos 6 e eu confirmei cada um no código antes
-de aceitar — com o escopo do Q-3 corrigido (ele disse "`curso.name` ou `emissor.name`"; medi, e
-`emissor.name` já tem quem o mate). O Q-1 nenhuma das duas lentes tinha visto antes desta rodada.
-
-**O achado que o gate não podia ter pego (Q-1 🟡)** — `ProblemDetails::detailFor()` troca o `detail`
-de **todo 500** por `'Ocorreu um erro inesperado. Tente novamente.'` quando `app.debug` é falso. A
-D8 promete o contrário: a linha corrompida mantém **Ver**, o `CertificateViewDialog` imprime
-`error.detail` no `AppErrorState`, "é onde o suporte lê quais campos faltam". Em produção o suporte
-lia "erro inesperado" — sem código, sem campo. **Nem a suíte nem o e2e viam**, e o motivo foi
-medido: `backend/.env` tem `APP_DEBUG=true` e **não existe `.env.testing`**, então os dois provaram a
-D8 num caminho que a produção não percorre. Nasce `App\Shared\Exceptions\PublicDetail`, interface
-marcadora para a exceção cuja mensagem foi escrita para quem lê a resposta; o default segue
-mascarando e só quem declara passa. No mesmo achado, a mensagem saiu de **PT-BR** para **es-CL** —
-ela agora chega à tela de um usuário chileno, e todas as recusas irmãs deste diff já estavam em
-espanhol. Guarda nova com `config(['app.debug' => false])`, **vista vermelha primeiro**, com o
-diff literal `+'Ocorreu um erro inesperado. Tente novamente.'`.
-
-**Os outros cinco:**
-
-- **Q-2 🟡** (lição 13, o Minor-2 herdado) — o docblock afirmava "**a listagem é a exceção
-  deliberada, e é a única**", e `store()`/`revoke()` também projetam `CertificateData` sem gate. O
-  texto vinha **verbatim do plano, linha 793**; com a aprovação do João foi corrigido, nomeando os
-  dois e o motivo de ficarem fora (são eco de escrita, não apresentação do documento — quem
-  apresenta é `show`, o PDF e o QR), sem virar a quinta mudança de comportamento.
-- **Q-3 🟡** — a política obrigatória tem três campos e **`curso.name` não tinha quem o matasse**:
-  `aluno.name` morre em 3 testes, `emissor.name` no `CertificatePdfTest:384`, e remover `curso.name`
-  deixava a **suíte inteira** verde. A terceira linha do teste da listagem (a revogada **e**
-  corrompida, que existe para quebrar a correlação `status`×`snapshot_ok`) passa a corromper
-  `curso.name` em vez de `aluno.name` — fecha o buraco sem teste novo e sem perder o poder
-  discriminante. Mutante **visto vermelho** (`Failed asserting that true is identical to false.`),
-  revertido em seguida.
-- **Q-4 🟢** (o Minor-3 herdado) — `CertificateData::fromModel` lia `$certificate->snapshot` duas
-  vezes; com `withoutObjectCaching` no cast são dois decodes de JSON por linha de uma listagem que
-  não pagina. Variável local; não reabre o bug do cache de casts, que era do Eloquent e não da
-  variável.
-- **Q-5 🟢** — `test_show_de_snapshot_corrompido_falha_alto` afirmava só status e content-type;
-  passa a afirmar o `detail` que nomeia o certificado e o campo, que é exatamente o texto de que a
-  D8 depende.
-- **Q-6 🟢** — o seam `ValidationMessages::squash()` tinha unit test, a **fiação** dele no Action do
-  lote não tinha nenhuma: voltar para `->first()` ficava verde. Teste novo com recusa de duas
-  razões; mutante **visto vermelho** (`-'La clase no está concluida. El redactor no está designado
-  en esta clase.'` / `+'La clase no está concluida.'`), revertido em seguida. Não é bug vivo — as
-  seis portas emitem uma mensagem cada —, é guarda contra a regressão.
-
-**Não viraram achado, por serem decisão consciente registrada:** o **Minor-4** (o `IssuedDialog` lê
-o certificado por caminho não-gateado, porque `useIssueCertificate` semeia `detailKey` com a resposta
-do POST — fechar seria a quinta mudança de comportamento); a **tag não vista renderizada**, que é
-limitação declarada do gate e segue com o João; e o corrompido **não** virar um quinto
-`CertDerivedStatus`, com filtro e contadores continuando a classificar a linha pelas datas —
-consequência declarada na spec.
-
-**Placar pós-correção: 500 passed, 1 skipped (1858 assertions)** — +2 testes / +8 asserções sobre os
-498/1850 do gate, que eu reconferi antes de revisar em vez de herdar do relatório. Pint `passed` nos
-5 arquivos novos/editados do fix. **Uma exceção honesta:** `ProblemDetails.php` reprova no Pint, e
-**já reprovava antes desta edição** — conferido rodando `pint --test` sobre a versão de `HEAD`, com a
-mesma lista de fixers. É dívida de estilo pré-existente num arquivo que o bloco não tinha tocado;
-reformatá-lo inteiro seria ruído de diff (lição 9), então ficou. `pnpm lint`, `pnpm build` e
-`pnpm test` (13 arquivos / 47 testes) verdes; `typescript:transform` **sem diff** em `generated.ts` —
-nenhum DTO mudou de forma. Correções no commit `d01c279`.

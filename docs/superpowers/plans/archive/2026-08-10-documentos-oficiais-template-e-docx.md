@@ -18,7 +18,7 @@ destinos.
 8.34.0 (`/forms/chromium/convert/html`, `/forms/chromium/screenshot/html`,
 `/forms/libreoffice/convert`) · React 19 + TS · PrimeReact via `shared/ui`.
 
-**Spec:** `docs/superpowers/specs/2026-08-10-documentos-oficiais-template-e-docx-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md`
 (aprovada pelo João em 2026-08-10).
 
 ## Global Constraints
