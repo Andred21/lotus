@@ -63,13 +63,28 @@ class ManualTurmaTest extends TestCase
         $this->assertSame(1, $fake->timesCalled());
     }
 
+    /**
+     * O nome deste teste promete o envelope, então ele afirma o envelope: só o
+     * status deixaria passar um 500 em HTML puro, que é exatamente a classe de
+     * regressão que o `ProblemDetails` já apresentou uma vez (mascaramento do
+     * `detail` visto no bloco anterior).
+     */
     public function test_conversor_fora_do_ar_500_rfc7807(): void
     {
         $this->actingAsAdmin();
         Http::preventStrayRequests();
         Http::fake(['*/forms/libreoffice/convert' => Http::response('boom', 503)]);
 
-        $this->getJson("/api/turmas/{$this->turma->id}/manual")->assertStatus(500);
+        $this->getJson("/api/turmas/{$this->turma->id}/manual")
+            ->assertStatus(500)
+            ->assertHeader('content-type', 'application/problem+json')
+            ->assertJsonPath('type', 'https://lotus.cl/errors/server')
+            ->assertJsonPath('title', 'Erro interno')
+            ->assertJsonPath('status', 500)
+            ->assertJsonPath(
+                'detail',
+                'O conversor de documentos falhou ao converter o manual (HTTP 503).',
+            );
     }
 
     public function test_manual_exige_turma_view(): void
@@ -135,6 +150,43 @@ class ManualTurmaTest extends TestCase
         // chega a renderizar.
         $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', $xml);
         $this->assertStringContainsString('<w:pgSz w:w="20183" w:h="12246" w:orient="landscape"/>', $xml);
+    }
+
+    /**
+     * DoD 3, a metade que o LibreOffice não cobra: o Word identifica cada
+     * desenho pelo `id` do `<wp:docPr>` e pede reparo do arquivo quando ele
+     * repete. O `docs/templates/manual.docx`, escrito pelo próprio Word, numera
+     * os seus dez desenhos de 1 a 10 sem repetir — e escreve `id="0"` nos dez
+     * `<pic:cNvPr>`, porque ali o id é interno à figura. O cabeçalho é um
+     * partial incluído cinco vezes; sem contador, sairiam cinco ids iguais.
+     */
+    public function test_cada_desenho_do_pacote_tem_id_unico(): void
+    {
+        preg_match_all('/<wp:docPr id="(\d+)"/', $this->documentXml(), $desenhos);
+
+        $this->assertCount(5, $desenhos[1], 'um cabeçalho por página');
+        $this->assertSame($desenhos[1], array_values(array_unique($desenhos[1])));
+    }
+
+    /**
+     * O manual numera linha a linha e é ASSINADO por linha, e o PDF e o DOCX
+     * são dois requests. Sem ORDER BY a mesma turma podia sair numerada de dois
+     * jeitos — o defeito que o `EnrollmentQueryBuilder::orderByStudentName` já
+     * documenta para a tela, aqui com peso de documento.
+     */
+    public function test_as_tres_grades_saem_em_ordem_de_nome(): void
+    {
+        foreach (['Zoe Zapata', 'Ana Alvarez', 'Bruno Bravo'] as $nombre) {
+            $this->matricular($nombre);
+        }
+
+        preg_match_all('/>(Ana Alvarez|Bruno Bravo|Zoe Zapata)<\/w:t>/', $this->documentXml(), $orden);
+
+        $this->assertSame([
+            'Ana Alvarez', 'Bruno Bravo', 'Zoe Zapata',
+            'Ana Alvarez', 'Bruno Bravo', 'Zoe Zapata',
+            'Ana Alvarez', 'Bruno Bravo', 'Zoe Zapata',
+        ], $orden[1]);
     }
 
     /**
@@ -229,14 +281,19 @@ class ManualTurmaTest extends TestCase
     private function enroll(int $n): void
     {
         for ($i = 1; $i <= $n; $i++) {
-            $student = Student::create([
-                'user_id' => User::factory()->create([
-                    'type' => 'aluno', 'is_active' => false, 'name' => "Alumno {$i}",
-                ])->id,
-            ]);
-
-            Enrollment::create(['turma_id' => $this->turma->id, 'student_id' => $student->id]);
+            $this->matricular("Alumno {$i}");
         }
+    }
+
+    private function matricular(string $nombre): void
+    {
+        $student = Student::create([
+            'user_id' => User::factory()->create([
+                'type' => 'aluno', 'is_active' => false, 'name' => $nombre,
+            ])->id,
+        ]);
+
+        Enrollment::create(['turma_id' => $this->turma->id, 'student_id' => $student->id]);
     }
 
     private function documentXml(): string

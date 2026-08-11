@@ -45,6 +45,12 @@
     // branco do impresso. Truncar esconderia aluno num documento de sala.
     $filas = fn (int $minimo) => max($alumnos->count(), $minimo);
     $alumno = fn (int $i) => $alumnos->get($i)?->student;
+
+    // Id de desenho: contador em vez de literal, porque o cabeçalho é o mesmo
+    // partial cinco vezes e o Word pede reparo do arquivo quando dois desenhos
+    // compartilham o id. Incrementar no `@include` mantém a unicidade mesmo se
+    // uma página for movida ou duplicada.
+    $dibujo = 0;
 @endphp
 <w:document
     xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -55,7 +61,7 @@
 <w:body>
 
 {{-- ------------------------------------------------------------------ 1/5 --}}
-@include('operation.manual.partials.encabezado', ['titulo' => 'Libro de Control de Clases'])
+@include('operation.manual.partials.encabezado', ['titulo' => 'Libro de Control de Clases', 'dibujo' => ++$dibujo])
 @php
     $datos = [
         [1020, 'Cliente', $turma->contratante()->name],
@@ -82,7 +88,7 @@
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 
 {{-- ------------------------------------------------------------------ 2/5 --}}
-@include('operation.manual.partials.encabezado', ['titulo' => 'Antecedentes Participantes'])
+@include('operation.manual.partials.encabezado', ['titulo' => 'Antecedentes Participantes', 'dibujo' => ++$dibujo])
 @php
     $columnas = [[1361, 'N°'], [5216, 'Nombre'], [2948, 'RUT'], [4819, 'Empresa'], [3798, 'Firma']];
 @endphp
@@ -117,7 +123,7 @@
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 
 {{-- ------------------------------------------------------------------ 3/5 --}}
-@include('operation.manual.partials.encabezado', ['titulo' => 'Control de Asistencia de Participantes'])
+@include('operation.manual.partials.encabezado', ['titulo' => 'Control de Asistencia de Participantes', 'dibujo' => ++$dibujo])
 @php
     // 31 dias em cinco blocos; cada bloco de sete fecha numa coluna FIRMA
     // larga. A última coluna leva FIRMA/CONFORMIDAD/PARTICIPANTES em três
@@ -177,7 +183,7 @@
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 
 {{-- ------------------------------------------------------------------ 4/5 --}}
-@include('operation.manual.partials.encabezado', ['titulo' => 'Temas de La Capacitación'])
+@include('operation.manual.partials.encabezado', ['titulo' => 'Temas de La Capacitación', 'dibujo' => ++$dibujo])
 @php
     $columnas = [[1020, 'N°'], [7143, 'Módulo'], [3118, 'Objetivos'], [3402, 'Contenidos'],
         [1729, "Horas\nT"], [1729, "Horas\nP"]];
@@ -224,7 +230,7 @@
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 
 {{-- ------------------------------------------------------------------ 5/5 --}}
-@include('operation.manual.partials.encabezado', ['titulo' => 'Evaluaciones'])
+@include('operation.manual.partials.encabezado', ['titulo' => 'Evaluaciones', 'dibujo' => ++$dibujo])
 @php
     $columnas = [[567, 'N°'], [4252, 'NOMBRE'], [2154, 'FECHA'], [2154, 'FECHA'], [2154, 'FECHA'],
         [2154, 'FECHA'], [2154, 'NOTA FINAL'], [2551, "FIRMA\nCONFORMIDAD\nPARTICIPANTES"]];

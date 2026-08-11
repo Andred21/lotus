@@ -85,8 +85,9 @@
 **Nota (2026-08-10) — documento editável usa a SEGUNDA porta do mesmo Gotenberg.** Documento que o
 cliente edita (hoje o manual de classe) não nasce de HTML: é **OOXML autorado em Blade** e
 empacotado em OPC (`.docx`) por `App\Shared\Office\` — `Xml` (escape e `<w:br/>`), `OoxmlPackager`
-(ZIP com `[Content_Types].xml` primeiro) e `LibreOfficeConverter`, que fala com
-`/forms/libreoffice/convert` do **mesmo container Gotenberg** do certificado. O PDF do manual é a
+(ZIP com `[Content_Types].xml` primeiro) e a porta `DocxToPdf`, cuja única implementação é
+`GotenbergDocxToPdf` — que fala com `/forms/libreoffice/convert` do **mesmo container Gotenberg**
+do certificado, do mesmo jeito que `Shared\Pdf\GotenbergHtmlToPdf` fala com a rota Chromium. O PDF do manual é a
 conversão do próprio `.docx` entregue, não um segundo render: os dois formatos saem da mesma fonte,
 então não podem divergir. Não há ADR separado porque a decisão de transporte é a desta: um serviço
 externo do compose converte documento, e a rota Chromium e a rota LibreOffice são duas portas dele.

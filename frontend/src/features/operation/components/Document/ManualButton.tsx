@@ -13,20 +13,22 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
           label={t('operation.documents.manualPdf')}
           icon="pi pi-file-pdf"
           outlined
-          loading={manual.pending}
+          loading={manual.pdfPending}
           onClick={manual.openPdf}
         />
         <AppButton
           label={t('operation.documents.manualDocx')}
           icon="pi pi-file-word"
           outlined
-          loading={manual.pending}
+          loading={manual.docxPending}
           onClick={manual.downloadDocx}
         />
       </div>
-      {(manual.popupBlocked || manual.message) && (
+      {(manual.popupBlocked || manual.pdfError || manual.docxError) && (
         <p className="text-sm text-red-600">
-          {manual.popupBlocked ? t('operation.documents.popupBlocked') : manual.message}
+          {manual.popupBlocked
+            ? t('operation.documents.popupBlocked')
+            : (manual.pdfError ?? manual.docxError)}
         </p>
       )}
     </div>

@@ -15,4 +15,14 @@ class OfficeRenderException extends RuntimeException
     {
         return new self("O conversor de documentos falhou ao converter o manual (HTTP {$status}).");
     }
+
+    /**
+     * Falha ao FECHAR o pacote — antes do conversor, portanto. Um `.docx`
+     * incompleto é indistinguível de um completo para quem só olha o status da
+     * resposta; a falha tem de ter nome próprio em vez de virar documento.
+     */
+    public static function packagingFailed(string $porque): self
+    {
+        return new self("Não foi possível montar o pacote do documento: {$porque}.");
+    }
 }

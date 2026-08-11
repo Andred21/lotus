@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Shared;
 
+use App\Shared\Office\OfficeRenderException;
 use App\Shared\Office\OoxmlPackager;
 use App\Shared\Office\Xml;
 use Tests\TestCase;
@@ -54,5 +55,26 @@ class OoxmlPackagerTest extends TestCase
         $this->assertSame('<w:document/>', $zip->getFromName('word/document.xml'));
         $zip->close();
         unlink($file);
+    }
+
+    /**
+     * Pacote que não produziu bytes é FALHA, não documento.
+     *
+     * O caso é medido, não hipotético: fechar um ZIP sem nenhuma entrada faz o
+     * libzip APAGAR o arquivo temporário. O que este teste viu antes da
+     * correção foi `ErrorException: file_get_contents(/tmp/ooxmlXXXXXX): Failed
+     * to open stream` — 500 sem nome de domínio, carregando o caminho do
+     * temporário no `detail`, e com o `unlink` pulado. A falha agora tem tipo
+     * (`OfficeRenderException`, o que o contrato do `DocxToPdf` declara) e o
+     * temporário morre no `finally`. As demais checagens (`tempnam`, `open`,
+     * `addFromString`, `close`) fecham a mesma porta antes, cada uma no seu
+     * ponto — inclusive a única que devolveria bytes vazios sem nenhum aviso:
+     * `open()` falhando deixa para trás o arquivo de zero byte do `tempnam`.
+     */
+    public function test_pacote_vazio_falha_em_vez_de_devolver_documento_de_zero_byte(): void
+    {
+        $this->expectException(OfficeRenderException::class);
+
+        (new OoxmlPackager)->package([]);
     }
 }

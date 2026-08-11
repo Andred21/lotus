@@ -25,8 +25,14 @@ class ManualDocumentService
     public function docx(Turma $turma): string
     {
         $turma->load([
-            'course.modules', 'quote.budget.client.user',
-            'redatores.user', 'enrollments.student.user',
+            'course.modules', 'quote.budget.client.user', 'redatores.user',
+            // As três grades numeram linha a linha e são ASSINADAS por linha.
+            // Sem ORDER BY a relação vem na ordem que o banco quiser, e o PDF e
+            // o DOCX — que são dois requests — podiam numerar a mesma turma de
+            // dois jeitos. É o defeito que o `orderByStudentName` já documenta
+            // para a tela, aqui com peso de documento.
+            'enrollments' => fn ($q) => $q->orderByStudentName(),
+            'enrollments.student.user',
             'enrollments.student.currentClient',
         ]);
 
