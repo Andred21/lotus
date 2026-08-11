@@ -21,20 +21,22 @@ export function Sidebar() {
   const modules = NAV_MODULES.filter((m) => !m.permission || can(m.permission))
   const roleKey = roleSectionLabel(roles)
 
+  // Navy fixa nos DOIS temas (spec §6/UI-04): a sidebar é a assinatura e não
+  // acompanha o swap de tema — por isso não há dark: aqui.
   return (
     <AppSidebar
-      className={`${collapsed ? 'w-20' : 'w-64'} border-slate-400 bg-gray-200 transition-all dark:border-slate-800 dark:bg-slate-900`}
+      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-[var(--brand-navy)] transition-all`}
     >
       <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        {!collapsed && <AppLogo variant="on-dark" className="h-8 w-auto" />}
 
-        {!collapsed && (
-          <AppLogo className="ml-15 h-30 w-auto" />
+        {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
+          * de girar em falso) é o que preserva a pref persistida (UI-02). */}
+        {!compact && (
+          <AppButton variant="brandIcon" onClick={toggle} aria-label={t('common.toggleMenu')}>
+            <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
+          </AppButton>
         )}
-
-        <AppButton variant="brandIcon" onClick={toggle} aria-label="Alternar menu">
-          <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
-        </AppButton>
-
       </div>
 
       {!collapsed && roleKey && (

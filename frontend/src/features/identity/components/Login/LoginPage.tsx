@@ -46,7 +46,7 @@ export function LoginPage() {
           <AppButton
             variant="brandIcon"
             onClick={toggleTheme}
-            aria-label="Alternar tema"
+            aria-label={t("common.toggleTheme")}
           >
             <i className={`pi ${theme === "dark" ? "pi-sun" : "pi-moon"}`} />
           </AppButton>
