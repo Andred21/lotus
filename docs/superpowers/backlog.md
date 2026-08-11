@@ -30,6 +30,22 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
+4. **Estilização · tema custom (ADR-16), shell e tipografia**
+   — fechar o ADR-16 com identidade própria em vez do `lara-light-blue` stock: tema custom sobre o
+   Lara (override de tokens — `--primary-*` = `#25A5E4` com escala via `color-mix`, fonte, radius,
+   focus ring) carregado depois do link do tema, nos dois modos; shell com dono único de título
+   (header vira barra utilitária; PageHeader fica com o título), sidebar navy `#0F2B3D` fixa nos
+   dois temas com wordmark claro, header responsivo no mobile e toggle oculto em compact; tipografia
+   em 3 papéis (Archivo display, Inter corpo, IBM Plex Mono para folio/RUT/datas com
+   `tabular-nums`); neutros numa família só e fim dos hex `#25A5E4` hardcoded. Motivação e
+   evidência: análise de 2026-08-11 + review de UI do AppLayout
+   (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt` — C: UI-01 menu do
+   usuário inacessível a 390, UI-02 toggle inoperante; B: UI-03 foco invisível, UI-04 logo no dark,
+   UI-05 título duplicado, UI-07 aria-labels fora do i18n). Direção completa na memória da sessão
+   de 2026-08-11. **Este item é a decisão que faltava** aos débitos "Shell fora de conformidade
+   com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de 1024px" — ambos entram no escopo e
+   saem dos débitos ao fechar. UI-06 (affordance de scroll de tabela) é a mesma classe do débito
+   do piloto Clientes (BD-3) e pode entrar neste bloco ou no dele, a decidir no planejamento.
 
 ## Blocos de execução de dívida — BD-2..BD-7 (proposta de 2026-08-10)
 
@@ -176,6 +192,10 @@ empresa depende de uma permissão de outro módulo"** (RBAC/spec); a decisão do
 assimetria entre camadas"** (zero principais); **P-28** (fundo do certificado, aceito como está);
 **P-02** (retenção da auditoria) e **P-05** (consolidar migrations), os dois com gatilho "antes de
 subir para produção".
+
+**Atualização 2026-08-11:** o toggle da sidebar e o shell ADR-16 §4 **ganharam decisão** — o item 4
+de "Próximos blocos" (Estilização) os cobre. As duas linhas seguem aqui e em `## Débitos técnicos`
+até o fechamento daquele bloco, pela regra de origem acima.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
