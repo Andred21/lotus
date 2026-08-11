@@ -32,12 +32,12 @@ export function UserMenu() {
   ]
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
 
       <AppAvatar name={user.name}  size='large'/>
-      
+
       <div className="hidden text-left -my-1 sm:block">
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</p>
+        <p className="text-sm font-semibold" style={{ color: 'var(--text-color)' }}>{user.name}</p>
 
         <p className="text-sm text-[var(--brand)]">{roleKey && t(roleKey)}</p>
       </div>
@@ -45,7 +45,7 @@ export function UserMenu() {
       <AppButton
         text
         rounded
-        aria-label="Abrir menu do usuário"
+        aria-label={t('common.openUserMenu')}
         onClick={(e) => menuRef.current?.toggle(e)}
       >
         <i className="pi pi-angle-down" />

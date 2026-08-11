@@ -17,7 +17,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-color)' }}>{title}</h2>
         {description && (
           <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{description}</p>
         )}
