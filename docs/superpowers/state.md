@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
@@ -116,6 +116,34 @@ tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados e
 Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
 o Codex entra na segunda lente do review (spec §10). O estado transiciona para
 `ready_for_execution` no mesmo commit do plano.
+
+### Execução iniciada — 2026-08-11: o plano foi revisado contra o Lara instalado, e mudou
+
+O João autorizou com `/executar-bloco estilizacao-adr16-shell-tipografia`, com a instrução literal
+`Mas antes revise o plano e spec, verificando se esta de acordo`. O gate passou (spec, plano,
+branch e Git coerentes); a revisão pedida **não** foi de coerência documental — foi do plano contra
+o `node_modules/primereact` instalado, e achou **seis defeitos**, gravados como emenda no plano
+(D-P4..D-P9). É a mesma mecânica da lição 13 que produziu a D5': defeito achado na fase seguinte se
+corrige com decisão, não se silencia.
+
+Quatro entraram declarados por serem defeito ou implementação literal da spec: o script tinha de
+**remover** os `@font-face` do Lara (o rename `"Inter var"→"Inter"` os transformava numa face com
+`src` 404 competindo com a do `@fontsource`); a escala `--primary-50..900` não era tocada por
+nenhum dos dois mapas, então o arquivo afirmaria "sem azul Lara" carregando 20 hexes azuis; a
+guarda de drift conferia 3 hexes em vez da família; e sobravam cinzas (`#1f2937` no light,
+`#030712` no dark) contra a D-P3.
+
+**Duas mudavam o construído e foram decididas pelo João antes de qualquer linha de código.**
+**D-P8** — medi 9 blocos no Lara light pintando a primária com texto branco (`.p-button`, `.p-tag`
+2×, `.p-badge`, `.p-selectbutton`, `.p-togglebutton`, `.p-overlaypanel-close`, `.p-steps`,
+`.p-stepper`); depois do mapa isso é **2,77:1**, reprovando AA, e a cadeia de `:not()` do plano
+cobria só o botão — com `AppTag` usado em 9+ arquivos de feature. Ele escolheu tornar a D6
+propriedade do **tema gerado** (transform block-aware), matando a cadeia de `:not()`. **D-P9** — o
+anel de foco da D-P1 media ~1,4:1 sobre branco e o DoD §9.3 passaria verde com o foco invisível,
+que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visible` de 2px celeste.
+
+O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
+pulou e registrou como falha de processo.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 

@@ -772,11 +772,53 @@ git diff --stat -- src/shared/types/generated.ts        # vazio
 
 ---
 
+## Emenda de execução — 2026-08-11 (lição 13)
+
+A revisão do plano contra o Lara **instalado**, feita na abertura do `/executar-bloco`, achou seis
+defeitos. Os quatro primeiros são defeito ou implementação literal da spec e entram declarados; os
+dois últimos mudavam o construído e foram **decididos pelo João** antes de qualquer código.
+
+- **D-P4 — o script REMOVE os dois `@font-face` do Lara.** O `COMMON_MAP` renomeia `"Inter var"` →
+  `"Inter"` **dentro** dos blocos `@font-face`, cujo `src` é `url("./fonts/InterVariable.woff2")`,
+  relativo ao arquivo gerado — que mora em `src/shared/styles/themes/`, sem pasta `fonts/`. Sem a
+  remoção, o tema passa a declarar uma face **"Inter" com src 404** competindo com a real do
+  `@fontsource`. Hoje é inofensivo (a família "Inter var" não existe em lugar nenhum); depois do
+  bloco seria regressão. O `:root { font-family }` continua sendo renomeado — é ele que dá Inter
+  ao corpo, já que o Preflight está desligado e ninguém mais escreve `font-family` no `body`.
+- **D-P5 — a escala `--primary-50..900` entra nos dois mapas.** A spec §4 promete escala celeste;
+  os mapas do rascunho não tocavam um valor dela. Medido: `--primary-50:#f5f9ff` … `--primary-900:
+  #183462` (light, espelhados em `--blue-*`) e `#f7fbff` … `#264264` (dark) sobreviviam inteiros.
+  Nada em `src/` usa `bg-primary-*` hoje — o defeito é o arquivo **afirmar** "sem azul Lara"
+  carregando 20 hexes azuis, com o primeiro `bg-primary-500` futuro saindo errado.
+- **D-P6 — a guarda de drift assere ausência da FAMÍLIA azul, não de 3 hexes.** O rascunho conferia
+  `#3b82f6`/`#1d4ed8`/`#60a5fa`. Sobravam não mapeados `#9dc1fb` (box-shadow de foco, 2×),
+  `#f5f9ff`/`#d0e1fd`/`#abc9fb`/`#85b2f9` (light) e `rgba(59, 130, 246` (dark, 3×).
+- **D-P7 — os cinzas residuais entram no mapa.** Contra a D-P3 ("uma família só") sobreviviam
+  `#1f2937` (gray-800, 10× no light, incluindo `--surface-800`/`--gray-800`) e `#030712` (28× no
+  dark). O `#030712` é o `--primary-color-text` do dark: vira **azul-poste**, não slate, para
+  coincidir com a D6.
+- **D-P8 — a D6 vira propriedade do tema gerado, e alcança as 9 superfícies (decisão do João).**
+  Medido: **9 blocos** no Lara light pintam `background: #3b82f6` com `color: #ffffff` —
+  `.p-button`, `.p-tag` (2×), `.p-badge`, `.p-selectbutton`, `.p-togglebutton`,
+  `.p-overlaypanel-close`, `.p-steps`, `.p-stepper`. Depois do mapa isso é branco sobre celeste =
+  **2,77:1**, que reprova AA e reprova até o 3:1 de gráfico; `AppTag` é usado em 9+ arquivos de
+  feature. O `transform()` passa a ser **block-aware**: em bloco do tema light que pinte o fundo
+  com a primária, `color: #ffffff` → azul-poste (5,29:1). O `brand-theme.css` **perde** a cadeia de
+  `:not()` do rascunho — ela cobria só `.p-button` e era a segunda fonte de verdade. O dark não tem
+  o problema: lá o par já é texto escuro (`#030712`) sobre azul claro.
+- **D-P9 — a D-P1 é reaberta: o anel de foco volta ao que a spec §4 escreveu (decisão do João).**
+  O anel tingido de celeste-200 mede **~1,4:1 sobre branco** — o mesmo patamar do `#bfdbfe` que ele
+  substitui, e o DoD §9.3 (`outline != none OU shadow != none`) passaria **verde com o foco
+  praticamente invisível**, que é literalmente o UI-03. O `brand-theme.css` ganha uma regra
+  `:focus-visible` com outline 2px celeste sólido + offset: só teclado, os dois temas, somada ao
+  anel do Lara em vez de substituí-lo.
+
 ## Desvios declarados (lição 13)
 
-- **D-P1 — focus ring:** a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara
-  (`0.2rem`, ~3.2px) **tingido** de celeste-200 pelo mapa do script. Mesma função (foco visível,
-  UI-03), zero regra extra — criar um anel novo de 2px seria uma segunda fonte de verdade.
+- **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara
+  (`0.2rem`, ~3.2px) **tingido** de celeste-200 pelo mapa do script.~~ **Revogado pela D-P9** —
+  a medição mostrou que o anel tingido não é visível. O tingimento do anel do Lara **fica** (é
+  consequência do mapa), mas somado ao outline de 2px da spec.
 - **D-P2 — humo e noche:** o fundo claro humo entra por override da var `--surface-ground`
   (consumida só pelo shell), escopado a `html:not(.dark)`; o noche entra pelo mapa do script no
   tema dark (`#111827 → #0b1220`). Dois mecanismos porque o Lara compila o dark ground inline e
