@@ -60,6 +60,11 @@ class UserData extends Data
      */
     public static function fromModel(User $user): self
     {
+        // Uma chamada só. A segunda não custava SELECT (a relação já vem de
+        // `loadMissing`), custava um `pluck` — e escondia que as duas
+        // projeções vêm da MESMA fonte.
+        $roles = $user->getRoleNames();
+
         return new self(
             id: $user->id,
             uuid: $user->uuid,
@@ -67,10 +72,10 @@ class UserData extends Data
             email: $user->email,
             rut: $user->rut,
             phone: $user->phone,
-            role: $user->getRoleNames()->first() ?? '',
+            role: $roles->first() ?? '',
             is_active: $user->is_active,
             type: $user->type,
-            roles: $user->getRoleNames()->all(),
+            roles: $roles->all(),
             photo_url: $user->photo_path,
         );
     }
