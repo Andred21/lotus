@@ -31,13 +31,16 @@ class UpdateStaffUserAction
             $this->guard->assertNotLastActiveSuperadmin($user);
         }
 
-        $rut = ($data->rut instanceof Optional || $data->rut === null)
-            ? null
-            : $this->users->ensureRutAvailable($data->rut, $user->id);
+        return DB::transaction(function () use ($user, $data) {
+            // Unicidade DENTRO da transação: fora dela, check e write são duas
+            // operações independentes. Molde dos irmãos que já faziam certo
+            // (CreateStaffUserAction, Create/UpdateStudentAction).
+            $rut = ($data->rut instanceof Optional || $data->rut === null)
+                ? null
+                : $this->users->ensureRutAvailable($data->rut, $user->id);
 
-        $this->users->ensureEmailAvailable($data->email, $user->id);
+            $this->users->ensureEmailAvailable($data->email, $user->id);
 
-        return DB::transaction(function () use ($user, $data, $rut) {
             $attrs = [
                 'name' => $data->name,
                 'email' => $data->email,
