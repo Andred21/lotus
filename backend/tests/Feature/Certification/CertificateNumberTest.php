@@ -3,14 +3,15 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Certification\Services\CertificateNumberService;
-use Illuminate\Database\Connection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
+use Tests\Support\ProbesMysqlConcurrency;
 use Tests\TestCase;
 
 class CertificateNumberTest extends TestCase
 {
+    use ProbesMysqlConcurrency;
     use RefreshDatabase;
 
     public function test_primeiro_numero_do_ano_comeca_em_1000_e_o_seguinte_incrementa(): void
@@ -43,15 +44,11 @@ class CertificateNumberTest extends TestCase
 
     public function test_duas_primeiras_emissoes_concorrentes_recebem_numeros_distintos_no_mysql(): void
     {
-        if (DB::connection()->getDriverName() !== 'mysql') {
-            $this->markTestSkipped('lockForUpdate é no-op em sqlite; este caso exige MySQL real.');
-        }
+        $this->skipUnlessMysql();
 
         $year = 2028;
         $connectionName = 'certificate_number_gate';
-        config()->set("database.connections.{$connectionName}", config('database.connections.mysql'));
-
-        $gate = DB::connection($connectionName);
+        $gate = $this->mysqlGateConnection($connectionName);
         $processes = [
             $this->certificateNumberProcess($year),
             $this->certificateNumberProcess($year),
@@ -86,7 +83,12 @@ class CertificateNumberTest extends TestCase
                 $process->setIdleTimeout(60);
             }
 
-            $waitingCount = $this->waitUntilBothProcessesAreWaitingForMysqlLock($gate, $processes);
+            $waitingCount = $this->waitUntilProcessesAreWaitingForMysqlLock(
+                $gate,
+                $processes,
+                count($processes),
+                'certificate_sequences',
+            );
             $this->assertGreaterThanOrEqual(2, $waitingCount);
 
             foreach ($processes as $process) {
@@ -139,62 +141,6 @@ fflush(STDOUT);
 fwrite(STDOUT, $app->make(App\Domains\Certification\Services\CertificateNumberService::class)->next((int) $argv[2])."\n");
 PHP;
 
-        $process = new Process(
-            [PHP_BINARY, '-r', $script, base_path(), (string) $year],
-            base_path(),
-            [
-                'APP_ENV' => 'testing',
-                'DB_CONNECTION' => 'mysql',
-                'DB_DATABASE' => DB::connection()->getDatabaseName(),
-            ],
-            null,
-            120,
-        );
-
-        $process->setIdleTimeout(60);
-
-        return $process;
-    }
-
-    /**
-     * @param  array<int, Process>  $processes
-     */
-    private function waitUntilBothProcessesAreWaitingForMysqlLock(Connection $observer, array $processes): int
-    {
-        $deadline = hrtime(true) + 30_000_000_000;
-        $waitingCount = 0;
-
-        do {
-            foreach ($processes as $process) {
-                if (! $process->isRunning()) {
-                    $this->fail(
-                        "processo terminou antes do commit do gate:\n"
-                        ."stdout:\n{$process->getOutput()}\n"
-                        ."stderr:\n{$process->getErrorOutput()}",
-                    );
-                }
-            }
-
-            $row = $observer->selectOne(
-                <<<'SQL'
-SELECT COUNT(DISTINCT waits.REQUESTING_ENGINE_TRANSACTION_ID) AS waiting_count
-FROM performance_schema.data_lock_waits AS waits
-INNER JOIN performance_schema.data_locks AS requested
-    ON requested.ENGINE_LOCK_ID = waits.REQUESTING_ENGINE_LOCK_ID
-WHERE requested.OBJECT_SCHEMA = ?
-  AND requested.OBJECT_NAME = 'certificate_sequences'
-SQL,
-                [$observer->getDatabaseName()],
-            );
-            $waitingCount = (int) $row->waiting_count;
-
-            if ($waitingCount >= count($processes)) {
-                return $waitingCount;
-            }
-
-            usleep(20_000);
-        } while (hrtime(true) < $deadline);
-
-        $this->fail("MySQL não registrou os dois processos esperando pelo lock; observados: {$waitingCount}");
+        return $this->mysqlChildProcess($script, [(string) $year]);
     }
 }
