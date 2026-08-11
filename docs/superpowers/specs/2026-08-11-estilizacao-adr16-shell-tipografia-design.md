@@ -16,9 +16,22 @@
 
 A interface tem "cara de template" e a raiz é medida, não impressão: o tema é o `lara-light-blue`/
 `lara-dark-blue` **stock** do PrimeReact, com a primária Lara (`#3B82F6`) brigando com a marca
-(`#25A5E4`, hardcoded em 3 arquivos); nenhuma fonte é carregada (o corpo é o stack system default
-do Lara); o título da página tem dois donos (h1 do Header + h2 do PageHeader, gap medido de 0px);
-a sidebar mistura `gray-200` com `slate-400`; e o logo usa `ml-15 h-30` arbitrário.
+(`#25A5E4`, hardcoded em 3 arquivos); ~~nenhuma fonte é carregada (o corpo é o stack system default
+do Lara)~~ **[corrigido — ver adenda abaixo]**; o título da página tem dois donos (h1 do Header +
+h2 do PageHeader, gap medido de 0px); a sidebar mistura `gray-200` com `slate-400`; e o logo usa
+`ml-15 h-30` arbitrário.
+
+> **Correção factual (2026-08-11, medida na Task 0 do `/executar-bloco` — lição 13).** A frase
+> riscada acima nasceu errada. Fonte **é** carregada hoje: o Vite processa o `url()` de dentro do
+> `theme.css` mesmo quando o import usa `?url`, então o build emite
+> `dist/assets/InterVariable-CWi-zmRD.woff2` (345 KB) e a itálica (380 KB), e o tema emitido
+> referencia `url(/assets/InterVariable-…woff2)`. O corpo já é **Inter var**, embutida no tema
+> stock. O problema real não é ausência de fonte — é que a tipografia do produto é um efeito
+> colateral do tema de terceiro, sem papéis, sem controle de peso e sem versionamento nosso, e
+> custa 725 KB de fonte que ninguém escolheu. O §5 continua valendo integralmente. Consequência
+> para o plano: o script **precisa remover** os blocos `@font-face` do Lara ao gerar as cópias,
+> senão o tema gerado apontaria para `./fonts/InterVariable.woff2` — inexistente ao lado do arquivo
+> gerado — e o **build quebraria** (D-P4 do plano).
 
 O review canônico do AppLayout (2026-08-11) reprovou com **C**: UI-01 (menu do usuário fora da
 viewport a 390 — rightEdge 491/390, sem scroll de alcance), UI-02 (toggle da sidebar inoperante
