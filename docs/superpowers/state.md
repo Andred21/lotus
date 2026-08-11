@@ -2,22 +2,15 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: guardas-que-faltam
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md
 active_plan: docs/superpowers/plans/2026-08-10-guardas-que-faltam.md
 context_packet: null
-blocker: >-
-  Review de sprint de 2026-08-11 (BAIXO RISCO, uma lente Claude) devolveu 4 achados aguardando
-  decisão do João: Q-1 (a guarda 3 vigia o `axios.create` e não o interceptor de request do MESMO
-  arquivo — mutante que É o bug da lição 6 passa a suíte inteira verde), Q-2 (a guarda 4 declara
-  escopo `.claude/rules/*.md` na D4 da spec e implementa 4 nomes fixos — rule nova escapa),
-  Q-3 (a guarda §5.2 varre só `backend/database/` e a lei não tem escopo — `DB::unprepared` em
-  `app/` passa verde) e Q-4 🟢 (`tests/**/*.test.ts` exclui `.tsx`). Os três primeiros foram
-  provados por sonda executada, não deduzidos. Nenhum é violação de lei §5; nenhum é defeito vivo.
-review_findings_approved: null
+blocker: null
+review_findings_approved: Q-1, Q-2, Q-3, Q-4 (instrução literal do João em 2026-08-11: "faça Q-1 á Q-4")
 last_completed_work_item: documentos-oficiais-template-e-docx
 state_basis_commit: d885738
 updated_at: 2026-08-11T10:32:00-03:00
@@ -293,6 +286,46 @@ arquivo com outro nome" é bem menor do que o ledger da execução supunha. Sobr
 Plausibilidade baixa demais para gastar um dos achados.
 
 **Estado:** `blocked`, aguardando o João aprovar quais achados entram. Só achado aprovado se corrige.
+
+### Correções do review — 2026-08-11: os quatro aprovados, dois commits
+
+O João aprovou com a instrução literal `faça Q-1 á Q-4`. Backend em `45534c9`, frontend em
+`b854019`. **Os quatro foram vistos vermelhos antes do verde**, cada um contra a violação que
+promete pegar:
+
+- **Q-3** — `DB::unprepared("CREATE TRIGGER …")` plantado em
+  `app/Shared/Pdf/PdfRenderException.php` reprova agora pelas **duas** formas, e passava verde
+  antes. A varredura da §5.2 virou `database/` **mais** `app/`.
+- **Q-1** — o mutante no interceptor de `axios.ts` reprova o caso novo (1 failed / 10 passed) e
+  passava a suíte inteira antes. A guarda ganhou uma guarda-de-si-mesma: `handlers` vazio (removido,
+  ou renomeado numa major do axios) faria o laço iterar em vazio e passar sem exercitar nada.
+- **Q-2** — `zz-sonda.md` reprova **nomeando a rule**, e passava com 13 verdes antes.
+- **Q-4** — teste `.tsx` em `tests/` roda com o include corrigido (2 arquivos / 15 testes) e era
+  **ignorado em silêncio** com o antigo (1 arquivo / 14 testes).
+
+**Uma medição mudou o desenho do Q-1, e a versão recusada fica registrada.** A primeira forma
+mandava uma requisição real por `adapter` e lia o header final — o que cobriria o pipeline inteiro.
+Medido no jsdom: o próprio axios escreve `Content-Type: application/x-www-form-urlencoded` para
+`FormData` (e `application/json` para objeto). É artefato do ambiente, não configuração da app, e
+assertar ali **reprovaria o estado correto** — exatamente a armadilha da D-E2 deste bloco, onde
+afirmar ausência de chave reprovava o `undefined` que o axios escreve de propósito. O universo da
+guarda passou a ser o que a app **declara**: `defaults.headers` mais os interceptors registrados.
+
+**Verificação depois das correções, refeita e não herdada:** backend **524 passed, 1 skipped (1963
+assertions)** — o placar não muda porque a Q-3 alargou o universo de uma varredura sem somar teste;
+Pint `passed` no `.php` tocado; frontend **16 arquivos / 82 testes** (+3 sobre os 79 do gate: dois
+casos novos no axios, um no `repo-docs-refs`); `pnpm lint` limpo, `pnpm build` verde;
+`typescript:transform` **sem diff** em `generated.ts`; `git diff main...HEAD` de `backend/database/`,
+`backend/app/` e `frontend/src/features/` **vazios**; zero sonda sobrevivente.
+
+**O que continua não provado, sem maquiagem:** as guardas de varredura seguem com escape por
+construção, e três nomeados no ledger da execução continuam abertos por decisão de escopo — a
+guarda 4 só vê token entre crases que **pareça path** (classe citada sem `/`, o caso
+`LibreOfficeConverter`, segue fora), a guarda 1 casa por nome de arquivo (mitigado por PSR-4, não
+fechado: `/QueryBuilders/` é exclusão por path e um `Repository` dentro dela escaparia) e a guarda 2
+exige **declaração**, não correção. Nenhum dos três foi tocado por estas correções.
+
+**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
