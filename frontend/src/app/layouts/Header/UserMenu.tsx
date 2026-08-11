@@ -39,7 +39,7 @@ export function UserMenu() {
       <div className="hidden text-left -my-1 sm:block">
         <p className="text-sm font-semibold" style={{ color: 'var(--text-color)' }}>{user.name}</p>
 
-        <p className="text-sm text-[var(--brand)]">{roleKey && t(roleKey)}</p>
+        <p className="text-sm text-(--brand)">{roleKey && t(roleKey)}</p>
       </div>
 
       <AppButton

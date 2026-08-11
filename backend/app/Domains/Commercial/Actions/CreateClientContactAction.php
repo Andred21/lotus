@@ -19,6 +19,8 @@ class CreateClientContactAction
     public function execute(Client $client, ClientContactData $data): ClientContact
     {
         return DB::transaction(function () use ($client, $data) {
+            Client::lockForWrite($client->id);
+
             $contact = $client->contacts()->create($data->toArray());
 
             $this->primaryContacts->ensureSingle($client, $contact);

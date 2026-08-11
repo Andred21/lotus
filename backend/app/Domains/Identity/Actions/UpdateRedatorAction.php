@@ -30,8 +30,6 @@ class UpdateRedatorAction
 
     public function execute(Redator $redator, RedatorData $data, array $documents = []): Redator
     {
-        $rut = $this->users->ensureRutAvailable($data->rut, $redator->user_id);
-
         // Todos os binários sobem ANTES da transação (mesmo padrão de
         // CreateRedatorAction, spec D3): StoreRedatorDocumentAction::execute()
         // abriria sua PRÓPRIA transação aninhada (savepoint) dentro desta, e um
@@ -49,7 +47,14 @@ class UpdateRedatorAction
                 ];
             }
 
-            return DB::transaction(function () use ($redator, $data, $rut, $uploaded) {
+            return DB::transaction(function () use ($redator, $data, $uploaded) {
+                // Unicidade DENTRO da transação que escreve. Consequência
+                // aceita: os binários já subiram (eles ficam fora da transação
+                // por decisão registrada, D3 da spec do redator), então um RUT
+                // duplicado agora sobe e descarta. O `catch` abaixo já é a
+                // fonte única desse descarte — RedatorDocumentRollbackTest.
+                $rut = $this->users->ensureRutAvailable($data->rut, $redator->user_id);
+
                 $redator->user->update([
                     'name' => $data->name,
                     'rut' => $rut,

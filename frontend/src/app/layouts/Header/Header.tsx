@@ -5,7 +5,7 @@ import { UserMenu } from './UserMenu'
  * tem UM dono — o PageHeader (UI-05 do review de 2026-08-11). */
 export function Header() {
   return (
-    <AppHeader className="min-h-14 border-[var(--surface-border)] bg-[var(--surface-card)] px-3 py-2 sm:px-6">
+    <AppHeader className="min-h-14 border-(--surface-border) bg-(--brand-navy) px-3 py-2 sm:px-6">
       <div className="ml-auto flex items-center gap-2 sm:gap-4">
         <AppearanceControls />
         <AppDivider layout="vertical" className="mx-0! h-6 hidden sm:block" />

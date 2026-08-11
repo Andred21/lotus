@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Actions;
 
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,16 @@ class DeleteClientContactAction
     public function execute(ClientContact $contact): void
     {
         DB::transaction(function () use ($contact) {
+            // Mutex do cliente PRIMEIRO, como nas outras cinco Actions. Sem ele
+            // esta era a única escritora que ia direto em `client_contacts`,
+            // invertendo a ordem dos locks: as duas varreduras `FOR UPDATE`
+            // (esta contagem e o `ensureSingle` da Action concorrente) adquirem
+            // as linhas INCREMENTALMENTE, então cada uma podia segurar parte da
+            // coleção e bloquear na parte que a outra segurava —
+            // `SQLSTATE[40001] ... 1213 Deadlock found` virando 500
+            // (review de 2026-08-11, Q-2).
+            Client::lockForWrite($contact->client_id);
+
             // `lockForUpdate` na contagem (Q-5): sem ele, duas exclusões
             // concorrentes leem 2 contatos e apagam os 2, deixando o cliente
             // sem nenhum — estado que o cadastro recusa. Em sqlite (suíte) o

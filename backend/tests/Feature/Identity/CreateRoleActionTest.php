@@ -32,17 +32,27 @@ class CreateRoleActionTest extends TestCase
 
     public function test_rejeita_permissao_segregada(): void
     {
-        $this->expectException(ValidationException::class);
-        app(CreateRoleAction::class)->execute(
-            RoleData::from(['name' => 'x', 'permissions' => ['identity.access.manage']]),
-        );
+        try {
+            app(CreateRoleAction::class)->execute(
+                RoleData::from(['name' => 'x', 'permissions' => ['identity.access.manage']]),
+            );
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            // A chave é o que a tela lê para destacar o campo. `expectException`
+            // sozinho passaria com QUALQUER outra porta recusando primeiro.
+            $this->assertArrayHasKey('permissions', $e->errors());
+        }
     }
 
     public function test_rejeita_nome_duplicado(): void
     {
-        $this->expectException(ValidationException::class);
-        app(CreateRoleAction::class)->execute(
-            RoleData::from(['name' => 'admin', 'permissions' => []]),
-        );
+        try {
+            app(CreateRoleAction::class)->execute(
+                RoleData::from(['name' => 'admin', 'permissions' => []]),
+            );
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('name', $e->errors());
+        }
     }
 }

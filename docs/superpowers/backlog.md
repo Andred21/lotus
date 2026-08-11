@@ -62,30 +62,10 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-2 → BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. O **BD-1** foi entregue
-> em 2026-08-11 e saiu desta lista (`progress.md`). A ordem dentro de cada
-> bloco é parte do bloco, não sugestão.
-
-### BD-2 · Integridade e concorrência no backend
-
-Independente do frontend. O item 1 é o único defeito de dado desta lista inteira.
-
-Cobre: **Q-16** (`PrimaryContactService`/`PrimaryAddressService`) · **"Bloco 5.2a (minors do review
-final)"** · **"Bloco 5.2b (minors do review final)"**, só a parte de teste.
-
-Ordem:
-1. **Q-16** — `lockForUpdate()` no `Client` (não só na coleção) antes do `ensureSingle()`, nos
-   **dois** serviços no mesmo commit; conferido em 2026-08-10: nenhum dos dois trava nada hoje;
-2. unicidade de RUT/email do `UpdateStaffUserAction` para **dentro** da `DB::transaction` — hoje
-   `ensureRutAvailable`/`ensureEmailAvailable` rodam antes de abrir a transação;
-3. `UserData::fromModel` chama `getRoleNames()` duas vezes (linhas 70 e 73);
-4. os testes que faltam: `SuperadminGuard` com outro superadmin **inativo** (os 3 casos existentes
-   cobrem ativo, outro-ativo e não-superadmin); auto-colisão de RUT/email no próprio update; o 422
-   de `role: redator` afirmando a **chave** (hoje só `expectException`); error-bag de
-   `CreateRoleAction`/`UpdateRoleAction`.
-
-DoD: sonda de concorrência real no item 1 (dois writes competindo), não só teste sequencial verde.
-Fora: a decisão do 5.2b sobre `GET /api/roles` enumerar permissão de superadmin — é do João.
+> Ordem entre blocos: **BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. O **BD-1** foi entregue
+> em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
+> junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
+> `## Débitos técnicos`. A ordem dentro de cada bloco é parte do bloco, não sugestão.
 
 ### BD-3 · Faixa visível e acessibilidade dos diálogos (fronteira `shared/ui`)
 
@@ -319,16 +299,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   este débito no próprio arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33` não
   existe mais — o `?? '—'` vive em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
   Coberto pelo **BD-6**.
-- **Q-16 — `PrimaryContactService`/`PrimaryAddressService` sem lock: dois writes concorrentes podem
-  deixar dois principais.** `ensureSingle()` lê os principais com `SELECT` comum (sem `lockForUpdate`)
-  e sem travar o `Client`. Dois `PUT`/`POST` concorrentes promovendo endereços/contatos distintos
-  podem cada um enxergar só o próprio principal marcado, não achar conflito e ambos commitarem como
-  principais. Achado pela segunda lente (Codex) no review de correção de `hardening-debitos-integridade`
-  (2026-08-01, commit `ca02c9b`) — mesmo padrão em `PrimaryContactService`, já em produção, não
-  introduzido por este bloco. Não bloqueou o fechamento por proporcionalidade (~10 usuários internos,
-  mesma classe de decisão do Q-5) e porque corrigir exigiria lock do `Client` nos dois serviços, escopo
-  maior que a correção pontual de rota que motivou o achado. Saída provável: `lockForUpdate()` no
-  `Client` (não só na coleção) antes do `ensureSingle()`, nos dois serviços juntos.
 - **Q-6 — idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial escreve em
   PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`)
   — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;
@@ -373,13 +343,10 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão
   do João no Bloco 2.
-- Bloco 5.2a (minors do review final): `SuperadminGuard` sem teste do caso superadmin inativo;
-  `UserData::fromModel` chama `getRoleNames()` duas vezes; unicidade de RUT/email do
-  `UpdateStaffUserAction` roda fora da transação; auto-colisão no update sem teste; teste do 422 de
-  `redator` não afirma a chave `role`.
-- Bloco 5.2b (minors do review final): testes de falha de `CreateRoleAction`/`UpdateRoleAction` não
-  afirmam a chave do error-bag; decisão pendente do João sobre `GET /api/roles` permitir a admin
-  comum enumerar permissões do superadmin enquanto `/api/permissions` é superadmin-only.
+- Bloco 5.2b (minors do review final) — **só a decisão do João continua aberta:** `GET /api/roles`
+  permitir a admin comum enumerar permissões do superadmin enquanto `/api/permissions` é
+  superadmin-only. A parte de teste desta linha e a linha inteira do **Bloco 5.2a** saíram em
+  2026-08-11 com o BD-2 (`integridade-e-concorrencia-backend`).
 - Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`, adiado pelo João em 2026-07-26): CTA duplicado
   quando `ClientsTable`/`BudgetsTable` estão genuinamente vazias — `AppCardToolbar` (`end={actions}`)
   e `AppEmptyState` (`action={actions}`) renderizam o mesmo botão nos dois lugares ao mesmo tempo.

@@ -25,10 +25,10 @@ export function Sidebar() {
   // acompanha o swap de tema — por isso não há dark: aqui.
   return (
     <AppSidebar
-      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-[var(--brand-navy)] transition-all`}
+      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) transition-all`}
     >
       <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        {!collapsed && <AppLogo variant="on-dark" className="h-8 w-auto" />}
+        {!collapsed && <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />}
 
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}

@@ -19,6 +19,8 @@ class CreateClientAddressAction
     public function execute(Client $client, ClientAddressData $data): ClientAddress
     {
         return DB::transaction(function () use ($client, $data) {
+            Client::lockForWrite($client->id);
+
             $address = $client->addresses()->create($data->toArray());
 
             $this->primaryAddresses->ensureSingle($client, $address);

@@ -99,7 +99,7 @@ export function BudgetsTable({
       <AppDataTable
         value={table.rows}
         loading={loading || clients.isLoading}
-        error={loadError}
+        error={loadError} 
         onRetry={retry}
         emptyMessage={empty}
         footerCount={t('budget.count', { count: table.rows.length })}

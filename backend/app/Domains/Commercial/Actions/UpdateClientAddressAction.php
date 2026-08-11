@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Actions;
 
 use App\Domains\Commercial\Data\ClientAddressData;
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Commercial\Services\PrimaryAddressService;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ class UpdateClientAddressAction
     public function execute(ClientAddress $address, ClientAddressData $data): ClientAddress
     {
         return DB::transaction(function () use ($address, $data) {
+            Client::lockForWrite($address->client_id);
+
             $address->update($data->toArray());
 
             $this->primaryAddresses->ensureSingle($address->client, $address);
