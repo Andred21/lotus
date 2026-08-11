@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: guardas-que-faltam
-workflow_state: ready_for_planning
-next_owner: claude
-next_action: plan_active_work_item
+workflow_state: planning
+next_owner: joao
+next_action: approve_active_spec
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: documentos-oficiais-template-e-docx
-state_basis_commit: ec3ad2a
-updated_at: 2026-08-10T23:10:00-03:00
+state_basis_commit: 9c683b6
+updated_at: 2026-08-10T23:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -101,9 +101,50 @@ aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
    dois casos já medidos (`useFilePreview`, `SearchableTableFrame`). Entra no bloco porque o item 4
    já abre as rules pelo mecanismo da lição 13.
 
-**O que o planejamento tem de decidir e ainda não está decidido:** a forma do teste dos itens 1 e 4.
-Guarda de arquitetura em PHP e parser de comando dentro de arquivo Markdown são as duas peças sem
-precedente no repositório — o resto do bloco tem molde pronto ao lado.
+**Uma frase desta seção nasceu errada e é corrigida aqui, não apagada:** ela dizia que os itens 1 e
+4 eram "as duas peças sem precedente no repositório". O item 1 **tem** precedente —
+`tests/Feature/Shared/DomainDependencyTest.php` já é guarda de arquitetura por varredura de código,
+com comentário descartado por `token_get_all()` e forma não coberta banida em vez de fingidamente
+coberta. Só o item 4 era peça nova, e o brainstorming mudou o que ele confere.
+
+### Brainstorming e spec — 2026-08-10
+
+O João aprovou o desenho com a instrução literal `aprovado`. O estado entra em `planning` no mesmo
+commit da spec; `active_plan` segue `null` até a leitura humana do documento e a escrita posterior do
+plano.
+
+**Quatro decisões dele, respondidas antes de a spec existir** (D1, D2, D5 e D6 da §2): a guarda da
+lição 13 confere **referência de código citada em doc**, não comando; ela mora no **vitest**, em
+`frontend/tests/`; o `useEntityPhoto` ganha **seis** casos; e a frase vencida da rule é corrigida
+neste bloco.
+
+**Três medições que mudaram o desenho, feitas antes de escrever:**
+
+1. **O item 4, como o backlog o registrou, não fecha honesto.** Ele dizia "todo comando citado nos
+   `§Comandos` das rules existe como script em `package.json`/`composer.json`, e vice-versa". Medido:
+   só 2 das 4 rules têm `## Comandos`; o que citam é `docker compose exec -T app php artisan …` e
+   `pnpm …`; **nenhum** é script de `composer.json`; e o "vice-versa" reprovaria no dia 1 contra
+   `setup` e `post-autoload-dump`, que doc nenhuma cita. As três reincidências reais da lição 13
+   foram **classe ou pasta citada que nunca existiu** (`app/Data`, `LibreOfficeConverter`).
+2. **O container não enxerga a raiz do repositório.** `docker-compose.yml` monta `./backend` e
+   `./frontend`; `CLAUDE.md`, `.claude/rules/` e `docs/` não estão montados — conferido de dentro do
+   container. PHPUnit não tem como ler o doc que a guarda confere, e criar volume para isso seria
+   mudar infra por guarda de doc, o mesmo que o bloco anterior recusou na D-P1. O vitest é o único
+   runner do projeto com acesso à raiz.
+3. **A guarda 4 nasce verde, e por pouco:** 87 referências conferíveis em 10 docs normativos, **3**
+   não resolvem — e as três são negação deliberada (`generated-types.md:16` escreve "Não existe
+   `app/Data`"; `README.md:88` é a própria lição 13; `estrutura-monolito.md:192` lista `src/Domains/`
+   como alternativa em aberto). Viram lista de exceção declarada, não heurística de vizinhança.
+
+**Um achado que o brainstorming produziu e o BD-1 não previa:** `.claude/rules/frontend-fsliced.md:161-167`
+afirma que o runner "cobre os hooks de `shared/hooks/`", e existem **8 testes de hook de feature** no
+repositório. É lição 13 dentro do arquivo que o item 8 já ia abrir; a correção entra no mesmo commit
+(D6). O registro do bloco anterior, que herdou a mesma premissa ao justificar a Q-6 sem teste, **não**
+foi reescrito — é histórico, pelo precedente da P-27.
+
+**Risco de review declarado MÉDIO** (§7 da spec): nenhum gatilho de ALTO se aplica (sem schema, auth,
+RBAC, dinheiro, documento legal, `generated.ts`, sem execução delegada). O risco próprio é guarda que
+promete cobrir e não cobre — cinco das oito são varredura, e varredura tem escape por construção.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
