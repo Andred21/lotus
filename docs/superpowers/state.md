@@ -2,18 +2,25 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: guardas-que-faltam
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-10-guardas-que-faltam-design.md
 active_plan: docs/superpowers/plans/2026-08-10-guardas-que-faltam.md
 context_packet: null
-blocker: null
+blocker: >-
+  Review de sprint de 2026-08-11 (BAIXO RISCO, uma lente Claude) devolveu 4 achados aguardando
+  decisão do João: Q-1 (a guarda 3 vigia o `axios.create` e não o interceptor de request do MESMO
+  arquivo — mutante que É o bug da lição 6 passa a suíte inteira verde), Q-2 (a guarda 4 declara
+  escopo `.claude/rules/*.md` na D4 da spec e implementa 4 nomes fixos — rule nova escapa),
+  Q-3 (a guarda §5.2 varre só `backend/database/` e a lei não tem escopo — `DB::unprepared` em
+  `app/` passa verde) e Q-4 🟢 (`tests/**/*.test.ts` exclui `.tsx`). Os três primeiros foram
+  provados por sonda executada, não deduzidos. Nenhum é violação de lei §5; nenhum é defeito vivo.
 review_findings_approved: null
 last_completed_work_item: documentos-oficiais-template-e-docx
 state_basis_commit: d885738
-updated_at: 2026-08-11T10:06:00-03:00
+updated_at: 2026-08-11T10:32:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -231,6 +238,61 @@ exige **declaração**, não correção, então `withoutScopedBindings()` escrit
 São o foco do review pela §7 da spec.
 
 **Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-11: uma lente, 4 achados, três provados por sonda
+
+**BAIXO RISCO pelo gate da skill, e a classificação divergiu da spec de propósito.** A §7 da spec
+declarou MÉDIO na escala dela; o `/revisar-sprint` é binário, e **nenhum** gatilho de ALTO se aplica
+— zero schema, zero `generated.ts`, zero auth/Sanctum, zero auditoria, zero RBAC, sem dinheiro, sem
+documento legal, `executor: claude`. Uma frente, lente Claude, **sem Codex**.
+
+**Gate reproduzido, não herdado do relatório de execução:** backend **524 passed, 1 skipped (1963
+assertions)**, frontend **16 arquivos / 79 testes**, `pnpm lint` limpo, `pnpm build` verde.
+
+**Órfãos: zero.** `ScansPhpSource` tem os dois consumidores previstos; os quatro símbolos tirados do
+barrel (`unclassifiedPayloadKeys`, `classificationConflicts`, `MutableResource`, `CrudFormOptions`)
+não têm um único import sobrevivente em `frontend/src/`; nenhuma sonda das oito tasks ficou para
+trás.
+
+**A guarda 7 foi testada por mutação, não aceita por contagem.** Três mutantes no `useEntityPhoto`,
+cada um pego pelo caso que o promete: `onRetry` lendo a prop `id` em vez do `retryId` reprova
+*"reenvia para o id da TENTATIVA"*; remover `sizeError === null` do gate reprova *"`sizeError` apaga
+o `onRetry`"*; e `flush` propagando a exceção reprova *"NÃO lança e liga `hasBufferedFailure`"*. Não
+é cobertura fantasma.
+
+**A guarda 4 discrimina onde alcança:** path inventado em `.claude/rules/backend-ddd.md` reprova
+nomeando `arquivo:linha`. E a afirmação nova da rule — que `frontend/tests/` é type-checado pelo
+`tsc -b` — foi **provada**, não aceita: erro de tipo plantado no `repo-docs-refs.test.ts` sai como
+`error TS2322` no `pnpm build`. Nenhuma lição 13 nasceu no commit que corrige lição 13.
+
+**Os quatro achados atacam o risco que a própria §7 declarou** — guarda que promete cobrir e não
+cobre —, e os três primeiros foram **vistos passando verde contra a violação**, com árvore
+restaurada limpa em cada sonda:
+
+1. **Q-1 🟡** — a guarda 3 assere `api.defaults.headers` e **não** a cadeia de interceptors. Fixar
+   `Content-Type: application/json` no interceptor de request de `axios.ts:45` — a segunda porta do
+   mesmo arquivo, seis linhas abaixo da que a guarda vigia — passa a suíte **inteira** verde (16
+   arquivos / 79 testes). O mutante não é hipotético: é literalmente o bug da lição 6, com FormData
+   serializado como JSON, cada `File` virando `{}` e upload chegando vazio com 201 silencioso, em
+   caminho de documento com peso legal.
+2. **Q-2 🟡** — a D4 da spec escreve o escopo como `.claude/rules/*.md` (glob) e o `DOCS` do teste é
+   lista literal de quatro nomes. Rule nova (`zz-sonda.md`) citando
+   `backend/app/Domains/Inexistente/NaoExiste.php` → **13 passed**. O teste já carrega três
+   guardas-de-si-mesmo (doc existe, volume > 60, citação deliberada viva); falta a do **conjunto**, e
+   `.claude/rules/` é onde a lição 13 reincidiu duas vezes no mesmo arquivo.
+3. **Q-3 🟡** — a guarda §5.2 varre só `backend/database/`; a lei não tem escopo.
+   `DB::unprepared("CREATE TRIGGER …")` plantado em `backend/app/Shared/Pdf/PdfRenderException.php`
+   → **2 passed**. A §5.1, no mesmo arquivo, já varre `app/` inteiro.
+4. **Q-4 🟢** — `vite.config.ts:25` inclui `tests/**/*.test.ts` enquanto a linha ao lado usa
+   `src/**/*.test.{ts,tsx}`. Teste de repositório que precise de JSX nunca roda, em silêncio.
+
+**Uma observação medida que NÃO virou achado:** a §5.1 casa por nome de arquivo, e PSR-4 amarra nome
+de arquivo a nome de classe para tudo que o autoload alcança — o escape "classe `Repository` em
+arquivo com outro nome" é bem menor do que o ledger da execução supunha. Sobra a exclusão de
+`/QueryBuilders/`, que é por path: `app/Domains/X/QueryBuilders/ClientRepository.php` escaparia.
+Plausibilidade baixa demais para gastar um dos achados.
+
+**Estado:** `blocked`, aguardando o João aprovar quais achados entram. Só achado aprovado se corrige.
 
 ## Último item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
 
