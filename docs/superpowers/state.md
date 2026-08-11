@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: hardening
 active_work_item: integridade-e-concorrencia-backend
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-integridade-e-concorrencia-backend-design.md
 active_plan: docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: 09a11d9
-updated_at: 2026-08-11T13:44:00-03:00
+updated_at: 2026-08-11T14:12:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -201,6 +201,51 @@ argumento, que reformata o repositório inteiro) e a conferência do banco de de
 **Risco de review continua MÉDIO.** O foco é um só: a sonda realmente disputa, o vermelho foi visto
 sem o lock, e o harness extraído não afrouxou o caso do certificado. O review não roda
 automaticamente ao fim da Task 6.
+
+### Execução — 2026-08-11
+
+O João autorizou com `/executar-bloco integridade-e-concorrencia-backend`. Thread principal, main
+tree, sem worktree (P-03), do base `44db6ca`. Sete tasks (0–6), commit por task, revisão de task
+após cada commit delegável.
+
+Commits, na ordem do plano: `542e3cc` (Task 1, harness extraído para `tests/Support/`), `1c27647`
+(Task 2, o lock — Q-16), `2cf0250` (Task 3, unicidade dentro da transação nos três sítios),
+`2f0d756` (Task 4, `getRoleNames()` uma vez), `15f9fff` (Task 5, os quatro testes que faltam).
+Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Vermelho visto antes de cada correção, texto exato:**
+- Task 2 — sondas MySQL de `PrimaryConcurrencyTest`: `2 failed, 2 passed`, o array final
+  `['SONDA-B','SONDA-C']` contra o esperado `['SONDA-C']` — dois principais sobreviveram.
+- Task 3 — os três casos de `UniquenessInsideTransactionTest`: `3 failed`, `a unicidade de rut foi
+  checada FORA da transação que escreve`, `Failed asserting that 1 is identical to 2`.
+- Task 5 — quatro mutantes, quatro vermelhos: superadmin inativo, `esperava ValidationException: o
+  outro superadmin está inativo`; auto-colisão de RUT, `ValidationException: Este RUT já está
+  cadastrado.`; porta `redator`, `esperava ValidationException`; as duas Role Actions, `4 failed`,
+  `Failed asserting that an array has the key 'name'`/`'permissions'`.
+
+**Um desvio de execução, não de plano.** O implementador da Task 3 (subagent) morreu no meio do
+trabalho — a sessão anterior encerrou antes de ele rodar a verificação final e commitar. O
+controller recuperou o working tree (edições já feitas, sem commit), conferiu que batia byte a
+byte com o brief, e reproduziu o vermelho por conta própria via `git stash` das três Actions antes
+de aceitar o fix — não herdou a prova de ninguém. A Task 4 teve uma imprecisão do texto do plano: o
+Step 2 projetava `11 passed` para `StaffUserActionTest`, e o real, estável antes e depois da
+edição, é `10 passed (17 assertions)` — a task não toca arquivo de teste, então a contagem do plano
+estava simplesmente errada, não o código.
+
+**Gate reproduzido, Steps 1 e 2:** backend em sqlite `3 skipped, 532 passed (1983 assertions)`;
+contra MySQL real, filtro `CertificateNumberTest|PrimaryConcurrencyTest`, `7 passed (40
+assertions)`. Pint `passed` nos 20 arquivos fechados do bloco (conferidos contra `git diff
+--name-only main...HEAD -- '*.php'`, mesma lista). `typescript:transform` sem diff em
+`generated.ts`; `git diff main...HEAD` de `backend/database/` e `frontend/` vazio. Nenhuma sonda
+sobrevivente (`git status --porcelain` vazio, nenhum `SONDA`/`dd(`/`dump(` no diff de
+`backend/app/`). Banco de dev intocado: `LOT-2026-1001` segue corrompido.
+
+**O que o gate NÃO provou, sem maquiagem:** a corrida de unicidade de RUT/e-mail continua aberta —
+duas escritas concorrentes com o mesmo valor ainda colidem no índice único e sobem 500, não 422 (D3
+da spec, recusa registrada). E a suíte em sqlite segue sem enxergar lock nenhum:
+`SQLiteGrammar::compileLock()` é no-op, então tudo que prova o lock do item 1 é MySQL-only.
+
+**Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
