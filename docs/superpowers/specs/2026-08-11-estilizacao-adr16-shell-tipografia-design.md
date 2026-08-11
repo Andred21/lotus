@@ -61,10 +61,22 @@ placeholder; qualquer feature ou backend. `generated.ts` não é tocado.
 
 ## §4 — Tema e tokens (enmenda ao ADR-16)
 
-O ADR-16 ganha o ponto 5: camada de marca **sobre** o Lara. `frontend/src/app/styles/brand-theme.css`
-entra no bundle do Vite (import na cadeia do `index.css`), que o injeta no `<head>` **depois** do
-`<link id="prime-theme">` — vence a cascata por ordem, sem mudar o mecanismo de swap do
-`applyPrimeTheme()`. Overrides em `:root` (comuns) e `html.dark` (modo escuro). O Lara continua
+> **Correção D5' (2026-08-11, aprovada pelo João na escrita do plano — lição 13).** A escrita do
+> plano mediu que o Lara **compila as cores inline** nas regras de componente (97 ocorrências
+> literais de `#3b82f6` no `theme.css` light); as vars de `:root` são um conjunto paralelo que as
+> regras compiladas não consomem — override puro de tokens não restiliza botão, foco nem highlight.
+> Mecanismo corrigido: **script versionado** `frontend/scripts/generate-brand-theme.mjs` gera
+> cópias dos dois Lara com a escala azul substituída pela escala celeste derivada
+> (`border-radius: 6px→4px` e `"Inter var"→"Inter"` incluídos), saída **versionada** em
+> `frontend/src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
+> `primeTheme.ts` mora em `shared/config` e a seta de dependência não sobe), consumida pelo
+> `applyPrimeTheme()`. Guarda: teste vitest reprova se o arquivo commitado divergir de uma geração
+> fresca ou se restar azul Lara. O `brand-theme.css` continua existindo, **fino** (fontes, D6,
+> `tabular-nums`), em `frontend/src/shared/styles/brand-theme.css`. Upgrade do primereact = rodar
+> o script de novo, com o teste acusando drift.
+
+O ADR-16 ganha o ponto 5: camada de marca **sobre** o Lara — os temas gerados + `brand-theme.css`
+no bundle do Vite, que entra no `<head>` **depois** do `<link id="prime-theme">`. O Lara continua
 base: o que a camada não redefine, permanece Lara.
 
 Paleta — 6 tokens nomeados, únicos donos de cor da identidade:
@@ -129,7 +141,8 @@ Cada correção provada pela **mesma medição que reprovou**:
 3. computed style do foco nos brand buttons ≠ `outline: none` + box-shadow zerado (UI-03);
 4. screenshot do wordmark sobre navy nos 2 temas, legível (UI-04);
 5. **um** heading de página no shell (UI-05);
-6. grep sem `#25A5E4` fora de `brand.ts`/`brand-theme.css`; sem `gray-*` no shell;
+6. grep sem `#25A5E4` fora de `brand.ts`, `brand-theme.css`, `scripts/generate-brand-theme.mjs` e
+   dos temas gerados em `shared/styles/themes/` (D5'); sem `gray-*` no shell;
 7. paridade das 3 locales (chaves novas incluídas);
 8. `pnpm build`, `pnpm lint`, `pnpm test` verdes;
 9. **checkpoint visual do João** nas 3 viewports (1440/1024/390), light e dark;

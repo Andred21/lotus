@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
 context_packet: null
 blocker: null
 review_findings_approved: null
@@ -93,6 +93,29 @@ ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanç
 1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
 O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
 revisar a spec escrita e autorizar o `writing-plans`.
+
+### Spec aprovada e plano escrito — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. **A escrita do plano achou um defeito na
+spec aprovada e ele foi corrigido com decisão dele, não silenciado (lição 13):** o Lara compila as
+cores inline (97 ocorrências de `#3b82f6` nas regras de componente) e as vars de `:root` são um
+conjunto paralelo que as regras não consomem — a D5 original (override puro de tokens) **não**
+restilizaria botão, foco nem highlight. Nasce a **D5'**, aprovada pelo João: script versionado
+`frontend/scripts/generate-brand-theme.mjs` gera cópias dos 2 Lara com a escala celeste, os neutros
+gray→slate (corpo em grafite, ground dark em noche), radius 4px e `"Inter var"→"Inter"`, saída
+versionada em `src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
+a seta de dependência não sobe até `primeTheme.ts`), com teste vitest de drift; o
+`brand-theme.css` fica fino (D6, humo via `--surface-ground`, `tabular-nums`). A adenda D5' foi
+gravada na própria spec (§4) com a correção do §9.6.
+
+Plano em 8 tasks (0–7): baseline → fontes `@fontsource` + tokens Tailwind → temas gerados +
+guarda de drift → `brand-theme.css` + higiene de hex + foco (UI-03) → sidebar navy + toggle +
+aria i18n (UI-02/04/07) → header barra utilitária + tokens no shell (UI-01/05) → enmenda ADR-16 →
+gate pelas mesmas medições do report. Três desvios declarados no §Desvios do plano (focus ring
+tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados em slate).
+Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
+o Codex entra na segunda lente do review (spec §10). O estado transiciona para
+`ready_for_execution` no mesmo commit do plano.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
