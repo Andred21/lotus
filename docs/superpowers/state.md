@@ -3,8 +3,8 @@ schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
 workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+next_owner: joao
+next_action: approve_visual_checkpoint
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: guardas-que-faltam
 state_basis_commit: b29f3b9
-updated_at: 2026-08-11T17:40:00-03:00
+updated_at: 2026-08-11T17:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -144,6 +144,54 @@ que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visib
 
 O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
 pulou e registrou como falha de processo.
+
+### Tasks 0–7 executadas — 2026-08-11: o código fechou, o checkpoint do João não
+
+As sete tasks estão implementadas e commitadas na `feat/estilizacao-adr16-shell-tipografia`:
+`f76ba67` (baseline), `c12a3bc` (fontes), `f54f6ff` (temas gerados), `b029ea8` (camada fina),
+`59e6e1d` (sidebar/i18n), `87442f4` (header/shell), `df781c6` (ADR-16 ponto 5), `6eead8e` (correção
+achada pelo próprio gate). Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Mais duas emendas nasceram DURANTE a execução, gravadas no plano** — nenhuma reabre decisão do
+João, as duas são a decisão dele aplicada onde ela vale. **D-P10**: a regra "mesmo bloco" da D-P8
+pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em outro — mais 7 declarações
+ficavam brancas sobre celeste. **D-P11**: o Step 6 da Task 3 esperava que o grep de `#25A5E4`
+devolvesse só o `SidebarItem`; devolveu três — `AppAvatar.tsx` pintava `#25A5E4`/`#fff` inline e o
+`brandOutline` mandava `dark:text-white` sobre celeste. Os dois são o par de 2,77:1 que a spec D6
+nomeia, dentro do bloco que existe para matá-lo.
+
+**Duas vezes a inspeção pegou o que os testes verdes não pegaram**, e é o padrão que a lição 13
+combate: 96 verdes não provam o arquivo certo. Na Task 2, `--primary-400` e `--primary-500` saíram
+com o mesmo hex e `--primary-color-text` ficou branco. Na Task 7, o grep de `ring-0` reprovou por um
+motivo que virou correção: o scanner do Tailwind lê comentário, achou o token no `//` que explicava
+a remoção da classe e **emitia a utility morta no bundle**.
+
+**Gate do bloco, medido no navegador com sessão real** (não mock): UI-01 `rightEdge` 378 e
+`scrollWidth` == 390; UI-02 zero `aside button` a 390, um a 1440, com a pref persistida intacta nos
+dois; UI-03 Tab real casando `:focus-visible` com `outline: solid 2px rgb(37,165,228)` **somado** ao
+anel do tema; UI-05 um heading por página. Mais: corpo em `Inter, sans-serif`, título em `Archivo`,
+`--surface-ground` humo/noche, sidebar `rgb(15,43,61)` nos dois temas, `--primary-color-text`
+azul-poste, radius 4px, `tabular-nums` nas células. Suíte **17 arquivos / 96 testes**, build e lint
+verdes, `generated.ts` sem diff, os quatro greps de higiene vazios.
+
+**O bloco PARA aqui, e o plano é quem manda parar.** O Step 4 da Task 7 é o checkpoint visual do
+João, declarado **bloqueante** ("sem aprovação dele o bloco não segue"), e o Step 5 é o re-run do
+`/lotus-ui-review`, que é invocação dele. Nada foi promovido a `ready_for_review`.
+
+**Três coisas para a decisão dele, achadas olhando as telas — a medição verde não pegaria nenhuma:**
+
+1. **O wordmark ficou ilegível (regressão do Step 4 da Task 4).** O asset é retrato **335×466**; com
+   o `h-8 w-auto` que o plano escreveu ele renderiza **23×32 px**. O `on-dark` resolveu a cor, que
+   era a UI-04; o tamanho errou para o outro lado do `h-30` anterior. Decisão de marca.
+2. **O toggle da sidebar é uma caixa branca sobre a navy no tema claro** (`rgb(255,255,255)`
+   medido). O `brandOutline` acompanha o tema; a sidebar deixou de acompanhar na Task 4. Contraste
+   passa, coerência não.
+3. **Celeste como traço ou texto sobre superfície clara segue reprovando.** A D6/D-P8 resolveu uma
+   direção — texto **sobre** celeste. A outra não tem decisão: o outline de foco mede **2,77:1**
+   sobre branco (e 5,29:1 sobre a navy, onde passa), o `brandOutline` claro mede 2,77:1, e as
+   variantes `outlined`/`text` do tema caíram de 3,68:1 (Lara stock) para 2,77:1. A D-P9 continua
+   certa — 1,4:1 → 2,77:1 é a diferença entre invisível e visível —; falta a decisão de cor.
+   Proposta: azul-poste como traço de foco no claro (13,4:1 sobre humo), celeste mantido no escuro.
 
 ## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
 
