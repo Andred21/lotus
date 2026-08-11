@@ -23,6 +23,6 @@ export default defineConfig({
     // `tests/` fica fora de `src/` porque o que ele confere é o REPOSITÓRIO,
     // não a app: o container `app` monta só `./backend` e `./frontend`, então
     // o vitest é o único runner do projeto com acesso à raiz.
-    include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
   },
 });

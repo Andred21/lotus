@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 /**
@@ -116,6 +116,25 @@ describe('referência de path em doc normativo', () => {
     const total = DOCS.flatMap(referencias).length
 
     expect(total).toBeGreaterThan(60)
+  })
+
+  it('toda rule de `.claude/rules/` está na lista conferida', () => {
+    // Q-1 do review de 2026-08-11. A D4 da spec declara o escopo com GLOB
+    // (`.claude/rules/*.md`) e `DOCS` é lista literal: rule nova entrava sem
+    // ser conferida, em silêncio. Provado por sonda — uma rule citando um path
+    // inexistente passava com 13 verdes. É a pasta onde a lição 13 reincidiu
+    // duas vezes no mesmo arquivo, então é o pior lugar possível para a
+    // cobertura encolher sozinha.
+    //
+    // Só `.claude/rules/` é glob. `docs/` não pode ser varrida assim: a D4
+    // exclui `docs/pendencias.md` e `docs/superpowers/**` de propósito, e um
+    // glob os traria de volta.
+    const rules = readdirSync(join(RAIZ, '.claude', 'rules'))
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => `.claude/rules/${f}`)
+
+    expect(rules.filter((r) => !DOCS.includes(r))).toEqual([])
+    expect(rules.length).toBeGreaterThan(0)
   })
 
   it('toda citação deliberada ainda está no doc que a declara', () => {

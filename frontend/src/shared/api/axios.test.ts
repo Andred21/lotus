@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
 import { api } from './axios'
 
 /**
@@ -21,6 +22,19 @@ import { api } from './axios'
  * `content-type` minúsculo quebraria a app do mesmo jeito.
  */
 const escopos = ['common', 'delete', 'get', 'head', 'post', 'put', 'patch'] as const
+
+/**
+ * Os `fulfilled` dos interceptors de request registrados na instância.
+ * `handlers` não está no tipo público do axios — é a única porta para
+ * exercitar o que a APP pendurou, sem subir uma requisição de verdade.
+ */
+function handlersDeRequest(): Array<(c: InternalAxiosRequestConfig) => unknown> {
+  const manager = api.interceptors.request as unknown as {
+    handlers: Array<{ fulfilled?: (c: InternalAxiosRequestConfig) => unknown } | null>
+  }
+
+  return manager.handlers.flatMap((h) => (h?.fulfilled ? [h.fulfilled] : []))
+}
 
 /** Valores de Content-Type REALMENTE fixados no objeto de headers. */
 function contentTypeFixado(headers: unknown): unknown[] {
@@ -54,5 +68,40 @@ describe('instância do axios', () => {
     // vazio (instância trocada, import quebrado) passaria nas duas de cima
     // sem provar nada.
     expect(JSON.stringify(api.defaults.headers)).toContain('application/json')
+  })
+
+  /**
+   * A SEGUNDA porta do mesmo arquivo, e a que faltava (Q-1 do review de
+   * 2026-08-11). `defaults.headers` era tudo que esta guarda olhava, e
+   * `axios.ts` tem um interceptor de request seis linhas abaixo do
+   * `axios.create` — quem escrevesse `headers.set('Content-Type', …)` ali
+   * reproduzia o bug da lição 6 inteiro com a suíte verde. Provado por sonda:
+   * o mutante passava os 16 arquivos / 79 testes.
+   *
+   * O universo é o que a APP declara, não o pipeline inteiro do axios. Uma
+   * versão anterior desta guarda mandava uma requisição real por `adapter` e
+   * lia o header final; medido, o axios do jsdom escreve
+   * `application/x-www-form-urlencoded` para FormData, que é artefato do
+   * ambiente e não configuração nossa — assertar ali reprovaria o estado
+   * correto, que é o mesmo erro da D-E2 deste bloco (afirmar ausência de
+   * chave onde o axios escreve `undefined` de propósito).
+   */
+  it('nenhum interceptor de request fixa Content-Type', async () => {
+    const config = {
+      headers: new AxiosHeaders({ Accept: 'application/json' }),
+    } as InternalAxiosRequestConfig
+
+    for (const handler of handlersDeRequest()) {
+      await handler(config)
+    }
+
+    expect(contentTypeFixado(config.headers.toJSON())).toEqual([])
+  })
+
+  it('há interceptor de request registrado', () => {
+    // Guarda da guarda: interceptor removido (ou `handlers` renomeado numa
+    // major do axios) deixaria o laço acima iterando vazio e passando sem
+    // exercitar nada.
+    expect(handlersDeRequest().length).toBeGreaterThan(0)
   })
 })
