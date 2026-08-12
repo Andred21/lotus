@@ -19,8 +19,13 @@ class LoginLog extends Model
 {
     public const UPDATED_AT = null;
 
+    /**
+     * `user_id` fica FORA de propósito, pela mesma razão que `created_at`: num
+     * log de segurança nem a data nem o dono do acesso se forjam por mass
+     * assignment. O único escritor é a `RecordLoginAction`, que grava por
+     * `$user->loginLogs()->create([...])` — a relação define a FK.
+     */
     protected $fillable = [
-        'user_id',
         'ip_address',
         'user_agent',
     ];

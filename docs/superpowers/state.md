@@ -2,15 +2,15 @@
 schema_version: 1
 active_feature: null
 active_work_item: last-login
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-last-login-design.md
 active_plan: docs/superpowers/plans/2026-08-12-last-login.md
 context_packet: null
 blocker: null
-review_findings_approved: null
+review_findings_approved: [Q-1, Q-2, Q-3]
 last_completed_work_item: integridade-e-concorrencia-backend
 state_basis_commit: 397548c
 updated_at: 2026-08-12T17:10:00-03:00
@@ -271,6 +271,108 @@ Ledger fino task-a-task (branch, commits, achados de review) em `.superpowers/sd
 
 **Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
 `/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
+
+### Review de sprint — 2026-08-12: ALTO risco, duas lentes, 3 achados
+
+**ALTO RISCO pelo gate da skill, e desta vez a escala da spec e a do `/revisar-sprint` concordam** —
+os três gatilhos que a §5 da spec declara se aplicam: auth (`AuthController`), schema (tabela nova) e
+`generated.ts`. Duas lentes: Claude mais revisão independente do Codex (read-only, `codex` MCP).
+
+**Gate reproduzido, não herdado do relatório de execução:** backend **547 passed, 5 skipped (2021
+assertions)**; frontend **17 arquivos / 86 testes**, `pnpm lint` limpo e `pnpm build` verde;
+`typescript:transform` **sem diff** em `generated.ts` (`git status --porcelain` vazio depois de
+rodar); Pint `{"tool":"pint","result":"passed"}` nos 12 `.php` do bloco. Nenhuma sonda
+`dd(`/`dump(`/`console.log`/`SONDA` no diff de `backend/app` e `frontend/src`.
+
+**Órfãos: zero.** `LoginLog` tem os consumidores previstos (`User::loginLogs`/`latestLogin` e os três
+testes); `RecordLoginAction` está fiada no `AuthController`; `latestLogin()` é consumida pelos dois
+DTOs e pelos dois controllers; `formatDateTime` tem os dois consumidores mais o teste co-locado e sai
+pelo barrel `shared/lib` que já era `export *`; `common.lastLogin` existe nos três locales e é lida
+pelas duas tabelas.
+
+**As duas lentes convergiram no Q-1 e no Q-2.** O Q-3 só o Codex viu, e foi verificado no código
+antes de entrar. **Três sub-afirmações do Codex foram recusadas**, registradas abaixo dos achados.
+
+**Uma medição que NÃO virou achado, porque o código está certo.** A conferência do
+`latestOfMany(['created_at', 'id'])` contra o vendor (`CanBeOneOfMany`) confirma o desempate: a forma
+com array vira `['created_at' => 'MAX', 'id' => 'MAX']` e aplica os agregados em cadeia, então dois
+logins no mesmo segundo desempatam por `id`, que é exatamente o que a D-P1 do plano pretendia.
+
+**Os três achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — `AuthController.php:32` segue passando
+   `$request->boolean('remember')` ao `attempt()`. A D3 da spec recusou o listener do evento `Login`
+   afirmando que "o caminho de cookie remember me está morto", mas a medição que sustenta isso varreu
+   `features/identity/` e `shared/api/` — ou seja, o **frontend**, não a superfície da API, que aceita
+   o parâmetro de qualquer cliente. Conferido no vendor: com o recaller no request,
+   `SessionGuard::user()` chama `userFromRecaller()` e `updateSession()` e **reconstrói a sessão sem
+   passar pelo `AuthController`**, então aquele acesso não gera linha em `login_logs` e a coluna
+   "Último acceso" envelhece numa conta em uso diário — exatamente a pergunta que a D5 diz que a
+   coluna existe para responder. **RN-01 (§5.5) NÃO é ferida, e isso foi verificado, não presumido:**
+   o `logout()` do gate de `is_active` (linha 45) chama `clearUserDataFromStorage()`, que faz
+   `unqueue` do recaller **incondicionalmente**, e ainda cicla o `remember_token`, então o usuário
+   inativo não sai com cookie válido. Correção mais barata: apagar o argumento `remember` (uma
+   linha), já que nenhum cliente o envia — o que torna a justificativa da D3 verdadeira em vez de
+   aproximada.
+2. **Q-2 🟡** *(Claude + Codex)* — `LastLoginEagerLoadTest.php:33-45`: o caso de **usuários** afirma
+   só `assertOk()`, sem fixar quantas linhas foram hidratadas. O docblock do próprio arquivo escreve
+   que `Model::preventLazyLoading()` só marca a instância quando `Builder::hydrate()` vê
+   `count($items) > 1`; o caso de **redatores**, dez linhas abaixo, fecha essa ponta com
+   `assertJsonCount(2)`. Se `actingAsAdmin()` deixar de criar um `type=admin` (hoje cria, conferido em
+   `tests/TestCase.php:29`) ou o filtro do `index` mudar, a listagem cai para ≤1 linha e o teste segue
+   verde guardando nada. É o padrão "teste que para de discriminar" que este repo já puniu duas vezes
+   (A-1 e o `IssuableEnrollmentBuilder`). Correção: `->assertJsonCount(3)` — os dois criados mais o
+   admin que autentica.
+3. **Q-3 🟢** *(Codex, verificado)* — `LoginLog.php:23`: `user_id` está no `$fillable` e nenhum
+   escritor o usa — o único é `RecordLoginAction`, que grava por `$user->loginLogs()->create([...])`,
+   e a relação define a FK. Num log de segurança é porta sem consumidor, e contrasta com a decisão
+   deliberada do mesmo bloco de manter `created_at` **fora** do `$fillable` ("a data do acesso não se
+   forja por mass assignment"): o mesmo argumento vale para de quem foi o acesso.
+
+**Sub-afirmações do Codex recusadas, com a razão:**
+
+- *"`created_at` aceita NULL na migration"* — `$table->timestamp('created_at')->nullable()` é
+  exatamente o que `$table->timestamps()` gera, e o model tem timestamps ligados (só `UPDATED_AT` é
+  `null`), então todo insert por Eloquent preenche a coluna. Não é defeito.
+- *"`LoginLogTest` aceita qualquer IP não nulo"* — o `user_agent` é asserido pelo valor exato
+  (`SondaAgent/1.0`), o que já reprovaria uma troca de argumentos entre IP e user-agent, que é o único
+  defeito que a asserção frouxa de IP deixaria passar.
+- *"`store`/`update` pagam consulta extra"* — o próprio Codex classificou como aceitável e a
+  conferência concorda: modelo único, `Builder::hydrate()` não marca a instância com
+  `count($items) <= 1`, o valor projetado sai correto e o custo é um `SELECT` num caminho de escrita.
+  Não é o N+1 que a D4 existe para impedir.
+
+**Decisão do João (2026-08-12): os três entram.** Corrigidos na mesma sessão do review.
+
+**Como cada correção foi provada:**
+
+| Achado | Correção | Prova de que o teste discrimina |
+|---|---|---|
+| Q-1 | `attempt($credentials)` sem o segundo argumento; teste novo `test_remember_nao_abre_porta_de_reautenticacao_fora_do_controller` | com `$request->boolean('remember')` de volta só naquela linha: `assertCookieMissing` reprova — o recaller está na resposta |
+| Q-2 | `->assertJsonCount(3)` no caso de usuários | com a listagem degradada a **um** staff criado: reprova (2 linhas contra 3) — a guarda deixa de valer e a asserção acusa |
+| Q-3 | `user_id` sai do `$fillable` de `LoginLog` | **sem teste próprio, e isso é declarado:** é estreitamento de superfície, não mudança de comportamento. A prova é `test_login_ok_grava_uma_linha_com_ip_e_user_agent` seguir afirmando `$log->user_id === $user->id` — o escritor real continua gravando a FK pela relação |
+
+**Um erro de método corrigido dentro da própria correção, registrado sem maquiagem.** A primeira
+versão do teste do Q-1 afirmava `assertNull($user->fresh()->remember_token)` e foi vista reprovar —
+mas pelo motivo **errado**: a `UserFactory:38` já semeia `remember_token`, e o
+`ensureRememberTokenIsSet()` só escreve quando a coluna está vazia, então ela fica idêntica nos dois
+estados do código e não discrimina nada. O vermelho era da factory, não do defeito. A asserção
+passou para o **cookie recaller** (`Auth::guard('web')->getRecallerName()`), que é o que
+`queueRecallerCookie()` de fato produz, e só então o vermelho passou a acusar a linha certa. A razão
+está escrita ao lado da asserção para não se reintroduzir.
+
+**Gate depois das correções:** backend **548 passed, 5 skipped (2025 assertions)** — um teste a mais
+que o gate de execução, como esperado. Pint `passed` nos 4 arquivos tocados. Nenhum DTO mudou, então
+`typescript:transform` não era necessário e `frontend/` ficou intocado pelas correções (`git diff`
+vazio), o que preserva os 17 arquivos / 86 testes já medidos.
+
+**O que continua NÃO provado, sem maquiagem:** nenhuma tela foi vista renderizada (WSL sem browser) —
+o checkpoint visual das duas colunas segue com o João; login falho e logout continuam fora de escopo
+(D2); a retenção de `ip_address`/`user_agent` segue aberta na P-30. E o Q-1 fecha a porta na origem,
+mas **não** instala gate de `is_active` em requisição já autenticada: sessão comum também não
+re-checa o flag, o que é anterior a este bloco e permanece aberto.
+
+**Estado: `ready_for_closure`.** O fechamento não roda automaticamente.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 

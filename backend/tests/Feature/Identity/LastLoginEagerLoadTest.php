@@ -42,7 +42,11 @@ class LastLoginEagerLoadTest extends TestCase
 
         Model::preventLazyLoading();
 
-        $this->getJson('/api/users')->assertOk();
+        // A contagem NÃO é decoração: a guarda só existe quando o `hydrate()`
+        // vê mais de uma linha, e sem afirmar isso o caso segue verde guardando
+        // nada se `actingAsAdmin()` deixar de criar um `type=admin` ou o filtro
+        // do `index` mudar. São os dois criados acima mais o admin que autentica.
+        $this->getJson('/api/users')->assertOk()->assertJsonCount(3);
     }
 
     public function test_listagem_de_redatores_nao_lazy_loada_o_ultimo_login(): void

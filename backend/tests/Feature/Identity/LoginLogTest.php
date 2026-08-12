@@ -5,6 +5,7 @@ namespace Tests\Feature\Identity;
 use App\Domains\Identity\Models\LoginLog;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -75,6 +76,39 @@ class LoginLogTest extends TestCase
             ->assertStatus(422);
 
         $this->assertSame(0, LoginLog::count());
+    }
+
+    /**
+     * O log só enxerga quem passa pelo `AuthController`. O cookie "remember me"
+     * é a única porta deste repo que reautentica FORA dele: com o recaller no
+     * request, `SessionGuard::user()` chama `userFromRecaller()` e
+     * `updateSession()` sem tocar o controller — nenhuma linha de `login_logs`
+     * nasce e a coluna "último acesso" envelhece numa conta em uso diário.
+     *
+     * A porta se fecha na origem: o `attempt()` não recebe mais `remember`,
+     * então o `remember_token` nunca é escrito e um recaller forjado não
+     * valida em `retrieveByToken()`. O frontend nunca enviou o campo (zero
+     * ocorrência em `features/identity/` e `shared/api/`) — o que existia era a
+     * API aceitá-lo de qualquer cliente.
+     */
+    public function test_remember_nao_abre_porta_de_reautenticacao_fora_do_controller(): void
+    {
+        $this->makeUser();
+
+        $resposta = $this->postJson('/api/login', [
+            'email' => 'admin@lotus.cl',
+            'password' => 'senha123',
+            'remember' => true,
+        ])->assertOk();
+
+        // A asserção é no COOKIE, não no `remember_token` da tabela: a
+        // `UserFactory` já semeia o token (`UserFactory.php:38`) e o
+        // `ensureRememberTokenIsSet()` só escreve quando ele está vazio, então
+        // a coluna fica idêntica nos dois estados do código e não discrimina
+        // nada. Quem abre a porta é o recaller enfileirado por
+        // `queueRecallerCookie()`, e é ele que tem de faltar.
+        $resposta->assertCookieMissing(Auth::guard('web')->getRecallerName());
+        $this->assertSame(1, LoginLog::count());
     }
 
     public function test_senha_errada_nao_grava_login(): void
