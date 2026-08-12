@@ -5,6 +5,7 @@ namespace Tests\Feature\Cadastros;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -114,5 +115,62 @@ class HabilitacaoTest extends TestCase
             'email' => $redator->user->email,
             'course_ids' => [99999],
         ])->assertStatus(422)->assertJsonValidationErrors('course_ids.0');
+    }
+
+    public function test_habilitacao_pelo_lado_do_curso_grava_audit_no_curso(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+        $redator = $this->redator();
+
+        $this->putJson("/api/courses/{$course->id}/redatores", [
+            'redator_ids' => [$redator->id],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'course',
+            'auditable_id' => $course->id,
+            'event' => 'sync',
+        ]);
+    }
+
+    public function test_habilitacao_pelo_lado_do_redator_grava_audit_no_redator(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+        $redator = $this->redator();
+
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => 'Fabián Cifuentes',
+            'rut' => '12.345.678-5',
+            'email' => 'fc@lotus.cl',
+            'course_ids' => [$course->id],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'redator',
+            'auditable_id' => $redator->id,
+            'event' => 'sync',
+        ]);
+    }
+
+    public function test_edicao_de_redator_sem_mudar_curso_nao_grava_audit_de_sync(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+        $redator = $this->redator();
+        $redator->courses()->attach($course->id);
+
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => 'Fabián Cifuentes',
+            'rut' => '12.345.678-5',
+            'email' => 'fc@lotus.cl',
+            'course_ids' => [$course->id],
+        ])->assertOk();
+
+        $this->assertSame(0, DB::table('audits')
+            ->where('auditable_type', 'redator')
+            ->where('event', 'sync')
+            ->count());
     }
 }

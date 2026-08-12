@@ -6,6 +6,7 @@ use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
+use App\Shared\Audit\PivotAudit;
 use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -63,7 +64,7 @@ class UpdateRedatorAction
                 ]);
 
                 if (! $data->course_ids instanceof Optional) {
-                    $redator->courses()->sync($data->course_ids);
+                    PivotAudit::sync($redator, 'courses', $data->course_ids);
                 }
 
                 foreach ($uploaded as $type => $upload) {

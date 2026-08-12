@@ -5,6 +5,7 @@ namespace App\Domains\Operation\Actions;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\RedatorIdoneidadeService;
+use App\Shared\Audit\PivotAudit;
 
 /**
  * Designa 1 redator à turma após o gate RN-09. Idempotente
@@ -17,7 +18,7 @@ class DesignateRedatorAction
     public function execute(Turma $turma, Redator $redator): Turma
     {
         $this->idoneidade->assertEligible($redator, $turma->course);
-        $turma->redatores()->syncWithoutDetaching([$redator->id]);
+        PivotAudit::syncWithoutDetaching($turma, 'redatores', [$redator->id]);
 
         return $turma;
     }

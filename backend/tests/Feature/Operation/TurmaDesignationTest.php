@@ -12,6 +12,7 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -130,5 +131,52 @@ class TurmaDesignationTest extends TestCase
         $this->deleteJson("/api/turmas/{$this->turma->id}/redatores/{$r->id}")->assertOk();
 
         $this->assertDatabaseMissing('turma_redator', ['turma_id' => $this->turma->id, 'redator_id' => $r->id]);
+    }
+
+    public function test_designacao_grava_audit_na_turma(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUpTurma();
+        $r = $this->makeRedator(habilitado: true, reufValidUntil: '2030-01-01');
+
+        $this->postJson("/api/turmas/{$this->turma->id}/redatores/{$r->id}")->assertOk();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'turma',
+            'auditable_id' => $this->turma->id,
+            'event' => 'sync',
+        ]);
+    }
+
+    public function test_designacao_repetida_nao_grava_segunda_audit(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUpTurma();
+        $r = $this->makeRedator(habilitado: true, reufValidUntil: '2030-01-01');
+
+        $this->postJson("/api/turmas/{$this->turma->id}/redatores/{$r->id}")->assertOk();
+        $this->postJson("/api/turmas/{$this->turma->id}/redatores/{$r->id}")->assertOk();
+
+        $this->assertSame(1, DB::table('audits')
+            ->where('auditable_type', 'turma')
+            ->where('auditable_id', $this->turma->id)
+            ->where('event', 'sync')
+            ->count());
+    }
+
+    public function test_remocao_grava_audit_de_detach(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUpTurma();
+        $r = $this->makeRedator(habilitado: true, reufValidUntil: '2030-01-01');
+        $this->turma->redatores()->attach($r->id);
+
+        $this->deleteJson("/api/turmas/{$this->turma->id}/redatores/{$r->id}")->assertOk();
+
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'turma',
+            'auditable_id' => $this->turma->id,
+            'event' => 'detach',
+        ]);
     }
 }
