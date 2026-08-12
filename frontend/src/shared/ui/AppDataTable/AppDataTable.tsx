@@ -37,8 +37,11 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
    * `AppErrorState` (spec D16). Estruturalmente compatível com `ProblemDetails`
    * sem importar de `shared/api`. */
   error?: { detail?: string | null } | null
-  /** Recarrega a lista. Sem ele o estado de erro não oferece botão. */
-  onRetry?: () => void
+  /** Recarrega a lista. Sem ele o estado de erro não oferece botão.
+   * Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
+   * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
+   * retorno — e faria o tipo mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
 }
 
 /** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
@@ -112,7 +115,9 @@ export function AppDataTable<T extends DataTableValueArray>({
       rows={rows}
       paginator={footerCount !== undefined && !errored}
       alwaysShowPaginator
-      paginatorLeft={footerCount}
+      // Desligar o paginador durante o `loading` foi recusado: a faixa some e
+      // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
+      paginatorLeft={loading ? t('common.loading') : footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
       pt={mergePt(
         mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, widthPt),

@@ -47,7 +47,10 @@ export interface SearchableTableFrameProps<T> {
   actions?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
-  onRetry?: () => void
+  /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
+   * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
+   * retorno — e faria o tipo mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
   /** As `<AppColumn/>`. */
   children: ReactNode
 }

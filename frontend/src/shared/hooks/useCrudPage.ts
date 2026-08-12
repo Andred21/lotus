@@ -41,7 +41,9 @@ export function useCrudPage<T extends { id?: number }>(resource: ListableResourc
      * pelo interceptor: `isError` sem `ProblemDetails`. Sem ele o tipo vira
      * `ProblemDetails | {}` e qualquer `.detail` no consumidor não compila. */
     error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    refetch: () => { void query.refetch() },
+    /** Devolve a promise: o `AppErrorState` a aguarda para manter o Reintentar
+     * em `loading` enquanto o GET está em voo (Q-14). */
+    refetch: () => query.refetch(),
     dialog: dialog ? { mode: dialog.mode, entity } : null,
     openCreate: () => setDialog({ mode: 'create', id: null }),
     openView: (item: T) => setDialog({ mode: 'view', id: item.id ?? null }),

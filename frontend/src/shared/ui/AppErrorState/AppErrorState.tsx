@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { AppButton } from '../AppButton'
 
 export interface AppErrorStateProps {
@@ -8,7 +9,10 @@ export interface AppErrorStateProps {
   /** Ausente => sem botão. Uma lista que não recarrega sozinha não deve
    * prometer que recarrega. */
   retryLabel?: string
-  onRetry?: () => void
+  /** Devolver a promise do refetch faz o botão esperar por ela. Handler que
+   * devolve `void` continua funcionando — só fica sem feedback, e isso está
+   * declarado na spec §7.1 como limitação, não como bug. */
+  onRetry?: () => void | Promise<unknown>
 }
 
 /**
@@ -24,6 +28,18 @@ export interface AppErrorStateProps {
 export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorStateProps) {
   const danger = 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))'
 
+  const [retrying, setRetrying] = useState(false)
+
+  const handleRetry = async () => {
+    if (retrying) return
+    setRetrying(true)
+    try {
+      await onRetry?.()
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-4 py-10 text-center">
       <i className="pi pi-exclamation-triangle text-3xl" style={{ color: danger }} aria-hidden="true" />
@@ -33,7 +49,14 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
       )}
       {retryLabel && onRetry && (
         <div className="mt-1">
-          <AppButton label={retryLabel} icon="pi pi-refresh" outlined onClick={onRetry} />
+          <AppButton
+            label={retryLabel}
+            icon="pi pi-refresh"
+            outlined
+            loading={retrying}
+            disabled={retrying}
+            onClick={() => { void handleRetry() }}
+          />
         </div>
       )}
     </div>
