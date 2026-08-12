@@ -30,7 +30,7 @@ export function ModuleFields({
   return (
     <>
       {modules.length === 0 && (
-        <p className="text-sm text-slate-500">{t('courseModule.empty')}</p>
+        <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.empty')}</p>
       )}
 
       {modules.map((m, i) => (
@@ -54,7 +54,7 @@ export function ModuleFields({
       )}
 
       {modules.length > 0 && (
-        <p className="text-right text-sm text-slate-500">
+        <p className="text-right text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('courseModule.modulesTotal', { hours: modulesTotal })}
         </p>
       )}
@@ -62,7 +62,13 @@ export function ModuleFields({
       {/* Aviso, não erro: âmbar e sem role="alert" (o FormErrorBanner é vermelho e
           para 422). NUNCA bloqueia o submit — §5.7, registro não bloqueia ação. */}
       {hoursMismatch && (
-        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+        <p
+          className="rounded px-3 py-2 text-sm"
+          style={{
+            background: 'color-mix(in srgb, var(--yellow-500) 12%, var(--surface-card))',
+            color: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
+          }}
+        >
           {t('courseModule.hoursMismatch', { modules: modulesTotal, workload: workloadHours })}
         </p>
       )}

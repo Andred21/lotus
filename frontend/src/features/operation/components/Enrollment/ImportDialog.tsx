@@ -25,7 +25,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
       <div className="space-y-4">
         {!f.result && (
           <>
-            <p className="text-sm text-slate-500">{t('operation.enrollment.import.help')}</p>
+            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.enrollment.import.help')}</p>
             <AppFileUpload
               accept=".xlsx,.csv"
               chooseLabel={t('operation.enrollment.import.choose')}
@@ -34,7 +34,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
               disabled={f.pending}
             />
             {f.pending && (
-              <p className="text-sm text-slate-500">{t('operation.enrollment.import.uploading')}</p>
+              <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.enrollment.import.uploading')}</p>
             )}
           </>
         )}
@@ -49,7 +49,9 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
         )}
 
         {(f.sizeError || f.message) && (
-          <p className="text-sm text-red-600">{f.sizeError || f.message}</p>
+          <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+            {f.sizeError || f.message}
+          </p>
         )}
       </div>
     </AppDialog>

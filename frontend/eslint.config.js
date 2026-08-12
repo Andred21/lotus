@@ -46,6 +46,43 @@ const FORMDATA_FORA_DO_HELPER = {
     'Upload de feature não monta FormData: use postMultipart de @shared/api/postMultipart, que é o único ponto onde o Content-Type não pode ser fixado (frontend-fsliced.md, lição 6).',
 }
 
+// D7 (cor pelo tema) e modo leitura: as duas regras abaixo, medidas com o
+// Step 5 do próprio bloco. O texto original do brief dava cada regra num
+// bloco separado, um casando `src/features/**/*.tsx` (cor, com catraca) e o
+// outro casando `src/features/**/*.tsx` + `src/shared/**/*.tsx` (modo
+// leitura, sem catraca) — e os dois colidem ENTRE SI pelo mesmo bug de merge
+// raso que o comentário deles cita (Q-2, 2026-08-04): qualquer arquivo de
+// feature fora da catraca casa os dois blocos, e o que vem depois no array
+// apaga o `no-restricted-syntax` do que vem antes por inteiro. Rodar o Step 5
+// com os blocos separados provou isto — a mutação de cor em RoleDialog.tsx
+// passou verde, regra morta. Por isso os dois seletores entram JUNTOS no
+// array de um único bloco onde ambas valem (features fora da catraca), e
+// cada regra que sobra fora dessa faixa (a catraca em si, e shared/) ganha
+// bloco próprio e mutuamente exclusivo — nenhum arquivo casa dois blocos que
+// declarem `no-restricted-syntax` ao mesmo tempo.
+const COR_HARDCODED = {
+  selector:
+    'JSXAttribute[name.name="className"] Literal[value=/\\b(text|bg|border|ring|divide)-(slate|gray|zinc|neutral|stone|red|green|blue|amber|yellow|emerald|sky|indigo|violet|rose|orange|teal|cyan|lime|fuchsia|purple|pink)-[0-9]{2,3}\\b/]',
+  message:
+    'Cor Tailwind hardcoded: Tailwind é layout, cor vem de variável do tema (ADR-16). Use style={{ color: "var(--text-color-secondary)" }} e irmãs.',
+}
+const DISABLED_READONLY = {
+  selector: 'JSXAttribute[name.name="disabled"] > JSXExpressionContainer > Identifier[name="readOnly"]',
+  message:
+    'Campo desabilitado trunca o valor e some com o contraste em leitura: passe `readOnly` e `value` ao FormField/NestedField (spec BD-3 §4).',
+}
+// Catraca da regra de cor: lista que só ENCOLHE. Login e Validação têm fundo
+// escuro deliberado — mudá-las é desenho novo, não pagamento de débito (D7).
+const CATRACA_COR = [
+  'src/features/identity/components/Login/LoginForm.tsx',
+  'src/features/identity/components/Login/LoginPage.tsx',
+  'src/features/certification/components/Validation/ValidationPage.tsx',
+  'src/features/commercial/components/Budget/CourseStep.tsx',
+  'src/features/commercial/components/Budget/QuoteWizard.tsx',
+  'src/features/operation/components/Document/ManualButton.tsx',
+  'src/features/commercial/components/Client/ClientsTable.tsx',
+]
+
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
   // à mão — lintá-lo só produz erro que não se pode corrigir na fonte certa.
@@ -238,6 +275,37 @@ export default defineConfig([
           ],
         },
       ],
+    },
+  },
+  // Bloco PRÓPRIO de propósito: flat config faz merge raso de `rules`, e dois
+  // blocos que casam o mesmo arquivo e declaram `no-restricted-syntax` NÃO
+  // concatenam os seletores — o último apaga o primeiro inteiro. É o bug do
+  // review de 2026-08-04 (Q-2), documentado em `eslint.config.js:145-153`.
+  // Estes três blocos casam `src/features/**`/`src/shared/**` sem colidir com
+  // os de cima (que casam `src/features/*/components/**` e o complemento por
+  // `ignores`) NEM entre si — ver o comentário de `COR_HARDCODED` acima.
+  //
+  // Faixa 1: features fora da catraca de cor — as duas regras valem juntas.
+  {
+    files: ['src/features/**/*.tsx'],
+    ignores: CATRACA_COR,
+    rules: {
+      'no-restricted-syntax': ['error', COR_HARDCODED, DISABLED_READONLY],
+    },
+  },
+  // Faixa 2: a catraca em si — cor fica hardcoded de propósito (D7), mas o
+  // modo leitura vale igual, sem exceção (a regra nasce com `ignores` vazio).
+  {
+    files: CATRACA_COR,
+    rules: {
+      'no-restricted-syntax': ['error', DISABLED_READONLY],
+    },
+  },
+  // Faixa 3: shared/ não tem cor de feature para checar — só modo leitura.
+  {
+    files: ['src/shared/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', DISABLED_READONLY],
     },
   },
 ])

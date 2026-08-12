@@ -61,14 +61,14 @@ export function RoleDialog({
         </FormField>
 
         {isSystem && (
-          <p className="text-sm text-slate-500">{t('role.systemReadOnly')}</p>
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('role.systemReadOnly')}</p>
         )}
 
         <div className="space-y-4">
           <FormSection title={t('role.permissions')} />
           {groups.map(([group, perms]) => (
             <div key={group} className="space-y-2">
-              <p className="text-xs font-medium text-slate-400">{t(`permGroup.${group}`)}</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-color-secondary)' }}>{t(`permGroup.${group}`)}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {perms.map((p) => (
                   <label key={p.name} className="flex items-start gap-2 text-sm">

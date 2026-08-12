@@ -57,7 +57,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
               <AppInputText value={f.details.email} onChange={(e) => f.setField('email', e.target.value)} />
             </FormField>
             {f.isNewStudent && (
-              <p className="text-sm text-slate-500">{t('operation.enrollment.form.emailHintNew')}</p>
+              <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.enrollment.form.emailHintNew')}</p>
             )}
             <FormField label={t('operation.enrollment.form.phoneLabel')} error={err('phone')}>
               <AppInputText value={f.details.phone} onChange={(e) => f.setField('phone', e.target.value)} />
@@ -73,7 +73,11 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
           </>
         )}
 
-        {f.message && <p className="text-sm text-red-600">{f.message}</p>}
+        {f.message && (
+          <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+            {f.message}
+          </p>
+        )}
       </div>
 
       <MoveConfirmDialog

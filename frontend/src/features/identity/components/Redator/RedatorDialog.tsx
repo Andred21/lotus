@@ -156,9 +156,15 @@ export function RedatorDialog({
 
         <FormSection title={t("redator.sectionDocuments")} spaced />
         {upload.error && (
-          <p className="text-sm text-red-600">{upload.error.detail}</p>
+          <p className="text-sm" style={{ color: "color-mix(in srgb, var(--red-500) 70%, var(--text-color))" }}>
+            {upload.error.detail}
+          </p>
         )}
-        {sizeError && <p className="text-sm text-red-600">{sizeError}</p>}
+        {sizeError && (
+          <p className="text-sm" style={{ color: "color-mix(in srgb, var(--red-500) 70%, var(--text-color))" }}>
+            {sizeError}
+          </p>
+        )}
         {DOC_TYPES.map((type) => (
           <RedatorDocumentSlot
             key={type}

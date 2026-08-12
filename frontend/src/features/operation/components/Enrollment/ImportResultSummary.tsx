@@ -27,7 +27,7 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
       {result.moved.length > 0 && (
         <div>
           <p className="font-medium">{t('operation.enrollment.import.moved')}</p>
-          <ul className="list-disc pl-5 text-slate-600 dark:text-slate-300">
+          <ul className="list-disc pl-5" style={{ color: 'var(--text-color-secondary)' }}>
             {result.moved.map((m, i) => (
               <li key={i}>
                 {t('operation.enrollment.import.movedRow', {
@@ -44,8 +44,8 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
 
       {result.errors.length > 0 && (
         <div>
-          <p className="font-medium text-red-600">{t('operation.enrollment.import.errors')}</p>
-          <ul className="list-disc pl-5 text-red-600">
+          <p className="font-medium" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>{t('operation.enrollment.import.errors')}</p>
+          <ul className="list-disc pl-5" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
             {result.errors.map((e, i) => (
               <li key={i}>{t('operation.enrollment.import.errorRow', { row: e.row, message: e.message })}</li>
             ))}

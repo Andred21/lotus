@@ -23,9 +23,9 @@ export function ModuleCard({
   const { t } = useTranslation()
 
   return (
-    <div className="space-y-3 rounded border border-slate-200 p-3 dark:border-slate-700">
+    <div className="space-y-3 rounded border p-3" style={{ borderColor: 'var(--surface-border)' }}>
       <div className="flex items-start gap-2">
-        <span className="mt-2.5 text-xs font-semibold text-slate-500">{t('courseModule.itemLabel', { n: index + 1 })}</span>
+        <span className="mt-2.5 text-xs font-semibold" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.itemLabel', { n: index + 1 })}</span>
         <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]} readOnly={readOnly} value={module.name}>
           <div className="flex-1">
             <AppInputText
@@ -51,7 +51,7 @@ export function ModuleCard({
             contrário do FormField), e em leitura só `value` é montado — uma
             legenda dentro de `children` sumiria junto do input. */}
         <div>
-          <span className="mb-1 block text-xs text-slate-500">{t('courseModule.theoryHours')}</span>
+          <span className="mb-1 block text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.theoryHours')}</span>
           <NestedField
             error={fieldErrors?.[`modules.${index}.theory_hours`]?.[0]}
             readOnly={readOnly}
@@ -66,7 +66,7 @@ export function ModuleCard({
           </NestedField>
         </div>
         <div>
-          <span className="mb-1 block text-xs text-slate-500">{t('courseModule.practiceHours')}</span>
+          <span className="mb-1 block text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.practiceHours')}</span>
           <NestedField
             error={fieldErrors?.[`modules.${index}.practice_hours`]?.[0]}
             readOnly={readOnly}
@@ -80,13 +80,13 @@ export function ModuleCard({
             />
           </NestedField>
         </div>
-        <span className="pb-2 text-sm text-slate-500">
+        <span className="pb-2 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('courseModule.total', { hours: module.theory_hours + module.practice_hours })}
         </span>
       </div>
 
       <div>
-        <span className="mb-1 block text-xs text-slate-500">{t('courseModule.learnings')}</span>
+        <span className="mb-1 block text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.learnings')}</span>
         <NestedField
           error={fieldErrors?.[`modules.${index}.learnings`]?.[0]}
           readOnly={readOnly}
@@ -103,7 +103,7 @@ export function ModuleCard({
       </div>
 
       <div>
-        <span className="mb-1 block text-xs text-slate-500">{t('courseModule.contents')}</span>
+        <span className="mb-1 block text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.contents')}</span>
         <NestedField
           error={fieldErrors?.[`modules.${index}.contents`]?.[0]}
           readOnly={readOnly}
