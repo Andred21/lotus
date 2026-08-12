@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: null
 active_work_item: faixa-visivel-e-acessibilidade-dos-dialogos
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md
 context_packet: null
 blocker: null
 last_completed_work_item: last-login
@@ -121,12 +121,54 @@ abertura do brainstorming, como nos precedentes.
 
 ### Fase: `planning`, com o brainstorming reduzido ao que a base nova abriu
 
-O estado entra em `planning` neste commit, junto do primeiro artefato durável desta sessão — a
-remedição da spec. `active_plan` segue `null`: o plano é o próximo artefato, e o `/planejar-bloco`
-exige que ele saia de `writing-plans`, não da promoção. **Risco de review declarado na §9 da spec:
-MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC, dinheiro ou
-documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as telas de uma
-vez, e o modo leitura atravessa 10 arquivos de 5 features.
+O estado entra em `planning` no commit `0533303`, junto do primeiro artefato durável desta sessão — a
+remedição da spec. `active_plan` seguiu `null` até o plano existir. **Risco de review declarado na §9
+da spec: MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC,
+dinheiro ou documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as
+telas de uma vez, e o modo leitura atravessa 10 arquivos de 5 features.
+
+### Spec aprovada e plano escrito — 2026-08-12
+
+**O brainstorming foi curto por construção, e as duas perguntas que sobraram foram feitas em vez de
+presumidas.** O João respondeu que **já leu a spec e a aprova** — as oito decisões da §2 são dele e o
+documento escrito passou pela leitura —, e **dispensou o Context Packet**, confirmando a ausência
+medida de fonte externa (nenhum dos seis itens cita Drive, Notion ou Figma). Nada foi
+complementado na spec além da remedição, porque a base nova não abriu decisão nova: ela mudou dois
+números e não tocou um único arquivo-alvo.
+
+**Uma medição desfez um bloqueio herdado dos quatro blocos anteriores.** De 2026-08-08 a 2026-08-10 o
+fechamento registrou "WSL sem browser utilizável" e empurrou o checkpoint visual para o João. Isso
+**não vale mais**: `playwright-cli` está no PATH e `.artifacts/ui-review/` tem run de 2026-08-12. O
+DoD do BD-3 é comportamento na tela, e ele é executável — o que torna a Task 8 um gate de verdade em
+vez de uma limitação declarada.
+
+O plano (`docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md`) decompõe
+o bloco em **8 tasks**: `AppDialog` (foco + nome do maximizar); o kit `FormField`/`NestedField` com
+modo leitura; a adoção nos 40 sítios; a faixa visível; o CTA único; Q-14 e Q-15; cor pelo tema mais as
+duas regras de lint; gate.
+
+**O item 2 virou duas tasks, não uma.** O mecanismo (kit) é rejeitável por um revisor que aprove a
+adoção, e vice-versa — é exatamente onde a fronteira de task deve cair. A adoção também é o único
+lugar do bloco com decisão por sítio: dropdown mostra rótulo traduzido, não o código cru.
+
+**A escrita do plano achou uma lacuna no próprio rascunho, corrigida antes de gravar:** o Q-14 depende
+de o `onRetry` devolver a promise, e `onRetry` é declarado em **três** camadas — `AppErrorStateProps`,
+`AppDataTableProps` e `SearchableTableFrameProps`. Mudar só a primeira **compilaria**: TypeScript
+aceita atribuir `() => Promise<T>` a uma prop `() => void`, então a promise chegaria em runtime com as
+camadas do meio mentindo sobre o contrato, e o build passaria verde. As três entram no plano.
+
+**Baseline medido, não herdado:** `pnpm test` = **27 arquivos / 131 testes** em `18cf90a`; lint e
+build verdes. Projeção do plano: **28 arquivos / 137 testes** — o kit de leitura (5) e o retorno do
+`refetch` (1). Só duas tasks ganham teste automatizado, e a razão está declarada: componente com
+PrimeReact no jsdom está fora do corte do runner, então foco, `aria-label`, largura, CTA e feedback de
+retry provam no navegador ou não provam.
+
+**Handoff: `executor: claude`**, sem `paths_autorizados`. O bloco fecha por leitura de sonda no
+navegador e por decisão de apresentação em 40 sítios; e a Task 7 mexe em `eslint.config.js`, onde um
+bloco no lugar errado apaga seletores existentes **em silêncio** (Q-2 de 2026-08-04).
+
+**Estado:** `ready_for_execution`. `/executar-bloco faixa-visivel-e-acessibilidade-dos-dialogos` exige
+instrução posterior do João.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
