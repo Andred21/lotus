@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: faixa-visivel-e-acessibilidade-dos-dialogos
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: last-login
-state_basis_commit: ff1f304
-updated_at: 2026-08-12T17:25:00-03:00
+state_basis_commit: 18cf90a
+updated_at: 2026-08-12T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,86 @@ updated_at: 2026-08-12T17:25:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — BD-3 (`faixa-visivel-e-acessibilidade-dos-dialogos`)
+
+### Seleção — 2026-08-12: o item entra com a spec já escrita, e é isso que muda a fase
+
+**BD-3 do `backlog.md:57`, promovido explicitamente pelo João** com o estado em `idle`, pelo título
+literal da seção (`/planejar-bloco do ### BD-3 · Faixa visível e acessibilidade dos diálogos
+(fronteira shared/ui)`) — mesmo precedente de BD-1, BD-2 e BD-7: o argumento é título de seção, não
+slug promovido, e quem promove é ele, não o comando.
+
+**A diferença deste bloco para todos os anteriores: a spec já existia antes da promoção, e não por
+acidente.** `docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md`
+foi gravada em `397548c`, cuja mensagem é literalmente `docs(spec): desenho do BD-3 escrito e NAO
+promovido`. Ela carrega os seis itens e as **oito decisões da §2 já tomadas pelo João**. Isso **não é
+divergência de estado**: `active_spec: null` e `workflow_state: idle` eram a redação correta de "spec
+escrita, bloco não promovido", e o próprio documento abre declarando isso. O gate foi conferido nos
+dois sentidos antes de qualquer escrita — `plans/` só tem `archive/`, então `active_plan: null`
+também era coerente.
+
+**Por que não foi promovido na época, e por que pode ser agora:** a spec parou porque
+`estilizacao-adr16-shell-tipografia` seguia `executing`, e promover o BD-3 violaria a invariante de
+um `active_work_item` só — além de o item 6 escrever variáveis de tema contra uma folha Lara-Lotus
+que vivia só naquela branch. **As duas travas caíram:** a estilização entrou na `main` pelo PR #41
+(`0b72dba`) e o `last-login` pelo PR #42 (`18cf90a`). O estado está `idle` com
+`last_completed_work_item: last-login` — nenhum item concorrente.
+
+### A remedição que a própria spec exigia foi feita, e o resultado é o oposto do temido
+
+A spec declarava que todo número da §4.1, §5.1, §6 e §7.3 fora medido contra `main`@`4b02b72` e
+**precisava ser remedido antes de executar**, porque a branch da estilização mexera em `AppButton`,
+`AppHeader`, `AppSidebar` e na camada de cor. Remedido contra `18cf90a`, e a tabela completa está no
+cabeçalho da spec. O resumo:
+
+- **41 sítios de `disabled={readOnly}` em 10 arquivos** — idênticos, arquivo a arquivo;
+- **`AppDataTable.tsx:83-84` e `:106`, `SearchableTableFrame.tsx:103-104` e `:115`,
+  `AppErrorState.tsx:36`** — todos na linha exata;
+- **os 35 hits de cor nos 9 diálogos** — idênticos, com a contagem por arquivo batendo uma a uma;
+- **7 das 9 montagens condicionais da §3.1 na linha exata**; só `BudgetDetailPage` deslocou
+  (`:126`/`:140` → `:132`/`:136`);
+- **duas correções de número:** `UsersTable` de `25,28` para `26,29` (o `last-login` inseriu coluna) e
+  o total dos `ignores` da §7.3 de **24 para 23**, porque a estilização baixou o `LoginPage` de 3
+  ocorrências para 2.
+
+**A colisão prevista não existiu.** `git diff 4b02b72..18cf90a -- frontend/src/` toca 47 arquivos e
+**nenhum** deles é `AppDialog`, `AppDataTable`, `SearchableTableFrame`, `FormField`, `AppErrorState`,
+nem qualquer um dos 9 diálogos ou dos 10 arquivos do modo leitura. Os arquivos que a estilização
+tocou e que este bloco cita (`LoginForm`, `LoginPage`, `ValidationPage`) são exatamente os que a **D7
+deixa de fora** e a §7.3 põe em `ignores`. **As oito decisões da §2 seguem íntegras** — eram
+independentes da base, e a medição confirma.
+
+**Um efeito a favor:** o item 6 ficou mais barato. As variáveis que ele passa a usar
+(`--text-color-secondary`, `--surface-border`) agora vivem no tema Lotus gerado
+(`shared/styles/themes/lara-{light,dark}-lotus.css` + `brand-theme.css`), entregue pelo PR #41 — antes
+eram as do Lara stock.
+
+### Isolamento — worktree por instrução do João, não por P-03
+
+Bloco frontend puro (zero schema, zero `generated.ts`, zero backend), então a **P-03 não dispara** —
+ela restringe worktree apenas em bloco de backend. A escolha de worktree é instrução dele
+(`Criando uma branch e liberando a main para worktree principal`): branch
+`feat/dialogos-faixa-visivel-acessibilidade` criada de `main`@`18cf90a` na worktree
+`/home/jvbat/projetos/fix-frontend`, o que devolve a `main` à árvore principal
+`/home/jvbat/projetos/lotus`, que estava presa em `feat/last-login`.
+
+### Context Packet — dispensado por ausência medida de fonte externa
+
+`context_packet: null`, e a razão é a que a própria spec já registrava: nenhum dos seis itens cita
+Drive, Notion ou Figma. As fontes são o repositório, os débitos versionados do `backlog.md` (os três
+do piloto UI, `Q-14`, `Q-15`, o CTA duplicado e a cor fora do corte do D18) e o `D18`, que é decisão
+de spec versionada (`specs/archive/2026-07-26-bloco-visual-refino-ui-design.md:395`). Confirmar na
+abertura do brainstorming, como nos precedentes.
+
+### Fase: `planning`, com o brainstorming reduzido ao que a base nova abriu
+
+O estado entra em `planning` neste commit, junto do primeiro artefato durável desta sessão — a
+remedição da spec. `active_plan` segue `null`: o plano é o próximo artefato, e o `/planejar-bloco`
+exige que ele saia de `writing-plans`, não da promoção. **Risco de review declarado na §9 da spec:
+MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC, dinheiro ou
+documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as telas de uma
+vez, e o modo leitura atravessa 10 arquivos de 5 features.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
