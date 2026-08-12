@@ -111,4 +111,55 @@ class PersistenceLawsTest extends TestCase
             $encontrados,
         )));
     }
+
+    /**
+     * Escrita de pivot sem auditoria (spec `rastro-unicidade-e-gates`, D3).
+     *
+     * `turma_redator` e `course_redator` são portas de emissão de certificado,
+     * e o pacote NÃO audita pivot sozinho: `sync`/`attach`/`detach` crus não
+     * deixam rastro nenhum. A correção sem catraca volta na primeira Action
+     * nova — a guarda é o que transforma a decisão em lei.
+     *
+     * Só a seta entra no regex, e é de propósito: `PivotAudit::sync(...)` é a
+     * chamada LEGÍTIMA, e ela usa `::`. `->auditSync(` também fica fora, pelo
+     * prefixo. A allowlist tem um arquivo — o helper —, que é onde a chamada
+     * crua passa a ser o comportamento correto.
+     *
+     * Nasceu VERDE em 2026-08-12: as cinco ocorrências que existiam (as duas
+     * Actions de designação, o controller de habilitação e as duas Actions de
+     * redator) foram convertidas na task anterior deste mesmo bloco.
+     */
+    public function test_nenhuma_escrita_de_pivot_sem_auditoria(): void
+    {
+        $permitidos = ['app/Shared/Audit/PivotAudit.php'];
+        $metodos = ['sync', 'syncWithoutDetaching', 'attach', 'detach', 'toggle', 'updateExistingPivot'];
+        $encontrados = [];
+
+        foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+            $local = str_replace(base_path().'/', '', $arquivo);
+
+            if (in_array($local, $permitidos, true)) {
+                continue;
+            }
+
+            $codigo = $this->codigoSemComentarios($arquivo);
+
+            foreach ($metodos as $metodo) {
+                if (preg_match('/->\s*'.$metodo.'\s*\(/', $codigo) === 1) {
+                    $encontrados[] = "{$local}: ->{$metodo}()";
+                }
+            }
+        }
+
+        sort($encontrados);
+
+        $this->assertSame([], $encontrados, implode("\n", array_merge(
+            [
+                'Escrita de pivot sem auditoria (ADR-08): o pacote nao audita pivot sozinho.',
+                'Use App\Shared\Audit\PivotAudit — ele compara antes de gravar e delega ao auditSync.',
+                'Ocorrencias:',
+            ],
+            $encontrados,
+        )));
+    }
 }
