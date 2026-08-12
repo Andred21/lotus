@@ -6,7 +6,6 @@ use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Operation\Data\ImportResultData;
 use App\Domains\Operation\Data\ImportRowErrorData;
 use App\Domains\Operation\Data\MovedStudentData;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\SpreadsheetRowReader;
 use App\Shared\Validation\ValidationMessages;
@@ -26,11 +25,10 @@ class ImportStudentsAction
 
     public function execute(Turma $turma, UploadedFile $file): ImportResultData
     {
-        if ($turma->status !== TurmaStatus::EmAndamento) {
-            throw ValidationException::withMessages([
-                'turma' => 'Importação só é permitida com a turma em andamento.',
-            ]);
-        }
+        // O gate fica no topo mesmo com o EnrollStudentAction gateando por
+        // linha: recusar a planilha inteira de uma vez é a resposta certa, e
+        // não é o mesmo que recusar 40 linhas uma a uma.
+        $turma->assertAcademicallyWritable();
 
         $created = $relinked = $already = 0;
         $moved = [];

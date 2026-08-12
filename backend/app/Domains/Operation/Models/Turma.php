@@ -105,10 +105,19 @@ class Turma extends Model implements Auditable
     }
 
     /**
-     * RN-15 — blindagem: turma concluída não aceita mais escrita acadêmica.
-     * TODO caminho de escrita acadêmica chama isto: docs da turma (6d) e o
-     * futuro endpoint de notas/presença (sprint do redator). Matrícula já é
-     * bloqueada pelo gate "só em andamento" do 6c.
+     * RN-15 — blindagem: turma concluída não aceita mais escrita. ONZE caminhos
+     * chamam isto, e é a única mensagem: edição e arquivamento da própria turma,
+     * designação e remoção de redator, documentos do 6d (store e delete),
+     * matrícula individual, import, remoção de matrícula, resultado de
+     * matrícula e a própria conclusão (que assim recusa concluir duas vezes).
+     *
+     * As quatro grafias inline que testavam `status !== EmAndamento` à mão, com
+     * quatro mensagens diferentes — três em PT-BR num app es-CL —, morreram no
+     * bloco `rastro-unicidade-e-gates`. O `TurmaStatus` tem dois casos, então a
+     * condição é a mesma; o que mudou foi haver uma resposta só.
+     *
+     * A mensagem é imutável: dois testes a afirmam literalmente
+     * (`EnrollmentResultTest`, `IssueCertificateTest`).
      */
     public function assertAcademicallyWritable(): void
     {

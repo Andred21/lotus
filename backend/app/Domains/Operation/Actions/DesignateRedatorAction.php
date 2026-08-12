@@ -17,6 +17,7 @@ class DesignateRedatorAction
 
     public function execute(Turma $turma, Redator $redator): Turma
     {
+        $turma->assertAcademicallyWritable();
         $this->idoneidade->assertEligible($redator, $turma->course);
         PivotAudit::syncWithoutDetaching($turma, 'redatores', [$redator->id]);
 

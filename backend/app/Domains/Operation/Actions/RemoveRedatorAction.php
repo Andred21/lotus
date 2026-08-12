@@ -11,6 +11,7 @@ class RemoveRedatorAction
 {
     public function execute(Turma $turma, Redator $redator): Turma
     {
+        $turma->assertAcademicallyWritable();
         PivotAudit::detach($turma, 'redatores', $redator->id);
 
         return $turma;

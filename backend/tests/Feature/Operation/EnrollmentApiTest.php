@@ -135,6 +135,29 @@ class EnrollmentApiTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_turma_concluida_recusa_remocao_de_matricula(): void
+    {
+        $this->actingAsAdmin();
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos", [
+            'rut' => '11.111.111-1', 'name' => 'Juan Soto', 'email' => 'juan@acme.cl',
+        ])->assertCreated();
+        $enrollment = Enrollment::sole();
+
+        $this->turma->update([
+            'status' => TurmaStatus::Concluida,
+            'concluded_at' => now(),
+        ]);
+
+        $this->deleteJson("/api/turmas/{$this->turma->id}/alunos/{$enrollment->id}")
+            ->assertStatus(422)
+            ->assertJsonPath(
+                'errors.turma.0',
+                'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+            );
+
+        $this->assertDatabaseHas('enrollments', ['id' => $enrollment->id, 'deleted_at' => null]);
+    }
+
     private function actingAsRedator(): void
     {
         $user = User::factory()->redator()->create(['is_active' => true]);
