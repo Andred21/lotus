@@ -7,6 +7,7 @@ import {
   DARK_MAP,
   AZUIS_LIGHT,
   AZUIS_DARK,
+  HERDEIROS,
   CELESTE,
   AZUL_POSTE,
   TINTA_CLARA,
@@ -22,6 +23,74 @@ const committed = (name: string) =>
 // em superfície escura e mede 6,76:1 (achado 3 do checkpoint).
 const light = () => transform(stock('lara-light-blue'), LIGHT_MAP, TINTA_CLARA)
 const dark = () => transform(stock('lara-dark-blue'), DARK_MAP)
+
+// ── Régua da família azul (Q-6) ─────────────────────────────────────────────
+// Serve à guarda de upgrade: precisa dizer "isto é azul da família da primária"
+// sobre uma cor que ninguém listou ainda, então é geometria, não lista. Os três
+// limiares foram medidos sobre os 171/177 hexes do Lara 10.9.8 instalado, e
+// cada um existe para separar uma vizinhança concreta — ver a guarda abaixo.
+const CORES = /#([0-9a-f]{6}|[0-9a-f]{3})\b|rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/gi
+
+/** Todo literal de cor de um texto CSS (ou de uma chave do mapa) como RGB. */
+function rgbDasCores(texto: string): number[][] {
+  const achados: number[][] = []
+  for (const m of texto.matchAll(CORES)) {
+    if (m[1]) {
+      const hex = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1]
+      achados.push([0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)))
+    } else {
+      achados.push([Number(m[2]), Number(m[3]), Number(m[4])])
+    }
+  }
+  return achados
+}
+
+function daFamiliaAzul([r, g, b]: number[]): boolean {
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const croma = max - min
+  // Croma separa COR de quase-neutro. Os gray/slate escuros do Lara têm
+  // saturação HSL alta por artefato de luminância (#111827 marca 39%), e é o
+  // croma que os derruba: 22 contra os 35 do #dbeafe, o azul mapeado mais fraco.
+  if (croma < 30) return false
+  const soma = max + min
+  const saturacao = (soma > 255 ? croma / (510 - soma) : croma / soma) * 100
+  // O azul mapeado menos saturado é #355b8a (44,5%); o neutro slate mais
+  // saturado que passa no croma é #334155 (25,0%). 36 cai na folga.
+  if (saturacao < 36) return false
+  const matiz =
+    60 *
+    (max === r
+      ? (g - b) / croma + (g < b ? 6 : 0)
+      : max === g
+        ? (b - r) / croma + 2
+        : (r - g) / croma + 4)
+  // A família mapeada mede 211,7–224,3. O vizinho cromático mais próximo abaixo
+  // é o info/sky (≤204,0) e acima é o indigo (≥238,5): a janela cai na folga dos
+  // dois lados, e as severidades ficam intactas de propósito.
+  return matiz >= 207 && matiz <= 231
+}
+
+const chaveRgb = (rgb: number[]) => rgb.join(',')
+const hexDeRgb = (rgb: number[]) => '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('')
+
+/**
+ * Azuis da família da primária presentes no CSS que o mapa do gerador NÃO cobre.
+ *
+ * A referência de cobertura é o MAPA, não `AZUIS_*`: as duas listas dizem coisas
+ * diferentes. `AZUIS_*` é "o que tem de desaparecer da saída" e só existe na
+ * forma hex; o mapa é "o que o gerador sabe traduzir" e inclui as veladuras, que
+ * o Lara escreve só como `rgba(...)` (o dark tem dois azuis exclusivos dessa
+ * forma). Cobrar contra `AZUIS_*` reprovaria o gerador correto de hoje.
+ */
+function azuisDescobertos(cssStock: string, mapa: Record<string, string>): string[] {
+  const cobertos = new Set(Object.keys(mapa).flatMap(rgbDasCores).map(chaveRgb))
+  const fora = new Set<string>()
+  for (const rgb of rgbDasCores(cssStock)) {
+    if (daFamiliaAzul(rgb) && !cobertos.has(chaveRgb(rgb))) fora.add(hexDeRgb(rgb))
+  }
+  return [...fora].sort()
+}
 
 /**
  * O tema commitado deve ser exatamente uma geração fresca sobre o Lara
@@ -41,9 +110,13 @@ describe("temas Lara-Lotus gerados (spec D5')", () => {
    * três hexes escolhidos a dedo. O rascunho do plano conferia `#3b82f6`,
    * `#1d4ed8` e `#60a5fa` — e deixava passar `#9dc1fb` (anel de foco),
    * `#f5f9ff`/`#d0e1fd`/`#abc9fb`/`#85b2f9` (escala do Lara) e as veladuras
-   * `rgba(...)`. A fonte da lista é o próprio mapa, então um azul novo que
-   * entre num upgrade só passa despercebido se ninguém o tiver mapeado — e aí
-   * o teste de igualdade acima já reprova.
+   * `rgba(...)`.
+   *
+   * Q-6: esta guarda cobre UMA direção — os azuis já conhecidos não sobrevivem
+   * à geração. Ela não sabe nada de um azul que o Lara passe a usar num upgrade,
+   * e a igualdade acima também não: regerado o tema, os dois lados nascem do
+   * stock novo e a comparação passa. Quem cobre esse caso é a guarda de upgrade
+   * logo abaixo, que varre o stock atrás de azul não mapeado.
    */
   it('nenhum azul do Lara sobrevive em nenhum dos dois temas', () => {
     for (const [nome, css, azuis] of [
@@ -53,6 +126,67 @@ describe("temas Lara-Lotus gerados (spec D5')", () => {
       const sobreviventes = azuis.filter((hex) => css.toLowerCase().includes(hex))
       expect(`${nome}: ${sobreviventes.join(', ')}`).toBe(`${nome}: `)
     }
+  })
+
+  /**
+   * Q-6: a guarda que o comentário acima PROMETIA e que não existia. As listas
+   * `AZUIS_*` são manuais; um upgrade do primereact que traga um azul novo não
+   * reprova em lugar nenhum — regerado o tema, os dois lados da igualdade nascem
+   * do stock novo e o Tailwind blue fica dentro de um tema de marca.
+   *
+   * Esta varre o MESMO stock que o gerador consome e cobra que toda cor da
+   * família azul da primária esteja no mapa. Reprova de verdade: o teste
+   * seguinte injeta um azul novo e confere que ele é acusado.
+   *
+   * PONTOS CEGOS declarados, para o comentário não prometer mais do que cobre:
+   *
+   * 1. Os degraus "-50" (`#eff6ff`, `#f5f9ff`, `#f7fbff`) ficam sob o croma
+   *    mínimo e a guarda não os alcança. Não é descuido — ali a geometria não
+   *    separa: `#f7fbff` (azul-50 do Lara) e `#f6f9fc` (neutro) têm a mesma
+   *    matiz e a mesma forma, e qualquer limiar que aceitasse um aceitaria o
+   *    outro. São brancos a olho nu; o que escapa ali é cosmético.
+   * 2. A régua lê `#rgb`, `#rrggbb` e `rgb()/rgba()` separados por vírgula — que
+   *    é tudo que o Lara 10.9.8 escreve (conferido: zero hex de 8 dígitos, zero
+   *    sintaxe por espaço, zero `hsl/lab/oklch/color-mix`). Se um upgrade migrar
+   *    a notação, esta guarda fica cega — só que o gerador casa por substring da
+   *    MESMA forma, então ele para de substituir junto e o tema sai sem marca
+   *    nenhuma. Quem acusa aí são as asserções de token (`--primary-color` e
+   *    `--primary-500` deixam de ser celeste), não a igualdade: regerado o tema,
+   *    ela compara stock novo com stock novo e passa.
+   */
+  it('todo azul da família da primária no Lara stock está mapeado (guarda de upgrade)', () => {
+    for (const [nome, arquivo, mapa] of [
+      ['light', 'lara-light-blue', LIGHT_MAP],
+      ['dark', 'lara-dark-blue', DARK_MAP],
+    ] as const) {
+      const descobertos = azuisDescobertos(stock(arquivo), mapa)
+      expect(`${nome}: ${descobertos.join(', ')}`).toBe(`${nome}: `)
+    }
+  })
+
+  /**
+   * Lição 10: guarda que nunca viu o bug é cobertura fantasma. Como o bug que
+   * a de cima persegue só existe num upgrade futuro do primereact, a prova é
+   * aqui — CSS sintético com um azul da família que ninguém mapeou, ao lado das
+   * severidades que ficam intactas de propósito. Fixa as duas metades: acusa o
+   * azul novo e NÃO acusa info/sky, success, warning, danger nem secondary/slate.
+   */
+  it('a guarda de upgrade tem dentes: acusa azul novo e ignora as severidades', () => {
+    const novo = '#4f8ff7' // matiz 217,1 — no meio da família, fora de todo mapa
+    const severidades = [
+      '.a{color:#0ea5e9;background:#38bdf8;border-color:#082f49}', // info/sky
+      '.b{color:#22c55e;background:#f59e0b;border-color:#ef4444}', // success/warning/danger
+      '.c{color:#64748b;background:#334155;border-color:#94a3b8}', // secondary/slate
+      '.d{color:#6366f1;background:#1f2937;border-color:#030712}', // indigo e quase-pretos
+      '.e{box-shadow:0 0 0 1px rgba(2, 6, 23, 0.5)}',
+    ].join('')
+
+    expect(azuisDescobertos(severidades, LIGHT_MAP)).toEqual([])
+    expect(azuisDescobertos(`${severidades}.f{background:${novo}}`, LIGHT_MAP)).toEqual([novo])
+    // e na forma rgba, que foi por onde o #dbeafe escapou por quatro dias
+    expect(
+      azuisDescobertos(`${severidades}.g{background:rgba(79, 143, 247, 0.24)}`, LIGHT_MAP),
+    ).toEqual([novo])
   })
 
   it('as veladuras rgba da primária também viram celeste', () => {
@@ -219,16 +353,34 @@ describe("temas Lara-Lotus gerados (spec D5')", () => {
    * bloco" não o alcança — medido no Lara instalado, sete declarações ficavam
    * brancas sobre celeste (check do checkbox, ponto do radio, ícones de
    * select/togglebutton e o label da progressbar).
+   *
+   * Q-2: itera a constante do GERADOR, não uma amostra dela. A versão anterior
+   * conferia três dos sete, e os quatro de select/togglebutton podiam voltar a
+   * branco sobre celeste (2,77:1) com a suíte verde — a igualdade lá em cima não
+   * pega, porque regenera os dois lados. É a mesma forma de defeito que a D-P6
+   * corrigiu neste arquivo; agora herdeiro novo entra na guarda sozinho.
+   *
+   * O casamento é por lista de seletores (`includes`), igual ao do gerador,
+   * porque o Lara agrupa `-icon-left` e `-icon-right` num bloco só: quatro dos
+   * sete nunca abrem bloco próprio, e foi isso que empurrou a versão anterior
+   * para a amostragem. Blocos casados sem cor nenhuma existem de propósito (o
+   * `width/height` do `.p-checkbox-icon`), então a régua é "pelo menos um bloco
+   * pinta navy" + "nenhum ficou branco", e não "todos pintam navy".
    */
   it('ícone e rótulo que pousam na primária por herança também viram navy (D-P10)', () => {
-    const css = light()
-    for (const seletor of [
-      '.p-checkbox .p-checkbox-box .p-checkbox-icon',
-      '.p-radiobutton .p-radiobutton-box .p-radiobutton-icon',
-      '.p-progressbar .p-progressbar-label',
-    ]) {
-      const bloco = css.split(seletor + ' {')[1]?.split('}')[0] ?? ''
-      expect(`${seletor}: ${bloco}`).toContain(AZUL_POSTE)
+    const blocos = [...light().matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+
+    for (const seletor of HERDEIROS) {
+      const corpos = blocos.filter(([, sel]) => sel.includes(seletor)).map(([, , corpo]) => corpo)
+      const comNavy = corpos.filter((corpo) => corpo.includes(AZUL_POSTE))
+      const brancos = corpos.filter((corpo) => /#(?:ffffff|fff)\b/i.test(corpo))
+
+      // 0 blocos casados também reprova aqui: seletor que sumiu no upgrade é
+      // guarda que passou a não guardar nada.
+      expect(
+        `${seletor}: ${comNavy.length ? 'navy presente' : `SEM navy em ${corpos.length} bloco(s)`}`,
+      ).toBe(`${seletor}: navy presente`)
+      expect(`${seletor}: ${brancos.join(' | ')}`).toBe(`${seletor}: `)
     }
   })
 

@@ -236,7 +236,12 @@ const PRIMARIAS_LARA = [ANCORA_LIGHT, ANCORA_DARK]
 // Descendentes medidos cujo ancestral pinta com a primária. Só texto e ícone —
 // preenchimento decorativo fica branco de propósito (a bolinha do inputswitch e
 // o handle do slider são o idioma universal do controle; navy ali lê como bug).
-const HERDEIROS = [
+//
+// Exportada porque a guarda da D-P10 itera ESTA lista: enquanto ela amostrava à
+// mão, quatro dos sete (select/togglebutton) podiam voltar a branco sobre
+// celeste com a suíte verde — a mesma forma de defeito que a D-P6 corrigiu.
+// Herdeiro acrescentado aqui entra na guarda sozinho.
+export const HERDEIROS = [
   '.p-checkbox .p-checkbox-box .p-checkbox-icon',
   '.p-radiobutton .p-radiobutton-box .p-radiobutton-icon',
   '.p-selectbutton .p-button.p-highlight .p-button-icon-left',

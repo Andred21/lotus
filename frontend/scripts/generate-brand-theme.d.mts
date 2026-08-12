@@ -6,6 +6,8 @@ export const AZUL_POSTE: string
 export const TINTA_CLARA: string
 export const AZUIS_LIGHT: readonly string[]
 export const AZUIS_DARK: readonly string[]
+/** Descendentes que herdam o fundo primário — a guarda da D-P10 itera esta lista. */
+export const HERDEIROS: readonly string[]
 export const LIGHT_MAP: Record<string, string>
 export const DARK_MAP: Record<string, string>
 /** `tinta` só no claro — no escuro o celeste de primeiro plano mede 6,76:1. */
