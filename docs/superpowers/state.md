@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: rastro-unicidade-e-gates
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-rastro-unicidade-e-gates-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-12-rastro-unicidade-e-gates.md
 context_packet: null
 blocker: null
 last_completed_work_item: last-login
 state_basis_commit: e6c831f
-updated_at: 2026-08-12T18:20:00-03:00
+updated_at: 2026-08-12T19:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -132,6 +132,29 @@ o `seq_in_budget`, mesmo padrão do mesmo ADR-17, também não tem sonda.
 
 O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
 spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-12
+
+**João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-12-rastro-unicidade-e-gates.md`: **sete tasks**, uma por commit, na
+ordem helper → call-sites → guarda → índice → derivação → gate → fechamento. O índice vem **antes**
+da derivação de propósito: sem ele, o `withTrashed()` não teria o que provar.
+
+**Baseline medido antes de escrever (não herdado do bloco anterior):** 548 passed, 5 skipped, 2025
+assertions. Projeção do plano: **+21 casos → 569**; assertions ficam para o gate medir.
+
+**Duas coisas que só apareceram ao escrever o plano, e que mudam trabalho:**
+
+1. **Tirar `version` do `$fillable` quebra sete sítios de teste** que criam template por mass
+   assignment (`CourseModelTest`, `IssueCertificateTest`, `CertificateListingTest`,
+   `CertificateEligibilityTest` e o `IssuableEnrollmentBuilder`). O vermelho é ruidoso
+   (`NOT NULL constraint failed`), não silencioso, e a Task 5 traz o trait
+   `Tests\Support\CreatesCertificateTemplates` para resolvê-lo por atribuição explícita.
+2. **A recusa do `RemoveEnrollmentAction` nunca teve teste** — é um dos sete caminhos que a prova 11
+   afirma cobrir. A Task 6 escreve o caso que falta, e ele nasce vermelho pela mensagem PT-BR antiga.
+
+`executor: claude`, sem `paths_autorizados`: três gatilhos de lei do §5 (auditoria, schema com peso
+legal, `generated.ts`) e quatro pontos que fecham por prova de mutação.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
