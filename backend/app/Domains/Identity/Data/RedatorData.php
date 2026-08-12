@@ -43,6 +43,9 @@ class RedatorData extends Data
         #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
+        /** Último acesso do usuário-redator. Ver `UserData::$last_login`. */
+        #[Computed]
+        public ?string $last_login = null,
     ) {}
 
     public static function rules(): array
@@ -87,6 +90,7 @@ class RedatorData extends Data
                 fn ($f) => RedatorDocumentData::fromModel($f)
             )->all(),
             photo_url: $redator->user->photo_path,
+            last_login: $redator->user->latestLogin?->created_at?->toISOString(),
         );
     }
 }

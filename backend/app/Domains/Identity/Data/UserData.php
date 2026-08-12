@@ -43,6 +43,12 @@ class UserData extends Data
         #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
+        /**
+         * Último acesso, DERIVADO de `login_logs` — não existe coluna
+         * `users.last_login`. ISO 8601 ou `null` para quem nunca acessou.
+         */
+        #[Computed]
+        public ?string $last_login = null,
     ) {}
 
     public static function rules(): array
@@ -77,6 +83,7 @@ class UserData extends Data
             type: $user->type,
             roles: $roles->all(),
             photo_url: $user->photo_path,
+            last_login: $user->latestLogin?->created_at?->toISOString(),
         );
     }
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import { AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
+import { formatDateTime } from '@shared/lib'
 
 export function UsersTable({
   users, loading, onView, actions, error, onRetry,
@@ -53,6 +54,12 @@ export function UsersTable({
             severity={u.is_active ? 'success' : 'danger'}
           />
         )}
+      />
+      <AppColumn
+        field="last_login"
+        header={t('common.lastLogin')}
+        sortable
+        body={(u: UserData) => (u.last_login ? formatDateTime(new Date(u.last_login)) : '—')}
       />
       <AppColumn
         body={(u: UserData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(u)} />}
