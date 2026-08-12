@@ -15,7 +15,7 @@ Header barra utilitária) migra para tokens do tema; aria-labels entram no i18n.
 **Tech Stack:** React 19 + TS, Vite, Tailwind v4 (layout), PrimeReact/Lara, `@fontsource`,
 vitest, playwright-cli (verificação).
 
-**Spec:** `docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-11-estilizacao-adr16-shell-tipografia-design.md`
 
 ## Global Constraints
 

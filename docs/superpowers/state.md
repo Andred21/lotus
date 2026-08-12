@@ -1,26 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
-active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: >-
-  2026-08-12, João aprovou os 8 achados do review de sprint (Q-1..Q-8) e, no
-  re-review das correções (duas frentes sobre `3acff29..HEAD`), os 4 achados
-  S-1..S-4 — o S-1 pela opção (b), manter o desvio e corrigir a afirmação. Nada
-  deferido para o backlog. Todos corrigidos; nenhum achado aguardando decisão
-  ou correção. Seguem abertas, sem bloquear o fechamento, três decisões do João
-  registradas na seção do re-review: o caminho do commit `54d0f8c`, o ponto
-  final da copy de `operation.detail.notFound` e o `P-28` duplicado.
-last_completed_work_item: integridade-e-concorrencia-backend
+last_completed_work_item: estilizacao-adr16-shell-tipografia
 state_basis_commit: 1fbaa32
-updated_at: 2026-08-12T13:32:00-03:00
+updated_at: 2026-08-12T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -56,7 +48,7 @@ updated_at: 2026-08-12T13:32:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-11 (`estilizacao-adr16-shell-tipografia`)
+## Último item fechado — 2026-08-12 (`estilizacao-adr16-shell-tipografia`)
 
 ### Seleção — 2026-08-11
 
@@ -491,7 +483,73 @@ própria (26/126 verdes na época), o que confirma o gate por caminho separado.
 aqui): o caminho do commit `54d0f8c`, o ponto final da copy de `operation.detail.notFound` e o
 `P-28` duplicado.
 
-## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
+### Fechamento — 2026-08-12
+
+**Item 0 — o critério de aceite foi remedido no navegador, não herdado do registro da execução.**
+Sessão real contra a API (`POST /api/login` com a credencial de seed; nenhuma outra escrita), duas
+rotas autenticadas: **UI-01** `rightEdge` **378** com `scrollWidth == innerWidth == 390`; **UI-02**
+zero `aside button` a 390 com a pref persistida em `true` — o valor que o toggle a 1440 gravou,
+intacto depois do resize; **UI-03** com **Tab real** (o `focus()` programático não casa
+`:focus-visible`, e essa foi a única correção de método deste gate): `outline: solid 2px
+rgb(37,165,228)` no controle sobre a navy e `rgb(15,43,61)` no controle fora do shell — as duas
+metades da D-P14 vivas ao mesmo tempo; **UI-05** um `h1` no dashboard e um em `/personas`;
+**UI-04** wordmark legível sobre a navy nos dois temas, por screenshot em 1440. Junto: corpo em
+`Inter`, `h1` em `Archivo`, `--surface-ground` `#f1f5f9`, sidebar `rgb(15,43,61)` nos dois temas,
+`--primary-color-text` azul-poste, `--brand-ink` `#186b94` (medido como `color` do rótulo do botão
+de marca), radius 4px e `<html lang>` acompanhando o i18n.
+
+**Itens 1–8.** Backend **547 passed / 5 skipped (2021 assertions)** — o bloco não tem arquivo
+`backend/` no diff, então o placar é baseline e **Pint não se aplica** (o gate exige argumento;
+sem arquivo da sprint, não se roda). Frontend `pnpm build`, `pnpm lint` e `pnpm test` verdes com
+**26 arquivos / 127 testes**, paridade das 3 locales em 3 testes. Higiene reconferida em primeira
+mão: `#25A5E4` só nas fontes declaradas, `ring-0` ausente, sem `bg-gray-*`/`border-slate-400` no
+shell, `generated.ts` sem diff contra a `origin/main` (nenhum DTO mudou — `typescript:transform`
+não se aplica). Leis §5: zero `primereact` fora de `shared/ui` **exceto** o `shared/config/primeLocale.ts`
+já declarado no S-4, zero import cross-feature. Código morto: os dois PNGs do gate foram apagados
+do working tree; nada mais nasceu órfão (a única órfã do bloco, `common.openUserMenu`, morreu em
+`b6636d1`).
+
+**As três decisões abertas foram resolvidas por ele neste gate**, e uma quarta nasceu do próprio
+fechamento: o commit `54d0f8c` **fica** (o conteúdo é o autorizado; reverter puniria o resultado
+pelo caminho); o ponto final de `operation.detail.notFound` **saiu** nos três locales, alinhando
+com os `notFound` irmãos, que nunca tiveram ponto; e o `P-28` duplicado (guarda da lição 13) foi
+renumerado para **P-32**, com a origem anotada na própria linha — as menções a "P-28" na narrativa
+do BD-1 continuam apontando para ela e ficam como estão, porque história não se reescreve.
+
+**O passo da §11 que o agente não consegue executar, registrado em vez de silenciado.** O re-sync
+do ponto 5 do ADR-16 com o espelho canônico do Drive (`decisao-stack.md`) é passo declarado do
+fechamento. Conferido lendo o arquivo: o ADR-16 de lá segue com os cinco bullets originais, **sem**
+o ponto 5. As ferramentas de Drive desta sessão são de leitura e criação — não há update do
+arquivo canônico, e criar um segundo fragmentaria o espelho. **Decisão do João:** fechar o bloco e
+registrar como **P-31**, no precedente da P-17. A nota de sync do ADR-16 em `docs/adrs.md` passa a
+apontar para a pendência em vez de prometer o passo.
+
+**Arquivamento:** plano → `plans/archive/2026-08-11-estilizacao-adr16-shell-tipografia.md`; spec →
+`specs/archive/2026-08-11-estilizacao-adr16-shell-tipografia-design.md` (não é compartilhada — o
+UI-06 parqueado no BD-3 é citado por narrativa, não por path). A referência interna do plano à spec
+foi reapontada. Entrega no `progress.md`, com a de 2026-08-05 descendo para o `progress-archive.md`
+para manter dez. Item 4 removido de "Próximos blocos" **sem renumerar** os anteriores (era o
+último). Os dois débitos que o bloco fechado decidia — "Shell fora de conformidade com o ADR-16 §4"
+e "Toggle da sidebar sem efeito abaixo de 1024px" — saíram de `## Débitos técnicos` e de "Fora dos
+BDs", como a §11 da spec prescrevia.
+
+**Pendências:** nasceu a **P-31** (espelho do Drive); a **P-30** já havia nascido no review. Nenhuma
+fechou e nenhum gatilho de data venceu (P-28 revisa 2026-09-30; P-29, P-30 e P-32 revisam
+2026-10-31; P-02 e P-05 seguem presas a "antes de produção").
+
+**Estado do banco de dev:** intocado — o bloco é frontend-only e a jornada do gate foi read-only
+fora do login. O `LOT-2026-1001` corrompido de propósito continua lá, esperando o checkpoint visual
+de outro bloco.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o ponto 5 do ADR-16 **não** está no Drive (P-31);
+o `ámbar-aviso` da spec original nunca foi construído e a paleta tem cinco donos, não seis (P-30);
+a caixa branca do toggle sobre a navy no tema claro segue sendo escolha estética dele, não defeito
+resolvido; e UI-04 e UI-06 continuam sem teste automatizado — são geometria, provadas por medição e
+screenshot, como o próprio plano declarou.
+
+**Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
+
+## Penúltimo item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
 ### Seleção — 2026-08-11
 
@@ -849,7 +907,7 @@ nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre reg
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
+## Antepenúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
 
 ### Seleção — 2026-08-10
 
@@ -1197,416 +1255,3 @@ absorção segue no BD-5.
 — nenhuma sonda tocou banco.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
-
-## Antepenúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
-
-### Seleção — 2026-08-10
-
-**Item 1 do `backlog.md`, escrito e selecionado explicitamente pelo João na mesma instrução.** Ele
-descreveu o escopo em detalhe (fundo do certificado, realocação do QR, fidelidade tipográfica ao
-template, manual conforme `manual.pdf` preenchido automaticamente, saída DOCX e botão na UI),
-mandou abstrair no backlog e percorrer o workflow. O backlog foi escrito a partir dessa descrição;
-ele não promoveu nada sozinho.
-
-**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
-(mesmo caso de `turma-habilitacao-listagem` e `profundidade-backend-b4-b7`): o item não cita Drive,
-Notion nem Figma. As fontes são o repositório e os três templates **já versionados no repo** —
-`docs/templates/certificado.pdf`, `docs/templates/manual.pdf` e `docs/templates/fundo-certificado.png`,
-este último entregue pelo João junto da instrução. `context_packet: null`.
-
-**Toca backend → main tree, sem worktree (P-03).** O bloco mexe em
-`backend/resources/views/certification/certificate.blade.php`,
-`backend/resources/views/operation/manual-turma.blade.php`, `ManualPdfService`, `TurmaController` e
-no frontend (`features/operation/components/Document/`). Nenhum outro `active_work_item` de backend
-está aberto, então o gatilho de fechamento da P-03 continua não vencido.
-
-### Terreno medido antes de planejar (não é desenho, é fato)
-
-1. **Os dois documentos já existem e já são Blade** — o bloco é refatoração, não construção:
-   `certificate.blade.php` (2 páginas: certificado + temário) e `manual-turma.blade.php` (A4 retrato,
-   3 tabelas), ambos via Gotenberg (`Shared/Pdf/GotenbergHtmlToPdf`). O manual já tem rota
-   (`GET turmas/{turma}/manual`, `Operation/routes.php:25`), serviço (`ManualPdfService`) e botão
-   (`features/operation/components/Document/ManualButton.tsx`, consumido por `TurmaDocuments.tsx:41`).
-   O que não existe é **DOCX** — nenhuma ocorrência no repo.
-2. **O manual do template não é o manual de hoje, nem em forma nem em conteúdo.** `manual.pdf` tem
-   **5 páginas em ofício paisagem (1009×612 pt)** — Dados de la clase, Antecedentes Participantes,
-   Control de Asistencia de Participantes (grade de 31 dias), Temas de La Capacitación, Evaluaciones.
-   A Blade atual tem **3 tabelas em A4 retrato**, e o `@page { size: A4 portrait }` dela é decisão
-   registrada (D4 do bloco 6d, com `preferCssPageSize` ligado no serviço). Mudar a orientação
-   contradiz uma decisão escrita — o brainstorming tem de reabri-la explicitamente com o João, não
-   sobrescrevê-la em silêncio.
-3. **O fundo é pesado e o peso é o critério do próprio João.** `fundo-certificado.png` é
-   **1414×2000, RGBA 8-bit, 1,2 MB** — proporção exatamente A4. Em base64 são ~1,66 MB **por página**
-   que o embutir; o certificado tem 2 páginas e o manual, 5. O PDF são de hoje mede **40.119 bytes**
-   (medido no gate de `certificacao-lote-e-snapshot`), e é essa a linha de base contra a qual o
-   "visualizador travado" tem de ser medido.
-4. **O QR e o par código/emissão trocam de lugar, não de existência.** Hoje `.meta` (`N°` + `Emisión`)
-   abre a página 1 no canto superior **esquerdo** (`certificate.blade.php:244-247`) e o QR vive no
-   rodapé dentro de `.footer-main` a 32mm (`:214-216`, `:313-316`). O template e a foto que o João
-   anexou põem os três juntos no canto superior **direito**, QR menor com o par embaixo.
-5. **O layout do certificado carrega guardas pagas com defeito medido em 2026-08-08** e documentadas
-   no próprio arquivo: `min-height` em vez de `height` (com `height`, QR, assinatura e aviso legal
-   saíram **sobrepostos** ao temário — documento corrompido sem aviso), o clamp
-   `-webkit-line-clamp` da descrição e o limiar 80×7 que troca o tier de 11px pelo de 9px. Quem
-   mexer no layout responde por elas; o `.accent-bottom` já tem falha de enquadramento **em aberto**
-   declarada no arquivo (`:130-138`).
-6. **DOCX via Blade é a pergunta aberta do bloco, e é decisão de arquitetura.** Não há biblioteca de
-   escritório no `composer.json`; Gotenberg converte DOCX→PDF, nunca o contrário. O caminho a
-   investigar no brainstorming é Blade renderizando WordprocessingML empacotado como OOXML; recorrer
-   a biblioteca de terceiros é ADR, não escolha de implementação.
-
-**Pendências tocadas pelo escopo, nenhuma vencida:** a **P-08** (RF-CUR-04 promete manual por curso;
-implementado é Blade única) **não** dispara — o bloco continua com Blade única padronizada. A
-**P-03** não fecha: um bloco de backend só.
-
-### Brainstorming e spec — 2026-08-10
-
-O João aprovou o desenho com a instrução literal `Aprovado — gravar e commitar a spec.` O estado
-entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até a aprovação humana
-deste documento e a escrita posterior do plano.
-
-**Quatro decisões de abertura, respondidas por ele ANTES de a spec existir** (D1–D4 da §2):
-manual com fonte de verdade única em Blade WordprocessingML, com o PDF saindo do mesmo `.docx` pela
-rota LibreOffice; ofício paisagem igual ao template; fundo em JPEG de ~100 KB só no certificado; e
-tipografia do certificado por fonte versionada com `@font-face`.
-
-**A D2 reabre explicitamente a D4/D6 do bloco 6d** — o A4 retrato do manual, justificado na própria
-Blade com "o cliente arquiva em A4, como todo documento oficial da Lotus". Não foi sobrescrita em
-silêncio: as três saídas foram apresentadas e o João escolheu fidelidade literal ao arquivo aprovado
-pela Lotus. O manual passa a ser o único documento oficial fora do A4.
-
-**Três medições que mudaram o desenho, feitas antes de escrever:**
-
-1. **O fundo entregue é limpo, e o peso tem referência própria.** `fundo-certificado.png`
-   (1414×2000 RGBA, **1.245.172 bytes**) não tem logo, assinatura nem carimbos — é textura mais as
-   barras azul/preta. O **mesmo fundo dentro do `certificado.pdf` aprovado** é um JPEG de
-   **98.258 bytes** nas mesmas dimensões: 12,7× mais leve. O teto do bloco deixou de ser palpite.
-2. **As fontes do template foram identificadas apesar da ofuscação do Word.** `pdffonts` só devolve
-   `___WRD_EMBED_SUB_1235`; descomprimindo os oito programas de fonte e lendo o `name` table
-   (`nameID 6`) saem **Lexend** (Regular/Bold/ExtraBold — três dos oito subsets), **Montserrat
-   ExtraBold**, Comfortaa, Roboto e ArialMT. Lexend/Montserrat/Comfortaa são OFL e Roboto é
-   Apache 2.0: nenhuma trava para versionar.
-3. **A rota LibreOffice foi provada antes de virar decisão, não depois.** Pacote OOXML mínimo montado
-   à mão (**1.207 bytes**) → `/forms/libreoffice/convert` → **`http=200`**, PDF de **18.671 bytes**,
-   **`Page size: 1008 × 612 pts`** contra os 1009×612 do template, `LiberationSans-Bold` embutida e
-   a célula com `w:shd w:fill="29A3E0"` no azul da Lotus. A D1 e a D2 repousam sobre medição.
-
-**A contradição aparente entre D1 e D4 foi resolvida por medição, não por prosa** (§2.1 da spec):
-`@font-face` é CSS e o manual deixa de passar por CSS, mas o texto do `manual.pdf` **é Liberation
-Sans**, que o Gotenberg já tem — o probe a embutiu sem nenhuma instalação. D4 vale só para o
-certificado.
-
-**Um achado que a leitura do template produziu e o item do backlog não previa:** os títulos de página
-do manual (`Libro de Control de Clases`, `Antecedentes Participantes`…) **não são texto** —
-`pdftotext` da página 1 devolve só o conteúdo das células. Eles vivem dentro da faixa de cabeçalho
-rasterizada (4205×378). Com a D3 deixando o manual sem fundo raster, os títulos passam a ser texto em
-Liberation Sans Bold.
-
-**Risco de review declarado ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
-
-**A sessão parou no gate de leitura da spec, por escolha do João.** Ele optou por ler o documento
-antes do `writing-plans`, então `next_owner` voltou para ele e a ação foi `approve_active_spec`.
-Nenhuma linha de implementação foi escrita nessa etapa.
-
-### Aprovação da spec e plano — 2026-08-10
-
-O João aprovou a spec com a instrução literal `Spec aprovada, escreva o plano`. O plano ativo
-(`docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md`) decompõe o bloco em
-**11 tasks (0–10)**: baseline; fundo JPEG e fontes WOFF2 versionados; três tasks de certificado
-(fundo, tipografia com remedição do limiar, QR); `App\Shared\Office\`; manual em Blade OOXML com o
-PDF saindo do pacote; rota do DOCX; frontend; gate. O handoff fixa **`executor: claude`** — metade
-das tasks fecha por comparação visual página a página com os templates, num laço de
-render → olhar → ajustar. Nenhuma implementação foi iniciada durante o planejamento; o estado
-transiciona para `ready_for_execution` no mesmo commit do plano.
-
-**Baseline reconferido em `a703a26`, não herdado:** backend **503 passed, 1 skipped (1868
-assertions)** — o mesmo placar do fechamento do `hardening-revisao-ui-assistida`, como esperado de
-três commits só de documentação. O plano projeta **520 passed** ao fim do bloco (+17).
-
-**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano), em vez
-de silenciá-los. Os que mudam decisão da spec:
-
-1. **`docs/templates/manual.docx` existe no repo** — a spec só tinha lido o PDF. Dele saíram o papel
-   exato (`w:pgSz w:w="20183" w:h="12246"`, contra os 20160×12240 do probe), o `w:pgMar`, as larguras
-   de coluna das cinco tabelas, a cor institucional **`25A5E4`** (e não `29A3E0`) e a descoberta de
-   que o template declara **Arial** — Liberation Sans é a substituição métrica do LibreOffice, não a
-   fonte pedida. Declarar Arial acerta o conversor **e** o Word do cliente (D-P3, D-P4).
-2. **A conversão PNG→JPEG saiu sem mudança de infra.** A alternativa era `libjpeg-turbo-dev` no
-   `docker/php/Dockerfile`; foi recusada por trocar imagem de produção para converter um asset uma
-   vez. A rota `/forms/chromium/screenshot/html` do Gotenberg foi provada: JPEG **1414×2000 de 74.604
-   bytes** com `quality=92`, contra os 98.258 do mesmo fundo dentro do certificado aprovado (D-P1).
-3. **São duas faces WOFF2, não quatro** (a spec §3.3 dizia quatro): Lexend e Montserrat são fontes
-   **variáveis**, e o Google Fonts serve a mesma URL para 400/700/800 do Lexend. 39.680 + 19.012
-   bytes cobrem os quatro pesos (D-P2).
-4. **`short_open_tag` está `On` no container**, então uma Blade que abra com o `<?xml …?>` literal
-   morre em `Parse error: syntax error, unexpected identifier "version"` — confirmado executando os
-   dois casos lado a lado. As quatro Blades do pacote abrem por uma diretiva `@xmlDecl`; `{!! … !!}`
-   foi recusado por reintroduzir a interpolação crua que a guarda de escape proíbe (D-P9).
-5. **`printBackground` não é necessário** — medido antes de aplicar o fundo: os PDFs com e sem o
-   campo saem byte a byte do mesmo tamanho. `PageOptions` e `GotenbergHtmlToPdf`, que são
-   compartilhados com o certificado, **não mudam** (D-P7).
-6. **As grades do manual são formulário impresso com linha fixa** (22/20/20), e o plano fixa
-   `max(N, fixas)`: turma pequena mantém as linhas em branco, turma grande estende a grade. Truncar
-   esconderia aluno (D-P5).
-
-A auto-revisão do plano contra a spec ainda achou seis erros no próprio rascunho e os corrigiu antes
-de gravar: `makeStudentWithUser` não existe no `CreatesDomainRecords` (o idioma real é
-`Student::create` sobre `User::factory()`); o `CertificatePdfTest` já tem `fakeGotenberg()`/
-`assertHtml()` e não precisava de um helper novo; a guarda "sem `{{`" reprovaria o próprio comentário
-Blade; duas asserções de contagem eram ambíguas (`<w:tr ` com espaço nunca casa; `6` e `10` também
-são número de linha); a rota pública é `publico/certificados`, não `public/certificates`; e a troca
-do controller precisava entrar na Task 7, senão um commit ficaria com a rota do manual quebrada.
-
-**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
-review não roda automaticamente ao fim da Task 10.
-
-**Uma pergunta fica aberta para o João, no Step 7 da Task 10:** `App\Shared\Office\` e a rota
-LibreOffice são decisão de arquitetura de transporte. A recomendação do plano é **nota no ADR-12**,
-não ADR novo — a rota LibreOffice é uma segunda porta do **mesmo** serviço do compose, com o mesmo
-racional de "o transporte mora num lugar só".
-
-### Execução iniciada — 2026-08-10
-
-O João autorizou com `/executar-bloco documentos-oficiais-template-e-docx`. Execução no **thread
-principal** conforme o `## Handoff de execução` do plano (`executor: claude`): metade das tasks
-(3, 4, 5, 7 e 10) fecha por comparação visual página a página contra os templates, num laço
-render → olhar → ajustar que exige leitura de imagem a cada iteração. Main tree, sem worktree (P-03).
-
-**Task 0 provada em `8ee1d9e`:** backend **503 passed, 1 skipped (1868 assertions)** — bate com o
-baseline do plano; `typescript:transform` sem diff em `generated.ts`; `pnpm lint` e `pnpm build`
-verdes; `git status --porcelain` vazio.
-
-### Tasks 1–9 entregues — 2026-08-10
-
-Commits, do base `8ee1d9e`: `7d4a85f` (fundo JPEG), `90a353a` (fontes WOFF2), `11f75d5` (fundo
-aplicado, morte do `.accent`), `042c2f2` (tipografia e remedição do limiar), `5037f24` (QR e bloco
-de identificação no topo), `fc6c996` (`App\Shared\Office\`), `af046f6` (manual em Blade OOXML),
-`2d815cb` (rota do DOCX), `86d81dc` (frontend com os dois formatos). Evidência task a task, e os
-doze desvios declarados (D-E1..D-E12), em `.superpowers/sdd/progress.md`.
-
-**Três desvios mudam o que o plano dizia, não só como foi feito.** **D-E6** — `Xml::lines()` nasceu
-emitindo `<w:br/>` **dentro** do `<w:t>`, que é bem-formado e **inválido** contra o schema
-(`CT_Text` é tipo simples); o separador passou a fechar e reabrir o `<w:t>`. **D-E7** — as fontes,
-bordas e margens de cada tabela saíram **medidas do `docs/templates/manual.docx`**, tabela a tabela,
-em vez do `sz 13/17` uniforme que o plano supunha. **D-E11** — `@else@xml(...)` **não compila**: o
-regex de diretiva do Blade exige `\B@`, e o `e` de `@else` colado no `@` é fronteira de palavra; a
-diretiva saía literal dentro do documento. O flag `$lineas` morreu e toda célula usa `@xmlLines`.
-
-### Task 10 — o gate do bloco (2026-08-10)
-
-**Ferramentas.** Backend **519 passed, 1 skipped (1950 assertions)** — contra os 520 projetados pelo
-plano; a diferença é a Task 5, que substituiu asserções em vez de somar teste. `typescript:transform`
-**sem diff** em `generated.ts` (nenhum DTO mudou de forma). `git diff` de `backend/database/`
-**vazio** — zero schema, como o plano exige. Pint `passed` nos arquivos do bloco. Frontend: `pnpm
-lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**.
-
-**E2e contra a API real**, sessão Sanctum por cookie + CSRF. `GET /api/turmas/1/manual` → **200**
-`application/pdf` + `inline; filename="manual-turma-1.pdf"`; `GET /api/turmas/1/manual/docx` → **200**
-`…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`. `pdfinfo` do manual:
-**`Pages: 5`**, **`Page size: 1008 x 612 pts`**. Pesos: certificado **199.820 B** (linha de base
-40.119, teto do plano 251.450), manual `.docx` **19.259 B**, manual `.pdf` **52.966 B**, template de
-referência 444.830 B.
-
-**Contrato do certificado intacto:** `snapshot_ok` **False** só no `LOT-2026-1001`, que segue
-corrompido de propósito no banco de dev como evidência viva do checkpoint visual pendente do João.
-`migrate:fresh --seed` **não** foi rodado, pelo mesmo motivo do bloco anterior. 51 consumidores das
-classes de `App\Shared\Office\`; zero `Repository`; a única ocorrência da varredura de sobra é
-`CertificatePdfTest.php:737`, que é a guarda `assertStringNotContainsString('class="qr"', $html)` —
-asserção de **ausência**, não referência sobrevivente.
-
-**O que o gate NÃO provou, sem maquiagem:** fidelidade **pixel a pixel** contra os templates — a
-comparação foi de grade, cor e posição, página a página, com os PNGs de 144 dpi lado a lado;
-comportamento de turma sem alunos ou sem módulos além do que os testes cobrem; e o manual aberto no
-**Word do cliente** — a conversão foi validada pelo LibreOffice do Gotenberg, que é o mesmo motor
-que gera o PDF, não um segundo leitor independente.
-
-**Três decisões do João no checkpoint visual, todas registradas:**
-
-1. **QR do certificado muda de lado.** A `§3.4` da spec pedia topo **direito**, e a Task 5 entregou
-   assim; o gate mostrou que o `docs/templates/certificado.pdf` abre a folha com o retângulo do QR à
-   **esquerda**. Ele decidiu pelo template. Corrigido em `ee285df` (`align-self: flex-start`), com o
-   lado **assertado no teste** — a divergência veio de uma releitura da spec, e sem guarda a próxima
-   releitura reverteria em silêncio uma decisão tomada contra ela.
-2. **Fundo do certificado: aceitar agora, tratar depois** → **P-28**. Faltam as cunhas diagonais das
-   quinas da página 1 (são **vetor** no PDF aprovado; o raster versionado não as contém) e a faixa
-   azul/preta se repete na página 2, onde o aprovado é cinza limpo. Nenhuma das duas estava nas
-   exclusões aceitas da §7 da spec, por isso viraram pendência em vez de silêncio.
-3. **ADR: nota no ADR-12, não ADR novo.** `App\Shared\Office\` e a rota LibreOffice são a segunda
-   porta do **mesmo** Gotenberg do certificado, com o mesmo racional de transporte. A nota está
-   escrita. Isso **venceu o gatilho da P-20** (o bloco tocou `docs/adrs.md`) e resolveu metade da
-   **P-21** — as duas foram **atualizadas, não fechadas**: o hospedeiro do `openspout` segue sendo
-   escolha dele, e o `simple-qrcode` pertence a um bloco de Certification, não a este.
-
-**Pendências revisadas:** a **P-08** não disparou (o manual continua Blade única padronizada, agora
-em OOXML) e a **P-03** não fechou (um bloco de backend só). Nasceu a **P-28**. P-04 reavalia
-**2026-08-15**; P-15, P-23, P-25, P-26 e a nova P-28 revisam **2026-09-30**.
-
-**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
-bloco **para** em `ready_for_review`; review, fechamento, push e PR não rodam automaticamente.
-
-### Review de sprint — 2026-08-10: duas lentes, 7 achados, todos aprovados e corrigidos
-
-**ALTO RISCO** pela §8 da spec (documento com peso legal + dependência de infra nova em caminho de
-produção). Lente Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre
-`8ee1d9e..HEAD` (11 commits, 38 arquivos). **Órfãos: zero** — `ManualPdfService` morreu sem
-referência sobrevivente, as cinco classes de `App\Shared\Office\` têm consumidor e a chave de locale
-`documents.manual` não sobrou em nenhuma das três locales. **Leis §5 limpas:** zero `abort(` em
-`Domains/Operation/`, zero Repository, `generated.ts` sem diff, `git diff` de `backend/database/`
-vazio, controller fino, `ManualButton` só via `shared/ui`, permissão nas duas rotas com teste de 403.
-
-**Uma divergência entre as lentes, mostrada em vez de resolvida em silêncio.** O achado nº 1 do
-Codex — `w:tcPr` emitindo `vAlign`/`tcMar`/`shd`/`tcBorders` fora da sequência ECMA-376 — foi
-**REJEITADO por medição**: descompactado, o `docs/templates/manual.docx` escrito pelo Word usa
-exatamente a mesma ordem (`tcW, vAlign, tcMar, …, shd, tcBorders` ×706; `trHeight, cantSplit` ×81).
-Sobrou dele só a parte confirmada em separado, que virou a Q-1. Também **não** foi reportada a
-ausência de validação do corpo do PDF no `GotenbergDocxToPdf` (Codex nº 4): é o comportamento
-idêntico do `GotenbergHtmlToPdf` já em produção pelo ADR-12, e apertar só um lado criaria assimetria
-entre as duas portas do mesmo serviço.
-
-**O João aprovou Q-1..Q-7 na íntegra** (`Todos de Q-1 a Q-7`); todos entraram em `96d7256`.
-
-**Documento (Q-1, Q-2), com o template como árbitro.** O cabeçalho é um partial incluído cinco
-vezes e escrevia `wp:docPr id="1"` nas cinco — o Word identifica figura pelo id e pede reparo do
-arquivo quando ele repete, e o gate havia declarado, sem maquiagem, que o manual **nunca foi aberto
-no Word do cliente**. O template aprovado numera os seus dez desenhos **1..10** e escreve
-`pic:cNvPr id="0"` nos dez; as duas convenções foram medidas e seguidas (contador no `@include`,
-`cNvPr` fixo em 0). A Q-2 trocou o `load('enrollments…')` por `orderByStudentName()`: as três grades
-numeram linha a linha e são **assinadas** por linha, e PDF e DOCX são dois requests — sem ORDER BY a
-mesma turma podia sair com duas numerações. O `EnrollmentQueryBuilder` já documentava o defeito para
-a tela; aqui ele tinha peso de documento.
-
-**Mecanismo (Q-3), com uma correção ao próprio achado.** O `OoxmlPackager` passou a conferir
-`tempnam`, `open`, `addFromString`, `close` e a leitura, a apagar o temporário num `finally` e a
-recusar pacote sem nenhum byte com `OfficeRenderException`. **O achado dizia "HTTP 200 com zero
-byte" e isso não se reproduz:** sob o handler de erro do Laravel, o `file_get_contents` de um arquivo
-ausente vira `ErrorException`. O que foi medido no vermelho do teste é pior de outro jeito — 500 sem
-tipo de domínio, com o caminho `/tmp/ooxmlXXXXXX` dentro do `detail` e o `unlink` pulado. A porta
-que devolveria bytes vazios em silêncio é o `open()` falhando, que deixa para trás o arquivo de zero
-byte do `tempnam`; é ela que a checagem de `open` fecha.
-
-**Teste (Q-4):** o `500_rfc7807` afirmava só o status — um 500 em HTML puro passaria. Passou a
-afirmar `content-type`, `type`, `title`, `status` e o `detail` que nomeia o conversor. É guarda,
-não conserto: o comportamento já estava certo, faltava a asserção.
-
-**Doc (Q-5):** a nota do ADR-12 citava `LibreOfficeConverter`, classe que nunca existiu (lição 13);
-agora nomeia `DocxToPdf` e `GotenbergDocxToPdf`, com o paralelo explícito ao `GotenbergHtmlToPdf`.
-
-**Frontend (Q-6, Q-7):** o download do DOCX revogava o objectURL no mesmo stack do `click()` de uma
-âncora **nunca anexada ao DOM** — duas causas conhecidas de download que não começa, e assimetria
-com o caminho do PDF ao lado, que fazia certo. A âncora passou a ser anexada e o objectURL a viver
-no `urlRef` até a próxima geração ou o unmount, com os dois formatos usando o mesmo `keepUrl`. A Q-7
-separou o estado: `useMutationErrors` devolve o **primeiro** erro truthy e só a mutação disparada
-reseta o próprio erro, então o erro do PDF sobrevivia a um DOCX baixado com sucesso; e o `pending`
-fundido girava os dois botões juntos, anunciando o Word quando o pedido tinha sido o PDF.
-
-**Verificação depois das correções, refeita e não herdada:** backend **522 passed, 1 skipped (1961
-assertions)** — +3 testes / +10 asserções sobre o 519/1951 do gate, e os três testes novos foram
-**vistos vermelhos** antes da correção (ids `1,1,1,1,1`; ordem `Zoe, Ana, Bruno`; `ErrorException` no
-lugar da `OfficeRenderException`). Pint `passed`; `typescript:transform` sem diff em `generated.ts`;
-`git diff` de `backend/database/` vazio; frontend `pnpm lint` limpo, `pnpm build` verde, **13
-arquivos / 47 testes**. E2e contra o documento real da turma do seed: `.docx` de **19.269 B** com
-`docPr=1,2,3,4,5`, `cNvPr=0,0,0,0,0` e as doze matrículas em ordem alfabética; PDF convertido de
-**52.954 B**, **`Pages: 5`**, **`Page size: 1008 x 612 pts`**, página 2 conferida na imagem.
-
-**O que continua não provado, sem maquiagem:** o manual **aberto no Word do cliente**. A Q-1 remove
-a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor independente
-continua sendo o do João. A Q-6 tem correção sem teste: o corte do runner do frontend cobre os hooks
-de `shared/`, e hook de feature com DOM segue fora dele — dizer o contrário seria cobertura fantasma
-(lição 10).
-
-**Uma divergência numérica registrada, sem consequência:** o gate do bloco anotou **1950**
-asserções; a suíte na mesma árvore mede **1951**. O número do gate está errado por um.
-
-**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito, não herdado.** As correções Q-1..Q-7 entraram depois do e2e da Task 10 e
-mexeram no documento (ids do `wp:docPr`, ordem das matrículas), no `OoxmlPackager` e no frontend —
-então o critério de aceite do bloco foi provado de novo contra a API real, e não pelo relatório do
-gate anterior.
-
-**Ferramentas.** Backend **522 passed, 1 skipped (1961 assertions)** — o mesmo placar da verificação
-pós-review, contra os 520 que o plano projetava. Pint `--test` **`passed`** nos **22** `.php` vivos
-do bloco. `typescript:transform` executado: **sem diff** em `generated.ts`, `git status --porcelain`
-vazio depois de rodar. `git diff main...HEAD -- backend/database/` **vazio** (zero schema). Frontend:
-`pnpm lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**. As três locales com **538 chaves
-cada e zero diff** entre si.
-
-**E2E com sessão Sanctum por cookie + CSRF, só GETs — nenhuma mutação no banco de dev.**
-`GET /api/turmas/1/manual` → **200** `application/pdf` + `inline; filename="manual-turma-1.pdf"`,
-`pdfinfo` dizendo **`Pages: 5`** e **`Page size: 1008 x 612 pts`**; `GET /api/turmas/1/manual/docx` →
-**200** `…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`.
-
-**O pacote foi aberto, não suposto.** As cinco parts (`[Content_Types].xml`, `_rels/.rels`,
-`word/document.xml`, `word/_rels/document.xml.rels`, `word/media/lotus-logo.png`),
-`w:pgSz w:w="20183" w:h="12246" w:orient="landscape"` **idêntico ao `docs/templates/manual.docx`**,
-`wp:docPr` numerado **1,2,3,4,5** e `pic:cNvPr id="0"` cinco vezes — as duas convenções da Q-1
-vivas no documento entregue, e não só no teste.
-
-**Preenchimento por contagem (DoD 4):** turma de **12 matrículas**, cada nome aparecendo **3 vezes**
-(uma por grade), grades em 23/21/21 linhas (cabeçalho mais as 22/20/20 fixas) — com N=12 o
-`max(N, fixas)` da D-P5 mantém as linhas em branco, como o formulário impresso. Rodapé de horas
-fechando com a soma dos módulos: 8+6+4 = **18 T**, 4+10+8 = **22 P**.
-
-**Pesos (DoD 1):** manual `.docx` **19.269 B**, manual `.pdf` **52.954 B** (template de referência
-444.830 B), certificado **199.830 B** contra a linha de base **40.119 B** e o teto **251.450 B** do
-documento aprovado pela Lotus.
-
-**Fonte de verdade única (DoD 9), conferida no código:** `ManualDocumentService::pdf()` é
-`converter->render($this->docx($turma))`. Não há segundo caminho de montagem.
-
-**Contrato do certificado (DoD 7):** `GET /api/certificates` **200** com os treze campos de sempre e
-`snapshot_ok` **false só** no `LOT-2026-1001`; `show` do são **200**; rota pública **sem cookie**
-**200**; o corrompido devolve **500 `application/problem+json`** no `show` e no `pdf`, nomeando
-`LOT-2026-1001` **e** o campo `aluno.name`.
-
-**Visto renderizado (DoD 8):** 14 PNGs comparados página a página. As **cinco** páginas do manual
-batem com o template em grade, colunas, cores e contagem de linhas; no certificado as únicas
-divergências são as já declaradas — assinatura da gerente e carimbos SENCE/NCH pela §7 da spec,
-cunhas das quinas e faixa na página 2 pela **P-28** —, confirmadas na imagem em vez de assumidas.
-
-**Órfãos e leis §5:** 54 consumidores das classes de `App\Shared\Office\`; zero sobra de
-`ManualPdfService`, `manual-turma.blade`, `class="accent"` ou `class="meta"` (os únicos hits são um
-comentário que explica a renomeação e a asserção de **ausência** de `class="qr"`); zero `abort(` em
-`Domains/Operation/`; zero Repository; nenhum import de PrimeReact direto nem cross-feature nos três
-arquivos de frontend do bloco.
-
-**Pendências:** nenhuma nasceu neste gate e nenhuma fechou. A **P-28** já entrou no gate técnico; a
-**P-20** e a **P-21** foram atualizadas, não fechadas (o hospedeiro do `openspout` e a nota do
-`simple-qrcode` seguem com o João). A **P-08** não disparou (manual continua Blade única
-padronizada, agora em OOXML) e a **P-03** não fechou (um bloco de backend só). P-04 reavalia
-**2026-08-15**; P-15, P-23, P-25, P-26 e P-28 revisam **2026-09-30**.
-
-**Uma imprecisão do plano, registrada em vez de corrigida retroativamente:** o Step 2 da Task 10
-escreve `"password":"password"` como credencial do seed, e a senha real é `senha123` — todos os
-outros planos do repositório escrevem certo. O plano aprovado **não** foi reescrito (precedente da
-P-27) e o e2e deste gate rodou com a credencial correta.
-
-**Divergência de outro bloco, achada e não corrigida pelo segundo gate seguido:** a linha do
-`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
-`Spatie\LaravelData\Optional|int`, que parte a tabela naquela linha. O fechamento do
-`hardening-revisao-ui-assistida` já a registrou sem tocar; reverter aquela decisão sem o João seria
-a mesma deriva silenciosa que o gate existe para impedir.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-documentos-oficiais-template-e-docx.md`; spec →
-`specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md` (não é compartilhada com
-nenhum item futuro registrado). A referência interna do plano à spec foi reapontada para o path
-arquivado. Entrega registrada no `progress.md`, com a de 2026-08-04
-(`hardening-estrutural-pre-sprint-4`) descendo para o `progress-archive.md` para manter dez. Item 1
-removido do `backlog.md`, com renumeração dos seguintes.
-
-**Estado do ambiente:** `migrate:fresh --seed` **não** foi rodado — o banco de dev segue carregando
-o `LOT-2026-1001` corrompido de propósito para o checkpoint visual do João, que é justamente a
-evidência viva que o DoD 7 usa. O e2e deste gate foi read-only.
-
-**O que o fechamento NÃO provou, sem maquiagem:** o manual **aberto no Word do cliente** (a Q-1
-remove a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor
-independente continua sendo o do João); fidelidade **pixel a pixel** — a comparação foi de grade,
-cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre os hooks de `shared/`
-e hook de feature com DOM está fora dele (lição 10).
-
-**Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.

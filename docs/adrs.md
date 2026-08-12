@@ -178,8 +178,9 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 > **Proveniência ratificada (doc-sync 2026-07-30):** o texto não trazia atribuição nominal explícita;
 > confirmada como decisão do João no portão de triagem do bloco `hardening-doc-sync-sprint4`.
 >
-> O ponto 5 (2026-08-11) ainda não está espelhado — re-sync com o Drive é passo do fechamento
-> deste bloco (spec §11).
+> O ponto 5 (2026-08-11) **ainda não está espelhado** no Drive — conferido no `/fechar-sprint` de
+> 2026-08-12, que também mediu por que não fechou ali: as ferramentas de Drive do agente são de
+> leitura, não de escrita. Rastreado como **P-31** em `docs/pendencias.md`.
 
 ## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
 

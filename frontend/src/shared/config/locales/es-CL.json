@@ -409,7 +409,7 @@
     "status": { "em_andamento": "En curso", "habilitada": "Habilitada", "concluida": "Concluida" },
     "detail": {
       "back": "Volver a Operación",
-      "notFound": "Turma no encontrada.",
+      "notFound": "Turma no encontrada",
       "relatedTo": "Presupuesto {{budget}} · Cotización {{quote}}",
       "tabs": {
         "config": "Configuración",
