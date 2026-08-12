@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: null
 active_work_item: last-login
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-last-login-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-12-last-login.md
 context_packet: null
 blocker: null
 review_findings_approved: null
@@ -179,6 +179,48 @@ torna isso risco declarado, com guarda de runtime própria na §4 da spec.
 
 **Risco de review continua ALTO**, com os três gatilhos intactos — auth, schema (agora tabela nova em
 vez de coluna) e `generated.ts`.
+
+### Aprovação da spec e plano — 2026-08-12
+
+O João aprovou a spec revisada com a instrução literal `aprovado`. O plano ativo
+(`docs/superpowers/plans/2026-08-12-last-login.md`) decompõe o bloco em **7 tasks (0–6)**: baseline;
+tabela `login_logs` mais model e relações; a captura no login; a projeção nos dois DTOs; a guarda de
+N+1; o frontend; gate.
+
+**A guarda de N+1 é task própria, não passo da projeção**, porque é o risco central declarado da §5.1
+da spec e um revisor pode reprová-la aprovando a projeção.
+
+**Baseline medido, não herdado:** backend **538 passed, 5 skipped (1999 assertions)** e frontend
+**16 arquivos / 82 testes**. O registro de fechamento do BD-1 dizia **79** testes de frontend; o real
+é 82, e o plano parte do medido. Projeção: **547 passed / 5 skipped** no backend e **17 arquivos / 86
+testes** no frontend; o total de assertions é declarado como **registrado no gate, não projetado**.
+
+O handoff fixa **`executor: claude`**: as Tasks 2, 3 e 4 fecham por prova de mutação, e ler o vermelho
+certo (ordem de captura, `oldestOfMany`, `LazyLoadingViolationException`) é julgamento, não passo
+mecânico. Nada é delegado ao Codex, então não há `paths_autorizados`.
+
+**A escrita do plano mediu o terreno e achou dois defeitos no próprio rascunho, os dois corrigidos
+antes de gravar:**
+
+1. **`latestOfMany()` ordena por `id`, não por `created_at`** — conferido no vendor
+   (`CanBeOneOfMany::latestOfMany($column = 'id')`). Num log append-only os dois quase sempre
+   coincidem, mas o campo se chama "último ACESSO" e a justificativa do índice composto depende de
+   `created_at`. Além disso `MAX` numa coluna só devolve **duas** linhas quando dois logins caem no
+   mesmo segundo, o que acontece em retry. Ficou `latestOfMany(['created_at', 'id'])`.
+2. **O teste da projeção seria falso-positivo por mass assignment.** O rascunho backdatava com
+   `loginLogs()->create(['created_at' => ...])`, e `created_at` **não** está no `$fillable` — a chave
+   seria descartada em silêncio, as duas linhas nasceriam com a mesma data e o caso que existe para
+   discriminar `latestOfMany` de `oldest` passaria por acidente. Ficou `forceFill(...)->save()`, com
+   a razão escrita ao lado. O `$fillable` **segue** sem `created_at` de propósito: a data do acesso
+   não se forja por mass assignment.
+
+Duas instruções do rascunho que eram "confira se…" viraram fato medido: o barrel
+`shared/lib/index.ts:1` já é `export * from './datetime'` (não muda uma linha), e
+`RedatoresTable.tsx:6` já importa de `@shared/lib` enquanto `UsersTable.tsx` não importa — os dois
+passos passaram a dizer exatamente o que editar. O ID da pendência de retenção também foi fixado em
+**P-30** (maior em uso é P-29), com a nota de não mexer na duplicidade conhecida do P-28.
+
+**Estado:** `ready_for_execution`. `/executar-bloco last-login` exige instrução posterior do João.
 
 **Fora de escopo, declarado na spec:** `SessionUserData` não ganha o campo (a captura precede a
 montagem do payload, então `/me` diria "último acesso = agora" — campo que mente por construção); sem
