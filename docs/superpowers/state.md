@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: last-login
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-last-login-design.md
 active_plan: docs/superpowers/plans/2026-08-12-last-login.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
 state_basis_commit: 397548c
-updated_at: 2026-08-12T15:45:00-03:00
+updated_at: 2026-08-12T17:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -230,6 +230,47 @@ backfill; alunos e clientes não entram porque não autenticam.
 `/revisar-sprint` **concordam**: três gatilhos se aplicam — auth, schema e `generated.ts`. O risco
 próprio é que escrita silenciosa é, por definição, escrita que a auditoria não enxerga: `saveQuietly`
 no model errado ou fora do gate não produz audit, não move `updated_at` e não levanta exceção.
+
+### Execução — 2026-08-12, via Subagent-Driven Development
+
+O João instruiu **`USE SDD para execução`** a meio da Task 2 (que tinha começado inline), o que
+redirecionou todo o resto do bloco: cada task passou a ser um agente implementador isolado
+(brief extraído do plano, report próprio) seguido de um agente revisor dedicado (spec compliance +
+qualidade), com loop fix→re-review quando necessário. As seis tasks fecharam, todas Approved:
+
+- **Task 1** (`656175c`) — tabela `login_logs`, model, `User::latestLogin()`.
+- **Task 2** (`66bc72e`) — `RecordLoginAction`, captura depois do gate de `is_active`. Mutation-proof
+  da ORDEM registrado (`Failed asserting that 1 is identical to 0.`).
+- **Task 3** (`feef5e3`) — projeção `last_login` em `UserData`/`RedatorData`, eager-load em
+  index/show. **Execução atípica:** o agente implementador foi interrompido pelo João antes de
+  escrever o report (o código já estava commitado e correto); um segundo agente verificou
+  retroativamente Steps 7-10. O primeiro review apontou um achado Important puramente procedural —
+  o Step 2 ("ver vermelho" contra o código antigo) nunca tinha sido registrado — fechado por um fix
+  que reproduziu o vermelho retroativo contra o commit pai, sem tocar o commit já aprovado.
+  Re-review: Approved.
+- **Task 4** (`7abbc3c`) — guarda de N+1, `LazyLoadingViolationException` provada nos dois
+  controllers. Approved de primeira.
+- **Task 5** (`c84173a`) — `formatDateTime`, coluna nas duas tabelas, 3 locales. Approved de
+  primeira.
+- **Task 6** — gate final, verificação pura (nenhum arquivo de produção, nenhum commit). Suíte 547
+  passed/5 skipped; frontend 17 arquivos/86 testes; Pint limpo nos 12 arquivos `.php` do bloco;
+  `generated.ts` sem diff; sem sonda; as três leis do §5 confirmadas; **E2E contra a API real do
+  DoD** (lição 12) fechou os 6 sub-itens — login via Sanctum cookie/CSRF real, `login_logs` grava
+  IP/UA reais, `users.updated_at`/`audits` inalterados, `/api/users` e `/api/redatores` projetam
+  `last_login` certo, segundo login grava segunda linha e atualiza a projeção. `LOT-2026-1001`
+  seguiu corrompido de propósito, intocado.
+
+**O que o gate NÃO provou, registrado sem maquiagem:** nenhuma tela foi vista renderizada (WSL sem
+browser) — o checkpoint visual das duas colunas fica com o João; login falho e logout continuam fora
+de escopo (D2 da spec); a retenção de `ip_address`/`user_agent` segue aberta em P-30; o preenchimento
+de `last_login` após um login de redator real não foi reexercitado ponta-a-ponta (só o estado `null`
+foi confirmado via `/api/redatores` — o mecanismo é o mesmo já coberto pela suíte nas Tasks 3/4).
+
+Ledger fino task-a-task (branch, commits, achados de review) em `.superpowers/sdd/progress.md`
+(local, não versionado).
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
+`/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
