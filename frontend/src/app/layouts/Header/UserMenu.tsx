@@ -50,7 +50,7 @@ export function UserMenu() {
       </div>
 
       <AppButton
-        variant="onNavyPlain"
+        text
         rounded
         aria-label={t('common.openUserMenu')}
         onClick={(e) => menuRef.current?.toggle(e)}

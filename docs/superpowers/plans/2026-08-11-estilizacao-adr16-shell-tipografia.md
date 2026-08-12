@@ -886,21 +886,27 @@ com `variant="on-dark"`, como ele deixou no `c9fb188`). Do resto do retorno saí
     relógio — os dois reprovam. Passaram a branco: **14,65:1** medidos, iguais nos dois temas. A
     data do relógio fica em branco a 75% (**8,84:1**). O papel do usuário **continua celeste**
     (5,29:1, passa) — é o acento da marca sobre a navy, o mesmo do item ativo da sidebar.
-  - **Variantes `onNavy*` no `AppButton`, e isto fecha o achado do toggle da sidebar.** O
-    `brandOutline` usa `--surface-card`, que no claro é branco: todo controle sobre a navy virava
-    caixa branca colada no fundo (era o achado nº 2 que eu tinha aberto para o checkpoint, na
-    sidebar, e o header navy do `c9fb188` o replicou). Três variantes novas — `onNavyLabel`,
-    `onNavyIcon`, `onNavyPlain` — com fundo transparente, traço em véu de branco e rótulo branco.
-    O hover é `enabled:hover:` por especificidade medida: o Lara traz `.p-button:enabled:hover`
-    (0,3,0), que ganha de um `hover:` simples (0,2,0); empatando em 0,3,0 vence quem vem depois, e o
-    bundle do Vite vem depois do `<link>` do tema. Verificado no navegador com o ponteiro em cima.
-  - **`LanguageMenu` ganhou `variant`** porque vive em duas superfícies (o fundo de tema do login e a
-    navy do header); `AppearanceControls` ganhou `onNavy` como **um** booleano, para os dois
-    controles não saírem de superfícies diferentes por descuido do call site.
+  - **Os botões ficam como estavam — decisão do João, contra a minha proposta.** Eu havia entregue
+    três variantes `onNavy*` no `AppButton` (fundo transparente, traço em véu de branco, rótulo
+    branco), porque o `brandOutline` usa `--surface-card` e no claro isso pinta caixa branca colada
+    na navy — era o achado nº 2 que eu tinha aberto para o checkpoint. **O João aprovou o visual e
+    mandou reverter o `AppButton`** ("visual aprovado, só deixe o AppButton como estava"). Revertido
+    por inteiro: as variantes saíram, o `LanguageMenu` e o `AppearanceControls` voltaram a não ter
+    prop de superfície, a sidebar voltou ao `brandIcon` e o chevron do usuário ao `text rounded`.
+    Zero referências a `onNavy` no `src/`. **Consequência declarada, não escondida: o achado nº 2
+    permanece aberto por escolha dele** — a caixa branca sobre a navy é agora estética assumida, não
+    defeito pendente. Contraste nunca foi o problema ali (celeste sobre branco no botão passa); o
+    que eu argumentava era coerência de superfície, e essa é chamada dele.
+  - **Sobra registrada da tentativa, para não se re-descobrir depois:** o hover teria de ser
+    `enabled:hover:` e não `hover:`, porque o Lara traz `.p-button:enabled:hover` (0,3,0), que ganha
+    de um `hover:` simples (0,2,0); empatando em 0,3,0 vence quem vem depois, e o bundle do Vite vem
+    depois do `<link>` do tema. Medido no navegador com o ponteiro em cima antes de reverter.
   - **Responsividade:** nome do usuário com largura máxima e corte (nome longo empurrava a barra em
     vez de cortar), `min-w-0` na régua do flex, e o divisor com o traço em véu de branco — ele mora
     no `::before` do tema, em cinza de superfície clara. Medido em 1440/1280/1024/768/640/390/320:
-    **zero overflow horizontal**, 42px de sobra na pior largura, altura constante em 64px.
+    **zero overflow horizontal**, altura constante. Remedido depois da reversão do `AppButton`
+    (que devolveu o `gap-4` e o padding maior dos botões): segue sem overflow, com **24px de sobra**
+    na pior largura — era 42px com as variantes.
   - **Reincidência da armadilha da UI-03:** o primeiro comentário do `Header` citava a classe de
     altura antiga e o scanner do Tailwind emitiu a regra morta no bundle (o scanner lê comentário).
     Reescrito; conferido no `dist` que a regra sumiu. É a **segunda** vez no mesmo bloco.

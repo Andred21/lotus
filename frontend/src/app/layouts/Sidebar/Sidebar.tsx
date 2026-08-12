@@ -33,7 +33,7 @@ export function Sidebar() {
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}
         {!compact && (
-          <AppButton variant="onNavyIcon" onClick={toggle} aria-label={t('common.toggleMenu')}>
+          <AppButton variant="brandIcon" onClick={toggle} aria-label={t('common.toggleMenu')}>
             <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
           </AppButton>
         )}

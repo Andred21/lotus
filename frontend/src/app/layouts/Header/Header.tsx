@@ -5,8 +5,9 @@ import { UserMenu } from './UserMenu'
  * tem UM dono — o PageHeader (UI-05 do review de 2026-08-11).
  *
  * Navy fixa nos DOIS temas, como a sidebar (spec §6/UI-04). Daí o texto branco
- * e os controles `onNavy`: os tokens de tema pintam para superfície clara e
- * sobre a navy davam 1,42:1 no nome do usuário (D-P13).
+ * cravado: os tokens de tema pintam para superfície clara e sobre a navy davam
+ * 1,42:1 no nome do usuário (D-P13). Os botões seguem no visual de marca por
+ * decisão do João no checkpoint — o `AppButton` fica como estava.
  *
  * Altura fixa no lugar da altura mínima que havia aqui: a barra media 94px de
  * verdade, porque sem Preflight os <p> do relógio e do usuário ainda carregam
@@ -20,7 +21,7 @@ export function Header() {
   return (
     <AppHeader className="h-20 border-white/10 bg-(--brand-navy) px-3 text-white sm:px-6">
       <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
-        <AppearanceControls onNavy />
+        <AppearanceControls />
         {/* O traço do divisor mora no ::before do tema, em cinza de superfície
           * clara — daí a variante `before:` em vez de uma classe no root. */}
         <AppDivider

@@ -4,7 +4,7 @@ active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
 workflow_state: executing
 next_owner: joao
-next_action: approve_visual_checkpoint
+next_action: run_lotus_ui_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
 state_basis_commit: b29f3b9
-updated_at: 2026-08-12T00:20:00-03:00
+updated_at: 2026-08-12T10:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -234,18 +234,29 @@ emendas, executadas e commitadas em `1a0279d`, declaradas no plano:
   das margens de user-agent dos `<p>` (o projeto não carrega Preflight): 42px mortos em cada bloco.
   Zeradas, o teto vira o avatar e a altura vira escolha — **o João fixou 80px no working tree
   durante a execução, e o valor dele ficou**. Texto branco cravado no lugar dos tokens de tema, que
-  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. Variantes `onNavy*` no
-  `AppButton` **fecham também o achado nº 2** (toggle da sidebar como caixa branca). 7 larguras
-  medidas, de 1440 a 320: zero overflow horizontal.
+  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. 7 larguras medidas, de 1440
+  a 320: zero overflow horizontal.
+- **O `AppButton` fica como estava — decisão dele, contra a minha proposta.** Eu tinha entregue
+  variantes `onNavy*` para os controles sobre a navy; ele **aprovou o visual e mandou reverter só o
+  `AppButton`**. Revertido por inteiro (zero referências a `onNavy` no `src/`), gate refeito.
+  **O achado nº 2 volta a ficar aberto por escolha dele:** a caixa branca sobre a navy passa a ser
+  estética assumida, não defeito pendente. Contraste ali sempre passou; o que eu argumentava era
+  coerência de superfície, e essa é chamada dele.
 - **Reincidência da armadilha da UI-03 no mesmo bloco:** um comentário meu citou a classe de altura
   antiga e o scanner do Tailwind emitiu a regra morta no bundle. Segunda vez. Reescrito e conferido
   no `dist`.
 
-**O bloco continua parado, e continua parado no mesmo lugar:** `next_owner: joao`,
-`next_action: approve_visual_checkpoint`. O Step 4 é bloqueante e agora tem material novo para ele
-reaprovar; o Step 5 (`/lotus-ui-review`) é invocação dele. **Achado nº 3 segue sem decisão** —
-celeste como traço sobre superfície clara reprova 3:1 fora do shell (o shell aprovado hoje não é
-afetado, porque sobre a navy o celeste mede 5,29:1). Nada foi promovido a `ready_for_review`.
+**Step 4 APROVADO** — "visual aprovado", com a única ressalva do `AppButton`, já atendida. É a
+primeira transição do bloco que não é minha de decidir e saiu: o checkpoint bloqueante caiu.
+
+**O bloco continua em `executing` e continua em `next_owner: joao`, agora no Step 5:** o re-run do
+`/lotus-ui-review AppLayout (sidebar, header e page)` é invocação dele, não minha. Só depois disso o
+bloco pode ir a `ready_for_review`. Nada foi promovido.
+
+**Achado nº 3 segue sem decisão** — celeste como traço sobre superfície clara reprova 3:1 fora do
+shell (o shell aprovado não é afetado, porque sobre a navy o celeste mede 5,29:1). **Achado nº 2
+foi fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado: fica como
+está.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
