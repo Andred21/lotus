@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: rastro-unicidade-e-gates
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-12-rastro-unicidade-e-gates-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: last-login
-state_basis_commit: ff1f304
-updated_at: 2026-08-12T17:25:00-03:00
+state_basis_commit: e6c831f
+updated_at: 2026-08-12T18:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,91 @@ updated_at: 2026-08-12T17:25:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-12 (`rastro-unicidade-e-gates`)
+
+### Seleção — 2026-08-12
+
+**BD-8 do `backlog.md:208`, promovido explicitamente pelo João.** Ele abriu com
+`/planejar-bloco BD-8 · Rastro, unicidade e gate no eixo de peso legal (achados 1+2+3)` e o gate do
+comando **reprovou por dois motivos**, como em BD-1, BD-2 e BD-7:
+
+1. Argumento é **título de seção**, não slug promovido, com o estado em `idle` e `active_work_item`
+   `null`. O comando pode mostrar o backlog e pedir seleção; não pode promover.
+2. Existia **item ativo em paralelo**: a worktree `/home/jvbat/projetos/fix-frontend`, na branch
+   `feat/dialogos-faixa-visivel-acessibilidade`, carrega `faixa-visivel-e-acessibilidade-dos-dialogos`
+   em `executing` (`updated_at` 14:48). A invariante de um `active_work_item` só precisava da mesma
+   exceção declarada de 12-08.
+
+**Três decisões do João fecharam o gate**, e as três ficam registradas porque nenhuma é default:
+promover o BD-8 com o **paralelismo autorizado** (a outra frente é frontend, então a P-03 não
+dispara contra este bloco de backend); **rota direta a `ready_for_planning`, sem Context Packet**,
+por ausência medida de fonte externa — o bloco nasceu de revisão do próprio repositório e cita só
+arquivos, ADR-17 e o relatório da revisão, sem Drive, Notion ou Figma; e o slug
+`rastro-unicidade-e-gates`.
+
+**A proposta foi commitada antes da promoção** (`e6c831f`, que passa a ser o `state_basis_commit`),
+precedente de BD-1 e da estilização: BD-8 e BD-9 estavam só no working tree. Aquele commit carrega
+junto o item 4 (Login) que o João já tinha pendente no mesmo arquivo — declarado na mensagem, não
+misturado em silêncio.
+
+**Toca backend e schema → main tree, sem worktree (P-03).** Branch `feat/rastro-unicidade-e-gates`,
+criada de `18cf90a`.
+
+### Terreno medido antes de desenhar (fato, não desenho)
+
+1. **Os call-sites crus de pivot são exatamente cinco** — o grep de
+   `->(sync|syncWithoutDetaching|attach|detach|toggle|updateExistingPivot)\(` em `app/` devolve as
+   cinco linhas do achado e mais nada. A guarda estática nasce verde, sem allowlist além do próprio
+   helper.
+2. **O rastro de pivot não é fraco: não existe.** As 14 asserções sobre `audits` em `tests/` cobrem
+   6 `auditable_type` e **dois** eventos (`deleted` 8×, `updated` 3×). Zero `sync`/`attach`/`detach`,
+   zero sobre `turma` ou `redator`.
+3. **A armadilha do `$auditInclude` do bloco anterior NÃO se aplica a pivot.**
+   `Auditable.php:262` desvia para `getCustomEventAttributes()` quando `isCustomEvent`, então o
+   filtro de atributos não zera o diff da relação.
+4. **Mas existe outra, oposta:** `auditSync` com diff vazio zera os dois lados e **ainda dispara**
+   (`Auditable.php:831-840`), e `config/audit.php:104` tem `empty_values => true`. Como
+   `UpdateRedatorAction:66` roda `courses()->sync` em toda edição de redator, a `audits` ganharia
+   linha vazia por salvada. É o que a D12 mata.
+5. **O `version` tem três caminhos de escrita, não um:** `CourseTemplateController::store` (controller
+   cru, sem Action nem transação), `CreateCourseAction:28-32` e `UpdateCourseAction:35-40`.
+6. **O replace nested obriga `withTrashed()` na derivação.** `UpdateCourseAction:36` soft-deleta
+   todos e recria; com `unique(course_id, version)` cru, `MAX` sobre vivos voltaria a 1 e o banco
+   recusaria a segunda salvada.
+7. **Um quarto caminho sem gate, que o relatório não listou e o código autodenuncia:**
+   `DeleteTurmaAction.php:8-9` — "Home para futuras guardas do 6d (blindagem pós-conclusão RN-15) —
+   hoje sem gate".
+8. **Trocar a chave do erro é inerte na tela.** `FormErrorSummary.tsx:62-67` renderiza qualquer
+   chave sem input mapeado e `useMutationErrors` cai no primeiro valor do mapa. Só um teste afirma
+   texto literal de gate (`EnrollmentResultTest:150-151`), e é a mensagem que **fica**.
+
+### Brainstorming e spec — 2026-08-12
+
+O João aprovou o desenho por seções (§1+§2, depois §3+§4). Oito decisões novas entram na spec como
+D9–D16; as D1–D8 vêm fechadas do grilling e não foram reabertas.
+
+**Quatro são escolha dele entre alternativas apresentadas:** `version` **imutável** com PUT editando
+in-place (contra versionamento por linha nova); **Action única como escritor exclusivo** mais
+`version` fora do `$fillable` (contra service solto e contra evento `creating`, que rodaria a trava
+fora de transação e viraria no-op silencioso em SQLite); **`UpdateTurmaAction` fecha total sem
+caminho de correção novo** — a pergunta que o backlog deixou aberta, respondida com o precedente da
+conclusão terminal; e **helper que não grava audit em no-op** (contra aceitar o ruído e contra
+curto-circuitar só a designação).
+
+**Uma amplia o escopo por decisão dele:** o `DeleteTurmaAction` entra no gate, que passa de dez para
+**onze** caminhos.
+
+**Três são consequência declarada, não escolha:** a audit cai no model que o usuário tocou, então
+`course_redator` passa a ter dois `auditable_type`; o gate mantém nome e mensagem **verbatim**
+para não churnar os dois testes que afirmam o texto; e a sonda de concorrência MySQL fica **fora**,
+porque aqui o `unique` é a defesa de integridade e a corrida degrada para 500, não para duplicata —
+o `seq_in_budget`, mesmo padrão do mesmo ADR-17, também não tem sonda.
+
+**Risco de review declarado ALTO** (§5 da spec): schema, peso legal e `generated.ts`.
+
+O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
+spec escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
