@@ -81,7 +81,14 @@ export function AppDataTable<T extends DataTableValueArray>({
   // visível numa tela estreita — o oposto do que a Task 33 resolveu nos
   // diálogos.
   const hasRows = (data?.length ?? 0) > 0
-  const widthPt: DataTablePassThroughOptions = hasRows ? {} : { table: { className: '' } }
+  // Sem linhas, sem cabeçalho. A largura mínima já era zerada aqui, e não
+  // bastou: os seis `<th>` com `px-4 py-2.5` têm largura intrínseca própria e
+  // sustentam a tabela mesmo com o corpo ocupado por um único `<td>` de estado
+  // vazio (452px de conteúdo para 276px visíveis, medido em 390x844). Cabeçalho
+  // sobre zero linha não informa nada: não há coluna a interpretar.
+  const widthPt: DataTablePassThroughOptions = hasRows
+    ? {}
+    : { table: { className: '' }, thead: { className: 'hidden' } }
 
   const body = errored ? (
     <AppErrorState
