@@ -46,20 +46,67 @@ const FORMDATA_FORA_DO_HELPER = {
     'Upload de feature não monta FormData: use postMultipart de @shared/api/postMultipart, que é o único ponto onde o Content-Type não pode ser fixado (frontend-fsliced.md, lição 6).',
 }
 
-// D7 (cor pelo tema) e modo leitura: as duas regras abaixo, medidas com o
-// Step 5 do próprio bloco. O texto original do brief dava cada regra num
-// bloco separado, um casando `src/features/**/*.tsx` (cor, com catraca) e o
-// outro casando `src/features/**/*.tsx` + `src/shared/**/*.tsx` (modo
-// leitura, sem catraca) — e os dois colidem ENTRE SI pelo mesmo bug de merge
-// raso que o comentário deles cita (Q-2, 2026-08-04): qualquer arquivo de
-// feature fora da catraca casa os dois blocos, e o que vem depois no array
-// apaga o `no-restricted-syntax` do que vem antes por inteiro. Rodar o Step 5
-// com os blocos separados provou isto — a mutação de cor em RoleDialog.tsx
-// passou verde, regra morta. Por isso os dois seletores entram JUNTOS no
-// array de um único bloco onde ambas valem (features fora da catraca), e
-// cada regra que sobra fora dessa faixa (a catraca em si, e shared/) ganha
-// bloco próprio e mutuamente exclusivo — nenhum arquivo casa dois blocos que
-// declarem `no-restricted-syntax` ao mesmo tempo.
+// Os 3 seletores que proíbem query/mutation dentro de componente de feature +
+// o ban de FormData solto, extraídos em array: dois blocos de `files`
+// diferentes precisam do mesmo conjunto — `src/features/*/components/**` sem
+// exceção de cor, e o mesmo caminho filtrado pela catraca de cor (D7), que
+// ainda bane query/mutation/FormData igual, só não a cor hardcoded. Duplicar
+// os 4 objetos entre blocos os deixaria dessincronizar em silêncio.
+const REGRAS_COMPONENTE_FEATURE = [
+  {
+    // `coursesApi.useList()`, `rolesApi.useList()`, e qualquer `xxxApi.useAlgo()`.
+    selector: "CallExpression[callee.object.name=/Api$/][callee.property.name=/^use[A-Z]/]",
+    message:
+      'Query de recurso não vive em componente de feature: mova para um hook em features/<x>/hooks/ e consuma o resultado derivado (frontend-fsliced.md).',
+  },
+  {
+    // `useQuery`/`useMutation` diretos. O `$` é o que impede casar
+    // `useMutationErrors`, que é consumo de erro e pode ficar no componente.
+    selector: "CallExpression[callee.name=/^use(Query|Mutation|InfiniteQuery|SuspenseQuery)$/]",
+    message:
+      'TanStack Query direto não vive em componente de feature: mova para features/<x>/api/ ou hooks/ (frontend-fsliced.md).',
+  },
+  {
+    // O escape do seletor acima: `useCrudPage(budgetsApi)` não casa
+    // `xxxApi.useAlgo()`, mas a query está lá dentro do mesmo jeito — o
+    // `useCrudPage` chama `resource.useList()`. Casa pelo ARGUMENTO, não
+    // pelo nome do hook: banir `useCrudPage` fecharia só o caso conhecido
+    // e `useOutraCoisa(clientsApi)` escaparia igual amanhã, que é como
+    // este buraco nasceu (spec D5). Os `xxxApi.keys.all` dos 4 diálogos
+    // são MemberExpression, não Identifier, e seguem passando.
+    //
+    // Casa QUALQUER posição de argumento, não só a primeira. Fixar
+    // `arguments.0` reproduzia o buraco que este seletor existe para
+    // fechar: `useEntityForm(mode, clientsApi)` escapava pela mesma
+    // lógica que motivou a regra (review de 2026-08-04, Q-2, sonda).
+    selector: 'CallExpression > Identifier.arguments[name=/Api$/]',
+    message:
+      'Recurso de API não entra em componente de feature nem como argumento: consuma um hook de features/<x>/hooks/ (frontend-fsliced.md).',
+  },
+  FORMDATA_FORA_DO_HELPER,
+]
+
+// D7 (cor pelo tema) e modo leitura (BD-3 §4): as duas regras abaixo, medidas
+// com o Step 5 do próprio bloco. O texto original do brief dava cada regra em
+// blocos `src/features/**/*.tsx` PRÓPRIOS, separados dos blocos de
+// `no-restricted-syntax` que já existiam para `src/features/*/components/**`
+// e `src/features/**` — e blocos próprios COLIDEM com os já existentes pelo
+// mesmo bug de merge raso que o comentário deles já citava (Q-2, 2026-08-04):
+// todo arquivo de componente casa dois blocos que declaram
+// `no-restricted-syntax` [o de query/FormData que já existia, e o novo de
+// cor/modo-leitura], e o que vem depois no array apaga o do que vem antes por
+// inteiro. Rodar o Step 5 dos blocos próprios provou o sintoma esperado pelo
+// brief [mutação de cor em RoleDialog.tsx reprovando], mas não provou a
+// colisão com os blocos de cima — achado do review desta task, com
+// `--print-config` mostrando os 3 bans de query e o de FormData apagados em
+// ~75 arquivos de componente.
+//
+// Por isso `COR_HARDCODED` e `DISABLED_READONLY` NÃO ganham bloco próprio:
+// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (com
+// a catraca de cor particionada por `ignores`/`files: CATRACA_COR`, dois
+// blocos abaixo) e o resto de `src/features/**` — e só `shared/**` ganha
+// bloco novo, porque nenhum bloco existente casa aquele glob com
+// `no-restricted-syntax`.
 const COR_HARDCODED = {
   selector:
     'JSXAttribute[name.name="className"] Literal[value=/\\b(text|bg|border|ring|divide)-(slate|gray|zinc|neutral|stone|red|green|blue|amber|yellow|emerald|sky|indigo|violet|rose|orange|teal|cyan|lime|fuchsia|purple|pink)-[0-9]{2,3}\\b/]',
@@ -106,61 +153,46 @@ export default defineConfig([
   // `abstracao-componentes-operation` (TurmaConfigCard) são o MESMO achado, dois
   // blocos seguidos. Grep manual no gate só prova a pasta que acabou de ser
   // limpa; isto aqui reprova na hora, em qualquer feature.
+  //
+  // `COR_HARDCODED` e `DISABLED_READONLY` (D7 / BD-3 §4) entram NESTE array em
+  // vez de em blocos `src/features/**` próprios — um bloco extra que casasse o
+  // mesmo `files` colidiria com este por merge raso de `rules` (Q-2,
+  // 2026-08-04): o `no-restricted-syntax` de quem vem depois no array apaga o
+  // de quem vem antes por inteiro, não concatena. Foi o que a Task 7 tentou
+  // primeiro — dois blocos `src/features/**/*.tsx` novos apagando ESTE bloco
+  // em silêncio para todo componente, achado do review desta task.
+  //
+  // `ignores: CATRACA_COR` porque a catraca de cor (D7, dois blocos abaixo)
+  // precisa das MESMAS 4 proibições de componente — só não a de cor hardcoded
+  // — e um array de `no-restricted-syntax` não aceita `ignores` por seletor
+  // individual dentro de si. A catraca ganha bloco próprio com o mesmo array
+  // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
+    ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          // `coursesApi.useList()`, `rolesApi.useList()`, e qualquer `xxxApi.useAlgo()`.
-          selector: "CallExpression[callee.object.name=/Api$/][callee.property.name=/^use[A-Z]/]",
-          message:
-            'Query de recurso não vive em componente de feature: mova para um hook em features/<x>/hooks/ e consuma o resultado derivado (frontend-fsliced.md).',
-        },
-        {
-          // `useQuery`/`useMutation` diretos. O `$` é o que impede casar
-          // `useMutationErrors`, que é consumo de erro e pode ficar no componente.
-          selector:
-            "CallExpression[callee.name=/^use(Query|Mutation|InfiniteQuery|SuspenseQuery)$/]",
-          message:
-            'TanStack Query direto não vive em componente de feature: mova para features/<x>/api/ ou hooks/ (frontend-fsliced.md).',
-        },
-        {
-          // O escape do seletor acima: `useCrudPage(budgetsApi)` não casa
-          // `xxxApi.useAlgo()`, mas a query está lá dentro do mesmo jeito — o
-          // `useCrudPage` chama `resource.useList()`. Casa pelo ARGUMENTO, não
-          // pelo nome do hook: banir `useCrudPage` fecharia só o caso conhecido
-          // e `useOutraCoisa(clientsApi)` escaparia igual amanhã, que é como
-          // este buraco nasceu (spec D5). Os `xxxApi.keys.all` dos 4 diálogos
-          // são MemberExpression, não Identifier, e seguem passando.
-          //
-          // Casa QUALQUER posição de argumento, não só a primeira. Fixar
-          // `arguments.0` reproduzia o buraco que este seletor existe para
-          // fechar: `useEntityForm(mode, clientsApi)` escapava pela mesma
-          // lógica que motivou a regra (review de 2026-08-04, Q-2, sonda).
-          selector: 'CallExpression > Identifier.arguments[name=/Api$/]',
-          message:
-            'Recurso de API não entra em componente de feature nem como argumento: consuma um hook de features/<x>/hooks/ (frontend-fsliced.md).',
-        },
-        // Componente também não monta multipart. Mora AQUI, e não num bloco
-        // `src/features/**` próprio, porque flat config faz merge raso de
-        // `rules`: dois blocos que casam o mesmo arquivo e declaram
-        // `no-restricted-syntax` não concatenam os seletores — o último apaga o
-        // primeiro inteiro. Um bloco genérico apagaria os dois seletores acima
-        // em todo componente, em silêncio, que é o bug do review de 2026-08-04
-        // (Q-2, fronteiras 1 e 2 do `no-restricted-imports`). O bloco abaixo
-        // cobre o resto da feature e exclui `components/` por `ignores`, então
-        // os dois nunca se sobrepõem.
-        FORMDATA_FORA_DO_HELPER,
-      ],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, DISABLED_READONLY],
+    },
+  },
+  // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
+  // é o único ponto onde a cor segue hardcoded de propósito. `files: CATRACA_COR`
+  // aqui e `ignores: CATRACA_COR` acima particionam o mesmo glob; nenhum
+  // arquivo casa os dois blocos.
+  {
+    files: CATRACA_COR,
+    rules: {
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, DISABLED_READONLY],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
-  // do `postMultipart` de fato vivem.
+  // do `postMultipart` de fato vivem. `COR_HARDCODED` e `DISABLED_READONLY`
+  // (D7 / BD-3 §4) entram aqui também: as duas regras valem em toda
+  // `src/features/**/*.tsx`, não só em `components/`, que ganha o array
+  // completo (mais os 3 bans de query) nos dois blocos acima.
   {
     files: ['src/features/**/*.{ts,tsx}'],
     ignores: [
-      // Coberto pelo bloco acima, com os 3 seletores juntos.
+      // Coberto pelos dois blocos acima, com os 4 seletores de componente juntos.
       'src/features/*/components/**/*.{ts,tsx}',
       // Catraca de um: `useRedatorForm` monta array (`course_ids[]`) e chave
       // polimórfica (`documents[type]`) e entrega o FormData pronto para uma
@@ -170,7 +202,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER],
+      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, DISABLED_READONLY],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -277,31 +309,12 @@ export default defineConfig([
       ],
     },
   },
-  // Bloco PRÓPRIO de propósito: flat config faz merge raso de `rules`, e dois
-  // blocos que casam o mesmo arquivo e declaram `no-restricted-syntax` NÃO
-  // concatenam os seletores — o último apaga o primeiro inteiro. É o bug do
-  // review de 2026-08-04 (Q-2), documentado em `eslint.config.js:145-153`.
-  // Estes três blocos casam `src/features/**`/`src/shared/**` sem colidir com
-  // os de cima (que casam `src/features/*/components/**` e o complemento por
-  // `ignores`) NEM entre si — ver o comentário de `COR_HARDCODED` acima.
-  //
-  // Faixa 1: features fora da catraca de cor — as duas regras valem juntas.
-  {
-    files: ['src/features/**/*.tsx'],
-    ignores: CATRACA_COR,
-    rules: {
-      'no-restricted-syntax': ['error', COR_HARDCODED, DISABLED_READONLY],
-    },
-  },
-  // Faixa 2: a catraca em si — cor fica hardcoded de propósito (D7), mas o
-  // modo leitura vale igual, sem exceção (a regra nasce com `ignores` vazio).
-  {
-    files: CATRACA_COR,
-    rules: {
-      'no-restricted-syntax': ['error', DISABLED_READONLY],
-    },
-  },
-  // Faixa 3: shared/ não tem cor de feature para checar — só modo leitura.
+  // BD-3 §4 (modo leitura) também vale em `shared/ui`: `FormField`/`NestedField`
+  // moram lá, e um wrapper que reintroduzisse `disabled={readOnly}` por dentro
+  // escaparia dos blocos de `src/features/**` acima. Bloco isolado porque
+  // nenhum outro bloco deste arquivo casa `no-restricted-syntax` em
+  // `src/shared/**` — sem risco do merge raso (Q-2) aqui: só este bloco
+  // declara a regra para este glob.
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
