@@ -49,32 +49,40 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
           {back.label}
         </AppButton >
       )}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de
-            * 2026-08-12): em página de detalhe o dono do título é este
-            * componente. Sai SEMPRE — condicioná-lo ao `title` era o que deixava
-            * carga, falha e não-encontrado sem nível 1 (Q-5). Margem cravada no
-            * valor que o user-agent dava ao h2, porque o projeto não carrega
-            * Preflight; no modo escondido essa classe nem é aplicada — o
-            * `sr-only` tira o elemento do fluxo e traz a margem dele. */}
-          <h1
-            className={titleHidden ? 'sr-only' : 'my-[0.83em] text-2xl font-bold'}
-            style={{ color: 'var(--text-color)' }}
-          >
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+      {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de 2026-08-12):
+        * em página de detalhe o dono do título é este componente. Sai SEMPRE —
+        * condicioná-lo ao `title` era o que deixava carga, falha e
+        * não-encontrado sem nível 1 (Q-5).
+        *
+        * Escondido, ele sai da LINHA e vira filho direto daqui: `sr-only` é
+        * `position: absolute`, então não é item flex e não conta o `gap-4`.
+        * Dentro da linha, ela ficava com altura zero mas seguia sendo item, e o
+        * gap abria 1rem de espaço morto acima do esqueleto e do cartão de erro
+        * (S-2 do re-review de 2026-08-12). Pela mesma razão a linha só existe
+        * quando tem o que mostrar. */}
+      {titleHidden && <h1 className="sr-only">{title}</h1>}
+      {(!titleHidden || subtitle || tags || actions) && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            {/* Margem cravada no valor que o user-agent dava ao h2, porque o
+              * projeto não carrega Preflight. */}
+            {!titleHidden && (
+              <h1 className="my-[0.83em] text-2xl font-bold" style={{ color: 'var(--text-color)' }}>
+                {title}
+              </h1>
+            )}
+            {subtitle && (
+              <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+            )}
+          </div>
+          {(tags || actions) && (
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              {tags}
+              {actions}
+            </div>
           )}
         </div>
-        {(tags || actions) && (
-          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-            {tags}
-            {actions}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

@@ -36,6 +36,24 @@ describe('DetailHeader sempre tem um nível 1', () => {
     expect(h1?.className).toContain('sr-only')
   })
 
+  /**
+   * S-2 do re-review de 2026-08-12. `sr-only` é `position: absolute`: fora do
+   * fluxo, mas ainda um ITEM do flex se estiver dentro da linha — e o `gap-4`
+   * da raiz conta entre itens independente de altura, o que abria 1rem de
+   * espaço morto acima do esqueleto e do cartão de erro. jsdom não mede layout,
+   * então o que se assere é a estrutura que produz a geometria: escondido, o
+   * `h1` é filho DIRETO da raiz e a linha vazia não existe.
+   */
+  it('com titleHidden e nada mais, o h1 não fica dentro de uma linha vazia', () => {
+    const { container } = render(
+      <DetailHeader title="Cargando..." titleHidden back={{ label: 'Volver', onClick: () => {} }} />,
+    )
+    const raiz = container.firstElementChild
+
+    expect(container.querySelector('h1')?.parentElement).toBe(raiz)
+    expect([...(raiz?.children ?? [])].map((e) => e.tagName)).toEqual(['BUTTON', 'H1'])
+  })
+
   it('não abre outro nível de cabeçalho abaixo do h1', () => {
     const { container } = render(
       <DetailHeader title="Turma 7" subtitle="Enel" tags={<span>Activa</span>} />,

@@ -1,6 +1,7 @@
 /* Camada fina de marca sobre o tema gerado (ADR-16 §5, spec §4).
  * Entra no bundle do Vite — depois do <link id="prime-theme"> no head,
- * então vence o tema por ordem de cascata. Cores SÓ dos 6 tokens da spec.
+ * então vence o tema por ordem de cascata. Cores SÓ dos 5 tokens da spec §4
+ * (eram 6 no texto aprovado; o `ámbar-aviso` nunca foi construído — D-P16).
  *
  * O que a D6 (texto navy sobre a primária) pedia AQUI mora hoje no tema
  * gerado, por decisão do João (D-P8): a cadeia de `:not()` do rascunho cobria

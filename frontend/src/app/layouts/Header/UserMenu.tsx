@@ -68,11 +68,17 @@ export function UserMenu() {
         * João em 2026-08-12: o acento da marca sobre a navy fica com o item
         * ativo da sidebar, e aqui a hierarquia se faz por peso e opacidade, não
         * por cor.
-        * <span> no lugar de <div>/<p>: <button> só aceita conteúdo de frase, e
-        * o resto era HTML inválido. Some junto a margem de 1em do user-agent
-        * que o <p> trazia (o projeto não carrega o Preflight) e que era zerada
-        * à mão aqui; `truncate` porque nome longo empurrava a barra em vez de
-        * cortar.
+        * <span> no lugar de <div>/<p>: <button> só aceita conteúdo de frase.
+        * Some junto a margem de 1em do user-agent que o <p> trazia (o projeto
+        * não carrega o Preflight) e que era zerada à mão aqui; `truncate`
+        * porque nome longo empurrava a barra em vez de cortar.
+        * O gatilho NÃO ficou conforme com isso: a raiz do Avatar do PrimeReact
+        * é sempre um <div> (`avatar.cjs.js:254`), e ele é filho deste botão.
+        * Desvio consciente (S-1 do review de 2026-08-12, decisão do João):
+        * nenhum parser fecha o <button> num <div> — o sintoma era o texto, que
+        * saiu —, e um círculo de frase aqui significaria reimplementar o
+        * fallback foto→iniciais fora do wrapper. Não escreva que este botão só
+        * tem conteúdo de frase; ele não tem.
         * `sr-only sm:not-sr-only`, e não ocultação por display: este bloco É o
         * nome acessível do gatilho, então abaixo do sm ele sai da TELA, não da
         * árvore — escondê-lo tirava a identidade da sessão do leitor de tela

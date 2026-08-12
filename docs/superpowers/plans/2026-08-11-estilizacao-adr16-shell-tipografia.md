@@ -24,7 +24,8 @@ vitest, playwright-cli (verificação).
 - Seta de dependência só desce: `shared/config` não importa de `app/` — temas gerados moram em
   `src/shared/styles/`.
 - i18n: 3 locales (`pt-BR`, `es-CL`, `en`) com chaves idênticas; `es-CL` é a referência.
-- Paleta: só os 6 tokens da spec §4. Nenhum hex novo fora deles.
+- Paleta: só os tokens da spec §4 — **5**, não 6: o `ámbar-aviso` não foi construído (D-P16).
+  Nenhum hex novo fora deles.
 - Gate de verificação frontend = `pnpm build` + `pnpm lint` + `pnpm test`, de `frontend/`.
 - Commits frequentes, mensagem em português, formato `feat/fix/docs(escopo): ...`.
 - Baseline esperada (Task 0 confirma): testes frontend verdes, git limpo sobre `463e715`.
@@ -336,7 +337,8 @@ git commit -m "feat(tema): temas Lara-Lotus gerados por script com guarda de dri
 ```css
 /* Camada fina de marca sobre o tema gerado (ADR-16 §5, spec §4).
  * Entra no bundle do Vite — depois do <link id="prime-theme"> no head,
- * então vence o tema por ordem de cascata. Cores SÓ dos 6 tokens da spec. */
+ * então vence o tema por ordem de cascata. Cores SÓ dos 5 tokens da spec §4
+ * (eram 6 no texto aprovado; o `ámbar-aviso` nunca foi construído — D-P16). */
 :root {
   --brand: #25A5E4;      /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
   --brand-navy: #0F2B3D; /* azul-poste — sidebar, texto do botão primário (D6) */

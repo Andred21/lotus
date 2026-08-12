@@ -50,7 +50,7 @@ linhas de origem ficam até o fechamento, pela regra do backlog.
 shell conforme (fim da exceção §4) e tipografia com papéis — provando cada correção pela medição
 que o review usou para reprovar.
 
-**Entra:** camada `brand-theme.css`; paleta de 6 tokens; 3 famílias tipográficas self-hosted;
+**Entra:** camada `brand-theme.css`; paleta de ~~6~~ **5** tokens (correção D-P16, §4); 3 famílias tipográficas self-hosted;
 dono único de título; sidebar navy fixa; header responsivo (UI-01); toggle oculto em compact
 (UI-02); focus ring visível (UI-03); wordmark legível no dark (UI-04); neutros numa família só;
 fim dos hex hardcoded; aria-labels do shell no i18n (UI-07, D4).
