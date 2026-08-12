@@ -112,7 +112,11 @@ export function SearchableTableFrame<T>({
             {filterSlot}
           </div>
         }
-        end={error ? undefined : actions}
+        // O CTA aparece na toolbar quando há linha e dentro do vazio quando não
+        // há: com a lista vazia o convite a cadastrar É o empty state, e dois
+        // botões idênticos na mesma tela é o débito. Irmã da supressão em erro,
+        // que já morava nesta linha.
+        end={error || table.rows.length === 0 ? undefined : actions}
       />
       <AppDataTable
         value={table.rows as unknown as DataTableValueArray}

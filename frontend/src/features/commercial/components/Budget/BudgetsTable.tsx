@@ -94,7 +94,8 @@ export function BudgetsTable({
             </div>
           </>
         }
-        end={loadError ? undefined : actions}
+        // Mesma regra da SearchableTableFrame; a adoção da moldura é o BD-4.
+        end={loadError || budgets.length === 0 ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
