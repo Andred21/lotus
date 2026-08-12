@@ -46,10 +46,13 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-3 → BD-4 → BD-5 → BD-6 → BD-7**. O **BD-1** foi entregue
+> Ordem entre blocos: **BD-3 → BD-4 → BD-5 → BD-6**. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
-> `## Débitos técnicos`. A ordem dentro de cada bloco é parte do bloco, não sugestão.
+> `## Débitos técnicos`. O **BD-7** foi entregue em 2026-08-12, **fora da ordem escrita e por
+> promoção explícita do João**, e saiu com o débito `last_login` que ele cobria; a retenção do dado
+> pessoal que a tabela nova passou a guardar ficou na **P-30**. A ordem dentro de cada bloco é parte
+> do bloco, não sugestão.
 
 ### BD-3 · Faixa visível e acessibilidade dos diálogos (fronteira `shared/ui`)
 
@@ -136,15 +139,6 @@ Ordem:
 `QuoteWizard.tsx:23` e hoje vive em `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que
 documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
 não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
-
-### BD-7 · `last_login`
-
-Cobre: **"`last_login` não existe"**.
-
-Feature de backend, não limpeza — por isso fica por último e não se mistura com os anteriores:
-coluna nova, captura no login, campo no `UserData`, regeneração de tipos e exposição na tela de
-Usuários. Conferido em 2026-08-10: zero ocorrência em `backend/app/` e em
-`backend/database/migrations/`.
 
 ### Fora dos BDs — travado em decisão do João
 
@@ -315,10 +309,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   das CSS vars do Lara. `AppHeader` não tem altura explícita e o logo usa `ml-15 h-30` (120 px).
   **Não corrigir sem decisão:** o João aprovou a aparência atual do shell (2026-07-26) e trocar por
   CSS var a mudaria. Registrado para que a divergência não seja lida como esquecimento.
-- **`last_login` não existe** — nenhuma ocorrência em `backend/app/` nem em
-  `backend/database/migrations/`; `UserData` não tem o campo. O "último acesso" que o protótipo mostra
-  na tela de Usuários exige coluna nova, captura no login e exposição no DTO. Task de backend, não
-  de UI.
 - Decidir assimetria entre camadas: a UI não consegue voltar a zero principais, mas o backend
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão
