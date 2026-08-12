@@ -28,6 +28,10 @@ export function ContactCard({
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">
           <label className="flex items-center gap-2 text-sm">
+            {/* Único controle que segue desabilitado em leitura (não convertido para
+                FormField/NestedField): rádio de contato principal não é valor truncado
+                e o estado já é legível pela marcação (spec §4.1). */}
+            {/* eslint-disable-next-line no-restricted-syntax */}
             <AppRadioButton
               name="primaryContact"
               checked={contact.is_primary}
@@ -59,10 +63,11 @@ export function ContactCard({
           <FormField
             label={t('client.contactName')}
             error={fieldErrors?.[`contacts.${index}.name`]?.[0]}
+            readOnly={readOnly}
+            value={contact.name}
           >
             <AppInputText
               value={contact.name}
-              disabled={readOnly}
               onChange={(e) => onPatch({ name: e.target.value })}
               className="w-full"
             />
@@ -70,10 +75,11 @@ export function ContactCard({
           <FormField
             label={t('client.contactJobTitle')}
             error={fieldErrors?.[`contacts.${index}.job_title`]?.[0]}
+            readOnly={readOnly}
+            value={contact.job_title ?? ''}
           >
             <AppInputText
               value={contact.job_title ?? ''}
-              disabled={readOnly}
               onChange={(e) => onPatch({ job_title: e.target.value })}
               className="w-full"
             />
@@ -81,10 +87,11 @@ export function ContactCard({
           <FormField
             label={t('common.email')}
             error={fieldErrors?.[`contacts.${index}.email`]?.[0]}
+            readOnly={readOnly}
+            value={contact.email ?? ''}
           >
             <AppInputText
               value={contact.email ?? ''}
-              disabled={readOnly}
               onChange={(e) => onPatch({ email: e.target.value })}
               className="w-full"
             />
@@ -92,10 +99,11 @@ export function ContactCard({
           <FormField
             label={t('common.phone')}
             error={fieldErrors?.[`contacts.${index}.phone`]?.[0]}
+            readOnly={readOnly}
+            value={contact.phone ?? ''}
           >
             <AppInputText
               value={contact.phone ?? ''}
-              disabled={readOnly}
               onChange={(e) => onPatch({ phone: e.target.value })}
               className="w-full"
             />

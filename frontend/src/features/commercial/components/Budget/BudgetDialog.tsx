@@ -53,10 +53,14 @@ export function BudgetDialog({
           />
         </FormField>
 
-        <FormField label={t('budget.paymentTerms')} error={fieldErrors?.payment_terms?.[0]}>
+        <FormField
+          label={t('budget.paymentTerms')}
+          error={fieldErrors?.payment_terms?.[0]}
+          readOnly={readOnly}
+          value={form.payment_terms ?? ''}
+        >
           <AppInputText
             value={form.payment_terms ?? ''}
-            disabled={readOnly}
             onChange={(e) => set('payment_terms', e.target.value)}
             className="w-full"
           />

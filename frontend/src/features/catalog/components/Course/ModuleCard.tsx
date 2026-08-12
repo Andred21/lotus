@@ -26,13 +26,12 @@ export function ModuleCard({
     <div className="space-y-3 rounded border border-slate-200 p-3 dark:border-slate-700">
       <div className="flex items-start gap-2">
         <span className="mt-2.5 text-xs font-semibold text-slate-500">{t('courseModule.itemLabel', { n: index + 1 })}</span>
-        <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]}>
+        <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]} readOnly={readOnly} value={module.name}>
           <div className="flex-1">
             <AppInputText
               placeholder={t('courseModule.namePlaceholder')}
               aria-label={t('courseModule.name')}
               value={module.name}
-              disabled={readOnly}
               onChange={(e) => onPatch({ name: e.target.value })}
               className="w-full"
             />
@@ -48,54 +47,77 @@ export function ModuleCard({
       </div>
 
       <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-        <NestedField error={fieldErrors?.[`modules.${index}.theory_hours`]?.[0]}>
+        {/* Legenda fica FORA do NestedField: ele não tem prop `label` (ao
+            contrário do FormField), e em leitura só `value` é montado — uma
+            legenda dentro de `children` sumiria junto do input. */}
+        <div>
           <span className="mb-1 block text-xs text-slate-500">{t('courseModule.theoryHours')}</span>
-          <AppInputText
-            aria-label={t('courseModule.theoryHours')}
+          <NestedField
+            error={fieldErrors?.[`modules.${index}.theory_hours`]?.[0]}
+            readOnly={readOnly}
             value={String(module.theory_hours)}
-            disabled={readOnly}
-            onChange={(e) => onPatch({ theory_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-            className="w-full"
-          />
-        </NestedField>
-        <NestedField error={fieldErrors?.[`modules.${index}.practice_hours`]?.[0]}>
+          >
+            <AppInputText
+              aria-label={t('courseModule.theoryHours')}
+              value={String(module.theory_hours)}
+              onChange={(e) => onPatch({ theory_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+              className="w-full"
+            />
+          </NestedField>
+        </div>
+        <div>
           <span className="mb-1 block text-xs text-slate-500">{t('courseModule.practiceHours')}</span>
-          <AppInputText
-            aria-label={t('courseModule.practiceHours')}
+          <NestedField
+            error={fieldErrors?.[`modules.${index}.practice_hours`]?.[0]}
+            readOnly={readOnly}
             value={String(module.practice_hours)}
-            disabled={readOnly}
-            onChange={(e) => onPatch({ practice_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
-            className="w-full"
-          />
-        </NestedField>
+          >
+            <AppInputText
+              aria-label={t('courseModule.practiceHours')}
+              value={String(module.practice_hours)}
+              onChange={(e) => onPatch({ practice_hours: Number(e.target.value.replace(/\D/g, '')) || 0 })}
+              className="w-full"
+            />
+          </NestedField>
+        </div>
         <span className="pb-2 text-sm text-slate-500">
           {t('courseModule.total', { hours: module.theory_hours + module.practice_hours })}
         </span>
       </div>
 
-      <NestedField error={fieldErrors?.[`modules.${index}.learnings`]?.[0]}>
+      <div>
         <span className="mb-1 block text-xs text-slate-500">{t('courseModule.learnings')}</span>
-        <AppTextarea
-          aria-label={t('courseModule.learnings')}
+        <NestedField
+          error={fieldErrors?.[`modules.${index}.learnings`]?.[0]}
+          readOnly={readOnly}
           value={module.learnings ?? ''}
-          disabled={readOnly}
-          rows={2}
-          onChange={(e) => onPatch({ learnings: e.target.value })}
-          className="w-full"
-        />
-      </NestedField>
+        >
+          <AppTextarea
+            aria-label={t('courseModule.learnings')}
+            value={module.learnings ?? ''}
+            rows={2}
+            onChange={(e) => onPatch({ learnings: e.target.value })}
+            className="w-full"
+          />
+        </NestedField>
+      </div>
 
-      <NestedField error={fieldErrors?.[`modules.${index}.contents`]?.[0]}>
+      <div>
         <span className="mb-1 block text-xs text-slate-500">{t('courseModule.contents')}</span>
-        <AppTextarea
-          aria-label={t('courseModule.contents')}
+        <NestedField
+          error={fieldErrors?.[`modules.${index}.contents`]?.[0]}
+          readOnly={readOnly}
           value={module.contents ?? ''}
-          disabled={readOnly}
-          rows={3}
-          onChange={(e) => onPatch({ contents: e.target.value })}
-          className="w-full"
-        />
-      </NestedField>
+        >
+          <AppTextarea
+            aria-label={t('courseModule.contents')}
+            value={module.contents ?? ''}
+            rows={3}
+            onChange={(e) => onPatch({ contents: e.target.value })}
+            className="w-full"
+          />
+        </NestedField>
+      </div>
     </div>
   )
 }
