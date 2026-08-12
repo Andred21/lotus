@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 function ReadOnlyValue({ value }: { value?: ReactNode }) {
   const empty = value === undefined || value === null || value === ''
   return (
-    <span className="block break-words text-sm" style={{ color: 'var(--text-color)' }}>
+    <span className="block wrap-break-word text-sm" style={{ color: 'var(--text-color)' }}>
       {empty ? '—' : value}
     </span>
   )
