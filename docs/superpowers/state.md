@@ -12,8 +12,8 @@ context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
-state_basis_commit: e2a251c
-updated_at: 2026-08-11T17:58:00-03:00
+state_basis_commit: b29f3b9
+updated_at: 2026-08-12T00:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +49,563 @@ updated_at: 2026-08-11T17:58:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-11 (`guardas-que-faltam`)
+## Item ativo — 2026-08-11 (`estilizacao-adr16-shell-tipografia`)
+
+### Seleção — 2026-08-11
+
+**Item 4 de "Próximos blocos" do `backlog.md`, promovido explicitamente pelo João** via
+`/planejar-bloco item 4 — Estilização · tema custom (ADR-16), shell e tipografia` com o estado em
+`idle` — o precedente é o de `turma-habilitacao-listagem` (item nomeado literalmente no argumento;
+o comando não promove sozinho). Como no BD-1, o item era proposta ainda não commitada, nascida na
+mesma sessão por instrução literal dele (`quero melhorar a estilização … e depois adicionamos no
+backlog e seguimos`): **a proposta foi commitada antes da promoção** (`b29f3b9`), sobre a base
+fresca de `origin/main` (`09a11d9`) — a edição original estava sobre base velha na branch
+`fix/detalhes-tabelas-interface` e foi portada, não mesclada (guardada em stash).
+
+**Escopo:** fechar o ADR-16 com tema custom sobre o Lara nos dois modos; shell com dono único de
+título, sidebar navy fixa, header responsivo, toggle oculto em compact; tipografia em 3 papéis;
+neutros numa família só e fim dos hex hardcoded. Evidência: review de UI do AppLayout de
+2026-08-11 (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt`, 2 C + 5 B) +
+análise de estilização com a lente `frontend-design`. **O item é a decisão que faltava** aos
+débitos "Shell fora de conformidade com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de
+1024px" (seção "Fora dos BDs" ganhou o ponteiro; as linhas de origem ficam até o fechamento).
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa:** as
+fontes são o repositório, o report em `.artifacts/`, o ADR-16 em `docs/adrs.md` e a direção
+registrada na memória da sessão de 2026-08-11 — o item não cita Drive, Notion nem Figma. O Figma
+**não** é fonte deste bloco de propósito: a direção é identidade própria aceita pelo João em
+2026-08-11, não implementação de protótipo. Dispensa a confirmar por ele na abertura do
+brainstorming, como nos precedentes.
+
+**Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
+branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
+`fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
+
+### Brainstorming e spec — 2026-08-11
+
+Dispensa do packet confirmada pelo João na abertura (D1). Entrevista fechou 8 decisões (D1–D8 da
+spec): fontes self-hosted em 3 famílias via `@fontsource`; UI-06 fica no BD-3; UI-07 entra;
+mecanismo do tema = `brand-theme.css` estático sobre o Lara (abordagem A, contra tema compilado e
+runtime JS); botão primário celeste com texto azul-poste por AA medido (~2.6:1 de branco sobre
+celeste reprova); radius 6→4px; review em duas frentes por tocar `locales/`. O João aprovou o
+design por seções (§1+§2, depois §3+§4) com a instrução literal `APROVADO — gravar spec`. A spec
+ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanças de shell mapeadas
+1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
+O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
+revisar a spec escrita e autorizar o `writing-plans`.
+
+### Spec aprovada e plano escrito — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. **A escrita do plano achou um defeito na
+spec aprovada e ele foi corrigido com decisão dele, não silenciado (lição 13):** o Lara compila as
+cores inline (97 ocorrências de `#3b82f6` nas regras de componente) e as vars de `:root` são um
+conjunto paralelo que as regras não consomem — a D5 original (override puro de tokens) **não**
+restilizaria botão, foco nem highlight. Nasce a **D5'**, aprovada pelo João: script versionado
+`frontend/scripts/generate-brand-theme.mjs` gera cópias dos 2 Lara com a escala celeste, os neutros
+gray→slate (corpo em grafite, ground dark em noche), radius 4px e `"Inter var"→"Inter"`, saída
+versionada em `src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
+a seta de dependência não sobe até `primeTheme.ts`), com teste vitest de drift; o
+`brand-theme.css` fica fino (D6, humo via `--surface-ground`, `tabular-nums`). A adenda D5' foi
+gravada na própria spec (§4) com a correção do §9.6.
+
+Plano em 8 tasks (0–7): baseline → fontes `@fontsource` + tokens Tailwind → temas gerados +
+guarda de drift → `brand-theme.css` + higiene de hex + foco (UI-03) → sidebar navy + toggle +
+aria i18n (UI-02/04/07) → header barra utilitária + tokens no shell (UI-01/05) → enmenda ADR-16 →
+gate pelas mesmas medições do report. Três desvios declarados no §Desvios do plano (focus ring
+tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados em slate).
+Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
+o Codex entra na segunda lente do review (spec §10). O estado transiciona para
+`ready_for_execution` no mesmo commit do plano.
+
+### Execução iniciada — 2026-08-11: o plano foi revisado contra o Lara instalado, e mudou
+
+O João autorizou com `/executar-bloco estilizacao-adr16-shell-tipografia`, com a instrução literal
+`Mas antes revise o plano e spec, verificando se esta de acordo`. O gate passou (spec, plano,
+branch e Git coerentes); a revisão pedida **não** foi de coerência documental — foi do plano contra
+o `node_modules/primereact` instalado, e achou **seis defeitos**, gravados como emenda no plano
+(D-P4..D-P9). É a mesma mecânica da lição 13 que produziu a D5': defeito achado na fase seguinte se
+corrige com decisão, não se silencia.
+
+Quatro entraram declarados por serem defeito ou implementação literal da spec: o script tinha de
+**remover** os `@font-face` do Lara (o rename `"Inter var"→"Inter"` os transformava numa face com
+`src` 404 competindo com a do `@fontsource`); a escala `--primary-50..900` não era tocada por
+nenhum dos dois mapas, então o arquivo afirmaria "sem azul Lara" carregando 20 hexes azuis; a
+guarda de drift conferia 3 hexes em vez da família; e sobravam cinzas (`#1f2937` no light,
+`#030712` no dark) contra a D-P3.
+
+**Duas mudavam o construído e foram decididas pelo João antes de qualquer linha de código.**
+**D-P8** — medi 9 blocos no Lara light pintando a primária com texto branco (`.p-button`, `.p-tag`
+2×, `.p-badge`, `.p-selectbutton`, `.p-togglebutton`, `.p-overlaypanel-close`, `.p-steps`,
+`.p-stepper`); depois do mapa isso é **2,77:1**, reprovando AA, e a cadeia de `:not()` do plano
+cobria só o botão — com `AppTag` usado em 9+ arquivos de feature. Ele escolheu tornar a D6
+propriedade do **tema gerado** (transform block-aware), matando a cadeia de `:not()`. **D-P9** — o
+anel de foco da D-P1 media ~1,4:1 sobre branco e o DoD §9.3 passaria verde com o foco invisível,
+que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visible` de 2px celeste.
+
+O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
+pulou e registrou como falha de processo.
+
+### Tasks 0–7 executadas — 2026-08-11: o código fechou, o checkpoint do João não
+
+As sete tasks estão implementadas e commitadas na `feat/estilizacao-adr16-shell-tipografia`:
+`f76ba67` (baseline), `c12a3bc` (fontes), `f54f6ff` (temas gerados), `b029ea8` (camada fina),
+`59e6e1d` (sidebar/i18n), `87442f4` (header/shell), `df781c6` (ADR-16 ponto 5), `6eead8e` (correção
+achada pelo próprio gate). Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Mais duas emendas nasceram DURANTE a execução, gravadas no plano** — nenhuma reabre decisão do
+João, as duas são a decisão dele aplicada onde ela vale. **D-P10**: a regra "mesmo bloco" da D-P8
+pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em outro — mais 7 declarações
+ficavam brancas sobre celeste. **D-P11**: o Step 6 da Task 3 esperava que o grep de `#25A5E4`
+devolvesse só o `SidebarItem`; devolveu três — `AppAvatar.tsx` pintava `#25A5E4`/`#fff` inline e o
+`brandOutline` mandava `dark:text-white` sobre celeste. Os dois são o par de 2,77:1 que a spec D6
+nomeia, dentro do bloco que existe para matá-lo.
+
+**Duas vezes a inspeção pegou o que os testes verdes não pegaram**, e é o padrão que a lição 13
+combate: 96 verdes não provam o arquivo certo. Na Task 2, `--primary-400` e `--primary-500` saíram
+com o mesmo hex e `--primary-color-text` ficou branco. Na Task 7, o grep de `ring-0` reprovou por um
+motivo que virou correção: o scanner do Tailwind lê comentário, achou o token no `//` que explicava
+a remoção da classe e **emitia a utility morta no bundle**.
+
+**Gate do bloco, medido no navegador com sessão real** (não mock): UI-01 `rightEdge` 378 e
+`scrollWidth` == 390; UI-02 zero `aside button` a 390, um a 1440, com a pref persistida intacta nos
+dois; UI-03 Tab real casando `:focus-visible` com `outline: solid 2px rgb(37,165,228)` **somado** ao
+anel do tema; UI-05 um heading por página. Mais: corpo em `Inter, sans-serif`, título em `Archivo`,
+`--surface-ground` humo/noche, sidebar `rgb(15,43,61)` nos dois temas, `--primary-color-text`
+azul-poste, radius 4px, `tabular-nums` nas células. Suíte **17 arquivos / 96 testes**, build e lint
+verdes, `generated.ts` sem diff, os quatro greps de higiene vazios.
+
+**O bloco PARA aqui, e o plano é quem manda parar.** O Step 4 da Task 7 é o checkpoint visual do
+João, declarado **bloqueante** ("sem aprovação dele o bloco não segue"), e o Step 5 é o re-run do
+`/lotus-ui-review`, que é invocação dele. Nada foi promovido a `ready_for_review`.
+
+**Três coisas para a decisão dele, achadas olhando as telas — a medição verde não pegaria nenhuma:**
+
+1. **O wordmark ficou ilegível (regressão do Step 4 da Task 4).** O asset é retrato **335×466**; com
+   o `h-8 w-auto` que o plano escreveu ele renderiza **23×32 px**. O `on-dark` resolveu a cor, que
+   era a UI-04; o tamanho errou para o outro lado do `h-30` anterior. Decisão de marca.
+2. **O toggle da sidebar é uma caixa branca sobre a navy no tema claro** (`rgb(255,255,255)`
+   medido). O `brandOutline` acompanha o tema; a sidebar deixou de acompanhar na Task 4. Contraste
+   passa, coerência não.
+3. **Celeste como traço ou texto sobre superfície clara segue reprovando.** A D6/D-P8 resolveu uma
+   direção — texto **sobre** celeste. A outra não tem decisão: o outline de foco mede **2,77:1**
+   sobre branco (e 5,29:1 sobre a navy, onde passa), o `brandOutline` claro mede 2,77:1, e as
+   variantes `outlined`/`text` do tema caíram de 3,68:1 (Lara stock) para 2,77:1. A D-P9 continua
+   certa — 1,4:1 → 2,77:1 é a diferença entre invisível e visível —; falta a decisão de cor.
+   Proposta: azul-poste como traço de foco no claro (13,4:1 sobre humo), celeste mantido no escuro.
+
+### Este arquivo foi reconstruído — 2026-08-12 (perda no merge `c9fb188`)
+
+**Não é reescrita de história: é conserto de uma perda medida, com os dois lados recuperáveis no
+Git.** O merge `c9fb188` ("fix: tailwind css applayout"), que trouxe a `origin/main` para dentro da
+branch, resolveu o `state.md` num híbrido que **nenhum dos dois pais tinha**: ficou com o
+frontmatter da main (`last_completed_work_item: integridade-e-concorrencia-backend`,
+`state_basis_commit: e2a251c`) e, ao mesmo tempo, apagou **as duas** narrativas — a seção
+`## Item ativo` deste bloco (144 linhas, vindas de `421e1c0`) **e** a seção do
+`integridade-e-concorrencia-backend` que a main tinha acabado de escrever (358 linhas, de
+`eca0e34`). O arquivo caiu de ~1170 para 812 linhas e passou a se contradizer: dizia no frontmatter
+que o último fechado era o `integridade` enquanto a seção "Último item fechado" era o
+`guardas-que-faltam`, e não havia registro nenhum do bloco em execução.
+
+Reconstrução, sem escolha por heurística — cada peça veio de um pai identificado:
+
+| Campo/seção | Origem | Por quê |
+|---|---|---|
+| `active_work_item`, `workflow_state`, `next_action`, `active_spec`, `active_plan` | branch (`421e1c0`) | é o bloco em execução; a main estava `idle` |
+| `last_completed_work_item: integridade-e-concorrencia-backend` | main (`eca0e34`) | fechou 18:00, depois do `guardas-que-faltam` — é o fato mais novo |
+| `state_basis_commit: b29f3b9` | branch (`421e1c0`) | é a base **deste** bloco, citada na própria seção Seleção; o `e2a251c` que o merge deixou é a base do bloco de backend |
+| `## Item ativo` (144 linhas) | branch (`421e1c0`) | restaurada literal |
+| `## Último item fechado — integridade` (358 linhas) | main (`eca0e34`) | restaurada literal, e a cadeia voltou a `Último → Penúltimo → Antepenúltimo` |
+
+Nenhuma linha foi reescrita de memória. O único texto novo é esta seção e a de baixo.
+
+### Checkpoint visual respondido — 2026-08-12: duas emendas, o bloco segue parado no João
+
+O João respondeu ao Step 4 da Task 7. **Aprovou a navy no header e na sidebar** ("o jeito que está
+atualmente está legal") e **fechou o achado nº 1** (logo): fica como está. Do retorno saíram duas
+emendas, executadas e commitadas em `1a0279d`, declaradas no plano:
+
+- **D-P12 — regressão de comportamento, achada por ele, não por teste.** Trocar o idioma parou de
+  reformatar hora e data; só mudava no reload. O `Clock` nunca se inscreveu no i18n — quem
+  re-renderizava era o `Header`, que tinha `t()` no título até a UI-05 dar essa posse ao
+  `PageHeader`. A suíte não tinha como ver: o formato continuava certo, só congelado. Corrigido na
+  origem (inscrição em quem depende dela) e coberto por `Clock.test.tsx`, que **foi rodado contra a
+  versão sem inscrição e reprovou** com a data congelada — o sintoma literal do relato.
+- **D-P13 — altura, texto branco e responsividade do header navy.** Altura real era 94px por causa
+  das margens de user-agent dos `<p>` (o projeto não carrega Preflight): 42px mortos em cada bloco.
+  Zeradas, o teto vira o avatar e a altura vira escolha — **o João fixou 80px no working tree
+  durante a execução, e o valor dele ficou**. Texto branco cravado no lugar dos tokens de tema, que
+  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. Variantes `onNavy*` no
+  `AppButton` **fecham também o achado nº 2** (toggle da sidebar como caixa branca). 7 larguras
+  medidas, de 1440 a 320: zero overflow horizontal.
+- **Reincidência da armadilha da UI-03 no mesmo bloco:** um comentário meu citou a classe de altura
+  antiga e o scanner do Tailwind emitiu a regra morta no bundle. Segunda vez. Reescrito e conferido
+  no `dist`.
+
+**O bloco continua parado, e continua parado no mesmo lugar:** `next_owner: joao`,
+`next_action: approve_visual_checkpoint`. O Step 4 é bloqueante e agora tem material novo para ele
+reaprovar; o Step 5 (`/lotus-ui-review`) é invocação dele. **Achado nº 3 segue sem decisão** —
+celeste como traço sobre superfície clara reprova 3:1 fora do shell (o shell aprovado hoje não é
+afetado, porque sobre a navy o celeste mede 5,29:1). Nada foi promovido a `ready_for_review`.
+
+## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
+
+### Seleção — 2026-08-11
+
+**BD-2 do `backlog.md`, promovido explicitamente pelo João.** Ele abriu a sessão com
+`/planejar-bloco ### BD-2 · Integridade e concorrência no backend`; o gate do comando **reprovou**
+pelo mesmo motivo do BD-1 na véspera — estado `idle`, `active_work_item` `null` e argumento que é
+título de seção, não slug promovido. A promoção veio da resposta dele ao gate, com uma escolha
+registrada: **manter os quatro itens do BD-2 na íntegra**, contra o recorte alternativo que teria
+deixado só os itens 1 e 2 (concorrência) e devolvido a dedução do `getRoleNames()` e os quatro
+testes ao backlog.
+
+**Nada precisou ser commitado antes de promover** — ao contrário do BD-1, cuja proposta nasceu no
+mesmo dia. O BD-2 já era durável em `ec3ad2a` e a árvore estava limpa em `09a11d9`, o merge do
+PR #38, que passa a ser o `state_basis_commit`.
+
+**BD-2 não é o item 1 de `## Próximos blocos`** — ali segue `Arquivados e restauração de
+soft-delete`, intocado desde o BD-1. A fila **não** foi renumerada: os BDs vivem na seção de dívida,
+paralela a `Próximos blocos`, e a ordem escrita entre eles (BD-2 → BD-7) está sendo seguida.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
+(mesmo caso de `guardas-que-faltam`, `turma-habilitacao-listagem`, `profundidade-backend-b4-b7` e
+`documentos-oficiais-template-e-docx`): nenhum dos quatro itens cita Drive, Notion ou Figma. As
+fontes são o próprio repositório e documentos versionados — `Q-16` em `backlog.md:302`, os débitos
+"Bloco 5.2a/5.2b (minors do review final)" em `backlog.md:356` e `:360`, e as specs arquivadas
+`specs/archive/2026-07-17-bloco5.2a-usuarios-design.md` e
+`specs/archive/2026-07-18-bloco5.2b-roles-permisos-design.md`. `context_packet: null`.
+
+**Toca backend → main tree, sem worktree (P-03).** Nenhum outro `active_work_item` de backend está
+aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
+`hardening/integridade-e-concorrencia-backend`, criada de `09a11d9`, no padrão de
+`hardening/guardas-que-faltam`.
+
+**Escopo, na ordem escrita do BD-2:** (1) `lockForUpdate()` no `Client` — não só na coleção — antes
+do `ensureSingle()`, nos **dois** serviços (`PrimaryContactService`, `PrimaryAddressService`) no
+mesmo commit; (2) unicidade de RUT/email do `UpdateStaffUserAction` para **dentro** da
+`DB::transaction`; (3) `UserData::fromModel` chamando `getRoleNames()` duas vezes; (4) os quatro
+testes que faltam — `SuperadminGuard` com outro superadmin **inativo**, auto-colisão de RUT/email no
+próprio update, o 422 de `role: redator` afirmando a **chave** e o error-bag de
+`CreateRoleAction`/`UpdateRoleAction`. **DoD do item 1 é sonda de concorrência real** (dois writes
+competindo), não teste sequencial verde.
+
+**Fora de escopo, declarado pelo próprio item:** a decisão do 5.2b sobre `GET /api/roles` enumerar
+permissão de superadmin — é do João, e está travada em `backlog.md:173`.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **`lockForUpdate()` é no-op silencioso na suíte.** `SQLiteGrammar::compileLock()` devolve `''`
+   (conferido no vendor) — nenhum teste sqlite pode provar serialização. O repo já sabia disso: o
+   `DeleteClientContactAction` (Q-5) escreve exatamente isso no comentário do lock que já carrega.
+2. **O repo já tem sonda de concorrência real, automatizada e versionada.**
+   `CertificateNumberTest:44` pula fora do MySQL, clona a conexão, sobe **dois processos** com
+   `Symfony\Process`, alinha os dois num gate e confirma pelo `performance_schema.data_lock_waits`
+   que ambos esperam pelo mesmo lock antes de commitar. É o `1 skipped` que a suíte reporta há
+   blocos. **Medido neste terreno, não herdado:** contra MySQL real (`lotus_test`), o arquivo dá
+   **3 passed (20 assertions)**, com o caso concorrente em 0,31s.
+3. **Os seis chamadores dos dois serviços de principal já abrem `DB::transaction`**
+   (`Create`/`UpdateClientAction`, `Create`/`UpdateClientContactAction`,
+   `Create`/`UpdateClientAddressAction`) — o lock nasce com efeito, sem tocar Action nenhuma.
+4. **O item 2 tem três sítios, não um.** Além do `UpdateStaffUserAction:34-38` que o débito nomeia,
+   `UpdateClientAction:29` e `UpdateRedatorAction:33` chamam `ensureRutAvailable` antes de abrir a
+   transação. Os irmãos `CreateStaffUserAction`, `UpdateStudentAction` e `CreateStudentAction` já
+   chamam de dentro — a inconsistência é entre Actions irmãs, não um caso isolado.
+5. **O item 3 não economiza query.** `getRoleNames()` faz `loadMissing('roles')` e a segunda chamada
+   lê a relação em cache (conferido no vendor do spatie). É dedução de `pluck`, não de `SELECT`, e a
+   spec diz isso em vez de vender ganho inexistente.
+6. **O banco de dev segue com o `LOT-2026-1001` corrompido de propósito** (`snapshot.aluno.name`
+   vazio, conferido em SQL cru), esperando o checkpoint visual do João. Nenhum passe deste bloco
+   roda `migrate:fresh --seed`.
+
+### Brainstorming e spec — 2026-08-11
+
+O João aprovou o desenho com a instrução literal `Aprovado`. O estado entra em `planning` no mesmo
+commit da spec; `active_plan` segue `null` até a leitura humana do documento e a escrita posterior do
+plano.
+
+**A medição que mudou o desenho, feita antes de escrever:** sonda contra o MySQL de dev
+(`REPEATABLE-READ`) mostrando que, depois de acordar do `lockForUpdate()` no `Client`, o `SELECT`
+comum de `ensureSingle()` **continua lendo o snapshot** — não enxerga o principal que a transação
+concorrente já commitou (`leitura comum: [..., "SONDA-A"]` contra `leitura com lock: [..., "SONDA-A",
+"SONDA-B"]`). O Q-16, ao pé da letra, entregaria mecanismo que promete e não fecha: a transação
+contaria 1 principal, faria o early-return e os dois sobreviveriam. O mutex é necessário e não
+suficiente.
+
+**Três decisões dele, respondidas antes de a spec existir** (D1, D2 e D3 da §2): o lock é **duplo**
+(mutex no `Client` mais leitura travada da coleção); a prova é **teste MySQL-only com o harness
+extraído** para `tests/Support/`, consumido também pelo `CertificateNumberTest` sem mudança de
+comportamento; e o item 2 entra nos **três** sítios medidos, com a conversão de violação de índice
+único em 422 **recusada** e registrada como limitação (a corrida de RUT/email segue subindo 500).
+
+**Efeito declarado no placar:** a suíte em sqlite passa de **1 para 3 skipped** — skip aqui é sinal
+honesto de caso que existe e roda onde o lock existe.
+
+**Risco de review declarado MÉDIO** (§8 da spec): nenhum gatilho de ALTO se aplica (sem schema,
+`generated.ts`, Sanctum, RBAC em produção, dinheiro, documento legal; `executor: claude`). Os dois
+gatilhos próprios são caminho de escrita auditado e concorrência que a suíte anula por construção.
+
+### Aprovação da spec e plano — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. O plano ativo
+(`docs/superpowers/plans/2026-08-11-integridade-e-concorrencia-backend.md`) decompõe o bloco em
+**7 tasks (0–6)**: baseline; harness extraído para `tests/Support/`; o lock (item 1) num commit só;
+unicidade dentro da transação nos três sítios (item 2); a dedução do `getRoleNames()` (item 3); os
+quatro testes que faltam (item 4); gate. O handoff fixa **`executor: claude`** — a Task 2 fecha por
+laço de medição contra MySQL com alinhamento de processos, e o modo de falha do desenho é um
+**deadlock**, que aparece como exit code do filho e precisa ser lido como sintoma de ordem de lock,
+não como flakiness a contornar com retry.
+
+**Baseline reconferido, não herdado:** backend **524 passed, 1 skipped (1963 assertions)**; contra
+MySQL real (`lotus_test`), `CertificateNumberTest` **3 passed (20 assertions)**. O plano projeta
+**532 passed / 3 skipped** em sqlite e **7 passed** no recorte de MySQL. O total de assertions é
+declarado como **registrado no gate, não projetado** — casos com laço de espera não têm contagem
+previsível.
+
+**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano). Os
+três que mudam decisão da spec:
+
+1. **O mutex sai do `ensureSingle` e vai para as Actions — cinco Actions mudam, não zero** (D-P1). A
+   §3.2 da spec põe as duas peças do lock dentro do serviço e afirma "Nenhuma Action muda". Medido
+   contra MySQL: nessa forma o mutex é tomado **depois** de a Action já ter escrito, o que inverte a
+   ordem dos locks e produz `SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying
+   to get lock` em `select * from clients ... for update`, matando um dos processos (exit 255) — em
+   produção, 500 para o perdedor. Com o mutex antes de qualquer escrita: 2 processos esperando, os
+   dois com exit 0, exatamente 1 principal. `CreateClientAction` fica de fora com a razão escrita no
+   código — o cliente nasce ali, não há concorrente disputando um id ainda não gerado.
+2. **O alinhamento é por `performance_schema`, não por marcador dentro do filho** (D-P3). Os dois
+   candidatos que a §3.3 nomeia não sobrevivem à exigência de o filho exercitar a **Action real**:
+   não há onde emitir marcador entre o mutex e a escrita, porque as duas coisas estão dentro de uma
+   chamada só. A saída medida: iniciar P1, esperar até ele estar **bloqueado** (o que só acontece
+   depois de ele ter tomado o mutex) e só então iniciar P2. Daí o harness ganhar mínimo explícito e
+   filtro de tabela opcional (D-P2) — P1 espera em `client_contacts` e P2 espera em `clients`.
+3. **O teste de `role: redator` prova a porta abrindo as outras, não afirmando a chave** (D-P9). A
+   §6 diz que ele "afirma a chave `role`"; medido no código, as três regras de `role` (`required`,
+   `exists:roles,name`, `Rule::notIn`) reprovam com a **mesma chave** e a **mesma mensagem** do
+   Laravel. Afirmar a chave não discrimina porta nenhuma — seria o defeito que o item 4 existe para
+   corrigir, reintroduzido dentro da correção. O que discrimina é asserir que a role `redator`
+   **existe** em `roles`, o que fecha a porta do `exists` e deixa só o `notIn` podendo recusar.
+
+**Nenhuma guarda extra nasce para a ordem dos locks, e a razão é medida** (D-P4): a própria sonda já
+reprova nas duas formas de quebrar o mecanismo — apagar o mutex deixa dois principais (a asserção
+final reprova) e movê-lo para depois da escrita mata o filho por deadlock (a asserção de exit code
+reprova). Varredura de código que tentasse provar a ordem seria promessa que a varredura não
+entrega, que é o risco central da §8.
+
+A auto-revisão do plano contra a spec ainda achou dois erros no próprio rascunho e os corrigiu antes
+de gravar: o Pint do gate alimentado por substituição de comando (lista vazia vira Pint sem
+argumento, que reformata o repositório inteiro) e a conferência do banco de dev lendo
+`certificates.number`, coluna que não existe — o nome real é `codigo`, conferido no schema.
+
+**Risco de review continua MÉDIO.** O foco é um só: a sonda realmente disputa, o vermelho foi visto
+sem o lock, e o harness extraído não afrouxou o caso do certificado. O review não roda
+automaticamente ao fim da Task 6.
+
+### Execução — 2026-08-11
+
+O João autorizou com `/executar-bloco integridade-e-concorrencia-backend`. Thread principal, main
+tree, sem worktree (P-03), do base `44db6ca`. Sete tasks (0–6), commit por task, revisão de task
+após cada commit delegável.
+
+Commits, na ordem do plano: `542e3cc` (Task 1, harness extraído para `tests/Support/`), `1c27647`
+(Task 2, o lock — Q-16), `2cf0250` (Task 3, unicidade dentro da transação nos três sítios),
+`2f0d756` (Task 4, `getRoleNames()` uma vez), `15f9fff` (Task 5, os quatro testes que faltam).
+Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Vermelho visto antes de cada correção, texto exato:**
+- Task 2 — sondas MySQL de `PrimaryConcurrencyTest`: `2 failed, 2 passed`, o array final
+  `['SONDA-B','SONDA-C']` contra o esperado `['SONDA-C']` — dois principais sobreviveram.
+- Task 3 — os três casos de `UniquenessInsideTransactionTest`: `3 failed`, `a unicidade de rut foi
+  checada FORA da transação que escreve`, `Failed asserting that 1 is identical to 2`.
+- Task 5 — quatro mutantes, quatro vermelhos: superadmin inativo, `esperava ValidationException: o
+  outro superadmin está inativo`; auto-colisão de RUT, `ValidationException: Este RUT já está
+  cadastrado.`; porta `redator`, `esperava ValidationException`; as duas Role Actions, `4 failed`,
+  `Failed asserting that an array has the key 'name'`/`'permissions'`.
+
+**Um desvio de execução, não de plano.** O implementador da Task 3 (subagent) morreu no meio do
+trabalho — a sessão anterior encerrou antes de ele rodar a verificação final e commitar. O
+controller recuperou o working tree (edições já feitas, sem commit), conferiu que batia byte a
+byte com o brief, e reproduziu o vermelho por conta própria via `git stash` das três Actions antes
+de aceitar o fix — não herdou a prova de ninguém. A Task 4 teve uma imprecisão do texto do plano: o
+Step 2 projetava `11 passed` para `StaffUserActionTest`, e o real, estável antes e depois da
+edição, é `10 passed (17 assertions)` — a task não toca arquivo de teste, então a contagem do plano
+estava simplesmente errada, não o código.
+
+**Gate reproduzido, Steps 1 e 2:** backend em sqlite `3 skipped, 532 passed (1983 assertions)`;
+contra MySQL real, filtro `CertificateNumberTest|PrimaryConcurrencyTest`, `7 passed (40
+assertions)`. Pint `passed` nos 20 arquivos fechados do bloco (conferidos contra `git diff
+--name-only main...HEAD -- '*.php'`, mesma lista). `typescript:transform` sem diff em
+`generated.ts`; `git diff main...HEAD` de `backend/database/` e `frontend/` vazio. Nenhuma sonda
+sobrevivente (`git status --porcelain` vazio, nenhum `SONDA`/`dd(`/`dump(` no diff de
+`backend/app/`). Banco de dev intocado: `LOT-2026-1001` segue corrompido.
+
+**O que o gate NÃO provou, sem maquiagem:** a corrida de unicidade de RUT/e-mail continua aberta —
+duas escritas concorrentes com o mesmo valor ainda colidem no índice único e sobem 500, não 422 (D3
+da spec, recusa registrada). E a suíte em sqlite segue sem enxergar lock nenhum:
+`SQLiteGrammar::compileLock()` é no-op, então tudo que prova o lock do item 1 é MySQL-only.
+
+**Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
+
+### Review de sprint — 2026-08-11: ALTO risco, duas lentes, 6 achados
+
+**ALTO RISCO pelo gate da skill, e a classificação divergiu da spec de propósito.** A §8 da spec
+declarou MÉDIO na escala dela, afirmando "sem RBAC em produção". O `/revisar-sprint` é binário e
+**três** gatilhos de ALTO se aplicam: o bloco toca RBAC (`UserData::fromModel` projetando
+`getRoleNames()`, as duas Role Actions, o `SuperadminGuard`), toca auth/identidade
+(`UpdateStaffUserAction`) e toca caminho de escrita auditado (as cinco Actions de Commercial). Duas
+lentes, portanto: Claude mais revisão independente do Codex.
+
+**Gate reproduzido, não herdado do relatório de execução:** backend em sqlite **3 skipped, 532
+passed (1983 assertions)** — bate com o registro da execução.
+
+**Órfãos: zero.** `ProbesMysqlConcurrency` tem os dois consumidores previstos (`CertificateNumberTest`,
+`PrimaryConcurrencyTest`); `Client::lockForWrite()` tem os cinco chamadores que a spec nomeia, e a
+sexta Action (`CreateClientAction`) carrega a razão escrita de não tomar o mutex; nenhuma sonda
+`SONDA-*` sobreviveu no diff de `backend/app/`.
+
+**A extração do harness não afrouxou nada.** Conferido linha a linha contra `09a11d9`: o
+`CertificateNumberTest` passa `count($processes)` e `'certificate_sequences'`, que reproduz o
+`WHERE ... OBJECT_NAME = 'certificate_sequences'` e o `>= count($processes)` da versão anterior. O
+`assertGreaterThanOrEqual(2, $waitingCount)` continua no arquivo.
+
+**Uma medição que NÃO virou achado, porque o código está certo.** O `lockForUpdate()` de
+`ensureSingle` **não escala para linhas de outros clientes** — era o risco real de o item 1
+serializar o sistema inteiro: sem índice, `SELECT ... WHERE client_id = ? AND is_primary = 1 FOR
+UPDATE` em InnoDB trava tudo que varre. Conferido no schema de `lotus_test`:
+`client_contacts_client_id_foreign` e `client_addresses_client_id_foreign` existem, então o lock fica
+na faixa do cliente.
+
+**A lente do Codex rodou em análise estática apenas** — o sandbox negou acesso ao Docker, então ele
+não executou suíte nenhuma. As duas lentes convergiram no Q-1 e no Q-5. O Codex achou sozinho o Q-2 e
+o Q-6; o Claude achou sozinho o Q-3 e o Q-4. Nenhum achado do Codex foi aceito sem conferência
+própria no código, e **duas sub-afirmações dele foram recusadas** (registradas abaixo do Q-5).
+
+**Uma conclusão da lente Claude estava errada e é corrigida aqui, não apagada.** A primeira passagem
+descartou `DeleteClientContactAction` como fonte de deadlock com o argumento de que ela nunca pede
+lock em `clients`, logo não fecha ciclo. O argumento ignora que o `lockForUpdate` dela adquire as
+linhas de `client_contacts` **incrementalmente durante a varredura**: ela pode segurar parte da
+coleção e bloquear no meio, numa linha que a outra transação já travou. Aí o ciclo existe. O Codex
+apontou, a releitura confirmou, e o achado entrou como Q-2. A leitura sobre `ClientController::destroy`
+continua válida no que ela afirmava (sem transação explícita, cada statement autocommita), mas isso
+não a inocenta — ver a segunda ocorrência do Q-2.
+
+**Os seis achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — o guard de lock-out de superadmin continua **check-then-act fora da
+   transação** (`UpdateStaffUserAction:30-32`, e `UserController:62` sem transação nenhuma), no mesmo
+   commit que moveu a unicidade para dentro pela razão oposta.
+2. **Q-2 🔴** *(Codex, verificado)* — **o mutex tem dois escritores que o ignoram**, e os dois estão
+   fora da lista de cinco Actions que o bloco tocou. `DeleteClientContactAction:32` trava a coleção
+   sem tomar o mutex antes: ordem invertida contra as Actions novas, com ciclo real por aquisição
+   incremental de lock, e o perdedor sai em `SQLSTATE[40001] ... 1213` (500). É **regressão do
+   bloco** — antes dele ninguém travava `clients`, então a inversão não existia. E o hook
+   `Client::booted deleting:40-47`, chamado por `ClientController::destroy:52` sem transação nem
+   mutex, enumera os filhos e apaga um a um: um `CreateClientContactAction` concorrente insere depois
+   da enumeração e o contato fica **ativo sob cliente arquivado**.
+3. **Q-3 🟡** *(Claude)* — a D-P7 do plano afirma que `RedatorDocumentRollbackTest` prova o descarte do
+   binário no caminho novo; o teste só injeta `RuntimeException` no segundo insert de `files`, depois
+   do check de RUT. O caminho que o bloco criou não tem caso.
+4. **Q-4 🟡** *(Claude)* — `PrimaryContactService` e `PrimaryAddressService` são idênticos byte a byte
+   depois de normalizar o nome da entidade, e o bloco acrescentou as **mesmas** dez linhas aos dois.
+5. **Q-5 🟢** *(Claude + Codex)* — `Client::lockForWrite()` devolve `void` e descarta o `->first()`: o
+   mutex é no-op indetectável quando o id não casa, além do no-op já documentado em sqlite.
+   **Duas sub-afirmações do Codex recusadas:** `null` produzindo `TypeError` é inalcançável pelos
+   quatro sítios de chamada — `client_id` é `foreignId()->constrained()`, NOT NULL; e o `withTrashed()`
+   aceitando cliente arquivado é a intenção escrita no docblock, não defeito do mutex.
+6. **Q-6 🟢** *(Codex, verificado)* — `ProbesMysqlConcurrency:104`: com `$table === null` o `WHERE` fica
+   só em `OBJECT_SCHEMA`, contando **qualquer** transação em espera no schema, sem correlação com os
+   processos filhos. As duas chamadas de `PrimaryConcurrencyTest` passam `null`, inclusive a de
+   `$minimum = 1` que existe para garantir que P1 já tomou o mutex antes de P2 subir.
+
+**Decisão do João (2026-08-11): os seis entram.** Corrigidos na mesma sessão do review.
+
+**Como cada correção foi provada — cada teste novo foi visto REPROVAR contra o código antigo,**
+um a um, revertendo só a linha que ele guarda:
+
+| Achado | Correção | Prova de que o teste discrimina |
+|---|---|---|
+| Q-1 | guard passa para dentro da `DB::transaction` da `UpdateStaffUserAction` e ganha `DeleteStaffUserAction`; `SuperadminGuard` troca `where('id','!=')->exists()` por `pluck` **travado do conjunto inteiro** — excluir o alvo do `FOR UPDATE` quebrava o mutex (T1 trava {B}, T2 trava {A}, sem conflito) | com o guard de volta para fora: `Failed asserting that 1 is identical to 2` no nível de transação |
+| Q-2 | `Client::lockForWrite()` na `DeleteClientContactAction`; `ClientController::destroy` passa por uma `DeleteClientAction` nova (transação + mutex) | sem o mutex no delete de contato, o filho **termina antes do commit do gate**; com `$client->delete()` cru, a sonda mede **0 contatos vivos** enquanto o escritor ainda espera — a cascata já tinha autocommitado, que é exatamente a janela do achado |
+| Q-3 | caso novo cobrindo a `ValidationException` de RUT duplicado no update do redator | trocando `catch (Throwable)` por `catch (RuntimeException)`: "objeto órfão ficou no bucket", com os outros três casos verdes |
+| Q-4 | regra única em `PrimaryCollectionService`; os dois services viram três linhas cada; `PrimaryConcurrencyTest` perde os três pares de helper e as duas cópias do caso MySQL | sem teste próprio — é estrutura, e a prova é a suíte inteira seguir verde com **uma** implementação |
+| Q-5 | `lockForWrite()` devolve o cliente travado, com `firstOrFail()`, e recusa cliente arquivado | com `first()`/`void` de volta: três casos do `ClientArchiveIntegrityTest` reprovam |
+| Q-6 | a sonda correlaciona por `PROCESSLIST_ID`, lido do `CONNECTION_ID()` que o filho imprime no handshake `READY` | **medido**: com uma sessão `mysql` CLI alheia bloqueada em `lotus_test`, a consulta antiga devolveu `1` e a correlacionada devolveu `0` |
+
+**Gate depois das correções:** sqlite **538 passed, 5 skipped (1999 assertions)**; MySQL real, os nove
+casos de sonda verdes (`PrimaryConcurrencyTest` com seis, `CertificateNumberTest` com três). Pint
+limpo nos arquivos tocados. Nenhum DTO mudou — `typescript:transform` não era necessário.
+
+**Uma consequência do Q-2 que exigiu fechar a outra ponta:** o mutex torna o arquivamento atômico,
+mas sozinho não impede o filho de nascer sob pai já arquivado — a requisição concorrente resolveu um
+cliente VIVO no binding de rota e só descobre o arquivamento depois. Por isso `lockForWrite()` recusa
+cliente arquivado: é uma decisão só, no único ponto por onde todos os escritores passam, em vez das
+quatro linhas repetidas em seis Actions que o Q-4 acabara de punir.
+
+### Gate de fechamento — 2026-08-11
+
+**Item 0 — o critério de aceite deste bloco, provado contra a API real e não herdado do review.** O
+DoD escrito é "dois writes competindo", então suíte verde não fecha item nenhum. O e2e rodou contra
+o banco de dev (MySQL), com sessão Sanctum por cookie e CSRF:
+
+| Prova | Resultado |
+|---|---|
+| cliente criado com **dois** contatos `is_primary=true` | **201** com **um** principal (o último por id, a regra escrita) |
+| rota nested `POST /clients/5/contacts` com principal já existente | **201**, o anterior rebaixado; SQL cru confirma 1 principal |
+| **20 `PUT` concorrentes** (10 rodadas, dois contatos do mesmo cliente disputando) | **200 nos 20**, invariante em **1 principal** em todas as rodadas |
+| espera de lock no caminho HTTP | `Innodb_row_lock_waits` **116 → 127** (delta **11** em 10 rodadas) e `SHOW ENGINE INNODB STATUS` **sem** seção de deadlock |
+| coleção de **endereços** (a subclasse nova do Q-4) | dois `POST` principais → 1 principal, mesma regra, um dono só |
+| **Q-2** — `DELETE /clients/6` concorrente com `POST .../contacts` | **204** e **422** `application/problem+json` (`Este cliente foi arquivado e não aceita mais alterações.`); **0 contatos vivos** sob o cliente arquivado em SQL cru |
+| **item 2** — `PUT /users/71` com o RUT de outro | **422** com `errors.rut`; SQL cru mostra o `name` **não** escrito (zero escrita parcial) |
+| item 2 — auto-colisão com o próprio RUT | **200** |
+| **Q-1** — `DELETE /users/1` (único superadmin) | **422** `Não é possível deixar o sistema sem superadmin ativo.` |
+| Q-1 — rebaixar o superadmin ativo com outro superadmin **inativo** no banco | **422**; role intacta em SQL — é o caso do item 4, medido onde o usuário vive |
+| **item 3** — projeção de roles | `role: "admin"` e `roles: ["admin"]` coerentes em todas as respostas de usuário |
+
+**A medição de espera de lock é o que separa este e2e de um teste sequencial disfarçado:** 20 writes
+paralelos que nunca se cruzassem passariam igual. As 11 esperas dizem que houve disputa real no
+caminho HTTP completo, e a ausência de deadlock diz que a ordem de locks da D-P1 se sustenta fora do
+harness.
+
+**Itens 1–5.** Backend **538 passed, 5 skipped (1999 assertions)** em sqlite. Contra MySQL real
+(`lotus_test`), `CertificateNumberTest|PrimaryConcurrencyTest` → **9 passed (48 assertions)**. Pint
+`{"tool":"pint","result":"passed"}` nos **29** `.php` do bloco (lista conferida contra `git diff
+--name-only main...HEAD -- '*.php'`, nunca por substituição de comando). `pnpm lint` limpo e `pnpm
+build` verde — o bloco não toca `frontend/`, e o diff vazio é a prova. `typescript:transform` **sem
+diff** em `generated.ts`. Código morto zero: `ProbesMysqlConcurrency` tem os dois consumidores
+previstos, `Client::lockForWrite()` tem **sete chamadores** — as sete Actions que escrevem sob cliente já
+existente, com `CreateClientAction` de fora carregando a razão escrita no código —,
+`PrimaryCollectionService` tem as duas subclasses, `DeleteClientAction`
+e `DeleteStaffUserAction` estão fiados nos controllers; `git status --porcelain` vazio e nenhuma
+sonda `SONDA`/`dd(`/`dump(` no diff de `backend/app/`.
+
+**Item 6 — leis.** Nenhuma contrariada: zero classe `Repository` em `backend/app/`, zero
+`CREATE TRIGGER`/`DB::unprepared` (as duas guardas do BD-1 seguem verdes), auditoria só na aplicação
+— o rebaixamento continua por instância, nunca por query builder —, `generated.ts` gerado e sem
+diff, Sanctum intocado, financeiro fora do bloco.
+
+**Item 7 — pendências.** Nenhum gatilho venceu: a **P-03** exige dois `active_work_item` de backend
+em paralelo (só houve um) ou 2026-10-31, e a **P-04** revisa em 2026-08-15. Nasceu a **P-29**: a
+corrida de unicidade **entre transações distintas** segue subindo 500, recusa registrada na D3 da
+spec e agora com gatilho próprio. Uma divergência de formato foi **reportada e não corrigida** — o
+ID `P-28` aparece **duas vezes** em `docs/pendencias.md` (a guarda da lição 13 e o fundo do
+certificado); renumerar quebra referência e é decisão do João.
+
+**O que o gate NÃO provou, sem maquiagem:** nada foi visto renderizado — o bloco é backend puro e o
+contrato HTTP saiu idêntico, então não há tela nova a conferir; a corrida de RUT/e-mail entre
+transações distintas continua em 500 (P-29); e a suíte em sqlite segue cega para lock
+(`SQLiteGrammar::compileLock()` é no-op), então **tudo** que prova o item 1 é MySQL-only — os 5
+skipped são isso, não cobertura ausente.
+
+**Duas mutações declaradas no banco de dev:** os registros criados pelo e2e (2 clientes, 3 usuários
+staff) foram removidos com `forceDelete` ao fim — `clients` vivos voltou a **4**, zero usuário
+`gate.*` —, restando **15** linhas de `audits` apontando para ids que não existem mais; e o
+`LOT-2026-1001` corrompido de propósito **segue lá**, conferido antes e depois, esperando o
+checkpoint visual do João. Nenhum passe rodou `migrate:fresh`. Registrado também que o João estava
+**usando a aplicação no navegador durante o gate** (foto e `PUT` no cliente 1, visto no log do
+nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre registros próprios.
+
+**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+## Penúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
 
 ### Seleção — 2026-08-10
 
