@@ -14,6 +14,8 @@
   },
   "common": {
     "language": "Idioma",
+    "toggleMenu": "Alternar menu",
+    "toggleTheme": "Alternar tema",
     "save": "Salvar",
     "cancel": "Cancelar",
     "close": "Fechar",
@@ -408,7 +410,7 @@
     "status": { "em_andamento": "Em curso", "habilitada": "Habilitada", "concluida": "Concluída" },
     "detail": {
       "back": "Voltar para Operação",
-      "notFound": "Turma não encontrada.",
+      "notFound": "Turma não encontrada",
       "relatedTo": "Orçamento {{budget}} · Cotação {{quote}}",
       "tabs": {
         "config": "Configuração",

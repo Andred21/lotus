@@ -14,6 +14,19 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "tailwindcss-primeui";
 
+/* Papéis tipográficos da marca (spec §5): sans = corpo, display = títulos,
+ * mono = dado técnico (folio, RUT, datas). Sobrescreve os tokens default do
+ * Tailwind v4 — `font-mono` existente passa a render IBM Plex Mono. */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Archivo', 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Camada fina de marca (tokens --brand/--brand-navy, foco visível). Fora de
+ * layer de propósito: precisa vencer o tema PrimeReact, que vem por <link>. */
+@import "./shared/styles/brand-theme.css";
+
 /* box-sizing previsível para as utilities de tamanho do Tailwind (w-*, p-*),
  * sem reintroduzir o reset de form controls que quebra o PrimeReact. */
 *,

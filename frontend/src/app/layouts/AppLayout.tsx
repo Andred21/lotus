@@ -5,7 +5,7 @@ import { Header } from './Header/Header'
 export function AppLayout() {
   // O tema é aplicado globalmente nos providers (useApplyTheme).
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-screen overflow-hidden bg-(--surface-ground)">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />

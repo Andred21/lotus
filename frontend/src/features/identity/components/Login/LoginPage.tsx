@@ -1,14 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { BRAND_COLOR, APP_VERSION } from "@shared/config/brand";
 import { LoginForm } from "./LoginForm";
-import { AppButton, AppLogo, LanguageMenu } from "@/shared/ui";
-import { useUiStore } from "@/shared/stores/uiStore";
+import { AppearanceControls, AppLogo } from "@/shared/ui";
 
 export function LoginPage() {
 
   const { t } = useTranslation();
-  const theme = useUiStore((s) => s.theme);
-  const toggleTheme = useUiStore((s) => s.toggleTheme);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row dark:bg-slate-900">
@@ -38,20 +35,10 @@ export function LoginPage() {
 
       <main className="relative flex items-center justify-center p-8 md:w-1/2 dark:bg-slate-900">
       
-        {/* idioma (ADR-15) + dark mode (ADR-16) */}
-        <div className="absolute top-4 right-4 flex gap-2 text-gray-400 text-sm select-none">
-
-          <LanguageMenu />
-
-          <AppButton
-            variant="brandIcon"
-            onClick={toggleTheme}
-            aria-label="Alternar tema"
-          >
-            <i className={`pi ${theme === "dark" ? "pi-sun" : "pi-moon"}`} />
-          </AppButton>
-          
-        </div>
+        {/* idioma (ADR-15) + dark mode (ADR-16): o par vem inteiro do
+            AppearanceControls. Aqui fica só o que é contexto do login — a
+            âncora no canto do painel e o `select-none` do rótulo. */}
+        <AppearanceControls className="absolute top-4 right-4 select-none" />
 
         <LoginForm />
 

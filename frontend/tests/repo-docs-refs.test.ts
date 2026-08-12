@@ -57,6 +57,15 @@ const CITACOES_DELIBERADAS: Record<string, string> = {
   '.claude/rules/generated-types.md::app/Data': 'a rule escreve "Não existe `app/Data`" — a negação é o conteúdo',
   'docs/README.md::app/Data': 'a lição 13 cita a pasta justamente por ela nunca ter existido',
   'docs/estrutura-monolito.md::src/Domains/': 'alternativa em aberto na lista [A CONFIRMAR FASE 2], não afirmação',
+  // Ledger local de execução: `.gitignore:21` o exclui por decisão e o CLAUDE.md
+  // §3 o cita como "OPCIONAL (se presente)". Ele existe só na máquina que está
+  // executando um bloco, então conferi-lo transforma estado local em critério:
+  // a guarda passava no main tree de 2026-08-11 (onde a execução o havia criado)
+  // e reprovava em worktree novo e em clone limpo. Medido em 2026-08-11, na
+  // abertura de `estilizacao-adr16-shell-tipografia`, com as três reprovando.
+  'CLAUDE.md::.superpowers/sdd/progress.md': 'ledger local gitignorado (.gitignore:21), declarado OPCIONAL no CLAUDE.md §3',
+  'INSTRUÇÕES-DO-PROJETO.md::.superpowers/sdd/progress.md': 'idem — nunca versionado, por decisão',
+  'docs/README.md::.superpowers/sdd/progress.md': 'idem — nunca versionado, por decisão',
 }
 
 /** Glob, placeholder e alternativa não são path conferível. */

@@ -1,0 +1,84 @@
+/* Camada fina de marca sobre o tema gerado (ADR-16 §5, spec §4).
+ * Entra no bundle do Vite — depois do <link id="prime-theme"> no head,
+ * então vence o tema por ordem de cascata. Cores SÓ dos 5 tokens da spec §4
+ * (eram 6 no texto aprovado; o `ámbar-aviso` nunca foi construído — D-P16).
+ *
+ * O que a D6 (texto navy sobre a primária) pedia AQUI mora hoje no tema
+ * gerado, por decisão do João (D-P8): a cadeia de `:not()` do rascunho cobria
+ * só `.p-button` e seria uma segunda fonte de verdade. */
+:root {
+  --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
+  --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
+
+  /* Traço de foco. O PADRÃO é celeste, e é o que vale no tema escuro inteiro
+   * (6,76:1 sobre o noche) e nas superfícies navy FIXAS do shell — que não
+   * acompanham o tema. São elas que impedem este token de ser só "navy no
+   * claro, celeste no escuro": a sidebar e o header são navy também no claro,
+   * e ali um traço navy seria foco invisível, pior que os 2,77:1 que o achado 3
+   * veio consertar. Quem pinta navy redeclara o traço no próprio elemento. */
+  --focus-stroke: var(--brand);
+
+  /* Tinta de marca: celeste quando ele é FUNDO (o preenchimento do escuro) e
+   * degrau 700 quando ele seria PRIMEIRO PLANO sobre superfície clara. É a
+   * mesma decisão do achado 3, aqui para a camada que o tema gerado não
+   * alcança — o `brandOutline` do AppButton é Tailwind, não CSS de tema, e
+   * sobreviveu ao transform pintando rótulo e borda a 2,77:1 no claro em 22
+   * call sites (UI-01 do review de 2026-08-12). O padrão é celeste porque no
+   * escuro o variant preenche de celeste e o rótulo vira navy. */
+  --brand-ink: var(--brand);
+
+  /* Traço do divisor. O AppDivider pinta o `::before` do componente Prime a
+   * partir daqui para que o call site nunca precise alcançar o pseudo-elemento
+   * (ADR-16 §3, Q-4 do review de 2026-08-12) — mesma mecânica do traço de foco
+   * acima: superfície que não acompanha o tema redeclara a variável, não a
+   * regra.
+   *
+   * O padrão é `--surface-d` porque é o hex que o Lara-Lotus já dá ao divisor
+   * nos dois temas (#e2e8f0 no claro, #334155 no escuro): trocar por
+   * `--surface-border` mudaria o tom no claro sem ninguém ter pedido. */
+  --divider-stroke: var(--surface-d);
+}
+
+/* Fundo claro = humo (spec §4). A var é consumida pelo shell (AppLayout);
+ * escopada ao claro para não vazar sobre o noche do tema dark gerado.
+ *
+ * `html:not(.dark)` é (0,1,1) e o `:root` acima é (0,1,0) — a sobrescrita do
+ * traço vale por especificidade, não por ordem. */
+html:not(.dark) {
+  --surface-ground: #f1f5f9;
+  /* Achado 3 (decisão do João, 2026-08-12): celeste como TRAÇO sobre claro mede
+   * 2,77:1 no branco e 2,53:1 no humo — reprova o 3:1 de elemento gráfico. O
+   * azul-poste mede 13,37:1 no humo. Aqui ele cabe porque é traço e não texto:
+   * não apaga a marca de lugar nenhum. No TEXTO a decisão foi outra (o degrau
+   * 700 da rampa), justamente para o celeste não sumir dos botões — ver o
+   * gerador do tema. */
+  --focus-stroke: var(--brand-navy);
+
+  /* No TEXTO/traço de marca a decisão é a mesma do gerador (`TINTA_CLARA`): o
+   * degrau 700 da rampa celeste, 5,88:1 no branco. Não é azul-poste de
+   * propósito — azul-poste no texto apagaria o celeste dos botões de marca em
+   * toda a aplicação para consertar contraste. Lido do tema para haver UMA
+   * fonte da tinta: `--primary-700` vale #186b94 nos dois temas gerados. */
+  --brand-ink: var(--primary-700);
+}
+
+/* D-P9: o foco do Lara é só um box-shadow tingido (`#b2dff5`, ~1,4:1 sobre
+ * branco) — o DoD passaria verde com o foco praticamente invisível, que é
+ * literalmente o UI-03. Este outline SOMA ao anel do tema em vez de
+ * substituí-lo, e `:focus-visible` mantém a regra no teclado (clique de mouse
+ * não acende).
+ *
+ * `:root ` na frente é especificidade, não escopo: o Lara zera o outline em 79
+ * regras da forma `.p-button:focus { outline: 0 none }` (0,2,0), e `*:focus-
+ * visible` (0,1,0) perderia. Com 0,2,0 empatamos e a ordem de origem decide —
+ * este arquivo é do bundle, que entra depois do <link> do tema. */
+:root :focus-visible {
+  outline: 2px solid var(--focus-stroke);
+  outline-offset: 2px;
+}
+
+/* Dado técnico alinha em coluna (spec §5): tabular-nums em toda célula de
+ * tabela — só afeta a largura dos algarismos, texto comum não muda. */
+.p-datatable .p-datatable-tbody > tr > td {
+  font-variant-numeric: tabular-nums;
+}

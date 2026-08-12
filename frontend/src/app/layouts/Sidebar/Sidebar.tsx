@@ -21,20 +21,39 @@ export function Sidebar() {
   const modules = NAV_MODULES.filter((m) => !m.permission || can(m.permission))
   const roleKey = roleSectionLabel(roles)
 
+  // Navy fixa nos DOIS temas (spec §6/UI-04): a sidebar é a assinatura e não
+  // acompanha o swap de tema — por isso não há dark: aqui.
+  //
+  // E é por não acompanhar que ela redeclara o traço de foco: o achado 3 pôs
+  // azul-poste no claro (13,37:1 sobre o humo), e azul-poste sobre esta navy
+  // seria foco invisível. Aqui vale celeste, que mede 5,29:1 sobre ela.
   return (
     <AppSidebar
-      className={`${collapsed ? 'w-20' : 'w-64'} border-slate-400 bg-gray-200 transition-all dark:border-slate-800 dark:bg-slate-900`}
+      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) [--focus-stroke:var(--brand)] transition-all`}
     >
-      <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-
-        {!collapsed && (
-          <AppLogo className="ml-15 h-30 w-auto" />
+      {/* Colapsada, a coluna empilha marca e toggle: lado a lado eles não cabem
+        * nos 80px do rail. Expandida, o toggle fica na ponta oposta ao logo. */}
+      <div
+        className={`flex px-4 py-5 ${collapsed ? 'flex-col items-center gap-4' : 'items-center justify-between'}`}
+      >
+        {/* Colapsada a marca é o glifo, não o wordmark reduzido: o asset é
+          * retrato e, na largura do rail, o texto "LOTUS" some. Sem isto o topo
+          * do rail ficava vazio — e como o colapso é imposto abaixo de 1024px,
+          * tablet e mobile não viam marca nenhuma em rota nenhuma (UI-06 do
+          * review de 2026-08-12). */}
+        {collapsed ? (
+          <AppLogo variant="glyph" className="h-9 w-auto" />
+        ) : (
+          <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />
         )}
 
-        <AppButton variant="brandIcon" onClick={toggle} aria-label="Alternar menu">
-          <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
-        </AppButton>
-
+        {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
+          * de girar em falso) é o que preserva a pref persistida (UI-02). */}
+        {!compact && (
+          <AppButton variant="brandIcon" onClick={toggle} aria-label={t('common.toggleMenu')}>
+            <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
+          </AppButton>
+        )}
       </div>
 
       {!collapsed && roleKey && (

@@ -145,11 +145,16 @@ não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCo
 Não entram em bloco porque executar sem decisão é escolher no lugar dele: **Q-6** (idioma canônico
 das `ValidationException` — PT em Commercial, ES em Operation, medido); **"Alunos · o dropdown de
 empresa depende de uma permissão de outro módulo"** (RBAC/spec); a decisão do **5.2b** sobre
-`GET /api/roles`; **"Toggle da sidebar sem efeito abaixo de 1024px"** (mantido por decisão de
-2026-07-27); **"Shell fora de conformidade com o ADR-16 §4"** (exceção aprovada); **"Decidir
-assimetria entre camadas"** (zero principais); **P-28** (fundo do certificado, aceito como está);
+`GET /api/roles`; **"Decidir assimetria entre camadas"** (zero principais); **P-28** (fundo do
+certificado, aceito como está);
 **P-02** (retenção da auditoria) e **P-05** (consolidar migrations), os dois com gatilho "antes de
 subir para produção".
+
+**Atualização 2026-08-12:** o toggle da sidebar e o shell ADR-16 §4 **saíram** — o bloco
+`estilizacao-adr16-shell-tipografia` os entregou (toggle ausente do DOM em compact com a pref
+persistida intacta; shell inteiro em tokens do tema e a exceção do ADR-16 §4 revogada no ponto 5 do
+próprio ADR). As duas linhas foram removidas daqui e de `## Débitos técnicos` no `/fechar-sprint`
+de 2026-08-12, pela regra de origem acima.
 
 ## Módulos ainda não implementados (feature, não ajuste visual)
 
@@ -295,20 +300,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   (`text-slate-500`, `text-slate-400` no `RoleDialog`, entre outros) — o D18 cortou o escopo em
   `shared/ui` + os 3 arquivos do D14 de propósito. Achado Minor do review final da Parte 4, não é
   esquecimento.
-- **Toggle da sidebar sem efeito abaixo de 1024px, corrompendo o estado persistido.** O D17 fez a
-  `Sidebar` forçar `collapsed` por media query sem escrever no `uiStore`, então abaixo de 1024px o
-  botão de toggle continua clicável, não muda nada na tela e ainda assim inverte o `sidebarCollapsed`
-  persistido — o usuário volta ao desktop com a sidebar no estado oposto ao que deixou. Trade-off
-  previsto e adiado de propósito pela Task 37 ("travar o toggle agora seria decisão nova"); achado
-  Important do review final da Parte 4, **João decidiu manter como está em 2026-07-27**. Saídas a
-  avaliar: esconder o toggle abaixo do breakpoint, ou desacoplar o colapso por viewport do estado
-  persistido.
-- **Shell fora de conformidade com o ADR-16 §4 — exceção deliberada.** `Sidebar.tsx` e
-  `AppLayout.tsx` usam pares Tailwind de cor hardcoded (`bg-gray-200 dark:bg-slate-900`,
-  `border-slate-400 dark:border-slate-800`, `bg-slate-50 dark:bg-slate-950`, `text-slate-400`) em vez
-  das CSS vars do Lara. `AppHeader` não tem altura explícita e o logo usa `ml-15 h-30` (120 px).
-  **Não corrigir sem decisão:** o João aprovou a aparência atual do shell (2026-07-26) e trocar por
-  CSS var a mudaria. Registrado para que a divergência não seja lida como esquecimento.
 - Decidir assimetria entre camadas: a UI não consegue voltar a zero principais, mas o backend
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão

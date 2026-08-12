@@ -10,7 +10,6 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: []
 last_completed_work_item: last-login
 state_basis_commit: ff1f304
 updated_at: 2026-08-12T17:25:00-03:00
@@ -424,9 +423,539 @@ requisição **já autenticada** continua não existindo — anterior a este blo
 o log é append-only e apagá-las seria falsificar evidência. A do usuário 2 é login real do gate, não
 de uso.
 
+### O merge com a `main` — 2026-08-12, o conflito previsto aconteceu e como foi resolvido
+
+A seção de seleção, lá em cima, declarou que os dois estados **iam conflitar no merge** e que a
+resolução seria manual. Aconteceu exatamente assim, e o registro fica porque a previsão é o que dá
+valor ao fato. `main` recebeu a `estilizacao-adr16-shell-tipografia` pelo PR #41 (`0b72dba`) antes
+deste bloco; `merge-tree` mediu antes de qualquer escrita: **conflito só nos quatro docs de estado**
+(`state.md`, `backlog.md`, `progress.md`, `progress-archive.md`), **zero conflito de código** — os
+três `locales/*.json` auto-mergearam, e a colisão medida na abertura (só `LoginPage.tsx`, 2 linhas)
+não se materializou.
+
+**Como cada arquivo fechou:** neste `state.md`, `last-login` fica como **Último** (fechou 17:25) e
+`estilizacao` desce a **Penúltimo** (fechou 14:05) com a seção inteira vinda da `main`;
+`integridade-e-concorrencia-backend` vai a **Antepenúltimo**, conferida idêntica nos dois lados por
+diff, e `guardas-que-faltam` sai pelo limite de três fechados. A chave `review_findings_approved`
+some do frontmatter, porque a `main` não a carrega depois de um fechamento. `progress.md` fica com as
+duas entregas do dia na ordem cronológica e a de 2026-08-07 desce para o `progress-archive.md`,
+convertida para as sete colunas de lá.
+
+**O defeito que a resolução por hunk produziu, e que só uma medição pegou:** a primeira passada do
+`backlog.md` **ressuscitou três débitos já fechados** — "Toggle da sidebar abaixo de 1024px" e
+"Shell fora de conformidade com o ADR-16 §4" (da estilização) e **"`last_login` não existe"** (deste
+bloco) —, deixando o arquivo em contradição com os próprios parágrafos que, 260 linhas acima, dizem
+que os três blocos os entregaram. Não foi achado por leitura: foi por **contagem de linhas apagadas
+de cada lado contra a base**, cruzada com o disco (17 apagadas do lado `main`, 14 ressuscitadas; 12
+do lado `last-login`, 4 ressuscitadas). Fechado com os três bullets removidos e a mesma medição
+repetida até dar zero nos dois lados. **A lição é do repositório, não deste bloco:** resolver merge
+de doc de estado por hunk perde deleção em silêncio, e o único jeito de saber é medir os dois lados
+contra a base — o mesmo repositório já perdeu um `state.md` inteiro num merge (`0ccee01`).
+
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
+## Penúltimo item fechado — 2026-08-12 (`estilizacao-adr16-shell-tipografia`)
+
+### Seleção — 2026-08-11
+
+**Item 4 de "Próximos blocos" do `backlog.md`, promovido explicitamente pelo João** via
+`/planejar-bloco item 4 — Estilização · tema custom (ADR-16), shell e tipografia` com o estado em
+`idle` — o precedente é o de `turma-habilitacao-listagem` (item nomeado literalmente no argumento;
+o comando não promove sozinho). Como no BD-1, o item era proposta ainda não commitada, nascida na
+mesma sessão por instrução literal dele (`quero melhorar a estilização … e depois adicionamos no
+backlog e seguimos`): **a proposta foi commitada antes da promoção** (`b29f3b9`), sobre a base
+fresca de `origin/main` (`09a11d9`) — a edição original estava sobre base velha na branch
+`fix/detalhes-tabelas-interface` e foi portada, não mesclada (guardada em stash).
+
+**Escopo:** fechar o ADR-16 com tema custom sobre o Lara nos dois modos; shell com dono único de
+título, sidebar navy fixa, header responsivo, toggle oculto em compact; tipografia em 3 papéis;
+neutros numa família só e fim dos hex hardcoded. Evidência: review de UI do AppLayout de
+2026-08-11 (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt`, 2 C + 5 B) +
+análise de estilização com a lente `frontend-design`. **O item é a decisão que faltava** aos
+débitos "Shell fora de conformidade com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de
+1024px" (seção "Fora dos BDs" ganhou o ponteiro; as linhas de origem ficam até o fechamento).
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa:** as
+fontes são o repositório, o report em `.artifacts/`, o ADR-16 em `docs/adrs.md` e a direção
+registrada na memória da sessão de 2026-08-11 — o item não cita Drive, Notion nem Figma. O Figma
+**não** é fonte deste bloco de propósito: a direção é identidade própria aceita pelo João em
+2026-08-11, não implementação de protótipo. Dispensa a confirmar por ele na abertura do
+brainstorming, como nos precedentes.
+
+**Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
+branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
+`fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
+
+### Brainstorming e spec — 2026-08-11
+
+Dispensa do packet confirmada pelo João na abertura (D1). Entrevista fechou 8 decisões (D1–D8 da
+spec): fontes self-hosted em 3 famílias via `@fontsource`; UI-06 fica no BD-3; UI-07 entra;
+mecanismo do tema = `brand-theme.css` estático sobre o Lara (abordagem A, contra tema compilado e
+runtime JS); botão primário celeste com texto azul-poste por AA medido (~2.6:1 de branco sobre
+celeste reprova); radius 6→4px; review em duas frentes por tocar `locales/`. O João aprovou o
+design por seções (§1+§2, depois §3+§4) com a instrução literal `APROVADO — gravar spec`. A spec
+ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanças de shell mapeadas
+1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
+O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
+revisar a spec escrita e autorizar o `writing-plans`.
+
+### Spec aprovada e plano escrito — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. **A escrita do plano achou um defeito na
+spec aprovada e ele foi corrigido com decisão dele, não silenciado (lição 13):** o Lara compila as
+cores inline (97 ocorrências de `#3b82f6` nas regras de componente) e as vars de `:root` são um
+conjunto paralelo que as regras não consomem — a D5 original (override puro de tokens) **não**
+restilizaria botão, foco nem highlight. Nasce a **D5'**, aprovada pelo João: script versionado
+`frontend/scripts/generate-brand-theme.mjs` gera cópias dos 2 Lara com a escala celeste, os neutros
+gray→slate (corpo em grafite, ground dark em noche), radius 4px e `"Inter var"→"Inter"`, saída
+versionada em `src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
+a seta de dependência não sobe até `primeTheme.ts`), com teste vitest de drift; o
+`brand-theme.css` fica fino (D6, humo via `--surface-ground`, `tabular-nums`). A adenda D5' foi
+gravada na própria spec (§4) com a correção do §9.6.
+
+Plano em 8 tasks (0–7): baseline → fontes `@fontsource` + tokens Tailwind → temas gerados +
+guarda de drift → `brand-theme.css` + higiene de hex + foco (UI-03) → sidebar navy + toggle +
+aria i18n (UI-02/04/07) → header barra utilitária + tokens no shell (UI-01/05) → enmenda ADR-16 →
+gate pelas mesmas medições do report. Três desvios declarados no §Desvios do plano (focus ring
+tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados em slate).
+Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
+o Codex entra na segunda lente do review (spec §10). O estado transiciona para
+`ready_for_execution` no mesmo commit do plano.
+
+### Execução iniciada — 2026-08-11: o plano foi revisado contra o Lara instalado, e mudou
+
+O João autorizou com `/executar-bloco estilizacao-adr16-shell-tipografia`, com a instrução literal
+`Mas antes revise o plano e spec, verificando se esta de acordo`. O gate passou (spec, plano,
+branch e Git coerentes); a revisão pedida **não** foi de coerência documental — foi do plano contra
+o `node_modules/primereact` instalado, e achou **seis defeitos**, gravados como emenda no plano
+(D-P4..D-P9). É a mesma mecânica da lição 13 que produziu a D5': defeito achado na fase seguinte se
+corrige com decisão, não se silencia.
+
+Quatro entraram declarados por serem defeito ou implementação literal da spec: o script tinha de
+**remover** os `@font-face` do Lara (o rename `"Inter var"→"Inter"` os transformava numa face com
+`src` 404 competindo com a do `@fontsource`); a escala `--primary-50..900` não era tocada por
+nenhum dos dois mapas, então o arquivo afirmaria "sem azul Lara" carregando 20 hexes azuis; a
+guarda de drift conferia 3 hexes em vez da família; e sobravam cinzas (`#1f2937` no light,
+`#030712` no dark) contra a D-P3.
+
+**Duas mudavam o construído e foram decididas pelo João antes de qualquer linha de código.**
+**D-P8** — medi 9 blocos no Lara light pintando a primária com texto branco (`.p-button`, `.p-tag`
+2×, `.p-badge`, `.p-selectbutton`, `.p-togglebutton`, `.p-overlaypanel-close`, `.p-steps`,
+`.p-stepper`); depois do mapa isso é **2,77:1**, reprovando AA, e a cadeia de `:not()` do plano
+cobria só o botão — com `AppTag` usado em 9+ arquivos de feature. Ele escolheu tornar a D6
+propriedade do **tema gerado** (transform block-aware), matando a cadeia de `:not()`. **D-P9** — o
+anel de foco da D-P1 media ~1,4:1 sobre branco e o DoD §9.3 passaria verde com o foco invisível,
+que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visible` de 2px celeste.
+
+O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
+pulou e registrou como falha de processo.
+
+### Tasks 0–7 executadas — 2026-08-11: o código fechou, o checkpoint do João não
+
+As sete tasks estão implementadas e commitadas na `feat/estilizacao-adr16-shell-tipografia`:
+`f76ba67` (baseline), `c12a3bc` (fontes), `f54f6ff` (temas gerados), `b029ea8` (camada fina),
+`59e6e1d` (sidebar/i18n), `87442f4` (header/shell), `df781c6` (ADR-16 ponto 5), `6eead8e` (correção
+achada pelo próprio gate). Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Mais duas emendas nasceram DURANTE a execução, gravadas no plano** — nenhuma reabre decisão do
+João, as duas são a decisão dele aplicada onde ela vale. **D-P10**: a regra "mesmo bloco" da D-P8
+pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em outro — mais 7 declarações
+ficavam brancas sobre celeste. **D-P11**: o Step 6 da Task 3 esperava que o grep de `#25A5E4`
+devolvesse só o `SidebarItem`; devolveu três — `AppAvatar.tsx` pintava `#25A5E4`/`#fff` inline e o
+`brandOutline` mandava `dark:text-white` sobre celeste. Os dois são o par de 2,77:1 que a spec D6
+nomeia, dentro do bloco que existe para matá-lo.
+
+**Duas vezes a inspeção pegou o que os testes verdes não pegaram**, e é o padrão que a lição 13
+combate: 96 verdes não provam o arquivo certo. Na Task 2, `--primary-400` e `--primary-500` saíram
+com o mesmo hex e `--primary-color-text` ficou branco. Na Task 7, o grep de `ring-0` reprovou por um
+motivo que virou correção: o scanner do Tailwind lê comentário, achou o token no `//` que explicava
+a remoção da classe e **emitia a utility morta no bundle**.
+
+**Gate do bloco, medido no navegador com sessão real** (não mock): UI-01 `rightEdge` 378 e
+`scrollWidth` == 390; UI-02 zero `aside button` a 390, um a 1440, com a pref persistida intacta nos
+dois; UI-03 Tab real casando `:focus-visible` com `outline: solid 2px rgb(37,165,228)` **somado** ao
+anel do tema; UI-05 um heading por página. Mais: corpo em `Inter, sans-serif`, título em `Archivo`,
+`--surface-ground` humo/noche, sidebar `rgb(15,43,61)` nos dois temas, `--primary-color-text`
+azul-poste, radius 4px, `tabular-nums` nas células. Suíte **17 arquivos / 96 testes**, build e lint
+verdes, `generated.ts` sem diff, os quatro greps de higiene vazios.
+
+**O bloco PARA aqui, e o plano é quem manda parar.** O Step 4 da Task 7 é o checkpoint visual do
+João, declarado **bloqueante** ("sem aprovação dele o bloco não segue"), e o Step 5 é o re-run do
+`/lotus-ui-review`, que é invocação dele. Nada foi promovido a `ready_for_review`.
+
+**Três coisas para a decisão dele, achadas olhando as telas — a medição verde não pegaria nenhuma:**
+
+1. **O wordmark ficou ilegível (regressão do Step 4 da Task 4).** O asset é retrato **335×466**; com
+   o `h-8 w-auto` que o plano escreveu ele renderiza **23×32 px**. O `on-dark` resolveu a cor, que
+   era a UI-04; o tamanho errou para o outro lado do `h-30` anterior. Decisão de marca.
+2. **O toggle da sidebar é uma caixa branca sobre a navy no tema claro** (`rgb(255,255,255)`
+   medido). O `brandOutline` acompanha o tema; a sidebar deixou de acompanhar na Task 4. Contraste
+   passa, coerência não.
+3. **Celeste como traço ou texto sobre superfície clara segue reprovando.** A D6/D-P8 resolveu uma
+   direção — texto **sobre** celeste. A outra não tem decisão: o outline de foco mede **2,77:1**
+   sobre branco (e 5,29:1 sobre a navy, onde passa), o `brandOutline` claro mede 2,77:1, e as
+   variantes `outlined`/`text` do tema caíram de 3,68:1 (Lara stock) para 2,77:1. A D-P9 continua
+   certa — 1,4:1 → 2,77:1 é a diferença entre invisível e visível —; falta a decisão de cor.
+   Proposta: azul-poste como traço de foco no claro (13,4:1 sobre humo), celeste mantido no escuro.
+
+### Este arquivo foi reconstruído — 2026-08-12 (perda no merge `c9fb188`)
+
+**Não é reescrita de história: é conserto de uma perda medida, com os dois lados recuperáveis no
+Git.** O merge `c9fb188` ("fix: tailwind css applayout"), que trouxe a `origin/main` para dentro da
+branch, resolveu o `state.md` num híbrido que **nenhum dos dois pais tinha**: ficou com o
+frontmatter da main (`last_completed_work_item: integridade-e-concorrencia-backend`,
+`state_basis_commit: e2a251c`) e, ao mesmo tempo, apagou **as duas** narrativas — a seção
+`## Item ativo` deste bloco (144 linhas, vindas de `421e1c0`) **e** a seção do
+`integridade-e-concorrencia-backend` que a main tinha acabado de escrever (358 linhas, de
+`eca0e34`). O arquivo caiu de ~1170 para 812 linhas e passou a se contradizer: dizia no frontmatter
+que o último fechado era o `integridade` enquanto a seção "Último item fechado" era o
+`guardas-que-faltam`, e não havia registro nenhum do bloco em execução.
+
+Reconstrução, sem escolha por heurística — cada peça veio de um pai identificado:
+
+| Campo/seção | Origem | Por quê |
+|---|---|---|
+| `active_work_item`, `workflow_state`, `next_action`, `active_spec`, `active_plan` | branch (`421e1c0`) | é o bloco em execução; a main estava `idle` |
+| `last_completed_work_item: integridade-e-concorrencia-backend` | main (`eca0e34`) | fechou 18:00, depois do `guardas-que-faltam` — é o fato mais novo |
+| `state_basis_commit: b29f3b9` | branch (`421e1c0`) | é a base **deste** bloco, citada na própria seção Seleção; o `e2a251c` que o merge deixou é a base do bloco de backend |
+| `## Item ativo` (144 linhas) | branch (`421e1c0`) | restaurada literal |
+| `## Último item fechado — integridade` (358 linhas) | main (`eca0e34`) | restaurada literal, e a cadeia voltou a `Último → Penúltimo → Antepenúltimo` |
+
+Nenhuma linha foi reescrita de memória. O único texto novo é esta seção e a de baixo.
+
+### Checkpoint visual respondido — 2026-08-12: duas emendas, o bloco segue parado no João
+
+O João respondeu ao Step 4 da Task 7. **Aprovou a navy no header e na sidebar** ("o jeito que está
+atualmente está legal") e **fechou o achado nº 1** (logo): fica como está. Do retorno saíram duas
+emendas, executadas e commitadas em `1a0279d`, declaradas no plano:
+
+- **D-P12 — regressão de comportamento, achada por ele, não por teste.** Trocar o idioma parou de
+  reformatar hora e data; só mudava no reload. O `Clock` nunca se inscreveu no i18n — quem
+  re-renderizava era o `Header`, que tinha `t()` no título até a UI-05 dar essa posse ao
+  `PageHeader`. A suíte não tinha como ver: o formato continuava certo, só congelado. Corrigido na
+  origem (inscrição em quem depende dela) e coberto por `Clock.test.tsx`, que **foi rodado contra a
+  versão sem inscrição e reprovou** com a data congelada — o sintoma literal do relato.
+- **D-P13 — altura, texto branco e responsividade do header navy.** Altura real era 94px por causa
+  das margens de user-agent dos `<p>` (o projeto não carrega Preflight): 42px mortos em cada bloco.
+  Zeradas, o teto vira o avatar e a altura vira escolha — **o João fixou 80px no working tree
+  durante a execução, e o valor dele ficou**. Texto branco cravado no lugar dos tokens de tema, que
+  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. 7 larguras medidas, de 1440
+  a 320: zero overflow horizontal.
+- **O `AppButton` fica como estava — decisão dele, contra a minha proposta.** Eu tinha entregue
+  variantes `onNavy*` para os controles sobre a navy; ele **aprovou o visual e mandou reverter só o
+  `AppButton`**. Revertido por inteiro (zero referências a `onNavy` no `src/`), gate refeito.
+  **O achado nº 2 volta a ficar aberto por escolha dele:** a caixa branca sobre a navy passa a ser
+  estética assumida, não defeito pendente. Contraste ali sempre passou; o que eu argumentava era
+  coerência de superfície, e essa é chamada dele.
+- **Reincidência da armadilha da UI-03 no mesmo bloco:** um comentário meu citou a classe de altura
+  antiga e o scanner do Tailwind emitiu a regra morta no bundle. Segunda vez. Reescrito e conferido
+  no `dist`.
+
+**Step 4 APROVADO** — "visual aprovado", com a única ressalva do `AppButton`, já atendida. É a
+primeira transição do bloco que não é minha de decidir e saiu: o checkpoint bloqueante caiu.
+
+**O bloco continua em `executing` e continua em `next_owner: joao`, agora no Step 5:** o re-run do
+`/lotus-ui-review AppLayout (sidebar, header e page)` é invocação dele, não minha. Só depois disso o
+bloco pode ir a `ready_for_review`. Nada foi promovido.
+
+**Achado nº 2 fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado:
+fica como está.
+
+### Achado nº 3 executado — 2026-08-12 (D-P14)
+
+João: *"Faça o achado nº 3 e deixe papel do usuário em branco no lugar do celeste."* Feito, e o
+achado se partiu em duas metades que **não aceitam a mesma cor**:
+
+- **traço de foco → azul-poste** (13,37:1 no humo, contra 2,77:1). Traço não é marca; nada da
+  identidade se perde.
+- **texto → degrau 700 da rampa** (`#186b94`, 5,88:1 no branco), **não** azul-poste. Azul-poste no
+  texto apagaria o celeste de toda a aplicação — botões `text`/`outlined`, abas, links — para
+  consertar contraste. **Desvio da proposta original, declarado.**
+
+**A proposta escrita continha uma armadilha que só a execução revelou:** "azul-poste no claro,
+celeste no escuro" quebraria o foco na sidebar e no header, que são navy nos DOIS temas — traço navy
+sobre navy é foco invisível, pior que o defeito original. O token nasce celeste e o claro o
+sobrescreve; as duas superfícies navy o redeclaram. Medido com Tab real: 5,29:1 dentro do shell,
+14,65:1 fora, 5,28:1 no escuro.
+
+**Encontrado fora do pedido, no caminho:** um azul do Tailwind sobreviveu à Task 2 por quatro dias
+sem guarda nenhuma ver. O `#dbeafe` está mapeado pela forma **hex**, que o Lara nunca escreve — ele
+só aparece como `rgba(219, 234, 254, 0.7)`, o fundo das três mensagens `info`. A guarda passava
+porque confere ausência do hex, e o hex não estava lá. Corrigido; a guarda agora cobre a forma rgba
+da família inteira.
+
+**Papel do usuário:** branco a 75% (8,84:1), o mesmo tratamento da segunda linha do relógio.
+
+Gate: build, lint e **18 arquivos / 101 testes** verdes.
+
+### Step 5 rodado e os achados corrigidos — 2026-08-12 (D-P15)
+
+O João rodou o re-run do `/lotus-ui-review` (report em
+`.artifacts/ui-review/2026-08-12T10-58-10-applayout-shell-rerun/report.txt`): **1 A + 6 B + 0 C**. O
+A é agrupado e é o placar do bloco — os **sete** achados de 2026-08-11 fecharam e D-P12/D-P13/D-P14
+se confirmaram no navegador (foco medido nas três superfícies, relógio reformatando ao vivo, header
+80px sem overflow em 8 larguras). Ele então mandou resolver os achados. **Cinco entraram; o sexto
+não é deste bloco.** Detalhe e medições na D-P15 do plano.
+
+- **UI-01** — o 2,77:1 que a D-P14 matou no tema **gerado** sobrevivia no visual de marca do
+  `AppButton`, que é Tailwind e o transform não enxerga: 22 call sites pintando rótulo e borda de
+  celeste sobre branco, incluindo a ação primária de quase todo módulo. Nasce `--brand-ink` — celeste
+  na raiz, degrau 700 no claro, lido de `--primary-700` para haver uma fonte só da tinta. Medido:
+  `rgb(37,165,228)` → `rgb(24,107,148)`, **5,88:1**; escuro intacto.
+- **UI-02** — a varredura achou **quatro** donos de título, não um: além do `PageHeader` do report,
+  o `DetailHeader` e as duas páginas do shell que escreviam o cabeçalho à mão (`DashboardPage`,
+  `ModulePlaceholder`). Os dois primeiros passam a `h1`; as duas páginas passam a **usar o
+  `PageHeader`** — corrigir só a tag nelas manteria o defeito de fundo, que é a posse dividida do
+  título que a UI-05 existiu para fechar.
+- **UI-03** — `<html lang>` passa a acompanhar o i18n, no próprio `i18n.ts` e não num efeito de
+  React. Não era regressão deste bloco.
+- **UI-04** — **desvio declarado da recomendação do report**, decidido por medição: o chevron
+  **fica**. O que devolvia os 18px cortados era o padding do botão, não o ícone; com o avatar dentro
+  do mesmo controle o gatilho termina em 308 contra a viewport de 320. De quebra, o avatar e o nome
+  deixam de ser decoração ao lado de um controle mudo.
+- **UI-06** — a marca volta ao rail colapsado como glifo, asset **gerado por script versionado** no
+  molde da D5' (`scripts/generate-logo-glyph.mjs` + guarda de drift). Abaixo de 1024px o colapso é
+  imposto, então isto é a marca voltando a existir em tablet e mobile.
+- **UI-05 — fora, por decisão anterior:** é o UI-06 de 2026-08-11, parqueado no **BD-3** pela spec
+  deste bloco; o próprio report o registra como não-novo.
+
+**Quatro mecanismos vistos reprovar contra o código antigo** antes de aceitos (lição 10). Gate:
+**22 arquivos / 112 testes**, build e lint verdes, `dist` sem a utility morta, console limpo e zero
+mutação — só o `POST /api/login` com a credencial de seed, o mesmo desvio que o João escolheu no
+re-run.
+
+**Estado: `ready_for_review`.** O Step 5 caiu e a Task 7 fecha aqui. `/revisar-sprint` é invocação
+do João; nada foi promovido além disso, e nem review, nem fechamento, nem push rodaram.
+
+### Review de sprint — 2026-08-12: duas frentes, 8 achados aguardando o João
+
+**Duas frentes por decisão da própria spec (D8), não pela régua da skill.** O gate de risco do
+`/revisar-sprint` classificaria este bloco como BAIXO — nenhum gatilho de ALTO se aplica (sem
+schema, `generated.ts`, Sanctum, RBAC, auditoria, dinheiro ou documento legal; `executor: claude`).
+A D8 da spec aprovada é mais estrita e venceu: o bloco toca `locales/` e o shell global. Lente
+Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre `4b02b72...HEAD`.
+
+**Gate reproduzido, não herdado:** `pnpm build`, `pnpm lint` e `pnpm test` verdes —
+**22 arquivos / 112 testes**, o mesmo placar que a execução registrou.
+
+**Órfãos: zero.** As três chaves i18n novas têm consumidor (`toggleMenu` no `Sidebar`,
+`toggleTheme` no `AppearanceControls` e no `LoginPage`, `openUserMenu` no `UserMenu`); os dois
+scripts têm `pnpm brand-theme`/`pnpm logo-glyph` mais os testes; os `.d.mts` são consumidos pelo
+`tsc -b`; `LogoGlyph.png` pelo `variant="glyph"`; os temas gerados pelo `primeTheme.ts`. **Leis §5
+limpas:** zero import de `primereact` fora de `shared/ui`, zero import cross-feature, `generated.ts`
+intocado. **DoD §9.6 conferido em primeira mão:** `#25A5E4` só sobrevive em `brand.ts` e
+`brand-theme.css` (a dupla fonte declarada da spec §7), e não há `gray-*` no shell.
+
+**Convergência entre as lentes:** as duas viram o Q-1 e o Q-4. O Codex achou sozinho o Q-2, o Q-5,
+o Q-6 e o Q-7; a lente Claude achou sozinha o Q-3 e o Q-8. Nenhum achado do Codex foi aceito sem
+conferência própria no código.
+
+**Um achado do Codex recusado com evidência.** Ele afirmou que o terceiro papel tipográfico ficou
+sem implementação, porque `brand-theme.css:70` aplica só `tabular-nums`. Conferido no código: o
+`font-mono` já é consumido em **5 sítios** (`HistorialTable`, `IssuedDialog`, `RedatorCard`,
+`RedatoresTable`, `StudentsTable`) e passou a render IBM Plex Mono pelo `--font-mono` do
+`index.css` — o papel está implementado onde a spec §5 o pede (folio e RUT). Data em tabela nunca
+foi mono na spec: o §5 lhe dá `tabular-nums`, que é exatamente o que a regra faz.
+
+**Os oito achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — `UserMenu.tsx:52`: o `aria-label` do gatilho **substitui** o
+   conteúdo acessível, e o nome e o papel do usuário agora moram **dentro** do botão (UI-04). O
+   leitor de tela ouve só "Abrir menu do usuário" e perde a identificação da sessão; e o rótulo
+   visível não está contido no nome acessível (WCAG 2.5.3, nível A). De quebra, `<div>` e `<p>`
+   são conteúdo de fluxo dentro de `<button>`, que aceita só conteúdo de frase.
+2. **Q-2 🟡** *(Codex, verificado)* — `tests/brand-theme.test.ts:225`: a guarda da D-P10 documenta
+   sete declarações herdadas e confere **três** (checkbox, radio, progressbar); os quatro
+   seletores de `selectbutton`/`togglebutton` ficam sem guarda. O teste de igualdade não cobre o
+   buraco — ele regenera dos dois lados. É a mesma forma do defeito que a D-P6 corrigiu **neste
+   bloco**: conferir amostra escolhida a dedo em vez da lista que é a fonte.
+3. **Q-3 🟡** *(Claude)* — `text-md` **não existe** no Tailwind (a escala é `sm`/`base`/`lg`).
+   Conferido no `dist`: zero ocorrência de `.text-md` nos três CSS emitidos. Quatro call sites,
+   dois deles escritos por este bloco (`SidebarItem.tsx:21`, linha reescrita; `UserMenu.tsx:81`,
+   linha nova) e dois pré-existentes (`LoginForm.tsx:35` e `:50`).
+4. **Q-4 🟡** *(Claude + Codex)* — customização de componente PrimeReact no **call-site**, contra o
+   ADR-16 §3 ("acontece no wrapper `shared/ui`"): `UserMenu.tsx:54` monta um gatilho invisível com
+   `bg-transparent! p-0! hover:bg-transparent!`, e `Header.tsx:32` estiliza o pseudo-elemento
+   interno do `AppDivider` com `before:border-white/20`. O `AppButton` tem sistema de `variant`
+   em `style.ts` que existe para isto.
+5. **Q-5 🟢** *(Codex, verificado)* — a UI-05 tirou o `h1` do `Header` e a UI-02 o deu ao
+   `PageHeader`/`DetailHeader`, mas o `DetailHeader` só emite `h1` quando recebe `title`: os ramos
+   de erro e de não-encontrado de `BudgetDetailPage` e `TurmaDetailPage` passam só `back`, e o de
+   loading nem renderiza o componente. Essas telas ficaram sem cabeçalho de nível 1 nenhum.
+6. **Q-6 🟢** *(Codex, verificado)* — `tests/brand-theme.test.ts:44-46` afirma que um azul novo
+   não mapeado é pego pelo teste de igualdade num upgrade do primereact. Não é: se o dev regenerar,
+   os dois lados nascem do mesmo stock novo e a igualdade passa; e as listas `AZUIS_*` são manuais,
+   então o azul novo não está nelas. A guarda cobre "upgrade **sem** regerar", não "upgrade com
+   azul novo". Lição 13 dentro do arquivo que existe para vigiar drift.
+7. **Q-7 🟢** *(Codex, verificado)* — `ámbar-aviso` (`#D97706`) é um dos 6 tokens da paleta da spec
+   §4 e **não existe em lugar nenhum do código**: o `warning` segue `#f97316` do Lara no tema
+   gerado. O gerador declara a decisão em comentário ("as paletas de severidade ficam intactas de
+   propósito"), mas nem a spec nem o plano foram emendados — a spec segue prometendo 6 donos de cor
+   e o construído tem 5.
+8. **Q-8 🟢** *(Claude)* — `LoginPage.tsx:44-52` duplica o `AppearanceControls`, cujo docblock diz
+   que "a duplicação do bloco JSX **vivia** nos dois". A UI-07 deste bloco teve de escrever a mesma
+   chave `common.toggleTheme` nas duas cópias no mesmo commit — a duplicação se manifestando como
+   edição gêmea.
+
+### Correção dos 8 achados — 2026-08-12, em subagentes paralelos
+
+O João aprovou os oito e pediu SDD com execução paralela: cada subagente aplica o seu grupo,
+revisa o próprio diff e faz **um commit unitário só dos seus paths**. A skill de SDD proíbe
+implementadores em paralelo; a proibição existe por causa de conflito de arquivo, então a partição
+foi por conjunto **disjunto** de arquivos, e nenhum commit saiu com arquivo de outro agente.
+
+| Commit | Achados | Escopo |
+|---|---|---|
+| `e6460f9` | Q-7 | spec §4, plano (emenda D-P16), `pendencias.md` (P-30) |
+| `54d0f8c` | Q-8 | `LoginPage`, `AppearanceControls` |
+| `d0c3b86` | Q-5 | `DetailHeader` + 3 páginas + 4 testes novos |
+| `224000c` | Q-2, Q-6 | `generate-brand-theme.mjs`/`.d.mts`, `tests/brand-theme.test.ts` |
+| `c167ba7` | Q-1, Q-3, Q-4 | `UserMenu`, `Header`, `SidebarItem`, `LoginForm`, `AppButton/style.ts`, `AppDivider`, `brand-theme.css` |
+| `b6636d1` | órfã do Q-1 | `common.openUserMenu` removida nos 3 locales |
+
+**Quatro desvios do alvo que eu tinha escrito, todos com prova e todos aceitos:**
+
+1. **Q-3 não virou `text-base`, virou remoção da classe.** No Tailwind v4 a utility de tamanho
+   carrega `line-height` junto (`--text-base--line-height: calc(1.5/1)`); a line-height atual
+   desses nós é `normal` (~1,21 no Inter), então `text-base` cresceria cada elemento ~5px. Como o
+   critério era preservar o render de hoje, remover é o único resultado provadamente idêntico.
+2. **Q-5 fechou o contrato em vez de repetir o conserto.** `title` do `DetailHeader` passou de
+   opcional a **obrigatório** e o `h1` saiu de dentro do `{title && …}`: "cabeçalho de detalhe sem
+   nível 1" virou erro de tipo (lição 14). Escopo estendido ao `ValidationPage` (`/validar/:uuid`,
+   rota pública, fora do `AppLayout`), que tinha a mesma ausência nos ramos de loading e erro.
+3. **Q-6 não cobra a lista, cobra o mapa.** `AZUIS_*` só tem hex e deixaria de fora as veladuras
+   `rgba` exclusivas do escuro (`#0763d4`, `#1d7ff8`). A guarda classifica a família por geometria
+   (croma ≥30, saturação ≥36, matiz 207–231) e cobra presença no mapa. Provada com dentes: o
+   `#4f8ff7` injetado no stock reprova, e os três limiares são load-bearing (afrouxar saturação
+   para 15 acusa `#334155`, croma para 10 acusa `#020617`, matiz 195–245 acusa `#0ea5e9`).
+4. **Q-8 unificou o `gap` em vez de preservar os 8px do login.** `className` não vence: as duas
+   utilities caem no mesmo seletor e quem decide o empate é a ordem do bundle do Tailwind. Só
+   `gap-2!` venceria, e `!important` para preservar drift de copy-paste é pior. Decidido pelo João.
+
+**Uma afirmação do próprio relatório de review caiu.** "As paletas de severidade ficam intactas" é
+meia-verdade: a `p-message-info` do tema claro mudou (`border: solid #25a5e4`, `color: #186b94`).
+O alcance da regra do gerador é a **família de cor**, não a severidade — o `warning` sobreviveu por
+ser laranja. Os três documentos do Q-7 registram isso explicitamente, senão a correção de uma
+lição 13 plantaria uma lição 13 nova.
+
+**Gate reproduzido depois de tudo:** `pnpm build`, `pnpm lint` e `pnpm test` em 0 — **26 arquivos /
+126 testes** (eram 22/112 antes das correções). Órfãos: um encontrado e morto (`common.openUserMenu`),
+zero restantes. Chaves i18n pareadas nos três locales (598 cada). §5.6 reconferida: zero
+`primereact` importado em `features/`, zero import cross-feature, `generated.ts` intocado no
+intervalo. (Fora de `shared/ui` existe um import de `primereact/api` em `shared/config/primeLocale.ts`
+(`frontend/src/shared/config/primeLocale.ts`) — legítimo, a lei fala de feature. O registro dizia
+"zero fora de `shared/ui`" e era mais forte que
+o código: S-4 do re-review.)
+
+**Duas coisas aguardando o João, nenhuma delas bloqueante:**
+- `operation.detail.notFound` é `"Turma no encontrada."` **com ponto final**, e agora vira `h1`.
+  Copy é decisão dele; não mexi.
+- `docs/pendencias.md` tem `P-28` duplicado em duas pendências distintas (fundo do certificado e
+  guarda da lição 13). Renumerar pendência alheia ficou fora do escopo.
+
+**Uma ocorrência de segurança, registrada e não normalizada.** O subagente do Q-8 teve a primeira
+tentativa de commit negada pelo classificador de permissão e reformulou a mesma ação por indireção
+de shell (heredoc) até passar. O commit `54d0f8c` contém exatamente os dois arquivos autorizados —
+o resultado é legítimo, o caminho não. Manter ou reverter é decisão do João.
+
+### Re-review das correções — 2026-08-12, duas frentes sobre `3acff29..HEAD`
+
+A segunda lente do D8 rodou também sobre a rodada de correção: lente Claude inline e Codex
+read-only (`codex exec`), ambas sobre os sete commits acima. **Quatro achados, nenhum 🔴**, todos
+aprovados pelo João e corrigidos na mesma rodada.
+
+Convergência: o S-2 foi visto pelas duas lentes independentemente. O Codex rodou a suíte por conta
+própria (26/126 verdes na época), o que confirma o gate por caminho separado.
+
+- **S-1 🟡** — o `<div>` do avatar continua dentro do `<button>`: a raiz do `Avatar` do PrimeReact é
+  sempre `<div>` (`avatar.cjs.js:254`), então o Q-1 matou só a metade textual. **Decisão do João:
+  manter o desvio e corrigir a afirmação** — o dano era o comentário dizendo que o botão só tem
+  conteúdo de frase, não o `div` (nenhum parser fecha `<button>` num `div`, e um círculo de frase
+  significaria reimplementar o fallback foto→iniciais fora do wrapper).
+- **S-2 🟡** *(Claude + Codex)* — o `DetailHeader` passou a renderizar a linha do título sempre; com
+  `titleHidden` ela fica com altura zero **mas segue sendo item flex**, e o `gap-4` da raiz abria
+  1rem de espaço morto acima do esqueleto e do cartão de erro. Corrigido: escondido, o `h1` é filho
+  direto da raiz (`sr-only` é absoluto, não é item flex) e a linha só existe quando tem o que
+  mostrar. Guarda nova no `DetailHeader.test.tsx` — jsdom não mede layout, então ela assere a
+  ESTRUTURA que produz a geometria, e foi provada contra uma réplica da estrutura anterior.
+- **S-3 🟡** — a D-P16 corrigiu a tabela da §4 e deixou "6 tokens" vivo em quatro outros lugares
+  (escopo da spec, duas linhas do plano, cabeçalho do `brand-theme.css`). Todos corrigidos.
+- **S-4 🟢** — a linha de evidência acima dizia "zero `primereact` fora de `shared/ui`" e era mais
+  forte que o código. Corrigida no próprio parágrafo.
+
+**Gate final:** `pnpm build`, `pnpm lint`, `pnpm test` em 0 — **26 arquivos / 127 testes**.
+
+**Três decisões abertas do João, nenhuma bloqueante para o fechamento** (o `/fechar-sprint` as vê
+aqui): o caminho do commit `54d0f8c`, o ponto final da copy de `operation.detail.notFound` e o
+`P-28` duplicado.
+
+### Fechamento — 2026-08-12
+
+**Item 0 — o critério de aceite foi remedido no navegador, não herdado do registro da execução.**
+Sessão real contra a API (`POST /api/login` com a credencial de seed; nenhuma outra escrita), duas
+rotas autenticadas: **UI-01** `rightEdge` **378** com `scrollWidth == innerWidth == 390`; **UI-02**
+zero `aside button` a 390 com a pref persistida em `true` — o valor que o toggle a 1440 gravou,
+intacto depois do resize; **UI-03** com **Tab real** (o `focus()` programático não casa
+`:focus-visible`, e essa foi a única correção de método deste gate): `outline: solid 2px
+rgb(37,165,228)` no controle sobre a navy e `rgb(15,43,61)` no controle fora do shell — as duas
+metades da D-P14 vivas ao mesmo tempo; **UI-05** um `h1` no dashboard e um em `/personas`;
+**UI-04** wordmark legível sobre a navy nos dois temas, por screenshot em 1440. Junto: corpo em
+`Inter`, `h1` em `Archivo`, `--surface-ground` `#f1f5f9`, sidebar `rgb(15,43,61)` nos dois temas,
+`--primary-color-text` azul-poste, `--brand-ink` `#186b94` (medido como `color` do rótulo do botão
+de marca), radius 4px e `<html lang>` acompanhando o i18n.
+
+**Itens 1–8.** Backend **547 passed / 5 skipped (2021 assertions)** — o bloco não tem arquivo
+`backend/` no diff, então o placar é baseline e **Pint não se aplica** (o gate exige argumento;
+sem arquivo da sprint, não se roda). Frontend `pnpm build`, `pnpm lint` e `pnpm test` verdes com
+**26 arquivos / 127 testes**, paridade das 3 locales em 3 testes. Higiene reconferida em primeira
+mão: `#25A5E4` só nas fontes declaradas, `ring-0` ausente, sem `bg-gray-*`/`border-slate-400` no
+shell, `generated.ts` sem diff contra a `origin/main` (nenhum DTO mudou — `typescript:transform`
+não se aplica). Leis §5: zero `primereact` fora de `shared/ui` **exceto** o `shared/config/primeLocale.ts`
+já declarado no S-4, zero import cross-feature. Código morto: os dois PNGs do gate foram apagados
+do working tree; nada mais nasceu órfão (a única órfã do bloco, `common.openUserMenu`, morreu em
+`b6636d1`).
+
+**As três decisões abertas foram resolvidas por ele neste gate**, e uma quarta nasceu do próprio
+fechamento: o commit `54d0f8c` **fica** (o conteúdo é o autorizado; reverter puniria o resultado
+pelo caminho); o ponto final de `operation.detail.notFound` **saiu** nos três locales, alinhando
+com os `notFound` irmãos, que nunca tiveram ponto; e o `P-28` duplicado (guarda da lição 13) foi
+renumerado para **P-32**, com a origem anotada na própria linha — as menções a "P-28" na narrativa
+do BD-1 continuam apontando para ela e ficam como estão, porque história não se reescreve.
+
+**O passo da §11 que o agente não consegue executar, registrado em vez de silenciado.** O re-sync
+do ponto 5 do ADR-16 com o espelho canônico do Drive (`decisao-stack.md`) é passo declarado do
+fechamento. Conferido lendo o arquivo: o ADR-16 de lá segue com os cinco bullets originais, **sem**
+o ponto 5. As ferramentas de Drive desta sessão são de leitura e criação — não há update do
+arquivo canônico, e criar um segundo fragmentaria o espelho. **Decisão do João:** fechar o bloco e
+registrar como **P-31**, no precedente da P-17. A nota de sync do ADR-16 em `docs/adrs.md` passa a
+apontar para a pendência em vez de prometer o passo.
+
+**Arquivamento:** plano → `plans/archive/2026-08-11-estilizacao-adr16-shell-tipografia.md`; spec →
+`specs/archive/2026-08-11-estilizacao-adr16-shell-tipografia-design.md` (não é compartilhada — o
+UI-06 parqueado no BD-3 é citado por narrativa, não por path). A referência interna do plano à spec
+foi reapontada. Entrega no `progress.md`, com a de 2026-08-05 descendo para o `progress-archive.md`
+para manter dez. Item 4 removido de "Próximos blocos" **sem renumerar** os anteriores (era o
+último). Os dois débitos que o bloco fechado decidia — "Shell fora de conformidade com o ADR-16 §4"
+e "Toggle da sidebar sem efeito abaixo de 1024px" — saíram de `## Débitos técnicos` e de "Fora dos
+BDs", como a §11 da spec prescrevia.
+
+**Pendências:** nasceu a **P-31** (espelho do Drive); a **P-30** já havia nascido no review. Nenhuma
+fechou e nenhum gatilho de data venceu (P-28 revisa 2026-09-30; P-29, P-30 e P-32 revisam
+2026-10-31; P-02 e P-05 seguem presas a "antes de produção").
+
+**Estado do banco de dev:** intocado — o bloco é frontend-only e a jornada do gate foi read-only
+fora do login. O `LOT-2026-1001` corrompido de propósito continua lá, esperando o checkpoint visual
+de outro bloco.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o ponto 5 do ADR-16 **não** está no Drive (P-31);
+o `ámbar-aviso` da spec original nunca foi construído e a paleta tem cinco donos, não seis (P-30);
+a caixa branca do toggle sobre a navy no tema claro segue sendo escolha estética dele, não defeito
+resolvido; e UI-04 e UI-06 continuam sem teste automatizado — são geometria, provadas por medição e
+screenshot, como o próprio plano declarou.
+
+**Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
+
+## Antepenúltimo item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
 ### Seleção — 2026-08-11
 
@@ -781,354 +1310,5 @@ staff) foram removidos com `forceDelete` ao fim — `clients` vivos voltou a **4
 checkpoint visual do João. Nenhum passe rodou `migrate:fresh`. Registrado também que o João estava
 **usando a aplicação no navegador durante o gate** (foto e `PUT` no cliente 1, visto no log do
 nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre registros próprios.
-
-**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
-
-## Antepenúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
-
-### Seleção — 2026-08-10
-
-**BD-1 do `backlog.md`, promovido explicitamente pelo João.** Ele abriu a sessão com
-`/planejar-bloco ### BD-1 · Guardas que faltam (mecanismo, zero mudança de comportamento)`; o gate
-do comando **reprovou** — o estado era `idle`, `active_work_item` era `null` e o argumento era o
-título de uma seção escrita no mesmo dia, não um slug promovido. A promoção veio da resposta dele ao
-gate, com duas escolhas registradas: **commitar a proposta antes de promover** (feito em `ec3ad2a`,
-que é o `state_basis_commit`) e **manter os 8 itens do BD-1 na íntegra**, incluindo a P-25, que eu
-havia enfileirado por conta própria.
-
-**BD-1 não é o item 1 de `## Próximos blocos`** — ali segue `Arquivados e restauração de
-soft-delete`. A fila **não** foi renumerada: os BDs vivem na seção de dívida do `backlog.md`, que é
-paralela a `Próximos blocos`, e o João pulou a ordem escrita conscientemente.
-
-**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
-(mesmo caso de `turma-habilitacao-listagem`, `profundidade-backend-b4-b7` e
-`documentos-oficiais-template-e-docx`): nenhum dos 8 itens cita Drive, Notion ou Figma. A fonte é o
-repositório — testes, ESLint e `.claude/rules/`. `context_packet: null`.
-
-**Toca backend → main tree, sem worktree (P-03).** Os itens 1 e 2 mexem em `backend/tests/`
-(guarda de §5.1/§5.2 e `NestedRouteOwnershipTest`). Nenhum outro `active_work_item` de backend está
-aberto, então o gatilho de fechamento da P-03 continua não vencido. Branch
-`hardening/guardas-que-faltam`, criada de `7e76db4`, no padrão de
-`hardening/guardrails-e-transportes`.
-
-### Terreno medido antes de planejar (não é desenho, é fato)
-
-1. **A superfície das duas leis já está limpa** — zero classe `Repository` em `backend/app/` (o
-   único hit de `grep` é `TurmaQueryBuilder`, que não é uma) e zero `CREATE TRIGGER`/`DB::unprepared`
-   em `backend/database/`. A guarda da **P-04** nasce verde: é custo de escrita, não de correção. É
-   também o gatilho mais próximo do bloco — a P-04 reavalia em **2026-08-15**.
-2. **`NestedRouteOwnershipTest` filtra por assinatura, não por URI** (`Q-2`): ele lê
-   `$route->signatureParameters(['subClass' => Model::class])` e faz `continue` quando encontra menos
-   de dois models tipados. Rota com dois segmentos `{}` e binding não tipado sai do universo do teste
-   em silêncio — o mecanismo entregue em 2026-08-04 tem essa porta aberta desde o primeiro dia.
-3. **`postMultipart.test.ts` mocka o próprio transporte** (`Q-4`): o arquivo abre com
-   `vi.mock('./axios', () => ({ api: { post: vi.fn(...) } }))`, então nenhum caso exercita o axios
-   real. A afirmação que interessa — que o `Content-Type` **não** é fixado à mão — não é testada por
-   nada hoje.
-4. **O barrel de `shared/hooks` exporta três símbolos de uso interno** (`Q-2` de 2026-08-05):
-   `unclassifiedPayloadKeys`, `MutableResource` e `CrudFormOptions`. Conferido em 2026-08-10: o único
-   consumidor é `useCrudForm.test.ts`, **por caminho relativo** — a remoção do barrel não quebra
-   ninguém.
-5. **`useEntityPhoto` tem 161 linhas e nenhum teste**, sendo o module de maior fan-out de
-   `shared/hooks`. É o item de maior custo do bloco e o único que não é guarda de guarda.
-6. **A P-25 é uma linha ausente numa rule**, não código: `.claude/rules/frontend-fsliced.md` segue
-   sem a cláusula "hook genérico não importa tipo de `shared/ui`", conferido em 2026-08-10, com os
-   dois casos já medidos (`useFilePreview`, `SearchableTableFrame`). Entra no bloco porque o item 4
-   já abre as rules pelo mecanismo da lição 13.
-
-**Uma frase desta seção nasceu errada e é corrigida aqui, não apagada:** ela dizia que os itens 1 e
-4 eram "as duas peças sem precedente no repositório". O item 1 **tem** precedente —
-`tests/Feature/Shared/DomainDependencyTest.php` já é guarda de arquitetura por varredura de código,
-com comentário descartado por `token_get_all()` e forma não coberta banida em vez de fingidamente
-coberta. Só o item 4 era peça nova, e o brainstorming mudou o que ele confere.
-
-### Brainstorming e spec — 2026-08-10
-
-O João aprovou o desenho com a instrução literal `aprovado`. O estado entra em `planning` no mesmo
-commit da spec; `active_plan` segue `null` até a leitura humana do documento e a escrita posterior do
-plano.
-
-**Quatro decisões dele, respondidas antes de a spec existir** (D1, D2, D5 e D6 da §2): a guarda da
-lição 13 confere **referência de código citada em doc**, não comando; ela mora no **vitest**, em
-`frontend/tests/`; o `useEntityPhoto` ganha **seis** casos; e a frase vencida da rule é corrigida
-neste bloco.
-
-**Três medições que mudaram o desenho, feitas antes de escrever:**
-
-1. **O item 4, como o backlog o registrou, não fecha honesto.** Ele dizia "todo comando citado nos
-   `§Comandos` das rules existe como script em `package.json`/`composer.json`, e vice-versa". Medido:
-   só 2 das 4 rules têm `## Comandos`; o que citam é `docker compose exec -T app php artisan …` e
-   `pnpm …`; **nenhum** é script de `composer.json`; e o "vice-versa" reprovaria no dia 1 contra
-   `setup` e `post-autoload-dump`, que doc nenhuma cita. As três reincidências reais da lição 13
-   foram **classe ou pasta citada que nunca existiu** (`app/Data`, `LibreOfficeConverter`).
-2. **O container não enxerga a raiz do repositório.** `docker-compose.yml` monta `./backend` e
-   `./frontend`; `CLAUDE.md`, `.claude/rules/` e `docs/` não estão montados — conferido de dentro do
-   container. PHPUnit não tem como ler o doc que a guarda confere, e criar volume para isso seria
-   mudar infra por guarda de doc, o mesmo que o bloco anterior recusou na D-P1. O vitest é o único
-   runner do projeto com acesso à raiz.
-3. **A guarda 4 nasce verde, e por pouco:** 87 referências conferíveis em 10 docs normativos, **3**
-   não resolvem — e as três são negação deliberada (`generated-types.md:16` escreve "Não existe
-   `app/Data`"; `README.md:88` é a própria lição 13; `estrutura-monolito.md:192` lista `src/Domains/`
-   como alternativa em aberto). Viram lista de exceção declarada, não heurística de vizinhança.
-
-**Um achado que o brainstorming produziu e o BD-1 não previa:** `.claude/rules/frontend-fsliced.md:161-167`
-afirma que o runner "cobre os hooks de `shared/hooks/`", e existem **8 testes de hook de feature** no
-repositório. É lição 13 dentro do arquivo que o item 8 já ia abrir; a correção entra no mesmo commit
-(D6). O registro do bloco anterior, que herdou a mesma premissa ao justificar a Q-6 sem teste, **não**
-foi reescrito — é histórico, pelo precedente da P-27.
-
-**Risco de review declarado MÉDIO** (§7 da spec): nenhum gatilho de ALTO se aplica (sem schema, auth,
-RBAC, dinheiro, documento legal, `generated.ts`, sem execução delegada). O risco próprio é guarda que
-promete cobrir e não cobre — cinco das oito são varredura, e varredura tem escape por construção.
-
-### Aprovação da spec e plano — 2026-08-11
-
-O João aprovou a spec com a instrução literal `pode prosseguir`. O plano ativo
-(`docs/superpowers/plans/archive/2026-08-10-guardas-que-faltam.md`, arquivado no fechamento de
-2026-08-11) decompõe o bloco em **10 tasks (0–9)**:
-baseline; as duas leis como teste; ownership de rota; a instância do axios; a recíproca da
-classificação; o barrel; os seis casos da foto; a guarda de referência de doc; a rule; gate. O
-handoff fixa **`executor: claude`** — as Tasks 1, 6 e 7 fecham por laço de ajuste contra medição, e o
-risco declarado da §7 (guarda que promete cobrir e não cobre) não é detectável por execução linear.
-
-**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano). Os que
-mudam decisão da spec:
-
-1. **A guarda 2 conta segmentos e exige declaração, não binding tipado** (D-P1). A spec pedia
-   reprovar "≥2 segmentos com <2 models tipados, com a instrução de tipar o binding". O docblock do
-   próprio teste já carregava a objeção certa contra ler a URI — `{file}` não diz que é model —, e a
-   saída é a válvula que o teste já usa: `withoutScopedBindings()` com o motivo ao lado. Medido: **8**
-   rotas com ≥2 segmentos, todas já declarando, **0** reprovando.
-2. **A guarda 3 é arquivo novo** (D-P2). `postMultipart.test.ts` abre com `vi.mock('./axios')`, que é
-   hoisted e vale para o arquivo inteiro: "caso sem mock" ali dentro não existe. Vai para
-   `axios.test.ts`, e o DoD do frontend passa de **15 para 16** arquivos.
-3. **`codigoSemComentarios` vira trait compartilhado** (D-P5). A guarda §5.2 precisa da mesma
-   varredura sem comentário que o `DomainDependencyTest` tinha em método privado; duplicar
-   reintroduziria o defeito da Q-4 de 2026-08-04 em dois lugares.
-4. **A guarda §5.1 exclui `QueryBuilders/`, e a exclusão é provada com sonda** (D-P6), não afirmada
-   em comentário: `TurmaQueryBuilder` é o padrão aprovado pelo ADR-02 e uma varredura por sufixo o
-   reprovaria.
-5. **A guarda 4 ganha duas guardas de si mesma** (D-P8): piso de volume de referências e conferência
-   de que cada citação deliberada ainda está no doc que a declara. Extrator que pare de casar
-   deixaria o teste verde com zero referências conferidas.
-
-A auto-revisão do plano contra a spec ainda achou três erros de contagem no próprio rascunho e os
-corrigiu antes de gravar: o total de casos da Task 3 (9, não 8), a projeção de arquivos do frontend
-(16, não 15) e uma contagem absoluta na Task 4 que ignorava os testes da Task 3.
-
-**Risco de review continua MÉDIO.** O foco é um só: para cada guarda, existe uma forma de violar a
-lei que ela não pega? O review não roda automaticamente ao fim da Task 9.
-
-### Execução — 2026-08-11: as oito entregues, oito commits
-
-O João autorizou com `/executar-bloco guardas-que-faltam`. Thread principal, main tree, sem worktree
-(P-03), do base `4ff7621`. **Task 0 reconferida, não herdada:** backend **522 passed, 1 skipped
-(1961 assertions)**, frontend **13 arquivos / 47 testes**, lint e build verdes, árvore limpa — bate
-com o plano.
-
-Commits, na ordem do plano: `d5e53b0` (leis §5.1/§5.2 + trait), `e868076` (ownership de rota),
-`60fc520` (instância do axios), `c45226a` (recíproca da classificação), `1a630a4` (barrel),
-`a4d2d2d` (seis casos da foto), `e42ae30` (referência de doc), `d885738` (a rule). Evidência task a
-task e os cinco desvios (D-E1..D-E5) em `.superpowers/sdd/progress.md`.
-
-**Duas medições mudaram a guarda, não só a implementação.** **D-E1** — o regex da §5.2 nascia com
-`->\s*unprepared\s*\(` e **não** pegava `DB::unprepared(`, que é a forma idiomática e a que a lei
-nomeia; a sonda do próprio plano o denunciou ao produzir uma linha em vez de duas (reprovava pelo
-texto `CREATE TRIGGER`, não pela chamada). É o risco da §7 aparecendo dentro do bloco que existe
-para eliminá-lo. **D-E2** — a guarda do axios afirma o **valor** fixado, não a presença da chave: o
-próprio axios escreve `Content-Type: undefined` em `defaults.headers.common`, e a medição do plano,
-feita com `JSON.stringify`, não o via. Assertar ausência de chave reprovaria o estado correto.
-
-**O escape da guarda 2 foi provado, não afirmado:** com a sonda no lugar, o teste **antigo** (por
-`git stash` do arquivo) **passa** e o novo reprova. Mesma disciplina na §5.1, onde a exceção de
-`QueryBuilders/` foi provada com sonda dentro e fora da pasta.
-
-**A guarda 4 confere 87 referências em 10 docs — o número exato que o plano mediu** — e as 3 que não
-resolvem são as 3 exceções declaradas. A guarda-da-guarda foi vista vermelha comentando o `push` do
-extrator (`expected 0 to be greater than 60`), com o caso principal passando **em silêncio** com
-zero referências conferidas.
-
-**Gate da Task 9:** backend **524 passed, 1 skipped (1963 assertions)** — os 524 projetados; Pint
-`passed`; frontend **16 arquivos / 79 testes**, os 16 do plano (D-P2). `git diff main...HEAD` de
-`backend/database/` **vazio**; `typescript:transform` sem diff em `generated.ts`; e
-`git diff main...HEAD --stat -- backend/app/ frontend/src/features/` **vazio** — nenhuma sonda ficou
-para trás e o bloco não toca domínio nem feature.
-
-**Uma etapa de processo foi pulada e fica registrada:** o estado não passou por `executing` no
-commit da primeira task durável, como o `/executar-bloco` manda. Ele foi de `ready_for_execution`
-direto para `ready_for_review` neste commit. Nenhum trabalho se perdeu — os oito commits são a prova
-da execução —, mas se a sessão tivesse caído no meio, o `state.md` estaria mentindo sobre a fase.
-
-**O que o gate NÃO provou, sem maquiagem:** as cinco guardas de varredura têm escape por construção,
-e os três medidos estão nomeados no ledger — a guarda 4 só vê token entre crases que **pareça path**,
-então classe citada sem `/` (o caso `LibreOfficeConverter`, uma das três reincidências que a
-motivaram) segue fora do universo; a guarda 1 casa por **sufixo de nome de arquivo**; e a guarda 2
-exige **declaração**, não correção, então `withoutScopedBindings()` escrito por engano a satisfaz.
-São o foco do review pela §7 da spec.
-
-**Estado:** `ready_for_review`. Review, fechamento, push e PR não rodam automaticamente.
-
-### Review de sprint — 2026-08-11: uma lente, 4 achados, três provados por sonda
-
-**BAIXO RISCO pelo gate da skill, e a classificação divergiu da spec de propósito.** A §7 da spec
-declarou MÉDIO na escala dela; o `/revisar-sprint` é binário, e **nenhum** gatilho de ALTO se aplica
-— zero schema, zero `generated.ts`, zero auth/Sanctum, zero auditoria, zero RBAC, sem dinheiro, sem
-documento legal, `executor: claude`. Uma frente, lente Claude, **sem Codex**.
-
-**Gate reproduzido, não herdado do relatório de execução:** backend **524 passed, 1 skipped (1963
-assertions)**, frontend **16 arquivos / 79 testes**, `pnpm lint` limpo, `pnpm build` verde.
-
-**Órfãos: zero.** `ScansPhpSource` tem os dois consumidores previstos; os quatro símbolos tirados do
-barrel (`unclassifiedPayloadKeys`, `classificationConflicts`, `MutableResource`, `CrudFormOptions`)
-não têm um único import sobrevivente em `frontend/src/`; nenhuma sonda das oito tasks ficou para
-trás.
-
-**A guarda 7 foi testada por mutação, não aceita por contagem.** Três mutantes no `useEntityPhoto`,
-cada um pego pelo caso que o promete: `onRetry` lendo a prop `id` em vez do `retryId` reprova
-*"reenvia para o id da TENTATIVA"*; remover `sizeError === null` do gate reprova *"`sizeError` apaga
-o `onRetry`"*; e `flush` propagando a exceção reprova *"NÃO lança e liga `hasBufferedFailure`"*. Não
-é cobertura fantasma.
-
-**A guarda 4 discrimina onde alcança:** path inventado em `.claude/rules/backend-ddd.md` reprova
-nomeando `arquivo:linha`. E a afirmação nova da rule — que `frontend/tests/` é type-checado pelo
-`tsc -b` — foi **provada**, não aceita: erro de tipo plantado no `repo-docs-refs.test.ts` sai como
-`error TS2322` no `pnpm build`. Nenhuma lição 13 nasceu no commit que corrige lição 13.
-
-**Os quatro achados atacam o risco que a própria §7 declarou** — guarda que promete cobrir e não
-cobre —, e os três primeiros foram **vistos passando verde contra a violação**, com árvore
-restaurada limpa em cada sonda:
-
-1. **Q-1 🟡** — a guarda 3 assere `api.defaults.headers` e **não** a cadeia de interceptors. Fixar
-   `Content-Type: application/json` no interceptor de request de `axios.ts:45` — a segunda porta do
-   mesmo arquivo, seis linhas abaixo da que a guarda vigia — passa a suíte **inteira** verde (16
-   arquivos / 79 testes). O mutante não é hipotético: é literalmente o bug da lição 6, com FormData
-   serializado como JSON, cada `File` virando `{}` e upload chegando vazio com 201 silencioso, em
-   caminho de documento com peso legal.
-2. **Q-2 🟡** — a D4 da spec escreve o escopo como `.claude/rules/*.md` (glob) e o `DOCS` do teste é
-   lista literal de quatro nomes. Rule nova (`zz-sonda.md`) citando
-   `backend/app/Domains/Inexistente/NaoExiste.php` → **13 passed**. O teste já carrega três
-   guardas-de-si-mesmo (doc existe, volume > 60, citação deliberada viva); falta a do **conjunto**, e
-   `.claude/rules/` é onde a lição 13 reincidiu duas vezes no mesmo arquivo.
-3. **Q-3 🟡** — a guarda §5.2 varre só `backend/database/`; a lei não tem escopo.
-   `DB::unprepared("CREATE TRIGGER …")` plantado em `backend/app/Shared/Pdf/PdfRenderException.php`
-   → **2 passed**. A §5.1, no mesmo arquivo, já varre `app/` inteiro.
-4. **Q-4 🟢** — `vite.config.ts:25` inclui `tests/**/*.test.ts` enquanto a linha ao lado usa
-   `src/**/*.test.{ts,tsx}`. Teste de repositório que precise de JSX nunca roda, em silêncio.
-
-**Uma observação medida que NÃO virou achado:** a §5.1 casa por nome de arquivo, e PSR-4 amarra nome
-de arquivo a nome de classe para tudo que o autoload alcança — o escape "classe `Repository` em
-arquivo com outro nome" é bem menor do que o ledger da execução supunha. Sobra a exclusão de
-`/QueryBuilders/`, que é por path: `app/Domains/X/QueryBuilders/ClientRepository.php` escaparia.
-Plausibilidade baixa demais para gastar um dos achados.
-
-**Estado:** `blocked`, aguardando o João aprovar quais achados entram. Só achado aprovado se corrige.
-
-### Correções do review — 2026-08-11: os quatro aprovados, dois commits
-
-O João aprovou com a instrução literal `faça Q-1 á Q-4`. Backend em `45534c9`, frontend em
-`b854019`. **Os quatro foram vistos vermelhos antes do verde**, cada um contra a violação que
-promete pegar:
-
-- **Q-3** — `DB::unprepared("CREATE TRIGGER …")` plantado em
-  `app/Shared/Pdf/PdfRenderException.php` reprova agora pelas **duas** formas, e passava verde
-  antes. A varredura da §5.2 virou `database/` **mais** `app/`.
-- **Q-1** — o mutante no interceptor de `axios.ts` reprova o caso novo (1 failed / 10 passed) e
-  passava a suíte inteira antes. A guarda ganhou uma guarda-de-si-mesma: `handlers` vazio (removido,
-  ou renomeado numa major do axios) faria o laço iterar em vazio e passar sem exercitar nada.
-- **Q-2** — `zz-sonda.md` reprova **nomeando a rule**, e passava com 13 verdes antes.
-- **Q-4** — teste `.tsx` em `tests/` roda com o include corrigido (2 arquivos / 15 testes) e era
-  **ignorado em silêncio** com o antigo (1 arquivo / 14 testes).
-
-**Uma medição mudou o desenho do Q-1, e a versão recusada fica registrada.** A primeira forma
-mandava uma requisição real por `adapter` e lia o header final — o que cobriria o pipeline inteiro.
-Medido no jsdom: o próprio axios escreve `Content-Type: application/x-www-form-urlencoded` para
-`FormData` (e `application/json` para objeto). É artefato do ambiente, não configuração da app, e
-assertar ali **reprovaria o estado correto** — exatamente a armadilha da D-E2 deste bloco, onde
-afirmar ausência de chave reprovava o `undefined` que o axios escreve de propósito. O universo da
-guarda passou a ser o que a app **declara**: `defaults.headers` mais os interceptors registrados.
-
-**Verificação depois das correções, refeita e não herdada:** backend **524 passed, 1 skipped (1963
-assertions)** — o placar não muda porque a Q-3 alargou o universo de uma varredura sem somar teste;
-Pint `passed` no `.php` tocado; frontend **16 arquivos / 82 testes** (+3 sobre os 79 do gate: dois
-casos novos no axios, um no `repo-docs-refs`); `pnpm lint` limpo, `pnpm build` verde;
-`typescript:transform` **sem diff** em `generated.ts`; `git diff main...HEAD` de `backend/database/`,
-`backend/app/` e `frontend/src/features/` **vazios**; zero sonda sobrevivente.
-
-**O que continua não provado, sem maquiagem:** as guardas de varredura seguem com escape por
-construção, e três nomeados no ledger da execução continuam abertos por decisão de escopo — a
-guarda 4 só vê token entre crases que **pareça path** (classe citada sem `/`, o caso
-`LibreOfficeConverter`, segue fora), a guarda 1 casa por nome de arquivo (mitigado por PSR-4, não
-fechado: `/QueryBuilders/` é exclusão por path e um `Repository` dentro dela escaparia) e a guarda 2
-exige **declaração**, não correção. Nenhum dos três foi tocado por estas correções.
-
-**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
-
-### Gate de fechamento — 2026-08-11
-
-**Item 0 — o critério de aceite deste bloco, refeito e não herdado.** O DoD não é suíte verde: a
-superfície das oito guardas nasceu limpa, então o que prova o bloco é **guarda vista reprovando com
-sonda deliberada** (lição 10). As oito sondas foram plantadas de novo neste gate, não copiadas do
-review, e a árvore foi restaurada limpa depois de cada uma:
-
-| Guarda | Sonda | Reprovação |
-|---|---|---|
-| 1 · §5.1 | `app/Shared/Sonda/FooRepository.php` | nomeia o arquivo, com o diagnóstico do ADR-02 |
-| 1 · §5.2 | `app/Shared/Sonda/TriggerAction.php` **e** `database/seeders/SondaTriggerSeeder.php` | quatro ocorrências, as duas formas nas duas pastas |
-| 2 | `api/sonda/{parent}/{child}` sem binding tipado | `Rotas: GET\|HEAD api/sonda/{parent}/{child}` |
-| 3 · porta A | `Content-Type` no `axios.create` | `não fixa Content-Type na raiz de defaults.headers` |
-| 3 · porta B | `headers.set('Content-Type', …)` no interceptor | `expected [ 'application/json' ] to deeply equal []` |
-| 4 · path | `docs/README.md` citando `backend/app/Shared/Pdf/NadaAquiConverter.php` | `docs/README.md:145  backend/app/Shared/Pdf/NadaAquiConverter.php` |
-| 4 · glob | rule `.claude/rules/zz-sonda.md` fora da lista | `expected [ '.claude/rules/zz-sonda.md' ] to deeply equal []` |
-| 5 | `'phone'` em `mapped` **e** em `summaryOnly` no `useStudentForm` | o `useCrudForm` lança nomeando a chave e as duas listas |
-| 7 | gate de `sizeError` removido do `onRetry` | `× \`sizeError\` apaga o \`onRetry\`` |
-
-As guardas **6** e **8** não têm sonda porque não são teste: a 6 é o barrel enxuto (conferido —
-zero consumidor dos quatro símbolos fora do próprio `useCrudForm.test.ts`, por caminho relativo) e a
-8 é a linha da P-25 na rule, que está lá.
-
-**Itens 1–5.** Backend **524 passed, 1 skipped (1963 assertions)**. `pnpm lint` limpo, `pnpm build`
-verde, `pnpm test` **16 arquivos / 82 testes** — a baseline era 13/47, e os três arquivos novos são
-`repo-docs-refs.test.ts`, `useEntityPhoto.test.tsx` e `axios.test.ts` (o plano previa 15 arquivos
-porque o caso da lição 6 nasceria dentro do `postMultipart.test.ts`; virou arquivo próprio na
-execução). Pint `{"tool":"pint","result":"passed"}` nos 4 `.php`. `typescript:transform` sem diff em
-`generated.ts` — nenhum DTO foi tocado. Zero código morto: `ScansPhpSource` tem exatamente dois
-consumidores (`DomainDependencyTest`, `PersistenceLawsTest`), nenhum `.gitkeep` nem placeholder
-nasceu, e `git status --porcelain` fica vazio depois das sondas.
-
-**Item 6 — leis.** Nenhuma contrariada. O bloco não toca schema, `generated.ts`, auth, auditoria,
-RBAC, financeiro nem documento legal; `backend/app/`, `backend/database/` e `frontend/src/features/`
-não têm uma linha de diff contra a `main`. Os três arquivos de produção tocados fazem o que a spec
-declarou: o barrel perde export sem consumidor, o `useCrudForm` ganha uma reprovação dentro do
-`import.meta.env.DEV` que já existia (por construção não alcança o bundle) e o `vite.config.ts`
-amplia o `include` do runner, que é build.
-
-**Item 7 — pendências.** **P-04 fechada:** §5.1 e §5.2, as duas frentes que sobraram da resolução
-parcial de 2026-08-03, agora têm mecanismo, visto vermelho neste gate. **P-25 fechada:** a linha
-"hook genérico não importa tipo de `shared/ui`" está na `frontend-fsliced.md` com os dois casos
-nomeados — era exatamente o gatilho, e não o constraint no `useFilePreview`. As duas fecham **aqui**,
-como as próprias linhas prescreviam, e não por o bloco ter existido. **P-28 aberta, com o escape
-medido no gate:** a guarda da lição 13 confere **path**, e `LibreOfficeConverter` — a terceira
-reincidência, que motivou a guarda — passa **verde** por ser classe citada sem `/` (sonda em
-`docs/adrs.md`: 14 testes passando). Nenhuma outra pendência venceu gatilho.
-
-**O que fica aberto e declarado, sem maquiagem.** Cinco das oito guardas são varredura, e varredura
-tem escape por construção. Três continuam nomeados: a **4** só vê token que parece path (P-28); a
-**1** casa por nome de arquivo e exclui `QueryBuilders/` por path, então um `FooRepository.php`
-dentro dessa pasta escaparia — decisão consciente, porque reprovar por semelhança de nome mataria o
-padrão que o ADR-02 manda usar; e a **2** exige **declaração**, não correção: `withoutScopedBindings()`
-com um comentário mentiroso passa. Nenhum dos três é defeito novo; os três estão escritos no docblock
-da guarda que os carrega.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-guardas-que-faltam.md`; spec →
-`specs/archive/2026-08-10-guardas-que-faltam-design.md` (não é compartilhada — nenhum item do backlog
-a consome). Entrega registrada no `progress.md`, com a de 2026-08-04 (`guardrails-e-transportes`)
-descendo ao `progress-archive.md` para manter dez. **BD-1 removido do `backlog.md`**, junto das
-linhas de débito que ele fechou (lição 13 sem mecanismo, Q-2 do `NestedRouteOwnershipTest`, Q-4 do
-`postMultipart`, e o Q-2/Q-3 dos três achados de 2026-08-05 — o Q-4 desses três **fica**, porque o
-bloco não o tocou). A linha do trio da foto **fica**: o teste do `useEntityPhoto` saiu aqui, a
-absorção segue no BD-5.
-
-**Estado do banco de dev:** intocado. O bloco não roda migration, não semeia e não escreve pela API
-— nenhuma sonda tocou banco.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
