@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Identity\Actions\RecordLoginAction;
 use App\Domains\Identity\Data\SessionUserData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ class AuthController extends Controller
      * Autentica via sessão (Sanctum SPA). O CSRF já foi validado
      * pelo middleware antes de chegar aqui.
      */
-    public function login(Request $request): SessionUserData
+    public function login(Request $request, RecordLoginAction $recordLogin): SessionUserData
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -46,6 +47,11 @@ class AuthController extends Controller
                 'email' => __('auth.inactive'),
             ]);
         }
+
+        // DEPOIS do gate de `is_active`, nunca antes: o `attempt()` já
+        // sucedeu neste ponto, mas o acesso só está concedido depois do gate.
+        // Capturar antes gravaria acesso de quem a API recusa com 422.
+        $recordLogin->execute($user, $request->ip(), $request->userAgent());
 
         return SessionUserData::fromUser($user);
     }
