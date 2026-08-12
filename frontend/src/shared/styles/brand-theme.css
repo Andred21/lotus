@@ -25,6 +25,17 @@
    * call sites (UI-01 do review de 2026-08-12). O padrão é celeste porque no
    * escuro o variant preenche de celeste e o rótulo vira navy. */
   --brand-ink: var(--brand);
+
+  /* Traço do divisor. O AppDivider pinta o `::before` do componente Prime a
+   * partir daqui para que o call site nunca precise alcançar o pseudo-elemento
+   * (ADR-16 §3, Q-4 do review de 2026-08-12) — mesma mecânica do traço de foco
+   * acima: superfície que não acompanha o tema redeclara a variável, não a
+   * regra.
+   *
+   * O padrão é `--surface-d` porque é o hex que o Lara-Lotus já dá ao divisor
+   * nos dois temas (#e2e8f0 no claro, #334155 no escuro): trocar por
+   * `--surface-border` mudaria o tom no claro sem ninguém ter pedido. */
+  --divider-stroke: var(--surface-d);
 }
 
 /* Fundo claro = humo (spec §4). A var é consumida pelo shell (AppLayout);

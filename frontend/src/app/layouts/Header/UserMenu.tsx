@@ -45,16 +45,21 @@ export function UserMenu() {
      * O botão não tem visual próprio (sem padding, sem fundo, sem hover): quem
      * pinta são os filhos, exatamente como antes. O que ele acrescenta é o anel
      * de foco em volta do bloco inteiro, que é o alvo real — e um nome acessível
-     * só onde antes havia um controle mudo ao lado de um avatar decorativo. */
+     * só onde antes havia um controle mudo ao lado de um avatar decorativo.
+     * Esse "sem visual próprio" é um variant do AppButton, não Tailwind cru
+     * daqui: customização de componente Prime mora no wrapper (ADR-16 §3). */
     <div className="flex min-w-0 items-center">
       <AppButton
+        variant="noSurface"
         text
-        aria-label={t('common.openUserMenu')}
         onClick={(e) => menuRef.current?.toggle(e)}
-        className="flex min-w-0 items-center gap-1 bg-transparent! p-0! hover:bg-transparent! sm:gap-2"
+        className="flex min-w-0 items-center gap-1 sm:gap-2"
       >
 
-        <AppAvatar name={user.name} size="large" className="shrink-0!" />
+        {/* Decorativo para o leitor de tela: as iniciais (ou o alt da foto)
+          * repetiriam o nome que vem logo abaixo, agora que o nome acessível do
+          * gatilho é o conteúdo e não mais um rótulo à parte. */}
+        <AppAvatar name={user.name} size="large" aria-hidden className="shrink-0!" />
 
       {/* Texto branco cravado, não token de tema: a navy do header é fixa nos
         * dois temas e `--text-color` é cinza de superfície clara — media 1,42:1
@@ -63,14 +68,21 @@ export function UserMenu() {
         * João em 2026-08-12: o acento da marca sobre a navy fica com o item
         * ativo da sidebar, e aqui a hierarquia se faz por peso e opacidade, não
         * por cor.
-        * `my-0` porque o projeto não carrega o Preflight e o <p> ainda traz a
-        * margem de 1em do user-agent; `truncate` porque nome longo empurrava a
-        * barra em vez de cortar. */}
-        <div className="hidden min-w-0 max-w-40 text-left sm:block lg:max-w-56">
-          <p className="my-0 truncate text-sm font-semibold text-white">{user.name}</p>
+        * <span> no lugar de <div>/<p>: <button> só aceita conteúdo de frase, e
+        * o resto era HTML inválido. Some junto a margem de 1em do user-agent
+        * que o <p> trazia (o projeto não carrega o Preflight) e que era zerada
+        * à mão aqui; `truncate` porque nome longo empurrava a barra em vez de
+        * cortar.
+        * `sr-only sm:not-sr-only`, e não ocultação por display: este bloco É o
+        * nome acessível do gatilho, então abaixo do sm ele sai da TELA, não da
+        * árvore — escondê-lo tirava a identidade da sessão do leitor de tela
+        * (Q-1 do review de 2026-08-12). Fora de fluxo nos dois casos: nada
+        * muda visualmente. */}
+        <span className="sr-only min-w-0 max-w-40 text-left sm:not-sr-only sm:block lg:max-w-56">
+          <span className="block truncate text-sm font-semibold text-white">{user.name}</span>
 
-          <p className="my-0 truncate text-sm text-white/75">{roleKey && t(roleKey)}</p>
-        </div>
+          <span className="block truncate text-sm text-white/75">{roleKey && t(roleKey)}</span>
+        </span>
 
         <i className="pi pi-angle-down" aria-hidden="true" />
 
@@ -78,7 +90,7 @@ export function UserMenu() {
 
       {/* Fora do gatilho: <button> não pode conter conteúdo interativo, e o
         * popup do Prime renderiza no lugar onde é declarado. */}
-      <AppMenu ref={menuRef} model={items} className='mt-2 text-md' />
+      <AppMenu ref={menuRef} model={items} className="mt-2" />
 
     </div>
   )

@@ -27,6 +27,23 @@ export const appButtonStyles = {
   brandLabel: `flex items-center gap-1 px-3 py-2.5 text-sm ${brandOutline}`,
   /** Marca, só-ícone (toggles: tema, colapso da sidebar). */
   brandIcon: `flex items-center justify-center ${brandOutline}`,
+  /**
+   * Sem superfície: fundo, padding e hover do `.p-button` zerados. É o gatilho
+   * que embrulha avatar e identidade no header — ali quem pinta são os filhos,
+   * e uma superfície própria desenharia uma segunda caixa em volta do bloco.
+   *
+   * Não é "botão invisível": o que sobra é justamente o que justifica ser um
+   * <button> — área de clique única e ANEL DE FOCO em volta do bloco inteiro.
+   * O anel não entra na conta de zerar nada; zerá-lo foi o UI-03 de 2026-08-11.
+   *
+   * Os `!` vieram verbatim do call site que este variant substitui (Q-4 do
+   * review de 2026-08-12) — a exigência era resultado idêntico ao de hoje. Eles
+   * não são prova de necessidade: o Prime inteiro (folha do tema e CSS injetado
+   * em runtime) vive em `@layer primereact`, abaixo do layer das utilities.
+   * Ficam como a marcação de override sobre raiz de componente Prime que o
+   * shell já usa (`mx-0!` no Header); tirá-los é experimento visual à parte.
+   */
+  noSurface: 'bg-transparent! p-0! hover:bg-transparent!',
 } as const
 
 export type AppButtonVariant = keyof typeof appButtonStyles

@@ -13,7 +13,7 @@ import { UserMenu } from './UserMenu'
  * achado 3 pôs azul-poste no claro, e azul-poste sobre esta navy é invisível.
  *
  * Altura fixa no lugar da altura mínima que havia aqui: a barra media 94px de
- * verdade, porque sem Preflight os <p> do relógio e do usuário ainda carregam
+ * verdade, porque sem Preflight os <p> do relógio e do usuário ainda carregavam
  * a margem de 1em do user-agent (42px de altura morta em cada bloco). Zeradas
  * as margens, o teto de conteúdo passa a ser o avatar de 48px e a altura vira
  * escolha, não resultado — 80px, valor que o João fixou no checkpoint.
@@ -22,15 +22,16 @@ import { UserMenu } from './UserMenu'
  * comentário e emitiria a regra no bundle (mesma armadilha da UI-03). */
 export function Header() {
   return (
-    <AppHeader className="h-20 border-white/10 bg-(--brand-navy) px-3 text-white [--focus-stroke:var(--brand)] sm:px-6">
+    <AppHeader className="h-20 border-white/10 bg-(--brand-navy) px-3 text-white [--divider-stroke:rgb(255_255_255/0.2)] [--focus-stroke:var(--brand)] sm:px-6">
       <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
         <AppearanceControls />
-        {/* O traço do divisor mora no ::before do tema, em cinza de superfície
-          * clara — daí a variante `before:` em vez de uma classe no root. */}
-        <AppDivider
-          layout="vertical"
-          className="mx-0! hidden h-6 before:border-white/20 sm:block"
-        />
+        {/* O traço do divisor mora no ::before do componente Prime, no cinza de
+          * borda do tema ativo (#e2e8f0 no claro, #334155 no escuro). Nenhum dos
+          * dois serve esta navy fixa — um berra, o outro some —, daí o branco a
+          * 20%. Quem alcança o pseudo-elemento é o wrapper, a partir do token
+          * redeclarado acima (ADR-16 §3 e Q-4 do review de 2026-08-12); daqui só
+          * se troca a variável, como já se faz com o traço de foco. */}
+        <AppDivider layout="vertical" className="mx-0! hidden h-6 sm:block" />
         <Clock className="hidden md:block" />
         <UserMenu />
       </div>
