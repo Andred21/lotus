@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import { AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade, IDONEIDADE_SEVERITY } from '@shared/lib'
+import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
@@ -59,6 +59,12 @@ export function RedatoresTable({
           const k = idoneidade(r)
           return <AppTag value={t(`suitability.${k}`)} severity={IDONEIDADE_SEVERITY[k]} />
         }}
+      />
+      <AppColumn
+        field="last_login"
+        header={t('common.lastLogin')}
+        sortable
+        body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
       />
       <AppColumn
         body={(r: RedatorData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
