@@ -72,6 +72,20 @@ const RAMPA = Object.values(DEGRAUS).map((t, i) =>
 /** Casa a escala do Lara (em ordem 50→900) com a rampa celeste, degrau a degrau. */
 const rampear = (escalaLara) => Object.fromEntries(escalaLara.map((hex, i) => [hex, RAMPA[i]]))
 
+// Achado 3 do checkpoint visual (2026-08-12, decidido pelo João): celeste NÃO
+// serve como cor de PRIMEIRO PLANO no tema claro. Mede 2,77:1 sobre branco e
+// 2,53:1 sobre o humo — abaixo até do 3:1 de elemento gráfico, quanto mais do
+// 4,5:1 de texto. É a outra metade da D6: aquela resolveu texto SOBRE celeste,
+// esta resolve celeste SOBRE superfície clara.
+//
+// A tinta é o degrau 700 da própria rampa, não uma cor nova: 5,88:1 sobre
+// branco, 5,37:1 sobre o humo e 5,13:1 sobre o fundo das mensagens info. O
+// azul-poste também passaria (14,65:1) e é o que a proposta original dizia,
+// mas apagaria o celeste de todo botão `text`/`outlined` da aplicação — a
+// marca sumiria da interface inteira para consertar contraste. O 700 mantém a
+// família e resolve a medição.
+export const TINTA_CLARA = RAMPA[7] // --primary-700
+
 // ── Os azuis, medidos no Lara instalado (não deduzidos) ─────────────────────
 // Contagens de 2026-08-11, primereact 10.9.8. Só a família da PRIMÁRIA entra:
 // as paletas de severidade (info/sky, success, warning, danger, secondary/slate)
@@ -159,7 +173,18 @@ const NEUTROS_DARK = {
 }
 
 // As veladuras da primária: o Lara escreve o canal RGB literal, sem hex.
-const VELADURAS_LIGHT = { 'rgba(59, 130, 246': 'rgba(37, 165, 228' }
+//
+// A segunda linha fecha um azul que sobreviveu à Task 2 e que a guarda de drift
+// não via: o `#dbeafe` está em COMPILADOS_LIGHT com o comentário "só via rgba
+// (3x)" — quem o listou sabia que ele não aparece como hex, mas a chave do mapa
+// é a forma HEX, que nunca casa. Resultado: o fundo das três mensagens `info`
+// continuava azul do Tailwind dentro de um tema de marca. A guarda passava
+// porque confere a ausência do hex, e o hex de fato não estava lá.
+// O valor é o mesmo re-ancoramento por luminância que o hex teria recebido.
+const VELADURAS_LIGHT = {
+  'rgba(59, 130, 246': 'rgba(37, 165, 228', // blue-500 → celeste
+  'rgba(219, 234, 254': 'rgba(211, 237, 250', // blue-100 → #d3edfa (fundo das mensagens info)
+}
 const VELADURAS_DARK = {
   'rgba(96, 165, 250': 'rgba(37, 165, 228',
   'rgba(59, 130, 246': 'rgba(37, 165, 228',
@@ -242,7 +267,18 @@ const CABECALHO = `/* GERADO por scripts/generate-brand-theme.mjs — NÃO edita
 
 const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-export function transform(css, map) {
+// Achado 3: no tema CLARO não existe superfície escura, então toda declaração
+// `color: <celeste>` é, por construção, celeste sobre claro. Por isso a regra é
+// de FORMA e não lista de seletores — lista envelheceria no próximo upgrade do
+// primereact, e são 24 declarações espalhadas por botão, splitbutton, tabview,
+// tabmenu, message, toast, rating, editor e datepicker.
+//
+// O lookbehind é o que separa PINTAR de DECLARAR: barra `--primary-color:`
+// (token, segue celeste — é a marca), `background-color:` e `border-color:`
+// (preenchimento e traço, que não são texto e têm régua própria).
+const CELESTE_PRIMEIRO_PLANO = new RegExp(`(?<![-\\w])color:(\\s*)${CELESTE}\\b`, 'gi')
+
+export function transform(css, map, tinta) {
   const tabela = { ...map, ...COMUM }
   // Uma passada só: substituir em série faria uma saída ser reescaneada pela
   // chave seguinte (o `#e2e8f0` que sai do gray-200 é chave de outra família).
@@ -254,22 +290,25 @@ export function transform(css, map) {
     busca,
     (achado) => indice.get(achado.toLowerCase()) ?? achado,
   )
-  return CABECALHO + out
+  // Depois do mapa, não antes: é o mapa que transforma o azul do Lara em
+  // celeste, e é o celeste que esta passada procura. Só o claro recebe tinta —
+  // no escuro o celeste pousa em superfície escura e mede 6,76:1.
+  return CABECALHO + (tinta ? out.replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`) : out)
 }
 
-function gerar(nomeStock, map, nomeSaida) {
+function gerar(nomeStock, map, nomeSaida, tinta) {
   const src = readFileSync(
     resolve(root, `node_modules/primereact/resources/themes/${nomeStock}/theme.css`),
     'utf8',
   )
   const dir = resolve(root, 'src/shared/styles/themes')
   mkdirSync(dir, { recursive: true })
-  writeFileSync(resolve(dir, `${nomeSaida}.css`), transform(src, map))
+  writeFileSync(resolve(dir, `${nomeSaida}.css`), transform(src, map, tinta))
   console.log(`gerado: src/shared/styles/themes/${nomeSaida}.css`)
 }
 
 // Só gera quando executado como script; importar (teste) não escreve nada.
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  gerar('lara-light-blue', LIGHT_MAP, 'lara-light-lotus')
+  gerar('lara-light-blue', LIGHT_MAP, 'lara-light-lotus', TINTA_CLARA)
   gerar('lara-dark-blue', DARK_MAP, 'lara-dark-lotus')
 }

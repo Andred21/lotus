@@ -9,6 +9,7 @@ import {
   AZUIS_DARK,
   CELESTE,
   AZUL_POSTE,
+  TINTA_CLARA,
 } from '../scripts/generate-brand-theme.mjs'
 
 const root = resolve(__dirname, '..')
@@ -17,7 +18,9 @@ const stock = (name: string) =>
 const committed = (name: string) =>
   readFileSync(resolve(root, `src/shared/styles/themes/${name}.css`), 'utf8')
 
-const light = () => transform(stock('lara-light-blue'), LIGHT_MAP)
+// A tinta é argumento só do claro: no escuro o celeste de primeiro plano pousa
+// em superfície escura e mede 6,76:1 (achado 3 do checkpoint).
+const light = () => transform(stock('lara-light-blue'), LIGHT_MAP, TINTA_CLARA)
 const dark = () => transform(stock('lara-dark-blue'), DARK_MAP)
 
 /**
@@ -56,6 +59,65 @@ describe("temas Lara-Lotus gerados (spec D5')", () => {
     expect(light()).not.toContain('rgba(59, 130, 246')
     expect(dark()).not.toContain('rgba(96, 165, 250')
     expect(dark()).not.toContain('rgba(59, 130, 246')
+  })
+
+  /**
+   * Um azul sobreviveu à Task 2 por quatro dias e nenhuma guarda o viu: o
+   * `#dbeafe` estava mapeado pela forma HEX, que o Lara nunca escreve — ele só
+   * aparece como `rgba(219, 234, 254, 0.7)`, o fundo das três mensagens `info`.
+   * A guarda de hex passava porque o hex de fato não estava lá. Esta confere a
+   * forma rgba de TODA a família azul, que é como o buraco se fecha de vez.
+   */
+  it('nenhum azul do Lara sobrevive na forma rgba (o buraco da guarda de hex)', () => {
+    const rgbDoHex = (hex: string) =>
+      'rgba(' + [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')
+
+    for (const [nome, css, azuis] of [
+      ['light', light(), AZUIS_LIGHT],
+      ['dark', dark(), AZUIS_DARK],
+    ] as const) {
+      const sobreviventes = azuis.filter((hex) => css.includes(rgbDoHex(hex)))
+      expect(`${nome}: ${sobreviventes.join(', ')}`).toBe(`${nome}: `)
+    }
+  })
+
+  /**
+   * Achado 3 do checkpoint (decisão do João, 2026-08-12). No tema claro não
+   * existe superfície escura, então celeste como `color:` é sempre celeste
+   * sobre claro — 2,77:1 no branco, 2,53:1 no humo, abaixo até do 3:1 de
+   * elemento gráfico. A tinta é o degrau 700 (5,88:1 no branco).
+   *
+   * As três asserções juntas são o ponto: a cor de TEXTO sai, o TOKEN da marca
+   * fica e o PREENCHIMENTO fica. Sem as duas últimas, "zerar o celeste" seria
+   * satisfeito por um tema sem marca nenhuma.
+   */
+  it('celeste não é cor de primeiro plano no claro, mas segue token e preenchimento (achado 3)', () => {
+    const css = light()
+    const primeiroPlano = /(?<![-\w])color:\s*#25a5e4\b/gi
+
+    expect(`primeiro plano celeste: ${css.match(primeiroPlano)?.length ?? 0}`).toBe(
+      'primeiro plano celeste: 0',
+    )
+    expect(css).toContain(`--primary-color: ${CELESTE}`)
+    expect(css).toContain(`background: ${CELESTE}`)
+    expect(css).toContain(TINTA_CLARA)
+  })
+
+  /**
+   * A tinta é do claro. No escuro o celeste pousa em superfície escura (6,76:1)
+   * e fica.
+   *
+   * A asserção é sobre a DECLARAÇÃO, não sobre o valor: `#186b94` é o degrau
+   * 700 da rampa e existe legitimamente nos dois temas como `--primary-700` /
+   * `--blue-700` (o DARK_MAP carrega a escala do light). Procurar o hex solto
+   * reprovaria o dark correto — foi o que esta asserção fez na primeira escrita.
+   */
+  it('o escuro mantém celeste como primeiro plano e não recebe a tinta', () => {
+    const css = dark()
+
+    expect(/(?<![-\w])color:\s*#25a5e4\b/i.test(css)).toBe(true)
+    expect(`tinta como cor no dark: ${css.match(/(?<![-\w])color:\s*#186b94\b/gi)?.length ?? 0}`)
+      .toBe('tinta como cor no dark: 0')
   })
 
   /** D-P5: a spec §4 promete escala celeste — a `--primary-*` é parte dela. */

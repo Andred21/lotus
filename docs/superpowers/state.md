@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
 state_basis_commit: b29f3b9
-updated_at: 2026-08-12T10:25:00-03:00
+updated_at: 2026-08-12T10:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -253,10 +253,35 @@ primeira transição do bloco que não é minha de decidir e saiu: o checkpoint 
 `/lotus-ui-review AppLayout (sidebar, header e page)` é invocação dele, não minha. Só depois disso o
 bloco pode ir a `ready_for_review`. Nada foi promovido.
 
-**Achado nº 3 segue sem decisão** — celeste como traço sobre superfície clara reprova 3:1 fora do
-shell (o shell aprovado não é afetado, porque sobre a navy o celeste mede 5,29:1). **Achado nº 2
-foi fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado: fica como
-está.
+**Achado nº 2 fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado:
+fica como está.
+
+### Achado nº 3 executado — 2026-08-12 (D-P14)
+
+João: *"Faça o achado nº 3 e deixe papel do usuário em branco no lugar do celeste."* Feito, e o
+achado se partiu em duas metades que **não aceitam a mesma cor**:
+
+- **traço de foco → azul-poste** (13,37:1 no humo, contra 2,77:1). Traço não é marca; nada da
+  identidade se perde.
+- **texto → degrau 700 da rampa** (`#186b94`, 5,88:1 no branco), **não** azul-poste. Azul-poste no
+  texto apagaria o celeste de toda a aplicação — botões `text`/`outlined`, abas, links — para
+  consertar contraste. **Desvio da proposta original, declarado.**
+
+**A proposta escrita continha uma armadilha que só a execução revelou:** "azul-poste no claro,
+celeste no escuro" quebraria o foco na sidebar e no header, que são navy nos DOIS temas — traço navy
+sobre navy é foco invisível, pior que o defeito original. O token nasce celeste e o claro o
+sobrescreve; as duas superfícies navy o redeclaram. Medido com Tab real: 5,29:1 dentro do shell,
+14,65:1 fora, 5,28:1 no escuro.
+
+**Encontrado fora do pedido, no caminho:** um azul do Tailwind sobreviveu à Task 2 por quatro dias
+sem guarda nenhuma ver. O `#dbeafe` está mapeado pela forma **hex**, que o Lara nunca escreve — ele
+só aparece como `rgba(219, 234, 254, 0.7)`, o fundo das três mensagens `info`. A guarda passava
+porque confere ausência do hex, e o hex não estava lá. Corrigido; a guarda agora cobre a forma rgba
+da família inteira.
+
+**Papel do usuário:** branco a 75% (8,84:1), o mesmo tratamento da segunda linha do relógio.
+
+Gate: build, lint e **18 arquivos / 101 testes** verdes.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 

@@ -23,9 +23,13 @@ export function Sidebar() {
 
   // Navy fixa nos DOIS temas (spec §6/UI-04): a sidebar é a assinatura e não
   // acompanha o swap de tema — por isso não há dark: aqui.
+  //
+  // E é por não acompanhar que ela redeclara o traço de foco: o achado 3 pôs
+  // azul-poste no claro (13,37:1 sobre o humo), e azul-poste sobre esta navy
+  // seria foco invisível. Aqui vale celeste, que mede 5,29:1 sobre ela.
   return (
     <AppSidebar
-      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) transition-all`}
+      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) [--focus-stroke:var(--brand)] transition-all`}
     >
       <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />}

@@ -911,10 +911,49 @@ com `variant="on-dark"`, como ele deixou no `c9fb188`). Do resto do retorno saí
     altura antiga e o scanner do Tailwind emitiu a regra morta no bundle (o scanner lê comentário).
     Reescrito; conferido no `dist` que a regra sumiu. É a **segunda** vez no mesmo bloco.
 
-**Fica aberto para o João, sem decisão ainda:** celeste como traço/texto sobre superfície **clara**
-(fora do shell) segue reprovando 3:1 — foco 2,77:1 sobre branco, anel do tema 1,83:1. Sobre a navy
-o celeste passa (5,29:1), então o shell aprovado hoje não é afetado. Proposta continua sendo
-azul-poste como traço de foco no claro, celeste no escuro.
+### D-P14 — achado 3 decidido: celeste não é cor de primeiro plano no claro (2026-08-12)
+
+João mandou fazer o achado 3 e pôr o papel do usuário em branco. O achado tinha **duas metades**, e
+elas não aceitam a mesma cor — foi o que a execução mostrou:
+
+- **Traço (foco): azul-poste**, como a proposta original dizia. 13,37:1 sobre o humo, 14,65:1 sobre
+  branco, contra os 2,77:1 do celeste. Cabe aqui porque traço não é marca: nada da identidade se
+  perde.
+- **Texto (botão `text`/`outlined`, aba ativa, link, mensagem info): degrau 700 da rampa**
+  (`#186b94`), **não** azul-poste. Aplicar azul-poste ao texto apagaria o celeste de toda a
+  aplicação — o botão "Novo instrutor", as abas, os links — para consertar contraste. O 700 mede
+  5,88:1 sobre branco, 5,37:1 sobre o humo e 5,13:1 sobre o fundo das mensagens info: passa o AA de
+  **texto** (4,5:1), não só o 3:1 de elemento gráfico, e continua sendo celeste da família.
+  **Este desvio da proposta é declarado, não silencioso.**
+
+**A armadilha que a proposta escrita continha, e que só a execução revelou:** "azul-poste no claro,
+celeste no escuro" quebraria o foco na **sidebar e no header** — eles são navy nos DOIS temas, e
+traço navy sobre fundo navy é foco invisível, pior que os 2,77:1 que o achado veio consertar. Por
+isso o token `--focus-stroke` nasce **celeste** no `:root` (vale no escuro inteiro e nas superfícies
+navy), o claro o sobrescreve para azul-poste, e as duas superfícies navy o redeclaram no próprio
+elemento. Medido com Tab real: 5,29:1 dentro do shell, 14,65:1 fora dele, 5,28:1 no escuro.
+
+**Mecanismo do texto: regra de forma, não lista de seletores.** No tema claro não existe superfície
+escura, então toda declaração `color: <celeste>` é, por construção, celeste sobre claro — são 24
+delas, em botão, splitbutton, tabview, tabmenu, message, toast, rating, editor e datepicker. Uma
+lista de seletores envelheceria no próximo upgrade do primereact. O lookbehind da regra separa
+**pintar** de **declarar**: preserva `--primary-color` (o token da marca segue celeste),
+`background-color` e `border-color` (preenchimento e traço têm régua própria). A guarda de drift
+confere as três coisas juntas — sem isso, "zerar o celeste de primeiro plano" seria satisfeito por
+um tema sem marca nenhuma.
+
+**Achado de tabela encontrado no caminho, fora do pedido:** um azul do Tailwind sobreviveu à Task 2
+por quatro dias sem nenhuma guarda ver. O `#dbeafe` está em `COMPILADOS_LIGHT` com o comentário
+"só via rgba (3x)" — quem o listou **sabia** que ele não aparece como hex, mas a chave do mapa é a
+forma hex, que nunca casa. As três mensagens `info` seguiam com fundo azul do Tailwind dentro de um
+tema de marca, e a guarda passava porque confere ausência do **hex**, e o hex de fato não estava lá.
+Corrigido, e a guarda agora confere a família azul inteira **também na forma rgba**.
+
+- **Papel do usuário em branco** (pedido dele): era celeste (5,29:1, passava). Foi para branco a
+  75%, **8,84:1** — o mesmo tratamento da segunda linha do relógio, que é a hierarquia já
+  estabelecida nesta barra. Se ele quiser branco puro (14,65:1), é trocar o sufixo.
+
+**Fica aberto:** nada do achado 3. As duas metades foram decididas e medidas.
 
 ## Desvios declarados (lição 13)
 

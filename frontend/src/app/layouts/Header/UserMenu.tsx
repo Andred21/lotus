@@ -38,15 +38,18 @@ export function UserMenu() {
 
       {/* Texto branco cravado, não token de tema: a navy do header é fixa nos
         * dois temas e `--text-color` é cinza de superfície clara — media 1,42:1
-        * aqui (D-P13). O papel fica celeste, o acento da marca sobre a navy
-        * (5,29:1), o mesmo do item ativo da sidebar.
+        * aqui (D-P13).
+        * O papel era celeste (5,29:1, passava) e virou branco por decisão do
+        * João em 2026-08-12: o acento da marca sobre a navy fica com o item
+        * ativo da sidebar, e aqui a hierarquia se faz por peso e opacidade, não
+        * por cor.
         * `my-0` porque o projeto não carrega o Preflight e o <p> ainda traz a
         * margem de 1em do user-agent; `truncate` porque nome longo empurrava a
         * barra em vez de cortar. */}
       <div className="hidden min-w-0 max-w-40 text-left sm:block lg:max-w-56">
         <p className="my-0 truncate text-sm font-semibold text-white">{user.name}</p>
 
-        <p className="my-0 truncate text-sm text-(--brand)">{roleKey && t(roleKey)}</p>
+        <p className="my-0 truncate text-sm text-white/75">{roleKey && t(roleKey)}</p>
       </div>
 
       <AppButton

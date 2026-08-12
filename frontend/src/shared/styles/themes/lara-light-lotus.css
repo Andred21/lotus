@@ -257,7 +257,7 @@
 .p-editor-container .ql-snow.ql-toolbar button.ql-active,
 .p-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active,
 .p-editor-container .ql-snow.ql-toolbar .ql-picker-item.ql-selected {
-  color: #25a5e4;
+  color: #186b94;
 }
 .p-editor-container .ql-snow.ql-toolbar button.ql-active .ql-stroke,
 .p-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke,
@@ -272,7 +272,7 @@
 .p-editor-container .ql-snow.ql-toolbar button.ql-active .ql-picker-label,
 .p-editor-container .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-picker-label,
 .p-editor-container .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-picker-label {
-  color: #25a5e4;
+  color: #186b94;
 }
 
 @layer primereact {
@@ -483,7 +483,7 @@
   }
   .p-datepicker .p-datepicker-header .p-datepicker-title .p-datepicker-year:enabled:hover,
   .p-datepicker .p-datepicker-header .p-datepicker-title .p-datepicker-month:enabled:hover {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-datepicker .p-datepicker-header .p-datepicker-title .p-datepicker-month {
     margin-right: 0.5rem;
@@ -1962,10 +1962,10 @@
     box-shadow: 0 0 0 0.2rem #b2dff5;
   }
   .p-rating .p-rating-item.p-rating-item-active .p-rating-icon {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-rating:not(.p-disabled):not(.p-readonly) .p-rating-item:hover .p-rating-icon {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-rating:not(.p-disabled):not(.p-readonly) .p-rating-item:hover .p-rating-icon.p-rating-cancel {
     color: #e73d3e;
@@ -2270,17 +2270,17 @@
   }
   .p-button.p-button-outlined {
     background-color: transparent;
-    color: #25a5e4;
+    color: #186b94;
     border: 1px solid;
   }
   .p-button.p-button-outlined:not(:disabled):hover {
     background: rgba(37, 165, 228, 0.04);
-    color: #25a5e4;
+    color: #186b94;
     border: 1px solid;
   }
   .p-button.p-button-outlined:not(:disabled):active {
     background: rgba(37, 165, 228, 0.16);
-    color: #25a5e4;
+    color: #186b94;
     border: 1px solid;
   }
   .p-button.p-button-outlined.p-button-plain {
@@ -2297,17 +2297,17 @@
   }
   .p-button.p-button-text {
     background-color: transparent;
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-button.p-button-text:not(:disabled):hover {
     background: rgba(37, 165, 228, 0.04);
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-button.p-button-text:not(:disabled):active {
     background: rgba(37, 165, 228, 0.16);
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-button.p-button-text.p-button-plain {
@@ -2346,7 +2346,7 @@
     min-width: 1rem;
     height: 1rem;
     line-height: 1rem;
-    color: #25a5e4;
+    color: #186b94;
     background-color: #ffffff;
   }
   .p-button.p-button-raised {
@@ -2772,16 +2772,16 @@
   }
   .p-splitbutton.p-button-outlined > .p-button {
     background-color: transparent;
-    color: #25a5e4;
+    color: #186b94;
     border: 1px solid;
   }
   .p-splitbutton.p-button-outlined > .p-button:not(:disabled):hover {
     background: rgba(37, 165, 228, 0.04);
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-splitbutton.p-button-outlined > .p-button:not(:disabled):active {
     background: rgba(37, 165, 228, 0.16);
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-splitbutton.p-button-outlined.p-button-plain > .p-button {
     color: #64748b;
@@ -2797,17 +2797,17 @@
   }
   .p-splitbutton.p-button-text > .p-button {
     background-color: transparent;
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-splitbutton.p-button-text > .p-button:not(:disabled):hover {
     background: rgba(37, 165, 228, 0.04);
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-splitbutton.p-button-text > .p-button:not(:disabled):active {
     background: rgba(37, 165, 228, 0.16);
-    color: #25a5e4;
+    color: #186b94;
     border-color: transparent;
   }
   .p-splitbutton.p-button-text.p-button-plain > .p-button {
@@ -4791,14 +4791,14 @@
   .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
     background: #ffffff;
     border-color: #25a5e4;
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-tabview .p-tabview-close {
     margin-left: 0.5rem;
   }
   .p-tabview .p-tabview-nav-btn.p-link {
     background: #ffffff;
-    color: #25a5e4;
+    color: #186b94;
     width: 3rem;
     box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
     border-radius: 0;
@@ -6227,7 +6227,7 @@
   .p-tabmenu .p-tabmenu-nav .p-tabmenuitem.p-highlight .p-menuitem-link {
     background: #ffffff;
     border-color: #25a5e4;
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-tieredmenu {
     padding: 0.5rem 0;
@@ -6324,13 +6324,13 @@
     border-radius: 4px;
   }
   .p-inline-message.p-inline-message-info {
-    background: rgba(219, 234, 254, 0.7);
+    background: rgba(211, 237, 250, 0.7);
     border: solid #25a5e4;
     border-width: 0px;
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-inline-message.p-inline-message-info .p-inline-message-icon {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-inline-message.p-inline-message-success {
     background: rgba(228, 248, 240, 0.7);
@@ -6396,16 +6396,16 @@
     box-shadow: 0 0 0 0.2rem #b2dff5;
   }
   .p-message.p-message-info {
-    background: rgba(219, 234, 254, 0.7);
+    background: rgba(211, 237, 250, 0.7);
     border: solid #25a5e4;
     border-width: 0 0 0 6px;
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-message.p-message-info .p-message-icon {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-message.p-message-info .p-message-close {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-message.p-message-success {
     background: rgba(228, 248, 240, 0.7);
@@ -6504,14 +6504,14 @@
     box-shadow: 0 0 0 0.2rem #b2dff5;
   }
   .p-toast .p-toast-message.p-toast-message-info {
-    background: rgba(219, 234, 254, 0.7);
+    background: rgba(211, 237, 250, 0.7);
     border: solid #25a5e4;
     border-width: 0 0 0 6px;
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-toast .p-toast-message.p-toast-message-info .p-toast-message-icon,
   .p-toast .p-toast-message.p-toast-message-info .p-toast-icon-close {
-    color: #25a5e4;
+    color: #186b94;
   }
   .p-toast .p-toast-message.p-toast-message-success {
     background: rgba(228, 248, 240, 0.7);

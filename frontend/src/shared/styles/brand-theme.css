@@ -8,12 +8,30 @@
 :root {
   --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
+
+  /* Traço de foco. O PADRÃO é celeste, e é o que vale no tema escuro inteiro
+   * (6,76:1 sobre o noche) e nas superfícies navy FIXAS do shell — que não
+   * acompanham o tema. São elas que impedem este token de ser só "navy no
+   * claro, celeste no escuro": a sidebar e o header são navy também no claro,
+   * e ali um traço navy seria foco invisível, pior que os 2,77:1 que o achado 3
+   * veio consertar. Quem pinta navy redeclara o traço no próprio elemento. */
+  --focus-stroke: var(--brand);
 }
 
 /* Fundo claro = humo (spec §4). A var é consumida pelo shell (AppLayout);
- * escopada ao claro para não vazar sobre o noche do tema dark gerado. */
+ * escopada ao claro para não vazar sobre o noche do tema dark gerado.
+ *
+ * `html:not(.dark)` é (0,1,1) e o `:root` acima é (0,1,0) — a sobrescrita do
+ * traço vale por especificidade, não por ordem. */
 html:not(.dark) {
   --surface-ground: #f1f5f9;
+  /* Achado 3 (decisão do João, 2026-08-12): celeste como TRAÇO sobre claro mede
+   * 2,77:1 no branco e 2,53:1 no humo — reprova o 3:1 de elemento gráfico. O
+   * azul-poste mede 13,37:1 no humo. Aqui ele cabe porque é traço e não texto:
+   * não apaga a marca de lugar nenhum. No TEXTO a decisão foi outra (o degrau
+   * 700 da rampa), justamente para o celeste não sumir dos botões — ver o
+   * gerador do tema. */
+  --focus-stroke: var(--brand-navy);
 }
 
 /* D-P9: o foco do Lara é só um box-shadow tingido (`#b2dff5`, ~1,4:1 sobre
@@ -27,7 +45,7 @@ html:not(.dark) {
  * visible` (0,1,0) perderia. Com 0,2,0 empatamos e a ordem de origem decide —
  * este arquivo é do bundle, que entra depois do <link> do tema. */
 :root :focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--focus-stroke);
   outline-offset: 2px;
 }
 
