@@ -6,11 +6,13 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CourseModelTest extends TestCase
 {
+    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
     use RefreshDatabase;
 
@@ -22,7 +24,7 @@ class CourseModelTest extends TestCase
             'workload_hours' => 40,
         ]);
 
-        $course->certificateTemplates()->create([
+        $this->makeTemplate($course->id, [
             'version' => 1,
             'layout_config' => ['orientation' => 'landscape'],
             'validity_months' => 24,
@@ -42,10 +44,7 @@ class CourseModelTest extends TestCase
     public function test_soft_delete_do_curso_cascateia_para_templates(): void
     {
         $course = $this->makeCourse();
-        $template = $course->certificateTemplates()->create([
-            'version' => 1,
-            'layout_config' => [],
-        ]);
+        $template = $this->makeTemplate($course->id, ['version' => 1, 'layout_config' => []]);
 
         $course->delete();
 

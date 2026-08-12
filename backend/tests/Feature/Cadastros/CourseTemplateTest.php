@@ -29,10 +29,12 @@ class CourseTemplateTest extends TestCase
             'id' => $templateId, 'course_id' => $course->id, 'version' => 1,
         ]);
 
+        // `version` no payload é ignorado (D9): o PUT edita a mesma linha e o
+        // número nasce no create.
         $this->putJson("/api/templates/{$templateId}", [
             'version' => 2,
             'layout_config' => ['orientation' => 'landscape'],
-        ])->assertOk()->assertJsonPath('version', 2)
+        ])->assertOk()->assertJsonPath('version', 1)
             ->assertJsonPath('layout_config.orientation', 'landscape');
 
         $this->deleteJson("/api/templates/{$templateId}")->assertNoContent();
@@ -146,5 +148,72 @@ class CourseTemplateTest extends TestCase
 
         $this->expectException(QueryException::class);
         DB::table('course_certificate_templates')->insert($linha);
+    }
+
+    public function test_version_e_derivada_e_o_payload_e_ignorado(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+
+        $this->postJson("/api/courses/{$course->id}/templates", [
+            'version' => 99,
+            'layout_config' => ['orientation' => 'portrait'],
+        ])->assertCreated()->assertJsonPath('version', 1);
+
+        $this->postJson("/api/courses/{$course->id}/templates", [
+            'layout_config' => ['orientation' => 'portrait'],
+        ])->assertCreated()->assertJsonPath('version', 2);
+
+        $this->postJson("/api/courses/{$course->id}/templates", [
+            'layout_config' => ['orientation' => 'portrait'],
+        ])->assertCreated()->assertJsonPath('version', 3);
+    }
+
+    /**
+     * O caso que discrimina o `withTrashed()` (D11): sem ele o MAX volta a 1
+     * depois do arquivamento, e o `unique` cru recusa a próxima criação. É o
+     * caminho real do `UpdateCourseAction`, que soft-deleta todos e recria.
+     */
+    public function test_derivacao_conta_os_arquivados(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+
+        // `layout_config` não vai vazio: a regra `required` do DTO (anterior a
+        // esta task) recusa array vazio com 422, e o que está sob teste aqui é a
+        // derivação, não a validação do layout.
+        foreach (range(1, 3) as $esperado) {
+            $id = $this->postJson("/api/courses/{$course->id}/templates", [
+                'layout_config' => ['orientation' => 'portrait'],
+            ])->assertCreated()->assertJsonPath('version', $esperado)->json('id');
+
+            $this->deleteJson("/api/templates/{$id}")->assertNoContent();
+        }
+
+        $this->postJson("/api/courses/{$course->id}/templates", [
+            'layout_config' => ['orientation' => 'portrait'],
+        ])->assertCreated()->assertJsonPath('version', 4);
+    }
+
+    public function test_put_edita_in_place_e_nao_muda_a_version(): void
+    {
+        $this->actingAsAdmin();
+        $course = $this->makeCourse();
+
+        $id = $this->postJson("/api/courses/{$course->id}/templates", [
+            'layout_config' => ['orientation' => 'portrait'],
+        ])->assertCreated()->json('id');
+
+        $this->putJson("/api/templates/{$id}", [
+            'version' => 7,
+            'layout_config' => ['orientation' => 'landscape'],
+        ])->assertOk()
+            ->assertJsonPath('id', $id)
+            ->assertJsonPath('version', 1)
+            ->assertJsonPath('layout_config.orientation', 'landscape');
+
+        $this->assertDatabaseHas('course_certificate_templates', [
+            'id' => $id, 'version' => 1,
+        ]);
     }
 }

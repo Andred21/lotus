@@ -2,7 +2,6 @@
 
 namespace App\Domains\Catalog\Data;
 
-use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -16,8 +15,9 @@ class CertificateTemplateData extends Data
 {
     public function __construct(
         public int|Optional $id,
-        #[Required]
-        public int $version,
+        // Derivada no backend (D4): o número que venha no payload é ignorado.
+        // Optional na ENTRADA; a saída sempre traz o número, porque vem do model.
+        public int|Optional $version,
         /** @var array<string, mixed> */
         public array $layout_config = [],
         public int|Optional|null $validity_months = null,

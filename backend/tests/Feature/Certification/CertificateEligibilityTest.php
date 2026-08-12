@@ -3,7 +3,6 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Data\EmissionPanelEnrollmentData;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Enums\CertificateStatus;
@@ -25,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -37,6 +37,7 @@ use Tests\TestCase;
  */
 class CertificateEligibilityTest extends TestCase
 {
+    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
     use RefreshDatabase;
 
@@ -220,8 +221,7 @@ class CertificateEligibilityTest extends TestCase
     public function test_template_de_um_curso_e_filtrado_na_consulta_e_nao_em_php(): void
     {
         $outro = $this->makeCourse(['name' => 'Otro Curso']);
-        CourseCertificateTemplate::create([
-            'course_id' => $outro->id,
+        $this->makeTemplate($outro->id, [
             'version' => 1,
             'layout_config' => ['city' => 'Valparaíso'],
         ]);

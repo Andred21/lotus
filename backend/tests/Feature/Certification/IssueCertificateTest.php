@@ -19,10 +19,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\TestCase;
 
 class IssueCertificateTest extends TestCase
 {
+    use CreatesCertificateTemplates;
     use RefreshDatabase;
 
     private Course $course;
@@ -317,8 +319,7 @@ class IssueCertificateTest extends TestCase
 
     private function createTemplate(array $overrides = []): CourseCertificateTemplate
     {
-        return CourseCertificateTemplate::create([
-            'course_id' => $this->course->id,
+        return $this->makeTemplate($this->course->id, [
             'version' => 1,
             'layout_config' => ['city' => 'Santiago'],
             'validity_months' => null,
