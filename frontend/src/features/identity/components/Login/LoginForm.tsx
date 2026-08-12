@@ -32,7 +32,7 @@ export function LoginForm() {
       <FormErrorBanner message={generalError} variant="inline" />
 
       <label className="flex flex-col gap-1">
-        <span className="text-md font-medium dark:text-slate-200">{t("login.email")}</span>
+        <span className="font-medium dark:text-slate-200">{t("login.email")}</span>
         <AppInputText
           leftIcon="pi pi-envelope"
           type="email"
@@ -47,7 +47,7 @@ export function LoginForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-md font-medium dark:text-slate-200">{t("login.password")}</span>
+        <span className="font-medium dark:text-slate-200">{t("login.password")}</span>
         <AppPassword
           leftIcon="pi pi-lock"
           value={password}

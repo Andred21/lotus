@@ -2,12 +2,22 @@ import type { ReactNode } from 'react'
 import { AppButton } from '../AppButton';
 
 export interface DetailHeaderProps {
-  /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele. */
+  /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele.
+   * Nos estados quebrados ele é o que impede a tela de virar beco sem saída —
+   * Reintentar recarrega, não sai. */
   back?: { label: string; onClick: () => void }
-  /** Ausente quando não há entidade para nomear: falha de carga ou id inexistente.
-   * Nesses estados o cabeçalho sobrevive só pelo `back` — sem ele a tela vira um
-   * beco sem saída, e Reintentar não é saída. */
-  title?: string
+  /** Título da página — **obrigatório**. Era opcional "quando não há entidade
+   * para nomear" (falha de carga, id inexistente), e como este componente é o
+   * dono único do `h1` da tela de detalhe, esses ramos abriam a página sem
+   * nível 1 nenhum (Q-5 do review de 2026-08-12). Sem entidade, quem compõe
+   * titula o ESTADO — "Cargando…", "Presupuesto no encontrado". */
+  title: string
+  /** Título só para leitor de tela (`sr-only`). Para os ramos em que a mesma
+   * frase já aparece na tela por outro caminho — a barra de título do
+   * `AppDetailSkeleton`, o texto em destaque do `AppErrorState` —, repeti-la em
+   * `h1` visível seriam dois títulos; escondida, a árvore de cabeçalhos ganha o
+   * nível 1 sem mudar nada do que se vê. */
+  titleHidden?: boolean
   /** Linha de identificação sob o título (cliente, RUT, vínculo). */
   subtitle?: ReactNode
   /** Tags de estado e modalidade, à direita. */
@@ -25,7 +35,7 @@ export interface DetailHeaderProps {
  * ação no cabeçalho desde a Task 17, e devolver `actions` lá reabriria a porta
  * que D1 fechou.
  */
-export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHeaderProps) {
+export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions }: DetailHeaderProps) {
   return (
     <div className="mb-6 flex flex-col gap-4">
       {back && (
@@ -39,10 +49,28 @@ export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHea
           {back.label}
         </AppButton >
       )}
-      {(title || subtitle || tags || actions) && (
+      {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de 2026-08-12):
+        * em página de detalhe o dono do título é este componente. Sai SEMPRE —
+        * condicioná-lo ao `title` era o que deixava carga, falha e
+        * não-encontrado sem nível 1 (Q-5).
+        *
+        * Escondido, ele sai da LINHA e vira filho direto daqui: `sr-only` é
+        * `position: absolute`, então não é item flex e não conta o `gap-4`.
+        * Dentro da linha, ela ficava com altura zero mas seguia sendo item, e o
+        * gap abria 1rem de espaço morto acima do esqueleto e do cartão de erro
+        * (S-2 do re-review de 2026-08-12). Pela mesma razão a linha só existe
+        * quando tem o que mostrar. */}
+      {titleHidden && <h1 className="sr-only">{title}</h1>}
+      {(!titleHidden || subtitle || tags || actions) && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>}
+            {/* Margem cravada no valor que o user-agent dava ao h2, porque o
+              * projeto não carrega Preflight. */}
+            {!titleHidden && (
+              <h1 className="my-[0.83em] text-2xl font-bold" style={{ color: 'var(--text-color)' }}>
+                {title}
+              </h1>
+            )}
             {subtitle && (
               <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
             )}

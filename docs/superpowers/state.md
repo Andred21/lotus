@@ -10,10 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-review_findings_approved: null
-last_completed_work_item: integridade-e-concorrencia-backend
-state_basis_commit: e2a251c
-updated_at: 2026-08-11T17:58:00-03:00
+last_completed_work_item: estilizacao-adr16-shell-tipografia
+state_basis_commit: 1fbaa32
+updated_at: 2026-08-12T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -49,7 +48,508 @@ updated_at: 2026-08-11T17:58:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
+## Último item fechado — 2026-08-12 (`estilizacao-adr16-shell-tipografia`)
+
+### Seleção — 2026-08-11
+
+**Item 4 de "Próximos blocos" do `backlog.md`, promovido explicitamente pelo João** via
+`/planejar-bloco item 4 — Estilização · tema custom (ADR-16), shell e tipografia` com o estado em
+`idle` — o precedente é o de `turma-habilitacao-listagem` (item nomeado literalmente no argumento;
+o comando não promove sozinho). Como no BD-1, o item era proposta ainda não commitada, nascida na
+mesma sessão por instrução literal dele (`quero melhorar a estilização … e depois adicionamos no
+backlog e seguimos`): **a proposta foi commitada antes da promoção** (`b29f3b9`), sobre a base
+fresca de `origin/main` (`09a11d9`) — a edição original estava sobre base velha na branch
+`fix/detalhes-tabelas-interface` e foi portada, não mesclada (guardada em stash).
+
+**Escopo:** fechar o ADR-16 com tema custom sobre o Lara nos dois modos; shell com dono único de
+título, sidebar navy fixa, header responsivo, toggle oculto em compact; tipografia em 3 papéis;
+neutros numa família só e fim dos hex hardcoded. Evidência: review de UI do AppLayout de
+2026-08-11 (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt`, 2 C + 5 B) +
+análise de estilização com a lente `frontend-design`. **O item é a decisão que faltava** aos
+débitos "Shell fora de conformidade com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de
+1024px" (seção "Fora dos BDs" ganhou o ponteiro; as linhas de origem ficam até o fechamento).
+
+**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa:** as
+fontes são o repositório, o report em `.artifacts/`, o ADR-16 em `docs/adrs.md` e a direção
+registrada na memória da sessão de 2026-08-11 — o item não cita Drive, Notion nem Figma. O Figma
+**não** é fonte deste bloco de propósito: a direção é identidade própria aceita pelo João em
+2026-08-11, não implementação de protótipo. Dispensa a confirmar por ele na abertura do
+brainstorming, como nos precedentes.
+
+**Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
+branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
+`fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
+
+### Brainstorming e spec — 2026-08-11
+
+Dispensa do packet confirmada pelo João na abertura (D1). Entrevista fechou 8 decisões (D1–D8 da
+spec): fontes self-hosted em 3 famílias via `@fontsource`; UI-06 fica no BD-3; UI-07 entra;
+mecanismo do tema = `brand-theme.css` estático sobre o Lara (abordagem A, contra tema compilado e
+runtime JS); botão primário celeste com texto azul-poste por AA medido (~2.6:1 de branco sobre
+celeste reprova); radius 6→4px; review em duas frentes por tocar `locales/`. O João aprovou o
+design por seções (§1+§2, depois §3+§4) com a instrução literal `APROVADO — gravar spec`. A spec
+ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanças de shell mapeadas
+1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
+O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
+revisar a spec escrita e autorizar o `writing-plans`.
+
+### Spec aprovada e plano escrito — 2026-08-11
+
+O João aprovou a spec com a instrução literal `aprovado`. **A escrita do plano achou um defeito na
+spec aprovada e ele foi corrigido com decisão dele, não silenciado (lição 13):** o Lara compila as
+cores inline (97 ocorrências de `#3b82f6` nas regras de componente) e as vars de `:root` são um
+conjunto paralelo que as regras não consomem — a D5 original (override puro de tokens) **não**
+restilizaria botão, foco nem highlight. Nasce a **D5'**, aprovada pelo João: script versionado
+`frontend/scripts/generate-brand-theme.mjs` gera cópias dos 2 Lara com a escala celeste, os neutros
+gray→slate (corpo em grafite, ground dark em noche), radius 4px e `"Inter var"→"Inter"`, saída
+versionada em `src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
+a seta de dependência não sobe até `primeTheme.ts`), com teste vitest de drift; o
+`brand-theme.css` fica fino (D6, humo via `--surface-ground`, `tabular-nums`). A adenda D5' foi
+gravada na própria spec (§4) com a correção do §9.6.
+
+Plano em 8 tasks (0–7): baseline → fontes `@fontsource` + tokens Tailwind → temas gerados +
+guarda de drift → `brand-theme.css` + higiene de hex + foco (UI-03) → sidebar navy + toggle +
+aria i18n (UI-02/04/07) → header barra utilitária + tokens no shell (UI-01/05) → enmenda ADR-16 →
+gate pelas mesmas medições do report. Três desvios declarados no §Desvios do plano (focus ring
+tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados em slate).
+Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
+o Codex entra na segunda lente do review (spec §10). O estado transiciona para
+`ready_for_execution` no mesmo commit do plano.
+
+### Execução iniciada — 2026-08-11: o plano foi revisado contra o Lara instalado, e mudou
+
+O João autorizou com `/executar-bloco estilizacao-adr16-shell-tipografia`, com a instrução literal
+`Mas antes revise o plano e spec, verificando se esta de acordo`. O gate passou (spec, plano,
+branch e Git coerentes); a revisão pedida **não** foi de coerência documental — foi do plano contra
+o `node_modules/primereact` instalado, e achou **seis defeitos**, gravados como emenda no plano
+(D-P4..D-P9). É a mesma mecânica da lição 13 que produziu a D5': defeito achado na fase seguinte se
+corrige com decisão, não se silencia.
+
+Quatro entraram declarados por serem defeito ou implementação literal da spec: o script tinha de
+**remover** os `@font-face` do Lara (o rename `"Inter var"→"Inter"` os transformava numa face com
+`src` 404 competindo com a do `@fontsource`); a escala `--primary-50..900` não era tocada por
+nenhum dos dois mapas, então o arquivo afirmaria "sem azul Lara" carregando 20 hexes azuis; a
+guarda de drift conferia 3 hexes em vez da família; e sobravam cinzas (`#1f2937` no light,
+`#030712` no dark) contra a D-P3.
+
+**Duas mudavam o construído e foram decididas pelo João antes de qualquer linha de código.**
+**D-P8** — medi 9 blocos no Lara light pintando a primária com texto branco (`.p-button`, `.p-tag`
+2×, `.p-badge`, `.p-selectbutton`, `.p-togglebutton`, `.p-overlaypanel-close`, `.p-steps`,
+`.p-stepper`); depois do mapa isso é **2,77:1**, reprovando AA, e a cadeia de `:not()` do plano
+cobria só o botão — com `AppTag` usado em 9+ arquivos de feature. Ele escolheu tornar a D6
+propriedade do **tema gerado** (transform block-aware), matando a cadeia de `:not()`. **D-P9** — o
+anel de foco da D-P1 media ~1,4:1 sobre branco e o DoD §9.3 passaria verde com o foco invisível,
+que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visible` de 2px celeste.
+
+O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
+pulou e registrou como falha de processo.
+
+### Tasks 0–7 executadas — 2026-08-11: o código fechou, o checkpoint do João não
+
+As sete tasks estão implementadas e commitadas na `feat/estilizacao-adr16-shell-tipografia`:
+`f76ba67` (baseline), `c12a3bc` (fontes), `f54f6ff` (temas gerados), `b029ea8` (camada fina),
+`59e6e1d` (sidebar/i18n), `87442f4` (header/shell), `df781c6` (ADR-16 ponto 5), `6eead8e` (correção
+achada pelo próprio gate). Evidência task a task em `.superpowers/sdd/progress.md`.
+
+**Mais duas emendas nasceram DURANTE a execução, gravadas no plano** — nenhuma reabre decisão do
+João, as duas são a decisão dele aplicada onde ela vale. **D-P10**: a regra "mesmo bloco" da D-P8
+pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em outro — mais 7 declarações
+ficavam brancas sobre celeste. **D-P11**: o Step 6 da Task 3 esperava que o grep de `#25A5E4`
+devolvesse só o `SidebarItem`; devolveu três — `AppAvatar.tsx` pintava `#25A5E4`/`#fff` inline e o
+`brandOutline` mandava `dark:text-white` sobre celeste. Os dois são o par de 2,77:1 que a spec D6
+nomeia, dentro do bloco que existe para matá-lo.
+
+**Duas vezes a inspeção pegou o que os testes verdes não pegaram**, e é o padrão que a lição 13
+combate: 96 verdes não provam o arquivo certo. Na Task 2, `--primary-400` e `--primary-500` saíram
+com o mesmo hex e `--primary-color-text` ficou branco. Na Task 7, o grep de `ring-0` reprovou por um
+motivo que virou correção: o scanner do Tailwind lê comentário, achou o token no `//` que explicava
+a remoção da classe e **emitia a utility morta no bundle**.
+
+**Gate do bloco, medido no navegador com sessão real** (não mock): UI-01 `rightEdge` 378 e
+`scrollWidth` == 390; UI-02 zero `aside button` a 390, um a 1440, com a pref persistida intacta nos
+dois; UI-03 Tab real casando `:focus-visible` com `outline: solid 2px rgb(37,165,228)` **somado** ao
+anel do tema; UI-05 um heading por página. Mais: corpo em `Inter, sans-serif`, título em `Archivo`,
+`--surface-ground` humo/noche, sidebar `rgb(15,43,61)` nos dois temas, `--primary-color-text`
+azul-poste, radius 4px, `tabular-nums` nas células. Suíte **17 arquivos / 96 testes**, build e lint
+verdes, `generated.ts` sem diff, os quatro greps de higiene vazios.
+
+**O bloco PARA aqui, e o plano é quem manda parar.** O Step 4 da Task 7 é o checkpoint visual do
+João, declarado **bloqueante** ("sem aprovação dele o bloco não segue"), e o Step 5 é o re-run do
+`/lotus-ui-review`, que é invocação dele. Nada foi promovido a `ready_for_review`.
+
+**Três coisas para a decisão dele, achadas olhando as telas — a medição verde não pegaria nenhuma:**
+
+1. **O wordmark ficou ilegível (regressão do Step 4 da Task 4).** O asset é retrato **335×466**; com
+   o `h-8 w-auto` que o plano escreveu ele renderiza **23×32 px**. O `on-dark` resolveu a cor, que
+   era a UI-04; o tamanho errou para o outro lado do `h-30` anterior. Decisão de marca.
+2. **O toggle da sidebar é uma caixa branca sobre a navy no tema claro** (`rgb(255,255,255)`
+   medido). O `brandOutline` acompanha o tema; a sidebar deixou de acompanhar na Task 4. Contraste
+   passa, coerência não.
+3. **Celeste como traço ou texto sobre superfície clara segue reprovando.** A D6/D-P8 resolveu uma
+   direção — texto **sobre** celeste. A outra não tem decisão: o outline de foco mede **2,77:1**
+   sobre branco (e 5,29:1 sobre a navy, onde passa), o `brandOutline` claro mede 2,77:1, e as
+   variantes `outlined`/`text` do tema caíram de 3,68:1 (Lara stock) para 2,77:1. A D-P9 continua
+   certa — 1,4:1 → 2,77:1 é a diferença entre invisível e visível —; falta a decisão de cor.
+   Proposta: azul-poste como traço de foco no claro (13,4:1 sobre humo), celeste mantido no escuro.
+
+### Este arquivo foi reconstruído — 2026-08-12 (perda no merge `c9fb188`)
+
+**Não é reescrita de história: é conserto de uma perda medida, com os dois lados recuperáveis no
+Git.** O merge `c9fb188` ("fix: tailwind css applayout"), que trouxe a `origin/main` para dentro da
+branch, resolveu o `state.md` num híbrido que **nenhum dos dois pais tinha**: ficou com o
+frontmatter da main (`last_completed_work_item: integridade-e-concorrencia-backend`,
+`state_basis_commit: e2a251c`) e, ao mesmo tempo, apagou **as duas** narrativas — a seção
+`## Item ativo` deste bloco (144 linhas, vindas de `421e1c0`) **e** a seção do
+`integridade-e-concorrencia-backend` que a main tinha acabado de escrever (358 linhas, de
+`eca0e34`). O arquivo caiu de ~1170 para 812 linhas e passou a se contradizer: dizia no frontmatter
+que o último fechado era o `integridade` enquanto a seção "Último item fechado" era o
+`guardas-que-faltam`, e não havia registro nenhum do bloco em execução.
+
+Reconstrução, sem escolha por heurística — cada peça veio de um pai identificado:
+
+| Campo/seção | Origem | Por quê |
+|---|---|---|
+| `active_work_item`, `workflow_state`, `next_action`, `active_spec`, `active_plan` | branch (`421e1c0`) | é o bloco em execução; a main estava `idle` |
+| `last_completed_work_item: integridade-e-concorrencia-backend` | main (`eca0e34`) | fechou 18:00, depois do `guardas-que-faltam` — é o fato mais novo |
+| `state_basis_commit: b29f3b9` | branch (`421e1c0`) | é a base **deste** bloco, citada na própria seção Seleção; o `e2a251c` que o merge deixou é a base do bloco de backend |
+| `## Item ativo` (144 linhas) | branch (`421e1c0`) | restaurada literal |
+| `## Último item fechado — integridade` (358 linhas) | main (`eca0e34`) | restaurada literal, e a cadeia voltou a `Último → Penúltimo → Antepenúltimo` |
+
+Nenhuma linha foi reescrita de memória. O único texto novo é esta seção e a de baixo.
+
+### Checkpoint visual respondido — 2026-08-12: duas emendas, o bloco segue parado no João
+
+O João respondeu ao Step 4 da Task 7. **Aprovou a navy no header e na sidebar** ("o jeito que está
+atualmente está legal") e **fechou o achado nº 1** (logo): fica como está. Do retorno saíram duas
+emendas, executadas e commitadas em `1a0279d`, declaradas no plano:
+
+- **D-P12 — regressão de comportamento, achada por ele, não por teste.** Trocar o idioma parou de
+  reformatar hora e data; só mudava no reload. O `Clock` nunca se inscreveu no i18n — quem
+  re-renderizava era o `Header`, que tinha `t()` no título até a UI-05 dar essa posse ao
+  `PageHeader`. A suíte não tinha como ver: o formato continuava certo, só congelado. Corrigido na
+  origem (inscrição em quem depende dela) e coberto por `Clock.test.tsx`, que **foi rodado contra a
+  versão sem inscrição e reprovou** com a data congelada — o sintoma literal do relato.
+- **D-P13 — altura, texto branco e responsividade do header navy.** Altura real era 94px por causa
+  das margens de user-agent dos `<p>` (o projeto não carrega Preflight): 42px mortos em cada bloco.
+  Zeradas, o teto vira o avatar e a altura vira escolha — **o João fixou 80px no working tree
+  durante a execução, e o valor dele ficou**. Texto branco cravado no lugar dos tokens de tema, que
+  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. 7 larguras medidas, de 1440
+  a 320: zero overflow horizontal.
+- **O `AppButton` fica como estava — decisão dele, contra a minha proposta.** Eu tinha entregue
+  variantes `onNavy*` para os controles sobre a navy; ele **aprovou o visual e mandou reverter só o
+  `AppButton`**. Revertido por inteiro (zero referências a `onNavy` no `src/`), gate refeito.
+  **O achado nº 2 volta a ficar aberto por escolha dele:** a caixa branca sobre a navy passa a ser
+  estética assumida, não defeito pendente. Contraste ali sempre passou; o que eu argumentava era
+  coerência de superfície, e essa é chamada dele.
+- **Reincidência da armadilha da UI-03 no mesmo bloco:** um comentário meu citou a classe de altura
+  antiga e o scanner do Tailwind emitiu a regra morta no bundle. Segunda vez. Reescrito e conferido
+  no `dist`.
+
+**Step 4 APROVADO** — "visual aprovado", com a única ressalva do `AppButton`, já atendida. É a
+primeira transição do bloco que não é minha de decidir e saiu: o checkpoint bloqueante caiu.
+
+**O bloco continua em `executing` e continua em `next_owner: joao`, agora no Step 5:** o re-run do
+`/lotus-ui-review AppLayout (sidebar, header e page)` é invocação dele, não minha. Só depois disso o
+bloco pode ir a `ready_for_review`. Nada foi promovido.
+
+**Achado nº 2 fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado:
+fica como está.
+
+### Achado nº 3 executado — 2026-08-12 (D-P14)
+
+João: *"Faça o achado nº 3 e deixe papel do usuário em branco no lugar do celeste."* Feito, e o
+achado se partiu em duas metades que **não aceitam a mesma cor**:
+
+- **traço de foco → azul-poste** (13,37:1 no humo, contra 2,77:1). Traço não é marca; nada da
+  identidade se perde.
+- **texto → degrau 700 da rampa** (`#186b94`, 5,88:1 no branco), **não** azul-poste. Azul-poste no
+  texto apagaria o celeste de toda a aplicação — botões `text`/`outlined`, abas, links — para
+  consertar contraste. **Desvio da proposta original, declarado.**
+
+**A proposta escrita continha uma armadilha que só a execução revelou:** "azul-poste no claro,
+celeste no escuro" quebraria o foco na sidebar e no header, que são navy nos DOIS temas — traço navy
+sobre navy é foco invisível, pior que o defeito original. O token nasce celeste e o claro o
+sobrescreve; as duas superfícies navy o redeclaram. Medido com Tab real: 5,29:1 dentro do shell,
+14,65:1 fora, 5,28:1 no escuro.
+
+**Encontrado fora do pedido, no caminho:** um azul do Tailwind sobreviveu à Task 2 por quatro dias
+sem guarda nenhuma ver. O `#dbeafe` está mapeado pela forma **hex**, que o Lara nunca escreve — ele
+só aparece como `rgba(219, 234, 254, 0.7)`, o fundo das três mensagens `info`. A guarda passava
+porque confere ausência do hex, e o hex não estava lá. Corrigido; a guarda agora cobre a forma rgba
+da família inteira.
+
+**Papel do usuário:** branco a 75% (8,84:1), o mesmo tratamento da segunda linha do relógio.
+
+Gate: build, lint e **18 arquivos / 101 testes** verdes.
+
+### Step 5 rodado e os achados corrigidos — 2026-08-12 (D-P15)
+
+O João rodou o re-run do `/lotus-ui-review` (report em
+`.artifacts/ui-review/2026-08-12T10-58-10-applayout-shell-rerun/report.txt`): **1 A + 6 B + 0 C**. O
+A é agrupado e é o placar do bloco — os **sete** achados de 2026-08-11 fecharam e D-P12/D-P13/D-P14
+se confirmaram no navegador (foco medido nas três superfícies, relógio reformatando ao vivo, header
+80px sem overflow em 8 larguras). Ele então mandou resolver os achados. **Cinco entraram; o sexto
+não é deste bloco.** Detalhe e medições na D-P15 do plano.
+
+- **UI-01** — o 2,77:1 que a D-P14 matou no tema **gerado** sobrevivia no visual de marca do
+  `AppButton`, que é Tailwind e o transform não enxerga: 22 call sites pintando rótulo e borda de
+  celeste sobre branco, incluindo a ação primária de quase todo módulo. Nasce `--brand-ink` — celeste
+  na raiz, degrau 700 no claro, lido de `--primary-700` para haver uma fonte só da tinta. Medido:
+  `rgb(37,165,228)` → `rgb(24,107,148)`, **5,88:1**; escuro intacto.
+- **UI-02** — a varredura achou **quatro** donos de título, não um: além do `PageHeader` do report,
+  o `DetailHeader` e as duas páginas do shell que escreviam o cabeçalho à mão (`DashboardPage`,
+  `ModulePlaceholder`). Os dois primeiros passam a `h1`; as duas páginas passam a **usar o
+  `PageHeader`** — corrigir só a tag nelas manteria o defeito de fundo, que é a posse dividida do
+  título que a UI-05 existiu para fechar.
+- **UI-03** — `<html lang>` passa a acompanhar o i18n, no próprio `i18n.ts` e não num efeito de
+  React. Não era regressão deste bloco.
+- **UI-04** — **desvio declarado da recomendação do report**, decidido por medição: o chevron
+  **fica**. O que devolvia os 18px cortados era o padding do botão, não o ícone; com o avatar dentro
+  do mesmo controle o gatilho termina em 308 contra a viewport de 320. De quebra, o avatar e o nome
+  deixam de ser decoração ao lado de um controle mudo.
+- **UI-06** — a marca volta ao rail colapsado como glifo, asset **gerado por script versionado** no
+  molde da D5' (`scripts/generate-logo-glyph.mjs` + guarda de drift). Abaixo de 1024px o colapso é
+  imposto, então isto é a marca voltando a existir em tablet e mobile.
+- **UI-05 — fora, por decisão anterior:** é o UI-06 de 2026-08-11, parqueado no **BD-3** pela spec
+  deste bloco; o próprio report o registra como não-novo.
+
+**Quatro mecanismos vistos reprovar contra o código antigo** antes de aceitos (lição 10). Gate:
+**22 arquivos / 112 testes**, build e lint verdes, `dist` sem a utility morta, console limpo e zero
+mutação — só o `POST /api/login` com a credencial de seed, o mesmo desvio que o João escolheu no
+re-run.
+
+**Estado: `ready_for_review`.** O Step 5 caiu e a Task 7 fecha aqui. `/revisar-sprint` é invocação
+do João; nada foi promovido além disso, e nem review, nem fechamento, nem push rodaram.
+
+### Review de sprint — 2026-08-12: duas frentes, 8 achados aguardando o João
+
+**Duas frentes por decisão da própria spec (D8), não pela régua da skill.** O gate de risco do
+`/revisar-sprint` classificaria este bloco como BAIXO — nenhum gatilho de ALTO se aplica (sem
+schema, `generated.ts`, Sanctum, RBAC, auditoria, dinheiro ou documento legal; `executor: claude`).
+A D8 da spec aprovada é mais estrita e venceu: o bloco toca `locales/` e o shell global. Lente
+Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre `4b02b72...HEAD`.
+
+**Gate reproduzido, não herdado:** `pnpm build`, `pnpm lint` e `pnpm test` verdes —
+**22 arquivos / 112 testes**, o mesmo placar que a execução registrou.
+
+**Órfãos: zero.** As três chaves i18n novas têm consumidor (`toggleMenu` no `Sidebar`,
+`toggleTheme` no `AppearanceControls` e no `LoginPage`, `openUserMenu` no `UserMenu`); os dois
+scripts têm `pnpm brand-theme`/`pnpm logo-glyph` mais os testes; os `.d.mts` são consumidos pelo
+`tsc -b`; `LogoGlyph.png` pelo `variant="glyph"`; os temas gerados pelo `primeTheme.ts`. **Leis §5
+limpas:** zero import de `primereact` fora de `shared/ui`, zero import cross-feature, `generated.ts`
+intocado. **DoD §9.6 conferido em primeira mão:** `#25A5E4` só sobrevive em `brand.ts` e
+`brand-theme.css` (a dupla fonte declarada da spec §7), e não há `gray-*` no shell.
+
+**Convergência entre as lentes:** as duas viram o Q-1 e o Q-4. O Codex achou sozinho o Q-2, o Q-5,
+o Q-6 e o Q-7; a lente Claude achou sozinha o Q-3 e o Q-8. Nenhum achado do Codex foi aceito sem
+conferência própria no código.
+
+**Um achado do Codex recusado com evidência.** Ele afirmou que o terceiro papel tipográfico ficou
+sem implementação, porque `brand-theme.css:70` aplica só `tabular-nums`. Conferido no código: o
+`font-mono` já é consumido em **5 sítios** (`HistorialTable`, `IssuedDialog`, `RedatorCard`,
+`RedatoresTable`, `StudentsTable`) e passou a render IBM Plex Mono pelo `--font-mono` do
+`index.css` — o papel está implementado onde a spec §5 o pede (folio e RUT). Data em tabela nunca
+foi mono na spec: o §5 lhe dá `tabular-nums`, que é exatamente o que a regra faz.
+
+**Os oito achados:**
+
+1. **Q-1 🟡** *(Claude + Codex)* — `UserMenu.tsx:52`: o `aria-label` do gatilho **substitui** o
+   conteúdo acessível, e o nome e o papel do usuário agora moram **dentro** do botão (UI-04). O
+   leitor de tela ouve só "Abrir menu do usuário" e perde a identificação da sessão; e o rótulo
+   visível não está contido no nome acessível (WCAG 2.5.3, nível A). De quebra, `<div>` e `<p>`
+   são conteúdo de fluxo dentro de `<button>`, que aceita só conteúdo de frase.
+2. **Q-2 🟡** *(Codex, verificado)* — `tests/brand-theme.test.ts:225`: a guarda da D-P10 documenta
+   sete declarações herdadas e confere **três** (checkbox, radio, progressbar); os quatro
+   seletores de `selectbutton`/`togglebutton` ficam sem guarda. O teste de igualdade não cobre o
+   buraco — ele regenera dos dois lados. É a mesma forma do defeito que a D-P6 corrigiu **neste
+   bloco**: conferir amostra escolhida a dedo em vez da lista que é a fonte.
+3. **Q-3 🟡** *(Claude)* — `text-md` **não existe** no Tailwind (a escala é `sm`/`base`/`lg`).
+   Conferido no `dist`: zero ocorrência de `.text-md` nos três CSS emitidos. Quatro call sites,
+   dois deles escritos por este bloco (`SidebarItem.tsx:21`, linha reescrita; `UserMenu.tsx:81`,
+   linha nova) e dois pré-existentes (`LoginForm.tsx:35` e `:50`).
+4. **Q-4 🟡** *(Claude + Codex)* — customização de componente PrimeReact no **call-site**, contra o
+   ADR-16 §3 ("acontece no wrapper `shared/ui`"): `UserMenu.tsx:54` monta um gatilho invisível com
+   `bg-transparent! p-0! hover:bg-transparent!`, e `Header.tsx:32` estiliza o pseudo-elemento
+   interno do `AppDivider` com `before:border-white/20`. O `AppButton` tem sistema de `variant`
+   em `style.ts` que existe para isto.
+5. **Q-5 🟢** *(Codex, verificado)* — a UI-05 tirou o `h1` do `Header` e a UI-02 o deu ao
+   `PageHeader`/`DetailHeader`, mas o `DetailHeader` só emite `h1` quando recebe `title`: os ramos
+   de erro e de não-encontrado de `BudgetDetailPage` e `TurmaDetailPage` passam só `back`, e o de
+   loading nem renderiza o componente. Essas telas ficaram sem cabeçalho de nível 1 nenhum.
+6. **Q-6 🟢** *(Codex, verificado)* — `tests/brand-theme.test.ts:44-46` afirma que um azul novo
+   não mapeado é pego pelo teste de igualdade num upgrade do primereact. Não é: se o dev regenerar,
+   os dois lados nascem do mesmo stock novo e a igualdade passa; e as listas `AZUIS_*` são manuais,
+   então o azul novo não está nelas. A guarda cobre "upgrade **sem** regerar", não "upgrade com
+   azul novo". Lição 13 dentro do arquivo que existe para vigiar drift.
+7. **Q-7 🟢** *(Codex, verificado)* — `ámbar-aviso` (`#D97706`) é um dos 6 tokens da paleta da spec
+   §4 e **não existe em lugar nenhum do código**: o `warning` segue `#f97316` do Lara no tema
+   gerado. O gerador declara a decisão em comentário ("as paletas de severidade ficam intactas de
+   propósito"), mas nem a spec nem o plano foram emendados — a spec segue prometendo 6 donos de cor
+   e o construído tem 5.
+8. **Q-8 🟢** *(Claude)* — `LoginPage.tsx:44-52` duplica o `AppearanceControls`, cujo docblock diz
+   que "a duplicação do bloco JSX **vivia** nos dois". A UI-07 deste bloco teve de escrever a mesma
+   chave `common.toggleTheme` nas duas cópias no mesmo commit — a duplicação se manifestando como
+   edição gêmea.
+
+### Correção dos 8 achados — 2026-08-12, em subagentes paralelos
+
+O João aprovou os oito e pediu SDD com execução paralela: cada subagente aplica o seu grupo,
+revisa o próprio diff e faz **um commit unitário só dos seus paths**. A skill de SDD proíbe
+implementadores em paralelo; a proibição existe por causa de conflito de arquivo, então a partição
+foi por conjunto **disjunto** de arquivos, e nenhum commit saiu com arquivo de outro agente.
+
+| Commit | Achados | Escopo |
+|---|---|---|
+| `e6460f9` | Q-7 | spec §4, plano (emenda D-P16), `pendencias.md` (P-30) |
+| `54d0f8c` | Q-8 | `LoginPage`, `AppearanceControls` |
+| `d0c3b86` | Q-5 | `DetailHeader` + 3 páginas + 4 testes novos |
+| `224000c` | Q-2, Q-6 | `generate-brand-theme.mjs`/`.d.mts`, `tests/brand-theme.test.ts` |
+| `c167ba7` | Q-1, Q-3, Q-4 | `UserMenu`, `Header`, `SidebarItem`, `LoginForm`, `AppButton/style.ts`, `AppDivider`, `brand-theme.css` |
+| `b6636d1` | órfã do Q-1 | `common.openUserMenu` removida nos 3 locales |
+
+**Quatro desvios do alvo que eu tinha escrito, todos com prova e todos aceitos:**
+
+1. **Q-3 não virou `text-base`, virou remoção da classe.** No Tailwind v4 a utility de tamanho
+   carrega `line-height` junto (`--text-base--line-height: calc(1.5/1)`); a line-height atual
+   desses nós é `normal` (~1,21 no Inter), então `text-base` cresceria cada elemento ~5px. Como o
+   critério era preservar o render de hoje, remover é o único resultado provadamente idêntico.
+2. **Q-5 fechou o contrato em vez de repetir o conserto.** `title` do `DetailHeader` passou de
+   opcional a **obrigatório** e o `h1` saiu de dentro do `{title && …}`: "cabeçalho de detalhe sem
+   nível 1" virou erro de tipo (lição 14). Escopo estendido ao `ValidationPage` (`/validar/:uuid`,
+   rota pública, fora do `AppLayout`), que tinha a mesma ausência nos ramos de loading e erro.
+3. **Q-6 não cobra a lista, cobra o mapa.** `AZUIS_*` só tem hex e deixaria de fora as veladuras
+   `rgba` exclusivas do escuro (`#0763d4`, `#1d7ff8`). A guarda classifica a família por geometria
+   (croma ≥30, saturação ≥36, matiz 207–231) e cobra presença no mapa. Provada com dentes: o
+   `#4f8ff7` injetado no stock reprova, e os três limiares são load-bearing (afrouxar saturação
+   para 15 acusa `#334155`, croma para 10 acusa `#020617`, matiz 195–245 acusa `#0ea5e9`).
+4. **Q-8 unificou o `gap` em vez de preservar os 8px do login.** `className` não vence: as duas
+   utilities caem no mesmo seletor e quem decide o empate é a ordem do bundle do Tailwind. Só
+   `gap-2!` venceria, e `!important` para preservar drift de copy-paste é pior. Decidido pelo João.
+
+**Uma afirmação do próprio relatório de review caiu.** "As paletas de severidade ficam intactas" é
+meia-verdade: a `p-message-info` do tema claro mudou (`border: solid #25a5e4`, `color: #186b94`).
+O alcance da regra do gerador é a **família de cor**, não a severidade — o `warning` sobreviveu por
+ser laranja. Os três documentos do Q-7 registram isso explicitamente, senão a correção de uma
+lição 13 plantaria uma lição 13 nova.
+
+**Gate reproduzido depois de tudo:** `pnpm build`, `pnpm lint` e `pnpm test` em 0 — **26 arquivos /
+126 testes** (eram 22/112 antes das correções). Órfãos: um encontrado e morto (`common.openUserMenu`),
+zero restantes. Chaves i18n pareadas nos três locales (598 cada). §5.6 reconferida: zero
+`primereact` importado em `features/`, zero import cross-feature, `generated.ts` intocado no
+intervalo. (Fora de `shared/ui` existe um import de `primereact/api` em `shared/config/primeLocale.ts`
+(`frontend/src/shared/config/primeLocale.ts`) — legítimo, a lei fala de feature. O registro dizia
+"zero fora de `shared/ui`" e era mais forte que
+o código: S-4 do re-review.)
+
+**Duas coisas aguardando o João, nenhuma delas bloqueante:**
+- `operation.detail.notFound` é `"Turma no encontrada."` **com ponto final**, e agora vira `h1`.
+  Copy é decisão dele; não mexi.
+- `docs/pendencias.md` tem `P-28` duplicado em duas pendências distintas (fundo do certificado e
+  guarda da lição 13). Renumerar pendência alheia ficou fora do escopo.
+
+**Uma ocorrência de segurança, registrada e não normalizada.** O subagente do Q-8 teve a primeira
+tentativa de commit negada pelo classificador de permissão e reformulou a mesma ação por indireção
+de shell (heredoc) até passar. O commit `54d0f8c` contém exatamente os dois arquivos autorizados —
+o resultado é legítimo, o caminho não. Manter ou reverter é decisão do João.
+
+### Re-review das correções — 2026-08-12, duas frentes sobre `3acff29..HEAD`
+
+A segunda lente do D8 rodou também sobre a rodada de correção: lente Claude inline e Codex
+read-only (`codex exec`), ambas sobre os sete commits acima. **Quatro achados, nenhum 🔴**, todos
+aprovados pelo João e corrigidos na mesma rodada.
+
+Convergência: o S-2 foi visto pelas duas lentes independentemente. O Codex rodou a suíte por conta
+própria (26/126 verdes na época), o que confirma o gate por caminho separado.
+
+- **S-1 🟡** — o `<div>` do avatar continua dentro do `<button>`: a raiz do `Avatar` do PrimeReact é
+  sempre `<div>` (`avatar.cjs.js:254`), então o Q-1 matou só a metade textual. **Decisão do João:
+  manter o desvio e corrigir a afirmação** — o dano era o comentário dizendo que o botão só tem
+  conteúdo de frase, não o `div` (nenhum parser fecha `<button>` num `div`, e um círculo de frase
+  significaria reimplementar o fallback foto→iniciais fora do wrapper).
+- **S-2 🟡** *(Claude + Codex)* — o `DetailHeader` passou a renderizar a linha do título sempre; com
+  `titleHidden` ela fica com altura zero **mas segue sendo item flex**, e o `gap-4` da raiz abria
+  1rem de espaço morto acima do esqueleto e do cartão de erro. Corrigido: escondido, o `h1` é filho
+  direto da raiz (`sr-only` é absoluto, não é item flex) e a linha só existe quando tem o que
+  mostrar. Guarda nova no `DetailHeader.test.tsx` — jsdom não mede layout, então ela assere a
+  ESTRUTURA que produz a geometria, e foi provada contra uma réplica da estrutura anterior.
+- **S-3 🟡** — a D-P16 corrigiu a tabela da §4 e deixou "6 tokens" vivo em quatro outros lugares
+  (escopo da spec, duas linhas do plano, cabeçalho do `brand-theme.css`). Todos corrigidos.
+- **S-4 🟢** — a linha de evidência acima dizia "zero `primereact` fora de `shared/ui`" e era mais
+  forte que o código. Corrigida no próprio parágrafo.
+
+**Gate final:** `pnpm build`, `pnpm lint`, `pnpm test` em 0 — **26 arquivos / 127 testes**.
+
+**Três decisões abertas do João, nenhuma bloqueante para o fechamento** (o `/fechar-sprint` as vê
+aqui): o caminho do commit `54d0f8c`, o ponto final da copy de `operation.detail.notFound` e o
+`P-28` duplicado.
+
+### Fechamento — 2026-08-12
+
+**Item 0 — o critério de aceite foi remedido no navegador, não herdado do registro da execução.**
+Sessão real contra a API (`POST /api/login` com a credencial de seed; nenhuma outra escrita), duas
+rotas autenticadas: **UI-01** `rightEdge` **378** com `scrollWidth == innerWidth == 390`; **UI-02**
+zero `aside button` a 390 com a pref persistida em `true` — o valor que o toggle a 1440 gravou,
+intacto depois do resize; **UI-03** com **Tab real** (o `focus()` programático não casa
+`:focus-visible`, e essa foi a única correção de método deste gate): `outline: solid 2px
+rgb(37,165,228)` no controle sobre a navy e `rgb(15,43,61)` no controle fora do shell — as duas
+metades da D-P14 vivas ao mesmo tempo; **UI-05** um `h1` no dashboard e um em `/personas`;
+**UI-04** wordmark legível sobre a navy nos dois temas, por screenshot em 1440. Junto: corpo em
+`Inter`, `h1` em `Archivo`, `--surface-ground` `#f1f5f9`, sidebar `rgb(15,43,61)` nos dois temas,
+`--primary-color-text` azul-poste, `--brand-ink` `#186b94` (medido como `color` do rótulo do botão
+de marca), radius 4px e `<html lang>` acompanhando o i18n.
+
+**Itens 1–8.** Backend **547 passed / 5 skipped (2021 assertions)** — o bloco não tem arquivo
+`backend/` no diff, então o placar é baseline e **Pint não se aplica** (o gate exige argumento;
+sem arquivo da sprint, não se roda). Frontend `pnpm build`, `pnpm lint` e `pnpm test` verdes com
+**26 arquivos / 127 testes**, paridade das 3 locales em 3 testes. Higiene reconferida em primeira
+mão: `#25A5E4` só nas fontes declaradas, `ring-0` ausente, sem `bg-gray-*`/`border-slate-400` no
+shell, `generated.ts` sem diff contra a `origin/main` (nenhum DTO mudou — `typescript:transform`
+não se aplica). Leis §5: zero `primereact` fora de `shared/ui` **exceto** o `shared/config/primeLocale.ts`
+já declarado no S-4, zero import cross-feature. Código morto: os dois PNGs do gate foram apagados
+do working tree; nada mais nasceu órfão (a única órfã do bloco, `common.openUserMenu`, morreu em
+`b6636d1`).
+
+**As três decisões abertas foram resolvidas por ele neste gate**, e uma quarta nasceu do próprio
+fechamento: o commit `54d0f8c` **fica** (o conteúdo é o autorizado; reverter puniria o resultado
+pelo caminho); o ponto final de `operation.detail.notFound` **saiu** nos três locales, alinhando
+com os `notFound` irmãos, que nunca tiveram ponto; e o `P-28` duplicado (guarda da lição 13) foi
+renumerado para **P-32**, com a origem anotada na própria linha — as menções a "P-28" na narrativa
+do BD-1 continuam apontando para ela e ficam como estão, porque história não se reescreve.
+
+**O passo da §11 que o agente não consegue executar, registrado em vez de silenciado.** O re-sync
+do ponto 5 do ADR-16 com o espelho canônico do Drive (`decisao-stack.md`) é passo declarado do
+fechamento. Conferido lendo o arquivo: o ADR-16 de lá segue com os cinco bullets originais, **sem**
+o ponto 5. As ferramentas de Drive desta sessão são de leitura e criação — não há update do
+arquivo canônico, e criar um segundo fragmentaria o espelho. **Decisão do João:** fechar o bloco e
+registrar como **P-31**, no precedente da P-17. A nota de sync do ADR-16 em `docs/adrs.md` passa a
+apontar para a pendência em vez de prometer o passo.
+
+**Arquivamento:** plano → `plans/archive/2026-08-11-estilizacao-adr16-shell-tipografia.md`; spec →
+`specs/archive/2026-08-11-estilizacao-adr16-shell-tipografia-design.md` (não é compartilhada — o
+UI-06 parqueado no BD-3 é citado por narrativa, não por path). A referência interna do plano à spec
+foi reapontada. Entrega no `progress.md`, com a de 2026-08-05 descendo para o `progress-archive.md`
+para manter dez. Item 4 removido de "Próximos blocos" **sem renumerar** os anteriores (era o
+último). Os dois débitos que o bloco fechado decidia — "Shell fora de conformidade com o ADR-16 §4"
+e "Toggle da sidebar sem efeito abaixo de 1024px" — saíram de `## Débitos técnicos` e de "Fora dos
+BDs", como a §11 da spec prescrevia.
+
+**Pendências:** nasceu a **P-31** (espelho do Drive); a **P-30** já havia nascido no review. Nenhuma
+fechou e nenhum gatilho de data venceu (P-28 revisa 2026-09-30; P-29, P-30 e P-32 revisam
+2026-10-31; P-02 e P-05 seguem presas a "antes de produção").
+
+**Estado do banco de dev:** intocado — o bloco é frontend-only e a jornada do gate foi read-only
+fora do login. O `LOT-2026-1001` corrompido de propósito continua lá, esperando o checkpoint visual
+de outro bloco.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o ponto 5 do ADR-16 **não** está no Drive (P-31);
+o `ámbar-aviso` da spec original nunca foi construído e a paleta tem cinco donos, não seis (P-30);
+a caixa branca do toggle sobre a navy no tema claro segue sendo escolha estética dele, não defeito
+resolvido; e UI-04 e UI-06 continuam sem teste automatizado — são geometria, provadas por medição e
+screenshot, como o próprio plano declarou.
+
+**Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
+
+## Penúltimo item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
 ### Seleção — 2026-08-11
 
@@ -407,7 +907,7 @@ nginx): o tráfego dele não cruzou nenhum alvo do e2e, que operou só sobre reg
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
+## Antepenúltimo item fechado — 2026-08-11 (`guardas-que-faltam`)
 
 ### Seleção — 2026-08-10
 
@@ -755,416 +1255,3 @@ absorção segue no BD-5.
 — nenhuma sonda tocou banco.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
-
-## Antepenúltimo item fechado — 2026-08-10 (`documentos-oficiais-template-e-docx`)
-
-### Seleção — 2026-08-10
-
-**Item 1 do `backlog.md`, escrito e selecionado explicitamente pelo João na mesma instrução.** Ele
-descreveu o escopo em detalhe (fundo do certificado, realocação do QR, fidelidade tipográfica ao
-template, manual conforme `manual.pdf` preenchido automaticamente, saída DOCX e botão na UI),
-mandou abstrair no backlog e percorrer o workflow. O backlog foi escrito a partir dessa descrição;
-ele não promoveu nada sozinho.
-
-**Rota direta a `ready_for_planning`, sem Context Packet, por ausência medida de fonte externa**
-(mesmo caso de `turma-habilitacao-listagem` e `profundidade-backend-b4-b7`): o item não cita Drive,
-Notion nem Figma. As fontes são o repositório e os três templates **já versionados no repo** —
-`docs/templates/certificado.pdf`, `docs/templates/manual.pdf` e `docs/templates/fundo-certificado.png`,
-este último entregue pelo João junto da instrução. `context_packet: null`.
-
-**Toca backend → main tree, sem worktree (P-03).** O bloco mexe em
-`backend/resources/views/certification/certificate.blade.php`,
-`backend/resources/views/operation/manual-turma.blade.php`, `ManualPdfService`, `TurmaController` e
-no frontend (`features/operation/components/Document/`). Nenhum outro `active_work_item` de backend
-está aberto, então o gatilho de fechamento da P-03 continua não vencido.
-
-### Terreno medido antes de planejar (não é desenho, é fato)
-
-1. **Os dois documentos já existem e já são Blade** — o bloco é refatoração, não construção:
-   `certificate.blade.php` (2 páginas: certificado + temário) e `manual-turma.blade.php` (A4 retrato,
-   3 tabelas), ambos via Gotenberg (`Shared/Pdf/GotenbergHtmlToPdf`). O manual já tem rota
-   (`GET turmas/{turma}/manual`, `Operation/routes.php:25`), serviço (`ManualPdfService`) e botão
-   (`features/operation/components/Document/ManualButton.tsx`, consumido por `TurmaDocuments.tsx:41`).
-   O que não existe é **DOCX** — nenhuma ocorrência no repo.
-2. **O manual do template não é o manual de hoje, nem em forma nem em conteúdo.** `manual.pdf` tem
-   **5 páginas em ofício paisagem (1009×612 pt)** — Dados de la clase, Antecedentes Participantes,
-   Control de Asistencia de Participantes (grade de 31 dias), Temas de La Capacitación, Evaluaciones.
-   A Blade atual tem **3 tabelas em A4 retrato**, e o `@page { size: A4 portrait }` dela é decisão
-   registrada (D4 do bloco 6d, com `preferCssPageSize` ligado no serviço). Mudar a orientação
-   contradiz uma decisão escrita — o brainstorming tem de reabri-la explicitamente com o João, não
-   sobrescrevê-la em silêncio.
-3. **O fundo é pesado e o peso é o critério do próprio João.** `fundo-certificado.png` é
-   **1414×2000, RGBA 8-bit, 1,2 MB** — proporção exatamente A4. Em base64 são ~1,66 MB **por página**
-   que o embutir; o certificado tem 2 páginas e o manual, 5. O PDF são de hoje mede **40.119 bytes**
-   (medido no gate de `certificacao-lote-e-snapshot`), e é essa a linha de base contra a qual o
-   "visualizador travado" tem de ser medido.
-4. **O QR e o par código/emissão trocam de lugar, não de existência.** Hoje `.meta` (`N°` + `Emisión`)
-   abre a página 1 no canto superior **esquerdo** (`certificate.blade.php:244-247`) e o QR vive no
-   rodapé dentro de `.footer-main` a 32mm (`:214-216`, `:313-316`). O template e a foto que o João
-   anexou põem os três juntos no canto superior **direito**, QR menor com o par embaixo.
-5. **O layout do certificado carrega guardas pagas com defeito medido em 2026-08-08** e documentadas
-   no próprio arquivo: `min-height` em vez de `height` (com `height`, QR, assinatura e aviso legal
-   saíram **sobrepostos** ao temário — documento corrompido sem aviso), o clamp
-   `-webkit-line-clamp` da descrição e o limiar 80×7 que troca o tier de 11px pelo de 9px. Quem
-   mexer no layout responde por elas; o `.accent-bottom` já tem falha de enquadramento **em aberto**
-   declarada no arquivo (`:130-138`).
-6. **DOCX via Blade é a pergunta aberta do bloco, e é decisão de arquitetura.** Não há biblioteca de
-   escritório no `composer.json`; Gotenberg converte DOCX→PDF, nunca o contrário. O caminho a
-   investigar no brainstorming é Blade renderizando WordprocessingML empacotado como OOXML; recorrer
-   a biblioteca de terceiros é ADR, não escolha de implementação.
-
-**Pendências tocadas pelo escopo, nenhuma vencida:** a **P-08** (RF-CUR-04 promete manual por curso;
-implementado é Blade única) **não** dispara — o bloco continua com Blade única padronizada. A
-**P-03** não fecha: um bloco de backend só.
-
-### Brainstorming e spec — 2026-08-10
-
-O João aprovou o desenho com a instrução literal `Aprovado — gravar e commitar a spec.` O estado
-entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até a aprovação humana
-deste documento e a escrita posterior do plano.
-
-**Quatro decisões de abertura, respondidas por ele ANTES de a spec existir** (D1–D4 da §2):
-manual com fonte de verdade única em Blade WordprocessingML, com o PDF saindo do mesmo `.docx` pela
-rota LibreOffice; ofício paisagem igual ao template; fundo em JPEG de ~100 KB só no certificado; e
-tipografia do certificado por fonte versionada com `@font-face`.
-
-**A D2 reabre explicitamente a D4/D6 do bloco 6d** — o A4 retrato do manual, justificado na própria
-Blade com "o cliente arquiva em A4, como todo documento oficial da Lotus". Não foi sobrescrita em
-silêncio: as três saídas foram apresentadas e o João escolheu fidelidade literal ao arquivo aprovado
-pela Lotus. O manual passa a ser o único documento oficial fora do A4.
-
-**Três medições que mudaram o desenho, feitas antes de escrever:**
-
-1. **O fundo entregue é limpo, e o peso tem referência própria.** `fundo-certificado.png`
-   (1414×2000 RGBA, **1.245.172 bytes**) não tem logo, assinatura nem carimbos — é textura mais as
-   barras azul/preta. O **mesmo fundo dentro do `certificado.pdf` aprovado** é um JPEG de
-   **98.258 bytes** nas mesmas dimensões: 12,7× mais leve. O teto do bloco deixou de ser palpite.
-2. **As fontes do template foram identificadas apesar da ofuscação do Word.** `pdffonts` só devolve
-   `___WRD_EMBED_SUB_1235`; descomprimindo os oito programas de fonte e lendo o `name` table
-   (`nameID 6`) saem **Lexend** (Regular/Bold/ExtraBold — três dos oito subsets), **Montserrat
-   ExtraBold**, Comfortaa, Roboto e ArialMT. Lexend/Montserrat/Comfortaa são OFL e Roboto é
-   Apache 2.0: nenhuma trava para versionar.
-3. **A rota LibreOffice foi provada antes de virar decisão, não depois.** Pacote OOXML mínimo montado
-   à mão (**1.207 bytes**) → `/forms/libreoffice/convert` → **`http=200`**, PDF de **18.671 bytes**,
-   **`Page size: 1008 × 612 pts`** contra os 1009×612 do template, `LiberationSans-Bold` embutida e
-   a célula com `w:shd w:fill="29A3E0"` no azul da Lotus. A D1 e a D2 repousam sobre medição.
-
-**A contradição aparente entre D1 e D4 foi resolvida por medição, não por prosa** (§2.1 da spec):
-`@font-face` é CSS e o manual deixa de passar por CSS, mas o texto do `manual.pdf` **é Liberation
-Sans**, que o Gotenberg já tem — o probe a embutiu sem nenhuma instalação. D4 vale só para o
-certificado.
-
-**Um achado que a leitura do template produziu e o item do backlog não previa:** os títulos de página
-do manual (`Libro de Control de Clases`, `Antecedentes Participantes`…) **não são texto** —
-`pdftotext` da página 1 devolve só o conteúdo das células. Eles vivem dentro da faixa de cabeçalho
-rasterizada (4205×378). Com a D3 deixando o manual sem fundo raster, os títulos passam a ser texto em
-Liberation Sans Bold.
-
-**Risco de review declarado ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only.
-
-**A sessão parou no gate de leitura da spec, por escolha do João.** Ele optou por ler o documento
-antes do `writing-plans`, então `next_owner` voltou para ele e a ação foi `approve_active_spec`.
-Nenhuma linha de implementação foi escrita nessa etapa.
-
-### Aprovação da spec e plano — 2026-08-10
-
-O João aprovou a spec com a instrução literal `Spec aprovada, escreva o plano`. O plano ativo
-(`docs/superpowers/plans/2026-08-10-documentos-oficiais-template-e-docx.md`) decompõe o bloco em
-**11 tasks (0–10)**: baseline; fundo JPEG e fontes WOFF2 versionados; três tasks de certificado
-(fundo, tipografia com remedição do limiar, QR); `App\Shared\Office\`; manual em Blade OOXML com o
-PDF saindo do pacote; rota do DOCX; frontend; gate. O handoff fixa **`executor: claude`** — metade
-das tasks fecha por comparação visual página a página com os templates, num laço de
-render → olhar → ajustar. Nenhuma implementação foi iniciada durante o planejamento; o estado
-transiciona para `ready_for_execution` no mesmo commit do plano.
-
-**Baseline reconferido em `a703a26`, não herdado:** backend **503 passed, 1 skipped (1868
-assertions)** — o mesmo placar do fechamento do `hardening-revisao-ui-assistida`, como esperado de
-três commits só de documentação. O plano projeta **520 passed** ao fim do bloco (+17).
-
-**A escrita do plano mediu o terreno e produziu nove desvios declarados** (§Desvios do plano), em vez
-de silenciá-los. Os que mudam decisão da spec:
-
-1. **`docs/templates/manual.docx` existe no repo** — a spec só tinha lido o PDF. Dele saíram o papel
-   exato (`w:pgSz w:w="20183" w:h="12246"`, contra os 20160×12240 do probe), o `w:pgMar`, as larguras
-   de coluna das cinco tabelas, a cor institucional **`25A5E4`** (e não `29A3E0`) e a descoberta de
-   que o template declara **Arial** — Liberation Sans é a substituição métrica do LibreOffice, não a
-   fonte pedida. Declarar Arial acerta o conversor **e** o Word do cliente (D-P3, D-P4).
-2. **A conversão PNG→JPEG saiu sem mudança de infra.** A alternativa era `libjpeg-turbo-dev` no
-   `docker/php/Dockerfile`; foi recusada por trocar imagem de produção para converter um asset uma
-   vez. A rota `/forms/chromium/screenshot/html` do Gotenberg foi provada: JPEG **1414×2000 de 74.604
-   bytes** com `quality=92`, contra os 98.258 do mesmo fundo dentro do certificado aprovado (D-P1).
-3. **São duas faces WOFF2, não quatro** (a spec §3.3 dizia quatro): Lexend e Montserrat são fontes
-   **variáveis**, e o Google Fonts serve a mesma URL para 400/700/800 do Lexend. 39.680 + 19.012
-   bytes cobrem os quatro pesos (D-P2).
-4. **`short_open_tag` está `On` no container**, então uma Blade que abra com o `<?xml …?>` literal
-   morre em `Parse error: syntax error, unexpected identifier "version"` — confirmado executando os
-   dois casos lado a lado. As quatro Blades do pacote abrem por uma diretiva `@xmlDecl`; `{!! … !!}`
-   foi recusado por reintroduzir a interpolação crua que a guarda de escape proíbe (D-P9).
-5. **`printBackground` não é necessário** — medido antes de aplicar o fundo: os PDFs com e sem o
-   campo saem byte a byte do mesmo tamanho. `PageOptions` e `GotenbergHtmlToPdf`, que são
-   compartilhados com o certificado, **não mudam** (D-P7).
-6. **As grades do manual são formulário impresso com linha fixa** (22/20/20), e o plano fixa
-   `max(N, fixas)`: turma pequena mantém as linhas em branco, turma grande estende a grade. Truncar
-   esconderia aluno (D-P5).
-
-A auto-revisão do plano contra a spec ainda achou seis erros no próprio rascunho e os corrigiu antes
-de gravar: `makeStudentWithUser` não existe no `CreatesDomainRecords` (o idioma real é
-`Student::create` sobre `User::factory()`); o `CertificatePdfTest` já tem `fakeGotenberg()`/
-`assertHtml()` e não precisava de um helper novo; a guarda "sem `{{`" reprovaria o próprio comentário
-Blade; duas asserções de contagem eram ambíguas (`<w:tr ` com espaço nunca casa; `6` e `10` também
-são número de linha); a rota pública é `publico/certificados`, não `public/certificates`; e a troca
-do controller precisava entrar na Task 7, senão um commit ficaria com a rota do manual quebrada.
-
-**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
-review não roda automaticamente ao fim da Task 10.
-
-**Uma pergunta fica aberta para o João, no Step 7 da Task 10:** `App\Shared\Office\` e a rota
-LibreOffice são decisão de arquitetura de transporte. A recomendação do plano é **nota no ADR-12**,
-não ADR novo — a rota LibreOffice é uma segunda porta do **mesmo** serviço do compose, com o mesmo
-racional de "o transporte mora num lugar só".
-
-### Execução iniciada — 2026-08-10
-
-O João autorizou com `/executar-bloco documentos-oficiais-template-e-docx`. Execução no **thread
-principal** conforme o `## Handoff de execução` do plano (`executor: claude`): metade das tasks
-(3, 4, 5, 7 e 10) fecha por comparação visual página a página contra os templates, num laço
-render → olhar → ajustar que exige leitura de imagem a cada iteração. Main tree, sem worktree (P-03).
-
-**Task 0 provada em `8ee1d9e`:** backend **503 passed, 1 skipped (1868 assertions)** — bate com o
-baseline do plano; `typescript:transform` sem diff em `generated.ts`; `pnpm lint` e `pnpm build`
-verdes; `git status --porcelain` vazio.
-
-### Tasks 1–9 entregues — 2026-08-10
-
-Commits, do base `8ee1d9e`: `7d4a85f` (fundo JPEG), `90a353a` (fontes WOFF2), `11f75d5` (fundo
-aplicado, morte do `.accent`), `042c2f2` (tipografia e remedição do limiar), `5037f24` (QR e bloco
-de identificação no topo), `fc6c996` (`App\Shared\Office\`), `af046f6` (manual em Blade OOXML),
-`2d815cb` (rota do DOCX), `86d81dc` (frontend com os dois formatos). Evidência task a task, e os
-doze desvios declarados (D-E1..D-E12), em `.superpowers/sdd/progress.md`.
-
-**Três desvios mudam o que o plano dizia, não só como foi feito.** **D-E6** — `Xml::lines()` nasceu
-emitindo `<w:br/>` **dentro** do `<w:t>`, que é bem-formado e **inválido** contra o schema
-(`CT_Text` é tipo simples); o separador passou a fechar e reabrir o `<w:t>`. **D-E7** — as fontes,
-bordas e margens de cada tabela saíram **medidas do `docs/templates/manual.docx`**, tabela a tabela,
-em vez do `sz 13/17` uniforme que o plano supunha. **D-E11** — `@else@xml(...)` **não compila**: o
-regex de diretiva do Blade exige `\B@`, e o `e` de `@else` colado no `@` é fronteira de palavra; a
-diretiva saía literal dentro do documento. O flag `$lineas` morreu e toda célula usa `@xmlLines`.
-
-### Task 10 — o gate do bloco (2026-08-10)
-
-**Ferramentas.** Backend **519 passed, 1 skipped (1950 assertions)** — contra os 520 projetados pelo
-plano; a diferença é a Task 5, que substituiu asserções em vez de somar teste. `typescript:transform`
-**sem diff** em `generated.ts` (nenhum DTO mudou de forma). `git diff` de `backend/database/`
-**vazio** — zero schema, como o plano exige. Pint `passed` nos arquivos do bloco. Frontend: `pnpm
-lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**.
-
-**E2e contra a API real**, sessão Sanctum por cookie + CSRF. `GET /api/turmas/1/manual` → **200**
-`application/pdf` + `inline; filename="manual-turma-1.pdf"`; `GET /api/turmas/1/manual/docx` → **200**
-`…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`. `pdfinfo` do manual:
-**`Pages: 5`**, **`Page size: 1008 x 612 pts`**. Pesos: certificado **199.820 B** (linha de base
-40.119, teto do plano 251.450), manual `.docx` **19.259 B**, manual `.pdf` **52.966 B**, template de
-referência 444.830 B.
-
-**Contrato do certificado intacto:** `snapshot_ok` **False** só no `LOT-2026-1001`, que segue
-corrompido de propósito no banco de dev como evidência viva do checkpoint visual pendente do João.
-`migrate:fresh --seed` **não** foi rodado, pelo mesmo motivo do bloco anterior. 51 consumidores das
-classes de `App\Shared\Office\`; zero `Repository`; a única ocorrência da varredura de sobra é
-`CertificatePdfTest.php:737`, que é a guarda `assertStringNotContainsString('class="qr"', $html)` —
-asserção de **ausência**, não referência sobrevivente.
-
-**O que o gate NÃO provou, sem maquiagem:** fidelidade **pixel a pixel** contra os templates — a
-comparação foi de grade, cor e posição, página a página, com os PNGs de 144 dpi lado a lado;
-comportamento de turma sem alunos ou sem módulos além do que os testes cobrem; e o manual aberto no
-**Word do cliente** — a conversão foi validada pelo LibreOffice do Gotenberg, que é o mesmo motor
-que gera o PDF, não um segundo leitor independente.
-
-**Três decisões do João no checkpoint visual, todas registradas:**
-
-1. **QR do certificado muda de lado.** A `§3.4` da spec pedia topo **direito**, e a Task 5 entregou
-   assim; o gate mostrou que o `docs/templates/certificado.pdf` abre a folha com o retângulo do QR à
-   **esquerda**. Ele decidiu pelo template. Corrigido em `ee285df` (`align-self: flex-start`), com o
-   lado **assertado no teste** — a divergência veio de uma releitura da spec, e sem guarda a próxima
-   releitura reverteria em silêncio uma decisão tomada contra ela.
-2. **Fundo do certificado: aceitar agora, tratar depois** → **P-28**. Faltam as cunhas diagonais das
-   quinas da página 1 (são **vetor** no PDF aprovado; o raster versionado não as contém) e a faixa
-   azul/preta se repete na página 2, onde o aprovado é cinza limpo. Nenhuma das duas estava nas
-   exclusões aceitas da §7 da spec, por isso viraram pendência em vez de silêncio.
-3. **ADR: nota no ADR-12, não ADR novo.** `App\Shared\Office\` e a rota LibreOffice são a segunda
-   porta do **mesmo** Gotenberg do certificado, com o mesmo racional de transporte. A nota está
-   escrita. Isso **venceu o gatilho da P-20** (o bloco tocou `docs/adrs.md`) e resolveu metade da
-   **P-21** — as duas foram **atualizadas, não fechadas**: o hospedeiro do `openspout` segue sendo
-   escolha dele, e o `simple-qrcode` pertence a um bloco de Certification, não a este.
-
-**Pendências revisadas:** a **P-08** não disparou (o manual continua Blade única padronizada, agora
-em OOXML) e a **P-03** não fechou (um bloco de backend só). Nasceu a **P-28**. P-04 reavalia
-**2026-08-15**; P-15, P-23, P-25, P-26 e a nova P-28 revisam **2026-09-30**.
-
-**Risco de review continua ALTO** (§8 da spec): documento com peso legal mais dependência de infra
-nova em caminho de produção → duas frentes, lente Claude e segunda frente do Codex read-only. O
-bloco **para** em `ready_for_review`; review, fechamento, push e PR não rodam automaticamente.
-
-### Review de sprint — 2026-08-10: duas lentes, 7 achados, todos aprovados e corrigidos
-
-**ALTO RISCO** pela §8 da spec (documento com peso legal + dependência de infra nova em caminho de
-produção). Lente Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre
-`8ee1d9e..HEAD` (11 commits, 38 arquivos). **Órfãos: zero** — `ManualPdfService` morreu sem
-referência sobrevivente, as cinco classes de `App\Shared\Office\` têm consumidor e a chave de locale
-`documents.manual` não sobrou em nenhuma das três locales. **Leis §5 limpas:** zero `abort(` em
-`Domains/Operation/`, zero Repository, `generated.ts` sem diff, `git diff` de `backend/database/`
-vazio, controller fino, `ManualButton` só via `shared/ui`, permissão nas duas rotas com teste de 403.
-
-**Uma divergência entre as lentes, mostrada em vez de resolvida em silêncio.** O achado nº 1 do
-Codex — `w:tcPr` emitindo `vAlign`/`tcMar`/`shd`/`tcBorders` fora da sequência ECMA-376 — foi
-**REJEITADO por medição**: descompactado, o `docs/templates/manual.docx` escrito pelo Word usa
-exatamente a mesma ordem (`tcW, vAlign, tcMar, …, shd, tcBorders` ×706; `trHeight, cantSplit` ×81).
-Sobrou dele só a parte confirmada em separado, que virou a Q-1. Também **não** foi reportada a
-ausência de validação do corpo do PDF no `GotenbergDocxToPdf` (Codex nº 4): é o comportamento
-idêntico do `GotenbergHtmlToPdf` já em produção pelo ADR-12, e apertar só um lado criaria assimetria
-entre as duas portas do mesmo serviço.
-
-**O João aprovou Q-1..Q-7 na íntegra** (`Todos de Q-1 a Q-7`); todos entraram em `96d7256`.
-
-**Documento (Q-1, Q-2), com o template como árbitro.** O cabeçalho é um partial incluído cinco
-vezes e escrevia `wp:docPr id="1"` nas cinco — o Word identifica figura pelo id e pede reparo do
-arquivo quando ele repete, e o gate havia declarado, sem maquiagem, que o manual **nunca foi aberto
-no Word do cliente**. O template aprovado numera os seus dez desenhos **1..10** e escreve
-`pic:cNvPr id="0"` nos dez; as duas convenções foram medidas e seguidas (contador no `@include`,
-`cNvPr` fixo em 0). A Q-2 trocou o `load('enrollments…')` por `orderByStudentName()`: as três grades
-numeram linha a linha e são **assinadas** por linha, e PDF e DOCX são dois requests — sem ORDER BY a
-mesma turma podia sair com duas numerações. O `EnrollmentQueryBuilder` já documentava o defeito para
-a tela; aqui ele tinha peso de documento.
-
-**Mecanismo (Q-3), com uma correção ao próprio achado.** O `OoxmlPackager` passou a conferir
-`tempnam`, `open`, `addFromString`, `close` e a leitura, a apagar o temporário num `finally` e a
-recusar pacote sem nenhum byte com `OfficeRenderException`. **O achado dizia "HTTP 200 com zero
-byte" e isso não se reproduz:** sob o handler de erro do Laravel, o `file_get_contents` de um arquivo
-ausente vira `ErrorException`. O que foi medido no vermelho do teste é pior de outro jeito — 500 sem
-tipo de domínio, com o caminho `/tmp/ooxmlXXXXXX` dentro do `detail` e o `unlink` pulado. A porta
-que devolveria bytes vazios em silêncio é o `open()` falhando, que deixa para trás o arquivo de zero
-byte do `tempnam`; é ela que a checagem de `open` fecha.
-
-**Teste (Q-4):** o `500_rfc7807` afirmava só o status — um 500 em HTML puro passaria. Passou a
-afirmar `content-type`, `type`, `title`, `status` e o `detail` que nomeia o conversor. É guarda,
-não conserto: o comportamento já estava certo, faltava a asserção.
-
-**Doc (Q-5):** a nota do ADR-12 citava `LibreOfficeConverter`, classe que nunca existiu (lição 13);
-agora nomeia `DocxToPdf` e `GotenbergDocxToPdf`, com o paralelo explícito ao `GotenbergHtmlToPdf`.
-
-**Frontend (Q-6, Q-7):** o download do DOCX revogava o objectURL no mesmo stack do `click()` de uma
-âncora **nunca anexada ao DOM** — duas causas conhecidas de download que não começa, e assimetria
-com o caminho do PDF ao lado, que fazia certo. A âncora passou a ser anexada e o objectURL a viver
-no `urlRef` até a próxima geração ou o unmount, com os dois formatos usando o mesmo `keepUrl`. A Q-7
-separou o estado: `useMutationErrors` devolve o **primeiro** erro truthy e só a mutação disparada
-reseta o próprio erro, então o erro do PDF sobrevivia a um DOCX baixado com sucesso; e o `pending`
-fundido girava os dois botões juntos, anunciando o Word quando o pedido tinha sido o PDF.
-
-**Verificação depois das correções, refeita e não herdada:** backend **522 passed, 1 skipped (1961
-assertions)** — +3 testes / +10 asserções sobre o 519/1951 do gate, e os três testes novos foram
-**vistos vermelhos** antes da correção (ids `1,1,1,1,1`; ordem `Zoe, Ana, Bruno`; `ErrorException` no
-lugar da `OfficeRenderException`). Pint `passed`; `typescript:transform` sem diff em `generated.ts`;
-`git diff` de `backend/database/` vazio; frontend `pnpm lint` limpo, `pnpm build` verde, **13
-arquivos / 47 testes**. E2e contra o documento real da turma do seed: `.docx` de **19.269 B** com
-`docPr=1,2,3,4,5`, `cNvPr=0,0,0,0,0` e as doze matrículas em ordem alfabética; PDF convertido de
-**52.954 B**, **`Pages: 5`**, **`Page size: 1008 x 612 pts`**, página 2 conferida na imagem.
-
-**O que continua não provado, sem maquiagem:** o manual **aberto no Word do cliente**. A Q-1 remove
-a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor independente
-continua sendo o do João. A Q-6 tem correção sem teste: o corte do runner do frontend cobre os hooks
-de `shared/`, e hook de feature com DOM segue fora dele — dizer o contrário seria cobertura fantasma
-(lição 10).
-
-**Uma divergência numérica registrada, sem consequência:** o gate do bloco anotou **1950**
-asserções; a suíte na mesma árvore mede **1951**. O número do gate está errado por um.
-
-**Estado:** `ready_for_closure`. Nada pendente de decisão. O fechamento não roda automaticamente.
-
-### Gate de fechamento — 2026-08-10
-
-**O item 0 foi refeito, não herdado.** As correções Q-1..Q-7 entraram depois do e2e da Task 10 e
-mexeram no documento (ids do `wp:docPr`, ordem das matrículas), no `OoxmlPackager` e no frontend —
-então o critério de aceite do bloco foi provado de novo contra a API real, e não pelo relatório do
-gate anterior.
-
-**Ferramentas.** Backend **522 passed, 1 skipped (1961 assertions)** — o mesmo placar da verificação
-pós-review, contra os 520 que o plano projetava. Pint `--test` **`passed`** nos **22** `.php` vivos
-do bloco. `typescript:transform` executado: **sem diff** em `generated.ts`, `git status --porcelain`
-vazio depois de rodar. `git diff main...HEAD -- backend/database/` **vazio** (zero schema). Frontend:
-`pnpm lint` limpo, `pnpm build` verde, **13 arquivos / 47 testes**. As três locales com **538 chaves
-cada e zero diff** entre si.
-
-**E2E com sessão Sanctum por cookie + CSRF, só GETs — nenhuma mutação no banco de dev.**
-`GET /api/turmas/1/manual` → **200** `application/pdf` + `inline; filename="manual-turma-1.pdf"`,
-`pdfinfo` dizendo **`Pages: 5`** e **`Page size: 1008 x 612 pts`**; `GET /api/turmas/1/manual/docx` →
-**200** `…wordprocessingml.document` + `attachment; filename="manual-turma-1.docx"`.
-
-**O pacote foi aberto, não suposto.** As cinco parts (`[Content_Types].xml`, `_rels/.rels`,
-`word/document.xml`, `word/_rels/document.xml.rels`, `word/media/lotus-logo.png`),
-`w:pgSz w:w="20183" w:h="12246" w:orient="landscape"` **idêntico ao `docs/templates/manual.docx`**,
-`wp:docPr` numerado **1,2,3,4,5** e `pic:cNvPr id="0"` cinco vezes — as duas convenções da Q-1
-vivas no documento entregue, e não só no teste.
-
-**Preenchimento por contagem (DoD 4):** turma de **12 matrículas**, cada nome aparecendo **3 vezes**
-(uma por grade), grades em 23/21/21 linhas (cabeçalho mais as 22/20/20 fixas) — com N=12 o
-`max(N, fixas)` da D-P5 mantém as linhas em branco, como o formulário impresso. Rodapé de horas
-fechando com a soma dos módulos: 8+6+4 = **18 T**, 4+10+8 = **22 P**.
-
-**Pesos (DoD 1):** manual `.docx` **19.269 B**, manual `.pdf` **52.954 B** (template de referência
-444.830 B), certificado **199.830 B** contra a linha de base **40.119 B** e o teto **251.450 B** do
-documento aprovado pela Lotus.
-
-**Fonte de verdade única (DoD 9), conferida no código:** `ManualDocumentService::pdf()` é
-`converter->render($this->docx($turma))`. Não há segundo caminho de montagem.
-
-**Contrato do certificado (DoD 7):** `GET /api/certificates` **200** com os treze campos de sempre e
-`snapshot_ok` **false só** no `LOT-2026-1001`; `show` do são **200**; rota pública **sem cookie**
-**200**; o corrompido devolve **500 `application/problem+json`** no `show` e no `pdf`, nomeando
-`LOT-2026-1001` **e** o campo `aluno.name`.
-
-**Visto renderizado (DoD 8):** 14 PNGs comparados página a página. As **cinco** páginas do manual
-batem com o template em grade, colunas, cores e contagem de linhas; no certificado as únicas
-divergências são as já declaradas — assinatura da gerente e carimbos SENCE/NCH pela §7 da spec,
-cunhas das quinas e faixa na página 2 pela **P-28** —, confirmadas na imagem em vez de assumidas.
-
-**Órfãos e leis §5:** 54 consumidores das classes de `App\Shared\Office\`; zero sobra de
-`ManualPdfService`, `manual-turma.blade`, `class="accent"` ou `class="meta"` (os únicos hits são um
-comentário que explica a renomeação e a asserção de **ausência** de `class="qr"`); zero `abort(` em
-`Domains/Operation/`; zero Repository; nenhum import de PrimeReact direto nem cross-feature nos três
-arquivos de frontend do bloco.
-
-**Pendências:** nenhuma nasceu neste gate e nenhuma fechou. A **P-28** já entrou no gate técnico; a
-**P-20** e a **P-21** foram atualizadas, não fechadas (o hospedeiro do `openspout` e a nota do
-`simple-qrcode` seguem com o João). A **P-08** não disparou (manual continua Blade única
-padronizada, agora em OOXML) e a **P-03** não fechou (um bloco de backend só). P-04 reavalia
-**2026-08-15**; P-15, P-23, P-25, P-26 e P-28 revisam **2026-09-30**.
-
-**Uma imprecisão do plano, registrada em vez de corrigida retroativamente:** o Step 2 da Task 10
-escreve `"password":"password"` como credencial do seed, e a senha real é `senha123` — todos os
-outros planos do repositório escrevem certo. O plano aprovado **não** foi reescrito (precedente da
-P-27) e o e2e deste gate rodou com a credencial correta.
-
-**Divergência de outro bloco, achada e não corrigida pelo segundo gate seguido:** a linha do
-`turma-habilitacao-listagem` no `progress.md` tem um `|` não escapado em
-`Spatie\LaravelData\Optional|int`, que parte a tabela naquela linha. O fechamento do
-`hardening-revisao-ui-assistida` já a registrou sem tocar; reverter aquela decisão sem o João seria
-a mesma deriva silenciosa que o gate existe para impedir.
-
-**Arquivamento:** plano → `plans/archive/2026-08-10-documentos-oficiais-template-e-docx.md`; spec →
-`specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md` (não é compartilhada com
-nenhum item futuro registrado). A referência interna do plano à spec foi reapontada para o path
-arquivado. Entrega registrada no `progress.md`, com a de 2026-08-04
-(`hardening-estrutural-pre-sprint-4`) descendo para o `progress-archive.md` para manter dez. Item 1
-removido do `backlog.md`, com renumeração dos seguintes.
-
-**Estado do ambiente:** `migrate:fresh --seed` **não** foi rodado — o banco de dev segue carregando
-o `LOT-2026-1001` corrompido de propósito para o checkpoint visual do João, que é justamente a
-evidência viva que o DoD 7 usa. O e2e deste gate foi read-only.
-
-**O que o fechamento NÃO provou, sem maquiagem:** o manual **aberto no Word do cliente** (a Q-1
-remove a causa conhecida de "pedir reparo", medida contra o template, mas o segundo leitor
-independente continua sendo o do João); fidelidade **pixel a pixel** — a comparação foi de grade,
-cor e posição; e a Q-6 segue **sem teste**, porque o runner do frontend cobre os hooks de `shared/`
-e hook de feature com DOM está fora dele (lição 10).
-
-**Estado:** `idle`. Nenhum item promovido — a seleção do próximo é do João.

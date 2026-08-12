@@ -1,0 +1,99 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import type { ValidationState } from '../../hooks/useValidationPage'
+import { ValidationPage } from './ValidationPage'
+
+/**
+ * Mesmo achado das telas de detalhe (Q-5, review de 2026-08-12) na rota pública
+ * do QR: `loading` e `error` não titulavam nada e, sem `AppLayout` e sem
+ * `DetailHeader`, ninguém mais assumia o nível 1 da página.
+ *
+ * Aqui o `valid` também entra: é o ramo mais cheio da tela e o que prova o outro
+ * lado da régua — um `h1`, nunca dois.
+ *
+ * `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`.
+ */
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
+
+const validation = vi.hoisted(() => ({ current: { kind: 'loading' } as ValidationState }))
+vi.mock('../../hooks/useValidationPage', () => ({
+  useValidationPage: () => validation.current,
+}))
+
+const CERT: Extract<ValidationState, { kind: 'valid' }>['cert'] = {
+  codigo: 'CERT-1',
+  status: 'emitido',
+  valido_ate: '2027-01-31',
+  revoked_at: null,
+  aluno: { name: 'Ana' },
+  curso: { name: 'Alta tensión', workload_hours: 8 },
+  turma: { end_date: '2026-01-31' },
+  // O DTO público carrega os dois, mas o cartão não os mostra (dados mínimos,
+  // spec D14) — estão aqui só porque o tipo os exige.
+  cliente: { name: 'Enel' },
+  redator: { name: 'Redator' },
+}
+
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/validar/abc']}>
+      <ValidationPage />
+    </MemoryRouter>,
+  )
+}
+
+beforeEach(() => {
+  validation.current = { kind: 'loading' }
+})
+
+afterEach(() => {
+  cleanup()
+})
+
+describe('ValidationPage titula todos os seus estados', () => {
+  it('em carga, tem um h1 (escondido) em vez de só o esqueleto', () => {
+    validation.current = { kind: 'loading' }
+
+    const { container } = renderPage()
+
+    const h1 = container.querySelectorAll('h1')
+    expect(h1).toHaveLength(1)
+    expect(h1[0].textContent).toBe('common.loading')
+    expect(h1[0].className).toContain('sr-only')
+  })
+
+  it('em falha de carga, tem um h1 (escondido) com o título do erro', () => {
+    validation.current = {
+      kind: 'error',
+      error: {
+        type: 'about:blank',
+        title: 'Server Error',
+        status: 500,
+        detail: 'boom',
+        instance: '/api/publico/certificados/abc',
+      },
+      retry: () => {},
+    }
+
+    const { container } = renderPage()
+
+    const h1 = container.querySelectorAll('h1')
+    expect(h1).toHaveLength(1)
+    expect(h1[0].textContent).toBe('common.loadError')
+    expect(h1[0].className).toContain('sr-only')
+  })
+
+  it('no certificado válido segue tendo um h1 só — o do StatusHeading', () => {
+    validation.current = { kind: 'valid', cert: CERT }
+
+    const { container } = renderPage()
+
+    const h1 = container.querySelectorAll('h1')
+    expect(h1).toHaveLength(1)
+    expect(h1[0].textContent).toBe('certificate.validation.valid')
+  })
+})

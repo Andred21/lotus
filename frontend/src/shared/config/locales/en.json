@@ -14,6 +14,8 @@
   },
   "common": {
     "language": "Language",
+    "toggleMenu": "Toggle menu",
+    "toggleTheme": "Toggle theme",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
@@ -407,7 +409,7 @@
     "status": { "em_andamento": "In progress", "habilitada": "Enabled", "concluida": "Concluded" },
     "detail": {
       "back": "Back to Operations",
-      "notFound": "Class not found.",
+      "notFound": "Class not found",
       "relatedTo": "Budget {{budget}} · Quote {{quote}}",
       "tabs": {
         "config": "Configuration",

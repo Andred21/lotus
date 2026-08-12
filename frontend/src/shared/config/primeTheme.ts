@@ -1,6 +1,9 @@
 // Vite resolve `?url` para o caminho servido (dev) ou para o asset emitido (build).
-import lightThemeUrl from 'primereact/resources/themes/lara-light-blue/theme.css?url'
-import darkThemeUrl from 'primereact/resources/themes/lara-dark-blue/theme.css?url'
+// Temas GERADOS por scripts/generate-brand-theme.mjs sobre o Lara (ADR-16 §5,
+// spec D5'). Não editar os arquivos: `pnpm brand-theme` regera e
+// tests/brand-theme.test.ts acusa drift.
+import lightThemeUrl from '../styles/themes/lara-light-lotus.css?url'
+import darkThemeUrl from '../styles/themes/lara-dark-lotus.css?url'
 
 const LINK_ID = 'prime-theme'
 

@@ -40,7 +40,7 @@ export function AppAvatar({ name, image, ...props }: AppAvatarProps) {
     <Avatar
       label={initialsFromName(name)}
       shape="circle"
-      style={{ backgroundColor: '#25A5E4', color: '#fff' }}
+      style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)' }}
       {...props}
     />
   )

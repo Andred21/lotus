@@ -141,7 +141,8 @@ move o Tailwind, mas não alcança o interior dos componentes Prime — `main.ts
 apenas `lara-light-blue`.
 
 **Decisão.**
-1. As duas folhas do tema Prime (`lara-light-blue`, `lara-dark-blue`) são carregadas por
+1. As duas folhas do tema Prime (`lara-light-blue`, `lara-dark-blue` — **substituídas pelas cópias
+   geradas, ver ponto 5**) são carregadas por
    um `<link id="prime-theme">` cujo `href` troca junto com o `uiStore.theme`. `applyPrimeTheme()`
    roda ANTES de `createRoot().render()` (folha pendente no `<head>` bloqueia o primeiro paint).
 2. Tailwind é camada de **layout** (grid, espaçamento, tipografia dos nossos elementos).
@@ -151,6 +152,16 @@ apenas `lara-light-blue`.
 4. Cores que precisam acompanhar o tema usam as CSS vars do Lara
    (`--surface-section`, `--surface-card`, `--surface-border`, `--text-color`),
    não pares `bg-white dark:bg-slate-800`.
+5. **Identidade própria sobre o Lara (2026-08-11).** Os temas carregados são cópias GERADAS
+   (`frontend/scripts/generate-brand-theme.mjs` → `src/shared/styles/themes/lara-*-lotus.css`)
+   com a escala celeste da marca no lugar do azul, radius 4px e Inter self-hosted — porque o Lara
+   compila cores inline (97 hexes) e override de token não alcança as regras. Uma camada fina
+   (`frontend/src/shared/styles/brand-theme.css`) cobre o que é regra nova: foco visível de
+   teclado e `tabular-nums` em células. O texto navy sobre a primária (AA) é propriedade do tema
+   gerado, não da camada fina. Guarda de drift: `frontend/tests/brand-theme.test.ts`.
+   A **exceção de shell** — o `Sidebar`/`AppLayout`/`AppHeader` fora do ponto 4, aprovada em
+   2026-07-26 e registrada em `docs/superpowers/backlog.md` (BD-3) — **acabou**: o shell consome
+   os tokens do tema, e a sidebar navy fixa nos dois temas é regra, não par `dark:`.
 
 **Consequência.** Os `dark:` espalhados nos wrappers viram redundantes e são removidos.
 O `<link>` do tema é injetado no topo do `<head>` para que as utilities do Tailwind
@@ -166,6 +177,10 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 >
 > **Proveniência ratificada (doc-sync 2026-07-30):** o texto não trazia atribuição nominal explícita;
 > confirmada como decisão do João no portão de triagem do bloco `hardening-doc-sync-sprint4`.
+>
+> O ponto 5 (2026-08-11) **ainda não está espelhado** no Drive — conferido no `/fechar-sprint` de
+> 2026-08-12, que também mediu por que não fechou ali: as ferramentas de Drive do agente são de
+> leitura, não de escrita. Rastreado como **P-31** em `docs/pendencias.md`.
 
 ## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
 

@@ -88,15 +88,29 @@ export function ValidationPage() {
       <AppLogo className="w-32" />
 
       <div className="w-full max-w-md">
-        {state.kind === 'loading' && <AppSkeleton height="12rem" />}
+        {/* Os quatro ramos de baixo titulam pelo `StatusHeading`; estes dois não
+          * tinham cabeçalho nenhum, e como esta rota é pública e sem `AppLayout`
+          * ninguém mais assumia o nível 1 — a página abria vazia para o leitor
+          * de tela (Q-5 do review de 2026-08-12, mesma correção das telas de
+          * detalhe). Escondido porque o esqueleto e o `AppErrorState` já ocupam
+          * a tela: título visível aqui seria um segundo título. */}
+        {state.kind === 'loading' && (
+          <>
+            <h1 className="sr-only">{t('common.loading')}</h1>
+            <AppSkeleton height="12rem" />
+          </>
+        )}
 
         {state.kind === 'error' && (
-          <AppErrorState
-            title={t('common.loadError')}
-            detail={state.error.detail ?? t('common.loadErrorHint')}
-            retryLabel={t('common.retry')}
-            onRetry={state.retry}
-          />
+          <>
+            <h1 className="sr-only">{t('common.loadError')}</h1>
+            <AppErrorState
+              title={t('common.loadError')}
+              detail={state.error.detail ?? t('common.loadErrorHint')}
+              retryLabel={t('common.retry')}
+              onRetry={state.retry}
+            />
+          </>
         )}
 
         {state.kind === 'notFound' && (

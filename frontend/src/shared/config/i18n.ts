@@ -17,6 +17,28 @@ export const SUPPORTED_LANGUAGES = [
 
 export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]['code']
 
+/**
+ * Espelha o idioma ativo em `<html lang>` (WCAG 3.1.1, nível A).
+ *
+ * O `index.html` declara o default do produto, mas quem sabe o idioma REAL é o
+ * detector — e ele resolve por localStorage/navigator, então a declaração
+ * estática já nasce podendo estar errada no primeiro load. Antes disso o
+ * documento dizia `en` com a interface inteira em espanhol (UI-03 do review de
+ * 2026-08-12): o leitor de tela pronunciava es-CL e pt-BR com voz inglesa.
+ *
+ * Vive aqui, e não num efeito de React, porque o gatilho é do i18n e não do
+ * ciclo de render: a troca de idioma acontece fora da árvore (o menu chama
+ * `changeLanguage`) e o primeiro load precisa acertar o atributo antes de
+ * qualquer componente montar. É o irmão não-React do `useApplyTheme`, que faz
+ * o mesmo para a classe de tema.
+ */
+const aplicarIdiomaNoDocumento = (lng?: string): void => {
+  if (typeof document === 'undefined') return
+  document.documentElement.lang = lng ?? i18n.resolvedLanguage ?? 'es-CL'
+}
+
+i18n.on('languageChanged', aplicarIdiomaNoDocumento)
+
 void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -36,5 +58,9 @@ void i18n
       caches: ['localStorage'],
     },
   })
+
+// O `languageChanged` acima cobre as trocas; esta chamada cobre o primeiro
+// load, em que o detector já resolveu o idioma sem nunca ter havido troca.
+aplicarIdiomaNoDocumento()
 
 export default i18n
