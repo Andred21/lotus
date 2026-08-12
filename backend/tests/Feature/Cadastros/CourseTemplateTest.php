@@ -3,7 +3,9 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Models\Course;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -121,5 +123,28 @@ class CourseTemplateTest extends TestCase
             'auditable_id' => $template->id,
             'event' => 'deleted',
         ]);
+    }
+
+    /**
+     * O duplicado entra por INSERT DIRETO, não pela API: pela API a derivação
+     * (D4/D11) torna a duplicata inalcançável, e é exatamente esse o ponto —
+     * o índice é a defesa de integridade que sobrevive a um caminho novo.
+     */
+    public function test_banco_recusa_par_course_id_version_duplicado(): void
+    {
+        $course = $this->makeCourse();
+
+        $linha = [
+            'course_id' => $course->id,
+            'version' => 1,
+            'layout_config' => '{}',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('course_certificate_templates')->insert($linha);
+
+        $this->expectException(QueryException::class);
+        DB::table('course_certificate_templates')->insert($linha);
     }
 }
