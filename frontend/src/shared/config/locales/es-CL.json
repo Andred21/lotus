@@ -49,7 +49,9 @@
     "networkError": "Sin conexión con el servidor",
     "networkErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
     "unexpectedError": "Error inesperado",
-    "unexpectedErrorHint": "No se pudo procesar la respuesta del servidor."
+    "unexpectedErrorHint": "No se pudo procesar la respuesta del servidor.",
+    "maximizeDialog": "Maximizar diálogo",
+    "restoreDialog": "Restaurar diálogo"
   },
   "module": {
     "comercial": {

@@ -49,7 +49,9 @@
     "networkError": "Cannot reach the server",
     "networkErrorHint": "Check your connection and try again.",
     "unexpectedError": "Unexpected error",
-    "unexpectedErrorHint": "Could not process the server response."
+    "unexpectedErrorHint": "Could not process the server response.",
+    "maximizeDialog": "Maximize dialog",
+    "restoreDialog": "Restore dialog"
   },
   "module": {
     "comercial": {
