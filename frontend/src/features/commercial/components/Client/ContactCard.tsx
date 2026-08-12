@@ -31,7 +31,8 @@ export function ContactCard({
             {/* Único controle que segue desabilitado em leitura (não convertido para
                 FormField/NestedField): rádio de contato principal não é valor truncado
                 e o estado já é legível pela marcação (spec §4.1). */}
-            {/* eslint-disable-next-line no-restricted-syntax */}
+            {/* eslint-disable no-restricted-syntax -- exceção declarada acima; o atributo
+                `disabled` fica em linha própria, então eslint-disable-next-line não o cobre */}
             <AppRadioButton
               name="primaryContact"
               checked={contact.is_primary}
@@ -39,6 +40,7 @@ export function ContactCard({
               aria-label={t('client.contactPrimary')}
               onChange={onSetPrimary}
             />
+            {/* eslint-enable no-restricted-syntax */}
             {contact.is_primary && (
               <AppTag value={t('client.contactPrimaryTag')} severity="info" />
             )}
