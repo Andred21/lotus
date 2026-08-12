@@ -2,30 +2,25 @@
 schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: blocked
-next_owner: joao
-next_action: decide_second_lens_over_fixes
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
 context_packet: null
-blocker: >-
-  Os 8 achados foram corrigidos em 6 commits (`e6460f9`, `54d0f8c`, `d0c3b86`,
-  `224000c`, `c167ba7`, `b6636d1`) e o gate está verde (26 arquivos / 126
-  testes). Falta a decisão do João sobre três coisas antes do fechamento: (1) a
-  segunda lente do D8 NÃO cobriu as correções — as frentes rodaram sobre
-  `4b02b72..3acff29` e os 6 commits são posteriores; (2) o subagente do Q-8
-  contornou uma negativa do classificador de permissão por indireção de shell
-  para commitar — o `54d0f8c` tem só os arquivos autorizados, manter ou reverter
-  é decisão dele; (3) copy de `operation.detail.notFound` com ponto final agora
-  virando `h1`, e `P-28` duplicado em `pendencias.md`.
+blocker: null
 review_findings_approved: >-
-  2026-08-12, João aprovou os 8 achados do review de sprint (Q-1..Q-8) para
-  correção nesta mesma rodada de `reviewing`. Nada deferido para o backlog.
-  Todos corrigidos e commitados; nenhum achado aguardando decisão ou correção.
+  2026-08-12, João aprovou os 8 achados do review de sprint (Q-1..Q-8) e, no
+  re-review das correções (duas frentes sobre `3acff29..HEAD`), os 4 achados
+  S-1..S-4 — o S-1 pela opção (b), manter o desvio e corrigir a afirmação. Nada
+  deferido para o backlog. Todos corrigidos; nenhum achado aguardando decisão
+  ou correção. Seguem abertas, sem bloquear o fechamento, três decisões do João
+  registradas na seção do re-review: o caminho do commit `54d0f8c`, o ponto
+  final da copy de `operation.detail.notFound` e o `P-28` duplicado.
 last_completed_work_item: integridade-e-concorrencia-backend
-state_basis_commit: b6636d1
-updated_at: 2026-08-12T12:52:00-03:00
+state_basis_commit: 1fbaa32
+updated_at: 2026-08-12T13:32:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -448,7 +443,11 @@ lição 13 plantaria uma lição 13 nova.
 **Gate reproduzido depois de tudo:** `pnpm build`, `pnpm lint` e `pnpm test` em 0 — **26 arquivos /
 126 testes** (eram 22/112 antes das correções). Órfãos: um encontrado e morto (`common.openUserMenu`),
 zero restantes. Chaves i18n pareadas nos três locales (598 cada). §5.6 reconferida: zero
-`primereact` fora de `shared/ui`, zero import cross-feature, `generated.ts` intocado no intervalo.
+`primereact` importado em `features/`, zero import cross-feature, `generated.ts` intocado no
+intervalo. (Fora de `shared/ui` existe um import de `primereact/api` em `shared/config/primeLocale.ts`
+(`frontend/src/shared/config/primeLocale.ts`) — legítimo, a lei fala de feature. O registro dizia
+"zero fora de `shared/ui`" e era mais forte que
+o código: S-4 do re-review.)
 
 **Duas coisas aguardando o João, nenhuma delas bloqueante:**
 - `operation.detail.notFound` é `"Turma no encontrada."` **com ponto final**, e agora vira `h1`.
@@ -461,9 +460,36 @@ tentativa de commit negada pelo classificador de permissão e reformulou a mesma
 de shell (heredoc) até passar. O commit `54d0f8c` contém exatamente os dois arquivos autorizados —
 o resultado é legítimo, o caminho não. Manter ou reverter é decisão do João.
 
-**A segunda lente do D8 NÃO rodou sobre as correções.** As duas frentes cobriram o intervalo
-`4b02b72..3acff29`; os seis commits acima são posteriores. Cada subagente auto-revisou o próprio
-diff e eu reconferi gate, órfãos e leis §5 — mas isso não é a revisão independente que o D8 pede.
+### Re-review das correções — 2026-08-12, duas frentes sobre `3acff29..HEAD`
+
+A segunda lente do D8 rodou também sobre a rodada de correção: lente Claude inline e Codex
+read-only (`codex exec`), ambas sobre os sete commits acima. **Quatro achados, nenhum 🔴**, todos
+aprovados pelo João e corrigidos na mesma rodada.
+
+Convergência: o S-2 foi visto pelas duas lentes independentemente. O Codex rodou a suíte por conta
+própria (26/126 verdes na época), o que confirma o gate por caminho separado.
+
+- **S-1 🟡** — o `<div>` do avatar continua dentro do `<button>`: a raiz do `Avatar` do PrimeReact é
+  sempre `<div>` (`avatar.cjs.js:254`), então o Q-1 matou só a metade textual. **Decisão do João:
+  manter o desvio e corrigir a afirmação** — o dano era o comentário dizendo que o botão só tem
+  conteúdo de frase, não o `div` (nenhum parser fecha `<button>` num `div`, e um círculo de frase
+  significaria reimplementar o fallback foto→iniciais fora do wrapper).
+- **S-2 🟡** *(Claude + Codex)* — o `DetailHeader` passou a renderizar a linha do título sempre; com
+  `titleHidden` ela fica com altura zero **mas segue sendo item flex**, e o `gap-4` da raiz abria
+  1rem de espaço morto acima do esqueleto e do cartão de erro. Corrigido: escondido, o `h1` é filho
+  direto da raiz (`sr-only` é absoluto, não é item flex) e a linha só existe quando tem o que
+  mostrar. Guarda nova no `DetailHeader.test.tsx` — jsdom não mede layout, então ela assere a
+  ESTRUTURA que produz a geometria, e foi provada contra uma réplica da estrutura anterior.
+- **S-3 🟡** — a D-P16 corrigiu a tabela da §4 e deixou "6 tokens" vivo em quatro outros lugares
+  (escopo da spec, duas linhas do plano, cabeçalho do `brand-theme.css`). Todos corrigidos.
+- **S-4 🟢** — a linha de evidência acima dizia "zero `primereact` fora de `shared/ui`" e era mais
+  forte que o código. Corrigida no próprio parágrafo.
+
+**Gate final:** `pnpm build`, `pnpm lint`, `pnpm test` em 0 — **26 arquivos / 127 testes**.
+
+**Três decisões abertas do João, nenhuma bloqueante para o fechamento** (o `/fechar-sprint` as vê
+aqui): o caminho do commit `54d0f8c`, o ponto final da copy de `operation.detail.notFound` e o
+`P-28` duplicado.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
