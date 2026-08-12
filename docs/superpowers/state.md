@@ -139,6 +139,47 @@ captura é **escrita silenciosa** (`saveQuietly` com `timestamps` desligado), co
 **incluiu `RedatoresTable`** — redator autentica (RN-01) e o campo entra pela relação que
 `RedatorData` já atravessa.
 
+### A spec foi revisada no mesmo dia — o mecanismo mudou, o parágrafo acima fica
+
+O João leu a spec e fez duas perguntas que mudaram o desenho. O parágrafo anterior **não é apagado**:
+ele registra o que foi decidido na primeira passada, e a segunda decisão só se entende contra ela.
+
+**Pergunta 1 — "não existe nada nativo do Laravel, tipo a tabela `sessions`?"** Medido antes de
+responder: Laravel **não** tem `last_login` nativo (nem core, nem Fortify/Jetstream), e a `sessions`
+**existe neste repo** — nativa, em `0001_01_01_000000_create_users_table.php:39-46`, com
+`SESSION_DRIVER=database`, viva com 5 linhas na hora da medição (4 do `user_id=1`, uma com `user_id`
+`NULL` de visitante). Ela **não** fecha o requisito: `last_activity` é última *atividade* e é
+reescrito a cada request; `session()->invalidate()` no logout **apaga a linha**, então quem sai apaga
+a própria evidência; e o dado expira em `SESSION_LIFETIME=120` minutos, além de morrer inteiro se o
+driver virar `redis`/`file` — feature de negócio pendurada em config de infra.
+
+**Pergunta 2 — ele quer histórico de logins, em tabela própria.** Duas decisões novas: o log guarda
+**só logins bem-sucedidos** (tentativa falha e logout recusados, com razão registrada na spec) e o
+"último acesso" é **derivado** do histórico — **`users.last_login` não existe mais**, contra
+denormalizar a coluna em paralelo.
+
+**O schema não copia o da `sessions`, embora tenha nascido dela na conversa.** Três colunas de lá são
+artefato do driver: `id` string primary é o ID da sessão, `payload longText` é a sessão serializada
+(peso morto e passivo de privacidade num log) e `last_activity integer` é unix timestamp cru, contra
+o `timestamp` com cast `datetime` que o projeto usa em todo lugar.
+
+**A revisão simplificou metade do bloco e complicou a outra.** Como nunca mais se escreve em `users`
+no login, **morreram juntos** a armadilha do `$auditInclude` (item 4 do terreno), o `saveQuietly` e o
+`timestamps = false` (item 5) — o desenho anterior existia inteiro para contornar uma escrita que
+deixou de existir. Os dois itens medidos continuam verdadeiros; apenas pararam de se aplicar.
+
+**Em troca, a leitura virou travessia de relação, que é onde este repo tem cicatriz.** A escolha do
+mecanismo foi por **modo de falha**, não por custo: `withMax('loginLogs', 'created_at')` é mais
+barato (subselect, zero query extra) mas **falha em silêncio** — controller que esqueça a carga
+projeta `null` e a tela diz "nunca acessou" para todos. `hasOne(...)->latestOfMany()` custa uma
+query e **falha alto**, estourando no `Model::preventLazyLoading()`. Ficou `latestOfMany`, na mesma
+direção da D-B3 de `turma-habilitacao-listagem`, que matou um `??` por esconder query atrás de
+fallback silencioso. O N+1 do seam do B4 (Q-1 de 2026-08-08, quatro listagens) é o precedente que
+torna isso risco declarado, com guarda de runtime própria na §4 da spec.
+
+**Risco de review continua ALTO**, com os três gatilhos intactos — auth, schema (agora tabela nova em
+vez de coluna) e `generated.ts`.
+
 **Fora de escopo, declarado na spec:** `SessionUserData` não ganha o campo (a captura precede a
 montagem do payload, então `/me` diria "último acesso = agora" — campo que mente por construção); sem
 backfill; alunos e clientes não entram porque não autenticam.
