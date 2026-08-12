@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: faixa-visivel-e-acessibilidade-dos-dialogos
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md
 active_plan: docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md
 context_packet: null
 blocker: null
 last_completed_work_item: last-login
-state_basis_commit: 18cf90a
-updated_at: 2026-08-12T14:48:57-03:00
+state_basis_commit: 9f38492
+updated_at: 2026-08-12T20:47:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -169,6 +169,81 @@ bloco no lugar errado apaga seletores existentes **em silêncio** (Q-2 de 2026-0
 
 **Estado:** `ready_for_execution`. `/executar-bloco faixa-visivel-e-acessibilidade-dos-dialogos` exige
 instrução posterior do João.
+
+### Execução — 2026-08-12: as 7 tasks de código fecharam, em commits próprios
+
+`main..HEAD` = 14 commits, sendo 12 de código e 2 de documento (`0533303` promoveu o bloco,
+`b1de7c0` gravou o plano, `f8b862c` marcou a transição para `executing`). O diff do bloco é
+**33 arquivos, +1884/−211**, todos sob `frontend/src`.
+
+Task 1 (`956c55b`) devolveu o foco ao disparador e nomeou o maximizar no `AppDialog`. Task 2
+(`3ee3039`) deu modo leitura ao kit `FormField`/`NestedField`, com 5 testes novos. Task 3
+(`69801b0`, emendada em `6962182`) adotou o modo leitura nos 40 sítios — a emenda corrigiu o
+placement do `eslint-disable` no `ContactCard`, onde o `disabled` fica em linha própria e
+`eslint-disable-next-line` não o cobria. Task 4 (`158823b`) resolveu a faixa desligando o
+`thead` sem linhas: zerar só a largura mínima não bastava, porque os seis `<th>` com `px-4 py-2.5`
+têm largura intrínseca própria e sustentavam a tabela sozinhos. Task 5 (`1095989`, emendada em
+`36c6847`) tirou o CTA duplicado; a emenda é a parte que importa — o critério virou
+`!table.filtering && rows.length === 0`, porque busca sem resultado **não** é lista vazia e o
+critério cru fazia o CTA sumir também durante a busca. Task 6 (`ecbf4a7`) fechou Q-14 e Q-15.
+Task 7 (`d64ed09`, emendada em `2e2deb2`) escreveu as duas regras de lint; a emenda é o risco que o
+plano previu se concretizando — as regras novas nasceram em blocos `files` próprios que casavam o
+mesmo glob e **apagavam em silêncio** o `no-restricted-syntax` existente (Q-2 de 2026-08-04), e a
+correção foi fundi-las nos arrays já existentes. `9f38492` corrigiu o Tailwind do `readOnlyValue`.
+
+### Gate da Task 8 — 2026-08-12: os seis provados no navegador, nenhum defeito, 5 achados B
+
+**Steps 1–4, medidos e não herdados:** `pnpm test` = **28 arquivos / 137 testes** — bate exatamente
+com a projeção do plano —, lint limpo e build verde. `git diff main...HEAD --stat -- backend/
+frontend/src/shared/types/generated.ts` vazio; nenhuma sonda (`console.log`/`debugger`/`SONDA`) no
+diff; nenhum `from 'primereact` em `src/features`.
+
+**Step 5:** `/lotus-ui-review` numa passada, sessão `bd3-gate-task8` do `playwright-cli` 0.1.18 em
+Chromium headed, login manual do João como admin. Quatro páginas (`/comercial`, `/cursos`,
+`/personas`, `/administracion`) nas três viewports. Relatório em
+`.artifacts/ui-review/2026-08-12T19-41-45-bd3-gate-task8/report.txt`, com 7 evidências ao lado —
+o diretório é gitignored (`.gitignore:25`), então este commit é o artefato durável da transição.
+Árvore limpa antes e depois, em `9f38492`; **zero mutação** (0 POST/PUT/PATCH/DELETE na corrida) e
+zero mudança de código.
+
+Os seis itens passaram, com sonda e não com impressão: foco de volta ao gatilho exato
+(`aria-label="View"`, dentro da `<tr>`) em **12/12** combinações, por Escape e depois de
+maximizar/restaurar, também no tema escuro; `aria-label` do maximizar alternando
+"Maximize dialog" ↔ "Restore dialog" nas 4 páginas; **zero** `input`/`textarea` de texto nos
+diálogos, com valor inteiro quebrando linha e campo vazio como "—"; wrapper da tabela com
+`scrollWidth == clientWidth` (276 e 261) a 390x844 e documento sem rolagem horizontal em 12/12;
+exatamente **1** CTA em 12/12, e **zero** sobre o estado de erro; Q-14 com o botão em
+`p-disabled p-button-loading` por ~38 ms e **1 clique = 1 GET, duplo clique = 1 GET**; Q-15 com o
+rodapé lido no instante do GET dizendo `Loading...`, nunca "0", assentando em "4 clients"; e todas
+as superfícies, textos e ações do `ClientDialog` trocando de valor entre claro e escuro.
+
+**Duas notas de método, porque o caminho não foi o óbvio.** `docker stop lotus-nginx-1` foi **negado
+pelo classificador de permissão** desta sessão, e offline emulado **não serve**: o TanStack Query
+trata rede offline como `fetchStatus: "paused"` (networkMode `online`) e nunca produz estado de
+erro. O estado de erro veio de `Network.setBlockedURLs` restrito a
+`http://localhost:8080/api/clients*` — servidor inalcançável para uma chamada, sem interceptar rota
+e sem fabricar resposta. Vale registrar para o próximo bloco que precisar de erro na tela.
+
+**Step 6, o que NÃO ficou provado:** lista genuinamente vazia (esvaziá-la exigiria mutação, proibida
+pela skill) — o ramo do CTA dentro do `AppEmptyState` de domínio fica coberto só por código
+(`SearchableTableFrame.tsx:125`) e pelo ramo irmão de erro, esse sim observado ao vivo; mutações;
+estado de erro fora de `/comercial`; tema escuro fora de `/comercial`; Q-14/Q-15 fora de 1440x900;
+travessia completa por Tab. E a limitação que a spec §8 já declarava continua valendo: **foco,
+`aria-label`, largura, CTA e feedback de retry não ganham teste automatizado** — o único mecanismo
+que sobrevive ao bloco é o lint da Task 7, e ele só vê cor e `disabled={readOnly}`.
+
+**Cinco achados B, zero C.** UI-01: nome de arquivo truncado sem `title` nem quebra a 390x844
+(`RedatorDialog`, seção DOCUMENTS). UI-02: `src/app/layouts/Sidebar/` tem 3 classes `text-slate-*`
+que **nenhum bloco** do `eslint.config.js` cobre — `COR_HARDCODED` só roda em `features/**` e
+`shared/**` —, nem convertidas nem declaradas na `CATRACA_COR`; é lacuna de alcance criada por este
+bloco, não regressão visual. UI-03: "3 course(s)" e "1 user(s)" contra "4 clients"/"7
+instructors"/"6 budgets", em duas das sete tabelas. UI-04: com o menu recolhido (390), o rótulo sai
+do DOM e sobra só `title` — sem hover no toque. UI-05: cada montagem de página com abas busca as
+**duas** abas. UI-01, UI-03, UI-04 e UI-05 são pré-existentes ao diff.
+
+**Estado:** `ready_for_review`. O review do bloco (`/revisar-sprint`) exige instrução do João; o foco
+declarado no plano é um só — **onde a mudança de `shared/ui` alcança tela que este bloco não abriu, e
+o que ela faz lá.** Risco de review: **MÉDIO**.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
