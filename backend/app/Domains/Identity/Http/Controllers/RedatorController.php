@@ -30,7 +30,7 @@ class RedatorController extends Controller implements HasMiddleware
     /** @return array<RedatorData> */
     public function index(): array
     {
-        return Redator::with(['user', 'courses', 'documents'])->get()
+        return Redator::with(['user.latestLogin', 'courses', 'documents'])->get()
             ->map(fn (Redator $r) => RedatorData::fromModel($r))
             ->all();
     }
@@ -42,7 +42,7 @@ class RedatorController extends Controller implements HasMiddleware
 
     public function show(Redator $redator): RedatorData
     {
-        return RedatorData::fromModel($redator->load(['user', 'courses', 'documents']));
+        return RedatorData::fromModel($redator->load(['user.latestLogin', 'courses', 'documents']));
     }
 
     public function update(RedatorData $data, Redator $redator, Request $request, UpdateRedatorAction $action): RedatorData

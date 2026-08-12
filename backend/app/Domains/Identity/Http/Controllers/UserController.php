@@ -31,7 +31,7 @@ class UserController extends Controller implements HasMiddleware
     /** @return array<UserData> */
     public function index(): array
     {
-        return User::where('type', 'admin')->with('roles')->orderBy('name')->get()
+        return User::where('type', 'admin')->with(['roles', 'latestLogin'])->orderBy('name')->get()
             ->map(fn (User $u) => UserData::fromModel($u))
             ->all();
     }
@@ -45,7 +45,7 @@ class UserController extends Controller implements HasMiddleware
     {
         abort_unless($user->type === 'admin', 404);
 
-        return UserData::fromModel($user->load('roles'));
+        return UserData::fromModel($user->load(['roles', 'latestLogin']));
     }
 
     public function update(UserData $data, User $user, UpdateStaffUserAction $action): UserData

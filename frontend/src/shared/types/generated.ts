@@ -260,6 +260,7 @@ phone: undefined | string | null,
 course_ids: number[],
 documents: RedatorDocumentData[],
 photo_url: string | null,
+last_login: string | null,
 };
 export type RedatorDocumentData = {
 id: number,
@@ -409,4 +410,5 @@ password: undefined | string,
 type: undefined | string,
 roles: string[],
 photo_url: string | null,
+last_login: string | null,
 };
