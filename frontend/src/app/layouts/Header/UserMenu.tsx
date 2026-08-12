@@ -32,18 +32,25 @@ export function UserMenu() {
   ]
 
   return (
-    <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex min-w-0 items-center gap-1 sm:gap-2">
 
-      <AppAvatar name={user.name}  size='large'/>
+      <AppAvatar name={user.name} size="large" className="shrink-0!" />
 
-      <div className="hidden text-left -my-1 sm:block">
-        <p className="text-sm font-semibold" style={{ color: 'var(--text-color)' }}>{user.name}</p>
+      {/* Texto branco cravado, não token de tema: a navy do header é fixa nos
+        * dois temas e `--text-color` é cinza de superfície clara — media 1,42:1
+        * aqui (D-P13). O papel fica celeste, o acento da marca sobre a navy
+        * (5,29:1), o mesmo do item ativo da sidebar.
+        * `my-0` porque o projeto não carrega o Preflight e o <p> ainda traz a
+        * margem de 1em do user-agent; `truncate` porque nome longo empurrava a
+        * barra em vez de cortar. */}
+      <div className="hidden min-w-0 max-w-40 text-left sm:block lg:max-w-56">
+        <p className="my-0 truncate text-sm font-semibold text-white">{user.name}</p>
 
-        <p className="text-sm text-(--brand)">{roleKey && t(roleKey)}</p>
+        <p className="my-0 truncate text-sm text-(--brand)">{roleKey && t(roleKey)}</p>
       </div>
 
       <AppButton
-        text
+        variant="onNavyPlain"
         rounded
         aria-label={t('common.openUserMenu')}
         onClick={(e) => menuRef.current?.toggle(e)}

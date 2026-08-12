@@ -852,6 +852,64 @@ decisão do João — as duas são a implementação correta do que ele já deci
   onde ela vale, como a D-P10. A **borda** branca do `brandOutline` no escuro fica: é traço
   decorativo, e a D-P10 já declarou que preenchimento decorativo não vira navy.
 
+### Emendas do checkpoint visual do João — Task 7 Step 4 (2026-08-12)
+
+O Step 4 é bloqueante e o João respondeu. Ele **aprovou a navy no header e na sidebar** ("o jeito
+que está atualmente está legal") e **fechou o achado do logo**: fica como está (`ml-15 h-30 w-auto`
+com `variant="on-dark"`, como ele deixou no `c9fb188`). Do resto do retorno saíram duas emendas.
+
+- **D-P12 — o relógio parou de reformatar na troca de idioma; a causa foi a UI-05, não o relógio.**
+  Achado do João, e é regressão de comportamento, não de estilo: antes deste bloco, trocar o idioma
+  no header reformatava hora e data na hora; passou a exigir reload. O `Clock` **nunca** se
+  inscreveu no i18n — `formatTime`/`formatDate` leem `i18n.language` no render, e quem re-renderizava
+  era o pai: o `Header` tinha `t(pageTitleKey(pathname))` no `<h1>`. A UI-05 deu ao `PageHeader` a
+  posse única do título, o `t()` saiu do `Header` e com ele o re-render emprestado. Corrigido onde a
+  dependência mora: `useTranslation()` **no `Clock`** (inscrição, não tradução) e `lang` no markup.
+  Os outros 8 consumidores dos formatters (`ConcludePanel`, `StudentDialog`, `EmissionPanel`,
+  `IssuedDialog`, `CertificateViewDialog`, `ValidationPage`, `HistorialTable`) renderizam `t()` ao
+  lado da data, então já se inscrevem — o `Clock` era o único que formatava sem se inscrever.
+  **Teste antes da correção:** `Clock.test.tsx` troca o idioma com o componente já montado e sem
+  remontar; contra a versão sem inscrição ele reprova com a data congelada em `11-08-2026` depois de
+  trocar para pt-BR, que é literalmente o sintoma relatado.
+- **D-P13 — a navy fixa também governa o texto e o controle em cima dela.** Pedido do João: header
+  mais baixo, textos brancos, melhor responsividade. É a mesma classe de defeito da D-P8/D-P11 —
+  superfície que **não** acompanha o tema encontrando texto/controle que acompanha:
+  - **Altura: 94px → 80px, e a causa não era o `min-height`.** O projeto não carrega o Preflight do
+    Tailwind, então todo `<p>` ainda traz a margem de 1em do user-agent: eram **42px de altura
+    morta** no relógio e outros 42 no bloco do usuário (o `-my-1` que havia lá era band-aid de 4px
+    num vão de 42). Zeradas as margens, o teto de conteúdo vira o avatar de 48px e a altura passa a
+    ser escolha em vez de resultado. Eu entreguei 64px; **o João ajustou para 80px no próprio
+    working tree durante a execução, e o valor dele é o que ficou** — 32px de folga sobre o avatar,
+    estável nas 7 larguras medidas.
+  - **Texto branco cravado no shell, não token de tema.** `--text-color` (`#334155`) sobre a navy
+    media **1,42:1** no nome do usuário e `--text-color-secondary` (`#64748b`) media **3,08:1** no
+    relógio — os dois reprovam. Passaram a branco: **14,65:1** medidos, iguais nos dois temas. A
+    data do relógio fica em branco a 75% (**8,84:1**). O papel do usuário **continua celeste**
+    (5,29:1, passa) — é o acento da marca sobre a navy, o mesmo do item ativo da sidebar.
+  - **Variantes `onNavy*` no `AppButton`, e isto fecha o achado do toggle da sidebar.** O
+    `brandOutline` usa `--surface-card`, que no claro é branco: todo controle sobre a navy virava
+    caixa branca colada no fundo (era o achado nº 2 que eu tinha aberto para o checkpoint, na
+    sidebar, e o header navy do `c9fb188` o replicou). Três variantes novas — `onNavyLabel`,
+    `onNavyIcon`, `onNavyPlain` — com fundo transparente, traço em véu de branco e rótulo branco.
+    O hover é `enabled:hover:` por especificidade medida: o Lara traz `.p-button:enabled:hover`
+    (0,3,0), que ganha de um `hover:` simples (0,2,0); empatando em 0,3,0 vence quem vem depois, e o
+    bundle do Vite vem depois do `<link>` do tema. Verificado no navegador com o ponteiro em cima.
+  - **`LanguageMenu` ganhou `variant`** porque vive em duas superfícies (o fundo de tema do login e a
+    navy do header); `AppearanceControls` ganhou `onNavy` como **um** booleano, para os dois
+    controles não saírem de superfícies diferentes por descuido do call site.
+  - **Responsividade:** nome do usuário com largura máxima e corte (nome longo empurrava a barra em
+    vez de cortar), `min-w-0` na régua do flex, e o divisor com o traço em véu de branco — ele mora
+    no `::before` do tema, em cinza de superfície clara. Medido em 1440/1280/1024/768/640/390/320:
+    **zero overflow horizontal**, 42px de sobra na pior largura, altura constante em 64px.
+  - **Reincidência da armadilha da UI-03:** o primeiro comentário do `Header` citava a classe de
+    altura antiga e o scanner do Tailwind emitiu a regra morta no bundle (o scanner lê comentário).
+    Reescrito; conferido no `dist` que a regra sumiu. É a **segunda** vez no mesmo bloco.
+
+**Fica aberto para o João, sem decisão ainda:** celeste como traço/texto sobre superfície **clara**
+(fora do shell) segue reprovando 3:1 — foco 2,77:1 sobre branco, anel do tema 1,83:1. Sobre a navy
+o celeste passa (5,29:1), então o shell aprovado hoje não é afetado. Proposta continua sendo
+azul-poste como traço de foco no claro, celeste no escuro.
+
 ## Desvios declarados (lição 13)
 
 - **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara

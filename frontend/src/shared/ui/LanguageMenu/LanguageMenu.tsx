@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MenuItem } from 'primereact/menuitem'
 import { AppButton } from '../AppButton/AppButton'
+import type { AppButtonVariant } from '../AppButton/style'
 import { AppMenu } from '../AppMenu/AppMenu'
 import type { AppMenuRef } from '../AppMenu/AppMenu'
 import { SUPPORTED_LANGUAGES } from '@shared/config/i18n'
@@ -10,8 +11,11 @@ import { SUPPORTED_LANGUAGES } from '@shared/config/i18n'
  * Seletor de idioma. O AppButton mostra a bandeira + código atual; ao clicar
  * abre o AppMenu com as 3 línguas — cada item com sua bandeira (flag-icons no
  * ícone do item) chamando i18n.changeLanguage.
+ *
+ * `variant` existe porque este seletor vive em duas superfícies diferentes: o
+ * fundo de tema do login e a navy fixa do header (D-P13).
  */
-export function LanguageMenu() {
+export function LanguageMenu({ variant = 'brandLabel' }: { variant?: AppButtonVariant }) {
   const { t, i18n } = useTranslation()
   const menuRef = useRef<AppMenuRef>(null)
 
@@ -29,7 +33,7 @@ export function LanguageMenu() {
   return (
     <>
       <AppButton
-        variant="brandLabel"
+        variant={variant}
         aria-label={t('common.language')}
         onClick={(e) => menuRef.current?.toggle(e)}
       >
