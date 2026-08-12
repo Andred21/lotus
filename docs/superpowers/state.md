@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: faixa-visivel-e-acessibilidade-dos-dialogos
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md
 active_plan: docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: last-login
 state_basis_commit: 18cf90a
-updated_at: 2026-08-12T18:40:00-03:00
+updated_at: 2026-08-12T14:48:57-03:00
 ---
 
 # Estado operacional — Lotus v2
