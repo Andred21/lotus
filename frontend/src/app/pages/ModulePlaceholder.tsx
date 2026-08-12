@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next'
+import { PageHeader } from '@shared/ui'
 
 /** Stand-in para módulos ainda não implementados; mantém a nav clicável.
- * Recebe a CHAVE i18n do título (ex.: "nav.comercial"). */
+ * Recebe a CHAVE i18n do título (ex.: "nav.comercial").
+ *
+ * Título pelo `PageHeader`, o dono único desde a UI-05 — escrevê-lo à mão era
+ * o que deixava a rota sem `h1` (UI-02 do review de 2026-08-12). */
 export function ModulePlaceholder({ titleKey }: { titleKey: string }) {
   const { t } = useTranslation()
-  return (
-    <div>
-      <h2 className="text-2xl font-bold text text-slate-800 dark:text-slate-100">{t(titleKey)}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('placeholder.module')}</p>
-    </div>
-  )
+
+  return <PageHeader title={t(titleKey)} description={t('placeholder.module')} />
 }

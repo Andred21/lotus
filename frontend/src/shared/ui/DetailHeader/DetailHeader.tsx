@@ -42,7 +42,11 @@ export function DetailHeader({ back, title, subtitle, tags, actions }: DetailHea
       {(title || subtitle || tags || actions) && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            {title && <h2 className="text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h2>}
+            {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de
+              * 2026-08-12): em página de detalhe o dono do título é este
+              * componente. Margem cravada no valor que o user-agent dava ao h2,
+              * porque o projeto não carrega Preflight. */}
+            {title && <h1 className="my-[0.83em] text-2xl font-bold" style={{ color: 'var(--text-color)' }}>{title}</h1>}
             {subtitle && (
               <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
             )}

@@ -31,8 +31,21 @@ export function Sidebar() {
     <AppSidebar
       className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) [--focus-stroke:var(--brand)] transition-all`}
     >
-      <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        {!collapsed && <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />}
+      {/* Colapsada, a coluna empilha marca e toggle: lado a lado eles não cabem
+        * nos 80px do rail. Expandida, o toggle fica na ponta oposta ao logo. */}
+      <div
+        className={`flex px-4 py-5 ${collapsed ? 'flex-col items-center gap-4' : 'items-center justify-between'}`}
+      >
+        {/* Colapsada a marca é o glifo, não o wordmark reduzido: o asset é
+          * retrato e, na largura do rail, o texto "LOTUS" some. Sem isto o topo
+          * do rail ficava vazio — e como o colapso é imposto abaixo de 1024px,
+          * tablet e mobile não viam marca nenhuma em rota nenhuma (UI-06 do
+          * review de 2026-08-12). */}
+        {collapsed ? (
+          <AppLogo variant="glyph" className="h-9 w-auto" />
+        ) : (
+          <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />
+        )}
 
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "brand-theme": "node scripts/generate-brand-theme.mjs",
+    "logo-glyph": "node scripts/generate-logo-glyph.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

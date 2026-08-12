@@ -955,6 +955,75 @@ Corrigido, e a guarda agora confere a família azul inteira **também na forma r
 
 **Fica aberto:** nada do achado 3. As duas metades foram decididas e medidas.
 
+### D-P15 — os achados do re-run do `/lotus-ui-review` corrigidos (2026-08-12)
+
+O Step 5 da Task 7 rodou (report em
+`.artifacts/ui-review/2026-08-12T10-58-10-applayout-shell-rerun/report.txt`, **1 A + 6 B + 0 C**): os
+sete achados de 2026-08-11 fecharam e D-P12/D-P13/D-P14 se confirmaram no navegador. João mandou
+resolver os achados novos. **Cinco entraram; o sexto não é deste bloco.**
+
+- **UI-01 — o 2,77:1 do achado 3 sobrevivia na camada que o tema não alcança.** A D-P14 tirou o
+  celeste de primeiro plano do tema **gerado**, mas o visual de marca do `AppButton` é Tailwind
+  (`shared/ui/AppButton/style.ts`), fora do alcance do transform: rótulo e borda seguiam celeste
+  sobre a superfície branca do botão, em **22 call sites** — a ação primária de quase todo módulo.
+  Correção pela mesma decisão, na camada certa: nasce `--brand-ink` no `brand-theme.css`, celeste no
+  `:root` (o escuro preenche de celeste e o rótulo é navy) e **degrau 700** em `html:not(.dark)`,
+  lido de `--primary-700` para haver **uma** fonte da tinta. Medido no navegador: os quatro
+  controles do shell e o botão primário de `/personas` em `rgb(24,107,148)` sobre branco (**5,88:1**,
+  eram 2,77:1); no escuro, celeste preenchido com rótulo `rgb(15,43,61)` — intacto.
+- **UI-02 — nenhuma rota autenticada tinha `h1`, e o alcance era maior que o report media.** O
+  report nomeia o `PageHeader`; a varredura achou **quatro** donos de título escrevendo o cabeçalho
+  à mão: `PageHeader`, `DetailHeader` (todas as páginas de detalhe) e as duas páginas do shell que
+  nem passavam por eles (`DashboardPage`, `ModulePlaceholder`). Os dois primeiros passam a `h1`; as
+  duas páginas passam a **usar o `PageHeader`**, que é a posse única que a UI-05 criou — corrigir só
+  a tag nelas manteria o defeito de fundo (dois donos de título). Medido: `["H1:Welcome, Admin
+  Lotus"]` no dashboard e `["H1:Personas"]` em `/personas`, um cabeçalho por página.
+  - **A margem é cravada, e é decisão, não descuido:** sem Preflight o user-agent dá `0.83em` ao h2
+    e `0.67em` ao h1, então a troca de nível mexeria no espaçamento de todas as páginas. O valor do
+    h2 fica, e a correção semântica não aparece na tela — que é o ponto.
+- **UI-03 — `<html lang>` nunca acompanhou o i18n.** Não é regressão deste bloco; o default do app é
+  es-CL e a declaração já nascia errada. A sincronização vive no próprio `i18n.ts` (evento
+  `languageChanged` mais uma chamada no primeiro load), não num efeito de React: o gatilho é do i18n,
+  a troca acontece fora da árvore e o primeiro load precisa acertar o atributo antes de qualquer
+  componente montar. É o irmão não-React do `useApplyTheme`. O `index.html` passa a declarar o
+  default do produto. Medido ao vivo: troca para ES com a UI já em espanhol → `documentElement.lang`
+  **es-CL**, sem reload.
+- **UI-04 — o gatilho do menu do usuário cabe a 320px, e o chevron FICA.** **Desvio declarado da
+  recomendação do report**, decidido por medição: ele propõe ocultar o chevron abaixo de `sm` e
+  promover o avatar a gatilho. Medido, o que devolvia os 18px cortados era o **padding do botão em
+  volta de um ícone de 12px** — com o avatar (que já estava na barra) dentro do mesmo controle e o
+  botão sem visual próprio, o gatilho inteiro mede 64px e termina em **308** contra a viewport de
+  320. Some-lo custaria a affordance que o achado cobra, sem ganhar pixel nenhum. Efeito colateral
+  que era metade do achado: o avatar e o nome deixam de ser decoração ao lado de um controle mudo —
+  agora há **um** alvo, com um nome acessível só e o anel de foco em volta do bloco inteiro.
+  Varridas 8 larguras (320→1440): `scrollWidth == innerWidth` em todas, gatilho sempre dentro da
+  viewport, menu abrindo dentro da tela a 320 (108→308) com os dois itens alcançáveis.
+- **UI-06 — a marca voltou ao rail colapsado, como glifo.** Abaixo de 1024px o colapso é imposto,
+  então tablet e mobile não viam identidade em rota nenhuma. O wordmark reduzido não serve (o asset
+  é retrato 335×466 e o texto some no rail de 80px — é o achado nº 1 do checkpoint no outro
+  sentido), então o glifo vira asset próprio, **gerado por script versionado** no molde da D5':
+  `scripts/generate-logo-glyph.mjs` mede a caixa dos pixels celestes e recorta (224×274), com
+  `tests/logo-glyph.test.ts` reprovando por drift. O topo do rail passa a empilhar glifo e toggle —
+  lado a lado eles não cabem nos 80px. Medido: glifo 29×36 centrado no rail em 320/375/390/640/768 e
+  no colapso manual a 1440; wordmark de volta a 1024+.
+- **UI-05 — fora, por decisão anterior.** É o UI-06 de 2026-08-11, parqueado no **BD-3** pela spec
+  deste bloco (§ Brainstorming), e o próprio report o registra como "não é achado novo". Tocá-lo aqui
+  seria reabrir fila fechada.
+
+**Quatro mecanismos vistos REPROVAR contra o código antigo** (lição 10), um a um, revertendo só a
+linha que cada um guarda: `brandOutline` de volta ao celeste → `expected ... to contain
+'text-[var(--brand-ink)]'`; `PageHeader` de volta a `h2` → `expected undefined to be 'Personas'`;
+`i18n.ts` sem a inscrição → `expected '' to be 'en'` e `expected '' to be 'pt-BR'`; um byte trocado
+no glifo commitado → `expected false to be true`. O teste do UI-01 mede **razão de contraste** em vez
+de conferir um hex escolhido, e carrega o controle que o faz discriminar: o celeste reprova na mesma
+superfície. UI-04 e UI-06 não têm teste — são geometria, e a prova é a medição no navegador acima.
+
+**Gate:** **22 arquivos / 112 testes** (era 18/101), `pnpm build` e `pnpm lint` verdes,
+`text-[var(--brand)]` ausente do `dist` (a armadilha do scanner de comentários, terceira vez no
+bloco, não reincidiu), console sem erro nem aviso na jornada e **zero mutação** — a única requisição
+de escrita da sessão é o `POST /api/login` com a credencial de seed versionada, o mesmo desvio que o
+João escolheu no re-run.
+
 ## Desvios declarados (lição 13)
 
 - **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara

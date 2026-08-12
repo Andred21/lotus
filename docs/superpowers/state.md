@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: estilizacao-adr16-shell-tipografia
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: joao
-next_action: run_lotus_ui_review
+next_action: request_sprint_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-11-estilizacao-adr16-shell-tipografia-design.md
 active_plan: docs/superpowers/plans/2026-08-11-estilizacao-adr16-shell-tipografia.md
@@ -13,7 +13,7 @@ blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
 state_basis_commit: b29f3b9
-updated_at: 2026-08-12T10:40:00-03:00
+updated_at: 2026-08-12T11:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -282,6 +282,45 @@ da família inteira.
 **Papel do usuário:** branco a 75% (8,84:1), o mesmo tratamento da segunda linha do relógio.
 
 Gate: build, lint e **18 arquivos / 101 testes** verdes.
+
+### Step 5 rodado e os achados corrigidos — 2026-08-12 (D-P15)
+
+O João rodou o re-run do `/lotus-ui-review` (report em
+`.artifacts/ui-review/2026-08-12T10-58-10-applayout-shell-rerun/report.txt`): **1 A + 6 B + 0 C**. O
+A é agrupado e é o placar do bloco — os **sete** achados de 2026-08-11 fecharam e D-P12/D-P13/D-P14
+se confirmaram no navegador (foco medido nas três superfícies, relógio reformatando ao vivo, header
+80px sem overflow em 8 larguras). Ele então mandou resolver os achados. **Cinco entraram; o sexto
+não é deste bloco.** Detalhe e medições na D-P15 do plano.
+
+- **UI-01** — o 2,77:1 que a D-P14 matou no tema **gerado** sobrevivia no visual de marca do
+  `AppButton`, que é Tailwind e o transform não enxerga: 22 call sites pintando rótulo e borda de
+  celeste sobre branco, incluindo a ação primária de quase todo módulo. Nasce `--brand-ink` — celeste
+  na raiz, degrau 700 no claro, lido de `--primary-700` para haver uma fonte só da tinta. Medido:
+  `rgb(37,165,228)` → `rgb(24,107,148)`, **5,88:1**; escuro intacto.
+- **UI-02** — a varredura achou **quatro** donos de título, não um: além do `PageHeader` do report,
+  o `DetailHeader` e as duas páginas do shell que escreviam o cabeçalho à mão (`DashboardPage`,
+  `ModulePlaceholder`). Os dois primeiros passam a `h1`; as duas páginas passam a **usar o
+  `PageHeader`** — corrigir só a tag nelas manteria o defeito de fundo, que é a posse dividida do
+  título que a UI-05 existiu para fechar.
+- **UI-03** — `<html lang>` passa a acompanhar o i18n, no próprio `i18n.ts` e não num efeito de
+  React. Não era regressão deste bloco.
+- **UI-04** — **desvio declarado da recomendação do report**, decidido por medição: o chevron
+  **fica**. O que devolvia os 18px cortados era o padding do botão, não o ícone; com o avatar dentro
+  do mesmo controle o gatilho termina em 308 contra a viewport de 320. De quebra, o avatar e o nome
+  deixam de ser decoração ao lado de um controle mudo.
+- **UI-06** — a marca volta ao rail colapsado como glifo, asset **gerado por script versionado** no
+  molde da D5' (`scripts/generate-logo-glyph.mjs` + guarda de drift). Abaixo de 1024px o colapso é
+  imposto, então isto é a marca voltando a existir em tablet e mobile.
+- **UI-05 — fora, por decisão anterior:** é o UI-06 de 2026-08-11, parqueado no **BD-3** pela spec
+  deste bloco; o próprio report o registra como não-novo.
+
+**Quatro mecanismos vistos reprovar contra o código antigo** antes de aceitos (lição 10). Gate:
+**22 arquivos / 112 testes**, build e lint verdes, `dist` sem a utility morta, console limpo e zero
+mutação — só o `POST /api/login` com a credencial de seed, o mesmo desvio que o João escolheu no
+re-run.
+
+**Estado: `ready_for_review`.** O Step 5 caiu e a Task 7 fecha aqui. `/revisar-sprint` é invocação
+do João; nada foi promovido além disso, e nem review, nem fechamento, nem push rodaram.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
