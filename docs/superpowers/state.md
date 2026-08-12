@@ -1,19 +1,19 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: last-login
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-12-last-login-design.md
 active_plan: null
 context_packet: null
 blocker: null
 review_findings_approved: null
 last_completed_work_item: integridade-e-concorrencia-backend
-state_basis_commit: e2a251c
-updated_at: 2026-08-11T17:58:00-03:00
+state_basis_commit: 397548c
+updated_at: 2026-08-12T12:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,6 +48,105 @@ updated_at: 2026-08-11T17:58:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-12 (`last-login`)
+
+### Seleção e o paralelismo autorizado — 2026-08-12
+
+**BD-7 do `backlog.md:140`, promovido explicitamente pelo João.** Ele abriu a sessão com
+`/planejar-bloco ### BD-7 · last_login`; o gate do comando **reprovou por dois motivos**, não um. O
+primeiro é o de sempre — argumento que é título de seção, não slug promovido, com o estado em `idle`
+e `active_work_item` `null`, igual a BD-1 e BD-2.
+
+**O segundo motivo é mais grave e foi o que exigiu decisão: existiam dois `state.md` com verdades
+diferentes.** O do main tree (em `397548c`) dizia `idle` / `active_work_item: null`, com
+`updated_at` de 2026-08-11T17:58. O da worktree `/home/jvbat/projetos/fix-frontend`, na branch
+`feat/estilizacao-adr16-shell-tipografia` (`3acff29`), dizia `reviewing` /
+`estilizacao-adr16-shell-tipografia`, com `updated_at` de 2026-08-12T11:55 — quase 18 horas mais
+novo. O commit `397548c`, escrito hoje, ainda registra uma **terceira** redação (`executing`), que a
+branch já superou.
+
+**Duas decisões do João fecharam a divergência**, e as duas ficam registradas porque nenhuma delas é
+o default do fluxo:
+
+1. **Paralelismo autorizado por ele**, relaxando a invariante "existe no máximo um
+   `active_work_item`". `estilizacao-adr16-shell-tipografia` (frontend, worktree, `reviewing`) e
+   `last-login` (backend, main tree) correm ao mesmo tempo. A invariante segue escrita como está e
+   esta é uma exceção declarada, não uma revogação silenciosa dela.
+2. **A branch é a verdade.** O `state.md` do main não foi sincronizado à mão para refletir
+   `estilizacao` — ele está atrasado por construção do fluxo de worktree, e o estado real daquele
+   item chega ao main no merge. Cada árvore carrega o estado do seu próprio item.
+
+**Consequência conhecida e aceita:** `feat/estilizacao` já mexe em `docs/superpowers/state.md` (+287
+linhas) e `docs/superpowers/backlog.md` (+20), então os dois estados **vão conflitar no merge** e a
+resolução é manual. No código a colisão é pequena e foi medida: de `features/identity/` aquela branch
+tocou só `LoginPage.tsx` (2 linhas), e este bloco não toca `shared/ui/` nem as duas folhas de tema de
+~7.000 linhas que ela trouxe.
+
+**Toca backend e schema → main tree, sem worktree (P-03).** Branch `feat/last-login`, criada de
+`397548c`, que passa a ser o `state_basis_commit`. **A P-03 não vence:** o gatilho dela exige dois
+`active_work_item` de **backend** em paralelo, e `estilizacao` é frontend.
+
+**Rota direta a `ready_for_planning`, sem Context Packet, mas por decisão e não por ausência de
+fonte** — diferente dos blocos anteriores. Aqui existia fonte externa real: o `backlog.md:319`
+escreve que "o protótipo mostra na tela de Usuários", o que é Figma. A dependência foi medida e é
+estreita: coluna, captura, DTO e `generated.ts` são todos internos ao repositório, e só o **formato
+do que a tela mostra** vivia no protótipo. Diante da escolha entre gerar o packet pelo Codex e
+responder direto, **o João optou por decidir o formato ele mesmo no brainstorming**.
+`context_packet: null`.
+
+### Terreno medido antes de planejar (não é desenho, é fato)
+
+1. **`last_login` é zero em toda parte, reconferido e não herdado do backlog:** nenhuma ocorrência em
+   `backend/app/`, `backend/database/` e `frontend/src/`. `users` no `docs/der-fisico.md:24` não tem
+   a coluna; `UserData` tem 12 campos e nenhum é ele.
+2. **O caminho de captura tem uma ordem obrigatória, e ela é medida.** O gate de `is_active` do
+   `AuthController.php:43-48` roda **depois** do `attempt()`. Qualquer captura anterior a ele grava
+   acesso de usuário inativo com senha certa — login que a API recusa com 422.
+3. **O evento `Login` do Laravel não serve, e o argumento a favor dele está morto.** Ele dispara no
+   `attempt()` bem-sucedido, antes do gate. O que o justificaria — pegar portas que não passam pelo
+   controller — não existe hoje: o frontend **nunca** envia `remember` (zero ocorrência em
+   `features/identity/` e `shared/api/`), então o cookie "remember me" está morto, e o repo não tem
+   um único listener de evento de auth.
+4. **A auditoria é uma armadilha de default, documentada no próprio model.** `User.php:53-68` diz que
+   `$auditInclude` **filtra o diff**: atributo de fora da lista gera audit com `old_values`/
+   `new_values` vazios. `last_login` não está na lista, então `save()` comum produziria uma linha
+   inútil de audit **por login, para sempre**, numa tabela de peso legal cuja política de retenção
+   (P-02) ainda está aberta.
+5. **`saveQuietly` sozinho não basta** — ele ainda toca `updated_at`, o que faria "última edição do
+   cadastro" mentir a cada login. Precisa de `timestamps = false` junto.
+6. **`RedatorData::fromModel` já achata campos do `user`** (`name`/`rut`/`email`/`phone`), então
+   incluir a tela de Redatores entra pela **mesma relação já percorrida** — sem eager-load novo e sem
+   o N+1 que o seam do B4 custou em 2026-08-08.
+7. **O frontend já tem as duas metades do formatter:** `shared/lib/datetime.ts` carrega `formatDate`
+   (curto do locale ativo, `dd-mm-aaaa` em es-CL) e `formatTime` (HH:MM). E `config/app.php` tem
+   `timezone => 'UTC'`, com precedente de projeção em `CertificateData:54`
+   (`revoked_at?->toISOString()`).
+
+### Brainstorming e spec — 2026-08-12
+
+O João aprovou o desenho com uma alteração de escopo e a instrução `o restante está aprovado`. O
+estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até a leitura humana
+do documento e a escrita posterior do plano.
+
+**Três decisões dele, respondidas antes de a spec existir:** a coluna mostra **data + hora**
+(`12-08-2026 14:32`, travessão para quem nunca acessou), contra data seca e contra tempo relativo; a
+captura é **escrita silenciosa** (`saveQuietly` com `timestamps` desligado), contra pôr o campo no
+`$auditInclude` e contra uma tabela `login_logs` própria; e a captura vive numa
+**`RecordLoginAction`**, contra inline no controller e contra listener de evento.
+
+**A quarta é alteração dele sobre o desenho apresentado:** a spec propunha só a tela de Usuários e ele
+**incluiu `RedatoresTable`** — redator autentica (RN-01) e o campo entra pela relação que
+`RedatorData` já atravessa.
+
+**Fora de escopo, declarado na spec:** `SessionUserData` não ganha o campo (a captura precede a
+montagem do payload, então `/me` diria "último acesso = agora" — campo que mente por construção); sem
+backfill; alunos e clientes não entram porque não autenticam.
+
+**Risco de review declarado ALTO** (§5 da spec), e desta vez a escala da spec e o gate do
+`/revisar-sprint` **concordam**: três gatilhos se aplicam — auth, schema e `generated.ts`. O risco
+próprio é que escrita silenciosa é, por definição, escrita que a auditoria não enxerga: `saveQuietly`
+no model errado ou fora do gate não produz audit, não move `updated_at` e não levanta exceção.
 
 ## Último item fechado — 2026-08-11 (`integridade-e-concorrencia-backend`)
 
