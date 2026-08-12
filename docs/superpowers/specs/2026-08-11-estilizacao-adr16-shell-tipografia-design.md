@@ -92,7 +92,8 @@ O ADR-16 ganha o ponto 5: camada de marca **sobre** o Lara — os temas gerados 
 no bundle do Vite, que entra no `<head>` **depois** do `<link id="prime-theme">`. O Lara continua
 base: o que a camada não redefine, permanece Lara.
 
-Paleta — 6 tokens nomeados, únicos donos de cor da identidade:
+Paleta — ~~6~~ **5** tokens nomeados, únicos donos de cor da identidade
+**[corrigido — ver a correção D-P16 abaixo]**:
 
 | Token | Hex | Papel |
 |---|---|---|
@@ -101,7 +102,19 @@ Paleta — 6 tokens nomeados, únicos donos de cor da identidade:
 | `humo` | `#F1F5F9` | fundo claro (`--surface-ground`) |
 | `grafite` | `#334155` | texto corpo no claro |
 | `noche` | `#0B1220` | fundo dark |
-| `ámbar-aviso` | `#D97706` | só semântico (warning); nunca decorativo |
+| ~~`ámbar-aviso`~~ | ~~`#D97706`~~ | ~~só semântico (warning); nunca decorativo~~ **não construído** — `warning` fica de stock do Lara; ver abaixo |
+
+> **Correção D-P16 (2026-08-12, decisão do João no review do bloco — lição 13).** O `ámbar-aviso`
+> nunca foi construído: `#D97706` não aparece em `frontend/src/`. As paletas de **severidade**
+> (info/sky, success, warning, danger, secondary/slate) ficam **intactas de propósito** — a camada
+> de marca transforma só a família da primária, como o comentário do `generate-brand-theme.mjs`
+> declara. O papel `warning` segue com o laranja de stock do Lara nos dois temas gerados: `#f97316`
+> em botão, tag e badge e `#cc8925` na borda da mensagem `warn` no claro; `#fb923c` e `#eab308` no
+> escuro. **A regra é por família, não por severidade:** onde o Lara pintou uma superfície de
+> severidade com o azul, a camada varreu junto — a mensagem `info` do claro hoje tem borda celeste
+> e texto no degrau 700 (D-P14). Adotar um âmbar de marca é decisão de **design**, com régua de
+> contraste própria em botão, tag, mensagem e badge nos dois temas — fora do escopo desta emenda ao
+> ADR-16, e registrada como pendência **P-30** em `docs/pendencias.md`, não como promessa aqui.
 
 Focus ring: 2px celeste, visível nos dois modos — é metade da correção do UI-03 (a outra metade é
 remover o `ring-0` do `brandOutline` em `AppButton/style.ts`). Radius global `6px → 4px` via token

@@ -1024,6 +1024,39 @@ bloco, não reincidiu), console sem erro nem aviso na jornada e **zero mutação
 de escrita da sessão é o `POST /api/login` com a credencial de seed versionada, o mesmo desvio que o
 João escolheu no re-run.
 
+### D-P16 — as paletas de severidade ficam de stock; o `ámbar-aviso` da spec §4 não foi construído (2026-08-12)
+
+Achado do review do bloco (Q-7): a §4 da spec declara **seis** tokens nomeados como "únicos donos de
+cor da identidade", e um deles — `ámbar-aviso` (`#D97706`) — não existe em `frontend/src/`. O papel
+`warning` segue com a paleta de stock do Lara nos dois temas gerados: `#f97316` em botão, tag e
+badge e `#cc8925` na borda da mensagem `warn` no claro; `#fb923c` e `#eab308` no escuro. O
+`generate-brand-theme.mjs` não tem **nenhum** hex laranja ou âmbar em mapa algum, e o
+`brand-theme.css` não toca `warning`.
+
+**A regra que produz isso estava declarada, mas só no código.** O `generate-brand-theme.mjs` a
+escreve num comentário do bloco dos azuis medidos: "as paletas de severidade (info/sky, success,
+warning, danger, secondary/slate) ficam intactas de propósito — elas comunicam significado, não
+marca". É a regra que o script inteiro segue: a camada de marca transforma **só** a família da
+primária. O defeito não é a decisão; é ela viver em comentário de script enquanto a spec aprovada
+promete um sexto token que ninguém construiu (lição 13).
+
+**O alcance da regra é a família, não a severidade — e isso está medido.** "Severidade intacta"
+vale onde o Lara pinta a severidade com a família dela: `p-tag-info` segue `#0ea5e9` (sky),
+`warning` segue laranja, `danger` segue vermelho. Onde o Lara pintou uma superfície de severidade
+com a **família azul**, a camada varreu junto, porque ela varre por família: a mensagem `info` do
+tema claro hoje tem borda `#25a5e4` e texto `#186b94` (o degrau 700 da D-P14). Não é contradição —
+é a mesma regra aplicada ao que o azul do Lara ocupava, e foi exatamente o "achado de tabela" da
+D-P14. Registrado aqui para que ninguém leia "severidade intacta" como "info não mudou".
+
+**O que fica decidido aqui** (decisão do João): o `ámbar-aviso` **não** entra neste bloco. Trocar o
+laranja do Lara por um âmbar próprio não é consequência da camada de marca — é escolher uma cor de
+severidade nova, com régua de contraste própria em botão, tag, mensagem e badge, nos dois temas.
+Isso é decisão de design, fora do escopo de um bloco cuja emenda ao ADR-16 é "camada de marca sobre
+o Lara". A **§4 da spec foi corrigida para descrever o construído**: cinco donos de cor de marca,
+com `warning` explicitamente de stock do Lara e ponteiro para esta emenda. O `ámbar-aviso` fica
+registrado como pendência de **design** (**P-30** em `docs/pendencias.md`), não como promessa dentro
+de doc aprovado.
+
 ## Desvios declarados (lição 13)
 
 - **D-P1 — focus ring:** ~~a spec §4 escreve "2px celeste"; o entregue é o anel do próprio Lara
