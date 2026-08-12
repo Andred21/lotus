@@ -1,17 +1,35 @@
 import type { ReactNode } from 'react'
 
+/** Texto de leitura: quebra linha, seleciona e copia. Usa `--text-color` e não
+ * o secundário — leitura não é texto de apoio, e o cinza de desabilitado é
+ * parte do que o débito mediu como contraste reduzido. Vazio vira travessão:
+ * campo em branco é ambíguo entre "sem valor" e "não carregou". */
+function ReadOnlyValue({ value }: { value?: ReactNode }) {
+  const empty = value === undefined || value === null || value === ''
+  return (
+    <span className="block break-words text-sm" style={{ color: 'var(--text-color)' }}>
+      {empty ? '—' : value}
+    </span>
+  )
+}
+
 export type FormFieldProps = {
   label: string
   error?: string
+  /** Modo leitura: o controle NÃO é montado; `value` vira texto. */
+  readOnly?: boolean
+  /** O valor de APRESENTAÇÃO, montado por quem tem o vocabulário de domínio
+   * (dropdown mostra o rótulo traduzido, não o código cru). */
+  value?: ReactNode
   children: ReactNode
 }
 
 /** Campo de formulário: label + controle + mensagem de erro do backend. */
-export function FormField({ label, error, children }: FormFieldProps) {
+export function FormField({ label, error, readOnly, value, children }: FormFieldProps) {
   return (
     <label className="block">
       <span className="mb-1 block text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</span>
-      {children}
+      {readOnly ? <ReadOnlyValue value={value} /> : children}
       {error && (
         <span
           className="mt-1 block text-sm"
@@ -26,16 +44,19 @@ export function FormField({ label, error, children }: FormFieldProps) {
 
 export type NestedFieldProps = {
   error?: string
+  /** Modo leitura: o controle NÃO é montado; `value` vira texto. */
+  readOnly?: boolean
+  value?: ReactNode
   children: ReactNode
 }
 
 /** Campo aninhado (linhas de contato/endereço/módulo): sem label própria, mas
  * com o erro do backend visível. Sem isso, um 422 em `contacts.0.name` deixa o
  * botão de salvar aparentemente inerte. */
-export function NestedField({ error, children }: NestedFieldProps) {
+export function NestedField({ error, readOnly, value, children }: NestedFieldProps) {
   return (
     <div>
-      {children}
+      {readOnly ? <ReadOnlyValue value={value} /> : children}
       {error && (
         <span
           className="mt-1 block text-sm"
