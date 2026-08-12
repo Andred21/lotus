@@ -115,8 +115,11 @@ export function SearchableTableFrame<T>({
         // O CTA aparece na toolbar quando há linha e dentro do vazio quando não
         // há: com a lista vazia o convite a cadastrar É o empty state, e dois
         // botões idênticos na mesma tela é o débito. Irmã da supressão em erro,
-        // que já morava nesta linha.
-        end={error || table.rows.length === 0 ? undefined : actions}
+        // que já morava nesta linha. `table.filtering`, não `rows.length` sozinho:
+        // busca sem resultado não é lista vazia (linha 18-23 acima) — se
+        // recalculasse por `rows.length`, o CTA sumiria também durante busca sem
+        // match, e o vazio de busca só oferece "limpar", nunca o CTA de domínio.
+        end={error || (!table.filtering && table.rows.length === 0) ? undefined : actions}
       />
       <AppDataTable
         value={table.rows as unknown as DataTableValueArray}
