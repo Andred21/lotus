@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: catraca-max-lines-e-moldura
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: bd769f8
-updated_at: 2026-08-13T03:10:00-03:00
+state_basis_commit: 0c2a24b
+updated_at: 2026-08-13T00:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,69 @@ updated_at: 2026-08-13T03:10:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
+
+### Seleção — 2026-08-13
+
+**BD-4 do `backlog.md:127`, promovido explicitamente pelo João** com o estado em `idle` e
+`active_work_item` `null`. O gate do `/planejar-bloco` não promove; as três decisões dele fecharam o
+gate: o slug `catraca-max-lines-e-moldura` (mesmo da branch já criada), **rota direta a
+`ready_for_planning` sem Context Packet** por ausência medida de fonte externa, e a worktree
+`/home/jvbat/projetos/fix-frontend` seguindo — bloco **frontend puro**, a P-03 não dispara.
+
+A branch `feat/catraca-max-lines-e-moldura` já existia em `0c2a24b`, **com zero commit sobre a
+`main`** e árvore limpa; isso não era divergência de estado, e `0c2a24b` passa a ser o
+`state_basis_commit`.
+
+### O terreno foi medido antes de desenhar, e achou cinco divergências
+
+Medição de 2026-08-13 sobre `0c2a24b`, por workflow de 9 agentes lançado antes do `/clear`.
+**Três dos quatro números da catraca estavam vencidos** — `StudentDialog` 281 (o backlog diz 283),
+`RedatorDialog` 206 (diz 199), `BudgetDetailPage` 187 (diz 171); só `RedatorDocumentSlot` (175)
+bate. Déficit real: **249 linhas a extrair**.
+
+**A premissa do bloco é falsa:** ele não existe por causa do modo leitura do BD-3 — o BD-3 tocou o
+`StudentDialog` num único commit (`dfc3f4b`) com saldo **−2 linhas**, e os dois blocos grandes vêm de
+`501b731` (2026-08-05). **A justificativa da ordem também:** a adoção da moldura não tira linha de
+diálogo nenhum, e as duas tabelas não estão na catraca.
+
+**O DoD escrito não era provável:** não existe regra de validação de `phone` em nenhum DTO de
+`Identity` (zero `Max(` na pasta; coluna `varchar(30)` sem unique; nenhum teste assere 422 em phone).
+
+**Os dois diálogos do item (c) não são o mesmo caso:** `useStudentForm` roda sobre `useCrudForm` e já
+entrega `errorSummary` pronto; `useRedatorForm` não usa `useCrudForm` e não tem o que espalhar.
+
+E o ponteiro `FormErrorSummary.tsx:62-67`, citado 4× em doc normativo, **aponta para arquivo que não
+existe** — o componente é export nomeado em `FormField.tsx`, e as linhas 62-67 de lá são do
+`NestedField`.
+
+### Brainstorming e spec — 2026-08-13
+
+Nove decisões do João (D1–D9), registradas na spec
+`docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md`. As que mudam trabalho:
+o 422 de `phone` provado por **request forjado** (backend intocado); o resumo do redator com `mapped`
+**literal**, sem migrar o hook (o BD-5 já o excluiu por critério); o campo de cliente do
+`StudentDialog` **colapsado** no molde do `BudgetDialog`, pagando a quarta grafia do débito BD-3 §4;
+`useStudentDetail` **ficando no pai** para preservar a rede; **dois** arquivos novos no par do
+redator; UI-01, os dois `<p>` e o `sp` morto **entrando**; overlays em vez dos ramos de estado no
+`BudgetDetailPage`; o critério de CTA da moldura **vencendo** na `BudgetsTable`; e a rule reescrita
+no mesmo commit que esvazia o `ignores`. Ordem escolhida: **catraca primeiro, moldura por último**.
+
+**Uma conta apresentada no brainstorming estava errada e foi corrigida antes da spec:** o colapso do
+campo de cliente não corta ~46 linhas, corta ~9 — `FormField` em modo leitura troca os **filhos
+inteiros** (`readOnly ? <ReadOnlyValue/> : children`), então as 28 linhas de dica são create-only e
+ficam, e o aviso `clientLocked` do modo edit **sumiria** se não saísse para fora do campo. Com a
+conta certa, o corte do bloco de view sozinho deixaria o arquivo em 156 — acima da régua —, e por
+isso o desenho extrai **dois** blocos do `StudentDialog` e **duas** seções do `RedatorDialog`.
+
+**Risco de review declarado MÉDIO** na spec (§9), contra o BAIXO do gate binário da skill —
+divergência declarada, sem conflito. O risco próprio é de alcance (`shared/ui` alcança 4 consumidores
+fora do bloco; a moldura passa a servir 8 tabelas) e de margem (`BudgetDetailPage` pousa com folga
+de ~5 linhas).
+
+O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
+spec escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
