@@ -4,7 +4,9 @@ namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
+use App\Shared\Data\Attributes\ReadOnlyCollection;
 use App\Shared\Files\Data\FileData;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -32,7 +34,17 @@ class QuoteData extends Data
         public string|Optional|null $purchase_order = null,
         public string|Optional|null $planned_start_date = null,
         public string|Optional|null $planned_end_date = null,
-        /** @var FileData[] */
+        /**
+         * Projeção de SAÍDA, igual à do `BudgetData`: arquivo se anexa por
+         * `POST /quotes/{quote}/files`, nenhuma Action lê este campo da
+         * entrada. Os dois atributos andam juntos — o primeiro põe a
+         * propriedade sob a guarda de coleção nested, o segundo declara (e a
+         * guarda verifica) que ela é só saída.
+         *
+         * @var FileData[]
+         */
+        #[DataCollectionOf(FileData::class)]
+        #[ReadOnlyCollection]
         public array|Optional $files = [],
     ) {}
 

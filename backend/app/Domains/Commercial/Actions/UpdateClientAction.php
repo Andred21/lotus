@@ -31,8 +31,9 @@ class UpdateClientAction
             // locks e produziria deadlock (ver Client::lockForWrite).
             Client::lockForWrite($client->id);
 
-            // Unicidade DENTRO da transação que escreve.
-            $rut = $this->users->ensureRutAvailable($data->rut, $client->user_id);
+            // Unicidade DENTRO da transação que escreve, pelas duas colunas: o
+            // e-mail faltava aqui e a colisão virava 500 (achado 4).
+            $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $client->user_id);
 
             $client->user->update([
                 'name' => $data->name,
@@ -49,14 +50,20 @@ class UpdateClientAction
 
             // Replace dos nested. Soft-delete por instância para a auditoria
             // registrar o que saiu (o builder emitiria UPDATE sem eventos).
-            $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
-            foreach ($data->addresses as $address) {
-                $client->addresses()->create($address->toArray());
+            // Coleção `Optional` (ausente do payload) NÃO entra no replace: quem
+            // não mandou a coleção não pediu para apagá-la (achado 5).
+            if (! $data->addresses instanceof Optional) {
+                $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
+                foreach ($data->addresses as $address) {
+                    $client->addresses()->create($address->toArray());
+                }
             }
 
-            $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
-            foreach ($data->contacts as $contact) {
-                $client->contacts()->create($contact->toArray());
+            if (! $data->contacts instanceof Optional) {
+                $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
+                foreach ($data->contacts as $contact) {
+                    $client->contacts()->create($contact->toArray());
+                }
             }
 
             $this->primaryAddresses->ensureSingle($client);

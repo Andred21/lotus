@@ -5,6 +5,7 @@ namespace App\Domains\Commercial\Data;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Services\BudgetSummaryService;
+use App\Shared\Data\Attributes\ReadOnlyCollection;
 use App\Shared\Files\Data\FileData;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
@@ -30,11 +31,30 @@ class BudgetData extends Data
         public string|Optional $total_approved_uf,
         public string|Optional $total_rejected_uf,
         public int|Optional $total_students,
-        /** @var array<QuoteData> */
+        /**
+         * Projeção de SAÍDA: o `fromModel` a preenche e nenhuma Action a lê da
+         * entrada — cotação se escreve por `POST /budgets/{budget}/quotes`.
+         * Por isso `#[ReadOnlyCollection]` em vez de `Optional`.
+         *
+         * @var array<QuoteData>
+         */
         #[DataCollectionOf(QuoteData::class)]
+        #[ReadOnlyCollection]
         public array $quotes = [],
         public string|Optional|null $payment_terms = null,
-        /** @var FileData[] */
+        /**
+         * Projeção de SAÍDA, mesma razão de `$quotes`: arquivo se anexa pela
+         * rota própria.
+         *
+         * O `#[DataCollectionOf]` não é decoração: sem ele a guarda de coleção
+         * nested não olha esta propriedade de jeito nenhum, e o
+         * `#[ReadOnlyCollection]` ao lado fingia uma cobertura que não existia
+         * (review de 2026-08-13, Q-4).
+         *
+         * @var FileData[]
+         */
+        #[DataCollectionOf(FileData::class)]
+        #[ReadOnlyCollection]
         public array|Optional $files = [],
     ) {}
 

@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
 state_basis_commit: 7c28699
-updated_at: 2026-08-13T09:10:00-03:00
+updated_at: 2026-08-13T11:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -371,7 +371,391 @@ declarada na spec §8.
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
+### Merge com a `main` — 2026-08-13: duas sprints fecharam em paralelo
+
+O BD-4 fechou às **08:49** e o BD-9 (`contrato-de-entrada-identidade-e-nested`, backend) às
+**09:12**, do mesmo dia, em branches irmãs da mesma base `0c2a24b`. **Colisão de código: zero** — 30
+arquivos de frontend contra 40 de backend mais `generated.ts`, sem um arquivo em comum. Os **cinco**
+arquivos que se cruzam são todos doc de estado, e só **três** conflitaram (`state.md`,
+`progress.md`, `progress-archive.md`).
+
+**Merge da `main` na branch, nunca rebase.** Replayar 24 commits reescreveria os SHAs que o
+`progress.md` e este arquivo **citam nominalmente** — doc versionado viraria mentira —, e faria 24
+encontros com o mesmo `state.md` em vez de um.
+
+**O perigo não estava nos conflitos, estava no auto-merge.** `pendencias.md` e `backlog.md`
+mesclaram sozinhos, e um dos dois saiu **falso**: o parágrafo de ordem do `backlog.md` manteve
+"então dessa fila resta o BD-9" depois de a `main` já ter entregue o BD-9 — a `main` nunca tocou
+aquele parágrafo, então o git escolheu o lado desta branch e a afirmação vencida passou verde.
+Corrigido à mão no mesmo commit. Auto-merge é ausência de sobreposição textual, não acordo.
+`pendencias.md` é seguro por medição: a `main` mexeu só na P-29, esta branch só na P-03, e os 32 IDs
+seguem sem duplicata — este repositório já renumerou ID duplicado três vezes.
+
+**A cadeia foi resolvida por decisão do João: BD-4 fica como Último por ordem de merge**, não por
+relógio (ele fechou 23 min antes do BD-9 e chega à `main` depois). BD-9 desce a Penúltimo,
+`rastro-unicidade-e-gates` a Antepenúltimo e `faixa-visivel-e-acessibilidade-dos-dialogos` sai da
+cadeia de três. O frontmatter é o desta branch (`last_completed_work_item:
+catraca-max-lines-e-moldura`, `state_basis_commit: 7c28699`). Os três corpos foram conferidos por
+comparação, não de olho: o do BD-9 entrou **byte a byte idêntico** ao da `main`, o do BD-4 idêntico
+ao desta branch, e o do `rastro-unicidade-e-gates` difere da `main` em exatamente **duas linhas** —
+as correções do ponteiro fantasma que o próprio BD-4 fez em `d50d7f8`, preservadas.
+
+**`progress.md`:** as duas entregas entram, dá 11 contra o teto de 10, então desceu
+`2026-08-10 · Operation · habilitação da turma`. **`progress-archive.md`:** os dois lados haviam
+arquivado a **mesma** linha (`2026-08-10 · Certificação · lote`) e união ingênua a duplicaria —
+ficou uma. E ficou na forma **verbatim de cinco colunas**, não no split de sete que esta branch
+tinha feito: o fechamento do BD-9 declarou essa convenção no cabeçalho do arquivo (duas arities
+convivendo, apontando para a P-23), e convenção recém-publicada vence reformatação.
+
+**Gate pós-merge, que nenhum dos dois lados exercitou sozinho:** `pnpm lint` exit 0, `pnpm build`
+verde (o `tsc -b` combinado é o risco real de um merge frontend×backend), `pnpm test` **29 arquivos
+/ 143 testes** — os 142 desta branch mais o caso de `useClientForm` que a `main` trouxe. Backend
+**591 passed, 5 skipped (2149 assertions)** e `typescript:transform` com **diff zero**; os dois
+rodaram no container, que monta o main tree, e valem para esta branch por medição:
+`git diff origin/main -- backend/ frontend/src/shared/types/generated.ts` devolve **zero linha**.
+
+## Penúltimo item fechado — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
+
+### Seleção — 2026-08-13
+
+**BD-9 do `backlog.md:185`, promovido explicitamente pelo João.** Ele abriu com
+`/planejar-bloco ### BD-9 · Contrato de entrada: identidade e coleção nested (backend)` mais o
+caminho de um arquivo de contexto, e o gate do comando **reprovou pelo motivo de sempre** (BD-1,
+BD-2, BD-7, BD-8): o argumento é **título de seção**, não slug promovido, com o estado em `idle` e
+`active_work_item` `null`. O comando mostra o backlog; quem promove é ele.
+
+**Diferente do BD-8, não havia item concorrente a autorizar.** A worktree
+`/home/jvbat/projetos/fix-frontend` está na branch `feat/catraca-max-lines-e-moldura` (BD-4), mas com
+**zero commits** além de `0c2a24b`, árvore limpa e `state.md` idêntico ao da árvore principal, também
+`idle` — branch criada, nada executado. A invariante de um `active_work_item` não precisou de
+exceção.
+
+**Três decisões do João fecharam o gate, todas confirmadas de uma vez:** promover o BD-9 com o slug
+`contrato-de-entrada-identidade-e-nested`; **rota direta a `ready_for_planning`, sem Context
+Packet**, por ausência **medida** de fonte externa; e **main tree, sem worktree** (P-03, bloco de
+backend), na branch `feat/contrato-de-entrada-identidade-e-nested` criada de `0c2a24b`.
+
+**A ausência de fonte externa foi medida, não presumida.** O arquivo de contexto que ele passou —
+`architecture-review-20260812-backend.html`, 81.193 B — é a mesma revisão de arquitetura que gerou o
+BD-8, e o grep por `drive.google`, `notion.so`, `figma.com` e `docs.google` devolve **zero
+ocorrência**. Os onze achados dele estão numerados em `<h2>`, e os **4** (`UserProvisioner fecha
+metade do invariante e quatro caminhos esquecem a outra`) e **5** (`ClientData::$addresses apaga a
+coleção em silêncio`) são literalmente os dois itens do BD-9. O arquivo vive no `/tmp` de **outra
+sessão** e é volátil; foi copiado para o scratchpad desta antes de qualquer leitura de desenho.
+
+**Baseline medido nesta branch, não herdado do fechamento anterior:** backend **573 passed,
+5 skipped (2104 assertions)** — bate com o placar de fechamento do `rastro-unicidade-e-gates`, o que
+confirma que a branch nasce da `main` sem deriva.
+
+### Terreno medido antes de desenhar — 2026-08-13 (fato, não desenho)
+
+1. **O arquivo de contexto que abriu o bloco não existe mais.** O
+   `architecture-review-20260812-backend.html` vivia no `/tmp` de outra sessão e não sobreviveu a
+   ela. **Não bloqueou:** os achados 4 e 5 estão transcritos integralmente em `backlog.md:185-231`,
+   com paths, linhas e as quatro decisões do grilling. `context_packet` segue `null` pela mesma
+   ausência medida de fonte externa.
+2. **Os caminhos de escrita de identidade são nove**, em cinco creates e quatro updates, e a
+   assimetria é exatamente a do achado: `Create/UpdateClientAction` e `Create/UpdateRedatorAction`
+   checam só o RUT; os outros cinco checam os dois.
+3. **O staff tem `rut` nullable** (`create_users_table.php:18`), e por isso
+   `Create/UpdateStaffUserAction` decidem entre `null` e a checagem por ternário. A assinatura
+   `ensureIdentityAvailable(string $rut, …)` que o backlog escreveu **não cobre** esses dois.
+4. **Fazer `provision()` checar e-mail torna duas chamadas redundantes** — `CreateStudentAction:49`
+   e `StudentResolver:63` já chamam `ensureEmailAvailable` logo antes.
+5. **O `Optional` no `ClientData` NÃO é inerte no frontend, e isso foi medido por sonda, não
+   estimado:** `addresses`/`contacts` com `| undefined` no `generated.ts` e `tsc -b` devolvem **17
+   erros em 4 arquivos** (`useClientForm.ts` 10, `ContactFields.tsx` 3, `ClientsTable.tsx` 2,
+   `ContactCard.tsx` 2). Inerte em runtime (o front sempre manda as duas), quebrado em compilação.
+   Árvore restaurada, `git status` limpo.
+6. **O universo da lei da `der-fisico.md:103-106` é cinco, não dois** — a minha primeira contagem
+   estava errada e foi corrigida antes de virar decisão. `#[DataCollectionOf]` são cinco
+   propriedades em três DTOs, mas `BudgetData::$quotes` e `$files` **nunca são lidos na entrada**
+   (grep de `data->quotes`/`data->files` em `app/` vazio): são projeção de saída e não violam lei
+   nenhuma. Uma guarda que só olhasse o atributo nasceria vermelha nelas.
+7. **Quem produz o `| undefined` no `generated.ts` é o docblock, não o tipo PHP.**
+   `BudgetData::$files` é `array|Optional = []` com `/** @var FileData[] */` e sai sem `| undefined`;
+   `CourseData:35,38` escreve `|Optional` no `@var` e sai com ele.
+8. **Não existe um único `ValidationContext` em `app/`** — os 14 `rules()` do repositório são
+   estáticos. A distinção create/update do `contacts` não tinha precedente e precisou de mecanismo.
+
+### Brainstorming e spec — 2026-08-13
+
+Spec em `docs/superpowers/specs/archive/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md`. As
+**D1–D4** vêm fechadas do grilling de 2026-08-12 e não foram reabertas; as **D5–D9** são desta
+sessão, cada uma escolhida pelo João entre alternativas apresentadas com o custo medido:
+
+- **D5** — o helper é a **porta única dos nove**, com `?string $rut` para caber no staff, e
+  `ensureRutAvailable`/`ensureEmailAvailable` viram **privados**. Recusado: fechar só os quatro
+  quebrados, que deixaria os dois métodos públicos e três formas de checar identidade convivendo.
+- **D6** — `contacts` é `sometimes` no PUT e obrigatório no POST, com a obrigatoriedade do POST
+  morando na **Action**, não em `rules()`. Recusado: `sometimes` nos dois verbos, que revogaria a
+  regra do Drive (um ou mais contatos, ratificada 2026-07-31) e deixaria a UI como única guardiã.
+- **D7** — o 422 **agrega** RUT e e-mail numa exceção só, em vez de dois round-trips.
+- **D8** — o helper lê `deleted_at` na mesma query, e cada campo ganha duas mensagens (vivo e
+  arquivado), quatro no total, em PT-BR. A Q-6 (idioma canônico) segue travada e não foi reaberta.
+- **D9** — a lei ganha guarda estática em `PersistenceLawsTest`, e a exceção read-only é declarada
+  **no sítio** por `#[ReadOnlyCollection]`. Recusados: migrar `BudgetData` junto (medido: 3 erros TS
+  em 2 arquivos, e o tipo passaria a mentir sobre uma saída sempre preenchida) e allowlist literal
+  dentro do teste.
+
+**Consequência declarada, não escolha:** cinco caminhos que **não têm defeito** (staff e aluno)
+mudam de forma. É o preço da porta única, e a prova de que o comportamento deles não mudou entra no
+DoD.
+
+**Um ruído previsto antes de aparecer:** `UniquenessInsideTransactionTest:116` filtra por
+`select exists`; trocar `->exists()` por leitura de `deleted_at` muda o SQL e reprova os três casos.
+O teste muda no mesmo commit, medindo a mesma coisa.
+
+**Risco de review declarado ALTO** (§8 da spec), **divergindo do MÉDIO que o backlog escreveu**: o
+gate da `revisar-sprint` é binário e lista `generated.ts` entre os gatilhos de alto
+(`SKILL.md:37`). A divergência fica declarada; o backlog não foi corrigido por conta própria.
+
+O estado entra em `planning` com `active_spec` preenchido neste commit; `active_plan` segue `null`
+até o João ler a spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/archive/2026-08-13-contrato-de-entrada-identidade-e-nested.md`: **seis tasks**, uma
+por commit, na ordem helper → creates → updates e morte dos métodos antigos → coleção nested com os
+consumidores TS → guarda da lei → gate.
+
+**Baseline medido antes de escrever, não herdado do fechamento anterior:** backend **573 passed,
+5 skipped (2104 assertions)**; frontend **28 arquivos / 138 testes**, lint limpo, build verde. Os
+27/131 registrados no fechamento do BD-8 eram de antes dos merges na `main` — o número do frontend
+subiu sozinho, sem este bloco tocar nada. Projeção do plano: **590 casos** no backend (+17),
+frontend **inalterado** em 28/138, porque `useClientForm` é hook de feature e está fora do corte do
+runner.
+
+**A ordem das três primeiras tasks é a do bloco anterior (helper → call-sites → guarda), e por quê:**
+o helper nasce sem chamador na Task 1, o que deixa um revisor rejeitar a forma da porta única sem
+rejeitar a migração dos nove caminhos, e vice-versa. A Task 3 é onde
+`ensureRutAvailable`/`ensureEmailAvailable` **deixam de existir** — a D5 na forma mais forte: método
+apagado, não privado.
+
+**Três coisas que só apareceram ao escrever o plano, e que mudam trabalho:**
+
+1. **`ClientContactMinimumTest:54-67` afirma literalmente o comportamento que a D6 muda.**
+   `test_update_sem_a_chave_contacts_da_422_em_vez_de_apagar` é o caso que o bloco tem de
+   **inverter**, não um vermelho a consertar. Os outros seis casos do arquivo ficam — inclusive o
+   `contacts: []` e a guarda da rota nested, que seguem valendo.
+2. **Trocar `->exists()` por leitura de `deleted_at` quebra o filtro de SQL do
+   `UniquenessInsideTransactionTest:116`** (`str_starts_with($query->sql, 'select exists')`). O
+   filtro novo casa SELECT + `deleted_at` projetado, porque o UPDATE de `users` também contém
+   `rut = ?` e o caractere de citação muda entre sqlite e MySQL. No mesmo passe, o cliente e o
+   redator passam a exigir `['rut','email']`: a assimetria que aquele arquivo registrava deixa de
+   existir.
+3. **A guarda da lei pede reflexão, não regex.** A pergunta é sobre o TIPO ("admite `Optional`?"), e
+   o texto do arquivo responde mal — default e união podem estar em linhas diferentes do atributo. A
+   varredura resolve o FQCN a partir do path (PSR-4) e lê os atributos do construtor.
+
+`executor: claude`, sem `paths_autorizados`: `generated.ts` regenera na Task 4 (lei §5.3), a forma do
+erro HTTP muda em quatro rotas (RFC 7807, §5.4) e três tasks fecham por sonda vista reprovando —
+julgamento, não transformação mecânica.
+
+### Execução — 2026-08-13, via Subagent-Driven Development
+
+**As seis tasks fecharam, cada uma em commit próprio, revisão individual aprovada antes de avançar:**
+`0bd994e` (T1 — `ensureIdentityAvailable`/`duplicateStatus` isolados, nenhum call-site migrado),
+`606bd36` (T2 — `provision()` passa a checar e-mail, fecha os dois `create`s de graça), `74d32ea` (T3
+— os cinco caminhos restantes migram, `ensureRutAvailable`/`ensureEmailAvailable` deletados),
+`29c3815` (T4 — `ClientData::$addresses`/`$contacts` viram `Optional`, `generated.ts` regenerado e os
+5 consumidores TS corrigidos no mesmo commit), `fe36ab0` (T5 — guarda de reflexão em
+`PersistenceLawsTest`, `#[ReadOnlyCollection]` nas duas projeções de saída de `BudgetData`). Task 6
+foi gate — verificação pura, **sem commit**: suíte, Pint, `generated.ts` sem diff, zero órfão, e um
+E2E completo contra a API real (sessão Sanctum de verdade) provando os 11 cenários do DoD por corpo
+de resposta, não só status. Contagem final: backend **590 passed, 5 skipped** (573 no baseline);
+frontend **28 arquivos**. Ledger fino task-a-task, achados Minor de cada review e o relatório do gate
+em `.superpowers/sdd/progress.md` (local, não versionado).
+
+**A revisão final de branch (mandato da própria skill SDD, não o `/revisar-sprint` do João — essa
+continua sendo a próxima instrução explícita) achou dois Important, ambos reais e ambos corrigidos
+antes de fechar:**
+
+1. A guarda nova de T5 checava só o TIPO do parâmetro (`array|Optional` admite `Optional`), nunca o
+   DEFAULT — e a lei em `backend-ddd.md` exige as duas coisas (`= new Optional`). Confirmado por
+   reflexão real: `BudgetData::from(['client_id'=>1])->files` devolve `array(0){}`, não `Optional`,
+   apesar do tipo admitir. Uma coleção nova escrita `array|Optional $x = []` passaria pela guarda e
+   ainda apagaria em silêncio — o mesmo defeito que o bloco existe para fechar, sob grafia diferente.
+   Corrigido em `11c7337`, sonda provada nos dois sentidos (código velho deixa passar errado, código
+   novo reprova nomeando a sonda).
+2. A spec (§5, ecoada em §9) afirmava que o frontend ficava sem teste novo porque "o runner só cobre
+   hooks de `shared/`" — falso, e o mesmo engano que `frontend-fsliced.md` já registra como lição
+   repetida duas vezes (lição 13) no próprio arquivo. A lacuna real era a normalização
+   `client.addresses ?? []`/`contacts ?? []` (T4) nunca ter sido exercitada por teste. Corrigido em
+   `e06c204`: caso novo em `useClientForm.test.tsx`, prosa da spec corrigida nos dois pontos. Frontend
+   138→139 testes.
+
+Nove achados Minor triados como backlog (não bloqueiam merge, nenhum fixado nesta passagem) — inclui
+uma discordância explícita da triagem da T4 (`$data->contacts === []` em `CreateClientAction` **não**
+é código morto: `OperationDemoSeeder` chama a Action direto, sem passar por `rules()` — manter).
+Recomendações não-bloqueantes: a guarda de T5 só alcança propriedade promovida no construtor marcada
+`#[DataCollectionOf]` (`QuoteData::$files` etc. ficam fora, spec §6 já declara essa fronteira);
+`UpdateStaffUserAction` tem o mesmo defeito de família num campo escalar (`rut` some em silêncio num
+PUT que o omite) — pré-existente, fora de escopo, vale backlog. Detalhe completo, achado a achado, em
+`.superpowers/sdd/progress.md`.
+
+**O que o gate NÃO provou, registrado sem maquiagem:** corrida de unicidade concorrente (a suíte roda
+sqlite `:memory:`, a defesa real é o `unique` do MySQL); nenhuma tela vista renderizada (o frontend só
+mudou de tipo mais a normalização `?? []`, sem mudança visual); a listagem `GET /api/clients` não
+recebeu asserção formal neste gate (fora do escopo de escrita do bloco).
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
+`/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
+
+### Review de sprint — 2026-08-13: ALTO risco, UMA lente, 4 achados
+
+Risco ALTO pelo gabarito: `generated.ts` regenerado (lei §5.3), forma do 422 mudando em quatro rotas,
+eixo de identidade. **A segunda lente foi recusada pelo João** — o despacho ao Codex não foi
+autorizado, e o review saiu com lente única. Fica declarado, não resolvido em silêncio (mesmo
+precedente do fechamento de 2026-08-12).
+
+**Gate reproduzido, não herdado:** backend 590 passed / 5 skipped / 2146 assertions; frontend
+`pnpm build` verde, `pnpm lint` limpo, 28 arquivos / 139 testes; `typescript:transform` sem diff;
+Pint `passed` nos `.php` do bloco; zero `dd(`/`dump(`/`console.log`/`SONDA` no diff.
+
+**Órfãos: zero.** `ensureRutAvailable`/`ensureEmailAvailable` não existem mais em `app/`, `tests/`
+nem `database/` — a D5 na forma forte. Os nove caminhos de escrita de identidade passam pela porta
+única (4 via `provision()`, 5 diretos), conferidos um a um.
+
+Os quatro achados, com as duas provas por sonda (árvore restaurada nos dois casos):
+
+1. **Q-1 🟡/P — `#[ReadOnlyCollection]` era isenção AUTO-DECLARADA.** A guarda dava `continue` na
+   marca antes de qualquer checagem: DTO sonda com `#[DataCollectionOf] public array $itens = []`
+   reprovava; a MESMA sonda, `array = []` intacto, passava só por ganhar a marca. A guarda não olhava
+   Action nenhuma — a read-only-ness, que é a premissa inteira da exceção, era a única parte não
+   mecanizada (a spec §1.5 a mediu à mão, uma vez).
+2. **Q-2 🟡/P — checagem de `contacts` rodava depois de escrever.** Sonda: `POST /api/clients` sem
+   `contacts` e com e-mail ocupado devolvia `status 422 | chaves: email`. Só `email`. Dois
+   round-trips para o operador, num check que é entrada pura e custa zero de banco.
+3. **Q-3 🟢/P — uma regra, três redações**, e duas línguas: "precisa **de** ao menos um contato"
+   (`CreateClientAction`), "precisa **ter** ao menos um contato" (`DeleteClientContactAction`) e
+   `El campo contacts debe tener al menos 1 elementos.` (o `min:1` de `rules()`, pelo locale `es` do
+   validador).
+4. **Q-4 🟢/P — marca inerte:** `BudgetData::$files` tinha `#[ReadOnlyCollection]` sem
+   `#[DataCollectionOf]`, então a guarda não olhava a propriedade de jeito nenhum e a marca sugeria
+   cobertura inexistente.
+
+**Descartado como achado, com razão registrada:** o objeto `entity` novo a cada render em
+`useClientForm` (o `useEntityForm` reseta comparando `id`+`mode`, não identidade — não há laço); o
+filtro SQL reescrito no `UniquenessInsideTransactionTest` (ainda discrimina); o `| undefined` na
+saída do `ClientData` (consequência declarada da D4, custo medido); a língua das mensagens (Q-6,
+congelada pelo João); `BudgetData` não migrar (D9).
+
+**Fora dos achados:** o deferimento do `rut` do `UpdateStaffUserAction`, declarado no relatório de
+execução acima como "vale backlog", nunca chegou ao `backlog.md`.
+
+### Correção dos achados — 2026-08-13: os 4 aprovados pelo João, os 4 aplicados
+
+Cada um com o vermelho visto antes do verde, sem exceção.
+
+- **Q-3** — `ClientData::CONTATO_OBRIGATORIO` vira o texto único, com `messages()` cobrindo
+  `contacts.min`/`contacts.array`, e as duas Actions passam a citar a constante. Vermelho real: as
+  três asserções de mensagem do `ClientContactMinimumTest` eram `fn ($m) => is_string($m)` — vagas
+  **porque** o texto variava. Apertadas para a frase literal, 3 reprovaram (duas em espanhol, uma
+  com "precisa ter"). A LÍNGUA do resto da validação segue sendo o Q-6 congelado; isto fecha só a
+  divergência de redação desta regra.
+- **Q-2** — a checagem de contato sai de dentro da transação e vai para o topo do `execute()`, antes
+  de `provision()` e do `client()->create()`. Vermelho por teste novo em `ClientCrudTest`
+  (`test_store_sem_contatos_reclama_do_contato_antes_da_identidade`): contra o código velho
+  `errors.contacts` vinha `null`. **O que isto NÃO faz, dito sem maquiagem:** o caso combinado
+  continua devolvendo UM campo por vez — agora `contacts` em vez de `email`. Agregar os dois num
+  422 exigiria plumbar a regra de contato (Commercial) por dentro do `ensureIdentityAvailable`
+  (Identity), e o preço não paga: a D7 agrega o que mora na MESMA chamada, e estes dois moram em
+  camadas diferentes. O que a correção compra é a ordem determinística e a transação contendo só
+  escrita.
+- **Q-1** — a marca deixou de ser palavra-de-honra. A guarda agora varre `app/` atrás de
+  `$data-><campo>` em arquivos que citam a classe do DTO, e reprova nomeando o sítio. Vermelho por
+  sonda (`SondaQ1Action` lendo `$data->quotes`): `BudgetData::$quotes: marcada como SAIDA, mas lida
+  da entrada em app/Domains/Commercial/Actions/SondaQ1Action.php`. Sonda apagada, árvore conferida
+  por `git status`. Limite honesto e declarado no docblock: só arquivos que citam a classe entram, e
+  a convenção `XData $data` é o que torna isso preciso — falso positivo aqui é barulhento, falso
+  negativo é o que a guarda existe para não ter.
+- **Q-4** — `BudgetData::$files` ganha `#[DataCollectionOf(FileData::class)]`, e a guarda passou a
+  reprovar marca sem coleção. Este foi o único vermelho que **não** precisou de sonda: a checagem
+  nova nomeou `BudgetData::$files` no primeiro `run`. `QuoteData::$files` — mesmo defeito na classe
+  irmã, um nível abaixo (não tinha nem a marca, então era invisível) — recebeu os dois atributos no
+  mesmo commit; é escopo ligeiramente além do achado, declarado aqui de propósito.
+
+**Gate após as correções:** backend **591 passed, 5 skipped, 2149 assertions** (+1 caso, o do Q-2);
+Pint `passed` nos 8 arquivos tocados; `typescript:transform` **sem diff** — nenhuma mudança de
+contrato TS, nenhum consumidor frontend tocado, e por isso o gate do frontend não foi rerodado.
+
+O deferimento do `rut` do `UpdateStaffUserAction` foi registrado em `backlog.md`, em
+`## Débitos técnicos`.
+
+**Estado: `ready_for_closure`.** O review não executa fechamento — `/fechar-sprint` é instrução
+explícita do João.
+
+### Fechamento — 2026-08-13
+
+**As correções do review estavam no working tree, não commitadas** — o último commit da branch era o
+handoff para review (`b2fe20e`). O fechamento começou por commitá-las (`59a39e3`, que passa a ser o
+`state_basis_commit`); a árvore ficou limpa antes de qualquer prova.
+
+**O item 0 foi refeito contra a API real, não herdado do review:** as quatro correções entraram
+depois do e2e de execução e mexeram exatamente no que ele mediu — ordem da checagem, texto das
+mensagens e a guarda. Sessão Sanctum por cookie + CSRF, `Origin` e `Accept` nos dois lados,
+**10 cenários provados por corpo de resposta**, não por status:
+
+1. **D7 na API:** RUT `76.123.456-0` e e-mail `contacto@transelec.demo.cl`, os dois ocupados, saem
+   **num 422 só** — `errors.rut` **e** `errors.email` —, com `content-type: application/problem+json`
+   conferido no header.
+2. **Q-2 na API:** POST sem `contacts` com o mesmo e-mail ocupado devolve **`contacts`, e
+   `errors.email` ausente**. A ordem que a correção comprou, medida onde o operador vive.
+3. **As três portas da regra de contato falam a mesma frase** (Q-3): POST sem contatos,
+   `contacts: []` no PUT (caminho do `min:1`, que antes respondia em espanhol) e DELETE do último
+   contato pela rota nested — `O cliente precisa de ao menos um contato.` nos três.
+4. **O coração do bloco:** PUT **sem** as chaves `addresses`/`contacts`, mudando só o `legal_name`,
+   devolve **200** e o GET seguinte mostra **1 endereço e 2 contatos intactos**. O replace explícito
+   segue funcionando — `addresses` com outro item troca de fato (`city` passa a `Valparaiso`) e os
+   contatos não são tocados.
+5. **A porta única nos caminhos que antes só checavam RUT:** `POST /api/redatores` com e-mail de
+   redator existente → 422 `email`; `PUT /api/clients/{id}` com RUT de outro usuário → 422 `rut`.
+6. **D8 (arquivado) pelo caminho real:** o cliente do gate foi soft-deletado pela própria API e a
+   recriação com o mesmo par devolveu as **duas** mensagens de arquivado, não as de "já cadastrado".
+
+**Ferramentas:** backend **591 passed, 5 skipped (2149 assertions)** contra o baseline **573** da
+abertura; frontend **28 arquivos / 139 testes**, `pnpm lint` limpo e `pnpm build` verde; Pint
+`{"tool":"pint","result":"passed"}` nos **21** `.php` do bloco; `typescript:transform` **sem diff**
+(`git status --porcelain frontend/` vazio depois de rodar); zero `abort(` novo em `app/`.
+
+**Órfãos: zero**, reconferidos no fechamento e não herdados do review: `ensureRutAvailable` e
+`ensureEmailAvailable` não aparecem em `app/`, `tests/` nem `database/`; `ensureIdentityAvailable`
+tem seis sítios em `app/` (o `UserProvisioner` mais cinco Actions) e três em `tests/`;
+`#[ReadOnlyCollection]` é usada nas três propriedades de saída que a declaram.
+
+**Item 7 — dois docs VIVOS nomeavam método morto, e é a lição 13 exata:** a lição 8 do
+`docs/README.md` e a **P-29** citavam `ensureRutAvailable`/`ensureEmailAvailable`. Os dois foram
+corrigidos para `UserProvisioner::ensureIdentityAvailable`; a guarda `repo-docs-refs` não os pegaria,
+porque confere **path** e o escopo dela exclui `docs/superpowers/**` e `docs/pendencias.md`. **A P-29
+NÃO fecha:** o BD-9 unificou a checagem e agregou o 422, e o que ela registra — a corrida entre
+transações distintas, que estoura no índice único como 500 — segue exatamente igual, porque o
+`SELECT` de unicidade não trava linha inexistente. O gatilho dela também não venceu: este bloco não
+tocou `ProblemDetails` nem `ValidationMessages`. Nenhuma pendência nova nasceu; os limites do bloco
+já estão declarados no sítio (docblock da guarda) ou no `backlog.md`.
+
+**A rule `backend-ddd.md` ganhou o que o bloco criou**, porque sem isso um DTO novo com coleção de
+saída reprovaria num teste cujo remédio a rule não documentava: a catraca da lei (tipo **e** default),
+a exceção `#[ReadOnlyCollection]` com a verificação das duas pontas, e a direção "obrigatoriedade que
+depende do verbo mora na Action, não em `rules()`", com o texto único da recusa.
+
+**Mutação declarada no banco de dev**, append-only e toda pela API: cliente 14 (`Gate BD9`) criado e
+soft-deletado no próprio gate, com o user de RUT `21.111.111-9`; endereços 22-23; contatos 35-36 (o
+35 apagado pela rota nested, para provar que só o último é recusado). **Nenhuma linha pré-existente
+foi alterada**, e nenhum `migrate:fresh`, `refresh`, `reset` ou seeder rodou — o banco segue com o
+`LOT-2026-1001` corrompido de propósito para o checkpoint visual do João.
+
+**O que o fechamento NÃO provou, sem maquiagem:** corrida de unicidade concorrente (a suíte roda
+sqlite `:memory:` e a defesa real é o `unique` do MySQL — é a P-29, aberta); **nenhuma tela vista
+renderizada**, porque o frontend só mudou de tipo mais a normalização `?? []`; e `GET /api/clients`
+não recebeu asserção formal neste gate. O `progress-archive.md` passou a conter uma linha de **cinco**
+colunas numa tabela de sete — a entrega mais antiga saiu do `progress.md` **verbatim**, como o
+fechamento manda, e o cabeçalho do arquivo agora declara as duas arities apontando para a P-23.
+
+**Estado: `idle`.** O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+## Antepenúltimo item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
 ### Seleção — 2026-08-12
 
@@ -759,335 +1143,3 @@ template → certificado não foi percorrida ponta a ponta; nenhuma tela vista r
 backfill** — o rastro dos dois pivots começa aqui.
 
 **Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
-## Antepenúltimo item fechado — 2026-08-12 (`faixa-visivel-e-acessibilidade-dos-dialogos`, BD-3)
-
-### Seleção — 2026-08-12: o item entra com a spec já escrita, e é isso que muda a fase
-
-**BD-3 do `backlog.md:57`, promovido explicitamente pelo João** com o estado em `idle`, pelo título
-literal da seção (`/planejar-bloco do ### BD-3 · Faixa visível e acessibilidade dos diálogos
-(fronteira shared/ui)`) — mesmo precedente de BD-1, BD-2 e BD-7: o argumento é título de seção, não
-slug promovido, e quem promove é ele, não o comando.
-
-**A diferença deste bloco para todos os anteriores: a spec já existia antes da promoção, e não por
-acidente.** `docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md`
-foi gravada em `397548c`, cuja mensagem é literalmente `docs(spec): desenho do BD-3 escrito e NAO
-promovido`. Ela carrega os seis itens e as **oito decisões da §2 já tomadas pelo João**. Isso **não é
-divergência de estado**: `active_spec: null` e `workflow_state: idle` eram a redação correta de "spec
-escrita, bloco não promovido", e o próprio documento abre declarando isso. O gate foi conferido nos
-dois sentidos antes de qualquer escrita — `plans/` só tem `archive/`, então `active_plan: null`
-também era coerente.
-
-**Por que não foi promovido na época, e por que pode ser agora:** a spec parou porque
-`estilizacao-adr16-shell-tipografia` seguia `executing`, e promover o BD-3 violaria a invariante de
-um `active_work_item` só — além de o item 6 escrever variáveis de tema contra uma folha Lara-Lotus
-que vivia só naquela branch. **As duas travas caíram:** a estilização entrou na `main` pelo PR #41
-(`0b72dba`) e o `last-login` pelo PR #42 (`18cf90a`). O estado está `idle` com
-`last_completed_work_item: last-login` — nenhum item concorrente.
-
-### A remedição que a própria spec exigia foi feita, e o resultado é o oposto do temido
-
-A spec declarava que todo número da §4.1, §5.1, §6 e §7.3 fora medido contra `main`@`4b02b72` e
-**precisava ser remedido antes de executar**, porque a branch da estilização mexera em `AppButton`,
-`AppHeader`, `AppSidebar` e na camada de cor. Remedido contra `18cf90a`, e a tabela completa está no
-cabeçalho da spec. O resumo:
-
-- **41 sítios de `disabled={readOnly}` em 10 arquivos** — idênticos, arquivo a arquivo;
-- **`AppDataTable.tsx:83-84` e `:106`, `SearchableTableFrame.tsx:103-104` e `:115`,
-  `AppErrorState.tsx:36`** — todos na linha exata;
-- **os 35 hits de cor nos 9 diálogos** — idênticos, com a contagem por arquivo batendo uma a uma;
-- **7 das 9 montagens condicionais da §3.1 na linha exata**; só `BudgetDetailPage` deslocou
-  (`:126`/`:140` → `:132`/`:136`);
-- **duas correções de número:** `UsersTable` de `25,28` para `26,29` (o `last-login` inseriu coluna) e
-  o total dos `ignores` da §7.3 de **24 para 23**, porque a estilização baixou o `LoginPage` de 3
-  ocorrências para 2.
-
-**A colisão prevista não existiu.** `git diff 4b02b72..18cf90a -- frontend/src/` toca 47 arquivos e
-**nenhum** deles é `AppDialog`, `AppDataTable`, `SearchableTableFrame`, `FormField`, `AppErrorState`,
-nem qualquer um dos 9 diálogos ou dos 10 arquivos do modo leitura. Os arquivos que a estilização
-tocou e que este bloco cita (`LoginForm`, `LoginPage`, `ValidationPage`) são exatamente os que a **D7
-deixa de fora** e a §7.3 põe em `ignores`. **As oito decisões da §2 seguem íntegras** — eram
-independentes da base, e a medição confirma.
-
-**Um efeito a favor:** o item 6 ficou mais barato. As variáveis que ele passa a usar
-(`--text-color-secondary`, `--surface-border`) agora vivem no tema Lotus gerado
-(`shared/styles/themes/lara-{light,dark}-lotus.css` + `brand-theme.css`), entregue pelo PR #41 — antes
-eram as do Lara stock.
-
-### Isolamento — worktree por instrução do João, não por P-03
-
-Bloco frontend puro (zero schema, zero `generated.ts`, zero backend), então a **P-03 não dispara** —
-ela restringe worktree apenas em bloco de backend. A escolha de worktree é instrução dele
-(`Criando uma branch e liberando a main para worktree principal`): branch
-`feat/dialogos-faixa-visivel-acessibilidade` criada de `main`@`18cf90a` na worktree
-`/home/jvbat/projetos/fix-frontend`, o que devolve a `main` à árvore principal
-`/home/jvbat/projetos/lotus`, que estava presa em `feat/last-login`.
-
-### Context Packet — dispensado por ausência medida de fonte externa
-
-`context_packet: null`, e a razão é a que a própria spec já registrava: nenhum dos seis itens cita
-Drive, Notion ou Figma. As fontes são o repositório, os débitos versionados do `backlog.md` (os três
-do piloto UI, `Q-14`, `Q-15`, o CTA duplicado e a cor fora do corte do D18) e o `D18`, que é decisão
-de spec versionada (`specs/archive/2026-07-26-bloco-visual-refino-ui-design.md:395`). Confirmar na
-abertura do brainstorming, como nos precedentes.
-
-### Fase: `planning`, com o brainstorming reduzido ao que a base nova abriu
-
-O estado entra em `planning` no commit `0533303`, junto do primeiro artefato durável desta sessão — a
-remedição da spec. `active_plan` seguiu `null` até o plano existir. **Risco de review declarado na §9
-da spec: MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC,
-dinheiro ou documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as
-telas de uma vez, e o modo leitura atravessa 10 arquivos de 5 features.
-
-### Spec aprovada e plano escrito — 2026-08-12
-
-**O brainstorming foi curto por construção, e as duas perguntas que sobraram foram feitas em vez de
-presumidas.** O João respondeu que **já leu a spec e a aprova** — as oito decisões da §2 são dele e o
-documento escrito passou pela leitura —, e **dispensou o Context Packet**, confirmando a ausência
-medida de fonte externa (nenhum dos seis itens cita Drive, Notion ou Figma). Nada foi
-complementado na spec além da remedição, porque a base nova não abriu decisão nova: ela mudou dois
-números e não tocou um único arquivo-alvo.
-
-**Uma medição desfez um bloqueio herdado dos quatro blocos anteriores.** De 2026-08-08 a 2026-08-10 o
-fechamento registrou "WSL sem browser utilizável" e empurrou o checkpoint visual para o João. Isso
-**não vale mais**: `playwright-cli` está no PATH e `.artifacts/ui-review/` tem run de 2026-08-12. O
-DoD do BD-3 é comportamento na tela, e ele é executável — o que torna a Task 8 um gate de verdade em
-vez de uma limitação declarada.
-
-O plano (`docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md`) decompõe
-o bloco em **8 tasks**: `AppDialog` (foco + nome do maximizar); o kit `FormField`/`NestedField` com
-modo leitura; a adoção nos 40 sítios; a faixa visível; o CTA único; Q-14 e Q-15; cor pelo tema mais as
-duas regras de lint; gate.
-
-**O item 2 virou duas tasks, não uma.** O mecanismo (kit) é rejeitável por um revisor que aprove a
-adoção, e vice-versa — é exatamente onde a fronteira de task deve cair. A adoção também é o único
-lugar do bloco com decisão por sítio: dropdown mostra rótulo traduzido, não o código cru.
-
-**A escrita do plano achou uma lacuna no próprio rascunho, corrigida antes de gravar:** o Q-14 depende
-de o `onRetry` devolver a promise, e `onRetry` é declarado em **três** camadas — `AppErrorStateProps`,
-`AppDataTableProps` e `SearchableTableFrameProps`. Mudar só a primeira **compilaria**: TypeScript
-aceita atribuir `() => Promise<T>` a uma prop `() => void`, então a promise chegaria em runtime com as
-camadas do meio mentindo sobre o contrato, e o build passaria verde. As três entram no plano.
-
-**Baseline medido, não herdado:** `pnpm test` = **27 arquivos / 131 testes** em `18cf90a`; lint e
-build verdes. Projeção do plano: **28 arquivos / 137 testes** — o kit de leitura (5) e o retorno do
-`refetch` (1). Só duas tasks ganham teste automatizado, e a razão está declarada: componente com
-PrimeReact no jsdom está fora do corte do runner, então foco, `aria-label`, largura, CTA e feedback de
-retry provam no navegador ou não provam.
-
-**Handoff: `executor: claude`**, sem `paths_autorizados`. O bloco fecha por leitura de sonda no
-navegador e por decisão de apresentação em 40 sítios; e a Task 7 mexe em `eslint.config.js`, onde um
-bloco no lugar errado apaga seletores existentes **em silêncio** (Q-2 de 2026-08-04).
-
-**Estado:** `ready_for_execution`. `/executar-bloco faixa-visivel-e-acessibilidade-dos-dialogos` exige
-instrução posterior do João.
-
-### Execução — 2026-08-12: as 7 tasks de código fecharam, em commits próprios
-
-`main..HEAD` = 14 commits, sendo 12 de código e 2 de documento (`0533303` promoveu o bloco,
-`b1de7c0` gravou o plano, `f8b862c` marcou a transição para `executing`). O diff do bloco é
-**33 arquivos, +1884/−211**, todos sob `frontend/src`.
-
-Task 1 (`956c55b`) devolveu o foco ao disparador e nomeou o maximizar no `AppDialog`. Task 2
-(`3ee3039`) deu modo leitura ao kit `FormField`/`NestedField`, com 5 testes novos. Task 3
-(`69801b0`, emendada em `6962182`) adotou o modo leitura nos 40 sítios — a emenda corrigiu o
-placement do `eslint-disable` no `ContactCard`, onde o `disabled` fica em linha própria e
-`eslint-disable-next-line` não o cobria. Task 4 (`158823b`) resolveu a faixa desligando o
-`thead` sem linhas: zerar só a largura mínima não bastava, porque os seis `<th>` com `px-4 py-2.5`
-têm largura intrínseca própria e sustentavam a tabela sozinhos. Task 5 (`1095989`, emendada em
-`36c6847`) tirou o CTA duplicado; a emenda é a parte que importa — o critério virou
-`!table.filtering && rows.length === 0`, porque busca sem resultado **não** é lista vazia e o
-critério cru fazia o CTA sumir também durante a busca. Task 6 (`ecbf4a7`) fechou Q-14 e Q-15.
-Task 7 (`d64ed09`, emendada em `2e2deb2`) escreveu as duas regras de lint; a emenda é o risco que o
-plano previu se concretizando — as regras novas nasceram em blocos `files` próprios que casavam o
-mesmo glob e **apagavam em silêncio** o `no-restricted-syntax` existente (Q-2 de 2026-08-04), e a
-correção foi fundi-las nos arrays já existentes. `9f38492` corrigiu o Tailwind do `readOnlyValue`.
-
-### Gate da Task 8 — 2026-08-12: os seis provados no navegador, nenhum defeito, 5 achados B
-
-**Steps 1–4, medidos e não herdados:** `pnpm test` = **28 arquivos / 137 testes** — bate exatamente
-com a projeção do plano —, lint limpo e build verde. `git diff main...HEAD --stat -- backend/
-frontend/src/shared/types/generated.ts` vazio; nenhuma sonda (`console.log`/`debugger`/`SONDA`) no
-diff; nenhum `from 'primereact` em `src/features`.
-
-**Step 5:** `/lotus-ui-review` numa passada, sessão `bd3-gate-task8` do `playwright-cli` 0.1.18 em
-Chromium headed, login manual do João como admin. Quatro páginas (`/comercial`, `/cursos`,
-`/personas`, `/administracion`) nas três viewports. Relatório em
-`.artifacts/ui-review/2026-08-12T19-41-45-bd3-gate-task8/report.txt`, com 7 evidências ao lado —
-o diretório é gitignored (`.gitignore:25`), então este commit é o artefato durável da transição.
-Árvore limpa antes e depois, em `9f38492`; **zero mutação** (0 POST/PUT/PATCH/DELETE na corrida) e
-zero mudança de código.
-
-Os seis itens passaram, com sonda e não com impressão: foco de volta ao gatilho exato
-(`aria-label="View"`, dentro da `<tr>`) em **12/12** combinações, por Escape e depois de
-maximizar/restaurar, também no tema escuro; `aria-label` do maximizar alternando
-"Maximize dialog" ↔ "Restore dialog" nas 4 páginas; **zero** `input`/`textarea` de texto nos
-diálogos, com valor inteiro quebrando linha e campo vazio como "—"; wrapper da tabela com
-`scrollWidth == clientWidth` (276 e 261) a 390x844 e documento sem rolagem horizontal em 12/12;
-exatamente **1** CTA em 12/12, e **zero** sobre o estado de erro; Q-14 com o botão em
-`p-disabled p-button-loading` por ~38 ms e **1 clique = 1 GET, duplo clique = 1 GET**; Q-15 com o
-rodapé lido no instante do GET dizendo `Loading...`, nunca "0", assentando em "4 clients"; e todas
-as superfícies, textos e ações do `ClientDialog` trocando de valor entre claro e escuro.
-
-**Duas notas de método, porque o caminho não foi o óbvio.** `docker stop lotus-nginx-1` foi **negado
-pelo classificador de permissão** desta sessão, e offline emulado **não serve**: o TanStack Query
-trata rede offline como `fetchStatus: "paused"` (networkMode `online`) e nunca produz estado de
-erro. O estado de erro veio de `Network.setBlockedURLs` restrito a
-`http://localhost:8080/api/clients*` — servidor inalcançável para uma chamada, sem interceptar rota
-e sem fabricar resposta. Vale registrar para o próximo bloco que precisar de erro na tela.
-
-**Step 6, o que NÃO ficou provado:** lista genuinamente vazia (esvaziá-la exigiria mutação, proibida
-pela skill) — o ramo do CTA dentro do `AppEmptyState` de domínio fica coberto só por código
-(`SearchableTableFrame.tsx:125`) e pelo ramo irmão de erro, esse sim observado ao vivo; mutações;
-estado de erro fora de `/comercial`; tema escuro fora de `/comercial`; Q-14/Q-15 fora de 1440x900;
-travessia completa por Tab. E a limitação que a spec §8 já declarava continua valendo: **foco,
-`aria-label`, largura, CTA e feedback de retry não ganham teste automatizado** — o único mecanismo
-que sobrevive ao bloco é o lint da Task 7, e ele só vê cor e `disabled={readOnly}`.
-
-**Cinco achados B, zero C.** UI-01: nome de arquivo truncado sem `title` nem quebra a 390x844
-(`RedatorDialog`, seção DOCUMENTS). UI-02: `src/app/layouts/Sidebar/` tem 3 classes `text-slate-*`
-que **nenhum bloco** do `eslint.config.js` cobre — `COR_HARDCODED` só roda em `features/**` e
-`shared/**` —, nem convertidas nem declaradas na `CATRACA_COR`; é lacuna de alcance criada por este
-bloco, não regressão visual. UI-03: "3 course(s)" e "1 user(s)" contra "4 clients"/"7
-instructors"/"6 budgets", em duas das sete tabelas. UI-04: com o menu recolhido (390), o rótulo sai
-do DOM e sobra só `title` — sem hover no toque. UI-05: cada montagem de página com abas busca as
-**duas** abas. UI-01, UI-03, UI-04 e UI-05 são pré-existentes ao diff.
-
-**Estado:** `ready_for_review`. O review do bloco (`/revisar-sprint`) exige instrução do João; o foco
-declarado no plano é um só — **onde a mudança de `shared/ui` alcança tela que este bloco não abriu, e
-o que ela faz lá.** Risco de review: **MÉDIO**.
-
-### Review de sprint — 2026-08-12: BAIXO risco, uma lente, 5 achados, todos corrigidos
-
-**BAIXO RISCO pelo gate da skill**, e aqui as duas escalas **divergem sem conflito**: a §9 da spec
-declara MÉDIO, a do `/revisar-sprint` é binária e nenhum gatilho de ALTO se aplica (sem schema,
-`generated.ts`, auth, RBAC, dinheiro, documento legal; `executor: claude`). Uma lente — Claude com o
-gabarito do projeto —, **sem Codex**.
-
-**Gate reproduzido, não herdado:** `pnpm test` **28 arquivos / 137 testes**, lint limpo, build verde;
-`git diff main...HEAD -- backend/ generated.ts` vazio; zero sonda; zero `from 'primereact` em
-`src/features`. **Órfãos: zero.** As 40 conversões seguem um molde só, o dropdown mostra rótulo e não
-código cru, e a fusão das regras nos arrays existentes (`2e2deb2`) é a correção certa do merge raso.
-
-**Os cinco achados são todos do foco declarado no plano** — o que `shared/ui` faz na tela que o bloco
-não abriu. Decisão do João: **os cinco entram**, corrigidos na mesma sessão.
-
-1. **Q-1 🟡 — o débito do modo leitura foi medido por STRING, não por forma.** A §4.1 achou 41 sítios
-   perguntando por `disabled={readOnly}`; a mesma pergunta feita pela forma do defeito acha **17 a
-   mais**, e o seletor entregue não via nenhum deles: `disabled={f.readOnly}` (MemberExpression, 4× em
-   `TurmaConfigCard`), `disabled={readOnly || !isCreate}` (LogicalExpression, `BudgetDialog`) e o par
-   **estático** `<AppInputText value={…} disabled readOnly />` (12×, sendo 11 na certificação — código,
-   RUT, nome do curso e motivo de revogação de snapshot congelado, dado de peso legal truncado num
-   input cinza). É a **2ª vez** que uma catraca deste `eslint.config.js` nasce medindo enumeração em
-   vez de forma (a 1ª foi a lista literal de features, Q-5 de 2026-08-04, citada no topo do próprio
-   arquivo).
-2. **Q-2 🟡 — o Q-14 atravessava por acidente.** O plano alargou `onRetry` nas **três** camadas de
-   `shared/ui` e não nas **dez** de feature entre a página e a moldura; nas 5 telas CRUD a promise
-   passava por baixo do tipo `() => void`, e em `OperationPage` (2×) e `StudentDialog` o
-   `void x.refetch()` a **apagava** — Reintentar sem feedback e duplo clique disparando dois GETs, em
-   telas que o gate não abriu.
-3. **Q-3 🟡 — o ramo de `loading` ficou fora das duas condições novas.** Durante o GET inicial a lista
-   também está vazia: o `<thead>` sumia e voltava (as 14 tabelas) e o CTA de cadastro **não existia em
-   lugar nenhum** da tela até o GET responder. É a classe que a decisão do Q-15 recusou três linhas
-   acima, ao manter a faixa do rodapé sempre montada.
-4. **Q-4 🟢 — `COR_HARDCODED` não rodava em `src/shared/**`**, que é justamente a camada onde a cor
-   deve vir do tema e onde um wrapper alcança todas as telas.
-5. **Q-5 🟢 — a fórmula do vermelho virou string mágica em 13 arquivos** (19 cópias): o bloco trocou
-   uma cor sem dono (`text-red-600`) por outra cor sem dono.
-
-**Como cada correção foi provada:**
-
-| Achado | Correção | Prova |
-|---|---|---|
-| Q-1 | seletor por forma (`:has(Identifier[name="readOnly"])`) + seletor novo para o par estático; os 17 sítios convertidos; `children` do `FormField`/`NestedField` vira **opcional** (campo que nasce só-leitura não tem controle a montar) | as duas regras vistas **vermelhas** com mutação (`disabled={form.readOnly}` e `<input disabled readOnly/>`), e um teste novo do `FormField` sem filho — **138 testes** |
-| Q-2 | as 10 props de feature passam a `() => void \| Promise<unknown>`; os 3 sítios devolvem a promise; `BudgetsTable.retry` vira `Promise.all` das duas recargas | o alargamento **quebrou o build em 7 lugares** (`() => unknown` da fonte não é assinável) — o tipo mentia na raiz, em `ListableResource.refetch`, corrigido para `() => Promise<unknown>` |
-| Q-3 | `thead` só some com `!hasRows && !loading`; CTA só some com `!loading`; `BudgetsTable` ganha `busy` (as duas queries) | a largura mínima segue zerada sempre que não há linha — o ganho do estado vazio a 390px não regride; conferido no código, **não** re-observado no navegador |
-| Q-4 | `COR_HARDCODED` entra no bloco de `src/shared/**` | **nasce verde** (zero classe de paleta em `src/shared`, medido) e reprova a reintrodução na mutação. `src/app/**` fica fora **por exceção declarada** — o shell é aprovação do João de 2026-07-26, registrada no `backlog.md` |
-| Q-5 | `shared/styles/tokens.ts` com `dangerText`/`dangerSurface`/`warningText`/`warningSurface` + `infoText`/`successText` (o mapa de tons do `AppCard` inteiro) | build verde com as 19 cópias substituídas; nenhuma `color-mix` literal sobra em `.tsx` |
-
-**Gate depois das correções:** **28 arquivos / 138 testes** (o teste novo do `FormField`), `pnpm lint`
-limpo, `pnpm build` verde. Diff das correções: **34 arquivos, +263/−131**, com `tokens.ts` novo.
-
-**O que as correções NÃO provaram, sem maquiagem:** **nada foi re-observado no navegador.** As
-mudanças do Q-3 mexem no estado de carregamento das 14 tabelas e o Q-1 mudou 5 diálogos que o gate da
-Task 8 não abriu (`ConfirmIssueDialog`, `CertificateViewDialog`, `RevokeDialog` pelo
-`CertificateIdentityFields`, `TurmaConfigCard`, `BudgetDialog`) — a prova aqui é tipo, lint com
-mutação nos dois sentidos e suíte. **O `/lotus-ui-review` precisa rodar de novo antes do fechamento**,
-com foco em `/operacion`, `/certificados` e no estado de carregamento das listas. `AppPhotoField.onRetry`
-segue `() => void` de propósito: é re-upload bufferizado do `useEntityPhoto`, não passa pelo
-`AppErrorState` e não tem promise a aguardar.
-
-**Proposta de regra ainda NÃO decidida pelo João** (padrão reincidente do Q-1): parágrafo em
-`.claude/rules/frontend-fsliced.md` — *catraca nova mede a própria população com o seletor dela, nunca
-com o grep que originou o débito; grep acha a grafia, o seletor acha o defeito.*
-
-### Gate de fechamento — 2026-08-12
-
-**Um defeito de processo foi achado antes do checklist e corrigido dentro dele.** As correções dos
-cinco achados do review estavam **sem commit** — 33 arquivos modificados, `tokens.ts` untracked e a
-transição `ready_for_review → ready_for_closure` só na working tree —, o que fere a invariante de
-mudança de estado entrar no mesmo commit do artefato que a prova. O diff foi conferido contra a
-narrativa do review antes de gravar (as duas catracas por forma, `!loading` nas duas condições,
-`COR_HARDCODED` em `src/shared/**`, `tokens.ts` com as 19 cópias substituídas) e entrou em `dfc3f4b`,
-que é o `state_basis_commit` deste fechamento.
-
-**Item 0 refeito no navegador, não herdado do review.** As correções mexeram no estado de
-carregamento das 14 tabelas (Q-3) e em 5 diálogos que o gate da Task 8 nunca abriu (Q-1), e o review
-declarou por escrito que o `/lotus-ui-review` teria de rodar de novo. Rodou: sessão `bd3-closure`
-(Playwright CLI 0.1.18, Chromium headed, login manual do João), jornada delimitada a `/operacion` e
-`/certificados` nas três viewports, com foco no carregamento das listas e nos diálogos de leitura.
-Relatório e 10 evidências em `.artifacts/ui-review/2026-08-12T21-30-00-bd3-closure/` (diretório
-gitignored — este commit é o artefato durável). **Zero mutação** (26 requisições à API, todas GET),
-zero mudança de código, árvore limpa antes e depois em `dfc3f4b`.
-
-**O que a passada provou com sonda:** `TurmaConfigCard` e `CertificateViewDialog` com
-`document.querySelectorAll('input,textarea').length === 0` e o valor inteiro em texto — RUT
-`16.200.022-5` e `Seguridad en alta tensión` legíveis por completo até 390x844, ausência como `—`;
-o `<thead>` **montado durante o GET** nas duas listas (`theads:1`, `theadHidden:0`) com o rodapé
-lendo `Loading...` e assentando em `5 classes` e `4 valid · 0 expiring · 0 expired · 1 revoked`;
-foco de volta ao `BUTTON[aria-label="View"]` dentro da `<tr>` nas três viewports;
-`documentElement.scrollWidth == clientWidth` a 1024 e 390, com o diálogo em 716.8 px e 370.5 px sem
-transbordo.
-
-**A prova do Q-14 saiu melhor do que a do gate anterior, e por acidente feliz.** O gate da Task 8
-precisou de `Network.setBlockedURLs` para alcançar estado de erro; aqui o erro veio **real**, do
-banco: `GET /api/certificates/2` responde **500** porque o `LOT-2026-1001` está corrompido de
-propósito desde um bloco anterior. Com RTT medido de 116 ms, o botão Reintentar ficou
-`p-disabled p-button-loading` em **91/91** amostras a 4 ms, com 1 clique = 1 GET e duplo clique =
-1 GET. No mesmo estado, o token `dangerText` foi medido invertendo com a folha —
-`srgb 0.76 0.244 0.237` no claro contra `srgb 1 0.446 0.415` no escuro —, que é o Q-5 e o item 6
-provados juntos.
-
-**O que o fechamento NÃO provou, sem maquiagem:** lista genuinamente vazia (esvaziá-la exige
-mutação); `ConfirmIssueDialog` e `IssuedDialog` — o primeiro fica a **um clique da emissão de
-documento de peso legal** e o segundo só existe depois dela, então nenhum se alcança sem mutação, e
-a garantia deles é que usam o mesmo `<FormField readOnly value={…}>` provado em três outros sítios;
-`BudgetDialog`; travessia completa por Tab; tema escuro fora de 1440x900. E a limitação estrutural
-segue de pé: **foco, `aria-label`, largura, CTA e feedback de retry não têm teste automatizado** —
-componente com PrimeReact no jsdom está fora do corte do runner, e o único mecanismo que sobrevive
-ao bloco é o lint da Task 7, que enxerga cor e `disabled`, não comportamento.
-
-**Placar do gate:** frontend **28 arquivos / 138 testes**, `pnpm lint` sem saída, `pnpm build`
-verde; backend **569 passed, 5 skipped (2092 assertions)** — rodado apesar de o bloco não ter uma
-linha de `backend/`; Pint **N/A** (zero `.php` no diff); `generated.ts` sem diff e nenhum DTO
-tocado; zero sonda; zero `from 'primereact` em `src/features`; zero import cruzado entre features;
-órfãos zero (os 6 símbolos de `tokens.ts` todos consumidos).
-
-**Três decisões que o gate levantou e o João fechou re-invocando o comando**, aplicadas por
-precedente e declaradas aqui para poder ser vetadas: (1) o **`P-30` duplicado** foi desfeito
-renumerando a linha da retenção de `login_logs` para **P-33**, pelo mesmo critério que renumerou a
-segunda `P-28` para `P-32` — a linha do `ámbar-aviso` chegou à `main` primeiro (`e6460f9`, PR #41) e
-esta veio depois (`656175c`), então quem renumera é a recém-chegada; as menções a "P-30" na
-narrativa do `last-login` **ficam como estão**, porque história não se reescreve. (2) A lacuna de
-alcance da catraca de cor — `COR_HARDCODED` não roda em `src/app/**`, onde vivem 3 classes
-`text-slate-*` do `Sidebar/` — virou **P-34**, com o motivo (exceção do shell, aprovada em
-2026-07-26) já escrito no comentário do `eslint.config.js` para não voltar como esquecimento. (3) A
-**regra proposta entrou** em `.claude/rules/frontend-fsliced.md`: *catraca nova mede a própria
-população com o seletor dela, nunca com o grep que originou o débito.* Precedente: a P-25 fechou do
-mesmo jeito, escrevendo o parágrafo na mesma rule durante um `/fechar-sprint`.
-
-**Seis achados B de UI, todos pré-existentes ao diff**, foram para `## Débitos técnicos` do
-`backlog.md` em vez de morrerem no relatório: nome de arquivo truncado sem `title` a 390
-(`RedatorDialog`), plural cru em duas das sete tabelas ("3 course(s)"), rótulo do menu recolhido só
-em `title` (sem hover no toque), página com abas buscando as duas abas, bloco de erro bilíngue com
-`aluno.name` cru na tela e a célula de aluno vazia na linha do certificado corrompido — esta última
-a única que o modo leitura do próprio bloco já sabia resolver, com o travessão.

@@ -116,9 +116,10 @@
 > duplicado e a cor fora do corte do D18); a lacuna de alcance que ele deixou na catraca de cor —
 > o shell fora de `COR_HARDCODED` — ficou na **P-34**. O **BD-8** e o **BD-9** nasceram depois
 > (revisão de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend,
-> enquanto BD-5 e BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi
-> entregue em 2026-08-13** e saiu desta lista (`progress.md`), então dessa fila resta o BD-9. Qual
-> das duas filas anda antes é promoção explícita do João, como sempre. O **BD-1** foi entregue
+> enquanto BD-5 e BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — os **dois foram
+> entregues em 2026-08-13** e saíram desta lista (`progress.md`), então a fila de backend está
+> **vazia** e o que resta em fila é `BD-5 → BD-6`. Qual item anda antes é promoção explícita do
+> João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
 > `## Débitos técnicos`. O **BD-7** foi entregue em 2026-08-12, **fora da ordem escrita e por
@@ -164,54 +165,6 @@ Ordem:
 `QuoteWizard.tsx:23` e hoje vive em `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que
 documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
 não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
-
-### BD-9 · Contrato de entrada: identidade e coleção nested (backend)
-
-**Origem:** mesma revisão de 2026-08-12, achados 4 e 5. Bloco separado do BD-8 de propósito: não
-toca schema, não toca certificação, e fecha em review de risco menor.
-
-Cobre:
-
-1. **`provision()` fecha metade do invariante.** `UserProvisioner.php:30` chama
-   `ensureRutAvailable()` por dentro e deixa `ensureEmailAvailable()` para o chamador. Quatro dos
-   nove caminhos de escrita de identidade não chamam: `CreateClientAction.php:31`,
-   `UpdateClientAction.php:35`, `CreateRedatorAction.php:50`, `UpdateRedatorAction.php:56`. Como
-   `users.email` é `unique` (`create_users_table.php:19`), a colisão sobe `QueryException`, cai no
-   `default` do `match` em `ProblemDetails.php:34-35` e vira **500 genérico** onde deveria ser 422
-   com o campo. A assimetria já está escrita no próprio guardrail:
-   `UniquenessInsideTransactionTest:49` passa `['rut','email']` para staff; `:68` e `:89` passam só
-   `['rut']` para cliente e redator. `email` é `string` obrigatório nos dois DTOs — não há caminho
-   nullable a tratar.
-2. **`ClientData::$addresses` apaga a coleção por omissão.** `ClientData.php:42` é `array $addresses
-   = []` e `rules()` declara só `rut` e `contacts`; `UpdateClientAction.php:52-55` apaga tudo e
-   recria do payload, então a chave ausente soft-deleta todos os endereços em silêncio. O par certo
-   está ao lado: `CourseData.php:37,40` são `array|Optional = new Optional` e
-   `UpdateCourseAction.php:35,44` guardam o replace com `instanceof Optional`. `docs/der-fisico.md:103-106`
-   é lei ("toda coleção nested read-write futura nasce `Optional`"), e o comentário de
-   `ClientData.php:55-58` já nomeia o bug — a correção anterior blindou só `contacts`.
-
-**Decisões já fechadas com o João no grilling de 2026-08-12:**
-
-- Fechar **por dentro**: `provision()` passa a checar e-mail, e nasce
-  `ensureIdentityAvailable(string $rut, string $email, ?int $exceptUserId = null): string` como
-  chamada única dos caminhos de update. Corrigir call-site a call-site deixaria a interface exigindo
-  memória — o quinto caminho que nascer esqueceria de novo.
-- **O 422 é explícito sobre o registro arquivado** (o `ensureEmailAvailable` usa `withTrashed()`):
-  ~10 usuários internos, não superfície pública — esconder transforma um erro acionável ("restaure o
-  cliente") em beco sem saída.
-- **`addresses` vira `Optional`**; `contacts` **migra junto** e mantém `min:1` só para quando a
-  chave vier — "não mandei contatos" deixa de ser 422, "mandei lista vazia" continua recusado.
-  Alinha com o padrão que o `CourseData` fixou.
-- Medido antes de decidir: o front **sempre** manda `addresses` (`useClientForm.ts:46`), então a
-  mudança é **inerte para a tela de hoje** — o valor está em fechar o caminho, não em corrigir bug
-  visível. Isso é o que torna o bloco barato, e o que impede vendê-lo como correção de sintoma.
-
-DoD: `PUT /api/clients/{id}` **sem** a chave `addresses` preserva os endereços (teste visto vermelho
-antes), e e-mail duplicado nos quatro caminhos devolve 422 com o campo em vez de 500 — os dois casos
-não existem na suíte hoje.
-
-Risco de review: **MÉDIO** — toca DTO (ADR-04, `generated.ts` regenera) e muda código de status de
-erro em quatro rotas.
 
 ### Fora dos BDs — travado em decisão do João
 
@@ -361,3 +314,15 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   **Os outros dois foram fechados pelo bloco `guardas-que-faltam` em 2026-08-11:** (Q-2) o barrel
   `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`, `MutableResource` e
   `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly` passou a reprovar.
+
+- **`UpdateStaffUserAction` apaga o `rut` do staff num `PUT` que só o OMITE.** `UserData::$rut` é
+  `Optional`, e a Action traduz `Optional` para `null` antes de gravar
+  (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`): quem manda o
+  formulário sem a chave zera o RUT de um usuário que tinha. É a mesma classe do defeito que o
+  bloco `contrato-de-entrada-identidade-e-nested` fechou nas coleções nested — omissão virando
+  apagamento —, num campo escalar. **Pré-existente e fora do escopo daquele bloco**, que só
+  atravessou o arquivo para trocar a checagem de unicidade pela porta única; declarado no relatório
+  de execução de 2026-08-13 e registrado aqui na correção do review do mesmo dia. Saída: o próximo
+  commit que tocar a escrita do staff decide entre preservar o valor atual quando a chave falta e
+  exigir a chave no `PUT` — decisão do João, porque muda contrato de entrada. DoD é o teste que
+  mostra o RUT sobrevivendo à omissão, não o `if` novo.

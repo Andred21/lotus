@@ -54,7 +54,7 @@ class UpdateRedatorAction
                 // por decisão registrada, D3 da spec do redator), então um RUT
                 // duplicado agora sobe e descarta. O `catch` abaixo já é a
                 // fonte única desse descarte — RedatorDocumentRollbackTest.
-                $rut = $this->users->ensureRutAvailable($data->rut, $redator->user_id);
+                $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $redator->user_id);
 
                 $redator->user->update([
                     'name' => $data->name,

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, AppDropdown, FormField } from '@shared/ui'
-import type { ClientData } from '@shared/types/generated'
+import type { ClientFormFields } from '../../hooks/useClientForm'
 
 const TYPE_VALUES = ['client', 'provider', 'other'] as const
 
@@ -11,10 +11,10 @@ const TYPE_VALUES = ['client', 'provider', 'other'] as const
 export function ClientGeneralFields({
   form, readOnly, fieldErrors, onChange,
 }: {
-  form: ClientData
+  form: ClientFormFields
   readOnly: boolean
   fieldErrors?: Record<string, string[]> | null
-  onChange: <K extends keyof ClientData>(k: K, v: ClientData[K]) => void
+  onChange: <K extends keyof ClientFormFields>(k: K, v: ClientFormFields[K]) => void
 }) {
   const { t } = useTranslation()
   const types = TYPE_VALUES.map((value) => ({ value, label: t(`clientType.${value}`) }))

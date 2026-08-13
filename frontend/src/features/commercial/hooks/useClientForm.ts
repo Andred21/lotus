@@ -1,19 +1,29 @@
 import { useCrudForm } from '@shared/hooks'
-import type { ClientAddressData, ClientData } from '@shared/types/generated'
+import type { ClientAddressData, ClientContactData, ClientData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { clientsApi } from '@shared/api/clientsApi'
 
 export type ClientDialogMode = DialogMode
 
+/**
+ * O que o formulário edita. `addresses` e `contacts` são `Optional` no contrato
+ * (ausente = não mexe), mas aqui são array sempre: esta tela é a dona das duas
+ * coleções e manda as duas inteiras. Mesmo padrão de `CourseFormFields`.
+ */
+export type ClientFormFields = Omit<ClientData, 'addresses' | 'contacts'> & {
+  addresses: ClientAddressData[]
+  contacts: ClientContactData[]
+}
+
 const EMPTY_ADDRESS: ClientAddressData = {
   id: undefined, line1: null, line2: null, number: null, commune: null, city: null, region: null, zip_code: null, is_primary: true,
 }
 
-const EMPTY_CONTACT: ClientData['contacts'][number] = {
+const EMPTY_CONTACT: ClientContactData = {
   id: undefined, name: '', job_title: null, email: null, phone: null, is_primary: false,
 }
 
-const EMPTY: ClientData = {
+const EMPTY: ClientFormFields = {
   id: undefined, name: '', rut: '', email: '', phone: null,
   legal_name: '', type: 'client', business_activity: null,
   photo_url: null,
@@ -27,8 +37,15 @@ export function useClientForm(
   onDone: () => void,
   afterCreate?: (created: ClientData) => Promise<void>,
 ) {
-  const { crud, setForm } = useCrudForm<ClientData, ClientData>(clientsApi, {
-    entity: client,
+  // A resposta da API sempre traz as duas coleções; o `| undefined` do tipo é
+  // do lado da ENTRADA (Optional). Normaliza aqui para o form não carregar o
+  // undefined.
+  const entity: ClientFormFields | null = client
+    ? { ...client, addresses: client.addresses ?? [], contacts: client.contacts ?? [] }
+    : null
+
+  const { crud, setForm } = useCrudForm<ClientFormFields, ClientData>(clientsApi, {
+    entity,
     mode,
     empty: EMPTY,
     // Campos LISTADOS, não `...form`: `photo_url` é `#[Computed]` e não tem o
@@ -66,7 +83,7 @@ export function useClientForm(
       return { ...f, addresses: [first, ...f.addresses.slice(1)] }
     })
 
-  const patchContact = (i: number, patch: Partial<ClientData['contacts'][number]>) =>
+  const patchContact = (i: number, patch: Partial<ClientContactData>) =>
     setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
 
   const setPrimaryContact = (i: number) =>

@@ -60,7 +60,6 @@ class StudentResolver
 
                 // Colisão de e-mail vira ValidationException por linha (chave email),
                 // inclusive contra soft-deletados — nunca 500 que aborta a planilha.
-                $this->provisioner->ensureEmailAvailable($email);
                 $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
                 $student = Student::create(['user_id' => $created->id]);
                 $this->linkService->link($student, $client);

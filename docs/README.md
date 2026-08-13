@@ -63,7 +63,7 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
 
 7. **Upload polimórfico: valide cada FOLHA com `instanceof UploadedFile`.** `is_array()` só olha o nível de cima — `documents[CV][]` (array de arquivos sob chave de tipo válida) passa e estoura `TypeError`/500 na action. Sempre `ValidationException::withMessages([...])`, nunca `abort()`.
 
-8. **Unicidade + soft-delete: `withTrashed` no check.** RUT (ou qualquer coluna `unique`) de um registro soft-deletado ainda ocupa o índice — checar sem `withTrashed` deixa a colisão escapar para o banco e retornar 500 em vez de 422. O check de disponibilidade (ex.: `UserProvisioner::ensureRutAvailable`) usa `withTrashed`.
+8. **Unicidade + soft-delete: `withTrashed` no check.** RUT (ou qualquer coluna `unique`) de um registro soft-deletado ainda ocupa o índice — checar sem `withTrashed` deixa a colisão escapar para o banco e retornar 500 em vez de 422. O check de disponibilidade (`UserProvisioner::ensureIdentityAvailable`, porta única de RUT **e** e-mail desde 2026-08-13) usa `withTrashed` — e lê `deleted_at` na mesma query, para dizer ao operador que o caminho é **restaurar**, não criar outro.
 
 9. **Tooling e git com escopo cirúrgico.** `./vendor/bin/pint` **sem argumento** reformata o repo inteiro (44 arquivos numa ocorrência, incluindo `use` de classes inexistentes) — passe só os arquivos tocados. `git add` só os caminhos exatos da task. Rode `git status` no início e `git diff <arquivo>` antes de editar arquivo sujo: o João edita o working tree **ao vivo** durante a execução (padrão recorrente) e o WIP dele é intocável.
 

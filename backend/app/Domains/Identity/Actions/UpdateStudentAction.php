@@ -22,8 +22,7 @@ class UpdateStudentAction
         return DB::transaction(function () use ($student, $data) {
             $user = $student->user;
 
-            $rut = $this->provisioner->ensureRutAvailable($data->rut, $user->id);
-            $this->provisioner->ensureEmailAvailable($data->email, $user->id);
+            $rut = $this->provisioner->ensureIdentityAvailable($data->rut, $data->email, $user->id);
 
             $user->update([
                 'name' => $data->name,
