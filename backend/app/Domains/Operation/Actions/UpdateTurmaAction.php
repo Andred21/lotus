@@ -13,6 +13,8 @@ class UpdateTurmaAction
 {
     public function execute(Turma $turma, TurmaData $data): Turma
     {
+        $turma->assertAcademicallyWritable();
+
         $turma->update([
             'modalidade' => $data->modalidade,
             'local_aplicacao' => $data->local_aplicacao,

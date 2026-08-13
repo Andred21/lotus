@@ -193,6 +193,10 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 - O código composto (`Scap 100 - Cot 2`) é **calculado** (accessor/DTO), nunca persistido como string.
 - Geração na **aplicação**, não em trigger (coerente com ADR-08). `id` bigint continua sendo a FK
   em todo relacionamento — `codigo` nunca vira FK.
+- `course_certificate_templates.version` (int) = **segundo consumidor do mesmo padrão** (2026-08-12):
+  `MAX(version)+1` com `lockForUpdate()` em transação no `CreateCertificateTemplateAction`, índice
+  `UNIQUE(course_id, version)` como defesa extra, e `withTrashed()` na conta porque o replace nested
+  do `UpdateCourseAction` arquiva e recria. Não é ADR nova: é este ADR aplicado de novo.
 
 **Porquê:** separa a natural key (rastreio legível que o cliente pede por telefone/e-mail) da
 surrogate key (`id`). Evita reaproveitamento de número após soft-delete. Trade-off: lock

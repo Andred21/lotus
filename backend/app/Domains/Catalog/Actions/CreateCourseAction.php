@@ -13,6 +13,8 @@ use Spatie\LaravelData\Optional;
  */
 class CreateCourseAction
 {
+    public function __construct(private CreateCertificateTemplateAction $templates) {}
+
     public function execute(CourseData $data): Course
     {
         return DB::transaction(function () use ($data) {
@@ -27,7 +29,7 @@ class CreateCourseAction
             // UpdateCourseAction — `CreateX` sincroniza o que `UpdateX` sincroniza.
             if (! $data->templates instanceof Optional) {
                 foreach ($data->templates as $template) {
-                    $course->certificateTemplates()->create($template->toArray());
+                    $this->templates->execute($course, $template);
                 }
             }
 

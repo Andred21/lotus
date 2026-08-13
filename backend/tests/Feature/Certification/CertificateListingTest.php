@@ -3,7 +3,6 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
@@ -24,11 +23,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CertificateListingTest extends TestCase
 {
+    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
     use RefreshDatabase;
 
@@ -251,8 +252,7 @@ class CertificateListingTest extends TestCase
 
         // A vigência sai do template MAIS NOVO do curso: o setUp cria a v1 com
         // `validity_months` null, então 24 só aparece se a v2 vencer.
-        CourseCertificateTemplate::create([
-            'course_id' => $this->course->id,
+        $this->makeTemplate($this->course->id, [
             'version' => 2,
             'layout_config' => ['city' => 'Santiago'],
             'validity_months' => 24,
@@ -427,8 +427,7 @@ class CertificateListingTest extends TestCase
     {
         $this->actingAsAdmin();
         $courseOnline = $this->makeCourse(['name' => 'Curso online sin ciudad']);
-        CourseCertificateTemplate::create([
-            'course_id' => $courseOnline->id,
+        $this->makeTemplate($courseOnline->id, [
             'version' => 1,
             'layout_config' => [],
             'validity_months' => null,

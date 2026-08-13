@@ -53,7 +53,7 @@ emitido_em: string | null,
 export type CertificateStatus = 'emitido' | 'revocado';
 export type CertificateTemplateData = {
 id: undefined | number,
-version: number,
+version: undefined | number,
 layout_config: Record<string, any>,
 validity_months: undefined | number | null,
 };

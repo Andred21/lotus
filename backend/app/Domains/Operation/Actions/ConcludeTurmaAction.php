@@ -20,11 +20,7 @@ class ConcludeTurmaAction
     public function execute(Turma $turma): Turma
     {
         return DB::transaction(function () use ($turma) {
-            if ($turma->status !== TurmaStatus::EmAndamento) {
-                throw ValidationException::withMessages([
-                    'status' => 'La clase ya fue concluida.',
-                ]);
-            }
+            $turma->assertAcademicallyWritable();
 
             // Leitura fresca DENTRO da transação, e declarada aqui: o `for()`
             // lê a relação como propriedade, então um model que já chegou

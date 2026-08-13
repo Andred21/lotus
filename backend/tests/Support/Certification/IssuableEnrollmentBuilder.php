@@ -15,6 +15,7 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 
 /**
@@ -30,6 +31,7 @@ use Tests\Support\CreatesDomainRecords;
  */
 final class IssuableEnrollmentBuilder
 {
+    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
 
     /** @var array<string, mixed> */
@@ -248,8 +250,7 @@ final class IssuableEnrollmentBuilder
         if ($this->comTemplate) {
             $layoutConfig = $this->templateComCidade ? ['city' => 'Santiago'] : [];
 
-            $this->template = CourseCertificateTemplate::create([
-                'course_id' => $this->course->id,
+            $this->template = $this->makeTemplate($this->course->id, [
                 'version' => 1,
                 'layout_config' => $layoutConfig,
                 'validity_months' => null,

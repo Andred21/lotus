@@ -32,7 +32,7 @@
 
 ### Catalog
 - **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
-- **course_certificate_templates** — `id PK`, `course_id FK` → courses cascade, `version` (int), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`.
+- **course_certificate_templates** — `id PK`, `course_id FK` → courses cascade, `version` (int, **derivado** por `MAX+1` sob `lockForUpdate` na Action — nunca input do cliente, mesmo padrão do `seq_in_budget`/ADR-17), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`. **`UNIQUE(course_id, version)`** — índice cru, sem `deleted_at` na chave: número arquivado não se reaproveita, então a derivação conta os arquivados.
 - **course_redator** — `id PK`, `course_id FK`, `redator_id FK` → redatores cascade, `unique(course_id, redator_id)`. Pivô N:N puro (idoneidade: quais redatores podem ministrar cada curso), **sem soft-delete**.
 - **course_modules** — `id PK`, `course_id FK` → courses cascade, `sort_order` (smallint, o "Item" 1..N — derivado do índice do array na Action, nunca do payload), `name`, `learnings` (text, nullable), `contents` (text, nullable, tópicos 1.1/1.2 em texto livre), `theory_hours` / `practice_hours` (smallint, default 0), `deleted_at`. Índice: `(course_id, sort_order)`. **Sem coluna de total** — horas do módulo e soma do curso são derivadas em runtime (`CourseModuleData`/`CourseData`); `courses.workload_hours` é a carga contratada, independente da soma (divergência é aviso de tela, não gate).
 

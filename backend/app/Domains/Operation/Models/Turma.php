@@ -42,6 +42,19 @@ class Turma extends Model implements Auditable
         'start_date', 'end_date', 'status', 'concluded_at',
     ];
 
+    /**
+     * O default da coluna repetido em memória, e não por gosto de simetria: o
+     * `turmas.status` nasce `em_andamento` no banco, mas `Turma::create([...])`
+     * sem a chave devolve a instância com `status` NULO — o default é do INSERT,
+     * não do objeto. Enquanto o gate da RN-15 perguntava `=== Concluida`, esse
+     * nulo passava batido; com a forma fail-closed ele recusaria escrita numa
+     * turma recém-criada. O buraco é anterior à mudança de forma, e ela é que o
+     * revelou (review de 2026-08-12, Q-6).
+     */
+    protected $attributes = [
+        'status' => 'em_andamento',
+    ];
+
     protected $casts = [
         'modalidade' => TurmaModalidade::class,
         'status' => TurmaStatus::class,
@@ -105,14 +118,29 @@ class Turma extends Model implements Auditable
     }
 
     /**
-     * RN-15 — blindagem: turma concluída não aceita mais escrita acadêmica.
-     * TODO caminho de escrita acadêmica chama isto: docs da turma (6d) e o
-     * futuro endpoint de notas/presença (sprint do redator). Matrícula já é
-     * bloqueada pelo gate "só em andamento" do 6c.
+     * RN-15 — blindagem: turma concluída não aceita mais escrita. ONZE caminhos
+     * chamam isto, e é a única mensagem: edição e arquivamento da própria turma,
+     * designação e remoção de redator, documentos do 6d (store e delete),
+     * matrícula individual, import, remoção de matrícula, resultado de
+     * matrícula e a própria conclusão (que assim recusa concluir duas vezes).
+     *
+     * As quatro grafias inline que testavam `status !== EmAndamento` à mão, com
+     * quatro mensagens diferentes — três em PT-BR num app es-CL —, morreram no
+     * bloco `rastro-unicidade-e-gates`. O que mudou foi haver uma resposta só.
+     *
+     * A pergunta é `!== EmAndamento`, e não `=== Concluida`, porque a segunda
+     * forma é fail-OPEN: com dois casos no enum as duas são idênticas hoje, mas
+     * um terceiro status ('cancelada', 'suspensa') abriria os onze caminhos em
+     * silêncio, sem nenhum teste virar vermelho. Escrita acadêmica só é
+     * liberada no estado que a RN-15 libera — os demais recusam por default.
+     * Apontado no review de 2026-08-12 (Q-6).
+     *
+     * A mensagem é imutável: dois testes a afirmam literalmente
+     * (`EnrollmentResultTest`, `IssueCertificateTest`).
      */
     public function assertAcademicallyWritable(): void
     {
-        if ($this->status === TurmaStatus::Concluida) {
+        if ($this->status !== TurmaStatus::EmAndamento) {
             throw ValidationException::withMessages([
                 'turma' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
             ]);

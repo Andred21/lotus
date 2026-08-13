@@ -19,6 +19,8 @@ use Spatie\LaravelData\Optional;
  */
 class UpdateCourseAction
 {
+    public function __construct(private CreateCertificateTemplateAction $templates) {}
+
     public function execute(Course $course, CourseData $data): Course
     {
         return DB::transaction(function () use ($course, $data) {
@@ -35,7 +37,7 @@ class UpdateCourseAction
             if (! $data->templates instanceof Optional) {
                 $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
                 foreach ($data->templates as $template) {
-                    $course->certificateTemplates()->create($template->toArray());
+                    $this->templates->execute($course, $template);
                 }
             }
 
