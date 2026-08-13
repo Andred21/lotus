@@ -1,27 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useCrudForm, unclassifiedPayloadKeys, classificationConflicts, forbiddenPayloadKeys } from './useCrudForm'
+import {
+  useCrudForm,
+  unclassifiedPayloadKeys,
+  classificationConflicts,
+  forbiddenPayloadKeys,
+  type MutableResource,
+} from './useCrudForm'
 
 type Fields = { id?: number; name: string; secret: string }
 
 const EMPTY: Fields = { id: undefined, name: '', secret: '' }
 
 /** `MutableResource` é estrutural: este literal basta, sem TanStack — mesmo
- * padrão do `fakeResource` do `useCrudPage.test.ts`. */
-function fakeResource(spy: { create?: unknown[]; update?: unknown[] } = {}) {
+ * padrão do `fakeResource` do `useCrudPage.test.ts`. Genérico em `T` (o tipo
+ * da entidade criada/atualizada) porque `afterCreate` de alguns testes tipa o
+ * `created` explicitamente — sem o genérico, `tsc -b` não unifica os dois
+ * lados de `MutableResource<T>` (o `vitest` não pega, só o build). */
+function fakeResource<T extends { id?: number } = { id?: number }>(
+  spy: { create?: unknown[]; update?: unknown[] } = {},
+): MutableResource<T> {
   return {
     useCreate: () => ({
-      mutate: (payload: unknown, opts?: { onSuccess?: (created: unknown) => void }) => {
+      mutate: (payload: unknown, opts?: { onSuccess?: (created: T) => void }) => {
         spy.create?.push(payload)
-        opts?.onSuccess?.({ id: 99 })
+        opts?.onSuccess?.({ id: 99 } as T)
       },
       isPending: false,
       error: null,
     }),
     useUpdate: () => ({
-      mutate: (vars: unknown, opts?: { onSuccess?: (updated: unknown) => void }) => {
+      mutate: (vars: unknown, opts?: { onSuccess?: (updated: T) => void }) => {
         spy.update?.push(vars)
-        opts?.onSuccess?.({ id: 1 })
+        opts?.onSuccess?.({ id: 1 } as T)
       },
       isPending: false,
       error: null,
@@ -233,8 +244,8 @@ describe('useCrudForm — mutações extras', () => {
 
   it('mostra o 422 da mutação extra no fieldErrors', () => {
     const erroDaExtra = {
-      type: 'about:blank', title: 'Unprocessable', status: 422, detail: null,
-      errors: { redator_ids: ['inválido'] },
+      type: 'about:blank', title: 'Unprocessable', status: 422, detail: '',
+      instance: '/api/courses', errors: { redator_ids: ['inválido'] },
     }
     const { result } = renderHook(() =>
       useCrudForm(fakeResource(), {
