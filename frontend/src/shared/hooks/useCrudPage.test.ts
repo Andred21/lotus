@@ -21,7 +21,10 @@ function fakeResource(state: {
       isLoading: state.isLoading ?? false,
       isError: state.isError ?? false,
       error: state.error ?? null,
-      refetch: () => undefined,
+      // TanStack Query devolve uma Promise do refetch real (useQuery). O fake
+      // espelha isso para o teste de forwarding poder distinguir "devolveu a
+      // promise" de "descartou e devolveu undefined" (Q-14).
+      refetch: () => Promise.resolve(),
     }),
   }
 }
@@ -101,5 +104,17 @@ describe('useCrudPage', () => {
 
     expect(result.current.dialog?.mode).toBe('edit')
     expect(result.current.dialog?.entity?.name).toBe('chegou')
+  })
+
+  it('refetch devolve a promise em vez de descartá-la', async () => {
+    // O AppErrorState aguarda este retorno para manter o botão em `loading`.
+    // Descartar a promise (`() => { void query.refetch() }`) deixa o Reintentar
+    // sem feedback nenhum, que é o Q-14.
+    const { result } = renderHook(() => useCrudPage(fakeResource({ data: [] })))
+
+    const returned = result.current.refetch()
+
+    expect(returned).toBeInstanceOf(Promise)
+    await returned
   })
 })

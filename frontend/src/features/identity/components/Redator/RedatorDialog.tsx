@@ -29,6 +29,7 @@ import {
 import { RedatorIdentityFields } from "./RedatorIdentityFields";
 import { RedatorCourseSelector } from "./RedatorCourseSelector";
 import { RedatorDocumentSlot } from "./RedatorDocumentSlot";
+import { dangerText } from "@shared/styles/tokens"
 
 export function RedatorDialog({
   visible,
@@ -156,9 +157,15 @@ export function RedatorDialog({
 
         <FormSection title={t("redator.sectionDocuments")} spaced />
         {upload.error && (
-          <p className="text-sm text-red-600">{upload.error.detail}</p>
+          <p className="text-sm" style={{ color: dangerText }}>
+            {upload.error.detail}
+          </p>
         )}
-        {sizeError && <p className="text-sm text-red-600">{sizeError}</p>}
+        {sizeError && (
+          <p className="text-sm" style={{ color: dangerText }}>
+            {sizeError}
+          </p>
+        )}
         {DOC_TYPES.map((type) => (
           <RedatorDocumentSlot
             key={type}

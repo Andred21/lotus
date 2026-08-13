@@ -45,26 +45,40 @@ export function CourseDialog({
       <section className="space-y-4">
         <FormSection title={t('course.sectionGeneral')} />
 
-        <FormField label={t('course.name')} error={fieldErrors?.name?.[0]}>
-          <AppInputText value={form.name} disabled={readOnly} placeholder={t('course.namePlaceholder')} onChange={(e) => set('name', e.target.value)} className="w-full" />
+        <FormField label={t('course.name')} error={fieldErrors?.name?.[0]} readOnly={readOnly} value={form.name}>
+          <AppInputText value={form.name} placeholder={t('course.namePlaceholder')} onChange={(e) => set('name', e.target.value)} className="w-full" />
         </FormField>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t('course.technicalName')} error={fieldErrors?.technical_name?.[0]}>
-            <AppInputText value={form.technical_name ?? ''} disabled={readOnly} placeholder={t('course.technicalNamePlaceholder')} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
+          <FormField
+            label={t('course.technicalName')}
+            error={fieldErrors?.technical_name?.[0]}
+            readOnly={readOnly}
+            value={form.technical_name ?? ''}
+          >
+            <AppInputText value={form.technical_name ?? ''} placeholder={t('course.technicalNamePlaceholder')} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
           </FormField>
-          <FormField label={t('course.workloadHours')} error={fieldErrors?.workload_hours?.[0]}>
+          <FormField
+            label={t('course.workloadHours')}
+            error={fieldErrors?.workload_hours?.[0]}
+            readOnly={readOnly}
+            value={String(form.workload_hours)}
+          >
             <AppInputText
               value={String(form.workload_hours)}
-              disabled={readOnly}
               onChange={(e) => set('workload_hours', Number(e.target.value.replace(/\D/g, '')) || 0)}
               className="w-full"
             />
           </FormField>
         </div>
 
-        <FormField label={t('course.description')} error={fieldErrors?.description?.[0]}>
-          <AppTextarea value={form.description ?? ''} disabled={readOnly} rows={3} onChange={(e) => set('description', e.target.value)} className="w-full" />
+        <FormField
+          label={t('course.description')}
+          error={fieldErrors?.description?.[0]}
+          readOnly={readOnly}
+          value={form.description ?? ''}
+        >
+          <AppTextarea value={form.description ?? ''} rows={3} onChange={(e) => set('description', e.target.value)} className="w-full" />
         </FormField>
 
         <FormSection title={t('courseModule.section')} spaced />

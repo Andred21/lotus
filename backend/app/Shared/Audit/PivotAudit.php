@@ -30,7 +30,7 @@ use OwenIt\Auditing\Events\AuditCustom;
  *    vazio e o `config/audit.php:104` tem `empty_values => true` — um `sync`
  *    que não muda nada gravava linha de audit vazia. O `UpdateRedatorAction`
  *    roda `courses()->sync` em TODA edição de redator: seria uma linha de
- *    ruído por salvada, numa tabela cuja retenção segue aberta (P-02/P-30).
+ *    ruído por salvada, numa tabela cuja retenção segue aberta (P-02/P-33).
  *
  * A comparação fica FORA da transação de propósito: o caminho quente é o no-op
  * (toda edição de redator passa por ele) e ele custa um SELECT só. Quem de fato

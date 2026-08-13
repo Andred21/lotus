@@ -18,37 +18,33 @@ export function AddressFields({
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-4">
-        <FormField label={t("client.street")}>
+        <FormField label={t("client.street")} readOnly={readOnly} value={value.line1 ?? ""}>
           <AppInputText
             value={value.line1 ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ line1: e.target.value })}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t("client.number")}>
+        <FormField label={t("client.number")} readOnly={readOnly} value={value.number ?? ""}>
           <AppInputText
             value={value.number ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ number: e.target.value })}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t("client.complement")}>
+        <FormField label={t("client.complement")} readOnly={readOnly} value={value.line2 ?? ""}>
           <AppInputText
             value={value.line2 ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ line2: e.target.value })}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t("client.zipCode")}>
+        <FormField label={t("client.zipCode")} readOnly={readOnly} value={value.zip_code ?? ""}>
           <AppInputText
             value={value.zip_code ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ zip_code: e.target.value })}
             className="w-full"
           />
@@ -56,29 +52,26 @@ export function AddressFields({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <FormField label={t("client.commune")}>
+        <FormField label={t("client.commune")} readOnly={readOnly} value={value.commune ?? ""}>
           <AppInputText
             value={value.commune ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ commune: e.target.value })}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t("client.city")}>
+        <FormField label={t("client.city")} readOnly={readOnly} value={value.city ?? ""}>
           <AppInputText
             value={value.city ?? ""}
-            disabled={readOnly}
             onChange={(e) => onChange({ city: e.target.value })}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t("client.region")}>
+        <FormField label={t("client.region")} readOnly={readOnly} value={value.region ?? ""}>
           <AppDropdown
             value={value.region}
             options={CHILE_REGIONS}
-            disabled={readOnly}
             onChange={(e) => onChange({ region: e.value })}
           />
         </FormField>

@@ -27,28 +27,27 @@ export function ClientGeneralFields({
       <FormField
         label={t('client.legalName')}
         error={fieldErrors?.legal_name?.[0] ?? fieldErrors?.name?.[0]}
+        readOnly={readOnly}
+        value={form.legal_name}
       >
         <AppInputText
           value={form.legal_name}
-          disabled={readOnly}
           onChange={(e) => onChange('legal_name', e.target.value)}
           className="w-full"
         />
       </FormField>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
+        <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]} readOnly={readOnly} value={form.rut}>
           <AppInputText
             value={form.rut}
-            disabled={readOnly}
             onChange={(e) => onChange('rut', e.target.value)}
             className="w-full"
           />
         </FormField>
-        <FormField label={t('common.email')} error={fieldErrors?.email?.[0]}>
+        <FormField label={t('common.email')} error={fieldErrors?.email?.[0]} readOnly={readOnly} value={form.email}>
           <AppInputText
             value={form.email}
-            disabled={readOnly}
             onChange={(e) => onChange('email', e.target.value)}
             className="w-full"
           />
@@ -56,18 +55,20 @@ export function ClientGeneralFields({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('client.type')}>
+        <FormField label={t('client.type')} readOnly={readOnly} value={t(`clientType.${form.type}`)}>
           <AppDropdown
             value={form.type}
             options={types}
-            disabled={readOnly}
             onChange={(e) => onChange('type', e.value)}
           />
         </FormField>
-        <FormField label={t('client.businessActivity')}>
+        <FormField
+          label={t('client.businessActivity')}
+          readOnly={readOnly}
+          value={form.business_activity ?? ''}
+        >
           <AppInputText
             value={form.business_activity ?? ''}
-            disabled={readOnly}
             onChange={(e) => onChange('business_activity', e.target.value)}
             className="w-full"
           />

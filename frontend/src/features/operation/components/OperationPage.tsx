@@ -23,7 +23,7 @@ export function OperationPage() {
           <PendingQuotesPanel
             items={pending.data ?? []}
             error={pending.isError ? (pending.error ?? {}) : null}
-            onRetry={() => { void pending.refetch() }}
+            onRetry={pending.refetch}
           />
         )}
         <AppCard>
@@ -31,7 +31,7 @@ export function OperationPage() {
             turmas={turmas.data ?? []}
             loading={turmas.isLoading}
             error={turmas.isError ? (turmas.error ?? {}) : null}
-            onRetry={() => { void turmas.refetch() }}
+            onRetry={turmas.refetch}
           />
         </AppCard>
       </div>

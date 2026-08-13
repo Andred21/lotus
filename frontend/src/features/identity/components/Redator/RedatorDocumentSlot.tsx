@@ -41,7 +41,7 @@ function EmptySlot({
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <p className="text-xs text-slate-500">{t('common.notLoaded')}</p>
+      <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('common.notLoaded')}</p>
       <AppFileUpload
         chooseOptions={UPLOAD_CHOOSE_OPTIONS}
         chooseLabel=""
@@ -97,7 +97,7 @@ function SlotBody({
 
   if (mode === 'view') {
     // Documento é imutável aqui: só ver e baixar.
-    if (!doc) return <p className="text-xs text-slate-500">{t('common.notLoaded')}</p>
+    if (!doc) return <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('common.notLoaded')}</p>
     return (
       <AppFileRow
         name={doc.original_name}
@@ -156,8 +156,8 @@ export function RedatorDocumentSlot({ type, mode, doc, ...body }: SlotBodyProps)
   const { t } = useTranslation()
   const status = doc ? docStatus(doc.valid_until) : null
 
-  // D7: a borda vem da variável do tema, não de par Tailwind hardcoded
-  // (`border-slate-200 dark:border-slate-700`), que era o débito do D18.
+  // D7: a borda vem da variável do tema, não de um par Tailwind hardcoded
+  // claro/escuro fixando a cor da borda — que era o débito do D18.
   return (
     <div className="rounded border p-2" style={{ borderColor: 'var(--surface-border)' }}>
       <div className="flex items-center justify-between gap-2">

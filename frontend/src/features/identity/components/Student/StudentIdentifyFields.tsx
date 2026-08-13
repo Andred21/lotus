@@ -23,19 +23,22 @@ export function StudentIdentityFields({
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-1">
-      <FormField label={t("student.name")} error={fieldErrors?.name?.[0]}>
+      <FormField
+          label={t("student.name")}
+          error={fieldErrors?.name?.[0]}
+          readOnly={readOnly}
+          value={form.name}
+        >
           <AppInputText
             value={form.name}
-            disabled={readOnly}
             onChange={(e) => set("name", e.target.value)}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]}>
+        <FormField label={t('common.rut')} error={fieldErrors?.rut?.[0]} readOnly={readOnly} value={form.rut}>
           <AppInputText
             value={form.rut}
-            disabled={readOnly}
             onChange={(e) => set('rut', e.target.value)}
             className="w-full"
           />
@@ -43,19 +46,22 @@ export function StudentIdentityFields({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('common.email')} error={fieldErrors?.email?.[0]}>
+        <FormField
+          label={t('common.email')}
+          error={fieldErrors?.email?.[0]}
+          readOnly={readOnly}
+          value={form.email}
+        >
           <AppInputText
             value={form.email}
-            disabled={readOnly}
             onChange={(e) => set('email', e.target.value)}
             className="w-full"
           />
         </FormField>
 
-        <FormField label={t('common.phone')}>
+        <FormField label={t('common.phone')} readOnly={readOnly} value={form.phone ?? ''}>
           <AppInputText
             value={form.phone ?? ''}
-            disabled={readOnly}
             onChange={(e) => set('phone', e.target.value)}
             className="w-full"
           />

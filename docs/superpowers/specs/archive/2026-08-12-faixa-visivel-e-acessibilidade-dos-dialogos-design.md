@@ -15,9 +15,38 @@
 > de `shared/ui` mudam com o merge. As oito decisões da §2 são independentes da base e continuam
 > valendo.
 >
+> **PROMOVIDO em 2026-08-12, e a remedição acima foi feita — o parágrafo de cima fica porque é a
+> previsão que dá valor ao resultado.** As duas branches que bloqueavam entraram na `main`
+> (`estilizacao-adr16-shell-tipografia` pelo PR #41, `last-login` pelo PR #42), e a base passou a ser
+> `main`@`18cf90a`. Os quatro grupos de número foram medidos de novo, não herdados:
+>
+> | § | Afirmação medida em `4b02b72` | Medida em `18cf90a` | Efeito |
+> |---|---|---|---|
+> | §3.1 | 9 diálogos de montagem condicional, com as linhas citadas | **7 das 9 na linha exata** (`CommercialPage:55` e `:65`, `CatalogPage:30`, `PeoplePage:79` e `:89`, `AdministracionPage:53` e `:64`); só `BudgetDetailPage` deslocou | citação de `BudgetDetailPage` corrigida abaixo; mecanismo intacto |
+> | §4.1 | 41 sítios `disabled={readOnly}` em 10 arquivos | **41 em 10**, mesma lista arquivo a arquivo | nenhum |
+> | §5.1 / §7.2 | `AppDataTable.tsx:83-84` e `:106` | `:83-84` e `:106` | nenhum |
+> | §5.2 / §6 | `SearchableTableFrame.tsx:103-104` e `:115` | `:103-104` e `:115` | nenhum |
+> | §7.1 | `AppErrorState.tsx:36`, `onRetry?: () => void` | `:36`, assinatura idêntica | nenhum |
+> | §7.3 corrigidos | 9 diálogos, 35 ocorrências, com a contagem por arquivo | **35**, arquivo a arquivo idêntico | nenhum |
+> | §7.3 ignores | 7 arquivos, 24 ocorrências | 7 arquivos, **23** — `LoginPage` caiu de 3 para 2 | número corrigido na §7.3 |
+> | §6 | `UsersTable:25,28` | `:26,29` | citação corrigida |
+>
+> **A estilização não tocou um único arquivo-alvo deste bloco.** `git diff 4b02b72..18cf90a --
+> frontend/src/` toca 47 arquivos e **nenhum** é `AppDialog`, `AppDataTable`, `SearchableTableFrame`,
+> `FormField`, `AppErrorState` nem qualquer um dos 9 diálogos ou dos 10 arquivos de modo leitura; os
+> que ela mexeu e este bloco cita (`LoginForm`, `LoginPage`, `ValidationPage`) são justamente os que a
+> D7 deixa **fora** e a §7.3 põe em `ignores`. O risco previsto de colisão não se materializou.
+>
+> **O item 6 ficou mais barato, não mais caro:** as variáveis de tema que ele passa a usar
+> (`--text-color-secondary`, `--surface-border`) agora vivem no tema Lotus gerado
+> (`shared/styles/themes/lara-{light,dark}-lotus.css` + `brand-theme.css`), entregue pelo PR #41 —
+> antes eram as do Lara stock.
+>
 > BD-3 do `backlog.md`, seis itens íntegros.
-> Frontend puro, main tree (a P-03 restringe worktree só em bloco de backend), zero schema, zero
-> `generated.ts`. Fonte: repositório e documentos versionados — os três débitos do piloto UI
+> Frontend puro, zero schema, zero `generated.ts`. **Roda na worktree `fix-frontend`, branch
+> `feat/dialogos-faixa-visivel-acessibilidade`, por instrução do João em 2026-08-12** — a P-03 não
+> proíbe worktree em bloco de frontend, ela só a restringe em backend, e sair do main tree libera a
+> `main` para a árvore principal. Fonte: repositório e documentos versionados — os três débitos do piloto UI
 > (`backlog.md:192`, `:202`, `:213`), `Q-14` (`backlog.md:292`), `Q-15` (`backlog.md:296`),
 > "Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`)" e "Cor fora do corte do D18"
 > (`backlog.md:300`). Sem Context Packet por ausência medida de fonte externa: nenhum dos seis itens
@@ -104,7 +133,7 @@ hooks.cjs.js:1264   useUpdateEffect → PULA a primeira execução
 
 Os 9 diálogos do repo montam condicionalmente já com `visible` — `CommercialPage.tsx:55-57`,
 `CatalogPage.tsx:30`, `PeoplePage.tsx:79` e `:89`, `AdministracionPage.tsx:53` e `:64`,
-`BudgetDetailPage.tsx:126` e `:140`, mais `CommercialPage.tsx:65`. Como o efeito de captura é de
+`BudgetDetailPage.tsx:132` e `:136`, mais `CommercialPage.tsx:65`. Como o efeito de captura é de
 atualização, ele nunca roda no ciclo em que o diálogo nasce: `focusElementOnHide` fica `null`, e
 `DomHandler.focus(null)` é no-op. O foco não é perdido — ele nunca foi guardado.
 
@@ -203,8 +232,8 @@ este bloco não fez; fica fora e é nomeado aqui para não virar surpresa no rev
 ## 6. Item 4 — CTA único
 
 `actions` chega hoje ao `emptyState` **e** à toolbar em seis tabelas, não nas duas que o débito
-nomeia: `ClientsTable:41,45`, `CoursesTable:26,29`, `UsersTable:25,28`, `StudentsTable:25,28`,
-`RedatoresTable:26,29` e `BudgetsTable:71` (que monta o vazio à mão, fora da moldura).
+nomeia: `ClientsTable:41,45`, `CoursesTable:26,29`, `UsersTable:26,29`, `StudentsTable:25,28`,
+`RedatoresTable:26,29` e `BudgetsTable:71,97` (que monta o vazio à mão, fora da moldura).
 
 A regra vai para a `SearchableTableFrame`: `actions` na toolbar **só quando há linha**; sem linha, o
 CTA existe só dentro do `AppEmptyState`, que é o convite a cadastrar. As tabelas seguem passando
@@ -252,8 +281,9 @@ invertem.
 **Duas regras `no-restricted-syntax`** em `src/features/**` (D8):
 
 1. **classe de paleta Tailwind em `className`** — nasce com `ignores` para os 7 arquivos que a D7
-   deixa de fora (`LoginForm` 12, `LoginPage` 3, `CourseStep` 3, `QuoteWizard` 2, `ValidationPage` 2,
-   `ManualButton` 1, `ClientsTable` 1). Catraca: lista que só encolhe, com o motivo escrito ao lado
+   deixa de fora (`LoginForm` 12, `CourseStep` 3, `LoginPage` 2, `QuoteWizard` 2, `ValidationPage` 2,
+   `ManualButton` 1, `ClientsTable` 1 — **23**, remedido em `18cf90a`: a estilização baixou o
+   `LoginPage` de 3 para 2). Catraca: lista que só encolhe, com o motivo escrito ao lado
    — Login e Validação têm fundo escuro deliberado e mudá-las é desenho novo, não pagamento de
    débito;
 2. **`disabled={readOnly}`** — nasce **verde**, com `ignores` vazio, porque o item 2 zera os 41

@@ -47,7 +47,10 @@ export interface SearchableTableFrameProps<T> {
   actions?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
-  onRetry?: () => void
+  /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
+   * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
+   * retorno — e faria o tipo mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
   /** As `<AppColumn/>`. */
   children: ReactNode
 }
@@ -112,7 +115,18 @@ export function SearchableTableFrame<T>({
             {filterSlot}
           </div>
         }
-        end={error ? undefined : actions}
+        // O CTA aparece na toolbar quando há linha e dentro do vazio quando não
+        // há: com a lista vazia o convite a cadastrar É o empty state, e dois
+        // botões idênticos na mesma tela é o débito. Irmã da supressão em erro,
+        // que já morava nesta linha. `table.filtering`, não `rows.length` sozinho:
+        // busca sem resultado não é lista vazia (linha 18-23 acima) — se
+        // recalculasse por `rows.length`, o CTA sumiria também durante busca sem
+        // match, e o vazio de busca só oferece "limpar", nunca o CTA de domínio.
+        // `!loading` pelo mesmo motivo: durante o GET inicial a lista está vazia
+        // e o `AppDataTable` mostra o corpo de carregamento, não o empty state —
+        // sem esta guarda o botão de cadastro não existia em lugar nenhum da
+        // tela até o GET voltar (review do BD-3, Q-3).
+        end={error || (!loading && !table.filtering && table.rows.length === 0) ? undefined : actions}
       />
       <AppDataTable
         value={table.rows as unknown as DataTableValueArray}

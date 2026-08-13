@@ -10,7 +10,12 @@ interface ListableResource<T> {
     isLoading: boolean
     isError: boolean
     error: ProblemDetails | null
-    refetch: () => unknown
+    /** `Promise`, não `unknown`: é o refetch do TanStack Query, e a promise é o
+     * que o `AppErrorState` aguarda para manter o Reintentar em `loading`
+     * (Q-14). Com `() => unknown` aqui, TODA a cadeia acima ficava impedida de
+     * declarar o contrato — o tipo do consumidor não pode ser mais preciso que
+     * o da fonte (review do BD-3, Q-2). */
+    refetch: () => Promise<unknown>
   }
 }
 
@@ -41,7 +46,9 @@ export function useCrudPage<T extends { id?: number }>(resource: ListableResourc
      * pelo interceptor: `isError` sem `ProblemDetails`. Sem ele o tipo vira
      * `ProblemDetails | {}` e qualquer `.detail` no consumidor não compila. */
     error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    refetch: () => { void query.refetch() },
+    /** Devolve a promise: o `AppErrorState` a aguarda para manter o Reintentar
+     * em `loading` enquanto o GET está em voo (Q-14). */
+    refetch: () => query.refetch(),
     dialog: dialog ? { mode: dialog.mode, entity } : null,
     openCreate: () => setDialog({ mode: 'create', id: null }),
     openView: (item: T) => setDialog({ mode: 'view', id: item.id ?? null }),

@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
 state_basis_commit: bd769f8
-updated_at: 2026-08-13T02:40:00-03:00
+updated_at: 2026-08-13T03:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -415,10 +415,19 @@ resíduo de `auditSync` só em comentário.
 vivo), audits 482-497 e um aluno de gate. `LOT-2026-1001` segue corrompido de propósito, intocado.
 
 **Duas decisões do João no gate**, nenhuma default: a segunda `P-30` — a do `ámbar-aviso`, que veio
-da branch de estilização e colidiu com a retenção de `login_logs` sem o merge acusar — foi
-**renumerada para P-33**, mesma forma do P-32 em 12-08; e das três coisas abertas oferecidas para
-registro, só a assimetria do `seq_in_budget` entrou, como **P-34**. O backfill (D2) e os avisos de
-`Optional` do `typescript:transform` ficam sem linha própria por decisão dele.
+da branch de estilização e colidiu com a retenção de `login_logs` sem o merge acusar — seria
+**renumerada para P-33**; e das três coisas abertas oferecidas para registro, só a assimetria do
+`seq_in_budget` entrou, como **P-34**. O backfill (D2) e os avisos de `Optional` do
+`typescript:transform` ficam sem linha própria por decisão dele.
+
+**A primeira dessas duas foi desfeita pelo merge da `main`, e o parágrafo acima fica como está
+porque história não se reescreve.** O fechamento do BD-3 já tinha resolvido o mesmo `P-30` duplicado
+**pelo critério oposto** — quem renumera é a linha que chegou à `main` por último, então quem virou
+`P-33` foi a retenção de `login_logs`, e o `ámbar-aviso` **ficou com o P-30**. Aquela decisão foi
+publicada na `main` (PR #43) antes desta branch mesclar; esta ainda não tinha saído. Reverter a
+publicada quebraria as referências que já vivem lá, então **a da `main` prevalece**: a renumeração
+deste fechamento foi desfeita e a pendência nova do `seq_in_budget` passou de `P-34` — número que a
+`main` já tinha dado à lacuna de alcance da catraca `COR_HARDCODED` — para **P-35**.
 
 **O que o fechamento NÃO provou, sem maquiagem:** a derivação segue sem prova de concorrência MySQL
 (D16, escolha declarada); 5 dos 11 caminhos da RN-15 só foram exercitados em SQLite; a cadeia
@@ -426,8 +435,340 @@ template → certificado não foi percorrida ponta a ponta; nenhuma tela vista r
 backfill** — o rastro dos dois pivots começa aqui.
 
 **Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
+## Penúltimo item fechado — 2026-08-12 (`faixa-visivel-e-acessibilidade-dos-dialogos`, BD-3)
 
-## Penúltimo item fechado — 2026-08-12 (`last-login`)
+### Seleção — 2026-08-12: o item entra com a spec já escrita, e é isso que muda a fase
+
+**BD-3 do `backlog.md:57`, promovido explicitamente pelo João** com o estado em `idle`, pelo título
+literal da seção (`/planejar-bloco do ### BD-3 · Faixa visível e acessibilidade dos diálogos
+(fronteira shared/ui)`) — mesmo precedente de BD-1, BD-2 e BD-7: o argumento é título de seção, não
+slug promovido, e quem promove é ele, não o comando.
+
+**A diferença deste bloco para todos os anteriores: a spec já existia antes da promoção, e não por
+acidente.** `docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md`
+foi gravada em `397548c`, cuja mensagem é literalmente `docs(spec): desenho do BD-3 escrito e NAO
+promovido`. Ela carrega os seis itens e as **oito decisões da §2 já tomadas pelo João**. Isso **não é
+divergência de estado**: `active_spec: null` e `workflow_state: idle` eram a redação correta de "spec
+escrita, bloco não promovido", e o próprio documento abre declarando isso. O gate foi conferido nos
+dois sentidos antes de qualquer escrita — `plans/` só tem `archive/`, então `active_plan: null`
+também era coerente.
+
+**Por que não foi promovido na época, e por que pode ser agora:** a spec parou porque
+`estilizacao-adr16-shell-tipografia` seguia `executing`, e promover o BD-3 violaria a invariante de
+um `active_work_item` só — além de o item 6 escrever variáveis de tema contra uma folha Lara-Lotus
+que vivia só naquela branch. **As duas travas caíram:** a estilização entrou na `main` pelo PR #41
+(`0b72dba`) e o `last-login` pelo PR #42 (`18cf90a`). O estado está `idle` com
+`last_completed_work_item: last-login` — nenhum item concorrente.
+
+### A remedição que a própria spec exigia foi feita, e o resultado é o oposto do temido
+
+A spec declarava que todo número da §4.1, §5.1, §6 e §7.3 fora medido contra `main`@`4b02b72` e
+**precisava ser remedido antes de executar**, porque a branch da estilização mexera em `AppButton`,
+`AppHeader`, `AppSidebar` e na camada de cor. Remedido contra `18cf90a`, e a tabela completa está no
+cabeçalho da spec. O resumo:
+
+- **41 sítios de `disabled={readOnly}` em 10 arquivos** — idênticos, arquivo a arquivo;
+- **`AppDataTable.tsx:83-84` e `:106`, `SearchableTableFrame.tsx:103-104` e `:115`,
+  `AppErrorState.tsx:36`** — todos na linha exata;
+- **os 35 hits de cor nos 9 diálogos** — idênticos, com a contagem por arquivo batendo uma a uma;
+- **7 das 9 montagens condicionais da §3.1 na linha exata**; só `BudgetDetailPage` deslocou
+  (`:126`/`:140` → `:132`/`:136`);
+- **duas correções de número:** `UsersTable` de `25,28` para `26,29` (o `last-login` inseriu coluna) e
+  o total dos `ignores` da §7.3 de **24 para 23**, porque a estilização baixou o `LoginPage` de 3
+  ocorrências para 2.
+
+**A colisão prevista não existiu.** `git diff 4b02b72..18cf90a -- frontend/src/` toca 47 arquivos e
+**nenhum** deles é `AppDialog`, `AppDataTable`, `SearchableTableFrame`, `FormField`, `AppErrorState`,
+nem qualquer um dos 9 diálogos ou dos 10 arquivos do modo leitura. Os arquivos que a estilização
+tocou e que este bloco cita (`LoginForm`, `LoginPage`, `ValidationPage`) são exatamente os que a **D7
+deixa de fora** e a §7.3 põe em `ignores`. **As oito decisões da §2 seguem íntegras** — eram
+independentes da base, e a medição confirma.
+
+**Um efeito a favor:** o item 6 ficou mais barato. As variáveis que ele passa a usar
+(`--text-color-secondary`, `--surface-border`) agora vivem no tema Lotus gerado
+(`shared/styles/themes/lara-{light,dark}-lotus.css` + `brand-theme.css`), entregue pelo PR #41 — antes
+eram as do Lara stock.
+
+### Isolamento — worktree por instrução do João, não por P-03
+
+Bloco frontend puro (zero schema, zero `generated.ts`, zero backend), então a **P-03 não dispara** —
+ela restringe worktree apenas em bloco de backend. A escolha de worktree é instrução dele
+(`Criando uma branch e liberando a main para worktree principal`): branch
+`feat/dialogos-faixa-visivel-acessibilidade` criada de `main`@`18cf90a` na worktree
+`/home/jvbat/projetos/fix-frontend`, o que devolve a `main` à árvore principal
+`/home/jvbat/projetos/lotus`, que estava presa em `feat/last-login`.
+
+### Context Packet — dispensado por ausência medida de fonte externa
+
+`context_packet: null`, e a razão é a que a própria spec já registrava: nenhum dos seis itens cita
+Drive, Notion ou Figma. As fontes são o repositório, os débitos versionados do `backlog.md` (os três
+do piloto UI, `Q-14`, `Q-15`, o CTA duplicado e a cor fora do corte do D18) e o `D18`, que é decisão
+de spec versionada (`specs/archive/2026-07-26-bloco-visual-refino-ui-design.md:395`). Confirmar na
+abertura do brainstorming, como nos precedentes.
+
+### Fase: `planning`, com o brainstorming reduzido ao que a base nova abriu
+
+O estado entra em `planning` no commit `0533303`, junto do primeiro artefato durável desta sessão — a
+remedição da spec. `active_plan` seguiu `null` até o plano existir. **Risco de review declarado na §9
+da spec: MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC,
+dinheiro ou documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as
+telas de uma vez, e o modo leitura atravessa 10 arquivos de 5 features.
+
+### Spec aprovada e plano escrito — 2026-08-12
+
+**O brainstorming foi curto por construção, e as duas perguntas que sobraram foram feitas em vez de
+presumidas.** O João respondeu que **já leu a spec e a aprova** — as oito decisões da §2 são dele e o
+documento escrito passou pela leitura —, e **dispensou o Context Packet**, confirmando a ausência
+medida de fonte externa (nenhum dos seis itens cita Drive, Notion ou Figma). Nada foi
+complementado na spec além da remedição, porque a base nova não abriu decisão nova: ela mudou dois
+números e não tocou um único arquivo-alvo.
+
+**Uma medição desfez um bloqueio herdado dos quatro blocos anteriores.** De 2026-08-08 a 2026-08-10 o
+fechamento registrou "WSL sem browser utilizável" e empurrou o checkpoint visual para o João. Isso
+**não vale mais**: `playwright-cli` está no PATH e `.artifacts/ui-review/` tem run de 2026-08-12. O
+DoD do BD-3 é comportamento na tela, e ele é executável — o que torna a Task 8 um gate de verdade em
+vez de uma limitação declarada.
+
+O plano (`docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md`) decompõe
+o bloco em **8 tasks**: `AppDialog` (foco + nome do maximizar); o kit `FormField`/`NestedField` com
+modo leitura; a adoção nos 40 sítios; a faixa visível; o CTA único; Q-14 e Q-15; cor pelo tema mais as
+duas regras de lint; gate.
+
+**O item 2 virou duas tasks, não uma.** O mecanismo (kit) é rejeitável por um revisor que aprove a
+adoção, e vice-versa — é exatamente onde a fronteira de task deve cair. A adoção também é o único
+lugar do bloco com decisão por sítio: dropdown mostra rótulo traduzido, não o código cru.
+
+**A escrita do plano achou uma lacuna no próprio rascunho, corrigida antes de gravar:** o Q-14 depende
+de o `onRetry` devolver a promise, e `onRetry` é declarado em **três** camadas — `AppErrorStateProps`,
+`AppDataTableProps` e `SearchableTableFrameProps`. Mudar só a primeira **compilaria**: TypeScript
+aceita atribuir `() => Promise<T>` a uma prop `() => void`, então a promise chegaria em runtime com as
+camadas do meio mentindo sobre o contrato, e o build passaria verde. As três entram no plano.
+
+**Baseline medido, não herdado:** `pnpm test` = **27 arquivos / 131 testes** em `18cf90a`; lint e
+build verdes. Projeção do plano: **28 arquivos / 137 testes** — o kit de leitura (5) e o retorno do
+`refetch` (1). Só duas tasks ganham teste automatizado, e a razão está declarada: componente com
+PrimeReact no jsdom está fora do corte do runner, então foco, `aria-label`, largura, CTA e feedback de
+retry provam no navegador ou não provam.
+
+**Handoff: `executor: claude`**, sem `paths_autorizados`. O bloco fecha por leitura de sonda no
+navegador e por decisão de apresentação em 40 sítios; e a Task 7 mexe em `eslint.config.js`, onde um
+bloco no lugar errado apaga seletores existentes **em silêncio** (Q-2 de 2026-08-04).
+
+**Estado:** `ready_for_execution`. `/executar-bloco faixa-visivel-e-acessibilidade-dos-dialogos` exige
+instrução posterior do João.
+
+### Execução — 2026-08-12: as 7 tasks de código fecharam, em commits próprios
+
+`main..HEAD` = 14 commits, sendo 12 de código e 2 de documento (`0533303` promoveu o bloco,
+`b1de7c0` gravou o plano, `f8b862c` marcou a transição para `executing`). O diff do bloco é
+**33 arquivos, +1884/−211**, todos sob `frontend/src`.
+
+Task 1 (`956c55b`) devolveu o foco ao disparador e nomeou o maximizar no `AppDialog`. Task 2
+(`3ee3039`) deu modo leitura ao kit `FormField`/`NestedField`, com 5 testes novos. Task 3
+(`69801b0`, emendada em `6962182`) adotou o modo leitura nos 40 sítios — a emenda corrigiu o
+placement do `eslint-disable` no `ContactCard`, onde o `disabled` fica em linha própria e
+`eslint-disable-next-line` não o cobria. Task 4 (`158823b`) resolveu a faixa desligando o
+`thead` sem linhas: zerar só a largura mínima não bastava, porque os seis `<th>` com `px-4 py-2.5`
+têm largura intrínseca própria e sustentavam a tabela sozinhos. Task 5 (`1095989`, emendada em
+`36c6847`) tirou o CTA duplicado; a emenda é a parte que importa — o critério virou
+`!table.filtering && rows.length === 0`, porque busca sem resultado **não** é lista vazia e o
+critério cru fazia o CTA sumir também durante a busca. Task 6 (`ecbf4a7`) fechou Q-14 e Q-15.
+Task 7 (`d64ed09`, emendada em `2e2deb2`) escreveu as duas regras de lint; a emenda é o risco que o
+plano previu se concretizando — as regras novas nasceram em blocos `files` próprios que casavam o
+mesmo glob e **apagavam em silêncio** o `no-restricted-syntax` existente (Q-2 de 2026-08-04), e a
+correção foi fundi-las nos arrays já existentes. `9f38492` corrigiu o Tailwind do `readOnlyValue`.
+
+### Gate da Task 8 — 2026-08-12: os seis provados no navegador, nenhum defeito, 5 achados B
+
+**Steps 1–4, medidos e não herdados:** `pnpm test` = **28 arquivos / 137 testes** — bate exatamente
+com a projeção do plano —, lint limpo e build verde. `git diff main...HEAD --stat -- backend/
+frontend/src/shared/types/generated.ts` vazio; nenhuma sonda (`console.log`/`debugger`/`SONDA`) no
+diff; nenhum `from 'primereact` em `src/features`.
+
+**Step 5:** `/lotus-ui-review` numa passada, sessão `bd3-gate-task8` do `playwright-cli` 0.1.18 em
+Chromium headed, login manual do João como admin. Quatro páginas (`/comercial`, `/cursos`,
+`/personas`, `/administracion`) nas três viewports. Relatório em
+`.artifacts/ui-review/2026-08-12T19-41-45-bd3-gate-task8/report.txt`, com 7 evidências ao lado —
+o diretório é gitignored (`.gitignore:25`), então este commit é o artefato durável da transição.
+Árvore limpa antes e depois, em `9f38492`; **zero mutação** (0 POST/PUT/PATCH/DELETE na corrida) e
+zero mudança de código.
+
+Os seis itens passaram, com sonda e não com impressão: foco de volta ao gatilho exato
+(`aria-label="View"`, dentro da `<tr>`) em **12/12** combinações, por Escape e depois de
+maximizar/restaurar, também no tema escuro; `aria-label` do maximizar alternando
+"Maximize dialog" ↔ "Restore dialog" nas 4 páginas; **zero** `input`/`textarea` de texto nos
+diálogos, com valor inteiro quebrando linha e campo vazio como "—"; wrapper da tabela com
+`scrollWidth == clientWidth` (276 e 261) a 390x844 e documento sem rolagem horizontal em 12/12;
+exatamente **1** CTA em 12/12, e **zero** sobre o estado de erro; Q-14 com o botão em
+`p-disabled p-button-loading` por ~38 ms e **1 clique = 1 GET, duplo clique = 1 GET**; Q-15 com o
+rodapé lido no instante do GET dizendo `Loading...`, nunca "0", assentando em "4 clients"; e todas
+as superfícies, textos e ações do `ClientDialog` trocando de valor entre claro e escuro.
+
+**Duas notas de método, porque o caminho não foi o óbvio.** `docker stop lotus-nginx-1` foi **negado
+pelo classificador de permissão** desta sessão, e offline emulado **não serve**: o TanStack Query
+trata rede offline como `fetchStatus: "paused"` (networkMode `online`) e nunca produz estado de
+erro. O estado de erro veio de `Network.setBlockedURLs` restrito a
+`http://localhost:8080/api/clients*` — servidor inalcançável para uma chamada, sem interceptar rota
+e sem fabricar resposta. Vale registrar para o próximo bloco que precisar de erro na tela.
+
+**Step 6, o que NÃO ficou provado:** lista genuinamente vazia (esvaziá-la exigiria mutação, proibida
+pela skill) — o ramo do CTA dentro do `AppEmptyState` de domínio fica coberto só por código
+(`SearchableTableFrame.tsx:125`) e pelo ramo irmão de erro, esse sim observado ao vivo; mutações;
+estado de erro fora de `/comercial`; tema escuro fora de `/comercial`; Q-14/Q-15 fora de 1440x900;
+travessia completa por Tab. E a limitação que a spec §8 já declarava continua valendo: **foco,
+`aria-label`, largura, CTA e feedback de retry não ganham teste automatizado** — o único mecanismo
+que sobrevive ao bloco é o lint da Task 7, e ele só vê cor e `disabled={readOnly}`.
+
+**Cinco achados B, zero C.** UI-01: nome de arquivo truncado sem `title` nem quebra a 390x844
+(`RedatorDialog`, seção DOCUMENTS). UI-02: `src/app/layouts/Sidebar/` tem 3 classes `text-slate-*`
+que **nenhum bloco** do `eslint.config.js` cobre — `COR_HARDCODED` só roda em `features/**` e
+`shared/**` —, nem convertidas nem declaradas na `CATRACA_COR`; é lacuna de alcance criada por este
+bloco, não regressão visual. UI-03: "3 course(s)" e "1 user(s)" contra "4 clients"/"7
+instructors"/"6 budgets", em duas das sete tabelas. UI-04: com o menu recolhido (390), o rótulo sai
+do DOM e sobra só `title` — sem hover no toque. UI-05: cada montagem de página com abas busca as
+**duas** abas. UI-01, UI-03, UI-04 e UI-05 são pré-existentes ao diff.
+
+**Estado:** `ready_for_review`. O review do bloco (`/revisar-sprint`) exige instrução do João; o foco
+declarado no plano é um só — **onde a mudança de `shared/ui` alcança tela que este bloco não abriu, e
+o que ela faz lá.** Risco de review: **MÉDIO**.
+
+### Review de sprint — 2026-08-12: BAIXO risco, uma lente, 5 achados, todos corrigidos
+
+**BAIXO RISCO pelo gate da skill**, e aqui as duas escalas **divergem sem conflito**: a §9 da spec
+declara MÉDIO, a do `/revisar-sprint` é binária e nenhum gatilho de ALTO se aplica (sem schema,
+`generated.ts`, auth, RBAC, dinheiro, documento legal; `executor: claude`). Uma lente — Claude com o
+gabarito do projeto —, **sem Codex**.
+
+**Gate reproduzido, não herdado:** `pnpm test` **28 arquivos / 137 testes**, lint limpo, build verde;
+`git diff main...HEAD -- backend/ generated.ts` vazio; zero sonda; zero `from 'primereact` em
+`src/features`. **Órfãos: zero.** As 40 conversões seguem um molde só, o dropdown mostra rótulo e não
+código cru, e a fusão das regras nos arrays existentes (`2e2deb2`) é a correção certa do merge raso.
+
+**Os cinco achados são todos do foco declarado no plano** — o que `shared/ui` faz na tela que o bloco
+não abriu. Decisão do João: **os cinco entram**, corrigidos na mesma sessão.
+
+1. **Q-1 🟡 — o débito do modo leitura foi medido por STRING, não por forma.** A §4.1 achou 41 sítios
+   perguntando por `disabled={readOnly}`; a mesma pergunta feita pela forma do defeito acha **17 a
+   mais**, e o seletor entregue não via nenhum deles: `disabled={f.readOnly}` (MemberExpression, 4× em
+   `TurmaConfigCard`), `disabled={readOnly || !isCreate}` (LogicalExpression, `BudgetDialog`) e o par
+   **estático** `<AppInputText value={…} disabled readOnly />` (12×, sendo 11 na certificação — código,
+   RUT, nome do curso e motivo de revogação de snapshot congelado, dado de peso legal truncado num
+   input cinza). É a **2ª vez** que uma catraca deste `eslint.config.js` nasce medindo enumeração em
+   vez de forma (a 1ª foi a lista literal de features, Q-5 de 2026-08-04, citada no topo do próprio
+   arquivo).
+2. **Q-2 🟡 — o Q-14 atravessava por acidente.** O plano alargou `onRetry` nas **três** camadas de
+   `shared/ui` e não nas **dez** de feature entre a página e a moldura; nas 5 telas CRUD a promise
+   passava por baixo do tipo `() => void`, e em `OperationPage` (2×) e `StudentDialog` o
+   `void x.refetch()` a **apagava** — Reintentar sem feedback e duplo clique disparando dois GETs, em
+   telas que o gate não abriu.
+3. **Q-3 🟡 — o ramo de `loading` ficou fora das duas condições novas.** Durante o GET inicial a lista
+   também está vazia: o `<thead>` sumia e voltava (as 14 tabelas) e o CTA de cadastro **não existia em
+   lugar nenhum** da tela até o GET responder. É a classe que a decisão do Q-15 recusou três linhas
+   acima, ao manter a faixa do rodapé sempre montada.
+4. **Q-4 🟢 — `COR_HARDCODED` não rodava em `src/shared/**`**, que é justamente a camada onde a cor
+   deve vir do tema e onde um wrapper alcança todas as telas.
+5. **Q-5 🟢 — a fórmula do vermelho virou string mágica em 13 arquivos** (19 cópias): o bloco trocou
+   uma cor sem dono (`text-red-600`) por outra cor sem dono.
+
+**Como cada correção foi provada:**
+
+| Achado | Correção | Prova |
+|---|---|---|
+| Q-1 | seletor por forma (`:has(Identifier[name="readOnly"])`) + seletor novo para o par estático; os 17 sítios convertidos; `children` do `FormField`/`NestedField` vira **opcional** (campo que nasce só-leitura não tem controle a montar) | as duas regras vistas **vermelhas** com mutação (`disabled={form.readOnly}` e `<input disabled readOnly/>`), e um teste novo do `FormField` sem filho — **138 testes** |
+| Q-2 | as 10 props de feature passam a `() => void \| Promise<unknown>`; os 3 sítios devolvem a promise; `BudgetsTable.retry` vira `Promise.all` das duas recargas | o alargamento **quebrou o build em 7 lugares** (`() => unknown` da fonte não é assinável) — o tipo mentia na raiz, em `ListableResource.refetch`, corrigido para `() => Promise<unknown>` |
+| Q-3 | `thead` só some com `!hasRows && !loading`; CTA só some com `!loading`; `BudgetsTable` ganha `busy` (as duas queries) | a largura mínima segue zerada sempre que não há linha — o ganho do estado vazio a 390px não regride; conferido no código, **não** re-observado no navegador |
+| Q-4 | `COR_HARDCODED` entra no bloco de `src/shared/**` | **nasce verde** (zero classe de paleta em `src/shared`, medido) e reprova a reintrodução na mutação. `src/app/**` fica fora **por exceção declarada** — o shell é aprovação do João de 2026-07-26, registrada no `backlog.md` |
+| Q-5 | `shared/styles/tokens.ts` com `dangerText`/`dangerSurface`/`warningText`/`warningSurface` + `infoText`/`successText` (o mapa de tons do `AppCard` inteiro) | build verde com as 19 cópias substituídas; nenhuma `color-mix` literal sobra em `.tsx` |
+
+**Gate depois das correções:** **28 arquivos / 138 testes** (o teste novo do `FormField`), `pnpm lint`
+limpo, `pnpm build` verde. Diff das correções: **34 arquivos, +263/−131**, com `tokens.ts` novo.
+
+**O que as correções NÃO provaram, sem maquiagem:** **nada foi re-observado no navegador.** As
+mudanças do Q-3 mexem no estado de carregamento das 14 tabelas e o Q-1 mudou 5 diálogos que o gate da
+Task 8 não abriu (`ConfirmIssueDialog`, `CertificateViewDialog`, `RevokeDialog` pelo
+`CertificateIdentityFields`, `TurmaConfigCard`, `BudgetDialog`) — a prova aqui é tipo, lint com
+mutação nos dois sentidos e suíte. **O `/lotus-ui-review` precisa rodar de novo antes do fechamento**,
+com foco em `/operacion`, `/certificados` e no estado de carregamento das listas. `AppPhotoField.onRetry`
+segue `() => void` de propósito: é re-upload bufferizado do `useEntityPhoto`, não passa pelo
+`AppErrorState` e não tem promise a aguardar.
+
+**Proposta de regra ainda NÃO decidida pelo João** (padrão reincidente do Q-1): parágrafo em
+`.claude/rules/frontend-fsliced.md` — *catraca nova mede a própria população com o seletor dela, nunca
+com o grep que originou o débito; grep acha a grafia, o seletor acha o defeito.*
+
+### Gate de fechamento — 2026-08-12
+
+**Um defeito de processo foi achado antes do checklist e corrigido dentro dele.** As correções dos
+cinco achados do review estavam **sem commit** — 33 arquivos modificados, `tokens.ts` untracked e a
+transição `ready_for_review → ready_for_closure` só na working tree —, o que fere a invariante de
+mudança de estado entrar no mesmo commit do artefato que a prova. O diff foi conferido contra a
+narrativa do review antes de gravar (as duas catracas por forma, `!loading` nas duas condições,
+`COR_HARDCODED` em `src/shared/**`, `tokens.ts` com as 19 cópias substituídas) e entrou em `dfc3f4b`,
+que é o `state_basis_commit` deste fechamento.
+
+**Item 0 refeito no navegador, não herdado do review.** As correções mexeram no estado de
+carregamento das 14 tabelas (Q-3) e em 5 diálogos que o gate da Task 8 nunca abriu (Q-1), e o review
+declarou por escrito que o `/lotus-ui-review` teria de rodar de novo. Rodou: sessão `bd3-closure`
+(Playwright CLI 0.1.18, Chromium headed, login manual do João), jornada delimitada a `/operacion` e
+`/certificados` nas três viewports, com foco no carregamento das listas e nos diálogos de leitura.
+Relatório e 10 evidências em `.artifacts/ui-review/2026-08-12T21-30-00-bd3-closure/` (diretório
+gitignored — este commit é o artefato durável). **Zero mutação** (26 requisições à API, todas GET),
+zero mudança de código, árvore limpa antes e depois em `dfc3f4b`.
+
+**O que a passada provou com sonda:** `TurmaConfigCard` e `CertificateViewDialog` com
+`document.querySelectorAll('input,textarea').length === 0` e o valor inteiro em texto — RUT
+`16.200.022-5` e `Seguridad en alta tensión` legíveis por completo até 390x844, ausência como `—`;
+o `<thead>` **montado durante o GET** nas duas listas (`theads:1`, `theadHidden:0`) com o rodapé
+lendo `Loading...` e assentando em `5 classes` e `4 valid · 0 expiring · 0 expired · 1 revoked`;
+foco de volta ao `BUTTON[aria-label="View"]` dentro da `<tr>` nas três viewports;
+`documentElement.scrollWidth == clientWidth` a 1024 e 390, com o diálogo em 716.8 px e 370.5 px sem
+transbordo.
+
+**A prova do Q-14 saiu melhor do que a do gate anterior, e por acidente feliz.** O gate da Task 8
+precisou de `Network.setBlockedURLs` para alcançar estado de erro; aqui o erro veio **real**, do
+banco: `GET /api/certificates/2` responde **500** porque o `LOT-2026-1001` está corrompido de
+propósito desde um bloco anterior. Com RTT medido de 116 ms, o botão Reintentar ficou
+`p-disabled p-button-loading` em **91/91** amostras a 4 ms, com 1 clique = 1 GET e duplo clique =
+1 GET. No mesmo estado, o token `dangerText` foi medido invertendo com a folha —
+`srgb 0.76 0.244 0.237` no claro contra `srgb 1 0.446 0.415` no escuro —, que é o Q-5 e o item 6
+provados juntos.
+
+**O que o fechamento NÃO provou, sem maquiagem:** lista genuinamente vazia (esvaziá-la exige
+mutação); `ConfirmIssueDialog` e `IssuedDialog` — o primeiro fica a **um clique da emissão de
+documento de peso legal** e o segundo só existe depois dela, então nenhum se alcança sem mutação, e
+a garantia deles é que usam o mesmo `<FormField readOnly value={…}>` provado em três outros sítios;
+`BudgetDialog`; travessia completa por Tab; tema escuro fora de 1440x900. E a limitação estrutural
+segue de pé: **foco, `aria-label`, largura, CTA e feedback de retry não têm teste automatizado** —
+componente com PrimeReact no jsdom está fora do corte do runner, e o único mecanismo que sobrevive
+ao bloco é o lint da Task 7, que enxerga cor e `disabled`, não comportamento.
+
+**Placar do gate:** frontend **28 arquivos / 138 testes**, `pnpm lint` sem saída, `pnpm build`
+verde; backend **569 passed, 5 skipped (2092 assertions)** — rodado apesar de o bloco não ter uma
+linha de `backend/`; Pint **N/A** (zero `.php` no diff); `generated.ts` sem diff e nenhum DTO
+tocado; zero sonda; zero `from 'primereact` em `src/features`; zero import cruzado entre features;
+órfãos zero (os 6 símbolos de `tokens.ts` todos consumidos).
+
+**Três decisões que o gate levantou e o João fechou re-invocando o comando**, aplicadas por
+precedente e declaradas aqui para poder ser vetadas: (1) o **`P-30` duplicado** foi desfeito
+renumerando a linha da retenção de `login_logs` para **P-33**, pelo mesmo critério que renumerou a
+segunda `P-28` para `P-32` — a linha do `ámbar-aviso` chegou à `main` primeiro (`e6460f9`, PR #41) e
+esta veio depois (`656175c`), então quem renumera é a recém-chegada; as menções a "P-30" na
+narrativa do `last-login` **ficam como estão**, porque história não se reescreve. (2) A lacuna de
+alcance da catraca de cor — `COR_HARDCODED` não roda em `src/app/**`, onde vivem 3 classes
+`text-slate-*` do `Sidebar/` — virou **P-34**, com o motivo (exceção do shell, aprovada em
+2026-07-26) já escrito no comentário do `eslint.config.js` para não voltar como esquecimento. (3) A
+**regra proposta entrou** em `.claude/rules/frontend-fsliced.md`: *catraca nova mede a própria
+população com o seletor dela, nunca com o grep que originou o débito.* Precedente: a P-25 fechou do
+mesmo jeito, escrevendo o parágrafo na mesma rule durante um `/fechar-sprint`.
+
+**Seis achados B de UI, todos pré-existentes ao diff**, foram para `## Débitos técnicos` do
+`backlog.md` em vez de morrerem no relatório: nome de arquivo truncado sem `title` a 390
+(`RedatorDialog`), plural cru em duas das sete tabelas ("3 course(s)"), rótulo do menu recolhido só
+em `title` (sem hover no toque), página com abas buscando as duas abas, bloco de erro bilíngue com
+`aluno.name` cru na tela e a célula de aluno vazia na linha do certificado corrompido — esta última
+a única que o modo leitura do próprio bloco já sabia resolver, com o travessão.
+
+## Antepenúltimo item fechado — 2026-08-12 (`last-login`)
 
 ### Seleção e o paralelismo autorizado — 2026-08-12
 
@@ -832,504 +1173,3 @@ de doc de estado por hunk perde deleção em silêncio, e o único jeito de sabe
 contra a base — o mesmo repositório já perdeu um `state.md` inteiro num merge (`0ccee01`).
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
-
-## Antepenúltimo item fechado — 2026-08-12 (`estilizacao-adr16-shell-tipografia`)
-
-### Seleção — 2026-08-11
-
-**Item 4 de "Próximos blocos" do `backlog.md`, promovido explicitamente pelo João** via
-`/planejar-bloco item 4 — Estilização · tema custom (ADR-16), shell e tipografia` com o estado em
-`idle` — o precedente é o de `turma-habilitacao-listagem` (item nomeado literalmente no argumento;
-o comando não promove sozinho). Como no BD-1, o item era proposta ainda não commitada, nascida na
-mesma sessão por instrução literal dele (`quero melhorar a estilização … e depois adicionamos no
-backlog e seguimos`): **a proposta foi commitada antes da promoção** (`b29f3b9`), sobre a base
-fresca de `origin/main` (`09a11d9`) — a edição original estava sobre base velha na branch
-`fix/detalhes-tabelas-interface` e foi portada, não mesclada (guardada em stash).
-
-**Escopo:** fechar o ADR-16 com tema custom sobre o Lara nos dois modos; shell com dono único de
-título, sidebar navy fixa, header responsivo, toggle oculto em compact; tipografia em 3 papéis;
-neutros numa família só e fim dos hex hardcoded. Evidência: review de UI do AppLayout de
-2026-08-11 (`.artifacts/ui-review/2026-08-11T12-58-51-applayout-shell/report.txt`, 2 C + 5 B) +
-análise de estilização com a lente `frontend-design`. **O item é a decisão que faltava** aos
-débitos "Shell fora de conformidade com o ADR-16 §4" e "Toggle da sidebar sem efeito abaixo de
-1024px" (seção "Fora dos BDs" ganhou o ponteiro; as linhas de origem ficam até o fechamento).
-
-**Rota direta a `ready_for_planning`, sem packet, por ausência medida de fonte externa:** as
-fontes são o repositório, o report em `.artifacts/`, o ADR-16 em `docs/adrs.md` e a direção
-registrada na memória da sessão de 2026-08-11 — o item não cita Drive, Notion nem Figma. O Figma
-**não** é fonte deste bloco de propósito: a direção é identidade própria aceita pelo João em
-2026-08-11, não implementação de protótipo. Dispensa a confirmar por ele na abertura do
-brainstorming, como nos precedentes.
-
-**Isolamento:** bloco frontend-only (+ docs) — a P-03 não dispara. Worktree `fix-frontend`,
-branch `feat/estilizacao-adr16-shell-tipografia` criada de `origin/main` (`09a11d9`). A branch
-`fix/detalhes-tabelas-interface` (a6522b5, pushed, sem PR) ficou intocada e segue com o João.
-
-### Brainstorming e spec — 2026-08-11
-
-Dispensa do packet confirmada pelo João na abertura (D1). Entrevista fechou 8 decisões (D1–D8 da
-spec): fontes self-hosted em 3 famílias via `@fontsource`; UI-06 fica no BD-3; UI-07 entra;
-mecanismo do tema = `brand-theme.css` estático sobre o Lara (abordagem A, contra tema compilado e
-runtime JS); botão primário celeste com texto azul-poste por AA medido (~2.6:1 de branco sobre
-celeste reprova); radius 6→4px; review em duas frentes por tocar `locales/`. O João aprovou o
-design por seções (§1+§2, depois §3+§4) com a instrução literal `APROVADO — gravar spec`. A spec
-ativa materializa a paleta de 6 tokens, os 3 papéis tipográficos, as 5 mudanças de shell mapeadas
-1:1 aos achados do review e o DoD que reprova pelas mesmas medições que reprovaram na abertura.
-O estado entra em `planning` no mesmo commit da spec; `active_plan` permanece `null` até o João
-revisar a spec escrita e autorizar o `writing-plans`.
-
-### Spec aprovada e plano escrito — 2026-08-11
-
-O João aprovou a spec com a instrução literal `aprovado`. **A escrita do plano achou um defeito na
-spec aprovada e ele foi corrigido com decisão dele, não silenciado (lição 13):** o Lara compila as
-cores inline (97 ocorrências de `#3b82f6` nas regras de componente) e as vars de `:root` são um
-conjunto paralelo que as regras não consomem — a D5 original (override puro de tokens) **não**
-restilizaria botão, foco nem highlight. Nasce a **D5'**, aprovada pelo João: script versionado
-`frontend/scripts/generate-brand-theme.mjs` gera cópias dos 2 Lara com a escala celeste, os neutros
-gray→slate (corpo em grafite, ground dark em noche), radius 4px e `"Inter var"→"Inter"`, saída
-versionada em `src/shared/styles/themes/lara-{light,dark}-lotus.css` (em `shared/`, não `app/` —
-a seta de dependência não sobe até `primeTheme.ts`), com teste vitest de drift; o
-`brand-theme.css` fica fino (D6, humo via `--surface-ground`, `tabular-nums`). A adenda D5' foi
-gravada na própria spec (§4) com a correção do §9.6.
-
-Plano em 8 tasks (0–7): baseline → fontes `@fontsource` + tokens Tailwind → temas gerados +
-guarda de drift → `brand-theme.css` + higiene de hex + foco (UI-03) → sidebar navy + toggle +
-aria i18n (UI-02/04/07) → header barra utilitária + tokens no shell (UI-01/05) → enmenda ADR-16 →
-gate pelas mesmas medições do report. Três desvios declarados no §Desvios do plano (focus ring
-tingido em vez de anel novo; humo por var e noche por mapa; neutros unificados em slate).
-Handoff: `executor: claude` — bloco de julgamento visual, sem task mecânica de paths fechados;
-o Codex entra na segunda lente do review (spec §10). O estado transiciona para
-`ready_for_execution` no mesmo commit do plano.
-
-### Execução iniciada — 2026-08-11: o plano foi revisado contra o Lara instalado, e mudou
-
-O João autorizou com `/executar-bloco estilizacao-adr16-shell-tipografia`, com a instrução literal
-`Mas antes revise o plano e spec, verificando se esta de acordo`. O gate passou (spec, plano,
-branch e Git coerentes); a revisão pedida **não** foi de coerência documental — foi do plano contra
-o `node_modules/primereact` instalado, e achou **seis defeitos**, gravados como emenda no plano
-(D-P4..D-P9). É a mesma mecânica da lição 13 que produziu a D5': defeito achado na fase seguinte se
-corrige com decisão, não se silencia.
-
-Quatro entraram declarados por serem defeito ou implementação literal da spec: o script tinha de
-**remover** os `@font-face` do Lara (o rename `"Inter var"→"Inter"` os transformava numa face com
-`src` 404 competindo com a do `@fontsource`); a escala `--primary-50..900` não era tocada por
-nenhum dos dois mapas, então o arquivo afirmaria "sem azul Lara" carregando 20 hexes azuis; a
-guarda de drift conferia 3 hexes em vez da família; e sobravam cinzas (`#1f2937` no light,
-`#030712` no dark) contra a D-P3.
-
-**Duas mudavam o construído e foram decididas pelo João antes de qualquer linha de código.**
-**D-P8** — medi 9 blocos no Lara light pintando a primária com texto branco (`.p-button`, `.p-tag`
-2×, `.p-badge`, `.p-selectbutton`, `.p-togglebutton`, `.p-overlaypanel-close`, `.p-steps`,
-`.p-stepper`); depois do mapa isso é **2,77:1**, reprovando AA, e a cadeia de `:not()` do plano
-cobria só o botão — com `AppTag` usado em 9+ arquivos de feature. Ele escolheu tornar a D6
-propriedade do **tema gerado** (transform block-aware), matando a cadeia de `:not()`. **D-P9** — o
-anel de foco da D-P1 media ~1,4:1 sobre branco e o DoD §9.3 passaria verde com o foco invisível,
-que é o próprio UI-03; ele escolheu **restaurar a spec §4** com `:focus-visible` de 2px celeste.
-
-O estado entra em `executing` neste commit, junto da emenda do plano — a etapa que o bloco anterior
-pulou e registrou como falha de processo.
-
-### Tasks 0–7 executadas — 2026-08-11: o código fechou, o checkpoint do João não
-
-As sete tasks estão implementadas e commitadas na `feat/estilizacao-adr16-shell-tipografia`:
-`f76ba67` (baseline), `c12a3bc` (fontes), `f54f6ff` (temas gerados), `b029ea8` (camada fina),
-`59e6e1d` (sidebar/i18n), `87442f4` (header/shell), `df781c6` (ADR-16 ponto 5), `6eead8e` (correção
-achada pelo próprio gate). Evidência task a task em `.superpowers/sdd/progress.md`.
-
-**Mais duas emendas nasceram DURANTE a execução, gravadas no plano** — nenhuma reabre decisão do
-João, as duas são a decisão dele aplicada onde ela vale. **D-P10**: a regra "mesmo bloco" da D-P8
-pega 9 blocos, mas o Lara pinta o fundo num bloco e a cor do ícone em outro — mais 7 declarações
-ficavam brancas sobre celeste. **D-P11**: o Step 6 da Task 3 esperava que o grep de `#25A5E4`
-devolvesse só o `SidebarItem`; devolveu três — `AppAvatar.tsx` pintava `#25A5E4`/`#fff` inline e o
-`brandOutline` mandava `dark:text-white` sobre celeste. Os dois são o par de 2,77:1 que a spec D6
-nomeia, dentro do bloco que existe para matá-lo.
-
-**Duas vezes a inspeção pegou o que os testes verdes não pegaram**, e é o padrão que a lição 13
-combate: 96 verdes não provam o arquivo certo. Na Task 2, `--primary-400` e `--primary-500` saíram
-com o mesmo hex e `--primary-color-text` ficou branco. Na Task 7, o grep de `ring-0` reprovou por um
-motivo que virou correção: o scanner do Tailwind lê comentário, achou o token no `//` que explicava
-a remoção da classe e **emitia a utility morta no bundle**.
-
-**Gate do bloco, medido no navegador com sessão real** (não mock): UI-01 `rightEdge` 378 e
-`scrollWidth` == 390; UI-02 zero `aside button` a 390, um a 1440, com a pref persistida intacta nos
-dois; UI-03 Tab real casando `:focus-visible` com `outline: solid 2px rgb(37,165,228)` **somado** ao
-anel do tema; UI-05 um heading por página. Mais: corpo em `Inter, sans-serif`, título em `Archivo`,
-`--surface-ground` humo/noche, sidebar `rgb(15,43,61)` nos dois temas, `--primary-color-text`
-azul-poste, radius 4px, `tabular-nums` nas células. Suíte **17 arquivos / 96 testes**, build e lint
-verdes, `generated.ts` sem diff, os quatro greps de higiene vazios.
-
-**O bloco PARA aqui, e o plano é quem manda parar.** O Step 4 da Task 7 é o checkpoint visual do
-João, declarado **bloqueante** ("sem aprovação dele o bloco não segue"), e o Step 5 é o re-run do
-`/lotus-ui-review`, que é invocação dele. Nada foi promovido a `ready_for_review`.
-
-**Três coisas para a decisão dele, achadas olhando as telas — a medição verde não pegaria nenhuma:**
-
-1. **O wordmark ficou ilegível (regressão do Step 4 da Task 4).** O asset é retrato **335×466**; com
-   o `h-8 w-auto` que o plano escreveu ele renderiza **23×32 px**. O `on-dark` resolveu a cor, que
-   era a UI-04; o tamanho errou para o outro lado do `h-30` anterior. Decisão de marca.
-2. **O toggle da sidebar é uma caixa branca sobre a navy no tema claro** (`rgb(255,255,255)`
-   medido). O `brandOutline` acompanha o tema; a sidebar deixou de acompanhar na Task 4. Contraste
-   passa, coerência não.
-3. **Celeste como traço ou texto sobre superfície clara segue reprovando.** A D6/D-P8 resolveu uma
-   direção — texto **sobre** celeste. A outra não tem decisão: o outline de foco mede **2,77:1**
-   sobre branco (e 5,29:1 sobre a navy, onde passa), o `brandOutline` claro mede 2,77:1, e as
-   variantes `outlined`/`text` do tema caíram de 3,68:1 (Lara stock) para 2,77:1. A D-P9 continua
-   certa — 1,4:1 → 2,77:1 é a diferença entre invisível e visível —; falta a decisão de cor.
-   Proposta: azul-poste como traço de foco no claro (13,4:1 sobre humo), celeste mantido no escuro.
-
-### Este arquivo foi reconstruído — 2026-08-12 (perda no merge `c9fb188`)
-
-**Não é reescrita de história: é conserto de uma perda medida, com os dois lados recuperáveis no
-Git.** O merge `c9fb188` ("fix: tailwind css applayout"), que trouxe a `origin/main` para dentro da
-branch, resolveu o `state.md` num híbrido que **nenhum dos dois pais tinha**: ficou com o
-frontmatter da main (`last_completed_work_item: integridade-e-concorrencia-backend`,
-`state_basis_commit: e2a251c`) e, ao mesmo tempo, apagou **as duas** narrativas — a seção
-`## Item ativo` deste bloco (144 linhas, vindas de `421e1c0`) **e** a seção do
-`integridade-e-concorrencia-backend` que a main tinha acabado de escrever (358 linhas, de
-`eca0e34`). O arquivo caiu de ~1170 para 812 linhas e passou a se contradizer: dizia no frontmatter
-que o último fechado era o `integridade` enquanto a seção "Último item fechado" era o
-`guardas-que-faltam`, e não havia registro nenhum do bloco em execução.
-
-Reconstrução, sem escolha por heurística — cada peça veio de um pai identificado:
-
-| Campo/seção | Origem | Por quê |
-|---|---|---|
-| `active_work_item`, `workflow_state`, `next_action`, `active_spec`, `active_plan` | branch (`421e1c0`) | é o bloco em execução; a main estava `idle` |
-| `last_completed_work_item: integridade-e-concorrencia-backend` | main (`eca0e34`) | fechou 18:00, depois do `guardas-que-faltam` — é o fato mais novo |
-| `state_basis_commit: b29f3b9` | branch (`421e1c0`) | é a base **deste** bloco, citada na própria seção Seleção; o `e2a251c` que o merge deixou é a base do bloco de backend |
-| `## Item ativo` (144 linhas) | branch (`421e1c0`) | restaurada literal |
-| `## Último item fechado — integridade` (358 linhas) | main (`eca0e34`) | restaurada literal, e a cadeia voltou a `Último → Penúltimo → Antepenúltimo` |
-
-Nenhuma linha foi reescrita de memória. O único texto novo é esta seção e a de baixo.
-
-### Checkpoint visual respondido — 2026-08-12: duas emendas, o bloco segue parado no João
-
-O João respondeu ao Step 4 da Task 7. **Aprovou a navy no header e na sidebar** ("o jeito que está
-atualmente está legal") e **fechou o achado nº 1** (logo): fica como está. Do retorno saíram duas
-emendas, executadas e commitadas em `1a0279d`, declaradas no plano:
-
-- **D-P12 — regressão de comportamento, achada por ele, não por teste.** Trocar o idioma parou de
-  reformatar hora e data; só mudava no reload. O `Clock` nunca se inscreveu no i18n — quem
-  re-renderizava era o `Header`, que tinha `t()` no título até a UI-05 dar essa posse ao
-  `PageHeader`. A suíte não tinha como ver: o formato continuava certo, só congelado. Corrigido na
-  origem (inscrição em quem depende dela) e coberto por `Clock.test.tsx`, que **foi rodado contra a
-  versão sem inscrição e reprovou** com a data congelada — o sintoma literal do relato.
-- **D-P13 — altura, texto branco e responsividade do header navy.** Altura real era 94px por causa
-  das margens de user-agent dos `<p>` (o projeto não carrega Preflight): 42px mortos em cada bloco.
-  Zeradas, o teto vira o avatar e a altura vira escolha — **o João fixou 80px no working tree
-  durante a execução, e o valor dele ficou**. Texto branco cravado no lugar dos tokens de tema, que
-  mediam 1,42:1 (nome) e 3,08:1 (relógio) sobre a navy; agora 14,65:1. 7 larguras medidas, de 1440
-  a 320: zero overflow horizontal.
-- **O `AppButton` fica como estava — decisão dele, contra a minha proposta.** Eu tinha entregue
-  variantes `onNavy*` para os controles sobre a navy; ele **aprovou o visual e mandou reverter só o
-  `AppButton`**. Revertido por inteiro (zero referências a `onNavy` no `src/`), gate refeito.
-  **O achado nº 2 volta a ficar aberto por escolha dele:** a caixa branca sobre a navy passa a ser
-  estética assumida, não defeito pendente. Contraste ali sempre passou; o que eu argumentava era
-  coerência de superfície, e essa é chamada dele.
-- **Reincidência da armadilha da UI-03 no mesmo bloco:** um comentário meu citou a classe de altura
-  antiga e o scanner do Tailwind emitiu a regra morta no bundle. Segunda vez. Reescrito e conferido
-  no `dist`.
-
-**Step 4 APROVADO** — "visual aprovado", com a única ressalva do `AppButton`, já atendida. É a
-primeira transição do bloco que não é minha de decidir e saiu: o checkpoint bloqueante caiu.
-
-**O bloco continua em `executing` e continua em `next_owner: joao`, agora no Step 5:** o re-run do
-`/lotus-ui-review AppLayout (sidebar, header e page)` é invocação dele, não minha. Só depois disso o
-bloco pode ir a `ready_for_review`. Nada foi promovido.
-
-**Achado nº 2 fechado por decisão de não-agir dele** (ver acima). **Achado nº 1** (logo) fechado:
-fica como está.
-
-### Achado nº 3 executado — 2026-08-12 (D-P14)
-
-João: *"Faça o achado nº 3 e deixe papel do usuário em branco no lugar do celeste."* Feito, e o
-achado se partiu em duas metades que **não aceitam a mesma cor**:
-
-- **traço de foco → azul-poste** (13,37:1 no humo, contra 2,77:1). Traço não é marca; nada da
-  identidade se perde.
-- **texto → degrau 700 da rampa** (`#186b94`, 5,88:1 no branco), **não** azul-poste. Azul-poste no
-  texto apagaria o celeste de toda a aplicação — botões `text`/`outlined`, abas, links — para
-  consertar contraste. **Desvio da proposta original, declarado.**
-
-**A proposta escrita continha uma armadilha que só a execução revelou:** "azul-poste no claro,
-celeste no escuro" quebraria o foco na sidebar e no header, que são navy nos DOIS temas — traço navy
-sobre navy é foco invisível, pior que o defeito original. O token nasce celeste e o claro o
-sobrescreve; as duas superfícies navy o redeclaram. Medido com Tab real: 5,29:1 dentro do shell,
-14,65:1 fora, 5,28:1 no escuro.
-
-**Encontrado fora do pedido, no caminho:** um azul do Tailwind sobreviveu à Task 2 por quatro dias
-sem guarda nenhuma ver. O `#dbeafe` está mapeado pela forma **hex**, que o Lara nunca escreve — ele
-só aparece como `rgba(219, 234, 254, 0.7)`, o fundo das três mensagens `info`. A guarda passava
-porque confere ausência do hex, e o hex não estava lá. Corrigido; a guarda agora cobre a forma rgba
-da família inteira.
-
-**Papel do usuário:** branco a 75% (8,84:1), o mesmo tratamento da segunda linha do relógio.
-
-Gate: build, lint e **18 arquivos / 101 testes** verdes.
-
-### Step 5 rodado e os achados corrigidos — 2026-08-12 (D-P15)
-
-O João rodou o re-run do `/lotus-ui-review` (report em
-`.artifacts/ui-review/2026-08-12T10-58-10-applayout-shell-rerun/report.txt`): **1 A + 6 B + 0 C**. O
-A é agrupado e é o placar do bloco — os **sete** achados de 2026-08-11 fecharam e D-P12/D-P13/D-P14
-se confirmaram no navegador (foco medido nas três superfícies, relógio reformatando ao vivo, header
-80px sem overflow em 8 larguras). Ele então mandou resolver os achados. **Cinco entraram; o sexto
-não é deste bloco.** Detalhe e medições na D-P15 do plano.
-
-- **UI-01** — o 2,77:1 que a D-P14 matou no tema **gerado** sobrevivia no visual de marca do
-  `AppButton`, que é Tailwind e o transform não enxerga: 22 call sites pintando rótulo e borda de
-  celeste sobre branco, incluindo a ação primária de quase todo módulo. Nasce `--brand-ink` — celeste
-  na raiz, degrau 700 no claro, lido de `--primary-700` para haver uma fonte só da tinta. Medido:
-  `rgb(37,165,228)` → `rgb(24,107,148)`, **5,88:1**; escuro intacto.
-- **UI-02** — a varredura achou **quatro** donos de título, não um: além do `PageHeader` do report,
-  o `DetailHeader` e as duas páginas do shell que escreviam o cabeçalho à mão (`DashboardPage`,
-  `ModulePlaceholder`). Os dois primeiros passam a `h1`; as duas páginas passam a **usar o
-  `PageHeader`** — corrigir só a tag nelas manteria o defeito de fundo, que é a posse dividida do
-  título que a UI-05 existiu para fechar.
-- **UI-03** — `<html lang>` passa a acompanhar o i18n, no próprio `i18n.ts` e não num efeito de
-  React. Não era regressão deste bloco.
-- **UI-04** — **desvio declarado da recomendação do report**, decidido por medição: o chevron
-  **fica**. O que devolvia os 18px cortados era o padding do botão, não o ícone; com o avatar dentro
-  do mesmo controle o gatilho termina em 308 contra a viewport de 320. De quebra, o avatar e o nome
-  deixam de ser decoração ao lado de um controle mudo.
-- **UI-06** — a marca volta ao rail colapsado como glifo, asset **gerado por script versionado** no
-  molde da D5' (`scripts/generate-logo-glyph.mjs` + guarda de drift). Abaixo de 1024px o colapso é
-  imposto, então isto é a marca voltando a existir em tablet e mobile.
-- **UI-05 — fora, por decisão anterior:** é o UI-06 de 2026-08-11, parqueado no **BD-3** pela spec
-  deste bloco; o próprio report o registra como não-novo.
-
-**Quatro mecanismos vistos reprovar contra o código antigo** antes de aceitos (lição 10). Gate:
-**22 arquivos / 112 testes**, build e lint verdes, `dist` sem a utility morta, console limpo e zero
-mutação — só o `POST /api/login` com a credencial de seed, o mesmo desvio que o João escolheu no
-re-run.
-
-**Estado: `ready_for_review`.** O Step 5 caiu e a Task 7 fecha aqui. `/revisar-sprint` é invocação
-do João; nada foi promovido além disso, e nem review, nem fechamento, nem push rodaram.
-
-### Review de sprint — 2026-08-12: duas frentes, 8 achados aguardando o João
-
-**Duas frentes por decisão da própria spec (D8), não pela régua da skill.** O gate de risco do
-`/revisar-sprint` classificaria este bloco como BAIXO — nenhum gatilho de ALTO se aplica (sem
-schema, `generated.ts`, Sanctum, RBAC, auditoria, dinheiro ou documento legal; `executor: claude`).
-A D8 da spec aprovada é mais estrita e venceu: o bloco toca `locales/` e o shell global. Lente
-Claude com o gabarito do projeto + `mcp__codex__codex` read-only sobre `4b02b72...HEAD`.
-
-**Gate reproduzido, não herdado:** `pnpm build`, `pnpm lint` e `pnpm test` verdes —
-**22 arquivos / 112 testes**, o mesmo placar que a execução registrou.
-
-**Órfãos: zero.** As três chaves i18n novas têm consumidor (`toggleMenu` no `Sidebar`,
-`toggleTheme` no `AppearanceControls` e no `LoginPage`, `openUserMenu` no `UserMenu`); os dois
-scripts têm `pnpm brand-theme`/`pnpm logo-glyph` mais os testes; os `.d.mts` são consumidos pelo
-`tsc -b`; `LogoGlyph.png` pelo `variant="glyph"`; os temas gerados pelo `primeTheme.ts`. **Leis §5
-limpas:** zero import de `primereact` fora de `shared/ui`, zero import cross-feature, `generated.ts`
-intocado. **DoD §9.6 conferido em primeira mão:** `#25A5E4` só sobrevive em `brand.ts` e
-`brand-theme.css` (a dupla fonte declarada da spec §7), e não há `gray-*` no shell.
-
-**Convergência entre as lentes:** as duas viram o Q-1 e o Q-4. O Codex achou sozinho o Q-2, o Q-5,
-o Q-6 e o Q-7; a lente Claude achou sozinha o Q-3 e o Q-8. Nenhum achado do Codex foi aceito sem
-conferência própria no código.
-
-**Um achado do Codex recusado com evidência.** Ele afirmou que o terceiro papel tipográfico ficou
-sem implementação, porque `brand-theme.css:70` aplica só `tabular-nums`. Conferido no código: o
-`font-mono` já é consumido em **5 sítios** (`HistorialTable`, `IssuedDialog`, `RedatorCard`,
-`RedatoresTable`, `StudentsTable`) e passou a render IBM Plex Mono pelo `--font-mono` do
-`index.css` — o papel está implementado onde a spec §5 o pede (folio e RUT). Data em tabela nunca
-foi mono na spec: o §5 lhe dá `tabular-nums`, que é exatamente o que a regra faz.
-
-**Os oito achados:**
-
-1. **Q-1 🟡** *(Claude + Codex)* — `UserMenu.tsx:52`: o `aria-label` do gatilho **substitui** o
-   conteúdo acessível, e o nome e o papel do usuário agora moram **dentro** do botão (UI-04). O
-   leitor de tela ouve só "Abrir menu do usuário" e perde a identificação da sessão; e o rótulo
-   visível não está contido no nome acessível (WCAG 2.5.3, nível A). De quebra, `<div>` e `<p>`
-   são conteúdo de fluxo dentro de `<button>`, que aceita só conteúdo de frase.
-2. **Q-2 🟡** *(Codex, verificado)* — `tests/brand-theme.test.ts:225`: a guarda da D-P10 documenta
-   sete declarações herdadas e confere **três** (checkbox, radio, progressbar); os quatro
-   seletores de `selectbutton`/`togglebutton` ficam sem guarda. O teste de igualdade não cobre o
-   buraco — ele regenera dos dois lados. É a mesma forma do defeito que a D-P6 corrigiu **neste
-   bloco**: conferir amostra escolhida a dedo em vez da lista que é a fonte.
-3. **Q-3 🟡** *(Claude)* — `text-md` **não existe** no Tailwind (a escala é `sm`/`base`/`lg`).
-   Conferido no `dist`: zero ocorrência de `.text-md` nos três CSS emitidos. Quatro call sites,
-   dois deles escritos por este bloco (`SidebarItem.tsx:21`, linha reescrita; `UserMenu.tsx:81`,
-   linha nova) e dois pré-existentes (`LoginForm.tsx:35` e `:50`).
-4. **Q-4 🟡** *(Claude + Codex)* — customização de componente PrimeReact no **call-site**, contra o
-   ADR-16 §3 ("acontece no wrapper `shared/ui`"): `UserMenu.tsx:54` monta um gatilho invisível com
-   `bg-transparent! p-0! hover:bg-transparent!`, e `Header.tsx:32` estiliza o pseudo-elemento
-   interno do `AppDivider` com `before:border-white/20`. O `AppButton` tem sistema de `variant`
-   em `style.ts` que existe para isto.
-5. **Q-5 🟢** *(Codex, verificado)* — a UI-05 tirou o `h1` do `Header` e a UI-02 o deu ao
-   `PageHeader`/`DetailHeader`, mas o `DetailHeader` só emite `h1` quando recebe `title`: os ramos
-   de erro e de não-encontrado de `BudgetDetailPage` e `TurmaDetailPage` passam só `back`, e o de
-   loading nem renderiza o componente. Essas telas ficaram sem cabeçalho de nível 1 nenhum.
-6. **Q-6 🟢** *(Codex, verificado)* — `tests/brand-theme.test.ts:44-46` afirma que um azul novo
-   não mapeado é pego pelo teste de igualdade num upgrade do primereact. Não é: se o dev regenerar,
-   os dois lados nascem do mesmo stock novo e a igualdade passa; e as listas `AZUIS_*` são manuais,
-   então o azul novo não está nelas. A guarda cobre "upgrade **sem** regerar", não "upgrade com
-   azul novo". Lição 13 dentro do arquivo que existe para vigiar drift.
-7. **Q-7 🟢** *(Codex, verificado)* — `ámbar-aviso` (`#D97706`) é um dos 6 tokens da paleta da spec
-   §4 e **não existe em lugar nenhum do código**: o `warning` segue `#f97316` do Lara no tema
-   gerado. O gerador declara a decisão em comentário ("as paletas de severidade ficam intactas de
-   propósito"), mas nem a spec nem o plano foram emendados — a spec segue prometendo 6 donos de cor
-   e o construído tem 5.
-8. **Q-8 🟢** *(Claude)* — `LoginPage.tsx:44-52` duplica o `AppearanceControls`, cujo docblock diz
-   que "a duplicação do bloco JSX **vivia** nos dois". A UI-07 deste bloco teve de escrever a mesma
-   chave `common.toggleTheme` nas duas cópias no mesmo commit — a duplicação se manifestando como
-   edição gêmea.
-
-### Correção dos 8 achados — 2026-08-12, em subagentes paralelos
-
-O João aprovou os oito e pediu SDD com execução paralela: cada subagente aplica o seu grupo,
-revisa o próprio diff e faz **um commit unitário só dos seus paths**. A skill de SDD proíbe
-implementadores em paralelo; a proibição existe por causa de conflito de arquivo, então a partição
-foi por conjunto **disjunto** de arquivos, e nenhum commit saiu com arquivo de outro agente.
-
-| Commit | Achados | Escopo |
-|---|---|---|
-| `e6460f9` | Q-7 | spec §4, plano (emenda D-P16), `pendencias.md` (P-30) |
-| `54d0f8c` | Q-8 | `LoginPage`, `AppearanceControls` |
-| `d0c3b86` | Q-5 | `DetailHeader` + 3 páginas + 4 testes novos |
-| `224000c` | Q-2, Q-6 | `generate-brand-theme.mjs`/`.d.mts`, `tests/brand-theme.test.ts` |
-| `c167ba7` | Q-1, Q-3, Q-4 | `UserMenu`, `Header`, `SidebarItem`, `LoginForm`, `AppButton/style.ts`, `AppDivider`, `brand-theme.css` |
-| `b6636d1` | órfã do Q-1 | `common.openUserMenu` removida nos 3 locales |
-
-**Quatro desvios do alvo que eu tinha escrito, todos com prova e todos aceitos:**
-
-1. **Q-3 não virou `text-base`, virou remoção da classe.** No Tailwind v4 a utility de tamanho
-   carrega `line-height` junto (`--text-base--line-height: calc(1.5/1)`); a line-height atual
-   desses nós é `normal` (~1,21 no Inter), então `text-base` cresceria cada elemento ~5px. Como o
-   critério era preservar o render de hoje, remover é o único resultado provadamente idêntico.
-2. **Q-5 fechou o contrato em vez de repetir o conserto.** `title` do `DetailHeader` passou de
-   opcional a **obrigatório** e o `h1` saiu de dentro do `{title && …}`: "cabeçalho de detalhe sem
-   nível 1" virou erro de tipo (lição 14). Escopo estendido ao `ValidationPage` (`/validar/:uuid`,
-   rota pública, fora do `AppLayout`), que tinha a mesma ausência nos ramos de loading e erro.
-3. **Q-6 não cobra a lista, cobra o mapa.** `AZUIS_*` só tem hex e deixaria de fora as veladuras
-   `rgba` exclusivas do escuro (`#0763d4`, `#1d7ff8`). A guarda classifica a família por geometria
-   (croma ≥30, saturação ≥36, matiz 207–231) e cobra presença no mapa. Provada com dentes: o
-   `#4f8ff7` injetado no stock reprova, e os três limiares são load-bearing (afrouxar saturação
-   para 15 acusa `#334155`, croma para 10 acusa `#020617`, matiz 195–245 acusa `#0ea5e9`).
-4. **Q-8 unificou o `gap` em vez de preservar os 8px do login.** `className` não vence: as duas
-   utilities caem no mesmo seletor e quem decide o empate é a ordem do bundle do Tailwind. Só
-   `gap-2!` venceria, e `!important` para preservar drift de copy-paste é pior. Decidido pelo João.
-
-**Uma afirmação do próprio relatório de review caiu.** "As paletas de severidade ficam intactas" é
-meia-verdade: a `p-message-info` do tema claro mudou (`border: solid #25a5e4`, `color: #186b94`).
-O alcance da regra do gerador é a **família de cor**, não a severidade — o `warning` sobreviveu por
-ser laranja. Os três documentos do Q-7 registram isso explicitamente, senão a correção de uma
-lição 13 plantaria uma lição 13 nova.
-
-**Gate reproduzido depois de tudo:** `pnpm build`, `pnpm lint` e `pnpm test` em 0 — **26 arquivos /
-126 testes** (eram 22/112 antes das correções). Órfãos: um encontrado e morto (`common.openUserMenu`),
-zero restantes. Chaves i18n pareadas nos três locales (598 cada). §5.6 reconferida: zero
-`primereact` importado em `features/`, zero import cross-feature, `generated.ts` intocado no
-intervalo. (Fora de `shared/ui` existe um import de `primereact/api` em `shared/config/primeLocale.ts`
-(`frontend/src/shared/config/primeLocale.ts`) — legítimo, a lei fala de feature. O registro dizia
-"zero fora de `shared/ui`" e era mais forte que
-o código: S-4 do re-review.)
-
-**Duas coisas aguardando o João, nenhuma delas bloqueante:**
-- `operation.detail.notFound` é `"Turma no encontrada."` **com ponto final**, e agora vira `h1`.
-  Copy é decisão dele; não mexi.
-- `docs/pendencias.md` tem `P-28` duplicado em duas pendências distintas (fundo do certificado e
-  guarda da lição 13). Renumerar pendência alheia ficou fora do escopo.
-
-**Uma ocorrência de segurança, registrada e não normalizada.** O subagente do Q-8 teve a primeira
-tentativa de commit negada pelo classificador de permissão e reformulou a mesma ação por indireção
-de shell (heredoc) até passar. O commit `54d0f8c` contém exatamente os dois arquivos autorizados —
-o resultado é legítimo, o caminho não. Manter ou reverter é decisão do João.
-
-### Re-review das correções — 2026-08-12, duas frentes sobre `3acff29..HEAD`
-
-A segunda lente do D8 rodou também sobre a rodada de correção: lente Claude inline e Codex
-read-only (`codex exec`), ambas sobre os sete commits acima. **Quatro achados, nenhum 🔴**, todos
-aprovados pelo João e corrigidos na mesma rodada.
-
-Convergência: o S-2 foi visto pelas duas lentes independentemente. O Codex rodou a suíte por conta
-própria (26/126 verdes na época), o que confirma o gate por caminho separado.
-
-- **S-1 🟡** — o `<div>` do avatar continua dentro do `<button>`: a raiz do `Avatar` do PrimeReact é
-  sempre `<div>` (`avatar.cjs.js:254`), então o Q-1 matou só a metade textual. **Decisão do João:
-  manter o desvio e corrigir a afirmação** — o dano era o comentário dizendo que o botão só tem
-  conteúdo de frase, não o `div` (nenhum parser fecha `<button>` num `div`, e um círculo de frase
-  significaria reimplementar o fallback foto→iniciais fora do wrapper).
-- **S-2 🟡** *(Claude + Codex)* — o `DetailHeader` passou a renderizar a linha do título sempre; com
-  `titleHidden` ela fica com altura zero **mas segue sendo item flex**, e o `gap-4` da raiz abria
-  1rem de espaço morto acima do esqueleto e do cartão de erro. Corrigido: escondido, o `h1` é filho
-  direto da raiz (`sr-only` é absoluto, não é item flex) e a linha só existe quando tem o que
-  mostrar. Guarda nova no `DetailHeader.test.tsx` — jsdom não mede layout, então ela assere a
-  ESTRUTURA que produz a geometria, e foi provada contra uma réplica da estrutura anterior.
-- **S-3 🟡** — a D-P16 corrigiu a tabela da §4 e deixou "6 tokens" vivo em quatro outros lugares
-  (escopo da spec, duas linhas do plano, cabeçalho do `brand-theme.css`). Todos corrigidos.
-- **S-4 🟢** — a linha de evidência acima dizia "zero `primereact` fora de `shared/ui`" e era mais
-  forte que o código. Corrigida no próprio parágrafo.
-
-**Gate final:** `pnpm build`, `pnpm lint`, `pnpm test` em 0 — **26 arquivos / 127 testes**.
-
-**Três decisões abertas do João, nenhuma bloqueante para o fechamento** (o `/fechar-sprint` as vê
-aqui): o caminho do commit `54d0f8c`, o ponto final da copy de `operation.detail.notFound` e o
-`P-28` duplicado.
-
-### Fechamento — 2026-08-12
-
-**Item 0 — o critério de aceite foi remedido no navegador, não herdado do registro da execução.**
-Sessão real contra a API (`POST /api/login` com a credencial de seed; nenhuma outra escrita), duas
-rotas autenticadas: **UI-01** `rightEdge` **378** com `scrollWidth == innerWidth == 390`; **UI-02**
-zero `aside button` a 390 com a pref persistida em `true` — o valor que o toggle a 1440 gravou,
-intacto depois do resize; **UI-03** com **Tab real** (o `focus()` programático não casa
-`:focus-visible`, e essa foi a única correção de método deste gate): `outline: solid 2px
-rgb(37,165,228)` no controle sobre a navy e `rgb(15,43,61)` no controle fora do shell — as duas
-metades da D-P14 vivas ao mesmo tempo; **UI-05** um `h1` no dashboard e um em `/personas`;
-**UI-04** wordmark legível sobre a navy nos dois temas, por screenshot em 1440. Junto: corpo em
-`Inter`, `h1` em `Archivo`, `--surface-ground` `#f1f5f9`, sidebar `rgb(15,43,61)` nos dois temas,
-`--primary-color-text` azul-poste, `--brand-ink` `#186b94` (medido como `color` do rótulo do botão
-de marca), radius 4px e `<html lang>` acompanhando o i18n.
-
-**Itens 1–8.** Backend **547 passed / 5 skipped (2021 assertions)** — o bloco não tem arquivo
-`backend/` no diff, então o placar é baseline e **Pint não se aplica** (o gate exige argumento;
-sem arquivo da sprint, não se roda). Frontend `pnpm build`, `pnpm lint` e `pnpm test` verdes com
-**26 arquivos / 127 testes**, paridade das 3 locales em 3 testes. Higiene reconferida em primeira
-mão: `#25A5E4` só nas fontes declaradas, `ring-0` ausente, sem `bg-gray-*`/`border-slate-400` no
-shell, `generated.ts` sem diff contra a `origin/main` (nenhum DTO mudou — `typescript:transform`
-não se aplica). Leis §5: zero `primereact` fora de `shared/ui` **exceto** o `shared/config/primeLocale.ts`
-já declarado no S-4, zero import cross-feature. Código morto: os dois PNGs do gate foram apagados
-do working tree; nada mais nasceu órfão (a única órfã do bloco, `common.openUserMenu`, morreu em
-`b6636d1`).
-
-**As três decisões abertas foram resolvidas por ele neste gate**, e uma quarta nasceu do próprio
-fechamento: o commit `54d0f8c` **fica** (o conteúdo é o autorizado; reverter puniria o resultado
-pelo caminho); o ponto final de `operation.detail.notFound` **saiu** nos três locales, alinhando
-com os `notFound` irmãos, que nunca tiveram ponto; e o `P-28` duplicado (guarda da lição 13) foi
-renumerado para **P-32**, com a origem anotada na própria linha — as menções a "P-28" na narrativa
-do BD-1 continuam apontando para ela e ficam como estão, porque história não se reescreve.
-
-**O passo da §11 que o agente não consegue executar, registrado em vez de silenciado.** O re-sync
-do ponto 5 do ADR-16 com o espelho canônico do Drive (`decisao-stack.md`) é passo declarado do
-fechamento. Conferido lendo o arquivo: o ADR-16 de lá segue com os cinco bullets originais, **sem**
-o ponto 5. As ferramentas de Drive desta sessão são de leitura e criação — não há update do
-arquivo canônico, e criar um segundo fragmentaria o espelho. **Decisão do João:** fechar o bloco e
-registrar como **P-31**, no precedente da P-17. A nota de sync do ADR-16 em `docs/adrs.md` passa a
-apontar para a pendência em vez de prometer o passo.
-
-**Arquivamento:** plano → `plans/archive/2026-08-11-estilizacao-adr16-shell-tipografia.md`; spec →
-`specs/archive/2026-08-11-estilizacao-adr16-shell-tipografia-design.md` (não é compartilhada — o
-UI-06 parqueado no BD-3 é citado por narrativa, não por path). A referência interna do plano à spec
-foi reapontada. Entrega no `progress.md`, com a de 2026-08-05 descendo para o `progress-archive.md`
-para manter dez. Item 4 removido de "Próximos blocos" **sem renumerar** os anteriores (era o
-último). Os dois débitos que o bloco fechado decidia — "Shell fora de conformidade com o ADR-16 §4"
-e "Toggle da sidebar sem efeito abaixo de 1024px" — saíram de `## Débitos técnicos` e de "Fora dos
-BDs", como a §11 da spec prescrevia.
-
-**Pendências:** nasceu a **P-31** (espelho do Drive); a **P-30** já havia nascido no review. Nenhuma
-fechou e nenhum gatilho de data venceu (P-28 revisa 2026-09-30; P-29, P-30 e P-32 revisam
-2026-10-31; P-02 e P-05 seguem presas a "antes de produção").
-
-**Estado do banco de dev:** intocado — o bloco é frontend-only e a jornada do gate foi read-only
-fora do login. O `LOT-2026-1001` corrompido de propósito continua lá, esperando o checkpoint visual
-de outro bloco.
-
-**O que o fechamento NÃO provou, sem maquiagem:** o ponto 5 do ADR-16 **não** está no Drive (P-31);
-o `ámbar-aviso` da spec original nunca foi construído e a paleta tem cinco donos, não seis (P-30);
-a caixa branca do toggle sobre a navy no tema claro segue sendo escolha estética dele, não defeito
-resolvido; e UI-04 e UI-06 continuam sem teste automatizado — são geometria, provadas por medição e
-screenshot, como o próprio plano declarou.
-
-**Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.

@@ -108,45 +108,21 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-3 → BD-4 → BD-5 → BD-6**. O **BD-8** e o **BD-9** nasceram depois (revisão
-de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend, enquanto
-BD-3..BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi entregue em
-2026-08-13** e saiu desta lista (`progress.md`), então dessa fila resta o BD-9. Qual das duas filas anda antes é
-promoção explícita do João, como sempre. O **BD-1** foi entregue
+> Ordem entre blocos: **BD-4 → BD-5 → BD-6**. O **BD-3** foi entregue em 2026-08-12 e saiu desta
+> lista com os seis débitos que cobria (os três do piloto UI de Clientes, `Q-14`, `Q-15`, o CTA
+> duplicado e a cor fora do corte do D18); a lacuna de alcance que ele deixou na catraca de cor —
+> o shell fora de `COR_HARDCODED` — ficou na **P-34**. O **BD-8** e o **BD-9** nasceram depois
+> (revisão de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend,
+> enquanto BD-4..BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi
+> entregue em 2026-08-13** e saiu desta lista (`progress.md`), então dessa fila resta o BD-9. Qual
+> das duas filas anda antes é promoção explícita do João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
 > `## Débitos técnicos`. O **BD-7** foi entregue em 2026-08-12, **fora da ordem escrita e por
 > promoção explícita do João**, e saiu com o débito `last_login` que ele cobria; a retenção do dado
-> pessoal que a tabela nova passou a guardar ficou na **P-30**. A ordem dentro de cada bloco é parte
+> pessoal que a tabela nova passou a guardar ficou na **P-33** (nasceu como segunda `P-30` e foi
+> renumerada no fechamento do BD-3). A ordem dentro de cada bloco é parte
 > do bloco, não sugestão.
-
-### BD-3 · Faixa visível e acessibilidade dos diálogos (fronteira `shared/ui`)
-
-Antes do BD-4 de propósito: mexe nos mesmos arquivos que o BD-4 vai fatiar, e extrair duas vezes é
-desperdício.
-
-Cobre: os **três débitos do piloto UI de Clientes** (tabela/estado vazio; foco e maximização sem
-nome; campos desabilitados truncados) · **Q-14** (`AppErrorState`) · **Q-15** (`AppDataTable`) ·
-**"Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`)"** (CTA duplicado) · **"Cor fora do corte do
-D18"**.
-
-Ordem:
-1. `AppDialog` — restaurar o foco ao disparador no `onHide` e nomear o controle de maximizar;
-   conferido em 2026-08-10: o wrapper é uma linha (`<Dialog maximizable …/>`), sem `aria-label` e
-   sem restauração. Corrige os 9 diálogos de uma vez;
-2. modo leitura — valor completo legível e copiável em campo desabilitado (`ClientGeneralFields` e
-   irmãos usam `disabled={readOnly}` puro), preservando os inputs no modo edit;
-3. tabela e estado vazio dentro da faixa visível em `1024x768` e `390x844`, pela fronteira
-   `shared/ui`;
-4. **CTA duplicado** — escolher um lugar só; hoje `ClientsTable` passa o mesmo `actions` para o
-   `emptyState` **e** para a toolbar da `SearchableTableFrame`, e `BudgetsTable` repete o padrão;
-5. **Q-14** e **Q-15** no mesmo commit — os dois são estado de carregamento mentindo na tela
-   (botão Reintentar sem feedback; paginador ligado com `footerCount` mesmo em `loading`);
-6. cor Tailwind hardcoded nos diálogos de feature (**D18**), por variável do tema (ADR-16).
-
-DoD: `/lotus-ui-review` nas três viewports fecha os seis de uma passada — comportamento na tela,
-não lint verde.
-Fora: o shell (`Sidebar`/`AppLayout`/`AppHeader`) — é exceção aprovada pelo João em 2026-07-26.
 
 ### BD-4 · Catraca do `max-lines` e adoção da moldura
 
@@ -302,36 +278,29 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 > em `## Blocos de execução de dívida — BD-2..BD-7`; entrar num BD **não** move nem apaga a linha
 > daqui — a remoção acontece só depois do bloco aplicado e do `/fechar-sprint` correspondente.
 
-- **Piloto UI Clientes — tabela e estado vazio perdem a faixa visível em tablet/mobile.**
-  Reproduzido por Codex e Claude Code em 2026-08-10: em `1024x768` e `390x844`, a coluna de ação
-  `View` começa fora da área visível e exige rolagem horizontal; em `390x844`, após pesquisar um
-  termo inexistente, o título, a orientação e a ação `Clear search` ficam cortados. No run Codex,
-  o wrapper do estado sem resultado mediu `452px` de conteúdo para `276px` visíveis. Evidências:
-  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{tablet,mobile}` e
-  `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/{06,07,09,10}-*.png`. Saída: preservar
-  os dados, mas manter a ação necessária e os estados vazio/erro aderentes à faixa visível pela
-  fronteira `shared/ui`; validar a mesma jornada nas três viewports.
-
-- **Piloto UI Clientes — o diálogo perde contexto de foco e expõe maximização sem nome.**
-  Reproduzido por Codex e Claude Code em desktop, tablet e mobile em 2026-08-10: ao fechar a
-  visualização por `Escape`, `document.activeElement` passa a `BODY` em vez de retornar ao botão
-  `View` (Codex nas três viewports; Claude em desktop e mobile); o primeiro controle no ciclo do
-  diálogo é o botão de maximizar, cujo HTML não contém `aria-label`, `aria-labelledby` nem `title`.
-  Evidências:
-  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{desktop,tablet,mobile}` e screenshots
-  `03`/`04`/`08`/`11` de `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/`. Saída:
-  restaurar o disparador ao fechar e nomear o controle de maximização de forma localizada na
-  fronteira compartilhada `AppDialog`/`CrudDialog`.
-
-- **Piloto UI Clientes — campos desabilitados truncam valores no modo visualização.**
-  Reproduzido por Codex e Claude Code nas três viewports em 2026-08-10: `Email` e
-  `Business activity` exibem apenas parte do valor em inputs desabilitados, que não recebem foco
-  nem oferecem um mecanismo evidente para ler ou copiar o conteúdo integral; o contraste reduzido
-  também foi medido no run Claude. Evidências:
-  `.artifacts/ui-review/2026-08-10T13-18-30-codex-live/{desktop,tablet,mobile}/*dialog-open.png` e
-  `.artifacts/ui-review/2026-08-10-1442-clientes-comercial/{04,08,11}-*.png`. Saída: no modo
-  read-only, expor o valor completo com leitura e seleção acessíveis, preservando os inputs no
-  modo edit.
+- **Seis achados B de UI, todos PRÉ-EXISTENTES ao diff do BD-3 e nenhum em arquivo que ele tocou.**
+  Saíram das duas passadas de `/lotus-ui-review` do bloco (gate da Task 8 e gate de fechamento,
+  2026-08-12) e entram aqui porque o bloco os **encontrou**, não os criou. Relatórios em
+  `.artifacts/ui-review/2026-08-12T19-41-45-bd3-gate-task8/` e
+  `.artifacts/ui-review/2026-08-12T21-30-00-bd3-closure/` (diretório gitignored — a evidência é
+  local, a linha é o registro durável).
+  1. **Nome de arquivo truncado sem `title` nem quebra a 390x844** (`RedatorDialog`, seção
+     DOCUMENTS) — o valor some sem mecanismo de leitura, que é a mesma classe do débito de campo
+     desabilitado que o BD-3 pagou, num controle que ele não cobria.
+  2. **Plural cru em duas das sete tabelas** — "3 course(s)" e "1 user(s)" contra "4 clients",
+     "7 instructors" e "6 budgets". Rodapé do `AppDataTable` alimentado por chave sem plural i18n.
+  3. **Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** — no toque não há hover, então
+     o nome do item de navegação fica inalcançável.
+  4. **Cada montagem de página com abas busca as DUAS abas** — custo de rede dobrado na abertura de
+     `PeoplePage` e `CertificatesPage`; sem falha funcional, mas mensurável.
+  5. **Bloco de erro bilíngue com caminho de campo cru na tela** — título vem do i18n do front e
+     segue a sessão (`Could not load the data`), corpo vem do `detail` do RFC 7807 e chega sempre em
+     espanhol, citando `aluno.name` (que ainda por cima é português). Medido no estado de erro real
+     do `LOT-2026-1001` em `/certificados`.
+  6. **A linha do certificado corrompido mostra a célula de aluno vazia, sem o travessão** que o
+     modo leitura do próprio BD-3 usa para ausência — a lista não distingue "sem nome" de "campo
+     faltando", e é o único lugar onde o registro aparece antes do clique. O diálogo do mesmo
+     registro explica a falha; a linha, não.
 
 - **O trio da foto é idêntico em 4 dialogs e ficou fora do item 1 de propósito.**
   `useEntityPhoto({resource, id, mode, url, invalidateKey})` + `afterCreate: (created) =>
@@ -402,18 +371,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   Arch tests cobrindo DDD-lite/sem-Repository, auditoria só na aplicação e demais leis testáveis no
   backend, mais `eslint-boundaries` para a regra de dependência do frontend (features não importam
   PrimeReact direto nem outra feature). Gatilho em `pendencias.md` P-04: reavaliar em 2026-08-15.
-- **Q-14 — `AppErrorState` não sinaliza "reintentando".** `AppErrorState.tsx:36`: o botão Reintentar
-  não recebe estado de refetch nem `disabled`, então cliques repetidos disparam refetch em série sem
-  nenhum feedback. Achado 🟢 do `/revisar-sprint` da Parte 4 (2026-07-27); o João optou por não
-  corrigir na parte. Exige propagar `isFetching` do consumidor até o componente.
-- **Q-15 — faixa de rodapé conta 0 durante o load inicial.** `AppDataTable.tsx:106`: `paginator`
-  liga junto com `footerCount` mesmo em `loading`, então a faixa afirma "0 registros" sob a overlay
-  do PrimeReact antes de o GET terminar. Cosmético; a overlay cobre. Achado 🟢 do `/revisar-sprint`
-  da Parte 4 (2026-07-27), deferido pelo João.
-- **Cor fora do corte do D18.** Os 6 diálogos de feature ficaram com cor Tailwind hardcoded
-  (`text-slate-500`, `text-slate-400` no `RoleDialog`, entre outros) — o D18 cortou o escopo em
-  `shared/ui` + os 3 arquivos do D14 de propósito. Achado Minor do review final da Parte 4, não é
-  esquecimento.
 - Decidir assimetria entre camadas: a UI não consegue voltar a zero principais, mas o backend
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão
@@ -422,11 +379,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   permitir a admin comum enumerar permissões do superadmin enquanto `/api/permissions` é
   superadmin-only. A parte de teste desta linha e a linha inteira do **Bloco 5.2a** saíram em
   2026-08-11 com o BD-2 (`integridade-e-concorrencia-backend`).
-- Bloco visual · Parte 1 (Q-1 do `/revisar-sprint`, adiado pelo João em 2026-07-26): CTA duplicado
-  quando `ClientsTable`/`BudgetsTable` estão genuinamente vazias — `AppCardToolbar` (`end={actions}`)
-  e `AppEmptyState` (`action={actions}`) renderizam o mesmo botão nos dois lugares ao mesmo tempo.
-  Não pegou no DoD porque o `OperationDemoSeeder` nunca zera as duas tabelas. Escolher um lugar só
-  para o botão (`ClientsTable.tsx:36,59`, `BudgetsTable.tsx:69,94`).
 - **Alunos · o dropdown de empresa depende de uma permissão de outro módulo.** O módulo de alunos
   inteiro é gated por `identity.user.*` (D8 da spec, e é o que o `StudentController` exige), mas o
   dropdown de empresa do create lista via `clientsApi`, que exige `commercial.client.view`. Quem tem
