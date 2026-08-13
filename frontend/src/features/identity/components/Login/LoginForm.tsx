@@ -67,10 +67,11 @@ export function LoginForm() {
 
       <AppButton type="submit" label={t("login.submit")} loading={isSubmitting} />
 
-      {/* stub: fluxo de senha (task futura, sem endpoint) */}
-      <a className="text-center text-sm cursor-default" style={{ color: 'var(--text-color-secondary)' }}>
+      {/* Texto de ajuda, não link: não existe endpoint de recuperação de senha,
+          e uma <a> sem href fica fora da ordem de tabulação (UI-07). */}
+      <p className="text-center text-sm" style={{ color: 'var(--text-color-secondary)' }}>
         {t("login.forgot")}
-      </a>
+      </p>
     </form>
   );
 }
