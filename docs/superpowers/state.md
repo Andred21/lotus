@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: usecrudform-mais-fundo
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md
 active_plan: docs/superpowers/plans/2026-08-13-usecrudform-mais-fundo.md
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 023be10
-updated_at: 2026-08-13T16:05:00-03:00
+state_basis_commit: f766860
+updated_at: 2026-08-13T17:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -259,6 +259,75 @@ navegador nesta execução.
 
 **Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona a
 revisão do trabalho ativo.
+
+### Review de sprint — 2026-08-13: BAIXO risco, uma lente, 1 achado
+
+**BAIXO pelo gate binário da skill, confirmado, não herdado da spec:** zero schema, `generated.ts`,
+Sanctum, auditoria, RBAC, dinheiro escrito ou documento legal gerado; `executor: claude`. Só lente
+Claude, sem Codex.
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **31 arquivos / 156 testes** — bate exato com a projeção do plano.
+`git diff main...HEAD --name-only -- backend/ frontend/src/shared/types/generated.ts` devolve
+**zero linha**. Os seis arquivos-alvo (`StaffUserDialog`, `StudentDialog`, `ClientDialog`,
+`RedatorDialog`, `RedatorUserSection`, `useCourseForm.ts`) pousaram em
+**125 / 97 / 97 / 127 / 40 / 129** linhas, todos com folga da régua de 150.
+
+**Órfãos: zero.** `FormPhotoRow` em 7 arquivos (4 consumidores + componente + 2 barrels),
+`useCrudFormWithPhoto` em 6 (3 hooks + hook + teste + barrel), conferido por grep.
+
+**O trio morreu nos três que migraram, sobrevive no quarto por critério:**
+`closeBlocked={pending || photo.pending}` tem **uma** ocorrência, em `RedatorDialog.tsx:70` — o hook
+do redator não migra (multipart, fora de escopo por D2), exatamente o esperado pela Task 9 Step 4.
+`createdIdRef` só sobrevive em comentário documental de `useCrudForm.ts:148`, citando o mecanismo que
+substituiu — mesma classe de hit legítimo já registrada no fechamento do BD-4.
+
+**As extrações foram conferidas contra o diff, não presumidas:** os quatro sítios do `FormPhotoRow`
+e as três migrações para `useCrudFormWithPhoto` batem com a Task 5/6/7/8 do plano, byte a byte no
+JSX. `useCourseForm.ts` bate com a Task 10: `createdIdRef` morto, `sync.mutateAsync` dentro do
+`afterCreate`, `extra: [sync]` somando `pending`/`fieldErrors`, `crud.form.redator_ids` lido no
+momento da chamada (fechamento correto, não capturado cedo — sem o desvio do `useRef` que a Task 10
+previu como contingência).
+
+**O único achado:**
+
+1. **Q-1 🟡 P** — `useCrudForm.ts:159-165`, `runAfterCreate`:
+   ```ts
+   async function runAfterCreate(created: T) {
+     try {
+       await afterCreate?.(created)
+     } catch {
+       return
+     }
+     onDone()
+   }
+   ```
+   O `catch` engole **qualquer** erro de `afterCreate`, sem log nenhum. O próprio docblock admite a
+   premissa: "o erro já está no `fieldErrors` da mutação que falhou" — mas isso é contrato do
+   chamador, não garantido pelo tipo de `afterCreate?: (created: T) => void | Promise<void>`. Hoje a
+   premissa se sustenta nos 3 caminhos que alcançam este código (`photo.flush` não lança de
+   propósito; `useCourseForm.sync` está em `extra`, rastreado). Mas o hook é `shared/hooks`, tem
+   **5 consumidores**, mexe em registros de peso legal (curso, cliente, aluno) — se um consumidor
+   futuro (ou uma falha do próprio `sync`/`afterCreate` fora do que `extra` cobre) lançar algo não
+   rastreado, o diálogo trava aberto sem nenhuma mensagem visível e sem rastro de console. É a classe
+   "vazio silencioso" que o projeto já pagou caro (lição 6; Q-1 do review do BD-4,
+   `RedatorDocumentsSection.tsx` com `removeDoc.error` nunca lido). Não registrado em nenhuma spec,
+   plano ou pendência como debt aceito. Sênior faria: `console.error` no branch do catch, sinal
+   mínimo de dev quando a premissa falhar. **Fere:** catálogo universal (catch vazio).
+
+**O que NÃO virou achado, e por quê:** ausência de teste de componente para a composição
+`FormPhotoRow` + diálogo, e `/lotus-ui-review` não executado — ambos já declarados como débito
+explícito no fechamento da execução (§"O que o bloco NÃO provou"), não achado novo.
+
+**Veredito: o bloco está bom.** Onze commits, cada um batendo com a task correspondente do plano,
+nenhuma extração divergiu do original, nenhum órfão. O achado único é de robustez de mecanismo
+genérico, não correção ativa — nenhum dos 5 consumidores atuais o alcança hoje.
+
+**Q-1 aprovado e corrigido — commit `f766860`.** `console.error` no branch do catch de
+`runAfterCreate`, sinal mínimo de dev quando a premissa do `fieldErrors` falhar. Gate reproduzido
+pós-fix: lint 0, build verde, 31 arquivos / 156 testes — sem mudança de contagem.
+
+**Estado: `ready_for_closure`.**
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
