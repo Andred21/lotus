@@ -59,8 +59,8 @@ export interface SearchableTableFrameProps<T> {
  * rodapé-paginador. As 5 tabelas busca-só repetiam este bloco literalmente —
  * diferiam só em `searchable`, ícone, 3 chaves i18n e `footerCount`.
  *
- * Não entram aqui: `BudgetsTable`/`TurmasTable` (dropdown de filtro por cima),
- * `RolesTable` (sem busca) e `EnrollmentTable` (sem toolbar) — spec D2.
+ * Não entram aqui: `RolesTable` (sem busca) e `EnrollmentTable` (sem
+ * toolbar) — spec D2.
  *
  * Tabela com filtro próprio entra pelo `filterSlot`: o vazio abaixo bifurca a
  * redação por `term`, como `BudgetsTable` e `TurmasTable` já faziam à mão. */
