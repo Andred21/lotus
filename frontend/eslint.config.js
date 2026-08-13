@@ -246,7 +246,6 @@ export default defineConfig([
     // nasce abaixo da régua, e quem passar dela extrai o bloco coeso em vez de
     // entrar aqui. Não acrescente arquivo para calar o lint.
     ignores: [
-      'src/features/identity/components/Student/StudentDialog.tsx',
       'src/features/identity/components/Redator/RedatorDialog.tsx',
       'src/features/identity/components/Redator/RedatorDocumentSlot.tsx',
       'src/features/commercial/components/Budget/BudgetDetailPage.tsx',
