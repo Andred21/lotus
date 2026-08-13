@@ -160,7 +160,8 @@ export function useCrudForm<F extends { id?: number }, T>(
   async function runAfterCreate(created: T) {
     try {
       await afterCreate?.(created)
-    } catch {
+    } catch (error) {
+      console.error('useCrudForm: afterCreate falhou, diálogo permanece aberto', error)
       return
     }
     onDone()
