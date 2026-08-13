@@ -80,9 +80,9 @@ diálogo nenhum, e as duas tabelas não estão na catraca.
 **Os dois diálogos do item (c) não são o mesmo caso:** `useStudentForm` roda sobre `useCrudForm` e já
 entrega `errorSummary` pronto; `useRedatorForm` não usa `useCrudForm` e não tem o que espalhar.
 
-E o ponteiro `FormErrorSummary.tsx:62-67`, citado 4× em doc normativo, **aponta para arquivo que não
-existe** — o componente é export nomeado em `FormField.tsx`, e as linhas 62-67 de lá são do
-`NestedField`.
+E o ponteiro `frontend/src/shared/ui/FormField/FormField.tsx:79-107`, citado 4× em doc normativo, **aponta para arquivo que
+existe** — o componente é export nomeado em `FormField.tsx`, e as linhas 79-107 de lá são do
+`FormErrorSummary`.
 
 ### Brainstorming e spec — 2026-08-13
 
@@ -216,7 +216,7 @@ criada de `18cf90a`.
 7. **Um quarto caminho sem gate, que o relatório não listou e o código autodenuncia:**
    `DeleteTurmaAction.php:8-9` — "Home para futuras guardas do 6d (blindagem pós-conclusão RN-15) —
    hoje sem gate".
-8. **Trocar a chave do erro é inerte na tela.** `FormErrorSummary.tsx:62-67` renderiza qualquer
+8. **Trocar a chave do erro é inerte na tela.** `frontend/src/shared/ui/FormField/FormField.tsx:79-107` renderiza qualquer
    chave sem input mapeado e `useMutationErrors` cai no primeiro valor do mapa. Só um teste afirma
    texto literal de gate (`EnrollmentResultTest:150-151`), e é a mensagem que **fica**.
 
@@ -361,8 +361,8 @@ como pendência resolvida.
 **Dois erros de ponteiro na spec, conferidos por mim no código, que não são defeito de código:** a
 D14 afirma que **dois** testes congelam a string da RN-15, mas `IssueCertificateTest:107` afirma a
 mensagem da **RN-08** (outro gate, condição oposta) — só o `EnrollmentResultTest:151` congela a
-RN-15; e a spec justifica a troca de chave `status` → `turma` citando `FormErrorSummary.tsx:62-67`,
-**arquivo que não existe** no repositório. A conclusão da spec sobrevive pelo mecanismo real:
+RN-15; e a spec justifica a troca de chave `status` → `turma` citando `frontend/src/shared/ui/FormField/FormField.tsx:79-107`,
+**arquivo que existe** no repositório. A conclusão da spec sobrevive pelo mecanismo real:
 `useMutationErrors` (`frontend/src/shared/hooks/useEntityForm.ts:54-63`) cai no primeiro valor do
 mapa **independentemente da chave**, e `useConclusionSection.ts:15` consome esse `message`.
 

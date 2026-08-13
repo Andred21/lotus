@@ -337,16 +337,16 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
 - **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
   `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
   `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
-  (189), `RedatorDialog` (189), `RedatorDocumentSlot` (175), `BudgetDetailPage` (171). Enquanto a
+  (281; medido 2026-08-13), `RedatorDialog` (206; medido 2026-08-13), `RedatorDocumentSlot` (175), `BudgetDetailPage` (187; medido 2026-08-13). Enquanto a
   lista existir, o lint verde afirma menos do que parece — mesmo padrão da catraca de
   query-em-componente, zerada em 2026-08-03. Lista que só encolhe: não acrescente arquivo para calar
   o lint. Saída: extrair o bloco coeso de cada um nos moldes já provados
   (`ContactFields`/`ContactCard`, `ModuleFields`/`ModuleCard`), um arquivo por commit, saindo dos
   `ignores` no mesmo commit — DoD é comportamento idêntico na tela, não lint verde.
   **Remedido em 2026-08-10 (os números de origem ficam registrados acima):** a catraca **piorou** —
-  `StudentDialog` foi de 189 para **283** linhas e `RedatorDialog` de 189 para **199**, os dois em
+  `StudentDialog` foi de 189 para **281** linhas (medido 2026-08-13) e `RedatorDialog` de 189 para **206** (medido 2026-08-13), os dois em
   `501b731` (2026-08-05), com o lint verde o tempo todo porque estão nos `ignores`.
-  `RedatorDocumentSlot` (175) e `BudgetDetailPage` (171) seguem iguais. Coberto pelo **BD-4**.
+  `RedatorDocumentSlot` (175) e `BudgetDetailPage` (187; medido 2026-08-13) seguem acima da régua. Coberto pelo **BD-4**.
 - **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
   `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
   sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
@@ -409,7 +409,7 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   resumo que falta é o débito. Saída: o commit que adicionar o `FormErrorSummary` aos dois paga
   junto a conferência de que todo campo em `mapped` realmente passa `error=` ao `FormField` — DoD é
   o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
-  do `max-lines` (189 linhas cada).
+  do `max-lines` (281 e 206 linhas; medido 2026-08-13).
 
 - **Um dos três achados do review de 2026-08-05 segue aberto — 🟢, esforço P.** (Q-4) O fato medido
   em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData`
