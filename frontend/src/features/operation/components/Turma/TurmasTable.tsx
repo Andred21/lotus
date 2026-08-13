@@ -19,7 +19,9 @@ export function TurmasTable({
   turmas: TurmaData[]
   loading: boolean
   error?: { detail?: string | null } | null
-  onRetry?: () => void
+  /** A promise é o que mantém o Reintentar em `loading` (Q-14); `() => void`
+   * compilaria e faria esta camada mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()

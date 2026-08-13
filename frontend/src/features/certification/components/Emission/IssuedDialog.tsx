@@ -4,6 +4,7 @@ import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
 import { formatDate } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
+import { dangerText } from '@shared/styles/tokens'
 
 type Props = {
   /** Sempre conhecido de imediato (vem da linha ou da resposta do POST de
@@ -84,7 +85,7 @@ export function IssuedDialog({
           </div>
 
           {(pdf.popupBlocked || pdf.message) && (
-            <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+            <p className="text-sm" style={{ color: dangerText }}>
               {pdf.popupBlocked ? t('certificate.popupBlocked') : pdf.message}
             </p>
           )}

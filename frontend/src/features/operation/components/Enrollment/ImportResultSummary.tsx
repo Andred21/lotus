@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { ImportResultData } from '@shared/types/generated'
+import { dangerText } from '@shared/styles/tokens'
 
 export function ImportResultSummary({ result }: { result: ImportResultData }) {
   const { t } = useTranslation()
@@ -44,8 +45,8 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
 
       {result.errors.length > 0 && (
         <div>
-          <p className="font-medium" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>{t('operation.enrollment.import.errors')}</p>
-          <ul className="list-disc pl-5" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+          <p className="font-medium" style={{ color: dangerText }}>{t('operation.enrollment.import.errors')}</p>
+          <ul className="list-disc pl-5" style={{ color: dangerText }}>
             {result.errors.map((e, i) => (
               <li key={i}>{t('operation.enrollment.import.errorRow', { row: e.row, message: e.message })}</li>
             ))}

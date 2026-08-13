@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppInputText, FormField, FormErrorSummary } from '@shared/ui'
 import { useEnrollStudentFlow } from '../../hooks/useEnrollStudentFlow'
 import { MoveConfirmDialog } from './MoveConfirmDialog'
+import { dangerText } from '@shared/styles/tokens'
 
 type Props = {
   turmaId: number
@@ -74,7 +75,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
         )}
 
         {f.message && (
-          <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+          <p className="text-sm" style={{ color: dangerText }}>
             {f.message}
           </p>
         )}

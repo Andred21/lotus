@@ -46,12 +46,20 @@ export function BudgetDialog({
           </p>
         )}
 
-        <FormField label={t('budget.client')} error={fieldErrors?.client_id?.[0]}>
-          {/* Cliente é imutável depois de criado: o backend só deixa payment_terms mudar. */}
+        {/* Cliente é imutável depois de criado: o backend só deixa
+            payment_terms mudar. Fora do `create` o campo é texto — dropdown
+            desabilitado cortava a razão social, que é o valor mais longo do
+            diálogo (review do BD-3, Q-1). O `value` mostra o RÓTULO, nunca o
+            id. */}
+        <FormField
+          label={t('budget.client')}
+          error={fieldErrors?.client_id?.[0]}
+          readOnly={readOnly || !isCreate}
+          value={clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
+        >
           <AppDropdown
             value={form.client_id}
             options={clientOptions}
-            disabled={readOnly || !isCreate}
             onChange={(e) => set('client_id', e.value as number)}
           />
         </FormField>

@@ -89,9 +89,16 @@ export function AppDataTable<T extends DataTableValueArray>({
   // sustentam a tabela mesmo com o corpo ocupado por um único `<td>` de estado
   // vazio (452px de conteúdo para 276px visíveis, medido em 390x844). Cabeçalho
   // sobre zero linha não informa nada: não há coluna a interpretar.
+  //
+  // `loading` NÃO é estado vazio, e por isso o cabeçalho fica: durante o GET
+  // inicial a lista também está vazia, e esconder o `thead` ali fazia o
+  // cabeçalho sumir e voltar a cada carregamento, com o card saltando de altura
+  // — exatamente o que a decisão do Q-15, três linhas abaixo, recusou ao manter
+  // a faixa do rodapé sempre montada (review do BD-3, Q-3). A largura mínima
+  // segue zerada sempre que não há linha, carregando ou não.
   const widthPt: DataTablePassThroughOptions = hasRows
     ? {}
-    : { table: { className: '' }, thead: { className: 'hidden' } }
+    : { table: { className: '' }, ...(loading ? {} : { thead: { className: 'hidden' } }) }
 
   const body = errored ? (
     <AppErrorState

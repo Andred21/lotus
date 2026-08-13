@@ -19,6 +19,17 @@ describe('FormField em modo leitura', () => {
     expect(screen.queryByTestId('controle')).toBeNull()
   })
 
+  it('em leitura SEM filho nenhum mostra o valor', () => {
+    // O sítio que nasce só-leitura (snapshot de certificado, carga horária
+    // derivada) não tem controle a montar em modo algum. Antes ele escrevia
+    // `<AppInputText disabled readOnly>`, que é o próprio débito do §4 — o
+    // input corta o valor. `children` opcional é o que permite matá-lo
+    // (review do BD-3, Q-1).
+    render(<FormField label="Código" readOnly value="LOT-2026-1001" />)
+
+    expect(screen.getByText('LOT-2026-1001')).toBeTruthy()
+  })
+
   it('mostra travessão quando o valor é vazio', () => {
     render(<FormField label="Giro" readOnly value="">{null}</FormField>)
 

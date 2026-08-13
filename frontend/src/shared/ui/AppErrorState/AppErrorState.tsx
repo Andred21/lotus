@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppButton } from '../AppButton'
+import { dangerText } from '../../styles/tokens'
 
 export interface AppErrorStateProps {
   title: string
@@ -26,8 +27,6 @@ export interface AppErrorStateProps {
  * é o que mantém contraste nos dois temas — os palette vars do Lara não invertem.
  */
 export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorStateProps) {
-  const danger = 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))'
-
   const [retrying, setRetrying] = useState(false)
 
   const handleRetry = async () => {
@@ -42,8 +41,8 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
 
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <i className="pi pi-exclamation-triangle text-3xl" style={{ color: danger }} aria-hidden="true" />
-      <p className="text-base font-semibold" style={{ color: danger }}>{title}</p>
+      <i className="pi pi-exclamation-triangle text-3xl" style={{ color: dangerText }} aria-hidden="true" />
+      <p className="text-base font-semibold" style={{ color: dangerText }}>{title}</p>
       {detail && (
         <p className="max-w-md text-sm" style={{ color: 'var(--text-color-secondary)' }}>{detail}</p>
       )}

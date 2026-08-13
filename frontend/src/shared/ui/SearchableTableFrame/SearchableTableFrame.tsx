@@ -122,7 +122,11 @@ export function SearchableTableFrame<T>({
         // busca sem resultado não é lista vazia (linha 18-23 acima) — se
         // recalculasse por `rows.length`, o CTA sumiria também durante busca sem
         // match, e o vazio de busca só oferece "limpar", nunca o CTA de domínio.
-        end={error || (!table.filtering && table.rows.length === 0) ? undefined : actions}
+        // `!loading` pelo mesmo motivo: durante o GET inicial a lista está vazia
+        // e o `AppDataTable` mostra o corpo de carregamento, não o empty state —
+        // sem esta guarda o botão de cadastro não existia em lugar nenhum da
+        // tela até o GET voltar (review do BD-3, Q-3).
+        end={error || (!loading && !table.filtering && table.rows.length === 0) ? undefined : actions}
       />
       <AppDataTable
         value={table.rows as unknown as DataTableValueArray}

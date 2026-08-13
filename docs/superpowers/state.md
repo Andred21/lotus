@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: faixa-visivel-e-acessibilidade-dos-dialogos
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md
 active_plan: docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: last-login
 state_basis_commit: 9f38492
-updated_at: 2026-08-12T20:47:00-03:00
+updated_at: 2026-08-12T21:12:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -244,6 +244,70 @@ do DOM e sobra só `title` — sem hover no toque. UI-05: cada montagem de pági
 **Estado:** `ready_for_review`. O review do bloco (`/revisar-sprint`) exige instrução do João; o foco
 declarado no plano é um só — **onde a mudança de `shared/ui` alcança tela que este bloco não abriu, e
 o que ela faz lá.** Risco de review: **MÉDIO**.
+
+### Review de sprint — 2026-08-12: BAIXO risco, uma lente, 5 achados, todos corrigidos
+
+**BAIXO RISCO pelo gate da skill**, e aqui as duas escalas **divergem sem conflito**: a §9 da spec
+declara MÉDIO, a do `/revisar-sprint` é binária e nenhum gatilho de ALTO se aplica (sem schema,
+`generated.ts`, auth, RBAC, dinheiro, documento legal; `executor: claude`). Uma lente — Claude com o
+gabarito do projeto —, **sem Codex**.
+
+**Gate reproduzido, não herdado:** `pnpm test` **28 arquivos / 137 testes**, lint limpo, build verde;
+`git diff main...HEAD -- backend/ generated.ts` vazio; zero sonda; zero `from 'primereact` em
+`src/features`. **Órfãos: zero.** As 40 conversões seguem um molde só, o dropdown mostra rótulo e não
+código cru, e a fusão das regras nos arrays existentes (`2e2deb2`) é a correção certa do merge raso.
+
+**Os cinco achados são todos do foco declarado no plano** — o que `shared/ui` faz na tela que o bloco
+não abriu. Decisão do João: **os cinco entram**, corrigidos na mesma sessão.
+
+1. **Q-1 🟡 — o débito do modo leitura foi medido por STRING, não por forma.** A §4.1 achou 41 sítios
+   perguntando por `disabled={readOnly}`; a mesma pergunta feita pela forma do defeito acha **17 a
+   mais**, e o seletor entregue não via nenhum deles: `disabled={f.readOnly}` (MemberExpression, 4× em
+   `TurmaConfigCard`), `disabled={readOnly || !isCreate}` (LogicalExpression, `BudgetDialog`) e o par
+   **estático** `<AppInputText value={…} disabled readOnly />` (12×, sendo 11 na certificação — código,
+   RUT, nome do curso e motivo de revogação de snapshot congelado, dado de peso legal truncado num
+   input cinza). É a **2ª vez** que uma catraca deste `eslint.config.js` nasce medindo enumeração em
+   vez de forma (a 1ª foi a lista literal de features, Q-5 de 2026-08-04, citada no topo do próprio
+   arquivo).
+2. **Q-2 🟡 — o Q-14 atravessava por acidente.** O plano alargou `onRetry` nas **três** camadas de
+   `shared/ui` e não nas **dez** de feature entre a página e a moldura; nas 5 telas CRUD a promise
+   passava por baixo do tipo `() => void`, e em `OperationPage` (2×) e `StudentDialog` o
+   `void x.refetch()` a **apagava** — Reintentar sem feedback e duplo clique disparando dois GETs, em
+   telas que o gate não abriu.
+3. **Q-3 🟡 — o ramo de `loading` ficou fora das duas condições novas.** Durante o GET inicial a lista
+   também está vazia: o `<thead>` sumia e voltava (as 14 tabelas) e o CTA de cadastro **não existia em
+   lugar nenhum** da tela até o GET responder. É a classe que a decisão do Q-15 recusou três linhas
+   acima, ao manter a faixa do rodapé sempre montada.
+4. **Q-4 🟢 — `COR_HARDCODED` não rodava em `src/shared/**`**, que é justamente a camada onde a cor
+   deve vir do tema e onde um wrapper alcança todas as telas.
+5. **Q-5 🟢 — a fórmula do vermelho virou string mágica em 13 arquivos** (19 cópias): o bloco trocou
+   uma cor sem dono (`text-red-600`) por outra cor sem dono.
+
+**Como cada correção foi provada:**
+
+| Achado | Correção | Prova |
+|---|---|---|
+| Q-1 | seletor por forma (`:has(Identifier[name="readOnly"])`) + seletor novo para o par estático; os 17 sítios convertidos; `children` do `FormField`/`NestedField` vira **opcional** (campo que nasce só-leitura não tem controle a montar) | as duas regras vistas **vermelhas** com mutação (`disabled={form.readOnly}` e `<input disabled readOnly/>`), e um teste novo do `FormField` sem filho — **138 testes** |
+| Q-2 | as 10 props de feature passam a `() => void \| Promise<unknown>`; os 3 sítios devolvem a promise; `BudgetsTable.retry` vira `Promise.all` das duas recargas | o alargamento **quebrou o build em 7 lugares** (`() => unknown` da fonte não é assinável) — o tipo mentia na raiz, em `ListableResource.refetch`, corrigido para `() => Promise<unknown>` |
+| Q-3 | `thead` só some com `!hasRows && !loading`; CTA só some com `!loading`; `BudgetsTable` ganha `busy` (as duas queries) | a largura mínima segue zerada sempre que não há linha — o ganho do estado vazio a 390px não regride; conferido no código, **não** re-observado no navegador |
+| Q-4 | `COR_HARDCODED` entra no bloco de `src/shared/**` | **nasce verde** (zero classe de paleta em `src/shared`, medido) e reprova a reintrodução na mutação. `src/app/**` fica fora **por exceção declarada** — o shell é aprovação do João de 2026-07-26, registrada no `backlog.md` |
+| Q-5 | `shared/styles/tokens.ts` com `dangerText`/`dangerSurface`/`warningText`/`warningSurface` + `infoText`/`successText` (o mapa de tons do `AppCard` inteiro) | build verde com as 19 cópias substituídas; nenhuma `color-mix` literal sobra em `.tsx` |
+
+**Gate depois das correções:** **28 arquivos / 138 testes** (o teste novo do `FormField`), `pnpm lint`
+limpo, `pnpm build` verde. Diff das correções: **34 arquivos, +263/−131**, com `tokens.ts` novo.
+
+**O que as correções NÃO provaram, sem maquiagem:** **nada foi re-observado no navegador.** As
+mudanças do Q-3 mexem no estado de carregamento das 14 tabelas e o Q-1 mudou 5 diálogos que o gate da
+Task 8 não abriu (`ConfirmIssueDialog`, `CertificateViewDialog`, `RevokeDialog` pelo
+`CertificateIdentityFields`, `TurmaConfigCard`, `BudgetDialog`) — a prova aqui é tipo, lint com
+mutação nos dois sentidos e suíte. **O `/lotus-ui-review` precisa rodar de novo antes do fechamento**,
+com foco em `/operacion`, `/certificados` e no estado de carregamento das listas. `AppPhotoField.onRetry`
+segue `() => void` de propósito: é re-upload bufferizado do `useEntityPhoto`, não passa pelo
+`AppErrorState` e não tem promise a aguardar.
+
+**Proposta de regra ainda NÃO decidida pelo João** (padrão reincidente do Q-1): parágrafo em
+`.claude/rules/frontend-fsliced.md` — *catraca nova mede a própria população com o seletor dela, nunca
+com o grep que originou o débito; grep acha a grafia, o seletor acha o defeito.*
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 

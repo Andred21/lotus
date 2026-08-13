@@ -20,7 +20,10 @@ export function BudgetsTable({
   loading: boolean
   actions?: ReactNode
   error?: { detail?: string | null } | null
-  onRetry?: () => void
+  /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
+   * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
+   * retorno — e faria o tipo mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -32,7 +35,13 @@ export function BudgetsTable({
   // busca por cliente devolvendo vazio, tudo em silêncio — a tela afirmaria que
   // esses orçamentos não têm cliente (spec D16). Reintentar recarrega as duas.
   const loadError = error ?? clients.loadError
-  const retry = () => { onRetry?.(); clients.refetch() }
+  /** Devolve a promise das DUAS recargas: o Reintentar do `AppErrorState`
+   * aguarda o retorno para ficar em `loading` enquanto os GETs estão em voo
+   * (Q-14). Descartá-las deixava o botão sem feedback nenhum. */
+  const retry = () => Promise.all([onRetry?.(), clients.refetch()])
+  /** Carregando é qualquer uma das duas queries: a tabela só está "vazia"
+   * depois que as duas responderam. */
+  const busy = loading || clients.isLoading
 
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
@@ -95,11 +104,11 @@ export function BudgetsTable({
           </>
         }
         // Mesma regra da SearchableTableFrame; a adoção da moldura é o BD-4.
-        end={loadError || budgets.length === 0 ? undefined : actions}
+        end={loadError || (!busy && budgets.length === 0) ? undefined : actions}
       />
       <AppDataTable
         value={table.rows}
-        loading={loading || clients.isLoading}
+        loading={busy}
         error={loadError} 
         onRetry={retry}
         emptyMessage={empty}

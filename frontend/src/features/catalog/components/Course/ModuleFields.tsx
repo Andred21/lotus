@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppButton } from '@shared/ui'
 import type { CourseModuleData } from '@shared/types/generated'
 import { ModuleCard } from './ModuleCard'
+import { warningSurface, warningText } from '@shared/styles/tokens'
 
 /** Quadro de módulos do curso. Devolve Fragment, não `<div>`: os filhos são
  * irmãos diretos do `<section className="space-y-4">` do CourseDialog, e um nó
@@ -65,8 +66,8 @@ export function ModuleFields({
         <p
           className="rounded px-3 py-2 text-sm"
           style={{
-            background: 'color-mix(in srgb, var(--yellow-500) 12%, var(--surface-card))',
-            color: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
+            background: warningSurface,
+            color: warningText,
           }}
         >
           {t('courseModule.hoursMismatch', { modules: modulesTotal, workload: workloadHours })}

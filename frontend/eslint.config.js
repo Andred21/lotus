@@ -113,10 +113,30 @@ const COR_HARDCODED = {
   message:
     'Cor Tailwind hardcoded: Tailwind é layout, cor vem de variável do tema (ADR-16). Use style={{ color: "var(--text-color-secondary)" }} e irmãs.',
 }
+// O seletor mede a FORMA do defeito, não a string que o grep achou. A primeira
+// versão exigia `JSXExpressionContainer > Identifier[name="readOnly"]` — casava
+// só `disabled={readOnly}`, que era a grafia dos 40 sítios convertidos — e
+// deixava passar `disabled={f.readOnly}` (MemberExpression, 4 sítios em
+// `TurmaConfigCard`) e `disabled={readOnly || !isCreate}` (LogicalExpression,
+// `BudgetDialog`), que são o MESMO campo truncado em leitura. É a segunda vez
+// que uma catraca deste arquivo nasce medindo enumeração em vez de forma (a
+// primeira foi a lista literal de features, Q-5 de 2026-08-04); achado do
+// review do BD-3 (Q-1).
 const DISABLED_READONLY = {
-  selector: 'JSXAttribute[name.name="disabled"] > JSXExpressionContainer > Identifier[name="readOnly"]',
+  selector: 'JSXAttribute[name.name="disabled"]:has(Identifier[name="readOnly"])',
   message:
     'Campo desabilitado trunca o valor e some com o contraste em leitura: passe `readOnly` e `value` ao FormField/NestedField (spec BD-3 §4).',
+}
+// A terceira grafia, e a que mais dói: o par ESTÁTICO
+// `<AppInputText value={…} disabled readOnly />`, campo que nasce só-leitura e
+// não tem expressão nenhuma para casar. Eram 12 sítios — snapshot congelado de
+// certificado (código, RUT, curso, motivo de revogação) e a carga horária da
+// turma —, dado de peso legal truncado dentro de um input cinza.
+const DISABLED_READONLY_ESTATICO = {
+  selector:
+    'JSXOpeningElement:has(JSXAttribute[name.name="disabled"][value=null]):has(JSXAttribute[name.name="readOnly"][value=null])',
+  message:
+    'Campo que nasce só-leitura não é input desabilitado: use <FormField readOnly value={…}> — o input corta o valor e derruba o contraste (spec BD-3 §4).',
 }
 // Catraca da regra de cor: lista que só ENCOLHE. Login e Validação têm fundo
 // escuro deliberado — mudá-las é desenho novo, não pagamento de débito (D7).
@@ -171,7 +191,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, DISABLED_READONLY],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -181,7 +201,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, DISABLED_READONLY],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -202,7 +222,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, DISABLED_READONLY],
+      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -315,10 +335,21 @@ export default defineConfig([
   // nenhum outro bloco deste arquivo casa `no-restricted-syntax` em
   // `src/shared/**` — sem risco do merge raso (Q-2) aqui: só este bloco
   // declara a regra para este glob.
+  //
+  // `COR_HARDCODED` entra aqui também, e **nasce verde**: `src/shared` tem hoje
+  // zero classe de paleta, medido. Ficar de fora era o buraco mais caro da
+  // catraca (review do BD-3, Q-4) — `shared/ui` é justamente a camada onde a cor
+  // DEVE vir do tema e onde um wrapper novo alcança todas as telas de uma vez.
+  //
+  // `src/app/**` segue sem a regra de propósito, e isso NÃO é esquecimento: o
+  // shell (`Sidebar`/`AppLayout`/`AppHeader`) é exceção aprovada pelo João em
+  // 2026-07-26 e registrada no `backlog.md` ("Fora: o shell"), com 3 classes de
+  // paleta vivas lá. Pôr a regra sem converter o shell só produziria `ignores`
+  // do tamanho da pasta inteira.
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', DISABLED_READONLY],
+      'no-restricted-syntax': ['error', DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED],
     },
   },
 ])

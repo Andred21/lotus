@@ -10,7 +10,12 @@ interface ListableResource<T> {
     isLoading: boolean
     isError: boolean
     error: ProblemDetails | null
-    refetch: () => unknown
+    /** `Promise`, não `unknown`: é o refetch do TanStack Query, e a promise é o
+     * que o `AppErrorState` aguarda para manter o Reintentar em `loading`
+     * (Q-14). Com `() => unknown` aqui, TODA a cadeia acima ficava impedida de
+     * declarar o contrato — o tipo do consumidor não pode ser mais preciso que
+     * o da fonte (review do BD-3, Q-2). */
+    refetch: () => Promise<unknown>
   }
 }
 

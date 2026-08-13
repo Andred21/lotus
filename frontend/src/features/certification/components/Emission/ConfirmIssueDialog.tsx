@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppDropdown, AppInputText, FormField, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, AppDropdown, FormField, FormErrorBanner } from '@shared/ui'
 import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useIssueCertificate } from '../../api/certificatesApi'
@@ -56,18 +56,13 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
         <FormErrorBanner message={message} />
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('certificate.confirmBody')}</p>
 
-        <FormField label={t('certificate.fieldAlumno')}>
-          <AppInputText value={enrollment.student_name} disabled readOnly />
-        </FormField>
-        <FormField label={t('certificate.fieldRut')}>
-          <AppInputText value={enrollment.student_rut} disabled readOnly />
-        </FormField>
-        <FormField label={t('certificate.fieldCurso')}>
-          <AppInputText value={turma.course_name} disabled readOnly />
-        </FormField>
-        <FormField label={t('certificate.fieldVigencia')}>
-          <AppInputText value={vigencia} disabled readOnly />
-        </FormField>
+        {/* Campos de confirmação: nascem só-leitura, então não há controle a
+            montar — `readOnly` sem filho. Input desabilitado cortava o nome
+            longo e derrubava o contraste (spec BD-3 §4). */}
+        <FormField label={t('certificate.fieldAlumno')} readOnly value={enrollment.student_name} />
+        <FormField label={t('certificate.fieldRut')} readOnly value={enrollment.student_rut} />
+        <FormField label={t('certificate.fieldCurso')} readOnly value={turma.course_name} />
+        <FormField label={t('certificate.fieldVigencia')} readOnly value={vigencia} />
 
         <FormField label={t('certificate.fieldRedator')} error={fieldErrors?.redator_id?.[0]}>
           <AppDropdown

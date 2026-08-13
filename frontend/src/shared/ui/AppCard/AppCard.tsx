@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { dangerText, infoText, successText, warningText } from '../../styles/tokens'
 
 export type AppCardVariant = 'default' | 'stat'
 export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
@@ -24,10 +25,10 @@ const TONE_HUE: Record<AppCardTone, string | null> = {
 
 const TONE_TEXT: Record<AppCardTone, string> = {
   neutral: 'var(--text-color)',
-  info: 'color-mix(in srgb, var(--blue-500) 70%, var(--text-color))',
-  success: 'color-mix(in srgb, var(--green-500) 70%, var(--text-color))',
-  warning: 'color-mix(in srgb, var(--yellow-500) 70%, var(--text-color))',
-  danger: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))',
+  info: infoText,
+  success: successText,
+  warning: warningText,
+  danger: dangerText,
 }
 
 /**
