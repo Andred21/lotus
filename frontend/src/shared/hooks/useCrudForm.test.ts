@@ -1,27 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useCrudForm, unclassifiedPayloadKeys, classificationConflicts } from './useCrudForm'
+import {
+  useCrudForm,
+  unclassifiedPayloadKeys,
+  classificationConflicts,
+  forbiddenPayloadKeys,
+  type MutableResource,
+} from './useCrudForm'
 
 type Fields = { id?: number; name: string; secret: string }
 
 const EMPTY: Fields = { id: undefined, name: '', secret: '' }
 
 /** `MutableResource` é estrutural: este literal basta, sem TanStack — mesmo
- * padrão do `fakeResource` do `useCrudPage.test.ts`. */
-function fakeResource(spy: { create?: unknown[]; update?: unknown[] } = {}) {
+ * padrão do `fakeResource` do `useCrudPage.test.ts`. Genérico em `T` (o tipo
+ * da entidade criada/atualizada) porque `afterCreate` de alguns testes tipa o
+ * `created` explicitamente — sem o genérico, `tsc -b` não unifica os dois
+ * lados de `MutableResource<T>` (o `vitest` não pega, só o build). */
+function fakeResource<T extends { id?: number } = { id?: number }>(
+  spy: { create?: unknown[]; update?: unknown[] } = {},
+): MutableResource<T> {
   return {
     useCreate: () => ({
-      mutate: (payload: unknown, opts?: { onSuccess?: (created: unknown) => void }) => {
+      mutate: (payload: unknown, opts?: { onSuccess?: (created: T) => void }) => {
         spy.create?.push(payload)
-        opts?.onSuccess?.({ id: 99 })
+        opts?.onSuccess?.({ id: 99 } as T)
       },
       isPending: false,
       error: null,
     }),
     useUpdate: () => ({
-      mutate: (vars: unknown, opts?: { onSuccess?: (updated: unknown) => void }) => {
+      mutate: (vars: unknown, opts?: { onSuccess?: (updated: T) => void }) => {
         spy.update?.push(vars)
-        opts?.onSuccess?.({ id: 1 })
+        opts?.onSuccess?.({ id: 1 } as T)
       },
       isPending: false,
       error: null,
@@ -69,6 +80,33 @@ describe('classificationConflicts', () => {
 
   it('devolve as duas em ordem estável', () => {
     expect(classificationConflicts(['b', 'a'], ['a', 'b'])).toEqual(['a', 'b'])
+  })
+})
+
+describe('forbiddenPayloadKeys', () => {
+  it('não acusa payload limpo', () => {
+    expect(forbiddenPayloadKeys(['name', 'rut', 'email'])).toEqual([])
+  })
+
+  it('acusa `photo_url` no payload de escrita', () => {
+    expect(forbiddenPayloadKeys(['name', 'photo_url'])).toEqual(['photo_url'])
+  })
+})
+
+describe('useCrudForm — chave proibida', () => {
+  it('lança mesmo quando a chave foi classificada, porque classificação não a salva', () => {
+    expect(() =>
+      renderHook(() =>
+        useCrudForm(fakeResource(), {
+          ...base,
+          entity: null,
+          mode: 'create' as const,
+          toPayload: (f: Fields) => ({ name: f.name, secret: f.secret, photo_url: null }),
+          // A chave está classificada: sem a guarda nova, isto passa.
+          summaryOnly: ['secret', 'photo_url'],
+        }),
+      ),
+    ).toThrow(/photo_url/)
   })
 })
 
@@ -179,5 +217,96 @@ describe('useCrudForm', () => {
     )
     expect(visto).toContain('create')
     expect(visto).toContain('edit')
+  })
+})
+
+describe('useCrudForm — mutações extras', () => {
+  const opts = (extra: { isPending: boolean; error: null }[]) => ({
+    ...base,
+    entity: null,
+    mode: 'create' as const,
+    extra,
+  })
+
+  it('soma o pending da mutação extra', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), opts([{ isPending: true, error: null }])),
+    )
+    expect(result.current.crud.pending).toBe(true)
+  })
+
+  it('não liga o pending quando nenhuma extra está pendente', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), opts([{ isPending: false, error: null }])),
+    )
+    expect(result.current.crud.pending).toBe(false)
+  })
+
+  it('mostra o 422 da mutação extra no fieldErrors', () => {
+    const erroDaExtra = {
+      type: 'about:blank', title: 'Unprocessable', status: 422, detail: '',
+      instance: '/api/courses', errors: { redator_ids: ['inválido'] },
+    }
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        extra: [{ isPending: false, error: erroDaExtra }],
+      }),
+    )
+    expect(result.current.crud.fieldErrors?.redator_ids).toEqual(['inválido'])
+  })
+})
+
+describe('useCrudForm — afterCreate retentável', () => {
+  it('não recria a entidade no resubmit depois de o afterCreate reprovar', async () => {
+    const spy: { create: unknown[] } = { create: [] }
+    let deveFalhar = true
+    const tentativas: number[] = []
+    const done: string[] = []
+
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(spy), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        onDone: () => done.push('done'),
+        afterCreate: async (created: { id?: number }) => {
+          tentativas.push(created.id as number)
+          if (deveFalhar) throw new Error('segunda etapa reprovou')
+        },
+      }),
+    )
+
+    await act(async () => { result.current.crud.submit() })
+
+    expect(spy.create).toHaveLength(1)
+    expect(tentativas).toEqual([99])
+    expect(done).toEqual([])   // afterCreate lançou: o diálogo NÃO fecha
+
+    deveFalhar = false
+    await act(async () => { result.current.crud.submit() })
+
+    expect(spy.create).toHaveLength(1)          // <- o create NÃO se repete
+    expect(tentativas).toEqual([99, 99])        // <- só a 2ª etapa re-tentou
+    expect(done).toEqual(['done'])
+  })
+
+  it('fecha o diálogo quando o afterCreate passa de primeira', async () => {
+    const done: string[] = []
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        onDone: () => done.push('done'),
+        afterCreate: async () => undefined,
+      }),
+    )
+
+    await act(async () => { result.current.crud.submit() })
+
+    expect(done).toEqual(['done'])
   })
 })

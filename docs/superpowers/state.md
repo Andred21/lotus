@@ -10,9 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: login-fora-do-adr16
-state_basis_commit: 024673a
-updated_at: 2026-08-13T19:20:00-03:00
+last_completed_work_item: usecrudform-mais-fundo
+state_basis_commit: f766860
+updated_at: 2026-08-13T21:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -508,6 +508,360 @@ papel do olho, **não** no nome acessível do campo — que é justamente a P-37
 instrumental dos sete itens acima, que é prova de geometria e de contraste, não juízo estético.
 
 **Estado: `idle`.** Nada foi promovido — o próximo item é escolha do João, no `backlog.md`.
+## Último item fechado — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
+
+### Seleção — 2026-08-13
+
+**BD-5 do `backlog.md:131`, promovido explicitamente pelo João** com o estado em `idle` e
+`active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2,
+BD-7, BD-8, BD-9): o argumento era **título de seção**, não slug promovido. As três decisões dele
+fecharam o gate: o slug `usecrudform-mais-fundo`; **rota direta a `ready_for_planning` sem Context
+Packet**; e **main tree `/home/jvbat/projetos/lotus`, sem worktree**, na branch
+`feat/usecrudform-mais-fundo` criada de `d0cc270`.
+
+**A ausência de fonte externa foi medida, não presumida:** grep por `drive.google`, `notion.so`,
+`figma.com`, `docs.google` e `http` nas 22 linhas do BD-5 devolve **zero ocorrência**. As fontes são
+o repositório e o próprio texto do backlog, que já traz paths e IDs (`Q-4` dos achados de
+2026-08-05, o débito do trio da foto, os 4 hooks fora do `useCrudForm`).
+
+**O main tree venceu a worktree por causa do DoD, não por costume.** O BD-5 é frontend por escopo de
+escrita, mas o DoD escrito é **foto real chegando no S3** — exige `app` + MinIO de pé, e é o main
+tree que serve o `:8080`. No BD-4 a worktree não pôde subir stack própria (P-03) e **dois passos do
+gate ficaram sem prova**; aqui o custo foi antecipado em vez de pago. **Esta decisão caiu horas
+depois — ver §"Divergência de estado" abaixo.**
+
+**`state_basis_commit` passa de `7c28699` a `d0cc270`** — o fechamento do BD-4 registrou o merge do
+PR #46, que é o HEAD atual da `main`. Não era divergência: com `active_work_item` `null` não havia
+trabalho ativo cujo baseline pudesse ter derivado.
+
+### Divergência de estado — 2026-08-13: dois `active_work_item` promovidos em paralelo
+
+A invariante "existe no máximo um `active_work_item`" **quebrou**, e não foi resolvida por
+heurística. Duas sessões promoveram itens distintos **a partir do mesmo `d0cc270`**, no mesmo
+repositório: `5bf54f3` (12:32, este bloco, branch `feat/usecrudform-mais-fundo`) e `0e3ce3b` (13:05,
+`login-fora-do-adr16`, branch `feat/login-fora-do-adr16`) — a segunda **não** descende da primeira.
+Cada branch ficou com um `state.md` afirmando que o item ativo é o outro. Precedente exato: os dois
+`ready_for_closure` de 2026-08-10, também resolvidos por decisão do João.
+
+**O que a sessão paralela mudou de fato:** o main tree `/home/jvbat/projetos/lotus` passou à branch
+de login, e a worktree `fix-frontend` foi movida do detached HEAD para
+`feat/usecrudform-mais-fundo`. **Nada foi perdido e nada alheio foi tocado:** `5bf54f3` sobrevive, a
+spec deste bloco foi preservada e movida para a worktree antes de qualquer commit — ela chegou a ser
+escrita dentro do main tree, que naquele momento já servia a branch alheia —, e o main tree ficou
+limpo.
+
+**Decisão do João (D6): as duas execuções correm em paralelo** — o BD-5 na worktree `fix-frontend`,
+o `login-fora-do-adr16` no main tree `lotus`. A invariante fica com **exceção declarada, não
+resolvida**, e o custo do precedente BD-4 × BD-9 é **aceito de antemão** em vez de descoberto no
+merge: os `state.md` conflitam, e `backlog.md`/`pendencias.md` auto-mesclam sem sobreposição textual,
+que é exatamente como uma afirmação vencida passou verde naquele bloco. Recusadas: pausar o BD-5, e
+o login ceder a vez.
+
+**Consequência: a D3 do gate caiu, e um grau pior do que no BD-4.** O bloco perde o main tree como
+área de trabalho e passa a usá-lo **só como servidor** do `:8080` para o e2e do S3 — exatamente o
+custo que a escolha original existia para evitar. E lá não há uma branch parada, e sim **execução
+ativa**: a prova do DoD só vale com `git diff main...HEAD -- backend/` **vazio** naquele tree,
+conferido **no momento da prova**, não no início do bloco. O banco de dev também é compartilhado
+pelas duas execuções. É a **P-03** aparecendo pela segunda vez seguida num bloco de frontend.
+
+### Brainstorming e spec — 2026-08-13
+
+Spec em `docs/superpowers/specs/archive/2026-08-13-usecrudform-mais-fundo-design.md`, com **seis decisões**
+(D1–D6), cada uma escolhida pelo João entre alternativas apresentadas com o custo medido.
+
+**O terreno foi medido antes de desenhar, e quatro afirmações do backlog não sobreviveram:**
+
+1. **`useQuoteForm` não é candidato legítimo** — reprova pelo mesmo critério que exclui o
+   `useTurmaConfigForm`. `useCreateQuote` recebe `{ budgetId, payload }` e `useUpdateQuote`
+   `{ quoteId, payload }`, então não satisfaz `MutableResource`; a cotação nasce em rota aninhada. E
+   as outras duas razões que o `backlog.md:304-306` dá para ele também são falsas: **não** manipula
+   coleção nested (sete escalares, sem "itens da cotação") e **não** usa `setForm`.
+2. **A absorção do trio não cabe inteira no `useCrudForm`** — metade é JSX, e o quarto diálogo não
+   roda sobre o hook (`useRedatorForm` usa `useEntityForm` direto). Absorver só no hook cobre 3 de 4.
+   O bloco JSX, esse sim, é idêntico **byte a byte nos quatro** sítios.
+3. **`useCourseForm` cabe, mas só com o hook mais fundo de verdade:** `createdIdRef` (não recriar
+   curso quando a segunda chamada falha), `pending` de três mutações, `fieldErrors` de três fontes.
+4. **O texto do Q-4 está impreciso** — o `SignedUrlTransformer` roda na serialização, então o front
+   recebe URL pré-assinada, não "um caminho interno de storage". O defeito real é outro e continua
+   valendo: `PUT` com `photo_url` devolve **200**, porque a promoção no construtor desvia do
+   `CannotSetComputedValue`.
+
+**Dois fatos mediram o desenho em vez de o justificarem depois:** a guarda de classificação que já
+existe **barra o `...form` ingênuo** (reprovaria com "chave de payload sem classificação:
+`photo_url`") — o buraco do Q-4 é quem **classifica** a chave e passa, e é esse o buraco que a D4
+fecha; e `StaffUserDialog` está em **150 linhas, margem zero** na régua, então a absorção é o que lhe
+devolve folga.
+
+**As decisões que mudam trabalho:** só `useCourseForm` migra (D1); a absorção mora em dois sítios,
+`useCrudForm` com `photo` e um `FormPhotoRow` novo em `shared/ui` (D2); o `afterCreate` vira
+**retentável**, com o `submit` pulando o create no resubmit, e `createdIdRef` morre (D3); a guarda do
+Q-4 é chave proibida no payload, que **nenhuma classificação salva** (D4); e o hook devolve `busy`
+derivado, sem contaminar `pending` — somar `photo.pending` faria o botão de salvar girar por upload
+de foto, que é a crítica Q-7 do bloco de documentos oficiais (D5).
+
+**Baseline medido, não herdado:** `pnpm test` = **29 arquivos / 143 testes**, exit 0 — bate com o
+gate pós-merge, sem deriva.
+
+**Risco de review BAIXO** pelo gate binário: zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal; `executor: claude`. O risco próprio é de **alcance** e está
+declarado: `useCrudForm` tem cinco consumidores e o `submit` muda para todos — a rede é que
+`photo.flush` não lança, mas isso é premissa a provar, não a assumir.
+
+O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
+spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**O João aprovou a spec com uma correção — a D6 — e o restante sem mudança.** O plano saiu em
+`docs/superpowers/plans/archive/2026-08-13-usecrudform-mais-fundo.md`: **onze tasks**, uma por commit, na
+ordem guarda do Q-4 → mutações extras → `afterCreate` retentável → composição da foto → componente
+de `shared/ui` → os três diálogos que migram → Redator → curso → gate.
+
+**Baseline medido em `4284ff7`, não herdado:** `pnpm test` = **29 arquivos / 143 testes**, lint exit
+0, build verde. Projeção do plano: **31 arquivos / 156 testes** (2 arquivos e 13 casos).
+
+**Um desvio apareceu só ao escrever o plano, e ele muda o construído (D-P1).** A D2 diz
+"`useCrudForm` ganha `photo`", e isso é **impossível na forma literal** — por regra do React, não por
+gosto: `useEntityPhoto` chama `useQueryClient`, `useState`, `useEffect` e dois `useMutation`.
+Montá-lo condicionalmente violaria as regras dos hooks; montá-lo sempre faria `useQueryClient()`
+lançar `No QueryClient set` nos oito testes atuais de `useCrudForm.test.ts`, que rodam **sem**
+`QueryClientProvider` de propósito — o `fakeResource` é literal estrutural, e é isso que mantém
+aquele arquivo sem TanStack. A capacidade nasce como hook **irmão**, `useCrudFormWithPhoto`, que
+compõe os dois na ordem certa. O efeito para os três diálogos é o que a D2 pede: o `afterCreate` de
+foto some do sítio de chamada, e `photo`/`busy` chegam prontos. `useBudgetForm` e `useRoleForm`, sem
+foto, seguem no `useCrudForm` puro.
+
+**Duas outras coisas que a escrita do plano fixou:** a guarda do Q-4 roda **antes** da checagem de
+classificação contraditória, para que a chave proibida ganhe a mensagem certa mesmo quando também
+estiver duplamente classificada; e a sonda que a prova tem de ser feita no `useClientForm`, não no
+`useStudentForm` — `StudentFormFields` não tem `photo_url`, então `...form` lá reprova no `tsc`, que
+é o vermelho errado.
+
+**Uma divergência de projeção ficou declarada em vez de corrigida retroativamente:** a spec projeta o
+`useCourseForm` em ~110 linhas e o plano em ~115, pela diferença do docblock do `afterCreate`, que
+não existia quando a spec foi escrita.
+
+`executor: claude`, sem `paths_autorizados`: o bloco muda o `submit` de um hook com **cinco**
+consumidores, decide apresentação em quatro telas, tem na Task 10 um julgamento que só aparece
+rodando (o `crud.form` lido dentro do `afterCreate`), e fecha por prova contra API real num ambiente
+compartilhado com outra execução ativa.
+
+**Estado: `ready_for_execution`.** `/executar-bloco usecrudform-mais-fundo` exige instrução posterior
+do João.
+
+### Execução — 2026-08-13: início
+
+`/executar-bloco usecrudform-mais-fundo` validou as âncoras (spec, plano, `context_packet` `null`
+coerente, Git limpo em `f9e1263`, sem divergência) e confirmou o gate main tree/worktree já resolvido
+pela D6: bloco frontend-only, worktree `/home/jvbat/projetos/fix-frontend` na branch
+`feat/usecrudform-mais-fundo` é o isolamento certo — o main tree segue com a execução paralela do
+`login-fora-do-adr16` (D6), sem escrita nenhuma aqui.
+
+**Mesmo conflito do `catraca-max-lines-e-moldura` (BD-4) reapareceu, e foi resolvido do mesmo jeito:**
+o plano recomenda `subagent-driven-development` (Handoff: `executor: claude`, sem
+`paths_autorizados` — cinco consumidores do `submit`, apresentação em quatro telas, julgamento em
+runtime na Task 10); a sessão tem regra de não chamar o Agent tool sem pedido. Escalado ao João via
+pergunta direta — **subagent-driven-development, com Agent tool autorizado para este bloco.**
+
+**Pre-flight scan do plano (onze tasks contra Global Constraints e a spec) achou um ponteiro
+fantasma:** o comentário previsto para `useCrudForm.ts` na Task 3 citava `(spec D10)`, herdado
+verbatim do plano arquivado `2026-08-05-profundidade-form-crud-e-hidratacao-dto` — cuja spec tem D10
+("o id do update vem da entidade"); a spec deste bloco só tem D1–D6. Mesma classe da Q-4 do review do
+BD-4 e da correção da Task 9 dele, um passo antes: pego no pre-flight, não no review. João escolheu
+tirar a citação em vez de reescrevê-la ou deixar como está. Corrigido no plano em `0ef104f`, antes de
+qualquer código.
+
+Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do BD-4, já fechado — as
+onze tasks deste bloco colidiriam de nome com as dez dele; arquivado em
+`.superpowers/sdd/archive/catraca-max-lines-e-moldura/`).
+
+**Estado:** `executing`.
+
+### Execução — 2026-08-13: fechamento
+
+**As onze tasks fecharam, cada uma em commit próprio, revisão individual aprovada antes de avançar:**
+`6ff9565` (T1 — guarda Q-4, sonda real em `useClientForm.ts` provando os dois sentidos), `67153e5`
+(T2 — `extra` soma pending/erro de mutações extras), `dce04ef` (T3 — `afterCreate` retentável via
+`createdRef`, curso/entidade não nasce duas vezes no resubmit), `fc88d61` (T4 —
+`useCrudFormWithPhoto`, hook-irmão por regra de hooks do React, desvio D-P1 declarado na spec),
+`7815152` (T5 — `FormPhotoRow`, extração byte a byte conferida contra os 4 sítios originais),
+`2d82018`/`5c8dff0`/`69dcba0` (T6/7/8 — Student/Client/StaffUser perdem o trio, `StaffUserDialog`
+saiu de exatamente 150 para 125 linhas), `4b998d0` (T9 — Redator adota só o `FormPhotoRow`,
+`useRedatorForm` explicitamente não migra por ser create multipart, comentário do ponteiro do BD-5
+corrigido), `023be10` (T10 — `useCourseForm` migra para `useCrudForm`, `createdIdRef` morto, task de
+maior peso legal do bloco: guarda anti-duplicação de curso provada por leitura direta do mecanismo,
+não só pelo relatório do implementador). Um commit fora de task, entre T3 e T4: `ae86d0a`, corrigindo
+type errors residuais que T2 e T3 deixaram passar porque `vitest run` não faz type-check completo —
+lição registrada no ledger para não repetir. Task 11 foi gate — verificação pura, **sem commit de
+produção**, relatório em `.superpowers/sdd/task-11-report.md` (local, não versionado). Contagem
+final: frontend **31 arquivos / 156 testes** (29/143 no baseline), bate exatamente com a projeção do
+plano.
+
+**O DoD 1 (foto real no S3) foi provado nos dois caminhos contra a API real do main tree**, sessão
+Sanctum de verdade (`admin@lotus.cl`, cookie + CSRF): `create` (aluno novo) e `edit` (aluno
+existente), com `Content-Length` de 68 bytes confirmado via GET na signed URL nos dois casos — não a
+falha de zero-byte da lição 6. Registros de teste limpos por `DELETE .../photo` (remove do S3) e
+`forceDelete` via tinker, molde do BD-2; `audits` remanescente declarado, não limpo.
+
+**Duas divergências do texto do plano, investigadas e explicadas, nenhuma achado de código:** os
+greps de verificação (Tasks 9, 10 e 11) esperavam `ZERO` para padrões que sobrevivem de propósito em
+`RedatorDialog.tsx` (hook que não migra, por critério) e num comentário documental de
+`useCrudForm.ts` — o texto do plano não previu esses hits legítimos; e o curl de exemplo da Task 11
+sem `Accept: application/json` cai num 500 (`Route [login] not defined`, o app não tem rota web de
+login por RN-01) em vez do 401 esperado — o client axios real sempre manda esse header, então isso
+nunca acontece em produção.
+
+**O que o bloco NÃO provou, sem maquiagem:** nenhum diálogo tem teste de componente — a composição
+`FormPhotoRow` + diálogo (Tasks 6-9) não é exercitada por teste automatizado, só os hooks; a Step 6 do
+gate proveu o fluxo de foto contra a API direto, não através do `AppPhotoField`/`FormPhotoRow`
+renderizado; e `/lotus-ui-review` não rodou — os quatro diálogos migrados nunca foram vistos no
+navegador nesta execução.
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona a
+revisão do trabalho ativo.
+
+### Review de sprint — 2026-08-13: BAIXO risco, uma lente, 1 achado
+
+**BAIXO pelo gate binário da skill, confirmado, não herdado da spec:** zero schema, `generated.ts`,
+Sanctum, auditoria, RBAC, dinheiro escrito ou documento legal gerado; `executor: claude`. Só lente
+Claude, sem Codex.
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **31 arquivos / 156 testes** — bate exato com a projeção do plano.
+`git diff main...HEAD --name-only -- backend/ frontend/src/shared/types/generated.ts` devolve
+**zero linha**. Os seis arquivos-alvo (`StaffUserDialog`, `StudentDialog`, `ClientDialog`,
+`RedatorDialog`, `RedatorUserSection`, `useCourseForm.ts`) pousaram em
+**125 / 97 / 97 / 127 / 40 / 129** linhas, todos com folga da régua de 150.
+
+**Órfãos: zero.** `FormPhotoRow` em 7 arquivos (4 consumidores + componente + 2 barrels),
+`useCrudFormWithPhoto` em 6 (3 hooks + hook + teste + barrel), conferido por grep.
+
+**O trio morreu nos três que migraram, sobrevive no quarto por critério:**
+`closeBlocked={pending || photo.pending}` tem **uma** ocorrência, em `RedatorDialog.tsx:70` — o hook
+do redator não migra (multipart, fora de escopo por D2), exatamente o esperado pela Task 9 Step 4.
+`createdIdRef` só sobrevive em comentário documental de `useCrudForm.ts:148`, citando o mecanismo que
+substituiu — mesma classe de hit legítimo já registrada no fechamento do BD-4.
+
+**As extrações foram conferidas contra o diff, não presumidas:** os quatro sítios do `FormPhotoRow`
+e as três migrações para `useCrudFormWithPhoto` batem com a Task 5/6/7/8 do plano, byte a byte no
+JSX. `useCourseForm.ts` bate com a Task 10: `createdIdRef` morto, `sync.mutateAsync` dentro do
+`afterCreate`, `extra: [sync]` somando `pending`/`fieldErrors`, `crud.form.redator_ids` lido no
+momento da chamada (fechamento correto, não capturado cedo — sem o desvio do `useRef` que a Task 10
+previu como contingência).
+
+**O único achado:**
+
+1. **Q-1 🟡 P** — `useCrudForm.ts:159-165`, `runAfterCreate`:
+   ```ts
+   async function runAfterCreate(created: T) {
+     try {
+       await afterCreate?.(created)
+     } catch {
+       return
+     }
+     onDone()
+   }
+   ```
+   O `catch` engole **qualquer** erro de `afterCreate`, sem log nenhum. O próprio docblock admite a
+   premissa: "o erro já está no `fieldErrors` da mutação que falhou" — mas isso é contrato do
+   chamador, não garantido pelo tipo de `afterCreate?: (created: T) => void | Promise<void>`. Hoje a
+   premissa se sustenta nos 3 caminhos que alcançam este código (`photo.flush` não lança de
+   propósito; `useCourseForm.sync` está em `extra`, rastreado). Mas o hook é `shared/hooks`, tem
+   **5 consumidores**, mexe em registros de peso legal (curso, cliente, aluno) — se um consumidor
+   futuro (ou uma falha do próprio `sync`/`afterCreate` fora do que `extra` cobre) lançar algo não
+   rastreado, o diálogo trava aberto sem nenhuma mensagem visível e sem rastro de console. É a classe
+   "vazio silencioso" que o projeto já pagou caro (lição 6; Q-1 do review do BD-4,
+   `RedatorDocumentsSection.tsx` com `removeDoc.error` nunca lido). Não registrado em nenhuma spec,
+   plano ou pendência como debt aceito. Sênior faria: `console.error` no branch do catch, sinal
+   mínimo de dev quando a premissa falhar. **Fere:** catálogo universal (catch vazio).
+
+**O que NÃO virou achado, e por quê:** ausência de teste de componente para a composição
+`FormPhotoRow` + diálogo, e `/lotus-ui-review` não executado — ambos já declarados como débito
+explícito no fechamento da execução (§"O que o bloco NÃO provou"), não achado novo.
+
+**Veredito: o bloco está bom.** Onze commits, cada um batendo com a task correspondente do plano,
+nenhuma extração divergiu do original, nenhum órfão. O achado único é de robustez de mecanismo
+genérico, não correção ativa — nenhum dos 5 consumidores atuais o alcança hoje.
+
+**Q-1 aprovado e corrigido — commit `f766860`.** `console.error` no branch do catch de
+`runAfterCreate`, sinal mínimo de dev quando a premissa do `fieldErrors` falhar. Gate reproduzido
+pós-fix: lint 0, build verde, 31 arquivos / 156 testes — sem mudança de contagem.
+
+**Estado: `ready_for_closure`.**
+
+### Fechamento — 2026-08-13
+
+A árvore já estava limpa em `f766860` (a correção do Q-1 entrou commitada), que segue como
+`state_basis_commit` — nada pendente a commitar antes de arquivar.
+
+**O item 0 foi refeito contra a API real, não herdado do relatório de execução nem do review.** A
+D6 exigia que a parificação da stack fosse conferida **no momento da prova**, e foi: o main tree
+`/home/jvbat/projetos/lotus` está na branch alheia `feat/login-fora-do-adr16`, e
+`git diff main...HEAD -- backend/` lá devolve **zero linha** — o `:8080` serve o mesmo backend que a
+`main`, então a medição é desta stack e não de outra. `/api/students` sem cookie devolve **401**.
+Com sessão Sanctum viva (cookie + CSRF, `Origin` e `Accept` nos dois lados), os **dois caminhos** do
+DoD 1 foram provados: **`create`** (aluno novo, id 58, foto subida contra o id devolvido — o que o
+`flush` faz) e **`edit`** (aluno pré-existente, id 37), ambos com `POST .../photo` **204** e
+`photo_url` não nulo na leitura seguinte. **A prova não parou no 200:** o GET na signed URL devolveu
+`http=200 bytes=70 type=image/png` nos dois, que é a falha de zero byte da lição 6 medida em vez de
+assumida; os objetos existem em `/data/lotus/user-photos/49` e `/91` no MinIO.
+
+**Limpeza declarada, não maquiada:** `DELETE .../photo` nos dois (o aluno 37 volta a
+`photo_url: null`, exatamente como estava antes da sonda, e os dois objetos somem do MinIO), e o
+aluno 58 mais o user 91 saíram por `forceDelete` via tinker, com a linha de `student_client_logs`
+antes. Restam **7 linhas de `audits`** apontando para ids que não existem mais — declaradas, não
+limpas, molde do BD-2.
+
+**O resíduo de backend do Q-4 foi medido no próprio fechamento, e continua vivo:**
+`PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo devolve **200**, e o campo
+volta `null` na resposta — a promoção no construtor do DTO desvia do `CannotSetComputedValue`, então
+chave `#[Computed]` no corpo é ignorada **sem 422**. O BD-5 era frontend-only por escopo declarado e
+fechou só a metade dele (`FORBIDDEN_PAYLOAD_KEYS` faz a chave lançar em DEV); a outra metade virou
+linha própria em `## Débitos técnicos`, com saída no próximo bloco de backend que tocar DTO com campo
+computado. Medido em `StudentData`, não no `ClientData` que o texto original do Q-4 nomeava — a
+promoção é a mesma nos quatro DTOs com foto, e a sonda escolheu o alvo sem coleção nested para não
+arriscar dado de seed.
+
+**A régua foi provada nos dois sentidos (lição 10), não herdada do review:** 30 linhas em branco
+apensadas ao `StaffUserDialog` fazem o lint reprovar com
+`File has too many lines (155). Maximum allowed is 150`, e a árvore volta limpa em seguida.
+Ferramentas: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **31 arquivos / 156 testes**. Alvos
+em **125 / 97 / 97 / 127 / 129** linhas, todos sob 150. Órfãos zero (`FormPhotoRow` em 7 arquivos,
+`useCrudFormWithPhoto` em 6). Leis §5 limpas por grep: zero `primereact` em `features/`, zero import
+cross-feature, `generated.ts` sem diff. **Pint e `typescript:transform` são N/A por escopo medido:**
+`git diff main...HEAD` de `backend/` e de `generated.ts` devolve zero arquivo, e o diff do bloco não
+tem um `.php`. A suíte backend **rodou** — **591 passed, 5 skipped (2149 assertions)** — mas mede o
+código da `main`, porque o container monta o main tree; é evidência de que nada quebrou, não prova
+deste bloco.
+
+**Pendências: nenhum gatilho venceu, nenhuma fechou, nenhuma nasceu.** A **P-03** ganhou uma
+**contraprova** em vez de mais uma cobrança: o arranjo é o mesmo do BD-4 — duas execuções em
+paralelo, worktree sem stack própria, dependendo do main tree —, e desta vez o e2e rodou **inteiro**,
+porque a branch alheia não tocou `backend/`. O custo da falta de compose por worktree não é
+constante; é contingente ao que a outra branch toca, e por isso a conferência tem de ser feita na
+hora da prova. A **P-34** (`COR_HARDCODED` fora de `src/app/**`) espera bloco que toque o shell, e
+`src/app/` não aparece no diff.
+
+**Arquivamento e histórico:** plano e spec foram para `plans/archive/` e `specs/archive/` (a spec não
+é compartilhada por nenhum item futuro), com o ponteiro da §Spec do próprio plano e os dois desta
+narrativa atualizados. O `progress.md` recebeu a entrega e voltou a dez linhas, movendo
+`Hardening · revisão UI/UX assistida por navegador` (2026-08-10) para o `progress-archive.md`
+**verbatim**, como o cabeçalho de lá manda. Do `backlog.md` saíram o **BD-5** e os **dois débitos que
+ele cobriu por inteiro** — a absorção do trio da foto nos 4 diálogos e os 4 hooks fora do
+`useCrudForm`, cada um com o critério agora decidido, inclusive o `useQuoteForm` que o bloco provou
+**não** ser candidato legítimo. **Nada foi promovido:** a fila de dívida fica com o `BD-6` sozinho, e
+o próximo item é escolha explícita do João.
+
+**O que o fechamento NÃO provou, sem maquiagem:** **`/lotus-ui-review` segue não executado** — os
+quatro diálogos migrados nunca foram vistos renderizados nesta execução, então a composição
+`FormPhotoRow` + diálogo na tela continua sem checagem visual; e **nenhum diálogo tem teste de
+componente**, então o e2e do S3 bateu na API direto, não através do `AppPhotoField`/`FormPhotoRow`
+renderizado. Os dois já estavam declarados no fechamento da execução e continuam abertos como débito
+escrito, não como omissão. **Uma divergência de projeção fica declarada em vez de corrigida
+retroativamente** (precedente da P-27): a spec projetou `useCourseForm` em ~110 linhas e o plano em
+~115; o entregue tem **129**.
+
+**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
 ## Penúltimo item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 

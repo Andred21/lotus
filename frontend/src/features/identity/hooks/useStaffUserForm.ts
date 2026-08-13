@@ -1,4 +1,4 @@
-import { useCrudForm } from '@shared/hooks'
+import { useCrudFormWithPhoto } from '@shared/hooks'
 import type { UserData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { usersApi } from '@shared/api/usersApi'
@@ -21,7 +21,6 @@ export function useStaffUserForm(
   user: UserData | null,
   mode: DialogMode,
   onDone: () => void,
-  afterCreate?: (created: UserData) => Promise<void>,
 ) {
   // `rut`/`phone` chegam `string | null | undefined` do contrato (Optional na
   // entrada); normaliza para string vazia antes de entrar no form — mesmo
@@ -39,7 +38,7 @@ export function useStaffUserForm(
       }
     : null
 
-  const { crud } = useCrudForm<StaffUserFormFields, UserData>(usersApi, {
+  const { crud } = useCrudFormWithPhoto<StaffUserFormFields, UserData>(usersApi, {
     entity,
     mode,
     empty: EMPTY,
@@ -63,7 +62,11 @@ export function useStaffUserForm(
     // passa `error=` ao FormField — quem mostra o 422 deles é o resumo.
     summaryOnly: ['phone', 'is_active'],
     onDone,
-    afterCreate,
+    photo: {
+      resource: 'users',
+      invalidateKey: usersApi.keys.all,
+      url: user?.photo_url,
+    },
   })
 
   return crud

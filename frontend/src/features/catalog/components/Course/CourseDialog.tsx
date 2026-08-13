@@ -17,7 +17,7 @@ export function CourseDialog({
 }) {
   const { t } = useTranslation()
   const { form, set, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
-          addModule, removeModule, patchModule, moveModule,
+          errorSummary, addModule, removeModule, patchModule, moveModule,
           modulesTotal, hoursMismatch } = useCourseForm(course, mode, onHide)
   const redatores = useCourseRedatores(form.redator_ids, onHide)
 
@@ -36,11 +36,7 @@ export function CourseDialog({
     >
       
       <FormErrorBanner message={generalError} />
-      <FormErrorSummary
-        errors={fieldErrors}
-        mapped={['name', 'technical_name', 'description', 'workload_hours']}
-        excludePrefixes={['modules.']}
-      />
+      <FormErrorSummary errors={fieldErrors} {...errorSummary} />
 
       <section className="space-y-4">
         <FormSection title={t('course.sectionGeneral')} />

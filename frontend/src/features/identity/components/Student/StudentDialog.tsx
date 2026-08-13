@@ -4,12 +4,10 @@ import {
   FormSection,
   FormErrorBanner,
   FormErrorSummary,
-  AppPhotoField,
+  FormPhotoRow,
 } from "@shared/ui";
 import type { StudentData } from "@shared/types/generated";
 import type { DialogMode } from "@shared/lib";
-import { studentsApi } from "@shared/api/studentsApi";
-import { useEntityPhoto } from "@shared/hooks";
 import { useStudentDetail } from "../../api/useStudentDetail";
 import { useStudentForm } from "../../hooks/useStudentForm";
 import { useStudentClients } from "../../hooks/useStudentClients";
@@ -31,28 +29,18 @@ export function StudentDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
-  const photo = useEntityPhoto({
-    resource: "students",
-    id: mode === "create" ? null : (student?.id ?? null),
-    mode,
-    url: student?.photo_url,
-    invalidateKey: studentsApi.keys.all,
-  });
-
-  // `flush` sobe a foto bufferizada com o id recém-criado. Não lança: a
-  // entidade já existe, e fechar o diálogo aqui esconderia a falha (D11).
   const {
     form,
     set,
     readOnly,
     submit,
     pending,
+    busy,
+    photo,
     fieldErrors,
     generalError,
     errorSummary,
-  } = useStudentForm(student, mode, onHide, (created) =>
-    photo.flush(created.id as number),
-  );
+  } = useStudentForm(student, mode, onHide);
   const clients = useStudentClients(mode);
   const clientsUnusable = clients.unusable;
   const detail = useStudentDetail(mode === "create" ? null : student?.id);
@@ -66,8 +54,8 @@ export function StudentDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
-      disabled={clientsUnusable || photo.pending}
-      closeBlocked={pending || photo.pending}
+      disabled={clientsUnusable || busy}
+      closeBlocked={busy}
       submitLabel={mode === "create" ? t("student.create") : undefined}
     >
       <FormErrorBanner message={generalError} />
@@ -79,29 +67,14 @@ export function StudentDialog({
       <section className="space-y-4">
         <FormSection title={t("student.sectionPersonal")} />
 
-        <div className="flex flex-col lg:flex-row justify-between">
-          <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
-            <AppPhotoField
-              name={form.name}
-              url={photo.url}
-              readOnly={readOnly}
-              pending={photo.pending}
-              error={photo.error}
-              onSelect={photo.onSelect}
-              onRemove={photo.onRemove}
-              onSizeReject={photo.onSizeReject}
-              onRetry={photo.onRetry}
-            />
-          </div>
-          <div className="flex flex-col gap-4 w-full">
-            <StudentIdentityFields
-              form={form}
-              set={set}
-              readOnly={readOnly}
-              fieldErrors={fieldErrors}
-            />
-          </div>
-        </div>
+        <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
+          <StudentIdentityFields
+            form={form}
+            set={set}
+            readOnly={readOnly}
+            fieldErrors={fieldErrors}
+          />
+        </FormPhotoRow>
 
         <StudentClientField
           mode={mode}

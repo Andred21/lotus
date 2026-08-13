@@ -46,17 +46,21 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-5 → BD-6**. O **BD-4** foi entregue em 2026-08-13 e saiu desta lista com
-> os três débitos que cobria (as 2 tabelas sem a `SearchableTableFrame`, a catraca do `max-lines` e
-> o `FormErrorSummary` que faltava nos dois diálogos); o gatilho do trio da foto que ele venceu está
-> escrito no próprio **BD-5**. O **BD-3** foi entregue em 2026-08-12 e saiu desta
+> Ordem entre blocos: resta o **BD-6**. O **BD-5** foi entregue em 2026-08-13 e saiu desta lista com
+> os dois débitos que cobria por inteiro (a absorção do trio da foto nos 4 diálogos e os 4 hooks fora
+> do `useCrudForm`, cada um com o critério agora decidido); do **Q-4** ele pagou só o lado do
+> frontend, e o resíduo de backend — chave `#[Computed]` aceita no corpo com 200 em silêncio — ficou
+> em `## Débitos técnicos`, remedido no fechamento. O **BD-4** foi entregue em 2026-08-13 e saiu desta
+> lista com os três débitos que cobria (as 2 tabelas sem a `SearchableTableFrame`, a catraca do
+> `max-lines` e o `FormErrorSummary` que faltava nos dois diálogos). O **BD-3** foi entregue em
+> 2026-08-12 e saiu desta
 > lista com os seis débitos que cobria (os três do piloto UI de Clientes, `Q-14`, `Q-15`, o CTA
 > duplicado e a cor fora do corte do D18); a lacuna de alcance que ele deixou na catraca de cor —
 > o shell fora de `COR_HARDCODED` — ficou na **P-34**. O **BD-8** e o **BD-9** nasceram depois
 > (revisão de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend,
-> enquanto BD-5 e BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — os **dois foram
+> enquanto BD-5 e BD-6 eram frontend, e a fila deles era **BD-8 → BD-9** entre si — os **dois foram
 > entregues em 2026-08-13** e saíram desta lista (`progress.md`), então a fila de backend está
-> **vazia** e o que resta em fila é `BD-5 → BD-6`. Qual item anda antes é promoção explícita do
+> **vazia** e o que resta em fila é o `BD-6`, sozinho. Promoção segue sendo explícita do
 > João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
@@ -65,28 +69,6 @@
 > pessoal que a tabela nova passou a guardar ficou na **P-33** (nasceu como segunda `P-30` e foi
 > renumerada no fechamento do BD-3). A ordem dentro de cada bloco é parte
 > do bloco, não sugestão.
-
-### BD-5 · `useCrudForm` mais fundo
-
-O gatilho do débito do trio da foto — "quando alguém tocar um desses 4 diálogos por outro motivo" —
-**venceu no BD-4** (2026-08-13), que reescreveu `StudentDialog` e `RedatorDialog` para caber na
-régua de 150 linhas.
-
-Cobre: **"O trio da foto é idêntico em 4 dialogs"** (a absorção; o teste saiu no bloco `guardas-que-faltam`, entregue em 2026-08-11) · **"Os 4
-hooks de formulário que ficaram fora do `useCrudForm`"** · **Q-4** dos três achados de 2026-08-05
-(`photo_url`/`photo_path` no corpo da escrita).
-
-Ordem:
-1. absorver o trio (`useEntityPhoto` + `afterCreate: photo.flush` + `FormErrorBanner` de falha
-   bufferizada + `closeBlocked`) nos 4 diálogos;
-2. migrar `useCourseForm` e `useQuoteForm`, os dois candidatos legítimos que ficaram fora por corte
-   de escopo;
-3. **Q-4** — guarda contra `...form` reintroduzir `photo_path` (hoje é path interno de storage, não
-   URL) no corpo da escrita.
-
-DoD: **foto real chegando no S3**, não lint verde — o caminho tem falha silenciosa conhecida
-(lição 6). Fora por critério, não por escopo: `useRedatorForm` (multipart com chave polimórfica) e
-`useTurmaConfigForm` (rota aninhada, não roda sobre `createCrudResource`).
 
 ### BD-6 · Falha que se disfarça de lista vazia
 
@@ -176,19 +158,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
      faltando", e é o único lugar onde o registro aparece antes do clique. O diálogo do mesmo
      registro explica a falha; a linha, não.
 
-- **O trio da foto é idêntico em 4 dialogs e ficou fora do item 1 de propósito.**
-  `useEntityPhoto({resource, id, mode, url, invalidateKey})` + `afterCreate: (created) =>
-  photo.flush(created.id)` + `{photo.hasBufferedFailure && <FormErrorBanner …/>}` +
-  `closeBlocked={pending || photo.pending}` se repetem byte a byte em `ClientDialog`,
-  `StaffUserDialog`, `StudentDialog` e `RedatorDialog`. Absorvê-los no `useCrudForm` fecharia a
-  repetição inteira, mas põe o bloco em cima de caminho de upload com **falha silenciosa** (lição 6:
-  `Content-Type` fixado → `File` vira `{}` → 201 com arquivo vazio) e do buffer pós-`201`, que já
-  custou duas decisões de spec (D10/D11 do bloco de alunos) e a quarta saída do `CrudDialog`.
-  Decisão do João em 2026-08-04: fora do item 1. Saída: entra quando alguém tocar um desses 4
-  dialogs por outro motivo, e o commit que absorver paga junto a prova de upload real no gate —
-  DoD é foto chegando no S3, não lint verde. `useEntityPhoto` **ganhou teste** em 2026-08-11 (bloco
-  `guardas-que-faltam`, seis casos); o que segue aberto aqui é só a **absorção**.
-
 - **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
   `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
   sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
@@ -233,25 +202,22 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   `identity.user.view`, permissão nova, ou aceitar o acoplamento. Levantado no `/revisar-sprint` do
   `bloco-alunos-modulo` (2026-07-27); movido para cá para não morrer no arquivamento do `state.md`.
 
-- **Os 4 hooks de formulário que ficaram fora do `useCrudForm`, com o critério de cada um.**
-  `useRedatorForm` monta o create com `new FormData()` — a exceção única e declarada da regra
-  `no-restricted-syntax` — e `toPayload` devolvendo objeto **não modela multipart**; entra quando
-  (e se) o transporte do redator deixar de ser multipart, ou quando o module aprender a devolver
-  `FormData`. `useTurmaConfigForm` **não roda sobre `createCrudResource`** (a turma nasce em rota
-  aninhada), então não satisfaz o `MutableResource`; entra se a turma ganhar recurso CRUD próprio.
-  `useCourseForm` e `useQuoteForm` são candidatos legítimos e ficaram fora só por corte de escopo —
-  ambos manipulam coleção nested (módulos, itens da cotação) e usam `setForm`, que o Q-1 do review
-  de 2026-08-05 tirou do retorno público: os dois leem `setForm` do par `{ crud, setForm }`.
-
-- **Um dos três achados do review de 2026-08-05 segue aberto — 🟢, esforço P.** (Q-4) O fato medido
-  em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData`
-  desvia do `CannotSetComputedValue` — foi apagado junto do `submit` do `useClientForm` e não
-  reapareceu, num bloco que **aumentou a aposta**: a propriedade deixou de carregar URL e passa a
-  carregar path, então quem reintroduzir `...form` manda um caminho interno de storage no corpo da
-  escrita. Saída: o próximo commit que tocar `useCrudForm` ou `useClientForm` paga o que couber.
-  **Os outros dois foram fechados pelo bloco `guardas-que-faltam` em 2026-08-11:** (Q-2) o barrel
-  `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`, `MutableResource` e
-  `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly` passou a reprovar.
+- **O backend aceita `photo_url` no corpo da escrita e devolve 200, em silêncio.** Resíduo medido do
+  Q-4 (review de 2026-08-05), que o **BD-5** fechou **só do lado do frontend**: `FORBIDDEN_PAYLOAD_KEYS`
+  no `useCrudForm` faz a chave lançar em DEV, então o `...form` ingênuo não a reintroduz mais. O
+  defeito do outro lado continua vivo e foi **remedido no `/fechar-sprint` de 2026-08-13**, não
+  herdado: `PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo devolve **200**, e o
+  campo volta `null` na resposta — a promoção no construtor do DTO desvia do `CannotSetComputedValue`,
+  então o campo `#[Computed]` é ignorado sem 422. Vale para os quatro DTOs com foto, não só o
+  `ClientData` que o texto original do Q-4 nomeava. **Uma afirmação do Q-4 original não sobreviveu à
+  medição da spec do BD-5:** `photo_url` **não** carrega path interno de storage — o
+  `SignedUrlTransformer` roda na serialização e o front recebe URL pré-assinada. O BD-5 era
+  frontend-only por escopo declarado e não podia tocar backend. Saída: o próximo bloco de backend que
+  tocar DTO com campo `#[Computed]` decide se chave computada no corpo vira 422 ou segue ignorada em
+  silêncio. **Os outros dois achados de 2026-08-05 foram fechados pelo bloco `guardas-que-faltam` em
+  2026-08-11:** (Q-2) o barrel `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`,
+  `MutableResource` e `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly`
+  passou a reprovar.
 
 - **`UpdateStaffUserAction` apaga o `rut` do staff num `PUT` que só o OMITE.** `UserData::$rut` é
   `Optional`, e a Action traduz `Optional` para `null` antes de gravar

@@ -1,4 +1,4 @@
-import { useCrudForm } from '@shared/hooks'
+import { useCrudFormWithPhoto } from '@shared/hooks'
 import type { StudentData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { studentsApi } from '@shared/api/studentsApi'
@@ -17,13 +17,12 @@ export function useStudentForm(
   student: StudentData | null,
   mode: DialogMode,
   onDone: () => void,
-  afterCreate?: (created: StudentData) => Promise<void>,
 ) {
   const entity: StudentFormFields | null = student
     ? { id: student.id, name: student.name, rut: student.rut, email: student.email, phone: student.phone ?? null, client_id: student.current_client_id ?? null }
     : null
 
-  const { crud } = useCrudForm<StudentFormFields, StudentData>(studentsApi, {
+  const { crud } = useCrudFormWithPhoto<StudentFormFields, StudentData>(studentsApi, {
     entity,
     mode,
     empty: EMPTY,
@@ -38,7 +37,11 @@ export function useStudentForm(
     // bloco não havia resumo naquela tela e o erro não aparecia em lugar nenhum).
     summaryOnly: ['phone'],
     onDone,
-    afterCreate,
+    photo: {
+      resource: 'students',
+      invalidateKey: studentsApi.keys.all,
+      url: student?.photo_url,
+    },
   })
 
   return crud
