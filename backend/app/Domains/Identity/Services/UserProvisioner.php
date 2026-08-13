@@ -42,48 +42,6 @@ class UserProvisioner
     }
 
     /**
-     * Normaliza o RUT e garante unicidade — inclusive contra soft-deletados,
-     * pois o índice único de users.rut não distingue deleted_at (senão o
-     * conflito viraria 500 em vez de 422). Fonte única desta regra: create
-     * (provision) e updates dos atores chamam este método.
-     *
-     * @param  int|null  $exceptUserId  id do próprio user, ignorado na checagem (update)
-     * @return string o RUT já formatado, pronto para persistir
-     */
-    public function ensureRutAvailable(string $rut, ?int $exceptUserId = null): string
-    {
-        $rut = Rut::parse($rut)->format();
-
-        $duplicate = User::withTrashed()
-            ->where('rut', $rut)
-            ->when($exceptUserId !== null, fn ($q) => $q->where('id', '!=', $exceptUserId))
-            ->exists();
-
-        if ($duplicate) {
-            throw ValidationException::withMessages(['rut' => 'Este RUT já está cadastrado.']);
-        }
-
-        return $rut;
-    }
-
-    /**
-     * Garante unicidade de e-mail — inclusive contra soft-deletados (o índice
-     * único de users.email não distingue deleted_at; senão a colisão vira 500 em
-     * vez de 422). Fonte única: as Actions de staff chamam antes de persistir.
-     */
-    public function ensureEmailAvailable(string $email, ?int $exceptUserId = null): void
-    {
-        $exists = User::withTrashed()
-            ->where('email', $email)
-            ->when($exceptUserId !== null, fn ($q) => $q->where('id', '!=', $exceptUserId))
-            ->exists();
-
-        if ($exists) {
-            throw ValidationException::withMessages(['email' => 'Este e-mail já está cadastrado.']);
-        }
-    }
-
-    /**
      * Porta única da checagem de identidade: RUT **e** e-mail, na mesma
      * chamada. Existe porque a metade era esquecível — `provision()` fechava só
      * o RUT e quatro dos nove caminhos de escrita não chamavam a outra, o que

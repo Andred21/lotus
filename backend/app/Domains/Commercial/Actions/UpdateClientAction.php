@@ -31,8 +31,9 @@ class UpdateClientAction
             // locks e produziria deadlock (ver Client::lockForWrite).
             Client::lockForWrite($client->id);
 
-            // Unicidade DENTRO da transação que escreve.
-            $rut = $this->users->ensureRutAvailable($data->rut, $client->user_id);
+            // Unicidade DENTRO da transação que escreve, pelas duas colunas: o
+            // e-mail faltava aqui e a colisão virava 500 (achado 4).
+            $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $client->user_id);
 
             $client->user->update([
                 'name' => $data->name,

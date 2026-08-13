@@ -20,8 +20,13 @@ use Tests\TestCase;
 /**
  * A checagem de unicidade (RUT/e-mail) tem de rodar DENTRO da transação que
  * escreve. Fora dela, check e write são duas operações independentes e a janela
- * entre as duas é real. Os irmãos que já fazem certo — `CreateStaffUserAction`,
- * `CreateStudentAction`, `UpdateStudentAction` — são a referência.
+ * entre as duas é real.
+ *
+ * Desde o bloco `contrato-de-entrada-identidade-e-nested`, os NOVE caminhos de
+ * escrita de identidade passam pela mesma porta (`ensureIdentityAvailable`), e
+ * os três aqui exercem as duas colunas — a assimetria que este arquivo
+ * registrava (staff com ['rut','email'], cliente e redator só com ['rut'])
+ * deixou de existir.
  *
  * A suíte roda sqlite `:memory:`: este teste NÃO fecha a corrida. Ele prova a
  * atomicidade de check+write, que é a condição sem a qual nada mais adianta. A
@@ -65,7 +70,7 @@ class UniquenessInsideTransactionTest extends TestCase
     {
         $client = $this->makeClientWithUser([], ['rut' => '13.456.789-9']);
 
-        $niveis = $this->niveisDeUnicidade(['rut'], fn () => app(UpdateClientAction::class)->execute(
+        $niveis = $this->niveisDeUnicidade(['rut', 'email'], fn () => app(UpdateClientAction::class)->execute(
             $client,
             ClientData::from([
                 'name' => 'ACME',
@@ -78,6 +83,7 @@ class UniquenessInsideTransactionTest extends TestCase
         ));
 
         $this->assertChecouDentroDaTransacao($niveis, 'rut');
+        $this->assertChecouDentroDaTransacao($niveis, 'email');
     }
 
     public function test_unicidade_do_redator_roda_dentro_da_transacao(): void
@@ -86,7 +92,7 @@ class UniquenessInsideTransactionTest extends TestCase
             'user_id' => User::factory()->redator()->create(['rut' => '13.456.789-9'])->id,
         ]);
 
-        $niveis = $this->niveisDeUnicidade(['rut'], fn () => app(UpdateRedatorAction::class)->execute(
+        $niveis = $this->niveisDeUnicidade(['rut', 'email'], fn () => app(UpdateRedatorAction::class)->execute(
             $redator,
             RedatorData::from([
                 'name' => $redator->user->name,
@@ -96,14 +102,12 @@ class UniquenessInsideTransactionTest extends TestCase
         ));
 
         $this->assertChecouDentroDaTransacao($niveis, 'rut');
+        $this->assertChecouDentroDaTransacao($niveis, 'email');
     }
 
     /**
-     * Níveis de transação observados em cada `select exists(...)` que cita a
-     * coluna, na ordem em que rodaram. Casar `select exists` em vez da coluna
-     * entre aspas é de propósito: o UPDATE de `users` também contém `rut = ?`, e
-     * o caractere de citação muda entre sqlite e MySQL. Só `->exists()` compila
-     * `select exists`.
+     * Níveis de transação observados em cada SELECT de checagem de unicidade
+     * que cita a coluna, na ordem em que rodaram.
      *
      * @param  array<int, string>  $colunas
      * @return array<string, array<int, int>>
@@ -113,7 +117,12 @@ class UniquenessInsideTransactionTest extends TestCase
         $niveis = [];
 
         DB::listen(function (QueryExecuted $query) use (&$niveis, $colunas): void {
-            if (! str_starts_with($query->sql, 'select exists')) {
+            // A checagem projeta `deleted_at` (é ela que distingue "já
+            // cadastrado" de "cadastro arquivado"), e o UPDATE de `users`
+            // também contém `rut = ?` — daí o filtro por SELECT + a coluna
+            // projetada, em vez de pelo nome da coluna sozinho. O caractere de
+            // citação muda entre sqlite e MySQL, então nada de aspas no match.
+            if (! str_starts_with($query->sql, 'select') || ! str_contains($query->sql, 'deleted_at')) {
                 return;
             }
 
