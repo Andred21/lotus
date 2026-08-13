@@ -36,9 +36,18 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // `locale('es')` nunca é chamado no projeto (primeLocale.ts só faz
     // `addLocale`), então um rótulo pendurado lá ficaria congelado na troca de
     // idioma. Pinado DEPOIS do `pt` do chamador: nome acessível não é opcional.
+    // O olho é BOTÃO, não `switch`. O Prime crava `role="switch"` com
+    // `aria-checked` fixo por ícone — `'true'` no showIcon e `'false'` no
+    // hideIcon (password.cjs.js:600-615) —, e isso é o inverso do estado da
+    // senha: com o campo mascarado o leitor de tela anunciava "Mostrar
+    // contraseña, ativado" (UI-04 do review de 2026-08-13). Um controle cujo
+    // NOME muda a cada clique é botão; switch tem nome estável e estado que
+    // varia. Trocar o papel preserva os dois rótulos medidos na API instalada
+    // (`passwordShow`/`passwordHide`) e apaga o estado que mentia.
+    const togglePt = { role: 'button', 'aria-checked': undefined }
     const ariaPt = {
-      showIcon: { 'aria-label': t('common.showPassword') },
-      hideIcon: { 'aria-label': t('common.hidePassword') },
+      showIcon: { ...togglePt, 'aria-label': t('common.showPassword') },
+      hideIcon: { ...togglePt, 'aria-label': t('common.hidePassword') },
       // O IconField interno do Password (o que abriga o olho) é shrink-to-fit e
       // não herda o `w-full` do input — ver o docblock. Pinado como o rótulo:
       // largura de campo não é opcional.
