@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: usecrudform-mais-fundo
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
 state_basis_commit: d0cc270
-updated_at: 2026-08-13T12:32:22-03:00
+updated_at: 2026-08-13T13:22:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -67,13 +67,85 @@ o repositório e o próprio texto do backlog, que já traz paths e IDs (`Q-4` do
 **O main tree venceu a worktree por causa do DoD, não por costume.** O BD-5 é frontend por escopo de
 escrita, mas o DoD escrito é **foto real chegando no S3** — exige `app` + MinIO de pé, e é o main
 tree que serve o `:8080`. No BD-4 a worktree não pôde subir stack própria (P-03) e **dois passos do
-gate ficaram sem prova**; aqui o custo foi antecipado em vez de pago. Consequência declarada: a
-worktree `fix-frontend` fica ociosa neste bloco (hoje em detached HEAD sobre `d0cc270`, árvore
-limpa).
+gate ficaram sem prova**; aqui o custo foi antecipado em vez de pago. **Esta decisão caiu horas
+depois — ver §"Divergência de estado" abaixo.**
 
 **`state_basis_commit` passa de `7c28699` a `d0cc270`** — o fechamento do BD-4 registrou o merge do
 PR #46, que é o HEAD atual da `main`. Não era divergência: com `active_work_item` `null` não havia
 trabalho ativo cujo baseline pudesse ter derivado.
+
+### Divergência de estado — 2026-08-13: dois `active_work_item` promovidos em paralelo
+
+A invariante "existe no máximo um `active_work_item`" **quebrou**, e não foi resolvida por
+heurística. Duas sessões promoveram itens distintos **a partir do mesmo `d0cc270`**, no mesmo
+repositório: `5bf54f3` (12:32, este bloco, branch `feat/usecrudform-mais-fundo`) e `0e3ce3b` (13:05,
+`login-fora-do-adr16`, branch `feat/login-fora-do-adr16`) — a segunda **não** descende da primeira.
+Cada branch ficou com um `state.md` afirmando que o item ativo é o outro. Precedente exato: os dois
+`ready_for_closure` de 2026-08-10, também resolvidos por decisão do João.
+
+**O que a sessão paralela mudou de fato:** o main tree `/home/jvbat/projetos/lotus` passou à branch
+de login, e a worktree `fix-frontend` foi movida do detached HEAD para
+`feat/usecrudform-mais-fundo`. **Nada foi perdido e nada alheio foi tocado:** `5bf54f3` sobrevive, a
+spec deste bloco foi preservada e movida para a worktree antes de qualquer commit — ela chegou a ser
+escrita dentro do main tree, que naquele momento já servia a branch alheia —, e o main tree ficou
+limpo.
+
+**Decisão do João (D6): o BD-5 segue e executa na worktree `fix-frontend`;
+`login-fora-do-adr16` cede a vez.** Recusadas: pausar o BD-5 e deixar as duas correrem em paralelo
+(precedente BD-4 × BD-9, com o custo conhecido de `state.md` conflitando no merge e auto-merge de
+`backlog.md` saindo falso sem sobreposição textual). **A branch de login não foi tocada** — o que
+fazer com ela é decisão dele, não deste bloco.
+
+**Consequência: a D3 do gate caiu.** O bloco perde o main tree como área de trabalho e passa a usá-lo
+**só como servidor** do `:8080` para o e2e do S3 — exatamente o custo que a escolha original existia
+para evitar. A prova do DoD só vale com `git diff main...HEAD -- backend/` **vazio** naquele tree,
+conferido no gate. É a **P-03** aparecendo pela segunda vez seguida num bloco de frontend.
+
+### Brainstorming e spec — 2026-08-13
+
+Spec em `docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md`, com **seis decisões**
+(D1–D6), cada uma escolhida pelo João entre alternativas apresentadas com o custo medido.
+
+**O terreno foi medido antes de desenhar, e quatro afirmações do backlog não sobreviveram:**
+
+1. **`useQuoteForm` não é candidato legítimo** — reprova pelo mesmo critério que exclui o
+   `useTurmaConfigForm`. `useCreateQuote` recebe `{ budgetId, payload }` e `useUpdateQuote`
+   `{ quoteId, payload }`, então não satisfaz `MutableResource`; a cotação nasce em rota aninhada. E
+   as outras duas razões que o `backlog.md:304-306` dá para ele também são falsas: **não** manipula
+   coleção nested (sete escalares, sem "itens da cotação") e **não** usa `setForm`.
+2. **A absorção do trio não cabe inteira no `useCrudForm`** — metade é JSX, e o quarto diálogo não
+   roda sobre o hook (`useRedatorForm` usa `useEntityForm` direto). Absorver só no hook cobre 3 de 4.
+   O bloco JSX, esse sim, é idêntico **byte a byte nos quatro** sítios.
+3. **`useCourseForm` cabe, mas só com o hook mais fundo de verdade:** `createdIdRef` (não recriar
+   curso quando a segunda chamada falha), `pending` de três mutações, `fieldErrors` de três fontes.
+4. **O texto do Q-4 está impreciso** — o `SignedUrlTransformer` roda na serialização, então o front
+   recebe URL pré-assinada, não "um caminho interno de storage". O defeito real é outro e continua
+   valendo: `PUT` com `photo_url` devolve **200**, porque a promoção no construtor desvia do
+   `CannotSetComputedValue`.
+
+**Dois fatos mediram o desenho em vez de o justificarem depois:** a guarda de classificação que já
+existe **barra o `...form` ingênuo** (reprovaria com "chave de payload sem classificação:
+`photo_url`") — o buraco do Q-4 é quem **classifica** a chave e passa, e é esse o buraco que a D4
+fecha; e `StaffUserDialog` está em **150 linhas, margem zero** na régua, então a absorção é o que lhe
+devolve folga.
+
+**As decisões que mudam trabalho:** só `useCourseForm` migra (D1); a absorção mora em dois sítios,
+`useCrudForm` com `photo` e um `FormPhotoRow` novo em `shared/ui` (D2); o `afterCreate` vira
+**retentável**, com o `submit` pulando o create no resubmit, e `createdIdRef` morre (D3); a guarda do
+Q-4 é chave proibida no payload, que **nenhuma classificação salva** (D4); e o hook devolve `busy`
+derivado, sem contaminar `pending` — somar `photo.pending` faria o botão de salvar girar por upload
+de foto, que é a crítica Q-7 do bloco de documentos oficiais (D5).
+
+**Baseline medido, não herdado:** `pnpm test` = **29 arquivos / 143 testes**, exit 0 — bate com o
+gate pós-merge, sem deriva.
+
+**Risco de review BAIXO** pelo gate binário: zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal; `executor: claude`. O risco próprio é de **alcance** e está
+declarado: `useCrudForm` tem cinco consumidores e o `submit` muda para todos — a rede é que
+`photo.flush` não lança, mas isso é premissa a provar, não a assumir.
+
+O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
+spec escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
