@@ -37,7 +37,7 @@ export function StudentClientField({
   const { t } = useTranslation();
 
   return (
-    <>
+    <div>
       <FormField
         label={t("student.client")}
         error={error}
@@ -88,6 +88,6 @@ export function StudentClientField({
           {t("student.clientLocked")}
         </p>
       )}
-    </>
+    </div>
   );
 }
