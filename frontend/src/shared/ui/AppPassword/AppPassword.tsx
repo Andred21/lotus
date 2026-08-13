@@ -25,7 +25,13 @@ export interface AppPasswordProps extends PasswordProps {
  * não alcança o input — por isso o `pl-10` (2.5rem, o mesmo offset do IconField).
  * A largura do input é `w-full`, como o irmão AppInputText: `w-96` são 384px
  * absolutos que não encolhem e vazavam a viewport de 390px (C-2 do review de
- * 2026-08-12), levando o olho da senha para fora da tela.
+ * 2026-08-12), levando o olho da senha para fora da tela. O `w-full` do
+ * `inputClassName` não basta sozinho: quando há `toggleMask`, o Password
+ * embrulha o <input> num IconField PRÓPRIO (`ptm('iconField')`,
+ * password.cjs.js:737) que é shrink-to-fit, então o `w-full` resolvia contra um
+ * pai sem largura e caía na largura intrínseca do input — 316px de teto, contra
+ * os 384px do AppInputText irmão (UI-01 do review de 2026-08-13). Por isso a
+ * largura é pinada também nesse nó, pelo `pt`.
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {
@@ -39,6 +45,10 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     const ariaPt = {
       showIcon: { 'aria-label': t('common.showPassword') },
       hideIcon: { 'aria-label': t('common.hidePassword') },
+      // O IconField interno do Password (o que abriga o olho) é shrink-to-fit e
+      // não herda o `w-full` do input — ver o docblock. Pinado como o rótulo:
+      // largura de campo não é opcional.
+      iconField: { root: { className: 'w-full' } },
     }
     if (!leftIcon) {
       return (
