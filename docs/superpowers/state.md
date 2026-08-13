@@ -6,13 +6,13 @@ workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
 state_basis_commit: 0c2a24b
-updated_at: 2026-08-13T12:00:00-03:00
+updated_at: 2026-08-13T16:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -80,6 +80,72 @@ sessão** e é volátil; foi copiado para o scratchpad desta antes de qualquer l
 **Baseline medido nesta branch, não herdado do fechamento anterior:** backend **573 passed,
 5 skipped (2104 assertions)** — bate com o placar de fechamento do `rastro-unicidade-e-gates`, o que
 confirma que a branch nasce da `main` sem deriva.
+
+### Terreno medido antes de desenhar — 2026-08-13 (fato, não desenho)
+
+1. **O arquivo de contexto que abriu o bloco não existe mais.** O
+   `architecture-review-20260812-backend.html` vivia no `/tmp` de outra sessão e não sobreviveu a
+   ela. **Não bloqueou:** os achados 4 e 5 estão transcritos integralmente em `backlog.md:185-231`,
+   com paths, linhas e as quatro decisões do grilling. `context_packet` segue `null` pela mesma
+   ausência medida de fonte externa.
+2. **Os caminhos de escrita de identidade são nove**, em cinco creates e quatro updates, e a
+   assimetria é exatamente a do achado: `Create/UpdateClientAction` e `Create/UpdateRedatorAction`
+   checam só o RUT; os outros cinco checam os dois.
+3. **O staff tem `rut` nullable** (`create_users_table.php:18`), e por isso
+   `Create/UpdateStaffUserAction` decidem entre `null` e a checagem por ternário. A assinatura
+   `ensureIdentityAvailable(string $rut, …)` que o backlog escreveu **não cobre** esses dois.
+4. **Fazer `provision()` checar e-mail torna duas chamadas redundantes** — `CreateStudentAction:49`
+   e `StudentResolver:63` já chamam `ensureEmailAvailable` logo antes.
+5. **O `Optional` no `ClientData` NÃO é inerte no frontend, e isso foi medido por sonda, não
+   estimado:** `addresses`/`contacts` com `| undefined` no `generated.ts` e `tsc -b` devolvem **17
+   erros em 4 arquivos** (`useClientForm.ts` 10, `ContactFields.tsx` 3, `ClientsTable.tsx` 2,
+   `ContactCard.tsx` 2). Inerte em runtime (o front sempre manda as duas), quebrado em compilação.
+   Árvore restaurada, `git status` limpo.
+6. **O universo da lei da `der-fisico.md:103-106` é cinco, não dois** — a minha primeira contagem
+   estava errada e foi corrigida antes de virar decisão. `#[DataCollectionOf]` são cinco
+   propriedades em três DTOs, mas `BudgetData::$quotes` e `$files` **nunca são lidos na entrada**
+   (grep de `data->quotes`/`data->files` em `app/` vazio): são projeção de saída e não violam lei
+   nenhuma. Uma guarda que só olhasse o atributo nasceria vermelha nelas.
+7. **Quem produz o `| undefined` no `generated.ts` é o docblock, não o tipo PHP.**
+   `BudgetData::$files` é `array|Optional = []` com `/** @var FileData[] */` e sai sem `| undefined`;
+   `CourseData:35,38` escreve `|Optional` no `@var` e sai com ele.
+8. **Não existe um único `ValidationContext` em `app/`** — os 14 `rules()` do repositório são
+   estáticos. A distinção create/update do `contacts` não tinha precedente e precisou de mecanismo.
+
+### Brainstorming e spec — 2026-08-13
+
+Spec em `docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md`. As
+**D1–D4** vêm fechadas do grilling de 2026-08-12 e não foram reabertas; as **D5–D9** são desta
+sessão, cada uma escolhida pelo João entre alternativas apresentadas com o custo medido:
+
+- **D5** — o helper é a **porta única dos nove**, com `?string $rut` para caber no staff, e
+  `ensureRutAvailable`/`ensureEmailAvailable` viram **privados**. Recusado: fechar só os quatro
+  quebrados, que deixaria os dois métodos públicos e três formas de checar identidade convivendo.
+- **D6** — `contacts` é `sometimes` no PUT e obrigatório no POST, com a obrigatoriedade do POST
+  morando na **Action**, não em `rules()`. Recusado: `sometimes` nos dois verbos, que revogaria a
+  regra do Drive (um ou mais contatos, ratificada 2026-07-31) e deixaria a UI como única guardiã.
+- **D7** — o 422 **agrega** RUT e e-mail numa exceção só, em vez de dois round-trips.
+- **D8** — o helper lê `deleted_at` na mesma query, e cada campo ganha duas mensagens (vivo e
+  arquivado), quatro no total, em PT-BR. A Q-6 (idioma canônico) segue travada e não foi reaberta.
+- **D9** — a lei ganha guarda estática em `PersistenceLawsTest`, e a exceção read-only é declarada
+  **no sítio** por `#[ReadOnlyCollection]`. Recusados: migrar `BudgetData` junto (medido: 3 erros TS
+  em 2 arquivos, e o tipo passaria a mentir sobre uma saída sempre preenchida) e allowlist literal
+  dentro do teste.
+
+**Consequência declarada, não escolha:** cinco caminhos que **não têm defeito** (staff e aluno)
+mudam de forma. É o preço da porta única, e a prova de que o comportamento deles não mudou entra no
+DoD.
+
+**Um ruído previsto antes de aparecer:** `UniquenessInsideTransactionTest:116` filtra por
+`select exists`; trocar `->exists()` por leitura de `deleted_at` muda o SQL e reprova os três casos.
+O teste muda no mesmo commit, medindo a mesma coisa.
+
+**Risco de review declarado ALTO** (§8 da spec), **divergindo do MÉDIO que o backlog escreveu**: o
+gate da `revisar-sprint` é binário e lista `generated.ts` entre os gatilhos de alto
+(`SKILL.md:37`). A divergência fica declarada; o backlog não foi corrigido por conta própria.
+
+O estado entra em `planning` com `active_spec` preenchido neste commit; `active_plan` segue `null`
+até o João ler a spec escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
