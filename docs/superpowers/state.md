@@ -90,16 +90,19 @@ spec deste bloco foi preservada e movida para a worktree antes de qualquer commi
 escrita dentro do main tree, que naquele momento já servia a branch alheia —, e o main tree ficou
 limpo.
 
-**Decisão do João (D6): o BD-5 segue e executa na worktree `fix-frontend`;
-`login-fora-do-adr16` cede a vez.** Recusadas: pausar o BD-5 e deixar as duas correrem em paralelo
-(precedente BD-4 × BD-9, com o custo conhecido de `state.md` conflitando no merge e auto-merge de
-`backlog.md` saindo falso sem sobreposição textual). **A branch de login não foi tocada** — o que
-fazer com ela é decisão dele, não deste bloco.
+**Decisão do João (D6): as duas execuções correm em paralelo** — o BD-5 na worktree `fix-frontend`,
+o `login-fora-do-adr16` no main tree `lotus`. A invariante fica com **exceção declarada, não
+resolvida**, e o custo do precedente BD-4 × BD-9 é **aceito de antemão** em vez de descoberto no
+merge: os `state.md` conflitam, e `backlog.md`/`pendencias.md` auto-mesclam sem sobreposição textual,
+que é exatamente como uma afirmação vencida passou verde naquele bloco. Recusadas: pausar o BD-5, e
+o login ceder a vez.
 
-**Consequência: a D3 do gate caiu.** O bloco perde o main tree como área de trabalho e passa a usá-lo
-**só como servidor** do `:8080` para o e2e do S3 — exatamente o custo que a escolha original existia
-para evitar. A prova do DoD só vale com `git diff main...HEAD -- backend/` **vazio** naquele tree,
-conferido no gate. É a **P-03** aparecendo pela segunda vez seguida num bloco de frontend.
+**Consequência: a D3 do gate caiu, e um grau pior do que no BD-4.** O bloco perde o main tree como
+área de trabalho e passa a usá-lo **só como servidor** do `:8080` para o e2e do S3 — exatamente o
+custo que a escolha original existia para evitar. E lá não há uma branch parada, e sim **execução
+ativa**: a prova do DoD só vale com `git diff main...HEAD -- backend/` **vazio** naquele tree,
+conferido **no momento da prova**, não no início do bloco. O banco de dev também é compartilhado
+pelas duas execuções. É a **P-03** aparecendo pela segunda vez seguida num bloco de frontend.
 
 ### Brainstorming e spec — 2026-08-13
 

@@ -6,9 +6,10 @@
 >
 > **O isolamento mudou depois do gate (D6).** A promoção escolheu main tree porque o DoD é foto real
 > no S3 e é o main tree que serve o `:8080`; uma sessão paralela tomou o main tree para
-> `login-fora-do-adr16` (`0e3ce3b`) antes de o desenho fechar. O bloco passa a executar na worktree,
-> usando o main tree **só como servidor** para o e2e — a mesma ressalva que o BD-4 pagou, e a P-03
-> outra vez.
+> `login-fora-do-adr16` (`0e3ce3b`) antes de o desenho fechar. **As duas execuções correm em
+> paralelo**: este bloco na worktree, o login no main tree. O `:8080` continua sendo do main tree, que
+> agora tem **execução ativa em cima** — não uma branch parada, como no BD-4. É a P-03 outra vez, um
+> grau pior.
 
 ## 1. O terreno, medido antes de desenhar
 
@@ -99,13 +100,15 @@ Cada uma escolhida pelo João entre alternativas apresentadas com o custo medido
   novo, que moveria o aviso do topo do diálogo para dentro da linha da foto em quatro telas sem
   checagem visual no gate.
 
-- **D6 — o BD-5 segue e executa na worktree; `login-fora-do-adr16` cede a vez.** Tomada com a
-  invariante "existe no máximo um `active_work_item`" **quebrada**: duas sessões promoveram itens
+- **D6 — as duas execuções correm em paralelo:** o BD-5 na worktree `/home/jvbat/projetos/fix-frontend`,
+  o `login-fora-do-adr16` no main tree `/home/jvbat/projetos/lotus`. Duas sessões promoveram itens
   distintos a partir de `d0cc270` no mesmo repositório (`5bf54f3` às 12:32, `0e3ce3b` às 13:05), cada
-  branch com um `state.md` dizendo que o item ativo é outro. Recusadas: pausar o BD-5 e deixar as
-  duas correrem em paralelo — esta última tem precedente (BD-4 × BD-9, 2026-08-13) e custo conhecido,
-  os `state.md` conflitando no merge e o auto-merge de `backlog.md` podendo sair falso sem
-  sobreposição textual. **A branch de login não foi tocada**; a decisão sobre ela é do João.
+  branch com um `state.md` dizendo que o item ativo é outro. A invariante "existe no máximo um
+  `active_work_item`" fica com **exceção declarada, não resolvida** — decisão do João, com o
+  precedente BD-4 × BD-9 (2026-08-13) e o custo dele **aceito de antemão**, não descoberto no merge:
+  os `state.md` conflitam, e `backlog.md`/`pendencias.md` auto-mesclam sem sobreposição textual, que
+  é como uma afirmação vencida passou verde naquele bloco. Recusadas: pausar o BD-5, e o login ceder
+  a vez.
 
 ## 3. O que muda
 
@@ -169,9 +172,11 @@ a guarda, que só olha as chaves que o payload produz.
 
 1. **E2E contra a API real, sessão Sanctum viva:** upload em `create` (buffer + `flush` pós-201) e em
    `edit`, com o objeto conferido no MinIO e o `photo_url` novo chegando na leitura seguinte.
-   O `:8080` serve o **main tree**, hoje na branch alheia `feat/login-fora-do-adr16` (D6): a prova só
-   vale com `git diff main...HEAD -- backend/` **vazio** naquele tree, conferido no gate e escrito no
-   relatório. Sem isso, a medição é de outra stack e não conta.
+   O `:8080` serve o **main tree**, que roda a execução paralela de `login-fora-do-adr16` (D6): a
+   prova só vale com `git diff main...HEAD -- backend/` **vazio** naquele tree, conferido **no momento
+   da prova**, não no início do bloco — a branch de lá está em movimento. Sem isso, a medição é de
+   outra stack e não conta. O banco de dev também é compartilhado pelas duas execuções: os registros
+   que o e2e criar entram no relatório e saem por `forceDelete`, como no BD-2.
 2. **Resubmit após `afterCreate` reprovado não recria a entidade** — provado por teste de unidade em
    `useCrudForm.test.ts`, com o vermelho visto contra o código sem o mecanismo.
 3. **Chave proibida no payload lança em DEV** — provado nos dois sentidos: sonda com `photo_url` no
