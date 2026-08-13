@@ -2,14 +2,19 @@
 schema_version: 1
 active_feature: null
 active_work_item: catraca-max-lines-e-moldura
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
 active_plan: docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md
 context_packet: null
-blocker: null
+blocker: >-
+  Review de sprint do BD-4 fechado com 4 achados aguardando triagem do João:
+  Q-1 (removeDoc.error sem banner, falha silenciosa em documento de peso legal),
+  Q-2 (contrato do clear composto sem mecanismo, 3o consumidor), Q-3 (cast novo
+  em StudentDialog:115) e Q-4 (docblock obsoleto em RedatorDocumentSlot:10-12).
+  Nenhum aprovado; nenhum corrigido.
 last_completed_work_item: rastro-unicidade-e-gates
 state_basis_commit: d50d7f8
 updated_at: 2026-08-13T03:20:00-03:00
@@ -197,6 +202,78 @@ registrados no ledger local, não bloqueiam.
 
 **Estado:** `ready_for_review`. Próxima instrução aciona a revisão do trabalho ativo — este
 comando não a inicia sozinho.
+
+### Review de sprint — 2026-08-13: BAIXO risco, uma lente, 4 achados
+
+**BAIXO pelo gate binário da skill:** zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal gerado; `executor: claude`. A spec §9 declara MÉDIO por alcance
+e margem — divergência declarada, sem conflito, como no BD-3. **Só lente Claude, sem Codex.**
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **29 arquivos / 142 testes** (a projeção do plano, exata); os **13** arquivos do bloco
+abaixo de 150, o maior sendo `SlotBody` em 144; `ignores` do `max-lines` inexistente (só o
+`globalIgnores` do topo e o `CATRACA_COR`, que é outra regra); zero `className="sp"`; zero
+`primereact` em `features/`; `BudgetDetailPage.test.tsx` com **diff vazio**.
+
+**A catraca foi provada nos dois sentidos (lição 10), não por lint verde:** 25 linhas em branco
+apensadas ao `StudentDialog` — o ex-ignorado — fazem o lint reprovar com
+`File has too many lines (153). Maximum allowed is 150`, e a árvore volta limpa em seguida. Verde
+sozinho não distinguiria "a régua vale" de "a regra parou de casar o glob".
+
+**Órfãos: zero.** Os 7 componentes novos têm exatamente um consumidor cada, conferido por grep.
+
+**As extrações foram conferidas linha a linha, não presumidas:** `StudentDetailSections` bate byte a
+byte com `StudentDialog.tsx:172-278` do `0c2a24b`, com uma única divergência — o `sp` → `space-y-2`
+da D6; `BudgetOverlays` e `BudgetStatCard` idênticos ao original; `SlotBody` preserva as duas
+assimetrias medidas. **E a conferência que o `backlog.md:409-411` pedia foi feita:** todo campo em
+`mapped` passa `error=` ao `FormField` nos dois diálogos, e `phone` não passa em nenhum — o resumo
+não duplica erro de campo visível.
+
+**A D8 foi confirmada por álgebra sobre o hook, não por leitura do JSX:** `useTableFilter.ts:98` é
+`term !== '' || scoped.length !== items.length`, então lista crua vazia **com** termo digitado dá
+`filtering: true` e o CTA aparece, onde o critério antigo (`budgets.length === 0`) o escondia. É o
+único caso que diverge.
+
+**Os quatro achados:**
+
+1. **Q-1 🟡 P** — `RedatorDocumentsSection.tsx:37,69-70`: `removeDoc.error` **nunca é lido**. Um
+   DELETE de documento do redator que falha deixa a linha na tela e não diz nada — vazio silencioso
+   (D16) sobre dado que alimenta a idoneidade. O irmão `commercial` já resolve os dois no mesmo
+   banner (`useBudgetDetail.ts:47`: `useMutationErrors([uploadFile.error, removeFile.error])`). O
+   bloco reescreveu exatamente as duas linhas vizinhas (D6, `<p>` → banner) e passou ao lado da
+   terceira. Não registrado em `backlog.md` nem em `pendencias.md`.
+2. **Q-2 🟡 M** — o contrato "quem passa `filterSlot` passa um `clear` COMPOSTO"
+   (`SearchableTableFrame.tsx:41-45`) é **prosa, não mecanismo**, e este bloco trouxe o terceiro
+   consumidor: `BudgetsTable:63,67`, `TurmasTable:40,44` e `useHistorial:60,86` remontam o mesmo
+   `clearAll` à mão. Esquecer produz um "Limpar filtros" que não devolve a lista — a mesma classe de
+   falha silenciosa que o `filtering` do `useTableFilter` existiu para matar em 2026-08-03, quando
+   estas duas tabelas erraram juntas. Pela lição 14 (instrução repetida três vezes quer mecanismo) e
+   pela cláusula de reincidência da skill, **vira regra ou tipo, não refactor**: a moldura compondo
+   por `onClearFilter`, o par virando tipo obrigatório, ou um `useStatusFilteredTable` em
+   `shared/hooks`.
+3. **Q-3 🟢 P** — `StudentDialog.tsx:115` introduz
+   `options={clients.options as { label: string; value: number }[]}`. A fonte
+   (`useStudentClients.ts:16`) devolve `value: c.id` com `ClientData.id` sendo `number | undefined`.
+   A extração criou uma fronteira tipada e o cast é o que a atravessa; corrigir no dono do dado
+   (filtrar/normalizar uma vez) elimina a asserção em vez de justificá-la em três linhas de
+   comentário.
+4. **Q-4 🟢 P** — `RedatorDocumentSlot.tsx:10-12` afirma que `preview` e `sizeError` "vivem no
+   diálogo"; depois da Task 4 eles vivem em `RedatorDocumentsSection.tsx:38-39`. Lição 13 na forma
+   exata, e a mesma classe do ponteiro fantasma que a Task 9 **deste bloco** existiu para corrigir.
+   `repo-docs-refs` não pega: é comentário em `.tsx`, não doc normativo.
+
+**O que NÃO virou achado, e por quê:** decisão consciente registrada não é achado — requisição
+ociosa de `useStudentDetail` em edit (D4), `mapped` literal do redator sem guarda (D2), CTA da
+`BudgetsTable` em lista-vazia-com-termo (D8), margem de 6 linhas do `SlotBody` (spec §8.1, no
+ledger), `SlotBody.tsx` fora da convenção `Redator*` (ledger) e os números do `backlog.md` §Débitos
+ainda descrevendo o estado pré-bloco (a baixa é do `/fechar-sprint`, por instrução do plano).
+
+**Veredito: o bloco está bom.** Dez tasks, dez commits, nenhuma condicional mudou de forma, nenhum
+`key` mudou de critério, e as quatro mudanças de tela são as quatro declaradas. Os quatro achados
+são de acabamento e de mecanismo; nenhum é de correção.
+
+**Estado: `blocked`,** aguardando a triagem do João sobre quais achados entram. Só achado aprovado
+pode ser corrigido; depois o estado volta a `reviewing`.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
