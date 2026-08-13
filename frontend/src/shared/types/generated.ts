@@ -85,8 +85,8 @@ phone: undefined | string | null,
 legal_name: string,
 type: string,
 business_activity: undefined | string | null,
-addresses: ClientAddressData[],
-contacts: ClientContactData[],
+addresses: ClientAddressData[] | undefined,
+contacts: ClientContactData[] | undefined,
 photo_url: string | null,
 };
 export type CourseData = {

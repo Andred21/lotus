@@ -2,6 +2,13 @@
 
 namespace Tests\Feature\Shared;
 
+use App\Shared\Data\Attributes\ReadOnlyCollection;
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Optional;
 use Tests\Support\ScansPhpSource;
 use Tests\TestCase;
 
@@ -178,5 +185,163 @@ class PersistenceLawsTest extends TestCase
             ],
             $encontrados,
         )));
+    }
+
+    /**
+     * Coleção nested read-write nasce `Optional` (`der-fisico.md`, ADR-04).
+     *
+     * `array = []` faz o replace-total da Action apagar a coleção de quem só
+     * OMITIU o campo — em silêncio, com peso legal. A lei existia desde o Bloco
+     * 5 e o `ClientData` a violou mesmo assim, em duas propriedades: convenção
+     * sem mecanismo depende de alguém lembrar.
+     *
+     * A varredura usa reflexão, e não regex, porque a pergunta é sobre o TIPO
+     * ("admite Optional?"), que o texto do arquivo responde mal — o default e a
+     * união podem estar em linhas diferentes do atributo.
+     *
+     * `#[ReadOnlyCollection]` é a única saída, e é declarada no sítio: o
+     * atributo sozinho não sabe o sentido da coleção.
+     *
+     * A marca NÃO é palavra-de-honra, e é a correção do review de 2026-08-13
+     * (Q-1). Escrita a primeira vez, ela dava `continue` antes de qualquer
+     * checagem: bastava anotá-la para a guarda calar, com `array = []` intacto.
+     * Provado por sonda nos dois sentidos — sem a marca a sonda reprovava, com a
+     * marca passava. Isenção auto-declarada é o mesmo "alguém lembra" que a
+     * guarda existe para substituir. Agora a marca é VERIFICADA nas duas pontas:
+     *
+     * - tem de haver `#[DataCollectionOf]`, senão a propriedade está fora da
+     *   varredura de qualquer jeito e a marca só finge cobertura (Q-4);
+     * - nenhum sítio em `app/` pode ler `$data-><campo>`, que é a leitura de
+     *   ENTRADA que a marca nega. É a medição que a spec §1.5 fez à mão, uma
+     *   vez, virando catraca.
+     *
+     * Nasce VERDE: as quatro read-write (`ClientData` ×2, `CourseData` ×2) são
+     * `Optional`, e as marcadas (`BudgetData`/`QuoteData`) só se escrevem por
+     * rota própria — `POST /budgets/{budget}/quotes`, upload de arquivo.
+     */
+    public function test_colecao_nested_read_write_nasce_optional(): void
+    {
+        $encontrados = [];
+
+        foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+            $local = str_replace(base_path().'/', '', $arquivo);
+
+            if (! str_contains($local, '/Data/')) {
+                continue;
+            }
+
+            $classe = 'App\\'.str_replace('/', '\\', substr($local, strlen('app/'), -strlen('.php')));
+
+            if (! class_exists($classe)) {
+                continue;
+            }
+
+            $construtor = (new ReflectionClass($classe))->getConstructor();
+
+            if ($construtor === null) {
+                continue;
+            }
+
+            foreach ($construtor->getParameters() as $parametro) {
+                $nome = $parametro->getName();
+                $marcada = $parametro->getAttributes(ReadOnlyCollection::class) !== [];
+                $colecao = $parametro->getAttributes(DataCollectionOf::class) !== [];
+
+                if ($marcada && ! $colecao) {
+                    $encontrados[] = "{$classe}::\${$nome}: #[ReadOnlyCollection] sem #[DataCollectionOf] — marca inerte, a guarda nao olha esta propriedade de nenhum jeito";
+
+                    continue;
+                }
+
+                if (! $colecao) {
+                    continue;
+                }
+
+                if ($marcada) {
+                    foreach ($this->sitiosQueLeemDaEntrada($classe, $nome) as $sitio) {
+                        $encontrados[] = "{$classe}::\${$nome}: marcada como SAIDA, mas lida da entrada em {$sitio}";
+                    }
+
+                    continue;
+                }
+
+                if ($this->admiteOptional($parametro->getType())
+                    && $parametro->isDefaultValueAvailable()
+                    && $parametro->getDefaultValue() instanceof Optional) {
+                    continue;
+                }
+
+                $encontrados[] = "{$classe}::\${$nome}";
+            }
+        }
+
+        sort($encontrados);
+
+        $this->assertSame([], $encontrados, implode("\n", array_merge(
+            [
+                'Colecao nested read-write nasce Optional (ADR-04, der-fisico.md).',
+                'Ausente = nao mexe; [] = apaga. Com `array = []`, o replace-total da Action',
+                'apaga a colecao de quem so omitiu o campo — em silencio.',
+                'Se a colecao so existe na SAIDA, marque com #[ReadOnlyCollection] — e a marca',
+                'so vale enquanto NENHUMA Action ler o campo da entrada. Ocorrencias:',
+            ],
+            $encontrados,
+        )));
+    }
+
+    /**
+     * Os sítios de `app/` que leem `$data-><campo>` — a leitura de ENTRADA que
+     * `#[ReadOnlyCollection]` nega.
+     *
+     * Só arquivos que CITAM a classe entram, e o próprio DTO fica de fora: o
+     * nome do campo sozinho é ambíguo (`->files` também é relação de model em
+     * meia dúzia de lugares), e a convenção do projeto é uniforme — Action
+     * recebe `XData $data`. Falso positivo aqui é barulhento e some ao renomear
+     * a variável; falso NEGATIVO é o defeito que a guarda existe para pegar.
+     *
+     * @return list<string>
+     */
+    private function sitiosQueLeemDaEntrada(string $classe, string $campo): array
+    {
+        $curto = class_basename($classe);
+        $sitios = [];
+
+        foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+            $local = str_replace(base_path().'/', '', $arquivo);
+
+            if (str_ends_with($local, "/{$curto}.php")) {
+                continue;
+            }
+
+            $codigo = $this->codigoSemComentarios($arquivo);
+
+            if (! str_contains($codigo, $curto)) {
+                continue;
+            }
+
+            if (preg_match('/\$data\s*->\s*'.preg_quote($campo, '/').'\b/', $codigo) === 1) {
+                $sitios[] = $local;
+            }
+        }
+
+        return $sitios;
+    }
+
+    /** O tipo admite `Optional` — direto ou como parte de uma união. */
+    private function admiteOptional(?ReflectionType $tipo): bool
+    {
+        if ($tipo instanceof ReflectionNamedType) {
+            return $tipo->getName() === Optional::class;
+        }
+
+        if ($tipo instanceof ReflectionUnionType) {
+            foreach ($tipo->getTypes() as $parte) {
+                if ($parte instanceof ReflectionNamedType && $parte->getName() === Optional::class) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

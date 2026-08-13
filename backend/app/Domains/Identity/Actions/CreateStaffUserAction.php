@@ -27,11 +27,10 @@ class CreateStaffUserAction
         }
 
         return DB::transaction(function () use ($data) {
-            $rut = ($data->rut instanceof Optional || $data->rut === null)
-                ? null
-                : $this->users->ensureRutAvailable($data->rut);
-
-            $this->users->ensureEmailAvailable($data->email);
+            $rut = $this->users->ensureIdentityAvailable(
+                ($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut,
+                $data->email,
+            );
 
             $user = User::create([
                 'name' => $data->name,

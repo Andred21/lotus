@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Actions;
 
+use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +45,7 @@ class DeleteClientContactAction
 
             if ($restantes <= 1) {
                 throw ValidationException::withMessages([
-                    'contacts' => 'O cliente precisa ter ao menos um contato.',
+                    'contacts' => ClientData::CONTATO_OBRIGATORIO,
                 ]);
             }
 

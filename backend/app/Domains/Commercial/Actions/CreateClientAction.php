@@ -8,6 +8,7 @@ use App\Domains\Commercial\Services\PrimaryAddressService;
 use App\Domains\Commercial\Services\PrimaryContactService;
 use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -25,6 +26,22 @@ class CreateClientAction
 
     public function execute(ClientData $data): Client
     {
+        // A regra "um ou mais contatos" (Drive, ratificada 2026-07-31) mora
+        // aqui, e não em rules(): a coleção precisa ser Optional para o PUT
+        // parar de apagá-la por omissão, e rules() é estático — não sabe o
+        // verbo. Precedente: CreateStudentAction, que também exige na Action o
+        // que o DTO não consegue exigir sozinho.
+        //
+        // ANTES DA TRANSAÇÃO, e não no meio dela: é entrada pura, custo zero de
+        // banco. Rodando depois do `provision()`, um POST sem contatos com
+        // e-mail ocupado devolvia só `email` — o operador só descobria a
+        // segunda falta na requisição seguinte (review de 2026-08-13, Q-2).
+        if ($data->contacts instanceof Optional || $data->contacts === []) {
+            throw ValidationException::withMessages([
+                'contacts' => ClientData::CONTATO_OBRIGATORIO,
+            ]);
+        }
+
         return DB::transaction(function () use ($data) {
             // Sem `Client::lockForWrite()`: o cliente nasce aqui. Não existe
             // transação concorrente disputando um id que ainda não foi gerado.
@@ -42,8 +59,10 @@ class CreateClientAction
                 'business_activity' => $data->business_activity instanceof Optional ? null : $data->business_activity,
             ]);
 
-            foreach ($data->addresses as $address) {
-                $client->addresses()->create($address->toArray());
+            if (! $data->addresses instanceof Optional) {
+                foreach ($data->addresses as $address) {
+                    $client->addresses()->create($address->toArray());
+                }
             }
 
             foreach ($data->contacts as $contact) {

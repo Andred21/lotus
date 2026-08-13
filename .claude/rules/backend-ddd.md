@@ -53,7 +53,19 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
 - **Coleção nested read-write nasce `Optional` no DTO** (`array|Optional = new Optional`), e a Action
   pula o replace quando `Optional`. **Ausente = não mexe; `[]` = apaga.** Default `array = []` faz o
   replace-total apagar a coleção de quem só omitiu o campo — em silêncio, com peso legal. Ref.:
-  `CourseData::$templates`/`$modules`.
+  `CourseData::$templates`/`$modules`, `ClientData::$addresses`/`$contacts`.
+  **A lei tem catraca desde 2026-08-13:** `PersistenceLawsTest::test_colecao_nested_read_write_nasce_optional`
+  varre por reflexão toda propriedade `#[DataCollectionOf]` e exige TIPO **e** DEFAULT `Optional` —
+  `array|Optional = []` passaria pelo tipo e apagaria igual. Coleção que só existe na SAÍDA declara
+  `#[ReadOnlyCollection]` no sítio, e a marca é **verificada, não confiada**: exige
+  `#[DataCollectionOf]` junto e reprova se algum arquivo de `app/` ler `$data-><campo>` da entrada.
+  Ref.: `BudgetData::$quotes`/`$files`, `QuoteData::$files`.
+  **Obrigatoriedade que depende do verbo mora na Action, não em `rules()`** — `rules()` é estático e
+  não sabe se é POST ou PUT. `contacts` é `sometimes|array|min:1` no DTO e a exigência do create vive
+  em `CreateClientAction`, **antes** da transação: checagem de entrada pura não paga banco nem se
+  esconde atrás de um erro de identidade. O texto da recusa é constante única do DTO
+  (`ClientData::CONTATO_OBRIGATORIO`), citada pelas duas Actions e pelo `messages()` — mesma regra,
+  mesma frase, nas três portas.
 - **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
   pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
   fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —

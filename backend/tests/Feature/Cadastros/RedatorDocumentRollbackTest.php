@@ -173,8 +173,8 @@ class RedatorDocumentRollbackTest extends TestCase
         $storage = Storage::fake('s3');
         config(['filesystems.default' => 's3']);
 
-        // O RUT já pertence a outro usuário: o ensureRutAvailable recusa DENTRO
-        // da transação, com os dois binários já no bucket.
+        // O RUT já pertence a outro usuário: o ensureIdentityAvailable recusa
+        // DENTRO da transação, com os dois binários já no bucket.
         User::factory()->create(['rut' => '13.456.789-9']);
         $redator = $this->redator();
         $data = RedatorData::from([

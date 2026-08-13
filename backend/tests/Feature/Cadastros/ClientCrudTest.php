@@ -168,4 +168,84 @@ class ClientCrudTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('contacts.0.job_title', null);
     }
+
+    /**
+     * Achado 5. `ClientData::$addresses` era `array = []` e o update faz
+     * replace-total: a chave ausente soft-deletava todos os endereços em
+     * silêncio. Ausente = não mexe; `[]` = apaga.
+     */
+    public function test_update_sem_a_chave_addresses_preserva_os_enderecos(): void
+    {
+        $this->actingAsAdmin();
+        $id = $this->postJson('/api/clients', $this->payload())->json('id');
+        $antes = ClientAddress::where('client_id', $id)->pluck('id')->all();
+
+        $payload = $this->payload();
+        unset($payload['addresses']);
+
+        $this->putJson("/api/clients/{$id}", $payload)->assertOk();
+
+        $this->assertSame($antes, ClientAddress::where('client_id', $id)->pluck('id')->all());
+    }
+
+    public function test_update_com_addresses_vazio_apaga(): void
+    {
+        $this->actingAsAdmin();
+        $id = $this->postJson('/api/clients', $this->payload())->json('id');
+
+        $this->putJson("/api/clients/{$id}", $this->payload(['addresses' => []]))->assertOk();
+
+        $this->assertSame(0, ClientAddress::where('client_id', $id)->count());
+    }
+
+    /**
+     * A regra do Drive (`entidade-contato-cliente.md`, ratificada 2026-07-31)
+     * muda de casa, não de valor: sai de `rules()`, que agora precisa aceitar a
+     * omissão no PUT, e entra na Action do create.
+     */
+    public function test_store_sem_a_chave_contacts_da_422(): void
+    {
+        $this->actingAsAdmin();
+        $payload = $this->payload();
+        unset($payload['contacts']);
+
+        $this->postJson('/api/clients', $payload)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
+    }
+
+    /**
+     * A checagem de contato é entrada PURA — custo zero de banco — e por isso
+     * roda antes de qualquer escrita. Ela rodava depois do `provision()` e do
+     * `client()->create()`, e o efeito aparecia quando as duas coisas estavam
+     * erradas na mesma requisição: o POST sem contatos com e-mail ocupado
+     * devolvia só `email`. O operador corrigia o e-mail, reenviava, e SÓ ENTÃO
+     * descobria que faltava contato — dois round-trips, que é o custo que a
+     * agregação de RUT+e-mail (spec D7) existe para eliminar (review de
+     * 2026-08-13, Q-2).
+     */
+    public function test_store_sem_contatos_reclama_do_contato_antes_da_identidade(): void
+    {
+        $this->actingAsAdmin();
+        User::factory()->create(['email' => 'info@switch.cl']);
+
+        $payload = $this->payload();
+        unset($payload['contacts']);
+
+        $this->postJson('/api/clients', $payload)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.')
+            ->assertJsonMissingPath('errors.email');
+    }
+
+    public function test_store_sem_a_chave_addresses_cria_sem_endereco(): void
+    {
+        $this->actingAsAdmin();
+        $payload = $this->payload();
+        unset($payload['addresses']);
+
+        $id = $this->postJson('/api/clients', $payload)->assertStatus(201)->json('id');
+
+        $this->assertSame(0, ClientAddress::where('client_id', $id)->count());
+    }
 }

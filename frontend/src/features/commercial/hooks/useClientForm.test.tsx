@@ -42,4 +42,24 @@ describe('useClientForm', () => {
       ),
     ).not.toThrow()
   })
+
+  it('normaliza addresses/contacts undefined (Optional do backend) para array vazio', () => {
+    // Formato real de uma resposta com `Optional` serializado: a chave chega
+    // ausente/undefined, não `[]`. O fixture `EMPTY` acima sempre traz as duas
+    // coleções como array e nunca exercitou o ramo direito do `?? []`.
+    const semColecoes = {
+      ...EMPTY,
+      id: 1,
+      addresses: undefined,
+      contacts: undefined,
+    } as unknown as ClientData
+
+    const { result } = renderHook(
+      () => useClientForm(semColecoes, 'edit', () => undefined),
+      { wrapper },
+    )
+
+    expect(result.current.form.addresses).toEqual([])
+    expect(result.current.form.contacts).toEqual([])
+  })
 })

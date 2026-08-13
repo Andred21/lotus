@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '@shared/ui'
-import type { ClientData } from '@shared/types/generated'
+import type { ClientContactData } from '@shared/types/generated'
 import { ContactCard } from './ContactCard'
 
 /** Lista de contatos do cliente. `key={i}` (não `id`): o backend replace-total
@@ -9,10 +9,10 @@ import { ContactCard } from './ContactCard'
 export function ContactFields({
   contacts, readOnly, fieldErrors, onPatch, onSetPrimary, onAdd, onRemove,
 }: {
-  contacts: ClientData['contacts']
+  contacts: ClientContactData[]
   readOnly: boolean
   fieldErrors?: Record<string, string[]> | null
-  onPatch: (i: number, patch: Partial<ClientData['contacts'][number]>) => void
+  onPatch: (i: number, patch: Partial<ClientContactData>) => void
   onSetPrimary: (i: number) => void
   onAdd: () => void
   onRemove: (i: number) => void

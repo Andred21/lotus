@@ -38,13 +38,13 @@ class UpdateStaffUserAction
             }
 
             // Unicidade DENTRO da transação: fora dela, check e write são duas
-            // operações independentes. Molde dos irmãos que já faziam certo
-            // (CreateStaffUserAction, Create/UpdateStudentAction).
-            $rut = ($data->rut instanceof Optional || $data->rut === null)
-                ? null
-                : $this->users->ensureRutAvailable($data->rut, $user->id);
-
-            $this->users->ensureEmailAvailable($data->email, $user->id);
+            // operações independentes. Porta única — RUT nulo (staff pode não
+            // ter) pula só a checagem de RUT, nunca a de e-mail.
+            $rut = $this->users->ensureIdentityAvailable(
+                ($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut,
+                $data->email,
+                $user->id,
+            );
 
             $attrs = [
                 'name' => $data->name,
