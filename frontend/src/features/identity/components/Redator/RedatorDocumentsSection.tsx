@@ -7,7 +7,7 @@ import {
 } from "@shared/ui";
 import type { FileUploadHandlerEvent } from "@shared/ui";
 import type { RedatorData, RedatorDocumentData } from "@shared/types/generated";
-import { useFilePreview } from "@shared/hooks";
+import { useFilePreview, useMutationErrors } from "@shared/hooks";
 import {
   useUploadDocument,
   useRemoveDocument,
@@ -37,6 +37,14 @@ export function RedatorDocumentsSection({
   const removeDoc = useRemoveDocument();
   const preview = useFilePreview<RedatorDocumentData>();
   const [sizeError, setSizeError] = useState<string | null>(null);
+  // As DUAS mutações num banner só, molde do `useBudgetDetail`: a exclusão que
+  // falha devolve 4xx, a lista é reinvalidada e o documento reaparece na tela —
+  // sem isto, em silêncio. Documento de redator alimenta idoneidade, que tem
+  // peso legal; falha silenciosa aqui é o D16 (review do BD-4, Q-1).
+  const { message: docError } = useMutationErrors([
+    upload.error,
+    removeDoc.error,
+  ]);
 
   // Documentos vêm da entidade viva (derivada da lista), não do estado do form:
   // são geridos por mutações próprias e devem refletir o servidor na hora.
@@ -66,7 +74,7 @@ export function RedatorDocumentsSection({
   return (
     <>
       <FormSection title={t("redator.sectionDocuments")} spaced />
-      <FormErrorBanner message={upload.error?.detail} />
+      <FormErrorBanner message={docError} />
       <FormErrorBanner message={sizeError} />
       {DOC_TYPES.map((type) => (
         <RedatorDocumentSlot
