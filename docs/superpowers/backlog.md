@@ -182,54 +182,6 @@ Ordem:
 documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
 não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
 
-### BD-9 · Contrato de entrada: identidade e coleção nested (backend)
-
-**Origem:** mesma revisão de 2026-08-12, achados 4 e 5. Bloco separado do BD-8 de propósito: não
-toca schema, não toca certificação, e fecha em review de risco menor.
-
-Cobre:
-
-1. **`provision()` fecha metade do invariante.** `UserProvisioner.php:30` chama
-   `ensureRutAvailable()` por dentro e deixa `ensureEmailAvailable()` para o chamador. Quatro dos
-   nove caminhos de escrita de identidade não chamam: `CreateClientAction.php:31`,
-   `UpdateClientAction.php:35`, `CreateRedatorAction.php:50`, `UpdateRedatorAction.php:56`. Como
-   `users.email` é `unique` (`create_users_table.php:19`), a colisão sobe `QueryException`, cai no
-   `default` do `match` em `ProblemDetails.php:34-35` e vira **500 genérico** onde deveria ser 422
-   com o campo. A assimetria já está escrita no próprio guardrail:
-   `UniquenessInsideTransactionTest:49` passa `['rut','email']` para staff; `:68` e `:89` passam só
-   `['rut']` para cliente e redator. `email` é `string` obrigatório nos dois DTOs — não há caminho
-   nullable a tratar.
-2. **`ClientData::$addresses` apaga a coleção por omissão.** `ClientData.php:42` é `array $addresses
-   = []` e `rules()` declara só `rut` e `contacts`; `UpdateClientAction.php:52-55` apaga tudo e
-   recria do payload, então a chave ausente soft-deleta todos os endereços em silêncio. O par certo
-   está ao lado: `CourseData.php:37,40` são `array|Optional = new Optional` e
-   `UpdateCourseAction.php:35,44` guardam o replace com `instanceof Optional`. `docs/der-fisico.md:103-106`
-   é lei ("toda coleção nested read-write futura nasce `Optional`"), e o comentário de
-   `ClientData.php:55-58` já nomeia o bug — a correção anterior blindou só `contacts`.
-
-**Decisões já fechadas com o João no grilling de 2026-08-12:**
-
-- Fechar **por dentro**: `provision()` passa a checar e-mail, e nasce
-  `ensureIdentityAvailable(string $rut, string $email, ?int $exceptUserId = null): string` como
-  chamada única dos caminhos de update. Corrigir call-site a call-site deixaria a interface exigindo
-  memória — o quinto caminho que nascer esqueceria de novo.
-- **O 422 é explícito sobre o registro arquivado** (o `ensureEmailAvailable` usa `withTrashed()`):
-  ~10 usuários internos, não superfície pública — esconder transforma um erro acionável ("restaure o
-  cliente") em beco sem saída.
-- **`addresses` vira `Optional`**; `contacts` **migra junto** e mantém `min:1` só para quando a
-  chave vier — "não mandei contatos" deixa de ser 422, "mandei lista vazia" continua recusado.
-  Alinha com o padrão que o `CourseData` fixou.
-- Medido antes de decidir: o front **sempre** manda `addresses` (`useClientForm.ts:46`), então a
-  mudança é **inerte para a tela de hoje** — o valor está em fechar o caminho, não em corrigir bug
-  visível. Isso é o que torna o bloco barato, e o que impede vendê-lo como correção de sintoma.
-
-DoD: `PUT /api/clients/{id}` **sem** a chave `addresses` preserva os endereços (teste visto vermelho
-antes), e e-mail duplicado nos quatro caminhos devolve 422 com o campo em vez de 500 — os dois casos
-não existem na suíte hoje.
-
-Risco de review: **MÉDIO** — toca DTO (ADR-04, `generated.ts` regenera) e muda código de status de
-erro em quatro rotas.
-
 ### Fora dos BDs — travado em decisão do João
 
 Não entram em bloco porque executar sem decisão é escolher no lugar dele: **Q-6** (idioma canônico

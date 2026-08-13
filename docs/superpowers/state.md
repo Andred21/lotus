@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: contrato-de-entrada-identidade-e-nested
-workflow_state: ready_for_closure
+active_work_item: null
+workflow_state: idle
 next_owner: joao
-next_action: close_active_work_item
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
-active_plan: docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: e06c204
-updated_at: 2026-08-13T21:40:00-03:00
+last_completed_work_item: contrato-de-entrada-identidade-e-nested
+state_basis_commit: 59a39e3
+updated_at: 2026-08-13T23:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-13T21:40:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
+## Último item fechado — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
 
 ### Seleção — 2026-08-13
 
@@ -114,7 +114,7 @@ confirma que a branch nasce da `main` sem deriva.
 
 ### Brainstorming e spec — 2026-08-13
 
-Spec em `docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md`. As
+Spec em `docs/superpowers/specs/archive/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md`. As
 **D1–D4** vêm fechadas do grilling de 2026-08-12 e não foram reabertas; as **D5–D9** são desta
 sessão, cada uma escolhida pelo João entre alternativas apresentadas com o custo medido:
 
@@ -150,7 +150,7 @@ até o João ler a spec escrita e autorizar o `writing-plans`.
 ### Plano — 2026-08-13
 
 **O João aprovou a spec sem pedir mudança**, e o plano saiu em
-`docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md`: **seis tasks**, uma
+`docs/superpowers/plans/archive/2026-08-13-contrato-de-entrada-identidade-e-nested.md`: **seis tasks**, uma
 por commit, na ordem helper → creates → updates e morte dos métodos antigos → coleção nested com os
 consumidores TS → guarda da lei → gate.
 
@@ -321,7 +321,75 @@ O deferimento do `rut` do `UpdateStaffUserAction` foi registrado em `backlog.md`
 **Estado: `ready_for_closure`.** O review não executa fechamento — `/fechar-sprint` é instrução
 explícita do João.
 
-## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
+### Fechamento — 2026-08-13
+
+**As correções do review estavam no working tree, não commitadas** — o último commit da branch era o
+handoff para review (`b2fe20e`). O fechamento começou por commitá-las (`59a39e3`, que passa a ser o
+`state_basis_commit`); a árvore ficou limpa antes de qualquer prova.
+
+**O item 0 foi refeito contra a API real, não herdado do review:** as quatro correções entraram
+depois do e2e de execução e mexeram exatamente no que ele mediu — ordem da checagem, texto das
+mensagens e a guarda. Sessão Sanctum por cookie + CSRF, `Origin` e `Accept` nos dois lados,
+**10 cenários provados por corpo de resposta**, não por status:
+
+1. **D7 na API:** RUT `76.123.456-0` e e-mail `contacto@transelec.demo.cl`, os dois ocupados, saem
+   **num 422 só** — `errors.rut` **e** `errors.email` —, com `content-type: application/problem+json`
+   conferido no header.
+2. **Q-2 na API:** POST sem `contacts` com o mesmo e-mail ocupado devolve **`contacts`, e
+   `errors.email` ausente**. A ordem que a correção comprou, medida onde o operador vive.
+3. **As três portas da regra de contato falam a mesma frase** (Q-3): POST sem contatos,
+   `contacts: []` no PUT (caminho do `min:1`, que antes respondia em espanhol) e DELETE do último
+   contato pela rota nested — `O cliente precisa de ao menos um contato.` nos três.
+4. **O coração do bloco:** PUT **sem** as chaves `addresses`/`contacts`, mudando só o `legal_name`,
+   devolve **200** e o GET seguinte mostra **1 endereço e 2 contatos intactos**. O replace explícito
+   segue funcionando — `addresses` com outro item troca de fato (`city` passa a `Valparaiso`) e os
+   contatos não são tocados.
+5. **A porta única nos caminhos que antes só checavam RUT:** `POST /api/redatores` com e-mail de
+   redator existente → 422 `email`; `PUT /api/clients/{id}` com RUT de outro usuário → 422 `rut`.
+6. **D8 (arquivado) pelo caminho real:** o cliente do gate foi soft-deletado pela própria API e a
+   recriação com o mesmo par devolveu as **duas** mensagens de arquivado, não as de "já cadastrado".
+
+**Ferramentas:** backend **591 passed, 5 skipped (2149 assertions)** contra o baseline **573** da
+abertura; frontend **28 arquivos / 139 testes**, `pnpm lint` limpo e `pnpm build` verde; Pint
+`{"tool":"pint","result":"passed"}` nos **21** `.php` do bloco; `typescript:transform` **sem diff**
+(`git status --porcelain frontend/` vazio depois de rodar); zero `abort(` novo em `app/`.
+
+**Órfãos: zero**, reconferidos no fechamento e não herdados do review: `ensureRutAvailable` e
+`ensureEmailAvailable` não aparecem em `app/`, `tests/` nem `database/`; `ensureIdentityAvailable`
+tem seis sítios em `app/` (o `UserProvisioner` mais cinco Actions) e três em `tests/`;
+`#[ReadOnlyCollection]` é usada nas três propriedades de saída que a declaram.
+
+**Item 7 — dois docs VIVOS nomeavam método morto, e é a lição 13 exata:** a lição 8 do
+`docs/README.md` e a **P-29** citavam `ensureRutAvailable`/`ensureEmailAvailable`. Os dois foram
+corrigidos para `UserProvisioner::ensureIdentityAvailable`; a guarda `repo-docs-refs` não os pegaria,
+porque confere **path** e o escopo dela exclui `docs/superpowers/**` e `docs/pendencias.md`. **A P-29
+NÃO fecha:** o BD-9 unificou a checagem e agregou o 422, e o que ela registra — a corrida entre
+transações distintas, que estoura no índice único como 500 — segue exatamente igual, porque o
+`SELECT` de unicidade não trava linha inexistente. O gatilho dela também não venceu: este bloco não
+tocou `ProblemDetails` nem `ValidationMessages`. Nenhuma pendência nova nasceu; os limites do bloco
+já estão declarados no sítio (docblock da guarda) ou no `backlog.md`.
+
+**A rule `backend-ddd.md` ganhou o que o bloco criou**, porque sem isso um DTO novo com coleção de
+saída reprovaria num teste cujo remédio a rule não documentava: a catraca da lei (tipo **e** default),
+a exceção `#[ReadOnlyCollection]` com a verificação das duas pontas, e a direção "obrigatoriedade que
+depende do verbo mora na Action, não em `rules()`", com o texto único da recusa.
+
+**Mutação declarada no banco de dev**, append-only e toda pela API: cliente 14 (`Gate BD9`) criado e
+soft-deletado no próprio gate, com o user de RUT `21.111.111-9`; endereços 22-23; contatos 35-36 (o
+35 apagado pela rota nested, para provar que só o último é recusado). **Nenhuma linha pré-existente
+foi alterada**, e nenhum `migrate:fresh`, `refresh`, `reset` ou seeder rodou — o banco segue com o
+`LOT-2026-1001` corrompido de propósito para o checkpoint visual do João.
+
+**O que o fechamento NÃO provou, sem maquiagem:** corrida de unicidade concorrente (a suíte roda
+sqlite `:memory:` e a defesa real é o `unique` do MySQL — é a P-29, aberta); **nenhuma tela vista
+renderizada**, porque o frontend só mudou de tipo mais a normalização `?? []`; e `GET /api/clients`
+não recebeu asserção formal neste gate. O `progress-archive.md` passou a conter uma linha de **cinco**
+colunas numa tabela de sete — a entrega mais antiga saiu do `progress.md` **verbatim**, como o
+fechamento manda, e o cabeçalho do arquivo agora declara as duas arities apontando para a P-23.
+
+**Estado: `idle`.** O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+## Penúltimo item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
 ### Seleção — 2026-08-12
 
@@ -708,7 +776,7 @@ template → certificado não foi percorrida ponta a ponta; nenhuma tela vista r
 backfill** — o rastro dos dois pivots começa aqui.
 
 **Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
-## Penúltimo item fechado — 2026-08-12 (`faixa-visivel-e-acessibilidade-dos-dialogos`, BD-3)
+## Antepenúltimo item fechado — 2026-08-12 (`faixa-visivel-e-acessibilidade-dos-dialogos`, BD-3)
 
 ### Seleção — 2026-08-12: o item entra com a spec já escrita, e é isso que muda a fase
 
@@ -1040,409 +1108,3 @@ mesmo jeito, escrevendo o parágrafo na mesma rule durante um `/fechar-sprint`.
 em `title` (sem hover no toque), página com abas buscando as duas abas, bloco de erro bilíngue com
 `aluno.name` cru na tela e a célula de aluno vazia na linha do certificado corrompido — esta última
 a única que o modo leitura do próprio bloco já sabia resolver, com o travessão.
-
-## Antepenúltimo item fechado — 2026-08-12 (`last-login`)
-
-### Seleção e o paralelismo autorizado — 2026-08-12
-
-**BD-7 do `backlog.md:140`, promovido explicitamente pelo João.** Ele abriu a sessão com
-`/planejar-bloco ### BD-7 · last_login`; o gate do comando **reprovou por dois motivos**, não um. O
-primeiro é o de sempre — argumento que é título de seção, não slug promovido, com o estado em `idle`
-e `active_work_item` `null`, igual a BD-1 e BD-2.
-
-**O segundo motivo é mais grave e foi o que exigiu decisão: existiam dois `state.md` com verdades
-diferentes.** O do main tree (em `397548c`) dizia `idle` / `active_work_item: null`, com
-`updated_at` de 2026-08-11T17:58. O da worktree `/home/jvbat/projetos/fix-frontend`, na branch
-`feat/estilizacao-adr16-shell-tipografia` (`3acff29`), dizia `reviewing` /
-`estilizacao-adr16-shell-tipografia`, com `updated_at` de 2026-08-12T11:55 — quase 18 horas mais
-novo. O commit `397548c`, escrito hoje, ainda registra uma **terceira** redação (`executing`), que a
-branch já superou.
-
-**Duas decisões do João fecharam a divergência**, e as duas ficam registradas porque nenhuma delas é
-o default do fluxo:
-
-1. **Paralelismo autorizado por ele**, relaxando a invariante "existe no máximo um
-   `active_work_item`". `estilizacao-adr16-shell-tipografia` (frontend, worktree, `reviewing`) e
-   `last-login` (backend, main tree) correm ao mesmo tempo. A invariante segue escrita como está e
-   esta é uma exceção declarada, não uma revogação silenciosa dela.
-2. **A branch é a verdade.** O `state.md` do main não foi sincronizado à mão para refletir
-   `estilizacao` — ele está atrasado por construção do fluxo de worktree, e o estado real daquele
-   item chega ao main no merge. Cada árvore carrega o estado do seu próprio item.
-
-**Consequência conhecida e aceita:** `feat/estilizacao` já mexe em `docs/superpowers/state.md` (+287
-linhas) e `docs/superpowers/backlog.md` (+20), então os dois estados **vão conflitar no merge** e a
-resolução é manual. No código a colisão é pequena e foi medida: de `features/identity/` aquela branch
-tocou só `LoginPage.tsx` (2 linhas), e este bloco não toca `shared/ui/` nem as duas folhas de tema de
-~7.000 linhas que ela trouxe.
-
-**Toca backend e schema → main tree, sem worktree (P-03).** Branch `feat/last-login`, criada de
-`397548c`, que passa a ser o `state_basis_commit`. **A P-03 não vence:** o gatilho dela exige dois
-`active_work_item` de **backend** em paralelo, e `estilizacao` é frontend.
-
-**Rota direta a `ready_for_planning`, sem Context Packet, mas por decisão e não por ausência de
-fonte** — diferente dos blocos anteriores. Aqui existia fonte externa real: o `backlog.md:319`
-escreve que "o protótipo mostra na tela de Usuários", o que é Figma. A dependência foi medida e é
-estreita: coluna, captura, DTO e `generated.ts` são todos internos ao repositório, e só o **formato
-do que a tela mostra** vivia no protótipo. Diante da escolha entre gerar o packet pelo Codex e
-responder direto, **o João optou por decidir o formato ele mesmo no brainstorming**.
-`context_packet: null`.
-
-### Terreno medido antes de planejar (não é desenho, é fato)
-
-1. **`last_login` é zero em toda parte, reconferido e não herdado do backlog:** nenhuma ocorrência em
-   `backend/app/`, `backend/database/` e `frontend/src/`. `users` no `docs/der-fisico.md:24` não tem
-   a coluna; `UserData` tem 12 campos e nenhum é ele.
-2. **O caminho de captura tem uma ordem obrigatória, e ela é medida.** O gate de `is_active` do
-   `AuthController.php:43-48` roda **depois** do `attempt()`. Qualquer captura anterior a ele grava
-   acesso de usuário inativo com senha certa — login que a API recusa com 422.
-3. **O evento `Login` do Laravel não serve, e o argumento a favor dele está morto.** Ele dispara no
-   `attempt()` bem-sucedido, antes do gate. O que o justificaria — pegar portas que não passam pelo
-   controller — não existe hoje: o frontend **nunca** envia `remember` (zero ocorrência em
-   `features/identity/` e `shared/api/`), então o cookie "remember me" está morto, e o repo não tem
-   um único listener de evento de auth.
-4. **A auditoria é uma armadilha de default, documentada no próprio model.** `User.php:53-68` diz que
-   `$auditInclude` **filtra o diff**: atributo de fora da lista gera audit com `old_values`/
-   `new_values` vazios. `last_login` não está na lista, então `save()` comum produziria uma linha
-   inútil de audit **por login, para sempre**, numa tabela de peso legal cuja política de retenção
-   (P-02) ainda está aberta.
-5. **`saveQuietly` sozinho não basta** — ele ainda toca `updated_at`, o que faria "última edição do
-   cadastro" mentir a cada login. Precisa de `timestamps = false` junto.
-6. **`RedatorData::fromModel` já achata campos do `user`** (`name`/`rut`/`email`/`phone`), então
-   incluir a tela de Redatores entra pela **mesma relação já percorrida** — sem eager-load novo e sem
-   o N+1 que o seam do B4 custou em 2026-08-08.
-7. **O frontend já tem as duas metades do formatter:** `shared/lib/datetime.ts` carrega `formatDate`
-   (curto do locale ativo, `dd-mm-aaaa` em es-CL) e `formatTime` (HH:MM). E `config/app.php` tem
-   `timezone => 'UTC'`, com precedente de projeção em `CertificateData:54`
-   (`revoked_at?->toISOString()`).
-
-### Brainstorming e spec — 2026-08-12
-
-O João aprovou o desenho com uma alteração de escopo e a instrução `o restante está aprovado`. O
-estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até a leitura humana
-do documento e a escrita posterior do plano.
-
-**Três decisões dele, respondidas antes de a spec existir:** a coluna mostra **data + hora**
-(`12-08-2026 14:32`, travessão para quem nunca acessou), contra data seca e contra tempo relativo; a
-captura é **escrita silenciosa** (`saveQuietly` com `timestamps` desligado), contra pôr o campo no
-`$auditInclude` e contra uma tabela `login_logs` própria; e a captura vive numa
-**`RecordLoginAction`**, contra inline no controller e contra listener de evento.
-
-**A quarta é alteração dele sobre o desenho apresentado:** a spec propunha só a tela de Usuários e ele
-**incluiu `RedatoresTable`** — redator autentica (RN-01) e o campo entra pela relação que
-`RedatorData` já atravessa.
-
-### A spec foi revisada no mesmo dia — o mecanismo mudou, o parágrafo acima fica
-
-O João leu a spec e fez duas perguntas que mudaram o desenho. O parágrafo anterior **não é apagado**:
-ele registra o que foi decidido na primeira passada, e a segunda decisão só se entende contra ela.
-
-**Pergunta 1 — "não existe nada nativo do Laravel, tipo a tabela `sessions`?"** Medido antes de
-responder: Laravel **não** tem `last_login` nativo (nem core, nem Fortify/Jetstream), e a `sessions`
-**existe neste repo** — nativa, em `0001_01_01_000000_create_users_table.php:39-46`, com
-`SESSION_DRIVER=database`, viva com 5 linhas na hora da medição (4 do `user_id=1`, uma com `user_id`
-`NULL` de visitante). Ela **não** fecha o requisito: `last_activity` é última *atividade* e é
-reescrito a cada request; `session()->invalidate()` no logout **apaga a linha**, então quem sai apaga
-a própria evidência; e o dado expira em `SESSION_LIFETIME=120` minutos, além de morrer inteiro se o
-driver virar `redis`/`file` — feature de negócio pendurada em config de infra.
-
-**Pergunta 2 — ele quer histórico de logins, em tabela própria.** Duas decisões novas: o log guarda
-**só logins bem-sucedidos** (tentativa falha e logout recusados, com razão registrada na spec) e o
-"último acesso" é **derivado** do histórico — **`users.last_login` não existe mais**, contra
-denormalizar a coluna em paralelo.
-
-**O schema não copia o da `sessions`, embora tenha nascido dela na conversa.** Três colunas de lá são
-artefato do driver: `id` string primary é o ID da sessão, `payload longText` é a sessão serializada
-(peso morto e passivo de privacidade num log) e `last_activity integer` é unix timestamp cru, contra
-o `timestamp` com cast `datetime` que o projeto usa em todo lugar.
-
-**A revisão simplificou metade do bloco e complicou a outra.** Como nunca mais se escreve em `users`
-no login, **morreram juntos** a armadilha do `$auditInclude` (item 4 do terreno), o `saveQuietly` e o
-`timestamps = false` (item 5) — o desenho anterior existia inteiro para contornar uma escrita que
-deixou de existir. Os dois itens medidos continuam verdadeiros; apenas pararam de se aplicar.
-
-**Em troca, a leitura virou travessia de relação, que é onde este repo tem cicatriz.** A escolha do
-mecanismo foi por **modo de falha**, não por custo: `withMax('loginLogs', 'created_at')` é mais
-barato (subselect, zero query extra) mas **falha em silêncio** — controller que esqueça a carga
-projeta `null` e a tela diz "nunca acessou" para todos. `hasOne(...)->latestOfMany()` custa uma
-query e **falha alto**, estourando no `Model::preventLazyLoading()`. Ficou `latestOfMany`, na mesma
-direção da D-B3 de `turma-habilitacao-listagem`, que matou um `??` por esconder query atrás de
-fallback silencioso. O N+1 do seam do B4 (Q-1 de 2026-08-08, quatro listagens) é o precedente que
-torna isso risco declarado, com guarda de runtime própria na §4 da spec.
-
-**Risco de review continua ALTO**, com os três gatilhos intactos — auth, schema (agora tabela nova em
-vez de coluna) e `generated.ts`.
-
-### Aprovação da spec e plano — 2026-08-12
-
-O João aprovou a spec revisada com a instrução literal `aprovado`. O plano ativo
-(`docs/superpowers/plans/archive/2026-08-12-last-login.md`) decompõe o bloco em **7 tasks (0–6)**: baseline;
-tabela `login_logs` mais model e relações; a captura no login; a projeção nos dois DTOs; a guarda de
-N+1; o frontend; gate.
-
-**A guarda de N+1 é task própria, não passo da projeção**, porque é o risco central declarado da §5.1
-da spec e um revisor pode reprová-la aprovando a projeção.
-
-**Baseline medido, não herdado:** backend **538 passed, 5 skipped (1999 assertions)** e frontend
-**16 arquivos / 82 testes**. O registro de fechamento do BD-1 dizia **79** testes de frontend; o real
-é 82, e o plano parte do medido. Projeção: **547 passed / 5 skipped** no backend e **17 arquivos / 86
-testes** no frontend; o total de assertions é declarado como **registrado no gate, não projetado**.
-
-O handoff fixa **`executor: claude`**: as Tasks 2, 3 e 4 fecham por prova de mutação, e ler o vermelho
-certo (ordem de captura, `oldestOfMany`, `LazyLoadingViolationException`) é julgamento, não passo
-mecânico. Nada é delegado ao Codex, então não há `paths_autorizados`.
-
-**A escrita do plano mediu o terreno e achou dois defeitos no próprio rascunho, os dois corrigidos
-antes de gravar:**
-
-1. **`latestOfMany()` ordena por `id`, não por `created_at`** — conferido no vendor
-   (`CanBeOneOfMany::latestOfMany($column = 'id')`). Num log append-only os dois quase sempre
-   coincidem, mas o campo se chama "último ACESSO" e a justificativa do índice composto depende de
-   `created_at`. Além disso `MAX` numa coluna só devolve **duas** linhas quando dois logins caem no
-   mesmo segundo, o que acontece em retry. Ficou `latestOfMany(['created_at', 'id'])`.
-2. **O teste da projeção seria falso-positivo por mass assignment.** O rascunho backdatava com
-   `loginLogs()->create(['created_at' => ...])`, e `created_at` **não** está no `$fillable` — a chave
-   seria descartada em silêncio, as duas linhas nasceriam com a mesma data e o caso que existe para
-   discriminar `latestOfMany` de `oldest` passaria por acidente. Ficou `forceFill(...)->save()`, com
-   a razão escrita ao lado. O `$fillable` **segue** sem `created_at` de propósito: a data do acesso
-   não se forja por mass assignment.
-
-Duas instruções do rascunho que eram "confira se…" viraram fato medido: o barrel
-`shared/lib/index.ts:1` já é `export * from './datetime'` (não muda uma linha), e
-`RedatoresTable.tsx:6` já importa de `@shared/lib` enquanto `UsersTable.tsx` não importa — os dois
-passos passaram a dizer exatamente o que editar. O ID da pendência de retenção também foi fixado em
-**P-30** (maior em uso é P-29), com a nota de não mexer na duplicidade conhecida do P-28.
-
-**Estado:** `ready_for_execution`. `/executar-bloco last-login` exige instrução posterior do João.
-
-**Fora de escopo, declarado na spec:** `SessionUserData` não ganha o campo (a captura precede a
-montagem do payload, então `/me` diria "último acesso = agora" — campo que mente por construção); sem
-backfill; alunos e clientes não entram porque não autenticam.
-
-**Risco de review declarado ALTO** (§5 da spec), e desta vez a escala da spec e o gate do
-`/revisar-sprint` **concordam**: três gatilhos se aplicam — auth, schema e `generated.ts`. O risco
-próprio é que escrita silenciosa é, por definição, escrita que a auditoria não enxerga: `saveQuietly`
-no model errado ou fora do gate não produz audit, não move `updated_at` e não levanta exceção.
-
-### Execução — 2026-08-12, via Subagent-Driven Development
-
-O João instruiu **`USE SDD para execução`** a meio da Task 2 (que tinha começado inline), o que
-redirecionou todo o resto do bloco: cada task passou a ser um agente implementador isolado
-(brief extraído do plano, report próprio) seguido de um agente revisor dedicado (spec compliance +
-qualidade), com loop fix→re-review quando necessário. As seis tasks fecharam, todas Approved:
-
-- **Task 1** (`656175c`) — tabela `login_logs`, model, `User::latestLogin()`.
-- **Task 2** (`66bc72e`) — `RecordLoginAction`, captura depois do gate de `is_active`. Mutation-proof
-  da ORDEM registrado (`Failed asserting that 1 is identical to 0.`).
-- **Task 3** (`feef5e3`) — projeção `last_login` em `UserData`/`RedatorData`, eager-load em
-  index/show. **Execução atípica:** o agente implementador foi interrompido pelo João antes de
-  escrever o report (o código já estava commitado e correto); um segundo agente verificou
-  retroativamente Steps 7-10. O primeiro review apontou um achado Important puramente procedural —
-  o Step 2 ("ver vermelho" contra o código antigo) nunca tinha sido registrado — fechado por um fix
-  que reproduziu o vermelho retroativo contra o commit pai, sem tocar o commit já aprovado.
-  Re-review: Approved.
-- **Task 4** (`7abbc3c`) — guarda de N+1, `LazyLoadingViolationException` provada nos dois
-  controllers. Approved de primeira.
-- **Task 5** (`c84173a`) — `formatDateTime`, coluna nas duas tabelas, 3 locales. Approved de
-  primeira.
-- **Task 6** — gate final, verificação pura (nenhum arquivo de produção, nenhum commit). Suíte 547
-  passed/5 skipped; frontend 17 arquivos/86 testes; Pint limpo nos 12 arquivos `.php` do bloco;
-  `generated.ts` sem diff; sem sonda; as três leis do §5 confirmadas; **E2E contra a API real do
-  DoD** (lição 12) fechou os 6 sub-itens — login via Sanctum cookie/CSRF real, `login_logs` grava
-  IP/UA reais, `users.updated_at`/`audits` inalterados, `/api/users` e `/api/redatores` projetam
-  `last_login` certo, segundo login grava segunda linha e atualiza a projeção. `LOT-2026-1001`
-  seguiu corrompido de propósito, intocado.
-
-**O que o gate NÃO provou, registrado sem maquiagem:** nenhuma tela foi vista renderizada (WSL sem
-browser) — o checkpoint visual das duas colunas fica com o João; login falho e logout continuam fora
-de escopo (D2 da spec); a retenção de `ip_address`/`user_agent` segue aberta em P-30; o preenchimento
-de `last_login` após um login de redator real não foi reexercitado ponta-a-ponta (só o estado `null`
-foi confirmado via `/api/redatores` — o mecanismo é o mesmo já coberto pela suíte nas Tasks 3/4).
-
-Ledger fino task-a-task (branch, commits, achados de review) em `.superpowers/sdd/progress.md`
-(local, não versionado).
-
-**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
-`/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
-
-### Review de sprint — 2026-08-12: ALTO risco, duas lentes, 3 achados
-
-**ALTO RISCO pelo gate da skill, e desta vez a escala da spec e a do `/revisar-sprint` concordam** —
-os três gatilhos que a §5 da spec declara se aplicam: auth (`AuthController`), schema (tabela nova) e
-`generated.ts`. Duas lentes: Claude mais revisão independente do Codex (read-only, `codex` MCP).
-
-**Gate reproduzido, não herdado do relatório de execução:** backend **547 passed, 5 skipped (2021
-assertions)**; frontend **17 arquivos / 86 testes**, `pnpm lint` limpo e `pnpm build` verde;
-`typescript:transform` **sem diff** em `generated.ts` (`git status --porcelain` vazio depois de
-rodar); Pint `{"tool":"pint","result":"passed"}` nos 12 `.php` do bloco. Nenhuma sonda
-`dd(`/`dump(`/`console.log`/`SONDA` no diff de `backend/app` e `frontend/src`.
-
-**Órfãos: zero.** `LoginLog` tem os consumidores previstos (`User::loginLogs`/`latestLogin` e os três
-testes); `RecordLoginAction` está fiada no `AuthController`; `latestLogin()` é consumida pelos dois
-DTOs e pelos dois controllers; `formatDateTime` tem os dois consumidores mais o teste co-locado e sai
-pelo barrel `shared/lib` que já era `export *`; `common.lastLogin` existe nos três locales e é lida
-pelas duas tabelas.
-
-**As duas lentes convergiram no Q-1 e no Q-2.** O Q-3 só o Codex viu, e foi verificado no código
-antes de entrar. **Três sub-afirmações do Codex foram recusadas**, registradas abaixo dos achados.
-
-**Uma medição que NÃO virou achado, porque o código está certo.** A conferência do
-`latestOfMany(['created_at', 'id'])` contra o vendor (`CanBeOneOfMany`) confirma o desempate: a forma
-com array vira `['created_at' => 'MAX', 'id' => 'MAX']` e aplica os agregados em cadeia, então dois
-logins no mesmo segundo desempatam por `id`, que é exatamente o que a D-P1 do plano pretendia.
-
-**Os três achados:**
-
-1. **Q-1 🟡** *(Claude + Codex)* — `AuthController.php:32` segue passando
-   `$request->boolean('remember')` ao `attempt()`. A D3 da spec recusou o listener do evento `Login`
-   afirmando que "o caminho de cookie remember me está morto", mas a medição que sustenta isso varreu
-   `features/identity/` e `shared/api/` — ou seja, o **frontend**, não a superfície da API, que aceita
-   o parâmetro de qualquer cliente. Conferido no vendor: com o recaller no request,
-   `SessionGuard::user()` chama `userFromRecaller()` e `updateSession()` e **reconstrói a sessão sem
-   passar pelo `AuthController`**, então aquele acesso não gera linha em `login_logs` e a coluna
-   "Último acceso" envelhece numa conta em uso diário — exatamente a pergunta que a D5 diz que a
-   coluna existe para responder. **RN-01 (§5.5) NÃO é ferida, e isso foi verificado, não presumido:**
-   o `logout()` do gate de `is_active` (linha 45) chama `clearUserDataFromStorage()`, que faz
-   `unqueue` do recaller **incondicionalmente**, e ainda cicla o `remember_token`, então o usuário
-   inativo não sai com cookie válido. Correção mais barata: apagar o argumento `remember` (uma
-   linha), já que nenhum cliente o envia — o que torna a justificativa da D3 verdadeira em vez de
-   aproximada.
-2. **Q-2 🟡** *(Claude + Codex)* — `LastLoginEagerLoadTest.php:33-45`: o caso de **usuários** afirma
-   só `assertOk()`, sem fixar quantas linhas foram hidratadas. O docblock do próprio arquivo escreve
-   que `Model::preventLazyLoading()` só marca a instância quando `Builder::hydrate()` vê
-   `count($items) > 1`; o caso de **redatores**, dez linhas abaixo, fecha essa ponta com
-   `assertJsonCount(2)`. Se `actingAsAdmin()` deixar de criar um `type=admin` (hoje cria, conferido em
-   `tests/TestCase.php:29`) ou o filtro do `index` mudar, a listagem cai para ≤1 linha e o teste segue
-   verde guardando nada. É o padrão "teste que para de discriminar" que este repo já puniu duas vezes
-   (A-1 e o `IssuableEnrollmentBuilder`). Correção: `->assertJsonCount(3)` — os dois criados mais o
-   admin que autentica.
-3. **Q-3 🟢** *(Codex, verificado)* — `LoginLog.php:23`: `user_id` está no `$fillable` e nenhum
-   escritor o usa — o único é `RecordLoginAction`, que grava por `$user->loginLogs()->create([...])`,
-   e a relação define a FK. Num log de segurança é porta sem consumidor, e contrasta com a decisão
-   deliberada do mesmo bloco de manter `created_at` **fora** do `$fillable` ("a data do acesso não se
-   forja por mass assignment"): o mesmo argumento vale para de quem foi o acesso.
-
-**Sub-afirmações do Codex recusadas, com a razão:**
-
-- *"`created_at` aceita NULL na migration"* — `$table->timestamp('created_at')->nullable()` é
-  exatamente o que `$table->timestamps()` gera, e o model tem timestamps ligados (só `UPDATED_AT` é
-  `null`), então todo insert por Eloquent preenche a coluna. Não é defeito.
-- *"`LoginLogTest` aceita qualquer IP não nulo"* — o `user_agent` é asserido pelo valor exato
-  (`SondaAgent/1.0`), o que já reprovaria uma troca de argumentos entre IP e user-agent, que é o único
-  defeito que a asserção frouxa de IP deixaria passar.
-- *"`store`/`update` pagam consulta extra"* — o próprio Codex classificou como aceitável e a
-  conferência concorda: modelo único, `Builder::hydrate()` não marca a instância com
-  `count($items) <= 1`, o valor projetado sai correto e o custo é um `SELECT` num caminho de escrita.
-  Não é o N+1 que a D4 existe para impedir.
-
-**Decisão do João (2026-08-12): os três entram.** Corrigidos na mesma sessão do review.
-
-**Como cada correção foi provada:**
-
-| Achado | Correção | Prova de que o teste discrimina |
-|---|---|---|
-| Q-1 | `attempt($credentials)` sem o segundo argumento; teste novo `test_remember_nao_abre_porta_de_reautenticacao_fora_do_controller` | com `$request->boolean('remember')` de volta só naquela linha: `assertCookieMissing` reprova — o recaller está na resposta |
-| Q-2 | `->assertJsonCount(3)` no caso de usuários | com a listagem degradada a **um** staff criado: reprova (2 linhas contra 3) — a guarda deixa de valer e a asserção acusa |
-| Q-3 | `user_id` sai do `$fillable` de `LoginLog` | **sem teste próprio, e isso é declarado:** é estreitamento de superfície, não mudança de comportamento. A prova é `test_login_ok_grava_uma_linha_com_ip_e_user_agent` seguir afirmando `$log->user_id === $user->id` — o escritor real continua gravando a FK pela relação |
-
-**Um erro de método corrigido dentro da própria correção, registrado sem maquiagem.** A primeira
-versão do teste do Q-1 afirmava `assertNull($user->fresh()->remember_token)` e foi vista reprovar —
-mas pelo motivo **errado**: a `UserFactory:38` já semeia `remember_token`, e o
-`ensureRememberTokenIsSet()` só escreve quando a coluna está vazia, então ela fica idêntica nos dois
-estados do código e não discrimina nada. O vermelho era da factory, não do defeito. A asserção
-passou para o **cookie recaller** (`Auth::guard('web')->getRecallerName()`), que é o que
-`queueRecallerCookie()` de fato produz, e só então o vermelho passou a acusar a linha certa. A razão
-está escrita ao lado da asserção para não se reintroduzir.
-
-**Gate depois das correções:** backend **548 passed, 5 skipped (2025 assertions)** — um teste a mais
-que o gate de execução, como esperado. Pint `passed` nos 4 arquivos tocados. Nenhum DTO mudou, então
-`typescript:transform` não era necessário e `frontend/` ficou intocado pelas correções (`git diff`
-vazio), o que preserva os 17 arquivos / 86 testes já medidos.
-
-**O que continua NÃO provado, sem maquiagem:** nenhuma tela foi vista renderizada (WSL sem browser) —
-o checkpoint visual das duas colunas segue com o João; login falho e logout continuam fora de escopo
-(D2); a retenção de `ip_address`/`user_agent` segue aberta na P-30. E o Q-1 fecha a porta na origem,
-mas **não** instala gate de `is_active` em requisição já autenticada: sessão comum também não
-re-checa o flag, o que é anterior a este bloco e permanece aberto.
-
-### Gate de fechamento — 2026-08-12
-
-**O item 0 foi refeito contra a API real, não herdado do review** — as correções dos três achados
-entraram depois do e2e de execução e uma delas (Q-1) mudou a chamada de `attempt()`. Sessão Sanctum
-por cookie + CSRF contra `localhost:8080`, com o banco de dev **intocado** (`migrate:fresh --seed`
-**não** foi rodado: o `LOT-2026-1001` segue corrompido de propósito para o checkpoint visual do João).
-
-Estado do banco **antes** do gate: `login_logs` com **5** linhas, `users.updated_at` do admin em
-`2026-08-10 17:29:30`, `audits` com **435** linhas.
-
-- **Login real grava uma linha e nada mais.** `POST /api/login` → **200**; `login_logs` passa a 6, a
-  linha nova com IP (`172.20.0.1`) e user-agent (`curl/8.5.0`) reais. `users.updated_at` **inalterado**
-  em `2026-08-10 17:29:30` e `audits` **inalterado** em 435 — a escrita silenciosa medida onde ela
-  precisa valer, não só na suíte.
-- **`GET /api/users` projeta o valor certo:** `last_login = 2026-08-12T17:06:12.000000Z`, byte a byte a
-  `created_at` da linha recém-gravada.
-- **A lacuna que o gate de execução declarou aberta foi fechada aqui: o redator foi exercitado
-  ponta-a-ponta.** O seed cria redator com `is_active=false` ("até o fluxo de ativação", que ainda não
-  existe), então o login dele exigiu **mutação temporária e reversível** do usuário 2: senha conhecida
-  e `is_active=true`, os dois por `saveQuietly()` com `timestamps` desligado. `POST /api/login` do
-  `juan.morales@lotus.cl` → **200**, e `GET /api/redatores` passa a mostrar
-  `last_login = 2026-08-12T17:08:00.000000Z` **só naquela linha**, com os outros seis em `null`.
-  Estado restaurado no mesmo passe, conferido: hash idêntico ao original, `is_active=false` de volta,
-  `updated_at` ainda em `2026-08-10 17:29:34`.
-- **Segundo login avança a projeção:** `login_logs` chega a **8** linhas (três logins reais) e
-  `GET /api/users` passa de `17:06:12` para `17:08:13` — o `latestOfMany` lendo a linha nova.
-- **O Q-1 provado na superfície onde ele vivia.** O segundo login foi enviado com
-  `"remember": true` **no corpo**, que é exatamente o que a API aceitava de qualquer cliente: resposta
-  **200** devolvendo só `XSRF-TOKEN` e `laravel-session`, **zero** cookie `remember_web_*`. A porta de
-  reautenticação fora do `AuthController` não existe mais na API real, não apenas na suíte.
-- **`SessionUserData` continua sem o campo**, como a spec declarou fora de escopo: a resposta do login
-  traz `id`/`uuid`/`name`/`email`/`type`/`is_active`/`roles`/`permissions` e nada mais.
-
-**Higiene:** backend **548 passed, 5 skipped (2025 assertions)**; frontend **17 arquivos / 86 testes**,
-`pnpm lint` limpo e `pnpm build` verde; Pint `{"tool":"pint","result":"passed"}` nos 12 `.php` do
-bloco; `typescript:transform` **sem diff** (`git status --porcelain` vazio depois de rodar — os dois
-avisos de `Optional` em `UserData` são anteriores ao bloco, `main` já tem as mesmas 9 ocorrências);
-nenhuma sonda no diff de `backend/app` e `frontend/src`. **Órfãos: zero** — `LoginLog`,
-`latestLogin`, `formatDateTime` e `common.lastLogin` têm todos os consumidores previstos. **Leis do
-§5 conferidas:** as duas tabelas importam só de `@shared/*` (zero PrimeReact direto, zero
-cross-feature), `generated.ts` é gerado e não editado, e a auth segue cookie de sessão Sanctum.
-
-**O que o gate NÃO provou, sem maquiagem:** nenhuma tela foi vista renderizada — o WSL segue sem
-browser utilizável, então o **checkpoint visual das duas colunas continua com o João**, e a prova
-aqui é de API real, suíte, lint e build. Login falho e logout seguem fora de escopo (D2). A retenção
-de `ip_address`/`user_agent` fica aberta na **P-30**, atada à P-02. E o gate de `is_active` em
-requisição **já autenticada** continua não existindo — anterior a este bloco e não fechado por ele.
-
-**Mutação declarada no banco de dev:** as três linhas de `login_logs` do gate (ids 7, 8 e 9) ficam —
-o log é append-only e apagá-las seria falsificar evidência. A do usuário 2 é login real do gate, não
-de uso.
-
-### O merge com a `main` — 2026-08-12, o conflito previsto aconteceu e como foi resolvido
-
-A seção de seleção, lá em cima, declarou que os dois estados **iam conflitar no merge** e que a
-resolução seria manual. Aconteceu exatamente assim, e o registro fica porque a previsão é o que dá
-valor ao fato. `main` recebeu a `estilizacao-adr16-shell-tipografia` pelo PR #41 (`0b72dba`) antes
-deste bloco; `merge-tree` mediu antes de qualquer escrita: **conflito só nos quatro docs de estado**
-(`state.md`, `backlog.md`, `progress.md`, `progress-archive.md`), **zero conflito de código** — os
-três `locales/*.json` auto-mergearam, e a colisão medida na abertura (só `LoginPage.tsx`, 2 linhas)
-não se materializou.
-
-**Como cada arquivo fechou:** neste `state.md`, `last-login` fica como **Último** (fechou 17:25) e
-`estilizacao` desce a **Penúltimo** (fechou 14:05) com a seção inteira vinda da `main`;
-`integridade-e-concorrencia-backend` vai a **Antepenúltimo**, conferida idêntica nos dois lados por
-diff, e `guardas-que-faltam` sai pelo limite de três fechados. A chave `review_findings_approved`
-some do frontmatter, porque a `main` não a carrega depois de um fechamento. `progress.md` fica com as
-duas entregas do dia na ordem cronológica e a de 2026-08-07 desce para o `progress-archive.md`,
-convertida para as sete colunas de lá.
-
-**O defeito que a resolução por hunk produziu, e que só uma medição pegou:** a primeira passada do
-`backlog.md` **ressuscitou três débitos já fechados** — "Toggle da sidebar abaixo de 1024px" e
-"Shell fora de conformidade com o ADR-16 §4" (da estilização) e **"`last_login` não existe"** (deste
-bloco) —, deixando o arquivo em contradição com os próprios parágrafos que, 260 linhas acima, dizem
-que os três blocos os entregaram. Não foi achado por leitura: foi por **contagem de linhas apagadas
-de cada lado contra a base**, cruzada com o disco (17 apagadas do lado `main`, 14 ressuscitadas; 12
-do lado `last-login`, 4 ressuscitadas). Fechado com os três bullets removidos e a mesma medição
-repetida até dar zero nos dois lados. **A lição é do repositório, não deste bloco:** resolver merge
-de doc de estado por hunk perde deleção em silêncio, e o único jeito de saber é medir os dois lados
-contra a base — o mesmo repositório já perdeu um `state.md` inteiro num merge (`0ccee01`).
-
-**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
