@@ -5,6 +5,7 @@ import { Password } from 'primereact/password'
 import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
+import { mergePt } from '../mergePt'
 
 export interface AppPasswordProps extends PasswordProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
@@ -53,6 +54,11 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
       // largura de campo não é opcional.
       iconField: { root: { className: 'w-full' } },
     }
+    // Fusão chave a chave, não spread raso: `{ ...pt, ...ariaPt }` cravava o
+    // rótulo E apagava o resto da chave do chamador (`showIcon.className`,
+    // `iconField.root.style`) em silêncio. O `pins` continua vencendo folha a
+    // folha — nome acessível e largura de campo não são opcionais.
+    const passwordPt = mergePt<PasswordProps['pt']>(pt, ariaPt)
     if (!leftIcon) {
       return (
         <Password
@@ -60,7 +66,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           toggleMask
           feedback={false}
           {...props}
-          pt={{ ...pt, ...ariaPt }}
+          pt={passwordPt}
         />
       )
     }
@@ -74,7 +80,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           className="w-full"
           inputClassName="w-full pl-10"
           {...props}
-          pt={{ ...pt, ...ariaPt }}
+          pt={passwordPt}
         />
       </IconField>
     )
