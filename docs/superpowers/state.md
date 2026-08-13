@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: rastro-unicidade-e-gates
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-rastro-unicidade-e-gates-design.md
 active_plan: docs/superpowers/plans/2026-08-12-rastro-unicidade-e-gates.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: last-login
 state_basis_commit: e6c831f
-updated_at: 2026-08-12T20:15:00-03:00
+updated_at: 2026-08-12T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -155,6 +155,108 @@ assertions. Projeção do plano: **+21 casos → 569**; assertions ficam para o 
 
 `executor: claude`, sem `paths_autorizados`: três gatilhos de lei do §5 (auditoria, schema com peso
 legal, `generated.ts`) e quatro pontos que fecham por prova de mutação.
+
+### Execução — 2026-08-12, via Subagent-Driven Development
+
+O João escolheu **SDD (subagentes)** quando o `/executar-bloco` levantou o conflito entre a
+prioridade do comando e a configuração de sessão. Cada task virou um agente implementador isolado
+(brief extraído do plano, report próprio) seguido de um agente revisor dedicado. As seis tasks com
+código fecharam **todas Approved**; a sétima é gate, sem commit.
+
+- **Task 1** (`9ba3615`) — `App\Shared\Audit\PivotAudit` como fonte única da escrita de pivot
+  auditada, comparando antes de delegar (D12).
+- **Task 2** (`e67cbf4`) — os cinco call-sites convertidos, nas duas portas (`turma_redator` e
+  `course_redator`).
+- **Task 3** (`5ed6ed9`) — guarda estática: escrita crua de pivot em `app/` reprova, com allowlist
+  de exatamente um arquivo.
+- **Task 4** (`673cb25`) — migration `UNIQUE(course_id, version)` em `course_certificate_templates`.
+- **Task 5** (`4aa077b`) — `CreateCertificateTemplateAction` derivando `MAX(version)+1` sob
+  `lockForUpdate` com `withTrashed()`, `version` fora do `$fillable`, DTO em `int|Optional` e
+  `generated.ts` regenerado.
+- **Task 6** (`4586e6f`) — `assertAcademicallyWritable()` nos onze caminhos, nome e mensagem
+  **verbatim**.
+- **Task 7** — gate, verificação pura.
+
+**Dois vermelhos de audit não discriminavam, e um deles teria passado falso.** As contagens literais
+do brief incluíam a linha `created` que a própria fixture grava (`makeCourse()`, `Turma::create()`).
+Na Task 1 isso reprovou o teste bom (`Failed asserting that 2 is identical to 1`); na Task 2 o
+`assertSame(1, …)` **casava com a linha `created`** e passava contra o código velho. Corrigido nos
+**testes**, filtrando por evento — `PivotAudit.php` não foi tocado para caber em asserção.
+
+**Um vermelho da Task 5 não era o esperado.** Entre as 90 falhas do Step 8, 89 eram o
+`NOT NULL constraint failed: course_certificate_templates.version` previsto; a de
+`test_derivacao_conta_os_arquivados` era 422 do `required` pré-existente sobre `layout_config => []`.
+Corrigido o **payload do teste**, não a regra de validação — afrouxar `required` seria mudança de
+contrato não pedida.
+
+**Gate (Task 7):** backend **569 passed, 5 skipped (2092 assertions)** — exatamente a projeção do
+plano (548+21). Frontend 27 arquivos/131 testes, lint limpo, build verde; o diff de `frontend/`
+contra a `main` são **só** os dois arquivos gerados, conferido — os 17/86 do registro anterior são do
+gate do `last-login`, antes de merges posteriores na main. Pint `passed` nos 33 `.php` do bloco;
+`typescript:transform` regenera com diff **zero**.
+
+**E2E contra a API real: 7/7**, com sessão Sanctum viva. `version: 99` no payload produziu **3**;
+MySQL recusou o par repetido (`Duplicate entry '8-90'`); designação real gravou audit com
+`new_values` populado e a repetida gravou **zero** linhas (D12 provada onde precisa valer); D13
+confirmada com os dois `auditable_type`; os quatro caminhos da RN-15 devolveram 422 +
+`application/problem+json` + mensagem exata, sem mutar nada. Dois casos além do brief foram escritos
+porque o status sozinho não provaria a afirmação: designar redator **já anexado** (se o gate rodasse
+depois do `PivotAudit`, o diff vazio curto-circuitaria para 200) e redator **não habilitado**.
+
+**Mutação declarada no banco de dev**, append-only e nomeada no ledger (course 8, budget 7, quote 9,
+turma 5 criada para o gate, templates, dois `course_redator`, um `turma_redator`, files 20-22,
+audits 460-481). **Nenhuma turma semeada foi concluída, apagada ou tocada.** Uma única linha
+pré-existente mudou, aditiva e reversível: `course_ids` do redator 2 de `[2,3]` para `[2,3,8]`.
+`LOT-2026-1001` reconferido corrompido, intocado. Nenhum `migrate:fresh`, `refresh`, `reset` ou
+seeder rodou.
+
+**O que o gate NÃO provou, sem maquiagem:** a derivação não tem prova de concorrência MySQL (D16,
+escolha declarada — `lockForUpdate` é no-op em SQLite, onde a suíte roda, e o `unique` é a defesa de
+integridade); 7 dos 11 caminhos da RN-15 só foram exercitados em SQLite; a cadeia
+template → certificado não foi percorrida ponta a ponta, então "o resolver escolhe o template certo"
+segue não provado; nenhuma tela vista renderizada (bloco de backend); **sem backfill (D2)** — o
+rastro dos dois pivots começa aqui e o passado não é recuperável; a retenção de `audits` segue aberta
+(P-02/P-30) e este bloco aumenta o volume.
+
+### Achados abertos, para triagem do review — 2026-08-12
+
+Os reviews de task fecharam Approved; estes seis ficaram registrados no ledger como Minor ou como
+achado do próprio gate, e **nenhum foi corrigido**. Entram no `/revisar-sprint` como entrada, não
+como pendência resolvida.
+
+1. **Achado do gate, o mais grave da lista:** a audit de `sync` registra o **delta, não o conjunto**.
+   O redator 2 já tinha os cursos 2 e 3 e `old_values` veio `{"courses":[]}` — o **estado** anterior
+   não é reconstruível a partir da `audits`. Numa tabela de peso legal, é o que este bloco existia
+   para consertar e consertou pela metade.
+2. `HabilitacaoTest.php:267-284` —
+   `test_edicao_de_redator_sem_mudar_curso_nao_grava_audit_de_sync` **não discrimina**: `sync()` cru
+   também não grava audit, então ele passa contra os dois códigos. Texto veio verbatim do plano; a
+   D12 está provada de fato em `PivotAuditTest` e no e2e.
+3. `PersistenceLawsTest` — a regex da guarda nova não tem o modificador `i`, e o dispatch de método
+   em PHP é case-insensitive: `->Attach(` passaria. A guarda irmã do mesmo arquivo tem a mesma
+   lacuna, então é estilo da casa, não defeito novo.
+4. `tests/Support/CreatesCertificateTemplates.php:19-24` — engole chave desconhecida em silêncio;
+   um `makeTemplate($id, ['validityMonths' => 24])` futuro gravaria o default e o teste passaria
+   contra o default. Nenhum chamador atual está errado.
+5. `CreateQuoteAction` ainda escreve `seq_in_budget` por mass assignment enquanto este bloco tirou
+   `version` do `$fillable` — os dois consumidores do mesmo padrão do ADR-17 passam a defender a
+   coluna derivada em profundidades diferentes.
+6. Duas dívidas pré-existentes achadas e deliberadamente não corrigidas: validação `required` sobre
+   o `redator_ids` read-only, e ~80 avisos de `Optional` no `typescript:transform`.
+
+**Dois erros de ponteiro na spec, conferidos por mim no código, que não são defeito de código:** a
+D14 afirma que **dois** testes congelam a string da RN-15, mas `IssueCertificateTest:107` afirma a
+mensagem da **RN-08** (outro gate, condição oposta) — só o `EnrollmentResultTest:151` congela a
+RN-15; e a spec justifica a troca de chave `status` → `turma` citando `FormErrorSummary.tsx:62-67`,
+**arquivo que não existe** no repositório. A conclusão da spec sobrevive pelo mecanismo real:
+`useMutationErrors` (`frontend/src/shared/hooks/useEntityForm.ts:54-63`) cai no primeiro valor do
+mapa **independentemente da chave**, e `useConclusionSection.ts:15` consome esse `message`.
+
+Ledger fino task-a-task em `.superpowers/sdd/progress.md` (local, não versionado).
+
+**Estado: `ready_for_review`.** O review final de branch inteira **não foi rodado** — o João recusou
+o despacho. Este comando não inicia review; a próxima instrução dele aciona `/revisar-sprint` sobre
+o trabalho ativo, com a lista de seis achados acima como entrada.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 
