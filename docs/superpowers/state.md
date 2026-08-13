@@ -2,22 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: catraca-max-lines-e-moldura
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
 active_plan: docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md
 context_packet: null
-blocker: >-
-  Review de sprint do BD-4 fechado com 4 achados aguardando triagem do João:
-  Q-1 (removeDoc.error sem banner, falha silenciosa em documento de peso legal),
-  Q-2 (contrato do clear composto sem mecanismo, 3o consumidor), Q-3 (cast novo
-  em StudentDialog:115) e Q-4 (docblock obsoleto em RedatorDocumentSlot:10-12).
-  Nenhum aprovado; nenhum corrigido.
+blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: d50d7f8
-updated_at: 2026-08-13T03:20:00-03:00
+state_basis_commit: 20bc7e7
+updated_at: 2026-08-13T08:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -272,8 +267,43 @@ ainda descrevendo o estado pré-bloco (a baixa é do `/fechar-sprint`, por instr
 `key` mudou de critério, e as quatro mudanças de tela são as quatro declaradas. Os quatro achados
 são de acabamento e de mecanismo; nenhum é de correção.
 
-**Estado: `blocked`,** aguardando a triagem do João sobre quais achados entram. Só achado aprovado
-pode ser corrigido; depois o estado volta a `reviewing`.
+### Correção dos achados — 2026-08-13: João aprovou os quatro
+
+Triagem do João: **Q-1 a Q-4, todos**. Quatro commits, um por achado, na ordem do relatório.
+
+**Q-1 (`3451976`)** — `RedatorDocumentsSection` adota o molde do `useBudgetDetail`:
+`useMutationErrors([upload.error, removeDoc.error])` num banner só. A exclusão reprovada agora fala;
+antes o documento reaparecia na linha e a tela ficava calada.
+
+**Q-2 (`b4d1a50`) — virou tipo, não refactor,** que é o que a cláusula de reincidência pede. Das três
+formas oferecidas no relatório (regra escrita, par obrigatório por tipo, `useStatusFilteredTable`),
+a escolhida foi a do meio: `SearchableTableFrameProps` deixou de ser interface e virou
+`SearchableTableFrameBaseProps<T> & FilterSlotProps`, com `FilterSlotProps` sendo
+`{ filterSlot?: undefined; onClearFilter?: undefined } | { filterSlot: ReactNode; onClearFilter: () => void }`.
+A composição saiu dos chamadores e entrou na moldura (`table.clear()` + `onClearFilter?.()`). Os três
+consumidores (`BudgetsTable`, `TurmasTable`, `useHistorial`) pararam de remontar `clearAll` à mão —
+o `useHistorial` passou a expor `clearStatusFilter` e devolve o `table` do hook intacto.
+**Provado nas duas direções** (lição 10), não por lint verde: removi o `onClearFilter` da
+`TurmasTable` mantendo o `filterSlot` e o `tsc -b` deu
+`TS2322: Property 'onClearFilter' is missing ... but required in type '{ filterSlot: ReactNode; onClearFilter: () => void }'`;
+restaurado, compila. O terceiro consumidor que motivou o achado é agora impossível de errar.
+A regra ficou registrada no bullet "Tabela em card" de `.claude/rules/frontend-fsliced.md`.
+
+**Q-3 (`ae52a6c`)** — `useStudentClients` descarta o `id` nulo com `flatMap` e devolve
+`value: number` de verdade; o cast e as três linhas que o justificavam sumiram do `StudentDialog`.
+Corrigido no dono do dado, não na fronteira.
+
+**Q-4 (`20bc7e7`)** — docblock do `RedatorDocumentSlot` aponta para `RedatorDocumentsSection`.
+
+**Gate reproduzido depois das correções:** `pnpm build` verde, `pnpm lint` exit 0,
+`pnpm test` **29 arquivos / 142 testes** — mesmos números do fechamento da execução, nenhum teste
+tocado. Os cinco componentes mexidos seguem sob a régua de 150 (maior: `HistorialTable`, 132).
+A `SearchableTableFrame` foi a 164 linhas e isso é legítimo: a régua cobre
+`src/features/*/components/**`, e a moldura é `shared/ui` — foi justamente ela que absorveu a
+complexidade que estava espalhada em três features.
+
+**Estado: `ready_for_closure`.** Nenhum achado aberto. O fechamento é passo explícito
+(`/fechar-sprint`), não automático — e é lá que a baixa dos débitos do `backlog.md` acontece.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
