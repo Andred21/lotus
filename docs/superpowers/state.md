@@ -2,12 +2,12 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
@@ -140,8 +140,53 @@ auditoria, RBAC, dinheiro ou documento legal; `executor: claude`) — a tela é 
 bloco não toca autenticação, e `useLoginForm` fica intocado. O risco próprio, escrito na §9 da spec,
 é de alcance: `AppPassword` chega a um call site fora do login e a saída da catraca é permanente.
 
-O estado entra em `planning` neste commit; `active_plan` segue `null` até o João ler a spec escrita e
-autorizar o `writing-plans`.
+O estado entrou em `planning` no commit da spec; `active_plan` seguiu `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md`: **dez tasks**, uma por commit, na ordem
+degradê → painel de marca → superfícies → tipografia → copy → par credencial → layout mobile →
+catraca → pendência → gate.
+
+**A ordem não é a do relatório de review, e o motivo é de dependência:** a Task 8 (catraca) só pode
+rodar depois das Tasks 3, 4 e 5, porque são elas que tiram a última utility de cor dos dois arquivos
+— tentar encolher a lista antes faz o lint reprovar o próprio bloco. E o degradê vem primeiro para
+que as tasks seguintes já meçam contraste contra o fundo definitivo, não contra o celeste.
+
+**Três coisas apareceram só ao escrever o plano, e as três mudam trabalho:**
+
+1. **A divisa do tema escuro precisa de duas larguras, não de uma.** No telefone os painéis empilham,
+   então o traço é `dark:border-t`; a partir de `md` eles ficam lado a lado e o traço é
+   `md:dark:border-l`. Uma borda só resolveria metade das viewports. A cor vai por
+   `style={{ borderColor: 'var(--surface-border)' }}` e fica inerte no claro, onde nenhuma largura é
+   declarada — é assim que "só no escuro" vira mecanismo em vez de condicional em JS.
+2. **`autoComplete` é repassado ao input pelo Prime, e isso foi verificado na fonte instalada**
+   (`password.cjs.js:713`: `autoComplete: props.autoComplete` no `inputTextProps`). Sem essa
+   verificação a Task 6 poderia precisar de `inputProps`, que o wrapper não expõe.
+3. **A sonda da catraca precisa de guarda contra si mesma.** O passo reintroduz `text-slate-800` por
+   `sed`; um `sed` que não casa deixaria a sonda passar **verde** e provaria o contrário do que se
+   quer. Por isso o passo grepa a string antes de rodar o lint: sem o grep, "não reprovou" seria
+   ambíguo entre "a régua morreu" e "a sonda não foi plantada".
+
+**Baseline medido antes de escrever, não herdado:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **29 arquivos / 143 testes**. Projeção do plano: **inalterado em 29/143** — nenhuma task
+escreve teste, porque a superfície inteira está fora do corte do runner, e prometer o contrário seria
+cobertura fantasma.
+
+`executor: claude`, sem `paths_autorizados`: o bloco decide apresentação com julgamento de contraste
+em vários sítios, atravessa a lei §5.6, mexe no `eslint.config.js` — onde bloco no lugar errado apaga
+seletor existente em silêncio (Q-2 de 2026-08-04, reincidente no BD-3) — e a Task 8 remove uma
+exceção de lint de forma permanente.
+
+**Um conflito conhecido fica declarado antes de acontecer:** o cabeçalho do plano pede
+`subagent-driven-development`, e esta sessão tem regra de não chamar o Agent tool sem pedido — o
+mesmo impasse do `rastro-unicidade-e-gates` e do BD-4. Resolve-se no `/executar-bloco`, por pergunta
+direta ao João, não aqui.
+
+**Estado: `ready_for_execution`.** `/executar-bloco login-fora-do-adr16` exige instrução posterior do
+João.
 
 **Superfície medida do bloco (fato, não desenho):** `LoginPage.tsx`, `LoginForm.tsx`,
 `shared/ui/AppPassword/AppPassword.tsx`, `shared/ui/AppLogo/AppLogo.tsx`,
