@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Password } from 'primereact/password'
 
 import type { PasswordProps } from 'primereact/password'
@@ -22,9 +23,23 @@ export interface AppPasswordProps extends PasswordProps {
  * esquerda. Como o Password aninha o <input> dentro de um <span.p-password>, o
  * padding automático do tema (`.p-icon-field-left > .p-inputtext`, filho direto)
  * não alcança o input — por isso o `pl-10` (2.5rem, o mesmo offset do IconField).
+ * A largura do input é `w-full`, como o irmão AppInputText: `w-96` são 384px
+ * absolutos que não encolhem e vazavam a viewport de 390px (C-2 do review de
+ * 2026-08-12), levando o olho da senha para fora da tela.
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
-  ({ leftIcon, ...props }, ref) => {
+  ({ leftIcon, pt, ...props }, ref) => {
+    const { t } = useTranslation()
+    // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
+    // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o
+    // wrapper é a única porta (UI-08). Não vai pela locale global do Prime:
+    // `locale('es')` nunca é chamado no projeto (primeLocale.ts só faz
+    // `addLocale`), então um rótulo pendurado lá ficaria congelado na troca de
+    // idioma. Pinado DEPOIS do `pt` do chamador: nome acessível não é opcional.
+    const ariaPt = {
+      showIcon: { 'aria-label': t('common.showPassword') },
+      hideIcon: { 'aria-label': t('common.hidePassword') },
+    }
     if (!leftIcon) {
       return (
         <Password
@@ -33,6 +48,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           feedback={false}
           inputClassName={darkInput}
           {...props}
+          pt={{ ...pt, ...ariaPt }}
         />
       )
     }
@@ -44,8 +60,9 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           toggleMask
           feedback={false}
           className="w-full dark:text-[var(--text-color-secondary)]"
-          inputClassName={`w-96 pl-10 ${darkInput}`}
+          inputClassName={`w-full pl-10 ${darkInput}`}
           {...props}
+          pt={{ ...pt, ...ariaPt }}
         />
       </IconField>
     )

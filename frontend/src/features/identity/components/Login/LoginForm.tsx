@@ -42,6 +42,7 @@ export function LoginForm() {
         <AppInputText
           leftIcon="pi pi-envelope"
           type="email"
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("login.emailPlaceholder")}
@@ -56,6 +57,7 @@ export function LoginForm() {
         <span className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.password")}</span>
         <AppPassword
           leftIcon="pi pi-lock"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           invalid={!!fieldErrors?.password}

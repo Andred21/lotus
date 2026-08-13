@@ -16,6 +16,8 @@
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "toggleTheme": "Toggle theme",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",
