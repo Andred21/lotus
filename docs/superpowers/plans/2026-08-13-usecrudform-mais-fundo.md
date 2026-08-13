@@ -469,7 +469,7 @@ Substitua a função `submit` inteira (hoje linhas 112-127) por:
     }
 
     // O id do PUT vem da ENTIDADE, nunca do form: o form é editável e o alvo
-    // do update não pode depender do que o usuário digitou (spec D10).
+    // do update não pode depender do que o usuário digitou.
     if (entity?.id == null) return
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }
