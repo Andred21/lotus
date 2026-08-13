@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: run_lotus_ui_review_login
+resume_state: executing
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
 context_packet: null
-blocker: null
+blocker: "Task 10 (gate final, D12) Step 5 exige /lotus-ui-review ou /revisar-ui sobre http://localhost:5173/login, rodado pelo Joao na sessao interativa — disable-model-invocation impede qualquer agente. Stack ja de pe."
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: d0cc270
-updated_at: 2026-08-13T13:05:00-03:00
+state_basis_commit: 1e2adf0
+updated_at: 2026-08-13T15:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -214,6 +214,36 @@ mecanismo de prova nos dois sentidos, não teste vazio.
 Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `contrato-de-entrada-identidade-e-nested`, já fechado).
 
 **Estado:** `executing`.
+
+### Execução — 2026-08-13: gate final bloqueado
+
+As Tasks 1-9 fecharam por `subagent-driven-development` (implementador + revisor por task, ledger em
+`.superpowers/sdd/progress.md`), com dois desvios registrados no ledger: uma regressão de teste
+(`brand-ink.test.ts`, comentário da Task 1 com `${BRAND_COLOR}` literal quebrando a regex do teste,
+corrigida em commit próprio `4c7a658`) e um Critical do review da Task 7 (painel de marca mobile
+cortando o topo do logo e a legenda de setor inteira, corrigido em `2173681`, altura do `aside` de
+250px pra 270px). Nenhuma das duas foi decisão heurística — as duas foram medidas, corrigidas e
+reverificadas antes de seguir.
+
+**A Task 10 (gate final, D12) bloqueou no Step 5.** A skill `lotus-ui-review` (e o comando legado
+`/revisar-ui`) tem `disable-model-invocation: true` — não pode ser chamada por agente nenhum, só por
+invocação explícita do humano na sessão interativa. A checagem visual bloqueante (3 viewports × 2
+temas) não foi medida. Stack está de pé (`docker compose up -d` + `pnpm dev` em background,
+`localhost:5173/login` respondendo 200) esperando o João rodar `/lotus-ui-review
+http://localhost:5173/login` ele mesmo. Steps 1-4 e 6-7 do gate passaram (detalhe completo, inclusive
+a ressalva não-bloqueante do Step 4 — dois greps de higiene batendo só em comentário histórico, não
+em código vivo — em `.superpowers/sdd/progress.md`, seção "Task 10 — gate final").
+
+**Achado à parte:** a sobreposição com o BD-5 (`usecrudform-mais-fundo`, worktree `fix-frontend`)
+que este `state.md` já registrava (§"Árvores trocadas", `AppPassword.tsx`/`StaffIdentifyFields` como
+ponto de interferência comportamental) é contexto relevante de que há uma segunda sessão ativa na
+mesma área — `AppPassword.tsx` apareceu revertido no working tree (não commitado) por duas vezes
+durante a execução, sempre limpo com `git checkout --` antes de qualquer commit deste bloco. Nenhum
+commit foi afetado; fica registrado para o João avaliar a causa, não é bloqueio do bloco.
+
+**Estado:** `blocked`. `blocker`: Task 10 Step 5 exige `/lotus-ui-review` ou `/revisar-ui` rodado
+pelo João na sessão interativa. `resume_state`: `executing` (retomar `continue_active_plan` — só
+fechar a Task 10 e seguir pro review de branch inteira — assim que o Step 5 for medido).
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
