@@ -37,9 +37,15 @@ export function LoginForm() {
 
       <FormErrorBanner message={generalError} variant="inline" />
 
-      <label className="flex flex-col gap-1">
-        <span className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.email")}</span>
+      {/* O rótulo NÃO embrulha o campo: o olho da senha vive dentro do
+          AppPassword e tem nome acessível próprio, então um <label> por fora
+          somava os dois e o campo passava a se chamar "Contraseña Mostrar
+          contraseña" (UI-03 do review de 2026-08-13). Com htmlFor/id o rótulo
+          nomeia só o input. */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="login-email" className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.email")}</label>
         <AppInputText
+          id="login-email"
           leftIcon="pi pi-envelope"
           type="email"
           autoComplete="username"
@@ -51,11 +57,12 @@ export function LoginForm() {
         {fieldErrors?.email && (
           <small style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
         )}
-      </label>
+      </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.password")}</span>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="login-password" className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.password")}</label>
         <AppPassword
+          inputId="login-password"
           leftIcon="pi pi-lock"
           autoComplete="current-password"
           value={password}
@@ -65,7 +72,7 @@ export function LoginForm() {
         {fieldErrors?.password && (
           <small style={{ color: dangerText }}>{fieldErrors.password[0]}</small>
         )}
-      </label>
+      </div>
 
       <AppButton type="submit" label={t("login.submit")} loading={isSubmitting} />
 
