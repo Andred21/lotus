@@ -11,8 +11,8 @@
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
   /* Degradê do painel de marca do login (UI-05 do review de 2026-08-12). Era
-   * `linear-gradient(135deg, ${BRAND_COLOR}, #1b7fb8)` montado em JS, com o
-   * segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o
+   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com BRAND_COLOR interpolado
+   * em JS e o segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o
    * transform do tema gerado alcançam template string em `.tsx`.
    *
    * Os dois pontos são degraus que JÁ existem, e a escala `--primary-*` é
