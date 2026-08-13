@@ -110,7 +110,8 @@
 >
 > Ordem entre blocos: **BD-3 → BD-4 → BD-5 → BD-6**. O **BD-8** e o **BD-9** nasceram depois (revisão
 de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend, enquanto
-BD-3..BD-6 são frontend, e a fila deles é **BD-8 → BD-9** entre si. Qual das duas filas anda antes é
+BD-3..BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi entregue em
+2026-08-13** e saiu desta lista (`progress.md`), então dessa fila resta o BD-9. Qual das duas filas anda antes é
 promoção explícita do João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
@@ -204,75 +205,6 @@ Ordem:
 `QuoteWizard.tsx:23` e hoje vive em `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que
 documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
 não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
-
-### BD-8 · Rastro, unicidade e gate no eixo de peso legal (backend)
-
-**Origem:** revisão de arquitetura do backend de 2026-08-12 (lente única, Claude Code; a segunda
-lente do Codex foi recusada na chamada e o bloco não a herda). Achados 1, 2 e 3 do relatório —
-todos com a medição reconferida no código pela sessão principal, não herdada do agente. Relatório
-não versionado (`/tmp`, `architecture-review-20260812-backend.html`); a evidência que importa está
-transcrita abaixo.
-
-**Os três atacam a mesma superfície — quem pode assinar um certificado — e por isso andam juntos.**
-
-Cobre:
-
-1. **Escrita de pivot sem rastro.** `grep auditSync|auditAttach|auditDetach` em `backend/app/` →
-   **zero**; os métodos existem em `vendor/owen-it/laravel-auditing/src/Auditable.php:683,709,747,789`.
-   Cinco call-sites escrevem `turma_redator`/`course_redator` pela API crua:
-   `Operation/Actions/DesignateRedatorAction.php:20`, `Operation/Actions/RemoveRedatorAction.php:13`,
-   `Catalog/Http/Controllers/CourseRedatorController.php:18`,
-   `Identity/Actions/CreateRedatorAction.php:61`, `Identity/Actions/UpdateRedatorAction.php:66`.
-   As 19 asserções sobre `audits` em `tests/` não tocam nenhum dos dois pivots. `docs/der-fisico.md:49`
-   **afirma o contrário** ("a designação usa `auditSync`") — doc e código divergem.
-2. **`course_certificate_templates` sem unicidade.** Único par sequência-por-pai do schema sem
-   índice: `database/migrations/2026_07_08_172639_courses.php:25` é `unsignedInteger('version')` cru,
-   contra `(budget_id, seq_in_budget)`, `(turma_id, student_id)`, `(turma_id, redator_id)` e
-   `(course_id, redator_id)`, que têm o seu. `CertificateTemplateData.php:20` é `#[Required] int
-   $version` sem `rules()`. Com empate, `CertificateTemplateResolver.php:41-44`
-   (`orderBy('version')->get()->keyBy('course_id')`) escolhe pela ordem que o banco devolver — e esse
-   template decide `valido_ate` (`IssueCertificateAction:36-38`) e a cidade de emissão
-   (`CertificateTemplateResolver:57`).
-3. **Gate de turma concluída em cinco grafias, três caminhos sem gate.** Usam
-   `Turma::assertAcademicallyWritable()` (`Turma.php:113`): `StoreTurmaDocumentAction:22`,
-   `DeleteTurmaDocumentAction:17`, `RecordEnrollmentResultAction:14`. Escrevem a condição à mão, com
-   quatro mensagens diferentes: `EnrollStudentAction:24`, `ImportStudentsAction:29`,
-   `RemoveEnrollmentAction:13`, `ConcludeTurmaAction:23`. Não perguntam nada: `UpdateTurmaAction`,
-   `DesignateRedatorAction`, `RemoveRedatorAction`. Os dois últimos são o furo com consequência
-   medida — `UpdateTurmaAction:16-21` grava `local_aplicacao`, primeira fonte da cidade do
-   certificado, e `DesignateRedatorAction` escreve o pivot que a porta 6 lê
-   (`CertificateEligibility.php:118`).
-
-**Decisões já fechadas com o João no grilling de 2026-08-12** (não reabrir no brainstorming; o que
-não está aqui, sim):
-
-- `auditSync`/`auditSyncWithoutDetaching`/`auditDetach` nos **cinco** call-sites — `course_redator`
-  entra porque habilitação é porta de emissão pela RN-09.
-- **Sem backfill.** O rastro começa no deploy; audit sintética inventaria `user_id` e data que
-  ninguém executou, o que é falsificar evidência em tabela de peso legal.
-- **A guarda entra no mesmo bloco:** teste que reprova `sync(`/`detach(` cru sobre `belongsToMany`
-  em `app/Domains/`, no molde do `PersistenceLawsTest`.
-- **`version` deixa de ser input** — derivada por `nextVersionFor(int $courseId): int` com
-  `MAX(version)+1` sob `lockForUpdate`, na forma que o ADR-17 já provou em `seq_in_budget`. Custo de
-  contrato medido como **zero**: `grep version frontend/src` não devolve nada e `templates` já fica
-  fora do payload de curso (`useCourseForm.ts:13-14`).
-- **`unique(course_id, version)` cru**, sem `deleted_at` na chave: número de versão não se
-  reaproveita depois de arquivar, mesmo argumento do ADR-17. Banco de dev conferido em 2026-08-12:
-  1 template, zero duplicatas — a migration sobe limpa.
-- **`UpdateTurmaAction` fecha total** depois de concluída (as quatro colunas: `modalidade`,
-  `local_aplicacao`, `start_date`, `end_date`). Se existir necessidade real de corrigir data
-  pós-conclusão, ela vira caminho próprio auditado — **e isso é pergunta aberta do brainstorming**.
-- **`RemoveRedatorAction` também fecha:** turma concluída com certificado emitido tem o redator no
-  snapshot; remover depois cria contradição entre documento e registro.
-- **Mensagem única.** As quatro mensagens inline morrem e sobra a do `assertAcademicallyWritable()`,
-  nomeando o motivo. O `detail` do RFC 7807 muda em 4 telas — consequência aceita.
-
-DoD: cada correção nasce de um teste visto **vermelho** — asserção sobre a linha em `audits` (não
-sobre `assertDatabaseHas('turma_redator', …)`, que já passa hoje), duas versões iguais recusadas
-pelo banco, e `PUT /api/turmas/{id}` + `POST /api/turmas/{id}/redatores/{redator}` sobre turma
-concluída reprovando com 422.
-
-Risco de review: **ALTO** — schema novo, peso legal e mudança de mensagem de erro.
 
 ### BD-9 · Contrato de entrada: identidade e coleção nested (backend)
 

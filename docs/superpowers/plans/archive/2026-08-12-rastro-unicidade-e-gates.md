@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3 · MySQL 8 (suíte em sqlite `:memory:`) · owen-it/laravel-auditing · spatie/laravel-data + typescript-transformer.
 
-**Spec:** `docs/superpowers/specs/2026-08-12-rastro-unicidade-e-gates-design.md` (D1–D16)
+**Spec:** `docs/superpowers/specs/archive/2026-08-12-rastro-unicidade-e-gates-design.md` (D1–D16)
 
 ## Global Constraints
 
