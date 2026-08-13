@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: contrato-de-entrada-identidade-e-nested
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: bd769f8
-updated_at: 2026-08-13T03:10:00-03:00
+state_basis_commit: 0c2a24b
+updated_at: 2026-08-13T12:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,39 @@ updated_at: 2026-08-13T03:10:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
+
+### Seleção — 2026-08-13
+
+**BD-9 do `backlog.md:185`, promovido explicitamente pelo João.** Ele abriu com
+`/planejar-bloco ### BD-9 · Contrato de entrada: identidade e coleção nested (backend)` mais o
+caminho de um arquivo de contexto, e o gate do comando **reprovou pelo motivo de sempre** (BD-1,
+BD-2, BD-7, BD-8): o argumento é **título de seção**, não slug promovido, com o estado em `idle` e
+`active_work_item` `null`. O comando mostra o backlog; quem promove é ele.
+
+**Diferente do BD-8, não havia item concorrente a autorizar.** A worktree
+`/home/jvbat/projetos/fix-frontend` está na branch `feat/catraca-max-lines-e-moldura` (BD-4), mas com
+**zero commits** além de `0c2a24b`, árvore limpa e `state.md` idêntico ao da árvore principal, também
+`idle` — branch criada, nada executado. A invariante de um `active_work_item` não precisou de
+exceção.
+
+**Três decisões do João fecharam o gate, todas confirmadas de uma vez:** promover o BD-9 com o slug
+`contrato-de-entrada-identidade-e-nested`; **rota direta a `ready_for_planning`, sem Context
+Packet**, por ausência **medida** de fonte externa; e **main tree, sem worktree** (P-03, bloco de
+backend), na branch `feat/contrato-de-entrada-identidade-e-nested` criada de `0c2a24b`.
+
+**A ausência de fonte externa foi medida, não presumida.** O arquivo de contexto que ele passou —
+`architecture-review-20260812-backend.html`, 81.193 B — é a mesma revisão de arquitetura que gerou o
+BD-8, e o grep por `drive.google`, `notion.so`, `figma.com` e `docs.google` devolve **zero
+ocorrência**. Os onze achados dele estão numerados em `<h2>`, e os **4** (`UserProvisioner fecha
+metade do invariante e quatro caminhos esquecem a outra`) e **5** (`ClientData::$addresses apaga a
+coleção em silêncio`) são literalmente os dois itens do BD-9. O arquivo vive no `/tmp` de **outra
+sessão** e é volátil; foi copiado para o scratchpad desta antes de qualquer leitura de desenho.
+
+**Baseline medido nesta branch, não herdado do fechamento anterior:** backend **573 passed,
+5 skipped (2104 assertions)** — bate com o placar de fechamento do `rastro-unicidade-e-gates`, o que
+confirma que a branch nasce da `main` sem deriva.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
