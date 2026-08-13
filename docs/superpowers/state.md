@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: contrato-de-entrada-identidade-e-nested
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
 active_plan: docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: 8ee6a15
-updated_at: 2026-08-13T18:00:00-03:00
+state_basis_commit: e06c204
+updated_at: 2026-08-13T19:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -187,8 +187,55 @@ apagado, não privado.
 erro HTTP muda em quatro rotas (RFC 7807, §5.4) e três tasks fecham por sonda vista reprovando —
 julgamento, não transformação mecânica.
 
-**Estado:** `ready_for_execution`. `/executar-bloco contrato-de-entrada-identidade-e-nested` exige
-instrução posterior do João.
+### Execução — 2026-08-13, via Subagent-Driven Development
+
+**As seis tasks fecharam, cada uma em commit próprio, revisão individual aprovada antes de avançar:**
+`0bd994e` (T1 — `ensureIdentityAvailable`/`duplicateStatus` isolados, nenhum call-site migrado),
+`606bd36` (T2 — `provision()` passa a checar e-mail, fecha os dois `create`s de graça), `74d32ea` (T3
+— os cinco caminhos restantes migram, `ensureRutAvailable`/`ensureEmailAvailable` deletados),
+`29c3815` (T4 — `ClientData::$addresses`/`$contacts` viram `Optional`, `generated.ts` regenerado e os
+5 consumidores TS corrigidos no mesmo commit), `fe36ab0` (T5 — guarda de reflexão em
+`PersistenceLawsTest`, `#[ReadOnlyCollection]` nas duas projeções de saída de `BudgetData`). Task 6
+foi gate — verificação pura, **sem commit**: suíte, Pint, `generated.ts` sem diff, zero órfão, e um
+E2E completo contra a API real (sessão Sanctum de verdade) provando os 11 cenários do DoD por corpo
+de resposta, não só status. Contagem final: backend **590 passed, 5 skipped** (573 no baseline);
+frontend **28 arquivos**. Ledger fino task-a-task, achados Minor de cada review e o relatório do gate
+em `.superpowers/sdd/progress.md` (local, não versionado).
+
+**A revisão final de branch (mandato da própria skill SDD, não o `/revisar-sprint` do João — essa
+continua sendo a próxima instrução explícita) achou dois Important, ambos reais e ambos corrigidos
+antes de fechar:**
+
+1. A guarda nova de T5 checava só o TIPO do parâmetro (`array|Optional` admite `Optional`), nunca o
+   DEFAULT — e a lei em `backend-ddd.md` exige as duas coisas (`= new Optional`). Confirmado por
+   reflexão real: `BudgetData::from(['client_id'=>1])->files` devolve `array(0){}`, não `Optional`,
+   apesar do tipo admitir. Uma coleção nova escrita `array|Optional $x = []` passaria pela guarda e
+   ainda apagaria em silêncio — o mesmo defeito que o bloco existe para fechar, sob grafia diferente.
+   Corrigido em `11c7337`, sonda provada nos dois sentidos (código velho deixa passar errado, código
+   novo reprova nomeando a sonda).
+2. A spec (§5, ecoada em §9) afirmava que o frontend ficava sem teste novo porque "o runner só cobre
+   hooks de `shared/`" — falso, e o mesmo engano que `frontend-fsliced.md` já registra como lição
+   repetida duas vezes (lição 13) no próprio arquivo. A lacuna real era a normalização
+   `client.addresses ?? []`/`contacts ?? []` (T4) nunca ter sido exercitada por teste. Corrigido em
+   `e06c204`: caso novo em `useClientForm.test.tsx`, prosa da spec corrigida nos dois pontos. Frontend
+   138→139 testes.
+
+Nove achados Minor triados como backlog (não bloqueiam merge, nenhum fixado nesta passagem) — inclui
+uma discordância explícita da triagem da T4 (`$data->contacts === []` em `CreateClientAction` **não**
+é código morto: `OperationDemoSeeder` chama a Action direto, sem passar por `rules()` — manter).
+Recomendações não-bloqueantes: a guarda de T5 só alcança propriedade promovida no construtor marcada
+`#[DataCollectionOf]` (`QuoteData::$files` etc. ficam fora, spec §6 já declara essa fronteira);
+`UpdateStaffUserAction` tem o mesmo defeito de família num campo escalar (`rut` some em silêncio num
+PUT que o omite) — pré-existente, fora de escopo, vale backlog. Detalhe completo, achado a achado, em
+`.superpowers/sdd/progress.md`.
+
+**O que o gate NÃO provou, registrado sem maquiagem:** corrida de unicidade concorrente (a suíte roda
+sqlite `:memory:`, a defesa real é o `unique` do MySQL); nenhuma tela vista renderizada (o frontend só
+mudou de tipo mais a normalização `?? []`, sem mudança visual); a listagem `GET /api/clients` não
+recebeu asserção formal neste gate (fora do escopo de escrita do bloco).
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
+`/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
