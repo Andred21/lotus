@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: usecrudform-mais-fundo
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 7c28699
-updated_at: 2026-08-13T11:40:00-03:00
+state_basis_commit: d0cc270
+updated_at: 2026-08-13T12:32:22-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,33 @@ updated_at: 2026-08-13T11:40:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
+
+### Seleção — 2026-08-13
+
+**BD-5 do `backlog.md:131`, promovido explicitamente pelo João** com o estado em `idle` e
+`active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2,
+BD-7, BD-8, BD-9): o argumento era **título de seção**, não slug promovido. As três decisões dele
+fecharam o gate: o slug `usecrudform-mais-fundo`; **rota direta a `ready_for_planning` sem Context
+Packet**; e **main tree `/home/jvbat/projetos/lotus`, sem worktree**, na branch
+`feat/usecrudform-mais-fundo` criada de `d0cc270`.
+
+**A ausência de fonte externa foi medida, não presumida:** grep por `drive.google`, `notion.so`,
+`figma.com`, `docs.google` e `http` nas 22 linhas do BD-5 devolve **zero ocorrência**. As fontes são
+o repositório e o próprio texto do backlog, que já traz paths e IDs (`Q-4` dos achados de
+2026-08-05, o débito do trio da foto, os 4 hooks fora do `useCrudForm`).
+
+**O main tree venceu a worktree por causa do DoD, não por costume.** O BD-5 é frontend por escopo de
+escrita, mas o DoD escrito é **foto real chegando no S3** — exige `app` + MinIO de pé, e é o main
+tree que serve o `:8080`. No BD-4 a worktree não pôde subir stack própria (P-03) e **dois passos do
+gate ficaram sem prova**; aqui o custo foi antecipado em vez de pago. Consequência declarada: a
+worktree `fix-frontend` fica ociosa neste bloco (hoje em detached HEAD sobre `d0cc270`, árvore
+limpa).
+
+**`state_basis_commit` passa de `7c28699` a `d0cc270`** — o fechamento do BD-4 registrou o merge do
+PR #46, que é o HEAD atual da `main`. Não era divergência: com `active_work_item` `null` não havia
+trabalho ativo cujo baseline pudesse ter derivado.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
