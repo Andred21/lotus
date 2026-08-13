@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useCrudForm, unclassifiedPayloadKeys, classificationConflicts } from './useCrudForm'
+import { useCrudForm, unclassifiedPayloadKeys, classificationConflicts, forbiddenPayloadKeys } from './useCrudForm'
 
 type Fields = { id?: number; name: string; secret: string }
 
@@ -69,6 +69,33 @@ describe('classificationConflicts', () => {
 
   it('devolve as duas em ordem estável', () => {
     expect(classificationConflicts(['b', 'a'], ['a', 'b'])).toEqual(['a', 'b'])
+  })
+})
+
+describe('forbiddenPayloadKeys', () => {
+  it('não acusa payload limpo', () => {
+    expect(forbiddenPayloadKeys(['name', 'rut', 'email'])).toEqual([])
+  })
+
+  it('acusa `photo_url` no payload de escrita', () => {
+    expect(forbiddenPayloadKeys(['name', 'photo_url'])).toEqual(['photo_url'])
+  })
+})
+
+describe('useCrudForm — chave proibida', () => {
+  it('lança mesmo quando a chave foi classificada, porque classificação não a salva', () => {
+    expect(() =>
+      renderHook(() =>
+        useCrudForm(fakeResource(), {
+          ...base,
+          entity: null,
+          mode: 'create' as const,
+          toPayload: (f: Fields) => ({ name: f.name, secret: f.secret, photo_url: null }),
+          // A chave está classificada: sem a guarda nova, isto passa.
+          summaryOnly: ['secret', 'photo_url'],
+        }),
+      ),
+    ).toThrow(/photo_url/)
   })
 })
 

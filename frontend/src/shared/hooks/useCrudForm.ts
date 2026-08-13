@@ -41,6 +41,23 @@ export function classificationConflicts(mapped: string[], summaryOnly: string[])
   return [...new Set(mapped.filter((k) => summaryOnly.includes(k)))].sort()
 }
 
+/**
+ * Chaves que NENHUMA classificação salva. `photo_url` é `#[Computed]` nos quatro
+ * DTOs que têm foto e carrega URL pré-assinada na saída (o `SignedUrlTransformer`
+ * roda na serialização); mandá-la de volta num corpo de escrita devolve **200**,
+ * não 422, porque a promoção no construtor do DTO desvia do
+ * `CannotSetComputedValue`. Falha silenciosa: o Q-4 dos achados de 2026-08-05.
+ *
+ * Separado da guarda de classificação de propósito — lá a resposta certa é
+ * declarar a chave numa das caixas; aqui nenhuma caixa é resposta certa.
+ */
+const FORBIDDEN_PAYLOAD_KEYS = ['photo_url']
+
+/** Chaves de saída computada presentes no payload. Ver `FORBIDDEN_PAYLOAD_KEYS`. */
+export function forbiddenPayloadKeys(keys: string[]): string[] {
+  return keys.filter((k) => FORBIDDEN_PAYLOAD_KEYS.includes(k))
+}
+
 export type CrudFormOptions<F extends { id?: number }, T> = {
   entity: F | null
   mode: DialogMode
@@ -90,6 +107,16 @@ export function useCrudForm<F extends { id?: number }, T>(
     ]
     const leaked = unclassifiedPayloadKeys(keys, mapped, summaryOnly, excludePrefixes)
     const conflicting = classificationConflicts(mapped, summaryOnly)
+
+    const forbidden = forbiddenPayloadKeys(keys)
+
+    if (forbidden.length > 0) {
+      throw new Error(
+        `useCrudForm: chave computada no payload de escrita: ${forbidden.join(', ')}. ` +
+          'Nenhuma classificação salva esta chave — ela não é campo de formulário. ' +
+          'Remova do `toPayload`: liste os campos em vez de espalhar `...form`.',
+      )
+    }
 
     if (conflicting.length > 0) {
       throw new Error(
