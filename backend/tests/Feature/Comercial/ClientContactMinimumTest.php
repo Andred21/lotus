@@ -16,9 +16,10 @@ use Tests\TestCase;
  * aceitava coleção vazia — divergência real, fechada aqui.
  *
  * Interação com a regra de coleção nested: `ClientData::$contacts` é
- * `array = []`, não `Optional`, e o update faz replace-total. Antes desta
- * regra, um PUT que OMITIA `contacts` apagava a coleção em silêncio. Com
- * `required`, a omissão vira 422 em vez de apagamento mudo.
+ * `Optional` desde o bloco `contrato-de-entrada-identidade-e-nested`. Ausente =
+ * não mexe (o caso de preservação abaixo); `[]` = apaga, e aí o `min:1`
+ * recusa. A obrigatoriedade no create mora na `CreateClientAction`, porque
+ * `rules()` é estático e não distingue verbo.
  */
 class ClientContactMinimumTest extends TestCase
 {
@@ -51,19 +52,23 @@ class ClientContactMinimumTest extends TestCase
         $this->assertSame(1, $client->contacts()->count());
     }
 
-    public function test_update_sem_a_chave_contacts_da_422_em_vez_de_apagar(): void
+    /**
+     * A omissão deixou de ser 422 e passou a ser preservação: `contacts` é
+     * `Optional`, e ausente significa "não mexi na coleção". O `min:1` continua
+     * valendo para quando a chave VIER — o caso acima prova isso —, e a
+     * obrigatoriedade no create mora na `CreateClientAction`.
+     */
+    public function test_update_sem_a_chave_contacts_preserva_a_colecao(): void
     {
         $this->actingAsAdmin();
         $client = $this->makeClientWithUser();
-        $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
+        $ana = $client->contacts()->create(['name' => 'Ana', 'is_primary' => true]);
         $payload = $this->payload();
         unset($payload['contacts']);
 
-        $this->putJson("/api/clients/{$client->id}", $payload)
-            ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', fn ($m) => is_string($m));
+        $this->putJson("/api/clients/{$client->id}", $payload)->assertOk();
 
-        $this->assertSame(1, $client->contacts()->count());
+        $this->assertSame([$ana->id], $client->contacts()->pluck('id')->all());
     }
 
     public function test_store_sem_contato_da_422(): void

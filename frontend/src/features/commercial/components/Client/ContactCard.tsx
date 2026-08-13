@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppCard, AppInputText, AppRadioButton, AppTag, FormField } from '@shared/ui'
-import type { ClientData } from '@shared/types/generated'
+import type { ClientContactData } from '@shared/types/generated'
 
 /** Um contato do cliente. O principal usa `tone="info"` do AppCard mais um
  * AppTag: antes, "principal" era só um radio com `title`, invisível sem hover.
@@ -12,12 +12,12 @@ import type { ClientData } from '@shared/types/generated'
 export function ContactCard({
   contact, index, readOnly, isLast, fieldErrors, onPatch, onSetPrimary, onRemove,
 }: {
-  contact: ClientData['contacts'][number]
+  contact: ClientContactData
   index: number
   readOnly: boolean
   isLast: boolean
   fieldErrors?: Record<string, string[]> | null
-  onPatch: (patch: Partial<ClientData['contacts'][number]>) => void
+  onPatch: (patch: Partial<ClientContactData>) => void
   onSetPrimary: () => void
   onRemove: () => void
 }) {

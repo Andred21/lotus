@@ -79,12 +79,12 @@ export function ClientsTable({
       />
       <AppColumn
         header={t("client.commune")}
-        body={(c: ClientData) => c.addresses[0]?.commune ?? "—"}
+        body={(c: ClientData) => c.addresses?.[0]?.commune ?? "—"}
       />
       <AppColumn
         header={t("client.contacts")}
         body={(c: ClientData) => (
-          <span className="font-semibold">{c.contacts.length}</span>
+          <span className="font-semibold">{c.contacts?.length ?? 0}</span>
         )}
       />
       <AppColumn

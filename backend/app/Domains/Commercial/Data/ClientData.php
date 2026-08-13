@@ -19,6 +19,10 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * Contrato do cadastro de cliente. Carrega os campos do usuário-empresa
  * (name/rut/email/phone) + os do próprio client + nested addresses/contacts.
  * A unicidade do RUT é checada na Action (não aqui — ver nota no plano).
+ *
+ * `addresses` e `contacts` são `Optional` na ENTRADA: ausente = não mexe na
+ * coleção; `[]` = apaga tudo (explícito). A saída (`fromModel`) sempre preenche
+ * as duas.
  */
 #[TypeScript]
 class ClientData extends Data
@@ -37,12 +41,12 @@ class ClientData extends Data
         #[In('client', 'provider', 'other')]
         public string $type = 'client',
         public string|Optional|null $business_activity = null,
-        /** @var array<ClientAddressData> */
+        /** @var array<ClientAddressData>|Optional */
         #[DataCollectionOf(ClientAddressData::class)]
-        public array $addresses = [],
-        /** @var array<ClientContactData> */
+        public array|Optional $addresses = new Optional,
+        /** @var array<ClientContactData>|Optional */
         #[DataCollectionOf(ClientContactData::class)]
-        public array $contacts = [],
+        public array|Optional $contacts = new Optional,
         #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
@@ -52,11 +56,13 @@ class ClientData extends Data
     {
         return [
             'rut' => ['required', 'string', new ValidRut],
-            // Um ou mais contatos (Drive `entidade-contato-cliente.md`,
-            // ratificado em 2026-07-31). `required` também fecha o buraco do
-            // replace-total: antes, omitir a chave apagava a coleção em
-            // silêncio, porque $contacts é `array = []` e não `Optional`.
-            'contacts' => ['required', 'array', 'min:1'],
+            // `sometimes`, não `required`: a coleção é `Optional`, e omitir a
+            // chave num PUT significa "não mexi nos contatos" — antes apagava
+            // todos em silêncio. `min:1` segue valendo quando a chave VEM, e a
+            // obrigatoriedade do create mora na CreateClientAction, porque
+            // rules() é estático e não distingue verbo (Drive
+            // `entidade-contato-cliente.md`, ratificado em 2026-07-31).
+            'contacts' => ['sometimes', 'array', 'min:1'],
         ];
     }
 
