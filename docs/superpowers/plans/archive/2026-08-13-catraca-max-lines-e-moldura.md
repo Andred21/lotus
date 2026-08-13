@@ -17,7 +17,7 @@ declaradas na spec e nenhuma outra é aceitável.
 **Tech Stack:** React 19 + TS (Vite) · PrimeReact via `shared/ui` · Tailwind v4 (layout) · vitest
 (jsdom) · eslint flat config.
 
-**Spec:** `docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md` (D1–D9).
+**Spec:** `docs/superpowers/specs/archive/2026-08-13-catraca-max-lines-e-moldura-design.md` (D1–D9).
 
 ## Global Constraints
 

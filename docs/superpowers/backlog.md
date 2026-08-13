@@ -108,12 +108,15 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: **BD-4 → BD-5 → BD-6**. O **BD-3** foi entregue em 2026-08-12 e saiu desta
+> Ordem entre blocos: **BD-5 → BD-6**. O **BD-4** foi entregue em 2026-08-13 e saiu desta lista com
+> os três débitos que cobria (as 2 tabelas sem a `SearchableTableFrame`, a catraca do `max-lines` e
+> o `FormErrorSummary` que faltava nos dois diálogos); o gatilho do trio da foto que ele venceu está
+> escrito no próprio **BD-5**. O **BD-3** foi entregue em 2026-08-12 e saiu desta
 > lista com os seis débitos que cobria (os três do piloto UI de Clientes, `Q-14`, `Q-15`, o CTA
 > duplicado e a cor fora do corte do D18); a lacuna de alcance que ele deixou na catraca de cor —
 > o shell fora de `COR_HARDCODED` — ficou na **P-34**. O **BD-8** e o **BD-9** nasceram depois
 > (revisão de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend,
-> enquanto BD-4..BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi
+> enquanto BD-5 e BD-6 são frontend, e a fila deles era **BD-8 → BD-9** entre si — o **BD-8 foi
 > entregue em 2026-08-13** e saiu desta lista (`progress.md`), então dessa fila resta o BD-9. Qual
 > das duas filas anda antes é promoção explícita do João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
@@ -124,31 +127,11 @@
 > renumerada no fechamento do BD-3). A ordem dentro de cada bloco é parte
 > do bloco, não sugestão.
 
-### BD-4 · Catraca do `max-lines` e adoção da moldura
-
-**A premissa do débito da moldura venceu.** Conferido em 2026-08-10: a `SearchableTableFrame` **já
-tem** o `filterSlot` e a bifurcação `noResultsFiltered`/`clearFilters`, entregues em `3c7cc20`
-(2026-08-08) para a `HistorialTable`. O débito dizia que isso só aconteceria no mesmo commit da
-primeira adoção; sobrou só adotar, e ficou barato.
-
-Cobre: **"As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`"** · **"Catraca do
-`max-lines`"** · **"`StudentDialog` e `RedatorDialog` não têm `FormErrorSummary`"**.
-
-Ordem (a adoção vem antes porque tira linha das tabelas antes de medir os diálogos):
-1. `BudgetsTable` adota a moldura pelo `filterSlot`;
-2. `TurmasTable` idem;
-3. `StudentDialog` abaixo de 150 linhas, **pagando junto** o `FormErrorSummary` que falta — hoje o
-   `summaryOnly: ['phone']` classifica certo e o 422 não aparece em tela nenhuma;
-4. `RedatorDialog` abaixo de 150, mesmo pagamento;
-5. `RedatorDocumentSlot` (175) e `BudgetDetailPage` (187; medido 2026-08-13);
-6. cada arquivo sai dos `ignores` do `eslint.config.js` **no mesmo commit** da extração.
-
-DoD: comportamento idêntico na tela; o 422 de `phone` aparecendo; `ignores` vazio ao fim.
-
 ### BD-5 · `useCrudForm` mais fundo
 
-Depois do BD-4 por gatilho declarado: o débito do trio da foto entra "quando alguém tocar um desses
-4 diálogos por outro motivo", e é o BD-4 que paga esse gatilho.
+O gatilho do débito do trio da foto — "quando alguém tocar um desses 4 diálogos por outro motivo" —
+**venceu no BD-4** (2026-08-13), que reescreveu `StudentDialog` e `RedatorDialog` para caber na
+régua de 150 linhas.
 
 Cobre: **"O trio da foto é idêntico em 4 dialogs"** (a absorção; o teste saiu no bloco `guardas-que-faltam`, entregue em 2026-08-11) · **"Os 4
 hooks de formulário que ficaram fora do `useCrudForm`"** · **Q-4** dos três achados de 2026-08-05
@@ -315,38 +298,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   DoD é foto chegando no S3, não lint verde. `useEntityPhoto` **ganhou teste** em 2026-08-11 (bloco
   `guardas-que-faltam`, seis casos); o que segue aberto aqui é só a **absorção**.
 
-- **As 2 tabelas com dropdown não adotaram a `SearchableTableFrame`, e adotar custa mais do que
-  trocar o markup.** `BudgetsTable` e `TurmasTable` ficaram fora do H.4.4 (2026-08-04, spec D2) por
-  terem um slot de filtro que as 5 busca-só não têm. O que a moldura **não** resolve para elas hoje é
-  a **redação** do empty state: ela só sabe dizer "sem resultados para `<termo>`" com ação
-  `common.clearSearch`, e essas duas precisam da bifurcação "filtros aplicados"
-  (`common.noResultsFiltered` / `common.clearFilters`), que existe hoje dentro de cada uma. A
-  bifurcação **não** foi construída na moldura de propósito — não há consumidor com `where`, e
-  construir para um consumidor hipotético é a lição 3. **O discriminador já está seguro:** o Q-1 do
-  review de 2026-08-04 fez a moldura consumir o `filtering` do `useTableFilter` em vez de recalcular
-  `term === ''`, que é exatamente o defeito que essas duas tabelas cometeram juntas em 2026-08-03
-  (o `Dropdown` do PrimeReact devolve o **objeto** da opção quando `option.value` é vazio). Saída:
-  a moldura ganha o slot de filtro **e** a bifurcação de redação no mesmo commit em que a primeira
-  das duas adotar — DoD é comportamento idêntico na tela, não lint verde. Decisão do João no
-  fechamento de 2026-08-04: registrar aqui em vez de gatilho datado em `pendencias.md`.
-  **Atualização medida em 2026-08-10 (a linha acima fica; o fato mudou):** a moldura **já ganhou**
-  o `filterSlot` e a bifurcação `common.noResultsFiltered`/`common.clearFilters` em `3c7cc20`
-  (2026-08-08), para a `HistorialTable` da certificação — fora da adoção que a "Saída" previa. Resta
-  só adotar nas duas tabelas, que hoje seguem sem importar a moldura. Coberto pelo **BD-4**.
-
-- **Catraca do `max-lines`: 4 componentes legados acima da régua de 150 linhas.** A regra
-  `max-lines` (150) sobre `src/features/*/components/**` nasceu em 2026-08-03 (Q-1 do
-  `abstracao-componentes-catalog`) com `ignores` para os 4 que já estavam acima: `StudentDialog`
-  (281; medido 2026-08-13), `RedatorDialog` (206; medido 2026-08-13), `RedatorDocumentSlot` (175), `BudgetDetailPage` (187; medido 2026-08-13). Enquanto a
-  lista existir, o lint verde afirma menos do que parece — mesmo padrão da catraca de
-  query-em-componente, zerada em 2026-08-03. Lista que só encolhe: não acrescente arquivo para calar
-  o lint. Saída: extrair o bloco coeso de cada um nos moldes já provados
-  (`ContactFields`/`ContactCard`, `ModuleFields`/`ModuleCard`), um arquivo por commit, saindo dos
-  `ignores` no mesmo commit — DoD é comportamento idêntico na tela, não lint verde.
-  **Remedido em 2026-08-10 (os números de origem ficam registrados acima):** a catraca **piorou** —
-  `StudentDialog` foi de 189 para **281** linhas (medido 2026-08-13) e `RedatorDialog` de 189 para **206** (medido 2026-08-13), os dois em
-  `501b731` (2026-08-05), com o lint verde o tempo todo porque estão nos `ignores`.
-  `RedatorDocumentSlot` (175) e `BudgetDetailPage` (187; medido 2026-08-13) seguem acima da régua. Coberto pelo **BD-4**.
 - **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
   `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
   sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
@@ -400,16 +351,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   `useCourseForm` e `useQuoteForm` são candidatos legítimos e ficaram fora só por corte de escopo —
   ambos manipulam coleção nested (módulos, itens da cotação) e usam `setForm`, que o Q-1 do review
   de 2026-08-05 tirou do retorno público: os dois leem `setForm` do par `{ crud, setForm }`.
-
-- **`StudentDialog` e `RedatorDialog` não têm `FormErrorSummary`, e no aluno isso tem chave
-  medida.** Dos 9 diálogos, só 6 têm o resumo. `useStudentForm` declara `summaryOnly: ['phone']` —
-  a classificação está correta e a guarda passa — mas **não existe resumo naquela tela**, então um
-  422 em `phone` não aparece em lugar nenhum. Medido e aceito no bloco de 2026-08-05 (spec D14): o
-  aluno migrou assim mesmo porque a classificação **expõe** a lacuna sem mudar a tela; construir o
-  resumo que falta é o débito. Saída: o commit que adicionar o `FormErrorSummary` aos dois paga
-  junto a conferência de que todo campo em `mapped` realmente passa `error=` ao `FormField` — DoD é
-  o 422 aparecendo na tela, não lint verde. Os dois arquivos também são 2 dos 4 legados na catraca
-  do `max-lines` (281 e 206 linhas; medido 2026-08-13).
 
 - **Um dos três achados do review de 2026-08-05 segue aberto — 🟢, esforço P.** (Q-4) O fato medido
   em 2026-08-01 — `PUT` com `photo_url` devolve 200 porque a promoção no construtor do `ClientData`
