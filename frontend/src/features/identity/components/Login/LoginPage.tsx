@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { BRAND_COLOR, APP_VERSION } from "@shared/config/brand";
+import { APP_VERSION } from "@shared/config/brand";
 import { LoginForm } from "./LoginForm";
 import { AppearanceControls, AppLogo } from "@/shared/ui";
 
@@ -13,9 +13,7 @@ export function LoginPage() {
       {/* Painel esquerdo (marca) */}
       <aside
         className="relative flex flex-col items-center justify-center gap-4 p-10 text-white md:w-1/2 overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${BRAND_COLOR}, #1b7fb8)`,
-        }}
+        style={{ background: 'var(--brand-gradient)' }}
       >
         <AppLogo className="w-40" />
 

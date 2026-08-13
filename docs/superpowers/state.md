@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
@@ -193,6 +193,27 @@ João.
 `shared/styles/brand-theme.css` e os três locales. `AppPassword` tem **2 call sites** — `LoginForm` e
 `StaffIdentifyFields` —, exatamente o alcance que o backlog escreveu. **Frontend puro: a P-03 não
 dispara**, e o backend que serve o `:8080` é o desta branch, que não toca `backend/`.
+
+### Execução — 2026-08-13: início
+
+`/executar-bloco login-fora-do-adr16` (arg recebido com typo, `login-fora-do-adr1`, confirmado com o
+João antes de prosseguir) validou as âncoras (spec, plano, `context_packet` `null` coerente com a
+ausência medida em §1.1, Git limpo em `8391a6a`, sem divergência) e abriu o gate main tree/worktree:
+a decisão de main tree já estava tomada em `state.md` (exceção declarada de dois `active_work_item`,
+§"Árvores trocadas"), então nenhuma worktree nova foi criada.
+
+**Mesmo conflito do BD-4 e do `rastro-unicidade-e-gates` reapareceu, e foi resolvido do mesmo jeito:**
+o plano recomenda `subagent-driven-development`; a sessão tem regra de não chamar o Agent tool sem
+pedido. Escalado ao João via pergunta direta — **subagent-driven-development**, com Agent tool
+autorizado para este bloco.
+
+Pre-flight scan do plano (10 tasks contra os Global Constraints e a spec): limpo, sem conflito novo —
+a sonda da Task 8 (reintroduz `text-slate-800` de propósito, reverte, confere árvore limpa) é
+mecanismo de prova nos dois sentidos, não teste vazio.
+
+Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `contrato-de-entrada-identidade-e-nested`, já fechado).
+
+**Estado:** `executing`.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
