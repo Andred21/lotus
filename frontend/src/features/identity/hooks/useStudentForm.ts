@@ -33,9 +33,9 @@ export function useStudentForm(
         // client_id não vai no update: trocar de empresa é ato da matrícula (D3).
         : { name: f.name, rut: f.rut, email: f.email, phone: f.phone },
     mapped: ['name', 'rut', 'email', 'client_id'],
-    // `StudentDialog` não tem FormErrorSummary: um 422 em `phone` não aparece
-    // em lugar nenhum hoje. Classificar expõe a lacuna sem mudar a tela —
-    // construir o resumo que falta é débito registrado (spec D14).
+    // `phone` não passa `error=` a nenhum `FormField`: quem mostra o 422 dele é
+    // o `FormErrorSummary` do `StudentDialog` (BD-4, 2026-08-13 — antes desse
+    // bloco não havia resumo naquela tela e o erro não aparecia em lugar nenhum).
     summaryOnly: ['phone'],
     onDone,
     afterCreate,

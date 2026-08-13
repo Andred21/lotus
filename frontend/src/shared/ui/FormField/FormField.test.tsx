@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { FormField, NestedField } from './FormField'
+import { FormField, FormErrorSummary, NestedField } from './FormField'
 
 afterEach(() => {
   cleanup()
@@ -71,5 +71,34 @@ describe('NestedField em modo leitura', () => {
 
     expect(screen.getByText('Módulo 1')).toBeTruthy()
     expect(screen.queryByTestId('controle')).toBeNull()
+  })
+})
+
+describe('FormErrorSummary', () => {
+  it('mostra a chave que NAO esta em mapped', () => {
+    // É o item (c) do BD-4: `phone` não tem `error=` em campo nenhum, então
+    // sem o resumo um 422 nele não aparece em lugar algum da tela.
+    render(<FormErrorSummary errors={{ phone: ['El teléfono es inválido.'] }} mapped={['name', 'rut']} />)
+
+    expect(screen.getByText('El teléfono es inválido.')).toBeTruthy()
+  })
+
+  it('NAO repete a chave que ja aparece no proprio campo', () => {
+    render(<FormErrorSummary errors={{ rut: ['RUT inválido.'] }} mapped={['name', 'rut']} />)
+
+    expect(screen.queryByText('RUT inválido.')).toBeNull()
+  })
+
+  it('corta a chave que casa excludePrefixes', () => {
+    render(
+      <FormErrorSummary
+        errors={{ 'modules.0.name': ['Requerido.'], phone: ['Inválido.'] }}
+        mapped={['name']}
+        excludePrefixes={['modules.']}
+      />,
+    )
+
+    expect(screen.queryByText('Requerido.')).toBeNull()
+    expect(screen.getByText('Inválido.')).toBeTruthy()
   })
 })

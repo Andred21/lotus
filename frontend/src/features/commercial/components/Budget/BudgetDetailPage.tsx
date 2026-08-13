@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, ConfirmDialog, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
-import type { AppCardTone } from '@shared/ui'
+import { AppButton, AppTag, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
-import { formatUf } from '../../lib/uf'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { QuotesList } from './QuotesList'
-import { BudgetDialog } from './BudgetDialog'
-import { QuoteWizard } from './QuoteWizard'
 import { BudgetDocumentsCard } from './BudgetDocumentsCard'
+import { BudgetOverlays } from './BudgetOverlays'
+import { BudgetStatCard } from './BudgetStatCard'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -100,9 +98,9 @@ export function BudgetDetailPage() {
       <div className="space-y-6">
         {/* Os três totais vêm SOMADOS do backend (bcmath). A UI nunca soma UF. */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
-          <StatCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
-          <StatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
+          <BudgetStatCard label={t('budget.totalQuoted')} value={budget.total_value_uf} />
+          <BudgetStatCard label={t('budget.totalApproved')} value={budget.total_approved_uf} tone="success" />
+          <BudgetStatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
         </div>
 
         <AppCard>
@@ -128,60 +126,8 @@ export function BudgetDetailPage() {
           fileSizeError={d.fileSizeError}
         />
 
-        {/* Reusa o dialog em modo edit — trava cliente e código, só payment_terms muda. */}
-        {d.editing && (
-          <BudgetDialog visible mode="edit" budget={budget} onHide={d.closeEdit} />
-        )}
-
-        {d.wizard && (
-          <QuoteWizard visible budgetId={budgetId} quote={d.wizard.quote} onHide={d.closeWizard} />
-        )}
-
-        {d.confirm && (
-          <ConfirmDialog
-            visible
-            title={t(CONFIRM_COPY[d.confirm.action].title)}
-            message={t(CONFIRM_COPY[d.confirm.action].body)}
-            confirmLabel={t(CONFIRM_COPY[d.confirm.action].label)}
-            severity={d.confirm.action === 'approve' ? undefined : 'danger'}
-            pending={d.confirmPending}
-            error={d.confirmError}
-            onCancel={d.closeConfirm}
-            onConfirm={d.runConfirm}
-          />
-        )}
-
-        {d.confirmDeleteBudget && (
-          <ConfirmDialog
-            visible
-            title={t('budget.confirmDeleteTitle')}
-            message={t('budget.confirmDeleteBody')}
-            confirmLabel={t('common.delete')}
-            severity="danger"
-            pending={d.removeBudgetPending}
-            error={d.removeBudgetError}
-            onCancel={d.closeDeleteBudget}
-            onConfirm={d.deleteBudget}
-          />
-        )}
+        <BudgetOverlays d={d} budgetId={budgetId} budget={budget} />
       </div>
     </div>
-  )
-}
-
-const CONFIRM_COPY = {
-  approve: { title: 'quote.confirmApproveTitle', body: 'quote.confirmApproveBody', label: 'quote.approve' },
-  reject: { title: 'quote.confirmRejectTitle', body: 'quote.confirmRejectBody', label: 'quote.reject' },
-  remove: { title: 'quote.confirmDeleteTitle', body: 'quote.confirmDeleteBody', label: 'common.delete' },
-} as const
-
-/** O número É o sinal: o `AppCard variant="stat"` já tinge texto, fundo e borda
- * pelo `tone`, então aqui não há cor nenhuma — só composição. */
-function StatCard({ label, value, tone }: { label: string; value?: string; tone?: AppCardTone }) {
-  return (
-    <AppCard variant="stat" tone={tone}>
-      <p className="text-2xl font-semibold">{formatUf(value ?? '0')} UF</p>
-      <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</p>
-    </AppCard>
   )
 }

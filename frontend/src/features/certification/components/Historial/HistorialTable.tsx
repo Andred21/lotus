@@ -27,6 +27,7 @@ export function HistorialTable() {
       <SearchableTableFrame
         table={h.table}
         searchPlaceholder={t('certificate.searchPlaceholder')}
+        onClearFilter={h.clearStatusFilter}
         filterSlot={
           <div className="w-48">
             <AppDropdown

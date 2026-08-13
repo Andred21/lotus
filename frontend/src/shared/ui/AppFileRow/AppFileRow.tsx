@@ -52,7 +52,7 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
         <i className={icon} aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <p className="truncate text-sm font-medium" title={name}>{name}</p>
         {meta && <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}

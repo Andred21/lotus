@@ -237,20 +237,14 @@ export default defineConfig([
   // 150 não é número redondo escolhido no chute: é o corte que a distribuição
   // real já desenhava — 53 dos 57 componentes de feature ficam abaixo dele.
   //
-  // Bloco SEPARADO do `no-restricted-syntax` de propósito: os `ignores` da
-  // catraca abaixo valem só para esta regra. Compartilhar o bloco reabriria em
-  // silêncio a catraca de query-em-componente, que foi zerada em 2026-08-03.
+  // Bloco SEPARADO do `no-restricted-syntax` de propósito: nasceu com uma
+  // catraca de `ignores` própria, que exigia não fundir com o bloco de cima —
+  // juntar as duas regras exporia aquele `ignores` ao `no-restricted-syntax` e
+  // reabriria em silêncio a catraca de query-em-componente (zerada em
+  // 2026-08-03). Esta catraca também zerou — o `ignores` não existe mais —,
+  // mas o bloco segue separado: nada ganha em fundir agora.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    // Catraca: os 4 legados de hoje. Lista que só encolhe — componente novo
-    // nasce abaixo da régua, e quem passar dela extrai o bloco coeso em vez de
-    // entrar aqui. Não acrescente arquivo para calar o lint.
-    ignores: [
-      'src/features/identity/components/Student/StudentDialog.tsx',
-      'src/features/identity/components/Redator/RedatorDialog.tsx',
-      'src/features/identity/components/Redator/RedatorDocumentSlot.tsx',
-      'src/features/commercial/components/Budget/BudgetDetailPage.tsx',
-    ],
     rules: {
       'max-lines': ['error', { max: 150, skipBlankLines: false, skipComments: false }],
     },

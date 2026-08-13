@@ -2,8 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppDataTable, AppColumn, AppInputText, AppDropdown, AppButton, AppTag,
-  AppCardToolbar, AppEmptyState,
+  AppColumn, AppDropdown, AppButton, AppTag,
+  AppEmptyState, SearchableTableFrame,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
@@ -35,9 +35,9 @@ export function BudgetsTable({
   // busca por cliente devolvendo vazio, tudo em silêncio — a tela afirmaria que
   // esses orçamentos não têm cliente (spec D16). Reintentar recarrega as duas.
   const loadError = error ?? clients.loadError
-  /** Devolve a promise das DUAS recargas: o Reintentar do `AppErrorState`
-   * aguarda o retorno para ficar em `loading` enquanto os GETs estão em voo
-   * (Q-14). Descartá-las deixava o botão sem feedback nenhum. */
+  /** `useCommercialClients.refetch` descarta a própria promise com `void`, então
+   * o `Promise.all` só serve para o `AppErrorState` aguardar o `onRetry` do pai
+   * (Q-14) — a recarga de clientes acontece junto, mas sem promise para esperar. */
   const retry = () => Promise.all([onRetry?.(), clients.refetch()])
   /** Carregando é qualquer uma das duas queries: a tabela só está "vazia"
    * depois que as duas responderam. */
@@ -57,85 +57,49 @@ export function BudgetsTable({
     ...STATUSES.map((s) => ({ label: t(`quoteStatus.${s}`), value: s })),
   ]
 
-  const filtering = table.filtering
-
-  const empty = filtering ? (
-    <AppEmptyState
-      icon="pi pi-search"
-      // Só monta `Sin resultados para "x"` quando existe termo. Com apenas o
-      // filtro de estado ativo, o termo é vazio e a frase citaria aspas em
-      // branco — cai no título genérico.
-      title={table.term === '' ? t('common.noResultsFiltered') : t('common.noResults', { term: table.filter.trim() })}
-      description={table.term === '' ? t('common.noResultsFilteredHint') : t('common.noResultsHint')}
-      action={
-        <AppButton
-          label={table.term === '' ? t('common.clearFilters') : t('common.clearSearch')}
-          icon="pi pi-times"
-          text
-          onClick={() => { table.clear(); setStatus(null) }}
-        />
-      }
-    />
-  ) : (
-    <AppEmptyState icon="pi pi-file" title={t('budget.empty')} description={t('budget.emptyHint')} action={actions} />
-  )
-
   return (
-    <>
-      <AppCardToolbar
-        start={
-          <>
-            <div className="min-w-64 flex-1">
-              <AppInputText
-                leftIcon="pi pi-search"
-                placeholder={t('budget.searchPlaceholder')}
-                value={table.filter}
-                onChange={(e) => table.onFilterChange(e.target.value)}
-              />
-            </div>
-            <div className="w-48">
-              <AppDropdown
-                value={status}
-                options={statusOptions}
-                optionValue="value"
-                onChange={(e) => { setStatus(e.value as QuoteStatus | null); table.resetPage() }}
-              />
-            </div>
-          </>
-        }
-        // Mesma regra da SearchableTableFrame; a adoção da moldura é o BD-4.
-        end={loadError || (!busy && budgets.length === 0) ? undefined : actions}
+    <SearchableTableFrame
+      table={table}
+      searchPlaceholder={t('budget.searchPlaceholder')}
+      onClearFilter={() => setStatus(null)}
+      filterSlot={
+        <div className="w-48">
+          <AppDropdown
+            value={status}
+            options={statusOptions}
+            optionValue="value"
+            onChange={(e) => { setStatus(e.value as QuoteStatus | null); table.resetPage() }}
+          />
+        </div>
+      }
+      emptyState={
+        <AppEmptyState icon="pi pi-file" title={t('budget.empty')} description={t('budget.emptyHint')} action={actions} />
+      }
+      footerCount={t('budget.count', { count: table.rows.length })}
+      actions={actions}
+      loading={busy}
+      error={loadError}
+      onRetry={retry}
+    >
+      <AppColumn
+        header={t('budget.code')}
+        body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
       />
-      <AppDataTable
-        value={table.rows}
-        loading={busy}
-        error={loadError} 
-        onRetry={retry}
-        emptyMessage={empty}
-        footerCount={t('budget.count', { count: table.rows.length })}
-        first={table.first}
-        onPage={table.onPage}
-      >
-        <AppColumn
-          header={t('budget.code')}
-          body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
-        />
-        <AppColumn header={t('budget.client')} body={(b: BudgetData) => clients.clientName(b.client_id)} />
-        <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />
-        <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} />
-        <AppColumn
-          header={t('budget.status')}
-          body={(b: BudgetData) =>
-            b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
-          }
-        />
-        <AppColumn
-          body={(b: BudgetData) => (
-            <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => navigate(`/comercial/presupuestos/${b.id}`)} />
-          )}
-          style={{ width: '4rem' }}
-        />
-      </AppDataTable>
-    </>
+      <AppColumn header={t('budget.client')} body={(b: BudgetData) => clients.clientName(b.client_id)} />
+      <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />
+      <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} />
+      <AppColumn
+        header={t('budget.status')}
+        body={(b: BudgetData) =>
+          b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
+        }
+      />
+      <AppColumn
+        body={(b: BudgetData) => (
+          <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => navigate(`/comercial/presupuestos/${b.id}`)} />
+        )}
+        style={{ width: '4rem' }}
+      />
+    </SearchableTableFrame>
   )
 }

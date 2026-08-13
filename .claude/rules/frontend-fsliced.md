@@ -103,9 +103,11 @@ exceção. Na dúvida, siga o vizinho da mesma
   `Fragment`, não `<div>` — um nó novo muda o espaçamento do `space-y-*` do pai.
   **Isto é lint, não conselho:** `max-lines` (150) em `eslint.config.js` sobre
   `src/features/*/components/**`. Vale só para `components/` — hook longo é legítimo, componente
-  inchado não. A régua tem catraca: **4 legados em `ignores`** (`StudentDialog`, `RedatorDialog`,
-  `RedatorDocumentSlot`, `BudgetDetailPage`), lista que só encolhe; não acrescente arquivo para calar
-  o lint. Ela nasceu de reincidência medida — o mesmo achado custou **três blocos consecutivos**
+  inchado não. A régua nasceu com uma **catraca**: 4 legados em `ignores` (`StudentDialog`,
+  `RedatorDialog`, `RedatorDocumentSlot`, `BudgetDetailPage`), lista que só encolhia.
+  **Zerada em 2026-08-13** — o bloco `ignores` não existe mais e a régua vale sem exceção. Não
+  reintroduza o campo para calar um arquivo: componente que passar dela extrai o bloco coeso.
+  Ela nasceu de reincidência medida — o mesmo achado custou **três blocos consecutivos**
   (`abstracao-componentes-operation` 2026-08-02, `zerar-catraca-e-componentes-commercial` e
   `abstracao-componentes-catalog` 2026-08-03) — e de uma lição mais cara: a régua era **citada** pelas
   specs e pelo `state.md` como se estivesse escrita aqui, e não estava em lugar nenhum (lição 13).
@@ -149,6 +151,13 @@ exceção. Na dúvida, siga o vizinho da mesma
   `TurmasTable` e `BudgetsTable` faziam isso com `status === null` e erravam o empty state juntas,
   porque o Dropdown do PrimeReact devolve o OBJETO da opção quando `option.value` é vazio
   (`dropdown.cjs.js:1441`; use `optionValue="value"` sempre que uma opção valer `null`/`''`).
+  **Filtro próprio entra pelo par `filterSlot` + `onClearFilter`, e o par é obrigatório por tipo:**
+  quem passa o slot passa o callback, porque o "Limpar filtros" do vazio promete os dois e o
+  `table.clear()` do `useTableFilter` limpa só a busca. A composição é da moldura, não do chamador —
+  o contrato era prosa, três telas remontavam o mesmo `clearAll` à mão e esquecê-lo devolvia um botão
+  que não devolve a lista (mesma classe de falha silenciosa do parágrafo acima). Instrução repetida
+  três vezes quer mecanismo (lição 14): virou união discriminada em `SearchableTableFrameProps`, e o
+  esquecimento agora não compila (review do BD-4, 2026-08-13).
   **O rodapé é o paginador:** passe `footerCount` ao
   `AppDataTable` e não renderize `AppCardFooter` junto de tabela — o wrapper exibe a faixa sempre e
   os controles de página só quando passa de `rows` (spec D12). Reescrever o bloco na feature foi o

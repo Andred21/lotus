@@ -13,7 +13,14 @@ export function useStudentClients(mode: DialogMode) {
   const clients = clientsApi.useList({ enabled: isCreate })
 
   return {
-    options: (clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id })),
+    /** `ClientData.id` é `undefined | number` no DTO gerado (o molde serve
+     * create e edit); um cliente vindo da listagem sempre tem id persistido.
+     * Descartar o impossível AQUI dá `value: number` de verdade e poupa o cast
+     * de quem consome — a asserção atravessava a fronteira do
+     * `StudentClientField` com três linhas de comentário (review do BD-4, Q-3). */
+    options: (clients.data ?? []).flatMap((c) =>
+      c.id == null ? [] : [{ label: c.legal_name, value: c.id }],
+    ),
     /** Bloqueia só quando NÃO há lista utilizável (ainda carregando, falhou sem
      * cache prévio, ou a lista veio vazia — `[]` é truthy, então checar só
      * `!clients.data` deixaria passar cliente nenhum pra escolher). Um refetch

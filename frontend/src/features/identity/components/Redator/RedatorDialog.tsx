@@ -1,35 +1,22 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   CrudDialog,
   AppTag,
-  AppFilePreviewDialog,
   FormSection,
   FormErrorBanner,
-  AppPhotoField,
+  FormErrorSummary,
 } from "@shared/ui";
-import type { FileUploadHandlerEvent } from "@shared/ui";
-import type { RedatorData, RedatorDocumentData } from "@shared/types/generated";
+import type { RedatorData } from "@shared/types/generated";
 import { redatoresApi } from "@shared/api/redatoresApi";
-import { useEntityPhoto, useFilePreview } from "@shared/hooks";
-import {
-  useUploadDocument,
-  useRemoveDocument,
-} from "../../api/useRedatorDocuments";
+import { useEntityPhoto } from "@shared/hooks";
 import {
   useRedatorForm,
   type RedatorDialogMode,
 } from "../../hooks/useRedatorForm";
-import {
-  DOC_TYPES,
-  idoneidade,
-  IDONEIDADE_SEVERITY,
-  type DocType,
-} from "@shared/lib";
-import { RedatorIdentityFields } from "./RedatorIdentityFields";
+import { idoneidade, IDONEIDADE_SEVERITY } from "@shared/lib";
 import { RedatorCourseSelector } from "./RedatorCourseSelector";
-import { RedatorDocumentSlot } from "./RedatorDocumentSlot";
-import { dangerText } from "@shared/styles/tokens"
+import { RedatorDocumentsSection } from "./RedatorDocumentsSection";
+import { RedatorUserSection } from "./RedatorUserSection";
 
 export function RedatorDialog({
   visible,
@@ -69,36 +56,7 @@ export function RedatorDialog({
   } = useRedatorForm(redator, mode, onHide, (created) =>
     photo.flush(created.id as number),
   );
-  const upload = useUploadDocument();
-  const removeDoc = useRemoveDocument();
-  const preview = useFilePreview<RedatorDocumentData>();
-  const [sizeError, setSizeError] = useState<string | null>(null);
-
-  // Documentos vêm da entidade viva (derivada da lista), não do estado do form:
-  // são geridos por mutações próprias e devem refletir o servidor na hora.
-  const existing = redator?.documents ?? [];
   const courseIds = form.course_ids;
-  // Só há exclusão quando o redator já existe: sem id não há endpoint aninhado.
-  // A ausência do callback é o que desliga a lixeira (mesmo contrato do
-  // `AppFileActions.onRemove`) — assim o id chega ao `mutate` estreitado pelo
-  // compilador, sem asserção.
-  const redatorId = redator?.id;
-
-  function handleUpload(type: DocType, e: FileUploadHandlerEvent) {
-    setSizeError(null);
-    const file = e.files[0];
-    if (file && redator?.id) {
-      upload.mutate({ redatorId: redator.id, type, file });
-    }
-    e.options.clear();
-  }
-
-  function handleStage(type: DocType, e: FileUploadHandlerEvent) {
-    setSizeError(null);
-    const file = e.files[0];
-    if (file) stageDoc(type, file);
-    e.options.clear();
-  }
 
   return (
     <CrudDialog
@@ -123,73 +81,34 @@ export function RedatorDialog({
     >
       <FormErrorBanner message={generalError} />
 
+      <FormErrorSummary
+        errors={fieldErrors}
+        // `useRedatorForm` não roda sobre `useCrudForm` (decisão do BD-5), então
+        // não há `errorSummary` a espalhar: a lista é literal, no estilo do
+        // CourseDialog/QuoteWizard. Só name, rut e email têm `error=` no campo;
+        // phone, course_ids e documents[<tipo>] caem aqui.
+        mapped={['name', 'rut', 'email']}
+      />
+
       {photo.hasBufferedFailure && (
         <FormErrorBanner message={t("photo.createUploadFailed")} />
       )}
 
       <section className="space-y-4">
-        <FormSection title={t("redator.sectionUser")} />
+        <RedatorUserSection
+          form={form}
+          set={set}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+          photo={photo}
+        />
 
-        <div className="flex flex-col lg:flex-row justify-between">
-          <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
-            <AppPhotoField
-              name={form.name}
-              url={photo.url}
-              readOnly={readOnly}
-              pending={photo.pending}
-              error={photo.error}
-              onSelect={photo.onSelect}
-              onRemove={photo.onRemove}
-              onSizeReject={photo.onSizeReject}
-              onRetry={photo.onRetry}
-            />
-          </div>
-
-          <div className="flex flex-col gap-4 w-full">
-            <RedatorIdentityFields
-              form={form}
-              set={set}
-              readOnly={readOnly}
-              fieldErrors={fieldErrors}
-            />
-          </div>
-        </div>
-
-        <FormSection title={t("redator.sectionDocuments")} spaced />
-        {upload.error && (
-          <p className="text-sm" style={{ color: dangerText }}>
-            {upload.error.detail}
-          </p>
-        )}
-        {sizeError && (
-          <p className="text-sm" style={{ color: dangerText }}>
-            {sizeError}
-          </p>
-        )}
-        {DOC_TYPES.map((type) => (
-          <RedatorDocumentSlot
-            key={type}
-            type={type}
-            mode={mode}
-            doc={existing.find((d) => d.type === type)}
-            staged={stagedDocs[type]}
-            uploading={upload.isPending && upload.variables?.type === type}
-            onStage={handleStage}
-            onUnstage={unstageDoc}
-            onUpload={handleUpload}
-            onRemoveDoc={
-              redatorId != null
-                ? (fileId) => removeDoc.mutate({ redatorId, fileId })
-                : undefined
-            }
-            onPreview={preview.open}
-            onSizeReject={setSizeError}
-          />
-        ))}
-        <AppFilePreviewDialog
-          file={preview.file}
-          visible={preview.visible}
-          onHide={preview.close}
+        <RedatorDocumentsSection
+          mode={mode}
+          redator={redator}
+          stagedDocs={stagedDocs}
+          stageDoc={stageDoc}
+          unstageDoc={unstageDoc}
         />
 
         <FormSection title={t("redator.sectionCourses")} spaced />

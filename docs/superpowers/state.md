@@ -10,9 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: contrato-de-entrada-identidade-e-nested
-state_basis_commit: 59a39e3
-updated_at: 2026-08-13T23:10:00-03:00
+last_completed_work_item: catraca-max-lines-e-moldura
+state_basis_commit: 7c28699
+updated_at: 2026-08-13T11:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,373 @@ updated_at: 2026-08-13T23:10:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
+## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
+
+### Seleção — 2026-08-13
+
+**BD-4 do `backlog.md:127`, promovido explicitamente pelo João** com o estado em `idle` e
+`active_work_item` `null`. O gate do `/planejar-bloco` não promove; as três decisões dele fecharam o
+gate: o slug `catraca-max-lines-e-moldura` (mesmo da branch já criada), **rota direta a
+`ready_for_planning` sem Context Packet** por ausência medida de fonte externa, e a worktree
+`/home/jvbat/projetos/fix-frontend` seguindo — bloco **frontend puro**, a P-03 não dispara.
+
+A branch `feat/catraca-max-lines-e-moldura` já existia em `0c2a24b`, **com zero commit sobre a
+`main`** e árvore limpa; isso não era divergência de estado, e `0c2a24b` passa a ser o
+`state_basis_commit`.
+
+### O terreno foi medido antes de desenhar, e achou cinco divergências
+
+Medição de 2026-08-13 sobre `0c2a24b`, por workflow de 9 agentes lançado antes do `/clear`.
+**Três dos quatro números da catraca estavam vencidos** — `StudentDialog` 281 (o backlog diz 283),
+`RedatorDialog` 206 (diz 199), `BudgetDetailPage` 187 (diz 171); só `RedatorDocumentSlot` (175)
+bate. Déficit real: **249 linhas a extrair**.
+
+**A premissa do bloco é falsa:** ele não existe por causa do modo leitura do BD-3 — o BD-3 tocou o
+`StudentDialog` num único commit (`dfc3f4b`) com saldo **−2 linhas**, e os dois blocos grandes vêm de
+`501b731` (2026-08-05). **A justificativa da ordem também:** a adoção da moldura não tira linha de
+diálogo nenhum, e as duas tabelas não estão na catraca.
+
+**O DoD escrito não era provável:** não existe regra de validação de `phone` em nenhum DTO de
+`Identity` (zero `Max(` na pasta; coluna `varchar(30)` sem unique; nenhum teste assere 422 em phone).
+
+**Os dois diálogos do item (c) não são o mesmo caso:** `useStudentForm` roda sobre `useCrudForm` e já
+entrega `errorSummary` pronto; `useRedatorForm` não usa `useCrudForm` e não tem o que espalhar.
+
+E o ponteiro `FormErrorSummary.tsx:62-67`, citado 4× em doc normativo, **apontava para arquivo que não
+existia** — o componente é export nomeado em `FormField.tsx`, e as linhas 62-67 de lá são do
+`NestedField`, não do `FormErrorSummary` (que vive em `FormField.tsx:79-107`). Corrigido na Task 9
+do BD-4 (2026-08-13): as citações vivas passaram a apontar para o destino real.
+
+### Brainstorming e spec — 2026-08-13
+
+Nove decisões do João (D1–D9), registradas na spec
+`docs/superpowers/specs/archive/2026-08-13-catraca-max-lines-e-moldura-design.md`. As que mudam trabalho:
+o 422 de `phone` provado por **request forjado** (backend intocado); o resumo do redator com `mapped`
+**literal**, sem migrar o hook (o BD-5 já o excluiu por critério); o campo de cliente do
+`StudentDialog` **colapsado** no molde do `BudgetDialog`, pagando a quarta grafia do débito BD-3 §4;
+`useStudentDetail` **ficando no pai** para preservar a rede; **dois** arquivos novos no par do
+redator; UI-01, os dois `<p>` e o `sp` morto **entrando**; overlays em vez dos ramos de estado no
+`BudgetDetailPage`; o critério de CTA da moldura **vencendo** na `BudgetsTable`; e a rule reescrita
+no mesmo commit que esvazia o `ignores`. Ordem escolhida: **catraca primeiro, moldura por último**.
+
+**Uma conta apresentada no brainstorming estava errada e foi corrigida antes da spec:** o colapso do
+campo de cliente não corta ~46 linhas, corta ~9 — `FormField` em modo leitura troca os **filhos
+inteiros** (`readOnly ? <ReadOnlyValue/> : children`), então as 28 linhas de dica são create-only e
+ficam, e o aviso `clientLocked` do modo edit **sumiria** se não saísse para fora do campo. Com a
+conta certa, o corte do bloco de view sozinho deixaria o arquivo em 156 — acima da régua —, e por
+isso o desenho extrai **dois** blocos do `StudentDialog` e **duas** seções do `RedatorDialog`.
+
+**Risco de review declarado MÉDIO** na spec (§9), contra o BAIXO do gate binário da skill —
+divergência declarada, sem conflito. O risco próprio é de alcance (`shared/ui` alcança 4 consumidores
+fora do bloco; a moldura passa a servir 8 tabelas) e de margem (`BudgetDetailPage` pousa com folga
+de ~5 linhas).
+
+O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
+spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/archive/2026-08-13-catraca-max-lines-e-moldura.md`: **dez tasks**, uma por commit, na
+ordem testes do resumo → `StudentDialog` → slot → `RedatorDialog` → `BudgetDetailPage` (que **zera o
+`ignores`** e reescreve a rule) → UI-01 → `BudgetsTable` → `TurmasTable` → docs → gate.
+
+**Baseline medido, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` = **28
+arquivos / 138 testes** — o número registrado neste arquivo até agora (27/131) estava vencido.
+Projeção do plano: **29 arquivos / 142 testes** (3 casos do `FormErrorSummary`, 1 arquivo e 1 caso do
+`AppFileRow`).
+
+**Três coisas apareceram só ao escrever o plano, e duas mudam trabalho:**
+
+1. **O `BudgetDetailPage` fica mais barato do que a spec projetou.** Os quatro overlays consomem o
+   objeto `d` (`useBudgetDetail`) **inteiro**, que a página já tem, então a chamada de volta é de uma
+   linha e `formatUf`/`AppCardTone` também ficam órfãos: **~136**, não ~145. A contingência da spec
+   (extrair a prop `actions` do `DetailHeader`) vira reserva.
+2. **O rótulo do modo leitura do campo de cliente precisa vir do pai.** Hoje o texto é
+   `student?.current_client_name ?? t("student.noClient")` — se o filho derivasse o rótulo do
+   `options`, view/edit cairia no travessão do `ReadOnlyValue`, que é o default certo para vazio e
+   **não** é o texto atual. O filho recebe `readOnlyLabel` pronto e não conhece `StudentData`.
+3. **Os testes novos do `FormErrorSummary` nascem verdes**, porque afirmam comportamento que já
+   existe — então a Task 1 tem passo de sonda: com o filtro de `mapped` desligado à mão, o caso "não
+   repete a chave que já aparece no campo" tem de reprovar, e a árvore volta limpa em seguida.
+
+`executor: claude`, sem `paths_autorizados`: o bloco decide apresentação em vários sítios, atravessa
+a lei §5.6 e mexe no `eslint.config.js`, onde bloco no lugar errado apaga seletor existente em
+silêncio (Q-2 de 2026-08-04, reincidente no BD-3); a Task 5 ainda reescreve rule normativa.
+
+**Estado: `ready_for_execution`.** `/executar-bloco catraca-max-lines-e-moldura` exige instrução
+posterior do João.
+
+### Execução — 2026-08-13: início
+
+`/executar-bloco catraca-max-lines-e-moldura` validou as âncoras (spec, plano, `context_packet`
+`null` coerente, Git limpo em `671bc94`, sem divergência) e abriu o gate main tree/worktree: bloco
+frontend puro, `using-git-worktrees` normal — a worktree `/home/jvbat/projetos/fix-frontend` na
+branch `feat/catraca-max-lines-e-moldura` já era o isolamento certo, sem criar nova.
+
+**Mesmo conflito do `rastro-unicidade-e-gates` reapareceu, e foi resolvido do mesmo jeito:** o
+plano recomenda `subagent-driven-development`; a sessão tem regra de não chamar o Agent tool sem
+pedido. Escalado ao João via pergunta direta — **subagent-driven-development**, com Agent tool
+autorizado para este bloco. Pre-flight scan do plano (10 tasks contra os Global Constraints e a
+spec): limpo, sem conflito novo — as dívidas aceitas (D2 sem guarda, D4 requisição ociosa, D8
+exceção de CTA) já são decisão declarada do João em §8 da spec, não achado a escalar aqui.
+
+Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `BD-3`, já fechado).
+
+**Estado:** `executing`.
+
+### Execução — 2026-08-13: fechamento
+
+10 tasks do plano completas via SDD, cada uma com revisor de task independente. Dois loops de fix
+durante a execução: Task 2 (`StudentClientField` devolvia `Fragment` quando devia devolver `<div>`
+— o `<p>` do aviso `clientLocked` não era irmão direto da section no original, achado escalado ao
+João, ele escolheu `<div>`); Task 9 (número esquecido em `backlog.md:143`). A catraca `max-lines`
+fechou de fato — array `ignores` do bloco removido inteiro em `eslint.config.js` (Task 5), regra
+vale sem exceção, `.claude/rules/frontend-fsliced.md:106` reescrito. `BudgetsTable`/`TurmasTable`
+migraram para `SearchableTableFrame` (D8: CTA muda comportamento só no caso lista-vazia-com-termo,
+verificado por álgebra exaustiva no review final). UI-01 corrigido (`AppFileRow` ganha `title`).
+
+**Gate da Task 10 — Steps 1-4 provados** (lint/build/test verdes, 29 arquivos/142 testes, os 6
+arquivos-alvo abaixo de 150, sem sonda/vazamento de camada/órfão). **Steps 5 e 6 (e2e do 422 de
+`phone` contra API real, checagem visual `/lotus-ui-review`) NÃO executados** — bloqueio de
+ambiente: nem o main tree (branch WIP alheia, 500 em `/api/students`) nem uma stack própria da
+worktree (comando `docker compose up` bloqueado pelo classifier de auto mode) ficaram disponíveis.
+Escalado ao João duas vezes; ele escolheu prosseguir sem essas duas provas. Débito explícito, não
+maquiado — ver `.superpowers/sdd/task-10-report.md` Step 7.
+
+**Review final de branch inteira** (opus, intervalo `0c2a24b..96d36ba`, depois `..d50d7f8`):
+veredito inicial "Ready to merge: With fixes" — 3 achados Important, todos verificados
+pessoalmente antes de agir: `SearchableTableFrame.tsx` sem `flex-wrap` (regressão de layout em
+telas estreitas nas duas tabelas migradas, achado real de CSS, não hipótese) e duas entradas do
+próprio `state.md` (aqui perto, §"Brainstorming e spec — 2026-08-13") que a Task 9 corrompeu com
+um find-replace cego — achado histórico do ponteiro fantasma virou afirmação invertida, e a
+descrição de uma spec ARQUIVADA (protegida por D9) passou a mentir sobre o que ela cita. Um fix
+subagent corrigiu os dois (commits `eb9bc47`, `d50d7f8`); re-review confirmou ambos resolvidos na
+raiz. **Veredito final: "Ready to merge: Yes."** Achados Minor (margem fina em dois arquivos
+novos, nome `SlotBody.tsx` foge da convenção `Redator*`, D6 muda espaçamento do banner em ~16px,
+`backlog.md:137` com racional que a spec provou falso, D8 sem guarda automatizada) ficam
+registrados no ledger local, não bloqueiam.
+
+**Estado:** `ready_for_review`. Próxima instrução aciona a revisão do trabalho ativo — este
+comando não a inicia sozinho.
+
+### Review de sprint — 2026-08-13: BAIXO risco, uma lente, 4 achados
+
+**BAIXO pelo gate binário da skill:** zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal gerado; `executor: claude`. A spec §9 declara MÉDIO por alcance
+e margem — divergência declarada, sem conflito, como no BD-3. **Só lente Claude, sem Codex.**
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **29 arquivos / 142 testes** (a projeção do plano, exata); os **13** arquivos do bloco
+abaixo de 150, o maior sendo `SlotBody` em 144; `ignores` do `max-lines` inexistente (só o
+`globalIgnores` do topo e o `CATRACA_COR`, que é outra regra); zero `className="sp"`; zero
+`primereact` em `features/`; `BudgetDetailPage.test.tsx` com **diff vazio**.
+
+**A catraca foi provada nos dois sentidos (lição 10), não por lint verde:** 25 linhas em branco
+apensadas ao `StudentDialog` — o ex-ignorado — fazem o lint reprovar com
+`File has too many lines (153). Maximum allowed is 150`, e a árvore volta limpa em seguida. Verde
+sozinho não distinguiria "a régua vale" de "a regra parou de casar o glob".
+
+**Órfãos: zero.** Os 7 componentes novos têm exatamente um consumidor cada, conferido por grep.
+
+**As extrações foram conferidas linha a linha, não presumidas:** `StudentDetailSections` bate byte a
+byte com `StudentDialog.tsx:172-278` do `0c2a24b`, com uma única divergência — o `sp` → `space-y-2`
+da D6; `BudgetOverlays` e `BudgetStatCard` idênticos ao original; `SlotBody` preserva as duas
+assimetrias medidas. **E a conferência que o `backlog.md:409-411` pedia foi feita:** todo campo em
+`mapped` passa `error=` ao `FormField` nos dois diálogos, e `phone` não passa em nenhum — o resumo
+não duplica erro de campo visível.
+
+**A D8 foi confirmada por álgebra sobre o hook, não por leitura do JSX:** `useTableFilter.ts:98` é
+`term !== '' || scoped.length !== items.length`, então lista crua vazia **com** termo digitado dá
+`filtering: true` e o CTA aparece, onde o critério antigo (`budgets.length === 0`) o escondia. É o
+único caso que diverge.
+
+**Os quatro achados:**
+
+1. **Q-1 🟡 P** — `RedatorDocumentsSection.tsx:37,69-70`: `removeDoc.error` **nunca é lido**. Um
+   DELETE de documento do redator que falha deixa a linha na tela e não diz nada — vazio silencioso
+   (D16) sobre dado que alimenta a idoneidade. O irmão `commercial` já resolve os dois no mesmo
+   banner (`useBudgetDetail.ts:47`: `useMutationErrors([uploadFile.error, removeFile.error])`). O
+   bloco reescreveu exatamente as duas linhas vizinhas (D6, `<p>` → banner) e passou ao lado da
+   terceira. Não registrado em `backlog.md` nem em `pendencias.md`.
+2. **Q-2 🟡 M** — o contrato "quem passa `filterSlot` passa um `clear` COMPOSTO"
+   (`SearchableTableFrame.tsx:41-45`) é **prosa, não mecanismo**, e este bloco trouxe o terceiro
+   consumidor: `BudgetsTable:63,67`, `TurmasTable:40,44` e `useHistorial:60,86` remontam o mesmo
+   `clearAll` à mão. Esquecer produz um "Limpar filtros" que não devolve a lista — a mesma classe de
+   falha silenciosa que o `filtering` do `useTableFilter` existiu para matar em 2026-08-03, quando
+   estas duas tabelas erraram juntas. Pela lição 14 (instrução repetida três vezes quer mecanismo) e
+   pela cláusula de reincidência da skill, **vira regra ou tipo, não refactor**: a moldura compondo
+   por `onClearFilter`, o par virando tipo obrigatório, ou um `useStatusFilteredTable` em
+   `shared/hooks`.
+3. **Q-3 🟢 P** — `StudentDialog.tsx:115` introduz
+   `options={clients.options as { label: string; value: number }[]}`. A fonte
+   (`useStudentClients.ts:16`) devolve `value: c.id` com `ClientData.id` sendo `number | undefined`.
+   A extração criou uma fronteira tipada e o cast é o que a atravessa; corrigir no dono do dado
+   (filtrar/normalizar uma vez) elimina a asserção em vez de justificá-la em três linhas de
+   comentário.
+4. **Q-4 🟢 P** — `RedatorDocumentSlot.tsx:10-12` afirma que `preview` e `sizeError` "vivem no
+   diálogo"; depois da Task 4 eles vivem em `RedatorDocumentsSection.tsx:38-39`. Lição 13 na forma
+   exata, e a mesma classe do ponteiro fantasma que a Task 9 **deste bloco** existiu para corrigir.
+   `repo-docs-refs` não pega: é comentário em `.tsx`, não doc normativo.
+
+**O que NÃO virou achado, e por quê:** decisão consciente registrada não é achado — requisição
+ociosa de `useStudentDetail` em edit (D4), `mapped` literal do redator sem guarda (D2), CTA da
+`BudgetsTable` em lista-vazia-com-termo (D8), margem de 6 linhas do `SlotBody` (spec §8.1, no
+ledger), `SlotBody.tsx` fora da convenção `Redator*` (ledger) e os números do `backlog.md` §Débitos
+ainda descrevendo o estado pré-bloco (a baixa é do `/fechar-sprint`, por instrução do plano).
+
+**Veredito: o bloco está bom.** Dez tasks, dez commits, nenhuma condicional mudou de forma, nenhum
+`key` mudou de critério, e as quatro mudanças de tela são as quatro declaradas. Os quatro achados
+são de acabamento e de mecanismo; nenhum é de correção.
+
+### Correção dos achados — 2026-08-13: João aprovou os quatro
+
+Triagem do João: **Q-1 a Q-4, todos**. Quatro commits, um por achado, na ordem do relatório.
+
+**Q-1 (`3451976`)** — `RedatorDocumentsSection` adota o molde do `useBudgetDetail`:
+`useMutationErrors([upload.error, removeDoc.error])` num banner só. A exclusão reprovada agora fala;
+antes o documento reaparecia na linha e a tela ficava calada.
+
+**Q-2 (`b4d1a50`) — virou tipo, não refactor,** que é o que a cláusula de reincidência pede. Das três
+formas oferecidas no relatório (regra escrita, par obrigatório por tipo, `useStatusFilteredTable`),
+a escolhida foi a do meio: `SearchableTableFrameProps` deixou de ser interface e virou
+`SearchableTableFrameBaseProps<T> & FilterSlotProps`, com `FilterSlotProps` sendo
+`{ filterSlot?: undefined; onClearFilter?: undefined } | { filterSlot: ReactNode; onClearFilter: () => void }`.
+A composição saiu dos chamadores e entrou na moldura (`table.clear()` + `onClearFilter?.()`). Os três
+consumidores (`BudgetsTable`, `TurmasTable`, `useHistorial`) pararam de remontar `clearAll` à mão —
+o `useHistorial` passou a expor `clearStatusFilter` e devolve o `table` do hook intacto.
+**Provado nas duas direções** (lição 10), não por lint verde: removi o `onClearFilter` da
+`TurmasTable` mantendo o `filterSlot` e o `tsc -b` deu
+`TS2322: Property 'onClearFilter' is missing ... but required in type '{ filterSlot: ReactNode; onClearFilter: () => void }'`;
+restaurado, compila. O terceiro consumidor que motivou o achado é agora impossível de errar.
+A regra ficou registrada no bullet "Tabela em card" de `.claude/rules/frontend-fsliced.md`.
+
+**Q-3 (`ae52a6c`)** — `useStudentClients` descarta o `id` nulo com `flatMap` e devolve
+`value: number` de verdade; o cast e as três linhas que o justificavam sumiram do `StudentDialog`.
+Corrigido no dono do dado, não na fronteira.
+
+**Q-4 (`20bc7e7`)** — docblock do `RedatorDocumentSlot` aponta para `RedatorDocumentsSection`.
+
+**Gate reproduzido depois das correções:** `pnpm build` verde, `pnpm lint` exit 0,
+`pnpm test` **29 arquivos / 142 testes** — mesmos números do fechamento da execução, nenhum teste
+tocado. Os cinco componentes mexidos seguem sob a régua de 150 (maior: `HistorialTable`, 132).
+A `SearchableTableFrame` foi a 164 linhas e isso é legítimo: a régua cobre
+`src/features/*/components/**`, e a moldura é `shared/ui` — foi justamente ela que absorveu a
+complexidade que estava espalhada em três features.
+
+**Estado: `ready_for_closure`.** Nenhum achado aberto. O fechamento é passo explícito
+(`/fechar-sprint`), não automático — e é lá que a baixa dos débitos do `backlog.md` acontece.
+
+### Fechamento — 2026-08-13
+
+A árvore já estava limpa em `7c28699` (as correções dos quatro achados entraram commitadas), que
+passa a ser o `state_basis_commit` — diferente do fechamento anterior, aqui não houve trabalho
+pendente a commitar antes de arquivar.
+
+**O item 0 foi refeito contra a API real e PAGOU a dívida que a execução declarou.** Os Steps 5 e 6
+do gate da Task 10 tinham ficado de fora por bloqueio de ambiente (500 em `/api/students` no main
+tree, `docker compose up` recusado na worktree), com o João escolhendo prosseguir sem eles. No
+fechamento a stack estava de pé e respondendo — `/api/students` sem cookie devolve **401**, não mais
+500 —, então o Step 5 rodou: com sessão Sanctum viva (cookie + CSRF, `Origin` e `Accept` nos dois
+lados), o payload forjado `"phone": []` devolveu **422 `application/problem+json`** com
+`errors.phone` em `PUT /api/students/37` **e** em `PUT /api/redatores/1`, mensagem
+`El campo teléfono debe ser una cadena de caracteres.`. É exatamente o insumo que o item (c) do
+bloco mostra: `phone` não está em `mapped` em nenhum dos dois diálogos (`useStudentForm` o declara
+em `summaryOnly`; o `RedatorDialog` passa a lista literal `['name', 'rut', 'email']`), então o 422
+cai no `FormErrorSummary` em vez de sumir. **Ressalva escrita, não maquiada:** o `:8080` serve o
+main tree, hoje na branch alheia `feat/contrato-de-entrada-identidade-e-nested`. O `phone` é
+`string\|Optional\|null` no DTO e o 422 vem do cast do spatie/laravel-data, não de regra de formato;
+`git diff main...HEAD -- backend/app/Domains/Identity/Data/` está **vazio** naquele tree, então o
+caminho medido é o mesmo que a `main` percorre — mas a medição não é de uma stack limpa, e isso é
+o custo da **P-03** aparecendo num bloco de frontend.
+
+**A catraca foi provada no próprio fechamento, nos dois sentidos (lição 10), não herdada do
+review:** 30 linhas em branco apensadas ao `StudentDialog` — o ex-ignorado — fazem o lint reprovar
+com `File has too many lines (154). Maximum allowed is 150`, e a árvore volta limpa em seguida.
+Ferramentas: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **29 arquivos / 142 testes**. Os
+seis alvos do plano pousaram em **124 / 125 / 34 / 133 / 105 / 116** linhas. Suíte backend, Pint e
+`typescript:transform` são **N/A por escopo medido, não por suposição**: `git diff main...HEAD --
+backend/` e `-- frontend/src/shared/types/generated.ts` devolvem **zero arquivo**, e rodar a suíte
+no container mediria o código da outra branch, não este bloco.
+
+**Um achado do próprio gate de código morto, corrigido no commit de fechamento:** o comentário de
+`useStudentForm.ts:36-38` ainda dizia que "`StudentDialog` não tem FormErrorSummary: um 422 em
+`phone` não aparece em lugar nenhum hoje". O bloco tornou a frase falsa ao adicionar o resumo em
+`StudentDialog.tsx:74`, e o arquivo ficou **fora** do diff das dez tasks — lição 13 na forma exata,
+mesma classe da Q-4 do review, um nível abaixo (comentário de hook, que a guarda `repo-docs-refs`
+não alcança).
+
+**Pendências: nenhum gatilho venceu.** A **P-34** (`COR_HARDCODED` fora de `src/app/**`) espera
+bloco que toque o shell, e este não tocou — `src/app/` não aparece no diff. A **P-23** (formato do
+`progress.md`) segue com revisão em 2026-09-30, e foi exercitada aqui ao mover a entrega mais antiga
+para o `progress-archive.md`, que tem as três colunas que o `progress.md` fundiu. A **P-03** ganhou
+uma linha: a ausência de compose por worktree custou dois passos de gate **num bloco de frontend**,
+não de backend — a worktree não pôde subir stack própria e dependeu do main tree, que naquele
+momento servia branch alheia quebrada. Nenhuma pendência nova nasceu: o que fica aberto deste bloco
+é prova não executada, registrada no `progress.md`, não divergência entre doc e realidade.
+
+**Arquivamento e histórico:** plano e spec foram para `plans/archive/` e `specs/archive/` (a spec
+não é compartilhada por nenhum item futuro), com os ponteiros da narrativa acima e o da §Spec do
+próprio plano atualizados. O `progress.md` recebeu a entrega e voltou a dez linhas, movendo
+`Certificação · lote em Action e gate único de snapshot` (2026-08-10) para o `progress-archive.md`.
+Do `backlog.md` saíram o **BD-4** e os **três débitos que ele cobria** — as 2 tabelas sem a
+`SearchableTableFrame`, a catraca do `max-lines` e o `FormErrorSummary` ausente nos dois diálogos —,
+mais a atualização da ordem (`BD-5 → BD-6`). O gatilho do trio da foto, que o BD-4 venceu, ficou
+escrito no próprio BD-5. **Nada foi promovido:** o próximo item é escolha explícita do João.
+
+**O que o fechamento NÃO provou, sem maquiagem:** o **Step 6 segue não executado** — nada foi visto
+renderizado, então o wrap da toolbar a 390x844, os quatro casos de CTA da D8, o aviso `clientLocked`
+sobrevivendo fora do `FormField` e o resumo com o 422 **na tela** continuam sem checagem visual. A
+equivalência das extrações é literal e conferida linha a linha no review, mas não vira mecanismo:
+nenhum diálogo tem teste de componente. D8 e D2 seguem sem guarda automatizada, por decisão
+declarada na spec §8.
+
+**Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
+
+### Merge com a `main` — 2026-08-13: duas sprints fecharam em paralelo
+
+O BD-4 fechou às **08:49** e o BD-9 (`contrato-de-entrada-identidade-e-nested`, backend) às
+**09:12**, do mesmo dia, em branches irmãs da mesma base `0c2a24b`. **Colisão de código: zero** — 30
+arquivos de frontend contra 40 de backend mais `generated.ts`, sem um arquivo em comum. Os **cinco**
+arquivos que se cruzam são todos doc de estado, e só **três** conflitaram (`state.md`,
+`progress.md`, `progress-archive.md`).
+
+**Merge da `main` na branch, nunca rebase.** Replayar 24 commits reescreveria os SHAs que o
+`progress.md` e este arquivo **citam nominalmente** — doc versionado viraria mentira —, e faria 24
+encontros com o mesmo `state.md` em vez de um.
+
+**O perigo não estava nos conflitos, estava no auto-merge.** `pendencias.md` e `backlog.md`
+mesclaram sozinhos, e um dos dois saiu **falso**: o parágrafo de ordem do `backlog.md` manteve
+"então dessa fila resta o BD-9" depois de a `main` já ter entregue o BD-9 — a `main` nunca tocou
+aquele parágrafo, então o git escolheu o lado desta branch e a afirmação vencida passou verde.
+Corrigido à mão no mesmo commit. Auto-merge é ausência de sobreposição textual, não acordo.
+`pendencias.md` é seguro por medição: a `main` mexeu só na P-29, esta branch só na P-03, e os 32 IDs
+seguem sem duplicata — este repositório já renumerou ID duplicado três vezes.
+
+**A cadeia foi resolvida por decisão do João: BD-4 fica como Último por ordem de merge**, não por
+relógio (ele fechou 23 min antes do BD-9 e chega à `main` depois). BD-9 desce a Penúltimo,
+`rastro-unicidade-e-gates` a Antepenúltimo e `faixa-visivel-e-acessibilidade-dos-dialogos` sai da
+cadeia de três. O frontmatter é o desta branch (`last_completed_work_item:
+catraca-max-lines-e-moldura`, `state_basis_commit: 7c28699`). Os três corpos foram conferidos por
+comparação, não de olho: o do BD-9 entrou **byte a byte idêntico** ao da `main`, o do BD-4 idêntico
+ao desta branch, e o do `rastro-unicidade-e-gates` difere da `main` em exatamente **duas linhas** —
+as correções do ponteiro fantasma que o próprio BD-4 fez em `d50d7f8`, preservadas.
+
+**`progress.md`:** as duas entregas entram, dá 11 contra o teto de 10, então desceu
+`2026-08-10 · Operation · habilitação da turma`. **`progress-archive.md`:** os dois lados haviam
+arquivado a **mesma** linha (`2026-08-10 · Certificação · lote`) e união ingênua a duplicaria —
+ficou uma. E ficou na forma **verbatim de cinco colunas**, não no split de sete que esta branch
+tinha feito: o fechamento do BD-9 declarou essa convenção no cabeçalho do arquivo (duas arities
+convivendo, apontando para a P-23), e convenção recém-publicada vence reformatação.
+
+**Gate pós-merge, que nenhum dos dois lados exercitou sozinho:** `pnpm lint` exit 0, `pnpm build`
+verde (o `tsc -b` combinado é o risco real de um merge frontend×backend), `pnpm test` **29 arquivos
+/ 143 testes** — os 142 desta branch mais o caso de `useClientForm` que a `main` trouxe. Backend
+**591 passed, 5 skipped (2149 assertions)** e `typescript:transform` com **diff zero**; os dois
+rodaram no container, que monta o main tree, e valem para esta branch por medição:
+`git diff origin/main -- backend/ frontend/src/shared/types/generated.ts` devolve **zero linha**.
+
+## Penúltimo item fechado — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
 
 ### Seleção — 2026-08-13
 
@@ -389,7 +755,7 @@ fechamento manda, e o cabeçalho do arquivo agora declara as duas arities aponta
 
 **Estado: `idle`.** O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
+## Antepenúltimo item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
 ### Seleção — 2026-08-12
 
@@ -443,7 +809,7 @@ criada de `18cf90a`.
 7. **Um quarto caminho sem gate, que o relatório não listou e o código autodenuncia:**
    `DeleteTurmaAction.php:8-9` — "Home para futuras guardas do 6d (blindagem pós-conclusão RN-15) —
    hoje sem gate".
-8. **Trocar a chave do erro é inerte na tela.** `FormErrorSummary.tsx:62-67` renderiza qualquer
+8. **Trocar a chave do erro é inerte na tela.** `frontend/src/shared/ui/FormField/FormField.tsx:79-107` renderiza qualquer
    chave sem input mapeado e `useMutationErrors` cai no primeiro valor do mapa. Só um teste afirma
    texto literal de gate (`EnrollmentResultTest:150-151`), e é a mensagem que **fica**.
 
@@ -589,7 +955,8 @@ como pendência resolvida.
 D14 afirma que **dois** testes congelam a string da RN-15, mas `IssueCertificateTest:107` afirma a
 mensagem da **RN-08** (outro gate, condição oposta) — só o `EnrollmentResultTest:151` congela a
 RN-15; e a spec justifica a troca de chave `status` → `turma` citando `FormErrorSummary.tsx:62-67`,
-**arquivo que não existe** no repositório. A conclusão da spec sobrevive pelo mecanismo real:
+**arquivo que não existe** no repositório (a spec arquivada não foi corrigida — D9 do BD-4 proíbe
+reescrever artefato fechado). A conclusão da spec sobrevive pelo mecanismo real:
 `useMutationErrors` (`frontend/src/shared/hooks/useEntityForm.ts:54-63`) cai no primeiro valor do
 mapa **independentemente da chave**, e `useConclusionSection.ts:15` consome esse `message`.
 
@@ -776,335 +1143,3 @@ template → certificado não foi percorrida ponta a ponta; nenhuma tela vista r
 backfill** — o rastro dos dois pivots começa aqui.
 
 **Estado:** `idle`. Nada foi promovido — a escolha do próximo item é do João, no `backlog.md`.
-## Antepenúltimo item fechado — 2026-08-12 (`faixa-visivel-e-acessibilidade-dos-dialogos`, BD-3)
-
-### Seleção — 2026-08-12: o item entra com a spec já escrita, e é isso que muda a fase
-
-**BD-3 do `backlog.md:57`, promovido explicitamente pelo João** com o estado em `idle`, pelo título
-literal da seção (`/planejar-bloco do ### BD-3 · Faixa visível e acessibilidade dos diálogos
-(fronteira shared/ui)`) — mesmo precedente de BD-1, BD-2 e BD-7: o argumento é título de seção, não
-slug promovido, e quem promove é ele, não o comando.
-
-**A diferença deste bloco para todos os anteriores: a spec já existia antes da promoção, e não por
-acidente.** `docs/superpowers/specs/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos-design.md`
-foi gravada em `397548c`, cuja mensagem é literalmente `docs(spec): desenho do BD-3 escrito e NAO
-promovido`. Ela carrega os seis itens e as **oito decisões da §2 já tomadas pelo João**. Isso **não é
-divergência de estado**: `active_spec: null` e `workflow_state: idle` eram a redação correta de "spec
-escrita, bloco não promovido", e o próprio documento abre declarando isso. O gate foi conferido nos
-dois sentidos antes de qualquer escrita — `plans/` só tem `archive/`, então `active_plan: null`
-também era coerente.
-
-**Por que não foi promovido na época, e por que pode ser agora:** a spec parou porque
-`estilizacao-adr16-shell-tipografia` seguia `executing`, e promover o BD-3 violaria a invariante de
-um `active_work_item` só — além de o item 6 escrever variáveis de tema contra uma folha Lara-Lotus
-que vivia só naquela branch. **As duas travas caíram:** a estilização entrou na `main` pelo PR #41
-(`0b72dba`) e o `last-login` pelo PR #42 (`18cf90a`). O estado está `idle` com
-`last_completed_work_item: last-login` — nenhum item concorrente.
-
-### A remedição que a própria spec exigia foi feita, e o resultado é o oposto do temido
-
-A spec declarava que todo número da §4.1, §5.1, §6 e §7.3 fora medido contra `main`@`4b02b72` e
-**precisava ser remedido antes de executar**, porque a branch da estilização mexera em `AppButton`,
-`AppHeader`, `AppSidebar` e na camada de cor. Remedido contra `18cf90a`, e a tabela completa está no
-cabeçalho da spec. O resumo:
-
-- **41 sítios de `disabled={readOnly}` em 10 arquivos** — idênticos, arquivo a arquivo;
-- **`AppDataTable.tsx:83-84` e `:106`, `SearchableTableFrame.tsx:103-104` e `:115`,
-  `AppErrorState.tsx:36`** — todos na linha exata;
-- **os 35 hits de cor nos 9 diálogos** — idênticos, com a contagem por arquivo batendo uma a uma;
-- **7 das 9 montagens condicionais da §3.1 na linha exata**; só `BudgetDetailPage` deslocou
-  (`:126`/`:140` → `:132`/`:136`);
-- **duas correções de número:** `UsersTable` de `25,28` para `26,29` (o `last-login` inseriu coluna) e
-  o total dos `ignores` da §7.3 de **24 para 23**, porque a estilização baixou o `LoginPage` de 3
-  ocorrências para 2.
-
-**A colisão prevista não existiu.** `git diff 4b02b72..18cf90a -- frontend/src/` toca 47 arquivos e
-**nenhum** deles é `AppDialog`, `AppDataTable`, `SearchableTableFrame`, `FormField`, `AppErrorState`,
-nem qualquer um dos 9 diálogos ou dos 10 arquivos do modo leitura. Os arquivos que a estilização
-tocou e que este bloco cita (`LoginForm`, `LoginPage`, `ValidationPage`) são exatamente os que a **D7
-deixa de fora** e a §7.3 põe em `ignores`. **As oito decisões da §2 seguem íntegras** — eram
-independentes da base, e a medição confirma.
-
-**Um efeito a favor:** o item 6 ficou mais barato. As variáveis que ele passa a usar
-(`--text-color-secondary`, `--surface-border`) agora vivem no tema Lotus gerado
-(`shared/styles/themes/lara-{light,dark}-lotus.css` + `brand-theme.css`), entregue pelo PR #41 — antes
-eram as do Lara stock.
-
-### Isolamento — worktree por instrução do João, não por P-03
-
-Bloco frontend puro (zero schema, zero `generated.ts`, zero backend), então a **P-03 não dispara** —
-ela restringe worktree apenas em bloco de backend. A escolha de worktree é instrução dele
-(`Criando uma branch e liberando a main para worktree principal`): branch
-`feat/dialogos-faixa-visivel-acessibilidade` criada de `main`@`18cf90a` na worktree
-`/home/jvbat/projetos/fix-frontend`, o que devolve a `main` à árvore principal
-`/home/jvbat/projetos/lotus`, que estava presa em `feat/last-login`.
-
-### Context Packet — dispensado por ausência medida de fonte externa
-
-`context_packet: null`, e a razão é a que a própria spec já registrava: nenhum dos seis itens cita
-Drive, Notion ou Figma. As fontes são o repositório, os débitos versionados do `backlog.md` (os três
-do piloto UI, `Q-14`, `Q-15`, o CTA duplicado e a cor fora do corte do D18) e o `D18`, que é decisão
-de spec versionada (`specs/archive/2026-07-26-bloco-visual-refino-ui-design.md:395`). Confirmar na
-abertura do brainstorming, como nos precedentes.
-
-### Fase: `planning`, com o brainstorming reduzido ao que a base nova abriu
-
-O estado entra em `planning` no commit `0533303`, junto do primeiro artefato durável desta sessão — a
-remedição da spec. `active_plan` seguiu `null` até o plano existir. **Risco de review declarado na §9
-da spec: MÉDIO** — nenhum gatilho de ALTO se aplica (sem schema, `generated.ts`, Sanctum, RBAC,
-dinheiro ou documento legal), e os dois riscos próprios são de alcance: `shared/ui` toca todas as
-telas de uma vez, e o modo leitura atravessa 10 arquivos de 5 features.
-
-### Spec aprovada e plano escrito — 2026-08-12
-
-**O brainstorming foi curto por construção, e as duas perguntas que sobraram foram feitas em vez de
-presumidas.** O João respondeu que **já leu a spec e a aprova** — as oito decisões da §2 são dele e o
-documento escrito passou pela leitura —, e **dispensou o Context Packet**, confirmando a ausência
-medida de fonte externa (nenhum dos seis itens cita Drive, Notion ou Figma). Nada foi
-complementado na spec além da remedição, porque a base nova não abriu decisão nova: ela mudou dois
-números e não tocou um único arquivo-alvo.
-
-**Uma medição desfez um bloqueio herdado dos quatro blocos anteriores.** De 2026-08-08 a 2026-08-10 o
-fechamento registrou "WSL sem browser utilizável" e empurrou o checkpoint visual para o João. Isso
-**não vale mais**: `playwright-cli` está no PATH e `.artifacts/ui-review/` tem run de 2026-08-12. O
-DoD do BD-3 é comportamento na tela, e ele é executável — o que torna a Task 8 um gate de verdade em
-vez de uma limitação declarada.
-
-O plano (`docs/superpowers/plans/2026-08-12-faixa-visivel-e-acessibilidade-dos-dialogos.md`) decompõe
-o bloco em **8 tasks**: `AppDialog` (foco + nome do maximizar); o kit `FormField`/`NestedField` com
-modo leitura; a adoção nos 40 sítios; a faixa visível; o CTA único; Q-14 e Q-15; cor pelo tema mais as
-duas regras de lint; gate.
-
-**O item 2 virou duas tasks, não uma.** O mecanismo (kit) é rejeitável por um revisor que aprove a
-adoção, e vice-versa — é exatamente onde a fronteira de task deve cair. A adoção também é o único
-lugar do bloco com decisão por sítio: dropdown mostra rótulo traduzido, não o código cru.
-
-**A escrita do plano achou uma lacuna no próprio rascunho, corrigida antes de gravar:** o Q-14 depende
-de o `onRetry` devolver a promise, e `onRetry` é declarado em **três** camadas — `AppErrorStateProps`,
-`AppDataTableProps` e `SearchableTableFrameProps`. Mudar só a primeira **compilaria**: TypeScript
-aceita atribuir `() => Promise<T>` a uma prop `() => void`, então a promise chegaria em runtime com as
-camadas do meio mentindo sobre o contrato, e o build passaria verde. As três entram no plano.
-
-**Baseline medido, não herdado:** `pnpm test` = **27 arquivos / 131 testes** em `18cf90a`; lint e
-build verdes. Projeção do plano: **28 arquivos / 137 testes** — o kit de leitura (5) e o retorno do
-`refetch` (1). Só duas tasks ganham teste automatizado, e a razão está declarada: componente com
-PrimeReact no jsdom está fora do corte do runner, então foco, `aria-label`, largura, CTA e feedback de
-retry provam no navegador ou não provam.
-
-**Handoff: `executor: claude`**, sem `paths_autorizados`. O bloco fecha por leitura de sonda no
-navegador e por decisão de apresentação em 40 sítios; e a Task 7 mexe em `eslint.config.js`, onde um
-bloco no lugar errado apaga seletores existentes **em silêncio** (Q-2 de 2026-08-04).
-
-**Estado:** `ready_for_execution`. `/executar-bloco faixa-visivel-e-acessibilidade-dos-dialogos` exige
-instrução posterior do João.
-
-### Execução — 2026-08-12: as 7 tasks de código fecharam, em commits próprios
-
-`main..HEAD` = 14 commits, sendo 12 de código e 2 de documento (`0533303` promoveu o bloco,
-`b1de7c0` gravou o plano, `f8b862c` marcou a transição para `executing`). O diff do bloco é
-**33 arquivos, +1884/−211**, todos sob `frontend/src`.
-
-Task 1 (`956c55b`) devolveu o foco ao disparador e nomeou o maximizar no `AppDialog`. Task 2
-(`3ee3039`) deu modo leitura ao kit `FormField`/`NestedField`, com 5 testes novos. Task 3
-(`69801b0`, emendada em `6962182`) adotou o modo leitura nos 40 sítios — a emenda corrigiu o
-placement do `eslint-disable` no `ContactCard`, onde o `disabled` fica em linha própria e
-`eslint-disable-next-line` não o cobria. Task 4 (`158823b`) resolveu a faixa desligando o
-`thead` sem linhas: zerar só a largura mínima não bastava, porque os seis `<th>` com `px-4 py-2.5`
-têm largura intrínseca própria e sustentavam a tabela sozinhos. Task 5 (`1095989`, emendada em
-`36c6847`) tirou o CTA duplicado; a emenda é a parte que importa — o critério virou
-`!table.filtering && rows.length === 0`, porque busca sem resultado **não** é lista vazia e o
-critério cru fazia o CTA sumir também durante a busca. Task 6 (`ecbf4a7`) fechou Q-14 e Q-15.
-Task 7 (`d64ed09`, emendada em `2e2deb2`) escreveu as duas regras de lint; a emenda é o risco que o
-plano previu se concretizando — as regras novas nasceram em blocos `files` próprios que casavam o
-mesmo glob e **apagavam em silêncio** o `no-restricted-syntax` existente (Q-2 de 2026-08-04), e a
-correção foi fundi-las nos arrays já existentes. `9f38492` corrigiu o Tailwind do `readOnlyValue`.
-
-### Gate da Task 8 — 2026-08-12: os seis provados no navegador, nenhum defeito, 5 achados B
-
-**Steps 1–4, medidos e não herdados:** `pnpm test` = **28 arquivos / 137 testes** — bate exatamente
-com a projeção do plano —, lint limpo e build verde. `git diff main...HEAD --stat -- backend/
-frontend/src/shared/types/generated.ts` vazio; nenhuma sonda (`console.log`/`debugger`/`SONDA`) no
-diff; nenhum `from 'primereact` em `src/features`.
-
-**Step 5:** `/lotus-ui-review` numa passada, sessão `bd3-gate-task8` do `playwright-cli` 0.1.18 em
-Chromium headed, login manual do João como admin. Quatro páginas (`/comercial`, `/cursos`,
-`/personas`, `/administracion`) nas três viewports. Relatório em
-`.artifacts/ui-review/2026-08-12T19-41-45-bd3-gate-task8/report.txt`, com 7 evidências ao lado —
-o diretório é gitignored (`.gitignore:25`), então este commit é o artefato durável da transição.
-Árvore limpa antes e depois, em `9f38492`; **zero mutação** (0 POST/PUT/PATCH/DELETE na corrida) e
-zero mudança de código.
-
-Os seis itens passaram, com sonda e não com impressão: foco de volta ao gatilho exato
-(`aria-label="View"`, dentro da `<tr>`) em **12/12** combinações, por Escape e depois de
-maximizar/restaurar, também no tema escuro; `aria-label` do maximizar alternando
-"Maximize dialog" ↔ "Restore dialog" nas 4 páginas; **zero** `input`/`textarea` de texto nos
-diálogos, com valor inteiro quebrando linha e campo vazio como "—"; wrapper da tabela com
-`scrollWidth == clientWidth` (276 e 261) a 390x844 e documento sem rolagem horizontal em 12/12;
-exatamente **1** CTA em 12/12, e **zero** sobre o estado de erro; Q-14 com o botão em
-`p-disabled p-button-loading` por ~38 ms e **1 clique = 1 GET, duplo clique = 1 GET**; Q-15 com o
-rodapé lido no instante do GET dizendo `Loading...`, nunca "0", assentando em "4 clients"; e todas
-as superfícies, textos e ações do `ClientDialog` trocando de valor entre claro e escuro.
-
-**Duas notas de método, porque o caminho não foi o óbvio.** `docker stop lotus-nginx-1` foi **negado
-pelo classificador de permissão** desta sessão, e offline emulado **não serve**: o TanStack Query
-trata rede offline como `fetchStatus: "paused"` (networkMode `online`) e nunca produz estado de
-erro. O estado de erro veio de `Network.setBlockedURLs` restrito a
-`http://localhost:8080/api/clients*` — servidor inalcançável para uma chamada, sem interceptar rota
-e sem fabricar resposta. Vale registrar para o próximo bloco que precisar de erro na tela.
-
-**Step 6, o que NÃO ficou provado:** lista genuinamente vazia (esvaziá-la exigiria mutação, proibida
-pela skill) — o ramo do CTA dentro do `AppEmptyState` de domínio fica coberto só por código
-(`SearchableTableFrame.tsx:125`) e pelo ramo irmão de erro, esse sim observado ao vivo; mutações;
-estado de erro fora de `/comercial`; tema escuro fora de `/comercial`; Q-14/Q-15 fora de 1440x900;
-travessia completa por Tab. E a limitação que a spec §8 já declarava continua valendo: **foco,
-`aria-label`, largura, CTA e feedback de retry não ganham teste automatizado** — o único mecanismo
-que sobrevive ao bloco é o lint da Task 7, e ele só vê cor e `disabled={readOnly}`.
-
-**Cinco achados B, zero C.** UI-01: nome de arquivo truncado sem `title` nem quebra a 390x844
-(`RedatorDialog`, seção DOCUMENTS). UI-02: `src/app/layouts/Sidebar/` tem 3 classes `text-slate-*`
-que **nenhum bloco** do `eslint.config.js` cobre — `COR_HARDCODED` só roda em `features/**` e
-`shared/**` —, nem convertidas nem declaradas na `CATRACA_COR`; é lacuna de alcance criada por este
-bloco, não regressão visual. UI-03: "3 course(s)" e "1 user(s)" contra "4 clients"/"7
-instructors"/"6 budgets", em duas das sete tabelas. UI-04: com o menu recolhido (390), o rótulo sai
-do DOM e sobra só `title` — sem hover no toque. UI-05: cada montagem de página com abas busca as
-**duas** abas. UI-01, UI-03, UI-04 e UI-05 são pré-existentes ao diff.
-
-**Estado:** `ready_for_review`. O review do bloco (`/revisar-sprint`) exige instrução do João; o foco
-declarado no plano é um só — **onde a mudança de `shared/ui` alcança tela que este bloco não abriu, e
-o que ela faz lá.** Risco de review: **MÉDIO**.
-
-### Review de sprint — 2026-08-12: BAIXO risco, uma lente, 5 achados, todos corrigidos
-
-**BAIXO RISCO pelo gate da skill**, e aqui as duas escalas **divergem sem conflito**: a §9 da spec
-declara MÉDIO, a do `/revisar-sprint` é binária e nenhum gatilho de ALTO se aplica (sem schema,
-`generated.ts`, auth, RBAC, dinheiro, documento legal; `executor: claude`). Uma lente — Claude com o
-gabarito do projeto —, **sem Codex**.
-
-**Gate reproduzido, não herdado:** `pnpm test` **28 arquivos / 137 testes**, lint limpo, build verde;
-`git diff main...HEAD -- backend/ generated.ts` vazio; zero sonda; zero `from 'primereact` em
-`src/features`. **Órfãos: zero.** As 40 conversões seguem um molde só, o dropdown mostra rótulo e não
-código cru, e a fusão das regras nos arrays existentes (`2e2deb2`) é a correção certa do merge raso.
-
-**Os cinco achados são todos do foco declarado no plano** — o que `shared/ui` faz na tela que o bloco
-não abriu. Decisão do João: **os cinco entram**, corrigidos na mesma sessão.
-
-1. **Q-1 🟡 — o débito do modo leitura foi medido por STRING, não por forma.** A §4.1 achou 41 sítios
-   perguntando por `disabled={readOnly}`; a mesma pergunta feita pela forma do defeito acha **17 a
-   mais**, e o seletor entregue não via nenhum deles: `disabled={f.readOnly}` (MemberExpression, 4× em
-   `TurmaConfigCard`), `disabled={readOnly || !isCreate}` (LogicalExpression, `BudgetDialog`) e o par
-   **estático** `<AppInputText value={…} disabled readOnly />` (12×, sendo 11 na certificação — código,
-   RUT, nome do curso e motivo de revogação de snapshot congelado, dado de peso legal truncado num
-   input cinza). É a **2ª vez** que uma catraca deste `eslint.config.js` nasce medindo enumeração em
-   vez de forma (a 1ª foi a lista literal de features, Q-5 de 2026-08-04, citada no topo do próprio
-   arquivo).
-2. **Q-2 🟡 — o Q-14 atravessava por acidente.** O plano alargou `onRetry` nas **três** camadas de
-   `shared/ui` e não nas **dez** de feature entre a página e a moldura; nas 5 telas CRUD a promise
-   passava por baixo do tipo `() => void`, e em `OperationPage` (2×) e `StudentDialog` o
-   `void x.refetch()` a **apagava** — Reintentar sem feedback e duplo clique disparando dois GETs, em
-   telas que o gate não abriu.
-3. **Q-3 🟡 — o ramo de `loading` ficou fora das duas condições novas.** Durante o GET inicial a lista
-   também está vazia: o `<thead>` sumia e voltava (as 14 tabelas) e o CTA de cadastro **não existia em
-   lugar nenhum** da tela até o GET responder. É a classe que a decisão do Q-15 recusou três linhas
-   acima, ao manter a faixa do rodapé sempre montada.
-4. **Q-4 🟢 — `COR_HARDCODED` não rodava em `src/shared/**`**, que é justamente a camada onde a cor
-   deve vir do tema e onde um wrapper alcança todas as telas.
-5. **Q-5 🟢 — a fórmula do vermelho virou string mágica em 13 arquivos** (19 cópias): o bloco trocou
-   uma cor sem dono (`text-red-600`) por outra cor sem dono.
-
-**Como cada correção foi provada:**
-
-| Achado | Correção | Prova |
-|---|---|---|
-| Q-1 | seletor por forma (`:has(Identifier[name="readOnly"])`) + seletor novo para o par estático; os 17 sítios convertidos; `children` do `FormField`/`NestedField` vira **opcional** (campo que nasce só-leitura não tem controle a montar) | as duas regras vistas **vermelhas** com mutação (`disabled={form.readOnly}` e `<input disabled readOnly/>`), e um teste novo do `FormField` sem filho — **138 testes** |
-| Q-2 | as 10 props de feature passam a `() => void \| Promise<unknown>`; os 3 sítios devolvem a promise; `BudgetsTable.retry` vira `Promise.all` das duas recargas | o alargamento **quebrou o build em 7 lugares** (`() => unknown` da fonte não é assinável) — o tipo mentia na raiz, em `ListableResource.refetch`, corrigido para `() => Promise<unknown>` |
-| Q-3 | `thead` só some com `!hasRows && !loading`; CTA só some com `!loading`; `BudgetsTable` ganha `busy` (as duas queries) | a largura mínima segue zerada sempre que não há linha — o ganho do estado vazio a 390px não regride; conferido no código, **não** re-observado no navegador |
-| Q-4 | `COR_HARDCODED` entra no bloco de `src/shared/**` | **nasce verde** (zero classe de paleta em `src/shared`, medido) e reprova a reintrodução na mutação. `src/app/**` fica fora **por exceção declarada** — o shell é aprovação do João de 2026-07-26, registrada no `backlog.md` |
-| Q-5 | `shared/styles/tokens.ts` com `dangerText`/`dangerSurface`/`warningText`/`warningSurface` + `infoText`/`successText` (o mapa de tons do `AppCard` inteiro) | build verde com as 19 cópias substituídas; nenhuma `color-mix` literal sobra em `.tsx` |
-
-**Gate depois das correções:** **28 arquivos / 138 testes** (o teste novo do `FormField`), `pnpm lint`
-limpo, `pnpm build` verde. Diff das correções: **34 arquivos, +263/−131**, com `tokens.ts` novo.
-
-**O que as correções NÃO provaram, sem maquiagem:** **nada foi re-observado no navegador.** As
-mudanças do Q-3 mexem no estado de carregamento das 14 tabelas e o Q-1 mudou 5 diálogos que o gate da
-Task 8 não abriu (`ConfirmIssueDialog`, `CertificateViewDialog`, `RevokeDialog` pelo
-`CertificateIdentityFields`, `TurmaConfigCard`, `BudgetDialog`) — a prova aqui é tipo, lint com
-mutação nos dois sentidos e suíte. **O `/lotus-ui-review` precisa rodar de novo antes do fechamento**,
-com foco em `/operacion`, `/certificados` e no estado de carregamento das listas. `AppPhotoField.onRetry`
-segue `() => void` de propósito: é re-upload bufferizado do `useEntityPhoto`, não passa pelo
-`AppErrorState` e não tem promise a aguardar.
-
-**Proposta de regra ainda NÃO decidida pelo João** (padrão reincidente do Q-1): parágrafo em
-`.claude/rules/frontend-fsliced.md` — *catraca nova mede a própria população com o seletor dela, nunca
-com o grep que originou o débito; grep acha a grafia, o seletor acha o defeito.*
-
-### Gate de fechamento — 2026-08-12
-
-**Um defeito de processo foi achado antes do checklist e corrigido dentro dele.** As correções dos
-cinco achados do review estavam **sem commit** — 33 arquivos modificados, `tokens.ts` untracked e a
-transição `ready_for_review → ready_for_closure` só na working tree —, o que fere a invariante de
-mudança de estado entrar no mesmo commit do artefato que a prova. O diff foi conferido contra a
-narrativa do review antes de gravar (as duas catracas por forma, `!loading` nas duas condições,
-`COR_HARDCODED` em `src/shared/**`, `tokens.ts` com as 19 cópias substituídas) e entrou em `dfc3f4b`,
-que é o `state_basis_commit` deste fechamento.
-
-**Item 0 refeito no navegador, não herdado do review.** As correções mexeram no estado de
-carregamento das 14 tabelas (Q-3) e em 5 diálogos que o gate da Task 8 nunca abriu (Q-1), e o review
-declarou por escrito que o `/lotus-ui-review` teria de rodar de novo. Rodou: sessão `bd3-closure`
-(Playwright CLI 0.1.18, Chromium headed, login manual do João), jornada delimitada a `/operacion` e
-`/certificados` nas três viewports, com foco no carregamento das listas e nos diálogos de leitura.
-Relatório e 10 evidências em `.artifacts/ui-review/2026-08-12T21-30-00-bd3-closure/` (diretório
-gitignored — este commit é o artefato durável). **Zero mutação** (26 requisições à API, todas GET),
-zero mudança de código, árvore limpa antes e depois em `dfc3f4b`.
-
-**O que a passada provou com sonda:** `TurmaConfigCard` e `CertificateViewDialog` com
-`document.querySelectorAll('input,textarea').length === 0` e o valor inteiro em texto — RUT
-`16.200.022-5` e `Seguridad en alta tensión` legíveis por completo até 390x844, ausência como `—`;
-o `<thead>` **montado durante o GET** nas duas listas (`theads:1`, `theadHidden:0`) com o rodapé
-lendo `Loading...` e assentando em `5 classes` e `4 valid · 0 expiring · 0 expired · 1 revoked`;
-foco de volta ao `BUTTON[aria-label="View"]` dentro da `<tr>` nas três viewports;
-`documentElement.scrollWidth == clientWidth` a 1024 e 390, com o diálogo em 716.8 px e 370.5 px sem
-transbordo.
-
-**A prova do Q-14 saiu melhor do que a do gate anterior, e por acidente feliz.** O gate da Task 8
-precisou de `Network.setBlockedURLs` para alcançar estado de erro; aqui o erro veio **real**, do
-banco: `GET /api/certificates/2` responde **500** porque o `LOT-2026-1001` está corrompido de
-propósito desde um bloco anterior. Com RTT medido de 116 ms, o botão Reintentar ficou
-`p-disabled p-button-loading` em **91/91** amostras a 4 ms, com 1 clique = 1 GET e duplo clique =
-1 GET. No mesmo estado, o token `dangerText` foi medido invertendo com a folha —
-`srgb 0.76 0.244 0.237` no claro contra `srgb 1 0.446 0.415` no escuro —, que é o Q-5 e o item 6
-provados juntos.
-
-**O que o fechamento NÃO provou, sem maquiagem:** lista genuinamente vazia (esvaziá-la exige
-mutação); `ConfirmIssueDialog` e `IssuedDialog` — o primeiro fica a **um clique da emissão de
-documento de peso legal** e o segundo só existe depois dela, então nenhum se alcança sem mutação, e
-a garantia deles é que usam o mesmo `<FormField readOnly value={…}>` provado em três outros sítios;
-`BudgetDialog`; travessia completa por Tab; tema escuro fora de 1440x900. E a limitação estrutural
-segue de pé: **foco, `aria-label`, largura, CTA e feedback de retry não têm teste automatizado** —
-componente com PrimeReact no jsdom está fora do corte do runner, e o único mecanismo que sobrevive
-ao bloco é o lint da Task 7, que enxerga cor e `disabled`, não comportamento.
-
-**Placar do gate:** frontend **28 arquivos / 138 testes**, `pnpm lint` sem saída, `pnpm build`
-verde; backend **569 passed, 5 skipped (2092 assertions)** — rodado apesar de o bloco não ter uma
-linha de `backend/`; Pint **N/A** (zero `.php` no diff); `generated.ts` sem diff e nenhum DTO
-tocado; zero sonda; zero `from 'primereact` em `src/features`; zero import cruzado entre features;
-órfãos zero (os 6 símbolos de `tokens.ts` todos consumidos).
-
-**Três decisões que o gate levantou e o João fechou re-invocando o comando**, aplicadas por
-precedente e declaradas aqui para poder ser vetadas: (1) o **`P-30` duplicado** foi desfeito
-renumerando a linha da retenção de `login_logs` para **P-33**, pelo mesmo critério que renumerou a
-segunda `P-28` para `P-32` — a linha do `ámbar-aviso` chegou à `main` primeiro (`e6460f9`, PR #41) e
-esta veio depois (`656175c`), então quem renumera é a recém-chegada; as menções a "P-30" na
-narrativa do `last-login` **ficam como estão**, porque história não se reescreve. (2) A lacuna de
-alcance da catraca de cor — `COR_HARDCODED` não roda em `src/app/**`, onde vivem 3 classes
-`text-slate-*` do `Sidebar/` — virou **P-34**, com o motivo (exceção do shell, aprovada em
-2026-07-26) já escrito no comentário do `eslint.config.js` para não voltar como esquecimento. (3) A
-**regra proposta entrou** em `.claude/rules/frontend-fsliced.md`: *catraca nova mede a própria
-população com o seletor dela, nunca com o grep que originou o débito.* Precedente: a P-25 fechou do
-mesmo jeito, escrevendo o parágrafo na mesma rule durante um `/fechar-sprint`.
-
-**Seis achados B de UI, todos pré-existentes ao diff**, foram para `## Débitos técnicos` do
-`backlog.md` em vez de morrerem no relatório: nome de arquivo truncado sem `title` a 390
-(`RedatorDialog`), plural cru em duas das sete tabelas ("3 course(s)"), rótulo do menu recolhido só
-em `title` (sem hover no toque), página com abas buscando as duas abas, bloco de erro bilíngue com
-`aluno.name` cru na tela e a célula de aluno vazia na linha do certificado corrompido — esta última
-a única que o modo leitura do próprio bloco já sabia resolver, com o travessão.
