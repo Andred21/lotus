@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: usecrudform-mais-fundo
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-13-usecrudform-mais-fundo.md
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
 state_basis_commit: d0cc270
-updated_at: 2026-08-13T13:22:00-03:00
+updated_at: 2026-08-13T13:41:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -149,6 +149,45 @@ declarado: `useCrudForm` tem cinco consumidores e o `submit` muda para todos —
 
 O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
 spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**O João aprovou a spec com uma correção — a D6 — e o restante sem mudança.** O plano saiu em
+`docs/superpowers/plans/2026-08-13-usecrudform-mais-fundo.md`: **onze tasks**, uma por commit, na
+ordem guarda do Q-4 → mutações extras → `afterCreate` retentável → composição da foto → componente
+de `shared/ui` → os três diálogos que migram → Redator → curso → gate.
+
+**Baseline medido em `4284ff7`, não herdado:** `pnpm test` = **29 arquivos / 143 testes**, lint exit
+0, build verde. Projeção do plano: **31 arquivos / 156 testes** (2 arquivos e 13 casos).
+
+**Um desvio apareceu só ao escrever o plano, e ele muda o construído (D-P1).** A D2 diz
+"`useCrudForm` ganha `photo`", e isso é **impossível na forma literal** — por regra do React, não por
+gosto: `useEntityPhoto` chama `useQueryClient`, `useState`, `useEffect` e dois `useMutation`.
+Montá-lo condicionalmente violaria as regras dos hooks; montá-lo sempre faria `useQueryClient()`
+lançar `No QueryClient set` nos oito testes atuais de `useCrudForm.test.ts`, que rodam **sem**
+`QueryClientProvider` de propósito — o `fakeResource` é literal estrutural, e é isso que mantém
+aquele arquivo sem TanStack. A capacidade nasce como hook **irmão**, `useCrudFormWithPhoto`, que
+compõe os dois na ordem certa. O efeito para os três diálogos é o que a D2 pede: o `afterCreate` de
+foto some do sítio de chamada, e `photo`/`busy` chegam prontos. `useBudgetForm` e `useRoleForm`, sem
+foto, seguem no `useCrudForm` puro.
+
+**Duas outras coisas que a escrita do plano fixou:** a guarda do Q-4 roda **antes** da checagem de
+classificação contraditória, para que a chave proibida ganhe a mensagem certa mesmo quando também
+estiver duplamente classificada; e a sonda que a prova tem de ser feita no `useClientForm`, não no
+`useStudentForm` — `StudentFormFields` não tem `photo_url`, então `...form` lá reprova no `tsc`, que
+é o vermelho errado.
+
+**Uma divergência de projeção ficou declarada em vez de corrigida retroativamente:** a spec projeta o
+`useCourseForm` em ~110 linhas e o plano em ~115, pela diferença do docblock do `afterCreate`, que
+não existia quando a spec foi escrita.
+
+`executor: claude`, sem `paths_autorizados`: o bloco muda o `submit` de um hook com **cinco**
+consumidores, decide apresentação em quatro telas, tem na Task 10 um julgamento que só aparece
+rodando (o `crud.form` lido dentro do `afterCreate`), e fecha por prova contra API real num ambiente
+compartilhado com outra execução ativa.
+
+**Estado: `ready_for_execution`.** `/executar-bloco usecrudform-mais-fundo` exige instrução posterior
+do João.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
