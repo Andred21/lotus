@@ -2,22 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
 context_packet: null
-blocker: >-
-  `/revisar-sprint` devolveu 3 achados aguardando triagem do João: Q-1 (faixa de marca mobile de
-  altura fixa — wordmark a 68px como compensação da margem de UA que o commit `2173681` nomeou e
-  deixou de pé), Q-2 (erro de campo do login sem `aria-describedby`/`aria-invalid` depois da UI-03,
-  e é o molde que a P-37 manda copiar para o `FormField`) e Q-3 (`pt` do chamador sobrescrito por
-  chave inteira no `AppPassword`). Só achado aprovado vira commit.
+blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 49cedb3
-updated_at: 2026-08-13T18:40:00-03:00
+state_basis_commit: 38b948d
+updated_at: 2026-08-13T18:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -394,6 +389,52 @@ for escrito agora (Q-2) e um de granularidade de merge (Q-3); nenhum é de corre
 
 **Estado:** `blocked`, `next_action: approve_review_findings`. Só achado aprovado pelo João vira
 commit; depois o estado volta a `reviewing` e as checagens pertinentes se repetem.
+
+### Correção dos achados — 2026-08-13: os 3 aprovados, um commit cada
+
+**O João aprovou os três** ("resolva os 3"). Nenhum outro trabalho entrou junto.
+
+**Q-1 (`221f8fb`)** — a causa raiz foi paga onde ela mora: `my-0` nos dois `<p>` do painel mata a
+margem de 1em do user-agent que o Preflight desligado deixa de pé, o `aside` virou `min-h-67.5`
+(cresce por conteúdo em vez de cortar), o `overflow-hidden` **saiu** (estouro futuro tem que
+aparecer) e o wordmark voltou a 150px (`w-37.5 md:w-52`). O badge de versão entra no fluxo no mobile
+(`mt-2 md:absolute md:bottom-4`), porque com o painel crescendo um badge absoluto colidiria com a
+legenda de setor. **Medido no navegador** (Playwright global, 390×844 e 1440×900): mobile cresceu
+270 → **337,7px** com tudo dentro de [0, 337,7] — img 24..232,7 (150×208,7, inteira), tagline
+236,7..264,7, setor 268,7..284,7, badge 296,7..313,7 —, `scrollWidth === innerWidth === 390`, o
+`gap-1` valendo **4,0px reais** (contra os ~20px que a margem do UA somava sozinha) e a banda
+"LOTUS" em **24,2px** com a sub-linha em 10,3px (era 11,0 e 4,7). Desktop sem regressão: logo 208px,
+badge em 867..884 dentro dos 900.
+
+**Q-2 (`1952075`)** — cada erro de campo tem `id` e o campo aponta para ele por `aria-describedby`
+quando, e só quando, há erro, com `aria-invalid` espelhando o estado que o PrimeReact não escreve.
+Os atributos chegam ao `<input>` pelo `getOtherProps` do Prime (`inputtext.cjs.js:191-192`; no
+Password, pelo `inputProps` de `password.cjs.js:699`). **Provado nos dois sentidos contra o backend
+real** — o que a revisão não pôde fazer por ser read-only: `POST /api/login` com credencial
+inexistente devolve **422** e o `#login-email` fica `aria-invalid="true"` com
+`aria-describedby="login-email-error"` resolvendo para "These credentials do not match our records.",
+enquanto o `#login-password`, sem erro na mesma resposta, permanece `aria-invalid="false"` e **sem**
+`describedby`. O nome acessível do campo continua sendo só "Email" — a UI-03 não regrediu. Isso
+fecha o buraco "estados de erro do login seguem não vistos" que o bloco havia declarado.
+
+**Q-3 (`38b948d`)** — a fusão do `pt` passou a ser chave a chave e em profundidade, com o que o
+wrapper crava vencendo folha a folha; nó aninhado (`iconField.root`) funde sem descartar o irmão e
+valor de função do chamador é **composto**, não descartado. O helper mora em `shared/ui/mergePt.ts`,
+fora do barrel, e o `AppDataTable` — que já tinha a versão local de um nível só — passa a usar o
+mesmo: duplicar a versão profunda ao lado dela era o padrão que o próprio review reprova. **Provado
+nos dois sentidos:** `mergePt.test.ts` (7 casos) passa e, com o corpo do helper trocado pelo spread
+raso de antes, **4 dos 7 falham por nome** (folha do chamador na mesma chave, nó aninhado, valor de
+função, base sem `pins`). A P-37 ganhou a linha que faltava: copiar o molde **inteiro**, não só o
+`htmlFor`.
+
+**Gate repetido depois dos três commits:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**30 arquivos / 150 testes** (+1 arquivo, +7 casos sobre o baseline de 29/143 — a diferença é o
+`mergePt.test.ts`, e nenhum teste existente mudou de resultado); os cinco arquivos tocados abaixo da
+régua de 150 (`LoginForm` 96, `LoginPage` 69, `AppPassword` 89, `mergePt` 40, `AppDataTable` 123, que
+**encurtou**). Zero arquivo de backend ou `generated.ts` no diff, como antes.
+
+**Estado:** `ready_for_closure`. `/fechar-sprint` é passo explícito do João — este turno não o
+executa.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
