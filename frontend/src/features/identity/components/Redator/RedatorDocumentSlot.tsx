@@ -8,8 +8,8 @@ import { SlotBody, type SlotBodyProps } from './SlotBody'
  * (rótulo + tag de status) é comum aos três; o corpo é `SlotBody`.
  *
  * `preview` e `sizeError` NÃO moram aqui (D6): são únicos para os quatro tipos e
- * vivem no diálogo — descê-los montaria quatro diálogos de preview e moveria a
- * mensagem de erro para dentro do slot.
+ * vivem em `RedatorDocumentsSection` — descê-los montaria quatro diálogos de
+ * preview e moveria a mensagem de erro para dentro do slot.
  */
 export function RedatorDocumentSlot({ type, mode, doc, ...body }: SlotBodyProps) {
   const { t } = useTranslation()
