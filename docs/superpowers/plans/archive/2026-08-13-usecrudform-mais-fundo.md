@@ -17,7 +17,7 @@ idêntico nos 4 sítios.
 **Tech Stack:** React 19 + TS, TanStack Query v5, Vitest (jsdom) + @testing-library/react,
 PrimeReact via `shared/ui`, i18n por `react-i18next`.
 
-**Spec:** `docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md` (D1–D6)
+**Spec:** `docs/superpowers/specs/archive/2026-08-13-usecrudform-mais-fundo-design.md` (D1–D6)
 
 ## Global Constraints
 
