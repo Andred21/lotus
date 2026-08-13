@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Quote;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -193,5 +194,55 @@ class TurmaCrudTest extends TestCase
         $this->assertDatabaseHas('turmas', [
             'id' => $id, 'deleted_at' => null, 'local_aplicacao' => 'Santiago',
         ]);
+    }
+
+    /**
+     * O default da coluna vale também em memória. Sem isto, a turma recém-criada
+     * chega ao gate com `status` nulo — sete casos da suíte reprovaram assim
+     * quando o gate virou fail-closed, e nenhum deles falava de conclusão.
+     */
+    public function test_turma_nova_ja_nasce_em_andamento_na_memoria(): void
+    {
+        $this->assertSame(TurmaStatus::EmAndamento, (new Turma)->status);
+
+        $quote = $this->makeQuote('approved');
+        $turma = Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $this->courseId,
+            'modalidade' => 'online', 'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
+        ]);
+
+        $this->assertSame(TurmaStatus::EmAndamento, $turma->status);
+        $turma->assertAcademicallyWritable();
+    }
+
+    /**
+     * O gate da RN-15 é fail-CLOSED: libera o único estado que a regra libera e
+     * recusa todo o resto. A varredura de `TurmaStatus::cases()` é de propósito
+     * — hoje o enum tem dois casos e isto equivale ao teste acima, mas um
+     * status novo ('cancelada', 'suspensa') cai aqui sozinho no dia em que
+     * alguém o acrescentar, em vez de abrir os onze caminhos de escrita em
+     * silêncio. Foi a forma `=== Concluida` que este caso passou a impedir
+     * (review de 2026-08-12, Q-6).
+     */
+    public function test_gate_recusa_todo_status_fora_de_em_andamento(): void
+    {
+        $turma = new Turma;
+
+        foreach (TurmaStatus::cases() as $status) {
+            $turma->status = $status;
+
+            if ($status === TurmaStatus::EmAndamento) {
+                $turma->assertAcademicallyWritable();
+
+                continue;
+            }
+
+            try {
+                $turma->assertAcademicallyWritable();
+                $this->fail("status '{$status->value}' devia recusar escrita academica");
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('turma', $e->errors());
+            }
+        }
     }
 }

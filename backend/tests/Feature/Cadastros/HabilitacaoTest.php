@@ -154,23 +154,72 @@ class HabilitacaoTest extends TestCase
         ]);
     }
 
+    /**
+     * O caso mede o D12 — o helper compara antes de gravar —, e por isso a
+     * PRIMEIRA edição tem de mudar a habilitação de verdade.
+     *
+     * A primeira escrita partia do pivot já ligado e afirmava só o zero: com
+     * `$redator->courses()->sync(...)` cru de volta na Action, o zero continuava
+     * verdadeiro (pivot cru não audita nada) e o caso passava com o regresso
+     * presente — provado por sonda no review de 2026-08-12 (Q-4). Duas edições,
+     * a segunda idêntica à primeira, prendem os dois lados: a de número 1 prova
+     * que a mudança GRAVA, a de número 2 prova que a repetição NÃO grava.
+     */
     public function test_edicao_de_redator_sem_mudar_curso_nao_grava_audit_de_sync(): void
     {
         $this->actingAsAdmin();
         $course = $this->makeCourse();
         $redator = $this->redator();
-        $redator->courses()->attach($course->id);
 
-        $this->putJson("/api/redatores/{$redator->id}", [
+        $payload = [
             'name' => 'Fabián Cifuentes',
             'rut' => '12.345.678-5',
             'email' => 'fc@lotus.cl',
             'course_ids' => [$course->id],
-        ])->assertOk();
+        ];
 
-        $this->assertSame(0, DB::table('audits')
+        $this->putJson("/api/redatores/{$redator->id}", $payload)->assertOk();
+        $this->assertSame(1, $this->auditsDeSync($redator), 'a habilitacao mudou: tinha de gravar audit');
+
+        $this->putJson("/api/redatores/{$redator->id}", $payload)->assertOk();
+        $this->assertSame(1, $this->auditsDeSync($redator), 'edicao identica nao pode gravar audit nova');
+    }
+
+    /**
+     * A audit de pivot carrega o CONJUNTO dos dois lados, não o delta — é o que
+     * torna o estado anterior reconstruível quando a designação decide quem
+     * pode assinar certificado (review de 2026-08-12, Q-2). Com o `auditSync`
+     * do pacote, `old_values` vinha `{"courses":[]}` no acréscimo.
+     */
+    public function test_audit_de_habilitacao_grava_o_conjunto_e_nao_o_delta(): void
+    {
+        $this->actingAsAdmin();
+        $c1 = $this->makeCourse();
+        $c2 = $this->makeCourse(['name' => 'C2', 'workload_hours' => 8]);
+        $redator = $this->redator();
+
+        $base = ['name' => $redator->user->name, 'rut' => $redator->user->rut, 'email' => $redator->user->email];
+
+        $this->putJson("/api/redatores/{$redator->id}", $base + ['course_ids' => [$c1->id]])->assertOk();
+        $this->putJson("/api/redatores/{$redator->id}", $base + ['course_ids' => [$c1->id, $c2->id]])->assertOk();
+
+        $audit = DB::table('audits')
             ->where('auditable_type', 'redator')
+            ->where('auditable_id', $redator->id)
             ->where('event', 'sync')
-            ->count());
+            ->latest('id')
+            ->first();
+
+        $this->assertSame([$c1->id], json_decode((string) $audit->old_values, true)['courses']);
+        $this->assertSame([$c1->id, $c2->id], json_decode((string) $audit->new_values, true)['courses']);
+    }
+
+    private function auditsDeSync(Redator $redator): int
+    {
+        return DB::table('audits')
+            ->where('auditable_type', 'redator')
+            ->where('auditable_id', $redator->id)
+            ->where('event', 'sync')
+            ->count();
     }
 }

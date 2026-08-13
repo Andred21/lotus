@@ -39,7 +39,11 @@ Migrations globais e cronológicas em `database/migrations/` (FK cruza domínios
 
 - **Auditoria só na aplicação, NUNCA em trigger de banco** (ADR-08). Trigger não enxerga o usuário
   autenticado — vê a conexão. Model Auditable+SoftDeletes muda via `$model->delete()` (dispara
-  eventos); delete no query builder **não audita**. Pivot não audita sozinho: use `auditSync`.
+  eventos); delete no query builder **não audita**. Pivot não audita sozinho: use
+  `App\Shared\Audit\PivotAudit` — o `auditSync` do pacote grava o DELTA da relação, e um pivot com
+  peso legal (`turma_redator`, `course_redator`) precisa do CONJUNTO dos dois lados para ter estado
+  anterior reconstruível. O helper compara antes de gravar, audita o conjunto e mantém escrita e
+  audit na mesma transação; `tests/Feature/Shared/PersistenceLawsTest.php` reprova pivot cru.
 - **Todo model Auditable/polimórfico precisa do alias no morph map** (`Relation::enforceMorphMap` no
   `AppServiceProvider`, ADR-10).
 

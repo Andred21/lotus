@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: rastro-unicidade-e-gates
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-12-rastro-unicidade-e-gates-design.md
 active_plan: docs/superpowers/plans/2026-08-12-rastro-unicidade-e-gates.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: last-login
 state_basis_commit: e6c831f
-updated_at: 2026-08-12T23:40:00-03:00
+updated_at: 2026-08-13T01:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -257,6 +257,123 @@ Ledger fino task-a-task em `.superpowers/sdd/progress.md` (local, não versionad
 **Estado: `ready_for_review`.** O review final de branch inteira **não foi rodado** — o João recusou
 o despacho. Este comando não inicia review; a próxima instrução dele aciona `/revisar-sprint` sobre
 o trabalho ativo, com a lista de seis achados acima como entrada.
+
+### Review de sprint — 2026-08-12: ALTO risco, duas lentes, 6 achados
+
+**ALTO RISCO pelo gate da skill, e a escala da spec (§5) concorda:** schema (índice novo),
+auditoria/peso legal e `generated.ts`. Duas lentes — Claude com o gabarito do projeto mais revisão
+independente do Codex (read-only, `mcp__codex__codex`, `model_reasoning_effort: high`).
+
+**Gate reproduzido, não herdado do relatório de execução:** backend **569 passed, 5 skipped (2092
+assertions)**; frontend **27 arquivos / 131 testes**, `pnpm lint` limpo e `pnpm build` verde; Pint
+`{"tool":"pint","result":"passed"}` nos 33 `.php` do bloco; `typescript:transform` **sem diff**
+(`git status --porcelain frontend/` vazio depois de rodar); nenhuma sonda `dd(`/`dump(`/
+`console.log`/`SONDA` no diff de `backend/app` e `frontend/src`.
+
+**Órfãos: zero.** `PivotAudit` tem os cinco call-sites previstos; `CreateCertificateTemplateAction`
+tem os três (controller, `CreateCourseAction`, `UpdateCourseAction`); `CreatesCertificateTemplates`
+é usada por cinco arquivos de teste; `assertAcademicallyWritable()` é chamada por **onze** Actions,
+conferido por grep.
+
+**Dois achados foram provados por sonda, não por leitura** (lição 10), com o controle rodado nos
+dois sentidos e a árvore restaurada em seguida (`git status --porcelain` limpo).
+
+**Os seis achados:**
+
+1. **Q-1 🟡** *(Claude)* — a guarda nova do `PersistenceLawsTest` é **cega para a forma maiúscula**:
+   o regex não tem `i` e o dispatch de método em PHP é case-insensitive. Sonda: um arquivo em
+   `app/Shared/Audit/` com `->Sync([1, 2])` faz o caso **passar**; a mesma linha em minúscula o faz
+   **reprovar**. E a varredura cobre só `app/`, enquanto a guarda irmã do mesmo arquivo varre
+   `app/` **e** `database/` — correção feita no review de 2026-08-11 (Q-3) pelo argumento de que a
+   lei não tem escopo. Medido: `database/` tem **zero** escrita de pivot hoje, então ampliar mantém
+   verde. O docblock da guarda irmã escreve que "guarda que promete cobrir uma forma e não cobre é o
+   defeito que este bloco existe para não repetir" — pelo gabarito (§lição institucionalizada) o
+   argumento é de 🔴; fica 🟡 porque a forma que escapa (`->Sync(`) ninguém escreve.
+2. **Q-2 🟡** *(Claude + gate)* — a audit de pivot grava o **delta, não o conjunto**.
+   `PivotAudit` delega ao `auditSync`, e `Auditable::dispatchRelationAuditEvent`
+   (`vendor/owen-it/laravel-auditing/src/Auditable.php:827-829`) grava `old->diff(new)` e
+   `new->diff(old)`. Conferido no fonte do pacote, não presumido. Consequência: numa habilitação que
+   só acrescenta, `old_values` vem `{"courses":[]}` e o estado anterior **não é reconstruível** a
+   partir da linha; e com a D2 (sem backfill) também não é pela soma das linhas, porque o ponto de
+   partida dos pivots que já existiam nunca foi gravado. Corrigir exige **não** usar o `auditSync`
+   (o pacote calcula o diff dentro de método privado) — custo M/G, decisão do João.
+3. **Q-3 🟢** *(Codex, verificado)* — pivot e audit **não são atômicos** nos três call-sites sem
+   transação externa (`DesignateRedatorAction`, `RemoveRedatorAction`, `CourseRedatorController`):
+   o pacote grava o pivot e só depois dispara o `AuditCustom`, então falha na escrita da audit deixa
+   o pivot mudado sem rastro. Os dois de `Identity` já correm dentro de transação. Correção
+   proporcional: `DB::transaction` dentro do próprio helper (aninha sem efeito nos dois que já têm).
+4. **Q-4 🟢** *(Claude)* — `HabilitacaoTest.php:267-284`
+   (`test_edicao_de_redator_sem_mudar_curso_nao_grava_audit_de_sync`) **não discrimina** o mutante
+   que mais importa. Sonda: devolvendo `->courses()->sync()` cru ao `UpdateRedatorAction:67`, o caso
+   **passa** (2 assertions), enquanto o irmão `test_habilitacao_pelo_lado_do_redator_grava_audit_no_redator`
+   **reprova**. Ele guarda a remoção da comparação (D12), não a remoção do helper. Correção P: no
+   mesmo caso, um PUT que **muda** os cursos primeiro (1 audit) e o PUT idêntico depois (segue 1).
+5. **Q-5 🟢** *(Claude)* — `tests/Support/CreatesCertificateTemplates.php:19-24` engole chave
+   desconhecida em silêncio: `makeTemplate($id, ['validityMonths' => 24])` gravaria o default e o
+   teste passaria contra o default. É a classe do `IssuableEnrollmentBuilder` (rule
+   `backend-ddd.md` §Testes). Nenhum chamador atual está errado.
+6. **Q-6 🟢** *(Claude)* — o gate pergunta `status === Concluida`, e as quatro grafias inline que ele
+   substituiu perguntavam `status !== EmAndamento`. Hoje é a mesma condição (o `TurmaStatus` tem
+   exatamente dois casos, conferido), mas a forma passou de fail-closed para **fail-open**: um
+   terceiro estado futuro (`cancelada`) abriria os onze caminhos sem ninguém ver. A forma é anterior
+   ao bloco (D14 congelou o método verbatim); o que o bloco fez foi estendê-la a mais quatro
+   caminhos.
+
+**Achados do Codex recusados, com a razão:**
+
+- *"`lockForUpdate()` não cria mutex confiável quando ainda não há template — duas primeiras
+  criações derivam versão 1 e uma termina em 500"* — em InnoDB/REPEATABLE READ o `SELECT … FOR
+  UPDATE` com `where course_id = X` toma gap lock no índice, então a segunda transação bloqueia em
+  vez de correr; e, mesmo se corresse, a **D16 declara exatamente essa degradação** ("aqui o
+  `unique` é a defesa de integridade: sem lock a corrida vira 500, não duplicata"). Decisão
+  consciente registrada não é achado.
+- *"o gate lê o status sem travar a turma — corrida entre check e escrita"* — TOCTOU real em tese,
+  mas a forma do `assertAcademicallyWritable()` é **anterior** ao bloco (D14 a congelou) e exigiria
+  conclusão simultânea a uma escrita, com ~10 usuários internos e concorrência declarada baixa no
+  `CLAUDE.md`. Não é defeito introduzido aqui; fica como nota, não como achado.
+
+**Triagem do João — 2026-08-13: "aprovado de Q-1 à Q-6".** Os seis entraram; nenhum foi deferido.
+
+### Correção dos achados — 2026-08-13
+
+Cada correção foi provada por sonda, com a árvore restaurada em seguida (`git status` limpo entre
+elas). O que a sonda mostrou, e não o que o código parecia dizer:
+
+- **Q-1** — regex com `i` e varredura de `app/` **e** `database/` em `PersistenceLawsTest:145`.
+  Duas sondas ao mesmo tempo (`app/Shared/Audit/SondaCaixa.php` com `->Sync([1,2])` e
+  `database/seeders/SondaEscopo.php` com `->attach(1)`): a guarda corrigida reprova nomeando as
+  duas; a guarda anterior, com as MESMAS sondas no lugar, passa verde.
+- **Q-2** — `PivotAudit` deixou de delegar ao `auditSync` e passou a montar o `AuditCustom` à mão,
+  com o CONJUNTO dos dois lados lido do banco antes e depois da escrita. Sonda: com o payload de
+  volta na forma do delta, os três casos novos de conjunto reprovam e os dois casos de no-op (D12)
+  seguem verdes — eles medem coisa diferente.
+- **Q-3** — escrita e audit na mesma `DB::transaction`, dentro do helper: cobre os cinco call-sites
+  de uma vez, e quem já abria transação (as duas Actions de redator) só ganha savepoint.
+- **Q-4** — `HabilitacaoTest` passou a fazer duas edições, a segunda idêntica à primeira. Sonda:
+  com `$redator->courses()->sync(...)` cru de volta na Action, o caso reprova (antes passava).
+- **Q-5** — `makeTemplate()` estoura `InvalidArgumentException` em chave desconhecida.
+- **Q-6** — o gate voltou à forma fail-closed `!== EmAndamento`. Sonda: com um terceiro caso no
+  `TurmaStatus` (`cancelada`), a forma `=== Concluida` deixa a escrita acadêmica passar e a forma
+  corrigida recusa. `TurmaCrudTest` ganhou uma guarda que varre `TurmaStatus::cases()`, então o
+  status que alguém acrescentar amanhã cai nela sozinho.
+
+**A Q-6 revelou um buraco anterior a ela, e é o achado desta rodada:** `Turma::create([...])` sem
+`status` deixa a instância em memória com `status` NULO — o default `em_andamento` é do INSERT, não
+do objeto. Enquanto o gate perguntava `=== Concluida`, esse nulo passava batido; com o fail-closed,
+**sete casos da suíte reprovaram**, nenhum deles falando de conclusão. Corrigido no model
+(`protected $attributes = ['status' => 'em_andamento']`), com guarda própria em `TurmaCrudTest`. A
+forma antiga não estava só latente: escondia um caminho em que a RN-15 já não valia.
+
+`.claude/rules/migrations.md` dizia "Pivot não audita sozinho: use `auditSync`" — a Q-2 tornou a
+linha falsa e ela é carregada por quem tocar em schema. Reescrita apontando para o `PivotAudit`,
+com a razão (delta vs. conjunto) junto.
+
+**Gate reproduzido após as correções:** backend **573 passed, 5 skipped (2104 assertions)** — os 569
+anteriores mais os quatro casos novos; Pint `passed` nos 7 arquivos tocados; `typescript:transform`
+sem diff (nenhum DTO mudou); frontend intocado nesta rodada, então lint/build seguem valendo da
+medição de 12-08.
+
+**Estado: `ready_for_closure`.** O fechamento não roda sozinho — é chamada do João.
 
 ## Último item fechado — 2026-08-12 (`last-login`)
 

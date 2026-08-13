@@ -53,11 +53,29 @@ class PivotAuditTest extends TestCase
             ->count();
     }
 
-    public function test_sync_grava_audit_com_o_diff(): void
+    private function ultimaAuditDoCurso(): object
     {
-        $r = $this->redator();
+        return DB::table('audits')
+            ->where('auditable_type', 'course')
+            ->where('auditable_id', $this->course->id)
+            ->where('event', '!=', 'created')
+            ->latest('id')
+            ->first();
+    }
 
-        PivotAudit::sync($this->course, 'redatores', [$r->id]);
+    /**
+     * A audit carrega o CONJUNTO dos dois lados, não o delta: `old_values` do
+     * acréscimo tem de trazer quem já estava ligado. Com o `auditSync` do
+     * pacote vinha `{"redatores":[]}` — estado anterior não reconstruível, e o
+     * pivot decide quem pode assinar certificado (review de 2026-08-12, Q-2).
+     */
+    public function test_sync_grava_audit_com_o_conjunto_inteiro(): void
+    {
+        $r1 = $this->redator('12.345.678-5');
+        $r2 = $this->redator('20.347.878-K');
+
+        PivotAudit::sync($this->course, 'redatores', [$r1->id]);
+        PivotAudit::sync($this->course, 'redatores', [$r1->id, $r2->id]);
 
         $this->assertDatabaseHas('audits', [
             'auditable_type' => 'course',
@@ -65,8 +83,23 @@ class PivotAuditTest extends TestCase
             'event' => 'sync',
         ]);
 
-        $audit = DB::table('audits')->where('auditable_type', 'course')->latest('id')->first();
-        $this->assertNotEmpty(json_decode((string) $audit->new_values, true));
+        $audit = $this->ultimaAuditDoCurso();
+        $this->assertSame([$r1->id], json_decode((string) $audit->old_values, true)['redatores']);
+        $this->assertSame([$r1->id, $r2->id], json_decode((string) $audit->new_values, true)['redatores']);
+    }
+
+    /** O detach fecha o outro lado: sai do conjunto, e o conjunto anterior fica. */
+    public function test_detach_grava_o_conjunto_dos_dois_lados(): void
+    {
+        $r1 = $this->redator('12.345.678-5');
+        $r2 = $this->redator('20.347.878-K');
+        PivotAudit::sync($this->course, 'redatores', [$r1->id, $r2->id]);
+
+        PivotAudit::detach($this->course, 'redatores', $r2->id);
+
+        $audit = $this->ultimaAuditDoCurso();
+        $this->assertSame([$r1->id, $r2->id], json_decode((string) $audit->old_values, true)['redatores']);
+        $this->assertSame([$r1->id], json_decode((string) $audit->new_values, true)['redatores']);
     }
 
     public function test_sync_sem_diferenca_nao_grava_segunda_audit(): void
