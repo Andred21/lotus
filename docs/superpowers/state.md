@@ -10,9 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: usecrudform-mais-fundo
-state_basis_commit: f766860
-updated_at: 2026-08-13T21:30:00-03:00
+last_completed_work_item: login-fora-do-adr16
+state_basis_commit: 024673a
+updated_at: 2026-08-13T19:42:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -508,7 +508,46 @@ papel do olho, **não** no nome acessível do campo — que é justamente a P-37
 instrumental dos sete itens acima, que é prova de geometria e de contraste, não juízo estético.
 
 **Estado: `idle`.** Nada foi promovido — o próximo item é escolha do João, no `backlog.md`.
-## Último item fechado — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
+
+### Merge com a `main` — 2026-08-13: código limpo, e a resolução do `state.md` corrigida depois
+
+Segunda vez que duas sprints fecham em paralelo a partir da mesma base (`d0cc270`), e desta vez o
+**BD-5 foi à `main` primeiro** (PR #47, `d29246a`, fast-forward puro) e o login absorveu a `main` por
+**merge, nunca rebase** (PR #48, `14bd7fd`) — replayar reescreveria SHAs que o `progress.md` e este
+arquivo citam nominalmente.
+
+**Colisão de código: zero.** O conflito real foram **4 arquivos, todos em `docs/`**. A árvore da
+`main` em `14bd7fd` é idêntica à do merge `ae4eef9`, e o gate nela passa: `pnpm lint` 0, `pnpm build`
+verde, `pnpm test` **32 arquivos / 163 testes** (30/150 do login mais os 2 arquivos e 13 casos do
+BD-5). `AppPassword` ficou na versão do login, com `mergePt`; o `FormField` o BD-5 não tocou, então os
+ponteiros da **P-37** (`FormField.tsx:36`, `StaffIdentifyFields.tsx:83`) seguem válidos.
+
+**`pendencias.md` e `backlog.md` saíram corretos** e foram conferidos linha a linha, não presumidos:
+a `main` inteira mais as duas linhas do login (**P-36**, **P-37**), com a **P-03** na versão longa que
+o fechamento do BD-5 escreveu (a contraprova) e o molde da P-37 intacto — nada perdido de nenhum
+lado, e **nenhum ID duplicado**, porque o fechamento do BD-5 não criou pendência (o resíduo do Q-4
+virou débito). No `backlog.md`, o item 4 (login) saiu e o texto novo da `main` sobreviveu ("BD-5
+entregue", "resta o BD-6", `### BD-5` removido), sem menção órfã a nenhum dos dois.
+
+**O `state.md` saiu com dois defeitos de resolução, e eles não foram descobertos pelo merge — foram
+descobertos por conferência posterior.** (1) Dois `## Último item fechado` no mesmo arquivo, login e
+BD-5, com **quatro** seções fechadas onde a convenção mantém **três**: a rotação simplesmente não foi
+aplicada. (2) O frontmatter ficou com o BD-5 (`last_completed_work_item: usecrudform-mais-fundo`,
+basis `f766860`), embora o login tenha fechado **depois** — `5f22df9` às **17:59** contra `960ac96`
+às **19:26**, medido nos commits, não deduzido da ordem de merge. Corrigido aqui: a cadeia rotacionou
+(login → Último, BD-5 → Penúltimo, BD-4 → Antepenúltimo, `contrato-de-entrada-identidade-e-nested`
+sai da cadeia de três e sobrevive no `progress.md`), e o frontmatter voltou ao login com basis
+`024673a`. **É a mesma classe do BD-4 × BD-9:** lá o auto-merge deixou passar uma afirmação vencida
+por ausência de sobreposição textual; aqui o conflito foi visto e resolvido, mas resolvido **sem
+aplicar a convenção do arquivo**. Ausência de conflito não é acordo, e presença de conflito não é
+garantia de resolução correta.
+
+**O `progress.md` também passou do teto** que ele mesmo declara — 11 linhas para dez —, e a entrega
+mais antiga (`2026-08-10 · Documentos oficiais`) desceu para o `progress-archive.md` **verbatim**. A
+ordem das duas linhas de 2026-08-13 foi trocada para seguir a hora de fechamento: o BD-5 fechou antes
+do login.
+
+## Penúltimo item fechado — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
 
 ### Seleção — 2026-08-13
 
@@ -863,7 +902,7 @@ retroativamente** (precedente da P-27): a spec projetou `useCourseForm` em ~110 
 
 **Estado:** `idle`. O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
+## Antepenúltimo item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
 ### Seleção — 2026-08-13
 
@@ -1228,344 +1267,3 @@ verde (o `tsc -b` combinado é o risco real de um merge frontend×backend), `pnp
 **591 passed, 5 skipped (2149 assertions)** e `typescript:transform` com **diff zero**; os dois
 rodaram no container, que monta o main tree, e valem para esta branch por medição:
 `git diff origin/main -- backend/ frontend/src/shared/types/generated.ts` devolve **zero linha**.
-
-## Antepenúltimo item fechado — 2026-08-13 (`contrato-de-entrada-identidade-e-nested`)
-
-### Seleção — 2026-08-13
-
-**BD-9 do `backlog.md:185`, promovido explicitamente pelo João.** Ele abriu com
-`/planejar-bloco ### BD-9 · Contrato de entrada: identidade e coleção nested (backend)` mais o
-caminho de um arquivo de contexto, e o gate do comando **reprovou pelo motivo de sempre** (BD-1,
-BD-2, BD-7, BD-8): o argumento é **título de seção**, não slug promovido, com o estado em `idle` e
-`active_work_item` `null`. O comando mostra o backlog; quem promove é ele.
-
-**Diferente do BD-8, não havia item concorrente a autorizar.** A worktree
-`/home/jvbat/projetos/fix-frontend` está na branch `feat/catraca-max-lines-e-moldura` (BD-4), mas com
-**zero commits** além de `0c2a24b`, árvore limpa e `state.md` idêntico ao da árvore principal, também
-`idle` — branch criada, nada executado. A invariante de um `active_work_item` não precisou de
-exceção.
-
-**Três decisões do João fecharam o gate, todas confirmadas de uma vez:** promover o BD-9 com o slug
-`contrato-de-entrada-identidade-e-nested`; **rota direta a `ready_for_planning`, sem Context
-Packet**, por ausência **medida** de fonte externa; e **main tree, sem worktree** (P-03, bloco de
-backend), na branch `feat/contrato-de-entrada-identidade-e-nested` criada de `0c2a24b`.
-
-**A ausência de fonte externa foi medida, não presumida.** O arquivo de contexto que ele passou —
-`architecture-review-20260812-backend.html`, 81.193 B — é a mesma revisão de arquitetura que gerou o
-BD-8, e o grep por `drive.google`, `notion.so`, `figma.com` e `docs.google` devolve **zero
-ocorrência**. Os onze achados dele estão numerados em `<h2>`, e os **4** (`UserProvisioner fecha
-metade do invariante e quatro caminhos esquecem a outra`) e **5** (`ClientData::$addresses apaga a
-coleção em silêncio`) são literalmente os dois itens do BD-9. O arquivo vive no `/tmp` de **outra
-sessão** e é volátil; foi copiado para o scratchpad desta antes de qualquer leitura de desenho.
-
-**Baseline medido nesta branch, não herdado do fechamento anterior:** backend **573 passed,
-5 skipped (2104 assertions)** — bate com o placar de fechamento do `rastro-unicidade-e-gates`, o que
-confirma que a branch nasce da `main` sem deriva.
-
-### Terreno medido antes de desenhar — 2026-08-13 (fato, não desenho)
-
-1. **O arquivo de contexto que abriu o bloco não existe mais.** O
-   `architecture-review-20260812-backend.html` vivia no `/tmp` de outra sessão e não sobreviveu a
-   ela. **Não bloqueou:** os achados 4 e 5 estão transcritos integralmente em `backlog.md:185-231`,
-   com paths, linhas e as quatro decisões do grilling. `context_packet` segue `null` pela mesma
-   ausência medida de fonte externa.
-2. **Os caminhos de escrita de identidade são nove**, em cinco creates e quatro updates, e a
-   assimetria é exatamente a do achado: `Create/UpdateClientAction` e `Create/UpdateRedatorAction`
-   checam só o RUT; os outros cinco checam os dois.
-3. **O staff tem `rut` nullable** (`create_users_table.php:18`), e por isso
-   `Create/UpdateStaffUserAction` decidem entre `null` e a checagem por ternário. A assinatura
-   `ensureIdentityAvailable(string $rut, …)` que o backlog escreveu **não cobre** esses dois.
-4. **Fazer `provision()` checar e-mail torna duas chamadas redundantes** — `CreateStudentAction:49`
-   e `StudentResolver:63` já chamam `ensureEmailAvailable` logo antes.
-5. **O `Optional` no `ClientData` NÃO é inerte no frontend, e isso foi medido por sonda, não
-   estimado:** `addresses`/`contacts` com `| undefined` no `generated.ts` e `tsc -b` devolvem **17
-   erros em 4 arquivos** (`useClientForm.ts` 10, `ContactFields.tsx` 3, `ClientsTable.tsx` 2,
-   `ContactCard.tsx` 2). Inerte em runtime (o front sempre manda as duas), quebrado em compilação.
-   Árvore restaurada, `git status` limpo.
-6. **O universo da lei da `der-fisico.md:103-106` é cinco, não dois** — a minha primeira contagem
-   estava errada e foi corrigida antes de virar decisão. `#[DataCollectionOf]` são cinco
-   propriedades em três DTOs, mas `BudgetData::$quotes` e `$files` **nunca são lidos na entrada**
-   (grep de `data->quotes`/`data->files` em `app/` vazio): são projeção de saída e não violam lei
-   nenhuma. Uma guarda que só olhasse o atributo nasceria vermelha nelas.
-7. **Quem produz o `| undefined` no `generated.ts` é o docblock, não o tipo PHP.**
-   `BudgetData::$files` é `array|Optional = []` com `/** @var FileData[] */` e sai sem `| undefined`;
-   `CourseData:35,38` escreve `|Optional` no `@var` e sai com ele.
-8. **Não existe um único `ValidationContext` em `app/`** — os 14 `rules()` do repositório são
-   estáticos. A distinção create/update do `contacts` não tinha precedente e precisou de mecanismo.
-
-### Brainstorming e spec — 2026-08-13
-
-Spec em `docs/superpowers/specs/archive/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md`. As
-**D1–D4** vêm fechadas do grilling de 2026-08-12 e não foram reabertas; as **D5–D9** são desta
-sessão, cada uma escolhida pelo João entre alternativas apresentadas com o custo medido:
-
-- **D5** — o helper é a **porta única dos nove**, com `?string $rut` para caber no staff, e
-  `ensureRutAvailable`/`ensureEmailAvailable` viram **privados**. Recusado: fechar só os quatro
-  quebrados, que deixaria os dois métodos públicos e três formas de checar identidade convivendo.
-- **D6** — `contacts` é `sometimes` no PUT e obrigatório no POST, com a obrigatoriedade do POST
-  morando na **Action**, não em `rules()`. Recusado: `sometimes` nos dois verbos, que revogaria a
-  regra do Drive (um ou mais contatos, ratificada 2026-07-31) e deixaria a UI como única guardiã.
-- **D7** — o 422 **agrega** RUT e e-mail numa exceção só, em vez de dois round-trips.
-- **D8** — o helper lê `deleted_at` na mesma query, e cada campo ganha duas mensagens (vivo e
-  arquivado), quatro no total, em PT-BR. A Q-6 (idioma canônico) segue travada e não foi reaberta.
-- **D9** — a lei ganha guarda estática em `PersistenceLawsTest`, e a exceção read-only é declarada
-  **no sítio** por `#[ReadOnlyCollection]`. Recusados: migrar `BudgetData` junto (medido: 3 erros TS
-  em 2 arquivos, e o tipo passaria a mentir sobre uma saída sempre preenchida) e allowlist literal
-  dentro do teste.
-
-**Consequência declarada, não escolha:** cinco caminhos que **não têm defeito** (staff e aluno)
-mudam de forma. É o preço da porta única, e a prova de que o comportamento deles não mudou entra no
-DoD.
-
-**Um ruído previsto antes de aparecer:** `UniquenessInsideTransactionTest:116` filtra por
-`select exists`; trocar `->exists()` por leitura de `deleted_at` muda o SQL e reprova os três casos.
-O teste muda no mesmo commit, medindo a mesma coisa.
-
-**Risco de review declarado ALTO** (§8 da spec), **divergindo do MÉDIO que o backlog escreveu**: o
-gate da `revisar-sprint` é binário e lista `generated.ts` entre os gatilhos de alto
-(`SKILL.md:37`). A divergência fica declarada; o backlog não foi corrigido por conta própria.
-
-O estado entra em `planning` com `active_spec` preenchido neste commit; `active_plan` segue `null`
-até o João ler a spec escrita e autorizar o `writing-plans`.
-
-### Plano — 2026-08-13
-
-**O João aprovou a spec sem pedir mudança**, e o plano saiu em
-`docs/superpowers/plans/archive/2026-08-13-contrato-de-entrada-identidade-e-nested.md`: **seis tasks**, uma
-por commit, na ordem helper → creates → updates e morte dos métodos antigos → coleção nested com os
-consumidores TS → guarda da lei → gate.
-
-**Baseline medido antes de escrever, não herdado do fechamento anterior:** backend **573 passed,
-5 skipped (2104 assertions)**; frontend **28 arquivos / 138 testes**, lint limpo, build verde. Os
-27/131 registrados no fechamento do BD-8 eram de antes dos merges na `main` — o número do frontend
-subiu sozinho, sem este bloco tocar nada. Projeção do plano: **590 casos** no backend (+17),
-frontend **inalterado** em 28/138, porque `useClientForm` é hook de feature e está fora do corte do
-runner.
-
-**A ordem das três primeiras tasks é a do bloco anterior (helper → call-sites → guarda), e por quê:**
-o helper nasce sem chamador na Task 1, o que deixa um revisor rejeitar a forma da porta única sem
-rejeitar a migração dos nove caminhos, e vice-versa. A Task 3 é onde
-`ensureRutAvailable`/`ensureEmailAvailable` **deixam de existir** — a D5 na forma mais forte: método
-apagado, não privado.
-
-**Três coisas que só apareceram ao escrever o plano, e que mudam trabalho:**
-
-1. **`ClientContactMinimumTest:54-67` afirma literalmente o comportamento que a D6 muda.**
-   `test_update_sem_a_chave_contacts_da_422_em_vez_de_apagar` é o caso que o bloco tem de
-   **inverter**, não um vermelho a consertar. Os outros seis casos do arquivo ficam — inclusive o
-   `contacts: []` e a guarda da rota nested, que seguem valendo.
-2. **Trocar `->exists()` por leitura de `deleted_at` quebra o filtro de SQL do
-   `UniquenessInsideTransactionTest:116`** (`str_starts_with($query->sql, 'select exists')`). O
-   filtro novo casa SELECT + `deleted_at` projetado, porque o UPDATE de `users` também contém
-   `rut = ?` e o caractere de citação muda entre sqlite e MySQL. No mesmo passe, o cliente e o
-   redator passam a exigir `['rut','email']`: a assimetria que aquele arquivo registrava deixa de
-   existir.
-3. **A guarda da lei pede reflexão, não regex.** A pergunta é sobre o TIPO ("admite `Optional`?"), e
-   o texto do arquivo responde mal — default e união podem estar em linhas diferentes do atributo. A
-   varredura resolve o FQCN a partir do path (PSR-4) e lê os atributos do construtor.
-
-`executor: claude`, sem `paths_autorizados`: `generated.ts` regenera na Task 4 (lei §5.3), a forma do
-erro HTTP muda em quatro rotas (RFC 7807, §5.4) e três tasks fecham por sonda vista reprovando —
-julgamento, não transformação mecânica.
-
-### Execução — 2026-08-13, via Subagent-Driven Development
-
-**As seis tasks fecharam, cada uma em commit próprio, revisão individual aprovada antes de avançar:**
-`0bd994e` (T1 — `ensureIdentityAvailable`/`duplicateStatus` isolados, nenhum call-site migrado),
-`606bd36` (T2 — `provision()` passa a checar e-mail, fecha os dois `create`s de graça), `74d32ea` (T3
-— os cinco caminhos restantes migram, `ensureRutAvailable`/`ensureEmailAvailable` deletados),
-`29c3815` (T4 — `ClientData::$addresses`/`$contacts` viram `Optional`, `generated.ts` regenerado e os
-5 consumidores TS corrigidos no mesmo commit), `fe36ab0` (T5 — guarda de reflexão em
-`PersistenceLawsTest`, `#[ReadOnlyCollection]` nas duas projeções de saída de `BudgetData`). Task 6
-foi gate — verificação pura, **sem commit**: suíte, Pint, `generated.ts` sem diff, zero órfão, e um
-E2E completo contra a API real (sessão Sanctum de verdade) provando os 11 cenários do DoD por corpo
-de resposta, não só status. Contagem final: backend **590 passed, 5 skipped** (573 no baseline);
-frontend **28 arquivos**. Ledger fino task-a-task, achados Minor de cada review e o relatório do gate
-em `.superpowers/sdd/progress.md` (local, não versionado).
-
-**A revisão final de branch (mandato da própria skill SDD, não o `/revisar-sprint` do João — essa
-continua sendo a próxima instrução explícita) achou dois Important, ambos reais e ambos corrigidos
-antes de fechar:**
-
-1. A guarda nova de T5 checava só o TIPO do parâmetro (`array|Optional` admite `Optional`), nunca o
-   DEFAULT — e a lei em `backend-ddd.md` exige as duas coisas (`= new Optional`). Confirmado por
-   reflexão real: `BudgetData::from(['client_id'=>1])->files` devolve `array(0){}`, não `Optional`,
-   apesar do tipo admitir. Uma coleção nova escrita `array|Optional $x = []` passaria pela guarda e
-   ainda apagaria em silêncio — o mesmo defeito que o bloco existe para fechar, sob grafia diferente.
-   Corrigido em `11c7337`, sonda provada nos dois sentidos (código velho deixa passar errado, código
-   novo reprova nomeando a sonda).
-2. A spec (§5, ecoada em §9) afirmava que o frontend ficava sem teste novo porque "o runner só cobre
-   hooks de `shared/`" — falso, e o mesmo engano que `frontend-fsliced.md` já registra como lição
-   repetida duas vezes (lição 13) no próprio arquivo. A lacuna real era a normalização
-   `client.addresses ?? []`/`contacts ?? []` (T4) nunca ter sido exercitada por teste. Corrigido em
-   `e06c204`: caso novo em `useClientForm.test.tsx`, prosa da spec corrigida nos dois pontos. Frontend
-   138→139 testes.
-
-Nove achados Minor triados como backlog (não bloqueiam merge, nenhum fixado nesta passagem) — inclui
-uma discordância explícita da triagem da T4 (`$data->contacts === []` em `CreateClientAction` **não**
-é código morto: `OperationDemoSeeder` chama a Action direto, sem passar por `rules()` — manter).
-Recomendações não-bloqueantes: a guarda de T5 só alcança propriedade promovida no construtor marcada
-`#[DataCollectionOf]` (`QuoteData::$files` etc. ficam fora, spec §6 já declara essa fronteira);
-`UpdateStaffUserAction` tem o mesmo defeito de família num campo escalar (`rut` some em silêncio num
-PUT que o omite) — pré-existente, fora de escopo, vale backlog. Detalhe completo, achado a achado, em
-`.superpowers/sdd/progress.md`.
-
-**O que o gate NÃO provou, registrado sem maquiagem:** corrida de unicidade concorrente (a suíte roda
-sqlite `:memory:`, a defesa real é o `unique` do MySQL); nenhuma tela vista renderizada (o frontend só
-mudou de tipo mais a normalização `?? []`, sem mudança visual); a listagem `GET /api/clients` não
-recebeu asserção formal neste gate (fora do escopo de escrita do bloco).
-
-**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
-`/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
-
-### Review de sprint — 2026-08-13: ALTO risco, UMA lente, 4 achados
-
-Risco ALTO pelo gabarito: `generated.ts` regenerado (lei §5.3), forma do 422 mudando em quatro rotas,
-eixo de identidade. **A segunda lente foi recusada pelo João** — o despacho ao Codex não foi
-autorizado, e o review saiu com lente única. Fica declarado, não resolvido em silêncio (mesmo
-precedente do fechamento de 2026-08-12).
-
-**Gate reproduzido, não herdado:** backend 590 passed / 5 skipped / 2146 assertions; frontend
-`pnpm build` verde, `pnpm lint` limpo, 28 arquivos / 139 testes; `typescript:transform` sem diff;
-Pint `passed` nos `.php` do bloco; zero `dd(`/`dump(`/`console.log`/`SONDA` no diff.
-
-**Órfãos: zero.** `ensureRutAvailable`/`ensureEmailAvailable` não existem mais em `app/`, `tests/`
-nem `database/` — a D5 na forma forte. Os nove caminhos de escrita de identidade passam pela porta
-única (4 via `provision()`, 5 diretos), conferidos um a um.
-
-Os quatro achados, com as duas provas por sonda (árvore restaurada nos dois casos):
-
-1. **Q-1 🟡/P — `#[ReadOnlyCollection]` era isenção AUTO-DECLARADA.** A guarda dava `continue` na
-   marca antes de qualquer checagem: DTO sonda com `#[DataCollectionOf] public array $itens = []`
-   reprovava; a MESMA sonda, `array = []` intacto, passava só por ganhar a marca. A guarda não olhava
-   Action nenhuma — a read-only-ness, que é a premissa inteira da exceção, era a única parte não
-   mecanizada (a spec §1.5 a mediu à mão, uma vez).
-2. **Q-2 🟡/P — checagem de `contacts` rodava depois de escrever.** Sonda: `POST /api/clients` sem
-   `contacts` e com e-mail ocupado devolvia `status 422 | chaves: email`. Só `email`. Dois
-   round-trips para o operador, num check que é entrada pura e custa zero de banco.
-3. **Q-3 🟢/P — uma regra, três redações**, e duas línguas: "precisa **de** ao menos um contato"
-   (`CreateClientAction`), "precisa **ter** ao menos um contato" (`DeleteClientContactAction`) e
-   `El campo contacts debe tener al menos 1 elementos.` (o `min:1` de `rules()`, pelo locale `es` do
-   validador).
-4. **Q-4 🟢/P — marca inerte:** `BudgetData::$files` tinha `#[ReadOnlyCollection]` sem
-   `#[DataCollectionOf]`, então a guarda não olhava a propriedade de jeito nenhum e a marca sugeria
-   cobertura inexistente.
-
-**Descartado como achado, com razão registrada:** o objeto `entity` novo a cada render em
-`useClientForm` (o `useEntityForm` reseta comparando `id`+`mode`, não identidade — não há laço); o
-filtro SQL reescrito no `UniquenessInsideTransactionTest` (ainda discrimina); o `| undefined` na
-saída do `ClientData` (consequência declarada da D4, custo medido); a língua das mensagens (Q-6,
-congelada pelo João); `BudgetData` não migrar (D9).
-
-**Fora dos achados:** o deferimento do `rut` do `UpdateStaffUserAction`, declarado no relatório de
-execução acima como "vale backlog", nunca chegou ao `backlog.md`.
-
-### Correção dos achados — 2026-08-13: os 4 aprovados pelo João, os 4 aplicados
-
-Cada um com o vermelho visto antes do verde, sem exceção.
-
-- **Q-3** — `ClientData::CONTATO_OBRIGATORIO` vira o texto único, com `messages()` cobrindo
-  `contacts.min`/`contacts.array`, e as duas Actions passam a citar a constante. Vermelho real: as
-  três asserções de mensagem do `ClientContactMinimumTest` eram `fn ($m) => is_string($m)` — vagas
-  **porque** o texto variava. Apertadas para a frase literal, 3 reprovaram (duas em espanhol, uma
-  com "precisa ter"). A LÍNGUA do resto da validação segue sendo o Q-6 congelado; isto fecha só a
-  divergência de redação desta regra.
-- **Q-2** — a checagem de contato sai de dentro da transação e vai para o topo do `execute()`, antes
-  de `provision()` e do `client()->create()`. Vermelho por teste novo em `ClientCrudTest`
-  (`test_store_sem_contatos_reclama_do_contato_antes_da_identidade`): contra o código velho
-  `errors.contacts` vinha `null`. **O que isto NÃO faz, dito sem maquiagem:** o caso combinado
-  continua devolvendo UM campo por vez — agora `contacts` em vez de `email`. Agregar os dois num
-  422 exigiria plumbar a regra de contato (Commercial) por dentro do `ensureIdentityAvailable`
-  (Identity), e o preço não paga: a D7 agrega o que mora na MESMA chamada, e estes dois moram em
-  camadas diferentes. O que a correção compra é a ordem determinística e a transação contendo só
-  escrita.
-- **Q-1** — a marca deixou de ser palavra-de-honra. A guarda agora varre `app/` atrás de
-  `$data-><campo>` em arquivos que citam a classe do DTO, e reprova nomeando o sítio. Vermelho por
-  sonda (`SondaQ1Action` lendo `$data->quotes`): `BudgetData::$quotes: marcada como SAIDA, mas lida
-  da entrada em app/Domains/Commercial/Actions/SondaQ1Action.php`. Sonda apagada, árvore conferida
-  por `git status`. Limite honesto e declarado no docblock: só arquivos que citam a classe entram, e
-  a convenção `XData $data` é o que torna isso preciso — falso positivo aqui é barulhento, falso
-  negativo é o que a guarda existe para não ter.
-- **Q-4** — `BudgetData::$files` ganha `#[DataCollectionOf(FileData::class)]`, e a guarda passou a
-  reprovar marca sem coleção. Este foi o único vermelho que **não** precisou de sonda: a checagem
-  nova nomeou `BudgetData::$files` no primeiro `run`. `QuoteData::$files` — mesmo defeito na classe
-  irmã, um nível abaixo (não tinha nem a marca, então era invisível) — recebeu os dois atributos no
-  mesmo commit; é escopo ligeiramente além do achado, declarado aqui de propósito.
-
-**Gate após as correções:** backend **591 passed, 5 skipped, 2149 assertions** (+1 caso, o do Q-2);
-Pint `passed` nos 8 arquivos tocados; `typescript:transform` **sem diff** — nenhuma mudança de
-contrato TS, nenhum consumidor frontend tocado, e por isso o gate do frontend não foi rerodado.
-
-O deferimento do `rut` do `UpdateStaffUserAction` foi registrado em `backlog.md`, em
-`## Débitos técnicos`.
-
-**Estado: `ready_for_closure`.** O review não executa fechamento — `/fechar-sprint` é instrução
-explícita do João.
-
-### Fechamento — 2026-08-13
-
-**As correções do review estavam no working tree, não commitadas** — o último commit da branch era o
-handoff para review (`b2fe20e`). O fechamento começou por commitá-las (`59a39e3`, que passa a ser o
-`state_basis_commit`); a árvore ficou limpa antes de qualquer prova.
-
-**O item 0 foi refeito contra a API real, não herdado do review:** as quatro correções entraram
-depois do e2e de execução e mexeram exatamente no que ele mediu — ordem da checagem, texto das
-mensagens e a guarda. Sessão Sanctum por cookie + CSRF, `Origin` e `Accept` nos dois lados,
-**10 cenários provados por corpo de resposta**, não por status:
-
-1. **D7 na API:** RUT `76.123.456-0` e e-mail `contacto@transelec.demo.cl`, os dois ocupados, saem
-   **num 422 só** — `errors.rut` **e** `errors.email` —, com `content-type: application/problem+json`
-   conferido no header.
-2. **Q-2 na API:** POST sem `contacts` com o mesmo e-mail ocupado devolve **`contacts`, e
-   `errors.email` ausente**. A ordem que a correção comprou, medida onde o operador vive.
-3. **As três portas da regra de contato falam a mesma frase** (Q-3): POST sem contatos,
-   `contacts: []` no PUT (caminho do `min:1`, que antes respondia em espanhol) e DELETE do último
-   contato pela rota nested — `O cliente precisa de ao menos um contato.` nos três.
-4. **O coração do bloco:** PUT **sem** as chaves `addresses`/`contacts`, mudando só o `legal_name`,
-   devolve **200** e o GET seguinte mostra **1 endereço e 2 contatos intactos**. O replace explícito
-   segue funcionando — `addresses` com outro item troca de fato (`city` passa a `Valparaiso`) e os
-   contatos não são tocados.
-5. **A porta única nos caminhos que antes só checavam RUT:** `POST /api/redatores` com e-mail de
-   redator existente → 422 `email`; `PUT /api/clients/{id}` com RUT de outro usuário → 422 `rut`.
-6. **D8 (arquivado) pelo caminho real:** o cliente do gate foi soft-deletado pela própria API e a
-   recriação com o mesmo par devolveu as **duas** mensagens de arquivado, não as de "já cadastrado".
-
-**Ferramentas:** backend **591 passed, 5 skipped (2149 assertions)** contra o baseline **573** da
-abertura; frontend **28 arquivos / 139 testes**, `pnpm lint` limpo e `pnpm build` verde; Pint
-`{"tool":"pint","result":"passed"}` nos **21** `.php` do bloco; `typescript:transform` **sem diff**
-(`git status --porcelain frontend/` vazio depois de rodar); zero `abort(` novo em `app/`.
-
-**Órfãos: zero**, reconferidos no fechamento e não herdados do review: `ensureRutAvailable` e
-`ensureEmailAvailable` não aparecem em `app/`, `tests/` nem `database/`; `ensureIdentityAvailable`
-tem seis sítios em `app/` (o `UserProvisioner` mais cinco Actions) e três em `tests/`;
-`#[ReadOnlyCollection]` é usada nas três propriedades de saída que a declaram.
-
-**Item 7 — dois docs VIVOS nomeavam método morto, e é a lição 13 exata:** a lição 8 do
-`docs/README.md` e a **P-29** citavam `ensureRutAvailable`/`ensureEmailAvailable`. Os dois foram
-corrigidos para `UserProvisioner::ensureIdentityAvailable`; a guarda `repo-docs-refs` não os pegaria,
-porque confere **path** e o escopo dela exclui `docs/superpowers/**` e `docs/pendencias.md`. **A P-29
-NÃO fecha:** o BD-9 unificou a checagem e agregou o 422, e o que ela registra — a corrida entre
-transações distintas, que estoura no índice único como 500 — segue exatamente igual, porque o
-`SELECT` de unicidade não trava linha inexistente. O gatilho dela também não venceu: este bloco não
-tocou `ProblemDetails` nem `ValidationMessages`. Nenhuma pendência nova nasceu; os limites do bloco
-já estão declarados no sítio (docblock da guarda) ou no `backlog.md`.
-
-**A rule `backend-ddd.md` ganhou o que o bloco criou**, porque sem isso um DTO novo com coleção de
-saída reprovaria num teste cujo remédio a rule não documentava: a catraca da lei (tipo **e** default),
-a exceção `#[ReadOnlyCollection]` com a verificação das duas pontas, e a direção "obrigatoriedade que
-depende do verbo mora na Action, não em `rules()`", com o texto único da recusa.
-
-**Mutação declarada no banco de dev**, append-only e toda pela API: cliente 14 (`Gate BD9`) criado e
-soft-deletado no próprio gate, com o user de RUT `21.111.111-9`; endereços 22-23; contatos 35-36 (o
-35 apagado pela rota nested, para provar que só o último é recusado). **Nenhuma linha pré-existente
-foi alterada**, e nenhum `migrate:fresh`, `refresh`, `reset` ou seeder rodou — o banco segue com o
-`LOT-2026-1001` corrompido de propósito para o checkpoint visual do João.
-
-**O que o fechamento NÃO provou, sem maquiagem:** corrida de unicidade concorrente (a suíte roda
-sqlite `:memory:` e a defesa real é o `unique` do MySQL — é a P-29, aberta); **nenhuma tela vista
-renderizada**, porque o frontend só mudou de tipo mais a normalização `?? []`; e `GET /api/clients`
-não recebeu asserção formal neste gate. O `progress-archive.md` passou a conter uma linha de **cinco**
-colunas numa tabela de sete — a entrega mais antiga saiu do `progress.md` **verbatim**, como o
-fechamento manda, e o cabeçalho do arquivo agora declara as duas arities apontando para a P-23.
-
-**Estado: `idle`.** O próximo item é escolha do João, no `backlog.md`; nada foi promovido.
