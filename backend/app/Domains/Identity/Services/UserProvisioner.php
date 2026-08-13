@@ -10,9 +10,10 @@ use Illuminate\Validation\ValidationException;
  * Domain Service compartilhado: provisiona o User de login de um "ator"
  * (cliente, redator, aluno) — toda entidade que é extensão 1:1 de User.
  *
- * Normaliza o RUT, garante unicidade (incluindo soft-deletados, pois o índice
- * único de users.rut não distingue deleted_at) e cria o User inativo com senha
- * placeholder: atores não logam até o fluxo de ativação (RN-01).
+ * Normaliza o RUT, garante unicidade de RUT **e** e-mail (incluindo
+ * soft-deletados, pois os índices únicos de users.rut/users.email não
+ * distinguem deleted_at) e cria o User inativo com senha placeholder: atores
+ * não logam até o fluxo de ativação (RN-01).
  *
  * É a fonte única desta regra — as Actions de cada domínio
  * (CreateClientAction, CreateRedatorAction, ...) chamam este service em vez de
@@ -27,7 +28,7 @@ class UserProvisioner
         string $email,
         ?string $phone = null,
     ): User {
-        $rut = $this->ensureRutAvailable($rut);
+        $rut = $this->ensureIdentityAvailable($rut, $email);
 
         return User::create([
             'name' => $name,

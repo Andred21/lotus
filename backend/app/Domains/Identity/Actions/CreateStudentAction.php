@@ -46,8 +46,6 @@ class CreateStudentAction
                 ]);
             }
 
-            $this->provisioner->ensureEmailAvailable($data->email);
-
             $user = $this->provisioner->provision(
                 type: 'aluno',
                 name: $data->name,
