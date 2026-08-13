@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: usecrudform-mais-fundo
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md
 active_plan: docs/superpowers/plans/2026-08-13-usecrudform-mais-fundo.md
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: d0cc270
-updated_at: 2026-08-13T13:41:00-03:00
+state_basis_commit: 0ef104f
+updated_at: 2026-08-13T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -188,6 +188,34 @@ compartilhado com outra execução ativa.
 
 **Estado: `ready_for_execution`.** `/executar-bloco usecrudform-mais-fundo` exige instrução posterior
 do João.
+
+### Execução — 2026-08-13: início
+
+`/executar-bloco usecrudform-mais-fundo` validou as âncoras (spec, plano, `context_packet` `null`
+coerente, Git limpo em `f9e1263`, sem divergência) e confirmou o gate main tree/worktree já resolvido
+pela D6: bloco frontend-only, worktree `/home/jvbat/projetos/fix-frontend` na branch
+`feat/usecrudform-mais-fundo` é o isolamento certo — o main tree segue com a execução paralela do
+`login-fora-do-adr16` (D6), sem escrita nenhuma aqui.
+
+**Mesmo conflito do `catraca-max-lines-e-moldura` (BD-4) reapareceu, e foi resolvido do mesmo jeito:**
+o plano recomenda `subagent-driven-development` (Handoff: `executor: claude`, sem
+`paths_autorizados` — cinco consumidores do `submit`, apresentação em quatro telas, julgamento em
+runtime na Task 10); a sessão tem regra de não chamar o Agent tool sem pedido. Escalado ao João via
+pergunta direta — **subagent-driven-development, com Agent tool autorizado para este bloco.**
+
+**Pre-flight scan do plano (onze tasks contra Global Constraints e a spec) achou um ponteiro
+fantasma:** o comentário previsto para `useCrudForm.ts` na Task 3 citava `(spec D10)`, herdado
+verbatim do plano arquivado `2026-08-05-profundidade-form-crud-e-hidratacao-dto` — cuja spec tem D10
+("o id do update vem da entidade"); a spec deste bloco só tem D1–D6. Mesma classe da Q-4 do review do
+BD-4 e da correção da Task 9 dele, um passo antes: pego no pre-flight, não no review. João escolheu
+tirar a citação em vez de reescrevê-la ou deixar como está. Corrigido no plano em `0ef104f`, antes de
+qualquer código.
+
+Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do BD-4, já fechado — as
+onze tasks deste bloco colidiriam de nome com as dez dele; arquivado em
+`.superpowers/sdd/archive/catraca-max-lines-e-moldura/`).
+
+**Estado:** `executing`.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
