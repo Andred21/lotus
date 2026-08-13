@@ -239,7 +239,9 @@ class PersistenceLawsTest extends TestCase
                     continue;
                 }
 
-                if ($this->admiteOptional($parametro->getType())) {
+                if ($this->admiteOptional($parametro->getType())
+                    && $parametro->isDefaultValueAvailable()
+                    && $parametro->getDefaultValue() instanceof Optional) {
                     continue;
                 }
 
