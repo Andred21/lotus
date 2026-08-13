@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: contrato-de-entrada-identidade-e-nested
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: 0c2a24b
-updated_at: 2026-08-13T16:30:00-03:00
+state_basis_commit: 8ee6a15
+updated_at: 2026-08-13T17:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -146,6 +146,49 @@ gate da `revisar-sprint` é binário e lista `generated.ts` entre os gatilhos de
 
 O estado entra em `planning` com `active_spec` preenchido neste commit; `active_plan` segue `null`
 até o João ler a spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md`: **seis tasks**, uma
+por commit, na ordem helper → creates → updates e morte dos métodos antigos → coleção nested com os
+consumidores TS → guarda da lei → gate.
+
+**Baseline medido antes de escrever, não herdado do fechamento anterior:** backend **573 passed,
+5 skipped (2104 assertions)**; frontend **28 arquivos / 138 testes**, lint limpo, build verde. Os
+27/131 registrados no fechamento do BD-8 eram de antes dos merges na `main` — o número do frontend
+subiu sozinho, sem este bloco tocar nada. Projeção do plano: **590 casos** no backend (+17),
+frontend **inalterado** em 28/138, porque `useClientForm` é hook de feature e está fora do corte do
+runner.
+
+**A ordem das três primeiras tasks é a do bloco anterior (helper → call-sites → guarda), e por quê:**
+o helper nasce sem chamador na Task 1, o que deixa um revisor rejeitar a forma da porta única sem
+rejeitar a migração dos nove caminhos, e vice-versa. A Task 3 é onde
+`ensureRutAvailable`/`ensureEmailAvailable` **deixam de existir** — a D5 na forma mais forte: método
+apagado, não privado.
+
+**Três coisas que só apareceram ao escrever o plano, e que mudam trabalho:**
+
+1. **`ClientContactMinimumTest:54-67` afirma literalmente o comportamento que a D6 muda.**
+   `test_update_sem_a_chave_contacts_da_422_em_vez_de_apagar` é o caso que o bloco tem de
+   **inverter**, não um vermelho a consertar. Os outros seis casos do arquivo ficam — inclusive o
+   `contacts: []` e a guarda da rota nested, que seguem valendo.
+2. **Trocar `->exists()` por leitura de `deleted_at` quebra o filtro de SQL do
+   `UniquenessInsideTransactionTest:116`** (`str_starts_with($query->sql, 'select exists')`). O
+   filtro novo casa SELECT + `deleted_at` projetado, porque o UPDATE de `users` também contém
+   `rut = ?` e o caractere de citação muda entre sqlite e MySQL. No mesmo passe, o cliente e o
+   redator passam a exigir `['rut','email']`: a assimetria que aquele arquivo registrava deixa de
+   existir.
+3. **A guarda da lei pede reflexão, não regex.** A pergunta é sobre o TIPO ("admite `Optional`?"), e
+   o texto do arquivo responde mal — default e união podem estar em linhas diferentes do atributo. A
+   varredura resolve o FQCN a partir do path (PSR-4) e lê os atributos do construtor.
+
+`executor: claude`, sem `paths_autorizados`: `generated.ts` regenera na Task 4 (lei §5.3), a forma do
+erro HTTP muda em quatro rotas (RFC 7807, §5.4) e três tasks fecham por sonda vista reprovando —
+julgamento, não transformação mecânica.
+
+**Estado:** `ready_for_execution`. `/executar-bloco contrato-de-entrada-identidade-e-nested` exige
+instrução posterior do João.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
