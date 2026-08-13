@@ -73,6 +73,10 @@ export type CrudFormOptions<F extends { id?: number }, T> = {
   excludePrefixes?: string[]
   onDone: () => void
   afterCreate?: (created: T) => void | Promise<void>
+  /** Mutações que o hook não dispara mas cujo estado pertence a este formulário
+   * (o `sync` de redatores do curso). Somam no `pending` e no `fieldErrors`;
+   * quem as dispara é o `afterCreate`. */
+  extra?: { isPending: boolean; error: ProblemDetails | null }[]
 }
 
 /**
@@ -90,8 +94,9 @@ export function useCrudForm<F extends { id?: number }, T>(
   resource: MutableResource<T>,
   opts: CrudFormOptions<F, T>,
 ) {
-  const { entity, mode, empty, toFields, toPayload, mapped, summaryOnly, onDone, afterCreate } = opts
+  const { entity, mode, empty, toFields, toPayload, mapped, summaryOnly, onDone, afterCreate, extra } = opts
   const excludePrefixes = opts.excludePrefixes ?? []
+  const extraMutations = extra ?? []
 
   const { form, setForm, set, readOnly, didReset } = useEntityForm<F>(entity, mode, empty, toFields)
 
@@ -153,7 +158,11 @@ export function useCrudForm<F extends { id?: number }, T>(
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError } = useMutationErrors([
+    create.error,
+    update.error,
+    ...extraMutations.map((m) => m.error),
+  ])
 
   return {
     // Tudo que o diálogo pode consumir vive AQUI dentro, porque os hooks de
@@ -164,7 +173,7 @@ export function useCrudForm<F extends { id?: number }, T>(
       readOnly,
       didReset,
       submit,
-      pending: create.isPending || update.isPending,
+      pending: create.isPending || update.isPending || extraMutations.some((m) => m.isPending),
       fieldErrors,
       generalError,
       errorSummary: { mapped, excludePrefixes },

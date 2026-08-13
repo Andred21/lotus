@@ -208,3 +208,42 @@ describe('useCrudForm', () => {
     expect(visto).toContain('edit')
   })
 })
+
+describe('useCrudForm — mutações extras', () => {
+  const opts = (extra: { isPending: boolean; error: null }[]) => ({
+    ...base,
+    entity: null,
+    mode: 'create' as const,
+    extra,
+  })
+
+  it('soma o pending da mutação extra', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), opts([{ isPending: true, error: null }])),
+    )
+    expect(result.current.crud.pending).toBe(true)
+  })
+
+  it('não liga o pending quando nenhuma extra está pendente', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), opts([{ isPending: false, error: null }])),
+    )
+    expect(result.current.crud.pending).toBe(false)
+  })
+
+  it('mostra o 422 da mutação extra no fieldErrors', () => {
+    const erroDaExtra = {
+      type: 'about:blank', title: 'Unprocessable', status: 422, detail: null,
+      errors: { redator_ids: ['inválido'] },
+    }
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        extra: [{ isPending: false, error: erroDaExtra }],
+      }),
+    )
+    expect(result.current.crud.fieldErrors?.redator_ids).toEqual(['inválido'])
+  })
+})
