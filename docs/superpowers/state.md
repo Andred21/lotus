@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: blocked
+workflow_state: ready_for_review
 next_owner: joao
-next_action: run_lotus_ui_review_login
-resume_state: executing
+next_action: request_sprint_review
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
 context_packet: null
-blocker: "Task 10 (gate final, D12) Step 5 exige /lotus-ui-review ou /revisar-ui sobre http://localhost:5173/login, rodado pelo Joao na sessao interativa — disable-model-invocation impede qualquer agente. Stack ja de pe."
+blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 1e2adf0
-updated_at: 2026-08-13T15:52:00-03:00
+state_basis_commit: a734dfc
+updated_at: 2026-08-13T17:34:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -244,6 +244,77 @@ commit foi afetado; fica registrado para o João avaliar a causa, não é bloque
 **Estado:** `blocked`. `blocker`: Task 10 Step 5 exige `/lotus-ui-review` ou `/revisar-ui` rodado
 pelo João na sessão interativa. `resume_state`: `executing` (retomar `continue_active_plan` — só
 fechar a Task 10 e seguir pro review de branch inteira — assim que o Step 5 for medido).
+
+### Execução — 2026-08-13: gate desbloqueado, 4 achados corrigidos, branch revisada
+
+**O João rodou `/lotus-ui-review http://localhost:5173/login` ele mesmo**, que era o único caminho —
+a skill tem `disable-model-invocation: true`. O bloqueio saiu por execução, não por decisão. Run em
+`.artifacts/ui-review/2026-08-13T16-51-39-loginpage-fora-adr16/` (report.txt, 11 PNGs, 2 snapshots).
+Playwright com `--browser=chromium`: o canal `chrome` não existe neste host, e trocar o binário do
+Chromium é escolha de mecanismo permitida — a skill proíbe trocar de **ferramenta**.
+
+**Steps 1-4 reproduzidos no gate, não herdados:** lint exit 0, build verde, **29 arquivos / 143
+testes**; `git diff main...HEAD -- backend/ generated.ts` com **zero arquivo**, que é o que torna
+backend/Pint/`typescript:transform` N/A por escopo medido; catraca provada **nos dois sentidos**
+(`text-slate-800` reintroduzido no `<h1>` faz o lint reprovar nomeando arquivo e linha, árvore volta
+limpa); greps de higiene batendo **só em comentário histórico**, a mesma ressalva não-bloqueante de
+antes e a forma exata do P-36.
+
+**Step 5 — as 8 afirmações do plano, todas medidas no navegador nas 3 viewports × 2 temas:** sem
+overflow nas seis combinações; contrastes lidos da tela (tagline **9,84:1**, versão 8,02:1, setor
+6,23:1, secundário 4,76:1 claro / 6,21:1 escuro) batendo com a projeção da spec; `LogoDark` nos dois
+temas; divisa `border-left` 1px escuro / 0px claro a 1440 e `border-top` equivalente a 390;
+`AppearanceControls.bottom` 358,4 ≤ `h1.top` 398,5 a 390; olho em `Mostrar`/`Ocultar contraseña` com
+`lang=es-CL`; `username` + `current-password` no DOM; **seis** paradas de Tab com anel visível.
+
+**A revisão achou 4 defeitos que as 8 afirmações não cobriam, e o João mandou corrigir os quatro** —
+Step 7 do plano em ação (gate que reprova vira commit próprio antes do review). Um commit por
+achado, cada um remedido no navegador:
+
+1. **UI-01 (`ebd0258`)** — o campo de senha **nunca preenchia o container**: 316px contra os 384px
+   do e-mail e do botão, as três bordas direitas desalinhadas em toda viewport acima de ~316px. O
+   `w-full` do `inputClassName` não alcança o IconField que o Password renderiza por dentro com
+   `toggleMask` (`password.cjs.js:737`), e esse nó mede por conteúdo. Vai pelo `pt`, na chave
+   `iconField.root` — **não** `iconField.className`, porque o Prime passa `ptm('iconField')` como o
+   *pt* do filho, não como props. Medido: 384/384, 326/326 e 256/256, sem overflow.
+2. **UI-02 (`21c2c3c`)** — no escuro os dois campos irmãos vinham de famílias diferentes: e-mail
+   `rgb(11,18,32)`/`rgb(51,65,85)` da folha de tema, senha `rgb(30,41,59)`/`rgba(255,255,255,0.1)`
+   das utilities `dark:` do wrapper. O docblock do `AppInputText` já mandava não empilhar `dark:`
+   (ADR-16). As seis utilities saíram; os campos agora batem nos dois temas.
+3. **UI-03 (`5e005f1`)** — o `<label>` embrulhava o campo e o olho tem `aria-label` próprio, então o
+   nome acessível era "Password  Show password". Trocado por `htmlFor`/`id` (com `inputId` no
+   `AppPassword`, porque o `id` cru pousaria no wrapper).
+4. **UI-04 (`c3a8f80`)** — o olho era `role="switch"` com `aria-checked` **invertido** (o Prime crava
+   `'true'` no showIcon; `password.cjs.js:600-615`), anunciando "Mostrar contraseña, ativado" com a
+   senha escondida. Corrigido **pelo papel** — controle cujo nome muda a cada clique é botão —, o
+   que mantém de pé os dois rótulos que a spec decidiu a partir da API instalada.
+
+**Uma observação declarada como NÃO introduzida pelo bloco, provada por sonda:** acionar o olho por
+teclado devolve o foco ao `<body>`, porque o Prime troca o elemento do ícone e o React remonta.
+Idêntico antes e depois da UI-04, medido guardando a mudança no stash.
+
+**Review de branch inteira (`main...HEAD`, 13 arquivos): um achado, verificado à mão antes de agir.**
+A correção da UI-03 fechou o login e deixou o **segundo** call site aberto — `FormField` embrulha o
+controle em `<label className="block">` sem `htmlFor` (`FormField.tsx:34-36`), então o olho segue
+somando no nome do campo dentro do `StaffUserDialog`. **Virou P-37, não commit de código, pelo
+precedente exato da D10/P-36:** `FormField` é o kit de form inteiro e está sob reescrita ativa do
+BD-5 na worktree `fix-frontend`. O bloco **piorou a forma e não criou o defeito** — antes da Task 6
+o olho já concatenava, em inglês. O resto da branch o review confirmou correto por verificação
+independente, inclusive que o `aria-checked: undefined` sobrevive ao `mergeProps` do Prime e que
+`h-67.5`/`w-17` saem no CSS construído.
+
+**O que o bloco NÃO provou, sem maquiagem:** nenhum teste automatizado cobre a aparência do login
+(PrimeReact no jsdom está fora do corte do runner), então a única guarda permanente é a catraca da
+Task 8 — que nem enxerga `style={{…}}`, o P-36; a não-regressão do `AppPassword` no `StaffUserDialog`
+é **inferência**, não medição, porque o segundo call site vive atrás do login e a revisão é read-only
+sem credencial; os estados de erro do login (credencial inválida, erro de campo, `loading`) seguem
+não vistos, porque alcançá-los exige submeter credencial e a skill proíbe fabricá-los por mock.
+
+Gate final depois dos cinco commits: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **29
+arquivos / 143 testes** — o baseline exato, como o plano projetou.
+
+**Estado:** `ready_for_review`. A próxima instrução aciona `/revisar-sprint`; este comando não a
+inicia sozinho.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
