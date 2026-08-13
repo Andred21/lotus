@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: catraca-max-lines-e-moldura
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
 active_plan: docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: 7c8d6c5
-updated_at: 2026-08-13T00:45:00-03:00
+state_basis_commit: 671bc94
+updated_at: 2026-08-13T00:31:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -143,6 +143,24 @@ silêncio (Q-2 de 2026-08-04, reincidente no BD-3); a Task 5 ainda reescreve rul
 
 **Estado: `ready_for_execution`.** `/executar-bloco catraca-max-lines-e-moldura` exige instrução
 posterior do João.
+
+### Execução — 2026-08-13: início
+
+`/executar-bloco catraca-max-lines-e-moldura` validou as âncoras (spec, plano, `context_packet`
+`null` coerente, Git limpo em `671bc94`, sem divergência) e abriu o gate main tree/worktree: bloco
+frontend puro, `using-git-worktrees` normal — a worktree `/home/jvbat/projetos/fix-frontend` na
+branch `feat/catraca-max-lines-e-moldura` já era o isolamento certo, sem criar nova.
+
+**Mesmo conflito do `rastro-unicidade-e-gates` reapareceu, e foi resolvido do mesmo jeito:** o
+plano recomenda `subagent-driven-development`; a sessão tem regra de não chamar o Agent tool sem
+pedido. Escalado ao João via pergunta direta — **subagent-driven-development**, com Agent tool
+autorizado para este bloco. Pre-flight scan do plano (10 tasks contra os Global Constraints e a
+spec): limpo, sem conflito novo — as dívidas aceitas (D2 sem guarda, D4 requisição ociosa, D8
+exceção de CTA) já são decisão declarada do João em §8 da spec, não achado a escalar aqui.
+
+Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `BD-3`, já fechado).
+
+**Estado:** `executing`.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
