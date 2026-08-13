@@ -41,7 +41,13 @@ export function LoginForm() {
           AppPassword e tem nome acessível próprio, então um <label> por fora
           somava os dois e o campo passava a se chamar "Contraseña Mostrar
           contraseña" (UI-03 do review de 2026-08-13). Com htmlFor/id o rótulo
-          nomeia só o input. */}
+          nomeia só o input.
+          O preço do htmlFor é que o erro do campo deixa de estar dentro do
+          rótulo, e aí só existe para quem vê a tela: `aria-describedby` o
+          reassocia e `aria-invalid` marca o estado, que o PrimeReact não
+          escreve (o `invalid` dele só pinta `.p-invalid`). Este par é o molde
+          que a P-37 manda copiar para o FormField — o `describedby` faz parte
+          do molde, não é acabamento. */}
       <div className="flex flex-col gap-1">
         <label htmlFor="login-email" className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.email")}</label>
         <AppInputText
@@ -53,9 +59,11 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("login.emailPlaceholder")}
           invalid={!!fieldErrors?.email}
+          aria-invalid={!!fieldErrors?.email}
+          aria-describedby={fieldErrors?.email ? "login-email-error" : undefined}
         />
         {fieldErrors?.email && (
-          <small style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
+          <small id="login-email-error" style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
         )}
       </div>
 
@@ -68,9 +76,11 @@ export function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           invalid={!!fieldErrors?.password}
+          aria-invalid={!!fieldErrors?.password}
+          aria-describedby={fieldErrors?.password ? "login-password-error" : undefined}
         />
         {fieldErrors?.password && (
-          <small style={{ color: dangerText }}>{fieldErrors.password[0]}</small>
+          <small id="login-password-error" style={{ color: dangerText }}>{fieldErrors.password[0]}</small>
         )}
       </div>
 
