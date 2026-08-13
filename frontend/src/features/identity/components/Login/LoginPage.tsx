@@ -8,7 +8,10 @@ export function LoginPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row dark:bg-slate-900">
+    <div
+      className="min-h-screen flex flex-col md:flex-row"
+      style={{ background: 'var(--surface-ground)' }}
+    >
 
       {/* Painel esquerdo (marca) */}
       <aside
@@ -39,7 +42,10 @@ export function LoginPage() {
 
       {/* Painel direito (form) */}
 
-      <main className="relative flex items-center justify-center p-8 md:w-1/2 dark:bg-slate-900">
+      <main
+        className="relative flex flex-1 items-center justify-center p-8 md:w-1/2 dark:border-t md:dark:border-t-0 md:dark:border-l"
+        style={{ background: 'var(--surface-card)', borderColor: 'var(--surface-border)' }}
+      >
       
         {/* idioma (ADR-15) + dark mode (ADR-16): o par vem inteiro do
             AppearanceControls. Aqui fica só o que é contexto do login — a
