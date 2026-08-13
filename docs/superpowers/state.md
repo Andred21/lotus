@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: catraca-max-lines-e-moldura
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
 active_plan: docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: 671bc94
-updated_at: 2026-08-13T00:31:00-03:00
+state_basis_commit: d50d7f8
+updated_at: 2026-08-13T03:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,6 +162,41 @@ exceção de CTA) já são decisão declarada do João em §8 da spec, não acha
 Ledger local reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `BD-3`, já fechado).
 
 **Estado:** `executing`.
+
+### Execução — 2026-08-13: fechamento
+
+10 tasks do plano completas via SDD, cada uma com revisor de task independente. Dois loops de fix
+durante a execução: Task 2 (`StudentClientField` devolvia `Fragment` quando devia devolver `<div>`
+— o `<p>` do aviso `clientLocked` não era irmão direto da section no original, achado escalado ao
+João, ele escolheu `<div>`); Task 9 (número esquecido em `backlog.md:143`). A catraca `max-lines`
+fechou de fato — array `ignores` do bloco removido inteiro em `eslint.config.js` (Task 5), regra
+vale sem exceção, `.claude/rules/frontend-fsliced.md:106` reescrito. `BudgetsTable`/`TurmasTable`
+migraram para `SearchableTableFrame` (D8: CTA muda comportamento só no caso lista-vazia-com-termo,
+verificado por álgebra exaustiva no review final). UI-01 corrigido (`AppFileRow` ganha `title`).
+
+**Gate da Task 10 — Steps 1-4 provados** (lint/build/test verdes, 29 arquivos/142 testes, os 6
+arquivos-alvo abaixo de 150, sem sonda/vazamento de camada/órfão). **Steps 5 e 6 (e2e do 422 de
+`phone` contra API real, checagem visual `/lotus-ui-review`) NÃO executados** — bloqueio de
+ambiente: nem o main tree (branch WIP alheia, 500 em `/api/students`) nem uma stack própria da
+worktree (comando `docker compose up` bloqueado pelo classifier de auto mode) ficaram disponíveis.
+Escalado ao João duas vezes; ele escolheu prosseguir sem essas duas provas. Débito explícito, não
+maquiado — ver `.superpowers/sdd/task-10-report.md` Step 7.
+
+**Review final de branch inteira** (opus, intervalo `0c2a24b..96d36ba`, depois `..d50d7f8`):
+veredito inicial "Ready to merge: With fixes" — 3 achados Important, todos verificados
+pessoalmente antes de agir: `SearchableTableFrame.tsx` sem `flex-wrap` (regressão de layout em
+telas estreitas nas duas tabelas migradas, achado real de CSS, não hipótese) e duas entradas do
+próprio `state.md` (aqui perto, §"Brainstorming e spec — 2026-08-13") que a Task 9 corrompeu com
+um find-replace cego — achado histórico do ponteiro fantasma virou afirmação invertida, e a
+descrição de uma spec ARQUIVADA (protegida por D9) passou a mentir sobre o que ela cita. Um fix
+subagent corrigiu os dois (commits `eb9bc47`, `d50d7f8`); re-review confirmou ambos resolvidos na
+raiz. **Veredito final: "Ready to merge: Yes."** Achados Minor (margem fina em dois arquivos
+novos, nome `SlotBody.tsx` foge da convenção `Redator*`, D6 muda espaçamento do banner em ~16px,
+`backlog.md:137` com racional que a spec provou falso, D8 sem guarda automatizada) ficam
+registrados no ledger local, não bloqueiam.
+
+**Estado:** `ready_for_review`. Próxima instrução aciona a revisão do trabalho ativo — este
+comando não a inicia sozinho.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
