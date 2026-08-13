@@ -1,5 +1,4 @@
-import { useRef } from 'react'
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useCrudForm } from '@shared/hooks'
 import type { CourseData, CourseModuleData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -42,15 +41,47 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
   // A resposta da API sempre traz `modules`; o `| undefined` do tipo é do lado da
   // ENTRADA (Optional). Normaliza aqui para o form não carregar o undefined.
   const entity: CourseFormFields | null = course ? { ...course, modules: course.modules ?? [] } : null
-  const { form, set, setForm, readOnly } = useEntityForm<CourseFormFields>(entity, mode, EMPTY, toFields)
-  const create = coursesApi.useCreate()
-  const update = coursesApi.useUpdate()
   const sync = useSyncCourseRedatores()
 
-  // Se o curso já foi criado numa tentativa anterior (o sync de redatores falhou),
-  // um resubmit NÃO pode recriá-lo — curso é registro de peso legal. Guarda o id e
-  // re-tenta só a habilitação. O ref zera sozinho: o dialog desmonta ao fechar.
-  const createdIdRef = useRef<number | null>(null)
+  const { crud, setForm } = useCrudForm<CourseFormFields, CourseData>(coursesApi, {
+    entity,
+    mode,
+    empty: EMPTY,
+    toFields,
+    // redator_ids NÃO entra: o backend ignora na escrita do curso.
+    // modules entra SEMPRE: o backend faz replace-total, então omitir o campo
+    // apagaria todos os módulos. Só os campos editáveis — sort_order e
+    // total_hours são derivados no backend e descartados no except() da Action.
+    toPayload: (f) => ({
+      name: f.name,
+      technical_name: f.technical_name,
+      description: f.description,
+      workload_hours: f.workload_hours,
+      modules: f.modules.map((m) => ({
+        name: m.name,
+        learnings: m.learnings,
+        contents: m.contents,
+        theory_hours: m.theory_hours,
+        practice_hours: m.practice_hours,
+      })),
+    }),
+    mapped: ['name', 'technical_name', 'description', 'workload_hours'],
+    // `modules` é a lista inteira (cada módulo mostra o próprio erro pelo
+    // prefixo). `redator_ids` NÃO está no payload do curso: é a chave que um
+    // 422 do `sync` traria, e sem ela aqui o erro não teria onde aparecer.
+    summaryOnly: ['modules', 'redator_ids'],
+    excludePrefixes: ['modules.'],
+    onDone,
+    // Segunda etapa do create: a habilitação mora em endpoint dedicado. Lança
+    // de propósito — é o que faz o `useCrudForm` segurar o diálogo aberto e,
+    // no resubmit, re-tentar só esta etapa em vez de recriar o curso (que é
+    // registro de peso legal). Em edit a habilitação é leitura.
+    afterCreate: async (created) => {
+      if (crud.form.redator_ids.length === 0) return
+      await sync.mutateAsync({ courseId: created.id!, redator_ids: crud.form.redator_ids })
+    },
+    extra: [sync],
+  })
 
   // Updater funcional: dois toggles no mesmo tick precisam ver o array já
   // atualizado pelo anterior (mesmo motivo do toggleCourse no redator).
@@ -83,63 +114,16 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
       return { ...f, modules }
     })
 
-  function submit() {
-    // redator_ids NÃO entra: o backend ignora na escrita do curso.
-    // modules entra SEMPRE: o backend faz replace-total, então omitir o campo
-    // apagaria todos os módulos. Só os campos editáveis — sort_order e total_hours
-    // são derivados no backend (do índice do array e da soma) e descartados no
-    // except() da Action.
-    const payload = {
-      name: form.name,
-      technical_name: form.technical_name,
-      description: form.description,
-      workload_hours: form.workload_hours,
-      modules: form.modules.map((m) => ({
-        name: m.name,
-        learnings: m.learnings,
-        contents: m.contents,
-        theory_hours: m.theory_hours,
-        practice_hours: m.practice_hours,
-      })),
-    }
-
-    if (mode === 'create') {
-      // Curso já criado numa tentativa anterior: só re-sincroniza a habilitação.
-      if (createdIdRef.current !== null) {
-        sync.mutate({ courseId: createdIdRef.current, redator_ids: form.redator_ids }, { onSuccess: onDone })
-        return
-      }
-      create.mutate(payload, {
-        onSuccess: (created) => {
-          createdIdRef.current = created.id!
-          // Sem redatores escolhidos, não dispara a 2ª chamada à toa.
-          if (form.redator_ids.length === 0) {
-            onDone()
-            return
-          }
-          sync.mutate({ courseId: created.id!, redator_ids: form.redator_ids }, { onSuccess: onDone })
-        },
-      })
-      return
-    }
-
-    // Em edit a habilitação é só leitura (edição mora em Pessoas): só os campos.
-    update.mutate({ id: course!.id!, payload }, { onSuccess: onDone })
-  }
-
   // Totais derivados: reagem ao que está sendo digitado, não ao último valor
   // salvo (o modules_total_hours do backend serve a consumidores de leitura).
-  const modulesTotal = form.modules.reduce((sum, m) => sum + m.theory_hours + m.practice_hours, 0)
+  const modulesTotal = crud.form.modules.reduce((sum, m) => sum + m.theory_hours + m.practice_hours, 0)
   // Curso sem módulo nenhum não é divergência — é curso sem módulo cadastrado.
-  const hoursMismatch = form.modules.length > 0 && modulesTotal !== form.workload_hours
-
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error, sync.error])
+  const hoursMismatch = crud.form.modules.length > 0 && modulesTotal !== crud.form.workload_hours
 
   return {
-    form, set, toggleRedator, readOnly, submit,
+    ...crud,
+    toggleRedator,
     addModule, removeModule, patchModule, moveModule,
     modulesTotal, hoursMismatch,
-    pending: create.isPending || update.isPending || sync.isPending,
-    fieldErrors, generalError,
   }
 }
