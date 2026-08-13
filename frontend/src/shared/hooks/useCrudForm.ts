@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react'
+import { useRef, type Dispatch, type SetStateAction } from 'react'
 import { useEntityForm, useMutationErrors } from './useEntityForm'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -141,19 +141,49 @@ export function useCrudForm<F extends { id?: number }, T>(
     }
   }
 
+  // Entidade já criada nesta sessão do diálogo, quando o `afterCreate` reprovou
+  // depois de o create ter dado certo. Sem isto, o resubmit criaria a entidade
+  // de novo — e curso, cliente e aluno são registros de peso legal. Não precisa
+  // zerar: o diálogo desmonta ao fechar, que é a mesma premissa do
+  // `createdIdRef` que este mecanismo substitui.
+  const createdRef = useRef<T | null>(null)
+
+  /**
+   * Roda a segunda etapa e só então fecha. Se ela lançar, o diálogo fica aberto
+   * (o erro já está no `fieldErrors` da mutação que falhou) e o `createdRef`
+   * segura o criado para o próximo submit.
+   *
+   * `photo.flush` NÃO lança de propósito (`useEntityPhoto.ts:97-101`), então os
+   * diálogos com foto nunca alcançam este caminho — quem o alcança é o
+   * `useCourseForm`, cuja segunda etapa é o `sync` de redatores.
+   */
+  async function runAfterCreate(created: T) {
+    try {
+      await afterCreate?.(created)
+    } catch {
+      return
+    }
+    onDone()
+  }
+
   function submit() {
     if (mode === 'create') {
+      if (createdRef.current !== null) {
+        void runAfterCreate(createdRef.current)
+        return
+      }
+
       create.mutate(toPayload(form, 'create'), {
-        onSuccess: async (created: T) => {
-          await afterCreate?.(created)
-          onDone()
+        onSuccess: (created: T) => {
+          createdRef.current = created
+          void runAfterCreate(created)
         },
       })
       return
     }
 
     // O id do PUT vem da ENTIDADE, nunca do form: o form é editável e o alvo
-    // do update não pode depender do que o usuário digitou (spec D10).
+    // do update não pode depender do que o usuário digitou.
     if (entity?.id == null) return
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }

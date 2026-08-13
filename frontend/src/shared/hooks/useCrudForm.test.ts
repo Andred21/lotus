@@ -247,3 +247,55 @@ describe('useCrudForm — mutações extras', () => {
     expect(result.current.crud.fieldErrors?.redator_ids).toEqual(['inválido'])
   })
 })
+
+describe('useCrudForm — afterCreate retentável', () => {
+  it('não recria a entidade no resubmit depois de o afterCreate reprovar', async () => {
+    const spy: { create: unknown[] } = { create: [] }
+    let deveFalhar = true
+    const tentativas: number[] = []
+    const done: string[] = []
+
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(spy), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        onDone: () => done.push('done'),
+        afterCreate: async (created: { id?: number }) => {
+          tentativas.push(created.id as number)
+          if (deveFalhar) throw new Error('segunda etapa reprovou')
+        },
+      }),
+    )
+
+    await act(async () => { result.current.crud.submit() })
+
+    expect(spy.create).toHaveLength(1)
+    expect(tentativas).toEqual([99])
+    expect(done).toEqual([])   // afterCreate lançou: o diálogo NÃO fecha
+
+    deveFalhar = false
+    await act(async () => { result.current.crud.submit() })
+
+    expect(spy.create).toHaveLength(1)          // <- o create NÃO se repete
+    expect(tentativas).toEqual([99, 99])        // <- só a 2ª etapa re-tentou
+    expect(done).toEqual(['done'])
+  })
+
+  it('fecha o diálogo quando o afterCreate passa de primeira', async () => {
+    const done: string[] = []
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create' as const,
+        onDone: () => done.push('done'),
+        afterCreate: async () => undefined,
+      }),
+    )
+
+    await act(async () => { result.current.crud.submit() })
+
+    expect(done).toEqual(['done'])
+  })
+})
