@@ -4,29 +4,8 @@ import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { AppErrorState } from '../AppErrorState'
+import { mergePt } from '../mergePt'
 import { appDataTablePt, appPaginatorPt } from './style'
-
-/** Mescla o passthrough do chamador com o da base POR CHAVE. Um spread raso
- * faria `pt={{ root: ... }}` descartar o `className` base do root em silêncio. */
-function mergePt(
-  base: DataTablePassThroughOptions,
-  override?: DataTableProps<DataTableValueArray>['pt'],
-): DataTablePassThroughOptions {
-  if (!override) return base
-  const merged: Record<string, unknown> = { ...base }
-  for (const [key, value] of Object.entries(override as Record<string, unknown>)) {
-    const current = merged[key]
-    if (
-      current && typeof current === 'object' && !Array.isArray(current) &&
-      value && typeof value === 'object' && !Array.isArray(value)
-    ) {
-      merged[key] = { ...(current as object), ...(value as object) }
-    } else {
-      merged[key] = value
-    }
-  }
-  return merged as DataTablePassThroughOptions
-}
 
 export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T> & {
   /** Contagem em prosa do rodapé. Passá-la liga a faixa: o paginador do
@@ -126,8 +105,11 @@ export function AppDataTable<T extends DataTableValueArray>({
       // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
       paginatorLeft={loading ? t('common.loading') : footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
-      pt={mergePt(
-        mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, widthPt),
+      pt={mergePt<DataTableProps<DataTableValueArray>['pt']>(
+        mergePt<DataTablePassThroughOptions>(
+          { ...appDataTablePt, paginator: appPaginatorPt },
+          widthPt,
+        ),
         pt as DataTableProps<DataTableValueArray>['pt'],
       )}
       loading={loading && !errored}

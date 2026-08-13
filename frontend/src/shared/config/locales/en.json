@@ -1,12 +1,12 @@
 {
   "login": {
     "title": "Sign in",
-    "subtitle": "Enter your credentials",
+    "subtitle": "Access for administrators and writers",
     "email": "Email",
     "emailPlaceholder": "email@company.cl",
     "password": "Password",
     "submit": "Sign in",
-    "forgot": "Forgot your password?"
+    "forgot": "Lost your access? Ask the platform administrator."
   },
   "brand": {
     "tagline": "Professional training platform",
@@ -16,6 +16,8 @@
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "toggleTheme": "Toggle theme",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",

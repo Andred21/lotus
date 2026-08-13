@@ -1,12 +1,12 @@
 {
   "login": {
     "title": "Entrar",
-    "subtitle": "Acesse com suas credenciais",
+    "subtitle": "Acesso para administradores e redatores",
     "email": "E-mail",
     "emailPlaceholder": "email@empresa.cl",
     "password": "Senha",
     "submit": "Entrar",
-    "forgot": "Esqueceu sua senha?"
+    "forgot": "Perdeu o acesso? Peça ao administrador da plataforma."
   },
   "brand": {
     "tagline": "Plataforma de capacitação profissional",
@@ -16,6 +16,8 @@
     "language": "Idioma",
     "toggleMenu": "Alternar menu",
     "toggleTheme": "Alternar tema",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "save": "Salvar",
     "cancel": "Cancelar",
     "close": "Fechar",

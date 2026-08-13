@@ -10,6 +10,18 @@
   --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
+  /* Degradê do painel de marca do login (UI-05 do review de 2026-08-12). Era
+   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com BRAND_COLOR interpolado
+   * em JS e o segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o
+   * transform do tema gerado alcançam template string em `.tsx`.
+   *
+   * Os dois pontos são degraus que JÁ existem, e a escala `--primary-*` é
+   * idêntica byte a byte nas duas folhas geradas: por isso o painel é
+   * superfície escura FIXA nos dois temas, como a sidebar, sem redeclarar nada
+   * por tema. Diferença de luminância entre as pontas: 1,13:1 — degradê
+   * mínimo, não campo de cor. */
+  --brand-gradient: linear-gradient(160deg, var(--primary-900), var(--brand-navy));
+
   /* Traço de foco. O PADRÃO é celeste, e é o que vale no tema escuro inteiro
    * (6,76:1 sobre o noche) e nas superfícies navy FIXAS do shell — que não
    * acompanham o tema. São elas que impedem este token de ser só "navy no

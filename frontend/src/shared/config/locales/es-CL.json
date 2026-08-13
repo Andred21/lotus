@@ -1,12 +1,12 @@
 {
   "login": {
     "title": "Iniciar sesión",
-    "subtitle": "Ingresa con tus credenciales",
+    "subtitle": "Acceso para administradores y redactores",
     "email": "Correo electrónico",
     "emailPlaceholder": "correo@empresa.cl",
     "password": "Contraseña",
     "submit": "Iniciar sesión",
-    "forgot": "¿Olvidaste tu contraseña?"
+    "forgot": "¿Perdiste el acceso? Pídelo al administrador de la plataforma."
   },
   "brand": {
     "tagline": "Plataforma de capacitación profesional",
@@ -16,6 +16,8 @@
     "language": "Idioma",
     "toggleMenu": "Alternar menú",
     "toggleTheme": "Cambiar tema",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "save": "Guardar",
     "cancel": "Cancelar",
     "close": "Cerrar",

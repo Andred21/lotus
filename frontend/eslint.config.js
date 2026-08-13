@@ -138,11 +138,13 @@ const DISABLED_READONLY_ESTATICO = {
   message:
     'Campo que nasce só-leitura não é input desabilitado: use <FormField readOnly value={…}> — o input corta o valor e derruba o contraste (spec BD-3 §4).',
 }
-// Catraca da regra de cor: lista que só ENCOLHE. Login e Validação têm fundo
-// escuro deliberado — mudá-las é desenho novo, não pagamento de débito (D7).
+// Catraca da regra de cor: lista que só ENCOLHE. A Validação tem fundo escuro
+// deliberado e mudá-la é desenho novo, não pagamento de débito (D7). O Login
+// SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
+// `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
+// em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
+// quem precisa de cor pede token ao tema.
 const CATRACA_COR = [
-  'src/features/identity/components/Login/LoginForm.tsx',
-  'src/features/identity/components/Login/LoginPage.tsx',
   'src/features/certification/components/Validation/ValidationPage.tsx',
   'src/features/commercial/components/Budget/CourseStep.tsx',
   'src/features/commercial/components/Budget/QuoteWizard.tsx',

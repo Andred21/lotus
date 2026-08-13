@@ -30,68 +30,6 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
-4. **Login · a tela que ficou fora do ADR-16**
-   — evidência: `/lotus-ui-review` de 2026-08-12 sobre `/login`
-   (`.artifacts/ui-review/2026-08-12T14-38-43-loginpage-wrappers/report.txt`, **2 C + 8 B**), mais a
-   lente `frontend-design` aplicada por cima. O bloco `estilizacao-adr16-shell-tipografia` tocou
-   `LoginPage.tsx` em **2 linhas** e o resto da tela ficou onde estava: é a única superfície do
-   produto que não lê **nenhum** token do tema, medido — `--surface-ground`, `--surface-card`,
-   `--text-color` e `--text-color-secondary` estão carregados nela e nenhum é consumido.
-
-   **O argumento não é a lista de achados, é que a lista tem uma causa só.** A direção registrada
-   fixou a assinatura do produto em *sidebar navy com wordmark* e a estética em "precisão
-   instrumental técnico-regulatória". O login responde com **split-screen de gradiente celeste**, que
-   é o default de tela de login SaaS e inventa uma segunda linguagem visual — inclusive uma segunda
-   cor de marca, `#1b7fb8`, que não existe em `brand-theme.css` nem nas duas folhas geradas.
-   Corrigir os dez achados um a um remenda sintoma; **trocar o painel de marca de gradiente para a
-   navy `azul-poste` faz cinco deles caírem por construção**, porque a navy é superfície escura fixa
-   nos dois temas e o `AppLogo` passa a usar `variant="on-dark"` por ser correto, não por remendo.
-
-   Direção proposta (decisão do João no brainstorming — nada aqui está aprovado):
-   - painel de marca em `--brand-navy`, mesma superfície fixa da sidebar; celeste deixa de ser campo
-     e vira o único acento sobre ela;
-   - painel do form em `--surface-ground` (humo) com o formulário num cartão `--surface-card`, que é
-     a gramática de superfície de todas as outras telas;
-   - `h1` no papel de display (`font-display`/Archivo 600, `tracking-tight`, `var(--text-color)`),
-     igual ao `PageHeader` — hoje é `text-2xl font-bold` em Inter, que é exatamente o uniforme que a
-     direção de 2026-08-11 existe para matar;
-   - `v0.1.0` no terceiro papel tipográfico (IBM Plex Mono + `tabular-nums`): é o único artefato
-     técnico da tela e hoje é Inter 12px a **2,79:1**. O papel do "voltímetro" nunca aparece na
-     primeira tela do produto;
-   - copy revista: "Ingresa tus credenciales" não diz nada que o usuário não saiba, e
-     "¿Olvidaste tu contraseña?" promete um fluxo que não tem endpoint.
-
-   Os dois **C** e os oito **B**, na ordem em que o relatório os classifica:
-   - **C-1 — wordmark ilegível no tema claro**, 1,45:1 a 2,30:1 (tinta média `rgb(78,98,109)` sobre
-     o gradiente). `AppLogo variant="auto"` escolhe o asset pelo **tema**; o painel é celeste nos
-     dois. No escuro fica branco e legível — é seleção de asset, não qualidade do asset.
-   - **C-2 — overflow horizontal a 390px** (`scrollWidth` 416 contra `innerWidth` 390), com o olho da
-     senha fora da tela. Causa: `AppPassword` fixa `inputClassName="w-96"` (384px absolutos) enquanto
-     o irmão `AppInputText` usa `w-full`. **É defeito do wrapper**: toda tela com `AppPassword` +
-     `leftIcon` herda. Não cabe neste bloco se o BD-3 andar antes — decidir a ordem na promoção.
-   - a tela não lê token nenhum: fundo branco em vez de humo `#f1f5f9` no claro, `slate-900` em vez
-     de noche `#0b1220` no escuro, rótulos de campo em **preto puro** `rgb(0,0,0)` (sem classe de
-     cor), `h1` em slate-800 e subtítulo em gray-500;
-   - `h1` fora do papel tipográfico (Inter 700 contra Archivo 600 do `PageHeader`);
-   - gradiente cravado em JS com `#1b7fb8` fora de qualquer fonte de verdade — mesmo modo de falha
-     do D-P11 daquele bloco, que achou `#25A5E4` inline no `AppAvatar`; grep de hex não alcança
-     template string em `.tsx`;
-   - texto sobre o gradiente reprova AA: tagline **3,10:1** (16px) e versão **2,79:1** (12px). Branco
-     cheio sobre o mesmo ponto ainda daria 3,46:1 — o problema é o par cor-de-fundo, não a opacidade;
-   - "¿Olvidaste tu contraseña?" a **2,60:1** e fora da ordem de tabulação (é `<a>` sem `href`);
-   - `AppPassword` mantém `aria-label="Show Password"` do default do PrimeReact com `lang=es-CL` —
-     wrapper, não call site, e chega a toda tela com senha;
-   - os dois campos sem `autocomplete` (`username`/`current-password`); o próprio Chrome registra o
-     aviso no console;
-   - a 390px o par idioma/tema divide a faixa vertical do `h1`, porque é `absolute top-4 right-4` do
-     `main` e no layout de coluna o `main` começa logo abaixo do painel de marca.
-
-   **O que o review confirmou funcionando, e que o bloco não deve regredir:** anel de foco
-   azul-poste 2px visível nas seis paradas do Tab; botão primário celeste com texto navy e raio 4px
-   saindo do tema; troca de idioma reformatando na hora.
-
-   Fora de escopo declarado: fluxo de recuperação de senha (não tem endpoint — a decisão aqui é só
-   o que a tela mostra enquanto ele não existe).
 
 ## Blocos de execução de dívida — BD-2..BD-7 (proposta de 2026-08-10)
 
