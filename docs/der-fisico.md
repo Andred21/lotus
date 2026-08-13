@@ -104,6 +104,9 @@
   `CourseData`, `templates`/`modules` ausentes do payload significam "não mexe"; `[]` apaga. Um
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
+  Desde 2026-08-13 a lei tem mecanismo, e não só convenção:
+  `tests/Feature/Shared/PersistenceLawsTest.php` reprova coleção nested sem `Optional`, e projeção
+  de saída se declara com `#[ReadOnlyCollection]` em vez de entrar numa allowlist.
 - **Contexto total (alvo):** 26 tabelas — 19 de domínio (16 implementadas + `certificates`,
   `certificate_sequences`, `feedbacks` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
   `audits`, que esta lista classifica como Transversal). Implementadas até

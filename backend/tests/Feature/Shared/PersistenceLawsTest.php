@@ -2,6 +2,13 @@
 
 namespace Tests\Feature\Shared;
 
+use App\Shared\Data\Attributes\ReadOnlyCollection;
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Optional;
 use Tests\Support\ScansPhpSource;
 use Tests\TestCase;
 
@@ -178,5 +185,96 @@ class PersistenceLawsTest extends TestCase
             ],
             $encontrados,
         )));
+    }
+
+    /**
+     * Coleção nested read-write nasce `Optional` (`der-fisico.md`, ADR-04).
+     *
+     * `array = []` faz o replace-total da Action apagar a coleção de quem só
+     * OMITIU o campo — em silêncio, com peso legal. A lei existia desde o Bloco
+     * 5 e o `ClientData` a violou mesmo assim, em duas propriedades: convenção
+     * sem mecanismo depende de alguém lembrar.
+     *
+     * A varredura usa reflexão, e não regex, porque a pergunta é sobre o TIPO
+     * ("admite Optional?"), que o texto do arquivo responde mal — o default e a
+     * união podem estar em linhas diferentes do atributo.
+     *
+     * `#[ReadOnlyCollection]` é a única saída, e é declarada no sítio: o
+     * atributo sozinho não sabe o sentido da coleção, e uma guarda que
+     * reprovasse projeção de saída (`BudgetData::$quotes`, `$files` — nenhuma
+     * Action as lê) prometeria cobrir uma lei que não é essa.
+     *
+     * Nasce VERDE: as quatro read-write (`ClientData` ×2, `CourseData` ×2) são
+     * `Optional` e as duas de saída estão marcadas.
+     */
+    public function test_colecao_nested_read_write_nasce_optional(): void
+    {
+        $encontrados = [];
+
+        foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+            $local = str_replace(base_path().'/', '', $arquivo);
+
+            if (! str_contains($local, '/Data/')) {
+                continue;
+            }
+
+            $classe = 'App\\'.str_replace('/', '\\', substr($local, strlen('app/'), -strlen('.php')));
+
+            if (! class_exists($classe)) {
+                continue;
+            }
+
+            $construtor = (new ReflectionClass($classe))->getConstructor();
+
+            if ($construtor === null) {
+                continue;
+            }
+
+            foreach ($construtor->getParameters() as $parametro) {
+                if ($parametro->getAttributes(DataCollectionOf::class) === []) {
+                    continue;
+                }
+
+                if ($parametro->getAttributes(ReadOnlyCollection::class) !== []) {
+                    continue;
+                }
+
+                if ($this->admiteOptional($parametro->getType())) {
+                    continue;
+                }
+
+                $encontrados[] = "{$classe}::\${$parametro->getName()}";
+            }
+        }
+
+        sort($encontrados);
+
+        $this->assertSame([], $encontrados, implode("\n", array_merge(
+            [
+                'Colecao nested read-write nasce Optional (ADR-04, der-fisico.md).',
+                'Ausente = nao mexe; [] = apaga. Com `array = []`, o replace-total da Action',
+                'apaga a colecao de quem so omitiu o campo — em silencio.',
+                'Se a colecao so existe na SAIDA, marque com #[ReadOnlyCollection]. Ocorrencias:',
+            ],
+            $encontrados,
+        )));
+    }
+
+    /** O tipo admite `Optional` — direto ou como parte de uma união. */
+    private function admiteOptional(?ReflectionType $tipo): bool
+    {
+        if ($tipo instanceof ReflectionNamedType) {
+            return $tipo->getName() === Optional::class;
+        }
+
+        if ($tipo instanceof ReflectionUnionType) {
+            foreach ($tipo->getTypes() as $parte) {
+                if ($parte instanceof ReflectionNamedType && $parte->getName() === Optional::class) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
