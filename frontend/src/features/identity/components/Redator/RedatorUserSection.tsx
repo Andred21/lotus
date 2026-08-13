@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AppPhotoField, FormSection } from "@shared/ui";
+import { FormPhotoRow, FormSection } from "@shared/ui";
 import type { useEntityPhoto } from "@shared/hooks";
 import type { RedatorFormFields } from "../../hooks/useRedatorForm";
 import { RedatorIdentityFields } from "./RedatorIdentityFields";
@@ -27,30 +27,14 @@ export function RedatorUserSection({
     <>
       <FormSection title={t("redator.sectionUser")} />
 
-      <div className="flex flex-col lg:flex-row justify-between">
-        <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
-          <AppPhotoField
-            name={form.name}
-            url={photo.url}
-            readOnly={readOnly}
-            pending={photo.pending}
-            error={photo.error}
-            onSelect={photo.onSelect}
-            onRemove={photo.onRemove}
-            onSizeReject={photo.onSizeReject}
-            onRetry={photo.onRetry}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4 w-full">
-          <RedatorIdentityFields
-            form={form}
-            set={set}
-            readOnly={readOnly}
-            fieldErrors={fieldErrors}
-          />
-        </div>
-      </div>
+      <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
+        <RedatorIdentityFields
+          form={form}
+          set={set}
+          readOnly={readOnly}
+          fieldErrors={fieldErrors}
+        />
+      </FormPhotoRow>
     </>
   );
 }

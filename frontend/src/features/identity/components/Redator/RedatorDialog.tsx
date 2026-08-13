@@ -83,10 +83,12 @@ export function RedatorDialog({
 
       <FormErrorSummary
         errors={fieldErrors}
-        // `useRedatorForm` não roda sobre `useCrudForm` (decisão do BD-5), então
-        // não há `errorSummary` a espalhar: a lista é literal, no estilo do
-        // CourseDialog/QuoteWizard. Só name, rut e email têm `error=` no campo;
-        // phone, course_ids e documents[<tipo>] caem aqui.
+        // `useRedatorForm` não roda sobre `useCrudForm`: o create é multipart
+        // (`new FormData()`), e `toPayload` devolvendo objeto não modela isso —
+        // critério mantido no BD-5 (2026-08-13), não corte de escopo. Sem
+        // `errorSummary` a espalhar, a lista é literal, no estilo do
+        // CourseDialog. Só name, rut e email têm `error=` no campo; phone,
+        // course_ids e documents[<tipo>] caem aqui.
         mapped={['name', 'rut', 'email']}
       />
 
