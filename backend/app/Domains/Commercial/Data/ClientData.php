@@ -27,6 +27,20 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[TypeScript]
 class ClientData extends Data
 {
+    /**
+     * Texto ÚNICO da regra "um ou mais contatos" (Drive,
+     * `entidade-contato-cliente.md`). A mesma regra é recusada em três lugares —
+     * `min:1` aqui, `CreateClientAction` no create, `DeleteClientContactAction`
+     * na rota nested — e cada um tinha a sua redação: duas em PT-BR ("precisa
+     * de" / "precisa ter") e a do `min:1` em espanhol, pelo locale do validador
+     * (review de 2026-08-13, Q-3). O operador via três mensagens para o mesmo
+     * "não".
+     *
+     * A LÍNGUA do resto da validação continua sendo a pergunta em aberto (Q-6,
+     * congelada pelo João); isto aqui fecha só a divergência de redação.
+     */
+    public const CONTATO_OBRIGATORIO = 'O cliente precisa de ao menos um contato.';
+
     public function __construct(
         public int|Optional $id,
         #[Required]
@@ -63,6 +77,18 @@ class ClientData extends Data
             // rules() é estático e não distingue verbo (Drive
             // `entidade-contato-cliente.md`, ratificado em 2026-07-31).
             'contacts' => ['sometimes', 'array', 'min:1'],
+        ];
+    }
+
+    /**
+     * A recusa de `contacts: []` fala a mesma frase das duas Actions. Sem isto,
+     * este caminho — e SÓ este — devolvia a mensagem genérica do validador.
+     */
+    public static function messages(): array
+    {
+        return [
+            'contacts.min' => self::CONTATO_OBRIGATORIO,
+            'contacts.array' => self::CONTATO_OBRIGATORIO,
         ];
     }
 

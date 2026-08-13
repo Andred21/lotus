@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: contrato-de-entrada-identidade-e-nested
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: ready_for_closure
+next_owner: joao
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
 active_plan: docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
 state_basis_commit: e06c204
-updated_at: 2026-08-13T19:15:00-03:00
+updated_at: 2026-08-13T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -236,6 +236,90 @@ recebeu asserção formal neste gate (fora do escopo de escrita do bloco).
 
 **Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
 `/revisar-sprint` (ou equivalente) sobre o trabalho ativo.
+
+### Review de sprint — 2026-08-13: ALTO risco, UMA lente, 4 achados
+
+Risco ALTO pelo gabarito: `generated.ts` regenerado (lei §5.3), forma do 422 mudando em quatro rotas,
+eixo de identidade. **A segunda lente foi recusada pelo João** — o despacho ao Codex não foi
+autorizado, e o review saiu com lente única. Fica declarado, não resolvido em silêncio (mesmo
+precedente do fechamento de 2026-08-12).
+
+**Gate reproduzido, não herdado:** backend 590 passed / 5 skipped / 2146 assertions; frontend
+`pnpm build` verde, `pnpm lint` limpo, 28 arquivos / 139 testes; `typescript:transform` sem diff;
+Pint `passed` nos `.php` do bloco; zero `dd(`/`dump(`/`console.log`/`SONDA` no diff.
+
+**Órfãos: zero.** `ensureRutAvailable`/`ensureEmailAvailable` não existem mais em `app/`, `tests/`
+nem `database/` — a D5 na forma forte. Os nove caminhos de escrita de identidade passam pela porta
+única (4 via `provision()`, 5 diretos), conferidos um a um.
+
+Os quatro achados, com as duas provas por sonda (árvore restaurada nos dois casos):
+
+1. **Q-1 🟡/P — `#[ReadOnlyCollection]` era isenção AUTO-DECLARADA.** A guarda dava `continue` na
+   marca antes de qualquer checagem: DTO sonda com `#[DataCollectionOf] public array $itens = []`
+   reprovava; a MESMA sonda, `array = []` intacto, passava só por ganhar a marca. A guarda não olhava
+   Action nenhuma — a read-only-ness, que é a premissa inteira da exceção, era a única parte não
+   mecanizada (a spec §1.5 a mediu à mão, uma vez).
+2. **Q-2 🟡/P — checagem de `contacts` rodava depois de escrever.** Sonda: `POST /api/clients` sem
+   `contacts` e com e-mail ocupado devolvia `status 422 | chaves: email`. Só `email`. Dois
+   round-trips para o operador, num check que é entrada pura e custa zero de banco.
+3. **Q-3 🟢/P — uma regra, três redações**, e duas línguas: "precisa **de** ao menos um contato"
+   (`CreateClientAction`), "precisa **ter** ao menos um contato" (`DeleteClientContactAction`) e
+   `El campo contacts debe tener al menos 1 elementos.` (o `min:1` de `rules()`, pelo locale `es` do
+   validador).
+4. **Q-4 🟢/P — marca inerte:** `BudgetData::$files` tinha `#[ReadOnlyCollection]` sem
+   `#[DataCollectionOf]`, então a guarda não olhava a propriedade de jeito nenhum e a marca sugeria
+   cobertura inexistente.
+
+**Descartado como achado, com razão registrada:** o objeto `entity` novo a cada render em
+`useClientForm` (o `useEntityForm` reseta comparando `id`+`mode`, não identidade — não há laço); o
+filtro SQL reescrito no `UniquenessInsideTransactionTest` (ainda discrimina); o `| undefined` na
+saída do `ClientData` (consequência declarada da D4, custo medido); a língua das mensagens (Q-6,
+congelada pelo João); `BudgetData` não migrar (D9).
+
+**Fora dos achados:** o deferimento do `rut` do `UpdateStaffUserAction`, declarado no relatório de
+execução acima como "vale backlog", nunca chegou ao `backlog.md`.
+
+### Correção dos achados — 2026-08-13: os 4 aprovados pelo João, os 4 aplicados
+
+Cada um com o vermelho visto antes do verde, sem exceção.
+
+- **Q-3** — `ClientData::CONTATO_OBRIGATORIO` vira o texto único, com `messages()` cobrindo
+  `contacts.min`/`contacts.array`, e as duas Actions passam a citar a constante. Vermelho real: as
+  três asserções de mensagem do `ClientContactMinimumTest` eram `fn ($m) => is_string($m)` — vagas
+  **porque** o texto variava. Apertadas para a frase literal, 3 reprovaram (duas em espanhol, uma
+  com "precisa ter"). A LÍNGUA do resto da validação segue sendo o Q-6 congelado; isto fecha só a
+  divergência de redação desta regra.
+- **Q-2** — a checagem de contato sai de dentro da transação e vai para o topo do `execute()`, antes
+  de `provision()` e do `client()->create()`. Vermelho por teste novo em `ClientCrudTest`
+  (`test_store_sem_contatos_reclama_do_contato_antes_da_identidade`): contra o código velho
+  `errors.contacts` vinha `null`. **O que isto NÃO faz, dito sem maquiagem:** o caso combinado
+  continua devolvendo UM campo por vez — agora `contacts` em vez de `email`. Agregar os dois num
+  422 exigiria plumbar a regra de contato (Commercial) por dentro do `ensureIdentityAvailable`
+  (Identity), e o preço não paga: a D7 agrega o que mora na MESMA chamada, e estes dois moram em
+  camadas diferentes. O que a correção compra é a ordem determinística e a transação contendo só
+  escrita.
+- **Q-1** — a marca deixou de ser palavra-de-honra. A guarda agora varre `app/` atrás de
+  `$data-><campo>` em arquivos que citam a classe do DTO, e reprova nomeando o sítio. Vermelho por
+  sonda (`SondaQ1Action` lendo `$data->quotes`): `BudgetData::$quotes: marcada como SAIDA, mas lida
+  da entrada em app/Domains/Commercial/Actions/SondaQ1Action.php`. Sonda apagada, árvore conferida
+  por `git status`. Limite honesto e declarado no docblock: só arquivos que citam a classe entram, e
+  a convenção `XData $data` é o que torna isso preciso — falso positivo aqui é barulhento, falso
+  negativo é o que a guarda existe para não ter.
+- **Q-4** — `BudgetData::$files` ganha `#[DataCollectionOf(FileData::class)]`, e a guarda passou a
+  reprovar marca sem coleção. Este foi o único vermelho que **não** precisou de sonda: a checagem
+  nova nomeou `BudgetData::$files` no primeiro `run`. `QuoteData::$files` — mesmo defeito na classe
+  irmã, um nível abaixo (não tinha nem a marca, então era invisível) — recebeu os dois atributos no
+  mesmo commit; é escopo ligeiramente além do achado, declarado aqui de propósito.
+
+**Gate após as correções:** backend **591 passed, 5 skipped, 2149 assertions** (+1 caso, o do Q-2);
+Pint `passed` nos 8 arquivos tocados; `typescript:transform` **sem diff** — nenhuma mudança de
+contrato TS, nenhum consumidor frontend tocado, e por isso o gate do frontend não foi rerodado.
+
+O deferimento do `rut` do `UpdateStaffUserAction` foi registrado em `backlog.md`, em
+`## Débitos técnicos`.
+
+**Estado: `ready_for_closure`.** O review não executa fechamento — `/fechar-sprint` é instrução
+explícita do João.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 

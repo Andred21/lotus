@@ -420,3 +420,15 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   **Os outros dois foram fechados pelo bloco `guardas-que-faltam` em 2026-08-11:** (Q-2) o barrel
   `shared/hooks/index.ts` parou de exportar `unclassifiedPayloadKeys`, `MutableResource` e
   `CrudFormOptions`; (Q-3) chave declarada em `mapped` **e** em `summaryOnly` passou a reprovar.
+
+- **`UpdateStaffUserAction` apaga o `rut` do staff num `PUT` que só o OMITE.** `UserData::$rut` é
+  `Optional`, e a Action traduz `Optional` para `null` antes de gravar
+  (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`): quem manda o
+  formulário sem a chave zera o RUT de um usuário que tinha. É a mesma classe do defeito que o
+  bloco `contrato-de-entrada-identidade-e-nested` fechou nas coleções nested — omissão virando
+  apagamento —, num campo escalar. **Pré-existente e fora do escopo daquele bloco**, que só
+  atravessou o arquivo para trocar a checagem de unicidade pela porta única; declarado no relatório
+  de execução de 2026-08-13 e registrado aqui na correção do review do mesmo dia. Saída: o próximo
+  commit que tocar a escrita do staff decide entre preservar o valor atual quando a chave falta e
+  exigir a chave no `PUT` — decisão do João, porque muda contrato de entrada. DoD é o teste que
+  mostra o RUT sobrevivendo à omissão, não o `if` novo.

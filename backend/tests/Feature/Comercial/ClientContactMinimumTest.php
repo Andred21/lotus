@@ -46,7 +46,7 @@ class ClientContactMinimumTest extends TestCase
 
         $this->putJson("/api/clients/{$client->id}", $this->payload(['contacts' => []]))
             ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', fn ($m) => is_string($m));
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
 
         // O contato existente NÃO foi apagado pelo replace-total.
         $this->assertSame(1, $client->contacts()->count());
@@ -77,7 +77,7 @@ class ClientContactMinimumTest extends TestCase
 
         $this->postJson('/api/clients', $this->payload(['contacts' => []]))
             ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', fn ($m) => is_string($m));
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
     }
 
     public function test_update_com_um_contato_continua_passando(): void
@@ -108,7 +108,7 @@ class ClientContactMinimumTest extends TestCase
 
         $this->deleteJson("/api/contacts/{$contact->id}")
             ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', fn ($m) => is_string($m));
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
 
         $this->assertSame(1, $client->contacts()->count());
     }

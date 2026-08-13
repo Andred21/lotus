@@ -214,6 +214,30 @@ class ClientCrudTest extends TestCase
             ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
     }
 
+    /**
+     * A checagem de contato é entrada PURA — custo zero de banco — e por isso
+     * roda antes de qualquer escrita. Ela rodava depois do `provision()` e do
+     * `client()->create()`, e o efeito aparecia quando as duas coisas estavam
+     * erradas na mesma requisição: o POST sem contatos com e-mail ocupado
+     * devolvia só `email`. O operador corrigia o e-mail, reenviava, e SÓ ENTÃO
+     * descobria que faltava contato — dois round-trips, que é o custo que a
+     * agregação de RUT+e-mail (spec D7) existe para eliminar (review de
+     * 2026-08-13, Q-2).
+     */
+    public function test_store_sem_contatos_reclama_do_contato_antes_da_identidade(): void
+    {
+        $this->actingAsAdmin();
+        User::factory()->create(['email' => 'info@switch.cl']);
+
+        $payload = $this->payload();
+        unset($payload['contacts']);
+
+        $this->postJson('/api/clients', $payload)
+            ->assertStatus(422)
+            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.')
+            ->assertJsonMissingPath('errors.email');
+    }
+
     public function test_store_sem_a_chave_addresses_cria_sem_endereco(): void
     {
         $this->actingAsAdmin();
