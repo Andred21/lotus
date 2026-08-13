@@ -29,7 +29,23 @@ export interface SearchableTableState<T> {
   clear: () => void
 }
 
-export interface SearchableTableFrameProps<T> {
+/** Filtro próprio da tabela (dropdown, chips) e a forma de limpá-lo, indivisíveis
+ * de propósito: sem `filterSlot` nenhum dos dois existe; com ele, `onClearFilter`
+ * é OBRIGATÓRIO.
+ *
+ * O contrato era prosa ("quem passa `filterSlot` passa também um `clear`
+ * COMPOSTO no `table`") e três consumidores remontavam o mesmo `clearAll` à mão.
+ * Esquecer produzia um "Limpar filtros" que não devolvia a lista — a mesma
+ * classe de falha silenciosa que o `filtering` do `useTableFilter` existiu para
+ * matar em 2026-08-03, quando `BudgetsTable` e `TurmasTable` erraram juntas.
+ * Instrução repetida três vezes quer mecanismo, não parágrafo (lição 14): agora
+ * a moldura compõe (`table.clear()` + `onClearFilter()`) e o par é união
+ * discriminada — passar o slot sem o clear não compila (review do BD-4, Q-2). */
+type FilterSlotProps =
+  | { filterSlot?: undefined; onClearFilter?: undefined }
+  | { filterSlot: ReactNode; onClearFilter: () => void }
+
+interface SearchableTableFrameBaseProps<T> {
   /** Vem pronto da feature — quem declara `searchable` é quem tem o vocabulário
    * de domínio (spec D3). */
   table: SearchableTableState<T>
@@ -38,12 +54,6 @@ export interface SearchableTableFrameProps<T> {
    * genérico nas 5 tabelas e a moldura monta sozinha (spec D4). */
   emptyState: ReactNode
   footerCount: ReactNode
-  /** Filtro próprio da tabela (dropdown, chips), renderizado na toolbar depois
-   * do input de busca. Quem passa isto passa também um `clear` COMPOSTO no
-   * `table`: o `clear` do `useTableFilter` limpa só a busca, e o vazio de filtro
-   * abaixo oferece `common.clearFilters` — se o filtro próprio não for limpo
-   * junto, o botão não devolve a lista. `HistorialTable` é o primeiro caso. */
-  filterSlot?: ReactNode
   actions?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
@@ -54,6 +64,8 @@ export interface SearchableTableFrameProps<T> {
   /** As `<AppColumn/>`. */
   children: ReactNode
 }
+
+export type SearchableTableFrameProps<T> = SearchableTableFrameBaseProps<T> & FilterSlotProps
 
 /** Moldura de tabela em card com busca: toolbar, os dois empty states, corpo e
  * rodapé-paginador. As 5 tabelas busca-só repetiam este bloco literalmente —
@@ -70,6 +82,7 @@ export function SearchableTableFrame<T>({
   emptyState,
   footerCount,
   filterSlot,
+  onClearFilter,
   actions,
   loading,
   error,
@@ -81,6 +94,12 @@ export function SearchableTableFrame<T>({
   // Filtrando sem termo de busca = só o `filterSlot` está estreitando a lista;
   // oferecer "limpar busca" ali mandaria o usuário apagar um campo já vazio.
   const filteredBySearch = table.term !== ''
+  // A composição é da moldura, não do chamador: `table.clear()` do
+  // `useTableFilter` limpa só a busca, e este botão promete os dois.
+  const clearAll = () => {
+    table.clear()
+    onClearFilter?.()
+  }
   const empty = table.filtering ? (
     <AppEmptyState
       icon="pi pi-search"
@@ -91,7 +110,7 @@ export function SearchableTableFrame<T>({
           label={filteredBySearch ? t('common.clearSearch') : t('common.clearFilters')}
           icon="pi pi-times"
           text
-          onClick={table.clear}
+          onClick={clearAll}
         />
       }
     />

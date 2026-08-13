@@ -151,6 +151,13 @@ exceção. Na dúvida, siga o vizinho da mesma
   `TurmasTable` e `BudgetsTable` faziam isso com `status === null` e erravam o empty state juntas,
   porque o Dropdown do PrimeReact devolve o OBJETO da opção quando `option.value` é vazio
   (`dropdown.cjs.js:1441`; use `optionValue="value"` sempre que uma opção valer `null`/`''`).
+  **Filtro próprio entra pelo par `filterSlot` + `onClearFilter`, e o par é obrigatório por tipo:**
+  quem passa o slot passa o callback, porque o "Limpar filtros" do vazio promete os dois e o
+  `table.clear()` do `useTableFilter` limpa só a busca. A composição é da moldura, não do chamador —
+  o contrato era prosa, três telas remontavam o mesmo `clearAll` à mão e esquecê-lo devolvia um botão
+  que não devolve a lista (mesma classe de falha silenciosa do parágrafo acima). Instrução repetida
+  três vezes quer mecanismo (lição 14): virou união discriminada em `SearchableTableFrameProps`, e o
+  esquecimento agora não compila (review do BD-4, 2026-08-13).
   **O rodapé é o paginador:** passe `footerCount` ao
   `AppDataTable` e não renderize `AppCardFooter` junto de tabela — o wrapper exibe a faixa sempre e
   os controles de página só quando passa de `rows` (spec D12). Reescrever o bloco na feature foi o

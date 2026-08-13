@@ -57,15 +57,11 @@ export function BudgetsTable({
     ...STATUSES.map((s) => ({ label: t(`quoteStatus.${s}`), value: s })),
   ]
 
-  // Composto: o vazio de filtro da moldura oferece `common.clearFilters`, e sem
-  // limpar o dropdown junto o estado do status ficaria preso (o `clear` do
-  // `useTableFilter` sozinho só limpa a busca).
-  const clearAll = () => { table.clear(); setStatus(null) }
-
   return (
     <SearchableTableFrame
-      table={{ ...table, clear: clearAll }}
+      table={table}
       searchPlaceholder={t('budget.searchPlaceholder')}
+      onClearFilter={() => setStatus(null)}
       filterSlot={
         <div className="w-48">
           <AppDropdown

@@ -52,15 +52,11 @@ export function useHistorial() {
     table.resetPage()
   }
 
-  // Contrato do `filterSlot` (SearchableTableFrame): quem passa um filtro
-  // próprio devolve um `clear` COMPOSTO — o `table.clear()` do
-  // `useTableFilter` limpa só a busca, e o vazio de filtro da moldura oferece
-  // "limpiar filtros" sobre os dois (busca + estado). A composição sai daqui
-  // pronta: montá-la no JSX da tela era pedir que a tela soubesse do contrato.
-  const clearAll = () => {
-    table.clear()
-    setStatusFilterState(null)
-  }
+  // Só o filtro de estado: a composição com a busca é da moldura, que exige
+  // este callback junto do `filterSlot` (SearchableTableFrame). Sem
+  // `resetPage()` porque quem limpa já volta à lista inteira, e a moldura chama
+  // o `table.clear()` no mesmo clique.
+  const clearStatusFilter = () => setStatusFilterState(null)
 
   const statusSummary = {
     vigentes: table.rows.filter((c) => certStatus(c) === 'vigente').length,
@@ -83,9 +79,10 @@ export function useHistorial() {
   }
 
   return {
-    table: { ...table, clear: clearAll },
+    table,
     statusFilter,
     setStatusFilter,
+    clearStatusFilter,
     statusSummary,
     loading: certificates.isLoading,
     loadError: certificates.isError ? (certificates.error ?? null) : null,

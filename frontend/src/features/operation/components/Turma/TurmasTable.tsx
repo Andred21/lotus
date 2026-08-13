@@ -37,12 +37,11 @@ export function TurmasTable({
     ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
   ]
 
-  const clearAll = () => { table.clear(); setStatus(null) }
-
   return (
     <SearchableTableFrame
-      table={{ ...table, clear: clearAll }}
+      table={table}
       searchPlaceholder={t('operation.table.search')}
+      onClearFilter={() => setStatus(null)}
       filterSlot={
         <div className="w-48">
           <AppDropdown
