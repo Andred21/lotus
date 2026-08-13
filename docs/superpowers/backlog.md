@@ -140,7 +140,7 @@ Ordem (a adoção vem antes porque tira linha das tabelas antes de medir os diá
 3. `StudentDialog` abaixo de 150 linhas, **pagando junto** o `FormErrorSummary` que falta — hoje o
    `summaryOnly: ['phone']` classifica certo e o 422 não aparece em tela nenhuma;
 4. `RedatorDialog` abaixo de 150, mesmo pagamento;
-5. `RedatorDocumentSlot` (175) e `BudgetDetailPage` (171);
+5. `RedatorDocumentSlot` (175) e `BudgetDetailPage` (187; medido 2026-08-13);
 6. cada arquivo sai dos `ignores` do `eslint.config.js` **no mesmo commit** da extração.
 
 DoD: comportamento idêntico na tela; o 422 de `phone` aparecendo; `ignores` vazio ao fim.
