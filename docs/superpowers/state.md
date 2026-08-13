@@ -2,17 +2,22 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: ready_for_review
+workflow_state: blocked
 next_owner: joao
-next_action: request_sprint_review
-resume_state: null
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: docs/superpowers/plans/2026-08-13-login-fora-do-adr16.md
 context_packet: null
-blocker: null
+blocker: >-
+  `/revisar-sprint` devolveu 3 achados aguardando triagem do João: Q-1 (faixa de marca mobile de
+  altura fixa — wordmark a 68px como compensação da margem de UA que o commit `2173681` nomeou e
+  deixou de pé), Q-2 (erro de campo do login sem `aria-describedby`/`aria-invalid` depois da UI-03,
+  e é o molde que a P-37 manda copiar para o `FormField`) e Q-3 (`pt` do chamador sobrescrito por
+  chave inteira no `AppPassword`). Só achado aprovado vira commit.
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: a734dfc
-updated_at: 2026-08-13T17:34:00-03:00
+state_basis_commit: 49cedb3
+updated_at: 2026-08-13T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -315,6 +320,80 @@ arquivos / 143 testes** — o baseline exato, como o plano projetou.
 
 **Estado:** `ready_for_review`. A próxima instrução aciona `/revisar-sprint`; este comando não a
 inicia sozinho.
+
+### Review de sprint — 2026-08-13: BAIXO risco, uma lente, 3 achados
+
+**BAIXO pelo gate binário da skill:** zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal gerado; `executor: claude`. A spec §9 declara o mesmo BAIXO —
+sem divergência a mostrar. **Só lente Claude, sem Codex.**
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **29 arquivos / 143 testes** (o baseline exato, como o plano projetou); as três locales
+com **545 chaves cada**; `git diff main...HEAD -- backend/ generated.ts` com **zero arquivo**, o que
+mantém backend/Pint/`typescript:transform` N/A por escopo medido; os três arquivos de código abaixo
+da régua de 150 (`LoginForm` 86, `LoginPage` 56, `AppPassword` 83); higiene limpa (zero
+`console.log`/`debugger`/`1b7fb8`/`w-96` em código vivo).
+
+**A catraca foi provada nos dois sentidos (lição 10), não por lint verde:** `text-slate-800`
+reintroduzido no `<p>` do subtítulo faz o lint reprovar em
+`LoginForm.tsx:35:22` com `Cor Tailwind hardcoded: Tailwind é layout, cor vem de variável do tema
+(ADR-16).`; árvore restaurada e lint de volta a 0.
+
+**Órfãos: zero, conferido por grep.** `--brand-gradient` tem exatamente um consumidor
+(`LoginPage.tsx:19`); `BRAND_COLOR` continua vivo em `FormSection.tsx:19` e `CoursesTable.tsx:43`, e
+portanto não virou export morto ao sair do login; `common.showPassword`/`hidePassword` são lidas só
+pelo wrapper, que é a porta única por desenho; a constante `darkInput` saiu sem deixar consumidor.
+
+**Duas afirmações do bloco foram verificadas na fonte instalada, não aceitas do relatório:**
+o `aria-checked: undefined` sobrevive de fato ao `mergeProps` (a função faz `merged[key] = value`
+iterando as chaves do objeto de `pt`, então a chave explícita apaga o `'true'` do Prime); e o
+`role="button"` não quebra teclado, porque `onToggleMaskKeyDown` (`password.cjs.js:588`) já trata
+`Enter` **e** `Space`, que é exatamente o contrato do papel de botão. `h-67.5` e `w-17` materializam
+no CSS construído como `calc(var(--spacing) * 67.5)` = 270px e `* 17` = 68px. A escala `--primary-*`
+é idêntica nas duas folhas para os quatro degraus que a tela usa (200/300/400/900).
+
+**Os três achados:**
+
+1. **Q-1 🟡 M** — `LoginPage.tsx:16,19`: a faixa de marca mobile tem **altura fixa com
+   `overflow-hidden`**, então ela absorve o conteúdo em vez de crescer — e o preço foi pago no
+   wordmark, que caiu de 208px (desktop) para **68px** no telefone. Medido no asset (335×466, banda
+   do "LOTUS" com 54px e a sub-linha com 23px): a 68px o wordmark tem **11,0px** de altura e a
+   sub-linha **4,7px**; a 208px são 33,5px e 14,3px. A causa raiz está escrita no corpo do próprio
+   commit `2173681` — o Preflight do Tailwind está desligado (`index.css:7,10`), então cada `<p>` do
+   painel carrega 1em de margem de agente de usuário que não colapsa com o `gap` do flex — e **não
+   foi removida**: o fix comprou espaço encolhendo a marca. Duas consequências: o `gap-1` do aside
+   virou decoração (quem espaça são as margens de UA), e sob zoom de texto o conteúdo volta a cortar,
+   que é o defeito Critical que a Task 7 já corrigiu uma vez neste bloco.
+2. **Q-2 🟡 P** — `LoginForm.tsx:47-54,64-72`: a UI-03 trocou o `<label>` que embrulhava o campo por
+   `htmlFor`/`id` e, com isso, o `<small>` do erro de campo **perdeu a única associação que tinha**.
+   O Prime não escreve `aria-invalid` (zero ocorrência em `inputtext.cjs.js`) — `invalid` só pinta
+   `.p-invalid` —, então um 422 em `email`/`password` (vivo por `useLoginForm.ts:21`) fica sem
+   `aria-describedby` e sem estado: aparece na tela e não existe para leitor de tela. O
+   `generalError` não tem o problema, porque o `FormErrorBanner` é `role="alert"`. **O que torna
+   isto mecanismo e não acabamento:** a P-37 aponta `LoginForm.tsx:40-70` como "o molde já existe e
+   está medido" para consertar o `FormField`, e o embrulho em `<label>` é justamente o que hoje faz
+   o `error` do kit ser anunciado (`FormField.tsx:34-46`) — copiar o molde como está tiraria a
+   associação de erro de **todo** diálogo do sistema.
+3. **Q-3 🟢 P** — `AppPassword.tsx:47-56`: `pt={{ ...pt, ...ariaPt }}` sobrescreve **chaves
+   inteiras** do chamador. Pinar depois do spread é o padrão da rule ("pine o override após o
+   spread"), mas a granularidade está errada: quem passar `pt.showIcon`, `pt.hideIcon` ou
+   `pt.iconField` perde `className`/`style`/handlers junto, em silêncio. Latente — nenhum dos 2 call
+   sites passa `pt` hoje —, e o custo de fundir por chave é de minutos.
+
+**O que NÃO virou achado, e por quê:** decisão registrada não é achado — a lacuna da catraca de cor
+(P-36), o nome acessível do `FormField` (P-37), a ausência de teste de componente sobre a aparência
+do login e a não-regressão do `AppPassword` no `StaffUserDialog` como inferência já estão escritas
+como débito declarado. A remoção do `darkInput` foi conferida contra o irmão: o `AppInputText`
+também não empilha `dark:`, e o docblock dele manda não empilhar — os dois wrappers ficaram
+simétricos, não divergentes.
+
+**Veredito: o bloco está bom.** Vinte e um commits, o gate reproduzido nos números do baseline,
+nenhuma lei §5 tocada, nenhuma utility de cor sobrevivendo nos dois arquivos que saíram da catraca.
+Os três achados são um de causa-raiz não paga (Q-1), um de mecanismo que vai infectar a P-37 se não
+for escrito agora (Q-2) e um de granularidade de merge (Q-3); nenhum é de correção de dado.
+
+**Estado:** `blocked`, `next_action: approve_review_findings`. Só achado aprovado pelo João vira
+commit; depois o estado volta a `reviewing` e as checagens pertinentes se repetem.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
