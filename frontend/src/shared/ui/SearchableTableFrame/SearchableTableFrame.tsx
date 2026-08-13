@@ -103,7 +103,7 @@ export function SearchableTableFrame<T>({
     <>
       <AppCardToolbar
         start={
-          <div className="flex min-w-64 flex-1 items-center gap-3">
+          <div className="flex min-w-64 flex-1 flex-wrap items-center gap-3">
             <div className="min-w-64 flex-1">
               <AppInputText
                 leftIcon="pi pi-search"
