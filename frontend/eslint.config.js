@@ -247,7 +247,6 @@ export default defineConfig([
     // entrar aqui. Não acrescente arquivo para calar o lint.
     ignores: [
       'src/features/identity/components/Redator/RedatorDialog.tsx',
-      'src/features/identity/components/Redator/RedatorDocumentSlot.tsx',
       'src/features/commercial/components/Budget/BudgetDetailPage.tsx',
     ],
     rules: {
