@@ -15,10 +15,10 @@ export function LoginPage() {
 
       {/* Painel esquerdo (marca) */}
       <aside
-        className="relative flex h-[250px] flex-col items-center justify-center gap-4 p-10 md:h-auto md:w-1/2 overflow-hidden"
+        className="relative flex h-67.5 flex-col items-center justify-center gap-1 p-6 md:h-auto md:w-1/2 md:gap-4 md:p-10 overflow-hidden"
         style={{ background: 'var(--brand-gradient)' }}
       >
-        <AppLogo variant="on-dark" className="w-[150px] md:w-52" />
+        <AppLogo variant="on-dark" className="w-17 md:w-52" />
 
         <p className="text-center text-xl" style={{ color: 'var(--primary-200)' }}>
           {t("brand.tagline")}
