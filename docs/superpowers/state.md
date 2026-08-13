@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: login-fora-do-adr16
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 7c28699
-updated_at: 2026-08-13T11:40:00-03:00
+state_basis_commit: d0cc270
+updated_at: 2026-08-13T13:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,60 @@ updated_at: 2026-08-13T11:40:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
+
+### Exceção declarada à invariante de um `active_work_item`
+
+**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-13**, e isto
+está escrito porque a invariante do topo deste arquivo diz o contrário. O `/planejar-bloco` do Login
+abriu com o estado `idle` no main tree **e** com o `usecrudform-mais-fundo` (BD-5) já em
+`ready_for_planning` na worktree `fix-frontend`, promovido por `5bf54f3` às 12:32 — dois `state.md`
+divergentes no mesmo repositório. Não foi resolvido por heurística: a divergência foi mostrada e ele
+escolheu **paralelo**, precedente do BD-4 × BD-9 (2026-08-13).
+
+**A diferença para aquele precedente é que aqui a sobreposição não é zero, e foi medida antes de
+decidir**, não depois:
+
+1. `FormErrorBanner` — o BD-5 o reescreve (`shared/ui/FormField/FormField.tsx:119`, falha
+   bufferizada) e `LoginForm.tsx:32` é call site (`variant="inline"`), num arquivo que este bloco
+   reescreve inteiro.
+2. `AppPassword.tsx:47` — a troca de `w-96` por `w-full` (decisão 6 do item) muda a largura
+   renderizada dentro de `StaffIdentifyFields`, consumido só por `StaffUserDialog`, que é um dos
+   quatro diálogos do trio da foto do BD-5. Interferência de comportamento, não de texto.
+3. `shared/config/locales/{es-CL,pt-BR,en}.json` — os dois blocos escrevem nos três arquivos.
+
+**Árvores trocadas em relação ao que o `5bf54f3` escreveu, também por decisão dele:** o Login fica no
+**main tree** `/home/jvbat/projetos/lotus`, branch `feat/login-fora-do-adr16` criada de `d0cc270`; o
+BD-5 fica na worktree `fix-frontend`, onde a branch dele já estava checada. O texto do `5bf54f3`
+("main tree, porque o DoD é foto real no S3") descreve uma decisão que este gate substituiu; ele vive
+na branch do BD-5 e não foi editado daqui — corrigi-lo é trabalho daquele bloco, não deste.
+
+### Seleção — 2026-08-13
+
+**Item 4 de "Próximos blocos" (`backlog.md:33`), promovido explicitamente pelo João.** O gate do
+`/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5): o argumento
+era **título de seção**, não slug promovido. As três decisões dele fecharam o gate: o slug
+`login-fora-do-adr16`; **rota direta a `ready_for_planning` sem Context Packet**; e o main tree.
+
+**A ausência de fonte externa foi medida, não presumida.** Grep por `drive.google`, `notion.so`,
+`figma.com` e `docs.google` no `backlog.md` devolve **zero ocorrência**; a única referência externa
+do item é o artifact `claude.ai` da análise "Placa de acesso" rev. 2 — saída de agente, não fonte de
+regra de negócio —, e as oito decisões, a tabela de escala, a tabela de copy, o degradê sem hex novo
+e o destino um a um dos 2 C + 8 B estão **transcritos** em `backlog.md:62-189`. A evidência do
+`/lotus-ui-review` de 2026-08-12 **existe no disco**:
+`.artifacts/ui-review/2026-08-12T14-38-43-loginpage-wrappers/` com `report.txt` (154 linhas), 6 PNGs
+e 4 snapshots YAML. Diretório gitignored, portanto volátil — o registro durável é o texto do backlog.
+
+**A direção decidida entra neste commit.** As 134 linhas do item 4 estavam **não commitadas** no
+working tree do main tree quando o comando abriu: decisão durável vivendo onde um `git checkout` a
+apagaria. Entram aqui como artefato do mesmo commit da promoção.
+
+**Superfície medida do bloco (fato, não desenho):** `LoginPage.tsx`, `LoginForm.tsx`,
+`shared/ui/AppPassword/AppPassword.tsx`, `shared/ui/AppLogo/AppLogo.tsx`,
+`shared/styles/brand-theme.css` e os três locales. `AppPassword` tem **2 call sites** — `LoginForm` e
+`StaffIdentifyFields` —, exatamente o alcance que o backlog escreveu. **Frontend puro: a P-03 não
+dispara**, e o backend que serve o `:8080` é o desta branch, que não toca `backend/`.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
