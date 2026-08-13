@@ -31,6 +31,7 @@ import { useStudentDetail } from "../../api/useStudentDetail";
 import { useStudentForm } from "../../hooks/useStudentForm";
 import { useStudentClients } from "../../hooks/useStudentClients";
 import { StudentIdentityFields } from "./StudentIdentifyFields";
+import { dangerText } from "@shared/styles/tokens"
 
 export function StudentDialog({
   visible,
@@ -125,10 +126,7 @@ export function StudentDialog({
               {clients.isError && (
                 <p
                   className="mt-1 flex items-center justify-between gap-2 text-xs"
-                  style={{
-                    color:
-                      "color-mix(in srgb, var(--red-500) 70%, var(--text-color))",
-                  }}
+                  style={{ color: dangerText }}
                 >
                   <span>
                     {clients.errorDetail ?? t("common.loadErrorHint")}
@@ -182,7 +180,7 @@ export function StudentDialog({
               title={t("common.loadError")}
               detail={detail.error?.detail ?? t("common.loadErrorHint")}
               retryLabel={t("common.retry")}
-              onRetry={() => void detail.refetch()}
+              onRetry={detail.refetch}
             />
           ) : (
             <>

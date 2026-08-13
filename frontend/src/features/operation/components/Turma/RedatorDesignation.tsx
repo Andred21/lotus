@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
+import { dangerText } from '@shared/styles/tokens'
 
 type Picker = ReturnType<typeof useRedatorPicker>
 
@@ -95,7 +96,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
       />
 
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.helpNote')}</p>
-      {picker.error && <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>{picker.error}</p>}
+      {picker.error && <p className="text-sm" style={{ color: dangerText }}>{picker.error}</p>}
 
       <AppDialog visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
         <PickerBody

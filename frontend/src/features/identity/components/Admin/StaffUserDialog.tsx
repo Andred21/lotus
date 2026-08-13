@@ -116,23 +116,30 @@ export function StaffUserDialog({
               className="mt-2 w-1/2"
             />
           </FormField>
-          <FormField label={t("admin.role")} error={fieldErrors?.role?.[0]}>
+          <FormField
+            label={t("admin.role")}
+            error={fieldErrors?.role?.[0]}
+            readOnly={readOnly}
+            value={roleOptions.find((o) => o.value === form.role)?.label ?? form.role}
+          >
             <AppDropdown
               value={form.role}
               options={roleOptions}
               optionLabel="label"
               optionValue="value"
-              disabled={readOnly}
               onChange={(e) => set("role", e.value)}
             />
           </FormField>
-          <FormField label={t("admin.state")}>
+          <FormField
+            label={t("admin.state")}
+            readOnly={readOnly}
+            value={form.is_active ? t("common.active") : t("common.inactive")}
+          >
             <AppDropdown
               value={form.is_active}
               options={stateOptions}
               optionLabel="label"
               optionValue="value"
-              disabled={readOnly}
               onChange={(e) => set("is_active", e.value)}
             />
           </FormField>

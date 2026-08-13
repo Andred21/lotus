@@ -109,6 +109,16 @@ exceção. Na dúvida, siga o vizinho da mesma
   (`abstracao-componentes-operation` 2026-08-02, `zerar-catraca-e-componentes-commercial` e
   `abstracao-componentes-catalog` 2026-08-03) — e de uma lição mais cara: a régua era **citada** pelas
   specs e pelo `state.md` como se estivesse escrita aqui, e não estava em lugar nenhum (lição 13).
+- **Catraca nova mede a própria população com o seletor dela, nunca com o grep que originou o
+  débito.** Grep acha a **grafia**; o seletor acha o **defeito**. Antes de declarar a lista de
+  sítios de uma regra nova, rode o seletor dela e conte — se o número não bater com o do grep, o
+  grep é que está errado. Reincidência medida, duas vezes no mesmo `eslint.config.js`: a regra de
+  query-em-componente nasceu casando só `arguments.0` e reproduzia o buraco que fechava (Q-2 de
+  2026-08-04), e a de modo leitura do BD-3 nasceu de um `grep disabled={readOnly}` que achou 41
+  sítios — o seletor por forma achou **17 a mais** (`disabled={f.readOnly}`,
+  `disabled={readOnly || !isCreate}` e o par estático `<AppInputText disabled readOnly />`, este
+  último com dado de peso legal truncado em input cinza). Uma catraca que enumera em vez de medir
+  nasce com a exceção embutida e ninguém a vê, porque ela fica **verde**.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.

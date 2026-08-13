@@ -15,7 +15,10 @@ type Props = {
   removeError?: string
   onResetRemove: () => void
   error?: { detail?: string | null } | null
-  onRetry?: () => void
+  /** Repassa o refetch da página: é a promise que mantém o Reintentar do
+   * AppErrorState em `loading` (Q-14). Tipar `() => void` aqui compilaria e
+   * faria a camada do meio mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
 }
 
 // Sem coluna CLIENTE: EnrollmentData não expõe cliente (a turma tem um único

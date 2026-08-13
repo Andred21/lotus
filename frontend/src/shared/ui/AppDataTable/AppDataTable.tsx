@@ -37,8 +37,11 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
    * `AppErrorState` (spec D16). Estruturalmente compatível com `ProblemDetails`
    * sem importar de `shared/api`. */
   error?: { detail?: string | null } | null
-  /** Recarrega a lista. Sem ele o estado de erro não oferece botão. */
-  onRetry?: () => void
+  /** Recarrega a lista. Sem ele o estado de erro não oferece botão.
+   * Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
+   * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
+   * retorno — e faria o tipo mentir sobre o contrato. */
+  onRetry?: () => void | Promise<unknown>
 }
 
 /** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
@@ -81,7 +84,21 @@ export function AppDataTable<T extends DataTableValueArray>({
   // visível numa tela estreita — o oposto do que a Task 33 resolveu nos
   // diálogos.
   const hasRows = (data?.length ?? 0) > 0
-  const widthPt: DataTablePassThroughOptions = hasRows ? {} : { table: { className: '' } }
+  // Sem linhas, sem cabeçalho. A largura mínima já era zerada aqui, e não
+  // bastou: os seis `<th>` com `px-4 py-2.5` têm largura intrínseca própria e
+  // sustentam a tabela mesmo com o corpo ocupado por um único `<td>` de estado
+  // vazio (452px de conteúdo para 276px visíveis, medido em 390x844). Cabeçalho
+  // sobre zero linha não informa nada: não há coluna a interpretar.
+  //
+  // `loading` NÃO é estado vazio, e por isso o cabeçalho fica: durante o GET
+  // inicial a lista também está vazia, e esconder o `thead` ali fazia o
+  // cabeçalho sumir e voltar a cada carregamento, com o card saltando de altura
+  // — exatamente o que a decisão do Q-15, três linhas abaixo, recusou ao manter
+  // a faixa do rodapé sempre montada (review do BD-3, Q-3). A largura mínima
+  // segue zerada sempre que não há linha, carregando ou não.
+  const widthPt: DataTablePassThroughOptions = hasRows
+    ? {}
+    : { table: { className: '' }, ...(loading ? {} : { thead: { className: 'hidden' } }) }
 
   const body = errored ? (
     <AppErrorState
@@ -105,7 +122,9 @@ export function AppDataTable<T extends DataTableValueArray>({
       rows={rows}
       paginator={footerCount !== undefined && !errored}
       alwaysShowPaginator
-      paginatorLeft={footerCount}
+      // Desligar o paginador durante o `loading` foi recusado: a faixa some e
+      // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
+      paginatorLeft={loading ? t('common.loading') : footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
       pt={mergePt(
         mergePt({ ...appDataTablePt, paginator: appPaginatorPt }, widthPt),

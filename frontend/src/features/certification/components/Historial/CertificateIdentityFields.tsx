@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, FormField } from '@shared/ui'
+import { FormField } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 
 type Props = {
@@ -25,12 +25,8 @@ export function CertificateIdentityFields({ certificate }: Props) {
 
   return (
     <>
-      <FormField label={t('certificate.fieldCodigo')}>
-        <AppInputText value={certificate.codigo} disabled readOnly />
-      </FormField>
-      <FormField label={t('certificate.fieldAlumno')}>
-        <AppInputText value={certificate.snapshot.aluno.name} disabled readOnly />
-      </FormField>
+      <FormField label={t('certificate.fieldCodigo')} readOnly value={certificate.codigo} />
+      <FormField label={t('certificate.fieldAlumno')} readOnly value={certificate.snapshot.aluno.name} />
     </>
   )
 }

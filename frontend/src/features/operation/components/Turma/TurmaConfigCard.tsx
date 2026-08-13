@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary } from '@shared/ui'
-import type { DialogMode } from '@shared/lib'
+import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
+import { dangerText } from '@shared/styles/tokens'
 
 type Props = {
   mode: DialogMode
@@ -24,6 +25,13 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
     { label: t('operation.modality.online'), value: 'online' },
   ]
 
+  // Valor de APRESENTAÇÃO da data em leitura: o formato curto do locale ativo,
+  // como a tela mostra em toda parte, nunca o ISO cru que o backend espera.
+  // `T00:00:00` sem `Z` para parsear à meia-noite LOCAL — `new Date('YYYY-MM-DD')`
+  // recua um dia em fuso negativo, e o Chile é UTC-3/-4 (mesma razão do
+  // `isoToDate` do AppDatePicker).
+  const readDate = (iso: string) => (iso ? formatDate(new Date(`${iso}T00:00:00`)) : '')
+
   return (
     <div className="space-y-5 p-4">
       <div className="flex items-center justify-between">
@@ -34,46 +42,68 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('operation.config.modality')} error={f.fieldErrors?.modalidade?.[0]}>
+        <FormField
+          label={t('operation.config.modality')}
+          error={f.fieldErrors?.modalidade?.[0]}
+          readOnly={f.readOnly}
+          value={modalityOptions.find((o) => o.value === f.form.modalidade)?.label ?? f.form.modalidade}
+        >
           <AppDropdown
             value={f.form.modalidade}
             options={modalityOptions}
-            disabled={f.readOnly}
             onChange={(e) => f.set('modalidade', e.value)}
           />
         </FormField>
 
-        <FormField label={t('operation.config.local')} error={f.fieldErrors?.local_aplicacao?.[0]}>
+        <FormField
+          label={t('operation.config.local')}
+          error={f.fieldErrors?.local_aplicacao?.[0]}
+          readOnly={f.readOnly}
+          value={f.form.local_aplicacao ?? ''}
+        >
+          {/* O `disabled` que sobra NÃO é modo leitura: turma online não tem
+              local a preencher, e isso vale em EDIÇÃO. Modo leitura sai pelo
+              `readOnly` acima. */}
           <AppInputText
             value={f.form.local_aplicacao ?? ''}
             placeholder={t('operation.config.localPlaceholder')}
-            disabled={f.readOnly || f.form.modalidade === 'online'}
+            disabled={f.form.modalidade === 'online'}
             onChange={(e) => f.set('local_aplicacao', e.target.value)}
           />
         </FormField>
 
-        <FormField label={t('operation.config.startDate')} error={f.fieldErrors?.start_date?.[0]}>
-          <AppDatePicker value={f.form.start_date || null} disabled={f.readOnly} onChange={(v) => f.set('start_date', v ?? '')} />
+        <FormField
+          label={t('operation.config.startDate')}
+          error={f.fieldErrors?.start_date?.[0]}
+          readOnly={f.readOnly}
+          value={readDate(f.form.start_date)}
+        >
+          <AppDatePicker value={f.form.start_date || null} onChange={(v) => f.set('start_date', v ?? '')} />
         </FormField>
 
-        <FormField label={t('operation.config.endDate')} error={f.fieldErrors?.end_date?.[0]}>
-          <AppDatePicker value={f.form.end_date || null} disabled={f.readOnly} onChange={(v) => f.set('end_date', v ?? '')} />
+        <FormField
+          label={t('operation.config.endDate')}
+          error={f.fieldErrors?.end_date?.[0]}
+          readOnly={f.readOnly}
+          value={readDate(f.form.end_date)}
+        >
+          <AppDatePicker value={f.form.end_date || null} onChange={(v) => f.set('end_date', v ?? '')} />
         </FormField>
 
         {mode !== 'create' && (
-          <FormField label={t('operation.config.workload')}>
-            <AppInputText
-              value={f.workloadHours != null ? t('operation.config.workloadValue', { hours: f.workloadHours }) : '—'}
-              disabled
-              readOnly
-            />
-          </FormField>
+          /* Carga horária é derivada do curso: nasce só-leitura em qualquer
+             modo, então não há controle a montar. */
+          <FormField
+            label={t('operation.config.workload')}
+            readOnly
+            value={f.workloadHours != null ? t('operation.config.workloadValue', { hours: f.workloadHours }) : ''}
+          />
         )}
       </div>
 
       <FormErrorSummary errors={f.fieldErrors} mapped={MAPPED} />
       {f.generalError && (
-        <p className="text-sm" style={{ color: 'color-mix(in srgb, var(--red-500) 70%, var(--text-color))' }}>
+        <p className="text-sm" style={{ color: dangerText }}>
           {f.generalError}
         </p>
       )}

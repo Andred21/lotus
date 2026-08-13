@@ -4,6 +4,7 @@ import { AppButton } from "../AppButton";
 import { AppFileUpload } from "../AppFileUpload";
 import type { FileUploadHandlerEvent } from "../AppFileUpload";
 import { MAX_PHOTO_BYTES } from "@shared/lib/upload";
+import { dangerText } from "../../styles/tokens"
 
 export interface AppPhotoFieldProps {
   /** Nome da pessoa/empresa — vira as duas iniciais quando não há foto. */
@@ -83,10 +84,7 @@ export function AppPhotoField({
         {error && (
           <p
             className="flex items-center gap-2 text-xs"
-            style={{
-              color:
-                "color-mix(in srgb, var(--red-500) 70%, var(--text-color))",
-            }}
+            style={{ color: dangerText }}
           >
             <span>{error}</span>
             {onRetry && (
