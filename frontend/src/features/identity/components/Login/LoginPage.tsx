@@ -12,18 +12,26 @@ export function LoginPage() {
 
       {/* Painel esquerdo (marca) */}
       <aside
-        className="relative flex flex-col items-center justify-center gap-4 p-10 text-white md:w-1/2 overflow-hidden"
+        className="relative flex flex-col items-center justify-center gap-4 p-10 md:w-1/2 overflow-hidden"
         style={{ background: 'var(--brand-gradient)' }}
       >
-        <AppLogo className="w-40" />
+        <AppLogo variant="on-dark" className="w-52" />
 
-        <p className="text-center opacity-90">
+        <p className="text-center text-xl" style={{ color: 'var(--primary-200)' }}>
           {t("brand.tagline")}
-          <br />
+        </p>
+
+        <p
+          className="text-center font-mono text-xs uppercase tracking-[0.14em]"
+          style={{ color: 'var(--primary-400)' }}
+        >
           {t("brand.sector")}
         </p>
-        
-        <span className="absolute bottom-4 text-xs opacity-70">
+
+        <span
+          className="absolute bottom-4 font-mono text-[13px] tabular-nums"
+          style={{ color: 'var(--primary-300)' }}
+        >
           {APP_VERSION}
         </span>
 
