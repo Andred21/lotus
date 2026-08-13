@@ -6,13 +6,11 @@ import {
   FormSection,
   FormErrorSummary,
   FormErrorBanner,
-  AppPhotoField,
+  FormPhotoRow,
   AppTag,
 } from "@shared/ui";
 import type { UserData } from "@shared/types/generated";
 import type { DialogMode } from "@shared/lib";
-import { usersApi } from "@shared/api/usersApi";
-import { useEntityPhoto } from "@shared/hooks";
 import { useStaffUserForm } from "../../hooks/useStaffUserForm";
 import { useStaffRoleOptions } from "../../hooks/useStaffRoleOptions";
 import { StaffIdentityFields } from "./StaffIdentifyFields";
@@ -33,26 +31,18 @@ export function StaffUserDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
-  const photo = useEntityPhoto({
-    resource: "users",
-    id: mode === "create" ? null : (user?.id ?? null),
-    mode,
-    url: user?.photo_url,
-    invalidateKey: usersApi.keys.all,
-  });
-
   const {
     form,
     set,
     readOnly,
     submit,
     pending,
+    busy,
+    photo,
     fieldErrors,
     generalError,
     errorSummary,
-  } = useStaffUserForm(user, mode, onHide, (created) =>
-    photo.flush(created.id as number),
-  );
+  } = useStaffUserForm(user, mode, onHide);
   const { roleOptions } = useStaffRoleOptions();
 
   const stateOptions = [
@@ -69,8 +59,8 @@ export function StaffUserDialog({
       onEdit={canManage ? onEdit : undefined}
       onSubmit={submit}
       pending={pending}
-      closeBlocked={pending || photo.pending}
-      disabled={photo.pending}
+      closeBlocked={busy}
+      disabled={busy}
       submitLabel={mode === "create" ? t("admin.create") : undefined}
     >
       <FormErrorBanner message={generalError} />
@@ -81,30 +71,15 @@ export function StaffUserDialog({
 
       <section className="space-y-4">
         <FormSection title={t("admin.sectionUser")} />
-        <div className="flex flex-col lg:flex-row justify-between">
-          <div className="flex flex-col sm:justify-center py-10 gap-4 lg:w-3/5 w-full">
-            <AppPhotoField
-              name={form.name}
-              url={photo.url}
-              readOnly={readOnly}
-              pending={photo.pending}
-              error={photo.error}
-              onSelect={photo.onSelect}
-              onRemove={photo.onRemove}
-              onSizeReject={photo.onSizeReject}
-              onRetry={photo.onRetry}
-            />
-          </div>
-          <div className="flex flex-col gap-4 w-full">
-            <StaffIdentityFields
-              form={form}
-              set={set}
-              readOnly={readOnly}
-              fieldErrors={fieldErrors}
-              mode={mode}
-            />
-          </div>
-        </div>
+        <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
+          <StaffIdentityFields
+            form={form}
+            set={set}
+            readOnly={readOnly}
+            fieldErrors={fieldErrors}
+            mode={mode}
+          />
+        </FormPhotoRow>
         <div className="grid gap-4 sm:grid-cols-3 mt-10">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.
               Tag em vez de input desabilitado: sinaliza "valor imutável", não

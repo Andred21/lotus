@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react'
+import { useRef, type Dispatch, type SetStateAction } from 'react'
 import { useEntityForm, useMutationErrors } from './useEntityForm'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -41,6 +41,23 @@ export function classificationConflicts(mapped: string[], summaryOnly: string[])
   return [...new Set(mapped.filter((k) => summaryOnly.includes(k)))].sort()
 }
 
+/**
+ * Chaves que NENHUMA classificação salva. `photo_url` é `#[Computed]` nos quatro
+ * DTOs que têm foto e carrega URL pré-assinada na saída (o `SignedUrlTransformer`
+ * roda na serialização); mandá-la de volta num corpo de escrita devolve **200**,
+ * não 422, porque a promoção no construtor do DTO desvia do
+ * `CannotSetComputedValue`. Falha silenciosa: o Q-4 dos achados de 2026-08-05.
+ *
+ * Separado da guarda de classificação de propósito — lá a resposta certa é
+ * declarar a chave numa das caixas; aqui nenhuma caixa é resposta certa.
+ */
+const FORBIDDEN_PAYLOAD_KEYS = ['photo_url']
+
+/** Chaves de saída computada presentes no payload. Ver `FORBIDDEN_PAYLOAD_KEYS`. */
+export function forbiddenPayloadKeys(keys: string[]): string[] {
+  return keys.filter((k) => FORBIDDEN_PAYLOAD_KEYS.includes(k))
+}
+
 export type CrudFormOptions<F extends { id?: number }, T> = {
   entity: F | null
   mode: DialogMode
@@ -56,6 +73,10 @@ export type CrudFormOptions<F extends { id?: number }, T> = {
   excludePrefixes?: string[]
   onDone: () => void
   afterCreate?: (created: T) => void | Promise<void>
+  /** Mutações que o hook não dispara mas cujo estado pertence a este formulário
+   * (o `sync` de redatores do curso). Somam no `pending` e no `fieldErrors`;
+   * quem as dispara é o `afterCreate`. */
+  extra?: { isPending: boolean; error: ProblemDetails | null }[]
 }
 
 /**
@@ -73,8 +94,9 @@ export function useCrudForm<F extends { id?: number }, T>(
   resource: MutableResource<T>,
   opts: CrudFormOptions<F, T>,
 ) {
-  const { entity, mode, empty, toFields, toPayload, mapped, summaryOnly, onDone, afterCreate } = opts
+  const { entity, mode, empty, toFields, toPayload, mapped, summaryOnly, onDone, afterCreate, extra } = opts
   const excludePrefixes = opts.excludePrefixes ?? []
+  const extraMutations = extra ?? []
 
   const { form, setForm, set, readOnly, didReset } = useEntityForm<F>(entity, mode, empty, toFields)
 
@@ -90,6 +112,16 @@ export function useCrudForm<F extends { id?: number }, T>(
     ]
     const leaked = unclassifiedPayloadKeys(keys, mapped, summaryOnly, excludePrefixes)
     const conflicting = classificationConflicts(mapped, summaryOnly)
+
+    const forbidden = forbiddenPayloadKeys(keys)
+
+    if (forbidden.length > 0) {
+      throw new Error(
+        `useCrudForm: chave computada no payload de escrita: ${forbidden.join(', ')}. ` +
+          'Nenhuma classificação salva esta chave — ela não é campo de formulário. ' +
+          'Remova do `toPayload`: liste os campos em vez de espalhar `...form`.',
+      )
+    }
 
     if (conflicting.length > 0) {
       throw new Error(
@@ -109,24 +141,59 @@ export function useCrudForm<F extends { id?: number }, T>(
     }
   }
 
+  // Entidade já criada nesta sessão do diálogo, quando o `afterCreate` reprovou
+  // depois de o create ter dado certo. Sem isto, o resubmit criaria a entidade
+  // de novo — e curso, cliente e aluno são registros de peso legal. Não precisa
+  // zerar: o diálogo desmonta ao fechar, que é a mesma premissa do
+  // `createdIdRef` que este mecanismo substitui.
+  const createdRef = useRef<T | null>(null)
+
+  /**
+   * Roda a segunda etapa e só então fecha. Se ela lançar, o diálogo fica aberto
+   * (o erro já está no `fieldErrors` da mutação que falhou) e o `createdRef`
+   * segura o criado para o próximo submit.
+   *
+   * `photo.flush` NÃO lança de propósito (`useEntityPhoto.ts:97-101`), então os
+   * diálogos com foto nunca alcançam este caminho — quem o alcança é o
+   * `useCourseForm`, cuja segunda etapa é o `sync` de redatores.
+   */
+  async function runAfterCreate(created: T) {
+    try {
+      await afterCreate?.(created)
+    } catch (error) {
+      console.error('useCrudForm: afterCreate falhou, diálogo permanece aberto', error)
+      return
+    }
+    onDone()
+  }
+
   function submit() {
     if (mode === 'create') {
+      if (createdRef.current !== null) {
+        void runAfterCreate(createdRef.current)
+        return
+      }
+
       create.mutate(toPayload(form, 'create'), {
-        onSuccess: async (created: T) => {
-          await afterCreate?.(created)
-          onDone()
+        onSuccess: (created: T) => {
+          createdRef.current = created
+          void runAfterCreate(created)
         },
       })
       return
     }
 
     // O id do PUT vem da ENTIDADE, nunca do form: o form é editável e o alvo
-    // do update não pode depender do que o usuário digitou (spec D10).
+    // do update não pode depender do que o usuário digitou.
     if (entity?.id == null) return
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError } = useMutationErrors([
+    create.error,
+    update.error,
+    ...extraMutations.map((m) => m.error),
+  ])
 
   return {
     // Tudo que o diálogo pode consumir vive AQUI dentro, porque os hooks de
@@ -137,7 +204,7 @@ export function useCrudForm<F extends { id?: number }, T>(
       readOnly,
       didReset,
       submit,
-      pending: create.isPending || update.isPending,
+      pending: create.isPending || update.isPending || extraMutations.some((m) => m.isPending),
       fieldErrors,
       generalError,
       errorSummary: { mapped, excludePrefixes },

@@ -1,4 +1,4 @@
-import { useCrudForm } from '@shared/hooks'
+import { useCrudFormWithPhoto } from '@shared/hooks'
 import type { ClientAddressData, ClientContactData, ClientData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { clientsApi } from '@shared/api/clientsApi'
@@ -35,7 +35,6 @@ export function useClientForm(
   client: ClientData | null,
   mode: ClientDialogMode,
   onDone: () => void,
-  afterCreate?: (created: ClientData) => Promise<void>,
 ) {
   // A resposta da API sempre traz as duas coleções; o `| undefined` do tipo é
   // do lado da ENTRADA (Optional). Normaliza aqui para o form não carregar o
@@ -44,7 +43,7 @@ export function useClientForm(
     ? { ...client, addresses: client.addresses ?? [], contacts: client.contacts ?? [] }
     : null
 
-  const { crud, setForm } = useCrudForm<ClientFormFields, ClientData>(clientsApi, {
+  const { crud, setForm } = useCrudFormWithPhoto<ClientFormFields, ClientData>(clientsApi, {
     entity,
     mode,
     empty: EMPTY,
@@ -71,7 +70,11 @@ export function useClientForm(
     summaryOnly: ['id', 'phone', 'addresses', 'contacts'],
     excludePrefixes: ['contacts.'],
     onDone,
-    afterCreate,
+    photo: {
+      resource: 'clients',
+      invalidateKey: clientsApi.keys.all,
+      url: client?.photo_url,
+    },
   })
 
   // Só o primeiro endereço é editável nesta tela; os demais são preservados.
