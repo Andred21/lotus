@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: contrato-de-entrada-identidade-e-nested
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-contrato-de-entrada-identidade-e-nested-design.md
 active_plan: docs/superpowers/plans/2026-08-13-contrato-de-entrada-identidade-e-nested.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
 state_basis_commit: 8ee6a15
-updated_at: 2026-08-13T17:10:00-03:00
+updated_at: 2026-08-13T18:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
