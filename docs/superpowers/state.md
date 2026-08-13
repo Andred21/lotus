@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: null
 active_work_item: login-fora-do-adr16
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -95,6 +95,53 @@ e 4 snapshots YAML. Diretório gitignored, portanto volátil — o registro dur�
 **A direção decidida entra neste commit.** As 134 linhas do item 4 estavam **não commitadas** no
 working tree do main tree quando o comando abriu: decisão durável vivendo onde um `git checkout` a
 apagaria. Entram aqui como artefato do mesmo commit da promoção.
+
+### Brainstorming e spec — 2026-08-13
+
+Spec em `docs/superpowers/specs/2026-08-13-login-fora-do-adr16-design.md`. As **D1–D8** vêm fechadas
+da direção que o João decidiu sobre a análise rev. 2 e **não foram reabertas**; as **D9–D12** são
+desta sessão, cada uma escolhida por ele entre alternativas com o custo medido.
+
+**A medição achou três coisas que o backlog não tinha, e uma delas muda o que o bloco é:**
+
+1. **O login é 2 das 7 entradas da `CATRACA_COR`, e o comentário da lista aponta para este bloco** —
+   *"lista que só ENCOLHE. Login e Validação têm fundo escuro deliberado — mudá-las é desenho novo,
+   não pagamento de débito (D7)"* (`eslint.config.js:141-151`). Este bloco **é** o desenho novo.
+   **D9:** os dois arquivos saem, a lista vai a **5**, e a prova é nos dois sentidos (lição 10) —
+   sem as linhas o lint fica verde; com um `text-slate-800` reintroduzido no `LoginForm` ele reprova
+   nomeando o arquivo. Numa tela sem teste de componente, é o único mecanismo disponível.
+2. **O degradê decidido é fixo nos dois temas por medição:** a escala `--primary-*` é idêntica byte a
+   byte nas duas folhas geradas (`--primary-900:#0c3549`). Os contrastes da tabela do backlog foram
+   **recalculados** — tagline **9,846:1** — e batem; a divisa invisível do tema escuro também
+   (`#0f2b3d` contra `#1e293b` = **1,0016:1**).
+3. **A guarda de cor não enxerga o defeito que o bloco mata, e o repositório já escrevera isso**
+   (`tokens.ts:11-13`). Dois sítios vivos com a forma exata, ambos a **2,77:1**:
+   `FormSection.tsx:19` e `CoursesTable.tsx:43`. **D10:** ficam fora — `FormSection` tem 11
+   consumidores, quatro deles os diálogos que o BD-5 reescreve agora, e a lacuna vira linha nova em
+   `docs/pendencias.md` em vez de alargar um bloco de login.
+
+**D11** mantém a label própria dos campos (o kit `FormField` pinta label em 14px secundário e
+contrariaria a linha "rótulos inalterados" da escala decidida); o erro de campo passa a `dangerText`,
+a fórmula de um dono só. **D12** torna a checagem visual pelo navegador **passo de gate bloqueante** —
+o bloco é 100% aparência, e é a dívida que o BD-4 declarou e pagou só pela metade.
+
+**Uma pergunta que a spec não adiou para o plano:** o número de chaves do nome acessível do olho da
+senha foi medido na API instalada — `password.cjs.js:605,614` tem `passwordShow` **e**
+`passwordHide`, dois estados. A via é o `pt` do wrapper e não a locale global do Prime, porque
+`locale('es')` nunca é chamado no projeto (`primeLocale.ts` só faz `addLocale`), então um rótulo
+pendurado lá ficaria congelado na troca de idioma.
+
+**Baseline medido nesta branch, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**29 arquivos / 143 testes** — bate com o placar do merge pós-BD-4, confirmando que a branch nasce da
+`main` sem deriva.
+
+**Risco de review declarado BAIXO** pelo gate binário da skill (zero schema, `generated.ts`, Sanctum,
+auditoria, RBAC, dinheiro ou documento legal; `executor: claude`) — a tela é a porta do Sanctum mas o
+bloco não toca autenticação, e `useLoginForm` fica intocado. O risco próprio, escrito na §9 da spec,
+é de alcance: `AppPassword` chega a um call site fora do login e a saída da catraca é permanente.
+
+O estado entra em `planning` neste commit; `active_plan` segue `null` até o João ler a spec escrita e
+autorizar o `writing-plans`.
 
 **Superfície medida do bloco (fato, não desenho):** `LoginPage.tsx`, `LoginForm.tsx`,
 `shared/ui/AppPassword/AppPassword.tsx`, `shared/ui/AppLogo/AppLogo.tsx`,
