@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: usecrudform-mais-fundo
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-usecrudform-mais-fundo-design.md
 active_plan: docs/superpowers/plans/2026-08-13-usecrudform-mais-fundo.md
 context_packet: null
 blocker: null
 last_completed_work_item: catraca-max-lines-e-moldura
-state_basis_commit: 0ef104f
-updated_at: 2026-08-13T14:05:00-03:00
+state_basis_commit: 023be10
+updated_at: 2026-08-13T16:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -216,6 +216,49 @@ onze tasks deste bloco colidiriam de nome com as dez dele; arquivado em
 `.superpowers/sdd/archive/catraca-max-lines-e-moldura/`).
 
 **Estado:** `executing`.
+
+### Execução — 2026-08-13: fechamento
+
+**As onze tasks fecharam, cada uma em commit próprio, revisão individual aprovada antes de avançar:**
+`6ff9565` (T1 — guarda Q-4, sonda real em `useClientForm.ts` provando os dois sentidos), `67153e5`
+(T2 — `extra` soma pending/erro de mutações extras), `dce04ef` (T3 — `afterCreate` retentável via
+`createdRef`, curso/entidade não nasce duas vezes no resubmit), `fc88d61` (T4 —
+`useCrudFormWithPhoto`, hook-irmão por regra de hooks do React, desvio D-P1 declarado na spec),
+`7815152` (T5 — `FormPhotoRow`, extração byte a byte conferida contra os 4 sítios originais),
+`2d82018`/`5c8dff0`/`69dcba0` (T6/7/8 — Student/Client/StaffUser perdem o trio, `StaffUserDialog`
+saiu de exatamente 150 para 125 linhas), `4b998d0` (T9 — Redator adota só o `FormPhotoRow`,
+`useRedatorForm` explicitamente não migra por ser create multipart, comentário do ponteiro do BD-5
+corrigido), `023be10` (T10 — `useCourseForm` migra para `useCrudForm`, `createdIdRef` morto, task de
+maior peso legal do bloco: guarda anti-duplicação de curso provada por leitura direta do mecanismo,
+não só pelo relatório do implementador). Um commit fora de task, entre T3 e T4: `ae86d0a`, corrigindo
+type errors residuais que T2 e T3 deixaram passar porque `vitest run` não faz type-check completo —
+lição registrada no ledger para não repetir. Task 11 foi gate — verificação pura, **sem commit de
+produção**, relatório em `.superpowers/sdd/task-11-report.md` (local, não versionado). Contagem
+final: frontend **31 arquivos / 156 testes** (29/143 no baseline), bate exatamente com a projeção do
+plano.
+
+**O DoD 1 (foto real no S3) foi provado nos dois caminhos contra a API real do main tree**, sessão
+Sanctum de verdade (`admin@lotus.cl`, cookie + CSRF): `create` (aluno novo) e `edit` (aluno
+existente), com `Content-Length` de 68 bytes confirmado via GET na signed URL nos dois casos — não a
+falha de zero-byte da lição 6. Registros de teste limpos por `DELETE .../photo` (remove do S3) e
+`forceDelete` via tinker, molde do BD-2; `audits` remanescente declarado, não limpo.
+
+**Duas divergências do texto do plano, investigadas e explicadas, nenhuma achado de código:** os
+greps de verificação (Tasks 9, 10 e 11) esperavam `ZERO` para padrões que sobrevivem de propósito em
+`RedatorDialog.tsx` (hook que não migra, por critério) e num comentário documental de
+`useCrudForm.ts` — o texto do plano não previu esses hits legítimos; e o curl de exemplo da Task 11
+sem `Accept: application/json` cai num 500 (`Route [login] not defined`, o app não tem rota web de
+login por RN-01) em vez do 401 esperado — o client axios real sempre manda esse header, então isso
+nunca acontece em produção.
+
+**O que o bloco NÃO provou, sem maquiagem:** nenhum diálogo tem teste de componente — a composição
+`FormPhotoRow` + diálogo (Tasks 6-9) não é exercitada por teste automatizado, só os hooks; a Step 6 do
+gate proveu o fluxo de foto contra a API direto, não através do `AppPhotoField`/`FormPhotoRow`
+renderizado; e `/lotus-ui-review` não rodou — os quatro diálogos migrados nunca foram vistos no
+navegador nesta execução.
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona a
+revisão do trabalho ativo.
 
 ## Último item fechado — 2026-08-13 (`catraca-max-lines-e-moldura`, BD-4)
 
