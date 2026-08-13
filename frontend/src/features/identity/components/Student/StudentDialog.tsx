@@ -108,11 +108,7 @@ export function StudentDialog({
           value={form.client_id}
           readOnlyLabel={student?.current_client_name ?? t("student.noClient")}
           error={fieldErrors?.client_id?.[0]}
-          // `ClientData.id` é `undefined | number` no DTO gerado (molde de
-          // create/edit); um cliente vindo da listagem sempre tem id
-          // persistido — mesmo cast de `x.id as number` usado no resto do
-          // código (ex.: StaffUserDialog, RedatorDialog).
-          options={clients.options as { label: string; value: number }[]}
+          options={clients.options}
           isError={clients.isError}
           errorDetail={clients.errorDetail}
           showEmptyHint={clients.showEmptyHint}
