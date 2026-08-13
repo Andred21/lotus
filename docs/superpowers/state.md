@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: catraca-max-lines-e-moldura
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-13-catraca-max-lines-e-moldura-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md
 context_packet: null
 blocker: null
 last_completed_work_item: rastro-unicidade-e-gates
-state_basis_commit: 0c2a24b
-updated_at: 2026-08-13T00:25:00-03:00
+state_basis_commit: 7c8d6c5
+updated_at: 2026-08-13T00:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -110,6 +110,39 @@ de ~5 linhas).
 
 O estado entra em `planning` no mesmo commit da spec; `active_plan` segue `null` até o João ler a
 spec escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-13
+
+**João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-13-catraca-max-lines-e-moldura.md`: **dez tasks**, uma por commit, na
+ordem testes do resumo → `StudentDialog` → slot → `RedatorDialog` → `BudgetDetailPage` (que **zera o
+`ignores`** e reescreve a rule) → UI-01 → `BudgetsTable` → `TurmasTable` → docs → gate.
+
+**Baseline medido, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` = **28
+arquivos / 138 testes** — o número registrado neste arquivo até agora (27/131) estava vencido.
+Projeção do plano: **29 arquivos / 142 testes** (3 casos do `FormErrorSummary`, 1 arquivo e 1 caso do
+`AppFileRow`).
+
+**Três coisas apareceram só ao escrever o plano, e duas mudam trabalho:**
+
+1. **O `BudgetDetailPage` fica mais barato do que a spec projetou.** Os quatro overlays consomem o
+   objeto `d` (`useBudgetDetail`) **inteiro**, que a página já tem, então a chamada de volta é de uma
+   linha e `formatUf`/`AppCardTone` também ficam órfãos: **~136**, não ~145. A contingência da spec
+   (extrair a prop `actions` do `DetailHeader`) vira reserva.
+2. **O rótulo do modo leitura do campo de cliente precisa vir do pai.** Hoje o texto é
+   `student?.current_client_name ?? t("student.noClient")` — se o filho derivasse o rótulo do
+   `options`, view/edit cairia no travessão do `ReadOnlyValue`, que é o default certo para vazio e
+   **não** é o texto atual. O filho recebe `readOnlyLabel` pronto e não conhece `StudentData`.
+3. **Os testes novos do `FormErrorSummary` nascem verdes**, porque afirmam comportamento que já
+   existe — então a Task 1 tem passo de sonda: com o filtro de `mapped` desligado à mão, o caso "não
+   repete a chave que já aparece no campo" tem de reprovar, e a árvore volta limpa em seguida.
+
+`executor: claude`, sem `paths_autorizados`: o bloco decide apresentação em vários sítios, atravessa
+a lei §5.6 e mexe no `eslint.config.js`, onde bloco no lugar errado apaga seletor existente em
+silêncio (Q-2 de 2026-08-04, reincidente no BD-3); a Task 5 ainda reescreve rule normativa.
+
+**Estado: `ready_for_execution`.** `/executar-bloco catraca-max-lines-e-moldura` exige instrução
+posterior do João.
 
 ## Último item fechado — 2026-08-13 (`rastro-unicidade-e-gates`)
 
