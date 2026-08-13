@@ -274,9 +274,11 @@ escreve — a resposta da API sempre traz; o `| undefined` é do lado da **entra
 `ClientContactData` direto do `generated` — tipagem correta de qualquer forma, e imune a esta classe
 de mudança. `ClientsTable.tsx:82,87` ganha `?.` nos dois sítios de listagem.
 
-**Sem teste automatizado novo no frontend, e a razão é a de sempre neste repositório:** o runner
-cobre hooks de `shared/`, e `useClientForm` é hook de feature. A prova é `tsc`/`pnpm build` mais o
-e2e contra a API. Declarado, não escondido.
+`useClientForm.test.tsx` ganha um caso novo cobrindo a normalização `?? []`: entidade chegando com
+`addresses`/`contacts` `undefined` (o formato real de uma resposta com `Optional` serializado), e o
+form nunca vendo `undefined`. O runner cobre hooks de `shared/hooks/` **e** hooks de feature
+(`.claude/rules/frontend-fsliced.md`) — `useClientForm` já tinha teste antes deste bloco; a lacuna
+era só o ramo direito do `??` ficar sem caso.
 
 ---
 
@@ -363,7 +365,7 @@ Os dois riscos próprios, além do gatilho:
   arquivado, não a janela entre duas escritas simultâneas; a defesa ali é o `unique` do MySQL, como
   `UniquenessInsideTransactionTest:26-31` já registra. A suíte roda sqlite `:memory:` e não fecha
   corrida.
-- **Nenhuma tela vista renderizada** — o único frontend tocado é correção de tipo, sem mudança
-  visual, e o comportamento de hoje já manda as duas coleções.
-- **A prova do frontend é build + e2e**, não teste automatizado: `useClientForm` é hook de feature e
-  está fora do corte do runner (§5).
+- **Nenhuma tela vista renderizada** — o único frontend tocado é correção de tipo mais a normalização
+  `?? []`, sem mudança visual, e o comportamento de hoje já manda as duas coleções. A prova de tela é
+  build + e2e; o caso novo em `useClientForm.test.tsx` (§5) cobre a normalização em si, não a
+  renderização.
