@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T15:55:36-03:00
+updated_at: 2026-08-14T17:20:16-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -322,6 +322,111 @@ telas foi entregue a ele em chat, não através de skill.
 
 **Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
 a revisão do trabalho ativo.
+
+### Extensão — 2026-08-14: foto no header, foto de redator sai de Turma/detalhe
+
+**O bloco já estava `ready_for_review` quando o João pediu, em chat, dois itens novos sobre a mesma
+superfície:** foto do usuário logado no header (via `IdentityCell`) e remoção da foto de redatores
+em Turma/detalhe da turma. Decisão dele: dobra no MESMO `active_work_item`, estado volta a
+`executing` para a extensão e fecha de novo em `ready_for_review` — sem abrir item novo.
+
+**`IdentityCell.tsx` não foi tocado — o João já o tinha editado à mão antes desta sessão** (`<p>` virou
+`<span>`, WIP não commitado quando a sessão abriu). A única consequência disso: `IdentityCell.test.tsx`
+estava quebrado (3 testes contando `<p>`, que não existe mais), achado no gate desta extensão e não
+por ele. Corrigido só o teste, trocando a asserção por `span.truncate` — o contrato real que o
+próprio componente documenta ("a forma empilhada trunca; a inline não"), não a tag incidental.
+
+**Foto no header exigiu DTO novo, não só JSX.** `SessionUserData` (`/login` e `/me`) não carregava
+`photo_url` — medido antes de mexer no front, não assumido. Campo acrescentado no mesmo molde de
+`UserData::$photo_url` (`#[WithTransformer(SignedUrlTransformer::class, 60)]`, `fromModel` lendo
+`$user->photo_path`), `typescript:transform` reexecutado, diff de `generated.ts` de uma linha só.
+`UserMenu.tsx` ganhou `image={user.photo_url}` no `AppAvatar` já existente.
+
+**`IdentityCell` NÃO entrou no header, por decisão do João contra a leitura literal do pedido.**
+O trigger do `UserMenu` tem desenho específico documentado no próprio arquivo — avatar `aria-hidden`
+(nome acessível vem do texto), texto colapsa por `sr-only` abaixo de `sm` (UI-04 do review de
+2026-08-12, chevron cortava a 320px), branco cravado (D-P13, a navy é fixa nos dois temas).
+`IdentityCell` empacota avatar+texto num bloco só, sem gancho pra isolar só o texto do colapso — usá-lo
+ali regrediria o UI-04. Escalado, e o João escolheu manter o `AppAvatar` com a foto encaixada, sem
+importar `IdentityCell` no header.
+
+**Redator sai de 2 sítios, os outros 11 já estavam certos — medido, não author.** Grep de
+`image={.*photo_url}` em todo `IdentityCell` do repo antes de editar: 3 sítios de Turma mostravam foto
+de redator (`RedatorDesignation.tsx:37,72`, `TurmasTable.tsx:106`), removida a prop `image` dos três
+(cai no fallback de iniciais do `AppAvatar`, sem tocar `IdentityCell`). Os sítios de aluno em
+Certificados e no detalhe da turma (`EnrollmentTable`, `EmissionStudentsTable`, `HistorialTable`) **já
+não passavam `image`** — commit `9e3a68e` desta mesma branch já fechou isso. `client_photo_url` em
+`TurmasTable`/`TurmaDetailPage` fica — é cliente, fora do pedido.
+
+**Gate reproduzido depois da extensão:** backend 592 passed / 5 skipped (2154 asserções, mesma
+contagem — a extensão não muda regra de negócio, só projeta um campo já resolvido);
+`pnpm build`/`pnpm lint`/`pnpm test` os três exit 0, **171 testes** (mesma contagem da Task 12 — a
+correção do `IdentityCell.test.tsx` troca asserção, não adiciona/remove teste); `typescript:transform`
+reexecutado de novo ao final, diff vazio.
+
+**O que esta extensão NÃO provou, sem maquiagem:** a foto aparecendo de fato no header não foi vista
+no navegador. `:5173`/`:8080` seguem ocupados pelo stack do main tree (mesma causa registrada acima
+para os 13 sítios da Task 12); um nginx+`pnpm dev` avulsos em portas alternativas (`8081`/`5174`),
+ligados só a este container via `fix-frontend_default`, chegaram a subir para o teste de rota
+(HTTP 200 confirmado) e foram desmontados em seguida sem login nem screenshot — checagem visual seguiu
+fora do escopo desta sessão, pelo mesmo motivo que já vale pro resto do bloco (`/lotus-ui-review` é
+`disable-model-invocation: true`, passo do João).
+
+**Estado: `ready_for_review`.** Mesma regra da Task 12 — este comando não inicia review.
+
+### Correção de rumo — 2026-08-14: "não exibe foto" era BUG, não pedido — foto entra em todos os sítios
+
+**A extensão acima leu o pedido ao contrário, e o João corrigiu em chat.** A frase "em turma,
+certificados e detalhes da turma não exibe foto de redatores, alunos" era RELATO de defeito, não
+pedido de remoção. Instrução corrigida: a foto deve aparecer **em todos os sítios que chamam
+`IdentityCell`** — redator e aluno inclusos — e no header. A remoção da subseção anterior foi
+desfeita e a direção invertida.
+
+**Causa raiz de "nunca apareceu, nem na 1ª nem na 2ª execução": stack misto — medido, não
+teorizado.** O `pnpm dev` em `:5173` é DESTA worktree (`/proc/<pid>/cwd` conferido), mas
+`VITE_API_URL` apontava `:8080` = nginx do MAIN tree = backend da branch do BD-6, **sem nenhum DTO
+alargado desta branch**. Todo `photo_url` que o front pedia chegava `undefined`; o header idem
+(`SessionUserData.photo_url` só existe aqui). Defeito latente adicional: o `backend/.env` desta
+worktree assinava URL pública contra `localhost:9002`, porta sem listener nenhum (o MinIO
+compartilhado publica `9000`) — mesmo com backend certo, a foto morreria no `onImageError`.
+
+**Código (commitável):** `image` restaurado nos 3 sítios de redator (`RedatorDesignation.tsx` ×2,
+`TurmasTable.tsx`); `EnrollmentData::photo_url`, `EmissionPanelEnrollmentData::student_photo_url` e
+`CertificateData::aluno_photo_url` criados no molde do `StudentData` (`#[Computed]` +
+`SignedUrlTransformer`), com os 3 sítios de aluno consumindo (`EnrollmentTable`,
+`EmissionStudentsTable`, `HistorialTable`). No `CertificateData` a foto é VIVA e deliberadamente
+fora do snapshot — a decisão de auditoria do `9e3a68e` ("snapshot não se ilustra com dado mutável")
+foi revertida por instrução explícita do João **para a listagem**; PDF e rota pública do QR seguem
+só-snapshot. `CertificateController::index` ganhou `with('enrollment.student.user')` (a listagem não
+tinha eager load porque só lia snapshot), e o `SoftDeletedRelationProjectionTest` ganhou o caso do
+certificado de aluno arquivado, na regra da rule backend-ddd. `generated.ts` regenerado (3 campos
+novos); 3 fixtures de teste TS ajustadas no mesmo passo (ADR-04, "quem regenera ajusta consumidor").
+O painel de emissão não custa query nova (`withListingData()` já carregava `student.user`).
+
+**Ambiente (não commitável, worktree):** `backend/.env` — `AWS_ENDPOINT_PUBLIC`/`AWS_URL`
+`9002→9000`, `FRONTEND_URL` e `SANCTUM_STATEFUL_DOMAINS` ganham `localhost:5173` (o vite real);
+`frontend/.env` — `VITE_API_URL` `8080→8081`; container avulso **`fix-frontend-nginx`**
+(nginx:alpine, `:8081`) servindo o backend DESTA branch via `fix-frontend-app-1`, que já vivia nas
+duas redes (`fix-frontend_default` + `lotus_default`) e por isso usa o MySQL e o MinIO do stack
+principal — mesmo banco de dev, mesmas fotos do `DemoPhotosSeeder`. O stack do main tree não foi
+tocado; `:8080`/`:5173` seguem dele.
+
+**Gate:** backend **593 passed / 5 skipped (2156 asserções)** — +1 teste, o caso novo de
+soft-delete; Pint passed nos 4 PHP; front `build`/`lint`/`test` verdes, **171 testes** (fixtures
+mudaram, contagem não).
+
+**Provado por request real, não só por suite:** login curl `admin@lotus.cl` em `:8081` →
+`/api/me` 200 com `photo_url` assinada contra `localhost:9000` → `curl` da própria URL = **200
+`image/png` (1,87 MB)**; `/api/turmas` = 6 turmas, 6 com `redatores[0].photo_url` assinada;
+`/api/certificates` = 5 linhas, `aluno_photo_url` em 3 (o seed é "um sim, um não" — as outras 2
+caem nas iniciais, que é o ramo correto); CORS respondendo
+`Access-Control-Allow-Origin: http://localhost:5173` + credentials.
+
+**NÃO provado: o pixel no navegador** — `/lotus-ui-review` segue sendo passo do João. O vite
+reinicia sozinho ao detectar o `.env` novo; se a aba ainda apontar `:8080`, reiniciar o `pnpm dev`
+e relogar (a sessão anterior era do backend do main tree).
+
+**Estado: `ready_for_review`.** Mesma regra de sempre — review só quando o João acionar.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
