@@ -29,6 +29,7 @@ const enrollment1: EmissionPanelEnrollmentData = {
   attendance_pct: '100',
   nota_final: '6.5',
   certificate: null,
+  student_photo_url: null,
 }
 
 const enrollment2: EmissionPanelEnrollmentData = {
@@ -39,6 +40,7 @@ const enrollment2: EmissionPanelEnrollmentData = {
   attendance_pct: '95',
   nota_final: '6.0',
   certificate: null,
+  student_photo_url: null,
 }
 
 function turmaWith(enrollments: EmissionPanelEnrollmentData[]): EmissionPanelTurmaData {
