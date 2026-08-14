@@ -74,6 +74,7 @@ class DomainDependencyTest extends TestCase
             'Commercial\Models\Quote',
             'Identity\Enums\RedatorDocumentType',
             'Identity\Models\Redator',
+            'Identity\Models\User',
             'Operation\Enums\EnrollmentApprovalStatus',
             'Operation\Enums\TurmaDocumentType',
             'Operation\Enums\TurmaStatus',
