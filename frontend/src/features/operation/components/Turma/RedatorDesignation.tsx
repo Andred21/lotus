@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppAvatar, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
+import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
 import { dangerText } from '@shared/styles/tokens'
@@ -34,10 +34,7 @@ function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: nu
     <ul className="space-y-2">
       {picker.eligible.map((r) => (
         <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border p-3" style={{ borderColor: 'var(--surface-border)' }}>
-          <div className="flex items-center gap-3">
-            <AppAvatar name={r.name} />
-            <span className="font-medium">{r.name}</span>
-          </div>
+          <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
           <AppButton
             variant="brandIcon"
             label={t('operation.redator.pick')}
@@ -69,12 +66,11 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
             className="flex items-center justify-between rounded-lg border p-3"
             style={{ borderColor: 'var(--surface-border)' }}
           >
+            {/* A tag fica IRMÃ da célula, não dentro da descrição: descrição é
+              * linha de texto, e o slot dela agora carrega o e-mail. */}
             <div className="flex items-center gap-3">
-              <AppAvatar name={r.name} />
-              <div>
-                <p className="font-medium">{r.name}</p>
-                <AppTag value={t('operation.redator.idoneo')} severity="success" />
-              </div>
+              <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
+              <AppTag value={t('operation.redator.idoneo')} severity="success" />
             </div>
             <AppButton
               label={t('operation.redator.remove')}

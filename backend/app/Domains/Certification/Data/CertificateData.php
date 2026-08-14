@@ -5,6 +5,9 @@ namespace App\Domains\Certification\Data;
 use App\Domains\Certification\Data\Snapshot\CertificateSnapshotData;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -31,6 +34,11 @@ class CertificateData extends Data
         public CertificateSnapshotData $snapshot,
         public bool $snapshot_ok,
         public string $created_at,
+        /** Foto VIVA do aluno, deliberadamente fora do snapshot: é identidade
+         * visual da listagem, não dado do documento congelado. */
+        #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $aluno_photo_url = null,
     ) {}
 
     public static function fromModel(Certificate $certificate): self
@@ -56,6 +64,7 @@ class CertificateData extends Data
             snapshot: $snapshot,
             snapshot_ok: $snapshot->isPresentable(),
             created_at: $certificate->created_at->toISOString(),
+            aluno_photo_url: $certificate->enrollment->student->user->photo_path,
         );
     }
 }

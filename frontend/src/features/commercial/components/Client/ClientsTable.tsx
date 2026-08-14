@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useTableFilter } from "@shared/hooks";
 import {
   AppColumn,
-  AppAvatar,
+  IdentityCell,
   AppTag,
   AppButton,
   AppEmptyState,
@@ -56,13 +56,7 @@ export function ClientsTable({
         sortable
         className="w-1/3"
         body={(c: ClientData) => (
-          <div className="flex  items-center gap-3">
-            <AppAvatar name={c.legal_name} image={c.photo_url} size="large" />
-            <div className="flex flex-col ">
-              <span className="font-semibold">{c.legal_name}</span>
-              <span className="text-sm font-medium text-gray-400">{c.email}</span>
-            </div>
-          </div>
+          <IdentityCell title={c.legal_name} description={c.email} image={c.photo_url} />
         )}
       />
       <AppColumn

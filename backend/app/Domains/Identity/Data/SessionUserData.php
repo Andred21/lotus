@@ -3,7 +3,9 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Http\Request;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -23,6 +25,8 @@ class SessionUserData extends Data
         public bool $is_active,
         public array $roles = [],
         public array $permissions = [],
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $photo_url = null,
     ) {}
 
     /**
@@ -40,6 +44,7 @@ class SessionUserData extends Data
             is_active: $user->is_active,
             roles: $user->getRoleNames()->all(),
             permissions: $user->getAllPermissions()->pluck('name')->all(),
+            photo_url: $user->photo_path,
         );
     }
 

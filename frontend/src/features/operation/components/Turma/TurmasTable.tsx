@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppButton, AppTag,
+  AppColumn, AppDropdown, AppButton, AppTag, IdentityCell,
   AppEmptyState, SearchableTableFrame,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
@@ -70,7 +70,16 @@ export function TurmasTable({
         )}
       />
       <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
-      <AppColumn header={t('operation.table.client')} body={(turma: TurmaData) => turma.client_name ?? '—'} />
+      <AppColumn
+        header={t('operation.table.client')}
+        body={(turma: TurmaData) => (
+          <IdentityCell
+            title={turma.client_name ?? '—'}
+            description={turma.client_rut}
+            image={turma.client_photo_url}
+          />
+        )}
+      />
       <AppColumn
         header={t('operation.table.modality')}
         body={(turma: TurmaData) => (
@@ -82,11 +91,31 @@ export function TurmasTable({
       />
       <AppColumn
         header={t('operation.table.redator')}
-        body={(turma: TurmaData) =>
-          turma.redatores.length > 0 ? turma.redatores.map((r) => r.name).join(', ') : (
-            <span style={{ color: 'var(--text-color-secondary)' }}>{t('operation.table.noRedator')}</span>
+        body={(turma: TurmaData) => {
+          const [primeiro, ...resto] = turma.redatores
+
+          if (primeiro === undefined)
+            return <span style={{ color: 'var(--text-color-secondary)' }}>{t('operation.table.noRedator')}</span>
+
+          /* Primeiro + contador, não N células empilhadas: a altura da linha
+           * tem de ser constante na tabela inteira. O `+N` é numeral puro,
+           * então não abre chave de i18n; os nomes restantes vão no `title`,
+           * que é dado e não copy. */
+          return (
+            <div className="flex items-center gap-2">
+              <IdentityCell title={primeiro.name} description={primeiro.email} image={primeiro.photo_url} />
+              {resto.length > 0 && (
+                <span
+                  className="text-xs"
+                  style={{ color: 'var(--text-color-secondary)' }}
+                  title={resto.map((r) => r.name).join(', ')}
+                >
+                  +{resto.length}
+                </span>
+              )}
+            </div>
           )
-        }
+        }}
       />
       <AppColumn
         header={t('operation.table.students')}

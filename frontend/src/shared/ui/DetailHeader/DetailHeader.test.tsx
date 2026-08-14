@@ -62,3 +62,20 @@ describe('DetailHeader sempre tem um nível 1', () => {
     expect(container.querySelectorAll('h2, h3, h4, h5, h6')).toHaveLength(0)
   })
 })
+
+describe('DetailHeader aceita bloco no subtítulo', () => {
+  /**
+   * O Avatar do PrimeReact renderiza sempre um <div> (avatar.cjs.js:254), e a
+   * célula de identidade inline vai dentro do subtítulo. <div> dentro de <p> é
+   * inválido: o parser fecha o <p> antes e o DOM se reorganiza em silêncio.
+   * O TurmaDetailPage já passava um <div> aqui antes deste bloco.
+   */
+  it('não embrulha o subtítulo em <p>', () => {
+    const { container } = render(
+      <DetailHeader title="Turma 7" subtitle={<div data-testid="bloco">Enel</div>} />,
+    )
+
+    expect(container.querySelector('p')).toBeNull()
+    expect(container.querySelector('[data-testid="bloco"]')?.parentElement?.tagName).toBe('DIV')
+  })
+})

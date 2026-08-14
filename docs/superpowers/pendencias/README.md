@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (27)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
@@ -47,6 +47,8 @@ ou de escrita fora do repositório.
 | P-05 | Migrations "adicionais" não consolidadas nas originais | João | antes de subir para produção |
 | P-03 | Compose por worktree não existe | João | dois blocos de **backend** em paralelo, ou 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
+| P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | João | João decidir que a coluna deve cortar; revisar 2026-10-31 |
+| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
@@ -58,8 +60,7 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (1)
+## Encerradas (0)
 
-| ID | Pendência | Sai em |
-|---|---|---|
-| P-26 | `->scopeBindings()` mudou 403 → 404 sem permissão, contra o que a spec afirma | próximo `/fechar-sprint` |
+Nenhuma aguardando remoção. A **P-26** saiu no `/fechar-sprint` de 2026-08-14
+(`celula-de-identidade`), cumprida a sprint de rastro.

@@ -47,5 +47,12 @@ class TurmaDataEnrichmentTest extends TestCase
         $this->assertSame($budget->id, $data->budget_id);
         $this->assertSame('Scap 7', $data->budget_code);
         $this->assertSame("Scap {$budget->id} - Cot 1", $data->quote_code);
+        // O RUT já vinha no ContratanteData e era descartado: a projeção usava
+        // só o ->name. Sem descrição, a coluna Cliente do TurmasTable não tem
+        // o que pôr na segunda linha da célula (spec D3).
+        $this->assertSame('55.666.777-2', $data->client_rut);
+        // Sem foto no cadastro, o campo é null e o transformer nem roda
+        // (TransformedDataResolver:102 curto-circuita antes).
+        $this->assertNull($data->client_photo_url);
     }
 }

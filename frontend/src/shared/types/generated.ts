@@ -36,6 +36,7 @@ revocation_reason: string | null,
 snapshot: CertificateSnapshotData,
 snapshot_ok: boolean,
 created_at: string,
+aluno_photo_url: string | null,
 };
 export type CertificateSnapshotData = {
 schema_version: number,
@@ -127,6 +128,7 @@ approval_status: EnrollmentApprovalStatus,
 attendance_pct: string | null,
 nota_final: string | null,
 certificate: EmissionPanelCertificateData | null,
+student_photo_url: string | null,
 };
 export type EmissionPanelRedatorData = {
 redator_id: number,
@@ -162,6 +164,7 @@ phone: string | null,
 approval_status: EnrollmentApprovalStatus | undefined,
 attendance_pct: undefined | string | null,
 grades: undefined | Array<any> | null,
+photo_url: string | null,
 };
 export type EnrollmentResultData = {
 grades: Array<any> | null,
@@ -291,6 +294,7 @@ type: string,
 is_active: boolean,
 roles: string[],
 permissions: string[],
+photo_url: string | null,
 };
 export type SnapshotCourseData = {
 name: string,
@@ -380,6 +384,8 @@ enrolled_count: undefined | number,
 quote_code: undefined | string | null,
 budget_code: undefined | string | null,
 budget_id: undefined | number | null,
+client_rut: undefined | string | null,
+client_photo_url: string | null,
 };
 export type TurmaDocumentData = {
 id: number,
@@ -395,6 +401,8 @@ export type TurmaModalidade = 'presencial' | 'online';
 export type TurmaRedatorData = {
 id: number,
 name: string,
+email: string | null,
+photo_url: string | null,
 };
 export type TurmaStatus = 'em_andamento' | 'concluida';
 export type UserData = {

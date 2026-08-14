@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, DetailHeader, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
+import { AppButton, AppTag, DetailHeader, IdentityCell, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { QuotesList } from './QuotesList'
@@ -63,10 +63,13 @@ export function BudgetDetailPage() {
         back={back}
         title={budget.code ?? '—'}
         subtitle={
-          <>
-            {d.client?.legal_name ?? '—'}
-            {d.client?.rut && ` · RUT ${d.client.rut}`}
-          </>
+          <IdentityCell
+            inline
+            title={d.client?.legal_name ?? '—'}
+            description={d.client?.rut ? `RUT ${d.client.rut}` : undefined}
+            image={d.client?.photo_url}
+            size="normal"
+          />
         }
         tags={
           budget.status && (

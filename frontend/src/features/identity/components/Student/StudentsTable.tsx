@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
-import { AppColumn, AppAvatar, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 
 export function StudentsTable({
@@ -38,13 +38,7 @@ export function StudentsTable({
         header={t('student.name')}
         sortable
         body={(s: StudentData) => (
-          <div className="flex items-center gap-3">
-            <AppAvatar name={s.name} image={s.photo_url} size="large" />
-            <div>
-              <p className="font-medium">{s.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{s.email}</p>
-            </div>
-          </div>
+          <IdentityCell title={s.name} description={s.email} image={s.photo_url} />
         )}
       />
       <AppColumn

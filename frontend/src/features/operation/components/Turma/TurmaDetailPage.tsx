@@ -5,6 +5,7 @@ import {
   AppTabPanel,
   AppTag,
   DetailHeader,
+  IdentityCell,
   AppCard,
   AppDetailSkeleton,
   AppErrorState,
@@ -78,11 +79,13 @@ export function TurmaDetailPage() {
         back={back}
         title={turma.course_name ?? "—"}
         subtitle={
-          <div className="flex flex-row items-center gap-2">
-            {turma.client_name ?? "—"}
-            {turma.budget_id != null && (
-              <>
-                {" · "}
+          <IdentityCell
+            inline
+            title={turma.client_name ?? "—"}
+            image={turma.client_photo_url}
+            size="normal"
+            description={
+              turma.budget_id != null && (
                 <AppButton
                   text
                   className="underline hover:no-underline"
@@ -93,9 +96,9 @@ export function TurmaDetailPage() {
                     quote: turma.quote_code ?? "—",
                   })}
                 </AppButton>
-              </>
-            )}
-          </div>
+              )
+            }
+          />
         }
         tags={
           <>

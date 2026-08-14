@@ -397,6 +397,52 @@ correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corr
 3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
 seguintes).
 
+## P-41 — o `IdentityCell` empilhado promete truncar e não trunca
+
+**Gatilho:** fecha quando o João decidir que a coluna deve cortar — aí volta o `min-w-0` **e** o
+teste vira medição de comportamento (largura fixa no pai, `scrollWidth > clientWidth`) —, ou quando
+uma tabela real mostrar a coluna alargada em uso. Revisar em **2026-10-31**.
+
+O bloco de texto de `frontend/src/shared/ui/IdentityCell/IdentityCell.tsx` é
+`<div className="flex flex-col gap-2">`, sem o `min-w-0` que o plano do bloco escrevia. Item de flex
+tem `min-width: auto`, então o `overflow-hidden`/ellipsis do `truncate` nunca dispara — nos 13 sítios
+da célula.
+
+Achado **Q-2** do `/revisar-sprint` de 2026-08-14 (`celula-de-identidade`), **rejeitado pelo João no
+mesmo dia**: a edição é dele, à mão, depois do plano ("deixe como está, eu que fiz as alterações").
+Consequência medida e aceita: nome ou e-mail longo alarga a coluna em vez de cortar.
+
+O docblock do componente ainda diz "a forma empilhada trunca" e o `IdentityCell.test.tsx` conta
+`span.truncate` — prova a **classe**, não o comportamento (lição 10, cobertura fantasma), então a
+regressão inversa também passaria verde.
+
+**Nasceu como `P-38` em `docs/pendencias.md` na branch `feat/celula-de-identidade` e foi renumerada
+no `/fechar-sprint` de 2026-08-14**, no precedente exato que renumerou a segunda `P-30` para `P-33` e
+a segunda `P-28` para `P-32`: a reorganização da pasta (PR #51) chegou à `main` primeiro e já usava
+`P-38` para outra pendência, então quem renumera é a recém-chegada. As menções a "P-38" na narrativa
+do `celula-de-identidade` em `docs/superpowers/state.md` são desta ficha e ficam como estão —
+história não se reescreve.
+
+## P-42 — a grafia construída do `IdentityCell` diverge da D1 da própria spec
+
+**Gatilho:** fecha quando o D1 for reescrito com a grafia construída e o motivo (ou quando o código
+voltar ao D1). Candidato natural: o próximo bloco que tocar tipografia de tabela. Revisar em
+**2026-10-31**.
+
+`IdentityCell.tsx` usa `font-semibold` no título (D1: `font-medium`), `text-sm font-medium` na
+descrição (D1: `text-xs`) e um `gap-2` entre as duas linhas que o D1 não previa.
+
+Achado **Q-3** do `/revisar-sprint` de 2026-08-14, **rejeitado pelo João** ("eu que mudei, deixei
+como está"). O D1 foi decidido no brainstorming como "grafia vencedora — a dos três de `identity`" e
+a decisão nova é dele, tomada com a tela na frente; o que fica aberto é só o **registro**: a spec
+`specs/archive/2026-08-14-celula-de-identidade-design.md` segue descrevendo a grafia planejada, e o
+`state.md` do bloco registrava apenas o `<p>`→`<span>` da edição à mão.
+
+O `gap-2` × N linhas muda a altura de toda tabela que usa a célula, então não é detalhe cosmético
+invisível.
+
+**Nasceu como `P-39` e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-41](#p-41).**
+
 ---
 
 # Travadas em decisão da Lotus
