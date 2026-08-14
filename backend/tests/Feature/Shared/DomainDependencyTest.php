@@ -56,13 +56,25 @@ class DomainDependencyTest extends TestCase
         // superfícies de Operation usadas por OperationMetricsQuery: Turma, os
         // dois enums e TurmaHabilitacaoService (D8 — habilitação não se duplica).
         // A Task 3 acrescenta Quote e QuoteStatus para os KPIs e pendências
-        // comerciais. As próximas tasks só acrescentam o que seus `use`
-        // efetivamente medirem.
+        // comerciais. A Task 4 acrescenta as superfícies usadas por
+        // CertificationMetricsQuery para matrículas aprovadas sem certificado
+        // e alertas de vencimento ativos, e por AnalyticsQuery para séries e
+        // rankings; Course e Client resolvem os nomes das linhas, enquanto
+        // RedatorDocumentType restringe os documentos regulatórios. As próximas
+        // tasks só acrescentam o que seus `use` efetivamente medirem — a lista
+        // do plano é indicativa e já ficou errada nos dois sentidos.
         'Dashboard' => [
+            'Catalog\Models\Course',
+            'Certification\Enums\CertificateStatus',
+            'Certification\Models\Certificate',
             'Commercial\Enums\QuoteStatus',
+            'Commercial\Models\Client',
             'Commercial\Models\Quote',
+            'Identity\Enums\RedatorDocumentType',
+            'Operation\Enums\EnrollmentApprovalStatus',
             'Operation\Enums\TurmaDocumentType',
             'Operation\Enums\TurmaStatus',
+            'Operation\Models\Enrollment',
             'Operation\Models\Turma',
             'Operation\Services\TurmaHabilitacaoService',
         ],
