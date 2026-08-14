@@ -1,3 +1,46 @@
+export type AdminDashboardData = {
+view: 'admin',
+kpis: AdminKpisData,
+pendencias: PendingItemData[],
+alertas: AlertData[],
+pipeline: PipelineStageCountData[] | null,
+agenda: AgendaData | null,
+compliance_turmas: TurmaComplianceData[] | null,
+redatores: RedatorLoadData[] | null,
+series: SeriesData | null,
+rankings: RankingsData | null,
+period_start: string,
+period_end: string,
+};
+export type AdminKpisData = {
+turmas_em_andamento: number,
+turmas_encerrando_em_breve: number,
+turmas_atrasadas: number,
+conclusoes_por_confirmar: number,
+cotacoes: QuoteKpisData | null,
+certificados_a_emitir: number | null,
+};
+export type AgendaData = {
+starting_soon: AgendaTurmaData[],
+ending_soon: AgendaTurmaData[],
+in_progress: AgendaTurmaData[],
+overdue: AgendaTurmaData[],
+};
+export type AgendaTurmaData = {
+turma_id: number,
+course_name: string,
+client_name: string | null,
+start_date: string,
+end_date: string,
+};
+export type AlertData = {
+type: DashboardAlertType,
+severity: DashboardSeverity,
+entity_id: number,
+description: string,
+date: string | null,
+navigation: Record<string, number>,
+};
 export type BatchIssueData = {
 enrollment_ids: number[],
 redator_id: number,
@@ -113,6 +156,9 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type DashboardAlertType = 'turma_overdue' | 'certificate_expiring_soon' | 'certificate_expired' | 'redator_document_expired' | 'redator_document_expiring_soon';
+export type DashboardModule = 'commercial' | 'operation' | 'certification';
+export type DashboardSeverity = 'high' | 'medium' | 'normal';
 export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {
 id: number,
@@ -193,12 +239,30 @@ message: string,
 export type IssueCertificateData = {
 redator_id: number,
 };
+export type MonthlyAmountData = {
+month: string,
+total_uf: string,
+};
+export type MonthlyCountData = {
+month: string,
+count: number,
+};
 export type MovedStudentData = {
 rut: string,
 name: string,
 previous_client: string | null,
 client: string,
 };
+export type PendingItemData = {
+module: DashboardModule,
+type: PendingItemType,
+severity: DashboardSeverity,
+entity_id: number,
+description: string,
+date: string | null,
+navigation: Record<string, number>,
+};
+export type PendingItemType = 'quote_awaiting_approval' | 'quote_approved_without_turma' | 'turma_without_redator' | 'turma_docs_incomplete' | 'turma_awaiting_conclusion' | 'enrollment_awaiting_certificate';
 export type PendingQuoteData = {
 quote_id: number,
 quote_code: string | null,
@@ -212,6 +276,11 @@ name: string,
 description: string,
 group: string,
 segregated: boolean,
+};
+export type PipelineStage = 'quote_pending' | 'quote_approved_without_turma' | 'turma_in_progress' | 'turma_ready_for_conclusion' | 'concluded_pending_issuance' | 'fully_issued';
+export type PipelineStageCountData = {
+stage: PipelineStage,
+count: number,
 };
 export type PublicCertificateData = {
 codigo: string,
@@ -250,7 +319,43 @@ planned_start_date: undefined | string | null,
 planned_end_date: undefined | string | null,
 files: FileData[],
 };
+export type QuoteKpisData = {
+pending_count: number,
+pending_value_uf: string,
+};
 export type QuoteStatus = 'pending' | 'approved' | 'rejected';
+export type RankingRowData = {
+id: number,
+name: string,
+turmas: number,
+matriculas: number,
+certificados: number,
+uf_aprovada: string | null,
+};
+export type RankingsData = {
+courses: RankingRowData[],
+clients: RankingRowData[],
+};
+export type RedatorAgendaData = {
+starting_soon: RedatorAgendaTurmaData[],
+ending_soon: RedatorAgendaTurmaData[],
+in_progress: RedatorAgendaTurmaData[],
+overdue: RedatorAgendaTurmaData[],
+};
+export type RedatorAgendaTurmaData = {
+turma_id: number,
+course_name: string,
+start_date: string,
+end_date: string,
+};
+export type RedatorDashboardData = {
+view: 'redator',
+resumo: RedatorResumoData,
+agenda: RedatorAgendaData,
+pendencias_documentais: RedatorTurmaPendenciaData[],
+alertas_documentos: AlertData[],
+historico: RedatorHistoricoData,
+};
 export type RedatorData = {
 id: undefined | number,
 name: string,
@@ -273,6 +378,30 @@ created_at: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RedatorHistoricoData = {
+turmas_concluidas: number,
+certificados_emitidos: number,
+};
+export type RedatorLoadData = {
+redator_id: number,
+name: string,
+current_turmas: number,
+upcoming_turmas: number,
+expired_documents: number,
+expiring_documents: number,
+};
+export type RedatorResumoData = {
+turmas_em_andamento: number,
+proximas_turmas: number,
+pendencias_documentais: number,
+documentos_vencendo: number,
+};
+export type RedatorTurmaPendenciaData = {
+turma_id: number,
+course_name: string,
+end_date: string,
+missing_types: string[],
+};
 export type RevokeCertificateData = {
 reason: string,
 };
@@ -281,6 +410,13 @@ name: string,
 permissions: string[],
 id: undefined | number,
 is_system: undefined | boolean,
+};
+export type SeriesData = {
+turmas_iniciadas: MonthlyCountData[] | null,
+turmas_concluidas: MonthlyCountData[] | null,
+certificados_emitidos: MonthlyCountData[] | null,
+matriculas: MonthlyCountData[] | null,
+uf_aprovada: MonthlyAmountData[] | null,
 };
 export type SessionUserData = {
 id: number,
@@ -360,6 +496,16 @@ quote_code: string | null,
 course_name: string,
 start_date: string,
 approval_status: EnrollmentApprovalStatus,
+};
+export type TurmaComplianceData = {
+turma_id: number,
+course_name: string,
+redatores: string[],
+start_date: string,
+end_date: string,
+present_types: string[],
+missing_types: string[],
+habilitada: boolean,
 };
 export type TurmaData = {
 id: undefined | number,

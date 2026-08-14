@@ -51,6 +51,10 @@ class DomainDependencyTest extends TestCase
         'Catalog' => [
             'Identity\Models\Redator',
         ],
+        // Task 1 do bloco `dashboard-backend-agregacoes`: o domínio nasce só
+        // com o contrato (enums, janelas, DTOs) — zero arestas, mesmo
+        // tratamento que Certification recebeu ao entrar.
+        'Dashboard' => [],
         // D-P2 do plano: TurmaStatus é a 7ª aresta exigida pela porta de conclusão.
         // D-P9: CourseModule é a 8ª — o temário da página 2 do documento oficial
         // é `course_modules`, e o snapshot precisa congelá-lo no ato da emissão.

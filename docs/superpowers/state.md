@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-backend-agregacoes
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-dashboard-backend-agregacoes-design.md
 active_plan: docs/superpowers/plans/2026-08-14-dashboard-backend-agregacoes.md
@@ -156,6 +156,38 @@ Projeção: +~24 testes backend, frontend inalterado (nenhum consumidor novo do 
 **Estado: `ready_for_execution`.** `/executar-bloco dashboard-backend-agregacoes` exige instrução
 posterior do João. Branch `feat/dashboard-backend-agregacoes` nasce no `/executar-bloco` (main
 tree, P-03).
+
+### Execução — 2026-08-14: início
+
+`/executar-bloco dashboard-backend-agregacoes` validou as âncoras (spec, packet, plano, Git limpo em
+`2de9d64`, sem divergência) e aplicou o gate main tree/worktree: **bloco toca backend, então main
+tree pela P-03** — nenhuma worktree criada. Branch `feat/dashboard-backend-agregacoes` criada de
+`main@2de9d64`.
+
+**As duas decisões do João no início:** `subagent-driven-development` com Agent tool autorizado para
+este bloco (mesmo impasse do BD-4, do login, do `rastro-unicidade-e-gates` e do `falha-vs-lista-vazia`,
+resolvido do mesmo jeito, por pergunta direta); e **o `executor: misto` do plano mantido** — Tasks 2,
+3 e 4 no Codex via `lotus-execute-block`, Tasks 1, 5, 6, 7 e 8 no claude.
+
+Baseline reproduzido nesta branch, não herdado: `docker compose exec -T app php artisan test` →
+**591 passed, 5 skipped (2149 assertions)**, exit 0 — bate com o baseline do plano. Ledger local
+reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `falha-vs-lista-vazia`, já fechado).
+
+**O pre-flight scan achou uma contradição real entre spec e plano, e ela mudou o contrato antes da
+primeira linha de código.** A spec §4.2 afirma duas coisas incompatíveis: `AgendaTurmaData` é DTO
+compartilhado entre as duas views, **e** o payload do Redator não contém cliente "por construção do
+tipo, não por omissão em runtime" (D5, Drive §7.4). O plano deu `?string $client_name` ao
+`AgendaTurmaData`, e `RedatorDashboardData` carrega quatro coleções dele — ou seja, o campo proibido
+chegava ao Redator pelo tipo. **O João escolheu o split:** nascem `RedatorAgendaTurmaData` (sem
+`client_name`) e `RedatorAgendaData`, a Task 1 passa de 19 para **21 DTOs**, e a agenda do admin
+mantém o nome do cliente. Vazamento volta a ser erro de tipo, que é a tese da D5.
+
+Dois outros achados do scan **não** foram escalados, e o motivo está no ledger: a lista de arestas
+pré-escrita da Task 2 é indicativa (o próprio passo manda conferir contra os `use` do arquivo final),
+e o parêntese da turma (c) na Task 2 é ambiguidade de redação que a asserção da linha seguinte
+resolve.
+
+**Estado:** `executing`.
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
