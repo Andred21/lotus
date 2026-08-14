@@ -82,6 +82,7 @@ export function StudentDialog({
           readOnlyLabel={student?.current_client_name ?? t("student.noClient")}
           error={fieldErrors?.client_id?.[0]}
           options={clients.options}
+          isLoading={clients.isLoading}
           isError={clients.isError}
           errorDetail={clients.errorDetail}
           isEmpty={clients.isEmpty}

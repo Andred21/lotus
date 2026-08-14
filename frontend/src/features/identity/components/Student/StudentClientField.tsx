@@ -12,6 +12,7 @@ export function StudentClientField({
   readOnlyLabel,
   error,
   options,
+  isLoading,
   isError,
   errorDetail,
   isEmpty,
@@ -26,6 +27,7 @@ export function StudentClientField({
   readOnlyLabel: string;
   error?: string;
   options: { label: string; value: number }[];
+  isLoading: boolean;
   isError: boolean;
   errorDetail?: string | null;
   isEmpty: boolean;
@@ -43,9 +45,14 @@ export function StudentClientField({
         readOnly={mode !== "create"}
         value={readOnlyLabel}
       >
+        {/* Carregando, o controle fica desabilitado E dá o sinal: sem `loading`
+         * ele vira controle morto sem explicação — o disfarce que o BD-6
+         * existe para matar, na escala de um campo (review do BD-6, Q-3). */}
         <AppDropdown
           value={value}
           disabled={unusable}
+          loading={isLoading}
+          aria-busy={isLoading}
           options={options}
           onChange={(e) => onChange(e.value as number)}
           className="w-full"

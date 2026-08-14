@@ -57,10 +57,16 @@ export function BudgetDialog({
           readOnly={readOnly || !isCreate}
           value={clients.clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
         >
+          {/* `loading` é o que impede o desabilitado de virar controle morto sem
+           * explicação enquanto o GET está em voo: o `InlineLoadState` abaixo é
+           * mudo nesse estado (não há erro nem lista vazia ainda), e o passo 1 do
+           * wizard, no mesmo bloco, já mostra esqueleto (review do BD-6, Q-3). */}
           <AppDropdown
             value={form.client_id}
             options={clients.clientOptions}
             disabled={clients.unusable}
+            loading={clients.isLoading}
+            aria-busy={clients.isLoading}
             onChange={(e) => set('client_id', e.value as number)}
           />
           {/* Dropdown vazio sem explicação é o disfarce do BD-6: quem não
