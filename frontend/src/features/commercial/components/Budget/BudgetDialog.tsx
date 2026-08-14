@@ -68,7 +68,7 @@ export function BudgetDialog({
            * em vez de concluir que não há cliente cadastrado. */}
           <InlineLoadState
             error={clients.isError ? (clients.errorDetail ?? t('common.loadErrorHint')) : null}
-            emptyHint={clients.showEmptyHint ? t('budget.noClientsAvailable') : null}
+            emptyHint={clients.isEmpty ? t('budget.noClientsAvailable') : null}
             retryLabel={t('common.retry')}
             onRetry={clients.refetch}
           />

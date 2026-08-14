@@ -84,7 +84,7 @@ export function StudentDialog({
           options={clients.options}
           isError={clients.isError}
           errorDetail={clients.errorDetail}
-          showEmptyHint={clients.showEmptyHint}
+          isEmpty={clients.isEmpty}
           unusable={clientsUnusable}
           refetch={clients.refetch}
           onChange={(id) => set("client_id", id)}

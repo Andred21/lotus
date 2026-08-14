@@ -14,7 +14,7 @@ export function StudentClientField({
   options,
   isError,
   errorDetail,
-  showEmptyHint,
+  isEmpty,
   unusable,
   refetch,
   onChange,
@@ -28,7 +28,7 @@ export function StudentClientField({
   options: { label: string; value: number }[];
   isError: boolean;
   errorDetail?: string | null;
-  showEmptyHint: boolean;
+  isEmpty: boolean;
   unusable: boolean;
   refetch: () => void;
   onChange: (id: number) => void;
@@ -52,7 +52,7 @@ export function StudentClientField({
         />
         <InlineLoadState
           error={isError ? (errorDetail ?? t("common.loadErrorHint")) : null}
-          emptyHint={showEmptyHint ? t("student.noClientsAvailable") : null}
+          emptyHint={isEmpty ? t("student.noClientsAvailable") : null}
           retryLabel={t("common.retry")}
           onRetry={refetch}
         />

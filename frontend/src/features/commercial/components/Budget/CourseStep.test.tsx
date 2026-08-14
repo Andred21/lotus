@@ -17,14 +17,18 @@ const CURSO = { id: 1, name: 'Alta tensión', workload_hours: 8 } as CourseData
 
 /** Estado feliz; cada teste sobrescreve só o que o SEU ramo muda. */
 const base: Courses = {
+  data: [CURSO],
   list: [CURSO],
   search: '',
   setSearch: () => {},
   isLoading: false,
   isError: false,
   errorDetail: undefined,
+  loadError: null,
   refetch: () => {},
   isEmpty: false,
+  unusable: false,
+  failedWithoutData: false,
   noResults: false,
 }
 
@@ -44,8 +48,11 @@ describe('CourseStep — os cinco estados', () => {
     expect(screen.queryByPlaceholderText('quote.courseSearchPlaceholder')).toBeNull()
   })
 
-  it('falha: erro com Reintentar, e NUNCA a mensagem de catálogo vazio', () => {
-    renderStep({ isError: true, errorDetail: 'Sin conexión', list: [] })
+  it('falha SEM cache: erro no passo inteiro, e NUNCA a mensagem de catálogo vazio', () => {
+    renderStep({
+      isError: true, failedWithoutData: true, unusable: true, errorDetail: 'Sin conexión',
+      data: [], list: [],
+    })
 
     expect(screen.getByText('common.loadError')).toBeTruthy()
     expect(screen.getByText('Sin conexión')).toBeTruthy()
