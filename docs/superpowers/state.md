@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+workflow_state: ready_for_review
+next_owner: joao
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
 active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T15:18:17-03:00
+updated_at: 2026-08-14T15:55:36-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -278,6 +278,50 @@ necessário, e aplicá-lo por precaução teria trocado um mecanismo medido por 
 teste e +5 asserções, exatamente o que as duas tasks acrescentam, zero regressão. Pint `passed` nos
 quatro arquivos. Diff revisado contra o plano antes do commit e integralmente dentro dos
 `paths_autorizados`; `generated.ts` intocado, como a lei §5.3 exige.
+
+### Execução — 2026-08-14: Tasks 3–12, o bloco fecha em `ready_for_review`
+
+**Task 4 (`IdentityCell`) não foi delegada a subagente.** SDD com Agent tool estava autorizado pelo
+João para o ciclo do bloco, mas a tentativa de spawn foi rejeitada em tempo real; executada inline
+por Claude a partir daí — Tasks 4 a 10 e o gate (12) inteiros sem subagente.
+
+**Um rabo solto da Task 3 apareceu ao abrir a Task 4:** `typescript-transformer-manifest.json`
+estava modificado na árvore sem nunca ter sido staged junto de `0c4e9ac` — hash novo já batendo com
+o `generated.ts` commitado. Corrigido em commit próprio (`a81adb2`), separado da Task 4.
+
+**Grupo A, B e C (Tasks 5–10) fecham os 13 sítios da superfície do bloco**, cada um com gate
+build+lint+test verde e commit isolado. Dois achados de execução, nenhum de código: `useCommercialClients.ts`
+seguia na forma pré-BD-6 (`clients.data?.find`, não `useLoadState`) — a variante Step 1b do plano
+previa exatamente esse caso, aplicada sem ambiguidade (Task 7). A catraca de cor provou nos dois
+sentidos (Task 5 Step 6): reintroduzir `text-gray-400` faz `pnpm lint` falhar nomeando arquivo e
+linha; revertido à mão, sem `git checkout`.
+
+**Task 11 (`DemoPhotosSeeder`, executor `codex`) repetiu a forma das Tasks 1/2** — Codex escreveu o
+arquivo verbatim ao plano, Pint passou, e os Steps dependentes de Docker (rodar o seed, provar
+idempotência) foram bloqueados no sandbox por desenho. Mas a causa raiz chegou uma task antes do
+previsto: o `--no-deps app` do gate de abertura resolvia teste (sqlite `:memory:`), não `db:seed`,
+que precisa de MySQL/MinIO reais — gap que o F1 do pre-flight só havia antecipado para a Task 12
+Step 7. **Decisão do João:** `docker network connect lotus_default fix-frontend-app-1` — sem subir
+ou derrubar container, sem tocar porta, só entrar como membro adicional da rede; o seed grava no
+MESMO banco de dev que o BD-6 usa, reuso deliberado, não isolamento. Medido depois: 33 semeadas na
+primeira rodada, `0 semeadas` e todos `já tem foto, pulado` na segunda — idempotência provada.
+
+**Gate do bloco (Task 12), todos os seis passos verificáveis sem exceção:** suíte de backend 592
+passed / 5 skipped (2154 asserções, mesma contagem desde a Task 3); frontend `pnpm build`/`pnpm lint`/`pnpm test`
+os três exit 0, 171 testes; `grep "text-gray-"` zero ocorrências; `CATRACA_COR` com exatamente 4
+linhas, sem `ClientsTable.tsx`; `grep "AppAvatar"` fora de `shared/ui` aponta só para
+`UserMenu.tsx`, a única exceção deliberada; `typescript:transform` reexecutado devolve diff vazio
+em `generated.ts` — nenhuma edição à mão.
+
+**O que o bloco NÃO provou, sem maquiagem:** `/lotus-ui-review` não rodou — os 13 sítios da lista do
+plano (Task 12 Step 8) nunca foram vistos no navegador nesta execução. A porta 5173 está ocupada
+pelo `pnpm dev` do main tree (BD-6, `/home/jvbat/projetos/lotus/frontend`), e o `docker compose up
+-d` sem `--no-deps` do texto original do plano colidiria de porta com aquele stack — mesma classe
+de desvio de mecanismo do F1. A revisão visual é passo do João na sessão interativa; a lista das 13
+telas foi entregue a ele em chat, não através de skill.
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
+a revisão do trabalho ativo.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
