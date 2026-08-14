@@ -5,7 +5,9 @@
 - **Branch:** `feat/celula-de-identidade`, worktree `fix-frontend`, criada de `0a1439f`
 - **Context Packet:** `docs/superpowers/context-packets/celula-de-identidade.md` (`status: partial`)
 - **Escopo:** frontend + **alargamento de dois DTOs no backend** (D2/D3); `generated.ts` regenera
-- **Executor previsto:** `claude` — o bloco regenera `generated.ts` (lei §5.3, ADR-04)
+- **Executor previsto:** **dividido por decisão do João em 2026-08-14** — `codex` em `backend/**`,
+  `claude` em `frontend/**`. O detalhe e os `paths_autorizados` vivem no `## Handoff de execução`
+  do plano; a fronteira que a lei §5.3 impõe está em §7.2
 
 ---
 
@@ -321,6 +323,47 @@ duas direções entram no DoD.
 **Backend.** Teste de listagem de turmas assere os quatro campos novos na resposta e prova que
 `redatores[0].photo_url` é URL assinada (§3), não `photo_path`.
 
+### 7.1 Fotos de demonstração — sem elas o DoD visual não prova nada
+
+**Decisão do João em 2026-08-14, e ela é pré-requisito de prova, não enfeite.** Hoje o banco de dev
+não tem nenhuma foto: todo sítio cai nas iniciais do `AppAvatar`. A revisão visual dos 14 sítios
+provaria apenas o ramo do fallback — o caminho `photo_url` → `SignedUrlTransformer` → `<img>`
+ficaria sem prova nenhuma, justamente o que §3 acrescenta.
+
+**Fonte:** `randomuser.me`, cujos retratos são de **pessoas reais** e licenciados pelo serviço para
+uso como placeholder. Não se raspa rosto avulso da web: neste produto o registro de aluno vira
+certificado com peso legal, e foto de pessoa real identificável em cadastro fictício é problema de
+privacidade, não detalhe estético. As URLs são determinísticas
+(`https://randomuser.me/api/portraits/{men,women}/{0-99}.jpg`), então o seed não depende da API,
+não sorteia e repete o mesmo resultado a cada execução.
+
+**Forma:** `DemoPhotosSeeder` em `backend/database/seeders/`, **não encadeado no
+`DatabaseSeeder::run()`** — roda só por `db:seed --class=DemoPhotosSeeder`. Três razões:
+
+1. a suíte usa sqlite `:memory:` sem MinIO e sem rede; um seeder de fotos no encadeamento
+   quebraria `php artisan test`;
+2. escreve pelo **`UserPhotoService::store()`**, nunca em `photo_path` direto — é ele que carrega a
+   ordem de gravação, a guarda do `store() === false`, a transação da auditoria e a compensação;
+3. **idempotente**: usuário que já tem `photo_path` é pulado, então re-rodar não empilha objeto
+   órfão no bucket.
+
+Alcance: alguns redatores e alguns alunos — o suficiente para que a revisão visual veja, lado a
+lado na mesma tabela, **a linha com foto e a linha sem foto**. Cobertura total esconderia a
+regressão do fallback. Falha de rede não derruba o seed: registra e segue.
+
+### 7.2 A fronteira que a divisão de executor não pode cruzar
+
+Codex aplica `backend/**`; Claude aplica `frontend/**`. `generated.ts` é **saída de build**, e a
+regeneração fica com Claude, depois do backend pronto:
+
+```bash
+docker compose exec -T app php artisan typescript:transform
+```
+
+`frontend/src/shared/types/generated.ts` **não entra** nos `paths_autorizados` do Codex. A lei §5.3
+proíbe editá-lo à mão, e a forma mais barata de garantir isso é o executor do backend não ter o
+arquivo no seu alcance de escrita.
+
 **DoD do bloco** — cada item prova comportamento, nenhum é "pacote instalado":
 
 - [ ] `docker compose exec -T app php artisan test` verde, incluindo os asserts novos;
@@ -329,9 +372,11 @@ duas direções entram no DoD.
 - [ ] catraca provada nos dois sentidos (§6);
 - [ ] `grep -rn "text-gray-" frontend/src` devolve **zero**;
 - [ ] nenhum `AppAvatar` remanescente em sítio de identidade fora de `shared/ui` — grep prova;
-- [ ] **revisão visual do João** nos 14 sítios. `/lotus-ui-review` tem
-      `disable-model-invocation: true`: é passo dele na sessão interativa, planejado agora e não
-      descoberto no gate.
+- [ ] **`db:seed --class=DemoPhotosSeeder` rodado** (§7.1) e provado: alguns redatores e alguns
+      alunos com foto, outros sem, na mesma tabela; re-rodar não duplica objeto no bucket;
+- [ ] **revisão visual do João** nos 14 sítios, **com o banco já semeado** — é ela que prova o ramo
+      com foto e o ramo sem foto lado a lado. `/lotus-ui-review` tem `disable-model-invocation:
+      true`: é passo dele na sessão interativa, planejado agora e não descoberto no gate.
 
 ---
 
@@ -372,3 +417,5 @@ lookup); qualquer regra de domínio dentro do componente.
 | D9 | `RedatorDesignation`: picker e card **idênticos** (foto + e-mail); `AppTag` fora da célula |
 | D10 | `RedatorCard` **entra**; `UserMenu` **fica fora**, por três razões medidas |
 | D11 | Um componente com prop `inline`, não dois componentes nem variante por string |
+| D12 | Execução **dividida**: `codex` em `backend/**`, `claude` em `frontend/**`; `generated.ts` fica fora dos `paths_autorizados` do Codex (§7.2) |
+| D13 | `DemoPhotosSeeder` opt-in semeia fotos de `randomuser.me` via `UserPhotoService::store()`, em **parte** dos redatores e alunos, para que a revisão visual prove os dois ramos (§7.1) |
