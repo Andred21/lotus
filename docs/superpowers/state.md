@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-backend-agregacoes
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+workflow_state: ready_for_review
+next_owner: joao
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-dashboard-backend-agregacoes-design.md
 active_plan: docs/superpowers/plans/2026-08-14-dashboard-backend-agregacoes.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-14-dashboard-backend-ag
 blocker: null
 last_completed_work_item: falha-vs-lista-vazia
 state_basis_commit: 1e40acb
-updated_at: 2026-08-14T18:05:00-03:00
+updated_at: 2026-08-14T20:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -188,6 +188,51 @@ e o parêntese da turma (c) na Task 2 é ambiguidade de redação que a asserç�
 resolve.
 
 **Estado:** `executing`.
+
+### Execução — 2026-08-14: fechamento
+
+As oito tasks do plano completaram em **sete commits** (`8c53f60`..`cdccb12`; a Task 8 é gate, não
+entrega). O `executor: misto` foi cumprido como escrito: **Tasks 2, 3 e 4 no Codex** via
+`lotus-execute-block` (`sandbox: workspace-write`, sem acesso ao socket do Docker — decisão explícita
+do João: "Codex escreve, eu rodo"), cada uma com o diff real lido contra o plano antes de aceita, a
+verificação rodada por mim e os `paths_autorizados` conferidos; **Tasks 1, 5, 6, 7 e 8 no claude**.
+
+**A Task 8 provou o DoD contra a API real com três atores**, não contra a suíte. Admin com todo KPI
+conferido por SQL independente (turmas 4/1/2; `certificados_a_emitir=9` respeitando a D6, com um
+certificado revogado que **não** volta a "a emitir"; cotação 1 / `250.0000 UF`), e a coerência interna
+fechando sozinha — `conclusoes_por_confirmar` = as turmas `habilitada` do `compliance_turmas`, e os
+`alertas` = os `overdue` da agenda, que é a D8 viva. Papel **sem permissão comercial** criado pela API
+real (`POST /api/roles` + `POST /api/users`): `cotacoes`, `uf_aprovada` das séries e as 8 UF de ranking
+saem `null`, o pipeline perde as duas etapas de cotação, e a rede de string no corpo bruto mostra que
+`uf`/`cotac` só aparecem como **nome de chave seguido de `null`** — zero valor comercial atravessa.
+Redator ativado de forma temporária e reversível: 6 chaves, nenhuma de admin, e o escopo conferido por
+SQL (só as turmas dela). **Restauração conferida byte a byte** (hash comparado com o capturado antes)
+e as 6 tabelas de RBAC/auditoria de volta aos números exatos do snapshot inicial.
+
+**Mutação zero foi medida, não afirmada:** contagem de 14 tabelas — incluindo `audits` e `login_logs`
+— antes e depois de uma rodada dos quatro GETs (sem filtro, filtro válido, intervalo invertido, data
+lixo). `diff` idêntico. Os dois caminhos de erro devolvem 422 `application/problem+json` pelo handler
+global; sem sessão, 401 no mesmo formato.
+
+**Placar final:** backend **617 passed, 5 skipped (2334 assertions)** — a projeção do plano era
+591 + ~24, e vieram **+26**. `pnpm lint` limpo, `pnpm test` **35 arquivos / 176 testes**, `pnpm build`
+verde, Pint `passed` nos `.php` do bloco, `typescript:transform` **sem diff novo** (`generated.ts` foi
+escrito na Task 1 e a árvore segue limpa depois de reexecutar o comando — lei §5.3 cumprida pela
+regeneração, não pela mão). `git status --porcelain` vazio; nenhum artefato de prova ficou no
+repositório ou no banco.
+
+**Quatro coisas ficam declaradas para o review, e nenhuma é regressão deste bloco:** (1) **nenhum
+redator autentica em produção** — `CreateRedatorAction` cria com `is_active=false` "até o fluxo de
+ativação", que não existe, então o dashboard do redator está correto e provado mas hoje inalcançável;
+(2) uma turma concluída com **zero matrículas** cai em `fully_issued` no funil, defensável mas lê como
+"tudo emitido" onde não havia o que emitir; (3) `DomainDependencyTest` detecta aresta **usada e não
+declarada**, mas a direção contrária passa em silêncio — o cenário (9) cobre isso só para Dashboard, e
+generalizar é candidato a follow-up; (4) **quatro premissas do plano venceram durante a execução** e
+estão registradas uma a uma no ledger, sendo a última o `preventLazyLoading` dito "já global" que é
+por teste.
+
+**Estado:** `ready_for_review`. Próxima ação: revisão do trabalho ativo, por instrução explícita do
+João — **não iniciada automaticamente aqui**.
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
