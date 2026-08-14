@@ -39,7 +39,7 @@ Antes de analisar qualquer tarefa, leia nesta ordem:
 1. `CLAUDE.md` — leis, fontes e comandos;
 2. `INSTRUÇÕES-DO-PROJETO.md` — postura e exceções;
 3. `docs/superpowers/state.md` — etapa atual e próxima ação permitida;
-4. `docs/superpowers/progress.md` — histórico recente, somente para orientação.
+4. `docs/superpowers/historico/progress.md` — histórico recente, somente para orientação.
 
 Leia `docs/superpowers/backlog.md` somente quando `state.md` estiver em `idle`, quando a tarefa for
 planejamento ou fechamento, ou quando a solicitação pedir explicitamente o roadmap.
@@ -55,7 +55,7 @@ Depois do bootstrap, carregue somente o necessário:
 - arquitetura, stack ou infraestrutura: `docs/adrs.md`;
 - schema, migration ou model: `docs/der-fisico.md`;
 - criação ou movimentação de arquivo: `docs/estrutura-monolito.md`;
-- possível divergência documental: `docs/pendencias.md`;
+- possível divergência documental: `docs/superpowers/pendencias/abertas.md`;
 - planejamento externo ou requisito ausente no repo: fonte canônica indicada no Drive.
 
 Não carregue `/docs`, planos arquivados ou regras inteiras por precaução.

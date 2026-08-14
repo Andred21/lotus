@@ -22,8 +22,8 @@ entra sozinha quando o agente toca `backend/app/**`, `frontend/src/**`, migratio
 | `adrs.md` | ADRs — decisão + porquê + trade-off |
 | `der-fisico.md` | DER físico MySQL |
 | `estrutura-monolito.md` | Esqueleto back+front, regras de dependência |
-| `pendencias.md` | Divergências conhecidas, cada uma com gatilho de expiração |
-| `superpowers/progress.md` | Índice vivo — 1 linha por feature |
+| `superpowers/pendencias/` | Divergências conhecidas, cada uma com gatilho de expiração |
+| `superpowers/historico/progress.md` | Índice vivo — 1 linha por feature |
 ---
 
 ## Documentos
@@ -122,7 +122,7 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     de dev exige `DB::beginTransaction()`/`rollBack()` ou um teste com `RefreshDatabase` — nunca
     `delete()` + `restore()` no tinker, que foi como esse estrago nasceu.
 
-> **Índice vivo do desenvolvimento:** `docs/superpowers/progress.md` (versionado) é o índice do que
+> **Índice vivo do desenvolvimento:** `docs/superpowers/historico/progress.md` (versionado) é o índice do que
 > foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
 > mora no ADR, de schema no `der-fisico`, de padrão de código no `INSTRUÇÕES`, e o passo-a-passo nos
 > planos/specs em `docs/superpowers/plans|specs/` (concluídos em `archive/`). O ledger fino de
@@ -131,8 +131,10 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
 
 ---
 
-> **Divergências conhecidas:** `docs/pendencias.md`. Não duplique a lista aqui — ela já morou em dois
-> lugares (comando `sync-docs` + Parte IV do INSTRUÇÕES) e as duas cópias divergiram entre si.
+> **Divergências conhecidas:** `docs/superpowers/pendencias/` — `README.md` é o índice (ID, bloco,
+> gatilho), `abertas.md` tem a ficha de cada uma e `encerradas.md` guarda o rastro de 1 sprint. Não
+> duplique a lista aqui — ela já morou em dois lugares (comando `sync-docs` + Parte IV do INSTRUÇÕES)
+> e as duas cópias divergiram entre si.
 
 ## Fontes que NÃO foram espelhadas (ficam só no Drive)
 

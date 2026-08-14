@@ -148,7 +148,7 @@ N+1 sem eager loading; `env()` fora de `config/`; feature que ninguém pediu.
 - **Estilo não é achado** — Pint e eslint fazem isso.
 - Padrão repetido N vezes = **1 achado** com a lista de ocorrências.
 - **Se o código está bom, diga que está bom.** Achado inventado destrói a confiança na skill.
-- Achado que é decisão consciente registrada (`backlog.md`, ADR, `pendencias.md`) **não é achado**.
+- Achado que é decisão consciente registrada (`backlog.md`, ADR, `pendencias/abertas.md`) **não é achado**.
 
 ## Saída e handoff
 
@@ -167,7 +167,7 @@ Somente achados aprovados podem ser corrigidos. Após as correções, retome `re
 checagens pertinentes ao mesmo `active_work_item`.
 
 Trabalho de código deferido vai para `docs/superpowers/backlog.md`. Divergência documental vai para
-`docs/pendencias.md`. Nenhum dos dois destinos promove trabalho automaticamente nem substitui o
+`docs/superpowers/pendencias/abertas.md`. Nenhum dos dois destinos promove trabalho automaticamente nem substitui o
 item ativo.
 
 Não promova automaticamente esse bloco para `state.md` enquanto existir outro

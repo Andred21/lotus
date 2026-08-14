@@ -32,7 +32,7 @@ const DOCS = [
 ]
 
 /**
- * `docs/superpowers/**` (progress, state, plans, specs) e `docs/pendencias.md`
+ * `docs/superpowers/**` (progress, state, plans, specs) e `docs/superpowers/pendencias/abertas.md`
  * ficam FORA de propósito: o primeiro é histórico e congela referência morta
  * por design — `ManualPdfService` morreu em 2026-08-10 e a linha que o cita
  * continua correta como registro —, e o segundo REGISTRA divergência, então
@@ -136,7 +136,7 @@ describe('referência de path em doc normativo', () => {
     // cobertura encolher sozinha.
     //
     // Só `.claude/rules/` é glob. `docs/` não pode ser varrida assim: a D4
-    // exclui `docs/pendencias.md` e `docs/superpowers/**` de propósito, e um
+    // exclui `docs/superpowers/pendencias/abertas.md` e `docs/superpowers/**` de propósito, e um
     // glob os traria de volta.
     const rules = readdirSync(join(RAIZ, '.claude', 'rules'))
       .filter((f) => f.endsWith('.md'))
