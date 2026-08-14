@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: falha-vs-lista-vazia
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-14-falha-vs-lista-vazia.md
 context_packet: null
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T12:41:00-03:00
+updated_at: 2026-08-14T13:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -118,6 +118,60 @@ bloco.
 
 O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
 escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-14
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-14-falha-vs-lista-vazia.md`: **seis tasks**, uma por commit, na ordem
+componente compartilhado → retrofit → passo 1 do wizard → card de cotações → dropdown do orçamento →
+gate.
+
+**A ordem tem uma dependência e uma dívida:** o `InlineLoadState` vem primeiro porque as Tasks 2, 4 e
+5 o consomem; e o **retrofit vem em segundo, antes dos sítios novos**, para a duplicação não chegar a
+existir — escrever os três consumidores e só depois voltar em `identity` é o caminho que o review do
+BD-5 reprovou no `mergePt`.
+
+**Três coisas apareceram só ao escrever o plano, e as três mudam trabalho:**
+
+1. **`GET /api/courses` não tem middleware de permissão** (`app/Domains/Catalog/routes.php:11`, só
+   `auth:sanctum`), então **não há 403 a provocar por RBAC** — o texto original do B-7 falava em
+   "403/rede". A falha do gate se produz redirecionando o XHR da rota por `eval` no navegador, e o
+   caminho de volta é `window.__unpatch()`, sem tocar container.
+2. **O `CourseStep` recebe o hook inteiro, não `list`/`search` soltos.** Trazer o
+   `useQuoteCourseSearch` para dentro dele — que é o que o `RedatorCourseSelector` faz — **reiniciaria
+   o termo digitado** a cada ida e volta entre os passos, porque o passo desmonta e o wizard não. É
+   regressão silenciosa que nenhum teste do bloco pegaria.
+3. **A prova do "vazio de verdade" precisa do banco, e ele volta atrás.** `Course` usa `SoftDeletes`,
+   então o gate apaga o catálogo, mede que a tela diz "No hay cursos." **e não** a mensagem de falha,
+   e restaura — com a contagem de `onlyTrashed` medida **antes**, para o restore não ressuscitar
+   curso que já estava na lixeira.
+
+**Também entrou no gate a prova nos dois sentidos dos testes novos** (spec §7.2): cada ramo é
+derrubado por `perl -0pi`, o `grep` confirma que a sonda foi plantada **antes** do vitest rodar — sem
+ele "não reprovou" seria ambíguo entre teste cego e sonda ausente, que é a lição da Task 8 do login —
+e o `git checkout` devolve a árvore.
+
+**Baseline medido em `0c18595`, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**32 arquivos / 163 testes**. Projeção do plano: **35 arquivos / 174 testes** (+3 arquivos, +11
+casos). A spec §6 dizia "~177" por estimativa; o plano fixa **174**, que é a soma exata dos casos
+escritos, e é esse o número que o gate confere.
+
+**Um risco de execução foi medido antes de virar bloqueio:** PrimeReact **renderiza em jsdom** e
+`fireEvent` funciona — probe com `AppInputText`/`AppRadioButton`/`AppButton` e com a `QuotesList`
+inteira (que monta `AppFileUpload`), as duas passando. Os três arquivos de teste do plano não
+dependem de mockar PrimeReact.
+
+`executor: claude`, sem `paths_autorizados`: o bloco muda comportamento em três telas, atravessa a
+fronteira de módulo (o retrofit toca `identity`), decide granularidade de estado por julgamento e o
+gate mexe no banco de dev com passo de restauração.
+
+**Um conflito conhecido fica declarado antes de acontecer:** o cabeçalho do plano pede
+`subagent-driven-development`, e esta sessão tem regra de não chamar o Agent tool sem pedido — o
+mesmo impasse do BD-4, do `rastro-unicidade-e-gates` e do login. Resolve-se no `/executar-bloco`, por
+pergunta direta ao João, não aqui.
+
+**Estado: `ready_for_execution`.** `/executar-bloco falha-vs-lista-vazia` exige instrução posterior
+do João.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
