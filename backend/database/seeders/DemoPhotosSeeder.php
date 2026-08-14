@@ -48,13 +48,19 @@ class DemoPhotosSeeder extends Seeder
             ->values();
 
         $usadas = 0;
+        $jaTinham = 0;
+        $semFoto = 0;
+        $falharam = 0;
 
         foreach ($users as $i => $user) {
             if ($i % 2 !== 0) {
+                $semFoto++;
+
                 continue;
             }
 
             if ($user->photo_path !== null) {
+                $jaTinham++;
                 $this->command->line("· {$user->name} já tem foto, pulado");
 
                 continue;
@@ -64,10 +70,18 @@ class DemoPhotosSeeder extends Seeder
 
             if ($this->seedOne($photos, $user, $url)) {
                 $usadas++;
+            } else {
+                $falharam++;
             }
         }
 
-        $this->command->info("Fotos de demonstração: {$usadas} semeadas, ".($users->count() - $usadas).' sem foto (proposital).');
+        // Os quatro números separados de propósito: "total menos semeadas"
+        // contava como intencional quem foi pulado por já ter foto e quem
+        // falhou por rede — e o dev lia "proposital" sobre um erro.
+        $this->command->info(
+            "Fotos de demonstração: {$usadas} semeadas, {$jaTinham} já tinham, "
+            ."{$semFoto} sem foto (proposital), {$falharam} falharam."
+        );
     }
 
     /** Falha de rede registra e segue: seed de demonstração não derruba o dev. */

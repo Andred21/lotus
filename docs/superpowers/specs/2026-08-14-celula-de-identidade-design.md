@@ -239,13 +239,21 @@ e-mail nos dois. O picker já tem `RedatorData` completo; o card passa a ter o n
 | `TurmasTable.tsx:73` (Cliente) | D3 | `client_rut` | `client_photo_url` |
 | `TurmasTable.tsx:83-90` (Redator) | D6 | `email` do primeiro | `photo_url` do primeiro |
 | `EnrollmentTable.tsx:63-71` | D8 | `email`, **sem linha quando `null`** | iniciais (DTO não tem foto) |
-| `HistorialTable.tsx:51-59` | D4 | `snapshot.aluno.rut ?? '—'` | **iniciais, nunca foto viva** |
+| `HistorialTable.tsx:51-59` | D4 | `snapshot.aluno.rut ?? '—'` | `aluno_photo_url` (foto viva — D4 revertida em 2026-08-14, ver nota) |
 | `EmissionStudentsTable.tsx:42-43` | D5 | `student_rut` | iniciais (DTO não tem foto) |
 
 **D4 é decisão de auditoria, escrita e não default.** `SnapshotPartyData` é o retrato congelado no
 momento da emissão de um documento com peso legal. Ilustrá-lo com a foto **viva** do aluno misturaria
 dado congelado com dado mutável num certificado. Não se faz. A célula usa as iniciais derivadas do
 nome congelado, e a descrição é o RUT do snapshot.
+
+> **D4 revertida pelo João em 2026-08-14, durante a execução (correção de rumo).** A listagem passa
+> a mostrar a foto **viva** do aluno (`CertificateData.aluno_photo_url`, `#[Computed]` fora do
+> snapshot), com nome e RUT ainda vindos do snapshot. A fronteira mudou de lugar, não sumiu: o que
+> é apresentado como **documento** — o PDF e a rota pública do QR (`PublicCertificateData`) —
+> continua só-snapshot. A tabela do histórico é tela de trabalho interna, e ali a foto é identidade
+> visual de linha, não conteúdo do certificado. O texto acima fica como registro da decisão
+> original; o vigente é este parágrafo.
 
 **D6 — coluna Redator, N redatores.** A célula fica com o **primeiro** redator; os demais viram um
 contador `+N` ao lado. Isso mantém **altura de linha constante** na tabela, que é o que empilhar N
@@ -409,7 +417,7 @@ lookup); qualquer regra de domínio dentro do componente.
 | D1 | Grafia vencedora: a dos três de identity — `font-medium` no título, `text-xs` + `--text-color-secondary` na descrição, `gap-3`, avatar `size="large"` |
 | D2 | Grupo C resolve-se **alargando os DTOs no backend**, não aceitando descrição ausente |
 | D3 | Alargamento **completo**: descrição **e** foto — `TurmaData.client_rut` + `client_photo_url`, `TurmaRedatorData.email` + `photo_url` |
-| D4 | `HistorialTable`: iniciais apenas, descrição = RUT do snapshot, **nunca** foto viva sobre snapshot legal |
+| D4 | `HistorialTable`: descrição = RUT do snapshot; **foto viva** do aluno (revertida em 2026-08-14 — só PDF e rota pública do QR seguem só-snapshot) |
 | D5 | `EmissionStudentsTable`: nome e RUT fundem numa coluna; nenhuma ordenação é perdida (nenhuma existia); `certificate.colRut` sai das 3 locales |
 | D6 | `TurmasTable`/Redator: primeiro redator + contador `+N`, altura de linha constante |
 | D7 | `DetailHeader`: `<p>` do subtítulo vira `<div>`, mesmas classes |

@@ -6,6 +6,7 @@ import type { ProblemDetails } from '@shared/api/axios'
  * é a mesma lista e o mesmo lookup, e a chave do TanStack já é compartilhada. */
 export function useCommercialClients() {
   const clients = clientsApi.useList()
+  const client = (id: number) => clients.data?.find((c) => c.id === id) ?? null
 
   return {
     isLoading: clients.isLoading,
@@ -16,12 +17,13 @@ export function useCommercialClients() {
     refetch: () => {
       void clients.refetch()
     },
-    clientName: (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—',
     /** O ClientData inteiro: a query já o traz, e estreitar para o nome
      * obrigava a tabela a renderizar texto cru onde cabe célula de identidade.
      * `clientName` continua porque o diálogo depende dele — e o fallback da
-     * tabela também, quando o id não resolve. */
-    client: (id: number) => clients.data?.find((c) => c.id === id) ?? null,
+     * tabela também, quando o id não resolve. Ele DERIVA daqui: eram duas
+     * varreduras com o mesmo predicado, e duas varreduras divergem. */
+    client,
+    clientName: (id: number) => client(id)?.legal_name ?? '—',
     clientOptions: (clients.data ?? []).map((c) => ({ label: c.legal_name, value: c.id })),
   }
 }

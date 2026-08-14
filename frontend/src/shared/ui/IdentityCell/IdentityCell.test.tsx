@@ -49,6 +49,24 @@ describe('IdentityCell', () => {
     expect(container.textContent).toContain('RUT 76.123.456-7')
   })
 
+  /** O avatar do Prime é um `<div>`: embrulhá-lo num `<span>` é o mesmo HTML
+   * inválido que a D7 tirou do subtítulo do DetailHeader. */
+  it('na forma inline o container é elemento de fluxo, não fraseado', () => {
+    const { container } = render(<IdentityCell title="Enel Chile" inline />)
+
+    expect(container.firstElementChild?.tagName).toBe('DIV')
+  })
+
+  /** O avatar ILUSTRA o título que vem ao lado. Sem `aria-hidden` o leitor de
+   * tela anuncia o nome duas vezes por linha — em 13 tabelas. */
+  it('esconde o avatar do leitor de tela nas duas formas', () => {
+    const { container: empilhado } = render(<IdentityCell title="Juan Soto" />)
+    const { container: inline } = render(<IdentityCell title="Juan Soto" inline />)
+
+    expect(empilhado.querySelector('[aria-hidden="true"]')?.textContent).toBe('JS')
+    expect(inline.querySelector('[aria-hidden="true"]')?.textContent).toBe('JS')
+  })
+
   it('sem imagem cai nas iniciais do título', () => {
     render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)
 

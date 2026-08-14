@@ -2,21 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
 active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
 context_packet: docs/superpowers/context-packets/celula-de-identidade.md
-blocker: |
-  /revisar-sprint fechou com 9 achados aguardando decisão do João: 2 🔴 (comentário do
-  HistorialTable afirma o contrário do código sobre foto viva em snapshot legal; `min-w-0`
-  ausente no IdentityCell deixa o `truncate` inerte nos 13 sítios), 4 🟡 e 3 🟢. Só achado
-  aprovado vira correção; depois o estado volta a `reviewing`.
+blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T17:42:40-03:00
+updated_at: 2026-08-14T18:02:45-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -465,7 +461,41 @@ regex pelo prefixo** — a guarda existe e não cobre o que o bloco criou.
 `EnrollmentData::photo_url`) **voltam assinados** — verificado por tinker contra o banco de dev,
 `http://localhost:9000/lotus/user-photos/…`. Não é bug; é lacuna de teste de regressão.
 
-**Estado: `blocked`.** Só achado aprovado pelo João vira correção.
+### Triagem do João (2026-08-14): 7 entram, 2 são decisão dele
+
+**Entraram e estão corrigidos** — Q-1, Q-4, Q-5, Q-6, Q-7, Q-8, Q-9:
+
+- **Q-1** — o comentário do `HistorialTable` passou a descrever a reversão, e a spec §D4 ganhou a
+  nota do que ficou de pé: **o PDF e a rota pública do QR seguem só-snapshot**; a fronteira mudou de
+  lugar, não sumiu.
+- **Q-4** — a regex da guarda virou `/->\s*\w*(download_url|photo_url)\b/`. Os três campos novos
+  passam a ser cobertos e nada de `app/` reprova.
+- **Q-5** — a forma inline devolve `<div>`. **Sem mudança visual**: o `flex` já cravava o `display`
+  nas duas grafias, e as classes são as mesmas — a troca só corrige `<div>` do avatar dentro de
+  fraseado. Teste novo prova o container de fluxo, e reprovou contra o `<span>` antes de entrar.
+- **Q-6** — nasceu o `CertificateQueryBuilder` (`LISTING = ['enrollment.student.user']`), com
+  `withListingData()` no `index` e `loadListingData()` em `show`/`store`/`revoke`, que
+  lazy-loadavam três relações cada. Guarda de runtime em
+  `tests/Feature/Certification/CertificateEagerLoadTest.php`, no molde do `ContratanteEagerLoadTest`
+  (duas cadeias distintas, `preventLazyLoading`) — **vista vermelha** com o eager load removido.
+  O segundo teste do arquivo fecha a lacuna que a própria revisão mediu: `aluno_photo_url` chega
+  **assinado** na listagem e no detalhe.
+- **Q-7** — `aria-hidden` no avatar da célula: o nome deixa de ser anunciado duas vezes por linha
+  nos 13 sítios, de uma linha só. Teste próprio, também visto vermelho antes.
+- **Q-8** — `clientName` deriva de `client`; era a mesma varredura escrita duas vezes.
+- **Q-9** — o seeder passa a contar quatro números separados (semeadas, já tinham, sem foto por
+  propósito, falharam); "total menos semeadas" chamava de proposital quem falhou por rede.
+
+**Não entraram, por decisão do João — as duas são alteração dele, à mão, depois do plano:**
+
+- **Q-2** (`min-w-0` ausente, `truncate` inerte nos 13 sítios) — "deixe como está". Registrado em
+  `docs/pendencias.md` (**P-38**) para não voltar como achado novo.
+- **Q-3** (grafia diverge do D1: `font-semibold`, `text-sm`, `gap-2`) — "eu que mudei". Registrado
+  em `docs/pendencias.md` (**P-39**); o D1 da spec segue com a grafia planejada.
+
+**Gates repetidos depois das correções:** backend **595 passed / 5 skipped (2162 asserções)**;
+`pnpm lint` exit 0; `pnpm build` sem erro de tipo; `pnpm test` **33 arquivos / 173 testes**;
+`typescript:transform` reexecutado não move `generated.ts`.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 

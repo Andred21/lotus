@@ -23,23 +23,30 @@ export interface IdentityCellProps {
  * A forma empilhada trunca; a forma inline NÃO. A inline é a que carrega nó
  * arbitrário (botão, tag), e `truncate` cortaria o nó em vez do texto.
  *
- * `<span>` na forma inline porque seus dois consumidores a entregam dentro do
- * `subtitle` do DetailHeader, e a cor do título é cravada em `--text-color`:
- * o `subtitle` já pinta tudo de `--text-color-secondary`, então sem isso o
- * título sumiria na cor da descrição.
+ * A cor do título é cravada em `--text-color` na forma inline: seus dois
+ * consumidores a entregam dentro do `subtitle` do DetailHeader, que já pinta
+ * tudo de `--text-color-secondary` — sem isso o título sumiria na cor da
+ * descrição.
  */
 export function IdentityCell({
   title, description, image, inline = false, size = 'large',
 }: IdentityCellProps) {
-  const avatar = <AppAvatar name={title} image={image} size={size} />
+  /* `aria-hidden` porque o avatar é ILUSTRAÇÃO do título que vem ao lado: sem
+   * isto o leitor de tela anuncia o nome duas vezes por linha (uma pelo
+   * `imageAlt`/iniciais, outra pelo texto). Mesma decisão do UserMenu. */
+  const avatar = <AppAvatar name={title} image={image} size={size} aria-hidden />
 
   if (inline)
     return (
-      <span className="flex items-center gap-2">
+      /* `<div>`, não `<span>`: o avatar do Prime é um `<div>`, e elemento de
+       * fluxo dentro de fraseado é o HTML inválido que a D7 caçou no `<p>` do
+       * DetailHeader. O `flex` já cravava `display`, então a troca não move
+       * pixel — o `subtitle` que recebe isto também é `<div>`. */
+      <div className="flex items-center gap-2">
         {avatar}
         <span className="font-semibold" style={{ color: 'var(--text-color)' }}>{title}</span>
         {description && <span style={{ color: 'var(--text-color-secondary)' }}>{description}</span>}
-      </span>
+      </div>
     )
 
   return (

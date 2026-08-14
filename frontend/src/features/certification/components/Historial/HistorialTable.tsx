@@ -51,10 +51,12 @@ export function HistorialTable() {
         <AppColumn
           header={t('certificate.colAlumno')}
           body={(c: CertificateData) => (
-            /* SEM `image`, e isto é decisão de auditoria: o snapshot é o
-             * retrato congelado no momento da emissão de um documento com
-             * peso legal. Ilustrá-lo com a foto VIVA do aluno misturaria dado
-             * congelado com dado mutável no certificado (spec D4). */
+            /* Texto do snapshot (nome e RUT congelados na emissão) + foto
+             * VIVA do aluno: a foto é identidade visual de LISTAGEM, não dado
+             * do documento. A spec D4 fechou "nunca foto viva" e o João
+             * reverteu em 2026-08-14 — a fronteira ficou onde o documento é
+             * apresentado como documento: o PDF e a rota pública do QR
+             * continuam só-snapshot, e é lá que a lei mora. */
             <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} image={c.aluno_photo_url} />
           )}
         />
