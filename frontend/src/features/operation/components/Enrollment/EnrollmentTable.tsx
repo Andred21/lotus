@@ -66,7 +66,7 @@ export function EnrollmentTable({
             /* `email` é nullable no DTO. Sem rótulo de ausência: a célula
              * simplesmente não abre a segunda linha, o que evita chave de
              * i18n nova e mantém a altura da linha estável. */
-            <IdentityCell title={e.name} description={e.email} />
+            <IdentityCell title={e.name} description={e.email} image={e.photo_url} />
           )}
         />
         <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />

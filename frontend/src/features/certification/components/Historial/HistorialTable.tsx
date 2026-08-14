@@ -55,7 +55,7 @@ export function HistorialTable() {
              * retrato congelado no momento da emissão de um documento com
              * peso legal. Ilustrá-lo com a foto VIVA do aluno misturaria dado
              * congelado com dado mutável no certificado (spec D4). */
-            <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} />
+            <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} image={c.aluno_photo_url} />
           )}
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />

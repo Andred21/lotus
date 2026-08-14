@@ -43,7 +43,7 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
         header={t('certificate.colName')}
         field="student_name"
         body={(e: EmissionPanelEnrollmentData) => (
-          <IdentityCell title={e.student_name} description={e.student_rut} />
+          <IdentityCell title={e.student_name} description={e.student_rut} image={e.student_photo_url} />
         )}
       />
       <AppColumn
