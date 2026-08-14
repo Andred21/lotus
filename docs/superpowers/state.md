@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_next_work_item
+active_feature: sprint-5-dashboard
+active_work_item: dashboard-backend-agregacoes
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: falha-vs-lista-vazia
-state_basis_commit: 2511501
-updated_at: 2026-08-14T15:45:00-03:00
+state_basis_commit: 1e40acb
+updated_at: 2026-08-14T17:07:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,28 @@ updated_at: 2026-08-14T15:45:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `dashboard-backend-agregacoes` (Sprint 5 · Dashboard, bloco 1 de 2)
+
+### Seleção — 2026-08-14
+
+**Primeiro bloco da Sprint 5 (`backlog.md:39`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre: o
+argumento era **título de seção** (`## Sprint 5 · Dashboard`), não slug promovido. As duas decisões
+dele fecharam o gate: o slug `dashboard-backend-agregacoes` (a ordem escrita do backlog — backend
+antes do frontend); e a **rota `context_required`**, exatamente como o backlog exige para a Sprint 5.
+
+**Aqui a fonte externa EXISTE declarada — o oposto dos BDs:** o backlog aponta o escopo canônico no
+Drive (`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion
+(EAP 8.4.0–8.4.7). Nenhuma rota direta a `ready_for_planning` se aplica; o Context Packet do Codex
+(`lotus-context-packet`, read-only) vem antes de qualquer brainstorming.
+
+**`state_basis_commit` passa de `2511501` a `1e40acb`** — o merge do PR #51, HEAD atual da `main`.
+Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse
+ter derivado.
+
+**Árvore ainda não decidida:** bloco de backend assume main tree pela P-03; branch nasce no
+planejamento/execução, não nesta promoção. O packet é gerado sobre `main@1e40acb`.
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
