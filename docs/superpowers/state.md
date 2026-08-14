@@ -2,17 +2,21 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: ready_for_review
+workflow_state: blocked
 next_owner: joao
-next_action: request_code_review
-resume_state: null
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
 active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
 context_packet: docs/superpowers/context-packets/celula-de-identidade.md
-blocker: null
+blocker: |
+  /revisar-sprint fechou com 9 achados aguardando decisão do João: 2 🔴 (comentário do
+  HistorialTable afirma o contrário do código sobre foto viva em snapshot legal; `min-w-0`
+  ausente no IdentityCell deixa o `truncate` inerte nos 13 sítios), 4 🟡 e 3 🟢. Só achado
+  aprovado vira correção; depois o estado volta a `reviewing`.
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T17:20:16-03:00
+updated_at: 2026-08-14T17:42:40-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -427,6 +431,41 @@ reinicia sozinho ao detectar o `.env` novo; se a aba ainda apontar `:8080`, rein
 e relogar (a sessão anterior era do backend do main tree).
 
 **Estado: `ready_for_review`.** Mesma regra de sempre — review só quando o João acionar.
+
+### Review — 2026-08-14: risco ALTO, duas lentes, 9 achados
+
+`/revisar-sprint` abriu em `ready_for_review`, transicionou a `reviewing` e classificou o bloco
+como **ALTO risco** pelo gatilho binário do projeto: `generated.ts` regenerado (lei §5.3), DTO de
+documento legal alargado (`CertificateData`) e Tasks 1/2/11 com `executor: codex`. Por isso a
+revisão do Codex read-only rodou como segunda lente, sobre o intervalo `0a1439f..840edf0`.
+
+**Os gates do bloco foram REPRODUZIDOS aqui, não herdados:** backend **593 passed / 5 skipped
+(2156 asserções)**; `pnpm lint` exit 0; `pnpm test` **33 arquivos / 171 testes**;
+`typescript:transform` reexecutado devolve `generated.ts` sem diff; `grep text-gray-` zero;
+`CATRACA_COR` com 4 linhas; `AppAvatar` fora de `shared/ui` só em `UserMenu.tsx`. Nenhum órfão.
+
+**Dois 🔴, e os dois são o mesmo tipo de defeito — texto afirmando o que o código não faz:**
+o comentário do `HistorialTable.tsx:54-57` diz "SEM `image`, e isto é decisão de auditoria" três
+linhas acima de `image={c.aluno_photo_url}` (a reversão do João está no `state.md`, mas a spec §D4 e
+o comentário seguem dizendo o contrário); e o `IdentityCell` perdeu o `min-w-0` que o plano
+escrevia, o que deixa o `truncate` inerte nos 13 sítios — com o teste verde, porque ele conta a
+classe `.truncate` em vez de medir o comportamento (lição 10, cobertura fantasma).
+
+**A segunda lente achou um que a primeira não tinha, e ele foi verificado no código antes de
+entrar:** o `SignedUrlPropertyReadTest` varre `app/` por `->photo_url` e `->download_url`, e os três
+campos novos do bloco (`client_photo_url`, `student_photo_url`, `aluno_photo_url`) **escapam da
+regex pelo prefixo** — a guarda existe e não cobre o que o bloco criou.
+
+**Um achado do Codex foi medido e reprovou, e não entra como ele o escreveu:** o
+`DemoPhotosSeeder` "sem guarda de ambiente" já é barrado em produção pelo `ConfirmableTrait` do
+`db:seed`, que exige `--force`. Fica como 🟢 de higiene, não como risco de produção.
+
+**Medição própria que desmontou uma suspeita:** os dois campos de foto aninhados em `array` sem
+`#[DataCollectionOf]` (`EmissionPanelEnrollmentData::student_photo_url` e
+`EnrollmentData::photo_url`) **voltam assinados** — verificado por tinker contra o banco de dev,
+`http://localhost:9000/lotus/user-photos/…`. Não é bug; é lacuna de teste de regressão.
+
+**Estado: `blocked`.** Só achado aprovado pelo João vira correção.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
