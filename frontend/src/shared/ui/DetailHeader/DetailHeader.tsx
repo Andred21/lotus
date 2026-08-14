@@ -71,8 +71,12 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
                 {title}
               </h1>
             )}
+            {/* <div> e não <p>: o subtítulo recebe célula de identidade, cujo
+              * avatar é sempre um <div> (avatar.cjs.js:254). <div> dentro de
+              * <p> é inválido — o parser fecha o <p> antes e o DOM se
+              * reorganiza sozinho. Mesmas classes, mesmo token. */}
             {subtitle && (
-              <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</p>
+              <div className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{subtitle}</div>
             )}
           </div>
           {(tags || actions) && (
