@@ -18,6 +18,8 @@ export function QuotesList({
   const courses = useQuotesListCourses()
   const files = useQuoteFiles()
 
+  const nameLost = courses.isError && quotes.some((q) => !courses.hasCourse(q.course_id))
+
   if (quotes.length === 0) {
     return <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noQuotes')}</p>
   }
@@ -29,9 +31,13 @@ export function QuotesList({
         {files.sizeError && <FormErrorBanner message={files.sizeError} />}
         {/* Falha do GET de cursos NÃO esconde as cotações (D2): o que ela explica
          * é o `—` no lugar do nome. Erro de mutação de arquivo é outra categoria
-         * e continua nos banners acima. */}
+         * e continua nos banners acima.
+         *
+         * O aviso só sai quando a falha CUSTOU algum nome: com o cache resolvendo
+         * todos os ids, gatear por `isError` cru anunciava uma falha que ninguém
+         * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */}
         <InlineLoadState
-          error={courses.isError ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+          error={nameLost ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
           retryLabel={t('common.retry')}
           onRetry={courses.refetch}
         />
