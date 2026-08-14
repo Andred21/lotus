@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T13:55:00-03:00
+updated_at: 2026-08-14T16:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -153,6 +153,39 @@ revisado é packet cujo revisor mediu, não cujo revisor confiou.
 **`status: partial` prossegue** pela regra da própria skill: fonte não canônica indisponível não
 bloqueia, e o fato faltante que bloquearia — uma regra de negócio ou critério de aceite — não
 existe, porque as cinco decisões são de apresentação e pertencem ao João.
+
+### Spec — 2026-08-14: o bloco deixou de ser frontend puro
+
+Spec em `docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md`, aprovada pelo João
+depois de onze decisões fechadas uma a uma (D1–D11, tabela §10 da spec). `active_spec` já entra
+preenchido: a spec existe no disco, e deixá-la `null` criaria exatamente a divergência que a
+invariante deste arquivo proíbe.
+
+**A decisão D2/D3 invalida a frase "frontend puro" escrita acima em "Seleção — 2026-08-14".** O
+Grupo C resolve-se **alargando dois DTOs no backend** (`TurmaData` ganha `client_rut` e
+`client_photo_url`; `TurmaRedatorData` ganha `email` e `photo_url`), o que regenera `generated.ts`
+pela lei §5.3 / ADR-04. A frase antiga previa esse caminho como alternativa (b) da decisão 1 — foi
+ele que o João escolheu. Duas consequências entram aqui porque mudam o gate, não a implementação:
+
+1. **Risco de review sobe a ALTO**, pelo gatilho binário do projeto (`generated.ts` regenerado,
+   precedente BD-9).
+2. **A P-03 continua não disparando, e isto foi remedido, não herdado.** O gatilho dela exige
+   *mais de um* `active_work_item` de **backend**; o diff `main...feat/falha-vs-lista-vazia` do BD-6
+   tem **zero** arquivo em `backend/`. Este é o único bloco de backend ativo.
+3. **A escolha da worktree sobrevive, sob uma condição escrita.** O João escolheu `fix-frontend` no
+   gate quando o bloco era declaradamente frontend. Medido: `docker compose ps` vazio e os mounts do
+   compose são relativos (`./backend`, `./frontend`), então `docker compose up -d` **desta** worktree
+   serve o backend **desta** branch em `:8080`. A condição é **um stack por vez**: se um stack subir
+   do main tree, o `:8080` passa a servir a outra branch e os testes deste bloco mentem. O BD-6 é
+   frontend e consome o mesmo backend sem dano, porque o alargamento é aditivo.
+
+**Custo do alargamento, medido e não estimado:** `TurmaQueryBuilder::LISTING` já traz
+`redatores.user` e `quote.budget.client.user`. Zero query nova, zero eager load novo, zero migration.
+Eu havia precificado esta rota como cara (risco de N+1, assinaturas por request) **antes** de medir;
+a medição desmentiu o meu próprio quadro de custo e isso está dito na spec §3. Sobra **uma**
+incerteza real e ela é verificação obrigatória do plano: `redatores` é `array` sem
+`#[DataCollectionOf]`, e não está provado que o `WithTransformer` dispare ali — o teste prova que
+`redatores[0].photo_url` volta assinada, ou o campo passa a ser resolvido no `fromModel`.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
