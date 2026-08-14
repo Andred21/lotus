@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md
 context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md
 blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T20:05:29-03:00
+updated_at: 2026-08-14T20:39:04-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -243,6 +243,44 @@ fechamento**, depois do merge — antes dele significaria importar de um domíni
 ainda não existe.
 
 **Estado: `planning`.** Próxima ação: `writing-plans` para o plano executável.
+
+### Plano — 2026-08-14: 8 tasks, executor único, e três armadilhas de teste fechadas antes da execução
+
+Plano em `docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md`. Ordem: enum
+(regras) → DTOs → `GET` → `PUT` → foto → senha → documentos → `generated.ts`. Cada task fecha com
+Pint dos arquivos tocados e um commit próprio.
+
+**A spec foi aprovada sem emenda pelo João**, e o self-review do plano contra ela reprovou **três
+coisas minhas**, todas medidas no repo, nenhuma vinda de suposição:
+
+1. **`@dataProvider` não existe mais.** O repo roda `phpunit/phpunit ^12.5.12`, e a anotação foi
+   removida na 12 — `EnrollmentResultTest` já usa `#[DataProvider]`. Os sete casos de campo proibido
+   teriam sido silenciosamente **não executados**.
+2. **O segundo teste de sessão, como eu o escrevi primeiro, não provava nada.** Ele usava
+   `actingAs()`, que autentica direto no guard e **não grava linha em `sessions`** — com
+   `SESSION_DRIVER=array` a tabela fica vazia, o purge vira no-op e o teste passa verde. Reescrito
+   para forçar `session.driver = database`, **logar por HTTP** (é o login que grava a linha com
+   `user_id`), plantar uma sessão de outro dispositivo e então asserir que a do outro morreu, que
+   sobrou exatamente uma, e que quem trocou continua navegando. É a mesma armadilha que a spec já
+   tinha nomeado — ela quase escapou na hora de virar código.
+3. **`post()` com arquivo devolveria a validação no formato errado.** O idioma do repo é
+   `postJson()` com `UploadedFile` no payload (`RedatorDocumentTest.php:85`); o cliente de teste
+   extrai os arquivos antes de serializar, e o `Accept: application/json` é o que garante 422 JSON.
+
+**Uma dúvida de mecanismo foi resolvida lendo o pacote, não a documentação.** A recusa 422 de campo
+proibido depende de `rules()` aceitar chave **sem propriedade correspondente** no DTO.
+`DataValidationRulesResolver::applyOverwrittenRules` itera as chaves devolvidas e as adiciona ao
+ruleset sem checar se existe propriedade com aquele nome — então funciona, e o plano cita o arquivo
+em vez de deixar contingência escrita.
+
+**Executor: `claude`**, para as oito tasks. Duas tocam lei do §5 diretamente (senha/sessão e a
+regeneração de `generated.ts`), a de documentos decide ownership com a RN-09 ao lado, e a de campos
+proibidos depende do comportamento de pacote acima. O plano registra que as tasks 1, 2 e 5
+qualificariam para `codex` com `paths_autorizados` fechados, e por que dividir não compensa: as
+demais consomem o contrato que elas fixam.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco meu-perfil-backend-self-service`,
+em instrução posterior — o planejamento não implementa.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
