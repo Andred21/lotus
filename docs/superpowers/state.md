@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md
 blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T18:40:34-03:00
+updated_at: 2026-08-14T18:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -136,6 +136,65 @@ própria senha; **e-mail, RUT, role, permissões, `type` e `is_active` não são
 **Risco de review projetado ALTO** pelo gatilho binário do projeto: regenera `generated.ts` (lei
 §5.3), toca eixo de autenticação (troca da própria senha) e ownership de documento de Redator. A
 classificação final é do `/revisar-sprint`, não desta promoção.
+
+### Context Packet — 2026-08-14: `ready`, e a rota se pagou de novo — agora com fonte que existe
+
+Packet em `docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md`, gerado
+pelo Codex read-only com a skill `lotus-context-packet`. **Contrato validado item a item, não aceito
+de chegada:** marcadores exatos, frontmatter completo com `plan_path`/`spec_path` corretamente em
+`null` (os ponteiros do estado eram `null`, e a skill proíbe inventá-los), **8 key facts** — o teto
+exato —, `status: ready`, `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum staleness trigger
+apontando para hash de proveniência ou para a própria transição promotora, que é a armadilha que a
+skill documenta em §"Provenance versus staleness".
+
+**Os três hashes de proveniência foram remedidos e batem:** `base_commit` `8964777024e8…`,
+`state_blob_sha` `7af48af2…` e `progress_blob_sha` `a494bf83…`. Obtidos, não adivinhados.
+
+**A diferença desta rota para todas as anteriores é que aqui a fonte externa EXISTE — e o packet a
+recuperou por ID.** Nos BDs a rota se justificava por ausência **medida** de fonte; no
+`celula-de-identidade` o retorno foi **prova de ausência**. Aqui o Drive
+`meu-perfil-escopo-funcional.md` (file ID `1lI3IEOx9_2H0…`) foi criado às **18:37:45Z de hoje**,
+três minutos antes desta promoção, e prescreve o bloco inteiro: os três campos self-service
+(`name`, `phone`, foto), os seis proibidos, o fluxo próprio de senha, os quatro tipos documentais,
+a fronteira Meu Perfil × Dashboard e o DoD de backend com dez itens. Não havia o que supor.
+
+**Duas afirmações do Codex foram verificadas contra a fonte pelo revisor, não aceitas pela citação:**
+
+1. **A linha "Validade documental" da tabela de divergências inverte design já implementado**, então
+   ela precisava ser real. O código diz o oposto do packet — `RedatorDocumentData.php:12-13`:
+   *"O status (vigente/por vencer/vencido) é derivado no front a partir de `valid_until`"*. O Drive
+   §5 diz **verbatim**: *"A regra que decide validade/idoneidade permanece no backend/domínio dono.
+   O React não calcula compliance a partir de datas cruas quando o contrato puder fornecer o estado
+   semântico."* O Drive vence pela hierarquia, e a regra de reconciliação que protege decisão
+   fechada **não se aplica**: ela protege contra reabrir decisão por causa de snapshot **antigo**, e
+   este documento é de hoje.
+2. **A EAP 8.5.1 foi buscada por page ID e confere:** `Camada: Backend`, `Sprint 6 · Meu Perfil`,
+   `ADR ref: ADR-04, ADR-06`. Mais importante, ela está ancorada na collection **canônica**
+   `e64b7d57-…`, não na obsoleta `6adbc960-…` que ainda responde a busca e produziu as **12 falsas
+   divergências** de 2026-07-30. O packet endereçou a base certa.
+
+**Uma emenda do revisor, registrada e não silenciosa:** o terceiro bullet de `## Constraints`
+afirmava as 15 linhas do dashboard na allowlist **sem chave de fonte**, e o contrato exige que todo
+fato externo cite uma. A chave `[DASH]` entrou e a emenda está no cabeçalho do packet; o fato foi
+remedido e confere. É a mesma forma da correção do packet do `celula-de-identidade` — resto
+verbatim, correção no cabeçalho.
+
+**O Codex corrigiu a minha instrução, e isso é o mecanismo funcionando na direção certa.** Eu passei
+o dashboard como `8c53f60` com WIP não commitado — medição minha, de 18:35. Ele remediu às 18:48 e
+achou `4b3d6e3f7c49…` com **árvore limpa**: a branch avançou entre as duas leituras e commitou o
+WIP. A linha entrou na tabela de divergências dele em vez de a minha descrição ser copiada. Foi
+exatamente o que o prompt exigia ("se não mediu, não escreva"), e é o oposto do que aconteceu no
+packet anterior, onde uma afirmação de árvore não medida teve de ser removida na revisão.
+
+**`status: ready`, não `partial`** — as duas fontes canônicas foram recuperadas, nenhuma ficou
+`unavailable`, e não sobra fato bloqueante. As **cinco open questions são as do próprio Drive**
+(§14, "Pontos para Context Packet / brainstorming técnico"), não lacunas que o Codex inventou:
+paths HTTP sem conflitar com `/api/me`, limiar de "vence em breve" e janela de próximas turmas,
+seam comum com o Dashboard, remoção self-service por tipo documental e comportamento da sessão
+após troca de nome/foto e de senha. São decisões de desenho do João e pertencem ao brainstorming.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
