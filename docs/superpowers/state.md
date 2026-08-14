@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md
 blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T18:52:00-03:00
+updated_at: 2026-08-14T20:05:29-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -107,11 +107,13 @@ então alcança o MySQL e o MinIO do stack principal — é exatamente o arranjo
    regenerou (+146 linhas commitadas, 21 DTOs e 5 enums); este bloco cria contrato próprio de perfil
    e regenera de novo. Cada árvore produz o arquivo correto para o próprio backend; o conflito é no
    merge, e o remédio é regenerar depois dele — mecânico, com precedente no merge do BD-6.
-2. `backend/tests/Feature/Shared/DomainDependencyTest.php` — **colisão provável.** É allowlist
-   compartilhada de arestas entre domínios, e o WIP do dashboard está justamente nela (`'Dashboard'`
-   ganhando quatro arestas para `Operation`). Se o resumo profissional do Redator ler Operation ou
-   Catalog de dentro de Identity, este bloco edita o mesmo array — chaves diferentes na mesma
-   estrutura, provável auto-merge, mesmo arquivo.
+2. `backend/tests/Feature/Shared/DomainDependencyTest.php` — **colisão provável na abertura,
+   eliminada no brainstorming.** Era allowlist compartilhada de arestas entre domínios, com o WIP do
+   dashboard justamente nela (`'Dashboard'` ganhando quatro arestas para `Operation`); a colisão
+   dependia de o resumo profissional do Redator ler Operation de dentro de Identity. O João cortou
+   exatamente essa parte do escopo (D1 da spec), então **o arquivo não é tocado por este bloco** e a
+   previsão não se confirmou. Registro mantido: a medição valia na hora em que foi feita, e o que
+   mudou foi o escopo, não o fato.
 3. `backend/app/Domains/**` — **zero colisão, medida.** O dashboard vive inteiro em
    `Domains/Dashboard/` (27 arquivos, domínio novo); este bloco vive em `Domains/Identity/`. Nenhum
    arquivo em comum.
@@ -195,6 +197,52 @@ após troca de nome/foto e de senha. São decisões de desenho do João e perten
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
 (brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-14: o bloco encolheu por decisão, e encolheu para melhor
+
+Spec em `docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md`. As **cinco
+open questions do packet eram as cinco perguntas do próprio Drive §14**, e as cinco foram fechadas
+pelo João: `/api/profile` como recurso próprio (D4), limiar de 30 dias em Identity (D6), sem seam
+com o Dashboard (D1), substituição sem remoção self-service (D2), REUF administrativo (D5).
+
+**O corte é a decisão do bloco.** O desenho apresentado primeiro construía uma camada comum em
+`Operation` (`OperationWindows`, `RedatorAtividadeQuery`) para o resumo de atividade do Redator, e
+com ela **três arestas novas de Identity para Operation**. O João recusou: *"Vamos excluir a parte
+que vem de dashboard, esperando a finalização do seu bloco na branch e worktree paralela, acredito
+que evita fazer cross-domain com operation. O restante implementamos."* Perguntado se o corte era
+por bloco inteiro ou pelo que de fato depende de Operation, escolheu o segundo. Saíram
+`turmas_em_andamento`, `proximas_turmas`, `proxima_turma` e `pendencias`; **ficou
+`cursos_habilitados`**, que sai de `Redator::courses()` — `belongsToMany` para `Catalog\Models\Course`,
+aresta **já** na allowlist. O bloco fica inteiro dentro de Identity, sem aresta nova, e a colisão
+prevista em `DomainDependencyTest.php` desapareceu com o escopo.
+
+**Um furo de regra de negócio apareceu na medição e não estava em fonte nenhuma.** A rota
+administrativa de documento aceita `valid_until` do corpo da request, e o
+`RedatorIdoneidadeService` decide habilitação de turma lendo exatamente REUF + `valid_until`.
+Self-service irrestrito deixaria o Redator declarar a própria validade de REUF e **se auto-habilitar
+por payload** — RN-09 furada sem nenhum código malicioso. Levantado como pergunta, não resolvido por
+conta própria; o João manteve o REUF administrativo (D5).
+
+**Uma armadilha de teste foi medida antes de o plano existir:** `backend/phpunit.xml` define
+`SESSION_DRIVER=array`, então a suíte não usa a tabela `sessions` e o teste do encerramento de
+sessões (D3) passaria verde **sem exercitar nada** — cobertura fantasma, a lição 10. A spec fixa
+dois testes que medem coisas diferentes (contagem de linhas na tabela; sessão corrente sobrevive ao
+HTTP) e obriga o override do driver. Igual sorte teve a asserção de N+1: `Model::preventLazyLoading()`
+**não está ligado globalmente** na suíte e só marca instância hidratada com mais de uma linha — no
+perfil, que hidrata um usuário, a guarda nunca dispararia. A spec troca por contagem de queries e
+registra o porquê, para o plano não repetir a tentativa.
+
+**Divergência do packet resolvida contra a fonte, não por gosto:** `RedatorDocumentData.php:12-13`
+afirma que o status documental é derivado no front; o Drive §5 diz o contrário. O Drive vence e o
+cálculo vai para o backend (enum `DocumentValidityStatus`), **mas o DTO administrativo não muda** —
+o contrato novo é do perfil, e reescrever `RedatorDocumentData` é escopo de outro bloco.
+
+Duplicação declarada e datada: `DIAS_AVISO = 30` em Identity coexiste com
+`DashboardWindows::EXPIRY_WINDOW_DAYS = 30` da branch paralela. Unificar é **tarefa nomeada no
+fechamento**, depois do merge — antes dele significaria importar de um domínio que nesta árvore
+ainda não existe.
+
+**Estado: `planning`.** Próxima ação: `writing-plans` para o plano executável.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
