@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: falha-vs-lista-vazia
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md
 active_plan: docs/superpowers/plans/2026-08-14-falha-vs-lista-vazia.md
 context_packet: null
 blocker: null
 last_completed_work_item: login-fora-do-adr16
-state_basis_commit: d20bebc
-updated_at: 2026-08-14T14:10:00-03:00
+state_basis_commit: 2511501
+updated_at: 2026-08-14T15:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -227,6 +227,124 @@ ou no banco.
 
 **Estado:** `ready_for_review`. Próxima ação: revisão do trabalho ativo, por instrução explícita do
 João — não iniciada automaticamente aqui.
+
+### Review de sprint — 2026-08-14: BAIXO risco, duas lentes, 5 achados (3+1+1)
+
+**BAIXO pelo gate binário da skill:** zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal gerado; `executor: claude`. A spec §9 declara o mesmo BAIXO —
+sem divergência a mostrar. **Só lente Claude, sem Codex.**
+
+**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **35 arquivos / 174 testes** — exatamente a projeção do plano (+3 arquivos, +11 casos
+sobre 32/163); `git diff --name-only 0a1439f..HEAD -- backend/ generated.ts` com **zero arquivo**,
+o que mantém backend/Pint/`typescript:transform` N/A por escopo medido; zero import de `primereact`
+e zero import cruzado `@features/*` dentro de `src/features` (§5.6, por busca); `CourseStep` em 94
+linhas, abaixo da régua de 150.
+
+**Órfãos: zero.** `InlineLoadState` tem 3 consumidores mais o barrel; toda chave nova dos três hooks
+tem leitor (`isEmpty`/`noResults` no `CourseStep`, `isError`/`errorDetail`/`refetch` na `QuotesList`,
+`unusable`/`showEmptyHint` no `BudgetDialog`); `budget.noClientsAvailable` é lida pelo
+`BudgetDialog` e coberta pelo `parity.test`; `dangerText` e `AppButton` continuam vivos depois de
+saírem do `StudentClientField`.
+
+**Duas afirmações da spec foram verificadas no código, não aceitas do relatório:** o `edit` do
+`BudgetDialog` é mesmo inalcançável sob falha de clientes — o segundo call site
+(`CommercialPage.tsx:66`) só produz `create`, porque a `BudgetsTable` navega para o detalhe em vez de
+abrir diálogo, e o detalhe reprova a página inteira; e `common.noResults` **tem** o `{{term}}` nos
+três locales, então a interpolação do ramo 4 não é decorativa.
+
+**A premissa central do Q-1 foi medida por sonda, não assumida:** `renderHook` com `queryFn` que
+resolve e depois rejeita, `retry: false` — o refetch falho deixa `isError === true` **com `data`
+ainda definido**. A sonda rodou como arquivo temporário sob `src/` e foi removida; árvore limpa.
+
+**Os três achados:**
+
+1. **Q-1 🟡 P** — `isError` cru ignora o cache, nos dois sítios que compartilham a mesma query
+   `['courses','list']`. `CourseStep.tsx:36-49` troca a lista inteira pelo `AppErrorState` mesmo com
+   `courses.list` populado; `QuotesList.tsx:33-38` anuncia falha mesmo com todo nome resolvido do
+   cache. O caminho é reentrada normal, não hipótese: `staleTime` é 0, então abrir o wizard sobre a
+   `QuotesList` refaz o GET, e um refetch falho apaga uma lista utilizável e o termo digitado. É o
+   inverso da própria D3 do bloco ("não travar com lista utilizável em cache", precedente `03280c6`)
+   e, na `QuotesList`, a tela afirma falha que não se vê — a tese do próprio bloco.
+2. **Q-2 🟡 M** — a derivação de load-state foi duplicada, não extraída: `isError`/`errorDetail`/
+   `refetch` em **6** hooks, o predicado de vazio **verbatim** em 3
+   (`!isError && isSuccess && length === 0`), e `errorDetail ?? t('common.loadErrorHint')` em **6**
+   call sites — com dois nomes para o mesmo predicado (`isEmpty` × `showEmptyHint`). O bloco extraiu
+   a **view** (D4, precedente `mergePt`) e replicou a **fonte**.
+3. **Q-3 🟢 P** — `BudgetDialog.tsx:63` desabilita o dropdown por `unusable`, que também é verdadeiro
+   **durante o carregamento**, e o `InlineLoadState` não fala nesse estado: controle morto e mudo,
+   enquanto o `CourseStep` do mesmo bloco mostra esqueleto para o mesmo estado. `isLoading` já existe
+   no hook e não é consumido ali.
+
+**O que NÃO virou achado, e por quê:** as duas utilities de cor grandfathered do `CourseStep` estão
+declaradas fora de escopo no plano; o segundo sítio do `<label>` sem `htmlFor` é a **P-37**, já
+registrada; a duplicação estrutural dos dois ramos do `InlineLoadState` é desenho explícito da
+spec §4; e o ramo "os dois juntos" ser inalcançável é contrato defensivo, não teste falso.
+
+**Duas divergências documentais propostas** (registram-se em `docs/pendencias.md` só depois da
+aprovação): `.claude/rules/frontend-fsliced.md` ainda diz que teste de componente com PrimeReact em
+jsdom fica fora do corte, e a spec §10 repete — este bloco montou três desses; e a P-37 passa a ter
+dois sítios (`StaffIdentifyFields` e `BudgetDialog`).
+
+**Veredito: o bloco está bom.** Seis commits, gate reproduzido nos números projetados, nenhuma lei §5
+tocada, nenhum órfão. Q-1 é comportamento reincidente (o molde `RedatorCourseSelector` tem a mesma
+forma) e candidato a regra, não só a fix; Q-2 é abstração faltando; Q-3 é acabamento.
+
+### Segunda lente — revisão independente do Codex (2026-08-14)
+
+**Pedida pelo João apesar do risco BAIXO**, que não a exigia. Codex rodou read-only sobre
+`0a1439f..HEAD`, restrito a `frontend/src/`, com spec, plano, CLAUDE.md §5, a rule da camada e
+`docs/pendencias.md` como gabarito. Devolveu 5 achados.
+
+**Três coincidem com a lente Claude** (Q-1 no `CourseStep`, Q-2 na derivação duplicada, Q-3 no
+dropdown mudo) — convergência independente: o prompt do Codex não citava achado nenhum do Claude.
+
+**Um achado é só do Codex e foi verificado no código antes de aceito (regra da skill): Q-4** — o
+`BudgetDialog` desabilitava o dropdown por `unusable` e **não** passava `disabled` ao `CrudDialog`,
+então Criar seguia vivo com o `client_id: 0` do form vazio. Verificação: o gêmeo
+`StudentDialog.tsx:57` já faz `disabled={clientsUnusable || busy}`, e o docblock do próprio
+`CrudDialog.tsx:23-26` nomeia exatamente este caso ("dependência externa que ainda não carregou,
+como a lista de clientes do create de aluno"). Achado real.
+
+**Um achado do Codex é corolário do Q-1 e foi absorvido nele:** `CourseStep.test.tsx:48` força
+`list: []` no ramo de falha, então o caso que quebra — `isError` **com** lista populada — não tinha
+teste e a regressão passava com a suíte verde.
+
+**Divergência entre as lentes, mostrada ao João em vez de resolvida em silêncio:** o aviso da
+`QuotesList` quando o cache resolve todos os nomes. Codex avaliou o sítio como bom (D2 cumprida, as
+cotações nunca somem); Claude o leu como falha anunciada e invisível. Eixos diferentes, cada um
+correto no seu. **João aprovou os dois lados**: as cotações continuam sempre visíveis **e** o aviso
+passou a depender do nome perdido.
+
+### Correções aplicadas — 2026-08-14 (João aprovou tudo)
+
+Cinco commits, um por achado, cada um com o gate verde na árvore do próprio commit (verificado com
+`git stash --keep-index`, não só no final):
+
+- `501d98c` **Q-2** — `shared/hooks/useLoadState.ts` centraliza `isLoading`/`isError`/`errorDetail`/
+  `loadError`/`isEmpty`/`unusable`/`failedWithoutData`/`refetch`; os 6 hooks passam a espalhá-lo. O
+  predicado de vazio fica com **um** nome (`isEmpty`), inclusive na prop do `StudentClientField`.
+- `08cb01a` **Q-1** — `CourseStep` troca a tela pelo erro só em `failedWithoutData`; com catálogo em
+  cache a falha vira `InlineLoadState` ao lado da lista, que segue utilizável com o termo digitado.
+  Entra o teste do ramo COM cache, que faltava.
+- `baf08e9` **Q-1b** — `QuotesList` avisa só quando a falha custou um nome (`hasCourse`); mais o
+  teste do caso "cache absorveu a falha, nenhum aviso".
+- `1ba7dbb` **Q-3** — `loading` + `aria-busy` no dropdown de cliente dos **dois** sítios (orçamento e
+  aluno, que compartilham o molde): desabilitado sem sinal era controle morto.
+- `4c7b61b` **Q-4** — `disabled={isCreate && clients.unusable}` no `CrudDialog` do `BudgetDialog`.
+
+**Gate final:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **35 arquivos / 176 testes**
+(+2 casos de regressão, ambos escritos para falhar no código antigo).
+
+**Documentação (`2511501`):** a **P-38** abre a divergência do corte do runner (a rule diz que teste
+de componente PrimeReact em jsdom fica fora, e o corte já tem três); a **P-37** ganha o segundo
+sítio (`BudgetDialog`); o padrão reincidente do Q-1 virou **regra** em
+`.claude/rules/frontend-fsliced.md` ("o que ramifica a tela é o dado que falta, não o `status` da
+query"), e os dois sítios fora de escopo (`RedatorCourseSelector`, `CourseRedatoresSection`) foram
+para o `backlog.md` com o fix de uma linha já descrito.
+
+**Estado:** `ready_for_closure`. Nenhum achado aberto, nenhuma correção pendente. O fechamento é
+passo explícito do João (`/fechar-sprint`) — não se executa sozinho.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
