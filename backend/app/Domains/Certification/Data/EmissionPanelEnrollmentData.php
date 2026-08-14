@@ -5,6 +5,9 @@ namespace App\Domains\Certification\Data;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -26,6 +29,9 @@ class EmissionPanelEnrollmentData extends Data
         public ?string $nota_final,
         /** O certificado VIGENTE da matrícula; `null` quando não há (nunca emitido ou revogado). */
         public ?EmissionPanelCertificateData $certificate,
+        #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $student_photo_url = null,
     ) {}
 
     public static function fromModel(Enrollment $enrollment, ?Certificate $vigente): self
@@ -48,6 +54,7 @@ class EmissionPanelEnrollmentData extends Data
                 ? (string) $enrollment->grades['final']
                 : null,
             certificate: $vigente === null ? null : EmissionPanelCertificateData::fromModel($vigente),
+            student_photo_url: $enrollment->student->user->photo_path,
         );
     }
 }

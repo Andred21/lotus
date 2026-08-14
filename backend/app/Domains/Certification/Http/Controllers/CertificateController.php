@@ -37,6 +37,7 @@ class CertificateController extends Controller implements HasMiddleware
     public function index(): array
     {
         return Certificate::query()
+            ->with('enrollment.student.user')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Certificate $certificate) => CertificateData::fromModel($certificate))
