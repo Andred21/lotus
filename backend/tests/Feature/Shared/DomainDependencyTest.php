@@ -60,9 +60,11 @@ class DomainDependencyTest extends TestCase
         // CertificationMetricsQuery para matrículas aprovadas sem certificado
         // e alertas de vencimento ativos, e por AnalyticsQuery para séries e
         // rankings; Course e Client resolvem os nomes das linhas, enquanto
-        // RedatorDocumentType restringe os documentos regulatórios. As próximas
-        // tasks só acrescentam o que seus `use` efetivamente medirem — a lista
-        // do plano é indicativa e já ficou errada nos dois sentidos.
+        // RedatorDocumentType restringe os documentos regulatórios. A Task 5
+        // acrescenta só Redator: o RedatorScopeQuery escopa por `turma_redator`
+        // e não alcança nenhuma superfície nova além do próprio redator.
+        // As próximas tasks só acrescentam o que seus `use` efetivamente
+        // medirem — a lista do plano é indicativa e já errou nos dois sentidos.
         'Dashboard' => [
             'Catalog\Models\Course',
             'Certification\Enums\CertificateStatus',
@@ -71,6 +73,7 @@ class DomainDependencyTest extends TestCase
             'Commercial\Models\Client',
             'Commercial\Models\Quote',
             'Identity\Enums\RedatorDocumentType',
+            'Identity\Models\Redator',
             'Operation\Enums\EnrollmentApprovalStatus',
             'Operation\Enums\TurmaDocumentType',
             'Operation\Enums\TurmaStatus',
