@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-backend-agregacoes
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-14-dashboard-backend-agregacoes-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-14-dashboard-backend-agregacoes.md
 blocker: null
 last_completed_work_item: falha-vs-lista-vazia
 state_basis_commit: 1e40acb
-updated_at: 2026-08-14T17:15:00-03:00
+updated_at: 2026-08-14T17:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -97,6 +97,30 @@ KPIs, filtros MVP, ranking do Redator) vão para o brainstorming.
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
 (brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-14
+
+Spec em `docs/superpowers/specs/2026-08-14-dashboard-backend-agregacoes-design.md`, com **nove
+decisões**: D1–D6 escolhidas pelo João entre alternativas com o custo declarado (recorte analítico
+sem tempos de ciclo; sem ranking de redatores nem séries próprias do Redator; filtro só de período;
+janelas 7d/30d; **dois DTOs raiz num endpoint só** — vazamento de payload vira erro de tipo, não bug
+de runtime; certificado revogado não devolve a matrícula a "a emitir"), D7–D9 derivadas e declaradas
+(sem permissão `dashboard.*` nova — view por `type`, seções por permissão existente com `null`
+tipado; regra de domínio reusada de `TurmaHabilitacaoService`/`BudgetSummaryService`, nunca
+duplicada; agregação por query, sem cache).
+
+**Três medições entraram na spec, não em memória:** o catálogo RBAC real (33 permissões, redator só
+com `operation.turma.view`/`submit_docs`/feedback) sustenta a D7; `certificates` **não tem coluna de
+data de emissão** — `created_at` é a data do ato, não proxy, e foi isso que expôs a ambiguidade do
+revogado que virou a D6; e o funil do Drive §3.4 tem sete rótulos com dois sobrepostos ("concluída"
+× "a emitir") — a spec fixa **seis baldes exclusivos** com o split por estado de emissão declarado.
+
+**Risco de review declarado ALTO** pelo gate binário (regenera `generated.ts`; eixo central é
+RBAC/ownership) — duas lentes no `/revisar-sprint`. O `der-fisico.md` listando `certificates` como
+"planejada" é divergência preexistente, registrada na §10 da spec para o fechamento.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
