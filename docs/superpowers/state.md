@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: falha-vs-lista-vazia
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md
 active_plan: docs/superpowers/plans/2026-08-14-falha-vs-lista-vazia.md
 context_packet: null
 blocker: null
 last_completed_work_item: login-fora-do-adr16
-state_basis_commit: 0a1439f
-updated_at: 2026-08-14T13:05:00-03:00
+state_basis_commit: d20bebc
+updated_at: 2026-08-14T14:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -194,6 +194,39 @@ Baseline reproduzido nesta branch, não herdado: `pnpm lint` exit 0, `pnpm build
 `.superpowers/sdd/progress.md` (o anterior era do `login-fora-do-adr16`, já fechado).
 
 **Estado:** `executing`.
+
+### Execução — 2026-08-14: fechamento
+
+As seis tasks do plano completaram via `subagent-driven-development` — implementador + revisor por
+task, todas **Approved** sem achado Critical/Important (só Minor, cada um julgado e registrado em
+`.superpowers/sdd/progress.md`). Suíte final **35 arquivos / 174 testes**, `pnpm lint`/`pnpm build`
+verdes, `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts` vazio
+(lei §5.3 e P-03 fora de escopo, medidos).
+
+**Task 6 (gate final) mediu a spec §7 ponta a ponta contra a stack real** — sonda nos três testes
+novos nos dois sentidos (planta, confirma por grep, reprova nomeado, restaura), Playwright CLI com
+`--browser chromium` (canal `chrome` do playwright-cli tentava Chrome de sistema, ausente; o binário
+Chromium empacotado do Playwright resolveu sem instalar nada), falha real de `/api/courses` e
+`/api/clients` provocada via patch de XHR e medida nos dois sítios de cada vez, catálogo vazio de
+verdade provado e distinguido da falha via soft-delete com restauração (`vivos=4 trashed=0` antes e
+depois), e a aditividade das quatro chaves novas de `useCommercialClients` confirmada ao vivo contra
+o consumidor antigo (`BudgetsTable`) sem tocá-lo. Evidência completa por step em
+`.superpowers/sdd/progress.md`, entrada "Task 6 — GATE FINAL".
+
+**Revisão final de branch** (modelo opus, base `0a1439f`, head `d20bebc`): zero achado Critical.
+Um Important, não-código — este `state.md` preso em `executing`, que esta própria transição fecha.
+Sete achados Minor, nenhum bloqueante, todos registrados em `.superpowers/sdd/progress.md` (um é
+observação sobre a spec, não sobre a implementação segui-la; um é a pendência P-37 ganhando um
+segundo sítio já mapeado; um é dívida documental preexistente em `frontend-fsliced.md`; os demais são
+follow-up de escopo explicitamente fora deste bloco). **Ready to merge: With fixes** — o único fix é
+esta transição.
+
+Working tree e commits conferem com o plano: seis commits de implementação
+(`f64ba33`..`d20bebc`), `git status --porcelain` vazio, nenhum artefato de prova ficou no repositório
+ou no banco.
+
+**Estado:** `ready_for_review`. Próxima ação: revisão do trabalho ativo, por instrução explícita do
+João — não iniciada automaticamente aqui.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
