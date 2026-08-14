@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-backend-agregacoes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-dashboard-backend-agregacoes-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-14-dashboard-backend-agregacoes.md
 context_packet: docs/superpowers/context-packets/2026-08-14-dashboard-backend-agregacoes.md
 blocker: null
 last_completed_work_item: falha-vs-lista-vazia
 state_basis_commit: 1e40acb
-updated_at: 2026-08-14T17:40:00-03:00
+updated_at: 2026-08-14T18:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -121,6 +121,41 @@ RBAC/ownership) — duas lentes no `/revisar-sprint`. O `der-fisico.md` listando
 
 O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
 escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-14
+
+**O João aprovou a spec e cravou execução MESCLADA claude/codex** ("delegue tarefas de backend ao
+codex, mesclando entre você e ele"). O plano saiu em
+`docs/superpowers/plans/2026-08-14-dashboard-backend-agregacoes.md`: **oito tasks**, uma por commit,
+na ordem contrato → queries por área (Operation, Commercial, Certification/Analytics) → ownership do
+Redator → assemblers/endpoint/gates → feature tests do endpoint → gate final e2e.
+
+**O handoff estende o contrato do comando por instrução explícita dele:** `executor: misto`, task a
+task — **codex nas Tasks 2, 3 e 4** (queries mecânicas com contrato fechado na Task 1, verificação
+executável e `paths_autorizados` de globs exatos, incluindo o `DomainDependencyTest` restrito à
+chave `'Dashboard'`); **claude nas Tasks 1, 5, 6, 7 e 8** (contrato/`generated.ts` §5.3, ownership
+do Redator, gates RBAC por seção, classificação do pipeline, gate final). Task de codex só fecha
+depois de revisão do claude; violação de path reprova a task.
+
+**Três coisas apareceram só ao escrever o plano:**
+
+1. **D-P1** — agrupar série por mês em SQL diverge entre engines (a suíte roda sqlite, sem
+   `DATE_FORMAT`): o bucketing `YYYY-MM` vai para PHP sobre projeção mínima, exceção declarada à
+   D9; contagens e somas de KPI seguem 100% em SQL.
+2. **`Enrollment` não tem relação com `Certificate`** — o vínculo é unidirecional
+   (`certificates.enrollment_id`). O "sem certificado" da D6 sai por `whereNotIn` sobre subselect,
+   sem criar relação nova em model de outro domínio.
+3. **O self-review achou dois órfãos de spec antes de commitar:** ninguém produzia
+   `RedatorLoadData` (seção `redatores` da D2 — nasceu o `RedatorLoadQuery` na Task 6) e o alerta
+   `TurmaOverdue` não tinha dono declarado (composição no `AdminDashboardAssembler`, registrada no
+   plano).
+
+**Baseline declarado:** backend `591 passed, 5 skipped`; frontend 35 arquivos / 176 testes.
+Projeção: +~24 testes backend, frontend inalterado (nenhum consumidor novo do `generated.ts`).
+
+**Estado: `ready_for_execution`.** `/executar-bloco dashboard-backend-agregacoes` exige instrução
+posterior do João. Branch `feat/dashboard-backend-agregacoes` nasce no `/executar-bloco` (main
+tree, P-03).
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
