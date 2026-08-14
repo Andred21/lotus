@@ -1,0 +1,78 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import type { CourseData } from '@shared/types/generated'
+import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
+import { CourseStep } from './CourseStep'
+
+/** `t` devolve a chave: o que se prova aqui é QUAL estado o passo mostra, não o
+ * texto traduzido (isso é do `parity.test.ts`). */
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
+
+type Courses = ReturnType<typeof useQuoteCourseSearch>
+
+const CURSO = { id: 1, name: 'Alta tensión', workload_hours: 8 } as CourseData
+
+/** Estado feliz; cada teste sobrescreve só o que o SEU ramo muda. */
+const base: Courses = {
+  list: [CURSO],
+  search: '',
+  setSearch: () => {},
+  isLoading: false,
+  isError: false,
+  errorDetail: undefined,
+  refetch: () => {},
+  isEmpty: false,
+  noResults: false,
+}
+
+const renderStep = (courses: Partial<Courses>) =>
+  render(<CourseStep courses={{ ...base, ...courses }} selectedId={0} onSelect={() => {}} />)
+
+afterEach(() => {
+  cleanup()
+})
+
+describe('CourseStep — os cinco estados', () => {
+  it('carregando: esqueleto com aria-busy e SEM campo de busca', () => {
+    const { container } = renderStep({ isLoading: true, list: [] })
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeTruthy()
+    // Filtrar coisa nenhuma é controle morto.
+    expect(screen.queryByPlaceholderText('quote.courseSearchPlaceholder')).toBeNull()
+  })
+
+  it('falha: erro com Reintentar, e NUNCA a mensagem de catálogo vazio', () => {
+    renderStep({ isError: true, errorDetail: 'Sin conexión', list: [] })
+
+    expect(screen.getByText('common.loadError')).toBeTruthy()
+    expect(screen.getByText('Sin conexión')).toBeTruthy()
+    expect(screen.getByText('common.retry')).toBeTruthy()
+    // É o B-7 inteiro: 403 não pode virar "no hay cursos".
+    expect(screen.queryByText('course.empty')).toBeNull()
+  })
+
+  it('catálogo vazio de verdade: mensagem própria, sem alarme de falha', () => {
+    renderStep({ isEmpty: true, list: [] })
+
+    expect(screen.getByText('course.empty')).toBeTruthy()
+    expect(screen.queryByText('common.loadError')).toBeNull()
+  })
+
+  it('termo sem resultado: a busca continua na tela, a lista some', () => {
+    renderStep({ noResults: true, search: 'zzz', list: [] })
+
+    expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
+    expect(screen.getByText('common.noResults')).toBeTruthy()
+    expect(screen.queryByText('Alta tensión')).toBeNull()
+  })
+
+  it('lista: busca e curso na tela', () => {
+    renderStep({})
+
+    expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
+    expect(screen.getByText('Alta tensión')).toBeTruthy()
+  })
+})
