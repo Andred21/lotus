@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
 import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
@@ -51,10 +51,11 @@ export function HistorialTable() {
         <AppColumn
           header={t('certificate.colAlumno')}
           body={(c: CertificateData) => (
-            <div>
-              <p className="font-medium">{c.snapshot.aluno.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{c.snapshot.aluno.rut ?? '—'}</p>
-            </div>
+            /* SEM `image`, e isto é decisão de auditoria: o snapshot é o
+             * retrato congelado no momento da emissão de um documento com
+             * peso legal. Ilustrá-lo com a foto VIVA do aluno misturaria dado
+             * congelado com dado mutável no certificado (spec D4). */
+            <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} />
           )}
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />

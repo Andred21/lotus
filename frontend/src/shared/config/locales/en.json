@@ -567,7 +567,6 @@
     "studentsCount": "{{total}} students · {{approved}} approved",
     "issuedPending": "{{issued}} certificate issued · {{pending}} pending",
     "colName": "Name",
-    "colRut": "RUT",
     "colFinalGrade": "Final grade",
     "colAttendance": "Attendance",
     "colAcadStatus": "Academic status",

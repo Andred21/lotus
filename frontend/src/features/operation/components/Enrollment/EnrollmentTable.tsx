@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
@@ -63,10 +63,10 @@ export function EnrollmentTable({
         <AppColumn
           header={t('operation.enrollment.table.name')}
           body={(e: EnrollmentData) => (
-            <div className="flex items-center gap-3">
-              <AppAvatar name={e.name}  size='large' />
-              <span className="font-medium">{e.name}</span>
-            </div>
+            /* `email` é nullable no DTO. Sem rótulo de ausência: a célula
+             * simplesmente não abre a segunda linha, o que evita chave de
+             * i18n nova e mantém a altura da linha estável. */
+            <IdentityCell title={e.name} description={e.email} />
           )}
         />
         <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />
