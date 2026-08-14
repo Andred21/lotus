@@ -380,6 +380,8 @@ enrolled_count: undefined | number,
 quote_code: undefined | string | null,
 budget_code: undefined | string | null,
 budget_id: undefined | number | null,
+client_rut: undefined | string | null,
+client_photo_url: string | null,
 };
 export type TurmaDocumentData = {
 id: number,
@@ -395,6 +397,8 @@ export type TurmaModalidade = 'presencial' | 'online';
 export type TurmaRedatorData = {
 id: number,
 name: string,
+email: string | null,
+photo_url: string | null,
 };
 export type TurmaStatus = 'em_andamento' | 'concluida';
 export type UserData = {
