@@ -30,6 +30,111 @@
    Administração — Roles e Permissões". Respeitar ADR-07 (permissões essenciais não editáveis).
 3. **Hardening**
    — ownership em rotas nested e política de retenção documental.
+4. **UI · célula de identidade (avatar + título + descrição) como componente único**
+
+   Pedido do João em 2026-08-14, com as duas capturas de tela do estado atual (coluna RAZÓN SOCIAL
+   de `/comercial/clientes` e o subtítulo do `DetailHeader` de `/comercial/presupuestos/:id`).
+   **A superfície abaixo foi MEDIDA no código em 2026-08-14, não herdada do pedido** — e a medição
+   achou que **metade dos sítios não tem o dado que o componente pede**, o que é a decisão central a
+   ser tomada no `/planejar-bloco`.
+
+   **O que se quer.** O bloco `AppAvatar` + nome + linha secundária está copiado a olho em ≥8
+   lugares, com quatro grafias diferentes do mesmo markup (`<div className="flex flex-col">` +
+   `<span>` no `ClientsTable`; `<div>` + `<p className="font-medium">` + `<p className="text-xs">`
+   nos três de `identity`; `min-w-0` + `truncate` só no `RedatorCard`; sem linha secundária nenhuma
+   no `EnrollmentTable` e no `RedatorDesignation`). Vira **um** componente com duas formas:
+   - **forma 1 (padrão, imagem 1)** — avatar na coluna 1; título e descrição empilhados na coluna 2;
+   - **forma 2 (imagem 2)** — avatar, título e descrição na mesma linha.
+
+   **Onde ele mora:** `shared/ui/`, não em feature. É apresentacional puro (recebe strings, não
+   conhece DTO nem regra de domínio), então cabe na mesma prateleira de `DetailHeader`,
+   `FormPhotoRow` e `PageHeader` — nome sem prefixo `App`, que neste repositório é reservado a
+   wrapper de PrimeReact. A `descrição` precisa aceitar **`ReactNode`**, não `string`: o subtítulo
+   do `TurmaDetailPage` carrega um `AppButton` de link para o orçamento.
+
+   **Superfície medida — 13 sítios, em três grupos.** Os DTOs são de `shared/types/generated.ts`.
+
+   *Grupo A — troca literal, o dado existe inteiro (4 sítios):*
+   - `ClientsTable.tsx:53-67` (`ClientData`: `photo_url`, `legal_name`, `email`) — é o molde da imagem 1;
+   - `StudentsTable.tsx:36-49` (`StudentData`: `photo_url`, `name`, `email`);
+   - `RedatoresTable.tsx:37-50` (`RedatorData`: `photo_url`, `name`, `email`);
+   - `UsersTable.tsx:37-50` (`UserData`: `photo_url`, `name`, `email`) — é a tabela de Administración.
+
+   *Grupo B — o dado existe, mas não chega ao componente hoje (2 sítios):*
+   - `BudgetsTable.tsx:88` — a coluna Cliente é `clients.clientName(b.client_id)`, string crua. A
+     query já traz o `ClientData` **inteiro**; quem estreita é `useCommercialClients:19`, que expõe
+     só o nome. Custo: expor o cliente no hook (frontend, sem backend);
+   - `RedatorDesignation.tsx:73` (card dos designados) vs. `:38` (lista do picker) — o **picker** tem
+     `RedatorData` completo (foto, e-mail, RUT), o **card** só tem `TurmaRedatorData { id, name }`.
+     Dois sítios do mesmo componente com dado assimétrico.
+
+   *Grupo C — o DTO NÃO tem foto e/ou descrição (5 sítios). Aqui está a decisão:*
+   - `TurmasTable.tsx:73` (Cliente) — `TurmaData.client_name` é `string` e **não há `client_id` na
+     `TurmaData`**, então nem um lookup local resolve: sem foto, sem e-mail, sem chave para buscá-los;
+   - `TurmasTable.tsx:83-90` (Redator) — `TurmaRedatorData { id, name }`, e é uma **lista de N**,
+     hoje renderizada como `redatores.map(r => r.name).join(', ')`. Uma célula de identidade por
+     redator muda a altura da linha da tabela inteira;
+   - `EnrollmentTable.tsx:63-71` (Alunos) — `EnrollmentData` tem `name`, `email` e `rut`, mas **não
+     tem `photo_url`**;
+   - `HistorialTable.tsx:51-59` (Aluno) — o dado é `c.snapshot.aluno`, um `SnapshotPartyData
+     { name, rut }` **congelado no momento da emissão**. Puxar a foto viva do aluno para ilustrar um
+     snapshot de documento com peso legal é misturar dado vivo com dado congelado — não é detalhe
+     estético, é decisão de auditoria;
+   - `EmissionStudentsTable.tsx:42-43` — `EmissionPanelEnrollmentData` tem `student_name` e
+     `student_rut`, sem foto e sem e-mail; e as duas vivem hoje em **colunas separadas** com `field`,
+     então aplicar o componente **funde duas colunas em uma** — não é troca literal de `body`.
+
+   *Os dois da forma 2 (inline):*
+   - `BudgetDetailPage.tsx:62-70` — `d.client` é o `ClientData` completo: foto e RUT disponíveis;
+   - `TurmaDetailPage.tsx:77-99` — `client_name` cru, sem foto, e o subtítulo já é `ReactNode`
+     (o link para o orçamento).
+
+   **Sítios com a mesma forma que o pedido NÃO nomeia, medidos junto** — entram ou ficam fora por
+   decisão do João, não por omissão: `RedatorCard.tsx:39-50` (catalog, avatar + nome + RUT + tag
+   dentro de `AppSelectableCard`) e `UserMenu.tsx:62` (shell, avatar + nome no header).
+
+   **Decisões que o `/planejar-bloco` tem de fechar (não decidir por heurística):**
+   1. **Grupo C — fallback ou backend?** `AppAvatar` já degrada sozinho para as **iniciais** quando
+      não recebe `image` (é o fallback duplo do docblock dele), então a forma funciona sem foto. O
+      que não existe é a **descrição** em `TurmaData.client_name` e `TurmaRedatorData`. Alternativas:
+      (a) descrição opcional — o componente aceita ausência e a célula fica só com avatar + título;
+      (b) alargar os DTOs no backend — mexe em `generated.ts` (lei §5.3, ADR-04) e **sobe o risco de
+      review**, num bloco que de outro modo é frontend puro.
+   2. **`HistorialTable`** — foto viva sobre snapshot congelado: recomendação é **não**, com
+      descrição = RUT do snapshot. Precisa ser decisão escrita, não default silencioso.
+   3. **`TurmasTable` coluna Redator** — N redatores: empilhar N células, mostrar a primeira com
+      "+2", ou manter texto e ficar fora do bloco.
+   4. **`EmissionStudentsTable`** — fundir nome + RUT numa coluna só (o que o pedido implica) muda
+      a tabela; as duas colunas de hoje usam `field`, que é o que alimenta ordenação.
+   5. **`RedatorDesignation`** — o card e o picker ficam iguais na aparência com dado desigual
+      (o card sem foto, o picker com), ou o card busca o `RedatorData` por id.
+
+   **O que já está medido e NÃO precisa ser reaberto no planejamento:**
+   - **Nenhum dos 13 arquivos passa da régua de 150 linhas** (maior: `EnrollmentTable` 137,
+     `TurmaDetailPage` 141); a troca **encurta** todos.
+   - **Teste de componente é viável, ao contrário do que a `frontend-fsliced.md` sugere:**
+     `DetailHeader.test.tsx`, `BudgetDetailPage.test.tsx` e `TurmaDetailPage.test.tsx` já renderizam
+     PrimeReact em jsdom e passam. O componente novo pode nascer com teste próprio — o DoD não
+     precisa ser só visual.
+   - **Os testes existentes das duas páginas de detalhe cobrem só os ramos sem entidade** (carga,
+     falha, não encontrado): o ramo com dado — que é justamente onde o subtítulo muda — está sem
+     cobertura hoje.
+   - **`/lotus-ui-review` tem `disable-model-invocation: true`**: se a checagem visual entrar como
+     gate, ela é passo **do João** na sessão interativa, como no `login-fora-do-adr16`. Planejar isso
+     antes, não descobrir no gate.
+   - **Sem chave de i18n nova prevista** — o componente recebe texto pronto. Se a decisão 1 criar
+     rótulo de ausência ("sin correo"), aí são as 3 locales com chaves idênticas.
+
+   **Ordem sugerida** (parte do bloco, não sugestão solta, quando promovido):
+   1. componente em `shared/ui` + barrel + teste;
+   2. Grupo A, os 4 sítios de troca literal;
+   3. Grupo B (`useCommercialClients` expondo o cliente; `RedatorDesignation`);
+   4. Grupo C, conforme a decisão 1;
+   5. os 2 subtítulos na forma 2;
+   6. gate: `pnpm build` + `pnpm lint` + `pnpm test`, mais a revisão visual do João.
+
+   **Fora de escopo:** redesenho das tabelas, mudança de colunas além da fusão do item 4, e
+   qualquer alteração de `AppAvatar` que não seja aditiva.
 
 ## Blocos de execução de dívida — BD-2..BD-7 (proposta de 2026-08-10)
 

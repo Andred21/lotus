@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: celula-de-identidade
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: login-fora-do-adr16
-state_basis_commit: 024673a
-updated_at: 2026-08-13T19:42:00-03:00
+state_basis_commit: 0a1439f
+updated_at: 2026-08-14T13:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,74 @@ updated_at: 2026-08-13T19:42:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
+
+### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência
+
+**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-14**, e isto
+está escrito porque a invariante do topo deste arquivo diz o contrário. O `falha-vs-lista-vazia`
+(BD-6) está em `workflow_state: executing` no main tree `/home/jvbat/projetos/lotus`, branch
+`feat/falha-vs-lista-vazia` (`d20bebc`), com **cinco tasks de conteúdo já commitadas**. Este bloco
+nasce na worktree `fix-frontend`, branch `feat/celula-de-identidade` criada de `0a1439f`.
+
+**A diferença para as duas ocorrências anteriores (BD-4 × BD-9 e BD-5 × login) é que aqui não há
+divergência de base:** a branch do BD-6 declara `state_basis_commit: 0a1439f` e **descende** do HEAD
+da `main` a partir do qual este bloco nasce. Não são dois `state.md` incompatíveis promovidos do
+mesmo ponto em paralelo — é um bloco ativo ainda não mergeado mais um bloco novo atrás dele. O
+`state.md` da `main` dizia `idle` porque o BD-6 vive na branch dele, não porque nada esteja ativo.
+
+**A sobreposição foi medida antes da decisão, não depois — três pontos, e o João a aceitou de
+antemão** em vez de descobri-la no merge:
+
+1. `frontend/src/features/commercial/hooks/useCommercialClients.ts` — o BD-6 **já o reescreveu**
+   (`f64ba33`…`d20bebc`), e o **Grupo B** deste bloco exige expor o `ClientData` inteiro nesse mesmo
+   hook, que hoje estreita para o nome (`backlog.md`, Grupo B, `BudgetsTable.tsx:88`). Colisão de
+   conteúdo, não só de texto.
+2. `frontend/src/shared/ui/index.ts` — o BD-6 acrescenta `InlineLoadState` ao barrel; este bloco
+   acrescenta a célula nova. Mesma região do arquivo.
+3. `shared/config/locales/{es-CL,pt-BR,en}.json` — o BD-6 escreve nos três; este bloco escreve **se**
+   a decisão 1 criar rótulo de ausência ("sin correo"). Condicional, não certo.
+
+**O que NÃO colide, também medido:** nenhum dos 13 sítios de renderização do item 4 aparece no diff
+`main...feat/falha-vs-lista-vazia`. Os arquivos do BD-6 em `commercial` são `BudgetDialog`,
+`CourseStep`, `QuoteWizard` e `QuotesList` — `BudgetsTable.tsx`, que é o sítio do Grupo B, está
+fora deles.
+
+**Alternativas recusadas por ele:** esperar o BD-6 fechar e mergear (manteria a invariante e
+permitiria planejar o Grupo B sobre a forma nova do hook, ao custo de o bloco não começar hoje); e
+promover em paralelo **cortando o Grupo B**, que teria eliminado a colisão de hook na origem.
+
+### Seleção — 2026-08-14
+
+**Item 4 de "Próximos blocos" (`backlog.md:33`), promovido explicitamente pelo João.** O gate do
+`/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, login): o
+estado era `idle` e o argumento era **título de seção**, não slug promovido. As quatro decisões dele
+fecharam o gate: o slug `celula-de-identidade`; a rota **`context_required`** com Context Packet
+gerado pelo Codex; o **paralelismo** com o BD-6; e a **worktree `fix-frontend`** como área de
+trabalho.
+
+**A rota do packet é decisão dele contra a medição, e isso fica escrito.** A ausência de fonte
+externa foi **medida**: grep por `drive.google`, `notion.so`, `figma.com`, `docs.google` e `http` nas
+105 linhas do item 4 devolve **zero ocorrência**, e a superfície dos 13 sítios, os três grupos, as
+cinco decisões abertas e a ordem sugerida estão **transcritos** no `backlog.md`. Pela medição, o
+precedente seria rota direta a `ready_for_planning` (BD-8, BD-9, BD-5, login). O João escolheu o
+packet mesmo assim — as duas capturas de tela que abriram o pedido são a única entrada que não vive
+no repositório, e o packet é o mecanismo que registra o que existe e o que está indisponível em vez
+de deixar a lacuna implícita.
+
+**A direção decidida entra neste commit.** As **105 linhas** do item 4 estavam **não commitadas** no
+working tree desta worktree quando o comando abriu — decisão durável vivendo onde um `git checkout`
+a apagaria. É a repetição exata do que aconteceu no `login-fora-do-adr16` (§"Seleção — 2026-08-13"),
+e entram aqui como artefato do mesmo commit da promoção.
+
+**`state_basis_commit` passa de `024673a` a `0a1439f`** — o HEAD da `main` de onde esta branch nasce.
+Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
+derivado.
+
+**Frontend puro por escopo declarado: a P-03 não dispara.** O bloco é apresentacional, e o único
+caminho que tocaria backend é a alternativa (b) da decisão 1 (alargar DTO, `generated.ts`, lei §5.3)
+— que é justamente uma das cinco decisões que o planejamento tem de fechar, não um dado do bloco.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
