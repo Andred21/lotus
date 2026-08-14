@@ -15,19 +15,19 @@ afterEach(() => {
 })
 
 describe('IdentityCell', () => {
-  it('na forma padrão empilha título e descrição em dois parágrafos', () => {
+  it('na forma padrão empilha título e descrição em duas linhas truncadas', () => {
     const { container } = render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)
 
-    const paragrafos = container.querySelectorAll('p')
-    expect(paragrafos).toHaveLength(2)
-    expect(paragrafos[0].textContent).toBe('Juan Soto')
-    expect(paragrafos[1].textContent).toBe('juan@lotus.cl')
+    const linhas = container.querySelectorAll('span.truncate')
+    expect(linhas).toHaveLength(2)
+    expect(linhas[0].textContent).toBe('Juan Soto')
+    expect(linhas[1].textContent).toBe('juan@lotus.cl')
   })
 
   it('sem descrição não abre a segunda linha', () => {
     const { container } = render(<IdentityCell title="Juan Soto" />)
 
-    expect(container.querySelectorAll('p')).toHaveLength(1)
+    expect(container.querySelectorAll('span.truncate')).toHaveLength(1)
     expect(screen.queryByText('juan@lotus.cl')).toBeNull()
   })
 
@@ -36,15 +36,15 @@ describe('IdentityCell', () => {
   it('com descrição null também não abre a segunda linha', () => {
     const { container } = render(<IdentityCell title="Juan Soto" description={null} />)
 
-    expect(container.querySelectorAll('p')).toHaveLength(1)
+    expect(container.querySelectorAll('span.truncate')).toHaveLength(1)
   })
 
-  it('na forma inline não usa parágrafo, e mantém título e descrição na mesma linha', () => {
+  it('na forma inline não trunca, e mantém título e descrição na mesma linha', () => {
     const { container } = render(
       <IdentityCell title="Enel Chile" description="RUT 76.123.456-7" inline />,
     )
 
-    expect(container.querySelectorAll('p')).toHaveLength(0)
+    expect(container.querySelectorAll('span.truncate')).toHaveLength(0)
     expect(container.textContent).toContain('Enel Chile')
     expect(container.textContent).toContain('RUT 76.123.456-7')
   })

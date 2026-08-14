@@ -37,7 +37,7 @@ export function IdentityCell({
     return (
       <span className="flex items-center gap-2">
         {avatar}
-        <span className="font-medium" style={{ color: 'var(--text-color)' }}>{title}</span>
+        <span className="font-semibold" style={{ color: 'var(--text-color)' }}>{title}</span>
         {description && <span style={{ color: 'var(--text-color-secondary)' }}>{description}</span>}
       </span>
     )
@@ -45,10 +45,10 @@ export function IdentityCell({
   return (
     <div className="flex items-center gap-3">
       {avatar}
-      <div className="min-w-0">
-        <p className="truncate font-medium">{title}</p>
+      <div className="flex flex-col gap-2">
+        <span className="truncate font-semibold">{title}</span>
         {description && (
-          <p className="truncate text-xs" style={{ color: 'var(--text-color-secondary)' }}>{description}</p>
+          <span className="truncate text-sm font-medium" style={{ color: 'var(--text-color-secondary)' }}>{description}</span>
         )}
       </div>
     </div>
