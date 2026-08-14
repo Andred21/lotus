@@ -230,3 +230,13 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   commit que tocar a escrita do staff decide entre preservar o valor atual quando a chave falta e
   exigir a chave no `PUT` — decisão do João, porque muda contrato de entrada. DoD é o teste que
   mostra o RUT sobrevivendo à omissão, não o `if` novo.
+
+- **`RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru.** É o
+  terceiro e o quarto sítio do padrão que o review do BD-6 (2026-08-14) transformou em regra —
+  falha que apaga cache utilizável — e os dois ficaram **fora do escopo** daquele bloco, que só
+  cobria os três sítios da spec (wizard, card de cotações, dropdown de cliente). Depois do
+  `useLoadState` o fix é de uma linha em cada um: trocar `courses.isError` / `redatores.isError` por
+  `failedWithoutData` no ramo que substitui a tela, e mandar a falha com cache para um
+  `InlineLoadState` ao lado da lista. Saída: o próximo bloco que tocar cards de redator ou a seção
+  de redatores do curso absorve os dois. DoD é o teste do ramo COM cache — o do BD-6 mostrou que
+  forçar `list: []` no teste de falha deixa a regressão passar verde.
