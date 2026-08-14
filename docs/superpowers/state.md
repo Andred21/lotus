@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: celula-de-identidade
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
-active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
-context_packet: docs/superpowers/context-packets/celula-de-identidade.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
-last_completed_work_item: login-fora-do-adr16
-state_basis_commit: 0a1439f
-updated_at: 2026-08-14T18:25:19-03:00
+last_completed_work_item: celula-de-identidade
+state_basis_commit: 9ed7351
+updated_at: 2026-08-14T18:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-14T18:25:19-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
+## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
 ### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência
 
@@ -156,7 +156,7 @@ existe, porque as cinco decisões são de apresentação e pertencem ao João.
 
 ### Spec — 2026-08-14: o bloco deixou de ser frontend puro
 
-Spec em `docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md`, aprovada pelo João
+Spec em `docs/superpowers/specs/archive/2026-08-14-celula-de-identidade-design.md`, aprovada pelo João
 depois de onze decisões fechadas uma a uma (D1–D11, tabela §10 da spec). `active_spec` já entra
 preenchido: a spec existe no disco, e deixá-la `null` criaria exatamente a divergência que a
 invariante deste arquivo proíbe.
@@ -189,7 +189,7 @@ incerteza real e ela é verificação obrigatória do plano: `redatores` é `arr
 
 ### Plano — 2026-08-14: 12 tasks, executor dividido
 
-Plano em `docs/superpowers/plans/2026-08-14-celula-de-identidade.md`. **Doze tasks, cada uma com
+Plano em `docs/superpowers/plans/archive/2026-08-14-celula-de-identidade.md`. **Doze tasks, cada uma com
 entregável testável isolado.** Ordem obrigatória: 1–2 (backend) antes de 3 (`typescript:transform`);
 3 e 4 antes de 5–10 (os sítios precisam do TS e do componente); 11 depois de tudo; 12 é o gate.
 As tasks 5–10 são independentes entre si.
@@ -544,7 +544,63 @@ por decisão do João: o `workflow_state` vai a `idle` e ele repromove o bloco e
 narrativa dela está preservada logo abaixo e a spec, o plano e o Context Packet do dashboard
 **continuam no disco, nas pastas ativas** — nada foi arquivado, porque nada foi entregue.
 
-## Promoção carregada da `main` — `dashboard-backend-agregacoes` (Sprint 5 · Dashboard, bloco 1 de 2)
+### Fechamento — 2026-08-14
+
+`/fechar-sprint` abriu com `workflow_state: ready_for_closure` e o item batendo. **O gate rodou
+inteiro DEPOIS do merge da `main`** (§"Integração" acima), porque a reorg de docs mudou o destino de
+dois passos dele — as pendências e o histórico.
+
+**O passo 0 fechou em duas metades, e a segunda não é artefato desta sessão.** A metade de API foi
+provada por request real contra o backend DESTA branch (`:8081`, sessão Sanctum, `Origin` +
+`Accept`): `/api/me` devolve `photo_url` assinada e o GET da própria URL responde **200 `image/png`,
+1.877.301 bytes**; `client_photo_url` em 3 de 6 turmas, `redatores[0].photo_url` em 5 de 6,
+`EnrollmentData::photo_url` em 27 de 55 matrículas, `student_photo_url` em 7 de 15 do painel de
+emissão e `aluno_photo_url` em 3 de 5 certificados — preenchimento parcial é o "um sim, um não" do
+`DemoPhotosSeeder`, e o resto cai nas iniciais, que é o ramo correto. Os **16 call sites** de
+`IdentityCell` passam `image`, conferidos um a um. **A metade de pixel veio do João**, que confirmou
+a checagem visual em chat; `/lotus-ui-review` não rodou e continua sendo passo dele
+(`disable-model-invocation: true`), com a porta 5173 ocupada pelo stack do main tree durante toda a
+execução. Fica escrito qual metade tem artefato no repositório e qual não tem.
+
+**Placar do gate, medido pós-merge e não herdado:** backend **595 passed / 5 skipped (2162
+asserções)**; `pnpm lint` exit 0; `pnpm build` exit 0; `pnpm test` **36 arquivos / 186 testes**;
+Pint `passed` nos 15 `.php` do bloco; `typescript:transform` reexecutado não move `generated.ts`;
+zero `.gitkeep` órfão, e os 9 arquivos novos são todos entregável nomeado no plano. Leis §5: zero
+import de `primereact` fora de `shared/ui`, zero import cruzado entre features, e o
+`CertificateQueryBuilder` é o sétimo `Eloquent\Builder` do padrão — não Repository.
+
+**Docker caiu inteiro no meio da sessão** (`Exited (255)` simultâneo nos sete containers, daemon/WSL)
+e o stack foi restaurado com `docker start`, com as duas redes de `fix-frontend-app-1` intactas. A
+suíte foi remedida depois da restauração, com o mesmo placar — o número acima é o de depois, não o de
+antes.
+
+**Arquivamento e histórico, já no layout novo da `main`:** plano em `plans/archive/`, spec em
+`specs/archive/`, com as duas referências dentro deste arquivo atualizadas para os paths movidos. O
+Context Packet fica onde está — `context-packets/` não tem convenção de arquivo. A entrega entrou em
+`docs/superpowers/historico/progress.md` e a mais antiga das dez (o BD-2, 2026-08-11) desceu
+**verbatim** para `historico/progress-archive.md`, mantendo o teto de dez.
+
+**O passo 9 do gate já estava cumprido pela `main`:** a reorg removeu o item 4 de "Próximos blocos"
+ao reescrever a fila em Sprint 5/6 + BD-10..BD-15, e nada foi removido daqui.
+
+**A P-26 saiu das encerradas.** Ela fechou na varredura pós-BD-6 com "sai no próximo
+`/fechar-sprint`", e este é o próximo; o rastro durável fica em `historico/progress-archive.md` e na
+spec arquivada do bloco de 2026-08-04.
+
+**Estado: `idle`, com a promoção do dashboard desfeita por decisão do João.** O `state.md` que veio
+da `main` trazia `dashboard-backend-agregacoes` em `ready_for_execution`; a alternativa era preservar
+a promoção e mexer só em `last_completed_work_item`, e ele escolheu **fechar a `idle` e repromover
+depois**. A spec, o plano e o Context Packet do dashboard **continuam nas pastas ativas** — nada foi
+arquivado, porque nada foi entregue —, e a narrativa da promoção segue logo abaixo, intacta.
+`state_basis_commit` aponta para `9ed7351`, o merge que integra a entrega; não para o commit deste
+fechamento.
+
+## Promoção desfeita no fechamento — `dashboard-backend-agregacoes` (Sprint 5 · Dashboard, bloco 1 de 2)
+
+> **Esta narrativa veio da `main` e está preservada inteira, mas o item NÃO está ativo.** O
+> `/fechar-sprint` de 2026-08-14 devolveu o estado a `idle` por decisão do João, e a repromoção é
+> instrução explícita dele — a spec, o plano e o Context Packet citados abaixo continuam no disco,
+> nas pastas ativas. O texto seguinte descreve a promoção como ela foi escrita, não o estado atual.
 
 ### Seleção — 2026-08-14
 
