@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-backend-agregacoes
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-14-dashboard-backend-agregacoes.md
 blocker: null
 last_completed_work_item: falha-vs-lista-vazia
 state_basis_commit: 1e40acb
-updated_at: 2026-08-14T17:07:00-03:00
+updated_at: 2026-08-14T17:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -69,6 +69,34 @@ ter derivado.
 
 **Árvore ainda não decidida:** bloco de backend assume main tree pela P-03; branch nasce no
 planejamento/execução, não nesta promoção. O packet é gerado sobre `main@1e40acb`.
+
+### Context Packet — 2026-08-14
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `a3833e0`) e validado contra o
+contrato da skill: markers exatos, frontmatter completo (`plan`/`spec` `null` registrados, não
+inventados), **8 key facts**, fontes por ID, `status: ready`,
+`RECOMMENDED_TRANSITION: ready_for_planning`. Salvo em
+`docs/superpowers/context-packets/2026-08-14-dashboard-backend-agregacoes.md`.
+
+**As duas fontes canônicas foram recuperadas, não presumidas:** o Drive
+(`dashboard-escopo-funcional-analitico.md`, ID `1HlT8kUsnoGsRJpYmryHacZ8zBZnDQgRa`) e as oito tasks
+EAP 8.4.0–8.4.7 na base canônica do Notion, endereçadas por ID de página — a lição das 12 falsas
+divergências de 2026-07-30 aplicada.
+
+**Uma divergência externa foi achada e reconciliada com base declarada, não em silêncio:** as
+descrições e critérios de aceite das EAP **8.4.0 e 8.4.7 estão trocados entre si** no Notion (títulos
+apontam backend/frontend correto; corpos invertidos). Resolução: o Drive decide o escopo — domínio e
+dependências ficam neste bloco, UI review fica no bloco frontend. A correção da troca no Notion é
+staleness trigger do packet.
+
+**O que o packet fixa para o desenho:** domínio `App\Domains\Dashboard` read-only **sem** Model,
+migration ou tabela; `GET /api/dashboard/metricas`; ownership e filtros aplicados **antes** da
+agregação no backend (nada de payload administrativo ocultado no React); sequência backend
+EAP 8.4.0→8.4.1→8.4.2→8.4.3→8.4.6; Notifications fora. Open questions não bloqueantes (semântica dos
+KPIs, filtros MVP, ranking do Redator) vão para o brainstorming.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
 
 ## Último item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
