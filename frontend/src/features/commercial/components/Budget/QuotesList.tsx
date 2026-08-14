@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { FormErrorBanner } from '@shared/ui'
+import { FormErrorBanner, InlineLoadState } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { useQuoteFiles } from '../../hooks/useQuoteFiles'
 import { useQuotesListCourses } from '../../hooks/useQuotesListCourses'
@@ -15,7 +15,7 @@ export function QuotesList({
   onReject?: (q: QuoteData) => void
 }) {
   const { t } = useTranslation()
-  const { courseName } = useQuotesListCourses()
+  const courses = useQuotesListCourses()
   const files = useQuoteFiles()
 
   if (quotes.length === 0) {
@@ -27,6 +27,14 @@ export function QuotesList({
       <div className="m-4 empty:m-0">
         <FormErrorBanner message={files.fileError} />
         {files.sizeError && <FormErrorBanner message={files.sizeError} />}
+        {/* Falha do GET de cursos NÃO esconde as cotações (D2): o que ela explica
+         * é o `—` no lugar do nome. Erro de mutação de arquivo é outra categoria
+         * e continua nos banners acima. */}
+        <InlineLoadState
+          error={courses.isError ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+          retryLabel={t('common.retry')}
+          onRetry={courses.refetch}
+        />
       </div>
       {/* Contêiner próprio: `first:border-t-0` mira o primeiro filho DESTA div,
        * não o primeiro filho do wrapper de cima (que sempre existe por causa do
@@ -37,7 +45,7 @@ export function QuotesList({
             key={q.id}
             quote={q}
             striped={i % 2 === 1}
-            courseName={courseName(q.course_id)}
+            courseName={courses.courseName(q.course_id)}
             uploading={files.isUploading(q.id!)}
             onEdit={onEdit ? () => onEdit(q) : undefined}
             onRemove={onRemove ? () => onRemove(q) : undefined}
