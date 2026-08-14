@@ -1008,21 +1008,38 @@ cliente, que ja vinha no ClientData e nao era usada."
 - Produces: `useCommercialClients().client(id): ClientData | null`. Nada mais consome.
 
 > **Ponto de sobreposição declarado com o BD-6** (`feat/falha-vs-lista-vazia`), que reescreveu este
-> hook. A mudança é **aditiva dos dois lados**: o BD-6 acrescenta `isError`/`errorDetail`/
-> `showEmptyHint`/`unusable` e **não remove** `clientName`; esta task acrescenta `client`. Se o
-> arquivo já estiver na forma do BD-6 no momento da execução, acrescentar `client` ao objeto de
-> retorno que existir, sem remover nada.
+> hook. A mudança é **aditiva dos dois lados**: o BD-6 troca os estados de carga pelo spread de
+> `useLoadState` e **não remove** `clientName`; esta task acrescenta `client`. **Verificado em
+> 2026-08-14 contra `feat/falha-vs-lista-vazia@baf08e9`:** o merge conflita neste objeto de retorno
+> e a resolução é mecânica — manter os dois lados, sem remover nada.
+>
+> **O `clients.data?.` do plano original não existe mais.** No BD-6 a variável é `load`, vinda de
+> `useLoadState(clientsApi.useList())`, e `load.data` **não é opcional** (o hook já resolve o `??
+> []`). Por isso o Step 1 abaixo está escrito na forma do BD-6. Se — e só se — o arquivo ainda
+> estiver na forma antiga (`const clients = clientsApi.useList()`), usar a variante do Step 1b.
 
-- [ ] **Step 1: Expor o cliente inteiro no hook**
+- [ ] **Step 1: Expor o cliente inteiro no hook** (forma BD-6, a esperada)
 
 Em `frontend/src/features/commercial/hooks/useCommercialClients.ts`, acrescentar logo depois de
 `clientName`:
 
 ```ts
-    clientName: (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—',
+    clientName: (id: number) => load.data.find((c) => c.id === id)?.legal_name ?? '—',
     /** O ClientData inteiro: a query já o traz, e estreitar para o nome
      * obrigava a tabela a renderizar texto cru onde cabe célula de identidade.
-     * `clientName` continua porque o diálogo depende dele. */
+     * `clientName` continua porque o diálogo depende dele — e o fallback da
+     * tabela também, quando o id não resolve. */
+    client: (id: number) => load.data.find((c) => c.id === id) ?? null,
+```
+
+- [ ] **Step 1b: Variante SÓ se o arquivo ainda estiver na forma pré-BD-6**
+
+Reconhece-se pela primeira linha do corpo do hook: `const clients = clientsApi.useList()` em vez de
+`const load = useLoadState(clientsApi.useList())`. Neste caso o `data` é opcional e a linha vira:
+
+```ts
+    clientName: (id: number) => clients.data?.find((c) => c.id === id)?.legal_name ?? '—',
+    /** Mesma justificativa do Step 1. */
     client: (id: number) => clients.data?.find((c) => c.id === id) ?? null,
 ```
 

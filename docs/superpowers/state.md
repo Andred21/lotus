@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
 active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T17:10:00-03:00
+updated_at: 2026-08-14T15:18:17-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -208,6 +208,76 @@ que é exatamente o que este bloco acrescenta, ficaria sem prova.
 **A revisão visual entra no plano como lista fechada de 13 telas com o que provar em cada uma**
 (task 12, step 8). `/lotus-ui-review` tem `disable-model-invocation: true`: é passo do João, e
 planejá-lo agora é o que evita descobri-lo no gate, como no `login-fora-do-adr16`.
+
+### Execução — 2026-08-14: início, e a premissa da worktree caiu antes da Task 1
+
+`/executar-bloco celula-de-identidade` validou as âncoras (spec, plano e packet no disco; Git em
+`abe976a` na branch `feat/celula-de-identidade`; `active_plan` cobrindo o work item) e abriu os dois
+gates. O ciclo foi escalado ao João pelo mesmo impasse recorrente do BD-4, do
+`rastro-unicidade-e-gates` e do login — o plano pede `subagent-driven-development` e a sessão não
+chama o Agent tool sem autorização: **SDD, Agent tool autorizado para este bloco.**
+
+**A condição escrita em §"Spec — 2026-08-14" item 3 estava falsa quando o comando abriu, e isso foi
+medido, não deduzido.** Aquele parágrafo autorizou a worktree com base em `docker compose ps`
+**vazio**. Na abertura da execução o stack `lotus-*` estava de pé havia 3h, servido pelo main tree em
+`feat/falha-vs-lista-vazia` (BD-6, `ready_for_closure`), e `lotus-app-1` monta
+`/home/jvbat/projetos/lotus/backend` — **não** esta árvore. Como as Tasks 1, 2 e 11 são de
+`backend/**`, `php artisan test` naquele container teria medido a outra branch.
+
+**O mecanismo do defeito ficaria invisível, e é isso que o torna grave.** Os três hashes de
+`TurmaData.php` — container, main tree e worktree — batiam em `f59c2df7…`, mas **por conteúdo**:
+`git diff main -- backend/` desta branch é vazio. A Task 1 escreve na worktree; o container seguiria
+lendo a cópia do main tree, **sem o campo**. Vermelho permanente contra código correto, sem nada na
+tela apontando para a causa.
+
+**Decisão do João: manter o stack de pé, sem derrubar nada.** Mecanismo:
+`docker compose up -d --no-deps app` desta worktree, que cria `fix-frontend-app-1` montando
+`fix-frontend/backend`. O serviço `app` não publica porta, então há zero colisão com os 8080/3307/9000
+do stack do main tree — conferido depois da subida: os cinco containers `lotus-*` seguem `Up`.
+`--no-deps` porque `mysql`/`minio` colidiriam, e o `phpunit.xml` usa sqlite `:memory:` (linhas 26-27),
+então teste de backend não precisa de MySQL. Sem build: `fix-frontend-app:latest` já existia.
+
+**Isso resolve as Tasks 1–11 e NÃO resolve a Task 12 Step 7**, que precisa de MySQL com dado real,
+MinIO e `pnpm dev` para o `DemoPhotosSeeder` e a revisão visual. Fica declarado agora como decisão
+pendente do João, em vez de descoberto no gate — que é a lição do `login-fora-do-adr16`.
+
+**Baseline medido nesta branch, não herdado:** backend **591 passed / 5 skipped** (2149 asserções);
+`pnpm lint` exit 0; `pnpm build` verde; `pnpm test` **32 arquivos / 163 testes**.
+
+**Pre-flight scan das 12 tasks — três achados, nenhum bloqueante.** O desvio de mecanismo acima (F1);
+um falso alarme descartado por medição (F2: `AppAvatarProps.image` já é `string | null` e o tipo já é
+exportado, então a Task 4 compila); e uma justificativa errada com conclusão certa (F3: a Task 10
+diz que o `field` alimenta a busca do `useTableFilter`, mas quem varre é o `searchable`, e o
+`EmissionStudentsTable` chama `useTableFilter(enrollments)` **sem** `searchable` — a tabela não tem
+busca nenhuma, então a fusão de colunas custa ainda menos do que D5 supôs). Detalhe em
+`.superpowers/sdd/progress.md`.
+
+**Nota de higiene:** o `updated_at` anterior dizia `17:10:00-03:00`, à frente do relógio real
+(`date -Is` na abertura: `15:18:17-03:00`). O campo passa a registrar a hora medida, então ele
+**recua** — o valor antigo é que estava errado.
+
+### Execução — 2026-08-14: Tasks 1 e 2, e a incerteza do bloco caiu por medição
+
+**O sandbox do Codex não alcança `/var/run/docker.sock`**, então ele não chegou ao PHPUnit e parou nos
+Steps 2 das duas tasks, corretamente marcando `blocked` em vez de alegar verde. **Escalar a permissão
+foi recusado**: o `/executar-bloco` já exige que Claude rode a verificação do plano antes de aceitar o
+diff, então o arranjo passou a ser Codex autora o diff e Claude mede — sem nenhum ganho de permissão.
+
+**Vermelho medido, e é literalmente o que o plano previu:** Task 1 com
+`Undefined property: App\Domains\Operation\Data\TurmaData::$client_rut`; Task 2 com
+`Failed asserting that null is identical to 'ana.silva@lotus.cl'`.
+
+**A única incerteza real declarada na spec §3 e no plano foi resolvida, e resolveu-se a favor do
+caminho barato.** `TurmaData::$redatores` é `array|Optional` com `@var TurmaRedatorData[]` e **sem
+`#[DataCollectionOf]`**, e não estava provado que um `WithTransformer` de propriedade disparasse
+dentro desse aninhamento. O `assertStringStartsWith('http', …)` **passou**: o transformer atravessa.
+O Step 6 alternativo do plano (resolver a assinatura no `fromModel`) **não foi aplicado** — não era
+necessário, e aplicá-lo por precaução teria trocado um mecanismo medido por um palpite.
+
+**Suíte inteira: 592 passed / 5 skipped** (2154 asserções) contra o baseline de 591/5 (2149) — +1
+teste e +5 asserções, exatamente o que as duas tasks acrescentam, zero regressão. Pint `passed` nos
+quatro arquivos. Diff revisado contra o plano antes do commit e integralmente dentro dos
+`paths_autorizados`; `generated.ts` intocado, como a lei §5.3 exige.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
