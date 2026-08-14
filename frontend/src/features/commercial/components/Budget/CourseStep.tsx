@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppErrorState, AppInputText, AppRadioButton, AppSkeleton, FormSection } from '@shared/ui'
+import { AppErrorState, AppInputText, AppRadioButton, AppSkeleton, FormSection, InlineLoadState } from '@shared/ui'
 import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 
 /**
@@ -10,6 +10,10 @@ import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
  *
  * A busca só aparece quando há catálogo: filtrar lista que não veio é controle
  * morto. Todo ramo mantém o `FormSection`, para o passo nunca ficar sem título.
+ *
+ * A falha tem DUAS formas, e a diferença é o cache: sem catálogo em mão ela
+ * ocupa o passo inteiro (`AppErrorState`); com catálogo em mão ela é um aviso
+ * ao lado da lista, que continua utilizável.
  */
 export function CourseStep({
   courses, selectedId, onSelect,
@@ -33,7 +37,13 @@ export function CourseStep({
     )
   }
 
-  if (courses.isError) {
+  // A falha SUBSTITUI a tela só quando não há catálogo em cache para usar. Com
+  // `staleTime` 0 a query `['courses','list']` refaz o GET a cada montagem, e um
+  // refetch falho mantém `data` populado enquanto `status` vira `error`: gatear
+  // por `isError` cru apagava uma lista utilizável e o termo já digitado, que é
+  // o oposto da D3 (precedente `03280c6`). Com cache, o aviso vai AO LADO da
+  // lista, no rodapé do ramo final (review do BD-6, Q-1).
+  if (courses.failedWithoutData) {
     return (
       <section className="space-y-3">
         <FormSection title={t('quote.stepCourse')} />
@@ -64,6 +74,11 @@ export function CourseStep({
         placeholder={t('quote.courseSearchPlaceholder')}
         value={courses.search}
         onChange={(e) => courses.setSearch(e.target.value)}
+      />
+      <InlineLoadState
+        error={courses.isError ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+        retryLabel={t('common.retry')}
+        onRetry={courses.refetch}
       />
       {courses.noResults ? (
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>

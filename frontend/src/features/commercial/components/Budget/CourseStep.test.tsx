@@ -61,6 +61,18 @@ describe('CourseStep — os cinco estados', () => {
     expect(screen.queryByText('course.empty')).toBeNull()
   })
 
+  it('falha COM cache: a lista fica, o aviso vai ao lado dela', () => {
+    // O ramo que a suíte não cobria e que deixou a regressão passar verde: o
+    // teste acima força `list: []`, então `isError` cru parecia correto (Q-1).
+    renderStep({ isError: true, errorDetail: 'Sin conexión' })
+
+    expect(screen.getByText('Alta tensión')).toBeTruthy()
+    expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('Sin conexión')
+    // Substituir o passo é do ramo sem cache; aqui o `AppErrorState` não entra.
+    expect(screen.queryByText('common.loadError')).toBeNull()
+  })
+
   it('catálogo vazio de verdade: mensagem própria, sem alarme de falha', () => {
     renderStep({ isEmpty: true, list: [] })
 
