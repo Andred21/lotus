@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: falha-vs-lista-vazia
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: login-fora-do-adr16
-state_basis_commit: 024673a
-updated_at: 2026-08-13T19:42:00-03:00
+state_basis_commit: 0a1439f
+updated_at: 2026-08-14T12:41:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,77 @@ updated_at: 2026-08-13T19:42:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
+
+### Seleção — 2026-08-14
+
+**BD-6 do `backlog.md:73`, promovido explicitamente pelo João** com o estado em `idle` e
+`active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2,
+BD-5, BD-7, BD-8, BD-9, login): o argumento era **título de seção**, não slug promovido. As três
+decisões dele fecharam o gate: o slug `falha-vs-lista-vazia`; **rota direta a `ready_for_planning`
+sem Context Packet**; e **main tree `/home/jvbat/projetos/lotus`**, na branch
+`feat/falha-vs-lista-vazia` criada de `0a1439f`.
+
+**A ausência de fonte externa foi medida, não presumida:** grep por `drive.google`, `notion.so`,
+`figma.com`, `docs.google` e `http` nas 15 linhas do BD-6 devolve **zero ocorrência**. As fontes são
+o repositório e o texto do backlog, que já traz os paths e a atualização de referência de 2026-08-10.
+
+**O main tree venceu por ausência de disputa, não por costume:** não há execução paralela nesta base
+— a worktree `fix-frontend` está em `fix/state-rotacao-pos-merge`, já mergeado em `0a1439f`, e a
+`lotus-preview` é preview de cliente. Sem os dois `active_work_item` de 2026-08-13, a invariante volta
+a valer sem exceção.
+
+**`state_basis_commit` passa de `024673a` a `0a1439f`** — o merge do PR #49, HEAD atual da `main`.
+Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
+derivado.
+
+### Brainstorming e spec — 2026-08-14
+
+Spec em `docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md`, com **nove decisões**
+(D1–D9): as quatro primeiras escolhidas pelo João entre alternativas com o custo medido, as cinco
+seguintes derivadas delas e declaradas como tais.
+
+**A medição achou quatro coisas que o backlog não tinha, e duas mudam o que o bloco é:**
+
+1. **O terceiro sítio escrito no BD-6 está vencido.** `useCommercialClients.clientName`
+   (`useCommercialClients.ts:19`) tem **um** consumidor, a `BudgetsTable`, que já agrega
+   `clients.loadError` e onde erro vence vazio (`BudgetsTable.tsx:35`) — sob falha o `'—'` **não
+   chega a renderizar**. Ele só aparece com GET bem-sucedido e id fora da lista, que é dado.
+   **D1:** o sítio sai e entra o disfarce vivo do mesmo hook — `clientOptions` no `BudgetDialog.tsx:22`,
+   onde GET falho rende dropdown vazio, sem motivo e sem Reintentar.
+2. **O molde pronto existe um módulo ao lado, sobre a mesma query:** `useRedatorCourses` +
+   `RedatorCourseSelector` fazem os cinco estados sobre `coursesApi.useList()` citando a **D11**
+   nominalmente; `useStudentClients` + `StudentClientField` fazem a versão de dropdown de form. Nada
+   aqui é padrão novo. **D4:** o par erro/dica sob campo é extraído para `shared/ui` como
+   `InlineLoadState` e o `StudentClientField` perde a cópia local — precedente exato do `mergePt`.
+3. **O runner cobre `features`, não só `shared/`** (`vite.config.ts:26` inclui
+   `src/**/*.test.{ts,tsx}`, e o `BudgetDetailPage.test.tsx` já testa ramo a ramo com o hook
+   mockado). Um bloco que muda comportamento de propósito **prova o comportamento em teste**, e não
+   só no navegador: três arquivos novos, projeção 35 arquivos / ~177 testes.
+4. **Um caso parecia trabalho e não é:** o `BudgetDialog` em `edit` mostra o cliente pelo label de
+   `clientOptions` e ficaria vazio sob falha, mas o único caminho até lá (`BudgetOverlays`, dentro do
+   `BudgetDetailPage`) já reprova a página inteira quando `clients` falha
+   (`useBudgetDetail.ts:89-92`). Fica declarado para não parecer esquecimento.
+
+**As decisões que mudam comportamento:** a falha de cursos na `QuotesList` é **local no card** e não
+promovida ao `loadError` da página (**D2**) — diverge da D16 por motivo medido, porque lá o nome do
+cliente era campo de busca e aqui não há busca, e esconder valor UF, status e arquivos por falha de
+nome seria o erro inverso; e **`canAdvance` fica `course_id > 0`** (**D3**), preservando escolha
+válida de quem edita, pelo mesmo critério do `unusable` do `useStudentClients` e para não repetir o
+`03280c6`, revertido justamente por travar com lista utilizável em cache.
+
+**Baseline medido nesta branch, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**32 arquivos / 163 testes** — bate com o placar pós-merge do PR #48, confirmando que a branch nasce
+da `main` sem deriva.
+
+**Risco de review BAIXO** pelo gate binário (zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
+dinheiro escrito ou documento legal; `executor: claude`). O risco próprio, na §9 da spec, é de
+alcance: `useCommercialClients` tem dois consumidores e o retrofit toca `identity`, fora do módulo do
+bloco.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
