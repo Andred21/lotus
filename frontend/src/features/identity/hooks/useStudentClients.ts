@@ -1,3 +1,4 @@
+import { useLoadState } from '@shared/hooks'
 import { clientsApi } from '@shared/api/clientsApi'
 import type { DialogMode } from '@shared/lib'
 
@@ -10,30 +11,17 @@ import type { DialogMode } from '@shared/lib'
  * vez de o botão sumir ou o dropdown ficar vazio sem explicação. */
 export function useStudentClients(mode: DialogMode) {
   const isCreate = mode === 'create'
-  const clients = clientsApi.useList({ enabled: isCreate })
+  const load = useLoadState(clientsApi.useList({ enabled: isCreate }))
 
   return {
+    ...load,
     /** `ClientData.id` é `undefined | number` no DTO gerado (o molde serve
      * create e edit); um cliente vindo da listagem sempre tem id persistido.
      * Descartar o impossível AQUI dá `value: number` de verdade e poupa o cast
      * de quem consome — a asserção atravessava a fronteira do
      * `StudentClientField` com três linhas de comentário (review do BD-4, Q-3). */
-    options: (clients.data ?? []).flatMap((c) =>
-      c.id == null ? [] : [{ label: c.legal_name, value: c.id }],
-    ),
-    /** Bloqueia só quando NÃO há lista utilizável (ainda carregando, falhou sem
-     * cache prévio, ou a lista veio vazia — `[]` é truthy, então checar só
-     * `!clients.data` deixaria passar cliente nenhum pra escolher). Um refetch
-     * em background que falha com `clients.data` já populado (retry manual,
-     * refoco de aba) não deve travar um form que ainda tem opções válidas. */
-    unusable: isCreate && !clients.data?.length,
-    isError: clients.isError,
-    errorDetail: clients.error?.detail,
-    /** Lista vazia de verdade — nem erro, nem carregando. Tem mensagem própria,
-     * distinta da de falha. */
-    showEmptyHint: !clients.isError && clients.isSuccess && clients.data.length === 0,
-    refetch: () => {
-      void clients.refetch()
-    },
+    options: load.data.flatMap((c) => (c.id == null ? [] : [{ label: c.legal_name, value: c.id }])),
+    /** Fora do create não há query nem dropdown para travar: o campo é texto. */
+    unusable: isCreate && load.unusable,
   }
 }
