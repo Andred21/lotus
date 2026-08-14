@@ -181,7 +181,7 @@ exceção. Na dúvida, siga o vizinho da mesma
   apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
   consome `useTableFilter` sem que o hook saiba da moldura). Hook que precisa do tipo de um
-  componente está desenhado ao contrário — quem depende é o componente. (P-25)
+  componente está desenhado ao contrário — quem depende é o componente.
 - **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
   no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
   Sem documento obrigatório → `no_idoneo`.

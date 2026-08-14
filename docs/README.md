@@ -92,7 +92,9 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     instrução (o agente obedecia quando lembrava); `.claude/rules` com `paths:` é mecanismo (carrega
     sozinho e volta depois da compactação). Mesma regra, custo zero de disciplina. Vale para o resto:
     lei que precisa valer sempre quer Arch test ou hook, não parágrafo. Enquanto o mecanismo não
-    existe, a lei é instrução — e isso vai registrado como pendência (P-04), não como conforto.
+    existe, a lei é instrução — e isso vai registrado como débito com gatilho, não como conforto. O
+    caso vivo é a §5.3: `generated.ts` não se edita à mão, e o `globalIgnores` do lint só tira o
+    arquivo do corte, não impede edição (linha em `docs/superpowers/backlog.md`, §Débitos técnicos).
 
 15. **Migration verde em sqlite pode falhar em MySQL — o gate prova contra o engine real.** No Bloco
     6a, `student_client_logs` tinha uma coluna gerada STORED (`open_link_student_id`, que garante "1

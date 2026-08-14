@@ -152,11 +152,24 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
   — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;
   levantado no segundo review (2026-08-01) porque o 422 novo de contatos tem uma única mensagem e ela é
   a que o cliente vê. Exige decisão do João sobre o idioma canônico antes de valer a pena unificar.
-- **Guardrail das leis §5 (P-04).** Leis invioláveis hoje são instrução em `CLAUDE.md`, não mecanismo
-  — "lei que precisa valer sempre quer Arch test ou hook, não parágrafo" (lição 14). Instalar Pest
-  Arch tests cobrindo DDD-lite/sem-Repository, auditoria só na aplicação e demais leis testáveis no
-  backend, mais `eslint-boundaries` para a regra de dependência do frontend (features não importam
-  PrimeReact direto nem outra feature). Gatilho em `pendencias.md` P-04: reavaliar em 2026-08-15.
+- **Guardrail das leis §5 — resíduo: a §5.3 segue sem mecanismo.** A linha original pedia Arch tests
+  no backend mais `eslint-boundaries` no frontend; **as duas partes nomeadas existem** e foram
+  remedidas em 2026-08-14 contra `977586e`, não herdadas de relatório: `PersistenceLawsTest` cobre
+  §5.1 (classe `Repository` sobre Eloquent), §5.2 (`CREATE TRIGGER`/`unprepared()` em `database/` e
+  `app/`), a escrita de pivot sem auditoria e a coleção nested read-write — quatro testes, com o
+  escape da primeira declarado no docblock do próprio arquivo (a exclusão de `QueryBuilders/` é por
+  path, então um `FooRepository.php` dentro dela escaparia; reprovar por semelhança de nome mataria
+  `TurmaQueryBuilder`, que é o padrão do ADR-02); e a §5.6 virou
+  `no-restricted-imports` no `eslint.config.js`, nas **três** fronteiras (feature→PrimeReact,
+  feature→feature em quatro grafias, `shared/`→feature), por mecanismo diferente do
+  `eslint-boundaries` que a linha nomeava e com o mesmo efeito. **O que falta é a §5.3:**
+  `generated.ts` não se edita à mão, e o único mecanismo hoje é `globalIgnores` no lint
+  (`eslint.config.js:158`), que apenas **tira o arquivo do corte** — não impede edição nenhuma. As
+  §5.4 (Sanctum), §5.5 (RN-01), §5.7 (financeiro) e §5.8 (DoD) seguem sem guarda e sem desenho
+  medido, então não entram aqui como promessa. Saída: o próximo bloco que tocar o pipeline do
+  `typescript:transform` decide a forma — teste que roda o transform e compara com o commitado é a
+  candidata óbvia, e ela reprova sozinha se alguém editar à mão. DoD é a sonda: editar
+  `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
 - Decidir assimetria entre camadas: a UI não consegue voltar a zero principais, mas o backend
   aceita zero.
 - Consolidar as migrations adicionais nas originais antes de subir para produção, conforme decisão
