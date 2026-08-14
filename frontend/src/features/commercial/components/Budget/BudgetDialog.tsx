@@ -31,6 +31,12 @@ export function BudgetDialog({
       onHide={onHide}
       onSubmit={submit}
       pending={pending}
+      // Sem lista utilizável não há `client_id` para escolher, e o create sai com
+      // o `0` do form vazio — POST inválido por construção, respondido com 422.
+      // O gêmeo `StudentDialog` já gateava assim, e o `disabled` do `CrudDialog`
+      // documenta exatamente este caso (review do BD-6, Q-4). Em `edit` o cliente
+      // é imutável e nem entra na conta.
+      disabled={isCreate && clients.unusable}
       submitLabel={isCreate ? t('budget.create') : undefined}
     >
       <FormErrorBanner message={generalError} />
