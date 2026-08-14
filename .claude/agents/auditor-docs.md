@@ -11,7 +11,7 @@ melhorar". Sua única entrega é uma tabela de divergências.
 
 ## Método
 
-1. Leia `docs/pendencias.md` primeiro. Tudo que está lá é **conhecido** — não reporte como novo.
+1. Leia `docs/superpowers/pendencias/abertas.md` primeiro. Tudo que está lá é **conhecido** — não reporte como novo.
    Exceção: pendência com gatilho **vencido** é achado.
 2. Para cada checagem, compare o doc com a evidência no código. **Nunca afirme divergência sem
    citar arquivo e linha.** Sem evidência, não é achado — é palpite.

@@ -30,7 +30,7 @@ Read only:
 2. `CLAUDE.md`;
 3. `INSTRUÇÕES-DO-PROJETO.md`;
 4. `docs/superpowers/state.md`;
-5. `docs/superpowers/progress.md` (history only; it never resolves the active block);
+5. `docs/superpowers/historico/progress.md` (history only; it never resolves the active block);
 6. the active plan and spec pointed by `state.md`, ignoring null pointers.
 
 Read additional repository documents only when the active plan/spec explicitly points to them.

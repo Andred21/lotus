@@ -180,7 +180,7 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
 >
 > O ponto 5 (2026-08-11) **ainda não está espelhado** no Drive — conferido no `/fechar-sprint` de
 > 2026-08-12, que também mediu por que não fechou ali: as ferramentas de Drive do agente são de
-> leitura, não de escrita. Rastreado como **P-31** em `docs/pendencias.md`.
+> leitura, não de escrita. Rastreado como **P-31** em `docs/superpowers/pendencias/abertas.md`.
 
 ## ADR-17 — Código de negócio para Orçamento/Cotação (rastreio manual do cliente)
 
