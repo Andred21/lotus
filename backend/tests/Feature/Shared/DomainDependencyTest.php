@@ -55,8 +55,12 @@ class DomainDependencyTest extends TestCase
         // apenas contrato próprio. A Task 2 abre, import a import, as quatro
         // superfícies de Operation usadas por OperationMetricsQuery: Turma, os
         // dois enums e TurmaHabilitacaoService (D8 — habilitação não se duplica).
-        // As próximas tasks só acrescentam o que seus `use` efetivamente medirem.
+        // A Task 3 acrescenta Quote e QuoteStatus para os KPIs e pendências
+        // comerciais. As próximas tasks só acrescentam o que seus `use`
+        // efetivamente medirem.
         'Dashboard' => [
+            'Commercial\Enums\QuoteStatus',
+            'Commercial\Models\Quote',
             'Operation\Enums\TurmaDocumentType',
             'Operation\Enums\TurmaStatus',
             'Operation\Models\Turma',
