@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: falha-vs-lista-vazia
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-falha-vs-lista-vazia-design.md
 active_plan: docs/superpowers/plans/2026-08-14-falha-vs-lista-vazia.md
@@ -172,6 +172,28 @@ pergunta direta ao João, não aqui.
 
 **Estado: `ready_for_execution`.** `/executar-bloco falha-vs-lista-vazia` exige instrução posterior
 do João.
+
+### Execução — 2026-08-14: início
+
+`/executar-bloco falha-vs-lista-vazia` validou as âncoras (spec, plano, `context_packet` `null`
+coerente com a ausência medida em §1.1, Git limpo em `3bebb39`, sem divergência) e confirmou o gate
+main tree/worktree: a decisão de main tree já estava tomada em `state.md` na Seleção de 2026-08-14
+("O main tree venceu por ausência de disputa"), então nenhuma worktree nova foi criada.
+
+**O mesmo conflito do BD-4, do `rastro-unicidade-e-gates` e do login reapareceu, e foi resolvido do
+mesmo jeito:** o plano recomenda `subagent-driven-development`; a sessão tem regra de não chamar o
+Agent tool sem pedido. Escalado ao João via pergunta direta — **subagent-driven-development**, com
+Agent tool autorizado para este bloco.
+
+Pre-flight scan do plano (6 tasks contra os Global Constraints e a spec): limpo, sem contradição —
+as projeções de arquivo/teste por task batem entre si e com o total final, e a duplicação estrutural
+dos dois ramos do `InlineLoadState` é decisão de design da spec, não achado a escalar.
+
+Baseline reproduzido nesta branch, não herdado: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**32 arquivos / 163 testes** — bate com o baseline do plano. Ledger local reiniciado em
+`.superpowers/sdd/progress.md` (o anterior era do `login-fora-do-adr16`, já fechado).
+
+**Estado:** `executing`.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
