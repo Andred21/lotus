@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T13:45:00-03:00
+updated_at: 2026-08-14T13:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -115,6 +115,44 @@ derivado.
 **Frontend puro por escopo declarado: a P-03 não dispara.** O bloco é apresentacional, e o único
 caminho que tocaria backend é a alternativa (b) da decisão 1 (alargar DTO, `generated.ts`, lei §5.3)
 — que é justamente uma das cinco decisões que o planejamento tem de fechar, não um dado do bloco.
+
+### Context Packet — 2026-08-14: `partial`, e a rota se pagou
+
+Packet em `docs/superpowers/context-packets/celula-de-identidade.md`, gerado pelo Codex read-only
+com a skill `lotus-context-packet`. **Contrato validado item a item, não aceito de chegada:**
+marcadores exatos, frontmatter completo com `plan_path`/`spec_path` corretamente em `null`,
+**8 key facts** (o teto exato da skill), `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum
+staleness trigger apontando para hash de proveniência ou para a própria transição promotora — que é
+a armadilha que a skill documenta.
+
+**Os quatro hashes de proveniência foram remedidos aqui e batem:** `base_commit`
+`fb443ee41af6…`, `state_blob_sha` `f4ac80fc…`, `progress_blob_sha` `35d631aa…` e o HEAD do BD-6
+`d20bebc78aa9…`. Foram obtidos, não adivinhados.
+
+**A rota que o João escolheu contra a medição se pagou, e o retorno é o oposto do esperado.** O
+packet consultou as três fontes canônicas do Drive por **file ID** (`tela-pessoas.md`,
+`tela-turmas.md`, `tela-servicos.md`) e a base canônica do Notion por **collection ID** — e o achado
+é que **nenhuma delas prescreve célula de identidade, uso de foto, fallback sem imagem, fusão de
+coluna ou tratamento de N redatores**. As cinco decisões abertas do item 4 continuam abertas, agora
+com **prova de ausência** em vez de suposição de ausência: o brainstorming as fecha com o João
+sabendo que não há respaldo externo a contrariar. Um único sinal de aceite externo apareceu, e é
+restritivo: a task `388bc960-3dfa-8188-b051-e0f4feb08943` exige que a lista de designação **continue
+filtrada por habilitação** — decide só isso, e não a aparência do card ou do picker.
+
+**As duas capturas viraram lacuna declarada, não fonte `unavailable`**, e a distinção é a que a
+skill exige: elas não têm arquivo, ID nem path, e não existe locator de Figma nos artefatos
+canônicos. Consequência escrita no packet: **não há aceite por equivalência visual** neste bloco.
+Isso não bloqueia o planejamento — vira `## Deferred`.
+
+**Uma afirmação do packet foi medida e reprovou, e a correção está no próprio arquivo.** Ele
+afirmava em `## Constraints` que o main tree tinha WIP não commitado em `CourseStep.tsx`; medido,
+`git -C /home/jvbat/projetos/lotus status --short` devolve **vazio** com HEAD em `d20bebc`. A
+cláusula saiu e a correção ficou registrada no cabeçalho do packet, com o resto verbatim — packet
+revisado é packet cujo revisor mediu, não cujo revisor confiou.
+
+**`status: partial` prossegue** pela regra da própria skill: fonte não canônica indisponível não
+bloqueia, e o fato faltante que bloquearia — uma regra de negócio ou critério de aceite — não
+existe, porque as cinco decisões são de apresentação e pertencem ao João.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
