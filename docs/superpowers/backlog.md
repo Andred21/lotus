@@ -46,7 +46,12 @@
 > em negrito da própria linha — **12 débitos desta página não têm número**, e numerá-los é decisão
 > de formato do João, não do agente.
 >
-> Ordem entre blocos: resta o **BD-6**. O **BD-5** foi entregue em 2026-08-13 e saiu desta lista com
+> Ordem entre blocos: **a fila está vazia** — o **BD-6** foi entregue em 2026-08-14 e saiu desta lista
+> com o débito **B-7** que ele cobria por inteiro; o que ele **não** remediu contra HEAD (o ramo de
+> catálogo vazio, medido na execução e não depois das correções) ficou na **P-40**, e a premissa
+> errada do plano sobre RBAC no `GET /api/courses`, na **P-39**. Os dois sítios do mesmo padrão que
+> ficaram fora de escopo (`RedatorCourseSelector`, `CourseRedatoresSection`) seguem em
+> `## Débitos técnicos`, com o fix de uma linha já descrito. O **BD-5** foi entregue em 2026-08-13 e saiu desta lista com
 > os dois débitos que cobria por inteiro (a absorção do trio da foto nos 4 diálogos e os 4 hooks fora
 > do `useCrudForm`, cada um com o critério agora decidido); do **Q-4** ele pagou só o lado do
 > frontend, e o resíduo de backend — chave `#[Computed]` aceita no corpo com 200 em silêncio — ficou
@@ -60,7 +65,7 @@
 > (revisão de arquitetura do backend de 2026-08-12) e **não entram nessa ordem**: são backend,
 > enquanto BD-5 e BD-6 eram frontend, e a fila deles era **BD-8 → BD-9** entre si — os **dois foram
 > entregues em 2026-08-13** e saíram desta lista (`progress.md`), então a fila de backend está
-> **vazia** e o que resta em fila é o `BD-6`, sozinho. Promoção segue sendo explícita do
+> **vazia** — como a de frontend, desde o BD-6. Promoção segue sendo explícita do
 > João, como sempre. O **BD-1** foi entregue
 > em 2026-08-11 e saiu desta lista (`progress.md`); o **BD-2** foi entregue em 2026-08-11 e saiu
 > junto — a decisão do 5.2b sobre `GET /api/roles`, que ele declarou fora de escopo, continua em
@@ -69,22 +74,6 @@
 > pessoal que a tabela nova passou a guardar ficou na **P-33** (nasceu como segunda `P-30` e foi
 > renumerada no fechamento do BD-3). A ordem dentro de cada bloco é parte
 > do bloco, não sugestão.
-
-### BD-6 · Falha que se disfarça de lista vazia
-
-Bloco separado porque **muda comportamento de propósito** — nenhum DoD de "comportamento idêntico"
-cabe aqui, que é exatamente por que o João o manteve fora do bloco de origem.
-
-Cobre: **B-7**.
-
-Ordem:
-1. distinguir loading / erro-com-Reintentar / vazio de verdade no passo 1 do wizard de cotação;
-2. os dois `?? '—'` da versão branda do mesmo padrão.
-
-**Atualização de referência (2026-08-10, sem remover a original):** o `?? []` saiu de
-`QuoteWizard.tsx:23` e hoje vive em `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que
-documenta o próprio débito no arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33`
-não existe mais — o `?? '—'` está em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
 
 ### Fora dos BDs — travado em decisão do João
 
@@ -158,20 +147,6 @@ divergência crítica de UI; **não são** — são módulo a construir, e nenhu
      faltando", e é o único lugar onde o registro aparece antes do clique. O diálogo do mesmo
      registro explica a falha; a linha, não.
 
-- **B-7 — falha de GET de cursos se disfarça de lista vazia no `QuoteWizard`.**
-  `QuoteWizard.tsx:23` usa `courses.data ?? []`: um 403/rede na listagem de cursos deixa o passo 1
-  sem nenhum curso, `canAdvance` nunca liga e **nenhuma mensagem aparece** — o usuário lê "não há
-  cursos" onde houve falha. `QuotesList.tsx:33` tem a versão branda do mesmo (`?? '—'` no nome do
-  curso). É a D16/D11 outra vez, agora em `commercial`; o `BudgetsTable.tsx:36` já trata (a falha da
-  query auxiliar conta como falha da tabela). Achado B-7 do `/revisar-frontend` de `commercial`
-  (2026-08-03), **mantido fora do bloco por decisão do João**: muda comportamento de propósito e não
-  cabe num DoD de "comportamento idêntico". Saída: distinguir loading / erro-com-Reintentar / vazio
-  de verdade, como já se faz nas tabelas.
-  **Atualização de referência em 2026-08-10 (as citações originais ficam):** o `?? []` migrou de
-  `QuoteWizard.tsx:23` para `features/commercial/hooks/useQuoteCourseSearch.ts:15`, que documenta
-  este débito no próprio arquivo e **não** expõe `isError` de propósito; `QuotesList.tsx:33` não
-  existe mais — o `?? '—'` vive em `useQuotesListCourses.ts:10` e `useCommercialClients.ts:19`.
-  Coberto pelo **BD-6**.
 - **Q-6 — idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial escreve em
   PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`)
   — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente, não introduzido pelo bloco;
