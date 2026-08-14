@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: sprint-6-meu-perfil
+active_work_item: meu-perfil-backend-self-service
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: celula-de-identidade
-state_basis_commit: 9ed7351
-updated_at: 2026-08-14T18:35:00-03:00
+state_basis_commit: 84b0838
+updated_at: 2026-08-14T18:40:34-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,95 @@ updated_at: 2026-08-14T18:35:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `meu-perfil-backend-self-service` (Sprint 6 · Meu Perfil, bloco 1 de 2)
+
+### Seleção — 2026-08-14
+
+**Primeiro bloco da Sprint 6 (`backlog.md:66`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — e é
+a nona vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, login, `celula-de-identidade`, dashboard): o
+argumento era **título de seção** (`## Sprint 6 · Meu Perfil`), não slug promovido. Três decisões
+dele fecharam o gate: o slug `meu-perfil-backend-self-service` (a ordem escrita do backlog — backend
+antes do frontend); a **worktree `fix-frontend`** como área de trabalho, com branch
+`feat/meu-perfil-backend-self-service` nascida de `84b0838`; e a rota **`context_required`**,
+exatamente como o backlog exige para a Sprint 6.
+
+**A fonte externa EXISTE declarada, como na Sprint 5 e ao contrário dos BDs:** o backlog aponta o
+escopo canônico no Drive (`Planejamento/meu-perfil-escopo-funcional.md`) e a execução detalhada no
+Notion (EAP 8.5.1–8.5.9). Nenhuma rota direta a `ready_for_planning` se aplica; o Context Packet do
+Codex (`lotus-context-packet`, read-only) vem antes de qualquer brainstorming.
+
+**`state_basis_commit` passa de `9ed7351` a `84b0838`** — o merge do PR #52, HEAD atual da `main`.
+Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
+derivado.
+
+### Exceção declarada à invariante de um `active_work_item` — quarta ocorrência, e a primeira que é backend × backend
+
+**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-14**, e isto
+está escrito porque a invariante do topo deste arquivo diz o contrário. O
+`dashboard-backend-agregacoes` (Sprint 5, bloco 1 de 2) está em `workflow_state: executing` no main
+tree `/home/jvbat/projetos/lotus`, branch `feat/dashboard-backend-agregacoes` (`8c53f60`,
+`state_basis_commit: 1e40acb`), com **uma task commitada e WIP não commitado na Task 2**
+(`OperationMetricsQuery.php` e `OperationMetricsQueryTest.php` untracked,
+`DomainDependencyTest.php` modificado).
+
+**A diferença para as três ocorrências anteriores é que esta é a que a P-03 descreve.** BD-4 × BD-9,
+BD-5 × login e BD-6 × `celula-de-identidade` foram todas backend × frontend, e a P-03 não disparava
+por definição. Aqui **os dois blocos são de backend**, que é o gatilho literal e verificável da
+pendência (`pendencias/abertas.md:331-333`: "mais de um `active_work_item` de backend"). **O gatilho
+da P-03 venceu neste bloco.** Fechá-la é decisão separada do João — o registro entra aqui para não
+voltar como achado novo no review.
+
+**O dano que a P-03 descreve foi medido e já está mitigado por mecanismo existente, não por sorte.**
+O texto dela diz: "o stack monta o main tree e o teste rodaria contra o código errado". Medido com
+`docker inspect`, não deduzido:
+
+| Container | Monta | Serve |
+|---|---|---|
+| `lotus-app-1` | `/home/jvbat/projetos/lotus/backend` | main tree = dashboard |
+| `fix-frontend-app-1` | `/home/jvbat/projetos/fix-frontend/backend` | **esta worktree** |
+
+`fix-frontend-app-1` está `Up` e vive nas duas redes (`fix-frontend_default` + `lotus_default`),
+então alcança o MySQL e o MinIO do stack principal — é exatamente o arranjo construído durante o
+`celula-de-identidade` e ele sobreviveu. `php artisan test` neste container mede **esta** branch. O
+`fix-frontend-nginx` em `:8081` segue de pé para o e2e; `:8080` e `:5173` seguem do main tree.
+
+**A sobreposição foi medida antes da decisão, não depois — quatro pontos:**
+
+1. `frontend/src/shared/types/generated.ts` — **colisão certa, não provável.** O dashboard já
+   regenerou (+146 linhas commitadas, 21 DTOs e 5 enums); este bloco cria contrato próprio de perfil
+   e regenera de novo. Cada árvore produz o arquivo correto para o próprio backend; o conflito é no
+   merge, e o remédio é regenerar depois dele — mecânico, com precedente no merge do BD-6.
+2. `backend/tests/Feature/Shared/DomainDependencyTest.php` — **colisão provável.** É allowlist
+   compartilhada de arestas entre domínios, e o WIP do dashboard está justamente nela (`'Dashboard'`
+   ganhando quatro arestas para `Operation`). Se o resumo profissional do Redator ler Operation ou
+   Catalog de dentro de Identity, este bloco edita o mesmo array — chaves diferentes na mesma
+   estrutura, provável auto-merge, mesmo arquivo.
+3. `backend/app/Domains/**` — **zero colisão, medida.** O dashboard vive inteiro em
+   `Domains/Dashboard/` (27 arquivos, domínio novo); este bloco vive em `Domains/Identity/`. Nenhum
+   arquivo em comum.
+4. `backend/routes/api.php` — **zero colisão, e por mecanismo, não por acaso.** O arquivo tem 14
+   linhas e agrega por glob (`app_path('Domains/*/routes.php')`); cada domínio declara as próprias
+   rotas no próprio arquivo. Dashboard escreve em `Domains/Dashboard/routes.php`, este bloco em
+   `Domains/Identity/routes.php`.
+
+**Alternativa recusada por ele:** fechar o dashboard primeiro e só então promover a Sprint 6, o que
+manteria a invariante, respeitaria a ordem escrita do backlog e eliminaria as duas colisões na
+origem, ao custo de o bloco não começar hoje.
+
+### Superfície declarada do bloco, medida na abertura
+
+`SessionUserData` tem hoje **9 campos** (`id`, `uuid`, `name`, `email`, `type`, `is_active`, `roles`,
+`permissions`, `photo_url` — o último acrescentado pela extensão do `celula-de-identidade`). O
+backlog é explícito em **não inflar** este DTO: o contrato de perfil é próprio. `Identity/Data/` tem
+10 DTOs, e `RedatorDocumentData` já existe — a documentação profissional do Redator não nasce do
+zero. O que é self-service está fechado no backlog (`backlog.md:72-73`): nome, telefone, foto e a
+própria senha; **e-mail, RUT, role, permissões, `type` e `is_active` não são**.
+
+**Risco de review projetado ALTO** pelo gatilho binário do projeto: regenera `generated.ts` (lei
+§5.3), toca eixo de autenticação (troca da própria senha) e ownership de documento de Redator. A
+classificação final é do `/revisar-sprint`, não desta promoção.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
