@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: celula-de-identidade
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-celula-de-identidade-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-14-celula-de-identidade.md
 context_packet: docs/superpowers/context-packets/celula-de-identidade.md
 blocker: null
 last_completed_work_item: login-fora-do-adr16
 state_basis_commit: 0a1439f
-updated_at: 2026-08-14T16:40:00-03:00
+updated_at: 2026-08-14T17:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -186,6 +186,28 @@ a medição desmentiu o meu próprio quadro de custo e isso está dito na spec �
 incerteza real e ela é verificação obrigatória do plano: `redatores` é `array` sem
 `#[DataCollectionOf]`, e não está provado que o `WithTransformer` dispare ali — o teste prova que
 `redatores[0].photo_url` volta assinada, ou o campo passa a ser resolvido no `fromModel`.
+
+### Plano — 2026-08-14: 12 tasks, executor dividido
+
+Plano em `docs/superpowers/plans/2026-08-14-celula-de-identidade.md`. **Doze tasks, cada uma com
+entregável testável isolado.** Ordem obrigatória: 1–2 (backend) antes de 3 (`typescript:transform`);
+3 e 4 antes de 5–10 (os sítios precisam do TS e do componente); 11 depois de tudo; 12 é o gate.
+As tasks 5–10 são independentes entre si.
+
+**O executor é dividido por decisão do João (D12): `codex` nas tasks 1, 2 e 11 (`backend/**`),
+`claude` no resto.** Os `paths_autorizados` do Codex são cinco arquivos nomeados um a um, e
+`frontend/src/shared/types/generated.ts` **não está entre eles** — a lei §5.3 proíbe editá-lo à
+mão, e a garantia mais barata é o executor do backend não alcançar o arquivo. A regeneração é task
+do Claude.
+
+**A ordem "depois de teste" do pedido está no plano, não na cabeça de ninguém:** o
+`DemoPhotosSeeder` é a task 11, depois das dez tasks de conteúdo, porque sem ele a revisão visual
+exercitaria só o fallback de iniciais — o caminho `photo_url` → `SignedUrlTransformer` → `<img>`,
+que é exatamente o que este bloco acrescenta, ficaria sem prova.
+
+**A revisão visual entra no plano como lista fechada de 13 telas com o que provar em cada uma**
+(task 12, step 8). `/lotus-ui-review` tem `disable-model-invocation: true`: é passo do João, e
+planejá-lo agora é o que evita descobri-lo no gate, como no `login-fora-do-adr16`.
 
 ## Último item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
