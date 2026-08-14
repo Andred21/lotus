@@ -57,7 +57,9 @@ Nenhuma lei do `CLAUDE.md` §5 foi contrariada. Registro no ledger não autoriza
 inviolável; qualquer exceção exige decisão explícita do João Victor e referência dessa decisão.
 
 ## 7. Pendências
-`docs/pendencias.md`: algum gatilho venceu? Alguma pendência fechou (move para "Encerradas")?
+`docs/superpowers/pendencias/`: algum gatilho venceu? Alguma pendência fechou (a ficha sai de
+`abertas.md` e vai para `encerradas.md`, e a linha do índice em `README.md` acompanha as duas)?
+Alguma das encerradas já passou de 1 sprint e sai de vez?
 Alguma nasceu nesta sprint?
 
 ## 8. Arquivamento
@@ -69,10 +71,10 @@ Alguma nasceu nesta sprint?
 
 ## 9. Histórico e backlog
 
-- Registre a entrega em `docs/superpowers/progress.md` com desfecho em uma linha e referências
+- Registre a entrega em `docs/superpowers/historico/progress.md` com desfecho em uma linha e referências
   arquivadas. O arquivo continua sendo histórico, nunca estado operacional.
 - Mantenha no máximo dez entregas recentes. Ao exceder o limite, mova as mais antigas para
-  `docs/superpowers/progress-archive.md` preservando integralmente as linhas históricas.
+  `docs/superpowers/historico/progress-archive.md` preservando integralmente as linhas históricas.
 - Remova de `docs/superpowers/backlog.md` somente o item concluído.
 - Nunca selecione nem promova automaticamente o item seguinte, mesmo que a ordem pareça óbvia.
 

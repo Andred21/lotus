@@ -8,7 +8,7 @@ disable-model-invocation: true
 ## Âncoras de contexto (não pule)
 
 @docs/superpowers/state.md
-@docs/superpowers/progress.md
+@docs/superpowers/historico/progress.md
 
 Leia `state.md` antes de qualquer outra fonte. Leia `backlog.md` somente se
 `workflow_state: idle`; ele serve para o João escolher um item, nunca para o comando selecionar o

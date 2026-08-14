@@ -18,7 +18,7 @@ Migrations globais e cronológicas em `database/migrations/` (FK cruza domínios
 - **Schema em inglês** (colunas descritivas). Exceção: **`redator` é nome próprio do domínio** (como
   "RUT") — tabela `redatores`, model `Redator`, FK `redator_id` ficam em PT (casam com morph map,
   pasta Identity, Notion). *Divergência aberta: o `docs/der-fisico.md` ainda está em PT/ES —
-  ver `docs/pendencias.md`.*
+  ver `docs/superpowers/pendencias/abertas.md`.*
 - **Extensão 1:1 de User** (Client, Redator): `extends Model` + `belongsTo(User)`, `user_id`
   **unique** FK cascade. NÃO `extends User`.
 - **RUT vive em `users.rut`** (já `unique`) — sem coluna duplicada nas extensões. Validação =

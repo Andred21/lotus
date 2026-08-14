@@ -30,7 +30,7 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **SEMPRE, PRIMEIRO:** `docs/superpowers/state.md` — fonte única da etapa atual, do trabalho
   ativo e da próxima ação permitida. Não deduza fase por commits, existência de arquivos, ordem do
   backlog ou texto do `progress.md`.
-- **DEPOIS:** `docs/superpowers/progress.md` — histórico curto e resultado das entregas recentes.
+- **DEPOIS:** `docs/superpowers/historico/progress.md` — histórico curto e resultado das entregas recentes.
   Ele não controla o workflow.
 - **EM SEGUIDA, PELOS PONTEIROS DO ESTADO:** leia `context_packet` (quando não for `null`),
   `active_spec` e `active_plan` (quando não forem `null`). O packet vem antes de qualquer consulta
@@ -47,8 +47,13 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 | `docs/der-fisico.md`                | criar migration/model ou mexer em schema                        |
 | `docs/estrutura-monolito.md`        | criar arquivo novo — para saber ONDE ele vai                    |
 | `docs/README.md` (lições)           | iniciar feature — não repetir erro já mapeado                   |
-| `docs/pendencias.md`                | antes de reportar divergência de doc — pode já estar registrada |
+| `docs/superpowers/pendencias/`      | antes de reportar divergência de doc — pode já estar registrada |
 | `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
+
+> **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
+> (etapa atual) e `backlog.md` (fila). O resto mora em pasta: `pendencias/` (`README.md` é o índice,
+> `abertas.md` a ficha de cada uma, `encerradas.md` o rastro de 1 sprint), `historico/`
+> (`progress.md` e `progress-archive.md`), `plans/`, `specs/`, `context-packets/` e `audits/`.
 
 > Planejamento canônico: Google Drive (`Viagem Chile/Projetos/Lotus.cl/V2`).
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).
@@ -81,7 +86,7 @@ igual, com `/`, mas não são a mesma coisa: comando é prompt fixo, skill carre
 | `/auditar-docs` | skill | auditoria de doc vs. código (reporta, não corrige) |
 
 Planos/specs ativos em `docs/superpowers/`; concluídos em `plans/archive/` e `specs/archive/`.
-Histórico curto: `docs/superpowers/progress.md` (§3).
+Histórico curto: `docs/superpowers/historico/progress.md` (§3).
 
 Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
 próprios comandos conforme `state.md`; os contratos vivem em `.agents/skills/`.

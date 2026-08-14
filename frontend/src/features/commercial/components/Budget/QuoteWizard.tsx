@@ -17,7 +17,7 @@ export function QuoteWizard({
   const { t } = useTranslation()
   const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } =
     useQuoteForm(budgetId, quote, onHide)
-  const { list, search, setSearch } = useQuoteCourseSearch()
+  const courses = useQuoteCourseSearch()
 
   const footer =
     step === 1 ? (
@@ -66,9 +66,7 @@ export function QuoteWizard({
 
       {step === 1 ? (
         <CourseStep
-          list={list}
-          search={search}
-          onSearch={setSearch}
+          courses={courses}
           selectedId={form.course_id}
           onSelect={(id) => set('course_id', id)}
         />

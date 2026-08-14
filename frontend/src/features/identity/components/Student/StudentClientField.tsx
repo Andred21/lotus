@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AppButton, AppDropdown, FormField } from "@shared/ui";
+import { AppDropdown, FormField, InlineLoadState } from "@shared/ui";
 import type { DialogMode } from "@shared/lib";
-import { dangerText } from "@shared/styles/tokens";
 
 /** Cliente é imutável depois do cadastro: fora do `create` o campo é texto, não
  * input desabilitado — `<AppInputText disabled>` cortava o nome do cliente, que
@@ -13,9 +12,10 @@ export function StudentClientField({
   readOnlyLabel,
   error,
   options,
+  isLoading,
   isError,
   errorDetail,
-  showEmptyHint,
+  isEmpty,
   unusable,
   refetch,
   onChange,
@@ -27,9 +27,10 @@ export function StudentClientField({
   readOnlyLabel: string;
   error?: string;
   options: { label: string; value: number }[];
+  isLoading: boolean;
   isError: boolean;
   errorDetail?: string | null;
-  showEmptyHint: boolean;
+  isEmpty: boolean;
   unusable: boolean;
   refetch: () => void;
   onChange: (id: number) => void;
@@ -44,41 +45,24 @@ export function StudentClientField({
         readOnly={mode !== "create"}
         value={readOnlyLabel}
       >
+        {/* Carregando, o controle fica desabilitado E dá o sinal: sem `loading`
+         * ele vira controle morto sem explicação — o disfarce que o BD-6
+         * existe para matar, na escala de um campo (review do BD-6, Q-3). */}
         <AppDropdown
           value={value}
           disabled={unusable}
+          loading={isLoading}
+          aria-busy={isLoading}
           options={options}
           onChange={(e) => onChange(e.value as number)}
           className="w-full"
         />
-        {isError && (
-          <p
-            className="mt-1 flex items-center justify-between gap-2 text-xs"
-            style={{ color: dangerText }}
-          >
-            <span>
-              {errorDetail ?? t("common.loadErrorHint")}
-            </span>
-            <AppButton
-              label={t("common.retry")}
-              text
-              onClick={refetch}
-            />
-          </p>
-        )}
-        {showEmptyHint && (
-          <p
-            className="mt-1 flex items-center justify-between gap-2 text-xs"
-            style={{ color: "var(--text-color-secondary)" }}
-          >
-            <span>{t("student.noClientsAvailable")}</span>
-            <AppButton
-              label={t("common.retry")}
-              text
-              onClick={refetch}
-            />
-          </p>
-        )}
+        <InlineLoadState
+          error={isError ? (errorDetail ?? t("common.loadErrorHint")) : null}
+          emptyHint={isEmpty ? t("student.noClientsAvailable") : null}
+          retryLabel={t("common.retry")}
+          onRetry={refetch}
+        />
       </FormField>
       {mode === "edit" && (
         <p

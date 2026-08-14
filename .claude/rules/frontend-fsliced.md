@@ -121,6 +121,17 @@ exceção. Na dúvida, siga o vizinho da mesma
   `disabled={readOnly || !isCreate}` e o par estático `<AppInputText disabled readOnly />`, este
   último com dado de peso legal truncado em input cinza). Uma catraca que enumera em vez de medir
   nasce com a exceção embutida e ninguém a vê, porque ela fica **verde**.
+- **O que ramifica a tela é o DADO que falta, não o `status` da query.** `isError` cru substituindo
+  a lista apaga cache utilizável: com `staleTime` 0 toda montagem refaz o GET, e um refetch falho
+  mantém `data` populado enquanto `status` vira `error` (medido por sonda no review do BD-6). Por
+  isso `useLoadState` (`shared/hooks/useLoadState.ts`) expõe `failedWithoutData` — falhou **e** não
+  há nada em cache — e é **ele** que autoriza trocar a tela pelo `AppErrorState`. Com cache em mão,
+  a falha vira aviso AO LADO da lista (`InlineLoadState`), que continua utilizável e preserva o que
+  o usuário já digitou. O simétrico vale para o aviso: só anuncie a falha que **custou** alguma
+  coisa na tela — a `QuotesList` avisava com `isError` cru e anunciava falha invisível quando o
+  cache resolvia todos os nomes. Estado de carga de lista **não se deriva à mão na feature**: vem do
+  `useLoadState`, que é onde a política "falhou" vs. "veio vazia" mora — seis hooks a repetiam e ela
+  já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.
@@ -170,7 +181,7 @@ exceção. Na dúvida, siga o vizinho da mesma
   apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
   consome `useTableFilter` sem que o hook saiba da moldura). Hook que precisa do tipo de um
-  componente está desenhado ao contrário — quem depende é o componente. (P-25)
+  componente está desenhado ao contrário — quem depende é o componente.
 - **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
   no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
   Sem documento obrigatório → `no_idoneo`.

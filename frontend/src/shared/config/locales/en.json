@@ -266,6 +266,7 @@
     "filterAll": "All",
     "code": "Code",
     "client": "Client",
+    "noClientsAvailable": "No clients registered yet. Register a client first.",
     "quoteCount": "Quotes",
     "totalValue": "Total value",
     "status": "Status",
