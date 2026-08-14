@@ -13,6 +13,15 @@ export function useCommercialClients() {
      * o interceptor não populou o corpo: `isError` sem `error` ainda é falha, e
      * devolver `null` a esconderia. */
     loadError: clients.isError ? (clients.error ?? ({} as ProblemDetails)) : null,
+    isError: clients.isError,
+    errorDetail: clients.error?.detail,
+    /** Lista que carregou e veio vazia de verdade — nem falha, nem carregando.
+     * Tem mensagem própria, distinta da de falha. */
+    showEmptyHint: !clients.isError && clients.isSuccess && clients.data.length === 0,
+    /** Sem lista utilizável: carregando, falhou sem cache, ou veio vazia. `[]` é
+     * truthy, então `!clients.data` deixaria passar lista vazia. Um refetch que
+     * falha com dado já em cache NÃO trava o form (precedente `03280c6`). */
+    unusable: !clients.data?.length,
     refetch: () => {
       void clients.refetch()
     },

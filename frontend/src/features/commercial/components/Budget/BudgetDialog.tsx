@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner, InlineLoadState } from '@shared/ui'
 import type { BudgetData } from '@shared/types/generated'
 import { useBudgetForm, type BudgetDialogMode } from '../../hooks/useBudgetForm'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
@@ -19,7 +19,7 @@ export function BudgetDialog({
   const { form, set, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = useBudgetForm(
     budget, mode, onHide, onCreated,
   )
-  const { clientOptions } = useCommercialClients()
+  const clients = useCommercialClients()
 
   const isCreate = mode === 'create'
 
@@ -55,12 +55,22 @@ export function BudgetDialog({
           label={t('budget.client')}
           error={fieldErrors?.client_id?.[0]}
           readOnly={readOnly || !isCreate}
-          value={clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
+          value={clients.clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
         >
           <AppDropdown
             value={form.client_id}
-            options={clientOptions}
+            options={clients.clientOptions}
+            disabled={clients.unusable}
             onChange={(e) => set('client_id', e.value as number)}
+          />
+          {/* Dropdown vazio sem explicação é o disfarce do BD-6: quem não
+           * consegue listar clientes precisa LER o motivo e poder reintentar,
+           * em vez de concluir que não há cliente cadastrado. */}
+          <InlineLoadState
+            error={clients.isError ? (clients.errorDetail ?? t('common.loadErrorHint')) : null}
+            emptyHint={clients.showEmptyHint ? t('budget.noClientsAvailable') : null}
+            retryLabel={t('common.retry')}
+            onRetry={clients.refetch}
           />
         </FormField>
 

@@ -266,6 +266,7 @@
     "filterAll": "Todos",
     "code": "Código",
     "client": "Cliente",
+    "noClientsAvailable": "No hay clientes registrados. Registra un cliente primero.",
     "quoteCount": "Cotizaciones",
     "totalValue": "Valor total",
     "status": "Estado",
