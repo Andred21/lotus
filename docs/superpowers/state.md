@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
 active_plan: docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-s
 blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T20:39:04-03:00
+updated_at: 2026-08-14T21:15:50-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -281,6 +281,23 @@ demais consomem o contrato que elas fixam.
 
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco meu-perfil-backend-self-service`,
 em instrução posterior — o planejamento não implementa.
+
+### Execução — 2026-08-14: início, técnica `executing-plans`
+
+`/executar-bloco meu-perfil-backend-self-service` validou as âncoras (spec, plano e packet no
+disco; Git limpo na branch `feat/meu-perfil-backend-self-service`; `active_plan` cobrindo o work
+item) e abriu com `fix-frontend-app-1` já `Up` (3h), montando esta worktree — a P-03 já estava
+mitigada, sem novo `docker compose up` necessário.
+
+**Técnica: `executing-plans`, não `subagent-driven-development`.** As oito tasks são sequenciais
+por contrato (3 consome 1+2, 4 consome 2+3, 8 consome todas) — não há paralelismo genuíno a
+explorar — e o ambiente restringe o uso do Agent tool a pedido explícito. `executor: claude` no
+plano já cobre a delegação ao Codex; nenhuma reabertura desse handoff aqui.
+
+**Task 1 (enum de validade documental) completa** (commit a seguir). Vermelho medido antes do
+código: `Call to undefined method RedatorDocumentType::isSelfService()`. 7 testes verdes depois do
+enum `DocumentValidityStatus` e dos dois métodos em `RedatorDocumentType`. Pint `passed` nos três
+arquivos.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
