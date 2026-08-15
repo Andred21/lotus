@@ -57,7 +57,7 @@ export function Sidebar() {
       </div>
 
       {!collapsed && roleKey && (
-        <p className="px-4 pb-2 text-xs font-semibold tracking-wider text-slate-400">
+        <p className="px-4 pb-2 text-xs font-semibold tracking-wider text-(--shell-ink-muted)">
           {t(roleKey)}
         </p>
       )}
@@ -68,7 +68,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {!collapsed && <div className="px-4 py-3 text-sm text-slate-400 text-center">{APP_VERSION}</div>}
+      {!collapsed && <div className="px-4 py-3 text-sm text-(--shell-ink-muted) text-center">{APP_VERSION}</div>}
     </AppSidebar>
   )
 }

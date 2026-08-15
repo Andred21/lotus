@@ -336,15 +336,41 @@ export default defineConfig([
   // catraca (review do BD-3, Q-4) — `shared/ui` é justamente a camada onde a cor
   // DEVE vir do tema e onde um wrapper novo alcança todas as telas de uma vez.
   //
-  // `src/app/**` segue sem a regra de propósito, e isso NÃO é esquecimento: o
-  // shell (`Sidebar`/`AppLayout`/`AppHeader`) é exceção aprovada pelo João em
-  // 2026-07-26 e registrada no `backlog.md` ("Fora: o shell"), com 3 classes de
-  // paleta vivas lá. Pôr a regra sem converter o shell só produziria `ignores`
-  // do tamanho da pasta inteira.
+  // `src/app/**` ficou fora desta regra até 2026-08-15 por exceção aprovada pelo
+  // João em 2026-07-26 ("Fora: o shell", backlog.md): o shell tinha 3 classes de
+  // paleta vivas e pôr a regra sem convertê-las só produziria um `ignores` do
+  // tamanho da pasta. A exceção acabou — o bloco logo abaixo liga a regra lá, e
+  // os 3 sítios foram convertidos para `--shell-ink`/`--shell-ink-muted`.
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
       'no-restricted-syntax': ['error', DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED],
+    },
+  },
+  // A catraca de cor entra em `src/app/**` (D11 de
+  // `dashboard-frontend-central-controle`). Era a P-34: a regra já rodava em
+  // `src/features/*/components/**`, `src/features/**` e `src/shared/**`, e o
+  // shell era a ÚNICA camada sem ela. O que mudou é que o Dashboard escreve 8
+  // arquivos novos em `src/app/pages/Dashboard/`, que nasceriam sem guarda de
+  // cor numa camada inteira sem guarda nenhuma.
+  //
+  // Nasce SEM `ignores`: os 3 sítios do shell (Sidebar.tsx:60/71,
+  // SidebarItem.tsx:24) foram convertidos na mesma task. A população foi medida
+  // com o PRÓPRIO seletor — `npx eslint 'src/app/**/*.tsx' --rule '{...}'`
+  // acusava exatamente 3 e passa a acusar 0 —, não com o grep que originou o
+  // débito (frontend-fsliced.md: grep acha a grafia, o seletor acha o defeito).
+  //
+  // Só `COR_HARDCODED`, e não o array inteiro: `DISABLED_READONLY` é sobre campo
+  // de formulário e o shell não tem nenhum — regra que nasce sem população não
+  // guarda nada. Os 3 bans de query também não entram: `app/` é justamente onde
+  // a composição cruzada é legítima (o AppRouter importa 5 features).
+  //
+  // Bloco próprio, sem risco do merge raso (Q-2, 2026-08-04): nenhum outro bloco
+  // deste arquivo casa `no-restricted-syntax` em `src/app/**`.
+  {
+    files: ['src/app/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', COR_HARDCODED],
     },
   },
 ])
