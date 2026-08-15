@@ -2,7 +2,9 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Identity\Actions\UpdateProfileAction;
 use App\Domains\Identity\Data\ProfileData;
+use App\Domains\Identity\Data\ProfileUpdateData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -21,5 +23,10 @@ class ProfileController extends Controller
     public function show(Request $request): ProfileData
     {
         return ProfileData::fromUser($request->user());
+    }
+
+    public function update(ProfileUpdateData $data, Request $request, UpdateProfileAction $action): ProfileData
+    {
+        return ProfileData::fromUser($action->execute($request->user(), $data));
     }
 }

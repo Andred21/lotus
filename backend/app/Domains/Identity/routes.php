@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil próprio (spec D4): recurso próprio, fora do grupo
     // `permission:identity.user.update`. `/me` continua servindo só a sessão.
     Route::get('profile', [ProfileController::class, 'show']);
+    Route::put('profile', [ProfileController::class, 'update']);
 
     // ->parameters: Str::singular('redatores') dá "redatore" (inflector em
     // inglês não reconhece o plural em português) — força o nome do parâmetro
