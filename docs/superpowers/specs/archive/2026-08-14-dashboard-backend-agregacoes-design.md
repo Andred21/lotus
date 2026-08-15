@@ -82,7 +82,9 @@ backend/app/Domains/Dashboard/
 
 `GET /api/dashboard/metricas` — `auth:sanctum`, sem middleware de permissão (D7).
 Query params: `period_start`, `period_end` (datas ISO; default = últimos 12 meses). Validação no
-DTO de request; inválido (formato, `start > end`) sobe ao handler global RFC 7807 como 422.
+DTO de request; inválido (formato, `start > end`) sobe ao handler global RFC 7807 como 422. A
+comparação é da janela **resolvida** — um limite só, invertido contra o default do outro, também é
+422, não 200 com série vazia.
 O período aplica-se **somente** a séries e rankings (D3).
 
 ### 4.2 DTOs raiz
@@ -91,17 +93,26 @@ O período aplica-se **somente** a séries e rankings (D3).
 
 | Seção | Conteúdo | Gate |
 |---|---|---|
-| `kpis` | os 4 KPIs do §3.1 | operação sempre; cotações/UF sob gate comercial |
+| `kpis` | os 4 KPIs do §3.1 | turmas sob `operation.turma.view`; cotações/UF sob gate comercial; certificados sob gate de certificação — cada campo nulo = não autorizado |
 | `pendencias` | lista unificada (§3.2), itens `PendingItemData` | por permissão do módulo de origem |
-| `alertas` | lista (§3.3), itens `AlertData` | idem |
-| `pipeline` | etapas do funil com contagem (§3.4) | etapas comerciais sob gate comercial |
+| `alertas` | lista (§3.3), itens `AlertData` | por permissão do módulo de origem: turma atrasada sob operação, certificado sob certificação, **documento de relator sob `identity.user.view`** |
+| `pipeline` | etapas do funil com contagem (§3.4) | operação **e** certificação; etapas comerciais degradam sob gate comercial |
 | `agenda` | turmas que iniciam/encerram ≤7d, em andamento, atrasadas | `operation.turma.view` |
 | `compliance_turmas` | por turma relevante: docs presentes/ausentes, progresso, habilitação, redatores, datas (§3.5) | `operation.turma.view` |
-| `redatores` | carga (turmas atuais/próximas por redator) + docs vencidos/vencendo (§3.7 + D2) | `identity.user.view` |
-| `series` | séries temporais do período (§4.1): turmas iniciadas, concluídas, certificados emitidos, matrículas, UF aprovada | UF sob gate comercial |
-| `rankings` | cursos e clientes (§4.2/4.3) por turmas, matrículas, certificados, UF | UF sob gate comercial |
+| `redatores` | carga (turmas atuais/próximas por redator) + docs vencidos/vencendo (§3.7 + D2) | `identity.user.view` **e** `operation.turma.view` |
+| `series` | séries temporais do período (§4.1): turmas iniciadas, concluídas, certificados emitidos, matrículas, UF aprovada | cada série sob o gate do seu módulo; a seção só cai se os três faltarem |
+| `rankings` | cursos e clientes (§4.2/4.3) por turmas, matrículas, certificados, UF | operação **e** certificação; UF degrada sob gate comercial |
 
 Seção sem permissão = `null` (tipo TS `X | null`), distinguível de vazio real (D7).
+
+**A regra de gate é uma só, e a coluna acima é sua aplicação:** uma seção exige TODOS os gates dos
+módulos de que ela lê. A degradação parcial só existe onde o TIPO admite ausência — campo anulável
+(`kpis.*`, `series.*`, `RankingRowData::$uf_aprovada`) ou item removível de lista (etapas de cotação
+no pipeline, itens de `pendencias` e `alertas`). Onde o tipo não admite, a seção inteira vira `null`:
+meia seção com zero no lugar do que não pode ser lido é número errado, não número censurado. É por
+isso que `rankings` e `pipeline` exigem operação **e** certificação (`RankingRowData::$certificados`
+e a partição de "concluída" são `int` não-nulo) e que `redatores` exige identity **e** operação
+(pessoa e documento são Identity; contagem de turma é Operation).
 
 **`RedatorDashboardData`** (`view: 'redator'`) — tudo escopado por ownership via `turma_redator`:
 

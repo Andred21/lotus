@@ -51,6 +51,37 @@ class DomainDependencyTest extends TestCase
         'Catalog' => [
             'Identity\Models\Redator',
         ],
+        // Task 1 do bloco `dashboard-backend-agregacoes` nasceu com zero arestas:
+        // apenas contrato próprio. A Task 2 abre, import a import, as quatro
+        // superfícies de Operation usadas por OperationMetricsQuery: Turma, os
+        // dois enums e TurmaHabilitacaoService (D8 — habilitação não se duplica).
+        // A Task 3 acrescenta Quote e QuoteStatus para os KPIs e pendências
+        // comerciais. A Task 4 acrescenta as superfícies usadas por
+        // CertificationMetricsQuery para matrículas aprovadas sem certificado
+        // e alertas de vencimento ativos, e por AnalyticsQuery para séries e
+        // rankings; Course e Client resolvem os nomes das linhas, enquanto
+        // RedatorDocumentType restringe os documentos regulatórios. A Task 5
+        // acrescenta só Redator: o RedatorScopeQuery escopa por `turma_redator`
+        // e não alcança nenhuma superfície nova além do próprio redator.
+        // As próximas tasks só acrescentam o que seus `use` efetivamente
+        // medirem — a lista do plano é indicativa e já errou nos dois sentidos.
+        'Dashboard' => [
+            'Catalog\Models\Course',
+            'Certification\Enums\CertificateStatus',
+            'Certification\Models\Certificate',
+            'Commercial\Enums\QuoteStatus',
+            'Commercial\Models\Client',
+            'Commercial\Models\Quote',
+            'Identity\Enums\RedatorDocumentType',
+            'Identity\Models\Redator',
+            'Identity\Models\User',
+            'Operation\Enums\EnrollmentApprovalStatus',
+            'Operation\Enums\TurmaDocumentType',
+            'Operation\Enums\TurmaStatus',
+            'Operation\Models\Enrollment',
+            'Operation\Models\Turma',
+            'Operation\Services\TurmaHabilitacaoService',
+        ],
         // D-P2 do plano: TurmaStatus é a 7ª aresta exigida pela porta de conclusão.
         // D-P9: CourseModule é a 8ª — o temário da página 2 do documento oficial
         // é `course_modules`, e o snapshot precisa congelá-lo no ato da emissão.

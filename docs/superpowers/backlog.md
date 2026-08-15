@@ -34,12 +34,11 @@ Central read-only operacional e analítica, com experiências distintas para Adm
 - **Exige `context_required`** antes do planejamento — o escopo é canônico do Drive, não do
   repositório, então o Context Packet vem antes do `/planejar-bloco`.
 
-**Dois blocos sequenciais:**
+**Bloco restante** (o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15 — ver
+`historico/progress.md`; o contrato do payload está em
+`specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` e os tipos, em `generated.ts`):
 
-1. **`dashboard-backend-agregacoes`** — domínio read-only Dashboard, DTOs, QueryBuilder
-   cross-domain, `GET /api/dashboard/metricas`, RBAC/ownership, visão administrativa × visão do
-   Redator, agregações, filtros e testes.
-2. **`dashboard-frontend-central-controle`** — TanStack Query, KPIs, pendências, alertas, pipeline,
+1. **`dashboard-frontend-central-controle`** — TanStack Query, KPIs, pendências, alertas, pipeline,
    séries históricas, compliance, análises gerenciais e Dashboard profissional do Redator.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
@@ -92,6 +91,16 @@ operação"*.
    brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
    (permissões essenciais não editáveis).
 3. **Hardening** — ownership em rotas nested e política de retenção documental.
+4. **Identity · ativação de acesso do redator.** `CreateRedatorAction` cria o `User` com
+   `is_active=false` "até o fluxo de ativação", e **o fluxo não existe** — o `UserProvisioner` gera
+   senha aleatória (`bin2hex(random_bytes(16))`) que ninguém recebe, e nenhuma tela ativa a conta.
+   Consequência medida no fechamento do `dashboard-backend-agregacoes` (2026-08-15): **nenhum redator
+   autentica em produção**, então a view `redator` do dashboard está implementada, testada e provada
+   ponta a ponta contra a API real — e hoje **inalcançável** por quem deveria usá-la. É a RN-01 pela
+   metade: a regra diz que redator autentica, o cadastro nunca o habilita. Toca convite ou
+   definição de senha, o gate de `is_active` e provavelmente `password_reset_tokens`; exige
+   brainstorming, porque "como o redator recebe a credencial" é decisão de produto, não de código.
+   **Bloqueia o valor do bloco B do Dashboard para metade dos papéis.**
 
 ---
 
@@ -277,6 +286,19 @@ sentada só — é o que torna o agrupamento barato.
   `useLoadState` o fix é de uma linha em cada um: trocar `courses.isError` / `redatores.isError`
   (`RedatorCourseSelector.tsx:38`, `CourseRedatoresSection.tsx:28`) por `failedWithoutData` no ramo
   que substitui a tela, e mandar a falha com cache para um `InlineLoadState` ao lado da lista.
+- **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
+  Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
+  escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
+  emitido': não há o que emitir"), e a classificação exclusiva exige que ela caia em algum lugar. O
+  que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
+  Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
+  contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
+- **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
+  **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
+  em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do
+  `dashboard-backend-agregacoes` cobre a direção contrária **só para `Dashboard`**; generalizar é
+  varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
+  varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Travado no merge — não entra em bloco até o dashboard chegar à `main`
 
