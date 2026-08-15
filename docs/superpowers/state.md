@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-15-dashboard-frontend-central-controle.md
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T09:20:07-03:00
+updated_at: 2026-08-15T09:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -105,6 +105,53 @@ read-only) vem antes de qualquer brainstorming.
 
 **Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
 `feat/dashboard-frontend-central-controle` a partir de `main@36faf44`.
+
+### Context Packet — 2026-08-15
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `1a56207`) e validado contra o
+contrato da skill item a item: markers exatos e nada fora deles, frontmatter completo com
+`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha` corretamente em **`null`** (registrados, não
+inventados), **8 key facts** — o teto exato —, toda fonte com status `retrieved` (nenhuma
+`unavailable`, então a regra das duas evidências não se aplica), divergência com base de resolução
+declarada, e **nenhum staleness trigger** apontando para hash de proveniência, para a transição
+promotora ou para edição de `state.md` que só move campo de workflow. Salvo em
+`docs/superpowers/context-packets/2026-08-15-dashboard-frontend-central-controle.md`.
+
+**Os três hashes de proveniência foram remedidos e batem:** `base_commit`
+`1a562076af2f…`, `state_blob_sha` `31bc77d7…` e `progress_blob_sha` `d2bac2b4…`. Foram obtidos por
+`git rev-parse`/`git hash-object` antes da invocação, não aceitos de chegada.
+
+**A troca do Notion PERSISTE, e agora está medida em vez de suposta.** O fechamento do bloco A
+registrou que as EAP **8.4.0 e 8.4.7** têm descrição e critério de aceite invertidos entre si
+(títulos, camadas e ADRs corretos; corpos trocados). O packet foi instruído a conferir se a troca
+havia sido corrigida: **não foi** — a 8.4.0 segue contendo o aceite de UI review e a 8.4.7 segue
+contendo domínio backend e `DomainDependencyTest`. A resolução é a mesma do bloco A e pela mesma
+base: **o Drive decide o escopo**, então a UI review pertence a este bloco. O staleness trigger da
+correção continua vivo.
+
+**Três afirmações materiais do packet foram medidas contra o repositório antes de salvá-lo, e as
+três batem:**
+
+1. **A composição em `app` sem `features/dashboard` não é imposição externa contra o repo — é
+   convergência.** O packet atribui a regra ao Drive; medido, `estrutura-monolito.md:100` já reserva
+   `app/pages/` para "página que NÃO é de domínio: DashboardPage, ModulePlaceholder", e as linhas 9 e
+   159 dizem que composição acontece na camada `app`/rota (lei §5.6). Um Dashboard que lesse de
+   Commercial, Operation e Certification como *feature* violaria a lei §5.6 — a proibição externa e a
+   lei interna apontam para o mesmo lugar. **Não há divergência a registrar aqui**, e é isso que a
+   medição estabelece.
+2. **Os dois DTOs raiz existem e são discriminados por `view`:** `AdminDashboardData` (`view: 'admin'`)
+   e `RedatorDashboardData` (`view: 'redator'`) em `generated.ts`, com a **nulabilidade de gate só no
+   admin** (`pipeline`, `agenda`, `compliance_turmas`, `redatores`, `series` como `| null`) e as seis
+   chaves do redator sem nenhuma anulável — exatamente o que o fechamento do bloco A provou ao vivo.
+3. Spec arquivada do bloco A e packet do bloco A existem nos paths citados.
+
+**`status: ready`, e as duas open questions não bloqueiam:** ambas são de **apresentação** —
+qual visualização recebe cada dataset e para onde cada CTA navega —, e o Drive delega essa decisão
+ao frontend. Nenhuma regra de negócio, critério de aceite ou comportamento de peso legal ficou por
+adivinhar, que é o teste da própria skill para `blocked`.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
