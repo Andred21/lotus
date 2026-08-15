@@ -251,8 +251,16 @@ os três arquivos se editam no mesmo commit.
 
 Entram no runner (`pnpm test`, vitest/jsdom): `useResourceState`, `useProfileForm`,
 `useProfilePassword`, `useProfileDocuments` — os hooks de feature por `renderHook` +
-`QueryClientProvider`, com o teste morando na própria feature. Teste de componente com PrimeReact
-no jsdom segue **fora** do corte, como no resto do projeto.
+`QueryClientProvider`, com o teste morando na própria feature.
+
+**Teste de componente com PrimeReact no jsdom está DENTRO do corte**, ao contrário do que a
+`.claude/rules/frontend-fsliced.md` afirma: a divergência é a **P-38**, que manda a rule valer pelo
+que o `pnpm test` faz, e a medição atual são seis testes de componente
+(`InlineLoadState`, `CourseStep`, `QuotesList`, `BudgetDetailPage`, `TurmaDetailPage`,
+`ValidationPage`). Este bloco usa isso em **um** ponto: `ProfileDocumentSlot`, porque o gate de
+`self_service` decide se um documento de peso legal oferece envio, e essa é a ramificação que uma
+regressão silenciosa mais barata quebraria. Molde: `QuotesList.test.tsx` — `vi.mock` do
+`react-i18next`, render, assert por `screen`.
 
 Cobertura mínima por hook: seed a partir do perfil e não-reset em refetch com mesmo id; payload
 enviado (`{name, phone}` e os três campos de senha); normalização de erro 422; limpeza dos campos de
@@ -279,7 +287,9 @@ locales, os dois temas e desktop/mobile (EAP 8.5.9).
 - **Divergência de documentação.** `.claude/rules/frontend-fsliced.md` afirma "status de documento e
   idoneidade se calculam no front". Isso é verdade para o DTO administrativo e **falso** para o DTO
   de perfil desde o bloco 1. Vira pendência de doc, não correção deste bloco (auditoria reporta, não
-  corrige).
+  corrige). A mesma rule carrega a **P-38** já aberta (teste de componente jsdom declarado fora de um
+  corte que já o inclui); este bloco não a fecha, porque o gatilho dela é tocar a rule, e a rule não
+  é tocada aqui — mas segue a medição, não o texto (§9).
 - **Superfície compartilhada com a frente paralela.** `feat/dashboard-frontend-central-controle`
   toca `app/router/AppRouter.tsx` e os três locales. A colisão é pequena e mecânica — uma linha de
   rota e um namespace novo cada — mas existe e se resolve no merge, não por coordenação prévia.

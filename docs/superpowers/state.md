@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: plan_active_work_item
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md
 context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.md
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T10:34:12-03:00
+updated_at: 2026-08-15T11:12:40-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -266,6 +266,37 @@ gate na spec §8.
 
 **Estado: `planning`.** Próxima ação: `writing-plans` produz o plano executável; só então
 `ready_for_execution`.
+
+### Plano — 2026-08-15: 11 tasks, executor Claude, e uma afirmação da própria spec corrigida por medição
+
+**Plano:** `docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md`. 11 tasks, 24 arquivos (22
+criados, 4 modificados), 5 arquivos de teste novos. Ordem: `useResourceState` → i18n → camada de API
+→ página com ramos de carga → as cinco peças de tela, cada uma acrescentando UMA linha de JSX à
+página → gate/DoD/UI review.
+
+**A correção que a medição impôs à spec já aprovada:** a §9 afirmava, herdando a
+`.claude/rules/frontend-fsliced.md`, que teste de componente PrimeReact no jsdom está fora do corte
+do runner. **Está dentro** — a medição são seis: `InlineLoadState`, `CourseStep`, `QuotesList`,
+`BudgetDetailPage`, `TurmaDetailPage` e `ValidationPage`. É a **P-38**, já aberta desde o BD-12, que
+manda a rule valer pelo que o `pnpm test` faz. A pendência **não fecha aqui** (o gatilho dela é tocar
+a rule, e este bloco não a toca), mas a spec deixou de repetir a afirmação vencida e o plano ganhou
+**um** teste de componente: `ProfileDocumentSlot`, escolhido porque o gate de `self_service` decide
+se um documento de peso legal oferece envio. É a mesma classe de defeito que a spec do BD-6 já tinha
+herdado — doc que descreve o corte por memória, não por medição.
+
+**Duas coisas que o self-review do plano pegou contra a spec, não contra si mesmo:** (1) o rótulo do
+botão documental tinha herdado o ícone mudo do slot administrativo, e a §6 exige "Enviar" vs.
+"Reemplazar" — o texto é o único aviso de que substituir apaga o anterior, mesmo contrato do
+`AppPhotoField`; (2) `profile.documents.noValidity` nascia órfã no dicionário, e passou a ser o que
+o slot mostra quando o documento existe sem data de vencimento.
+
+**Executor: `claude`.** O bloco é quase todo convenção local com lint por trás — `COR_HARDCODED`,
+`DISABLED_READONLY` nas três grafias, `max-lines: 150` incidindo inclusive sobre arquivo de teste que
+mora em `components/`, os três seletores de query-em-componente, `postMultipart` como único
+transporte — e paridade de chaves em três locales que **nenhum teste protege**. O gate final é visual
+e itera contra o navegador. Delegar aumentaria o custo de validação do diff sem baixar o de execução.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco meu-perfil-frontend`.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
