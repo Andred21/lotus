@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
 active_plan: docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-s
 blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T21:15:50-03:00
+updated_at: 2026-08-14T21:40:13-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -353,6 +353,42 @@ commit.**
 
 7 testes verdes; `AuthTest`/`LoginLogTest`/`RbacAuthTest` confirmam login e RBAC intocados. Pint
 `passed`.
+
+**Task 7 (documentos do redator) completa.** `POST /api/profile/documents` reusa
+`StoreRedatorDocumentAction` inteiro; `REUF` recusa com 422 nomeando o campo (nunca 403), fechando
+a RN-09 do jeito que a spec D5 prescreveu. 6 testes verdes; `RedatorIdoneidadeServiceTest` +
+`TurmaHabilitacaoServiceTest` + `TurmaDesignationTest` (23 testes) confirmam a RN-09 intocada. Pint
+removeu um import não usado, sem efeito de comportamento.
+
+**Task 8 (`generated.ts`) completa, fecha o bloco.** `typescript:transform` saiu aditivo — 37
+linhas, zero remoção — com as seis entradas da spec §3 presentes e `DocumentValidityStatus`
+serializando exatamente como previsto. `pnpm build` verde. Suíte de backend inteira: **644 passed /
+5 skipped (2292 asserções)**, contra baseline 592/5 (2154) — +52 testes e +138 asserções, exatamente
+as sete tasks de conteúdo do bloco, zero regressão e zero skip novo. `DomainDependencyTest` verde
+**sem ter sido tocado** — prova de que o corte D1 (sem aresta nova para Operation) segurou o bloco
+inteiro dentro de Identity, como a spec prometeu.
+
+**O bloco produziu duas descobertas de mecanismo de teste que não estavam em fonte nenhuma — a
+spec já havia fechado três armadilhas conhecidas (`@dataProvider`, `SESSION_DRIVER`, `postJson`
+com arquivo), e a execução mediu mais duas, ambas raiz no MESMO comportamento do Sanctum
+(`Illuminate\Auth\RequestGuard` cacheado por processo de teste), com sintomas opostos**: na Task 3
+o cache fazia o segundo `getJson` devolver dado VELHO (`redator` já carregado, N+1 mascarado); na
+Task 6 o mesmo cache fazia a autenticação sobreviver mas a sessão HTTP real não replicar entre
+chamadas, fazendo o purge matar a sessão "corrente" por engano. As duas ficam registradas nos
+comentários dos testes correspondentes (`ProfileReadTest`, `ProfilePasswordTest`) para não se
+repetir a investigação num bloco futuro que também misture duas chamadas HTTP autenticadas no mesmo
+método de teste.
+
+**Executor `claude` nas oito tasks, como o plano previu — nenhum subagente disparado.** O ambiente
+restringe o uso do Agent tool a pedido explícito do João; como as tasks são sequenciais por
+contrato (cada uma consome o que a anterior fixou), `subagent-driven-development` não teria
+paralelismo genuíno para explorar mesmo se disponível — `executing-plans` foi a técnica correta, não
+uma segunda escolha.
+
+**Estado: `ready_for_review`.** Working tree limpo, 8 commits de task na branch
+`feat/meu-perfil-backend-self-service` (`3499439`..`0765ed6`) sobre o commit de abertura que já
+trouxe a transição a `executing`. Este comando não inicia review — a próxima instrução do João aciona
+a revisão do trabalho ativo. O bloco 2 (frontend de Meu Perfil) só começa depois disso.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
