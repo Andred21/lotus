@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: sprint-6-meu-perfil
+active_work_item: meu-perfil-frontend
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
-state_basis_commit: d0430d0
-updated_at: 2026-08-15T08:57:58-03:00
+state_basis_commit: 36faf44
+updated_at: 2026-08-15T09:26:10-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,127 @@ updated_at: 2026-08-15T08:57:58-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `meu-perfil-frontend` (Sprint 6 · Meu Perfil, bloco 2 de 2)
+
+### Seleção — 2026-08-15
+
+**Bloco restante da Sprint 6 (`backlog.md:64`), promovido explicitamente pelo João** com o estado
+desta árvore em `idle` e `active_work_item` `null`. Três decisões dele fecharam o gate: correr **em
+paralelo** com o `dashboard-frontend-central-controle`; a worktree **`fix-frontend`** com branch
+nova a partir da `main`; e a rota **`context_required`**, como o backlog exige para a Sprint 6
+inteira (`backlog.md:61`).
+
+**O gate reprovou por motivo NOVO, e é a primeira vez em doze promoções.** As onze anteriores
+(BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`, `celula-de-identidade`,
+`dashboard-backend-agregacoes`, `meu-perfil-backend-self-service` e
+`dashboard-frontend-central-controle`) reprovaram porque o argumento era **título de seção**. Aqui o
+argumento **trazia o slug** (`## Sprint 6 · Meu Perfil **meu-perfil-frontend**`); o que reprovou foi
+**divergência de estado medida entre duas árvores**:
+
+| Onde | Branch / commit | `workflow_state` | `active_work_item` |
+|---|---|---|---|
+| worktree `fix-frontend` | `main` `36faf44` | `idle` | `null` |
+| main tree `/home/jvbat/projetos/lotus` | `feat/dashboard-frontend-central-controle` `1a56207` | `context_required` | `dashboard-frontend-central-controle` |
+
+O `1a56207` promoveu o bloco B da Sprint 5 às **09:20:07**, 23 minutos depois do state desta árvore
+(`08:57:58`), e **não chegou à `main`** — está um commit à frente, na branch dele. Nas duas leituras
+o gate reprovava para `meu-perfil-frontend`: `idle` não é estado aceito, e o `context_required` do
+main tree pertence a **outro** work item. A regra do `CLAUDE.md` §3 (divergência → PARE, não escolha
+por heurística) foi aplicada como escrita: nenhum arquivo tocado antes da decisão do João.
+
+### Exceção declarada à invariante de um `active_work_item` — quinta ocorrência, e a primeira frontend × frontend
+
+**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-15**, e isto
+está escrito porque a invariante do topo deste arquivo diz o contrário. As quatro anteriores
+(BD-4 × BD-9, BD-5 × login, BD-6 × `celula-de-identidade`, e
+`dashboard-backend-agregacoes` × `meu-perfil-backend-self-service`) eram backend × frontend ou
+backend × backend. **Esta é a primeira em que os dois blocos são de frontend.**
+
+**A P-03 não dispara, e o motivo é literal:** o gatilho da ficha (`pendencias/abertas.md:331-333`) é
+"mais de um `active_work_item` de **backend**". Nenhum destes dois toca backend — os dois consomem
+contrato já mergeado na `main` (`36faf44`, PR #53 e #54). **Mas a ausência do gatilho não significa
+ausência de colisão**, e a colisão desta dupla é de outra natureza: as duas frentes escrevem no
+**mesmo shell** `frontend/src/app/`.
+
+**A sobreposição foi medida antes de escrever esta seção, não depois — quatro pontos:**
+
+1. **`frontend/src/app/router/AppRouter.tsx` — colisão certa, 75 linhas, arquivo único.** As duas
+   frentes acrescentam import no bloco 1-18 e rota no bloco 58-68. **A rota `/perfil` já existe**
+   (`AppRouter.tsx:68`, hoje `<ModulePlaceholder titleKey="userMenu.profile" />`) e a `/` também
+   (linha 58, `DashboardPage`) — cada frente substitui a **sua** linha. O conflito real é o bloco de
+   imports, e é textual, não semântico: resolução mecânica no merge.
+2. **`frontend/src/features/` — zero colisão, medida.** Tem cinco domínios (`catalog`,
+   `certification`, `commercial`, `identity`, `operation`); **nem `dashboard` nem `profile`
+   existem**. Cada frente cria a própria pasta. Onde exatamente o perfil nasce sob o ADR-05 é
+   decisão do brainstorming — o backend dele vive em `App\Domains\Identity`, e `features/identity/`
+   já existe.
+3. **`frontend/src/shared/types/generated.ts` — zero colisão, e por mecanismo.** Os dois blocos são
+   **consumidores**; nenhum regenera. Os dois backends já estão na `main`.
+4. **`shared/ui/` — colisão possível, não medida ainda.** As duas frentes podem querer wrapper novo.
+   Fica declarado como risco de merge, não como fato.
+
+**Alternativa recusada por ele:** fechar o `dashboard-frontend-central-controle` primeiro, o que
+manteria a invariante e eliminaria a colisão do `AppRouter.tsx` na origem, ao custo de o bloco não
+começar hoje.
+
+### Área de trabalho
+
+**Worktree `fix-frontend`** (`/home/jvbat/projetos/fix-frontend`), branch
+`feat/meu-perfil-frontend` criada de `main@36faf44` — o merge do PR #54, HEAD da `main`, que já
+carrega o backend do bloco 1. O prefixo `feat/` segue o precedente de todas as branches do projeto;
+o João nomeou o slug. A árvore estava limpa e em `main` antes do checkout.
+
+**`state_basis_commit` passa de `d0430d0` a `36faf44`.** Não era divergência: com
+`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter derivado — mesmo
+critério das quatro promoções anteriores.
+
+### Superfície declarada do bloco, medida na abertura
+
+**O contrato inteiro já está no repositório, e foram conferidas as seis entradas do bloco 1**
+(`shared/types/generated.ts`):
+
+| Tipo | Forma medida |
+|---|---|
+| `ProfileData` | 10 campos; `redator: RedatorProfileData \| null` |
+| `ProfileUpdateData` | **2 campos** — `name`, `phone` |
+| `ProfilePasswordData` | `current_password`, `password`, `password_confirmation` |
+| `RedatorProfileData` | `documentos[]`, `cursos_habilitados: number`, `cursos: string[]` |
+| `RedatorProfileDocumentData` | 8 campos, com `status: DocumentValidityStatus` |
+| `DocumentValidityStatus` | `'vigente' \| 'vence_em_breve' \| 'vencido' \| 'ausente'` |
+
+**Duas divergências nasceram desta medição, e as duas são de fonte viva — não de suposição:**
+
+1. **O backlog promete mais do que o contrato entrega.** O `backlog.md:70-71` descreve o resumo do
+   Redator como "cursos habilitados, **turmas atuais/próximas e pendências**". O
+   `RedatorProfileData` tem `cursos_habilitados` e `cursos` — **turmas e pendências não existem**,
+   porque o **corte D1** do bloco 1 as removeu por decisão do João (evitar aresta de `Identity` para
+   `Operation`, esperando o bloco do dashboard). Não é lacuna a preencher por conta própria: ou o
+   escopo do bloco 2 encolhe junto, ou alguém reabre a aresta. **Decisão do brainstorming.**
+2. **Uma rule normativa ficou meio falsa, e a metade falsa é justamente a deste bloco.** O
+   `.claude/rules/frontend-fsliced.md` afirma: *"Derivação de apresentação no front, não no DTO:
+   status de documento e idoneidade se calculam no front."* O bloco 1 **inverteu isso** para o
+   contrato de perfil (Drive §5 vence, `DocumentValidityStatus` calculado no backend). Medido nos
+   dois DTOs: `RedatorProfileDocumentData` **tem** `status`; `RedatorDocumentData` (administrativo,
+   intocado de propósito pelo bloco 1) **não tem**. A rule segue verdadeira no administrativo e
+   falsa no perfil — é a **lição 13** com doc normativo vivo, e a emenda é tarefa deste bloco, não
+   descoberta de fechamento.
+
+**A porta de entrada da tela já está construída e não precisa nascer:** `UserMenu.tsx:22` já navega
+para `/perfil` com `t('userMenu.profile')`, e a rota já está registrada sob o ramo protegido. O que
+o bloco troca é o **conteúdo** do `ModulePlaceholder`.
+
+**O gate visual é passo do João, não meu:** o bloco termina em revisão de tela e `/lotus-ui-review`
+tem `disable-model-invocation: true`. Escrito aqui para não ser descoberto no fechamento, como no
+`login-fora-do-adr16`.
+
+**Risco de review projetado** pelo gatilho binário do projeto: **não regenera `generated.ts`**
+(consumidor puro), **não toca backend**. Mas a tela **exibe e escreve no eixo de autenticação**
+(troca da própria senha) e **exibe documento de peso legal com status de validade**. A
+classificação final é do `/revisar-sprint`, não desta promoção.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/meu-perfil-frontend` a partir de `main@36faf44`.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
