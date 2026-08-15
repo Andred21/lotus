@@ -62,9 +62,8 @@ notificações interna e, depois, canais como e-mail. **Notifications não entra
 
 **Dois blocos sequenciais:**
 
-1. **`meu-perfil-backend-self-service`** — contrato próprio de perfil sem inflar `SessionUserData`,
-   atualização segura de nome/telefone/foto, alteração da própria senha, ownership dos documentos do
-   Redator, projeção resumida profissional e testes.
+1. ~~**`meu-perfil-backend-self-service`**~~ — entregue em 2026-08-15
+   (`plans/archive/2026-08-14-meu-perfil-backend-self-service.md`).
 2. **`meu-perfil-frontend`** — página Meu Perfil, formulário pessoal, foto, segurança, documentos do
    Redator, resumo profissional, estados loading/erro/vazio, responsividade e UI review.
 
@@ -300,6 +299,14 @@ sentada só — é o que torna o agrupamento barato.
   `dashboard-backend-agregacoes` cobre a direção contrária **só para `Dashboard`**; generalizar é
   varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
   varredura de órfãos que os fechamentos já fazem à mão.
+
+## Travado no merge — não entra em bloco até o dashboard chegar à `main`
+
+- **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30` da
+  branch do dashboard.** Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14):
+  unificar antes do merge significaria importar de um domínio que na árvore `fix-frontend` ainda não
+  existe. Vira task de uma linha depois que `feat/dashboard-backend-agregacoes` chegar à `main` —
+  decidir o dono do número (Shared, ou um dos dois domínios) é parte da task, não desta linha.
 
 ## Travados em decisão — não entram em bloco
 
