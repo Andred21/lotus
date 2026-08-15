@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
 active_plan: docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md
 context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md
-blocker: "Review do bloco (risco ALTO, Claude + Codex) com 5 achados aguardando aprovacao: Q-1 senha fora de Action/transacao; Q-2 prohibited aceita campo vazio (D8); Q-3 teste de sessao nao assere o id sobrevivente; Q-4 teste de auditoria passa com trilha vazia (empty_values=true); Q-5 password_confirmation virou propriedade contra a spec §3. Nenhum 🔴; detalhe na secao Review do state.md."
+blocker: null
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-15T08:31:33-03:00
+updated_at: 2026-08-15T08:40:43-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -435,8 +435,16 @@ permissão nova). Lições 5/10/11 respeitadas.
 sobre o texto do Codex, pelo motivo registrado acima. Nenhum achado meu ficou fora da lista dele por
 discordância — as lentes convergiram.
 
-**Estado: `blocked`** aguardando o João aprovar o que entra; correções só de achado aprovado, e
-depois o review se repete sobre o mesmo work item.
+**Correções — 2026-08-15, os 5 achados aprovados pelo João e aplicados:** Q-1
+`ChangeOwnPasswordAction` (update + purge em `DB::transaction`, controller fino); Q-2 `missing` nos
+sete campos vetados + três casos vazios no dataprovider, **provados reprovando contra o
+`prohibited` antigo** (stash: 3 failed); Q-3 `assertDatabaseHas('sessions', ['id' => $sessionId])`
+e GET decorativo removido, **provado por mutação no purge** (assert novo da linha 177 reprovou);
+Q-4 assert de conteúdo em `new_values`, **provado por mutação no `$auditInclude`** (1 failed);
+Q-5 spec §3 emendada aceitando `password_confirmation` como propriedade. Suíte completa: 647
+passed, 5 skipped (pré-existentes). `generated.ts` intocado — só `rules()` mudou, nenhuma
+propriedade de DTO. Pint verde nos arquivos tocados. Recheck: Action nova consumida pelo
+controller (zero órfão). Revisão limpa — **`ready_for_closure`**.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
