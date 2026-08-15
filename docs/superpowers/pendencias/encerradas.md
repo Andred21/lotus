@@ -6,8 +6,3 @@
 > [`../historico/progress-archive.md`](../historico/progress-archive.md).
 
 _Nenhuma pendência encerrada aguardando remoção._
-
-**A P-26 saiu no `/fechar-sprint` de 2026-08-14 (`celula-de-identidade`)**, cumprindo a regra de uma
-sprint acima: ela havia fechado na varredura pós-BD-6 e este foi o fechamento seguinte. O rastro
-está em [`../historico/progress-archive.md`](../historico/progress-archive.md) (linha do
-`hardening-guardrails-e-transportes`, 2026-08-04) e na spec arquivada daquele bloco.

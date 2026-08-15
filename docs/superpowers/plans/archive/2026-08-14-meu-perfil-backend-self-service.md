@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Spec:** `docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md`. As decisões D1–D9 são vinculantes.
+- **Spec:** `docs/superpowers/specs/archive/2026-08-14-meu-perfil-backend-self-service-design.md`. As decisões D1–D9 são vinculantes.
 - **Backend roda no container:** `docker compose exec -T app php artisan …`. O host WSL não tem mbstring.
 - **Pint roda no host, de dentro de `backend/`, SEMPRE com argumento:** `./vendor/bin/pint <arquivos>`. Nunca sem argumento.
 - **`frontend/src/shared/types/generated.ts` não se edita à mão** (lei §5.3). Errou o tipo, corrige o DTO e regenera.
