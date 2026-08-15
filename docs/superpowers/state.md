@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md
 active_plan: docs/superpowers/plans/2026-08-15-dashboard-frontend-central-controle.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-dashboard-frontend-c
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T10:08:00-03:00
+updated_at: 2026-08-15T10:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -271,6 +271,24 @@ João** (`disable-model-invocation: true`); o bloco não fecha sem ele.
 
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco dashboard-frontend-central-controle`,
 por instrução do João. O planejamento **não** implementa.
+
+### Execução — 2026-08-15: início, técnica `executing-plans`
+
+`/executar-bloco dashboard-frontend-central-controle` validou as âncoras (spec, plano e packet no
+disco; Git limpo na branch `feat/dashboard-frontend-central-controle`; `active_plan` cobrindo o work
+item).
+
+**Técnica: `executing-plans`, não `subagent-driven-development`.** O plano tem 11 tasks
+majoritariamente sequenciais por contrato (Task 6 consome Task 1, Task 7 consome Task 4, Task 10
+consome 5–9, Task 11 consome tudo) e o ambiente restringe o uso do Agent tool a pedido explícito do
+João, que não veio nesta invocação. `executor: claude`, main tree — handoff do plano já cobria isso.
+
+**Task 1 (`formatUf` sobe para `shared/lib`) completa.** Medido antes de mexer: exatamente 5 sítios
+de import (`BudgetStatCard.tsx`, `BudgetsTable.tsx`, `QuoteRow.tsx`, `DataStep.tsx`,
+`useQuoteForm.ts`), como o plano previa. `git mv` preservou histórico; barrel de `shared/lib`
+exporta `uf`; os 5 imports reapontados para `@shared/lib`; zero referência ao caminho antigo. Gate:
+`tsc -b` sem erro, eslint exit 0, **36 arquivos / 186 testes** — baseline intocado, como esperado de
+uma task que só move função pura.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
