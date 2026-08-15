@@ -299,6 +299,27 @@ código: `Call to undefined method RedatorDocumentType::isSelfService()`. 7 test
 enum `DocumentValidityStatus` e dos dois métodos em `RedatorDocumentType`. Pint `passed` nos três
 arquivos.
 
+**Task 2 (DTOs de leitura) completa.** `ProfileData`, `RedatorProfileData` e
+`RedatorProfileDocumentData` seguem a forma da spec §3 sem desvio — 7 testes verdes, catraca
+`PersistenceLawsTest` verde confirmando `#[DataCollectionOf]` + `#[ReadOnlyCollection]` corretos.
+Pint removeu um import não usado no teste (`File`), sem efeito de comportamento.
+
+**Task 3 (`GET /api/profile`) completa, e uma quarta armadilha de teste apareceu na hora — nova,
+fora das três que a spec já tinha fechado.** O teste `test_perfil_nao_faz_n_mais_um`, copiado
+verbatim do plano, dava `0 identical to 4` com corpo idêntico entre as duas chamadas — sintoma de
+N+1 zerado por dado velho, não de N+1 ausente. Isolado por medição, não suposição: `auth:sanctum`
+resolve `$request->user()` via `Illuminate\Auth\RequestGuard` (Sanctum registra por
+`Auth::viaRequest`), que **cacheia o usuário internamente na primeira resolução** e é singleton no
+container durante o método de teste inteiro. `actingAs($novoUser, 'web')` sozinho não basta — troca
+só o guard `web`; `$request->user()` continua batendo no `sanctum` cacheado, que devolve o objeto
+velho com `redator` já carregado (`loadMissing` vira no-op). A prova ficou em três camadas de
+instrumentação temporária (contador estático no controller, `spl_object_id` dos dois guards,
+`DB::listen()` cru) — removida do commit, só o achado fica. Corrigido com
+`$this->app['auth']->forgetGuards()` antes de reautenticar com um `User::findOrFail` fresco. É
+artefato do container persistir entre chamadas de teste no mesmo método, não bug de produção: lá
+cada request boota o guard do zero. 4 testes verdes; `AuthTest`/`RbacAuthTest` confirmam `/api/me`
+intocado (D4). Pint `passed`.
+
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
 ### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência

@@ -2,6 +2,7 @@
 
 use App\Domains\Identity\Http\Controllers\AuthController;
 use App\Domains\Identity\Http\Controllers\PermissionController;
+use App\Domains\Identity\Http\Controllers\ProfileController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
 use App\Domains\Identity\Http\Controllers\RedatorPhotoController;
@@ -19,6 +20,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Perfil próprio (spec D4): recurso próprio, fora do grupo
+    // `permission:identity.user.update`. `/me` continua servindo só a sessão.
+    Route::get('profile', [ProfileController::class, 'show']);
 
     // ->parameters: Str::singular('redatores') dá "redatore" (inflector em
     // inglês não reconhece o plural em português) — força o nome do parâmetro
