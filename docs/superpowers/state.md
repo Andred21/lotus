@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: sprint-5-dashboard
+active_work_item: dashboard-frontend-central-controle
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
-state_basis_commit: d0430d0
-updated_at: 2026-08-15T08:57:58-03:00
+state_basis_commit: 36faf44
+updated_at: 2026-08-15T09:20:07-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,64 @@ updated_at: 2026-08-15T08:57:58-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `dashboard-frontend-central-controle` (Sprint 5 · Dashboard, bloco 2 de 2)
+
+### Seleção — 2026-08-15
+
+**Bloco restante da Sprint 5 (`backlog.md:41`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — o
+argumento era **título de seção** (`## Sprint 5 · Dashboard`), não slug promovido, exatamente como já
+reprovou a promoção de BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
+`celula-de-identidade`, `dashboard-backend-agregacoes` e `meu-perfil-backend-self-service`. Três
+decisões dele fecharam o gate: o slug `dashboard-frontend-central-controle`; a rota
+**`context_required`**, como o backlog exige para a Sprint 5; e **main tree** como área de trabalho.
+
+**A branch nasceu ANTES deste commit, por instrução explícita dele** ("já crie a branch antes de
+alterar qualquer documento"): `feat/dashboard-frontend-central-controle`, criada de `main@36faf44`.
+Este arquivo já é escrito na branch, não na `main`.
+
+**A main tree é escolha dele, não gatilho da P-03.** O bloco é de frontend — consome
+`GET /api/dashboard/metricas`, entregue e fechado no bloco A —, então o gatilho de dois blocos de
+**backend** não vence e uma worktree seria admissível. Ele escolheu a árvore principal mesmo assim.
+A `fix-frontend` está em `feat/meu-perfil-backend-self-service`, já mergeada, e não foi reusada.
+
+**`state_basis_commit` passa de `d0430d0` a `36faf44`, e a divergência que a sessão mediu na abertura
+já não existe.** Ao abrir o comando, a `main` local estava em `29eff53` e a
+`feat/meu-perfil-backend-self-service` tinha 18 commits com o bloco **fechado e não mergeado** — o
+que teria posto o bloco B numa base sem os tipos de Meu Perfil e adiado a colisão de `generated.ts`
+para o merge. O João respondeu que já havia mergeado; medido, o **PR #54** está na `main` (`36faf44`,
+igual a `origin/main`, árvore limpa). A base é única e a colisão não chega a existir.
+
+**Fonte externa declarada, como no bloco A:** o backlog aponta o escopo canônico no Drive
+(`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion
+(EAP 8.4.0–8.4.7). O bloco A cobriu a sequência de backend (8.4.0→8.4.1→8.4.2→8.4.3→8.4.6); **as EAP
+de frontend não foram consumidas por packet nenhum ainda**, e é isso que sustenta a rota — nenhuma
+rota direta a `ready_for_planning` se aplica, e o Context Packet do Codex (`lotus-context-packet`,
+read-only) vem antes de qualquer brainstorming.
+
+**Três medições da abertura entram aqui porque o packet e o brainstorming vão precisar delas:**
+
+1. **Não existe `features/dashboard/`.** O que há é `frontend/src/app/pages/DashboardPage.tsx`, um
+   placeholder na rota `/` do `AppRouter.tsx:58` cujo próprio docblock diz "conteúdo real é task
+   futura". Onde a feature nasce e o que acontece com a página de `app/pages/` é decisão do
+   brainstorming sob o ADR-05, não dado do bloco.
+2. **O contrato já está no repositório:** `generated.ts` traz os tipos do bloco A (9 ocorrências de
+   `Dashboard`), e a spec arquivada
+   `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` é o contrato do payload,
+   incluindo a §4.2 completada no fechamento (uma seção exige TODOS os gates dos módulos de que lê).
+3. **Dois itens do backlog apontam para este bloco e não são dele:** a **D-16** (turma concluída sem
+   matrícula em `fully_issued`) está parada esperando o consumidor dizer se a distinção paga — o
+   consumidor é este bloco; e a **ativação de acesso do redator** (item 4 de "Próximos blocos")
+   **bloqueia o valor da view do Redator**, porque nenhum redator autentica hoje. Nenhum dos dois é
+   escopo desta promoção.
+
+**A árvore não decide sozinha o gate visual:** o bloco termina em revisão de tela, e
+`/lotus-ui-review` tem `disable-model-invocation: true` — é passo do João. Planejar isso é do
+`writing-plans`, e está escrito aqui para não ser descoberto no gate, como no `login-fora-do-adr16`.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/dashboard-frontend-central-controle` a partir de `main@36faf44`.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
