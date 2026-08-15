@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.md
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T09:26:10-03:00
+updated_at: 2026-08-15T09:42:05-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,8 +166,61 @@ tem `disable-model-invocation: true`. Escrito aqui para não ser descoberto no f
 (troca da própria senha) e **exibe documento de peso legal com status de validade**. A
 classificação final é do `/revisar-sprint`, não desta promoção.
 
-**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
-`feat/meu-perfil-frontend` a partir de `main@36faf44`.
+### Context Packet — 2026-08-15: `ready`, e a validação virou medição em quatro frentes
+
+Packet em `docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.md`, gerado pelo Codex
+read-only com a skill `lotus-context-packet`. **Contrato conferido por medição, não aceito de
+chegada:** marcadores exatos e nada fora deles; frontmatter com os 16 campos populados e
+`plan_path`/`spec_path` corretamente em `null` (os ponteiros do estado eram `null`, e a skill proíbe
+inventá-los); **8 key facts** — o teto exato; **802 palavras** de corpo contra o orçamento de 1.200,
+contadas excluindo frontmatter e tabela de fontes como o contrato manda; `status: ready`,
+`RECOMMENDED_TRANSITION: ready_for_planning`; nenhuma fonte marcada `unavailable`; e os cinco
+staleness triggers todos semânticos, nenhum apontando para hash de proveniência ou para a própria
+transição promotora — a armadilha que a skill documenta em §"Provenance versus staleness".
+
+**Os três hashes de proveniência foram remedidos e batem byte a byte:** `base_commit`
+`5ff2e7e134d5…`, `state_blob_sha` `503d5ca5…` e `progress_blob_sha` `d2bac2b4…`. Obtidos com
+`git rev-parse`/`git hash-object`, não conferidos por semelhança.
+
+**O Codex corrigiu a minha medição de novo, e no mesmo eixo do bloco 1.** Eu passei a frente
+paralela como `1a56207` em `context_required` — medição minha, de 09:26. Ele mediu às 09:36 e achou
+`cfee85c1` em **`ready_for_planning`**, com packet próprio já salvo
+(`2026-08-15-dashboard-frontend-central-controle.md`, commit de 09:35). Conferido por
+`git --git-dir` no main tree: a branch avançou nos nove minutos entre as duas leituras. É a segunda
+vez que a instrução do prompt ("se não mediu, não escreva") devolve a correção na direção certa.
+
+**Três afirmações foram verificadas contra a fonte pelo revisor, não aceitas pela citação:**
+
+1. **"Sempre quatro slots" (key fact 3) confere no código, não na prosa.** `RedatorDocumentType`
+   tem exatamente quatro casos (`CV`, `REUF`, `TITULO`, `POSTGRADO`) e
+   `RedatorProfileData.php:48` projeta `RedatorDocumentType::cases()` — a lista não depende do que o
+   redator subiu.
+2. **A suspeita de lacuna nas EAP foi levantada e derrubada por medição.** O packet consumiu **3**
+   das **9** páginas de Meu Perfil da base canônica, e o teto da skill é cinco artefatos externos —
+   valia perguntar quais ficaram de fora. Buscadas na collection `e64b7d57-…` e abertas por ID: a
+   "projeção resumida de idoneidade e atividade profissional" (EAP **8.5.3**), o "self-service
+   seguro de documentos profissionais" (**8.5.6**) e os "testes de integração" (**8.5.8**) são
+   **todas `Camada: Backend`**. As EAP de frontend da sprint são exatamente **8.5.4, 8.5.5 e
+   8.5.9** — e ele consumiu as três. Nenhum gap.
+3. **O critério de aceite que o packet atribui à 8.5.5 é verbatim dela.** A página
+   (`3b1bc960-…-81e6`, `Camada: Frontend`, `ADR ref: ADR-05, ADR-06`) diz *"Admin não vê seção
+   documental"*, *"alteração de senha exige fluxo próprio"* e *"loading/erro/vazio/sucesso, i18n,
+   tema e responsividade seguem shared/ui"*. O packet não inflou o aceite.
+
+**As duas divergências que a abertura levantou voltaram resolvidas com base declarada:** o resumo do
+Redator (o Drive e a EAP 8.5.3 pedem turmas e pendências; o corte D1 as removeu do contrato, e a
+instrução posterior do João vence) e a validade documental (o Drive §5 manda calcular no backend; a
+linha da `frontend-fsliced.md` é genérica demais e vale só para o DTO administrativo). Nenhuma foi
+resolvida em silêncio.
+
+**Uma observação do revisor que NÃO vira emenda no packet, e fica aqui para o brainstorming:** o
+sinal de aceite da 8.5.5 pede *"CTA para o Dashboard do Redator"*, e o Dashboard do Redator é
+justamente a frente paralela — hoje a rota `/` ainda serve `DashboardPage` placeholder. O CTA não
+está bloqueado (a rota existe), mas para onde ele aponta e o que promete é decisão de desenho, não
+fato do packet. `status: ready` continua correto: nenhuma pergunta bloqueante sobrou.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
