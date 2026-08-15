@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-15-dashboard-frontend-central-controle.md
 context_packet: docs/superpowers/context-packets/2026-08-15-dashboard-frontend-central-controle.md
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T09:35:00-03:00
+updated_at: 2026-08-15T10:08:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -222,6 +222,55 @@ catraca nova numa camada inteira — a segunda lente é decisão do João no `/r
 
 O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
 escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-15: três medições corrigiram a spec antes de virar plano
+
+João aprovou a spec escrita ("aprovado pode continuar") e o `writing-plans` rodou. O plano tem
+**11 tasks** e vive em
+`docs/superpowers/plans/2026-08-15-dashboard-frontend-central-controle.md`.
+
+**A escrita do plano exigiu medir o que a spec tinha afirmado, e três afirmações caíram:**
+
+1. **`formatUf` tem 5 sítios de import, não 4.** `grep -rn "lib/uf'" src/` acusa `BudgetStatCard`,
+   `BudgetsTable`, `QuoteRow`, `useQuoteForm` **e `DataStep.tsx`** — este último consome
+   `parseUfInput` e ficara de fora da contagem. O quinto é o mais caro dos cinco: é o caminho de
+   **escrita** do valor da cotação, onde um erro grava dinheiro errado em silêncio, e não o de
+   leitura. D13 e o DoD da spec foram corrigidos.
+2. **O backend já manda a descrição do item pronta, em espanhol.** Medido em
+   `CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
+   `CertificationMetricsQuery.php:38` e `IdentityMetricsQuery.php:46`: `description` é string fixa
+   ("Cotización pendiente de aprobación."). A D14 manda traduzir os 11 tipos, então **isso não é a
+   mesma coisa que o rótulo** — a spec ganhou a **D17**: rótulo do tipo traduzido é a linha
+   principal, `description` entra como detalhe e fica em es-CL nas outras duas locales. Ela não some
+   porque em `turma_docs_incomplete` carrega a lista de documentos faltantes, dado que o front não
+   deriva. Traduzir texto de servidor é trabalho do backend e nasce no `backlog.md` no fechamento.
+3. **O caso "nenhuma seção legível" cabe no corte do runner.** Ele era caso-limite do §4 sem prova
+   automatizada nenhuma; como é decisão do hook e não de componente PrimeReact, virou o **5º teste
+   de `useDashboard`**. A spec §6 foi de 5 para 6 cenários.
+
+**A catraca de cor foi medida com o próprio seletor, não com o grep que originou o débito** (a
+regra do `frontend-fsliced.md`): `npx eslint 'src/app/**/*.tsx' --rule '{…COR_HARDCODED…}'` acusa
+**exatamente 3** — `Sidebar.tsx:60`, `Sidebar.tsx:71`, `SidebarItem.tsx:24`. Bate com o grep e com o
+backlog. A conversão **não pode** usar `--text-color`: a sidebar é navy FIXA nos dois temas
+(§6/UI-04) e a tinta do tema claro seria texto escuro sobre navy — entram dois tokens novos em
+`brand-theme.css` com os valores literais que o Tailwind já rendia, para a entrada da catraca não
+mexer um pixel.
+
+**Uma adição de plano à estrutura da spec §3:** `DashboardItemRow.tsx`. `AlertData` e
+`PendingItemData` têm a mesma forma de linha (`severity`, `description`, `date`, `navigation`); só
+`module` distingue. A linha é um componente, e as duas listas o compõem.
+
+**Números do gate:** baseline **36 arquivos / 186 testes**; ao fim **38 / 204**. Os "6 testes" da
+spec são **cenários**; o vitest conta **casos**, e os `it.each` de `navigation.test.ts` rendem 13.
+
+**Handoff: `executor: claude`, main tree.** Três das onze tasks são de fronteira do repositório e
+não de escrita de tela — mover um utilitário de dinheiro entre camadas, ligar uma catraca de lint
+numa camada inteira (reescrevendo o comentário normativo que a decisão torna falso) e provar o DoD
+com papel-sonda de RBAC e contagem de tabela. **O `/lotus-ui-review` do Step 9 da Task 11 é passo do
+João** (`disable-model-invocation: true`); o bloco não fecha sem ele.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco dashboard-frontend-central-controle`,
+por instrução do João. O planejamento **não** implementa.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 

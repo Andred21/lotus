@@ -88,11 +88,14 @@ D13–D15 são derivadas e declaradas como tais.
   ativação não existe — item 4 de "Próximos blocos").
 - **D13 (derivada) — `formatUf` sobe para `shared/lib/uf.ts`.** O KPI `cotacoes.pending_value_uf`
   chega como string decimal e precisa da mesma formatação que o Comercial usa; o arquivo vive hoje
-  em `features/commercial/lib/uf.ts` com 4 consumidores. `app/` importando de uma feature é
-  permitido pela direção da dependência, mas acopla a página ao módulo comercial por um utilitário
-  puro. O argumento é o do ADR-18 (`adrs.md:222`): recurso referenciado por mais de uma camada é
-  **promovido**, em vez de decidido caso a caso. O arquivo inteiro se move (`formatUf` e
-  `parseUfInput` são ambos utilitário puro) e os 4 imports são reapontados no mesmo commit.
+  em `features/commercial/lib/uf.ts` com **5 sítios de import** (medido em 2026-08-15 no
+  planejamento: `BudgetStatCard.tsx`, `BudgetsTable.tsx`, `QuoteRow.tsx`, `useQuoteForm.ts` e
+  `DataStep.tsx` — este último consome `parseUfInput` e faltava na primeira contagem desta spec).
+  `app/` importando de uma feature é permitido pela direção da dependência, mas acopla a página ao
+  módulo comercial por um utilitário puro. O argumento é o do ADR-18 (`adrs.md:222`): recurso
+  referenciado por mais de uma camada é **promovido**, em vez de decidido caso a caso. O arquivo
+  inteiro se move (`formatUf` e `parseUfInput` são ambos utilitário puro) e os 5 imports são
+  reapontados no mesmo commit.
 - **D14 (derivada) — Vocabulário e i18n.** Três locales com chaves idênticas, `es-CL` como
   referência de rótulo. Entram os 6 `PendingItemType`, os 5 `DashboardAlertType` e as 6 etapas do
   `PipelineStage`, além dos rótulos de KPI, agenda e estados vazios. Datas por `formatDate`
@@ -104,6 +107,18 @@ D13–D15 são derivadas e declaradas como tais.
   são leitura de contexto. Alternativas recusadas: coluna única na ordem de prioridade (mesma leitura
   em toda viewport, mas nada além dos KPIs cabe na primeira tela) e duas colunas assimétricas (a
   coluna estreita vira rodapé comprido no mobile).
+- **D17 (derivada, medida) — A linha do item é rótulo traduzido; a `description` do backend é
+  detalhe secundário e fica em es-CL.** Medido em `CommercialMetricsQuery.php:48`,
+  `OperationMetricsQuery.php:128`, `CertificationMetricsQuery.php:38` e
+  `IdentityMetricsQuery.php:46`: o backend já manda `description` como **string fixa em espanhol**
+  ("Cotización pendiente de aprobación.", "Clase sin relator designado."). A D14 manda traduzir os
+  11 tipos, então o rótulo do tipo é a linha principal e sai traduzido nas 3 locales. A
+  `description` não some porque em `turma_docs_incomplete` ela carrega informação que o front não
+  tem como derivar — a lista de documentos faltantes —, e descartá-la perderia dado; entra como
+  linha secundária. **Consequência declarada:** numa UI em pt-BR ou en, o detalhe do item aparece
+  em espanhol. Aceito para o cliente chileno, cuja locale de referência é `es-CL`; traduzir o texto
+  do servidor é trabalho do backend (chave i18n ou dado estruturado no lugar da frase pronta) e
+  nasce no `backlog.md` no fechamento, não neste bloco.
 
 ## 3. Arquitetura
 
@@ -175,7 +190,11 @@ jsdom segue **fora**. Cada teste com o vermelho visto antes do verde (lição 10
 3. **`useDashboard` — falha com cache:** o flag **não** liga e os dados anteriores permanecem.
 4. **`useDashboard` — query key varia por período** (D5), provando que o B2 não precisará mexer no
    cache.
-5. **`navigation.ts`:** cada `PendingItemType` e `DashboardAlertType` resolve a rota da tabela §5, e
+5. **`useDashboard` — nenhuma seção legível:** o caso-limite da última linha do §4 (todos os KPIs
+   nulos, `pipeline` e `agenda` nulos) tem estado próprio, distinto de vazio e de falha. É o único
+   dos seis estados do §4 que cai dentro do corte do runner, e sem ele a página em branco de quem
+   não tem módulo nenhum não teria guarda de regressão em lugar algum.
+6. **`navigation.ts`:** cada `PendingItemType` e `DashboardAlertType` resolve a rota da tabela §5, e
    chave ausente devolve "sem link" — teste de função pura, dentro do corte do runner.
 
 **O que NÃO terá teste automatizado, declarado:** as 5 seções renderizadas, o layout em duas
@@ -193,10 +212,12 @@ como lista fechada do que provar em cada viewport.
 - **Catraca de cor provada nos dois sentidos** (D11): a regra entra em `src/app/**` sem bloco
   `ignores`, e uma sonda reintroduzindo `text-slate-400` faz `pnpm lint` reprovar nomeando arquivo
   e linha.
-- **A promoção de `uf.ts` provada onde ela pode quebrar** (D13): os 4 consumidores do Comercial
-  seguem exibindo UF na tela — `BudgetsTable`, `BudgetStatCard`, `QuoteRow` e o preenchimento de
-  `useQuoteForm` —, conferidos na revisão visual, não só por `tsc` verde. É dinheiro na tela.
-- `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` verde com os 5 testes novos — contra o
+- **A promoção de `uf.ts` provada onde ela pode quebrar** (D13): os 5 sítios do Comercial seguem
+  exibindo e aceitando UF na tela — `BudgetsTable`, `BudgetStatCard`, `QuoteRow`, o preenchimento
+  de `useQuoteForm` e o campo de valor do `DataStep` (que usa `parseUfInput`: é o caminho de
+  ESCRITA, onde um erro grava valor errado em silêncio) —, conferidos na revisão visual, não só por
+  `tsc` verde. É dinheiro na tela.
+- `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` verde com os 6 testes novos — contra o
   baseline medido de **36 arquivos / 186 testes**.
 - **Zero mutação:** o bloco não escreve em tabela nenhuma; contagem de tabelas antes e depois de uma
   rodada da tela, com as sondas de RBAC restauradas aos números do snapshot inicial.
@@ -234,3 +255,5 @@ lentes, é decisão dele no `/revisar-sprint`.
 - **A ocultação por gate `null` não terá guarda automatizada** (componente PrimeReact fora do corte
   do runner): vale pela prova com papel-sonda do DoD, não por teste que reprove numa regressão
   futura.
+- **O detalhe de cada pendência e alerta fica em espanhol nas outras duas locales** (D17): a frase
+  vem pronta do backend. O rótulo do tipo, que é a linha que o olho lê primeiro, traduz.
