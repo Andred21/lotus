@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
 next_action: plan_active_work_item
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.md
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T09:42:05-03:00
+updated_at: 2026-08-15T10:34:12-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -221,6 +221,51 @@ fato do packet. `status: ready` continua correto: nenhuma pergunta bloqueante so
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
 (brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-15: cinco decisões, e a divergência de taxonomia virou débito nomeado
+
+**Spec:** `docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md`. Cinco perguntas abertas,
+cinco respondidas pelo João; D6–D10 derivadas e declaradas como tais.
+
+**D1 — layout de duas colunas com corte por mutabilidade.** Três formas foram desenhadas (empilhada,
+abas, duas colunas) e a de duas colunas ganhou; o corte entre elas foi a segunda pergunta, porque era
+ele que decidia se a esquerda ficava oca para o Admin. Cortar por *seção* deixava o Admin com uma
+coluna que existe só para segurar uma foto; cortar por **mutabilidade** dá conteúdo real aos dois
+papéis e faz a regra do bloco — o que é seu vs. o que o administrador controla — virar a regra
+visível do layout. Custo aceito: o nome aparece nos dois lados.
+
+**D2 — `useResourceState` é arquivo novo, `useLoadState` fica intocado.** O hook existente é tipado
+`UseQueryResult<T[], …>` e sua razão de existir é a política "falhou" vs. "veio vazia" de uma LISTA.
+Perfil é objeto único: não tem vazio. Generalizar mexeria nos seis consumidores por conveniência de
+um sétimo caso que não é do mesmo tipo — e arquivo novo é também a opção de menor colisão com a
+frente paralela, que pode adotá-lo depois.
+
+**D3 — `ProfileDocumentSlot` é irmão, não reuso.** O slot administrativo deriva status no front
+(`docStatus(valid_until)`), porque `RedatorDocumentData` não tem `status`; o do perfil consome
+`RedatorProfileDocumentData.status` pronto. São duas fontes de verdade para a mesma pergunta, e
+embutir as duas no mesmo componente é o que faria a tela mentir sob refactor.
+
+**A divergência que o brainstorming mediu e o bloco NÃO conserta:** o mesmo REUF renderiza `sin_venc`
+na tela administrativa e `vigente` no perfil, e um documento que vence em exatamente 30 dias é
+`vigente` no front (`<` estrito, relógio de parede) e `vence_em_breve` no backend (`<=` inclusivo,
+meia-noite). A raiz é `RedatorDocumentData` não ter `status` — correção de backend, declarada fora de
+escopo pela D6 do bloco 1. Vira **débito nomeado na spec §10**, não emenda silenciosa. Pela mesma
+razão, a linha da `frontend-fsliced.md` ("status de documento e idoneidade se calculam no front") é
+hoje meia-verdade: vale para o DTO administrativo, não para o de perfil. Vira pendência de doc.
+
+**O CTA que o packet deixou para o desenho foi resolvido:** aponta para `/`, que hoje serve um
+`DashboardPage` placeholder (22 linhas, só `PageHeader`). O link funciona em qualquer ordem de merge;
+se este bloco fechar primeiro, apenas leva a uma tela magra. Risco declarado, não bloqueio.
+
+**Medições que mudaram o desenho, não confirmaram premissa:** `documentType.*` já existe nos três
+locales e é reusado; `documentStatus.*` também existe, mas com a taxonomia ANTIGA (`sin_venc`,
+`por_vencer`) — daí o namespace `profile.docStatus.*` próprio (D9), para não acoplar as duas telas a
+uma régua que só uma usa. E `i18n.test.ts` protege a sincronia de `<html lang>`, **não** a paridade
+de chaves entre dicionários: locale esquecido não reprova nada, e isso ficou declarado como risco de
+gate na spec §8.
+
+**Estado: `planning`.** Próxima ação: `writing-plans` produz o plano executável; só então
+`ready_for_execution`.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 

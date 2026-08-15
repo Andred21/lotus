@@ -19,6 +19,7 @@
 .claude/scheduled_tasks.lock
 .claude/worktrees/
 .superpowers/sdd/progress.md
+.superpowers/brainstorm/
 
 # Revisão UI/UX assistida — evidências locais, sessões e credenciais efêmeras
 .playwright-cli/
