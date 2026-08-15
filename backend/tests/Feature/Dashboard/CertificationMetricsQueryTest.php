@@ -140,7 +140,13 @@ class CertificationMetricsQueryTest extends TestCase
         ], $this->pendingProjection($query->pendencias()));
     }
 
-    public function test_alerta_certificados_e_documentos_vencidos_ou_vencendo_na_janela(): void
+    /**
+     * Documento de relator NÃO sai por aqui — é dado de Identity e responde a
+     * `identity.user.view` (`IdentityMetricsQueryTest`). A asserção nomeada
+     * abaixo é a que prova a separação: o documento existe no banco deste
+     * cenário e não pode aparecer nesta lista.
+     */
+    public function test_alerta_certificados_vencidos_ou_vencendo_na_janela(): void
     {
         $turma = $this->createConcludedTurma();
         $expiredCertificate = $this->createCertificate(
@@ -164,13 +170,9 @@ class CertificationMetricsQueryTest extends TestCase
             CarbonImmutable::today()->subDay(),
         );
 
-        $expiredDocument = $this->createRedatorDocument(
+        $this->createRedatorDocument(
             RedatorDocumentType::REUF,
             CarbonImmutable::today()->subDay(),
-        );
-        $expiringDocument = $this->createRedatorDocument(
-            RedatorDocumentType::TITULO,
-            CarbonImmutable::today()->addDays(10),
         );
 
         $alerts = collect(app(CertificationMetricsQuery::class)->alertas())
@@ -188,18 +190,6 @@ class CertificationMetricsQueryTest extends TestCase
                 'type' => DashboardAlertType::CertificateExpiringSoon,
                 'severity' => DashboardSeverity::Medium,
                 'entity_id' => $expiringCertificate->id,
-                'date' => '2026-08-24',
-            ],
-            [
-                'type' => DashboardAlertType::RedatorDocumentExpired,
-                'severity' => DashboardSeverity::High,
-                'entity_id' => $expiredDocument->id,
-                'date' => '2026-08-13',
-            ],
-            [
-                'type' => DashboardAlertType::RedatorDocumentExpiringSoon,
-                'severity' => DashboardSeverity::Medium,
-                'entity_id' => $expiringDocument->id,
                 'date' => '2026-08-24',
             ],
         ], $alerts
@@ -222,6 +212,15 @@ class CertificationMetricsQueryTest extends TestCase
         ));
         $this->assertFalse($alerts->contains(
             fn ($alert): bool => $alert->type === DashboardAlertType::TurmaOverdue,
+        ));
+
+        // A separação por gate (Q-1): o documento vencido existe no banco deste
+        // cenário e não sai por aqui.
+        $this->assertFalse($alerts->contains(
+            fn ($alert): bool => in_array($alert->type, [
+                DashboardAlertType::RedatorDocumentExpired,
+                DashboardAlertType::RedatorDocumentExpiringSoon,
+            ], true),
         ));
     }
 

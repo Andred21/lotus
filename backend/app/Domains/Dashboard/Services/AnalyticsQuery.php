@@ -3,6 +3,7 @@
 namespace App\Domains\Dashboard\Services;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Client;
@@ -18,31 +19,54 @@ use Carbon\CarbonImmutable;
 
 class AnalyticsQuery
 {
-    public function series(CarbonImmutable $start, CarbonImmutable $end): SeriesData
-    {
-        $turmasIniciadas = Turma::query()
-            ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
-            ->get(['start_date']);
-        $turmasConcluidas = Turma::query()
-            ->whereBetween('concluded_at', [$start, $end])
-            ->get(['concluded_at']);
-        $certificadosEmitidos = Certificate::query()
-            ->whereBetween('created_at', [$start, $end])
-            ->get(['created_at']);
-        $matriculas = Enrollment::query()
-            ->whereBetween('created_at', [$start, $end])
-            ->get(['created_at']);
-        $ufAprovada = Quote::query()
-            ->where('status', QuoteStatus::Approved)
-            ->whereBetween('approved_at', [$start, $end])
-            ->get(['approved_at', 'value_uf']);
-
+    /**
+     * Série que o chamador não vai mostrar não é lida. Os flags dizem O QUE
+     * calcular — quem PODE ver segue sendo decisão do assembler (D7); o que
+     * muda aqui é não pagar a leitura para depois anular o campo (Q-9).
+     */
+    public function series(
+        CarbonImmutable $start,
+        CarbonImmutable $end,
+        bool $includeOperation,
+        bool $includeCertification,
+        bool $includeUf,
+    ): SeriesData {
         return new SeriesData(
-            turmas_iniciadas: $this->monthlyCounts($turmasIniciadas, 'start_date'),
-            turmas_concluidas: $this->monthlyCounts($turmasConcluidas, 'concluded_at'),
-            certificados_emitidos: $this->monthlyCounts($certificadosEmitidos, 'created_at'),
-            matriculas: $this->monthlyCounts($matriculas, 'created_at'),
-            uf_aprovada: $this->monthlyAmounts($ufAprovada, 'approved_at'),
+            turmas_iniciadas: $includeOperation
+                ? $this->monthlyCounts(
+                    Turma::query()
+                        ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+                        ->get(['start_date']),
+                    'start_date',
+                )
+                : null,
+            turmas_concluidas: $includeOperation
+                ? $this->monthlyCounts(
+                    Turma::query()->whereBetween('concluded_at', [$start, $end])->get(['concluded_at']),
+                    'concluded_at',
+                )
+                : null,
+            certificados_emitidos: $includeCertification
+                ? $this->monthlyCounts(
+                    Certificate::query()->emitidos()->whereBetween('created_at', [$start, $end])->get(['created_at']),
+                    'created_at',
+                )
+                : null,
+            matriculas: $includeOperation
+                ? $this->monthlyCounts(
+                    Enrollment::query()->whereBetween('created_at', [$start, $end])->get(['created_at']),
+                    'created_at',
+                )
+                : null,
+            uf_aprovada: $includeUf
+                ? $this->monthlyAmounts(
+                    Quote::query()
+                        ->where('status', QuoteStatus::Approved)
+                        ->whereBetween('approved_at', [$start, $end])
+                        ->get(['approved_at', 'value_uf']),
+                    'approved_at',
+                )
+                : null,
         );
     }
 
@@ -68,20 +92,32 @@ class AnalyticsQuery
             ->map(fn ($count): int => (int) $count)
             ->all();
         $courseCertificates = Certificate::query()
+            ->emitidos()
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw('course_id AS entity_id, COUNT(*) AS aggregate')
             ->groupBy('course_id')
             ->pluck('aggregate', 'entity_id')
             ->map(fn ($count): int => (int) $count)
             ->all();
-        $courseUf = $this->ufTotals(
-            Quote::query()
-                ->where('status', QuoteStatus::Approved)
-                ->whereBetween('approved_at', [$start, $end])
-                ->get(['course_id AS entity_id', 'value_uf']),
-        );
+        // Sem gate comercial a coluna de UF sai `null` linha a linha — então a
+        // cotação nem chega a ser lida. Carregar sob gate fechado é trabalho
+        // que ninguém vai ver (Q-9).
+        $courseUf = $includeUf
+            ? $this->ufTotals(
+                Quote::query()
+                    ->where('status', QuoteStatus::Approved)
+                    ->whereBetween('approved_at', [$start, $end])
+                    ->get(['course_id AS entity_id', 'value_uf']),
+            )
+            : [];
 
+        // `withTrashed()` nos agregados de cliente pelo mesmo motivo do nome: a
+        // query nasce em `clients`, então o escopo de soft delete apagaria a
+        // linha antes mesmo de haver nome para resolver. As tabelas do caminho
+        // (`budgets`, `quotes`, `turmas`) seguem com o `whereNull` explícito —
+        // ali o arquivado deve mesmo sumir.
         $clientTurmas = Client::query()
+            ->withTrashed()
             ->join('budgets', 'budgets.client_id', '=', 'clients.id')
             ->join('quotes', 'quotes.budget_id', '=', 'budgets.id')
             ->join('turmas', 'turmas.quote_id', '=', 'quotes.id')
@@ -95,6 +131,7 @@ class AnalyticsQuery
             ->map(fn ($count): int => (int) $count)
             ->all();
         $clientEnrollments = Client::query()
+            ->withTrashed()
             ->join('budgets', 'budgets.client_id', '=', 'clients.id')
             ->join('quotes', 'quotes.budget_id', '=', 'budgets.id')
             ->join('turmas', 'turmas.quote_id', '=', 'quotes.id')
@@ -110,6 +147,7 @@ class AnalyticsQuery
             ->map(fn ($count): int => (int) $count)
             ->all();
         $clientCertificates = Client::query()
+            ->withTrashed()
             ->join('budgets', 'budgets.client_id', '=', 'clients.id')
             ->join('quotes', 'quotes.budget_id', '=', 'budgets.id')
             ->join('turmas', 'turmas.quote_id', '=', 'quotes.id')
@@ -119,22 +157,28 @@ class AnalyticsQuery
             ->whereNull('quotes.deleted_at')
             ->whereNull('turmas.deleted_at')
             ->whereNull('enrollments.deleted_at')
+            // Mesma definição de "emitido" do `Certificate::scopeEmitidos()` —
+            // aqui qualificada pela tabela porque a query nasce em `clients`.
+            ->where('certificates.status', CertificateStatus::Emitido)
             ->whereBetween('certificates.created_at', [$start, $end])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT certificates.id) AS aggregate')
             ->groupBy('clients.id')
             ->pluck('aggregate', 'entity_id')
             ->map(fn ($count): int => (int) $count)
             ->all();
-        $clientUf = $this->ufTotals(
-            Client::query()
-                ->join('budgets', 'budgets.client_id', '=', 'clients.id')
-                ->join('quotes', 'quotes.budget_id', '=', 'budgets.id')
-                ->whereNull('budgets.deleted_at')
-                ->whereNull('quotes.deleted_at')
-                ->where('quotes.status', QuoteStatus::Approved)
-                ->whereBetween('quotes.approved_at', [$start, $end])
-                ->get(['clients.id AS entity_id', 'quotes.value_uf']),
-        );
+        $clientUf = $includeUf
+            ? $this->ufTotals(
+                Client::query()
+                    ->withTrashed()
+                    ->join('budgets', 'budgets.client_id', '=', 'clients.id')
+                    ->join('quotes', 'quotes.budget_id', '=', 'budgets.id')
+                    ->whereNull('budgets.deleted_at')
+                    ->whereNull('quotes.deleted_at')
+                    ->where('quotes.status', QuoteStatus::Approved)
+                    ->whereBetween('quotes.approved_at', [$start, $end])
+                    ->get(['clients.id AS entity_id', 'quotes.value_uf']),
+            )
+            : [];
 
         $courseIds = $this->entityIds(
             $courseTurmas,
@@ -149,9 +193,14 @@ class AnalyticsQuery
             $clientUf,
         );
 
+        // `withTrashed()` porque o nome é PROJEÇÃO de uma linha que já existe:
+        // `rankingRows()` itera os nomes, então curso ou cliente arquivado
+        // apagaria a linha inteira do ranking enquanto a série do mesmo payload
+        // segue contando a turma dele. Soft delete é arquivamento, não
+        // desaparecimento (`.claude/rules/backend-ddd.md`; Q-4).
         return new RankingsData(
             courses: $this->rankingRows(
-                Course::query()->whereIn('id', $courseIds)->pluck('name', 'id')->all(),
+                Course::query()->withTrashed()->whereIn('id', $courseIds)->pluck('name', 'id')->all(),
                 $courseTurmas,
                 $courseEnrollments,
                 $courseCertificates,
@@ -159,7 +208,7 @@ class AnalyticsQuery
                 $includeUf,
             ),
             clients: $this->rankingRows(
-                Client::query()->whereIn('id', $clientIds)->pluck('legal_name', 'id')->all(),
+                Client::query()->withTrashed()->whereIn('id', $clientIds)->pluck('legal_name', 'id')->all(),
                 $clientTurmas,
                 $clientEnrollments,
                 $clientCertificates,
@@ -213,7 +262,15 @@ class AnalyticsQuery
         );
     }
 
-    /** @param iterable<int, object> $rows */
+    /**
+     * Soma em `bcadd`, não `SUM()` no banco, e a razão é medível: `value_uf` é
+     * DECIMAL de 4 casas; MySQL soma DECIMAL exato, sqlite (a suíte) devolve
+     * float e arredonda. Somar no banco daria dois resultados diferentes para o
+     * mesmo dado conforme o ambiente — em cifra com peso contratual. A projeção
+     * carrega uma coluna só e a leitura já vem escopada pelo período (D9).
+     *
+     * @param  iterable<int, object>  $rows
+     */
     private function ufTotals(iterable $rows): array
     {
         $totals = [];

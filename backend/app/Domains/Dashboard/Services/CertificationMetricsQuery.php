@@ -10,11 +10,9 @@ use App\Domains\Dashboard\Enums\DashboardAlertType;
 use App\Domains\Dashboard\Enums\DashboardModule;
 use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Dashboard\Enums\PendingItemType;
-use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
-use App\Shared\Files\Models\File;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -46,13 +44,18 @@ class CertificationMetricsQuery
             ->all();
     }
 
-    /** @return AlertData[] */
+    /**
+     * Só certificado. Documento de idoneidade de relator é dado de Identity e
+     * sai pelo `IdentityMetricsQuery`, sob o gate `identity.user.view`.
+     *
+     * @return AlertData[]
+     */
     public function alertas(): array
     {
         $today = CarbonImmutable::today();
         $horizon = DashboardWindows::expiryHorizon();
 
-        $certificateAlerts = Certificate::query()
+        return Certificate::query()
             ->where('status', CertificateStatus::Emitido)
             ->whereNotNull('valido_ate')
             ->whereDate('valido_ate', '<=', $horizon)
@@ -78,42 +81,6 @@ class CertificationMetricsQuery
                 );
             })
             ->all();
-
-        $documentAlerts = File::query()
-            ->where('fileable_type', 'redator')
-            ->whereIn(
-                'type',
-                array_map(
-                    fn (RedatorDocumentType $type): string => $type->value,
-                    RedatorDocumentType::cases(),
-                ),
-            )
-            ->whereNotNull('valid_until')
-            ->whereDate('valid_until', '<=', $horizon)
-            ->orderBy('valid_until')
-            ->orderBy('id')
-            ->get(['id', 'fileable_id', 'type', 'valid_until'])
-            ->map(function (File $document) use ($today): AlertData {
-                $expired = $document->valid_until->isBefore($today);
-
-                return new AlertData(
-                    type: $expired
-                        ? DashboardAlertType::RedatorDocumentExpired
-                        : DashboardAlertType::RedatorDocumentExpiringSoon,
-                    severity: $expired
-                        ? DashboardSeverity::High
-                        : DashboardSeverity::Medium,
-                    entity_id: $document->id,
-                    description: $expired
-                        ? "Documento {$document->type} de relator vencido."
-                        : "Documento {$document->type} de relator próximo a vencer.",
-                    date: $document->valid_until->toDateString(),
-                    navigation: ['redator_id' => (int) $document->fileable_id],
-                );
-            })
-            ->all();
-
-        return [...$certificateAlerts, ...$documentAlerts];
     }
 
     /** @return Builder<Enrollment> */

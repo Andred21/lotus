@@ -3,6 +3,7 @@
 namespace App\Domains\Dashboard\Services;
 
 use App\Domains\Dashboard\Data\RedatorLoadData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -34,7 +35,14 @@ class RedatorLoadQuery
         return Redator::query()
             ->with([
                 'user',
-                'documents' => fn ($query) => $query->whereNotNull('valid_until'),
+                // Só documento de idoneidade conta como vencido/vencendo — a
+                // mesma lista canônica que o alerta do admin e o do próprio
+                // redator usam. Sem o filtro de tipo, qualquer arquivo do
+                // redator com `valid_until` inflava a contagem e o número do
+                // admin divergia do que o redator via (Q-8).
+                'documents' => fn ($query) => $query
+                    ->whereIn('type', RedatorDocumentType::values())
+                    ->whereNotNull('valid_until'),
             ])
             ->get()
             ->map(function (Redator $redator) use ($today, $horizon, $porRedator): RedatorLoadData {

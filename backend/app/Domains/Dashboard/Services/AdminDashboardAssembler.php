@@ -7,7 +7,7 @@ use App\Domains\Dashboard\Data\AdminKpisData;
 use App\Domains\Dashboard\Data\AgendaTurmaData;
 use App\Domains\Dashboard\Data\AlertData;
 use App\Domains\Dashboard\Data\DashboardFilterData;
-use App\Domains\Dashboard\Data\PendingItemData;
+use App\Domains\Dashboard\Data\QuoteKpisData;
 use App\Domains\Dashboard\Data\RankingsData;
 use App\Domains\Dashboard\Data\SeriesData;
 use App\Domains\Dashboard\Enums\DashboardAlertType;
@@ -30,12 +30,14 @@ use Carbon\CarbonImmutable;
  * meia seção com zero no lugar do que não pode ser lido seria devolver número
  * errado, não número censurado.
  *
- * Duas exceções conhecidas, ambas impostas pelo contrato TS da Task 1 e
- * registradas para o review do bloco:
- *  - os quatro KPIs de turma são `int` não-nulo; sem `operation.turma.view`
- *    eles saem 0, que se lê como "não há turma" e não como "não autorizado";
- *  - `RankingRowData::$certificados` é `int` não-nulo, então `rankings` exige
- *    operação E certificação (fail-closed) em vez de degradar coluna a coluna.
+ * Uma exceção conhecida: `RankingRowData::$certificados` é `int` não-nulo,
+ * então `rankings` exige operação E certificação (fail-closed) em vez de
+ * degradar coluna a coluna.
+ *
+ * Os quatro KPIs de turma eram a segunda exceção — saíam 0 sem
+ * `operation.turma.view`, que se lê como "não há turma" e não como "não
+ * autorizado". O review de 2026-08-14 (Q-3) tratou isso como o que era: zero
+ * que mente. `AdminKpisData` passou a declará-los anuláveis.
  */
 class AdminDashboardAssembler
 {
@@ -46,6 +48,7 @@ class AdminDashboardAssembler
         private readonly AnalyticsQuery $analytics,
         private readonly PipelineQuery $pipeline,
         private readonly RedatorLoadQuery $redatores,
+        private readonly IdentityMetricsQuery $identity,
     ) {}
 
     public function assemble(User $user, DashboardFilterData $filter): AdminDashboardData
@@ -63,16 +66,34 @@ class AdminDashboardAssembler
 
         $agenda = $canOperation ? $this->operation->agenda() : null;
 
+        // Cada agregação é consultada UMA vez e reusada por quem precisar dela.
+        // O funil lia os mesmos três serviços por conta própria e refazia tudo
+        // (Q-6); agora recebe pronto o que os KPIs e as pendências já apuraram.
+        $turmaKpis = $canOperation ? $this->operation->kpis() : null;
+        $quoteKpis = $canCommercial ? $this->commercial->quoteKpis() : null;
+        $commercialPendencias = $canCommercial ? $this->commercial->pendencias() : [];
+        $operationPendencias = $canOperation ? $this->operation->pendencias() : [];
+        $certificationPendencias = $canCertification ? $this->certification->pendencias() : [];
+
         return new AdminDashboardData(
             view: 'admin',
-            kpis: $this->kpis($canOperation, $canCommercial, $canCertification),
-            pendencias: $this->pendencias($canOperation, $canCommercial, $canCertification),
-            alertas: $this->alertas($agenda?->overdue ?? [], $canCertification),
+            kpis: $this->kpis($turmaKpis, $quoteKpis, $canCertification),
+            pendencias: [
+                ...$commercialPendencias,
+                ...$operationPendencias,
+                ...$certificationPendencias,
+            ],
+            alertas: $this->alertas($agenda?->overdue ?? [], $canCertification, $canIdentity),
             // O funil atravessa turma e certificado — sem uma das duas leituras
             // a partição de "concluída" mentiria, e etapa de funil errada é pior
             // que funil ausente.
             pipeline: $canOperation && $canCertification
-                ? $this->pipeline->stages(includeQuoteStages: $canCommercial)
+                ? $this->pipeline->stages(
+                    turmaKpis: $turmaKpis,
+                    certificationPendencias: $certificationPendencias,
+                    quoteKpis: $quoteKpis,
+                    commercialPendencias: $commercialPendencias,
+                )
                 : null,
             agenda: $agenda,
             compliance_turmas: $canOperation ? $this->operation->complianceTurmas() : null,
@@ -86,47 +107,37 @@ class AdminDashboardAssembler
         );
     }
 
-    private function kpis(bool $canOperation, bool $canCommercial, bool $canCertification): AdminKpisData
+    /**
+     * `$turmaKpis` nulo = sem `operation.turma.view`. Os quatro contadores saem
+     * `null`, não 0: "não autorizado" e "não há turma" são respostas
+     * diferentes, e o tipo agora sabe distingui-las (D7).
+     *
+     * @param  ?array{em_andamento:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis
+     */
+    private function kpis(?array $turmaKpis, ?QuoteKpisData $quoteKpis, bool $canCertification): AdminKpisData
     {
-        $turmas = $canOperation
-            ? $this->operation->kpis()
-            : ['em_andamento' => 0, 'encerrando' => 0, 'atrasadas' => 0, 'conclusoes_por_confirmar' => 0];
-
         return new AdminKpisData(
-            turmas_em_andamento: $turmas['em_andamento'],
-            turmas_encerrando_em_breve: $turmas['encerrando'],
-            turmas_atrasadas: $turmas['atrasadas'],
-            conclusoes_por_confirmar: $turmas['conclusoes_por_confirmar'],
-            cotacoes: $canCommercial ? $this->commercial->quoteKpis() : null,
+            turmas_em_andamento: $turmaKpis['em_andamento'] ?? null,
+            turmas_encerrando_em_breve: $turmaKpis['encerrando'] ?? null,
+            turmas_atrasadas: $turmaKpis['atrasadas'] ?? null,
+            conclusoes_por_confirmar: $turmaKpis['conclusoes_por_confirmar'] ?? null,
+            cotacoes: $quoteKpis,
             certificados_a_emitir: $canCertification ? $this->certification->certificadosAEmitir() : null,
         );
     }
 
     /**
-     * Filtro na FONTE, não na saída: o serviço do módulo bloqueado nem chega a
-     * ser consultado. `PendingItemData::$module` existe para o front agrupar —
-     * confiar nele para censurar seria filtrar depois de já ter lido.
-     *
-     * @return PendingItemData[]
-     */
-    private function pendencias(bool $canOperation, bool $canCommercial, bool $canCertification): array
-    {
-        return [
-            ...$canCommercial ? $this->commercial->pendencias() : [],
-            ...$canOperation ? $this->operation->pendencias() : [],
-            ...$canCertification ? $this->certification->pendencias() : [],
-        ];
-    }
-
-    /**
      * `AlertData` não tem campo `module` (contrato da Task 1), então o gate age
-     * na origem de cada grupo. Turma vencida é derivada da janela `overdue` da
-     * agenda — a mesma lista, não uma segunda definição de "atrasada" (D8).
+     * na origem de cada grupo — na FONTE, não na saída: o serviço do módulo
+     * bloqueado nem chega a ser consultado. Turma vencida é derivada da janela
+     * `overdue` da agenda — a mesma lista, não uma segunda definição de
+     * "atrasada" (D8). Documento de relator responde a `identity.user.view`,
+     * como a seção `redatores`: é dado de pessoa, não de certificado.
      *
      * @param  AgendaTurmaData[]  $overdue
      * @return AlertData[]
      */
-    private function alertas(array $overdue, bool $canCertification): array
+    private function alertas(array $overdue, bool $canCertification, bool $canIdentity): array
     {
         $alertas = array_map(
             fn (AgendaTurmaData $turma): AlertData => new AlertData(
@@ -143,12 +154,15 @@ class AdminDashboardAssembler
         return [
             ...$alertas,
             ...$canCertification ? $this->certification->alertas() : [],
+            ...$canIdentity ? $this->identity->alertasDocumentos() : [],
         ];
     }
 
     /**
      * Única seção com degradação série a série: `SeriesData` declara cada série
-     * anulável, então cada uma responde ao gate do seu próprio módulo.
+     * anulável, então cada uma responde ao gate do seu próprio módulo. O gate
+     * decide aqui e viaja como instrução do que calcular — a série negada nem
+     * chega a ser lida (Q-9).
      */
     private function series(
         CarbonImmutable $start,
@@ -161,14 +175,12 @@ class AdminDashboardAssembler
             return null;
         }
 
-        $series = $this->analytics->series($start, $end);
-
-        return new SeriesData(
-            turmas_iniciadas: $canOperation ? $series->turmas_iniciadas : null,
-            turmas_concluidas: $canOperation ? $series->turmas_concluidas : null,
-            certificados_emitidos: $canCertification ? $series->certificados_emitidos : null,
-            matriculas: $canOperation ? $series->matriculas : null,
-            uf_aprovada: $canCommercial ? $series->uf_aprovada : null,
+        return $this->analytics->series(
+            $start,
+            $end,
+            includeOperation: $canOperation,
+            includeCertification: $canCertification,
+            includeUf: $canCommercial,
         );
     }
 

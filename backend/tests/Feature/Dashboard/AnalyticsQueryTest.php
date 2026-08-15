@@ -129,7 +129,7 @@ class AnalyticsQueryTest extends TestCase
         $end = CarbonImmutable::parse('2026-02-28')->endOfDay();
         $query = app(AnalyticsQuery::class);
 
-        $series = $query->series($start, $end)->toArray();
+        $series = $this->series($query, $start, $end);
         $this->assertSame([
             'turmas_iniciadas' => [
                 ['month' => '2026-01', 'count' => 2],
@@ -194,6 +194,114 @@ class AnalyticsQueryTest extends TestCase
                 'uf_aprovada' => null,
             ]],
         ], $query->rankings($start, $end, false)->toArray());
+    }
+
+    /**
+     * Soft delete é arquivamento, não desaparecimento. `rankingRows()` itera os
+     * NOMES, então resolver o nome sem `withTrashed()` apagava a linha inteira —
+     * e a série do mesmo payload seguia contando a turma do curso arquivado, um
+     * ranking que não fecha com a própria série (Q-4).
+     */
+    public function test_curso_e_cliente_arquivados_mantem_a_linha_do_ranking(): void
+    {
+        $turma = $this->createConcludedTurma(
+            approvedAt: '2026-01-05 09:00:00',
+            valueUf: '100.0000',
+            startDate: '2026-01-10',
+            endDate: '2026-01-20',
+            concludedAt: '2026-01-20 18:00:00',
+        );
+        $this->createCertificate($this->createEnrollment($turma, '2026-01-10 10:00:00'), '2026-01-20 19:00:00');
+
+        $start = CarbonImmutable::parse('2026-01-01')->startOfDay();
+        $end = CarbonImmutable::parse('2026-02-28')->endOfDay();
+
+        $this->course->delete();
+        $this->client->delete();
+
+        $rankings = app(AnalyticsQuery::class)->rankings($start, $end, true)->toArray();
+
+        $this->assertSame([[
+            'id' => $this->course->id,
+            'name' => 'Analítica de Seguridad Eléctrica',
+            'turmas' => 1,
+            'matriculas' => 1,
+            'certificados' => 1,
+            'uf_aprovada' => '100.0000',
+        ]], $rankings['courses']);
+        $this->assertSame([[
+            'id' => $this->client->id,
+            'name' => 'Cliente Analytics Dashboard SpA',
+            'turmas' => 1,
+            'matriculas' => 1,
+            'certificados' => 1,
+            'uf_aprovada' => '100.0000',
+        ]], $rankings['clients']);
+
+        // A prova de que a linha não sumiu por acaso: a série que a alimenta
+        // segue contando a mesma turma.
+        $this->assertSame(
+            [['month' => '2026-01', 'count' => 1]],
+            $this->series(app(AnalyticsQuery::class), $start, $end)['turmas_iniciadas'],
+        );
+    }
+
+    /**
+     * "Certificados emitidos", uma definição só (Q-5): o histórico do redator
+     * conta apenas `Emitido`, e a série e o ranking do admin precisam contar o
+     * mesmo — senão o mesmo rótulo sai com dois números no mesmo payload.
+     */
+    public function test_certificado_revogado_nao_conta_como_emitido_em_serie_nem_ranking(): void
+    {
+        $turma = $this->createConcludedTurma(
+            approvedAt: '2026-01-05 09:00:00',
+            valueUf: '100.0000',
+            startDate: '2026-01-10',
+            endDate: '2026-01-20',
+            concludedAt: '2026-01-20 18:00:00',
+        );
+        $emitido = $this->createCertificate(
+            $this->createEnrollment($turma, '2026-01-10 10:00:00'),
+            '2026-01-20 19:00:00',
+        );
+        $revogado = $this->createCertificate(
+            $this->createEnrollment($turma, '2026-01-11 10:00:00'),
+            '2026-01-21 19:00:00',
+        );
+        $revogado->forceFill([
+            'status' => CertificateStatus::Revocado,
+            'revoked_at' => '2026-02-01 10:00:00',
+            'revocation_reason' => 'Error en el nombre.',
+        ])->saveQuietly();
+
+        $start = CarbonImmutable::parse('2026-01-01')->startOfDay();
+        $end = CarbonImmutable::parse('2026-02-28')->endOfDay();
+        $query = app(AnalyticsQuery::class);
+
+        $this->assertSame(
+            [['month' => '2026-01', 'count' => 1]],
+            $this->series($query, $start, $end)['certificados_emitidos'],
+            "Os dois certificados existem; só o {$emitido->codigo} segue emitido.",
+        );
+
+        $rankings = $query->rankings($start, $end, true)->toArray();
+        $this->assertSame(1, $rankings['courses'][0]['certificados']);
+        $this->assertSame(1, $rankings['clients'][0]['certificados']);
+    }
+
+    /**
+     * As séries com todos os gates abertos. O recorte por gate é do assembler e
+     * tem prova própria no `DashboardEndpointTest`.
+     */
+    private function series(AnalyticsQuery $query, CarbonImmutable $start, CarbonImmutable $end): array
+    {
+        return $query->series(
+            $start,
+            $end,
+            includeOperation: true,
+            includeCertification: true,
+            includeUf: true,
+        )->toArray();
     }
 
     private function createConcludedTurma(

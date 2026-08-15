@@ -12,6 +12,13 @@ use App\Domains\Dashboard\Enums\PendingItemType;
 
 class CommercialMetricsQuery
 {
+    /**
+     * A soma sai em `bcadd` e não em `SUM()` de propósito: `value_uf` é DECIMAL
+     * de 4 casas; MySQL soma DECIMAL exato, sqlite (a suíte) devolve float e
+     * arredonda. Somar no banco daria dois números diferentes para o mesmo dado
+     * conforme o ambiente, em cifra com peso contratual. O `pluck` carrega uma
+     * coluna só, das cotações pendentes — não a coleção de cotações (D9).
+     */
     public function quoteKpis(): QuoteKpisData
     {
         $pending = Quote::query()->where('status', QuoteStatus::Pending);

@@ -13,10 +13,10 @@ period_start: string,
 period_end: string,
 };
 export type AdminKpisData = {
-turmas_em_andamento: number,
-turmas_encerrando_em_breve: number,
-turmas_atrasadas: number,
-conclusoes_por_confirmar: number,
+turmas_em_andamento: number | null,
+turmas_encerrando_em_breve: number | null,
+turmas_atrasadas: number | null,
+conclusoes_por_confirmar: number | null,
 cotacoes: QuoteKpisData | null,
 certificados_a_emitir: number | null,
 };

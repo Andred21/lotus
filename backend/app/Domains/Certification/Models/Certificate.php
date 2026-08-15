@@ -7,6 +7,7 @@ use App\Domains\Certification\Casts\CertificateSnapshotCast;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use OwenIt\Auditing\Auditable;
@@ -48,6 +49,20 @@ class Certificate extends Model implements AuditableContract
         'revoked_at' => 'datetime',
         'status' => CertificateStatus::class,
     ];
+
+    /**
+     * "Certificado emitido", uma definição só. Revogado deixou de ser um
+     * certificado emitido — quem conta emissão (série, ranking, histórico do
+     * redator) pergunta por aqui, e não escreve o `where` de novo. Antes do
+     * review de 2026-08-14 o mesmo rótulo saía com dois números no mesmo
+     * payload (Q-5).
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeEmitidos(Builder $query): void
+    {
+        $query->where('status', CertificateStatus::Emitido);
+    }
 
     public function enrollment(): BelongsTo
     {

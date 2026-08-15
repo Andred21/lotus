@@ -8,6 +8,8 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Dashboard\Data\DashboardFilterData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
@@ -16,10 +18,13 @@ use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Files\Models\File;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Tests\Feature\Shared\DomainDependencyTest;
@@ -343,6 +348,189 @@ class DashboardEndpointTest extends TestCase
             ->assertJsonStructure(['type', 'title', 'status', 'detail', 'instance', 'errors' => ['period_end']]);
     }
 
+    /**
+     * O 422 não pode depender de o chamador ter mandado os DOIS limites: cada
+     * limite ausente tem um default, e o default participa da janela. Com
+     * `period_end` sozinho e anterior ao início default, a resposta era 200 com
+     * a janela invertida e séries vazias — entrada inválida virando "não há
+     * dado" (Q-2, a lição `falha-vs-lista-vazia` de novo).
+     */
+    public function test_periodo_com_um_limite_so_e_422_quando_a_janela_resolvida_inverte(): void
+    {
+        $this->actingAsAdmin();
+
+        // Default de início = 2025-08-14. Um fim anterior a ele inverte a janela.
+        $this->getJson(self::ENDPOINT.'?period_end=2020-01-01')
+            ->assertStatus(422)
+            ->assertHeader('content-type', 'application/problem+json')
+            ->assertJsonPath('errors.period_end', [DashboardFilterData::PERIODO_INVERTIDO]);
+
+        // O limite único que NÃO inverte segue válido: a regra é sobre a janela,
+        // não sobre a ausência do campo.
+        $this->getJson(self::ENDPOINT.'?period_end=2026-08-14')
+            ->assertOk()
+            ->assertJsonPath('period_start', '2025-08-14')
+            ->assertJsonPath('period_end', '2026-08-14');
+        $this->getJson(self::ENDPOINT.'?period_start=2026-01-01')
+            ->assertOk()
+            ->assertJsonPath('period_start', '2026-01-01');
+
+        // Início posterior a hoje inverte contra o fim default.
+        $this->getJson(self::ENDPOINT.'?period_start=2030-01-01')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.period_end', [DashboardFilterData::PERIODO_INVERTIDO]);
+    }
+
+    /**
+     * D7 ao pé da letra: seção não autorizada sai nula, nunca com zero que
+     * mente. Os quatro KPIs de turma eram `int` não-nulo e saíam 0 sem
+     * `operation.turma.view` — "não há turma" e "não posso ver turma" viravam a
+     * mesma resposta (Q-3).
+     */
+    public function test_admin_sem_gate_de_operacao_recebe_kpi_de_turma_nulo_e_nao_zero(): void
+    {
+        $this->actingAsAdminSem('operation.');
+        $this->cenarioRico();
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        foreach ([
+            'turmas_em_andamento',
+            'turmas_encerrando_em_breve',
+            'turmas_atrasadas',
+            'conclusoes_por_confirmar',
+        ] as $kpi) {
+            $this->assertNull(
+                $response->json("kpis.{$kpi}"),
+                "O KPI `{$kpi}` sem `operation.turma.view` é `null`, não 0.",
+            );
+        }
+
+        // O cenário TEM turmas: sem isso o teste passaria por banco vazio.
+        $this->assertSame(3, Turma::query()->count());
+
+        // O gate comercial e o de certificação seguem abertos e respondem.
+        $this->assertSame(['pending_count' => 1, 'pending_value_uf' => '100.0000'], $response->json('kpis.cotacoes'));
+        $this->assertSame(1, $response->json('kpis.certificados_a_emitir'));
+
+        // E as seções que exigem operação caem inteiras, como já caíam.
+        foreach (['pipeline', 'agenda', 'compliance_turmas', 'redatores', 'rankings'] as $secao) {
+            $this->assertNull($response->json($secao), "A seção `{$secao}` exige operação.");
+        }
+    }
+
+    /**
+     * Documento de idoneidade é dado de Identity: sai sob `identity.user.view`,
+     * o mesmo gate da seção `redatores`. Enquanto pegava carona no gate de
+     * certificado, quem só podia ver certificado recebia o `redator_id` de uma
+     * pessoa que o mesmo payload lhe negava (Q-1).
+     */
+    public function test_admin_sem_gate_de_identidade_nao_recebe_alerta_de_documento_de_relator(): void
+    {
+        $this->actingAsAdminSem('identity.');
+        $redator = $this->makeRedator('Relator con Documento');
+        $this->makeRedatorDocument($redator, '2026-08-13');
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        $this->assertNull($response->json('redatores'), 'A seção `redatores` já respondia ao gate.');
+        $this->assertNotContains(
+            'redator_document_expired',
+            array_column($response->json('alertas'), 'type'),
+        );
+
+        // A rede que não depende de eu apontar o campo: nem o id do relator nem
+        // o nome dele podem estar no corpo bruto.
+        $bruto = $response->getContent();
+        $this->assertStringNotContainsString('redator_id', $bruto);
+        $this->assertStringNotContainsString('Relator con Documento', $bruto);
+    }
+
+    /**
+     * O par positivo do teste acima, em método separado porque a sessão do
+     * primeiro request sobrevive ao `actingAs` seguinte — trocar de ator no meio
+     * do teste devolveria o mesmo usuário e a asserção viraria enfeite. Sem este
+     * método, o teste de cima passaria por um alerta que ninguém emite.
+     */
+    public function test_admin_com_gate_de_identidade_recebe_alerta_de_documento_de_relator(): void
+    {
+        $this->actingAsAdmin();
+        $redator = $this->makeRedator('Relator con Documento');
+        $documento = $this->makeRedatorDocument($redator, '2026-08-13');
+
+        $alertas = $this->getJson(self::ENDPOINT)->assertOk()->json('alertas');
+
+        $this->assertSame([[
+            'type' => 'redator_document_expired',
+            'severity' => 'high',
+            'entity_id' => $documento->id,
+            'date' => '2026-08-13',
+            'navigation' => ['redator_id' => $redator->id],
+        ]], array_map(
+            fn (array $alerta): array => array_diff_key($alerta, ['description' => null]),
+            $alertas,
+        ));
+    }
+
+    /**
+     * O funil injetava os três serviços de consulta e, sem binding
+     * compartilhado, recebia instâncias próprias: a agregação inteira rodava
+     * duas vezes por request. O teto conta só as queries contra `turmas` — é
+     * onde a duplicação aparece e o total do request está cheio de ruído de
+     * sessão e RBAC. Medido neste cenário: 13 depois do conserto, 20 antes
+     * (reproduzido devolvendo ao funil as instâncias próprias). O teto é guarda
+     * contra o regresso, não meta de performance (Q-6).
+     */
+    public function test_o_payload_do_admin_nao_reexecuta_a_agregacao_do_funil(): void
+    {
+        $this->actingAsAdmin();
+        $this->cenarioRico();
+
+        $queries = $this->queriesDaRequisicao();
+
+        $emTurmas = array_values(array_filter(
+            $queries,
+            fn (string $sql): bool => str_contains($sql, 'from "turmas"'),
+        ));
+        $this->assertLessThanOrEqual(
+            13,
+            count($emTurmas),
+            "Agregação de turma repetida — o funil voltou a consultar por conta própria:\n".implode("\n", $emTurmas),
+        );
+    }
+
+    /**
+     * Q-9: sem gate comercial a coluna de UF do ranking sai nula linha a linha —
+     * então a cotação nem chega a ser lida. Carregar sob gate fechado é trabalho
+     * que ninguém vai ver.
+     */
+    public function test_sem_gate_comercial_a_cotacao_do_ranking_nem_e_lida(): void
+    {
+        $this->actingAsAdminSemComercial();
+        $this->cenarioRico();
+
+        $this->assertSame(
+            [],
+            array_values(array_filter(
+                $this->queriesDaRequisicao(),
+                fn (string $sql): bool => str_contains($sql, 'value_uf'),
+            )),
+        );
+    }
+
+    /** @return string[] SQL de cada query executada por uma requisição ao endpoint. */
+    private function queriesDaRequisicao(): array
+    {
+        $queries = [];
+        DB::listen(function (QueryExecuted $query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        $this->getJson(self::ENDPOINT)->assertOk();
+
+        return $queries;
+    }
+
     // ---------------------------------------------------------------- (7)
 
     public function test_certificado_revogado_nao_devolve_a_matricula_para_a_emitir(): void
@@ -429,12 +617,22 @@ class DashboardEndpointTest extends TestCase
     /** Admin com tudo menos as permissões comerciais (cenário 2 da spec §6). */
     private function actingAsAdminSemComercial(): User
     {
+        return $this->actingAsAdminSem('commercial.');
+    }
+
+    /**
+     * Admin com o catálogo inteiro MENOS um módulo. Cada gate de seção é
+     * exercitado tirando exatamente uma permissão — o resto do payload segue
+     * inteiro, que é o que separa "seção censurada" de "dashboard quebrado".
+     */
+    private function actingAsAdminSem(string $prefixo): User
+    {
         $this->seed(RolePermissionSeeder::class);
 
-        $role = Role::findOrCreate('operaciones', 'web');
+        $role = Role::findOrCreate('sin-'.trim($prefixo, '.'), 'web');
         $role->syncPermissions(array_values(array_filter(
             array_keys(PermissionCatalog::descriptions()),
-            fn (string $permissao): bool => ! str_starts_with($permissao, 'commercial.'),
+            fn (string $permissao): bool => ! str_starts_with($permissao, $prefixo),
         )));
 
         $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
@@ -519,6 +717,22 @@ class DashboardEndpointTest extends TestCase
         ]);
 
         return Redator::create(['user_id' => $user->id]);
+    }
+
+    private function makeRedatorDocument(Redator $redator, string $validUntil): File
+    {
+        $n = ++$this->seq;
+
+        return File::create([
+            'fileable_type' => 'redator',
+            'fileable_id' => $redator->id,
+            'type' => RedatorDocumentType::REUF->value,
+            'path' => "dashboard/redatores/{$redator->id}/reuf-{$n}.pdf",
+            'original_name' => "reuf-{$n}.pdf",
+            'mime' => 'application/pdf',
+            'size' => 100,
+            'valid_until' => $validUntil,
+        ]);
     }
 
     private function makeQuote(

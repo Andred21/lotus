@@ -8,7 +8,11 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Dashboard\Data\PipelineStageCountData;
 use App\Domains\Dashboard\Enums\PipelineStage;
+use App\Domains\Dashboard\Services\CertificationMetricsQuery;
+use App\Domains\Dashboard\Services\CommercialMetricsQuery;
+use App\Domains\Dashboard\Services\OperationMetricsQuery;
 use App\Domains\Dashboard\Services\PipelineQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -126,7 +130,7 @@ class PipelineQueryTest extends TestCase
         $concluidaSemMatricula = $this->createTurma(TurmaStatus::Concluida);
         $this->createEnrollment($concluidaSemMatricula, EnrollmentApprovalStatus::Reprobado);
 
-        $stages = collect(app(PipelineQuery::class)->stages(includeQuoteStages: true))
+        $stages = collect($this->stages(includeQuoteStages: true))
             ->mapWithKeys(fn ($row): array => [$row->stage->value => $row->count])
             ->all();
 
@@ -152,7 +156,7 @@ class PipelineQueryTest extends TestCase
         $turma = $this->createTurma(TurmaStatus::EmAndamento);
         $this->createTurmaDocument($turma, TurmaDocumentType::MANUAL);
 
-        $stages = app(PipelineQuery::class)->stages(includeQuoteStages: false);
+        $stages = $this->stages(includeQuoteStages: false);
 
         $this->assertSame([
             PipelineStage::TurmaInProgress,
@@ -166,6 +170,25 @@ class PipelineQueryTest extends TestCase
         $this->assertSame(
             [1, 0, 0, 0],
             array_map(fn ($row): int => $row->count, $stages),
+        );
+    }
+
+    /**
+     * O funil recebe as contagens prontas dos serviços donos de cada pergunta —
+     * ele particiona, não consulta (menos a contagem de concluídas, que é a
+     * partição em si). Este helper monta a chamada como o assembler a monta.
+     *
+     * @return PipelineStageCountData[]
+     */
+    private function stages(bool $includeQuoteStages): array
+    {
+        $commercial = app(CommercialMetricsQuery::class);
+
+        return app(PipelineQuery::class)->stages(
+            turmaKpis: app(OperationMetricsQuery::class)->kpis(),
+            certificationPendencias: app(CertificationMetricsQuery::class)->pendencias(),
+            quoteKpis: $includeQuoteStages ? $commercial->quoteKpis() : null,
+            commercialPendencias: $includeQuoteStages ? $commercial->pendencias() : [],
         );
     }
 

@@ -33,6 +33,8 @@ class RedatorLoadQueryTest extends TestCase
 
     private int $quoteSequence = 0;
 
+    private int $fileSequence = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -87,12 +89,17 @@ class RedatorLoadQueryTest extends TestCase
         // Concluída não é carga: já saiu da mesa dele.
         $concluida->redatores()->attach($carregado->id);
 
-        $this->createDocument($carregado, RedatorDocumentType::REUF, $today->subDay());
-        $this->createDocument($carregado, RedatorDocumentType::TITULO, $today->addDays(10));
+        $this->createDocument($carregado, RedatorDocumentType::REUF->value, $today->subDay());
+        $this->createDocument($carregado, RedatorDocumentType::TITULO->value, $today->addDays(10));
         // Fora do horizonte de 30d: não é nem vencido nem vencendo.
-        $this->createDocument($carregado, RedatorDocumentType::CV, $today->addDays(60));
+        $this->createDocument($carregado, RedatorDocumentType::CV->value, $today->addDays(60));
         // Sem validade: documento que não vence não conta em nenhum dos dois.
-        $this->createDocument($carregado, RedatorDocumentType::POSTGRADO, null);
+        $this->createDocument($carregado, RedatorDocumentType::POSTGRADO->value, null);
+        // `files.type` é string livre. Arquivo do redator que NÃO é documento de
+        // idoneidade tem validade e mesmo assim não é carga documental — senão o
+        // número do admin diverge do que o próprio redator vê (Q-8).
+        $this->createDocument($carregado, 'CONTRATO', $today->subDay());
+        $this->createDocument($carregado, 'CONTRATO', $today->addDays(10));
 
         $linhas = array_map(
             fn ($linha): array => $linha->toArray(),
@@ -161,15 +168,17 @@ class RedatorLoadQueryTest extends TestCase
 
     private function createDocument(
         Redator $redator,
-        RedatorDocumentType $type,
+        string $type,
         ?CarbonImmutable $validUntil,
     ): File {
+        $sequence = ++$this->fileSequence;
+
         return File::create([
             'fileable_type' => 'redator',
             'fileable_id' => $redator->id,
-            'type' => $type->value,
-            'path' => "dashboard/carga/{$redator->id}/{$type->value}.pdf",
-            'original_name' => "{$type->value}.pdf",
+            'type' => $type,
+            'path' => "dashboard/carga/{$redator->id}/{$type}-{$sequence}.pdf",
+            'original_name' => "{$type}-{$sequence}.pdf",
             'mime' => 'application/pdf',
             'size' => 100,
             'valid_until' => $validUntil?->toDateString(),

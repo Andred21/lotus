@@ -2,7 +2,6 @@
 
 namespace App\Domains\Dashboard\Services;
 
-use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Dashboard\Data\AlertData;
 use App\Domains\Dashboard\Data\RedatorAgendaData;
@@ -125,10 +124,7 @@ class RedatorScopeQuery
         $today = CarbonImmutable::today();
 
         return $redator->documents()
-            ->whereIn('type', array_map(
-                fn (RedatorDocumentType $type): string => $type->value,
-                RedatorDocumentType::cases(),
-            ))
+            ->whereIn('type', RedatorDocumentType::values())
             ->whereNotNull('valid_until')
             ->whereDate('valid_until', '<=', DashboardWindows::expiryHorizon())
             ->orderBy('valid_until')
@@ -163,9 +159,11 @@ class RedatorScopeQuery
         // é `turma_redator`, o mesmo dos outros quatro métodos.
         //
         // Conta só `Emitido`: revogado deixou de ser um certificado emitido —
-        // é o próprio enum do domínio que responde isso, não uma regra nova.
+        // é o próprio enum do domínio que responde isso, não uma regra nova. O
+        // `where` mora no `Certificate::scopeEmitidos()`, uma definição só para
+        // as três leituras que contam emissão (Q-5).
         $certificados = Certificate::query()
-            ->where('status', CertificateStatus::Emitido)
+            ->emitidos()
             ->whereIn(
                 'enrollment_id',
                 Enrollment::query()
