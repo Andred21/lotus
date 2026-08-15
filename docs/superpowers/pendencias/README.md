@@ -37,6 +37,8 @@ ou de escrita fora do repositório.
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**; revisar 2026-10-31 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
+| P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
+| P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev, ou o bloco B do Dashboard; revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 
