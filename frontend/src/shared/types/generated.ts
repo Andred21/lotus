@@ -114,6 +114,7 @@ total_hours: undefined | number,
 export type CourseRedatorData = {
 redator_ids: number[],
 };
+export type DocumentValidityStatus = 'vigente' | 'vence_em_breve' | 'vencido' | 'ausente';
 export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {
 id: number,
@@ -216,6 +217,27 @@ description: string,
 group: string,
 segregated: boolean,
 };
+export type ProfileData = {
+id: number,
+uuid: string,
+name: string,
+email: string,
+rut: string | null,
+phone: string | null,
+type: string,
+role: string | null,
+photo_url: string | null,
+redator: RedatorProfileData | null,
+};
+export type ProfilePasswordData = {
+current_password: string,
+password: string,
+password_confirmation: string,
+};
+export type ProfileUpdateData = {
+name: string,
+phone: undefined | string | null,
+};
 export type PublicCertificateData = {
 codigo: string,
 status: CertificateStatus,
@@ -276,6 +298,21 @@ created_at: string | null,
 download_url: string,
 };
 export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RedatorProfileData = {
+documentos: RedatorProfileDocumentData[],
+cursos_habilitados: number,
+cursos: string[],
+};
+export type RedatorProfileDocumentData = {
+type: RedatorDocumentType,
+status: DocumentValidityStatus,
+self_service: boolean,
+valid_until: string | null,
+original_name: string | null,
+size: number | null,
+created_at: string | null,
+download_url: string | null,
+};
 export type RevokeCertificateData = {
 reason: string,
 };
