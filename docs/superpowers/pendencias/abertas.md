@@ -295,6 +295,46 @@ Plano e spec **não** foram retro-editados, pela regra que a P-27 fixou em 2026-
 ao encerramento dela: história de bloco fechado não se reescreve — a divergência ganha nota no
 `progress.md` da entrega, não emenda no artefato aprovado.
 
+## P-41 — `der-fisico.md` lista `certificates` como "planejada", e a tabela existe desde a Sprint 4
+
+**Bloco:** BD-15 · **Gatilho:** fecha no primeiro bloco que tocar `docs/der-fisico.md` por outro
+motivo — a correção é de quatro linhas e não vale um bloco só dela. Revisar em **2026-10-31**.
+
+A spec do `dashboard-backend-agregacoes` já previa esta pendência na sua §10 ("candidata a pendência
+no fechamento se ainda não registrada"); o fechamento de 2026-08-15 conferiu que não estava, e
+mediu os sítios:
+
+- `docs/der-fisico.md:87` — `courses` 1:N → … "e (planejada) `certificates`";
+- `docs/der-fisico.md:91` — "`enrollments` 1:1 → `certificates` (planejada)";
+- `docs/der-fisico.md:99` — "**`certificates`** (planejada): sem arquivo por aluno";
+- `docs/der-fisico.md:110` — a contagem "26 tabelas — 19 de domínio (16 implementadas +
+  `certificates`, …)" põe a tabela do lado do que ainda não existe.
+
+A linha 74, que descreve as colunas, está correta e não fala em "planejada" — a divergência é só
+nos quatro sítios de status. A tabela foi entregue na Sprint 4 (Bloco 7) e este bloco agrega
+diretamente sobre ela (`Certificate`, `CertificateStatus`, `scopeEmitidos`), com o
+`DomainDependencyTest` declarando as duas arestas. Diverge o **status escrito**, nunca o schema.
+
+## P-42 — os gates de e2e criam usuário de sonda no banco de dev e nem sempre o removem
+
+**Bloco:** BD-15 · **Gatilho:** fecha quando um bloco puder reseedar o banco de dev, ou quando a
+residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o primeiro candidato: a tela
+vai mostrar estes nomes). Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-15, no `users` do banco de dev: onze linhas de sonda de gates
+anteriores sobreviveram ao bloco que as criou — `gate.fechamento@lotus.cl` (id 76),
+`e2e.gate.a/b/r1/r2` (77–80), `e2e.gate2.a/b/r1/r2/staff/d` (82–89) e `gate-bd9@gate.cl` (89). Duas
+delas são `type=redator` e **aparecem na carga do dashboard** como "E2E Gate Redator 1" e
+"E2E Gate Redator 2", com zero turma — dado de sonda entrando em seção de produto.
+
+Nada disso é regressão deste bloco: as suas próprias sondas (3 roles `GATE-SIN-*` e 3 usuários)
+foram removidas no mesmo gate, com `users`, `roles`, `role_has_permissions` e `model_has_roles` de
+volta aos números exatos do snapshot (79/3/70/5). O que falta é o mecanismo — a receita de e2e
+declara a limpeza como passo do gate, e passo de gate depende de quem executa lembrar.
+
+**Não se deleta agora:** linha alheia de bloco fechado se menciona, não se apaga — a decisão de
+reseedar o dev é do João.
+
 ---
 
 # Travadas em decisão do João

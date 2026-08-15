@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (27)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
@@ -37,6 +37,8 @@ ou de escrita fora do repositório.
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**; revisar 2026-10-31 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
+| P-41 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
+| P-42 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev, ou o bloco B do Dashboard; revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 
@@ -58,8 +60,7 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (1)
+## Encerradas (0)
 
-| ID | Pendência | Sai em |
-|---|---|---|
-| P-26 | `->scopeBindings()` mudou 403 → 404 sem permissão, contra o que a spec afirma | próximo `/fechar-sprint` |
+Nenhuma aguardando remoção. A P-26 saiu no `/fechar-sprint` de `dashboard-backend-agregacoes`
+(2026-08-15), depois da sprint de rastro.
