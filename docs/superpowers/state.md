@@ -320,6 +320,40 @@ artefato do container persistir entre chamadas de teste no mesmo método, não b
 cada request boota o guard do zero. 4 testes verdes; `AuthTest`/`RbacAuthTest` confirmam `/api/me`
 intocado (D4). Pint `passed`.
 
+**Task 4 (`PUT /api/profile`) completa.** 12 testes verdes (5 diretos + 7 do `#[DataProvider]`) —
+o plano previa 11, mas contou errado; o `#[DataProvider]` funcionou de primeira, sem repetir a
+armadilha do `@dataProvider` antigo. `prohibited` recusou os sete campos forjados nomeando o campo,
+como a D8 exige. Pint removeu import não usado no teste (`User`), sem efeito de comportamento.
+
+**Task 5 (foto do perfil) completa.** Reuso integral de `UserPhotoService`, sem gate administrativo
+— 6 testes verdes, redator sem `identity.user.update` troca a própria foto (D7). Pint `passed`.
+
+**Task 6 (senha e sessões) completa, com a task mais sensível do bloco entregando DUAS armadilhas
+de teste novas — nenhuma das duas estava na spec, e as duas isoladas por medição em três camadas de
+instrumentação temporária (contador estático, `spl_object_id`, `DB::listen()` cru), removida do
+commit.**
+
+1. Mesma classe de bug da Task 3 (`RequestGuard` do Sanctum cacheado por processo), mas aqui o
+   sintoma inverteu: o `test_a_sessao_corrente_sobrevive_…` copiado do plano dava
+   `assertSame(1, 0)` — a "sessão corrente" desaparecia junto com a de terceiro. Causa em DUAS
+   camadas, as duas comprovadas antes do fix: (a) `postJson`/`putJson` resolvem cookies por
+   `MakesHttpRequests::prepareCookiesForJsonRequest()`, que devolve array **vazio** a menos que
+   `withCredentials()` esteja ligado — medido com `ALL_COOKIES=[]` no request do `PUT`; (b) mesmo
+   com `withCredentials()`, `prepareCookiesForRequest()` **criptografa sozinho** o valor passado a
+   `withCookie()` — ele espera texto puro, não o `Set-Cookie` já criptografado que
+   `getCookie(..., decrypt: false)` devolveria. Corrigido com `withCredentials()` +
+   `withCookie(config('session.cookie'), $login->getCookie(...)->getValue())` usando o decrypt
+   padrão. Autenticação (via guard cacheado) já funcionava mesmo sem o fix; só o ID de sessão
+   "corrente" estava errado — por isso o purge matava a sessão real do login junto com a de
+   terceiro.
+2. A nota do próprio plano ("se `assertSame(1, …)` falhar com `0`, o driver não trocou a tempo")
+   **não bateu com a causa medida** — `DB::table('sessions')->count()` logo após o login já dava 1,
+   a linha existia. O plano previu o sintoma certo com a causa errada; o registro fica para não se
+   repetir a heurística errada num teste parecido.
+
+7 testes verdes; `AuthTest`/`LoginLogTest`/`RbacAuthTest` confirmam login e RBAC intocados. Pint
+`passed`.
+
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
 ### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência
