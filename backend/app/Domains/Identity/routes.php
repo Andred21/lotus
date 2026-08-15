@@ -3,6 +3,7 @@
 use App\Domains\Identity\Http\Controllers\AuthController;
 use App\Domains\Identity\Http\Controllers\PermissionController;
 use App\Domains\Identity\Http\Controllers\ProfileController;
+use App\Domains\Identity\Http\Controllers\ProfileDocumentController;
 use App\Domains\Identity\Http\Controllers\ProfilePasswordController;
 use App\Domains\Identity\Http\Controllers\ProfilePhotoController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
@@ -30,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('profile/photo', [ProfilePhotoController::class, 'store']);
     Route::delete('profile/photo', [ProfilePhotoController::class, 'destroy']);
     Route::put('profile/password', [ProfilePasswordController::class, 'update']);
+    Route::post('profile/documents', [ProfileDocumentController::class, 'store']);
 
     // ->parameters: Str::singular('redatores') dá "redatore" (inflector em
     // inglês não reconhece o plural em português) — força o nome do parâmetro
