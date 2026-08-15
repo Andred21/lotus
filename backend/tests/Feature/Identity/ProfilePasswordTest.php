@@ -171,9 +171,14 @@ class ProfilePasswordTest extends TestCase
         ])->assertNoContent();
 
         $this->assertDatabaseMissing('sessions', ['id' => 'outro-dispositivo']);
+        // A sobrevivente é a CORRENTE, não uma linha qualquer: contagem 1
+        // sozinha passaria se o purge matasse a corrente e poupasse outra
+        // (review 2026-08-15, Q-3).
+        $this->assertDatabaseHas('sessions', ['id' => $sessionId, 'user_id' => $user->id]);
         $this->assertSame(1, DB::table('sessions')->where('user_id', $user->id)->count());
 
-        // E quem trocou continua navegando.
-        $this->getJson('/api/profile')->assertOk();
+        // Sem GET final "provando navegação": o guard sanctum fica cacheado no
+        // processo de teste e autentica mesmo com a sessão morta — seria
+        // cobertura fantasma.
     }
 }

@@ -95,9 +95,14 @@ tela não precisa saber quais tipos existem para desenhar a lista, e "não envio
 
 ```
 ProfileUpdateData     name, phone                 + campos proibidos (§4)
-ProfilePasswordData   current_password, password  password_confirmation é chave do payload,
-                                                  lida pela regra `confirmed`, não propriedade
+ProfilePasswordData   current_password, password, password_confirmation
 ```
+
+> **Emenda (review 2026-08-15, Q-5):** a spec original dizia "`password_confirmation` é chave do
+> payload, lida pela regra `confirmed`, não propriedade". A implementação a promoveu a propriedade
+> de verdade para o tipo gerado não mentir sobre o que a rota espera — o front do bloco 2 consome
+> `ProfilePasswordData` do `generated.ts` e precisa ver o campo. Decisão aceita pelo João no review;
+> este parágrafo substitui o texto original.
 
 Upload de foto e de documento validam no controller com `$request->validate()`, como já fazem
 `UserPhotoController` e `RedatorDocumentController` — arquivo não se hidrata em DTO em lugar nenhum

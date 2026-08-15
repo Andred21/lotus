@@ -3,6 +3,7 @@
 namespace Tests\Feature\Identity;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -24,18 +25,29 @@ class ProfileUpdateTest extends TestCase
         $this->assertSame('+56 9 2222 2222', $user->phone);
     }
 
-    /** `name` e `phone` estão em `$auditInclude`: a trilha vem de graça. */
+    /**
+     * `name` e `phone` estão em `$auditInclude`: a trilha vem de graça.
+     *
+     * Asserir o CONTEÚDO de `new_values` é o ponto: `config/audit.php` tem
+     * `empty_values => true`, então a linha de auditoria existe mesmo com
+     * trilha vazia — só a existência dela não prova que `name` está em
+     * `$auditInclude` (review 2026-08-15, Q-4).
+     */
     public function test_a_troca_de_nome_gera_linha_de_auditoria(): void
     {
         $user = $this->actingAsAdmin();
 
         $this->putJson('/api/profile', ['name' => 'Ana Auditada'])->assertOk();
 
-        $this->assertDatabaseHas('audits', [
-            'auditable_type' => $user->getMorphClass(),
-            'auditable_id' => $user->id,
-            'event' => 'updated',
-        ]);
+        $linha = DB::table('audits')
+            ->where('auditable_type', $user->getMorphClass())
+            ->where('auditable_id', $user->id)
+            ->where('event', 'updated')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($linha);
+        $this->assertStringContainsString('Ana Auditada', (string) $linha->new_values);
     }
 
     /** Omitir `phone` NÃO apaga o telefone — o campo nasce `Optional`. */
@@ -88,6 +100,11 @@ class ProfileUpdateTest extends TestCase
             'roles' => ['roles', ['superadmin']],
             'permissions' => ['permissions', ['identity.user.update']],
             'photo_url' => ['photo_url', 'x/y.png'],
+            // Chave presente mas vazia também reprova: `prohibited` deixava
+            // estes três passarem com 200 (review 2026-08-15, Q-2).
+            'email nulo' => ['email', null],
+            'roles vazio' => ['roles', []],
+            'rut vazio' => ['rut', ''],
         ];
     }
 

@@ -26,8 +26,11 @@ class ProfileUpdateData extends Data
 
     /**
      * Os seis campos vetados pelo Drive §3 mais `photo_url`, que tem rota
-     * própria. `prohibited` faz o payload forjado devolver 422 nomeando o
-     * campo (spec D8) em vez de ser ignorado em silêncio.
+     * própria. `missing`, não `prohibited`: `validateProhibited` é
+     * `! validateRequired` (vendor `ValidatesAttributes.php`), então o campo
+     * presente mas vazio (`null`, `''`, `[]`) passava com 200 silencioso.
+     * `missing` reprova a mera presença da chave — 422 nomeando o campo
+     * (spec D8) para qualquer payload forjado.
      *
      * Chave sem propriedade correspondente FUNCIONA e não é acidente:
      * `DataValidationRulesResolver::applyOverwrittenRules` itera as chaves
@@ -39,13 +42,13 @@ class ProfileUpdateData extends Data
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
-            'email' => ['prohibited'],
-            'rut' => ['prohibited'],
-            'type' => ['prohibited'],
-            'is_active' => ['prohibited'],
-            'roles' => ['prohibited'],
-            'permissions' => ['prohibited'],
-            'photo_url' => ['prohibited'],
+            'email' => ['missing'],
+            'rut' => ['missing'],
+            'type' => ['missing'],
+            'is_active' => ['missing'],
+            'roles' => ['missing'],
+            'permissions' => ['missing'],
+            'photo_url' => ['missing'],
         ];
     }
 }
