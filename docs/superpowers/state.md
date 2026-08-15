@@ -367,8 +367,8 @@ arquivado com cotação, um só tipo de documento de relator com zero vencido). 
 testes, cada um com a guarda vista reprovar contra o código antigo, e o Q-7 declaradamente **sem**
 guarda que morda (troca de convenção, sem delta). **Nenhuma tela foi vista** — é o bloco B.
 
-**Pendências:** nascem a **P-41** (`der-fisico.md` chama `certificates` de "planejada" em quatro
-sítios e a tabela existe desde a Sprint 4 — a §10 da spec já previa esta ficha) e a **P-42** (onze
+**Pendências:** nascem a **P-43** (`der-fisico.md` chama `certificates` de "planejada" em quatro
+sítios e a tabela existe desde a Sprint 4 — a §10 da spec já previa esta ficha) e a **P-44** (onze
 usuários de sonda de gates antigos vivem no banco de dev, e **dois aparecem na carga do dashboard**
 como "E2E Gate Redator 1/2"; as sondas deste bloco foram removidas, as alheias se mencionam e não
 se apagam). A **P-26** cumpriu a sprint de rastro e saiu de `encerradas.md`. Nenhum outro gatilho
@@ -387,7 +387,588 @@ redator está provada e hoje inalcançável.
 **Estado: `idle`.** `state_basis_commit` passa a `59b4f4d`, o commit que prova a entrega fechada; a
 próxima ação é escolha explícita do João no `backlog.md`.
 
-## Penúltimo item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
+### Integração — 2026-08-15: merge da `main` (fechamento da `celula-de-identidade`)
+
+**A `main` andou 30 commits desde o `1e40acb` de onde este bloco partiu** — o PR #52 fechou a
+`celula-de-identidade` em 2026-08-14, e aquele fechamento havia **desfeito a promoção deste bloco**,
+com a repromoção declarada como instrução explícita do João. A repromoção aconteceu: o bloco foi
+executado e fechado nesta branch em 2026-08-15, então o disclaimer "Promoção desfeita no fechamento"
+que veio da `main` saiu neste merge — o item foi entregue e a narrativa dele vive acima, como último
+item fechado. A `celula-de-identidade` entra como penúltimo, com a narrativa íntegra; a cadeia
+rotaciona (BD-6 → antepenúltimo, login → quarto, BD-5 → quinto).
+
+**Cinco conflitos, todos de documento ou de artefato gerado** (`state.md`, `progress.md`,
+`pendencias/README.md`, `pendencias/encerradas.md`, `typescript-transformer-manifest.json`); zero
+conflito de código — `Certificate.php`, `generated.ts` e os locales auto-mergearam.
+
+**P-41 e P-42 deste bloco colidiram de ID e foram renumeradas para P-43 e P-44**, pelo precedente que
+o repositório já fixou três vezes (P-32, P-33 e as próprias P-41/P-42 da célula): o fechamento da
+`celula-de-identidade` chegou à `main` primeiro usando esses IDs, e quem renumera é a recém-chegada.
+Fichas, índice, este arquivo e o `progress.md` acompanham.
+
+**A saída da P-26 fica creditada ao fechamento da `celula-de-identidade` (2026-08-14)** — os dois
+fechamentos a removeram em paralelo e a decisão publicada prevalece. O `progress-archive.md` havia
+recebido a MESMA linha (BD-2, 2026-08-11) uma vez por cada fechamento; a duplicata saiu, e o
+`progress.md` volta ao teto de dez descendo a Estilização (2026-08-12) verbatim.
+
+**O manifest do `generated.ts` não se resolve à mão (lei §5.3):** `typescript:transform` reexecutado
+depois do merge — `generated.ts` saiu **idêntico ao auto-merge** (regeneração idempotente) e o
+manifest passou a apontar o hash real do arquivo unido.
+
+**Gates remedidos pós-merge, não herdados:** backend **632 passed / 5 skipped (2397 asserções)** —
+a soma exata dos dois lados (628 deste bloco + 4 testes que a célula trouxe); Pint `passed` no
+`Certificate.php` auto-mergeado; `pnpm lint` exit 0; `pnpm build` verde; `pnpm test` **36 arquivos /
+186 testes**, a contagem da `main` pós-célula — este bloco não adiciona teste de frontend.
+
+
+## Penúltimo item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
+
+### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência
+
+**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-14**, e isto
+está escrito porque a invariante do topo deste arquivo diz o contrário. O `falha-vs-lista-vazia`
+(BD-6) está em `workflow_state: executing` no main tree `/home/jvbat/projetos/lotus`, branch
+`feat/falha-vs-lista-vazia` (`d20bebc`), com **cinco tasks de conteúdo já commitadas**. Este bloco
+nasce na worktree `fix-frontend`, branch `feat/celula-de-identidade` criada de `0a1439f`.
+
+**A diferença para as duas ocorrências anteriores (BD-4 × BD-9 e BD-5 × login) é que aqui não há
+divergência de base:** a branch do BD-6 declara `state_basis_commit: 0a1439f` e **descende** do HEAD
+da `main` a partir do qual este bloco nasce. Não são dois `state.md` incompatíveis promovidos do
+mesmo ponto em paralelo — é um bloco ativo ainda não mergeado mais um bloco novo atrás dele. O
+`state.md` da `main` dizia `idle` porque o BD-6 vive na branch dele, não porque nada esteja ativo.
+
+**A sobreposição foi medida antes da decisão, não depois — três pontos, e o João a aceitou de
+antemão** em vez de descobri-la no merge:
+
+1. `frontend/src/features/commercial/hooks/useCommercialClients.ts` — o BD-6 **já o reescreveu**
+   (`f64ba33`…`d20bebc`), e o **Grupo B** deste bloco exige expor o `ClientData` inteiro nesse mesmo
+   hook, que hoje estreita para o nome (`backlog.md`, Grupo B, `BudgetsTable.tsx:88`). Colisão de
+   conteúdo, não só de texto.
+2. `frontend/src/shared/ui/index.ts` — o BD-6 acrescenta `InlineLoadState` ao barrel; este bloco
+   acrescenta a célula nova. Mesma região do arquivo.
+3. `shared/config/locales/{es-CL,pt-BR,en}.json` — o BD-6 escreve nos três; este bloco escreve **se**
+   a decisão 1 criar rótulo de ausência ("sin correo"). Condicional, não certo.
+
+**O que NÃO colide, também medido:** nenhum dos 13 sítios de renderização do item 4 aparece no diff
+`main...feat/falha-vs-lista-vazia`. Os arquivos do BD-6 em `commercial` são `BudgetDialog`,
+`CourseStep`, `QuoteWizard` e `QuotesList` — `BudgetsTable.tsx`, que é o sítio do Grupo B, está
+fora deles.
+
+**Alternativas recusadas por ele:** esperar o BD-6 fechar e mergear (manteria a invariante e
+permitiria planejar o Grupo B sobre a forma nova do hook, ao custo de o bloco não começar hoje); e
+promover em paralelo **cortando o Grupo B**, que teria eliminado a colisão de hook na origem.
+
+### Seleção — 2026-08-14
+
+**Item 4 de "Próximos blocos" (`backlog.md:33`), promovido explicitamente pelo João.** O gate do
+`/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, login): o
+estado era `idle` e o argumento era **título de seção**, não slug promovido. As quatro decisões dele
+fecharam o gate: o slug `celula-de-identidade`; a rota **`context_required`** com Context Packet
+gerado pelo Codex; o **paralelismo** com o BD-6; e a **worktree `fix-frontend`** como área de
+trabalho.
+
+**A rota do packet é decisão dele contra a medição, e isso fica escrito.** A ausência de fonte
+externa foi **medida**: grep por `drive.google`, `notion.so`, `figma.com`, `docs.google` e `http` nas
+105 linhas do item 4 devolve **zero ocorrência**, e a superfície dos 13 sítios, os três grupos, as
+cinco decisões abertas e a ordem sugerida estão **transcritos** no `backlog.md`. Pela medição, o
+precedente seria rota direta a `ready_for_planning` (BD-8, BD-9, BD-5, login). O João escolheu o
+packet mesmo assim — as duas capturas de tela que abriram o pedido são a única entrada que não vive
+no repositório, e o packet é o mecanismo que registra o que existe e o que está indisponível em vez
+de deixar a lacuna implícita.
+
+**A direção decidida entra neste commit.** As **105 linhas** do item 4 estavam **não commitadas** no
+working tree desta worktree quando o comando abriu — decisão durável vivendo onde um `git checkout`
+a apagaria. É a repetição exata do que aconteceu no `login-fora-do-adr16` (§"Seleção — 2026-08-13"),
+e entram aqui como artefato do mesmo commit da promoção.
+
+**`state_basis_commit` passa de `024673a` a `0a1439f`** — o HEAD da `main` de onde esta branch nasce.
+Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
+derivado.
+
+**Frontend puro por escopo declarado: a P-03 não dispara.** O bloco é apresentacional, e o único
+caminho que tocaria backend é a alternativa (b) da decisão 1 (alargar DTO, `generated.ts`, lei §5.3)
+— que é justamente uma das cinco decisões que o planejamento tem de fechar, não um dado do bloco.
+
+### Context Packet — 2026-08-14: `partial`, e a rota se pagou
+
+Packet em `docs/superpowers/context-packets/celula-de-identidade.md`, gerado pelo Codex read-only
+com a skill `lotus-context-packet`. **Contrato validado item a item, não aceito de chegada:**
+marcadores exatos, frontmatter completo com `plan_path`/`spec_path` corretamente em `null`,
+**8 key facts** (o teto exato da skill), `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum
+staleness trigger apontando para hash de proveniência ou para a própria transição promotora — que é
+a armadilha que a skill documenta.
+
+**Os quatro hashes de proveniência foram remedidos aqui e batem:** `base_commit`
+`fb443ee41af6…`, `state_blob_sha` `f4ac80fc…`, `progress_blob_sha` `35d631aa…` e o HEAD do BD-6
+`d20bebc78aa9…`. Foram obtidos, não adivinhados.
+
+**A rota que o João escolheu contra a medição se pagou, e o retorno é o oposto do esperado.** O
+packet consultou as três fontes canônicas do Drive por **file ID** (`tela-pessoas.md`,
+`tela-turmas.md`, `tela-servicos.md`) e a base canônica do Notion por **collection ID** — e o achado
+é que **nenhuma delas prescreve célula de identidade, uso de foto, fallback sem imagem, fusão de
+coluna ou tratamento de N redatores**. As cinco decisões abertas do item 4 continuam abertas, agora
+com **prova de ausência** em vez de suposição de ausência: o brainstorming as fecha com o João
+sabendo que não há respaldo externo a contrariar. Um único sinal de aceite externo apareceu, e é
+restritivo: a task `388bc960-3dfa-8188-b051-e0f4feb08943` exige que a lista de designação **continue
+filtrada por habilitação** — decide só isso, e não a aparência do card ou do picker.
+
+**As duas capturas viraram lacuna declarada, não fonte `unavailable`**, e a distinção é a que a
+skill exige: elas não têm arquivo, ID nem path, e não existe locator de Figma nos artefatos
+canônicos. Consequência escrita no packet: **não há aceite por equivalência visual** neste bloco.
+Isso não bloqueia o planejamento — vira `## Deferred`.
+
+**Uma afirmação do packet foi medida e reprovou, e a correção está no próprio arquivo.** Ele
+afirmava em `## Constraints` que o main tree tinha WIP não commitado em `CourseStep.tsx`; medido,
+`git -C /home/jvbat/projetos/lotus status --short` devolve **vazio** com HEAD em `d20bebc`. A
+cláusula saiu e a correção ficou registrada no cabeçalho do packet, com o resto verbatim — packet
+revisado é packet cujo revisor mediu, não cujo revisor confiou.
+
+**`status: partial` prossegue** pela regra da própria skill: fonte não canônica indisponível não
+bloqueia, e o fato faltante que bloquearia — uma regra de negócio ou critério de aceite — não
+existe, porque as cinco decisões são de apresentação e pertencem ao João.
+
+### Spec — 2026-08-14: o bloco deixou de ser frontend puro
+
+Spec em `docs/superpowers/specs/archive/2026-08-14-celula-de-identidade-design.md`, aprovada pelo João
+depois de onze decisões fechadas uma a uma (D1–D11, tabela §10 da spec). `active_spec` já entra
+preenchido: a spec existe no disco, e deixá-la `null` criaria exatamente a divergência que a
+invariante deste arquivo proíbe.
+
+**A decisão D2/D3 invalida a frase "frontend puro" escrita acima em "Seleção — 2026-08-14".** O
+Grupo C resolve-se **alargando dois DTOs no backend** (`TurmaData` ganha `client_rut` e
+`client_photo_url`; `TurmaRedatorData` ganha `email` e `photo_url`), o que regenera `generated.ts`
+pela lei §5.3 / ADR-04. A frase antiga previa esse caminho como alternativa (b) da decisão 1 — foi
+ele que o João escolheu. Duas consequências entram aqui porque mudam o gate, não a implementação:
+
+1. **Risco de review sobe a ALTO**, pelo gatilho binário do projeto (`generated.ts` regenerado,
+   precedente BD-9).
+2. **A P-03 continua não disparando, e isto foi remedido, não herdado.** O gatilho dela exige
+   *mais de um* `active_work_item` de **backend**; o diff `main...feat/falha-vs-lista-vazia` do BD-6
+   tem **zero** arquivo em `backend/`. Este é o único bloco de backend ativo.
+3. **A escolha da worktree sobrevive, sob uma condição escrita.** O João escolheu `fix-frontend` no
+   gate quando o bloco era declaradamente frontend. Medido: `docker compose ps` vazio e os mounts do
+   compose são relativos (`./backend`, `./frontend`), então `docker compose up -d` **desta** worktree
+   serve o backend **desta** branch em `:8080`. A condição é **um stack por vez**: se um stack subir
+   do main tree, o `:8080` passa a servir a outra branch e os testes deste bloco mentem. O BD-6 é
+   frontend e consome o mesmo backend sem dano, porque o alargamento é aditivo.
+
+**Custo do alargamento, medido e não estimado:** `TurmaQueryBuilder::LISTING` já traz
+`redatores.user` e `quote.budget.client.user`. Zero query nova, zero eager load novo, zero migration.
+Eu havia precificado esta rota como cara (risco de N+1, assinaturas por request) **antes** de medir;
+a medição desmentiu o meu próprio quadro de custo e isso está dito na spec §3. Sobra **uma**
+incerteza real e ela é verificação obrigatória do plano: `redatores` é `array` sem
+`#[DataCollectionOf]`, e não está provado que o `WithTransformer` dispare ali — o teste prova que
+`redatores[0].photo_url` volta assinada, ou o campo passa a ser resolvido no `fromModel`.
+
+### Plano — 2026-08-14: 12 tasks, executor dividido
+
+Plano em `docs/superpowers/plans/archive/2026-08-14-celula-de-identidade.md`. **Doze tasks, cada uma com
+entregável testável isolado.** Ordem obrigatória: 1–2 (backend) antes de 3 (`typescript:transform`);
+3 e 4 antes de 5–10 (os sítios precisam do TS e do componente); 11 depois de tudo; 12 é o gate.
+As tasks 5–10 são independentes entre si.
+
+**O executor é dividido por decisão do João (D12): `codex` nas tasks 1, 2 e 11 (`backend/**`),
+`claude` no resto.** Os `paths_autorizados` do Codex são cinco arquivos nomeados um a um, e
+`frontend/src/shared/types/generated.ts` **não está entre eles** — a lei §5.3 proíbe editá-lo à
+mão, e a garantia mais barata é o executor do backend não alcançar o arquivo. A regeneração é task
+do Claude.
+
+**A ordem "depois de teste" do pedido está no plano, não na cabeça de ninguém:** o
+`DemoPhotosSeeder` é a task 11, depois das dez tasks de conteúdo, porque sem ele a revisão visual
+exercitaria só o fallback de iniciais — o caminho `photo_url` → `SignedUrlTransformer` → `<img>`,
+que é exatamente o que este bloco acrescenta, ficaria sem prova.
+
+**A revisão visual entra no plano como lista fechada de 13 telas com o que provar em cada uma**
+(task 12, step 8). `/lotus-ui-review` tem `disable-model-invocation: true`: é passo do João, e
+planejá-lo agora é o que evita descobri-lo no gate, como no `login-fora-do-adr16`.
+
+### Execução — 2026-08-14: início, e a premissa da worktree caiu antes da Task 1
+
+`/executar-bloco celula-de-identidade` validou as âncoras (spec, plano e packet no disco; Git em
+`abe976a` na branch `feat/celula-de-identidade`; `active_plan` cobrindo o work item) e abriu os dois
+gates. O ciclo foi escalado ao João pelo mesmo impasse recorrente do BD-4, do
+`rastro-unicidade-e-gates` e do login — o plano pede `subagent-driven-development` e a sessão não
+chama o Agent tool sem autorização: **SDD, Agent tool autorizado para este bloco.**
+
+**A condição escrita em §"Spec — 2026-08-14" item 3 estava falsa quando o comando abriu, e isso foi
+medido, não deduzido.** Aquele parágrafo autorizou a worktree com base em `docker compose ps`
+**vazio**. Na abertura da execução o stack `lotus-*` estava de pé havia 3h, servido pelo main tree em
+`feat/falha-vs-lista-vazia` (BD-6, `ready_for_closure`), e `lotus-app-1` monta
+`/home/jvbat/projetos/lotus/backend` — **não** esta árvore. Como as Tasks 1, 2 e 11 são de
+`backend/**`, `php artisan test` naquele container teria medido a outra branch.
+
+**O mecanismo do defeito ficaria invisível, e é isso que o torna grave.** Os três hashes de
+`TurmaData.php` — container, main tree e worktree — batiam em `f59c2df7…`, mas **por conteúdo**:
+`git diff main -- backend/` desta branch é vazio. A Task 1 escreve na worktree; o container seguiria
+lendo a cópia do main tree, **sem o campo**. Vermelho permanente contra código correto, sem nada na
+tela apontando para a causa.
+
+**Decisão do João: manter o stack de pé, sem derrubar nada.** Mecanismo:
+`docker compose up -d --no-deps app` desta worktree, que cria `fix-frontend-app-1` montando
+`fix-frontend/backend`. O serviço `app` não publica porta, então há zero colisão com os 8080/3307/9000
+do stack do main tree — conferido depois da subida: os cinco containers `lotus-*` seguem `Up`.
+`--no-deps` porque `mysql`/`minio` colidiriam, e o `phpunit.xml` usa sqlite `:memory:` (linhas 26-27),
+então teste de backend não precisa de MySQL. Sem build: `fix-frontend-app:latest` já existia.
+
+**Isso resolve as Tasks 1–11 e NÃO resolve a Task 12 Step 7**, que precisa de MySQL com dado real,
+MinIO e `pnpm dev` para o `DemoPhotosSeeder` e a revisão visual. Fica declarado agora como decisão
+pendente do João, em vez de descoberto no gate — que é a lição do `login-fora-do-adr16`.
+
+**Baseline medido nesta branch, não herdado:** backend **591 passed / 5 skipped** (2149 asserções);
+`pnpm lint` exit 0; `pnpm build` verde; `pnpm test` **32 arquivos / 163 testes**.
+
+**Pre-flight scan das 12 tasks — três achados, nenhum bloqueante.** O desvio de mecanismo acima (F1);
+um falso alarme descartado por medição (F2: `AppAvatarProps.image` já é `string | null` e o tipo já é
+exportado, então a Task 4 compila); e uma justificativa errada com conclusão certa (F3: a Task 10
+diz que o `field` alimenta a busca do `useTableFilter`, mas quem varre é o `searchable`, e o
+`EmissionStudentsTable` chama `useTableFilter(enrollments)` **sem** `searchable` — a tabela não tem
+busca nenhuma, então a fusão de colunas custa ainda menos do que D5 supôs). Detalhe em
+`.superpowers/sdd/progress.md`.
+
+**Nota de higiene:** o `updated_at` anterior dizia `17:10:00-03:00`, à frente do relógio real
+(`date -Is` na abertura: `15:18:17-03:00`). O campo passa a registrar a hora medida, então ele
+**recua** — o valor antigo é que estava errado.
+
+### Execução — 2026-08-14: Tasks 1 e 2, e a incerteza do bloco caiu por medição
+
+**O sandbox do Codex não alcança `/var/run/docker.sock`**, então ele não chegou ao PHPUnit e parou nos
+Steps 2 das duas tasks, corretamente marcando `blocked` em vez de alegar verde. **Escalar a permissão
+foi recusado**: o `/executar-bloco` já exige que Claude rode a verificação do plano antes de aceitar o
+diff, então o arranjo passou a ser Codex autora o diff e Claude mede — sem nenhum ganho de permissão.
+
+**Vermelho medido, e é literalmente o que o plano previu:** Task 1 com
+`Undefined property: App\Domains\Operation\Data\TurmaData::$client_rut`; Task 2 com
+`Failed asserting that null is identical to 'ana.silva@lotus.cl'`.
+
+**A única incerteza real declarada na spec §3 e no plano foi resolvida, e resolveu-se a favor do
+caminho barato.** `TurmaData::$redatores` é `array|Optional` com `@var TurmaRedatorData[]` e **sem
+`#[DataCollectionOf]`**, e não estava provado que um `WithTransformer` de propriedade disparasse
+dentro desse aninhamento. O `assertStringStartsWith('http', …)` **passou**: o transformer atravessa.
+O Step 6 alternativo do plano (resolver a assinatura no `fromModel`) **não foi aplicado** — não era
+necessário, e aplicá-lo por precaução teria trocado um mecanismo medido por um palpite.
+
+**Suíte inteira: 592 passed / 5 skipped** (2154 asserções) contra o baseline de 591/5 (2149) — +1
+teste e +5 asserções, exatamente o que as duas tasks acrescentam, zero regressão. Pint `passed` nos
+quatro arquivos. Diff revisado contra o plano antes do commit e integralmente dentro dos
+`paths_autorizados`; `generated.ts` intocado, como a lei §5.3 exige.
+
+### Execução — 2026-08-14: Tasks 3–12, o bloco fecha em `ready_for_review`
+
+**Task 4 (`IdentityCell`) não foi delegada a subagente.** SDD com Agent tool estava autorizado pelo
+João para o ciclo do bloco, mas a tentativa de spawn foi rejeitada em tempo real; executada inline
+por Claude a partir daí — Tasks 4 a 10 e o gate (12) inteiros sem subagente.
+
+**Um rabo solto da Task 3 apareceu ao abrir a Task 4:** `typescript-transformer-manifest.json`
+estava modificado na árvore sem nunca ter sido staged junto de `0c4e9ac` — hash novo já batendo com
+o `generated.ts` commitado. Corrigido em commit próprio (`a81adb2`), separado da Task 4.
+
+**Grupo A, B e C (Tasks 5–10) fecham os 13 sítios da superfície do bloco**, cada um com gate
+build+lint+test verde e commit isolado. Dois achados de execução, nenhum de código: `useCommercialClients.ts`
+seguia na forma pré-BD-6 (`clients.data?.find`, não `useLoadState`) — a variante Step 1b do plano
+previa exatamente esse caso, aplicada sem ambiguidade (Task 7). A catraca de cor provou nos dois
+sentidos (Task 5 Step 6): reintroduzir `text-gray-400` faz `pnpm lint` falhar nomeando arquivo e
+linha; revertido à mão, sem `git checkout`.
+
+**Task 11 (`DemoPhotosSeeder`, executor `codex`) repetiu a forma das Tasks 1/2** — Codex escreveu o
+arquivo verbatim ao plano, Pint passou, e os Steps dependentes de Docker (rodar o seed, provar
+idempotência) foram bloqueados no sandbox por desenho. Mas a causa raiz chegou uma task antes do
+previsto: o `--no-deps app` do gate de abertura resolvia teste (sqlite `:memory:`), não `db:seed`,
+que precisa de MySQL/MinIO reais — gap que o F1 do pre-flight só havia antecipado para a Task 12
+Step 7. **Decisão do João:** `docker network connect lotus_default fix-frontend-app-1` — sem subir
+ou derrubar container, sem tocar porta, só entrar como membro adicional da rede; o seed grava no
+MESMO banco de dev que o BD-6 usa, reuso deliberado, não isolamento. Medido depois: 33 semeadas na
+primeira rodada, `0 semeadas` e todos `já tem foto, pulado` na segunda — idempotência provada.
+
+**Gate do bloco (Task 12), todos os seis passos verificáveis sem exceção:** suíte de backend 592
+passed / 5 skipped (2154 asserções, mesma contagem desde a Task 3); frontend `pnpm build`/`pnpm lint`/`pnpm test`
+os três exit 0, 171 testes; `grep "text-gray-"` zero ocorrências; `CATRACA_COR` com exatamente 4
+linhas, sem `ClientsTable.tsx`; `grep "AppAvatar"` fora de `shared/ui` aponta só para
+`UserMenu.tsx`, a única exceção deliberada; `typescript:transform` reexecutado devolve diff vazio
+em `generated.ts` — nenhuma edição à mão.
+
+**O que o bloco NÃO provou, sem maquiagem:** `/lotus-ui-review` não rodou — os 13 sítios da lista do
+plano (Task 12 Step 8) nunca foram vistos no navegador nesta execução. A porta 5173 está ocupada
+pelo `pnpm dev` do main tree (BD-6, `/home/jvbat/projetos/lotus/frontend`), e o `docker compose up
+-d` sem `--no-deps` do texto original do plano colidiria de porta com aquele stack — mesma classe
+de desvio de mecanismo do F1. A revisão visual é passo do João na sessão interativa; a lista das 13
+telas foi entregue a ele em chat, não através de skill.
+
+**Estado: `ready_for_review`.** Este comando não inicia review — a próxima instrução do João aciona
+a revisão do trabalho ativo.
+
+### Extensão — 2026-08-14: foto no header, foto de redator sai de Turma/detalhe
+
+**O bloco já estava `ready_for_review` quando o João pediu, em chat, dois itens novos sobre a mesma
+superfície:** foto do usuário logado no header (via `IdentityCell`) e remoção da foto de redatores
+em Turma/detalhe da turma. Decisão dele: dobra no MESMO `active_work_item`, estado volta a
+`executing` para a extensão e fecha de novo em `ready_for_review` — sem abrir item novo.
+
+**`IdentityCell.tsx` não foi tocado — o João já o tinha editado à mão antes desta sessão** (`<p>` virou
+`<span>`, WIP não commitado quando a sessão abriu). A única consequência disso: `IdentityCell.test.tsx`
+estava quebrado (3 testes contando `<p>`, que não existe mais), achado no gate desta extensão e não
+por ele. Corrigido só o teste, trocando a asserção por `span.truncate` — o contrato real que o
+próprio componente documenta ("a forma empilhada trunca; a inline não"), não a tag incidental.
+
+**Foto no header exigiu DTO novo, não só JSX.** `SessionUserData` (`/login` e `/me`) não carregava
+`photo_url` — medido antes de mexer no front, não assumido. Campo acrescentado no mesmo molde de
+`UserData::$photo_url` (`#[WithTransformer(SignedUrlTransformer::class, 60)]`, `fromModel` lendo
+`$user->photo_path`), `typescript:transform` reexecutado, diff de `generated.ts` de uma linha só.
+`UserMenu.tsx` ganhou `image={user.photo_url}` no `AppAvatar` já existente.
+
+**`IdentityCell` NÃO entrou no header, por decisão do João contra a leitura literal do pedido.**
+O trigger do `UserMenu` tem desenho específico documentado no próprio arquivo — avatar `aria-hidden`
+(nome acessível vem do texto), texto colapsa por `sr-only` abaixo de `sm` (UI-04 do review de
+2026-08-12, chevron cortava a 320px), branco cravado (D-P13, a navy é fixa nos dois temas).
+`IdentityCell` empacota avatar+texto num bloco só, sem gancho pra isolar só o texto do colapso — usá-lo
+ali regrediria o UI-04. Escalado, e o João escolheu manter o `AppAvatar` com a foto encaixada, sem
+importar `IdentityCell` no header.
+
+**Redator sai de 2 sítios, os outros 11 já estavam certos — medido, não author.** Grep de
+`image={.*photo_url}` em todo `IdentityCell` do repo antes de editar: 3 sítios de Turma mostravam foto
+de redator (`RedatorDesignation.tsx:37,72`, `TurmasTable.tsx:106`), removida a prop `image` dos três
+(cai no fallback de iniciais do `AppAvatar`, sem tocar `IdentityCell`). Os sítios de aluno em
+Certificados e no detalhe da turma (`EnrollmentTable`, `EmissionStudentsTable`, `HistorialTable`) **já
+não passavam `image`** — commit `9e3a68e` desta mesma branch já fechou isso. `client_photo_url` em
+`TurmasTable`/`TurmaDetailPage` fica — é cliente, fora do pedido.
+
+**Gate reproduzido depois da extensão:** backend 592 passed / 5 skipped (2154 asserções, mesma
+contagem — a extensão não muda regra de negócio, só projeta um campo já resolvido);
+`pnpm build`/`pnpm lint`/`pnpm test` os três exit 0, **171 testes** (mesma contagem da Task 12 — a
+correção do `IdentityCell.test.tsx` troca asserção, não adiciona/remove teste); `typescript:transform`
+reexecutado de novo ao final, diff vazio.
+
+**O que esta extensão NÃO provou, sem maquiagem:** a foto aparecendo de fato no header não foi vista
+no navegador. `:5173`/`:8080` seguem ocupados pelo stack do main tree (mesma causa registrada acima
+para os 13 sítios da Task 12); um nginx+`pnpm dev` avulsos em portas alternativas (`8081`/`5174`),
+ligados só a este container via `fix-frontend_default`, chegaram a subir para o teste de rota
+(HTTP 200 confirmado) e foram desmontados em seguida sem login nem screenshot — checagem visual seguiu
+fora do escopo desta sessão, pelo mesmo motivo que já vale pro resto do bloco (`/lotus-ui-review` é
+`disable-model-invocation: true`, passo do João).
+
+**Estado: `ready_for_review`.** Mesma regra da Task 12 — este comando não inicia review.
+
+### Correção de rumo — 2026-08-14: "não exibe foto" era BUG, não pedido — foto entra em todos os sítios
+
+**A extensão acima leu o pedido ao contrário, e o João corrigiu em chat.** A frase "em turma,
+certificados e detalhes da turma não exibe foto de redatores, alunos" era RELATO de defeito, não
+pedido de remoção. Instrução corrigida: a foto deve aparecer **em todos os sítios que chamam
+`IdentityCell`** — redator e aluno inclusos — e no header. A remoção da subseção anterior foi
+desfeita e a direção invertida.
+
+**Causa raiz de "nunca apareceu, nem na 1ª nem na 2ª execução": stack misto — medido, não
+teorizado.** O `pnpm dev` em `:5173` é DESTA worktree (`/proc/<pid>/cwd` conferido), mas
+`VITE_API_URL` apontava `:8080` = nginx do MAIN tree = backend da branch do BD-6, **sem nenhum DTO
+alargado desta branch**. Todo `photo_url` que o front pedia chegava `undefined`; o header idem
+(`SessionUserData.photo_url` só existe aqui). Defeito latente adicional: o `backend/.env` desta
+worktree assinava URL pública contra `localhost:9002`, porta sem listener nenhum (o MinIO
+compartilhado publica `9000`) — mesmo com backend certo, a foto morreria no `onImageError`.
+
+**Código (commitável):** `image` restaurado nos 3 sítios de redator (`RedatorDesignation.tsx` ×2,
+`TurmasTable.tsx`); `EnrollmentData::photo_url`, `EmissionPanelEnrollmentData::student_photo_url` e
+`CertificateData::aluno_photo_url` criados no molde do `StudentData` (`#[Computed]` +
+`SignedUrlTransformer`), com os 3 sítios de aluno consumindo (`EnrollmentTable`,
+`EmissionStudentsTable`, `HistorialTable`). No `CertificateData` a foto é VIVA e deliberadamente
+fora do snapshot — a decisão de auditoria do `9e3a68e` ("snapshot não se ilustra com dado mutável")
+foi revertida por instrução explícita do João **para a listagem**; PDF e rota pública do QR seguem
+só-snapshot. `CertificateController::index` ganhou `with('enrollment.student.user')` (a listagem não
+tinha eager load porque só lia snapshot), e o `SoftDeletedRelationProjectionTest` ganhou o caso do
+certificado de aluno arquivado, na regra da rule backend-ddd. `generated.ts` regenerado (3 campos
+novos); 3 fixtures de teste TS ajustadas no mesmo passo (ADR-04, "quem regenera ajusta consumidor").
+O painel de emissão não custa query nova (`withListingData()` já carregava `student.user`).
+
+**Ambiente (não commitável, worktree):** `backend/.env` — `AWS_ENDPOINT_PUBLIC`/`AWS_URL`
+`9002→9000`, `FRONTEND_URL` e `SANCTUM_STATEFUL_DOMAINS` ganham `localhost:5173` (o vite real);
+`frontend/.env` — `VITE_API_URL` `8080→8081`; container avulso **`fix-frontend-nginx`**
+(nginx:alpine, `:8081`) servindo o backend DESTA branch via `fix-frontend-app-1`, que já vivia nas
+duas redes (`fix-frontend_default` + `lotus_default`) e por isso usa o MySQL e o MinIO do stack
+principal — mesmo banco de dev, mesmas fotos do `DemoPhotosSeeder`. O stack do main tree não foi
+tocado; `:8080`/`:5173` seguem dele.
+
+**Gate:** backend **593 passed / 5 skipped (2156 asserções)** — +1 teste, o caso novo de
+soft-delete; Pint passed nos 4 PHP; front `build`/`lint`/`test` verdes, **171 testes** (fixtures
+mudaram, contagem não).
+
+**Provado por request real, não só por suite:** login curl `admin@lotus.cl` em `:8081` →
+`/api/me` 200 com `photo_url` assinada contra `localhost:9000` → `curl` da própria URL = **200
+`image/png` (1,87 MB)**; `/api/turmas` = 6 turmas, 6 com `redatores[0].photo_url` assinada;
+`/api/certificates` = 5 linhas, `aluno_photo_url` em 3 (o seed é "um sim, um não" — as outras 2
+caem nas iniciais, que é o ramo correto); CORS respondendo
+`Access-Control-Allow-Origin: http://localhost:5173` + credentials.
+
+**NÃO provado: o pixel no navegador** — `/lotus-ui-review` segue sendo passo do João. O vite
+reinicia sozinho ao detectar o `.env` novo; se a aba ainda apontar `:8080`, reiniciar o `pnpm dev`
+e relogar (a sessão anterior era do backend do main tree).
+
+**Estado: `ready_for_review`.** Mesma regra de sempre — review só quando o João acionar.
+
+### Review — 2026-08-14: risco ALTO, duas lentes, 9 achados
+
+`/revisar-sprint` abriu em `ready_for_review`, transicionou a `reviewing` e classificou o bloco
+como **ALTO risco** pelo gatilho binário do projeto: `generated.ts` regenerado (lei §5.3), DTO de
+documento legal alargado (`CertificateData`) e Tasks 1/2/11 com `executor: codex`. Por isso a
+revisão do Codex read-only rodou como segunda lente, sobre o intervalo `0a1439f..840edf0`.
+
+**Os gates do bloco foram REPRODUZIDOS aqui, não herdados:** backend **593 passed / 5 skipped
+(2156 asserções)**; `pnpm lint` exit 0; `pnpm test` **33 arquivos / 171 testes**;
+`typescript:transform` reexecutado devolve `generated.ts` sem diff; `grep text-gray-` zero;
+`CATRACA_COR` com 4 linhas; `AppAvatar` fora de `shared/ui` só em `UserMenu.tsx`. Nenhum órfão.
+
+**Dois 🔴, e os dois são o mesmo tipo de defeito — texto afirmando o que o código não faz:**
+o comentário do `HistorialTable.tsx:54-57` diz "SEM `image`, e isto é decisão de auditoria" três
+linhas acima de `image={c.aluno_photo_url}` (a reversão do João está no `state.md`, mas a spec §D4 e
+o comentário seguem dizendo o contrário); e o `IdentityCell` perdeu o `min-w-0` que o plano
+escrevia, o que deixa o `truncate` inerte nos 13 sítios — com o teste verde, porque ele conta a
+classe `.truncate` em vez de medir o comportamento (lição 10, cobertura fantasma).
+
+**A segunda lente achou um que a primeira não tinha, e ele foi verificado no código antes de
+entrar:** o `SignedUrlPropertyReadTest` varre `app/` por `->photo_url` e `->download_url`, e os três
+campos novos do bloco (`client_photo_url`, `student_photo_url`, `aluno_photo_url`) **escapam da
+regex pelo prefixo** — a guarda existe e não cobre o que o bloco criou.
+
+**Um achado do Codex foi medido e reprovou, e não entra como ele o escreveu:** o
+`DemoPhotosSeeder` "sem guarda de ambiente" já é barrado em produção pelo `ConfirmableTrait` do
+`db:seed`, que exige `--force`. Fica como 🟢 de higiene, não como risco de produção.
+
+**Medição própria que desmontou uma suspeita:** os dois campos de foto aninhados em `array` sem
+`#[DataCollectionOf]` (`EmissionPanelEnrollmentData::student_photo_url` e
+`EnrollmentData::photo_url`) **voltam assinados** — verificado por tinker contra o banco de dev,
+`http://localhost:9000/lotus/user-photos/…`. Não é bug; é lacuna de teste de regressão.
+
+### Triagem do João (2026-08-14): 7 entram, 2 são decisão dele
+
+**Entraram e estão corrigidos** — Q-1, Q-4, Q-5, Q-6, Q-7, Q-8, Q-9:
+
+- **Q-1** — o comentário do `HistorialTable` passou a descrever a reversão, e a spec §D4 ganhou a
+  nota do que ficou de pé: **o PDF e a rota pública do QR seguem só-snapshot**; a fronteira mudou de
+  lugar, não sumiu.
+- **Q-4** — a regex da guarda virou `/->\s*\w*(download_url|photo_url)\b/`. Os três campos novos
+  passam a ser cobertos e nada de `app/` reprova.
+- **Q-5** — a forma inline devolve `<div>`. **Sem mudança visual**: o `flex` já cravava o `display`
+  nas duas grafias, e as classes são as mesmas — a troca só corrige `<div>` do avatar dentro de
+  fraseado. Teste novo prova o container de fluxo, e reprovou contra o `<span>` antes de entrar.
+- **Q-6** — nasceu o `CertificateQueryBuilder` (`LISTING = ['enrollment.student.user']`), com
+  `withListingData()` no `index` e `loadListingData()` em `show`/`store`/`revoke`, que
+  lazy-loadavam três relações cada. Guarda de runtime em
+  `tests/Feature/Certification/CertificateEagerLoadTest.php`, no molde do `ContratanteEagerLoadTest`
+  (duas cadeias distintas, `preventLazyLoading`) — **vista vermelha** com o eager load removido.
+  O segundo teste do arquivo fecha a lacuna que a própria revisão mediu: `aluno_photo_url` chega
+  **assinado** na listagem e no detalhe.
+- **Q-7** — `aria-hidden` no avatar da célula: o nome deixa de ser anunciado duas vezes por linha
+  nos 13 sítios, de uma linha só. Teste próprio, também visto vermelho antes.
+- **Q-8** — `clientName` deriva de `client`; era a mesma varredura escrita duas vezes.
+- **Q-9** — o seeder passa a contar quatro números separados (semeadas, já tinham, sem foto por
+  propósito, falharam); "total menos semeadas" chamava de proposital quem falhou por rede.
+
+**Não entraram, por decisão do João — as duas são alteração dele, à mão, depois do plano:**
+
+- **Q-2** (`min-w-0` ausente, `truncate` inerte nos 13 sítios) — "deixe como está". Registrado em
+  `docs/pendencias.md` (**P-38**) para não voltar como achado novo.
+- **Q-3** (grafia diverge do D1: `font-semibold`, `text-sm`, `gap-2`) — "eu que mudei". Registrado
+  em `docs/pendencias.md` (**P-39**); o D1 da spec segue com a grafia planejada.
+
+**Gates repetidos depois das correções:** backend **595 passed / 5 skipped (2162 asserções)**;
+`pnpm lint` exit 0; `pnpm build` sem erro de tipo; `pnpm test` **33 arquivos / 173 testes**;
+`typescript:transform` reexecutado não move `generated.ts`.
+
+
+### Integração — 2026-08-14: a `main` entra na branch antes do fechamento
+
+**A `main` andou 24 commits desde o `0a1439f` de onde esta branch nasceu**, e dois deles mudam o
+chão que o `/fechar-sprint` pisa: o BD-6 mergeado (PR #50) e a **reorganização da pasta de docs**
+(PR #51). `docs/pendencias.md` deixou de existir — virou `docs/superpowers/pendencias/` com
+`README.md` (índice), `abertas.md` (fichas) e `encerradas.md`; `progress.md` e `progress-archive.md`
+desceram para `docs/superpowers/historico/`. O próprio `.claude/skills/fechar-sprint/SKILL.md` foi
+reescrito na `main` com os paths novos. Fechar antes de integrar escreveria em dois arquivos mortos,
+então a ordem foi **merge primeiro**, por decisão do João (a alternativa, rebase dos 27 commits sobre
+a reorg, replayaria o mesmo conflito de `state.md` commit a commit).
+
+**Cinco conflitos, e três eram exatamente os que este arquivo previu em §"Exceção declarada".**
+`frontend/src/shared/ui/index.ts` (união: `IdentityCell` + `InlineLoadState`) e
+`frontend/src/features/commercial/hooks/useCommercialClients.ts` são as colisões 2 e 1 medidas antes
+da promoção paralela; a colisão 3 (os três locales) **auto-mergeou limpo**. Os outros dois são de
+documento: `docs/superpowers/backlog.md` e este arquivo.
+
+**O hook resolveu-se pela rule, não pelo meio-termo.** `.claude/rules/frontend-fsliced.md` escreve
+que estado de carga de lista **não se deriva à mão na feature** — vem do `useLoadState`. A forma do
+BD-6 (`...load`) fica inteira e o Grupo B deste bloco volta por cima dela como `client`, com
+`clientName` derivando dele. Medido: `useLoadState` já expõe `isLoading`, `loadError` e `refetch`,
+que eram os três campos que a forma antiga montava à mão, então `BudgetsTable` e `BudgetDialog`
+seguem compilando sem tocar em consumidor.
+
+**`backlog.md` ficou com o lado da `main` inteiro, e isso já cumpre o passo 9 do gate.** O único
+acréscimo desta branch ao arquivo eram as 105 linhas do item 4 (a própria célula de identidade), e a
+reorg da `main` já as removeu ao reescrever a fila em Sprint 5/6 + BD-10..BD-15.
+
+**P-38 e P-39 desta branch colidiram de ID e foram renumeradas para P-41 e P-42**, no precedente que
+o próprio repositório fixou duas vezes (a segunda `P-30` virou `P-33`; a segunda `P-28` virou
+`P-32`): a reorg chegou à `main` primeiro e já usava `P-38`/`P-39` para outras pendências, e vai até
+`P-40` — quem renumera é a recém-chegada. As fichas foram portadas para
+`docs/superpowers/pendencias/abertas.md` na forma nova, sob `# Travadas em decisão do João`, com o
+índice do `README.md` acompanhando.
+
+**O gatilho da P-34 venceu neste bloco e já tem casa: `BD-11`.** Este bloco tocou o shell
+(`frontend/src/app/layouts/Header/UserMenu.tsx`, a foto no `UserMenu`), que é o gatilho literal da
+pendência. Não foi absorvido — as 3 classes `text-slate-*` vivem em `Sidebar/`, não no Header, e a
+reorg da `main` já agrupou P-34 + D-03 no **BD-11 · shell: catraca de cor e navegação no toque**, com
+DoD escrito. O gatilho fica cumprido pelo agrupamento, não por alargamento desta sprint.
+
+**A promoção do `dashboard-backend-agregacoes` que veio da `main` NÃO fica de pé neste fechamento**,
+por decisão do João: o `workflow_state` vai a `idle` e ele repromove o bloco explicitamente. A
+narrativa dela está preservada logo abaixo e a spec, o plano e o Context Packet do dashboard
+**continuam no disco, nas pastas ativas** — nada foi arquivado, porque nada foi entregue.
+
+### Fechamento — 2026-08-14
+
+`/fechar-sprint` abriu com `workflow_state: ready_for_closure` e o item batendo. **O gate rodou
+inteiro DEPOIS do merge da `main`** (§"Integração" acima), porque a reorg de docs mudou o destino de
+dois passos dele — as pendências e o histórico.
+
+**O passo 0 fechou em duas metades, e a segunda não é artefato desta sessão.** A metade de API foi
+provada por request real contra o backend DESTA branch (`:8081`, sessão Sanctum, `Origin` +
+`Accept`): `/api/me` devolve `photo_url` assinada e o GET da própria URL responde **200 `image/png`,
+1.877.301 bytes**; `client_photo_url` em 3 de 6 turmas, `redatores[0].photo_url` em 5 de 6,
+`EnrollmentData::photo_url` em 27 de 55 matrículas, `student_photo_url` em 7 de 15 do painel de
+emissão e `aluno_photo_url` em 3 de 5 certificados — preenchimento parcial é o "um sim, um não" do
+`DemoPhotosSeeder`, e o resto cai nas iniciais, que é o ramo correto. Os **16 call sites** de
+`IdentityCell` passam `image`, conferidos um a um. **A metade de pixel veio do João**, que confirmou
+a checagem visual em chat; `/lotus-ui-review` não rodou e continua sendo passo dele
+(`disable-model-invocation: true`), com a porta 5173 ocupada pelo stack do main tree durante toda a
+execução. Fica escrito qual metade tem artefato no repositório e qual não tem.
+
+**Placar do gate, medido pós-merge e não herdado:** backend **595 passed / 5 skipped (2162
+asserções)**; `pnpm lint` exit 0; `pnpm build` exit 0; `pnpm test` **36 arquivos / 186 testes**;
+Pint `passed` nos 15 `.php` do bloco; `typescript:transform` reexecutado não move `generated.ts`;
+zero `.gitkeep` órfão, e os 9 arquivos novos são todos entregável nomeado no plano. Leis §5: zero
+import de `primereact` fora de `shared/ui`, zero import cruzado entre features, e o
+`CertificateQueryBuilder` é o sétimo `Eloquent\Builder` do padrão — não Repository.
+
+**Docker caiu inteiro no meio da sessão** (`Exited (255)` simultâneo nos sete containers, daemon/WSL)
+e o stack foi restaurado com `docker start`, com as duas redes de `fix-frontend-app-1` intactas. A
+suíte foi remedida depois da restauração, com o mesmo placar — o número acima é o de depois, não o de
+antes.
+
+**Arquivamento e histórico, já no layout novo da `main`:** plano em `plans/archive/`, spec em
+`specs/archive/`, com as duas referências dentro deste arquivo atualizadas para os paths movidos. O
+Context Packet fica onde está — `context-packets/` não tem convenção de arquivo. A entrega entrou em
+`docs/superpowers/historico/progress.md` e a mais antiga das dez (o BD-2, 2026-08-11) desceu
+**verbatim** para `historico/progress-archive.md`, mantendo o teto de dez.
+
+**O passo 9 do gate já estava cumprido pela `main`:** a reorg removeu o item 4 de "Próximos blocos"
+ao reescrever a fila em Sprint 5/6 + BD-10..BD-15, e nada foi removido daqui.
+
+**A P-26 saiu das encerradas.** Ela fechou na varredura pós-BD-6 com "sai no próximo
+`/fechar-sprint`", e este é o próximo; o rastro durável fica em `historico/progress-archive.md` e na
+spec arquivada do bloco de 2026-08-04.
+
+**Estado: `idle`, com a promoção do dashboard desfeita por decisão do João.** O `state.md` que veio
+da `main` trazia `dashboard-backend-agregacoes` em `ready_for_execution`; a alternativa era preservar
+a promoção e mexer só em `last_completed_work_item`, e ele escolheu **fechar a `idle` e repromover
+depois**. A spec, o plano e o Context Packet do dashboard **continuam nas pastas ativas** — nada foi
+arquivado, porque nada foi entregue —, e a narrativa da promoção segue logo abaixo, intacta.
+`state_basis_commit` aponta para `9ed7351`, o merge que integra a entrega; não para o commit deste
+fechamento.
+
+## Antepenúltimo item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
 
 ### Seleção — 2026-08-14
 
@@ -743,7 +1324,7 @@ frontend —, e **nada foi promovido no lugar**.
 **Estado: `idle`.** `state_basis_commit` segue em `2511501`, o commit que prova a entrega; a próxima
 ação é escolha explícita do João no `backlog.md`.
 
-## Antepenúltimo item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
+## Quarto item fechado — 2026-08-13 (`login-fora-do-adr16`, item 4 de "Próximos blocos")
 
 ### Exceção declarada à invariante de um `active_work_item`
 
@@ -1242,7 +1823,7 @@ mais antiga (`2026-08-10 · Documentos oficiais`) desceu para o `progress-archiv
 ordem das duas linhas de 2026-08-13 foi trocada para seguir a hora de fechamento: o BD-5 fechou antes
 do login.
 
-## Quarto item fechado — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
+## Quinto item fechado — 2026-08-13 (`usecrudform-mais-fundo`, BD-5)
 
 ### Seleção — 2026-08-13
 

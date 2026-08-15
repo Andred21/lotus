@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppButton, AppTag,
+  AppColumn, AppDropdown, AppButton, AppTag, IdentityCell,
   AppEmptyState, SearchableTableFrame,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
@@ -85,7 +85,18 @@ export function BudgetsTable({
         header={t('budget.code')}
         body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
       />
-      <AppColumn header={t('budget.client')} body={(b: BudgetData) => clients.clientName(b.client_id)} />
+      <AppColumn
+        header={t('budget.client')}
+        body={(b: BudgetData) => {
+          const c = clients.client(b.client_id)
+
+          return c ? (
+            <IdentityCell title={c.legal_name} description={c.email} image={c.photo_url} />
+          ) : (
+            clients.clientName(b.client_id)
+          )
+        }}
+      />
       <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />
       <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} />
       <AppColumn

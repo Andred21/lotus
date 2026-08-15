@@ -37,6 +37,7 @@ class CertificateController extends Controller implements HasMiddleware
     public function index(): array
     {
         return Certificate::query()
+            ->withListingData()
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Certificate $certificate) => CertificateData::fromModel($certificate))
@@ -50,7 +51,7 @@ class CertificateController extends Controller implements HasMiddleware
         // nome de aluno é atestar o que ninguém sabe.
         $certificate->snapshot->assertPresentable($certificate->codigo);
 
-        return CertificateData::fromModel($certificate);
+        return CertificateData::fromModel($certificate->loadListingData());
     }
 
     public function pdf(Certificate $certificate, CertificatePdfService $pdf): Response
@@ -75,7 +76,7 @@ class CertificateController extends Controller implements HasMiddleware
         $redator = Redator::query()->findOrFail($data->redator_id);
         $certificate = $action->execute($enrollment, $redator);
 
-        return CertificateData::fromModel($certificate)
+        return CertificateData::fromModel($certificate->loadListingData())
             ->toResponse(request())
             ->setStatusCode(201);
     }
@@ -85,7 +86,7 @@ class CertificateController extends Controller implements HasMiddleware
         Certificate $certificate,
         RevokeCertificateAction $action,
     ): JsonResponse {
-        return CertificateData::fromModel($action->execute($certificate, $data->reason))
+        return CertificateData::fromModel($action->execute($certificate, $data->reason)->loadListingData())
             ->toResponse(request())
             ->setStatusCode(200);
     }

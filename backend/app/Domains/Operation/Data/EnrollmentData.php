@@ -4,7 +4,10 @@ namespace App\Domains\Operation\Data;
 
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -28,6 +31,9 @@ class EnrollmentData extends Data
         public EnrollmentApprovalStatus|Optional $approval_status,
         public string|Optional|null $attendance_pct,
         public array|Optional|null $grades,
+        #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $photo_url = null,
     ) {}
 
     public static function rules(): array
@@ -53,6 +59,7 @@ class EnrollmentData extends Data
             approval_status: $e->approval_status,
             attendance_pct: $e->attendance_pct,
             grades: $e->grades,
+            photo_url: $e->student->user->photo_path,
         );
     }
 }

@@ -5,11 +5,13 @@ namespace App\Domains\Certification\Models;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Casts\CertificateSnapshotCast;
 use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\QueryBuilders\CertificateQueryBuilder;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
@@ -77,5 +79,17 @@ class Certificate extends Model implements AuditableContract
     public function redator(): BelongsTo
     {
         return $this->belongsTo(Redator::class)->withTrashed();
+    }
+
+    /** Contraparte de instância do `withListingData()` — mesmo molde do Turma. */
+    public function loadListingData(): static
+    {
+        return $this->load(CertificateQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): CertificateQueryBuilder
+    {
+        return new CertificateQueryBuilder($query);
     }
 }

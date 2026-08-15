@@ -37,8 +37,8 @@ ou de escrita fora do repositório.
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**; revisar 2026-10-31 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
-| P-41 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
-| P-42 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev, ou o bloco B do Dashboard; revisar 2026-10-31 |
+| P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
+| P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev, ou o bloco B do Dashboard; revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 
@@ -49,6 +49,8 @@ ou de escrita fora do repositório.
 | P-05 | Migrations "adicionais" não consolidadas nas originais | João | antes de subir para produção |
 | P-03 | Compose por worktree não existe | João | dois blocos de **backend** em paralelo, ou 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
+| P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | João | João decidir que a coluna deve cortar; revisar 2026-10-31 |
+| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
@@ -62,5 +64,5 @@ ou de escrita fora do repositório.
 
 ## Encerradas (0)
 
-Nenhuma aguardando remoção. A P-26 saiu no `/fechar-sprint` de `dashboard-backend-agregacoes`
-(2026-08-15), depois da sprint de rastro.
+Nenhuma aguardando remoção. A **P-26** saiu no `/fechar-sprint` de 2026-08-14
+(`celula-de-identidade`), cumprida a sprint de rastro.

@@ -149,7 +149,6 @@ const CATRACA_COR = [
   'src/features/commercial/components/Budget/CourseStep.tsx',
   'src/features/commercial/components/Budget/QuoteWizard.tsx',
   'src/features/operation/components/Document/ManualButton.tsx',
-  'src/features/commercial/components/Client/ClientsTable.tsx',
 ]
 
 export default defineConfig([

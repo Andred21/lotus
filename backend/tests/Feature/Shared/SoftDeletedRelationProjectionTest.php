@@ -3,6 +3,9 @@
 namespace Tests\Feature\Shared;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Certification\Data\CertificateData;
+use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Budget;
@@ -22,6 +25,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -215,6 +219,38 @@ class SoftDeletedRelationProjectionTest extends TestCase
         $data = EnrollmentData::fromModel($enrollment->fresh(['student.user']));
 
         $this->assertSame('Pedro Soto', $data->name);
+    }
+
+    public function test_certificate_data_projeta_certificado_de_aluno_arquivado(): void
+    {
+        $student = $this->student();
+        $student->user->update(['photo_path' => 'user-photos/1/foto.jpg']);
+        $client = $this->makeClientWithUser(['legal_name' => 'Enel'], ['rut' => $this->nextRut()]);
+        $course = $this->course();
+        $turma = $this->turma($client, $course);
+        $enrollment = Enrollment::create(['turma_id' => $turma->id, 'student_id' => $student->id]);
+        $redator = User::factory()->create(['type' => 'redator', 'rut' => $this->nextRut()])
+            ->redator()->create([]);
+
+        $certificate = Certificate::create([
+            'uuid' => (string) Str::uuid(),
+            'enrollment_id' => $enrollment->id,
+            'course_id' => $course->id,
+            'redator_id' => $redator->id,
+            'codigo' => 'LOT-2026-9000',
+            'snapshot' => ['aluno' => ['name' => 'Juan Congelado'], 'curso' => ['name' => 'Alta Tensión']],
+            'valido_ate' => null,
+            'status' => CertificateStatus::Emitido,
+        ]);
+
+        $student->user->delete();
+        $student->delete();
+
+        $data = CertificateData::fromModel($certificate->fresh(['enrollment.student.user']));
+
+        // O DTO carrega o PATH; a URL assinada nasce só na serialização.
+        $this->assertSame('user-photos/1/foto.jpg', $data->aluno_photo_url);
+        $this->assertSame('Juan Congelado', $data->snapshot->aluno->name);
     }
 
     public function test_pending_quote_data_projeta_cotacao_de_cliente_arquivado(): void

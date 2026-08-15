@@ -5,6 +5,9 @@
 > [`../historico/progress.md`](../historico/progress.md) ou
 > [`../historico/progress-archive.md`](../historico/progress-archive.md).
 
-_Nenhuma pendência encerrada aguardando remoção._ A P-26 (`->scopeBindings()` mudou 403 → 404 sem
-permissão) cumpriu a sprint de rastro e saiu no `/fechar-sprint` de `dashboard-backend-agregacoes`
-(2026-08-15); o rastro dela segue em `../historico/progress-archive.md:24` e no git.
+_Nenhuma pendência encerrada aguardando remoção._
+
+**A P-26 saiu no `/fechar-sprint` de 2026-08-14 (`celula-de-identidade`)**, cumprindo a regra de uma
+sprint acima: ela havia fechado na varredura pós-BD-6 e este foi o fechamento seguinte. O rastro
+está em [`../historico/progress-archive.md`](../historico/progress-archive.md) (linha do
+`hardening-guardrails-e-transportes`, 2026-08-04) e na spec arquivada daquele bloco.

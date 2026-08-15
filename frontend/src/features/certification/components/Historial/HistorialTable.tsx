@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
 import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
@@ -51,10 +51,13 @@ export function HistorialTable() {
         <AppColumn
           header={t('certificate.colAlumno')}
           body={(c: CertificateData) => (
-            <div>
-              <p className="font-medium">{c.snapshot.aluno.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{c.snapshot.aluno.rut ?? '—'}</p>
-            </div>
+            /* Texto do snapshot (nome e RUT congelados na emissão) + foto
+             * VIVA do aluno: a foto é identidade visual de LISTAGEM, não dado
+             * do documento. A spec D4 fechou "nunca foto viva" e o João
+             * reverteu em 2026-08-14 — a fronteira ficou onde o documento é
+             * apresentado como documento: o PDF e a rota pública do QR
+             * continuam só-snapshot, e é lá que a lei mora. */
+            <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} image={c.aluno_photo_url} />
           )}
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />

@@ -7,7 +7,10 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Validation\Rule;
+use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -41,6 +44,14 @@ class TurmaData extends Data
         public string|null|Optional $quote_code = new Optional,
         public string|null|Optional $budget_code = new Optional,
         public int|null|Optional $budget_id = new Optional,
+        /** RUT do contratante. Mesmo `ContratanteData` de onde sai o
+         * `client_name` — o valor já vinha e era descartado. */
+        public string|null|Optional $client_rut = new Optional,
+        /** Foto do usuário do cliente. `#[Computed]` porque nunca entra por
+         * payload, e o transformer assina na saída como em ClientData. */
+        #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $client_photo_url = null,
     ) {}
 
     public static function rules(): array
@@ -82,6 +93,8 @@ class TurmaData extends Data
             quote_code: $turma->quote->code,
             budget_code: $turma->quote->budget->code,
             budget_id: $turma->quote->budget->id,
+            client_rut: $turma->contratante()->rut,
+            client_photo_url: $turma->contratanteClient()->user->photo_path,
         );
     }
 }

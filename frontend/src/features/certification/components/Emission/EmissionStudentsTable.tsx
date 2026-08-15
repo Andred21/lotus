@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState } from '@shared/ui'
+import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
@@ -39,8 +39,13 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
       footerCount={t('certificate.studentsCount', { total: counts.total, approved: counts.aprobados })}
       emptyMessage={<AppEmptyState icon="pi pi-users" title={t('certificate.emptyStudents')} />}
     >
-      <AppColumn header={t('certificate.colName')} field="student_name" />
-      <AppColumn header={t('certificate.colRut')} field="student_rut" />
+      <AppColumn
+        header={t('certificate.colName')}
+        field="student_name"
+        body={(e: EmissionPanelEnrollmentData) => (
+          <IdentityCell title={e.student_name} description={e.student_rut} image={e.student_photo_url} />
+        )}
+      />
       <AppColumn
         header={t('certificate.colFinalGrade')}
         body={(e: EmissionPanelEnrollmentData) => e.nota_final ?? '—'}

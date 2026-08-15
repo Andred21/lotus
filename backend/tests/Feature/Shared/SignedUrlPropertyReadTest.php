@@ -13,6 +13,11 @@ use Tests\TestCase;
  * projeto, e "texto afirmando o que o repositório não faz" já custou quatro
  * achados de review.
  *
+ * O `\w*` antes do sufixo é o que faz a guarda acompanhar o projeto em vez de
+ * só o dia em que nasceu: `client_photo_url`, `student_photo_url` e
+ * `aluno_photo_url` (bloco `celula-de-identidade`) escapavam pelo prefixo, e
+ * mecanismo que só cobre o que já existia é docblock com outro nome.
+ *
  * A varredura é sobre o CÓDIGO, não sobre o texto: `token_get_all()` remove
  * comentários antes da regex. Os docblocks destes DTOs citam `download_url` em
  * prosa, e contar a menção reprovaria por um vínculo que não existe — foi
@@ -25,7 +30,7 @@ class SignedUrlPropertyReadTest extends TestCase
         $encontrados = [];
 
         foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
-            if (preg_match('/->\s*(download_url|photo_url)\b/', $this->codigoSemComentarios($arquivo))) {
+            if (preg_match('/->\s*\w*(download_url|photo_url)\b/', $this->codigoSemComentarios($arquivo))) {
                 $encontrados[] = str_replace(base_path().'/', '', $arquivo);
             }
         }

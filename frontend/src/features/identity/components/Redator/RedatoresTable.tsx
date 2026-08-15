@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
-import { AppColumn, AppAvatar, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
 
@@ -39,13 +39,7 @@ export function RedatoresTable({
         header={t('redator.name')}
         sortable
         body={(r: RedatorData) => (
-          <div className="flex items-center gap-3">
-            <AppAvatar name={r.name} image={r.photo_url} size="large" />
-            <div>
-              <p className="font-medium">{r.name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{r.email}</p>
-            </div>
-          </div>
+          <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
         )}
       />
       <AppColumn
