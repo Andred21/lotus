@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-15-dashboard-frontend-central-controle.md
 blocker: null
@@ -152,6 +152,76 @@ adivinhar, que é o teste da própria skill para `blocked`.
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
 (brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-15: o bloco B virou dois
+
+Spec em `docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md`, com
+**dezesseis decisões**: D1–D7, D11, D12 e D16 escolhidas pelo João entre alternativas com o custo
+declarado; D8–D10 e D13–D15 derivadas e declaradas como tais.
+
+**A decisão que reconfigura o bloco é a D1: o bloco B foi FATIADO em dois.** O contrato do bloco A
+expõe **14 seções de UI** (9 na view admin, 5 na do Redator), e entregá-las num plano só levaria o
+gate visual cansado ao fim. O corte é por pergunta respondida: o **B1** (este bloco) responde *"o
+que tenho para fazer agora"* — `kpis`, `pendencias`, `alertas`, `agenda`, `pipeline`; o **B2**
+(`dashboard-frontend-analitico-e-redator`, a nascer no `backlog.md` no fechamento) responde *"como a
+operação evoluiu"* e leva séries, rankings, compliance, carga de redatores e a view do Redator
+inteira. **O slug e a branch do B1 não mudam** (D2): a branch já existia quando o corte foi decidido.
+
+**O corte se pagou duas vezes, e as duas por medição feita antes do desenho:**
+
+1. **Não existe biblioteca de gráficos no projeto.** `package.json` não tem `chart.js` — peer
+   obrigatório do `Chart` do PrimeReact — nem alternativa, e não há wrapper de chart em `shared/ui`.
+   As 5 seções do B1 são as que **não precisam de gráfico**, então a decisão de chart lib inteira
+   saiu do caminho e nasce no B2, junto das 5 séries mensais que a exigem.
+2. **O filtro de período caiu junto.** A D3 da spec do bloco A já dizia que estado operacional
+   ignora o período — só séries e rankings o obedecem. Com séries e rankings no B2, **o B1 não tem
+   o que filtrar**, e a parte cara da EAP 8.4.4 saiu do bloco. O hook nasce com o parâmetro mesmo
+   assim (D5): fronteira pronta, sem UI, e o B2 liga a tela sem mexer no cache (lição 3).
+
+**Uma premissa do packet foi confirmada por medição em vez de aceita:** ele atribui ao Drive a
+proibição de `features/dashboard` e a composição em `app`. Medido, o repositório manda no mesmo
+sentido por outro caminho — `estrutura-monolito.md:100` já reserva `app/pages/` para "página que NÃO
+é de domínio: DashboardPage" e a lei §5.6 proíbe feature importar feature, o que um Dashboard que lê
+de três módulos violaria. **Drive e repositório convergem; não havia divergência a reconciliar.**
+
+**Três achados de terreno mudaram o desenho, e nenhum deles estava no packet:**
+
+1. **`useLoadState` não serve.** A assinatura é `UseQueryResult<T[]>` — query de **lista** —, e o
+   dashboard é objeto único com seções anuláveis. A política de estado vive no `useDashboard`
+   (D9), preservando a tese da rule verbatim (o que ramifica a tela é o dado que falta, não o
+   `status`). Sem irmão genérico em `shared/hooks`: um consumidor só; o segundo é Meu Perfil
+   frontend, e é ele quem pagaria a extração.
+2. **`formatUf` vive em `features/commercial/lib/uf.ts` com 4 consumidores**, e o KPI de cotações
+   precisa dela. `app/` importando de uma feature é permitido pela direção da dependência, mas
+   acopla a página ao módulo comercial por um utilitário puro — o arquivo sobe para `shared/lib`
+   (D13) pelo argumento do ADR-18 (`adrs.md:222`): recurso de mais de uma camada é promovido, não
+   decidido caso a caso.
+3. **Dois alertas não têm rota de detalhe.** `certificate_*` traz `certificate_id` e
+   `redator_document_*` traz `redator_id`, mas `/certificados` e `/personas` são listagem com
+   diálogo — não há rota de entidade. Ancorar seria decidir o **FUT-2**, que é futuro dependente de
+   decisão do João; os dois CTAs levam à listagem sem seleção (D8), com a limitação escrita.
+
+**A D11 é a única que amplia o bloco de propósito, e o motivo é medido:** `COR_HARDCODED` roda em
+`src/features/*/components/**`, `src/features/**` e `src/shared/**`, e `src/app/**` **é a única
+camada sem ela** — a P-34. Este bloco escreve oito arquivos novos justamente em `app/`, que
+nasceriam sem guarda de cor. A catraca entra aqui, com os 3 sítios que hoje a impedem
+(`SidebarItem.tsx:24`, `Sidebar.tsx:60`, `Sidebar.tsx:71`, batendo com a contagem do backlog).
+**Consequência: a P-34 fecha no `/fechar-sprint` deste bloco e o BD-11 fica só com a D-03.**
+
+**O self-review da spec achou quatro coisas e as corrigiu antes do commit:** o baseline não estava
+declarado (medido nesta branch: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **36 arquivos /
+186 testes**); o layout era citado sem número de decisão (virou D16); o DoD não provava o movimento
+de `uf.ts` onde ele pode quebrar (4 telas que exibem **dinheiro**); e faltava o caso-limite da D6 —
+esconder cada seção nula, uma a uma, deixa **página em branco** para quem não tem permissão de
+módulo nenhum, indistinguível de falha silenciosa, então esse caso ganhou mensagem própria.
+
+**Risco de review: BAIXO pelo gate binário** — não toca schema, não regenera `generated.ts`, não
+toca Sanctum, auditoria nem documento legal, e não decide autorização (o payload já chega filtrado).
+**Divergência por alcance declarada:** 8 arquivos novos, `uf.ts` tocando 4 telas de dinheiro e uma
+catraca nova numa camada inteira — a segunda lente é decisão do João no `/revisar-sprint`.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
