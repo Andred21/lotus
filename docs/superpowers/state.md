@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-backend-self-service
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md
 active_plan: docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md
 context_packet: docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md
-blocker: null
+blocker: "Review do bloco (risco ALTO, Claude + Codex) com 5 achados aguardando aprovacao: Q-1 senha fora de Action/transacao; Q-2 prohibited aceita campo vazio (D8); Q-3 teste de sessao nao assere o id sobrevivente; Q-4 teste de auditoria passa com trilha vazia (empty_values=true); Q-5 password_confirmation virou propriedade contra a spec §3. Nenhum 🔴; detalhe na secao Review do state.md."
 last_completed_work_item: celula-de-identidade
 state_basis_commit: 84b0838
-updated_at: 2026-08-14T21:40:13-03:00
+updated_at: 2026-08-15T08:31:33-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -389,6 +389,54 @@ uma segunda escolha.
 `feat/meu-perfil-backend-self-service` (`3499439`..`0765ed6`) sobre o commit de abertura que já
 trouxe a transição a `executing`. Este comando não inicia review — a próxima instrução do João aciona
 a revisão do trabalho ativo. O bloco 2 (frontend de Meu Perfil) só começa depois disso.
+
+### Review — 2026-08-15: risco ALTO, duas lentes, 5 achados, nenhum 🔴
+
+`/revisar-sprint` sobre `3499439`..`0765ed6`. **Risco ALTO** pelo gatilho binário: `generated.ts`
+regenerado (§5.3), senha/sessões (eixo Sanctum) e ownership de documento (RN-09). Revisão Claude
+com o gabarito do projeto + revisão independente do Codex (read-only, mesma janela Git); os achados
+das duas lentes foram deduplicados e **cada achado do Codex foi verificado no código/vendor antes de
+aceito** — nenhum entrou por citação.
+
+**O que está limpo, medido:** zero órfão (todas as rotas registradas, enums e Actions consumidos,
+nenhuma dep nova); leis §5 sem violação — `generated.ts` aditivo e regenerado (diff confere com os
+DTOs), nenhum `abort(422)`, D1 (zero aresta para Operation, `DomainDependencyTest` intocado), D4
+(`/api/me` e `SessionUserData` intocados), D5/RN-09 (REUF recusa 422 nomeando campo), D7 (nenhuma
+permissão nova). Lições 5/10/11 respeitadas.
+
+**Achados aguardando aprovação (Q-1 a Q-5):**
+
+1. **Q-1 🟡 P** — `ProfilePasswordController.php:22-24`: escrita de senha direta no controller,
+   fora de Action e fora de `DB::transaction` — a rule `backend-ddd.md` exige Action transacional
+   para escrita (o `UpdateProfileAction` do mesmo bloco segue); se o purge falhar, senha trocada +
+   sessões vivas + 500 (D3 não-atômica). Convergência das duas lentes (Codex apontou a transação;
+   o gabarito, a Action).
+2. **Q-2 🟡 P** — `ProfileUpdateData.php:36-44`: `prohibited` é `! validateRequired`
+   (`ValidatesAttributes.php:2222` — medido no vendor), então campo proibido presente-mas-vazio
+   (`email: null`, `roles: []`, `''`) responde **200 silencioso**, furando a D8 na borda. Remédio:
+   `missing`. Achado do Codex, confirmado por medição.
+3. **Q-3 🟢 P** — `ProfilePasswordTest.php` prova 2: não assere que a linha sobrevivente é
+   `$sessionId` (o `assertSame(1, …)` discrimina o cenário de falha já medido, mas não um futuro em
+   que o PUT grave sessão nova própria), e o `getJson` final não prova nada — o guard cacheado
+   autentica mesmo com a sessão morta, como o próprio comentário do teste registra. Codex apontou;
+   aceito parcialmente (a parte "sem prova confiável" é exagero — a asserção de contagem discrimina).
+4. **Q-4 🟡 P** — `ProfileUpdateTest.php:33-40`: o teste de auditoria só assere a EXISTÊNCIA da
+   linha `updated`; `config/audit.php:104` tem `empty_values => true` (medido), então remover `name`
+   de `$auditInclude` manteria o teste verde com trilha vazia — cobertura fantasma (lição 10) em
+   superfície de peso legal. Achado do Codex; minha primeira leitura o rejeitou e a medição da
+   config me desmentiu.
+5. **Q-5 🟢 P** — `ProfilePasswordData.php`: a spec §3 diz *"password_confirmation é chave do
+   payload, lida pela regra `confirmed`, não propriedade"*; o código a fez propriedade, com
+   justificativa em comentário (tipo TS gerado não mentir para o bloco 2). Comportamento idêntico e
+   provavelmente melhor — mas é desvio de spec vinculante não emendada: aceitar e emendar a spec, ou
+   reverter.
+
+**Divergência entre revisores, mostrada e não resolvida em silêncio:** só o Q-3 teve downgrade meu
+sobre o texto do Codex, pelo motivo registrado acima. Nenhum achado meu ficou fora da lista dele por
+discordância — as lentes convergiram.
+
+**Estado: `blocked`** aguardando o João aprovar o que entra; correções só de achado aprovado, e
+depois o review se repete sobre o mesmo work item.
 
 ## Último item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
