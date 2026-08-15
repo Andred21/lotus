@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T11:12:40-03:00
+updated_at: 2026-08-15T10:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -297,6 +297,26 @@ transporte — e paridade de chaves em três locales que **nenhum teste protege*
 e itera contra o navegador. Delegar aumentaria o custo de validação do diff sem baixar o de execução.
 
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco meu-perfil-frontend`.
+
+### Execução — 2026-08-15: início, técnica `executing-plans`
+
+`/executar-bloco meu-perfil-frontend` validou as âncoras (spec, plano e packet no disco; Git limpo
+na branch `feat/meu-perfil-frontend`; `active_plan` cobrindo o work item) e transicionou
+`ready_for_execution` → `executing` no commit da Task 1. Técnica: `executing-plans` — o handoff do
+plano já fixa `executor: claude` e o ambiente restringe o Agent tool a pedido explícito; as 11 tasks
+têm dependência sequencial de montagem (cada seção volta a `ProfilePage.tsx`), sem paralelismo
+genuíno a explorar.
+
+**Task 1 (`useResourceState`) completa, com um bug de tipo que o plano não previu.** Vermelho medido
+antes do código: `Failed to resolve import "./useResourceState"`. Implementação sem desvio da spec —
+4 testes verdes no `vitest run`. Mas `pnpm build` (`tsc -b`) reprovou o teste literal do plano:
+`Partial<UseQueryResult<T, ProblemDetails>>['error']` colapsa para `ProblemDetails | undefined`, sem
+`null` — o union discriminado de `QueryObserverResult` não distribui do jeito que o literal do plano
+assumia (`error: null` no terceiro caso). Isolado com repro mínimo fora do projeto antes de tocar o
+arquivo real: `Partial<Omit<UseQueryResult<…>, 'error'>> & { error?: ProblemDetails | null }`
+resolve, sem mudar nenhuma asserção do teste. Fica registrado no comentário do próprio arquivo de
+teste, para não repetir a investigação num hook futuro que mocke `UseQueryResult` do mesmo jeito.
+Gate: lint 0, build verde, suíte 37 arquivos / 190 testes.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
