@@ -4,6 +4,7 @@ import { useProfilePage } from '../../hooks/useProfilePage'
 import { ProfileIdentityCard } from './ProfileIdentityCard'
 import { ProfilePersonalSection } from './ProfilePersonalSection'
 import { ProfileSecuritySection } from './ProfileSecuritySection'
+import { ProfileDocumentsSection } from './ProfileDocumentsSection'
 
 /**
  * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): à esquerda o
@@ -50,7 +51,7 @@ export function ProfilePage() {
         <div className="flex flex-col gap-4">
           <ProfilePersonalSection profile={profile} />
           <ProfileSecuritySection />
-          {/* Task 9: <ProfileDocumentsSection /> */}
+          {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}
         </div>
       </div>
     </ModulePage>
