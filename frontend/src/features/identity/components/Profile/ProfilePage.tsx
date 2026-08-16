@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppDetailSkeleton, AppErrorState, InlineLoadState, ModulePage } from '@shared/ui'
 import { useProfilePage } from '../../hooks/useProfilePage'
+import { ProfileIdentityCard } from './ProfileIdentityCard'
 
 /**
  * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): à esquerda o
@@ -41,7 +42,8 @@ export function ProfilePage() {
 
       <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
-          {/* Task 5: <ProfileIdentityCard /> · Task 10: <ProfileSummaryCard /> */}
+          <ProfileIdentityCard profile={profile} />
+          {/* Task 10: <ProfileSummaryCard /> */}
         </div>
         <div className="flex flex-col gap-4">
           {/* Task 6: <ProfilePersonalSection /> · Task 7: <ProfileSecuritySection /> · Task 9: <ProfileDocumentsSection /> */}
