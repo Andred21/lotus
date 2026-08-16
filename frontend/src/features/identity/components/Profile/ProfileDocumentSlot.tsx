@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppFileActions, AppFileRow, AppFileUpload, AppTag } from '@shared/ui'
 import type { FileUploadHandlerEvent, PreviewableFile } from '@shared/ui'
+import { formatDate } from '@shared/lib'
 import type {
   DocumentValidityStatus,
   RedatorDocumentType,
@@ -107,11 +108,19 @@ export function ProfileDocumentSlot({
           </p>
         )}
 
+        {/* A validade é o dado de peso legal desta linha — é por ela que o
+            redator sabe quando renovar. `valid_until` vem só-data (`YYYY-MM-DD`)
+            e `new Date` a lê como meia-noite UTC: num fuso a oeste ela VOLTA um
+            dia, e sem locale o `Intl` cai no idioma do navegador, não no da
+            interface (exibia "8/9/2028" para um `2028-08-10` em es-CL, UI-01 do
+            review de 2026-08-16). `T00:00:00` ancora no fuso local e o
+            `formatDate` do projeto resolve o idioma ativo — o mesmo par do
+            `TurmaConfigCard`. */}
         {file && (
           <p className="mt-1 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
             {doc.valid_until
               ? t('profile.documents.validUntil', {
-                  date: new Date(doc.valid_until).toLocaleDateString(),
+                  date: formatDate(new Date(`${doc.valid_until}T00:00:00`)),
                 })
               : t('profile.documents.noValidity')}
           </p>
