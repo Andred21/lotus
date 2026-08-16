@@ -44,7 +44,13 @@ export function ProfilePage() {
         onRetry={refetch}
       />
 
-      <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+      {/* Duas colunas só a partir de `xl`. Em `lg` (1024px) a coluna fixa de
+          22rem consome metade da área útil e o `1fr` resolve em 336px — a
+          coluna que recebe TODOS os controles editáveis ficava menor que a de
+          leitura, invertendo a hierarquia que a D1 desenhou (UI-04 do review de
+          2026-08-16). Nessa faixa, uma coluna só é mais confortável que duas
+          iguais. */}
+      <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <ProfileIdentityCard profile={profile} />
           {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
