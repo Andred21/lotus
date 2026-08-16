@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md
 active_plan: docs/superpowers/plans/2026-08-15-dashboard-frontend-central-controle.md
@@ -344,6 +344,95 @@ ela. A transição para `ready_for_review` cobre o code review do diff, não sub
 **`backend/config/cors.php` está modificado no working tree e NÃO é deste bloco** (WIP do João:
 `allowed_origins` passa a aceitar lista separada por vírgula). Ficou fora de todo `git add` — os
 commits usaram paths exatos.
+
+### Review — 2026-08-16: `/revisar-sprint`, risco BAIXO, 3 achados 🟡
+
+**Divergência de registro encontrada na abertura, e ela não é sobre a etapa.** Cinco arquivos do
+Dashboard estão modificados no working tree, sem commit: `AgendaPanel`, `DashboardItemRow`,
+`DashboardPage`, `KpiRow` e `PipelineFunnel`. O conteúdo é correção de revisão visual — os
+comentários citam **UI-01 a UI-05 da "revisão de 2026-08-16"** com medidas em pixel (vazamento de
+19–55px em 390px, rótulo colapsado a ~33px, barras do funil no mínimo, truncagem em `lg`, 231px de
+KPI empurrando as listas para fora de 1440×900). O `/lotus-ui-review` do Step 9 **rodou**, portanto,
+mas a seção de execução acima ainda o declara PENDENTE e não existe artefato dele em
+`docs/superpowers/audits/`. Registro e árvore discordam sobre um fato, não sobre `workflow_state` —
+por isso a sessão seguiu para o review em vez de parar, e a reconciliação é decisão do João.
+
+**A revisão cobriu o working tree, não só o intervalo commitado**, porque é o working tree que vai
+para a `main`. Gate remedido nele: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**38 arquivos / 204 testes** — os mesmos números que o fechamento da execução mediu.
+
+**Classificação: BAIXO risco, pelo gate binário e medido, não pela projeção da spec.**
+`git diff main...HEAD -- backend/` e `-- generated.ts` vazios; nada de schema, Sanctum, auditoria,
+RBAC ou documento legal; `executor: claude`. O único toque em dinheiro é a promoção de `uf.ts`, e
+ela é `git mv` **byte-idêntico** (0 linhas no diffstat) com os 5 imports reapontados — nenhuma
+lógica de UF mudou. A segunda lente do Codex, que a spec §9 deixou como decisão do João pelo
+alcance (8 arquivos novos, `uf.ts` em 4 telas de dinheiro, catraca nova numa camada), **não foi
+acionada**; continua disponível se ele quiser.
+
+**Órfãos (Passo 1): três, todos dentro da pasta nova e todos virando achado.** `Kpi.hint` declarado
+e nunca preenchido; `severityTagProps` exportado sem consumidor externo; `dashboardKeys.all` sem
+consumidor. Fora deles: `features/commercial/lib/` sobreviveu ao `git mv` com `quoteStatus.ts`,
+`DashboardPage.tsx` antigo foi deletado de fato, e o `AppRouter` aponta para a pasta nova.
+
+**Conformidade verificada e limpa:** nenhum import de feature nem de `primereact` em
+`app/pages/Dashboard/` (lei §5.6); zero mutação e zero `can()`; `generated.ts` intocado (lei §5.3);
+as **50 chaves** de i18n existem idênticas nas 3 locales e cobrem os 6 `PendingItemType`, os 5
+`DashboardAlertType`, os 3 `DashboardModule`, as 3 severidades e as 6 `PipelineStage`; cor só por
+variável de tema, com a catraca `COR_HARDCODED` agora rodando em `src/app/**` sem `ignores`; o
+`sm:order-0` do `DashboardItemRow` foi conferido no CSS emitido (`.sm\:order-0{order:0}`) em vez de
+suposto válido no Tailwind v4. A política de estado do hook preserva a tese da rule verbatim.
+
+### Segunda lente (Codex) e correções — 2026-08-16
+
+**O João decidiu três coisas de uma vez:** os 3 achados entram, a segunda lente vem **antes** deles,
+e as 5 correções de UI review entram nesta branch. As correções foram commitadas primeiro
+(`3273cbf`), para o Codex revisar o intervalo Git completo em vez de um working tree sujo.
+
+**A segunda lente foi acionada mesmo com risco BAIXO, por decisão dele** — é a divergência por
+alcance que a spec §9 tinha deixado em aberto. Codex read-only (`mcp__codex__codex`, sandbox
+`read-only`) sobre `main...HEAD`, instruído a ler as leis §5, `docs/README.md`, os ADRs, a rule do
+frontend, a spec e o plano, e a devolver `arquivo:linha — problema — impacto`. **7 achados: 3
+coincidiram com os meus, 2 eram novos e verificados, 2 foram descartados com razão registrada.**
+Nenhuma divergência de julgamento entre as duas lentes — elas se complementaram, e nenhuma
+contradisse a outra.
+
+**O achado que só o Codex viu é o mais grave do review, e foi verificado no backend antes de
+aceito** (a regra da skill: achado que só o Codex viu não entra sem verificação própria). Ele
+apontou que `nenhumaSecaoLegivel` ignora alertas liberados por `identity.user.view`. Medido em
+`AdminDashboardAssembler.php:56-62,86,157`: essa permissão alimenta os alertas de documento de
+relator e **não liga KPI, pipeline nem agenda** — as três coisas que o predicado media. Um papel só
+com ela recebia todo KPI `null`, `pipeline: null`, `agenda: null` e uma lista de alertas **cheia**,
+e a tela anunciava *"Nenhum módulo visível — seu perfil não tem permissão de leitura sobre nenhum
+módulo"* enquanto escondia alerta autorizado. O bloco A mandou `null` justamente para a tela não
+mentir sobre o banco; aqui ela mentia na direção oposta, com dado de peso de RN-09. O argumento
+original do comentário vale para a lista **vazia** e se inverte na lista **cheia**: item na lista
+prova permissão, porque o gate age na origem.
+
+**Os dois descartados, com o porquê:** o `truncate` + `title` do detalhe é a UI-01 que o João
+acabara de aprovar, decisão declarada e não defeito; e o `unauthorized` devolvido antes de calcular
+`staleError` não custa nada — nesse ramo não há dado a preservar nem o que um retry recupere.
+
+**Cinco correções commitadas (`f38585e`), todas de esforço P:** `hint` do KPI passa a carregar chave
+i18n + valor e sai do `kpi.key === 'cotacoesPendentes'` no JSX; `severityTagProps` deixa de ser
+exportado e leva o `eslint-disable` junto; `dashboardKeys.all` removido; os 6 KPIs medidos por
+`Object.values` num lugar só; e o `min-w-1` do funil passa a valer só para contagem maior que zero.
+
+**O caso do Q-4 ganhou teste, com o vermelho visto antes do verde** (lição 10): payload com todo KPI
+nulo, seções nulas e **um** alerta devolve `ready`. Contra o predicado antigo ele falha e os 5
+anteriores seguem verdes — medido, não deduzido. Gate final: `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **38 arquivos / 205 testes** (204 + o caso de regressão).
+
+**A spec foi emendada onde o código passou a divergir dela**, em vez de a divergência ficar para o
+`/auditar-docs` achar depois: o §4 ganhou a emenda do predicado com o mecanismo medido, e o §6
+ganhou o 7º cenário. As emendas são datadas e dizem o que a spec afirmava antes.
+
+**Nenhum trabalho deferido:** tudo que o João aprovou foi corrigido nesta sessão, então nada desceu
+para o `backlog.md` e nada virou pendência documental.
+
+**Estado: `ready_for_closure`.** Próxima ação: `/fechar-sprint`, que **não** roda automaticamente.
+O fechamento herda o que já estava escrito para ele: fechar a P-34, deixar o BD-11 só com a D-03,
+criar o B2 (`dashboard-frontend-analitico-e-redator`) no backlog e nomear a tradução do
+`description` do backend (D17).
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 

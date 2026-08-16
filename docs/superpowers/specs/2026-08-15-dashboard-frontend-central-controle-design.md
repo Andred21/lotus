@@ -163,8 +163,17 @@ apaga informação utilizável.
 **A última linha é o caso-limite que a D6 sozinha não cobre.** Esconder cada seção nula, uma a uma,
 levaria a uma página em branco para quem não tem permissão de módulo algum — indistinguível de
 falha silenciosa. `pendencias` e `alertas` são listas não-anuláveis (chegam vazias, não `null`), e
-os 6 campos de `kpis` podem estar todos nulos; a condição é **nenhum KPI com valor e todas as seções
-anuláveis nulas**. A tela então diz isso explicitamente, em vez de não dizer nada.
+os 6 campos de `kpis` podem estar todos nulos; a condição é **nenhum KPI com valor, todas as seções
+anuláveis nulas e as duas listas vazias**. A tela então diz isso explicitamente, em vez de não dizer
+nada.
+
+> **Emenda do review de 2026-08-16 (segunda lente).** Esta seção dizia "nenhum KPI com valor e todas
+> as seções anuláveis nulas", deixando as duas listas fora da conta com o argumento de que `[]` não
+> distingue "sem permissão" de "sem pendência". O argumento vale para a lista **vazia** e se inverte
+> na lista **cheia**: `AdminDashboardAssembler.php:157` alimenta os alertas de documento de relator
+> por `identity.user.view`, e essa permissão não liga KPI, pipeline nem agenda. Um papel só com ela
+> caía em "nenhum módulo visível" com alerta autorizado na mão — dado de RN-09 escondido em
+> silêncio. O predicado passa a exigir também as duas listas vazias.
 
 ## 5. Navegação
 
@@ -196,6 +205,10 @@ jsdom segue **fora**. Cada teste com o vermelho visto antes do verde (lição 10
    não tem módulo nenhum não teria guarda de regressão em lugar algum.
 6. **`navigation.ts`:** cada `PendingItemType` e `DashboardAlertType` resolve a rota da tabela §5, e
    chave ausente devolve "sem link" — teste de função pura, dentro do corte do runner.
+7. **`useDashboard` — alerta na lista impede "sem acesso"** (acrescentado no review de 2026-08-16):
+   payload com todo KPI nulo, `pipeline`/`agenda` nulos e **um** alerta devolve `ready`, não
+   `unauthorized`. É a guarda de regressão da emenda do §4; o vermelho foi visto contra o predicado
+   antigo antes do verde.
 
 **O que NÃO terá teste automatizado, declarado:** as 5 seções renderizadas, o layout em duas
 colunas, o colapso responsivo, a ocultação por gate `null` e os estados vazios. A prova é
