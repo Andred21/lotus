@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T10:40:00-03:00
+updated_at: 2026-08-16T15:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -317,6 +317,118 @@ arquivo real: `Partial<Omit<UseQueryResult<…>, 'error'>> & { error?: ProblemDe
 resolve, sem mudar nenhuma asserção do teste. Fica registrado no comentário do próprio arquivo de
 teste, para não repetir a investigação num hook futuro que mocke `UseQueryResult` do mesmo jeito.
 Gate: lint 0, build verde, suíte 37 arquivos / 190 testes.
+
+**Tasks 2–10 completas**, uma por commit, na ordem do plano (`6f5a085`..`d4821d7`): i18n nos três
+locales, camada de API, página com os ramos de carga na rota `/perfil`, e então as cinco peças de
+tela — cartão de identidade com foto, `Datos personales`, `Seguridad`, slot e seção documental do
+Redator, resumo profissional —, cada uma acrescentando **uma** linha de JSX à `ProfilePage`. Os
+**5 arquivos de teste novos** que o plano previu existem (`useResourceState`, `useProfileForm`,
+`useProfilePassword`, `useProfileDocuments`, `ProfileDocumentSlot`).
+
+### Task 11 — 2026-08-16: gate verde, DoD provado, e o passo 4 do plano corrigido por medição
+
+**Step 1 — gate:** `pnpm build` verde, `pnpm lint` com 0 erro e 0 warning, suíte **41 arquivos /
+203 testes** contra a baseline de 36/186 — exatamente os 5 arquivos previstos.
+
+**Steps 2 e 3 — DoD end-to-end contra a API real:** 6/6 no Admin e 6/6 no Redator, cada item
+observado no navegador, não deduzido. Os dois que costumam passar por dedução foram medidos: **zero
+input desabilitado ou `readOnly`** entre os 6 campos da tela do Admin (e-mail, RUT e papel são
+texto), e **zero requisição de rede** na recusa do arquivo de 11 MB, conferida na aba Network — o
+teto de 10 MB corta antes do transporte. Nenhum slot documental tem botão de excluir, em papel
+nenhum.
+
+**Step 4 — o ramo de falha, e a receita do plano estava errada.** Derrubar o backend
+(`docker compose stop nginx`) **não** alcança o `AppErrorState`: `GET /api/me` morre junto e o
+shell redireciona para `/login` antes de a página montar. O ramo se prova com falha **isolada** de
+`/api/profile`, e assim foi provado — aviso inline ao lado do conteúdo, texto digitado preservado
+através do Retry, recuperação quando o backend volta; e, com recarga durante a falha isolada,
+`AppErrorState` substituindo a tela. Medição colateral: o `networkMode: 'online'` do TanStack Query
+**pausa** a query com o browser offline, então a página remonta exibindo cache sem aviso nenhum —
+offline de browser não serve como injeção de falha. A expectativa escrita do passo 4 foi corrigida
+no próprio plano; o João mediu a mesma coisa independentemente (UI-06).
+
+**Um defeito NOVO apareceu nessa medição, e a raiz é compartilhada — não nasceu neste bloco.** Sob
+um 5xx **de corpo vazio**, o aviso inline não aparecia. Isolado por sonda temporária na página e
+três testes de rascunho: `isError` verdadeiro, `loadError` presente, e ainda assim `null` chegando
+ao componente — porque o valor era `''`. Raiz em `shared/api/axios.ts`: o `??` do interceptor só
+pega `null`/`undefined`, então a string vazia virava a própria rejeição e o `InlineLoadState`
+desistia no `!error`. Alcança **todas** as listas do projeto pelo `useLoadState`, não só o perfil.
+
+### UI review — 2026-08-16: rodada pelo João, 7 achados, 2 classe C
+
+`/lotus-ui-review` sobre `/perfil` em `d4821d7`, artefatos em
+`.artifacts/ui-review/2026-08-16-1213-perfil/` (relatório + 20 PNGs). Cobertura: Admin e Redator,
+três locales, dois temas, 1440/1024/390. **Resumo A:** o corte por mutabilidade da D1 é legível nas
+três viewports; identidade, RUT, e-mail e papel como texto; Admin sem seção documental nem resumo;
+quatro slots sempre projetados para o Redator, REUF administrativo, "Sin subir" nos ausentes,
+substituição anunciada por rótulo e nenhum botão de exclusão; zero erro de console; zero requisição
+repetida; nenhum overflow horizontal em 390px.
+
+**Run NÃO conforme ao contrato read-only da skill, com autorização explícita do João:** a metade
+Redator era inalcançável de outro modo (todo `type=redator` do seed está `is_active=0` e o
+`UserProvisioner` grava senha aleatória). `users.id=2` (juan.morales@lotus.cl) recebeu
+`is_active=1`, senha `senha123` e o papel `redator`, e **permanece assim**. Nenhuma escrita em dado
+de negócio pela tela.
+
+### Step 6 — 2026-08-16: 8 commits de correção, um achado por commit
+
+Os 7 achados foram **verificados no código antes de virarem correção**, não aceitos pela descrição.
+O João aprovou todos, incluindo os três que moram fora da feature.
+
+| Achado | Correção | Prova |
+|---|---|---|
+| UI-01 (C) | `ProfileDocumentSlot` usa `formatDate` + âncora `T00:00:00` | "Vence el 10-08-2028" onde saía "8/9/2028"; teste novo pina o idioma da interface |
+| UI-02 (C) | `AppPassword` pina a largura **também** no ramo sem `leftIcon` | input `113→357` dentro do cartão em 390px, onde vazava 42px |
+| UI-05 (B) | `<form onSubmit>` + `autoComplete` nas duas seções | Enter envia (422 por campo vazio, sem mutação); console sem o aviso de DOM |
+| UI-05 (B) | campo `username` oculto para o gerenciador de senhas | o segundo aviso do Chrome também some; console em 0/0 |
+| — | `axios.ts` qualifica o corpo por **ser objeto** | guarda no interceptor real reprova com `expected '' to be truthy` se o `??` voltar |
+| UI-03 (B) | `AppTag` pinta `secondary` neutro | "Sin subir" cinza nos dois temas, distinto das tags de curso |
+| UI-04 (B) | grade de duas colunas só em `xl` | 1024px volta a uma coluna, com o self-service em largura cheia |
+| UI-07 (B) | `AppPhotoField` centra o par e mantém o centro na quebra | es-CL e pt-BR deixam de trocar de arranjo |
+
+**Gate re-rodado depois das oito:** build verde, lint 0, suíte **41 arquivos / 208 testes** (+5
+asserções novas de guarda: 1 no slot documental, 4 no interceptor).
+
+**Alcance declarado das correções de `shared/ui`:** `AppPassword` tem 5 sítios e só os 3 do perfil
+mudam de comportamento; `severity="secondary"` tem 2 sítios e o outro é a tag de tipo de cliente da
+`ClientsTable`, que também deixa de sair na cor da marca; `AppPhotoField` é o mesmo das telas de
+pessoas.
+
+**O que NÃO virou correção, e por quê.** `AppFileRow.tsx:42` tem a mesma classe do UI-01 (data no
+idioma do navegador), mas o próprio review a declarou decisão fora do bloco: vira **D-18** no
+`backlog.md`, agrupada no BD-10 junto do D-01, que é a mesma linha de arquivo. Como `created_at` é
+timestamp completo, ali só o formato erra — o dia não volta.
+
+### Emenda de doc — 2026-08-16: a rule que este bloco tinha de corrigir, e a pendência que veio junto
+
+A `.claude/rules/frontend-fsliced.md` afirmava que "status de documento e idoneidade se calculam no
+front". Verdade só na metade administrativa desde que o contrato de perfil existe: onde o DTO traz
+`status`, o front **não recalcula**. A linha foi reescrita separando os dois contratos, com a
+divergência REUF (`sin_venc` administrativo × `vigente` no perfil) declarada e não resolvida.
+
+**Tocar o arquivo disparou o gatilho literal da P-38**, e ela foi encerrada no mesmo passo: a frase
+"teste de componente com PrimeReact no jsdom segue fora do corte" foi trocada pelo corte **medido
+com o runner** — 13 arquivos renderizam componente, **9 montam wrapper PrimeReact**
+(`ValidationPage`, `BudgetDetailPage`, `CourseStep`, `QuotesList`, `TurmaDetailPage`,
+`ProfileDocumentSlot`, `DetailHeader`, `IdentityCell`, `InlineLoadState`), 4 são DOM puro. Ficha em
+`pendencias/encerradas.md`, índice e BD-12 atualizados.
+
+### Resíduos declarados no banco de dev — não são achado novo, são rastro
+
+1. `users.id=2` (juan.morales) segue `is_active=1`, `redator`, senha `senha123` — mutação do UI
+   review, autorizada e **não revertida**.
+2. Juan Morales ganhou um documento CV (`cv-e2e.pdf`) que não existia, do DoD do Step 3. Não há
+   remoção self-service por desenho (spec D2), então ele fica.
+3. O admin ficou **sem foto**: a demo foi substituída e depois removida na prova do Step 2. O
+   `DemoPhotosSeeder` restaura. Senha, nome e telefone do admin foram restaurados e reprovados por
+   login.
+
+Os três seguem a mesma classe da **P-44** (gates de e2e deixam resíduo no banco de dev), que já está
+aberta — não abre pendência nova.
+
+**Estado: `ready_for_review`.** Working tree limpo, 18 commits na branch `feat/meu-perfil-frontend`
+(`5ff2e7e`..HEAD), dos quais 10 de task, 8 de correção do gate visual e os de doc. A próxima
+instrução do João aciona `/revisar-sprint`; este passo não inicia review.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 

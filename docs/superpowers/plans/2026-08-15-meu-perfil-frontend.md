@@ -2009,8 +2009,21 @@ Logado como **redator**:
 
 Com a página aberta e carregada, derrube o backend (`docker compose stop nginx`) e clique em
 Reintentar: a falha deve aparecer **ao lado** do conteúdo, que continua na tela com o que estiver
-digitado preservado. Recarregue com o backend ainda derrubado: aí sim `AppErrorState` substitui a
-tela. Suba de volta (`docker compose start nginx`).
+digitado preservado. Suba de volta (`docker compose start nginx`).
+
+> **Correção medida na execução (UI-06 do review de UI de 2026-08-16).** A segunda metade do passo,
+> como estava escrita — "recarregue com o backend ainda derrubado: aí sim `AppErrorState` substitui
+> a tela" —, **não produz o estado prometido**. Com o backend fora, `GET /api/me` morre junto e o
+> `SessionBootstrap` redireciona para `/login` antes de `ProfilePage` montar; `location.pathname`
+> termina em `/login`, medido nas duas execuções (a minha e a do review). `failedWithoutData` só é
+> verdadeiro quando `/api/me` **responde** e `/api/profile` **falha** — falha ISOLADA do endpoint de
+> perfil, não indisponibilidade do backend. O ramo não é código morto (um 5xx só em `/api/profile` o
+> alcança, e foi assim que ele se provou), mas a rota escrita aqui nunca o alcançaria.
+>
+> Prova válida: bloquear apenas `**/api/profile` (precedente do BD-3, `Network.setBlockedURLs`) e
+> recarregar. Também derrubar o backend **não** basta para o aviso inline: o `networkMode: 'online'`
+> do TanStack Query PAUSA a query quando o browser está offline, e a página remonta exibindo cache
+> sem aviso nenhum — o offline do browser não serve como falha.
 
 - [ ] **Step 5: UI review**
 

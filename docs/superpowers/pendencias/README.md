@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (29)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -28,7 +28,6 @@ ou de escrita fora do repositório.
 | P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | BD-10 | bloco que tocar `FormSection`/`CoursesTable`; revisar 2026-10-31 |
 | P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | BD-10 | bloco que tocar `FormField`; revisar 2026-10-31 |
 | P-34 | Catraca `COR_HARDCODED` não roda em `src/app/**`, e lá vivem 3 classes `text-slate-*` | BD-11 | bloco que tocar o shell; revisar 2026-10-31 |
-| P-38 | A rule diz que teste PrimeReact/jsdom está fora do corte do runner, e o corte já tem três | BD-12 | próximo bloco que tocar `frontend-fsliced.md` |
 | P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | BD-12 | bloco que puder esvaziar o catálogo de dev; revisar 2026-10-31 |
 | P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | BD-14 | 500 observado em uso real, ou bloco que tocar `ProblemDetails`; revisar 2026-10-31 |
 | P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | BD-14 | bloco que tocar `CreateQuoteAction`/`Quote`; revisar 2026-10-31 |
@@ -62,7 +61,11 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (0)
+## Encerradas (1)
 
-Nenhuma aguardando remoção. A **P-26** saiu no `/fechar-sprint` de 2026-08-14
-(`celula-de-identidade`), cumprida a sprint de rastro.
+| ID | Pendência | Encerrada em | Como |
+|---|---|---|---|
+| P-38 | A rule dizia que teste PrimeReact/jsdom está fora do corte do runner | 2026-08-16 (`meu-perfil-frontend`) | gatilho literal: o bloco tocou `frontend-fsliced.md` e trocou a frase pelo corte **medido** — 13 testes de componente, 9 com PrimeReact |
+
+A **P-26** saiu no `/fechar-sprint` de 2026-08-14 (`celula-de-identidade`), cumprida a sprint de
+rastro.
