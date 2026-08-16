@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-central-controle
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-dashboard-frontend-central-controle-design.md
 active_plan: docs/superpowers/plans/2026-08-15-dashboard-frontend-central-controle.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-dashboard-frontend-c
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-15T10:25:00-03:00
+updated_at: 2026-08-16T11:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -289,6 +289,61 @@ de import (`BudgetStatCard.tsx`, `BudgetsTable.tsx`, `QuoteRow.tsx`, `DataStep.t
 exporta `uf`; os 5 imports reapontados para `@shared/lib`; zero referência ao caminho antigo. Gate:
 `tsc -b` sem erro, eslint exit 0, **36 arquivos / 186 testes** — baseline intocado, como esperado de
 uma task que só move função pura.
+
+### Execução — 2026-08-16: as 11 tasks executadas, `ready_for_review`
+
+**Tasks 2–11 completas**, uma por commit, cada uma com o gate do plano rodado antes de commitar.
+Gate final: eslint exit 0, `tsc -b` sem erro, **38 arquivos / 204 testes** — exatamente o alvo do
+plano (baseline 36/186 + 13 casos da Task 4 + 5 da Task 5). Nenhum step do DoD exigiu conserto de
+código, então o commit de `fix` previsto na Task 11 Step 10 não existe.
+
+**Três achados durante a execução, todos consertados no próprio commit da task:**
+
+1. **Task 5 — `mockClear()` em `beforeEach` produz falha fantasma de rejeição não tratada.** O
+   `beforeEach(() => get.mockClear())`, adicionado para isolar a contagem de chamadas, fez dois
+   testes que já passavam falharem com um dump cru do valor rejeitado, sem mensagem de asserção.
+   Isolado empiricamente (repro mínimo confirmou a asserção PASSANDO enquanto o Vitest reportava
+   falha; `mockRejectedValue` é lazy e `mockClear` só zera histórico, então o mecanismo exato não
+   foi fixado — a condição de gatilho, sim, 3/3). Consertado adotando **contagem relativa**
+   (`const antes = get.mock.calls.length`), que é a convenção que `useValidationPage.test.tsx` já
+   usava — o `beforeEach` nunca foi necessário.
+2. **Task 5 — narrowing de TS perdido através do closure.** `act(() => result.current.retry())` não
+   compila depois de um `if (result.current.kind !== 'ready') throw`: reacessar `result.current`
+   dentro da arrow function é escopo novo. Estava assim no código literal do plano. Consertado
+   capturando `const antesDoRetry = result.current`. Pego pelo `pnpm build`, não pelo `pnpm test`.
+3. **Task 7 — `react-refresh/only-export-components` sobre `severityTagProps`.** Helper puro
+   convivendo com componentes no mesmo arquivo. Seguido o precedente que já existe no repo
+   (`AppToast.tsx`): `eslint-disable-next-line` com motivo declarado, em vez de um arquivo novo para
+   uma função de três linhas.
+
+**Prova do DoD (Task 11) — o que foi medido, não deduzido:**
+
+- **Dado real, 6 seções:** as 6 KPIs, 7 pendências, 3 alertas, agenda e funil renderizam com o seed;
+  nenhuma chave i18n crua na tela.
+- **3 locales × 2 temas:** rótulo traduzido nas três; detalhe do item **em espanhol** nas outras
+  duas, como D17 prevê; formato de data acompanha a locale; nenhum tom ilegível no tema oposto.
+- **Gate `null` por papel-sonda (3 papéis criados e removidos):** sem `commercial.*` → card de
+  cotações some e as duas etapas comerciais somem do funil; sem `operation.turma.view` → os 4 KPIs
+  de turma, a agenda e o funil somem; sem nenhuma das três → tela `noAccess`, não página em branco.
+  Sondas removidas ao fim (`forceDelete`), zero resíduo em `users` e `roles`.
+- **5 sítios de UF (D13):** `BudgetsTable` (450/80/120 UF), `BudgetStatCard` (450/120/80),
+  `QuoteRow` (120 UF), `DataStep` — `parseUfInput` aceita `1.250,75` e normaliza para `1250,75` — e
+  `useQuoteForm`, que **repõe formatado**: o backend manda `"250.0000"` (`decimal(12,4)`) e o campo
+  reabre com `"250"`. O caminho de escrita foi exercido, não só o de leitura.
+- **Catraca de cor nos dois sentidos (D11):** verde no estado atual; com `text-slate-400` injetado
+  em `PipelineFunnel.tsx`, reprova **nomeando arquivo e linha** (`20:31`). Sonda revertida.
+- **Zero mutação:** `turmas=6, quotes=9, budgets=8, certificates=5, enrollments=56, files=22` antes
+  e depois de uma rodada por todos os CTAs — números idênticos.
+- **Backend intocado:** `git diff main...HEAD -- backend/` e `-- generated.ts` ambos vazios. Pint e
+  `typescript:transform` são N/A por escopo, medido e não suposto.
+
+**Step 9 do plano (`/lotus-ui-review`) continua PENDENTE e é do João** (`disable-model-invocation:
+true`). É a revisão de viewport, hierarquia de cabeçalhos e estados na tela; o bloco não fecha sem
+ela. A transição para `ready_for_review` cobre o code review do diff, não substitui esse passo.
+
+**`backend/config/cors.php` está modificado no working tree e NÃO é deste bloco** (WIP do João:
+`allowed_origins` passa a aceitar lista separada por vírgula). Ficou fora de todo `git add` — os
+commits usaram paths exatos.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
