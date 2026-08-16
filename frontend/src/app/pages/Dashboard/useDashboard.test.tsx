@@ -149,4 +149,32 @@ describe('useDashboard', () => {
 
     await waitFor(() => expect(result.current.kind).toBe('unauthorized'))
   })
+
+  // Papel só com `identity.user.view`: o backend alimenta os alertas de
+  // documento de relator por essa permissão (`AdminDashboardAssembler.php:157`)
+  // e ela não liga KPI, pipeline nem agenda. Item NA lista prova permissão, e
+  // dizer "nenhum módulo visível" aqui esconderia alerta autorizado.
+  it('alerta na lista impede o estado de sem acesso, mesmo com todo o resto nulo', async () => {
+    get.mockResolvedValue({
+      data: admin({
+        ...semNenhumaSecao(),
+        alertas: [
+          {
+            type: 'redator_document_expired',
+            severity: 'high',
+            entity_id: 5,
+            description: 'Documento del relator vencido.',
+            date: '2026-08-01',
+            navigation: { redator_id: 5 },
+          },
+        ],
+      }),
+    })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('ready'))
+    if (result.current.kind !== 'ready') throw new Error('esperava kind ready')
+    expect(result.current.data.alertas).toHaveLength(1)
+  })
 })

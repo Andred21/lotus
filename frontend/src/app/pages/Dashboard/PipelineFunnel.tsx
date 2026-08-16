@@ -36,7 +36,11 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
                 aria-hidden="true"
               >
                 <span
-                  className="h-2 min-w-1 rounded-full"
+                  // O mínimo de 4px só vale para etapa com contagem: ele existe
+                  // para que um valor pequeno ainda apareça, e aplicado a
+                  // `count === 0` desenhava preenchimento colorido ao lado do
+                  // número 0 (review de 2026-08-16, segunda lente).
+                  className={`h-2 rounded-full ${etapa.count > 0 ? 'min-w-1' : ''}`}
                   // Proporcional ao MAIOR valor, não ao total: o funil compara
                   // etapas entre si, e normalizar pelo total achataria todas
                   // quando uma domina.

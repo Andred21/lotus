@@ -8,8 +8,12 @@ type Kpi = {
   /** Sufixo da chave `dashboard.kpi.*`. */
   key: string
   value: string
-  /** Segunda linha. Hoje só as cotações têm (o valor em UF). */
-  hint?: string
+  /** Segunda linha: a chave de rótulo e o valor já formatado. Hoje só as
+   * cotações têm (o valor em UF). Nasceu como `string` nunca preenchido, com o
+   * JSX decidindo a linha por `key === 'cotacoesPendentes'` — a derivação
+   * escapava do módulo puro por uma comparação de string (Q-1, review de
+   * 2026-08-16). */
+  hint?: { i18nKey: string; value: string }
   tone: AppCardTone
 }
 
@@ -40,7 +44,12 @@ function cards(k: AdminKpisData): Kpi[] {
     lista.push({ key: 'conclusoesPorConfirmar', value: String(k.conclusoes_por_confirmar), tone: 'warning' })
   }
   if (k.cotacoes !== null) {
-    lista.push({ key: 'cotacoesPendentes', value: String(k.cotacoes.pending_count), tone: 'neutral' })
+    lista.push({
+      key: 'cotacoesPendentes',
+      value: String(k.cotacoes.pending_count),
+      hint: { i18nKey: 'dashboard.kpi.cotacoesValor', value: formatUf(k.cotacoes.pending_value_uf) },
+      tone: 'neutral',
+    })
   }
   if (k.certificados_a_emitir !== null) {
     lista.push({ key: 'certificadosAEmitir', value: String(k.certificados_a_emitir), tone: 'info' })
@@ -66,9 +75,9 @@ export function KpiRow({ kpis }: { kpis: AdminKpisData }) {
             {t(`dashboard.kpi.${kpi.key}`)}
           </p>
           <p className="font-display text-3xl font-semibold tabular-nums">{kpi.value}</p>
-          {kpi.key === 'cotacoesPendentes' && kpis.cotacoes !== null && (
+          {kpi.hint && (
             <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-              {t('dashboard.kpi.cotacoesValor', { value: formatUf(kpis.cotacoes.pending_value_uf) })}
+              {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
             </p>
           )}
         </AppCard>

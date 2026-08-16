@@ -8,8 +8,12 @@ import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/gen
 export type DashboardPeriod = { start: string; end: string }
 
 export const dashboardKeys = {
-  all: ['dashboard'] as const,
-  /** A key varia pelo período para o B2 ligar o seletor sem mexer no cache. */
+  /** A key varia pelo período para o B2 ligar o seletor sem mexer no cache.
+   *
+   * Sem `all` aqui: o bloco é read-only e nada invalida cache. Ele existia sem
+   * consumidor, e uma raiz de invalidação declarada num lugar e o literal
+   * repetido no outro são duas fontes do mesmo namespace (Q-2, review de
+   * 2026-08-16). Quando a invalidação chegar, ela nasce com quem a usa. */
   metrics: (period?: DashboardPeriod) =>
     ['dashboard', 'metricas', period?.start ?? null, period?.end ?? null] as const,
 }
@@ -33,24 +37,32 @@ export type DashboardState =
   | { kind: 'ready'; data: AdminDashboardData; staleError: string | null; retry: () => void }
 
 /**
- * Nenhuma seção do B1 legível: todo KPI nulo E as duas seções anuláveis nulas.
+ * Nenhuma seção do B1 legível: todo KPI nulo, as duas seções anuláveis nulas E
+ * as duas listas vazias.
  *
- * `pendencias` e `alertas` ficam de fora da conta de propósito — são listas
- * NÃO-anuláveis, então quem não tem permissão nenhuma recebe `[]`, exatamente
- * como quem tem permissão e não tem pendência. Elas não distinguem os dois
- * casos; os KPIs e as seções anuláveis distinguem.
+ * As listas entram pelo lado POSITIVO, não pelo negativo. `pendencias` e
+ * `alertas` são NÃO-anuláveis, então `[]` não distingue "sem permissão" de "sem
+ * pendência" — mas item NA lista distingue com certeza, porque o gate age na
+ * origem e só chega item de módulo autorizado. O caso que provou isso é o papel
+ * só com `identity.user.view`: `AdminDashboardAssembler.php:157` alimenta os
+ * alertas de documento de relator por essa permissão, e ela não liga KPI,
+ * pipeline nem agenda — a tela anunciava "nenhum módulo visível" e escondia
+ * alerta autorizado, com peso de RN-09 (review de 2026-08-16, segunda lente).
+ *
+ * Os KPIs se medem por `Object.values`, não campo a campo: a lista à mão vivia
+ * aqui E em `KpiRow.cards`, duas fontes da verdade sobre quais KPIs existem, e
+ * divergirem esconde KPI legível atrás da mensagem de "sem acesso".
  */
 function nenhumaSecaoLegivel(d: AdminDashboardData): boolean {
-  const k = d.kpis
-  const algumKpi =
-    k.turmas_em_andamento !== null ||
-    k.turmas_encerrando_em_breve !== null ||
-    k.turmas_atrasadas !== null ||
-    k.conclusoes_por_confirmar !== null ||
-    k.cotacoes !== null ||
-    k.certificados_a_emitir !== null
+  const algumKpi = Object.values(d.kpis).some((valor) => valor !== null)
 
-  return !algumKpi && d.pipeline === null && d.agenda === null
+  return (
+    !algumKpi &&
+    d.pipeline === null &&
+    d.agenda === null &&
+    d.pendencias.length === 0 &&
+    d.alertas.length === 0
+  )
 }
 
 /**

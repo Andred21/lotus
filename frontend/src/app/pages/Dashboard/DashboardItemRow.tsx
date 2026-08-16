@@ -5,9 +5,13 @@ import type { DashboardSeverity } from '@shared/types/generated'
 
 /** D15: a escala do contrato mapeia para a severidade do `AppTag` que já existe.
  * Sem componente novo em `shared/ui` — um átomo promovido sem segundo consumidor
- * medido é especulação. */
-// eslint-disable-next-line react-refresh/only-export-components -- helper puro do mesmo módulo da linha (sem estado próprio para justificar arquivo à parte)
-export function severityTagProps(severity: DashboardSeverity): { severity: 'danger' | 'warning' | 'info' } {
+ * medido é especulação.
+ *
+ * NÃO exportado de propósito: o único consumidor é a linha logo abaixo. O
+ * `export` custava um `eslint-disable` de `react-refresh/only-export-components`
+ * e o precedente do `AppToast` não o cobria — lá o `useToast` é consumido por
+ * features de fora (Q-2, review de 2026-08-16). */
+function severityTagProps(severity: DashboardSeverity): { severity: 'danger' | 'warning' | 'info' } {
   if (severity === 'high') return { severity: 'danger' }
   if (severity === 'medium') return { severity: 'warning' }
   return { severity: 'info' }
