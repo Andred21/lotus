@@ -26,7 +26,7 @@ const MAPEADOS = ['current_password', 'password', 'password_confirmation']
  * form", UI-05 do review de 2026-08-16). O `autoComplete` é a outra metade: sem
  * ele o gerenciador não distingue a senha atual da nova.
  */
-export function ProfileSecuritySection() {
+export function ProfileSecuritySection({ email }: { email: string }) {
   const { t } = useTranslation()
   const toast = useToast()
   const { form, set, submit, pending, fieldErrors, generalError } = useProfilePassword(() =>
@@ -44,6 +44,24 @@ export function ProfileSecuritySection() {
         }}
         className="mt-3 flex flex-col gap-3"
       >
+        {/* O gerenciador de senhas precisa saber DE QUEM é a senha para gravar
+            a nova — sem campo de usuário o Chrome avisa "Password forms should
+            have (optionally hidden) username fields". A conta não se troca
+            aqui, então o campo é somente-leitura, fora da ordem de tabulação e
+            fora da árvore de acessibilidade: existe para o navegador, não para
+            o usuário. `sr-only` e não `display:none`, que alguns navegadores
+            ignoram para este fim. */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          value={email}
+          readOnly
+          tabIndex={-1}
+          aria-hidden="true"
+          className="sr-only"
+        />
+
         <FormErrorBanner message={generalError} />
         <FormErrorSummary errors={fieldErrors} mapped={MAPEADOS} />
 

@@ -51,7 +51,7 @@ export function ProfilePage() {
         </div>
         <div className="flex flex-col gap-4">
           <ProfilePersonalSection profile={profile} />
-          <ProfileSecuritySection />
+          <ProfileSecuritySection email={profile.email} />
           {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}
         </div>
       </div>
