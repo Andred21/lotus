@@ -174,7 +174,77 @@
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
-    "subtitle": "Dashboard under construction."
+    "subtitle": "Current operating status: what needs action today.",
+    "noAccess": {
+      "title": "No modules visible",
+      "description": "Your profile has no read permission on any dashboard module. Ask an administrator for access."
+    },
+    "open": "Open",
+    "kpi": {
+      "turmasEmAndamento": "Classes in progress",
+      "turmasEncerrandoEmBreve": "Classes ending soon",
+      "turmasAtrasadas": "Overdue classes",
+      "conclusoesPorConfirmar": "Conclusions to confirm",
+      "cotacoesPendentes": "Pending quotes",
+      "cotacoesValor": "{{value}} UF pending",
+      "certificadosAEmitir": "Certificates to issue"
+    },
+    "module": {
+      "commercial": "Commercial",
+      "operation": "Operations",
+      "certification": "Certification"
+    },
+    "severity": {
+      "high": "High",
+      "medium": "Medium",
+      "normal": "Normal"
+    },
+    "pending": {
+      "title": "Pending",
+      "empty": "Nothing pending",
+      "emptyHint": "No pending actions in the modules you can see.",
+      "type": {
+        "quote_awaiting_approval": "Quote awaiting approval",
+        "quote_approved_without_turma": "Approved quote without a class",
+        "turma_without_redator": "Class without an instructor",
+        "turma_docs_incomplete": "Incomplete documentation",
+        "turma_awaiting_conclusion": "Class awaiting conclusion",
+        "enrollment_awaiting_certificate": "Enrolment awaiting certificate"
+      }
+    },
+    "alerts": {
+      "title": "Alerts",
+      "empty": "No alerts",
+      "emptyHint": "Nothing expired or expiring in the modules you can see.",
+      "type": {
+        "turma_overdue": "Overdue class",
+        "certificate_expiring_soon": "Certificate expiring soon",
+        "certificate_expired": "Expired certificate",
+        "redator_document_expired": "Expired instructor document",
+        "redator_document_expiring_soon": "Instructor document expiring soon"
+      }
+    },
+    "agenda": {
+      "title": "Agenda",
+      "startingSoon": "Starting soon",
+      "endingSoon": "Ending soon",
+      "inProgress": "In progress",
+      "overdue": "Overdue",
+      "empty": "No classes in the agenda",
+      "range": "{{start}} — {{end}}"
+    },
+    "pipeline": {
+      "title": "Commercial and operating funnel",
+      "empty": "Nothing in the funnel",
+      "stage": {
+        "quote_pending": "Quote pending",
+        "quote_approved_without_turma": "Approved without a class",
+        "turma_in_progress": "Class in progress",
+        "turma_ready_for_conclusion": "Ready to conclude",
+        "concluded_pending_issuance": "Concluded, to issue",
+        "fully_issued": "Fully issued"
+      }
+    }
   },
   "placeholder": {
     "module": "Module under construction."

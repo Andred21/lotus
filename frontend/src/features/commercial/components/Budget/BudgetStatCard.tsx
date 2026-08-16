@@ -1,6 +1,6 @@
 import { AppCard } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
-import { formatUf } from '../../lib/uf'
+import { formatUf } from '@shared/lib'
 
 /** O número É o sinal: o `AppCard variant="stat"` já tinge texto, fundo e borda
  * pelo `tone`, então aqui não há cor nenhuma — só composição. */

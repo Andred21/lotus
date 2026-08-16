@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, AppDatePicker, FormField, FormSection } from '@shared/ui'
 import type { QuoteFormFields } from '../../hooks/useQuoteForm'
-import { parseUfInput } from '../../lib/uf'
+import { parseUfInput } from '@shared/lib'
 
 /** Passo 2 do wizard: alunos, valor UF, ordem de compra e datas previstas. */
 export function DataStep({

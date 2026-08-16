@@ -77,22 +77,34 @@ sprint de 2026-08-13, medido contra um 422 real).
 `FormField`, então o dropdown de cliente herda a mesma concatenação. Não muda o diagnóstico nem a
 data — muda o tamanho do que o fix único em `shared/ui` resolve de uma vez.
 
-## P-34 — a catraca `COR_HARDCODED` não roda em `src/app/**`
+## P-45 — o `TestCase` lê `FRONTEND_URL` cru, e o ambiente já é lista de origens
 
-**Bloco:** BD-11 · **Gatilho:** fecha quando um bloco tocar o shell por outro motivo e puder
-converter as 3 classes junto com a entrada da regra — ou quando o João decidir que o shell deixa de
-ser exceção. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** o commit que ligar multi-origin de verdade (o `config/cors.php` com
+`explode` já está no working tree do João), ou o próximo `/fechar-sprint` que encontrar a suíte
+vermelha por este motivo. Revisar em **2026-10-31**.
 
-`src/app/**` é a única camada do frontend sem a catraca, e lá vivem 3 classes `text-slate-*` no
-`Sidebar/`.
+`backend/tests/TestCase.php:18` faz `$this->withHeader('Referer', env('FRONTEND_URL',
+'http://localhost:5173'))`. A variável passou a ser **lista separada por vírgula**
+(`backend/.env:38`: `http://localhost:5173,http://localhost:5174`), então o `Referer` sai com a
+string inteira, o host não bate com `sanctum.stateful` (`.env:37`) e o
+`EnsureFrontendRequestsAreStateful` não injeta o `StartSession`. `$request->session()` explode em
+`AuthController.php:47` e a rota devolve **500**.
 
-Achado UI-02 do gate da Task 8 do BD-3 (2026-08-12) e endereçado só pela metade no review (Q-4): a
-regra passou a cobrir `src/shared/**`, onde nasceu verde, e `src/app/**` ficou fora **por exceção
-declarada**, não por esquecimento — o shell (`Sidebar`/`AppLayout`/`AppHeader`) é exceção aprovada
-pelo João em 2026-07-26 e escrita no `backlog.md` ("Fora: o shell"). Pôr a regra sem converter o
-shell produziria um bloco `ignores` do tamanho da pasta; converter o shell dentro de um bloco de
-diálogos era o alargamento de escopo que o gate recusa. A razão está no comentário do próprio
-`eslint.config.js`, para não se reintroduzir como esquecimento.
+**Medido no `/fechar-sprint` de 2026-08-16, nos dois sentidos:** com o `.env` como está,
+`php artisan test` dá **12 failed / 672 passed / 5 skipped** — os 12 são `AuthTest` (6), troca de
+senha (3) e `StaffUserCrudTest` (3), todos com `RuntimeException: Session store not set on request.`
+Com `FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
+diferença é a variável, não o código.
+
+**Não é regressão do bloco que a encontrou:** o `dashboard-frontend-central-controle` é frontend
+puro (`git diff main...HEAD -- backend/` = 0 linhas). O `.env` é gitignored, então a mudança não
+aparece em `git status`; o que aparece é a outra metade do mesmo WIP, o `config/cors.php` trocando
+`[env('FRONTEND_URL', …)]` por `explode(',', env('FRONTEND_URL', …))`. **`TestCase.php` é o terceiro
+sítio que lê a variável e o único que ainda a trata como valor único.**
+
+**Não se conserta aqui:** o fechamento de um bloco de frontend não abre arquivo de backend. O fix
+provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
+commit que fecha o multi-origin — decisão do João.
 
 ## P-38 — a rule afirma que teste PrimeReact/jsdom está fora do corte, e o corte já tem três
 

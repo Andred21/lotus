@@ -10,6 +10,20 @@
   --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
+  /* Tinta sobre as superfícies navy FIXAS do shell (sidebar, header). NÃO pode
+   * sair de `--text-color`: essas superfícies não acompanham o swap de tema
+   * (spec §6/UI-04), e a tinta do tema claro seria texto escuro sobre navy —
+   * o mesmo raciocínio que já obriga o `--focus-stroke` a ser redeclarado ali.
+   *
+   * Os dois valores são exatamente os que `text-slate-300` e `text-slate-400`
+   * rendiam (`node_modules/tailwindcss/theme.css:217-218`), copiados literais em
+   * vez de referenciados: assim a entrada da catraca de cor (D11 de
+   * `dashboard-frontend-central-controle`) não mexe um pixel, e o contraste
+   * medido do shell não depende de o Tailwind continuar emitindo
+   * `--color-slate-*` no `:root` depois do `optimize`. */
+  --shell-ink: oklch(86.9% 0.022 252.894);
+  --shell-ink-muted: oklch(70.4% 0.04 256.788);
+
   /* Degradê do painel de marca do login (UI-05 do review de 2026-08-12). Era
    * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com BRAND_COLOR interpolado
    * em JS e o segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o

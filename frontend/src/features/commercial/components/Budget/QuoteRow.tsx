@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, type FileUploadHandlerEvent } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
-import { formatUf } from '../../lib/uf'
+import { formatUf } from '@shared/lib'
 import { FileList } from './FileList'
 
 /** Uma cotação da lista do orçamento. `striped` vem do índice: alternância como

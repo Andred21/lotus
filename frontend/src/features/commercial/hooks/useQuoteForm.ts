@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useEntityForm, useMutationErrors } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
-import { formatUf, parseUfInput } from '../lib/uf'
+import { formatUf, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter
  * para Number reintroduziria o float que o decimal do backend existe para evitar. */
