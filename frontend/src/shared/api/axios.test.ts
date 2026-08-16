@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
-import { api } from './axios'
+import { AxiosHeaders, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { api, type ProblemDetails } from './axios'
 
 /**
  * A lição 6 na instância REAL, sem mock. `postMultipart.test.ts` mocka
@@ -103,5 +103,70 @@ describe('instância do axios', () => {
     // major do axios) deixaria o laço acima iterando vazio e passando sem
     // exercitar nada.
     expect(handlersDeRequest().length).toBeGreaterThan(0)
+  })
+})
+
+/** Os `rejected` dos interceptors de resposta, pela mesma porta do de request. */
+function handlersDeResponse(): Array<(e: unknown) => unknown> {
+  const manager = api.interceptors.response as unknown as {
+    handlers: Array<{ rejected?: (e: unknown) => unknown } | null>
+  }
+
+  return manager.handlers.flatMap((h) => (h?.rejected ? [h.rejected] : []))
+}
+
+/** O valor com que a app REJEITA — é ele que chega ao `error` da query. */
+async function rejeicao(error: Partial<AxiosError>): Promise<unknown> {
+  const [rejeitar] = handlersDeResponse()
+
+  return await Promise.resolve(rejeitar(error)).then(
+    (v) => v,
+    (motivo: unknown) => motivo,
+  )
+}
+
+const resposta = (status: number, data: unknown) =>
+  ({ message: 'Request failed', response: { status, data } }) as Partial<AxiosError>
+
+describe('normalização de erro do axios', () => {
+  it('há interceptor de resposta registrado', () => {
+    expect(handlersDeResponse().length).toBeGreaterThan(0)
+  })
+
+  it('erro SEM corpo não rejeita com valor falsy', async () => {
+    // A forma do defeito, não o texto: a tela ramifica por `if (loadError)`, e
+    // um 5xx de corpo vazio rejeitava com `''` — falha que não aparecia em
+    // lugar nenhum, nem inline nem substituindo a tela (2026-08-16).
+    for (const vazio of ['', null, undefined, '<html>Bad Gateway</html>']) {
+      const motivo = await rejeicao(resposta(502, vazio))
+
+      expect(motivo).toBeTruthy()
+      expect(typeof motivo).toBe('object')
+      expect((motivo as ProblemDetails).status).toBe(502)
+      expect((motivo as ProblemDetails).title).toBeTruthy()
+    }
+  })
+
+  it('envelope RFC 7807 do backend passa intacto', async () => {
+    // O fallback não pode comer o que o backend disse: `detail` e `errors` são
+    // o que o formulário pendura nos campos.
+    const envelope = {
+      type: 'https://lotus.cl/errors/validation',
+      title: 'Datos inválidos',
+      status: 422,
+      detail: 'El RUT ya existe.',
+      instance: '/api/redatores',
+      errors: { rut: ['El RUT ya existe.'] },
+    }
+
+    expect(await rejeicao(resposta(422, envelope))).toEqual(envelope)
+  })
+
+  it('sem resposta do servidor vira erro de rede traduzido', async () => {
+    const motivo = (await rejeicao({ message: 'Network Error' })) as ProblemDetails
+
+    expect(motivo.status).toBe(0)
+    expect(motivo.title).toBeTruthy()
+    expect(motivo.detail).toBeTruthy()
   })
 })
