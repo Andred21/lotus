@@ -3,6 +3,7 @@ import { AppDetailSkeleton, AppErrorState, InlineLoadState, ModulePage } from '@
 import { useProfilePage } from '../../hooks/useProfilePage'
 import { ProfileIdentityCard } from './ProfileIdentityCard'
 import { ProfilePersonalSection } from './ProfilePersonalSection'
+import { ProfileSecuritySection } from './ProfileSecuritySection'
 
 /**
  * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): à esquerda o
@@ -48,7 +49,8 @@ export function ProfilePage() {
         </div>
         <div className="flex flex-col gap-4">
           <ProfilePersonalSection profile={profile} />
-          {/* Task 7: <ProfileSecuritySection /> · Task 9: <ProfileDocumentsSection /> */}
+          <ProfileSecuritySection />
+          {/* Task 9: <ProfileDocumentsSection /> */}
         </div>
       </div>
     </ModulePage>
