@@ -31,6 +31,13 @@ export interface AppPhotoFieldProps {
  * O rótulo do botão muda com o estado ("Seleccionar" vs "Reemplazar") porque
  * substituir apaga a foto anterior de forma irreversível (spec D4) — o texto é
  * o único aviso disso na tela.
+ *
+ * O par de controles é CENTRADO, e a quebra preserva isso: os rótulos de es-CL
+ * e pt-BR são mais longos que os de en e não cabem numa linha da coluna de
+ * 22rem do perfil. Alinhados ao fim, a quebra deixava o primário sozinho à
+ * esquerda e o secundário desalinhado na linha de baixo — o mesmo bloco mudava
+ * de arranjo com o idioma, e o que quebra é justamente o idioma de referência
+ * do projeto (UI-07 do review de 2026-08-16).
  */
 export function AppPhotoField({
   name,
@@ -52,14 +59,14 @@ export function AppPhotoField({
   };
 
   return (
-    <div className="flex flex-col items-center  ">
+    <div className="flex flex-col items-center">
       <div className="transform scale-200">
         <AppAvatar name={name} image={url} size="xlarge" />
       </div>
 
-      <div className="flex flex-col gap-2 items-end">
+      <div className="flex flex-col gap-2 items-center">
         {!readOnly && (
-          <div className="flex flex-wrap  items-end gap-2 pt-10">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-10">
             <AppFileUpload
               accept="image/jpeg,image/png,image/webp"
               maxBytes={MAX_PHOTO_BYTES}
