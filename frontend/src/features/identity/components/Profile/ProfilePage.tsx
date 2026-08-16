@@ -5,6 +5,7 @@ import { ProfileIdentityCard } from './ProfileIdentityCard'
 import { ProfilePersonalSection } from './ProfilePersonalSection'
 import { ProfileSecuritySection } from './ProfileSecuritySection'
 import { ProfileDocumentsSection } from './ProfileDocumentsSection'
+import { ProfileSummaryCard } from './ProfileSummaryCard'
 
 /**
  * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): à esquerda o
@@ -46,7 +47,7 @@ export function ProfilePage() {
       <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <ProfileIdentityCard profile={profile} />
-          {/* Task 10: <ProfileSummaryCard /> */}
+          {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
         </div>
         <div className="flex flex-col gap-4">
           <ProfilePersonalSection profile={profile} />
