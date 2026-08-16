@@ -24,15 +24,21 @@ function TurmaLinha({ turma }: { turma: AgendaTurmaData }) {
 
   return (
     <li className="border-b px-4 py-2 last:border-b-0" style={{ borderColor: 'var(--surface-border)' }}>
+      {/* Abaixo de `sm` o intervalo desce para a linha de baixo (`basis-full` no
+        * nome do curso). Na mesma linha ele era `shrink-0` e não cabia: vazava
+        * 19px (es-CL) a 55px (EN) além da viewport de 390px e era cortado, sem
+        * scroll horizontal que recuperasse (UI-02 da revisão de 2026-08-16). */}
       <Link
         to={`/operacion/turmas/${turma.turma_id}`}
-        className="flex items-center gap-3 no-underline"
+        className="flex flex-wrap items-center gap-x-3 gap-y-0.5 no-underline sm:flex-nowrap"
         style={{ color: 'var(--text-color)' }}
       >
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{turma.course_name}</span>
+        <span className="min-w-0 basis-full sm:flex-1 sm:basis-0">
+          <span className="block truncate text-sm font-medium" title={turma.course_name}>
+            {turma.course_name}
+          </span>
           {turma.client_name && (
-            <span className="block truncate text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+            <span className="block truncate text-xs" title={turma.client_name} style={{ color: 'var(--text-color-secondary)' }}>
               {turma.client_name}
             </span>
           )}

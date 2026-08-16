@@ -39,10 +39,18 @@ export function DashboardItemRow({
 }: DashboardItemRowProps) {
   const corpo = (
     <>
-      <AppTag value={tagLabel} {...severityTagProps(severity)} />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{label}</span>
-        <span className="block truncate text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+      <AppTag value={tagLabel} {...severityTagProps(severity)} className="order-1 sm:order-0" />
+      {/* `basis-full` abaixo de `sm` para o rótulo receber a linha inteira: com
+        * tudo numa linha só, os elementos `shrink-0` (tag, data, chevron) somam
+        * mais que a metade dos 295px úteis do mobile e o rótulo colapsava a
+        * ~33px de 154–201px necessários (UI-01 da revisão de 2026-08-16). O
+        * `title` recupera o texto no hover onde a faixa 1024–1279 ainda trunca —
+        * o do link é "Abrir", e o mais interno é o que vence. */}
+      <span className="order-3 min-w-0 basis-full sm:order-0 sm:flex-1 sm:basis-0">
+        <span className="block truncate text-sm font-medium" title={label}>
+          {label}
+        </span>
+        <span className="block truncate text-xs" title={detail} style={{ color: 'var(--text-color-secondary)' }}>
           {detail}
         </span>
       </span>
@@ -50,7 +58,10 @@ export function DashboardItemRow({
         // Ancorado ao meio-dia: `new Date('2026-03-01')` é lido como UTC e, num
         // fuso a oeste, volta um dia — a data exibida trocaria na virada. Mesma
         // razão do `formatMonthYear` em shared/lib/datetime.ts.
-        <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+        <span
+          className="order-2 ml-auto shrink-0 font-mono text-xs sm:order-0 sm:ml-0"
+          style={{ color: 'var(--text-color-secondary)' }}
+        >
           {formatDate(new Date(`${date}T12:00:00`))}
         </span>
       )}
@@ -61,7 +72,7 @@ export function DashboardItemRow({
   // `border-b-0` no <a> pareceria resolver e não resolve: com duas utilities da
   // mesma propriedade, quem vence é a ordem no CSS gerado, não a ordem na
   // string de classes.
-  const layout = 'flex items-center gap-3 px-4 py-3'
+  const layout = 'flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 sm:flex-nowrap'
 
   return (
     <li className="border-b last:border-b-0" style={{ borderColor: 'var(--surface-border)' }}>
@@ -78,7 +89,7 @@ export function DashboardItemRow({
           style={{ color: 'var(--text-color)' }}
         >
           {corpo}
-          <i className="pi pi-angle-right shrink-0" aria-hidden="true" />
+          <i className="pi pi-angle-right order-2 shrink-0 sm:order-0" aria-hidden="true" />
         </Link>
       )}
     </li>

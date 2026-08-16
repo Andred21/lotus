@@ -56,7 +56,10 @@ export function KpiRow({ kpis }: { kpis: AdminKpisData }) {
   if (lista.length === 0) return null
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    // Fileira única a partir de `xl`: travada em 3 colunas, a grade gastava
+    // 372px de altura com seis números e empurrava as duas listas 231px para
+    // fora da primeira tela em 1440x900 (UI-05 da revisão de 2026-08-16).
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {lista.map((kpi) => (
         <AppCard key={kpi.key} variant="stat" tone={kpi.tone}>
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>

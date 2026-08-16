@@ -16,21 +16,36 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3 p-4">
           {stages.map((etapa) => (
-            <li key={etapa.stage} className="flex items-center gap-3">
-              <span className="w-48 shrink-0 truncate text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            // Abaixo de `sm` o rótulo toma a linha inteira: o `w-48` fixo (192px)
+            // consumia a largura útil do mobile e TODAS as barras caíam no
+            // mínimo (UI-03 da revisão de 2026-08-16).
+            <li key={etapa.stage} className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:flex-nowrap">
+              <span
+                className="min-w-0 basis-full truncate text-sm sm:w-48 sm:shrink-0 sm:basis-auto"
+                style={{ color: 'var(--text-color-secondary)' }}
+              >
                 {t(`dashboard.pipeline.stage.${etapa.stage}`)}
               </span>
+              {/* O trilho é quem mede: todas as etapas partem da MESMA largura e
+                * o preenchimento é % dela. Aplicar a % direto na barra fazia a de
+                * 100% ser encolhida pelo `flex-shrink` enquanto as de 33% não —
+                * 3 e 1 desenhavam 2,38:1 em vez de 3:1. */}
               <span
-                className="h-2 min-w-1 rounded-full"
-                // Largura proporcional ao MAIOR valor, não ao total: o funil
-                // compara etapas entre si, e normalizar pelo total achataria
-                // todas quando uma domina.
-                style={{
-                  width: `${(etapa.count / maior) * 100}%`,
-                  background: 'var(--primary-color)',
-                }}
+                className="flex h-2 min-w-0 flex-1 rounded-full"
+                style={{ background: 'var(--surface-border)' }}
                 aria-hidden="true"
-              />
+              >
+                <span
+                  className="h-2 min-w-1 rounded-full"
+                  // Proporcional ao MAIOR valor, não ao total: o funil compara
+                  // etapas entre si, e normalizar pelo total achataria todas
+                  // quando uma domina.
+                  style={{
+                    width: `${(etapa.count / maior) * 100}%`,
+                    background: 'var(--primary-color)',
+                  }}
+                />
+              </span>
               <span className="shrink-0 font-mono text-sm tabular-nums">{etapa.count}</span>
             </li>
           ))}
