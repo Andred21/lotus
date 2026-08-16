@@ -16,8 +16,8 @@ filtrado pelo backend, com seção nula onde a permissão falta.
 **Tech Stack:** React 19 + TS, TanStack Query v5, PrimeReact via `@shared/ui`, Tailwind v4 (layout),
 i18n em 3 locales, vitest + `@testing-library/react` (`renderHook`).
 
-**Spec:** [`specs/2026-08-15-dashboard-frontend-central-controle-design.md`](../specs/2026-08-15-dashboard-frontend-central-controle-design.md)
-**Context Packet:** [`context-packets/2026-08-15-dashboard-frontend-central-controle.md`](../context-packets/2026-08-15-dashboard-frontend-central-controle.md)
+**Spec:** [`specs/archive/2026-08-15-dashboard-frontend-central-controle-design.md`](../../specs/archive/2026-08-15-dashboard-frontend-central-controle-design.md)
+**Context Packet:** [`context-packets/2026-08-15-dashboard-frontend-central-controle.md`](../../context-packets/2026-08-15-dashboard-frontend-central-controle.md)
 
 ## Global Constraints
 
