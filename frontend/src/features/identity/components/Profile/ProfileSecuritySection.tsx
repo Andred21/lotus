@@ -18,6 +18,13 @@ const MAPEADOS = ['current_password', 'password', 'password_confirmation']
  *
  * O aviso fica ACIMA do botão, onde é lido antes de agir: trocar a senha
  * encerra as outras sessões do usuário (D3 do bloco 1) e a atual sobrevive.
+ *
+ * É `<form>`, não `div`: sem ele não há envio por Enter — quem digitava as três
+ * senhas e apertava Enter não via nada acontecer — e o gerenciador de senhas
+ * perde a semântica que usa para preencher e para oferecer gravar a nova (o
+ * Chrome reclamava três vezes no console, "Password field is not contained in a
+ * form", UI-05 do review de 2026-08-16). O `autoComplete` é a outra metade: sem
+ * ele o gerenciador não distingue a senha atual da nova.
  */
 export function ProfileSecuritySection() {
   const { t } = useTranslation()
@@ -30,7 +37,13 @@ export function ProfileSecuritySection() {
     <AppCard className="p-4">
       <FormSection title={t('profile.security.title')} />
 
-      <div className="mt-3 flex flex-col gap-3">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit()
+        }}
+        className="mt-3 flex flex-col gap-3"
+      >
         <FormErrorBanner message={generalError} />
         <FormErrorSummary errors={fieldErrors} mapped={MAPEADOS} />
 
@@ -39,7 +52,7 @@ export function ProfileSecuritySection() {
           error={fieldErrors?.current_password?.[0]}
         >
           <AppPassword
-            className="w-full"
+            autoComplete="current-password"
             value={form.current_password}
             onChange={(e) => set('current_password', e.target.value)}
           />
@@ -47,7 +60,7 @@ export function ProfileSecuritySection() {
 
         <FormField label={t('profile.security.newPassword')} error={fieldErrors?.password?.[0]}>
           <AppPassword
-            className="w-full"
+            autoComplete="new-password"
             value={form.password}
             onChange={(e) => set('password', e.target.value)}
           />
@@ -58,7 +71,7 @@ export function ProfileSecuritySection() {
           error={fieldErrors?.password_confirmation?.[0]}
         >
           <AppPassword
-            className="w-full"
+            autoComplete="new-password"
             value={form.password_confirmation}
             onChange={(e) => set('password_confirmation', e.target.value)}
           />
@@ -70,13 +83,13 @@ export function ProfileSecuritySection() {
 
         <div>
           <AppButton
+            type="submit"
             label={t('profile.security.save')}
             icon="pi pi-lock"
             loading={pending}
-            onClick={() => submit()}
           />
         </div>
-      </div>
+      </form>
     </AppCard>
   )
 }
