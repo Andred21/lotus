@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-a
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
 state_basis_commit: c2ac9d4
-updated_at: 2026-08-17T14:20:00-03:00
+updated_at: 2026-08-17T14:04:22-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -318,6 +318,41 @@ de cliente (a D6 deixou a regra só no backend). Errar o recuo de mês manda uma
 **`executor: claude`**, com o `/lotus-ui-review` da Task 11 reservado ao João
 (`disable-model-invocation: true`). O aceite da EAP 8.4.0 exige validar admin e Redator
 **separadamente** — coisa que o B1 não podia satisfazer.
+
+### Execução — 2026-08-17: início, técnica `executing-plans`
+
+`/executar-bloco dashboard-frontend-analitico-e-redator` validou as âncoras (spec, plano e packet no
+disco; branch `feat/dashboard-frontend-analitico-e-redator` em `d479956`, árvore limpa exceto
+`backend/config/cors.php`; `active_plan` cobrindo o work item).
+
+**Técnica: `executing-plans`, não `subagent-driven-development`** — o ambiente restringe o Agent tool
+a pedido explícito do João, que não veio nesta invocação. Mesmo precedente do B1. `executor: claude`,
+main tree, como o handoff do plano já fixava.
+
+**Baseline remedida nesta branch antes da Task 1, e bate com o plano:** `pnpm lint` exit 0,
+`pnpm build` verde, `pnpm test` **39 arquivos / 223 testes**. Bundle antes: `index.js` 1.264,48 kB
+(gzip 350,52 kB).
+
+**Task 1 (paleta de série) completa.** Recharts **3.10.1** instalado e o peer medido, não suposto:
+`^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0` — aceita o React 19.2 do projeto, então a D1 se sustenta
+sem o PARE que o Step 2 previa. **O bundle não mexeu um byte** (mesmo hash `index--CYbGOcU.js`,
+1.264,48 kB): a dependência entrou sem importador, e o custo real só aparece na Task 2 — o número que
+o Step 3 manda declarar é este, e ele não é o custo do Recharts.
+
+**Os 5 tokens `--chart-1..5` saíram com zero hex novo** e a régua mediu razão em vez de conferir hex:
+claro **3,41 / 3,78 / 3,96 / 3,53 / 4,47:1** sobre o card, escuro **6,89 / 6,28 / 4,86 / 5,16 /
+4,52:1** — os mesmos números que o plano projetou, remedidos aqui. A catraca da D11 fixa que só
+`brand-theme.css` e `tokens.ts` nomeiam o token.
+
+**Uma divergência de contagem, da classe que a §8 da spec previu:** o Step 9 projetava **22 casos** e
+o runner deu **14**. A projeção contou *asserção* onde o vitest conta *caso* — os `it.each` de 5
+tokens × 2 temas rendem 10 casos com 2 asserções cada, mais 2 de matiz, o controle do amarelo e a
+catraca. Gate da task: lint exit 0, build verde, **40 arquivos / 237 testes**.
+
+**Um registro de relógio, não divergência de estado:** o `updated_at` que o commit do plano gravou
+(`14:20:00-03:00`) é 23 minutos adiantado em relação ao commit real (`13:57:55`). Este commit grava a
+hora medida, então o campo **anda para trás** uma vez. Ponteiros, `workflow_state` e `next_action`
+seguem coerentes — nada aqui bloqueia.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
