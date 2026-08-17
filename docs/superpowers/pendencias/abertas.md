@@ -138,26 +138,6 @@ sítio que lê a variável e o único que ainda a trata como valor único.**
 provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
 commit que fecha o multi-origin — decisão do João.
 
-## P-38 — a rule afirma que teste PrimeReact/jsdom está fora do corte, e o corte já tem três
-
-**Bloco:** BD-12 · **Gatilho:** fecha no próximo bloco que tocar `frontend-fsliced.md` por qualquer
-motivo, trocando a frase pelo corte medido (rodar o runner e contar, não citar de memória — é a
-catraca do parágrafo "mede a própria população com o seletor dela"). Enquanto não fechar, **a rule
-vale pelo que o `pnpm test` faz, não pelo que ela diz**.
-
-Divergência medida no review de sprint do BD-6 (2026-08-14). O próprio bloco criou
-`frontend/src/shared/ui/InlineLoadState/InlineLoadState.test.tsx`,
-`frontend/src/features/commercial/components/Budget/CourseStep.test.tsx` e
-`frontend/src/features/commercial/components/Budget/QuotesList.test.tsx` — os três renderizam
-componente que monta wrapper PrimeReact no jsdom, e os três passam. A §10 da spec
-`docs/superpowers/specs/archive/2026-08-14-falha-vs-lista-vazia-design.md` repete a mesma frase,
-herdada da rule.
-
-É a **lição 13 no mesmo arquivo pela terceira vez**: a rule já afirmou "sem test runner ainda" um
-bloco inteiro depois de o runner existir, e depois afirmou por quatro dias que o corte era só
-`shared/`. Não é bug de código: o corte real é maior que o documentado, então o texto **subestima**
-a cobertura — quem lê a rule pode deixar de escrever um teste que o projeto já sabe rodar.
-
 ## P-40 — o ramo "catálogo genuinamente vazio" não foi remedido contra HEAD
 
 **Bloco:** BD-12 · **Gatilho:** fecha quando um bloco puder esvaziar o catálogo de dev sem tinker

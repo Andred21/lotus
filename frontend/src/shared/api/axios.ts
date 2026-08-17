@@ -68,13 +68,31 @@ api.interceptors.response.use(
 
         // Se o backend mandou o envelope RFC 7807, retorna normalizado (já vem
         // localizado — o request manda Accept-Language). Se não (raro), monta um
-        // fallback com o status HTTP; `error.message` é do axios e fica em inglês,
-        // então o título traduzido é o que o usuário lê.
-        const normalized: ProblemDetails = problem ?? {
+        // fallback com o status HTTP, TRADUZIDO nas duas linhas.
+        //
+        // O `detail` não pode ser `error.message`: "Request failed with status
+        // code 500" é string do axios, em inglês, e é justamente o `detail` que
+        // o `AppErrorState`/`InlineLoadState` renderizam como corpo — o título
+        // é a linha curta. Enquanto o ramo abaixo era inalcançável (corpo vazio
+        // virava `''` e passava direto), o inglês não aparecia; a guarda de
+        // OBJETO passou a rotear corpo vazio e HTML para cá, e a partir daí ele
+        // chega à UI es-CL do cliente. Mesma chave do `problemFromBlob`, que
+        // monta este mesmo envelope sintético para corpo não-parseável.
+        //
+        // O que qualifica um corpo aqui é ser OBJETO, não ser não-nulo: um `??`
+        // só pega `null`/`undefined`, e resposta de erro SEM CORPO entrega `''`
+        // — que passava direto e virava a REJEIÇÃO. Aí `loadError` era string
+        // vazia, falsy, e o `InlineLoadState` desistia no `!error`: a tela
+        // falhava em SILÊNCIO, sem aviso nenhum (medido em /perfil com um 500 de
+        // corpo vazio, 2026-08-16). Vale igual para corpo em HTML (página de
+        // debug do Laravel, proxy no meio): string não é envelope.
+        const envelope = typeof problem === 'object' && problem !== null ? problem : null
+
+        const normalized: ProblemDetails = envelope ?? {
             type: 'https://lotus.cl/errors/unknown',
             title: i18n.t('common.unexpectedError'),
             status: error.response.status,
-            detail:error.message,
+            detail: i18n.t('common.unexpectedErrorHint'),
             instance: '',
         };
 

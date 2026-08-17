@@ -254,6 +254,56 @@
   "placeholder": {
     "module": "Module under construction."
   },
+  "profile": {
+    "subtitle": "Your personal data, your security and your professional documents.",
+    "loadError": "Could not load your profile",
+    "identity": {
+      "title": "Identity",
+      "email": "Email",
+      "rut": "RUT",
+      "role": "Profile",
+      "noRut": "No RUT on file",
+      "managedByAdmin": "This information is managed by the Lotus team."
+    },
+    "personal": {
+      "title": "Personal data",
+      "name": "Name",
+      "phone": "Phone",
+      "save": "Save changes",
+      "saved": "Your data was updated."
+    },
+    "security": {
+      "title": "Security",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Repeat the new password",
+      "warning": "Changing your password will close your other sessions. This session stays open.",
+      "save": "Change password",
+      "saved": "Your password was changed."
+    },
+    "documents": {
+      "title": "Professional documents",
+      "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
+      "send": "Upload document",
+      "replace": "Replace",
+      "managedByAdmin": "This document is managed by the administrator.",
+      "sent": "Document uploaded.",
+      "validUntil": "Valid until {{date}}",
+      "noValidity": "No expiry date"
+    },
+    "docStatus": {
+      "vigente": "Valid",
+      "vence_em_breve": "Expiring soon",
+      "vencido": "Expired",
+      "ausente": "Not uploaded"
+    },
+    "summary": {
+      "title": "Professional summary",
+      "enabledCourses": "Enabled courses",
+      "noCourses": "You have no enabled courses yet.",
+      "goToDashboard": "Go to my dashboard"
+    }
+  },
   "photo": {
     "label": "Photo",
     "select": "Select photo",

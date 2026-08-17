@@ -5,11 +5,11 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { SessionBootstrap } from '@app/SessionBootstrap'
 import { AppLayout } from '@app/layouts/AppLayout'
 import { DashboardPage } from '@app/pages/Dashboard'
-import { ModulePlaceholder } from '@app/pages/ModulePlaceholder'
 import { CommercialPage } from '@features/commercial/components/CommercialPage'
 import { BudgetDetailPage } from '@features/commercial/components/Budget/BudgetDetailPage'
 import { PeoplePage } from '@features/identity/components/PeoplePage'
 import { AdministracionPage } from '@features/identity/components/AdministracionPage'
+import { ProfilePage } from '@features/identity/components/Profile/ProfilePage'
 import { CatalogPage } from '@features/catalog/components/CatalogPage'
 import { OperationPage } from '@features/operation/components/OperationPage'
 import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetailPage'
@@ -65,7 +65,7 @@ export function AppRouter() {
           <Route path="/certificados" element={<CertificatesPage />} />
           <Route path="/personas" element={<PeoplePage />} />
           <Route path="/administracion" element={<AdministracionPage />} />
-          <Route path="/perfil" element={<ModulePlaceholder titleKey="userMenu.profile" />} />
+          <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
