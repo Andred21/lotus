@@ -206,6 +206,30 @@
       "expired": "Documentos vencidos",
       "expiring": "Documentos por vencer"
     },
+    "redator": {
+      "section": {
+        "now": "Mi situación",
+        "action": "Requiere mi acción",
+        "agenda": "Mis clases",
+        "history": "Mi historial"
+      },
+      "kpi": {
+        "turmasEmAndamento": "Clases en curso",
+        "proximasTurmas": "Próximas clases",
+        "pendenciasDocumentais": "Clases con documentación pendiente",
+        "documentosVencendo": "Mis documentos por vencer",
+        "turmasConcluidas": "Clases concluidas",
+        "certificadosEmitidos": "Certificados emitidos"
+      },
+      "pendencias": {
+        "title": "Documentación pendiente",
+        "empty": "Sin documentación pendiente",
+        "emptyHint": "Todas tus clases tienen la documentación al día.",
+        "missing": "Falta: {{types}}",
+        "until": "Hasta {{date}}",
+        "goToProfile": "Ir a Mi Perfil"
+      }
+    },
     "period": {
       "label": "Período",
       "last12": "Últimos 12 meses",

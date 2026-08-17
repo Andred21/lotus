@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PageHeader, AppErrorState, AppEmptyState } from '@shared/ui'
+import { PageHeader, AppErrorState, AppEmptyState, InlineLoadState } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { useDashboard } from './useDashboard'
 import { DashboardSkeleton } from './DashboardSkeleton'
 import { AdminView } from './admin/AdminView'
+import { RedatorView } from './redator/RedatorView'
 import { PERIOD_PRESET_PADRAO, periodoDoPreset, periodoPadrao } from './admin/periodPresets'
 import type { PeriodPresetKey } from './admin/periodPresets'
 
@@ -78,8 +79,18 @@ export function DashboardPage() {
     )
   }
 
-  // A view do Redator chega na Task 10.
-  if (state.kind === 'ready-redator') return <div>{header}</div>
+  if (state.kind === 'ready-redator') {
+    return (
+      <div>
+        {header}
+        {/* Falha COM dado em mão: aviso ao lado (BD-6). O Redator não tem
+          * seletor de janela, então o aviso mora aqui e não junto de um
+          * controle. */}
+        <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.retry} />
+        <RedatorView data={state.data} />
+      </div>
+    )
+  }
 
   return (
     <div>

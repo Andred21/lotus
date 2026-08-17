@@ -206,6 +206,30 @@
       "expired": "Expired documents",
       "expiring": "Documents expiring"
     },
+    "redator": {
+      "section": {
+        "now": "My status",
+        "action": "Needs my action",
+        "agenda": "My classes",
+        "history": "My history"
+      },
+      "kpi": {
+        "turmasEmAndamento": "Classes in progress",
+        "proximasTurmas": "Upcoming classes",
+        "pendenciasDocumentais": "Classes with pending documents",
+        "documentosVencendo": "My documents expiring",
+        "turmasConcluidas": "Classes completed",
+        "certificadosEmitidos": "Certificates issued"
+      },
+      "pendencias": {
+        "title": "Pending documents",
+        "empty": "No pending documents",
+        "emptyHint": "All your classes have their documents up to date.",
+        "missing": "Missing: {{types}}",
+        "until": "Until {{date}}",
+        "goToProfile": "Go to My Profile"
+      }
+    },
     "period": {
       "label": "Period",
       "last12": "Last 12 months",
