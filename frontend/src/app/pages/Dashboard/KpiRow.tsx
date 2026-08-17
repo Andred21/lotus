@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { AppCard } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
-import { formatUf } from '@shared/lib'
-import type { AdminKpisData } from '@shared/types/generated'
 
-type Kpi = {
-  /** Sufixo da chave `dashboard.kpi.*`. */
+export type Kpi = {
+  /** Chave i18n COMPLETA — `dashboard.kpi.*` no admin, `dashboard.redator.kpi.*`
+   * no Redator. Completa e não sufixo: com dois consumidores, um prefixo
+   * montado dentro do render põe metade da chave no módulo puro e metade no
+   * JSX (Emenda 3). Serve também de `key` do React: é única por card. */
   key: string
   value: string
   /** Grandeza secundária do mesmo card, já formatada. Hoje só as cotações têm
@@ -17,83 +18,78 @@ type Kpi = {
 }
 
 /**
- * Campo `null` NÃO vira card (D6). Nada de zero no lugar do que não pode ser
- * lido — essa é a lei do bloco A, e o backend passou a mandar `null` justamente
- * para a tela não ter como mentir — e nada de rótulo "sem acesso", que poluiria
- * a tela de quem nunca terá o módulo. É o mesmo padrão que o Sidebar já aplica
- * ao filtrar item por permissão.
+ * Colunas por QUANTIDADE de cards. Uma grade fixa de 6 servia à fileira do
+ * admin e sobrava nas duas do Redator: 4 cards deixavam 384px (34%) vazios à
+ * direita em 1440 e viravam 3 + 1, com um órfão, em 1024; os 2 do histórico
+ * gastavam duas colunas de seis (UI-06 da revisão de 2026-08-17).
  *
- * Derivação pura, no módulo e não no corpo do componente: o componente fica
- * declarativo, do mesmo jeito que o lint exige nos componentes de feature
- * (ADR-05) e que aqui vale por disciplina — o seletor não alcança `app/`.
+ * Classes LITERAIS numa tabela, não string montada em runtime: o scanner do
+ * Tailwind v4 lê o código-fonte, e `xl:grid-cols-${n}` não existiria no CSS
+ * gerado. A fileira única a partir de `xl` continua sendo a razão de o admin
+ * chegar a 6 — travada em 3, a grade gastava 372px de altura com seis números e
+ * empurrava as duas listas 231px para fora da primeira tela (UI-05 da revisão de
+ * 2026-08-16).
  */
-function cards(k: AdminKpisData): Kpi[] {
-  const lista: Kpi[] = []
-
-  if (k.turmas_em_andamento !== null) {
-    lista.push({ key: 'turmasEmAndamento', value: String(k.turmas_em_andamento), tone: 'info' })
-  }
-  if (k.turmas_encerrando_em_breve !== null) {
-    lista.push({ key: 'turmasEncerrandoEmBreve', value: String(k.turmas_encerrando_em_breve), tone: 'warning' })
-  }
-  if (k.turmas_atrasadas !== null) {
-    lista.push({ key: 'turmasAtrasadas', value: String(k.turmas_atrasadas), tone: 'danger' })
-  }
-  if (k.conclusoes_por_confirmar !== null) {
-    lista.push({ key: 'conclusoesPorConfirmar', value: String(k.conclusoes_por_confirmar), tone: 'warning' })
-  }
-  if (k.cotacoes !== null) {
-    lista.push({
-      key: 'cotacoesPendentes',
-      value: String(k.cotacoes.pending_count),
-      hint: { i18nKey: 'dashboard.kpi.cotacoesValor', value: formatUf(k.cotacoes.pending_value_uf) },
-      tone: 'neutral',
-    })
-  }
-  if (k.certificados_a_emitir !== null) {
-    lista.push({ key: 'certificadosAEmitir', value: String(k.certificados_a_emitir), tone: 'info' })
-  }
-
-  return lista
+const COLUNAS: Record<number, string> = {
+  1: '',
+  2: 'sm:grid-cols-2',
+  3: 'sm:grid-cols-2 lg:grid-cols-3',
+  4: 'sm:grid-cols-2 lg:grid-cols-4',
+  5: 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
+  6: 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
 }
 
-export function KpiRow({ kpis }: { kpis: AdminKpisData }) {
+/**
+ * Fileira de contadores. Genérico sobre `Kpi[]` desde o B1 — só a DERIVAÇÃO era
+ * do admin, e ela saiu para `admin/kpiCards.ts` quando o segundo consumidor
+ * chegou (D13). O Redator monta duas instâncias, resumo e histórico, cada uma
+ * com sua faixa de seção.
+ */
+export function KpiRow({ items }: { items: Kpi[] }) {
   const { t } = useTranslation()
-  const lista = cards(kpis)
 
-  if (lista.length === 0) return null
+  if (items.length === 0) return null
+
+  // Acima de 6 a fileira volta ao molde do admin: mais que isso não existe hoje,
+  // e inventar coluna para um caso inexistente é grade especulativa.
+  const colunas = COLUNAS[items.length] ?? COLUNAS[6]
 
   return (
-    // Fileira única a partir de `xl`: travada em 3 colunas, a grade gastava
-    // 372px de altura com seis números e empurrava as duas listas 231px para
-    // fora da primeira tela em 1440x900 (UI-05 da revisão de 2026-08-16).
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      {lista.map((kpi) => (
-        <AppCard key={kpi.key} variant="stat" tone={kpi.tone}>
+    <div className={`grid gap-4 ${colunas}`}>
+      {items.map((kpi) => (
+        // `flex flex-col` no card e `sm:flex-1` no corpo: a grade já estica cada
+        // card até a altura do mais alto da fileira, e é isto que transmite essa
+        // altura ao conteúdo sem depender de porcentagem resolvida contra um
+        // `height: auto`.
+        <AppCard key={kpi.key} variant="stat" tone={kpi.tone} className="flex flex-col">
           {/* Duas arrumações, um markup só. Abaixo de `sm` o card ocupa a
             * largura inteira e vira LINHA — rótulo à esquerda, número à
             * direita, na mesma base —, que é o que traz as duas listas de volta
-            * para perto do topo em 390px. De `sm` para cima a coluna é estreita
-            * e o card empilha. */}
-          <div className="flex items-baseline justify-between gap-4 sm:block">
-            {/* `min-h-8` = duas linhas de `text-xs`. É o que põe os seis números
-              * na MESMA base: sem o piso, o número nasce logo abaixo de um
-              * rótulo de altura variável e a fileira ficava em dois patamares,
-              * 81px e 101px, conforme a locale quebrasse o rótulo (UI-03 do
-              * review de 2026-08-17). Piso, não altura fixa — rótulo de três
-              * linhas ainda cresce, e cresce para todos. */}
+            * para perto do topo em 390px. De `sm` para cima a coluna é estreita,
+            * o card empilha e ocupa a ALTURA INTEIRA da fileira, que é o que
+            * ancora o número na base. */}
+          <div className="flex items-baseline justify-between gap-4 sm:flex-1 sm:flex-col sm:items-stretch sm:gap-0">
             {/* `min-w-0` para o rótulo longo quebrar DENTRO da própria caixa em
               * vez de empurrar o número para a linha de baixo: envolvido, o
               * número perdia o `justify-between` e voltava para a esquerda, e a
               * fileira do mobile ficava com quatro números à direita e dois à
               * esquerda. */}
-            <p
-              className="min-w-0 text-xs font-semibold tracking-wider uppercase sm:min-h-8"
-              style={{ color: 'var(--text-color-secondary)' }}
-            >
-              {t(`dashboard.kpi.${kpi.key}`)}
+            <p className="min-w-0 text-xs font-semibold tracking-wider uppercase" style={{ color: 'var(--text-color-secondary)' }}>
+              {t(kpi.key)}
             </p>
-            <p className="flex shrink-0 items-baseline gap-2 sm:mt-1 sm:justify-between">
+            {/* O `justify-between` do corpo é o que põe todos os números na
+              * MESMA base: dois filhos numa coluna que a grade já esticou até a
+              * altura do card mais alto da fileira — rótulo no topo, número no
+              * pé, independente de quantas linhas o rótulo ocupe. O piso de duas
+              * linhas no rótulo (`min-h-8`) resolvia só até duas: com um rótulo
+              * de três — "Clases con documentación pendiente" — o número caía
+              * 16px abaixo dos três vizinhos (UI-06 da revisão de 2026-08-17).
+              *
+              * Ancorar por margem não funciona aqui: o `[&_p]:m-0` que o
+              * `AppCard` aplica na variante `stat` casa `<p>` por elemento e
+              * vence qualquer `mt-*` de utility, que casa por classe. O
+              * afastamento do rótulo vem de `pt`, que aquela regra não toca. */}
+            <p className="flex shrink-0 items-baseline gap-2 sm:justify-between sm:pt-2">
               <span className="font-display text-3xl leading-none font-semibold tabular-nums">{kpi.value}</span>
               {/* Grandeza secundária na MESMA linha do número, nunca numa
                 * terceira: como linha própria, o único card que a tinha definia

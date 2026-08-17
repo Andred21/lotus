@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AppTag } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatIsoDate } from '@shared/lib'
 import type { DashboardSeverity } from '@shared/types/generated'
 
 /** D15: a escala do contrato mapeia para a severidade do `AppTag` que já existe.
@@ -59,14 +59,11 @@ export function DashboardItemRow({
         </span>
       </span>
       {date && (
-        // Ancorado ao meio-dia: `new Date('2026-03-01')` é lido como UTC e, num
-        // fuso a oeste, volta um dia — a data exibida trocaria na virada. Mesma
-        // razão do `formatMonthYear` em shared/lib/datetime.ts.
         <span
           className="order-2 ml-auto shrink-0 font-mono text-xs sm:order-0 sm:ml-0"
           style={{ color: 'var(--text-color-secondary)' }}
         >
-          {formatDate(new Date(`${date}T12:00:00`))}
+          {formatIsoDate(date)}
         </span>
       )}
     </>
