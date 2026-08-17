@@ -125,8 +125,13 @@ async function rejeicao(error: Partial<AxiosError>): Promise<unknown> {
   )
 }
 
+/** `message` é o que o axios põe em `error.message` — a string inglesa que o
+ * fallback NÃO pode devolver como `detail`. Fica nomeada para a guarda abaixo
+ * poder apontar para ela. */
+const MENSAGEM_DO_AXIOS = 'Request failed with status code 502'
+
 const resposta = (status: number, data: unknown) =>
-  ({ message: 'Request failed', response: { status, data } }) as Partial<AxiosError>
+  ({ message: MENSAGEM_DO_AXIOS, response: { status, data } }) as Partial<AxiosError>
 
 describe('normalização de erro do axios', () => {
   it('há interceptor de resposta registrado', () => {
@@ -144,6 +149,15 @@ describe('normalização de erro do axios', () => {
       expect(typeof motivo).toBe('object')
       expect((motivo as ProblemDetails).status).toBe(502)
       expect((motivo as ProblemDetails).title).toBeTruthy()
+
+      // As DUAS linhas vêm do i18n, não só o título. `detail` é o que
+      // `AppErrorState`/`InlineLoadState` renderizam como CORPO — devolver
+      // `error.message` aqui vazava "Request failed with status code 502" para
+      // a UI es-CL do cliente chileno. Sem esta asserção a reversão passava
+      // verde: o caso já existia e nunca olhou o `detail` (Q-8 do review de
+      // 2026-08-17).
+      expect((motivo as ProblemDetails).detail).toBeTruthy()
+      expect((motivo as ProblemDetails).detail).not.toBe(MENSAGEM_DO_AXIOS)
     }
   })
 
