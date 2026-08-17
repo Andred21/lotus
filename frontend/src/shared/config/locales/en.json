@@ -21,6 +21,8 @@
     "hidePassword": "Hide password",
     "save": "Save",
     "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
     "close": "Close",
     "edit": "Edit",
     "rut": "RUT",
@@ -178,7 +180,89 @@
     "subtitle": "Current operating status: what needs action today.",
     "section": {
       "action": "Needs action",
-      "context": "Context"
+      "context": "Context",
+      "analysis": "Period analysis",
+      "compliance": "Compliance and workload"
+    },
+    "compliance": {
+      "title": "Class document compliance",
+      "empty": "No classes to review",
+      "count": "{{count}} classes",
+      "course": "Course",
+      "redatores": "Instructors",
+      "noRedator": "No instructor",
+      "range": "Period",
+      "present": "Documents on file",
+      "missing": "Missing documents",
+      "enabled": "Enabled"
+    },
+    "redatorLoad": {
+      "title": "Instructor workload",
+      "empty": "No instructors",
+      "count": "{{count}} instructors",
+      "name": "Instructor",
+      "current": "Classes in progress",
+      "upcoming": "Upcoming classes",
+      "expired": "Expired documents",
+      "expiring": "Documents expiring"
+    },
+    "redator": {
+      "section": {
+        "now": "My status",
+        "action": "Needs my action",
+        "agenda": "My classes",
+        "history": "My history"
+      },
+      "kpi": {
+        "turmasEmAndamento": "Classes in progress",
+        "proximasTurmas": "Upcoming classes",
+        "pendenciasDocumentais": "Classes with pending documents",
+        "documentosVencendo": "My documents expiring",
+        "turmasConcluidas": "Classes completed",
+        "certificadosEmitidos": "Certificates issued"
+      },
+      "pendencias": {
+        "title": "Pending documents",
+        "empty": "No pending documents",
+        "emptyHint": "All your classes have their documents up to date.",
+        "missing": "Missing: {{types}}",
+        "until": "Until {{date}}",
+        "goToProfile": "Go to My Profile"
+      },
+      "alerts": {
+        "emptyHint": "None of your documents are expired or expiring."
+      }
+    },
+    "period": {
+      "label": "Period",
+      "last12": "Last 12 months",
+      "last6": "Last 6 months",
+      "currentYear": "Current year",
+      "custom": "Custom",
+      "start": "From",
+      "end": "To"
+    },
+    "series": {
+      "countsTitle": "Monthly trend",
+      "ufTitle": "Approved UF per month",
+      "empty": "No records in the period",
+      "turmas_iniciadas": "Classes started",
+      "turmas_concluidas": "Classes completed",
+      "matriculas": "Enrollments",
+      "certificados_emitidos": "Certificates issued",
+      "uf_aprovada": "Approved UF"
+    },
+    "rankings": {
+      "courses": "Most requested courses",
+      "clients": "Most active clients",
+      "empty": "No data in the period",
+      "metric": {
+        "label": "Metric",
+        "turmas": "Classes",
+        "matriculas": "Enrollments",
+        "certificados": "Certificates",
+        "uf_aprovada": "Approved UF"
+      }
     },
     "noAccess": {
       "title": "No modules visible",

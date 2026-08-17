@@ -250,6 +250,25 @@ export default defineConfig([
       'max-lines': ['error', { max: 150, skipBlankLines: false, skipComments: false }],
     },
   },
+  // D8 do B2: `src/app/**` era a camada SEM régua, e dois dos seus 24 arquivos
+  // já a excediam — os dois criados pelo B1. Mesmo formato da D11 do B1, que
+  // fechou a P-34 ligando a catraca de cor nesta mesma camada descoberta.
+  //
+  // O glob é `.tsx` e não `{ts,tsx}` de PROPÓSITO, e é o mesmo recorte da regra
+  // das features, que vale só para `components/`: hook e módulo de derivação
+  // longos são legítimos, componente inchado não. Em `app/pages/Dashboard/` os
+  // `.ts` são exatamente isso — `useDashboard`, `navigation`, `kpiCards`,
+  // `resumoCards`, `periodPresets`.
+  //
+  // Teste cai na mesma isenção pelo mesmo motivo: quebrar um arquivo de teste
+  // coeso é pagar preço pela regra, não pelo defeito.
+  {
+    files: ['src/app/**/*.tsx'],
+    ignores: ['**/*.test.tsx'],
+    rules: {
+      'max-lines': ['error', { max: 150, skipBlankLines: false, skipComments: false }],
+    },
+  },
   // Lei §5.6 do CLAUDE.md vira mecanismo (lição 14). As 3 fronteiras estão
   // limpas hoje — 0 primereact fora de shared/ui, 0 cross-feature, 0
   // shared->feature — então a regra nasce SEM catraca, diferente das duas

@@ -21,6 +21,8 @@
     "hidePassword": "Ocultar senha",
     "save": "Salvar",
     "cancel": "Cancelar",
+    "yes": "Sim",
+    "no": "Não",
     "close": "Fechar",
     "edit": "Editar",
     "rut": "RUT",
@@ -178,7 +180,89 @@
     "subtitle": "Estado operacional atual: o que precisa de ação hoje.",
     "section": {
       "action": "Requer ação",
-      "context": "Contexto"
+      "context": "Contexto",
+      "analysis": "Análise do período",
+      "compliance": "Conformidade e carga"
+    },
+    "compliance": {
+      "title": "Conformidade documental das turmas",
+      "empty": "Sem turmas a revisar",
+      "count": "{{count}} turmas",
+      "course": "Curso",
+      "redatores": "Relatores",
+      "noRedator": "Sem relator",
+      "range": "Período",
+      "present": "Documentos presentes",
+      "missing": "Documentos faltantes",
+      "enabled": "Habilitada"
+    },
+    "redatorLoad": {
+      "title": "Carga de relatores",
+      "empty": "Sem relatores",
+      "count": "{{count}} relatores",
+      "name": "Relator",
+      "current": "Turmas em curso",
+      "upcoming": "Próximas turmas",
+      "expired": "Documentos vencidos",
+      "expiring": "Documentos a vencer"
+    },
+    "redator": {
+      "section": {
+        "now": "Minha situação",
+        "action": "Requer minha ação",
+        "agenda": "Minhas turmas",
+        "history": "Meu histórico"
+      },
+      "kpi": {
+        "turmasEmAndamento": "Turmas em curso",
+        "proximasTurmas": "Próximas turmas",
+        "pendenciasDocumentais": "Turmas com documentação pendente",
+        "documentosVencendo": "Meus documentos a vencer",
+        "turmasConcluidas": "Turmas concluídas",
+        "certificadosEmitidos": "Certificados emitidos"
+      },
+      "pendencias": {
+        "title": "Documentação pendente",
+        "empty": "Sem documentação pendente",
+        "emptyHint": "Todas as suas turmas estão com a documentação em dia.",
+        "missing": "Falta: {{types}}",
+        "until": "Até {{date}}",
+        "goToProfile": "Ir ao Meu Perfil"
+      },
+      "alerts": {
+        "emptyHint": "Nenhum documento seu vencido nem a vencer."
+      }
+    },
+    "period": {
+      "label": "Período",
+      "last12": "Últimos 12 meses",
+      "last6": "Últimos 6 meses",
+      "currentYear": "Ano corrente",
+      "custom": "Personalizado",
+      "start": "De",
+      "end": "Até"
+    },
+    "series": {
+      "countsTitle": "Evolução mensal",
+      "ufTitle": "UF aprovada por mês",
+      "empty": "Sem registros no período",
+      "turmas_iniciadas": "Turmas iniciadas",
+      "turmas_concluidas": "Turmas concluídas",
+      "matriculas": "Matrículas",
+      "certificados_emitidos": "Certificados emitidos",
+      "uf_aprovada": "UF aprovada"
+    },
+    "rankings": {
+      "courses": "Cursos mais demandados",
+      "clients": "Clientes mais ativos",
+      "empty": "Sem dados no período",
+      "metric": {
+        "label": "Métrica",
+        "turmas": "Turmas",
+        "matriculas": "Matrículas",
+        "certificados": "Certificados",
+        "uf_aprovada": "UF aprovada"
+      }
     },
     "noAccess": {
       "title": "Nenhum módulo visível",

@@ -1,7 +1,13 @@
 import { addLocale } from 'primereact/api'
 
 /** Locale es-CL do PrimeReact (nomes de mês/dia do Calendar). Rodar uma vez no
- * boot, antes do primeiro render — mesmo lugar do applyPrimeTheme (ADR-16). */
+ * boot, antes do primeiro render — mesmo lugar do applyPrimeTheme (ADR-16).
+ *
+ * As chaves de RÓTULO entram junto com as de nome. Só os nomes registrados,
+ * `chooseDate` caía no default do PrimeReact e o botão de calendário anunciava
+ * "Choose Date" numa tela inteira em espanhol — invisível na pintura, audível em
+ * leitor de tela (UI-09 da revisão de 2026-08-17). Elas valem para todo
+ * `Calendar` da aplicação, não só para o filtro do Dashboard. */
 export function registerPrimeLocales(): void {
   addLocale('es', {
     firstDayOfWeek: 1,
@@ -12,5 +18,15 @@ export function registerPrimeLocales(): void {
     monthNamesShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
     today: 'Hoy',
     clear: 'Limpiar',
+    weekHeader: 'Sem',
+    chooseDate: 'Elegir fecha',
+    chooseMonth: 'Elegir mes',
+    chooseYear: 'Elegir año',
+    prevMonth: 'Mes anterior',
+    nextMonth: 'Mes siguiente',
+    prevYear: 'Año anterior',
+    nextYear: 'Año siguiente',
+    prevDecade: 'Década anterior',
+    nextDecade: 'Década siguiente',
   })
 }

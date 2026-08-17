@@ -1,16 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppLogo, AppCard, AppSkeleton, AppErrorState } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatDate, formatIsoDate } from '@shared/lib'
 import { useValidationPage } from '../../hooks/useValidationPage'
 import type { PublicCertificateData } from '@shared/types/generated'
-
-/** Ancora data-only (`YYYY-MM-DD`) ao meio-dia local antes de formatar: sem
- * isso `new Date('2026-06-26')` é lido como UTC e um fuso a oeste volta um
- * dia (mesmo cuidado do `formatMonthYear`, `shared/lib/datetime.ts`). */
-function formatDateOnly(iso: string): string {
-  return formatDate(new Date(`${iso}T12:00:00`))
-}
 
 type HeadingTone = 'success' | 'danger' | 'warning' | 'neutral'
 
@@ -56,12 +49,12 @@ function ValidCard({ cert }: { cert: PublicCertificateData }) {
         </div>
         {cert.turma.end_date && (
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.validation.completedAt', { date: formatDateOnly(cert.turma.end_date) })}
+            {t('certificate.validation.completedAt', { date: formatIsoDate(cert.turma.end_date) })}
           </p>
         )}
         {cert.valido_ate && (
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.validation.validUntil', { date: formatDateOnly(cert.valido_ate) })}
+            {t('certificate.validation.validUntil', { date: formatIsoDate(cert.valido_ate) })}
           </p>
         )}
       </dl>
