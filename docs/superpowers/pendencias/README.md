@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (29)
+## Abertas (30)
 
 ### Agrupadas em bloco de execução
 
@@ -44,6 +44,7 @@ ou de escrita fora do repositório.
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
 | P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | João | commit que fechar o multi-origin (o `cors.php` com `explode` já está no working tree); revisar 2026-10-31 |
+| P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | João | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | João | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | João | fecha junto da P-02, ou antes de produção |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | João | antes de subir para produção |

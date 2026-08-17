@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader, AppErrorState, AppSkeleton, AppEmptyState, InlineLoadState } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
@@ -21,6 +22,35 @@ function DashboardSkeleton() {
         <AppSkeleton width="100%" height="16rem" />
       </div>
       <AppSkeleton width="100%" height="12rem" />
+    </div>
+  )
+}
+
+/**
+ * Faixa de seção. O `h2` que faltava: a página emitia `h1` e depois `h3` dos
+ * cards, sem degrau intermediário, e as quatro seções não se apresentavam como
+ * filhas do título (UI-05 do review de 2026-08-17). O degrau existe porque a
+ * página TEM dois registros — o que pede ação e o que dá contexto —, e eles já
+ * estavam escritos no docblock abaixo sem aparecer na tela.
+ *
+ * `m-0` pelo mesmo motivo do `AppCardHeader`: sem Preflight, o `h2` traria
+ * `margin: 0.83em` do agente do usuário.
+ *
+ * Tinta do corpo, não a secundária: a faixa pousa no `--surface-ground`, e ali
+ * `--text-color-secondary` mede 4,34:1 — reprova o 4,5:1 de texto normal. O
+ * mesmo cinza passa (4,76:1) sobre o branco dos cards, que é onde os outros
+ * rótulos miúdos da tela moram.
+ */
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3">
+      <h2
+        className="m-0 text-xs font-semibold tracking-wider uppercase"
+        style={{ color: 'var(--text-color)' }}
+      >
+        {children}
+      </h2>
+      <span aria-hidden="true" className="h-px flex-1" style={{ background: 'var(--surface-border)' }} />
     </div>
   )
 }
@@ -97,21 +127,32 @@ export function DashboardPage() {
       {/* Falha COM cache: aviso ao lado, a tela permanece utilizável (BD-6). */}
       <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.retry} />
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <KpiRow kpis={data.kpis} />
 
-        {/* Duas colunas só a partir de `xl`. Em `lg` a sidebar ainda está
-          * expandida (256px) e cada card caía para ~343px, truncando os 7
-          * rótulos de pendência; em 1280 a truncagem some (UI-04 da revisão de
-          * 2026-08-16). */}
-        <div className="grid gap-4 xl:grid-cols-2">
-          <PendingList items={data.pendencias} />
-          <AlertList items={data.alertas} />
-        </div>
+        <section className="space-y-3">
+          <SectionLabel>{t('dashboard.section.action')}</SectionLabel>
+          {/* Duas colunas só a partir de `xl`. Em `lg` a sidebar ainda está
+            * expandida (256px) e cada card caía para ~343px, truncando os 7
+            * rótulos de pendência; em 1280 a truncagem some (UI-04 da revisão de
+            * 2026-08-16). */}
+          <div className="grid gap-4 xl:grid-cols-2">
+            <PendingList items={data.pendencias} />
+            <AlertList items={data.alertas} />
+          </div>
+        </section>
 
-        {/* Seção nula por gate não renderiza (D6). */}
-        {data.agenda !== null && <AgendaPanel agenda={data.agenda} />}
-        {data.pipeline !== null && <PipelineFunnel stages={data.pipeline} />}
+        {/* Seção nula por gate não renderiza (D6) — e a faixa some junto quando
+          * as DUAS somem, senão o rótulo anunciaria um bloco vazio. */}
+        {(data.agenda !== null || data.pipeline !== null) && (
+          <section className="space-y-3">
+            <SectionLabel>{t('dashboard.section.context')}</SectionLabel>
+            <div className="space-y-4">
+              {data.agenda !== null && <AgendaPanel agenda={data.agenda} />}
+              {data.pipeline !== null && <PipelineFunnel stages={data.pipeline} />}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
 state_basis_commit: 0afdb55
-updated_at: 2026-08-16T14:30:00-03:00
+updated_at: 2026-08-17T11:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,60 @@ updated_at: 2026-08-16T14:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
+
+**Isto não é um `active_work_item` e não muda `workflow_state`.** O estado segue `idle`,
+`active_work_item` segue `null` e `state_basis_commit` segue `0afdb55`. A seção existe porque houve
+escrita de código sem bloco promovido, e escrita não registrada é exatamente o que o
+`/auditar-docs` volta a achar depois como divergência nova.
+
+**Duas invocações do João, na mesma sessão.** Primeiro `/lotus-ui-review dashboard`, que é passo
+dele por `disable-model-invocation: true`; depois, lido o relatório, a instrução de cruzar os
+achados com a skill `frontend-design` e corrigir. Nenhum item do `backlog.md` foi promovido, nenhum
+gate de `/planejar-bloco` correu, e não existem spec nem plano — **por decisão dele, não por
+esquecimento do fluxo.**
+
+**A divergência de registro que o fechamento do B1 deixou aberta fecha aqui.** O
+`/fechar-sprint` de 2026-08-16 escreveu que o `/lotus-ui-review` daquele bloco "rodou mas não deixou
+artefato em `docs/superpowers/audits/`". A execução de 2026-08-17 deixa:
+`audits/2026-08-17-lotus-ui-review-dashboard.md`, com o `report.txt` verbatim, o passe de correção e
+os números medidos antes e depois. A evidência bruta (13 capturas + 5 snapshots da revisão, 10 do
+passe) fica em `.artifacts/ui-review/`, coberta por `.gitignore:24-25` — o relatório é o que se
+versiona, não os PNG.
+
+**A revisão não era redundante, e o próprio fechamento anterior dizia por quê:** `f38585e` tocou
+`DashboardItemRow`, `KpiRow` e `PipelineFunnel` **depois** do commit da revisão visual `3273cbf`,
+sem re-rodar os passos visuais do DoD. Medido agora, as cinco correções de 2026-08-16 se sustentam.
+
+**6 achados B, 0 C, todos corrigidos.** Os números de antes e depois estão na §3.1 do artefato de
+auditoria e não se repetem aqui. A tese de desenho que amarra o passe é uma só: **cor de sinal vive
+em traço e marca; texto fica em contraste cheio** — é o que fecha a UI-04 na raiz, porque o tom sai
+do número (onde precisava de 4,5:1 e entregava 2,86) e vai para o trilho (onde 3:1 basta e entrega
+5,2–5,8).
+
+**Três achados que não estavam no relatório apareceram ao corrigir e entraram junto:** a faixa do
+`AppCardHeader` media 80px para 24px de texto em **todo card da aplicação**; a barra do funil
+reprovava o 3:1 de elemento gráfico contra o próprio trilho nos dois temas; e dois sítios fora do
+Dashboard pintavam texto com `var(--red-500)` cru a 3,52:1 — o caso que a **P-36** descreve.
+
+**O alcance fora do Dashboard está declarado, não descoberto depois:** as quatro tintas de tom mudam
+de valor em ~20 sítios; o `AppCardHeader` encurta nos 8 consumidores; `variant="stat"` também é do
+`BudgetStatCard`, e a tela de orçamento foi conferida no navegador; o link de salto é do shell e
+vale para toda rota protegida.
+
+**Nasce a P-46**, e ela é a causa raiz da UI-02 que este passe **não** fechou: sem Preflight, toda
+tag de bloco herda margem do agente do usuário. A neutralização foi feita onde custava e parou aí —
+o reset escopado mexe no espaçamento de todas as telas de uma vez e é decisão do João.
+
+**Branch `fix/dashboard-revisao-visual-2026-08-17`**, nascida de `main@18bf487`, oito commits de
+código (`abff4be`…`2fc0bd8`) mais este de documentação, um por alteração. Gate: `pnpm lint` exit 0,
+`pnpm build` verde, `pnpm test` **39 arquivos / 223 testes**. Zero mutação de dado.
+`backend/config/cors.php` (WIP do João, o outro lado da P-45) ficou fora de todo `git add` — os
+commits usaram paths exatos.
+
+**Estado: `idle`.** O passe está entregue e o merge é decisão do João. O backlog não promove nada
+sozinho.
 
 ## Último item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
 

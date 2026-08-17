@@ -1,13 +1,13 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { dangerText, infoText, successText, warningText } from '../../styles/tokens'
+import { dangerText, infoText, neutralInk, successText, warningText } from '../../styles/tokens'
 
 export type AppCardVariant = 'default' | 'stat'
 export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
 
 export interface AppCardProps {
   variant?: AppCardVariant
-  /** Tinge fundo e borda em qualquer variante. Em `variant="stat"` tinge
-   * também o texto — lá o número É o sinal semântico. */
+  /** Tinge fundo e borda na variante `default`. Em `variant="stat"` o tom sai
+   * do fundo e do texto e vira TRILHO na borda de início. */
   tone?: AppCardTone
   className?: string
   children: ReactNode
@@ -31,6 +31,11 @@ const TONE_TEXT: Record<AppCardTone, string> = {
   danger: dangerText,
 }
 
+/** Trilho do `stat`. Difere do `TONE_TEXT` só no neutro: como texto, neutro é a
+ * tinta do corpo; como traço, a tinta do corpo seria o mais escuro da fileira e
+ * leria como o mais urgente. */
+const TONE_RAIL: Record<AppCardTone, string> = { ...TONE_TEXT, neutral: neutralInk }
+
 /**
  * Container de conteúdo. Apresentacional puro — não conhece feature nem rota.
  * Compõe-se com AppCardHeader/AppCardToolbar/AppCardFooter; nenhum deles é
@@ -40,24 +45,46 @@ const TONE_TEXT: Record<AppCardTone, string> = {
  * forma. Um card de alerta é `tone="info"` sem variante; um card de estatística
  * é `variant="stat"` com o tom que o número pedir.
  *
+ * **Onde o tom pousa muda com a variante.** Em `default` ele tinge fundo e
+ * borda. Em `stat` ele vira um trilho de 3px na borda de início, e o conteúdo
+ * fica em `--text-color` sobre `--surface-card` — cor de sinal em traço, texto
+ * em contraste cheio. O desenho anterior tingia fundo E número: o número em
+ * aviso media 2,86:1 no tema claro (abaixo até do 3,0:1 de texto grande) e o
+ * rótulo secundário sobre o fundo tingido caía a 4,28–4,41:1 nos quatro tons
+ * (UI-04 do review de 2026-08-17). Como traço, o mesmo tom só precisa de 3:1 e
+ * entrega 4,6–7,4:1; como texto, o número passou de 2,86 para 10,35:1.
+ *
  * Publica `--app-card-tone-text` aos descendentes para que os subcomponentes
  * acompanhem o tom sem recebê-lo por prop.
  */
 export function AppCard({ variant = 'default', tone = 'neutral', className, children }: AppCardProps) {
   const hue = TONE_HUE[tone]
+  const stat = variant === 'stat'
 
   const style: CSSProperties = {
-    background: hue ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
-    borderColor: hue ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
-    // O texto do container só segue o tom em `stat`: numa lista ou tabela,
-    // tingir todo o corpo derruba o contraste em vez de sinalizar.
-    color: variant === 'stat' ? TONE_TEXT[tone] : 'var(--text-color)',
+    background: hue && !stat ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
+    borderColor: hue && !stat ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
+    color: 'var(--text-color)',
+    ...(stat ? { borderInlineStartWidth: '3px', borderInlineStartColor: TONE_RAIL[tone] } : null),
     ['--app-card-tone-text' as string]: TONE_TEXT[tone],
   }
 
   return (
     <div
-      className={['rounded-lg border overflow-hidden', variant === 'stat' ? 'px-5 py-4' : '', className].filter(Boolean).join(' ')}
+      className={[
+        'rounded-lg border overflow-hidden',
+        // O projeto não carrega o Preflight (`index.css:1-9`), então todo `p`
+        // aqui dentro herda `margin: 1em` do agente do usuário — proporcional à
+        // fonte, o que dava 30px acima e abaixo do número do KPI e 75–95px de
+        // área morta por card (UI-02 do mesmo review). O card de estatística é
+        // texto curto e conhecido: zerar aqui é mais barato e mais confiável do
+        // que repetir `m-0` em cada call site, e não reintroduz o reset global
+        // que a decisão do `index.css` recusou.
+        stat ? 'px-4 py-3.5 [&_p]:m-0' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={style}
     >
       {children}
@@ -76,7 +103,12 @@ export interface AppCardHeaderProps {
 /** Cabeçalho de card: título (+ badge de contagem) à esquerda, ação à direita.
  * O título acompanha o tom do card pela var publicada pelo `AppCard`; o badge
  * fica neutro de propósito, para não precisar de uma segunda escala de
- * contraste por tom nos dois temas. */
+ * contraste por tom nos dois temas.
+ *
+ * O `m-0` do título é a mesma correção do `[&_p]:m-0` do `AppCard`: sem
+ * Preflight, o `h3` carrega `margin: 1em` do agente do usuário e a faixa media
+ * 80px de altura para 24px de texto, em TODO card da aplicação. Zerado, ela
+ * passa a valer o `py-3` que o markup declara. */
 export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
   return (
     <div
@@ -85,14 +117,14 @@ export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
     >
       <div className="flex items-center gap-2">
         <h3
-          className="text-base font-semibold"
+          className="m-0 text-base font-semibold"
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
         >
           {title}
         </h3>
         {count !== undefined && (
           <span
-            className="rounded-full px-2 py-0.5 text-xs font-semibold"
+            className="rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums"
             style={{ background: 'var(--surface-section)', color: 'var(--text-color-secondary)' }}
           >
             {count}

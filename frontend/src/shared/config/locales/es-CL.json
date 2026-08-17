@@ -16,6 +16,7 @@
     "language": "Idioma",
     "toggleMenu": "Alternar menú",
     "toggleTheme": "Cambiar tema",
+    "skipToContent": "Saltar al contenido",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
     "save": "Guardar",
@@ -175,6 +176,10 @@
   "dashboard": {
     "welcome": "Bienvenido, {{name}}",
     "subtitle": "Estado operativo actual: qué requiere acción hoy.",
+    "section": {
+      "action": "Requiere acción",
+      "context": "Contexto"
+    },
     "noAccess": {
       "title": "Sin módulos visibles",
       "description": "Tu perfil no tiene permiso de lectura sobre ningún módulo del panel. Solicita acceso a un administrador."
@@ -186,7 +191,7 @@
       "turmasAtrasadas": "Clases atrasadas",
       "conclusoesPorConfirmar": "Conclusiones por confirmar",
       "cotacoesPendentes": "Cotizaciones pendientes",
-      "cotacoesValor": "{{value}} UF pendientes",
+      "cotacoesValor": "{{value}} UF",
       "certificadosAEmitir": "Certificados por emitir"
     },
     "module": {

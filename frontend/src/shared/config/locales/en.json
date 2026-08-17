@@ -16,6 +16,7 @@
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "toggleTheme": "Toggle theme",
+    "skipToContent": "Skip to content",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "save": "Save",
@@ -175,6 +176,10 @@
   "dashboard": {
     "welcome": "Welcome, {{name}}",
     "subtitle": "Current operating status: what needs action today.",
+    "section": {
+      "action": "Needs action",
+      "context": "Context"
+    },
     "noAccess": {
       "title": "No modules visible",
       "description": "Your profile has no read permission on any dashboard module. Ask an administrator for access."
@@ -186,7 +191,7 @@
       "turmasAtrasadas": "Overdue classes",
       "conclusoesPorConfirmar": "Conclusions to confirm",
       "cotacoesPendentes": "Pending quotes",
-      "cotacoesValor": "{{value}} UF pending",
+      "cotacoesValor": "{{value}} UF",
       "certificadosAEmitir": "Certificates to issue"
     },
     "module": {

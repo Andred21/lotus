@@ -16,6 +16,7 @@
     "language": "Idioma",
     "toggleMenu": "Alternar menu",
     "toggleTheme": "Alternar tema",
+    "skipToContent": "Pular para o conteúdo",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "save": "Salvar",
@@ -175,6 +176,10 @@
   "dashboard": {
     "welcome": "Bem-vindo, {{name}}",
     "subtitle": "Estado operacional atual: o que precisa de ação hoje.",
+    "section": {
+      "action": "Requer ação",
+      "context": "Contexto"
+    },
     "noAccess": {
       "title": "Nenhum módulo visível",
       "description": "Seu perfil não tem permissão de leitura sobre nenhum módulo do painel. Solicite acesso a um administrador."
@@ -186,7 +191,7 @@
       "turmasAtrasadas": "Turmas atrasadas",
       "conclusoesPorConfirmar": "Conclusões a confirmar",
       "cotacoesPendentes": "Cotações pendentes",
-      "cotacoesValor": "{{value}} UF pendentes",
+      "cotacoesValor": "{{value}} UF",
       "certificadosAEmitir": "Certificados a emitir"
     },
     "module": {

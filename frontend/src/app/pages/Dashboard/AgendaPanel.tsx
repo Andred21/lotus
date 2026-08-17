@@ -2,15 +2,21 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
 import { formatDate } from '@shared/lib'
+import { dangerText, infoText, neutralInk, warningText } from '@shared/styles/tokens'
 import type { AgendaData, AgendaTurmaData } from '@shared/types/generated'
 
 /** As 4 janelas na ordem em que a operação as lê: o que está atrasado primeiro,
- * o que termina em seguida, e só então o que está em curso e o que começa. */
-const JANELAS: { key: keyof AgendaData; labelKey: string }[] = [
-  { key: 'overdue', labelKey: 'dashboard.agenda.overdue' },
-  { key: 'ending_soon', labelKey: 'dashboard.agenda.endingSoon' },
-  { key: 'in_progress', labelKey: 'dashboard.agenda.inProgress' },
-  { key: 'starting_soon', labelKey: 'dashboard.agenda.startingSoon' },
+ * o que termina em seguida, e só então o que está em curso e o que começa.
+ *
+ * A `ink` diz a mesma coisa que a ordem, em cor: só as janelas COM item
+ * aparecem, então a ordem sozinha não distingue "a primeira coluna é a mais
+ * urgente" de "a primeira coluna é a única que sobrou". É a mesma gramática do
+ * trilho do card de KPI — tom em marca, nunca em texto. */
+const JANELAS: { key: keyof AgendaData; labelKey: string; ink: string }[] = [
+  { key: 'overdue', labelKey: 'dashboard.agenda.overdue', ink: dangerText },
+  { key: 'ending_soon', labelKey: 'dashboard.agenda.endingSoon', ink: warningText },
+  { key: 'in_progress', labelKey: 'dashboard.agenda.inProgress', ink: infoText },
+  { key: 'starting_soon', labelKey: 'dashboard.agenda.startingSoon', ink: neutralInk },
 ]
 
 /** Ancorado ao meio-dia: data ISO pura é lida como UTC e volta um dia num fuso
@@ -54,6 +60,7 @@ function TurmaLinha({ turma }: { turma: AgendaTurmaData }) {
 export function AgendaPanel({ agenda }: { agenda: AgendaData }) {
   const { t } = useTranslation()
   const total = JANELAS.reduce((soma, janela) => soma + agenda[janela.key].length, 0)
+  const preenchidas = JANELAS.filter((janela) => agenda[janela.key].length > 0)
 
   return (
     <AppCard>
@@ -61,14 +68,25 @@ export function AgendaPanel({ agenda }: { agenda: AgendaData }) {
       {total === 0 ? (
         <AppEmptyState icon="pi pi-calendar" title={t('dashboard.agenda.empty')} />
       ) : (
-        <div className="grid gap-0 sm:grid-cols-2">
-          {JANELAS.filter((janela) => agenda[janela.key].length > 0).map((janela) => (
+        // A contagem de colunas segue as janelas PREENCHIDAS, não as quatro
+        // possíveis. Com só uma janela com turma, a grade fixa de duas colunas
+        // deixava 351,5px vazios enquanto, ao lado, o nome do curso truncava
+        // numa caixa de 142px contra 255px de texto — e o `title` só se recupera
+        // por hover, que não existe em toque (UI-01 do review de 2026-08-17).
+        <div className={`grid gap-0 ${preenchidas.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+          {preenchidas.map((janela) => (
             <section key={janela.key}>
               <h4
-                className="px-4 pt-3 pb-1 text-xs font-semibold tracking-wider uppercase"
+                className="m-0 flex items-center gap-2 px-4 pt-3 pb-1 text-xs font-semibold tracking-wider uppercase"
                 style={{ color: 'var(--text-color-secondary)' }}
               >
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 shrink-0 rounded-full"
+                  style={{ background: janela.ink }}
+                />
                 {t(janela.labelKey)}
+                <span className="font-mono font-normal tabular-nums">{agenda[janela.key].length}</span>
               </h4>
               <ul className="m-0 list-none p-0">
                 {agenda[janela.key].map((turma) => (
