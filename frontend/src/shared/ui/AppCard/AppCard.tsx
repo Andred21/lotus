@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { dangerText, infoText, neutralInk, successText, warningText } from '../../styles/tokens'
 
-export type AppCardVariant = 'default' | 'stat'
+export type AppCardVariant = 'default' | 'stat' | 'sunken'
 export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
 
 export interface AppCardProps {
@@ -54,16 +54,30 @@ const TONE_RAIL: Record<AppCardTone, string> = { ...TONE_TEXT, neutral: neutralI
  * (UI-04 do review de 2026-08-17). Como traço, o mesmo tom só precisa de 3:1 e
  * entrega 4,6–7,4:1; como texto, o número passou de 2,86 para 10,35:1.
  *
+ * **`sunken` marca superfície RECUADA, e é a terceira variante.** Ela põe o
+ * cartão em `--surface-ground` — o mesmo fundo que o `AppLayout` já pinta —, com
+ * a borda na cor do fundo em vez de `border: none`, para que o anel suma sem
+ * mexer no box model. Serve ao corte por mutabilidade de `/perfil` (D-28): a
+ * única ideia estrutural daquela tela era expressa só por posição horizontal,
+ * que existe a partir de 1280px, e abaixo disso virava ordem vertical — ordem
+ * sem marca não lê como regra. Recuada, a coluna de leitura se dissolve no fundo
+ * e sobra cartão só onde há o que fazer. A mecânica tem precedente: o
+ * `PipelineFunnel` já usa `--surface-ground` como sulco dentro de um cartão.
+ * Como o `stat`, ela decide a SUPERFÍCIE e deixa o `tone` decidir o acento; ao
+ * contrário do `stat`, não traz padding acoplado.
+ *
  * Publica `--app-card-tone-text` aos descendentes para que os subcomponentes
  * acompanhem o tom sem recebê-lo por prop.
  */
 export function AppCard({ variant = 'default', tone = 'neutral', className, children }: AppCardProps) {
   const hue = TONE_HUE[tone]
   const stat = variant === 'stat'
+  const sunken = variant === 'sunken'
+  const tingido = hue && !stat && !sunken
 
   const style: CSSProperties = {
-    background: hue && !stat ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
-    borderColor: hue && !stat ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
+    background: sunken ? 'var(--surface-ground)' : tingido ? `color-mix(in srgb, ${hue} 8%, var(--surface-card))` : 'var(--surface-card)',
+    borderColor: sunken ? 'var(--surface-ground)' : tingido ? `color-mix(in srgb, ${hue} 35%, var(--surface-border))` : 'var(--surface-border)',
     color: 'var(--text-color)',
     ...(stat ? { borderInlineStartWidth: '3px', borderInlineStartColor: TONE_RAIL[tone] } : null),
     ['--app-card-tone-text' as string]: TONE_TEXT[tone],
