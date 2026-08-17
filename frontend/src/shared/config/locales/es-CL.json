@@ -255,7 +255,8 @@
     "module": "Módulo en construcción."
   },
   "profile": {
-    "subtitle": "Tus datos personales, tu seguridad y tu documentación profesional.",
+    "subtitleRedator": "Tus datos personales, tu seguridad y tu documentación profesional.",
+    "subtitleAdmin": "Revisa tus datos y administra tu contraseña.",
     "loadError": "No se pudo cargar tu perfil",
     "identity": {
       "title": "Identidad",

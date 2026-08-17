@@ -21,11 +21,19 @@ export function ProfilePage() {
   const { data: profile, isLoading, loadError, errorDetail, failedWithoutData, refetch } =
     useProfilePage()
 
+  // O MESMO predicado que ramifica o corpo (linhas do `profile.redator` abaixo),
+  // não uma checagem de role: o backend já decide quem tem perfil profissional,
+  // e `usePermissions`/`can()` é conveniência de interface, não autoridade
+  // (ADR-07). Enquanto o subtítulo não ramificava, o Admin lia
+  // "…y tu documentación profesional" e rolava até o fim para descobrir que a
+  // seção não existe — e a frase já enganou uma medição de fechamento (D-26).
+  const subtitulo = profile?.redator ? t('profile.subtitleRedator') : t('profile.subtitleAdmin')
+
   if (isLoading) return <AppDetailSkeleton />
 
   if (failedWithoutData || !profile) {
     return (
-      <ModulePage title={t('userMenu.profile')} description={t('profile.subtitle')}>
+      <ModulePage title={t('userMenu.profile')} description={subtitulo}>
         <AppErrorState
           title={t('profile.loadError')}
           detail={errorDetail ?? t('common.loadErrorHint')}
@@ -37,7 +45,7 @@ export function ProfilePage() {
   }
 
   return (
-    <ModulePage title={t('userMenu.profile')} description={t('profile.subtitle')}>
+    <ModulePage title={t('userMenu.profile')} description={subtitulo}>
       <InlineLoadState
         error={loadError ? (errorDetail ?? t('common.loadErrorHint')) : null}
         retryLabel={t('common.retry')}
