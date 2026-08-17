@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
 state_basis_commit: c2ac9d4
-updated_at: 2026-08-17T12:31:00-03:00
+updated_at: 2026-08-17T12:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -135,6 +135,76 @@ consumidor autenticável. A classificação final é do `/revisar-sprint`, não 
 
 **Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
 `feat/dashboard-frontend-analitico-e-redator` a partir de `main@c2ac9d4`.
+
+### Context Packet — 2026-08-17: a metade externa foi verificada por conta própria
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `e48b4ae`) e validado contra o
+contrato da skill item a item: marcadores exatos e nada fora deles, frontmatter completo com
+`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha` corretamente em **`null`** (registrados, não
+inventados, porque os ponteiros do estado eram `null`), **8 key facts** — o teto exato —, corpo em
+**718 palavras** contra o orçamento de 1.200, toda fonte com status `retrieved` (nenhuma
+`unavailable`, então a regra das duas evidências não se aplica), e **nenhum staleness trigger**
+apontando para hash de proveniência, para a transição promotora ou para edição de `state.md` que só
+move campo de workflow. Salvo em
+`docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md`.
+
+**Os três hashes de proveniência foram medidos antes da invocação e batem:** `base_commit`
+`e48b4aebedc0…`, `state_blob_sha` `98f93dac…` e `progress_blob_sha` `04ded854…`, obtidos por
+`git rev-parse`/`git hash-object` e não aceitos de chegada.
+
+**Seis afirmações de repositório foram medidas contra o código antes de salvar o packet, e as seis
+batem:** `SeriesData` tem as cinco séries com os nomes que o packet lista e **cada uma anulável**
+(`generated.ts:454-460`); `TurmaComplianceData` e `RedatorLoadData` batem campo a campo com o que o
+packet atribui ao Drive (`present_types`/`missing_types`/`habilitada`/`redatores`/datas e
+`current_turmas`/`upcoming_turmas`/`expired_documents`/`expiring_documents`); `DashboardPage.tsx:71`
+chama `useDashboard()` **sem período**, como o packet afirma; os dois blob SHAs dos packets citados
+como insumo batem exatamente; a spec do B1 (linha 16) confirma o corte da D1; e a D3 do bloco A está
+verbatim onde o packet a cita.
+
+**A metade externa não foi aceita de chegada — foi remedida por ferramenta própria, porque ela é a
+parte que só o Codex tinha visto.** O Drive `1HlT8kUsnoGsRJpYmryHacZ8zBZnDQgRa` existe, é
+`dashboard-escopo-funcional-analitico.md` e tem `modifiedTime` **`2026-08-14T18:38:17.992Z`** —
+idêntico ao que o registro de fontes declara. E a EAP 8.4.0 foi buscada direto pelo ID
+`3bcbc960-3dfa-81c8-9df1-de7d7805816b`.
+
+**A troca 8.4.0 × 8.4.7 PERSISTE, e agora está medida em terceira mão independente.** A 8.4.0 tem
+título "Estruturar domínio read-only Dashboard e dependências cross-domain", `Camada: Backend` e
+`ADR ref: ADR-02` — **título, camada e ADR corretos** —, enquanto a `Descrição` diz "Validar a
+central do Dashboard com harness/lotus-ui-review" e o `Critério de aceite` diz "UI review não
+encontra falhas bloqueantes de hierarquia, leitura, overflow ou estados". O `parent-data-source` é
+`collection://e64b7d57-d000-4433-b652-a410e75193cc`, **a base canônica** — não a homônima obsoleta
+que produziu 12 divergências falsas em 2026-07-30. A resolução é a de sempre: o Drive decide o
+escopo, e a UI review pertence ao frontend.
+
+**A medição direta trouxe um fato que o packet não destaca e que muda o DoD deste bloco:** o corpo
+de UI review da 8.4.0 exige validar "separadamente perfil administrativo e Redator" e, para o
+Redator, "ownership visual, ausência de dados comerciais/terceiros". **O B1 não podia satisfazer
+isso** — ele não tinha view do Redator. O aceite da 8.4.0 só fecha inteiro aqui.
+
+**Uma linha do packet foi medida e não é divergência de verdade, e fica registrada em vez de
+aceita.** A terceira linha da tabela ("Alcance do período") opõe o Drive à D3 local; medido, a
+própria D3 cita **"§5 do Drive"** como base — ela deriva do Drive, não o contradiz. A resolução
+registrada continua correta (só séries e rankings obedecem ao período), então **isto não foi motivo
+de re-invocação**: nenhum item da validação da skill é violado, e o custo é registro a mais, não
+decisão errada. Mesmo padrão do packet do B1, onde a medição também mostrou convergência onde o
+packet via imposição externa.
+
+**Uma tensão entre o packet e esta promoção fica declarada em vez de resolvida em silêncio.** A
+seleção acima escreveu que o gatilho da **P-44** vence aqui; o packet põe a limpeza em `Deferred`.
+Medida a ficha (`pendencias/abertas.md:369-371`), o gatilho é "quando um bloco puder reseedar o banco
+de dev, **ou** quando a residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o
+primeiro candidato: a tela vai mostrar estes nomes)". As duas leituras cabem: a tela **vai** mostrar
+os nomes de sonda, e este bloco **não** pode reseedar. É decisão do João no brainstorming, não
+escolha por heurística.
+
+**`status: ready`, e as duas open questions não bloqueiam:** ambas são de **apresentação** — qual
+chart lib e qual visualização por dataset, e qual UX do seletor de período —, e o Drive delega essa
+decisão ao frontend, o mesmo teste que o packet do B1 passou. Nenhuma regra de negócio, critério de
+aceite ou comportamento de peso legal ficou por adivinhar, que é o teste da própria skill para
+`blocked`.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
