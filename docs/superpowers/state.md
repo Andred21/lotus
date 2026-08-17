@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
-state_basis_commit: d8c401f
-updated_at: 2026-08-17T14:05:00-03:00
+state_basis_commit: 135e468
+updated_at: 2026-08-17T16:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -90,6 +90,30 @@ outro motivo"*) foi disparado pelo DS-01 da auditoria.
 **Colisão de ID encontrada e não corrigida.** Existem dois `D-18` no `backlog.md`: a data do
 `AppFileRow` (que este bloco cobre) e o `description` em espanhol fixo do Dashboard, em "Travados em
 decisão". Renumerar é decisão do João — está anotado nas duas linhas.
+
+### Planejamento — brainstorming fechado em 2026-08-17
+
+**Spec:** `specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md`. Oito decisões escolhidas pelo
+João (D1–D8) e sete derivadas (D9–D15). Executor `claude`, worktree `fix-frontend`, branch
+`feat/bd16-perfil-e-kit-compartilhado` a partir de `main@135e468`. Falta o plano; depois dele o
+estado vai a `ready_for_execution`.
+
+**Duas divergências medidas contra o que estava escrito, e o que venceu:**
+
+1. **`FormSection` tem 16 consumidores, não 11.** A ficha da P-36 mediu 11 em 2026-08-13; os cinco
+   arquivos de `Profile/` nasceram depois, e o DoD do BD-16 no `backlog.md` herdou o número velho.
+   **Vence a medição de hoje.** A correção do registro sai no fechamento, junto do encerramento das
+   duas pendências — auditoria reporta, não corrige no meio do bloco.
+2. **O `aria-pressed` que a D-24 pede foi RECUSADO com motivo.** `AppPassword.tsx:50-57` registra a
+   decisão de 2026-08-13 (UI-04): o olho é botão, não `switch`, porque o **nome** dele alterna a cada
+   clique — e o `aria-checked` do Prime foi removido justamente por mentir sobre o estado. Pendurar
+   `aria-pressed` num botão cujo nome já carrega o estado o anuncia duas vezes. A D-24 fecha pela
+   metade do teclado (Espaço); a metade do `aria-pressed` não entra. Está na D6 da spec.
+
+**Um risco que pode reabrir a DS-05 durante a execução.** A faixa horizontal da D8 esbarra no
+`transform scale-200` do `AppPhotoField`, e a DS-05 está fora do bloco. Se a faixa recortar no
+navegador, a decisão volta ao João: ou a DS-05 entra, ou a faixa fica só na parte de baixo do
+cartão. Medir antes de escrever o layout.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
