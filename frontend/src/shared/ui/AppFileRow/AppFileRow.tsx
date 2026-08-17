@@ -58,7 +58,17 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
     // redator e perfil —, e um breakpoint acertaria uma e erraria três. O
     // contra-exemplo que isolou a causa é o REUF: sem botão de upload, ele mede
     // `scrollWidth` = `clientWidth` e não vaza.
-    <div className="flex flex-wrap items-center gap-3">
+    // `justify-end` é da LINHA e vale só depois que ela quebra: enquanto tudo
+    // cabe numa linha, o bloco de nome é `flex-1` e come a folga inteira, então
+    // não há espaço para distribuir e nada se mexe (medido: em 1440px os quatro
+    // slots do perfil mantêm nome de 413/556px e `Ver` em x=1290 com e sem a
+    // classe). Quando o grupo de ações desce, ele passa a ser o único item da
+    // segunda linha, e sem isto ancorava à ESQUERDA: em 390px o slot do REUF
+    // punha `Ver` em x=122 enquanto os outros dois, que ainda cabiam ao lado,
+    // ficavam em x=248 — a coluna de ação deixava de ser uma coluna, que é
+    // justamente o que a D-22 mediu em 1440px (x=1132 contra x=1275). Com a
+    // âncora à direita os três voltam a x=248.
+    <div className="flex flex-wrap items-center justify-end gap-3">
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
         style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}

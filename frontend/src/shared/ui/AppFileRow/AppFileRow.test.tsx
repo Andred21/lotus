@@ -70,6 +70,19 @@ describe('AppFileRow', () => {
     expect(nome.parentElement?.className).toContain('basis-40')
   })
 
+  it('ancora a linha a direita, senao o grupo que QUEBROU volta para a esquerda', () => {
+    // D-22 medida de novo no gate, agora em 390px: o slot do REUF punha `Ver` em
+    // x=122 e os outros dois, que ainda cabiam ao lado do nome, em x=248 — a
+    // coluna de acao deixava de ser coluna assim que UM slot quebrava. Inerte
+    // enquanto tudo cabe numa linha: o bloco de nome e `flex-1` e nao sobra
+    // folga para distribuir (1440px, com e sem a classe: `Ver` em x=1290).
+    const { container } = render(
+      <AppFileRow name="cv.pdf" actions={<button type="button">Ver</button>} />,
+    )
+
+    expect(container.firstElementChild?.className).toContain('justify-end')
+  })
+
   it('usa font-mono na linha de metadados', () => {
     // D-29: data e tamanho sao dado tecnico, e o token ja existe
     // (`index.css`). Alcanca comercial, turma e redator, que e consistencia.
