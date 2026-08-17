@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: sprint-5-dashboard
-active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md
-active_plan: docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md
-context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
-last_completed_work_item: dashboard-frontend-central-controle
-state_basis_commit: c2ac9d4
-updated_at: 2026-08-17T18:20:17-03:00
+last_completed_work_item: dashboard-frontend-analitico-e-redator
+state_basis_commit: 121ee1b
+updated_at: 2026-08-17T19:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -208,7 +208,7 @@ aceite ou comportamento de peso legal ficou por adivinhar, que é o teste da pr�
 
 ### Brainstorming e spec — 2026-08-17: o terreno mudou três decisões
 
-Spec em `docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md`, com
+Spec em `docs/superpowers/specs/archive/2026-08-17-dashboard-frontend-analitico-e-redator-design.md`, com
 **treze decisões**: D1–D10 escolhidas pelo João entre alternativas com o custo declarado, D11–D13
 derivadas e declaradas como tais.
 
@@ -268,7 +268,7 @@ escrita e autorizar o `writing-plans`.
 ### Plano — 2026-08-17: escrever o plano derrubou o mecanismo de uma decisão aprovada
 
 **O João aprovou a spec sem pedir mudança**, e o plano saiu em
-`docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md`: **onze tasks**, uma
+`docs/superpowers/plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`: **onze tasks**, uma
 por commit, na ordem paleta → wrappers → hook → pastas → régua → período → séries → rankings →
 compliance/carga → Redator → DoD.
 
@@ -409,6 +409,126 @@ do João) fora de todo `git add`.
 **Estado: `ready_for_review`.** `active_spec`, `active_plan` e `context_packet` **permanecem
 preenchidos** — quem os arquiva é o `/fechar-sprint`. Próxima ação: revisão de código do bloco, por
 instrução explícita do João; este commit **não** a inicia.
+
+### Revisão de código — 2026-08-17: 4 achados, nenhum de lei, e uma classe repetida do B1
+
+`/revisar-sprint` sobre `main..891bcdc` (16 commits, 50 arquivos). O estado passou por `reviewing`,
+parou em `blocked` para a decisão do João, e voltou a `reviewing` com **os quatro achados
+aprovados**. Todos corrigidos — o passe está registrado logo abaixo.
+
+**Risco: BAIXO pelo gate binário, remedido e não herdado da spec** — `git diff main...HEAD -- backend/`
+e `-- generated.ts` vazios, zero import de `primereact` fora de `shared/ui`, nada de Sanctum,
+auditoria, RBAC ou documento legal. **Sem segunda lente do Codex**, que a skill só exige em alto
+risco. Gate remedido nesta sessão: `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos / 262
+testes** — os mesmos números do fechamento.
+
+**Órfãos: nenhum.** Os 13 arquivos novos têm consumidor; `recharts` tem importador; as 3 chaves i18n
+novas existem idênticas nas 3 locales (658 chaves, zero divergência medida).
+
+**Um falso positivo morreu na medição, e fica escrito para não renascer:** a sombra de rolagem do
+UI-10 pinta as capas com `var(--surface-card)` e o `StudentDetailSections` põe `AppDataTable` dentro
+de um `Dialog`, cuja superfície é `--surface-overlay`. Medido, `--surface-card` e `--surface-overlay`
+são **o mesmo hex** nos dois temas (`#ffffff` / `#1e293b`) — não há banda de cor a aparecer, e o
+alcance da mudança em `shared/ui` não é achado.
+
+| Achado | Severidade | Esforço |
+|---|---|---|
+| Q-1 · o aviso de falha some para o admin sem seção analítica | 🟡 | P |
+| Q-2 · a métrica UF é oferecida com o gate comercial fechado e o vazio mente | 🟡 | P |
+| Q-3 · a âncora de meio-dia é copiada em 5 sítios, 2 deles novos | 🟡 | P |
+| Q-4 · `retry` é campo sem consumidor nas duas variantes `ready` | 🟢 | P |
+
+**Nada aqui viola as leis §5.** O relatório completo (trecho encontrado, versão alvo, princípio e
+consequência) está na sessão.
+
+### Passe de correção — 2026-08-17: os 4 achados aprovados, aplicados
+
+**O João aprovou os quatro**, e os quatro estão corrigidos. O que mudou, achado a achado:
+
+- **Q-1 — `admin/AdminView.tsx`.** A condição da seção de análise virou `temAnalise`, e o
+  `InlineLoadState` do admin passa a existir também **fora** dela: quando não há `series` nem
+  `rankings`, não há `PeriodFilter` — e era dentro dele que o único aviso de falha do ramo admin
+  morava. Os dois sítios são mutuamente exclusivos, então nenhum papel vê o aviso duas vezes. O caso
+  medido é o papel só com `identity.user.view`, que é `ready-admin` pelos alertas e tinha as duas
+  seções nulas: um refetch falho ficava mudo e a tela seguia com dado velho.
+- **Q-2 — `admin/RankingsPanel.tsx`.** `metricasDisponiveis(rankings)` remove a opção `uf_aprovada`
+  quando **toda** linha a traz nula. Isso equivale exatamente ao gate comercial fechado:
+  `rankingRows` preenche `'0.0000'` sempre que `includeUf` é verdadeiro
+  (`AnalyticsQuery.php:319`), e `includeUf` é `$canCommercial` (`AdminDashboardAssembler.php:204`) —
+  medido, não inferido. A seção deixa de renderizar "não pode ler" como "não há", e passa a falar a
+  mesma língua do `SeriesPanel`, que já escondia a série de UF pelo mesmo gate. `turmas` é o valor
+  inicial e nunca sai da lista, então não há estado apontando para opção inexistente.
+- **Q-3 — `shared/lib/datetime.ts` + 5 sítios.** A âncora de meio-dia virou a função interna
+  `meioDia`, e nasceu `formatIsoDate` ao lado do `formatMonthYear`, que agora a compõe. As cinco
+  cópias morreram: `AgendaPanel`, `DashboardItemRow`, `admin/CompliancePanel`,
+  `redator/PendenciasList` e `certification/.../ValidationPage` (esta mantém `formatDate` para
+  `revoked_at`, que é timestamp e não data pura). Dois testes novos guardam a regra em
+  `datetime.test.ts`, sem depender do fuso da máquina: a data ISO tem de cair no mesmo dia do
+  calendário **local**, e o `new Date(iso)` cru só coincide com ela fora dos fusos a oeste.
+- **Q-4 — `useDashboard.ts`.** `retry` saiu das duas variantes `ready`; repetir agora é oferecido
+  só onde a tela oferece — `retry` no ramo `error` (`AppErrorState`) e `staleRetry` nos `ready`
+  (`InlineLoadState`). O único consumidor do campo morto era o teste do BD-6, que passou a forçar o
+  refetch pelo `queryClient.refetchQueries()` — o que o TanStack Query faz sozinho no produto
+  (montagem, foco), e não uma porta que só o teste usava.
+
+**Gate remedido depois das correções:** `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos /
+264 testes** (262 + os 2 do `formatIsoDate`).
+
+**Estado: `ready_for_closure`.** Nenhum achado aguarda decisão ou correção. Próxima ação:
+`/fechar-sprint`, por instrução explícita do João — a skill de review não fecha sozinha.
+
+### Fechamento — 2026-08-17: o B2 fecha, e a P-45 vence o gatilho pela segunda vez
+
+`/fechar-sprint` sobre `dashboard-frontend-analitico-e-redator`, com o estado em `ready_for_closure`
+e sem argumento a conferir.
+
+**Item 0 — o critério de aceite do bloco, remedido contra a API real e não pela suíte.** As duas
+correções que mudaram comportamento observável mexem no mesmo lugar do DoD 4 (o gate `null` da D7),
+então é ele que se reprova. Papel-sonda criado e removido por API, como o plano manda:
+
+- **`sonda-cierre-op-cert`** (`operation.turma.view` + `certification.certificate.view`, **sem**
+  comercial) → `rankings` presente com 4 cursos e 4 clientes, **`uf_aprovada` nula em todas**, e
+  `series.uf_aprovada` nula. É o payload exato em que a métrica de UF era oferecida e devolvia
+  empty state; agora a opção não existe.
+- **`sonda-cierre-identity`** (só `identity.user.view`) → `series` e `rankings` **nulas**, todo KPI
+  nulo, pipeline/agenda/compliance/redatores nulos. Com `alertas: []` a tela é `unauthorized` — e
+  foi isso que a primeira medição devolveu. **Para provar que o Q-1 não era teórico**, um
+  `valid_until` de documento de relator foi movido para dentro do horizonte e restaurado em seguida
+  (doc 1, de `2028-08-10` para ontem e de volta): com **um** alerta, `nenhumaSecaoLegivel` é falso,
+  a tela é `ready-admin` e as duas seções analíticas continuam nulas. O caso é alcançável, a
+  correção não é código morto.
+
+As sondas saíram: `users` com `sonda.cierre.b2@lotus.cl` = 0, `roles like 'sonda-cierre%'` = 0.
+
+**Item 1 — `php artisan test`: ❌ registrado, e é a P-45.** `12 failed / 672 passed / 5 skipped`,
+todos `RuntimeException: Session store not set on request.` Com
+`FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
+diferença é a variável, não o código: `tests/TestCase.php:18` manda `Referer` com o valor cru de
+`FRONTEND_URL`, que no `.env` do João já é lista de duas origens. Números idênticos aos do
+fechamento do B1 — **o gatilho da P-45 venceu**, e ela segue com o João, porque o fechamento de um
+bloco de frontend não abre arquivo de backend.
+
+**Itens 2 a 6.** Front: `pnpm lint` exit 0, `pnpm build` verde, 44 arquivos / 264 testes. Pint e
+`typescript:transform`: **N/A por escopo medido** — `git diff main...HEAD -- backend/` e
+`-- generated.ts` vazios, e nenhum DTO mudou. Código morto: o passe de correção **removeu** cinco
+helpers locais e não criou nenhum; zero órfão no review. Leis §5: nenhuma contrariada — o único
+`primereact` fora de `shared/ui` é `shared/config/primeLocale.ts`, que não é feature.
+`backend/config/cors.php` ficou fora de todo `git add`, como em todos os commits deste bloco.
+
+**Item 7 — pendências.** Dois gatilhos venceram e nenhuma pendência nasceu. A **P-45** ganhou a
+segunda medição, nos dois sentidos. A **P-44** apontava para este bloco: ele fechou **declarando** a
+residência pela D10 em vez de apagá-la, e as sondas do próprio gate não engrossaram a lista. A P-34,
+única encerrada, **fica** — foi fechada dentro da Sprint 5, que só agora termina, e o rastro é de uma
+sprint, não de um bloco.
+
+**Itens 8 e 9.** Plano e spec arquivados (`plans/archive/`, `specs/archive/`), com as referências
+atualizadas aqui e no `progress.md`. O `progress.md` voltou ao teto de dez entregas — as duas mais
+antigas (BD-8 e BD-9, ambas de 2026-08-13) foram para o `progress-archive.md` **verbatim**. O item 2
+do Sprint 5 saiu do `backlog.md`; **nenhum item foi promovido**.
+
+**Estado: `idle`.** `last_completed_work_item: dashboard-frontend-analitico-e-redator`,
+`state_basis_commit: 121ee1b` — o commit do passe de correção, que é o último a provar a entrega.
+Próxima ação: **o João escolher o próximo item do `backlog.md`.** A Sprint 5 não tem bloco restante.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 

@@ -34,35 +34,21 @@ Central read-only operacional e analítica, com experiências distintas para Adm
 - **Exige `context_required`** antes do planejamento — o escopo é canônico do Drive, não do
   repositório, então o Context Packet vem antes do `/planejar-bloco`.
 
-**Bloco restante** (o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15 e o bloco
-B1, `dashboard-frontend-central-controle`, em 2026-08-16 — ver `historico/progress.md`; o contrato do
+**Nenhum bloco restante** — o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15;
+o B1, `dashboard-frontend-central-controle`, em 2026-08-16; e o B2,
+`dashboard-frontend-analitico-e-redator`, em 2026-08-17 (ver `historico/progress.md`). O contrato do
 payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` e os tipos, em
-`generated.ts`):
+`generated.ts`:
 
 1. ~~**`dashboard-frontend-central-controle`** (B1)~~ — entregue em 2026-08-16
    (`plans/archive/2026-08-15-dashboard-frontend-central-controle.md`). Levou as 5 seções que
    respondem *"o que tenho para fazer agora"*: KPIs, pendências, alertas, agenda e pipeline.
-2. **`dashboard-frontend-analitico-e-redator`** (B2) — a outra metade do bloco B, criada pelo corte
-   da **D1** da spec do B1 (2026-08-15). Responde *"como a operação evoluiu"*: as 5 séries mensais,
-   os 2 rankings, `compliance_turmas`, a carga de redatores e **a view do Redator inteira**.
-
-   **Três coisas que o B1 empurrou para cá, medidas e não supostas:**
-
-   - **A decisão de biblioteca de gráficos é deste bloco.** Não existe chart lib no projeto:
-     `package.json` não tem `chart.js` — peer obrigatório do `Chart` do PrimeReact — nem alternativa,
-     e não há wrapper de chart em `shared/ui`. O B1 pôde ser entregue sem ela porque as 5 seções
-     dele não têm gráfico; as 5 séries mensais daqui têm.
-   - **O filtro de período nasce aqui.** A D3 da spec do bloco A fixou que estado operacional ignora
-     o período — só séries e rankings o obedecem. O `useDashboard` do B1 já nasceu **com o
-     parâmetro** e sem UI (D5), então este bloco liga a tela sem mexer no cache.
-   - **A D-16** (turma concluída sem matrícula caindo em `fully_issued` no funil) esperava o
-     consumidor dizer se a distinção paga. O consumidor do funil é o B1, e ele **não pediu** a
-     distinção — a linha segue no BD-15 com o gatilho intacto.
-
-   **Duas dependências externas ao bloco, já registradas:** a **P-44** (dois usuários de sonda
-   aparecem na carga de redatores) tem o gatilho apontando para cá; e o item 4 de "Próximos blocos"
-   (ativação de acesso do redator) **bloqueia o valor da view do Redator** — nenhum redator autentica
-   hoje. Nenhum dos dois é escopo deste bloco.
+2. ~~**`dashboard-frontend-analitico-e-redator`** (B2)~~ — entregue em 2026-08-17
+   (`plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`). Levou a outra metade:
+   as 5 séries mensais, os 2 rankings, `compliance_turmas`, a carga de redatores e a view do
+   Redator inteira. **A P-44 continua aberta** — a carga mostra dois usuários de sonda, declarados
+   pela D10 em vez de apagados —, e o item 4 de "Próximos blocos" (ativação de acesso do redator)
+   segue bloqueando o VALOR da view do Redator: nenhum redator autentica hoje.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
 compliance e análises.

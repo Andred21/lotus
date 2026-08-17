@@ -37,13 +37,13 @@ ou de escrita fora do repositório.
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**; revisar 2026-10-31 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
 | P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
-| P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev, ou `dashboard-frontend-analitico-e-redator` (B2); revisar 2026-10-31 |
+| P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev (o B2 fechou declarando pela D10, não apagando); revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
-| P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | João | commit que fechar o multi-origin (o `cors.php` com `explode` já está no working tree); revisar 2026-10-31 |
+| P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | João | **gatilho vencido** (2º fechamento com a suíte vermelha por isso, 2026-08-17); espera o commit que fechar o multi-origin; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | João | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | João | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | João | fecha junto da P-02, ou antes de produção |
