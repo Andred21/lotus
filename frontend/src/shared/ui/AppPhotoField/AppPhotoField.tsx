@@ -77,10 +77,18 @@ export function AppPhotoField({
               onSizeReject={onSizeReject}
             />
             {url && (
+              // `severity="danger"`, não `dangerText` inline: é BOTÃO, e botão
+              // recebe severidade — a tinta vem da folha do Prime, sem hex novo
+              // (ADR-16). Antes, `Eliminar foto` era texto celeste logo abaixo do
+              // `Reemplazar` celeste PREENCHIDO: das duas, a destrutiva tinha o
+              // MENOR peso visual, e lia como "menos importante" em vez de "mais
+              // perigosa" (D-30). É o caso pior do acúmulo de papéis que a P-36
+              // registra — a mesma tinta em ação primária e em ação que apaga.
               <AppButton
                 label={t("photo.remove")}
                 icon="pi pi-trash"
                 text
+                severity="danger"
                 disabled={pending}
                 onClick={onRemove}
               />
