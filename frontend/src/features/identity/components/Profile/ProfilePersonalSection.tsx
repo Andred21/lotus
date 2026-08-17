@@ -40,11 +40,16 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
         <FormErrorBanner message={generalError} />
         <FormErrorSummary errors={fieldErrors} mapped={['name', 'phone']} />
 
+        {/* `disabled` durante o PUT (spec §7). Sem ele o campo aceita digitação
+            que a requisição em voo NÃO leva: o toast de sucesso aparecia sobre
+            um texto na tela que nunca chegou ao servidor, e o refetch só o
+            desmentia depois. */}
         <FormField label={t('profile.personal.name')} error={fieldErrors?.name?.[0]}>
           <AppInputText
             className="w-full"
             autoComplete="name"
             value={form.name}
+            disabled={pending}
             onChange={(e) => set('name', e.target.value)}
           />
         </FormField>
@@ -54,6 +59,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             className="w-full"
             autoComplete="tel"
             value={form.phone}
+            disabled={pending}
             onChange={(e) => set('phone', e.target.value)}
           />
         </FormField>

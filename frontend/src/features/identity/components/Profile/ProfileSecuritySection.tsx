@@ -65,6 +65,11 @@ export function ProfileSecuritySection({ email }: { email: string }) {
         <FormErrorBanner message={generalError} />
         <FormErrorSummary errors={fieldErrors} mapped={MAPEADOS} />
 
+        {/* `disabled` durante o PUT (spec §7). Aqui não é só cosmética: o
+            sucesso limpa o formulário inteiro (`setForm(VAZIO)`), então o que
+            fosse digitado no meio do voo era APAGADO sem aviso — e o que se
+            digita neste formulário é senha, que não se recupera relendo a
+            tela. */}
         <FormField
           label={t('profile.security.currentPassword')}
           error={fieldErrors?.current_password?.[0]}
@@ -72,6 +77,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
           <AppPassword
             autoComplete="current-password"
             value={form.current_password}
+            disabled={pending}
             onChange={(e) => set('current_password', e.target.value)}
           />
         </FormField>
@@ -80,6 +86,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
           <AppPassword
             autoComplete="new-password"
             value={form.password}
+            disabled={pending}
             onChange={(e) => set('password', e.target.value)}
           />
         </FormField>
@@ -91,6 +98,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
           <AppPassword
             autoComplete="new-password"
             value={form.password_confirmation}
+            disabled={pending}
             onChange={(e) => set('password_confirmation', e.target.value)}
           />
         </FormField>
