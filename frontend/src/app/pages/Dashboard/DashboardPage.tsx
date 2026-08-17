@@ -36,10 +36,16 @@ function DashboardSkeleton() {
  * `m-0` pelo mesmo motivo do `AppCardHeader`: sem Preflight, o `h2` traria
  * `margin: 0.83em` do agente do usuário.
  *
- * Tinta do corpo, não a secundária: a faixa pousa no `--surface-ground`, e ali
- * `--text-color-secondary` mede 4,34:1 — reprova o 4,5:1 de texto normal. O
- * mesmo cinza passa (4,76:1) sobre o branco dos cards, que é onde os outros
- * rótulos miúdos da tela moram.
+ * Tinta do corpo, não a secundária. A razão ORIGINAL era contraste: a faixa
+ * pousa no `--surface-ground`, e ali a secundária de então (`#64748b`) media
+ * 4,34:1 — reprovava o 4,5:1 de texto normal, embora passasse raspando (4,76:1)
+ * sobre o branco dos cards, onde moram os outros rótulos miúdos da tela.
+ *
+ * Essa razão MORREU no BD-16 (D-28): a secundária do claro desceu ao slate-600
+ * e hoje mede 6,92:1 no humo — ver o bloco `html:not(.dark)` do
+ * `brand-theme.css`. A tinta de corpo fica assim mesmo, agora por hierarquia e
+ * não por régua: é um `h2`, e o degrau que ele marca vem do peso e da caixa
+ * alta, não de um cinza mais claro que o dos rótulos que ele encabeça.
  */
 function SectionLabel({ children }: { children: ReactNode }) {
   return (

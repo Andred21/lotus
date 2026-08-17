@@ -9,13 +9,16 @@ import type { RedatorProfileData } from '@shared/types/generated'
  * Só cursos: `turmas_em_andamento`, `proximas_turmas` e `pendencias` saíram do
  * contrato pelo corte D1 do bloco 1, que evitou a aresta Identity → Operation.
  * Eles vivem no Dashboard, e o CTA abaixo é o caminho até lá.
+ *
+ * Recuado como o cartão de identidade (D-28): é leitura, não self-service. O CTA
+ * para o Dashboard é NAVEGAÇÃO, não mutação, e não abre exceção na regra.
  */
 export function ProfileSummaryCard({ redator }: { redator: RedatorProfileData }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
-    <AppCard className="p-4">
+    <AppCard variant="sunken" className="p-4">
       <FormSection title={t('profile.summary.title')} />
 
       <div className="mt-3 flex items-baseline justify-between gap-2">

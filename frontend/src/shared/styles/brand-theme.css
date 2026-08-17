@@ -110,6 +110,29 @@
  * traço vale por especificidade, não por ordem. */
 html:not(.dark) {
   --surface-ground: #f1f5f9;
+
+  /* O degrau que a rampa do tema pula (decisão do João, 2026-08-17, D-28).
+   *
+   * O gerado dá `#64748b` (slate-500) à tinta secundária, e ele mede 4,34:1
+   * sobre o humo — reprova o 4,5:1 de texto normal assim que um bloco pousa no
+   * FUNDO da aplicação em vez do card branco, onde os mesmos 4,76:1 passavam
+   * raspando. Não é achado novo: o `SectionLabel` do Dashboard mediu este mesmo
+   * 4,34 e escapou trocando por tinta de CORPO. Essa saída não serve ao perfil
+   * recuado do BD-16, porque lá a secundária é o RÓTULO do `FormField` em
+   * leitura — em tinta de corpo, rótulo e valor ficam no mesmo cinza e no mesmo
+   * `text-sm`, e o par "E-mail / joao@…" perde a hierarquia.
+   *
+   * `#475569` é o slate-600, e a rampa do tema realmente o pula: `--surface-500`
+   * é o slate-500 e `--surface-600` já é o slate-700 (`#334155`, a tinta de
+   * corpo). Mede 6,92:1 sobre o humo e 7,58:1 sobre o branco, contra 4,34/4,76.
+   *
+   * Escopado ao claro porque no escuro não há o que consertar: a secundária de
+   * lá é `rgba(255,255,255,0.6)` e mede 7,16:1 sobre o noche. E vale só para
+   * quem consome a VAR — os 117 `#64748b` literais que o gerador escreve dentro
+   * das regras do Prime seguem como estão, de propósito: o que a régua do bloco
+   * mediu foi o texto dos nossos componentes, não o miolo compilado do Lara. */
+  --text-color-secondary: #475569;
+
   /* Achado 3 (decisão do João, 2026-08-12): celeste como TRAÇO sobre claro mede
    * 2,77:1 no branco e 2,53:1 no humo — reprova o 3:1 de elemento gráfico. O
    * azul-poste mede 13,37:1 no humo. Aqui ele cabe porque é traço e não texto:
