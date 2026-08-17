@@ -67,8 +67,19 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
       </span>
       {/* `min-w-0 flex-1` é o que mantém o truncamento funcionando ANTES da
           quebra — sem ele o nome volta a empurrar a linha inteira, e o `title`
-          (a leitura completa, desde 2026-08-16) deixa de ser o único recurso. */}
-      <div className="min-w-0 flex-1">
+          (a leitura completa, desde 2026-08-16) deixa de ser o único recurso.
+
+          `basis-40` é o que DECIDE a quebra, e ele foi medido no gate do BD-16:
+          sem base, `min-w-0` deixa o nome encolher sem limite, então o grupo de
+          ações nunca quebra e o nome é que paga. O REUF do perfil em 390px
+          media 66px de nome ("reuf-jua…") com a data partida em TRÊS linhas —
+          `clientWidth` = `scrollWidth`, sem vazar, e ainda assim ilegível: ele
+          é o slot sem botão de upload, e era justamente o contra-exemplo que a
+          primeira metade da D-19 usou para se declarar resolvida. Com a base de
+          10rem o mesmo slot mede 178px, o nome cabe inteiro, a data volta a uma
+          linha e o par de ícones desce. Onde sobra espaço nada muda: a base é
+          menor que a linha e o grupo continua ao lado. */}
+      <div className="min-w-0 flex-1 basis-40">
         <p className="truncate text-sm font-medium" title={name}>{name}</p>
         {meta && (
           <p className="font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>

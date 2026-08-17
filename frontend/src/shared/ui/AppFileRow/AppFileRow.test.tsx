@@ -58,6 +58,18 @@ describe('AppFileRow', () => {
     expect(nome.parentElement?.className).toContain('min-w-0')
   })
 
+  it('da BASE ao bloco de nome, senao a quebra nunca acontece', () => {
+    // jsdom nao faz layout, entao o que se guarda aqui e a classe: sem base, o
+    // `min-w-0` deixa o nome encolher sem limite e o grupo de acoes fica ao
+    // lado para sempre. Medido no gate do BD-16, em 390px, no slot do REUF
+    // (o unico sem botao de upload): 66px de nome e a data partida em tres
+    // linhas antes; 178px, nome inteiro e data numa linha depois.
+    render(<AppFileRow name="reuf-juan-morales.pdf" actions={<button type="button">Ver</button>} />)
+
+    const nome = screen.getByText('reuf-juan-morales.pdf')
+    expect(nome.parentElement?.className).toContain('basis-40')
+  })
+
   it('usa font-mono na linha de metadados', () => {
     // D-29: data e tamanho sao dado tecnico, e o token ja existe
     // (`index.css`). Alcanca comercial, turma e redator, que e consistencia.
