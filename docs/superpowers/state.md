@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: repetir_review_do_bloco
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-17T10:14:00-03:00
+updated_at: 2026-08-17T10:34:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -501,6 +501,54 @@ verde — ele assere `toBeTruthy()`, não o texto).
 
 **Gate após as correções:** `pnpm lint` 0, `pnpm build` 0, suíte **41 arquivos / 210 testes**
 (+2), exit 0.
+
+### Revisão de sprint — 2ª rodada, 2026-08-17: as duas correções que saíram com defeito
+
+Risco inalterado (**alto**), então a segunda lente do Codex rodou de novo, sobre `df75d50..HEAD`.
+Gate: lint 0, build 0, 41 arquivos / 210 testes. Órfãos zero — nenhuma referência sobrevivente a
+`uploadingType`, `generated.ts` intocado, nenhum import de `primereact` ou cross-feature em
+`identity/**`, nenhuma chave i18n nova. Leis §5 sem violação nova.
+
+Q-1, Q-3, Q-4 e Q-5 saíram corretos, com as duas lentes concordando. **Q-2 e Q-6 saíram com
+defeito, e os dois achados vieram do Codex** — verificados no código antes de aceitos, e nenhum
+deles nascido do trabalho original: os dois nascem da rodada de correção.
+
+**Q-7 — o docblock do `valid_until` afirmava a regra de domínio ao contrário.** O Q-6 escreveu
+"quem declara validade é o administrador, e o redator declarar a própria fura a RN-09 (D5)", e a D5
+do bloco 1 diz literalmente o oposto: *"`valid_until` segue aceito, e só nos três tipos permitidos.
+Nenhum deles entra no gate da RN-09, que lê exclusivamente REUF."* Quem protege a RN-09 é o
+`Rule::in(selfServiceValues())`, que barra o REUF por TIPO — validade de CV/TÍTULO/POSTGRADO é
+capacidade suportada. O Q-6 não removeu superfície proibida, removeu superfície **ainda não usada**,
+o que continua defensável; a justificativa é que não era. Pior: o comentário de
+`useProfileDocuments.ts` já estava errado desde a execução, e o Q-6 o **copiou** para um segundo
+arquivo em vez de medi-lo — lição 13 na regra que decide habilitação de turma. Os dois docblocks
+foram reescritos, e a spec §4 ganhou a nota de que a rota aceita o campo e a tela é que não o
+declara. (No relatório da rodada a tabela de contratos foi citada como §5; é **§4** — o código e a
+emenda estão corretos.)
+
+**Q-8 — a correção do Q-2 não tinha guarda.** O caso do fallback em `axios.test.ts` assere `status`
+e `title` e **nunca** `detail`, que é o campo inteiro do achado: passava verde antes do Q-2, com
+`error.message` em inglês, e passaria verde de novo se alguém revertesse. Corrige também o registro
+acima, que afirmou não haver comportamento a guardar — havia.
+
+**Q-9 — `AppPassword` acumulou quatro achados de largura sem nenhuma guarda.** C-2 (08-12), UI-01
+(08-13), UI-02 e Q-5 (08-16), sempre a mesma forma, e a quarta encontrada por leitura. A rule já
+carregava o texto ("pine o override após o spread"); faltava o mecanismo, mesma lacuna do D-08.
+Ganhou `AppPassword.test.tsx`: os dois ramos, sob `inputClassName` do chamador.
+
+**As duas guardas novas foram vistas reprovar contra o código antigo** (reversão pontual, medida,
+revertida): com `detail: error.message` o caso do fallback falha em
+`expected 'Request failed with status code 502' not to be 'Request failed with status code 502'`;
+com o `className` antes do spread no ramo com ícone, o teste falha em
+`expected 'uppercase p-password-input…' to contain 'w-full'`. O ramo sem ícone segue verde na mesma
+reversão, que é o esperado — ele já estava correto desde o `a5f748c`.
+
+**Gate após a 2ª rodada:** lint 0, build 0, suíte **42 arquivos / 213 testes**. Esta rodada não
+mudou comportamento de produção — só comentário, doc e teste —, então as checagens pertinentes se
+esgotam no gate e na medição das guardas.
+
+**Estado: `ready_for_closure`.** Nenhum achado pendente de decisão ou correção. O fechamento não é
+executado automaticamente.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
