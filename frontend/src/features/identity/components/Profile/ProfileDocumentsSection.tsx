@@ -18,7 +18,7 @@ export function ProfileDocumentsSection({
   const { t } = useTranslation()
   const toast = useToast()
   const preview = useFilePreview<PreviewableFile>()
-  const { upload, uploadingType, error, setSizeError } = useProfileDocuments(() =>
+  const { upload, uploadingTypes, error, setSizeError } = useProfileDocuments(() =>
     toast.success(t('profile.documents.sent')),
   )
 
@@ -37,7 +37,7 @@ export function ProfileDocumentsSection({
           <ProfileDocumentSlot
             key={doc.type}
             doc={doc}
-            uploading={uploadingType === doc.type}
+            uploading={uploadingTypes.includes(doc.type)}
             onUpload={upload}
             onSizeReject={setSizeError}
             onPreview={preview.open}
