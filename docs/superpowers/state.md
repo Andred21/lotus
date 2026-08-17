@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
 active_plan: docs/superpowers/plans/2026-08-17-bd16-perfil-e-kit-compartilhado.md
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
-state_basis_commit: 135e468
-updated_at: 2026-08-17T18:05:00-03:00
+state_basis_commit: 254d691
+updated_at: 2026-08-17T15:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -124,6 +124,25 @@ Executor `claude`, worktree `fix-frontend`, branch `feat/bd16-perfil-e-kit-compa
 `transform scale-200` do `AppPhotoField`, e a DS-05 está fora do bloco. Se a faixa recortar no
 navegador, a decisão volta ao João: ou a DS-05 entra, ou a faixa fica só na parte de baixo do
 cartão. Medir antes de escrever o layout.
+
+### Execução — 2026-08-17: início, técnica `executing-plans`
+
+`/executar-bloco bd16-perfil-e-kit-compartilhado` validou as âncoras (spec e plano no disco,
+`context_packet: null` legítimo porque o bloco não tem fonte externa, handoff `executor: claude`,
+`active_plan` cobrindo o work item) e transicionou `ready_for_execution` → `executing` no commit da
+Task 1. Técnica: `executing-plans` — o ambiente restringe o Agent tool a pedido explícito, e as 16
+tasks têm dependência sequencial declarada (a Task 2 só apaga `BRAND_COLOR` depois que a Task 1 o
+zera; a Task 7 consome o contexto da Task 6; as Tasks 14 e 15 consomem a variante da Task 5).
+
+**A branch nasce de `254d691`, não de `135e468` como o plano escreveu.** Não é divergência de estado:
+os dois commits a mais na `main` são a própria spec (`94b533d`) e o próprio plano (`254d691`), que
+não existiam quando o plano fixou a base. Nascer de `135e468` produziria uma branch que não carrega o
+plano que executa. `state_basis_commit` acompanha, pelo mesmo critério das promoções anteriores.
+
+**Worktree `fix-frontend` já era linked worktree** (`GIT_DIR` ≠ `GIT_COMMON`, sem submódulo), então
+`using-git-worktrees` parou no passo 0 — nenhuma worktree nova foi criada, só a branch
+`feat/bd16-perfil-e-kit-compartilhado`. Baseline medida antes de tocar arquivo: **45 arquivos /
+250 testes**, verde.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
