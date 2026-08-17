@@ -278,4 +278,39 @@ consumidor autenticável. A segunda lente é decisão do João no `/revisar-spri
 
 ## 11. Emendas
 
-Nenhuma até aqui.
+### Emenda 1 — a D8 obriga três arquivos que a §4 não listava (Task 4)
+
+A §4 dava ao `DashboardPage.tsx` dois papéis — roteador de `kind` E compositor das seções do
+admin — e a D8 põe uma régua de 150 linhas sobre ele. Ele tinha **159 linhas ANTES** das 4 seções
+novas; as duas exigências não se satisfazem juntas.
+
+Resolvido sem reabrir a D4, pelo próprio critério dela: o que a §4 já fazia para o Redator
+(`RedatorView.tsx`) passa a valer para o admin, e o que as duas views usam mora na raiz. Três
+arquivos a mais: `admin/AdminView.tsx`, `SectionLabel.tsx` e `DashboardSkeleton.tsx`.
+
+### Emenda 2 — a D6 troca de mecanismo, não de objetivo (Task 3)
+
+A D6 nomeava `placeholderData: keepPreviousData`. Medido no observador da versão instalada
+(`@tanstack/query-core@5.101.1`, `src/queryObserver.ts:486-491`), o placeholder só entra com
+`status === 'pending'`:
+
+```ts
+if (options.placeholderData !== undefined && data === undefined && status === 'pending') {
+```
+
+Quando o fetch da janela nova **falha**, `status` vira `'error'` e `data` volta `undefined` — o
+placeholder não entra e a tela vira `AppErrorState`, que é exatamente o que a D6 foi escrita para
+impedir. Ele cobre a troca normal (o "ganho de brinde") e **não cobre a troca falhada**, que era o
+objetivo declarado.
+
+Substituído por um piso único no hook: o último payload que chegou bom, usado quando `query.data`
+está `undefined`. Cobre as duas metades com um mecanismo só; manter os dois seria a segunda fonte
+da mesma verdade. O objetivo da D6 e o cenário 4 do §6 não mudaram.
+
+### Emenda 3 — a chave i18n do KPI passa a ser completa (Task 4)
+
+`KpiRow` montava `dashboard.kpi.${key}` dentro do render. Com o Redator como segundo consumidor, as
+chaves dele vivem em `dashboard.redator.kpi.*` e o prefixo implícito quebra; a alternativa, uma prop
+de prefixo, põe metade da chave no call-site e metade no render. O `Kpi.key` passa a carregar a
+chave i18n inteira, e cada módulo de derivação a escreve. É a mesma correção que o Q-1 do review de
+2026-08-16 já fez neste arquivo: derivação não escapa do módulo puro para dentro do JSX.

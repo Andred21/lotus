@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-a
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
 state_basis_commit: c2ac9d4
-updated_at: 2026-08-17T14:04:22-03:00
+updated_at: 2026-08-17T18:20:17-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -353,6 +353,62 @@ catraca. Gate da task: lint exit 0, build verde, **40 arquivos / 237 testes**.
 (`14:20:00-03:00`) é 23 minutos adiantado em relação ao commit real (`13:57:55`). Este commit grava a
 hora medida, então o campo **anda para trás** uma vez. Ponteiros, `workflow_state` e `next_action`
 seguem coerentes — nada aqui bloqueia.
+
+### Execução concluída — 2026-08-17: DoD provado item a item, e a revisão de UI custou mais que qualquer task
+
+**As onze tasks fecharam, uma por commit** (`64bfc43`…`70e0129`), mais o passe de correção da
+revisão de UI (`a71e11d`). As três emendas que o plano previa entraram na §11 da spec com o texto
+que ele fixou — nenhuma emenda nova apareceu na execução.
+
+**O DoD foi provado item a item, e não por ferramenta verde:**
+
+| DoD | Prova |
+|---|---|
+| 1-2 · janela alcança só séries e rankings | 7 seções byte-idênticas entre janelas, medidas por API nas Tasks 6-7; a metade visual fechou no `/lotus-ui-review` (KPIs em 4/0/3/1/1(250 UF)/9 antes e depois da troca de preset) |
+| 3 · janela invertida | 422 com `La fecha de término no puede ser anterior a la de inicio.`, tela **mantendo** o dado anterior |
+| 4 · gate `null` | papel-sonda criado e removido por API: `redatores: null` some a tabela inteira, `series.uf_aprovada: null` some do gráfico **e** da legenda, `rankings.*.uf_aprovada: null` devolve zero barras e empty state |
+| 5 · view do Redator | payload real capturado com `acting-as` e alimentado a sonda de render: 4 faixas, zero chave crua, zero `client`/`Cliente`, zero `UF`, `href=/perfil` presente. Confirmado depois no navegador, com sessão de verdade |
+| 6 · 3 locales × 2 temas | sem chave crua nas 3 locales; `chart-tokens` verde; os 2 temas fechados na revisão de UI, com a troca repintando traço, barra e legenda sem recarregar — o motivo declarado de escolher SVG na D1 |
+| 7 · régua da D8 | verde no HEAD; sonda de 200 linhas reprova (`File has too many lines (230). Maximum allowed is 150`); `--print-config` confirma o recorte `.tsx` |
+| 8 · zero mutação | `COUNT(*)` nas 35 tabelas, 6 chamadas: `SEM MUTACAO`. O `+1 login_logs / +1 sessions` da primeira medição veio do **login**, não da travessia |
+| 9 · escopo medido | `git diff main...HEAD -- backend/` e `-- generated.ts` vazios; Pint e `typescript:transform` **N/A por medição** |
+| 10 · `/lotus-ui-review` | passo do João, `disable-model-invocation: true`. 10 achados, todos corrigidos e provados |
+
+**Um desvio de procedimento, registrado e não escondido:** o Step 3 mandava criar o usuário-sonda
+**pela UI**; sem navegador no momento, ele nasceu e morreu por `tinker` (`forceDelete`, sem redator
+ligado), com papel e usuário conferidos como ausentes depois. A prova de comportamento é a mesma; o
+caminho não foi o do plano.
+
+**A revisão de UI achou 10, e os dois C eram leitura errada de número.** O `AppLineChart` fixava
+`dot={false}`, e **série com um mês dentro de um gráfico de vários não desenhava nada** — três das
+quatro curvas eram `M526,207.405Z`, e o eixo ia a 60 por causa das 55 matrículas que ninguém via.
+Em 390px o CTA "Ir a Mi Perfil" saía do card **e da viewport**, sem rolagem que o alcançasse. Os
+oito B e as medições de antes e depois estão no artefato, não aqui.
+
+**A ativação do redator para a revisão é do João, não deste bloco.** A limitação 1 da spec §9
+continua verdadeira sobre o fluxo (`CreateRedatorAction.php:20` segue criando `is_active=false`); o
+que mudou é que a jornada do Redator foi percorrida com sessão de verdade, e isso fecha o aceite da
+EAP 8.4.0 no ponto que o B1 não podia satisfazer.
+
+**Três mecanismos tiveram de ser trocados durante o passe, os três por medição, e os três estão no
+artefato:** `mt-auto` é letra morta contra o `[&_p]:m-0` do `AppCard`; a sombra de rolagem da tabela
+nasceu invisível sob a linha opaca do Lara; e a barra de rolagem sempre visível é impossível neste
+Chromium, que força overlay.
+
+**Um desvio do Step 12, deliberado:** ele lista três paths no `git add`, e entrou um quarto —
+`audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`. O motivo é o precedente que
+este mesmo arquivo registra logo abaixo: o `/lotus-ui-review` do B1 rodou e **não deixou artefato**,
+e o fechamento teve de anotar isso como divergência. O `report.txt` vive em `.artifacts/`, coberto
+por `.gitignore:24-25`; o relatório é o que se versiona.
+
+**Gate final:** `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos / 262 testes** (baseline
+39/223); bundle `index.js` de **1.264,48 kB para 1.672,59 kB** (gzip 350,52 → 464,97), que é o custo
+do Recharts a partir do momento em que a Task 7 lhe deu consumidor. `backend/config/cors.php` (WIP
+do João) fora de todo `git add`.
+
+**Estado: `ready_for_review`.** `active_spec`, `active_plan` e `context_packet` **permanecem
+preenchidos** — quem os arquiva é o `/fechar-sprint`. Próxima ação: revisão de código do bloco, por
+instrução explícita do João; este commit **não** a inicia.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
