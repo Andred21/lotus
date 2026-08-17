@@ -20,15 +20,26 @@ export function useProfilePhoto(url: string | null) {
 
   const { message } = useMutationErrors([upload.error, remove.error])
 
+  // Cada `useMutation` guarda o próprio `error` até o PRÓXIMO `mutate` dela ou
+  // um `reset`. São duas instâncias e `useMutationErrors` devolve o primeiro
+  // truthy da lista: sem zerar a irmã, remover a foto depois de um upload que
+  // falhou deixava o erro do upload na tela — anunciando falha de uma ação que
+  // já não existe, sobre uma remoção que deu certo. Vale nos dois sentidos.
+  function enviar(file: File) {
+    remove.reset()
+    upload.mutate(file, { onSuccess: () => setLastTried(null) })
+  }
+
   function onSelect(file: File) {
     setSizeError(null)
     setLastTried(file)
-    upload.mutate(file, { onSuccess: () => setLastTried(null) })
+    enviar(file)
   }
 
   function onRemove() {
     setSizeError(null)
     setLastTried(null)
+    upload.reset()
     remove.mutate()
   }
 
@@ -44,9 +55,6 @@ export function useProfilePhoto(url: string | null) {
     // `undefined` apaga o botão "Reintentar" no `AppPhotoField`. Com
     // `sizeError` na tela o botão mentiria: reenviaria o arquivo ANTERIOR,
     // não o que acabou de ser recusado pelo teto.
-    onRetry:
-      sizeError === null && lastTried !== null
-        ? () => upload.mutate(lastTried, { onSuccess: () => setLastTried(null) })
-        : undefined,
+    onRetry: sizeError === null && lastTried !== null ? () => enviar(lastTried) : undefined,
   }
 }
