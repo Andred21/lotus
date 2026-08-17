@@ -34,15 +34,35 @@ export function formatDateTime(date: Date): string {
 }
 
 /**
+ * Data-only (`YYYY-MM-DD`) do backend ancorada ao meio-dia LOCAL.
+ *
+ * `new Date('2026-03-01')` é interpretado como UTC e, num fuso a oeste, volta
+ * um dia — a data exibida troca na virada, em início/fim de turma e em
+ * vencimento de documento. O meio-dia é a folga que absorve o deslocamento nos
+ * dois sentidos.
+ *
+ * Interna de propósito: quem formata data ISO usa os dois exports abaixo, não
+ * monta a âncora de novo. Ela vivia copiada em cinco componentes, cada um
+ * reafirmando a regra em comentário, e uma cópia que a perca mostra o dia
+ * anterior sem erro nenhum (Q-3 da revisão de 2026-08-17).
+ */
+function meioDia(isoDate: string): Date {
+  return new Date(`${isoDate}T12:00:00`)
+}
+
+/** Data ISO (`YYYY-MM-DD`) no formato curto do idioma ativo, com a âncora de
+ * meio-dia do `meioDia`. É o formatador de toda data que vem do backend como
+ * data pura — a `Date` já com hora usa `formatDate`. */
+export function formatIsoDate(isoDate: string): string {
+  return formatDate(meioDia(isoDate))
+}
+
+/**
  * Mês abreviado + ano ("mar 2026"). Usado onde o dia não importa — histórico de
  * vínculo e de turmas do aluno.
- *
- * Recebe a data ISO (`YYYY-MM-DD`) que o backend projeta e ancora em meio-dia:
- * `new Date('2026-03-01')` é interpretado como UTC e, num fuso a oeste, volta
- * um dia — o que trocaria o mês exibido na virada.
  */
 export function formatMonthYear(isoDate: string): string {
-  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(activeLocale(), {
+  return meioDia(isoDate).toLocaleDateString(activeLocale(), {
     month: 'short',
     year: 'numeric',
   })

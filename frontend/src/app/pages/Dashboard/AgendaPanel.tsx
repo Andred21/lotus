@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatIsoDate } from '@shared/lib'
 import { dangerText, infoText, neutralInk, warningText } from '@shared/styles/tokens'
 /**
  * A linha mínima que o painel sabe desenhar. `client_name` é OPCIONAL, e é o
@@ -41,12 +41,6 @@ const JANELAS: { key: keyof AgendaJanelas<AgendaLinha>; labelKey: string; ink: s
   { key: 'starting_soon', labelKey: 'dashboard.agenda.startingSoon', ink: neutralInk },
 ]
 
-/** Ancorado ao meio-dia: data ISO pura é lida como UTC e volta um dia num fuso
- * a oeste (mesma razão do `formatMonthYear`). */
-function dia(iso: string): string {
-  return formatDate(new Date(`${iso}T12:00:00`))
-}
-
 function TurmaLinha({ turma }: { turma: AgendaLinha }) {
   const { t } = useTranslation()
 
@@ -72,7 +66,10 @@ function TurmaLinha({ turma }: { turma: AgendaLinha }) {
           )}
         </span>
         <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-          {t('dashboard.agenda.range', { start: dia(turma.start_date), end: dia(turma.end_date) })}
+          {t('dashboard.agenda.range', {
+            start: formatIsoDate(turma.start_date),
+            end: formatIsoDate(turma.end_date),
+          })}
         </span>
       </Link>
     </li>

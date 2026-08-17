@@ -18,6 +18,21 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
 }
 
+/** Wrapper com o cliente à mão, para o teste que precisa refazer o GET da MESMA
+ * key. Com dado em mão e sem falha, o estado não expõe gatilho nenhum —
+ * `staleRetry` só nasce DEPOIS do erro, e o `retry` que existia nos dois `ready`
+ * era campo sem consumidor de produção (Q-4 da revisão de 2026-08-17). Quem
+ * refaz o GET no produto é o próprio TanStack Query (montagem, foco, janela
+ * voltando), e é isso que o `refetchQueries` reproduz. */
+function comCliente() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  )
+
+  return { qc, Wrapper }
+}
+
 function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData {
   return {
     view: 'admin',
@@ -118,17 +133,15 @@ describe('useDashboard', () => {
   // informação utilizável — a falha vira aviso AO LADO do que já veio.
   it('falha COM cache mantém os dados e avisa ao lado', async () => {
     get.mockResolvedValueOnce({ data: admin() })
+    const { qc, Wrapper } = comCliente()
 
-    const { result } = renderHook(() => useDashboard(), { wrapper })
+    const { result } = renderHook(() => useDashboard(), { wrapper: Wrapper })
     await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
 
     get.mockRejectedValue(problem('caiu no refetch'))
-    if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
-    // `result.current` acessado de novo dentro do closure do `act` perde o
-    // narrowing do `if` acima (é um novo escopo para o TS); captura local
-    // preserva o tipo estreitado até o retry.
-    const antesDoRetry = result.current
-    act(() => antesDoRetry.retry())
+    await act(async () => {
+      await qc.refetchQueries()
+    })
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('a tela não pode virar erro com cache em mão')

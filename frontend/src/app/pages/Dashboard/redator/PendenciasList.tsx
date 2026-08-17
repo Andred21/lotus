@@ -1,11 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState, AppButton } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatIsoDate } from '@shared/lib'
 import { warningText } from '@shared/styles/tokens'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
-
-const dia = (iso: string) => formatDate(new Date(`${iso}T12:00:00`))
 
 /**
  * Turmas do próprio Redator com documento faltando. Sem cliente, sem UF, sem
@@ -68,7 +66,7 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                   </span>
                 </span>
                 <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
-                  {t('dashboard.redator.pendencias.until', { date: dia(item.end_date) })}
+                  {t('dashboard.redator.pendencias.until', { date: formatIsoDate(item.end_date) })}
                 </span>
               </div>
             </li>

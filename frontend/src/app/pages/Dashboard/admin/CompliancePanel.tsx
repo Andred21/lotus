@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatIsoDate } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
-
-/** Ancorado ao meio-dia: data ISO pura é lida como UTC e volta um dia num fuso
- * a oeste (mesma razão do `formatMonthYear`). */
-const dia = (iso: string) => formatDate(new Date(`${iso}T12:00:00`))
 
 /**
  * Compliance documental das turmas. Tabela de verdade e não lista compacta
@@ -61,7 +57,10 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
             // deixando de ser legível como data (UI-10 da revisão de
             // 2026-08-17).
             <span className="font-mono text-xs whitespace-nowrap">
-              {t('dashboard.agenda.range', { start: dia(r.start_date), end: dia(r.end_date) })}
+              {t('dashboard.agenda.range', {
+                start: formatIsoDate(r.start_date),
+                end: formatIsoDate(r.end_date),
+              })}
             </span>
           )}
         />

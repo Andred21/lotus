@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { InlineLoadState } from '@shared/ui'
 import type { AdminDashboardData } from '@shared/types/generated'
 import type { DashboardPeriod } from '../useDashboard'
 import { SectionLabel } from '../SectionLabel'
@@ -46,8 +47,21 @@ export function AdminView({
 }) {
   const { t } = useTranslation()
 
+  // O aviso de falha com dado em mão mora DENTRO do seletor de janela, junto do
+  // controle que a causou (D6) — e o seletor só existe se houver seção de
+  // análise. Sem ela, não havia onde o aviso aparecer: um refetch falho ficava
+  // mudo e a tela seguia com dado velho, que é a falha silenciosa que a lição
+  // do BD-6 existe para impedir. O caso é real e já foi medido — o papel só com
+  // `identity.user.view` é `ready-admin` pelos alertas e tem `series` e
+  // `rankings` nulas (Q-1 da revisão de 2026-08-17).
+  const temAnalise = data.series !== null || data.rankings !== null
+
   return (
     <div className="space-y-6">
+      {!temAnalise && (
+        <InlineLoadState error={staleError} retryLabel={t('common.retry')} onRetry={onRetry} />
+      )}
+
       <KpiRow items={kpiCards(data.kpis)} />
 
       <section className="space-y-3">
@@ -77,7 +91,7 @@ export function AdminView({
       {/* A janela histórica só alcança séries e rankings (D3 do bloco A), e é
         * por isso que o seletor mora DENTRO desta seção e não no cabeçalho da
         * página: no cabeçalho ele prometeria filtrar a tela inteira. */}
-      {(data.series !== null || data.rankings !== null) && (
+      {temAnalise && (
         <section className="space-y-3">
           <SectionLabel>{t('dashboard.section.analysis')}</SectionLabel>
           <PeriodFilter

@@ -34,6 +34,12 @@ type DashboardPayload = AdminDashboardData | RedatorDashboardData
  * `view` acontece AQUI, uma vez, e a página recebe o DTO já estreitado. O ramo
  * `unsupported` morreu junto com a ausência de tela do Redator — ramo que não
  * dispara é órfão, e o review do B1 já matou três.
+ *
+ * Pelo mesmo critério, repetir só é oferecido onde a tela oferece: `retry` no
+ * ramo `error`, que é o botão do `AppErrorState`, e `staleRetry` nos dois
+ * `ready`, que é o do `InlineLoadState`. Os dois `ready` carregavam TAMBÉM um
+ * `retry` que nenhum consumidor de produção lia — dois campos para a mesma
+ * ação, um deles inalcançável pela tela (Q-4 da revisão de 2026-08-17).
  */
 export type DashboardState =
   | { kind: 'loading' }
@@ -45,14 +51,12 @@ export type DashboardState =
       staleError: string | null
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
       staleRetry?: () => void
-      retry: () => void
     }
   | {
       kind: 'ready-redator'
       data: RedatorDashboardData
       staleError: string | null
       staleRetry?: () => void
-      retry: () => void
     }
 
 /**
@@ -173,8 +177,8 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   const staleError = query.isError ? (query.error?.detail ?? null) : null
   const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
 
-  if (data.view === 'redator') return { kind: 'ready-redator', data, staleError, staleRetry, retry }
+  if (data.view === 'redator') return { kind: 'ready-redator', data, staleError, staleRetry }
   if (nenhumaSecaoLegivel(data)) return { kind: 'unauthorized' }
 
-  return { kind: 'ready-admin', data, staleError, staleRetry, retry }
+  return { kind: 'ready-admin', data, staleError, staleRetry }
 }

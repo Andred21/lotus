@@ -9,6 +9,24 @@ type Metrica = 'turmas' | 'matriculas' | 'certificados' | 'uf_aprovada'
 
 const METRICAS: Metrica[] = ['turmas', 'matriculas', 'certificados', 'uf_aprovada']
 
+/**
+ * A UF só entra na lista quando ALGUMA linha a traz.
+ *
+ * `uf_aprovada` é `null` em toda linha exatamente quando o gate comercial está
+ * fechado — `rankingRows` a preenche com `'0.0000'` sempre que `includeUf` é
+ * verdadeiro (`AnalyticsQuery.php:319`), e `includeUf` é `$canCommercial`
+ * (`AdminDashboardAssembler.php:204`). Ofertar a métrica mesmo assim devolvia
+ * "sin datos en el período" ao escolhê-la: "não pode ler" renderizado como "não
+ * há", que é o zero que mente da D7. O `SeriesPanel` já esconde a série de UF
+ * pelo mesmo gate, e as duas ausências têm de falar a mesma língua na mesma
+ * seção (Q-2 da revisão de 2026-08-17).
+ */
+function metricasDisponiveis(rankings: RankingsData): Metrica[] {
+  const temUf = [...rankings.courses, ...rankings.clients].some((l) => l.uf_aprovada !== null)
+
+  return temUf ? METRICAS : METRICAS.filter((m) => m !== 'uf_aprovada')
+}
+
 /** Uma métrica por vez, e não 4 barras agrupadas: `uf_aprovada` é decimal em UF
  * e as outras três são contagem — no mesmo eixo, uma achata a outra. Mesma
  * razão que separou os dois gráficos de série. */
@@ -72,7 +90,12 @@ export function RankingsPanel({ rankings }: { rankings: RankingsData }) {
   const { t } = useTranslation()
   const [metrica, setMetrica] = useState<Metrica>('turmas')
 
-  const opcoes = METRICAS.map((m) => ({ value: m, label: t(`dashboard.rankings.metric.${m}`) }))
+  // `turmas` é o valor inicial e nunca sai da lista — só a UF pode sumir —,
+  // então não há estado apontando para opção inexistente a reconciliar.
+  const opcoes = metricasDisponiveis(rankings).map((m) => ({
+    value: m,
+    label: t(`dashboard.rankings.metric.${m}`),
+  }))
 
   return (
     <div className="space-y-3">
