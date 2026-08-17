@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-17-bd16-perfil-e-kit-compartilhado.md
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: 135e468
-updated_at: 2026-08-17T16:40:00-03:00
+updated_at: 2026-08-17T18:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -91,12 +91,22 @@ outro motivo"*) foi disparado pelo DS-01 da auditoria.
 `AppFileRow` (que este bloco cobre) e o `description` em espanhol fixo do Dashboard, em "Travados em
 decisão". Renumerar é decisão do João — está anotado nas duas linhas.
 
-### Planejamento — brainstorming fechado em 2026-08-17
+### Planejamento — fechado em 2026-08-17
 
 **Spec:** `specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md`. Oito decisões escolhidas pelo
-João (D1–D8) e sete derivadas (D9–D15). Executor `claude`, worktree `fix-frontend`, branch
-`feat/bd16-perfil-e-kit-compartilhado` a partir de `main@135e468`. Falta o plano; depois dele o
-estado vai a `ready_for_execution`.
+João (D1–D8) e sete derivadas (D9–D15).
+**Plano:** `plans/2026-08-17-bd16-perfil-e-kit-compartilhado.md` — 16 tasks. As 8 primeiras entregam
+o kit compartilhado (`shared/ui`), as 7 seguintes aplicam em `/perfil`, a 16ª é o gate do bloco.
+Executor `claude`, worktree `fix-frontend`, branch `feat/bd16-perfil-e-kit-compartilhado` a partir de
+`main@135e468`. P-03 não dispara: o bloco é frontend puro.
+
+**Duas tasks abrem ponto de decisão por medição, não por escolha do executor:**
+
+- **Task 8** ramifica: `onToggleMaskKeyDown` do Prime (`password.cjs.js:588-593`) **já trata**
+  `event.code === 'Space'`. Se o teste da Task 8 passar sem código novo, o defeito não reproduz em
+  jsdom e a task vira registro medido, não correção. Um handler no wrapper chamaria `toggleMask()`
+  duas vezes e devolveria o campo ao estado inicial — o defeito pioraria ficando invisível.
+- **Task 15** para e pergunta se a faixa recortar o avatar (ver o risco abaixo).
 
 **Duas divergências medidas contra o que estava escrito, e o que venceu:**
 
