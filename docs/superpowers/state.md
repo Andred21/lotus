@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: sprint-6-meu-perfil
 active_work_item: meu-perfil-frontend
-workflow_state: ready_for_review
+workflow_state: reviewing
 next_owner: claude
-next_action: request_code_review
+next_action: repetir_review_do_bloco
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-15-meu-perfil-frontend-design.md
 active_plan: docs/superpowers/plans/2026-08-15-meu-perfil-frontend.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-15-meu-perfil-frontend.
 blocker: null
 last_completed_work_item: meu-perfil-backend-self-service
 state_basis_commit: 36faf44
-updated_at: 2026-08-16T15:10:00-03:00
+updated_at: 2026-08-17T10:14:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -429,6 +429,78 @@ aberta — não abre pendência nova.
 **Estado: `ready_for_review`.** Working tree limpo, 18 commits na branch `feat/meu-perfil-frontend`
 (`5ff2e7e`..HEAD), dos quais 10 de task, 8 de correção do gate visual e os de doc. A próxima
 instrução do João aciona `/revisar-sprint`; este passo não inicia review.
+
+### Revisão de sprint — 2026-08-16: alto risco, duas lentes, 6 achados e zero violação de lei
+
+`/revisar-sprint` transicionou `ready_for_review` → `reviewing` e classificou o bloco como **alto
+risco**: não regenera `generated.ts` e não toca backend, mas **escreve no eixo de autenticação**
+(troca da própria senha) e **exibe documento de peso legal com status de validade**. A projeção da
+abertura se confirmou, e a classificação acionou a **segunda lente do Codex** (read-only) sobre o
+mesmo intervalo Git contra plano, spec e leis §5.
+
+**Gate remedido, não citado:** `pnpm build` 0, `pnpm lint` 0, suíte **41 arquivos / 208 testes** —
+bate com o que a Task 11 registrou.
+
+**Órfãos: zero.** Todo hook novo tem consumidor, todo componente entra na `ProfilePage`, o
+`useResourceState` está no barrel e é consumido pelo `useProfilePage`, e a paridade de chaves dos
+três locales foi **medida** (581 chaves, 0 divergência) — justamente o que nenhum teste protege.
+Nenhuma chave `profile.*` órfã entre as 36 criadas. Nenhuma dependência nova.
+
+**Leis §5: nenhuma violada, e as duas de maior risco foram medidas.** `generated.ts` intocado nos 23
+commits; nenhum import de `primereact` ou de outra feature sob `features/identity/**` — o
+`ProfileDocumentSlot` recebe `FileUploadHandlerEvent` e `PreviewableFile` pelo reexport de
+`shared/ui`, que é a porta.
+
+**As duas lentes convergiram em quatro achados e divergiram em dois**, e as divergências foram
+resolvidas por medição, não por autoridade:
+
+1. **`refetch` que engole a promise** (`useResourceState.ts:31`) — o Codex a reportou; **derrubada
+   na verificação.** O `useLoadState`, irmão e convenção vigente, faz o mesmo `void query.refetch()`
+   e o docblock dele nomeia isso como idiom aceito. Divergir seria o achado, não seguir.
+2. **`created_at` no idioma do navegador** (`ProfileDocumentSlot.tsx:89` via `AppFileRow`) — o Codex
+   a reportou e ele próprio a identificou como **D-18**, já registrada no `backlog.md` pelo UI
+   review. Decisão consciente registrada não é achado.
+
+Os seis que sobraram entram no relatório ao João. Nenhum é 🔴: nenhum fere lei, lição ou ADR — o
+mais caro é uma **divergência literal contra a spec §7** ("campos daquela seção desabilitados"),
+reincidente em duas seções.
+
+**Estado: `blocked`.** Só achado aprovado pelo João vira correção; depois o estado retorna a
+`reviewing` e as checagens se repetem sobre o mesmo work item.
+
+### Correções — 2026-08-17: os 6 achados aprovados pelo João, todos aplicados
+
+**João aprovou Q-1 a Q-6 em bloco.** Nenhum achado foi diferido para o `backlog.md`.
+
+| # | O que entrou |
+|---|---|
+| Q-1 | `disabled={pending}` nos 2 campos do `ProfilePersonalSection` e nos 3 do `ProfileSecuritySection` — a spec §7, que pedia isso literalmente |
+| Q-2 | `detail` do fallback do interceptor passa a ser `common.unexpectedErrorHint`, a mesma chave que o `problemFromBlob` já usava para corpo não-parseável |
+| Q-3 | `useProfilePhoto` zera a mutation IRMÃ antes de disparar a própria (`remove.reset()` no envio, `upload.reset()` na remoção); o envio saiu para uma função `enviar`, usada também pelo `onRetry` |
+| Q-4 | `useProfileDocuments` deixou de ler o estado em voo da instância compartilhada: `mutateAsync` por chamada, lista local `emVoo` e erro local — `uploadingType` virou `uploadingTypes` |
+| Q-5 | `AppPassword`: no ramo com `leftIcon`, `className`/`inputClassName` mesclados DEPOIS do spread, como no ramo sem ícone |
+| Q-6 | `valid_until` removido das variables e do `postMultipart` em `useUploadProfileDocument` |
+
+**A premissa do Q-4 foi medida contra o TanStack instalado, não deduzida.** Sonda temporária com
+`useMutation` real e duas chamadas concorrentes numa instância: `variables` vira a da SEGUNDA com a
+primeira ainda em voo (é o que reabilitava o slot errado), a `mutationFn` das duas roda e o
+`onSuccess` da mutation dispara 2×, mas o **`onSettled` por chamada da primeira nunca dispara** —
+`mutationObserver.mutate` faz `removeObserver` na anterior (build/modern/mutationObserver.js:58).
+Isso **derruba a alternativa sugerida no próprio achado**: um `Set` alimentado por
+`onMutate`/`onSettled` deixaria o primeiro slot desabilitado para sempre. `mutateAsync` devolve a
+promise daquela chamada, que resolve sem observer; a invalidação segue na mutation e vale para as
+duas. A sonda foi removida após medir.
+
+**Guardas novas onde a correção tem comportamento a provar:** dois casos em
+`useProfileDocuments.test.tsx` — envios simultâneos saindo da fila cada um no próprio término (o
+segundo termina primeiro e o primeiro **não** reabilita) e falha do primeiro visível depois do
+sucesso do segundo. O mock passou a devolver **uma promise por chamada**, que é o que permite
+sobrepor os dois envios. Q-1, Q-2, Q-5 e Q-6 são supressão de superfície ou de string: não há
+comportamento novo que uma guarda morda além do que a suíte já cobre (o `axios.test.ts:143` segue
+verde — ele assere `toBeTruthy()`, não o texto).
+
+**Gate após as correções:** `pnpm lint` 0, `pnpm build` 0, suíte **41 arquivos / 210 testes**
+(+2), exit 0.
 
 ## Último item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
