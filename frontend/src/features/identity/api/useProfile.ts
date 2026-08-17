@@ -76,21 +76,18 @@ export function useChangePassword() {
   })
 }
 
+/** Sem `valid_until` nas variables: quem declara validade é o administrador, e
+ * o redator declarar a própria fura a RN-09 (D5 do bloco 1). O backend aceita o
+ * campo nesta rota, então deixá-lo aqui — sem nenhum chamador que o passe — era
+ * superfície morta convidando a ser preenchida; hoje o único guarda da regra é
+ * o `selfServiceValues()` do controller. */
 export function useUploadProfileDocument() {
   const invalidate = useInvalidate(false)
-  return useMutation<
-    RedatorDocumentData,
-    ProblemDetails,
-    { type: RedatorDocumentType; file: File; valid_until?: string | null }
-  >({
-    // `valid_until` vazio vira `undefined`: `postMultipart` OMITE a chave, em
-    // vez de mandar a string "undefined" para uma coluna de data.
-    mutationFn: ({ type, file, valid_until }) =>
-      postMultipart<RedatorDocumentData>('/api/profile/documents', {
-        type,
-        file,
-        valid_until: valid_until || undefined,
-      }),
-    onSuccess: invalidate,
-  })
+  return useMutation<RedatorDocumentData, ProblemDetails, { type: RedatorDocumentType; file: File }>(
+    {
+      mutationFn: ({ type, file }) =>
+        postMultipart<RedatorDocumentData>('/api/profile/documents', { type, file }),
+      onSuccess: invalidate,
+    },
+  )
 }
