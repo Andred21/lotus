@@ -21,6 +21,8 @@
     "hidePassword": "Ocultar senha",
     "save": "Salvar",
     "cancel": "Cancelar",
+    "yes": "Sim",
+    "no": "Não",
     "close": "Fechar",
     "edit": "Editar",
     "rut": "RUT",
@@ -179,7 +181,30 @@
     "section": {
       "action": "Requer ação",
       "context": "Contexto",
-      "analysis": "Análise do período"
+      "analysis": "Análise do período",
+      "compliance": "Conformidade e carga"
+    },
+    "compliance": {
+      "title": "Conformidade documental das turmas",
+      "empty": "Sem turmas a revisar",
+      "count": "{{count}} turmas",
+      "course": "Curso",
+      "redatores": "Relatores",
+      "noRedator": "Sem relator",
+      "range": "Período",
+      "present": "Documentos presentes",
+      "missing": "Documentos faltantes",
+      "enabled": "Habilitada"
+    },
+    "redatorLoad": {
+      "title": "Carga de relatores",
+      "empty": "Sem relatores",
+      "count": "{{count}} relatores",
+      "name": "Relator",
+      "current": "Turmas em curso",
+      "upcoming": "Próximas turmas",
+      "expired": "Documentos vencidos",
+      "expiring": "Documentos a vencer"
     },
     "period": {
       "label": "Período",

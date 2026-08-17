@@ -1,0 +1,82 @@
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
+import { formatDate } from '@shared/lib'
+import type { TurmaComplianceData } from '@shared/types/generated'
+
+/** Ancorado ao meio-dia: data ISO pura é lida como UTC e volta um dia num fuso
+ * a oeste (mesma razão do `formatMonthYear`). */
+const dia = (iso: string) => formatDate(new Date(`${iso}T12:00:00`))
+
+/**
+ * Compliance documental das turmas. Tabela de verdade e não lista compacta
+ * (D9): são 8 campos por linha, e em linha compacta metade trunca.
+ *
+ * `AppDataTable` sem `SearchableTableFrame`: dashboard é visão, busca é do
+ * módulo dono. O wrapper já resolve vazio, ordenação e o rodapé de contagem — e
+ * reescrever esse rodapé à mão rendeu, em 6 cópias, paginador duplicado e
+ * vazio falso.
+ *
+ * A janela histórica NÃO alcança esta seção: compliance é estado ATUAL (D3 do
+ * bloco A), e é por isso que ela mora fora da seção de análise.
+ */
+export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
+  const { t } = useTranslation()
+
+  return (
+    <AppCard>
+      <AppCardHeader title={t('dashboard.compliance.title')} count={turmas.length} />
+      <AppDataTable
+        value={turmas}
+        dataKey="turma_id"
+        emptyMessage={<AppEmptyState icon="pi pi-verified" title={t('dashboard.compliance.empty')} />}
+        footerCount={t('dashboard.compliance.count', { count: turmas.length })}
+      >
+        <AppColumn
+          field="course_name"
+          header={t('dashboard.compliance.course')}
+          sortable
+          body={(r: TurmaComplianceData) => (
+            <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline" style={{ color: 'var(--text-color)' }}>
+              {r.course_name}
+            </Link>
+          )}
+        />
+        <AppColumn
+          header={t('dashboard.compliance.redatores')}
+          body={(r: TurmaComplianceData) =>
+            r.redatores.length === 0 ? (
+              <span style={{ color: 'var(--text-color-secondary)' }}>{t('dashboard.compliance.noRedator')}</span>
+            ) : (
+              r.redatores.join(', ')
+            )
+          }
+        />
+        <AppColumn
+          header={t('dashboard.compliance.range')}
+          body={(r: TurmaComplianceData) => (
+            <span className="font-mono text-xs">
+              {t('dashboard.agenda.range', { start: dia(r.start_date), end: dia(r.end_date) })}
+            </span>
+          )}
+        />
+        <AppColumn header={t('dashboard.compliance.present')} body={(r: TurmaComplianceData) => r.present_types.length} />
+        <AppColumn
+          header={t('dashboard.compliance.missing')}
+          body={(r: TurmaComplianceData) => (r.missing_types.length === 0 ? '—' : r.missing_types.join(', '))}
+        />
+        <AppColumn
+          header={t('dashboard.compliance.enabled')}
+          sortable
+          field="habilitada"
+          body={(r: TurmaComplianceData) => (
+            <AppTag
+              value={r.habilitada ? t('common.yes') : t('common.no')}
+              severity={r.habilitada ? 'success' : 'warning'}
+            />
+          )}
+        />
+      </AppDataTable>
+    </AppCard>
+  )
+}

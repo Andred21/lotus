@@ -21,6 +21,8 @@
     "hidePassword": "Hide password",
     "save": "Save",
     "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
     "close": "Close",
     "edit": "Edit",
     "rut": "RUT",
@@ -179,7 +181,30 @@
     "section": {
       "action": "Needs action",
       "context": "Context",
-      "analysis": "Period analysis"
+      "analysis": "Period analysis",
+      "compliance": "Compliance and workload"
+    },
+    "compliance": {
+      "title": "Class document compliance",
+      "empty": "No classes to review",
+      "count": "{{count}} classes",
+      "course": "Course",
+      "redatores": "Instructors",
+      "noRedator": "No instructor",
+      "range": "Period",
+      "present": "Documents on file",
+      "missing": "Missing documents",
+      "enabled": "Enabled"
+    },
+    "redatorLoad": {
+      "title": "Instructor workload",
+      "empty": "No instructors",
+      "count": "{{count}} instructors",
+      "name": "Instructor",
+      "current": "Classes in progress",
+      "upcoming": "Upcoming classes",
+      "expired": "Expired documents",
+      "expiring": "Documents expiring"
     },
     "period": {
       "label": "Period",

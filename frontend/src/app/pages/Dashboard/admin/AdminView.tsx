@@ -11,6 +11,8 @@ import { PipelineFunnel } from './PipelineFunnel'
 import { PeriodFilter } from './PeriodFilter'
 import { SeriesPanel } from './SeriesPanel'
 import { RankingsPanel } from './RankingsPanel'
+import { CompliancePanel } from './CompliancePanel'
+import { RedatorLoadPanel } from './RedatorLoadPanel'
 import type { PeriodPresetKey } from './periodPresets'
 
 /**
@@ -87,6 +89,18 @@ export function AdminView({
           />
           {data.series !== null && <SeriesPanel series={data.series} />}
           {data.rankings !== null && <RankingsPanel rankings={data.rankings} />}
+        </section>
+      )}
+
+      {/* Estado ATUAL, não histórico: por isso fora da seção de análise, e o
+        * seletor de janela não as toca (D3 do bloco A). */}
+      {(data.compliance_turmas !== null || data.redatores !== null) && (
+        <section className="space-y-3">
+          <SectionLabel>{t('dashboard.section.compliance')}</SectionLabel>
+          <div className="space-y-4">
+            {data.compliance_turmas !== null && <CompliancePanel turmas={data.compliance_turmas} />}
+            {data.redatores !== null && <RedatorLoadPanel redatores={data.redatores} />}
+          </div>
         </section>
       )}
     </div>
