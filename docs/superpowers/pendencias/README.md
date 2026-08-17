@@ -25,8 +25,8 @@ ou de escrita fora do repositório.
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | BD-10 | bloco que tocar `FormSection`/`CoursesTable`; revisar 2026-10-31 |
-| P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | BD-10 | bloco que tocar `FormField`; revisar 2026-10-31 |
+| P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | **BD-16** | **gatilho disparado em 2026-08-17** — o BD-16 toca `FormSection` pelo DS-01 da auditoria de `/perfil` |
+| P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | **BD-16** | bloco que tocar `FormField`; o BD-16 toca `AppPassword`/`FormField` pela D-24 |
 | P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | BD-12 | bloco que puder esvaziar o catálogo de dev; revisar 2026-10-31 |
 | P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | BD-14 | 500 observado em uso real, ou bloco que tocar `ProblemDetails`; revisar 2026-10-31 |
 | P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | BD-14 | bloco que tocar `CreateQuoteAction`/`Quote`; revisar 2026-10-31 |

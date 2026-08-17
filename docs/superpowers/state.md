@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: perfil-e-kit-compartilhado
+active_work_item: bd16-perfil-e-kit-compartilhado
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
-state_basis_commit: e103178
-updated_at: 2026-08-17T12:10:00-03:00
+state_basis_commit: d8c401f
+updated_at: 2026-08-17T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,49 @@ updated_at: 2026-08-17T12:10:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `bd16-perfil-e-kit-compartilhado` (promovido em 2026-08-17)
+
+**Promoção explícita do João**, a partir da auditoria
+`audits/2026-08-17-perfil-ui-review-e-design.md`. O estado saiu de `idle` para `ready_for_planning`
+no mesmo commit que grava a auditoria e o BD-16 — a fronteira durável é essa, e não a leitura do
+relatório.
+
+**Como o item nasceu.** Duas lentes sobre `/perfil`, na mesma sessão: o `/lotus-ui-review` (1 achado
+**C**, 8 **B**, 18 capturas em `.artifacts/ui-review/2026-08-17-1241-perfil/`) e o `frontend-design`
+(7 achados estéticos). Nenhum código foi tocado por nenhuma das duas — o passo 16 da skill proíbe, e
+a auditoria é registro, não correção.
+
+**Escopo escolhido: A + B + C, com a D-28 dentro.** As três frentes estão no BD-16 do
+`backlog.md`; a D-28 (dar marca visual ao corte de mutabilidade da spec D1) entrou por decisão
+explícita do João na mesma seleção, e **precede a D-27** — reordenar sem marca visual só troca qual
+metade fica por último.
+
+**Por que `ready_for_planning` e não `context_required`.** As Sprints 5 e 6 exigiam Context Packet
+porque o escopo delas era canônico do Drive. Este bloco não tem fonte externa: cada item é medição
+local, feita no navegador ou por `grep` no repositório, e a auditoria já é o pacote de contexto.
+Nenhuma consulta a Drive, Notion ou Figma é necessária para planejá-lo.
+
+**O bloco absorve o BD-10 e reabre duas pendências travadas.** P-36 e P-37 estavam adiadas desde
+2026-08-13 pelo mesmo motivo — `FormSection` e `FormField` sob reescrita ativa do BD-5 —, e o
+impedimento venceu. O gatilho literal da P-36 (*"bloco que tocar `FormSection` ou `CoursesTable` por
+outro motivo"*) foi disparado pelo DS-01 da auditoria.
+
+**Três coisas que o planejamento precisa tratar e que não são detalhe:**
+
+1. **O alcance sai de `/perfil`.** `FormSection` tem 11 consumidores, `AppPassword` 5 sítios,
+   `AppFileRow` serve comercial/turma/redator, `AppTag` aparece fora da tela. O plano declara os
+   sítios e o DoD prova que nenhum regrediu — a lei 6 manda a correção para `shared/ui`, então o
+   alcance é consequência, não escolha.
+2. **A P-36 traz uma decisão junto, não só um fix.** O seletor da catraca `COR_HARDCODED` precisa
+   distinguir cor crua de `var(--…)` em `style={{ }}`, e é isso que sempre adiou a guarda.
+3. **Dois achados ficaram FORA por decisão pendente:** DS-05 (`scale-200` no avatar — a previsão de
+   recorte é aritmética e precisa de medição no navegador antes de virar task) e DS-07 (mural de
+   credenciais como assinatura da tela — inverte a ordem da spec D1, é bloco próprio).
+
+**Colisão de ID encontrada e não corrigida.** Existem dois `D-18` no `backlog.md`: a data do
+`AppFileRow` (que este bloco cobre) e o `description` em espanhol fixo do Dashboard, em "Travados em
+decisão". Renumerar é decisão do João — está anotado nas duas linhas.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
