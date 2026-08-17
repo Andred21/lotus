@@ -182,9 +182,20 @@ exceção. Na dúvida, siga o vizinho da mesma
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
   consome `useTableFilter` sem que o hook saiba da moldura). Hook que precisa do tipo de um
   componente está desenhado ao contrário — quem depende é o componente.
-- **Derivação de apresentação no front, não no DTO:** status de documento e idoneidade se calculam
-  no front. `valid_until` inparseável → tratar como **vencido** (direção conservadora, peso legal).
-  Sem documento obrigatório → `no_idoneo`.
+- **Quem deriva status de documento depende do CONTRATO, não do lado.** Onde o DTO **não** traz
+  `status`, o front deriva: `RedatorDocumentData` (tela administrativa) só tem `valid_until`, e ali
+  valem as regras conservadoras — `valid_until` inparseável → **vencido** (peso legal); sem documento
+  obrigatório → `no_idoneo`. Onde o DTO **traz** `status`, o front **não recalcula**:
+  `RedatorProfileDocumentData` (Meu Perfil) projeta `DocumentValidityStatus` já decidido em Identity,
+  porque o Drive §5 fecha que *"o React não calcula compliance a partir de datas cruas quando o
+  contrato puder fornecer o estado semântico"*. Esta linha já foi uma frase só ("status de documento
+  e idoneidade se calculam no front"), verdadeira só na primeira metade desde que o contrato de
+  perfil existe (bloco `meu-perfil-backend-self-service`, 2026-08-14) — lição 13 em doc normativo
+  vivo. É também por isso que `ProfileDocumentSlot` é **irmão** do `RedatorDocumentSlot`, não reuso
+  (spec D3 de `meu-perfil-frontend`): duas fontes de verdade para a mesma pergunta dentro do mesmo
+  componente é o que faz a tela mentir sob refactor. **Divergência declarada, não resolvida:** o
+  mesmo REUF pode ler `sin_venc` na tela administrativa e `vigente` no perfil — a raiz é
+  `RedatorDocumentData` não ter `status`, correção de backend fora de escopo dos dois blocos.
 - **i18n:** 3 locales (`pt-BR`, `es-CL`, `en`) com chaves **idênticas**; `es-CL` é a referência de
   rótulo (cliente chileno). `generated.ts` fica no `globalIgnores` do eslint.
 - **Vocabulário de domínio é o do backend.** `Redator`, não `Writer`. Nome de tela pode ser em inglês
@@ -204,9 +215,14 @@ cobre os hooks de `shared/hooks/` — os de maior fan-out do projeto — **e** h
 importando `features/` quebraria a lei §5.6). Desde 2026-08-11 cobre também o **repositório**, em
 `frontend/tests/`: `repo-docs-refs.test.ts` confere que todo path citado em doc normativo existe, e
 mora aqui porque o container `app` monta só `./backend` e `./frontend`, então PHPUnit não lê a raiz.
-Teste de componente com PrimeReact no jsdom segue **fora** do corte. Sem `globals`: cada teste
-importa `describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo
-`tsc -b`. Este parágrafo dizia "sem test runner ainda" por um bloco inteiro depois de o runner
-existir (review de 2026-08-04, Q-3), e depois afirmou por mais quatro dias que o corte era só
-`shared/` quando já havia oito testes de hook de feature — a mesma lição 13, no mesmo arquivo, duas
-vezes.
+Teste de componente **está** no corte, PrimeReact incluído. Medido com o runner em 2026-08-16, não
+citado de memória: dos **13** arquivos que renderizam componente, **9 montam wrapper PrimeReact** no
+jsdom (`ValidationPage`, `BudgetDetailPage`, `CourseStep`, `QuotesList`, `TurmaDetailPage`,
+`ProfileDocumentSlot`, `DetailHeader`, `IdentityCell`, `InlineLoadState`) e os outros 4 são DOM puro
+(`AppFileRow`, `PageHeader`, `FormField`, `Clock`). Sem `globals`: cada teste importa
+`describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo `tsc -b`.
+Este parágrafo dizia "sem test runner ainda" por um bloco inteiro depois de o runner existir (review
+de 2026-08-04, Q-3); depois afirmou por mais quatro dias que o corte era só `shared/` quando já havia
+oito testes de hook de feature; e afirmou "componente PrimeReact fora do corte" desde o BD-6, com
+três testes desse tipo já verdes no mesmo repo (P-38, encerrada aqui). Mesma lição 13, no mesmo
+arquivo, **três vezes** — quem lia a rule deixava de escrever teste que o projeto já sabia rodar.

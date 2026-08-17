@@ -69,18 +69,26 @@ notificações interna e, depois, canais como e-mail. **Notifications não entra
 - **Execução detalhada:** Notion EAP 8.5.1–8.5.9
 - **Exige `context_required`** antes do planejamento, pelo mesmo motivo da Sprint 5.
 
-**Dois blocos sequenciais:**
+**Dois blocos sequenciais, os dois entregues:**
 
 1. ~~**`meu-perfil-backend-self-service`**~~ — entregue em 2026-08-15
    (`plans/archive/2026-08-14-meu-perfil-backend-self-service.md`).
-2. **`meu-perfil-frontend`** — página Meu Perfil, formulário pessoal, foto, segurança, documentos do
-   Redator, resumo profissional, estados loading/erro/vazio, responsividade e UI review.
+2. ~~**`meu-perfil-frontend`**~~ — entregue em 2026-08-17
+   (`plans/archive/2026-08-15-meu-perfil-frontend.md`). Levou a página em duas colunas com corte por
+   mutabilidade: identidade e resumo à esquerda, e à direita exatamente o que é self-service —
+   dados pessoais, troca de senha e os quatro slots documentais do Redator.
 
 **Escopo do self-service:** Admin e Redator alteram apenas dados pessoais permitidos e a própria
 senha. **E-mail, RUT, role, permissões, `type` e `is_active` não são self-service.**
 
 **Exclusivo do Redator:** upload/substituição dos próprios documentos regulatórios e resumo de
-idoneidade profissional, cursos habilitados, turmas atuais/próximas e pendências.
+idoneidade profissional, cursos habilitados, ~~turmas atuais/próximas e pendências~~.
+
+> **Turmas e pendências NÃO foram entregues, e não é lacuna de execução.** A **D1** da spec do bloco
+> 1 as cortou do contrato por decisão do João, para não abrir aresta de `Identity` para `Operation`
+> antes do bloco do Dashboard — `RedatorProfileData` tem `cursos_habilitados` e `cursos`, e nada de
+> turma. Reabrir isso é decisão de escopo, não conserto: quem responde *"o que tenho para fazer"* é o
+> Dashboard do Redator, que vive no **B2** da Sprint 5.
 
 **O resumo profissional não substitui o Dashboard do Redator.** Meu Perfil responde *"quem sou e
 qual minha situação profissional"*; o Dashboard responde *"o que tenho para fazer e como está minha
@@ -123,7 +131,7 @@ operação"*.
 
 ## BD-10 · Frontend · kit de formulário: nome acessível e cor de marca
 
-**Cobre:** P-37, P-36, D-01 · **Frente:** frontend
+**Cobre:** P-37, P-36, D-01, D-18 · **Frente:** frontend
 **Afinidade:** os três tocam `shared/ui` (`FormField`, `FormSection`) ou o diálogo que os consome, e
 os dois primeiros foram adiados **pelo mesmo motivo** — o kit inteiro passa pelo arquivo, então o fix
 alcança toda tela de uma vez e não cabia num bloco de escopo estreito.
@@ -135,6 +143,8 @@ alcança toda tela de uma vez e não cabia num bloco de escopo estreito.
   `FormSection.tsx:19` e `CoursesTable.tsx:43`. Fechar os sítios **e** decidir o seletor da guarda —
   `style` também é a grafia certa quando o valor é `var(--…)`.
 - **D-01** — nome de arquivo truncado sem `title` nem quebra a 390x844.
+- **D-18** — a data da MESMA linha de arquivo sai no idioma do navegador, não no da
+  interface. Mesmo componente do D-01, e é o que torna os dois baratos juntos.
 
 **DoD:** o nome acessível medido em leitor de tela (ou por `accessibleName` no Playwright) nos dois
 sítios da P-37, não só o atributo no DOM.
@@ -157,15 +167,16 @@ o atributo novo no DOM.
 
 ## BD-12 · Frontend · load-state: os dois sítios que sobraram do BD-6
 
-**Cobre:** D-14, P-40, P-38 · **Frente:** frontend
-**Afinidade:** os três orbitam `useLoadState` e o catálogo de cursos. O bloco escreve teste de
-componente PrimeReact no jsdom, que é justamente o que a P-38 diz não existir.
+**Cobre:** D-14, P-40 · **Frente:** frontend
+**Afinidade:** os dois orbitam `useLoadState` e o catálogo de cursos.
 
 - **D-14** — `RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru.
 - **P-40** — remedição do ramo "catálogo genuinamente vazio" contra HEAD. Depende de conseguir
   esvaziar o catálogo de dev (seeder de cenário, endpoint de teste, ou o João rodando o comando).
-- **P-38** — a rule `frontend-fsliced.md` afirma que teste PrimeReact/jsdom está fora do corte, e o
-  corte já tem três. Corrigir **rodando o runner e contando**, não citando de memória.
+
+> A **P-38** saía deste bloco e foi **encerrada antes**, em 2026-08-16, pelo gatilho literal dela: o
+> `meu-perfil-frontend` tocou `frontend-fsliced.md` por outro motivo e trocou a frase pelo corte
+> medido com o runner (`pendencias/encerradas.md`).
 
 **DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
 falha deixa a regressão passar verde.
@@ -305,6 +316,13 @@ sentada só — é o que torna o agrupamento barato.
   que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
   Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
   contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
+- **D-18 · A data do `AppFileRow` sai no idioma do NAVEGADOR, não no da interface** → **BD-10**.
+  `AppFileRow.tsx:42` chama `new Date(createdAt).toLocaleDateString()` sem locale: numa interface
+  es-CL a linha do documento exibe `8/16/2026` (en-US) enquanto o slot logo abaixo, corrigido em
+  2026-08-16, exibe `10-08-2028`. Como `created_at` é timestamp completo, aqui só o **formato** erra
+  — o dia não volta, ao contrário do UI-01 que originou a correção. Fix de uma linha (`formatDate`
+  de `@shared/lib`), adiado porque `AppFileRow` é `shared/ui` de outras telas e o próprio review de
+  UI o declarou decisão fora do bloco.
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
   em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do

@@ -27,6 +27,16 @@ export interface AppPasswordProps extends PasswordProps {
  * pai sem largura e caía na largura intrínseca do input — 316px de teto, contra
  * os 384px do AppInputText irmão (UI-01 do review de 2026-08-13). Por isso a
  * largura é pinada também nesse nó, pelo `pt`.
+ *
+ * A largura é do WRAPPER nos DOIS ramos, não só no que tem ícone. Enquanto ela
+ * dependia do chamador lembrar de `inputClassName`, o ramo sem ícone caía na
+ * largura intrínseca do PrimeReact: 288px de input dentro de um campo de 719px,
+ * com o olho ancorado 403px à direita do fim do input, e em 390px o input
+ * vazando 42px além de um cartão `overflow-hidden` (UI-02 do review de
+ * 2026-08-16 — o TERCEIRO achado de largura neste mesmo componente). Metade da
+ * regra no wrapper e metade no chamador foi o que reproduziu o débito três
+ * vezes. Mesclado, não cravado: o chamador acrescenta classe, não perde a
+ * largura (idiom do `AppInputText`).
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {
@@ -66,6 +76,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           toggleMask
           feedback={false}
           {...props}
+          className={`w-full ${props.className ?? ''}`}
+          inputClassName={`w-full ${props.inputClassName ?? ''}`}
           pt={passwordPt}
         />
       )
@@ -73,13 +85,17 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     return (
       <IconField iconPosition="left">
         <InputIcon className={`${leftIcon} z-10`} />
+        {/* Mesclado DEPOIS do spread, igual ao ramo sem ícone. Antes dele, um
+            `inputClassName` do chamador apagava `w-full pl-10` inteiro — e o
+            `pl-10` é o offset que impede o texto de correr por baixo do ícone,
+            não enfeite. */}
         <Password
           inputRef={ref}
           toggleMask
           feedback={false}
-          className="w-full"
-          inputClassName="w-full pl-10"
           {...props}
+          className={`w-full ${props.className ?? ''}`}
+          inputClassName={`w-full pl-10 ${props.inputClassName ?? ''}`}
           pt={passwordPt}
         />
       </IconField>

@@ -338,6 +338,56 @@
   "placeholder": {
     "module": "Módulo em construção."
   },
+  "profile": {
+    "subtitle": "Seus dados pessoais, sua segurança e sua documentação profissional.",
+    "loadError": "Não foi possível carregar seu perfil",
+    "identity": {
+      "title": "Identidade",
+      "email": "E-mail",
+      "rut": "RUT",
+      "role": "Perfil",
+      "noRut": "Sem RUT cadastrado",
+      "managedByAdmin": "Estes dados são administrados pela equipe Lotus."
+    },
+    "personal": {
+      "title": "Dados pessoais",
+      "name": "Nome",
+      "phone": "Telefone",
+      "save": "Salvar alterações",
+      "saved": "Seus dados foram atualizados."
+    },
+    "security": {
+      "title": "Segurança",
+      "currentPassword": "Senha atual",
+      "newPassword": "Nova senha",
+      "confirmPassword": "Repita a nova senha",
+      "warning": "Ao trocar sua senha, suas outras sessões serão encerradas. Esta sessão continua aberta.",
+      "save": "Trocar senha",
+      "saved": "Sua senha foi alterada."
+    },
+    "documents": {
+      "title": "Documentação profissional",
+      "hint": "Você pode enviar e substituir seus documentos. Eles não são excluídos: o novo substitui o anterior.",
+      "send": "Enviar documento",
+      "replace": "Substituir",
+      "managedByAdmin": "Este documento é gerido pelo administrador.",
+      "sent": "Documento enviado.",
+      "validUntil": "Vence em {{date}}",
+      "noValidity": "Sem data de vencimento"
+    },
+    "docStatus": {
+      "vigente": "Vigente",
+      "vence_em_breve": "A vencer",
+      "vencido": "Vencido",
+      "ausente": "Não enviado"
+    },
+    "summary": {
+      "title": "Resumo profissional",
+      "enabledCourses": "Cursos habilitados",
+      "noCourses": "Você ainda não tem cursos habilitados.",
+      "goToDashboard": "Ir ao meu painel"
+    }
+  },
   "photo": {
     "label": "Foto",
     "select": "Selecionar foto",
