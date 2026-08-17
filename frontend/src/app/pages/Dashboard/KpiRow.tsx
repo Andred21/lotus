@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { AppCard } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
-import { formatUf } from '@shared/lib'
-import type { AdminKpisData } from '@shared/types/generated'
 
-type Kpi = {
-  /** Sufixo da chave `dashboard.kpi.*`. */
+export type Kpi = {
+  /** Chave i18n COMPLETA — `dashboard.kpi.*` no admin, `dashboard.redator.kpi.*`
+   * no Redator. Completa e não sufixo: com dois consumidores, um prefixo
+   * montado dentro do render põe metade da chave no módulo puro e metade no
+   * JSX (Emenda 3). Serve também de `key` do React: é única por card. */
   key: string
   value: string
   /** Grandeza secundária do mesmo card, já formatada. Hoje só as cotações têm
@@ -17,58 +18,22 @@ type Kpi = {
 }
 
 /**
- * Campo `null` NÃO vira card (D6). Nada de zero no lugar do que não pode ser
- * lido — essa é a lei do bloco A, e o backend passou a mandar `null` justamente
- * para a tela não ter como mentir — e nada de rótulo "sem acesso", que poluiria
- * a tela de quem nunca terá o módulo. É o mesmo padrão que o Sidebar já aplica
- * ao filtrar item por permissão.
- *
- * Derivação pura, no módulo e não no corpo do componente: o componente fica
- * declarativo, do mesmo jeito que o lint exige nos componentes de feature
- * (ADR-05) e que aqui vale por disciplina — o seletor não alcança `app/`.
+ * Fileira de contadores. Genérico sobre `Kpi[]` desde o B1 — só a DERIVAÇÃO era
+ * do admin, e ela saiu para `admin/kpiCards.ts` quando o segundo consumidor
+ * chegou (D13). O Redator monta duas instâncias, resumo e histórico, cada uma
+ * com sua faixa de seção.
  */
-function cards(k: AdminKpisData): Kpi[] {
-  const lista: Kpi[] = []
-
-  if (k.turmas_em_andamento !== null) {
-    lista.push({ key: 'turmasEmAndamento', value: String(k.turmas_em_andamento), tone: 'info' })
-  }
-  if (k.turmas_encerrando_em_breve !== null) {
-    lista.push({ key: 'turmasEncerrandoEmBreve', value: String(k.turmas_encerrando_em_breve), tone: 'warning' })
-  }
-  if (k.turmas_atrasadas !== null) {
-    lista.push({ key: 'turmasAtrasadas', value: String(k.turmas_atrasadas), tone: 'danger' })
-  }
-  if (k.conclusoes_por_confirmar !== null) {
-    lista.push({ key: 'conclusoesPorConfirmar', value: String(k.conclusoes_por_confirmar), tone: 'warning' })
-  }
-  if (k.cotacoes !== null) {
-    lista.push({
-      key: 'cotacoesPendentes',
-      value: String(k.cotacoes.pending_count),
-      hint: { i18nKey: 'dashboard.kpi.cotacoesValor', value: formatUf(k.cotacoes.pending_value_uf) },
-      tone: 'neutral',
-    })
-  }
-  if (k.certificados_a_emitir !== null) {
-    lista.push({ key: 'certificadosAEmitir', value: String(k.certificados_a_emitir), tone: 'info' })
-  }
-
-  return lista
-}
-
-export function KpiRow({ kpis }: { kpis: AdminKpisData }) {
+export function KpiRow({ items }: { items: Kpi[] }) {
   const { t } = useTranslation()
-  const lista = cards(kpis)
 
-  if (lista.length === 0) return null
+  if (items.length === 0) return null
 
   return (
     // Fileira única a partir de `xl`: travada em 3 colunas, a grade gastava
     // 372px de altura com seis números e empurrava as duas listas 231px para
     // fora da primeira tela em 1440x900 (UI-05 da revisão de 2026-08-16).
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      {lista.map((kpi) => (
+      {items.map((kpi) => (
         <AppCard key={kpi.key} variant="stat" tone={kpi.tone}>
           {/* Duas arrumações, um markup só. Abaixo de `sm` o card ocupa a
             * largura inteira e vira LINHA — rótulo à esquerda, número à
@@ -91,7 +56,7 @@ export function KpiRow({ kpis }: { kpis: AdminKpisData }) {
               className="min-w-0 text-xs font-semibold tracking-wider uppercase sm:min-h-8"
               style={{ color: 'var(--text-color-secondary)' }}
             >
-              {t(`dashboard.kpi.${kpi.key}`)}
+              {t(kpi.key)}
             </p>
             <p className="flex shrink-0 items-baseline gap-2 sm:mt-1 sm:justify-between">
               <span className="font-display text-3xl leading-none font-semibold tabular-nums">{kpi.value}</span>

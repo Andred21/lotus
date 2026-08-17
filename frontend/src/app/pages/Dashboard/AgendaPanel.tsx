@@ -3,7 +3,29 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import { dangerText, infoText, neutralInk, warningText } from '@shared/styles/tokens'
-import type { AgendaData, AgendaTurmaData } from '@shared/types/generated'
+/**
+ * A linha mínima que o painel sabe desenhar. `client_name` é OPCIONAL, e é o
+ * único campo em que `AgendaTurmaData` e `RedatorAgendaTurmaData` divergem
+ * (`generated.ts:29-35` × `:370-375`): o Redator não pode ver cliente.
+ *
+ * Genérico e não condicional de tela: assim o ownership é consequência do
+ * TIPO — passar o payload do Redator não dá acesso a um campo que ele não tem,
+ * e nenhum `if` de papel mora no render (D13).
+ */
+export type AgendaLinha = {
+  turma_id: number
+  course_name: string
+  start_date: string
+  end_date: string
+  client_name?: string | null
+}
+
+export type AgendaJanelas<L extends AgendaLinha> = {
+  starting_soon: L[]
+  ending_soon: L[]
+  in_progress: L[]
+  overdue: L[]
+}
 
 /** As 4 janelas na ordem em que a operação as lê: o que está atrasado primeiro,
  * o que termina em seguida, e só então o que está em curso e o que começa.
@@ -12,7 +34,7 @@ import type { AgendaData, AgendaTurmaData } from '@shared/types/generated'
  * aparecem, então a ordem sozinha não distingue "a primeira coluna é a mais
  * urgente" de "a primeira coluna é a única que sobrou". É a mesma gramática do
  * trilho do card de KPI — tom em marca, nunca em texto. */
-const JANELAS: { key: keyof AgendaData; labelKey: string; ink: string }[] = [
+const JANELAS: { key: keyof AgendaJanelas<AgendaLinha>; labelKey: string; ink: string }[] = [
   { key: 'overdue', labelKey: 'dashboard.agenda.overdue', ink: dangerText },
   { key: 'ending_soon', labelKey: 'dashboard.agenda.endingSoon', ink: warningText },
   { key: 'in_progress', labelKey: 'dashboard.agenda.inProgress', ink: infoText },
@@ -25,7 +47,7 @@ function dia(iso: string): string {
   return formatDate(new Date(`${iso}T12:00:00`))
 }
 
-function TurmaLinha({ turma }: { turma: AgendaTurmaData }) {
+function TurmaLinha({ turma }: { turma: AgendaLinha }) {
   const { t } = useTranslation()
 
   return (
@@ -57,7 +79,7 @@ function TurmaLinha({ turma }: { turma: AgendaTurmaData }) {
   )
 }
 
-export function AgendaPanel({ agenda }: { agenda: AgendaData }) {
+export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJanelas<L> }) {
   const { t } = useTranslation()
   const total = JANELAS.reduce((soma, janela) => soma + agenda[janela.key].length, 0)
   const preenchidas = JANELAS.filter((janela) => agenda[janela.key].length > 0)
