@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md
 context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
 state_basis_commit: c2ac9d4
-updated_at: 2026-08-17T12:45:00-03:00
+updated_at: 2026-08-17T14:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -264,6 +264,60 @@ uma superfície de tela sem consumidor autenticável.
 
 O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
 escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-17: escrever o plano derrubou o mecanismo de uma decisão aprovada
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/2026-08-17-dashboard-frontend-analitico-e-redator.md`: **onze tasks**, uma
+por commit, na ordem paleta → wrappers → hook → pastas → régua → período → séries → rankings →
+compliance/carga → Redator → DoD.
+
+**A ordem tem uma inversão deliberada.** A régua da D8 entra na Task 5, **antes** das cinco tasks
+que escrevem seções novas, e não no fim. Catraca serve para o código nascer conforme: ligada
+depois, as 4 seções nasceriam grandes e a task de ligar viraria refatoração retroativa. É a mesma
+sequência da D11 do B1.
+
+**Três coisas apareceram só ao escrever o plano, e as três viram emenda à spec.**
+
+1. **A D6 nomeava um mecanismo que não faz o que ela pede.** Medido no observador da versão
+   instalada — `@tanstack/query-core@5.101.1`, `src/queryObserver.ts:486-491` —,
+   `placeholderData: keepPreviousData` só entra com `status === 'pending'`. Quando o fetch da
+   janela nova **falha**, `status` vira `'error'`, `data` volta `undefined` e a tela vira
+   `AppErrorState`: exatamente o que a D6 foi escrita para impedir. Ele cobre a troca normal — o
+   "ganho de brinde" que a decisão citava — e **não cobre a troca falhada**, que era o objetivo
+   declarado. Substituído por um piso único no hook (o último payload bom). Um mecanismo cobre as
+   duas metades; manter os dois seria a segunda fonte da mesma verdade. **O objetivo da D6 e o
+   cenário 4 do §6 não mudaram** — mudou o mecanismo nomeado.
+2. **A §4 e a D8 não se satisfazem juntas.** A §4 dava ao `DashboardPage.tsx` dois papéis — roteador
+   de `kind` e compositor das seções do admin — e a D8 põe 150 linhas sobre ele. Ele tem **159
+   ANTES** das 4 seções novas. Resolvido pelo critério da própria D4: `admin/AdminView.tsx`,
+   simétrico ao `RedatorView.tsx` que a §4 já previa, mais `SectionLabel.tsx` e
+   `DashboardSkeleton.tsx` na raiz, que é onde mora o que as duas views usam.
+3. **A chave i18n do KPI vira completa.** `KpiRow` montava `dashboard.kpi.${key}` dentro do render;
+   com o Redator em `dashboard.redator.kpi.*` o prefixo implícito quebra, e uma prop de prefixo
+   poria metade da chave no call-site e metade no JSX. Mesma correção que o Q-1 do review de
+   2026-08-16 já fez neste arquivo.
+
+**Quatro coisas que o plano mediu em vez de supor**, e as quatro mudaram código escrito:
+`common.yes`/`common.no` **não existem** em nenhuma das 3 locales; a contagem de rodapé do
+repositório **não usa plural do i18next** (`role.count` é `"{{count}} roles"`, forma única); **não
+existe rota de detalhe de relator** — o `AppRouter` registra só `/personas`, e `navigation.ts:49-50`
+já resolveu o mesmo caso com `key: null`; e o Meu Perfil é **`/perfil`**, não `/mi-perfil`.
+
+**As 5 cores da D2 saíram medidas, não escolhidas por olho:** teal/laranja/roxo/rosa/índigo, nenhum
+deles um hue dos `--tone-*-ink`, todos apontando para degraus que a rampa do tema já tem — **zero
+hex novo**. No claro medem 3,41 / 3,78 / 3,96 / 3,53 / 4,47:1 sobre o card; no escuro, 4,52 a 6,89.
+A régua (`frontend/tests/chart-tokens.test.ts`) cobra 3:1 e **30° de matiz entre quaisquer duas**,
+com um controle que reprova a alternativa rejeitada da D2 — o amarelo do tom de aviso fica a 21° do
+laranja da paleta.
+
+**Um cenário além dos 6 do §6, e o motivo:** `periodoDoPreset` manda data ao servidor sem validação
+de cliente (a D6 deixou a regra só no backend). Errar o recuo de mês manda uma janela que o backend
+**aceita** e a tela mostra errada, sem nenhum 422 — mesma categoria do `parseUfInput`.
+
+**`executor: claude`**, com o `/lotus-ui-review` da Task 11 reservado ao João
+(`disable-model-invocation: true`). O aceite da EAP 8.4.0 exige validar admin e Redator
+**separadamente** — coisa que o B1 não podia satisfazer.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
