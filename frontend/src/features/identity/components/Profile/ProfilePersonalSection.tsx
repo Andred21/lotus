@@ -55,8 +55,11 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
         </FormField>
 
         <FormField label={t('profile.personal.phone')} error={fieldErrors?.phone?.[0]}>
+          {/* `font-mono` (D-29): único sítio da decisão que pousa num controle
+              EDITÁVEL, e não num valor de leitura — a auditoria o cita
+              explicitamente ("vale também para telefone"). */}
           <AppInputText
-            className="w-full"
+            className="w-full font-mono"
             autoComplete="tel"
             value={form.phone}
             disabled={pending}

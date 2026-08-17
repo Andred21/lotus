@@ -57,13 +57,22 @@ export function ProfilePage() {
           coluna que recebe TODOS os controles editáveis ficava menor que a de
           leitura, invertendo a hierarquia que a D1 desenhou (UI-04 do review de
           2026-08-16). Nessa faixa, uma coluna só é mais confortável que duas
-          iguais. */}
+          iguais.
+
+          Abaixo de `xl`, o self-service vem PRIMEIRO (D-27). Em 1024x768 o Admin
+          tinha `Datos personales` em y=829 e 1476px de total; o Redator,
+          `Documentación profesional` em y=1809 e 2544px — 3,7 dobras, com a
+          primeira contendo só o cartão de identidade, cujo único controle é o de
+          foto. A ordem em `xl` fica intocada: ali a posição horizontal já
+          carrega a regra, e quem a carrega abaixo disso é a superfície recuada
+          (D-28), que precisou vir antes — reordenar sem marca visual só troca
+          qual metade fica por último. */}
       <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-4">
+        <div className="order-2 flex flex-col gap-4 xl:order-1">
           <ProfileIdentityCard profile={profile} />
           {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="order-1 flex flex-col gap-4 xl:order-2">
           <ProfilePersonalSection profile={profile} />
           <ProfileSecuritySection email={profile.email} />
           {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}
