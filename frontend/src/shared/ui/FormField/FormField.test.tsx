@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { FormField, FormErrorSummary, NestedField } from './FormField'
+import { useFieldProps } from './fieldContext'
 
 afterEach(() => {
   cleanup()
@@ -100,5 +101,83 @@ describe('FormErrorSummary', () => {
 
     expect(screen.queryByText('Requerido.')).toBeNull()
     expect(screen.getByText('Inválido.')).toBeTruthy()
+  })
+})
+
+/** Consumidor mínimo do contexto. Existe para testar o CONTRATO sem depender de
+ * nenhum wrapper de Prime — os wrappers reais são medidos na task seguinte. */
+function ControleDeTeste() {
+  const props = useFieldProps('id')
+  return <input {...props} data-testid="controle" />
+}
+
+describe('FormField associa o rótulo ao controle (P-37)', () => {
+  it('o nome acessível do controle é SÓ o rótulo', () => {
+    // Hoje o <label> envolve o texto E o controle, então o nome acessível soma
+    // os dois — e com erro presente soma a mensagem junto. É a P-37.
+    render(
+      <FormField label="RUT">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    expect(screen.getByLabelText('RUT')).toBe(screen.getByTestId('controle'))
+  })
+
+  it('erro publica aria-invalid e aria-describedby apontando para a mensagem', () => {
+    render(
+      <FormField label="RUT" error="RUT inválido">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const controle = screen.getByTestId('controle')
+    expect(controle.getAttribute('aria-invalid')).toBe('true')
+
+    const descrito = controle.getAttribute('aria-describedby')
+    expect(descrito).toBeTruthy()
+    expect(document.getElementById(descrito as string)?.textContent).toBe('RUT inválido')
+  })
+
+  it('sem erro NAO pendura aria-invalid nem aria-describedby', () => {
+    render(
+      <FormField label="RUT">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const controle = screen.getByTestId('controle')
+    expect(controle.getAttribute('aria-invalid')).toBeNull()
+    expect(controle.getAttribute('aria-describedby')).toBeNull()
+  })
+
+  it('em leitura o rotulo NAO aponta para controle nenhum', () => {
+    // `htmlFor` pendurado num id que não existe é label morta.
+    const { container } = render(<FormField label="RUT" readOnly value="76.123.456-7" />)
+
+    expect(container.querySelector('label')?.getAttribute('for')).toBeNull()
+  })
+
+  it('dois campos na mesma tela nao colidem de id', () => {
+    render(
+      <>
+        <FormField label="Nombre"><ControleDeTeste /></FormField>
+        <FormField label="Teléfono"><ControleDeTeste /></FormField>
+      </>,
+    )
+
+    const [a, b] = screen.getAllByTestId('controle')
+    expect(a.id).toBeTruthy()
+    expect(a.id).not.toBe(b.id)
+  })
+
+  it('fora de um FormField o hook nao pendura nada', () => {
+    // O wrapper usado solto — login, filtro de tabela — continua exatamente como
+    // era. Nenhum dos 55 call sites com controle precisa mudar por causa disto.
+    render(<ControleDeTeste />)
+
+    const controle = screen.getByTestId('controle')
+    expect(controle.id).toBe('')
+    expect(controle.getAttribute('aria-invalid')).toBeNull()
   })
 })
