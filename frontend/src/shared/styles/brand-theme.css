@@ -53,6 +53,43 @@
    * escuro o variant preenche de celeste e o rótulo vira navy. */
   --brand-ink: var(--brand);
 
+  /* Tinta de severidade. Mesma mecânica do `--brand-ink` logo acima, aplicada
+   * aos quatro tons do `AppCard`: o degrau que é legível MUDA com o tema, então
+   * quem muda é a variável, não a regra.
+   *
+   * O padrão (escuro) é o degrau 400: sobre o `--surface-card` #1e293b mede
+   * 7,03 / 7,40 / 8,58 / 4,98:1 e sobre o card tingido a 8% mede 6,22 / 6,47 /
+   * 7,40 / 4,68:1 — todos acima do 4,5:1 de texto normal.
+   *
+   * Substitui o `color-mix(hue 70%, --text-color)` que morava em `tokens.ts`.
+   * O docblock de lá afirmava que compor com `--text-color` mantinha contraste
+   * "nos dois temas"; medido, valia só no escuro — no claro os 70% do hue
+   * dominavam e o número em aviso do KPI ficava em 2,86:1, abaixo até do 3,0:1
+   * de texto grande (UI-04 do review de 2026-08-17). Elevar a participação do
+   * `--text-color` fecharia o contraste às custas do matiz: 40% de amarelo
+   * sobre slate é #7c6f36, oliva, e o aviso deixaria de parecer aviso. O degrau
+   * da própria rampa guarda o matiz E o contraste.
+   *
+   * Serve a texto E a traço: o mesmo token pinta o rótulo de erro do
+   * `FormField` e o trilho de severidade do `AppCard variant="stat"`. Guarda de
+   * drift: `frontend/tests/tone-ink.test.ts`. */
+  --tone-info-ink: var(--blue-400);
+  --tone-success-ink: var(--green-400);
+  --tone-warning-ink: var(--yellow-400);
+  --tone-danger-ink: var(--red-400);
+
+  /* Tom neutro não tem severidade: o trilho existe como elemento de estrutura,
+   * sem cor de sinal. Cinza da rampa de superfície, não `--text-color` — um
+   * traço na tinta do corpo seria o mais escuro da fileira e leria como o mais
+   * urgente, o oposto do que "neutro" diz.
+   *
+   * Sem 3:1 a cobrar (o tom neutro não carrega informação), mas com um piso
+   * prático: a 1,36:1 o trilho simplesmente sumia e o card neutro parecia sem
+   * estilo ao lado dos cinco com sinal. O degrau muda por tema porque a rampa
+   * de superfície inverte — 3,93:1 no escuro, 2,60:1 no claro, presença
+   * parecida nos dois. */
+  --tone-neutral-ink: var(--surface-300);
+
   /* Traço do divisor. O AppDivider pinta o `::before` do componente Prime a
    * partir daqui para que o call site nunca precise alcançar o pseudo-elemento
    * (ADR-16 §3, Q-4 do review de 2026-08-12) — mesma mecânica do traço de foco
@@ -79,6 +116,18 @@ html:not(.dark) {
    * 700 da rampa), justamente para o celeste não sumir dos botões — ver o
    * gerador do tema. */
   --focus-stroke: var(--brand-navy);
+
+  /* Degraus do claro. NÃO são o mesmo número em todo tom: o que iguala os
+   * quatro é a razão medida sobre `--surface-card`, não o índice da rampa —
+   * 5,88 (info-700) / 6,52 (success-800) / 5,70 (warning-800) / 6,39
+   * (danger-700), e sobre o card tingido a 8% nenhum cai abaixo de 5,4:1. O
+   * amarelo precisa descer dois degraus a mais porque é o hue mais luminoso da
+   * paleta: `--yellow-700` ainda mede 3,81:1, reprova em texto normal. */
+  --tone-info-ink: var(--blue-700);
+  --tone-success-ink: var(--green-800);
+  --tone-warning-ink: var(--yellow-800);
+  --tone-danger-ink: var(--red-700);
+  --tone-neutral-ink: var(--surface-400);
 
   /* No TEXTO/traço de marca a decisão é a mesma do gerador (`TINTA_CLARA`): o
    * degrau 700 da rampa celeste, 5,88:1 no branco. Não é azul-poste de
