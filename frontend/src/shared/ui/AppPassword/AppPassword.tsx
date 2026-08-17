@@ -38,6 +38,14 @@ export interface AppPasswordProps extends PasswordProps {
  * regra no wrapper e metade no chamador foi o que reproduziu o débito três
  * vezes. Mesclado, não cravado: o chamador acrescenta classe, não perde a
  * largura (idiom do `AppInputText`).
+ *
+ * **A D-24 pediu Espaço, e o Espaço já funciona.** O `onToggleMaskKeyDown` do
+ * Prime trata `event.key === 'Enter' || event.code === 'Space'`
+ * (`password.cjs.js:588-593`) e o `pt` deste wrapper não o sobrescreve — há
+ * teste medindo as duas teclas. Acrescentar handler próprio alternaria DUAS
+ * vezes e o campo voltaria ao estado inicial: defeito pior e invisível. Se o
+ * Espaço falhar no navegador, a causa não é este componente, e o achado precisa
+ * ser remedido lá antes de virar código aqui.
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {

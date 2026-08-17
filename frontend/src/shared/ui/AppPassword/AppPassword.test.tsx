@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { AppPassword } from './AppPassword'
 
 afterEach(() => {
@@ -48,5 +48,41 @@ describe('AppPassword mantém a largura sob className do chamador', () => {
     // PRÓPRIO, shrink-to-fit, contra o qual um `w-full` sozinho resolve para a
     // largura intrínseca (UI-01).
     expect(container.querySelector('.p-password')?.className).toContain('w-full')
+  })
+})
+
+describe('AppPassword — o olho responde às DUAS teclas de botão', () => {
+  function olho() {
+    return screen.getByRole('button', { name: 'common.showPassword' })
+  }
+
+  it('Enter alterna o campo para texto', () => {
+    render(<AppPassword aria-label="senha" />)
+
+    expect(input().getAttribute('type')).toBe('password')
+    fireEvent.keyDown(olho(), { key: 'Enter', code: 'Enter' })
+    expect(input().getAttribute('type')).toBe('text')
+  })
+
+  it('Espaco alterna o campo para texto (D-24)', () => {
+    // A WAI-ARIA exige as DUAS teclas para role="button". O review de
+    // 2026-08-17 mediu Enter funcionando e Espaço não.
+    render(<AppPassword aria-label="senha" />)
+
+    expect(input().getAttribute('type')).toBe('password')
+    fireEvent.keyDown(olho(), { key: ' ', code: 'Space' })
+    expect(input().getAttribute('type')).toBe('text')
+  })
+
+  it('o olho NAO carrega aria-pressed', () => {
+    // Recusa com motivo (spec D6): o NOME deste controle alterna a cada clique,
+    // e um controle cujo nome muda é botão — foi por isso que o `role="switch"`
+    // + `aria-checked` do Prime saiu em 2026-08-13 (UI-04), por mentir sobre o
+    // estado. Pendurar `aria-pressed` num botão cujo nome já o carrega anuncia o
+    // estado duas vezes, em duas gramáticas.
+    render(<AppPassword aria-label="senha" />)
+
+    expect(olho().getAttribute('aria-pressed')).toBeNull()
+    expect(olho().getAttribute('aria-checked')).toBeNull()
   })
 })
