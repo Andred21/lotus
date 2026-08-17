@@ -175,6 +175,10 @@
   "dashboard": {
     "welcome": "Welcome, {{name}}",
     "subtitle": "Current operating status: what needs action today.",
+    "section": {
+      "action": "Needs action",
+      "context": "Context"
+    },
     "noAccess": {
       "title": "No modules visible",
       "description": "Your profile has no read permission on any dashboard module. Ask an administrator for access."

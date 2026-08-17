@@ -175,6 +175,10 @@
   "dashboard": {
     "welcome": "Bienvenido, {{name}}",
     "subtitle": "Estado operativo actual: qué requiere acción hoy.",
+    "section": {
+      "action": "Requiere acción",
+      "context": "Contexto"
+    },
     "noAccess": {
       "title": "Sin módulos visibles",
       "description": "Tu perfil no tiene permiso de lectura sobre ningún módulo del panel. Solicita acceso a un administrador."
