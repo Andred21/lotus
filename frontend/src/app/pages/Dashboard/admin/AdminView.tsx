@@ -10,6 +10,7 @@ import { PendingList } from './PendingList'
 import { PipelineFunnel } from './PipelineFunnel'
 import { PeriodFilter } from './PeriodFilter'
 import { SeriesPanel } from './SeriesPanel'
+import { RankingsPanel } from './RankingsPanel'
 import type { PeriodPresetKey } from './periodPresets'
 
 /**
@@ -85,6 +86,7 @@ export function AdminView({
             onRetry={onRetry}
           />
           {data.series !== null && <SeriesPanel series={data.series} />}
+          {data.rankings !== null && <RankingsPanel rankings={data.rankings} />}
         </section>
       )}
     </div>

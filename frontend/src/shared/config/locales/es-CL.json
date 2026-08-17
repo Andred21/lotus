@@ -200,6 +200,18 @@
       "certificados_emitidos": "Certificados emitidos",
       "uf_aprovada": "UF aprobada"
     },
+    "rankings": {
+      "courses": "Cursos más demandados",
+      "clients": "Clientes más activos",
+      "empty": "Sin datos en el período",
+      "metric": {
+        "label": "Métrica",
+        "turmas": "Clases",
+        "matriculas": "Matrículas",
+        "certificados": "Certificados",
+        "uf_aprovada": "UF aprobada"
+      }
+    },
     "noAccess": {
       "title": "Sin módulos visibles",
       "description": "Tu perfil no tiene permiso de lectura sobre ningún módulo del panel. Solicita acceso a un administrador."

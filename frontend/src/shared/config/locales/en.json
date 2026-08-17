@@ -200,6 +200,18 @@
       "certificados_emitidos": "Certificates issued",
       "uf_aprovada": "Approved UF"
     },
+    "rankings": {
+      "courses": "Most requested courses",
+      "clients": "Most active clients",
+      "empty": "No data in the period",
+      "metric": {
+        "label": "Metric",
+        "turmas": "Classes",
+        "matriculas": "Enrollments",
+        "certificados": "Certificates",
+        "uf_aprovada": "Approved UF"
+      }
+    },
     "noAccess": {
       "title": "No modules visible",
       "description": "Your profile has no read permission on any dashboard module. Ask an administrator for access."
