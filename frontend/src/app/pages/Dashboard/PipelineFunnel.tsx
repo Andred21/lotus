@@ -30,9 +30,14 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
                 * o preenchimento é % dela. Aplicar a % direto na barra fazia a de
                 * 100% ser encolhida pelo `flex-shrink` enquanto as de 33% não —
                 * 3 e 1 desenhavam 2,38:1 em vez de 3:1. */}
+              {/* O trilho é o FUNDO DA PÁGINA, não a borda: contra
+                * `--surface-border` a barra media 2,33:1 no claro e 2,77:1 no
+                * escuro, e o 3:1 de elemento gráfico se cobra justamente contra
+                * a cor adjacente. O sulco em `--surface-ground` separa os dois
+                * nos dois temas sem trocar a cor da barra. */}
               <span
                 className="flex h-2 min-w-0 flex-1 rounded-full"
-                style={{ background: 'var(--surface-border)' }}
+                style={{ background: 'var(--surface-ground)' }}
                 aria-hidden="true"
               >
                 <span
@@ -44,13 +49,24 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
                   // Proporcional ao MAIOR valor, não ao total: o funil compara
                   // etapas entre si, e normalizar pelo total achataria todas
                   // quando uma domina.
+                  //
+                  // `--brand-ink`, não `--primary-color`: a barra É o dado, e
+                  // celeste puro sobre o card claro mede 2,77:1 contra o branco
+                  // (2,33:1 contra o próprio trilho), abaixo do 3:1 de elemento
+                  // gráfico. É exatamente o defeito que o token já existia para
+                  // evitar no traço do AppButton — no escuro ele continua sendo
+                  // o celeste (brand-theme.css §--brand-ink).
                   style={{
                     width: `${(etapa.count / maior) * 100}%`,
-                    background: 'var(--primary-color)',
+                    background: 'var(--brand-ink)',
                   }}
                 />
               </span>
-              <span className="shrink-0 font-mono text-sm tabular-nums">{etapa.count}</span>
+              {/* Largura fixa: o trilho é `flex-1`, então um `12` o encurta 8px
+                * a mais que um `3` e os 100% de cada etapa medem trilhos
+                * diferentes. Com a coluna cravada, todas as barras comparam a
+                * mesma régua — que é a premissa do funil. */}
+              <span className="w-8 shrink-0 text-right font-mono text-sm tabular-nums">{etapa.count}</span>
             </li>
           ))}
         </ul>
