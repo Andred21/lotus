@@ -2,11 +2,11 @@
 schema_version: 1
 active_feature: sprint-5-dashboard
 active_work_item: dashboard-frontend-analitico-e-redator
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md
 blocker: null
@@ -205,6 +205,65 @@ aceite ou comportamento de peso legal ficou por adivinhar, que é o teste da pr�
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
 (brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-17: o terreno mudou três decisões
+
+Spec em `docs/superpowers/specs/2026-08-17-dashboard-frontend-analitico-e-redator-design.md`, com
+**treze decisões**: D1–D10 escolhidas pelo João entre alternativas com o custo declarado, D11–D13
+derivadas e declaradas como tais.
+
+**Baseline medido nesta branch antes de desenhar:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **39 arquivos / 223 testes**.
+
+**A D1 se decidiu por medição de mecanismo, não por preferência de biblioteca.** O tema troca em
+runtime trocando o `href` de um `<link>` (`primeTheme.ts:15`), sem re-render React. SVG aceita
+`stroke="var(--chart-1)"` e acompanha a troca **sem JS**; canvas exige `getComputedStyle` mais
+redraw forçado. **Recharts venceu por isso**, e não por bundle ou API.
+
+**Quatro achados de terreno mudaram o desenho, e nenhum estava no packet:**
+
+1. **A catraca de cor é cega para gráfico.** `COR_HARDCODED` casa só `className` com classe Tailwind
+   (`eslint.config.js:110-115`) — hex dentro de objeto de configuração de dataset passa em silêncio.
+   É a **P-36**, e a consequência entrou na D11: o wrapper de `shared/ui` é o **único** sítio que
+   nomeia token de cor, e o call-site passa índice de série. Cor vira mecanismo num lugar só, porque
+   lint não a alcança.
+2. **`src/app/**` é a camada sem a régua de linhas** — `max-lines` roda só em
+   `src/features/*/components/**` (`eslint.config.js:248-251`) —, e **2 dos 24 arquivos dela já a
+   excedem**, os dois criados pelo B1. É o mesmo formato da P-34 que o B1 fechou para a catraca de
+   cor, agora com `max-lines`. Virou a **D8**, e o custo medido é **um** arquivo, porque a D4 já
+   encolhe o `DashboardPage`.
+3. **A query key varia pelo período, e isso quebrava a tela.** Trocar a janela cria key nova,
+   `query.data` volta `undefined` e o hook cai em `kind: 'error'` — **a tela inteira viraria
+   `AppErrorState` por um erro de digitação no filtro**, e o `staleError` do B1 não alcança porque o
+   cache é da key antiga. A **D6** (`keepPreviousData`) fecha isso, e some de brinde o flash de tela
+   em branco na troca **normal** de período.
+4. **O reuso entre as duas views é maior do que parecia, e por forma do contrato.** `AgendaData` e
+   `RedatorAgendaData` têm as **mesmas 4 janelas** e a linha difere em **exatamente um campo**,
+   `client_name` — que é a regra de ownership. Genericizar `AgendaPanel` faz **o ownership virar
+   consequência do tipo**, não condicional de tela. E `alertas_documentos` é `AlertData[]`, o mesmo
+   tipo do `AlertList`: reuso sem tocar no arquivo.
+
+**O self-review da spec achou quatro coisas e as corrigiu antes do commit:** eu havia escrito "os 7
+cenários que o B1 deixou" e o arquivo tem **6 casos** (o "7º" do registro do B1 era contagem de
+**cenário da spec**, e o próprio fechamento dele anotou que o vitest conta **casos**); o mapeamento
+das 5 seções do Redator estava implícito e virou tabela, porque a D13 dispensou os componentes
+`ResumoRow`/`HistoricoRow` que o desenho apresentado previa; o glob `.tsx` da D8 parecia arbitrário e
+ganhou a razão (é o mesmo recorte da regra das features — hook e derivação longos são legítimos); e o
+alvo do gate projetava número de casos, que é justamente a projeção que o fechamento do B1 teve de
+declarar como divergência.
+
+**Uma verificação que evitou um falso problema:** a spec cita paths que ainda não existem, e
+`frontend/tests/repo-docs-refs.test.ts` reprova path fantasma em doc normativo. Medido,
+`docs/superpowers/**` está **excluído de propósito** dele (`:35,138-140`). Nenhum risco, e isso fica
+escrito para não ser remedido no próximo bloco.
+
+**Risco de review: BAIXO pelo gate binário** — não toca schema, não regenera `generated.ts`, não
+toca Sanctum, auditoria nem RBAC. **Divergência por alcance declarada:** dependência de runtime nova
+(Recharts), 2 wrappers novos em `shared/ui`, 5 tokens de cor novos, régua nova numa camada inteira e
+uma superfície de tela sem consumidor autenticável.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
