@@ -79,6 +79,16 @@
   --tone-warning-ink: var(--yellow-400);
   --tone-danger-ink: var(--red-400);
 
+  /* Tom sem severidade e com hue próprio (a modalidade `Online` do `AppTag`).
+   * Entrou neste mapa no BD-16, um bloco depois dos quatro acima, porque era o
+   * ÚLTIMO sobrevivente do `color-mix(hue 70%, --text-color)` — e ali a fórmula
+   * reprovava nos DOIS temas, não só no claro: 4,41:1 no escuro e 4,44:1 no
+   * claro, medidos na tabela de turmas contra o 4,5:1 de texto normal. O degrau
+   * do escuro é o 300, e não o 400 dos irmãos, porque o roxo é mais escuro que
+   * eles na mesma altura da rampa: `--purple-400` mede 4,10:1 sobre o fundo
+   * tingido a 15% e continuaria reprovando. O 300 mede 5,42:1. */
+  --tone-accent-ink: var(--purple-300);
+
   /* Tom neutro não tem severidade: o trilho existe como elemento de estrutura,
    * sem cor de sinal. Cinza da rampa de superfície, não `--text-color` — um
    * traço na tinta do corpo seria o mais escuro da fileira e leria como o mais
@@ -152,6 +162,8 @@ html:not(.dark) {
   --tone-warning-ink: var(--yellow-800);
   --tone-danger-ink: var(--red-700);
   --tone-neutral-ink: var(--surface-400);
+  /* 5,80:1 sobre o fundo tingido a 15%, contra os 4,44:1 da fórmula antiga. */
+  --tone-accent-ink: var(--purple-700);
 
   /* No TEXTO/traço de marca a decisão é a mesma do gerador (`TINTA_CLARA`): o
    * degrau 700 da rampa celeste, 5,88:1 no branco. Não é azul-poste de

@@ -1,6 +1,6 @@
 import { Tag } from 'primereact/tag'
 import type { TagProps } from 'primereact/tag'
-import { dangerText, infoText, successText, warningText } from '../../styles/tokens'
+import { accentText, dangerText, infoText, successText, warningText } from '../../styles/tokens'
 
 /** Tom sem equivalente em `severity` do PrimeReact. Hoje só o roxo de
  * modalidade `Online`. Modalidade não é severidade — não entra na escala
@@ -16,9 +16,14 @@ export interface AppTagProps extends TagProps {
  * (claro `#e2e8f0`/`#334155`, escuro `#334155`/branco a 87%). */
 const NEUTRO = { background: 'var(--surface-200)', color: 'var(--text-color)' }
 
+/** Mesma mecânica dos quatro tons abaixo, e pelo mesmo motivo medido: a tinta
+ * era `color-mix(in srgb, var(--purple-500) 70%, var(--text-color))` — a fórmula
+ * que o `tokens.ts` abandonou —, e aqui ela reprovava nos DOIS temas: 4,44:1 no
+ * claro e 4,41:1 no escuro, contra o 4,5:1 de texto normal (12px/700). Este era
+ * o último sítio dela no projeto. */
 const ACCENT = {
   background: 'color-mix(in srgb, var(--purple-500) 15%, var(--surface-card))',
-  color: 'color-mix(in srgb, var(--purple-500) 70%, var(--text-color))',
+  color: accentText,
 }
 
 /** Hue por severidade. Os palette vars do Lara NÃO invertem entre temas, então o
