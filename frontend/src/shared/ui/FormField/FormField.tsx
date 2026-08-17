@@ -56,7 +56,13 @@ export function FormField({ label, error, readOnly, value, children }: FormField
   return (
     <div className="block">
       {/* Sem `htmlFor` em leitura: não há controle a apontar, e label pendurada
-          num id inexistente é label morta. */}
+          num id inexistente é label morta.
+          Quem decide isso é a PROP, não o conteúdo: `children` que não monta
+          controle — uma `AppTag` de valor imutável, por exemplo — passa por aqui
+          como se montasse, e a label sai apontando para o vazio. Aconteceu em
+          dois sítios (`StaffUserDialog`, `CertificateViewDialog`), medidos no
+          gate do BD-16. Valor que só se lê entra por `readOnly` + `value`, que
+          aceita `ReactNode` justamente para isso. */}
       <label
         htmlFor={readOnly ? undefined : id}
         className="mb-1 block text-sm"
