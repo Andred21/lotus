@@ -27,6 +27,19 @@ describe('AppFileUpload', () => {
     expect(screen.getByRole('button').getAttribute('aria-label')).toBeNull()
   })
 
+  it('com rotulo VAZIO o botao nao anuncia nem MOSTRA o default ingles do Prime', () => {
+    // Tres sitios pedem o disparador so-icone com `chooseLabel=""`, e sem piso o
+    // botao anunciava E renderizava "Choose" numa interface em espanhol (gate do
+    // BD-16, quatro ocorrencias visiveis no dialogo do redator).
+    render(<AppFileUpload chooseLabel="" />)
+
+    const botao = screen.getByRole('button')
+    const rotulo = botao.getAttribute('aria-label')
+    expect(rotulo).toBeTruthy()
+    expect(rotulo).not.toBe('Choose')
+    expect(botao.textContent).not.toContain('Choose')
+  })
+
   it('o pt do chamador sobrevive ao pin do wrapper', () => {
     // mergePt funde chave a chave: quem passa pt.basicButton.className nao perde
     // o role que o wrapper crava, e vice-versa.

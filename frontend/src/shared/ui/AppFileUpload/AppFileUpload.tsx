@@ -64,11 +64,43 @@ export function AppFileUpload({
     uploadHandler?.(e)
   }
 
+  // Nome acessível: o do chamador vence sempre. Sem ele, quem nomeia é o rótulo
+  // VISÍVEL — e quando esse rótulo é vazio, que é como três sítios pedem o
+  // disparador só-ícone (`QuoteRow`, e as duas linhas do `SlotBody`), o Prime
+  // cai no próprio default INGLÊS e o botão anuncia "Choose" numa interface em
+  // espanhol. Medido no gate do BD-16: quatro ocorrências só no diálogo do
+  // redator. O piso traduzido mora aqui pela mesma régua do olho do
+  // `AppPassword` (UI-08) — o wrapper é a única porta, e nome acessível não é
+  // opcional. `common.upload` é o rótulo que os outros sítios já mostram.
+  const nome = accessibleName ?? (props.chooseLabel ? undefined : t('common.upload'))
+
   const uploadPt = mergePt<FileUploadProps['pt']>(pt, {
-    basicButton: { role: 'button', ...(accessibleName ? { 'aria-label': accessibleName } : null) },
+    basicButton: { role: 'button', ...(nome ? { 'aria-label': nome } : null) },
   })
 
+  // Rótulo vazio pede disparador só-ícone, e `iconOnly` é como o Prime o
+  // entrega: ele troca o rótulo por `&nbsp;` (`fileupload.cjs.js:979`). Sem
+  // isso, a cadeia `chooseLabel || chooseOptions.label || localeOption('choose')`
+  // (`:401`) escorrega para o default e o botão RENDERIZA "Choose" — visível,
+  // 59x20px a 16px, quatro vezes no diálogo do redator, numa interface em
+  // espanhol. O `aria-label` acima sozinho calaria o leitor de tela e deixaria
+  // a palavra na tela.
+  // Só entra quando falta rótulo: passar `chooseOptions={undefined}` de volta
+  // ATROPELA o default do Prime — a prop explícita vence, e o `createBasic`
+  // estoura em `chooseOptions.iconOnly`.
+  const soIcone = props.chooseLabel
+    ? null
+    : { chooseOptions: { ...props.chooseOptions, iconOnly: true } }
+
   return (
-    <FileUpload mode="basic" auto {...props} pt={uploadPt} uploadHandler={guarded} customUpload />
+    <FileUpload
+      mode="basic"
+      auto
+      {...props}
+      {...soIcone}
+      pt={uploadPt}
+      uploadHandler={guarded}
+      customUpload
+    />
   )
 }
