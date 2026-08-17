@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { AppTag, AppButton, AppFileUpload, type FileUploadHandlerEvent } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
-import { formatUf } from '../../lib/uf'
+import { formatUf } from '@shared/lib'
+import { dangerText } from '@shared/styles/tokens'
 import { FileList } from './FileList'
 
 /** Uma cotação da lista do orçamento. `striped` vem do índice: alternância como
@@ -46,8 +47,13 @@ export function QuoteRow({
           {quote.planned_start_date && ` · ${quote.planned_start_date}`}
           {quote.planned_end_date && ` – ${quote.planned_end_date}`}
         </p>
+        {/* `dangerText`, não `--red-500` cru: o hue puro mede 3,52:1 em 14px
+          * sobre o card, abaixo do 4,5:1 de texto normal. É o caso que o
+          * docblock de `tokens.ts` prevê — a catraca de cor do eslint só
+          * enxerga `className`, então cor errada entrando por `style` passa
+          * verde. */}
         {quote.status === 'rejected' && (
-          <p className="mt-1 text-sm" style={{ color: 'var(--red-500)' }}>{t('quote.rejectedNote')}</p>
+          <p className="mt-1 text-sm" style={{ color: dangerText }}>{t('quote.rejectedNote')}</p>
         )}
       </div>
 

@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: e103178
-updated_at: 2026-08-17T11:20:00-03:00
+updated_at: 2026-08-17T12:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,60 @@ updated_at: 2026-08-17T11:20:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
+
+**Isto não é um `active_work_item` e não muda `workflow_state`.** O estado segue `idle`,
+`active_work_item` segue `null` e `state_basis_commit` segue `0afdb55`. A seção existe porque houve
+escrita de código sem bloco promovido, e escrita não registrada é exatamente o que o
+`/auditar-docs` volta a achar depois como divergência nova.
+
+**Duas invocações do João, na mesma sessão.** Primeiro `/lotus-ui-review dashboard`, que é passo
+dele por `disable-model-invocation: true`; depois, lido o relatório, a instrução de cruzar os
+achados com a skill `frontend-design` e corrigir. Nenhum item do `backlog.md` foi promovido, nenhum
+gate de `/planejar-bloco` correu, e não existem spec nem plano — **por decisão dele, não por
+esquecimento do fluxo.**
+
+**A divergência de registro que o fechamento do B1 deixou aberta fecha aqui.** O
+`/fechar-sprint` de 2026-08-16 escreveu que o `/lotus-ui-review` daquele bloco "rodou mas não deixou
+artefato em `docs/superpowers/audits/`". A execução de 2026-08-17 deixa:
+`audits/2026-08-17-lotus-ui-review-dashboard.md`, com o `report.txt` verbatim, o passe de correção e
+os números medidos antes e depois. A evidência bruta (13 capturas + 5 snapshots da revisão, 10 do
+passe) fica em `.artifacts/ui-review/`, coberta por `.gitignore:24-25` — o relatório é o que se
+versiona, não os PNG.
+
+**A revisão não era redundante, e o próprio fechamento anterior dizia por quê:** `f38585e` tocou
+`DashboardItemRow`, `KpiRow` e `PipelineFunnel` **depois** do commit da revisão visual `3273cbf`,
+sem re-rodar os passos visuais do DoD. Medido agora, as cinco correções de 2026-08-16 se sustentam.
+
+**6 achados B, 0 C, todos corrigidos.** Os números de antes e depois estão na §3.1 do artefato de
+auditoria e não se repetem aqui. A tese de desenho que amarra o passe é uma só: **cor de sinal vive
+em traço e marca; texto fica em contraste cheio** — é o que fecha a UI-04 na raiz, porque o tom sai
+do número (onde precisava de 4,5:1 e entregava 2,86) e vai para o trilho (onde 3:1 basta e entrega
+5,2–5,8).
+
+**Três achados que não estavam no relatório apareceram ao corrigir e entraram junto:** a faixa do
+`AppCardHeader` media 80px para 24px de texto em **todo card da aplicação**; a barra do funil
+reprovava o 3:1 de elemento gráfico contra o próprio trilho nos dois temas; e dois sítios fora do
+Dashboard pintavam texto com `var(--red-500)` cru a 3,52:1 — o caso que a **P-36** descreve.
+
+**O alcance fora do Dashboard está declarado, não descoberto depois:** as quatro tintas de tom mudam
+de valor em ~20 sítios; o `AppCardHeader` encurta nos 8 consumidores; `variant="stat"` também é do
+`BudgetStatCard`, e a tela de orçamento foi conferida no navegador; o link de salto é do shell e
+vale para toda rota protegida.
+
+**Nasce a P-46**, e ela é a causa raiz da UI-02 que este passe **não** fechou: sem Preflight, toda
+tag de bloco herda margem do agente do usuário. A neutralização foi feita onde custava e parou aí —
+o reset escopado mexe no espaçamento de todas as telas de uma vez e é decisão do João.
+
+**Branch `fix/dashboard-revisao-visual-2026-08-17`**, nascida de `main@18bf487`, oito commits de
+código (`abff4be`…`2fc0bd8`) mais este de documentação, um por alteração. Gate: `pnpm lint` exit 0,
+`pnpm build` verde, `pnpm test` **39 arquivos / 223 testes**. Zero mutação de dado.
+`backend/config/cors.php` (WIP do João, o outro lado da P-45) ficou fora de todo `git add` — os
+commits usaram paths exatos.
+
+**Estado: `idle`.** O passe está entregue e o merge é decisão do João. O backlog não promove nada
+sozinho.
 
 ## Último item fechado — 2026-08-17 (`meu-perfil-frontend`, Sprint 6 · Meu Perfil, bloco 2 de 2)
 
@@ -633,8 +687,525 @@ da outra. **Nada disso é fechamento; é merge**, e é trabalho a fazer.
 **Estado: `idle`.** `state_basis_commit` passa a `e103178`, o commit que prova a entrega fechada; a
 próxima ação é escolha explícita do João no `backlog.md`. Nenhum item foi promovido — o backlog não
 promove sozinho e a instrução atual não nomeou o seguinte.
+### Integração — 2026-08-17: merge da `main` (fechamento do `dashboard-frontend-central-controle`)
 
-## Penúltimo item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
+**A `main` andou 30 commits desde o `36faf44` de onde este bloco partiu** — o PR #55 fechou o
+`dashboard-frontend-central-controle` em 2026-08-16, e em 2026-08-17 entrou ainda o passe de
+correção da revisão de UI do Dashboard, que não é bloco. As duas frentes correram em paralelo por
+exceção declarada (a quinta, e a primeira frontend × frontend), então este merge é a costura
+prevista, não uma surpresa.
+
+**Merge, não rebase, e a razão é documental:** rebase reescreve todo SHA da branch, e o fechamento
+deste bloco **cita SHAs** — `state_basis_commit: e103178` e a linha do `progress.md` com o intervalo
+`5ff2e7e..e103178`. A prova da entrega passaria a apontar para commits inexistentes. O segundo
+motivo é a forma dos conflitos: os arquivos que colidiram são os que o fluxo escreve em quase todo
+commit, então rebase replayaria a mesma colisão de `state.md` dezenas de vezes, e cada resolução
+intermediária seria um estado que **nunca existiu** — o oposto da invariante de fronteira durável.
+
+**Cinco conflitos: quatro de documento e um de código.** Documento: `state.md`, `progress.md`,
+`pendencias/README.md`, `pendencias/encerradas.md`. Código: `AppRouter.tsx`. Auto-mergearam
+`backlog.md`, `pendencias/abertas.md`, `progress-archive.md` e os três locales.
+
+**O conflito de código era o previsto na abertura, e fechou um placeholder:** a `main` moveu o
+`DashboardPage` de `@app/pages/DashboardPage` para `@app/pages/Dashboard/` (a central de controle
+virou pasta), e este bloco trocou o `/perfil` de `ModulePlaceholder` por `ProfilePage`. Resolvido
+com o caminho novo da `main` e a rota real deste bloco. Consequência medida: **`/perfil` era o
+último consumidor do `ModulePlaceholder`** — o import saiu (senão o lint reprova) e o componente
+`frontend/src/app/pages/ModulePlaceholder.tsx` ficou **órfão**. Não foi deletado aqui: código morto
+alheio se menciona, não se apaga num merge. O comentário do `AppRouter` que promete guarda de rota
+"quando páginas reais substituírem os `ModulePlaceholder`" também venceu — não há mais nenhum.
+
+**P-38 e P-34 fecharam em paralelo, uma de cada lado, e as duas ficam.** A tabela de encerradas do
+índice unia formatos divergentes (a deste lado tinha coluna `Como`, a da `main` tinha `Sai em`);
+ficou com as duas colunas, sem descartar informação de nenhum lado. As duas saem no próximo
+`/fechar-sprint`, cumprida a sprint de rastro.
+
+**A contagem de abertas do índice vinha errada dos dois lados, desde a base.** `36faf44` declarava
+`Abertas (29)` com 31 linhas na tabela; a `main` declarava `(30)` com 32; esta branch, `(28)` com
+30. O merge grava o número **contado** — **31**, conferido contra as 31 fichas de `abertas.md`, com
+zero ID de diferença entre índice e fichas. Não é achado deste bloco nem da frente paralela: é
+deriva herdada, e é exatamente a classe que a P-32 e a regra de "medir a própria população com o
+seletor dela" existem para pegar.
+
+**A candidata a pendência que o fechamento deixou para o João já existe na `main`:** o
+`TestCase.php:18` lendo `FRONTEND_URL` cru contra um `.env` que virou lista é a **P-45**, aberta
+pela frente paralela. Nada a registrar; a decisão segue sendo do João.
+
+**O `progress.md` estourou o teto de dez ao unir as duas frentes** — cada lado rotacionou a mesma
+linha mais antiga (BD-3) e depois somou entregas: uma daqui, duas de lá, dando doze. As duas mais
+antigas (`2026-08-13 · Auditoria · BD-8` e `2026-08-13 · Identity/Commercial · contrato de entrada`)
+desceram **verbatim** para o `progress-archive.md`, que vai a 58 linhas. A cascata deste arquivo
+rotaciona um degrau e o `falha-vs-lista-vazia` (BD-6) sai como sexto — a narrativa dele vive no git
+e no `progress-archive.md`.
+
+**`last_completed_work_item` fica em `meu-perfil-frontend` por medição, não por preferência:** o
+`dashboard-frontend-central-controle` fechou em 2026-08-16 14:22 (`4a0f08b`) e este em 2026-08-17
+11:21 (`7afe2be`). `state_basis_commit` segue em `e103178`, o commit que prova a entrega fechada
+mais recente, e continua sendo ancestral desta árvore.
+
+**Gates remedidos pós-merge, não herdados:** `pnpm lint` exit 0; `pnpm build` exit 0; `pnpm test`
+**45 arquivos / 250 testes**, a união das duas frentes (esta branch trazia 42/213). Backend
+**684 passed / 5 skipped (2537 asserções)**, idêntico ao medido no fechamento — o merge não trouxe
+**nenhum** arquivo de `backend/`, e a suíte só passa com `FRONTEND_URL` de uma URL só, que é a P-45.
+
+## Penúltimo item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
+
+### Seleção — 2026-08-15
+
+**Bloco restante da Sprint 5 (`backlog.md:41`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — o
+argumento era **título de seção** (`## Sprint 5 · Dashboard`), não slug promovido, exatamente como já
+reprovou a promoção de BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
+`celula-de-identidade`, `dashboard-backend-agregacoes` e `meu-perfil-backend-self-service`. Três
+decisões dele fecharam o gate: o slug `dashboard-frontend-central-controle`; a rota
+**`context_required`**, como o backlog exige para a Sprint 5; e **main tree** como área de trabalho.
+
+**A branch nasceu ANTES deste commit, por instrução explícita dele** ("já crie a branch antes de
+alterar qualquer documento"): `feat/dashboard-frontend-central-controle`, criada de `main@36faf44`.
+Este arquivo já é escrito na branch, não na `main`.
+
+**A main tree é escolha dele, não gatilho da P-03.** O bloco é de frontend — consome
+`GET /api/dashboard/metricas`, entregue e fechado no bloco A —, então o gatilho de dois blocos de
+**backend** não vence e uma worktree seria admissível. Ele escolheu a árvore principal mesmo assim.
+A `fix-frontend` está em `feat/meu-perfil-backend-self-service`, já mergeada, e não foi reusada.
+
+**`state_basis_commit` passa de `d0430d0` a `36faf44`, e a divergência que a sessão mediu na abertura
+já não existe.** Ao abrir o comando, a `main` local estava em `29eff53` e a
+`feat/meu-perfil-backend-self-service` tinha 18 commits com o bloco **fechado e não mergeado** — o
+que teria posto o bloco B numa base sem os tipos de Meu Perfil e adiado a colisão de `generated.ts`
+para o merge. O João respondeu que já havia mergeado; medido, o **PR #54** está na `main` (`36faf44`,
+igual a `origin/main`, árvore limpa). A base é única e a colisão não chega a existir.
+
+**Fonte externa declarada, como no bloco A:** o backlog aponta o escopo canônico no Drive
+(`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion
+(EAP 8.4.0–8.4.7). O bloco A cobriu a sequência de backend (8.4.0→8.4.1→8.4.2→8.4.3→8.4.6); **as EAP
+de frontend não foram consumidas por packet nenhum ainda**, e é isso que sustenta a rota — nenhuma
+rota direta a `ready_for_planning` se aplica, e o Context Packet do Codex (`lotus-context-packet`,
+read-only) vem antes de qualquer brainstorming.
+
+**Três medições da abertura entram aqui porque o packet e o brainstorming vão precisar delas:**
+
+1. **Não existe `features/dashboard/`.** O que há é `frontend/src/app/pages/DashboardPage.tsx`, um
+   placeholder na rota `/` do `AppRouter.tsx:58` cujo próprio docblock diz "conteúdo real é task
+   futura". Onde a feature nasce e o que acontece com a página de `app/pages/` é decisão do
+   brainstorming sob o ADR-05, não dado do bloco.
+2. **O contrato já está no repositório:** `generated.ts` traz os tipos do bloco A (9 ocorrências de
+   `Dashboard`), e a spec arquivada
+   `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` é o contrato do payload,
+   incluindo a §4.2 completada no fechamento (uma seção exige TODOS os gates dos módulos de que lê).
+3. **Dois itens do backlog apontam para este bloco e não são dele:** a **D-16** (turma concluída sem
+   matrícula em `fully_issued`) está parada esperando o consumidor dizer se a distinção paga — o
+   consumidor é este bloco; e a **ativação de acesso do redator** (item 4 de "Próximos blocos")
+   **bloqueia o valor da view do Redator**, porque nenhum redator autentica hoje. Nenhum dos dois é
+   escopo desta promoção.
+
+**A árvore não decide sozinha o gate visual:** o bloco termina em revisão de tela, e
+`/lotus-ui-review` tem `disable-model-invocation: true` — é passo do João. Planejar isso é do
+`writing-plans`, e está escrito aqui para não ser descoberto no gate, como no `login-fora-do-adr16`.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/dashboard-frontend-central-controle` a partir de `main@36faf44`.
+
+### Context Packet — 2026-08-15
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `1a56207`) e validado contra o
+contrato da skill item a item: markers exatos e nada fora deles, frontmatter completo com
+`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha` corretamente em **`null`** (registrados, não
+inventados), **8 key facts** — o teto exato —, toda fonte com status `retrieved` (nenhuma
+`unavailable`, então a regra das duas evidências não se aplica), divergência com base de resolução
+declarada, e **nenhum staleness trigger** apontando para hash de proveniência, para a transição
+promotora ou para edição de `state.md` que só move campo de workflow. Salvo em
+`docs/superpowers/context-packets/2026-08-15-dashboard-frontend-central-controle.md`.
+
+**Os três hashes de proveniência foram remedidos e batem:** `base_commit`
+`1a562076af2f…`, `state_blob_sha` `31bc77d7…` e `progress_blob_sha` `d2bac2b4…`. Foram obtidos por
+`git rev-parse`/`git hash-object` antes da invocação, não aceitos de chegada.
+
+**A troca do Notion PERSISTE, e agora está medida em vez de suposta.** O fechamento do bloco A
+registrou que as EAP **8.4.0 e 8.4.7** têm descrição e critério de aceite invertidos entre si
+(títulos, camadas e ADRs corretos; corpos trocados). O packet foi instruído a conferir se a troca
+havia sido corrigida: **não foi** — a 8.4.0 segue contendo o aceite de UI review e a 8.4.7 segue
+contendo domínio backend e `DomainDependencyTest`. A resolução é a mesma do bloco A e pela mesma
+base: **o Drive decide o escopo**, então a UI review pertence a este bloco. O staleness trigger da
+correção continua vivo.
+
+**Três afirmações materiais do packet foram medidas contra o repositório antes de salvá-lo, e as
+três batem:**
+
+1. **A composição em `app` sem `features/dashboard` não é imposição externa contra o repo — é
+   convergência.** O packet atribui a regra ao Drive; medido, `estrutura-monolito.md:100` já reserva
+   `app/pages/` para "página que NÃO é de domínio: DashboardPage, ModulePlaceholder", e as linhas 9 e
+   159 dizem que composição acontece na camada `app`/rota (lei §5.6). Um Dashboard que lesse de
+   Commercial, Operation e Certification como *feature* violaria a lei §5.6 — a proibição externa e a
+   lei interna apontam para o mesmo lugar. **Não há divergência a registrar aqui**, e é isso que a
+   medição estabelece.
+2. **Os dois DTOs raiz existem e são discriminados por `view`:** `AdminDashboardData` (`view: 'admin'`)
+   e `RedatorDashboardData` (`view: 'redator'`) em `generated.ts`, com a **nulabilidade de gate só no
+   admin** (`pipeline`, `agenda`, `compliance_turmas`, `redatores`, `series` como `| null`) e as seis
+   chaves do redator sem nenhuma anulável — exatamente o que o fechamento do bloco A provou ao vivo.
+3. Spec arquivada do bloco A e packet do bloco A existem nos paths citados.
+
+**`status: ready`, e as duas open questions não bloqueiam:** ambas são de **apresentação** —
+qual visualização recebe cada dataset e para onde cada CTA navega —, e o Drive delega essa decisão
+ao frontend. Nenhuma regra de negócio, critério de aceite ou comportamento de peso legal ficou por
+adivinhar, que é o teste da própria skill para `blocked`.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-15: o bloco B virou dois
+
+Spec em `docs/superpowers/specs/archive/2026-08-15-dashboard-frontend-central-controle-design.md`
+(arquivada no fechamento), com
+**dezesseis decisões**: D1–D7, D11, D12 e D16 escolhidas pelo João entre alternativas com o custo
+declarado; D8–D10 e D13–D15 derivadas e declaradas como tais.
+
+**A decisão que reconfigura o bloco é a D1: o bloco B foi FATIADO em dois.** O contrato do bloco A
+expõe **14 seções de UI** (9 na view admin, 5 na do Redator), e entregá-las num plano só levaria o
+gate visual cansado ao fim. O corte é por pergunta respondida: o **B1** (este bloco) responde *"o
+que tenho para fazer agora"* — `kpis`, `pendencias`, `alertas`, `agenda`, `pipeline`; o **B2**
+(`dashboard-frontend-analitico-e-redator`, a nascer no `backlog.md` no fechamento) responde *"como a
+operação evoluiu"* e leva séries, rankings, compliance, carga de redatores e a view do Redator
+inteira. **O slug e a branch do B1 não mudam** (D2): a branch já existia quando o corte foi decidido.
+
+**O corte se pagou duas vezes, e as duas por medição feita antes do desenho:**
+
+1. **Não existe biblioteca de gráficos no projeto.** `package.json` não tem `chart.js` — peer
+   obrigatório do `Chart` do PrimeReact — nem alternativa, e não há wrapper de chart em `shared/ui`.
+   As 5 seções do B1 são as que **não precisam de gráfico**, então a decisão de chart lib inteira
+   saiu do caminho e nasce no B2, junto das 5 séries mensais que a exigem.
+2. **O filtro de período caiu junto.** A D3 da spec do bloco A já dizia que estado operacional
+   ignora o período — só séries e rankings o obedecem. Com séries e rankings no B2, **o B1 não tem
+   o que filtrar**, e a parte cara da EAP 8.4.4 saiu do bloco. O hook nasce com o parâmetro mesmo
+   assim (D5): fronteira pronta, sem UI, e o B2 liga a tela sem mexer no cache (lição 3).
+
+**Uma premissa do packet foi confirmada por medição em vez de aceita:** ele atribui ao Drive a
+proibição de `features/dashboard` e a composição em `app`. Medido, o repositório manda no mesmo
+sentido por outro caminho — `estrutura-monolito.md:100` já reserva `app/pages/` para "página que NÃO
+é de domínio: DashboardPage" e a lei §5.6 proíbe feature importar feature, o que um Dashboard que lê
+de três módulos violaria. **Drive e repositório convergem; não havia divergência a reconciliar.**
+
+**Três achados de terreno mudaram o desenho, e nenhum deles estava no packet:**
+
+1. **`useLoadState` não serve.** A assinatura é `UseQueryResult<T[]>` — query de **lista** —, e o
+   dashboard é objeto único com seções anuláveis. A política de estado vive no `useDashboard`
+   (D9), preservando a tese da rule verbatim (o que ramifica a tela é o dado que falta, não o
+   `status`). Sem irmão genérico em `shared/hooks`: um consumidor só; o segundo é Meu Perfil
+   frontend, e é ele quem pagaria a extração.
+2. **`formatUf` vive em `features/commercial/lib/uf.ts` com 4 consumidores**, e o KPI de cotações
+   precisa dela. `app/` importando de uma feature é permitido pela direção da dependência, mas
+   acopla a página ao módulo comercial por um utilitário puro — o arquivo sobe para `shared/lib`
+   (D13) pelo argumento do ADR-18 (`adrs.md:222`): recurso de mais de uma camada é promovido, não
+   decidido caso a caso.
+3. **Dois alertas não têm rota de detalhe.** `certificate_*` traz `certificate_id` e
+   `redator_document_*` traz `redator_id`, mas `/certificados` e `/personas` são listagem com
+   diálogo — não há rota de entidade. Ancorar seria decidir o **FUT-2**, que é futuro dependente de
+   decisão do João; os dois CTAs levam à listagem sem seleção (D8), com a limitação escrita.
+
+**A D11 é a única que amplia o bloco de propósito, e o motivo é medido:** `COR_HARDCODED` roda em
+`src/features/*/components/**`, `src/features/**` e `src/shared/**`, e `src/app/**` **é a única
+camada sem ela** — a P-34. Este bloco escreve oito arquivos novos justamente em `app/`, que
+nasceriam sem guarda de cor. A catraca entra aqui, com os 3 sítios que hoje a impedem
+(`SidebarItem.tsx:24`, `Sidebar.tsx:60`, `Sidebar.tsx:71`, batendo com a contagem do backlog).
+**Consequência: a P-34 fecha no `/fechar-sprint` deste bloco e o BD-11 fica só com a D-03.**
+
+**O self-review da spec achou quatro coisas e as corrigiu antes do commit:** o baseline não estava
+declarado (medido nesta branch: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **36 arquivos /
+186 testes**); o layout era citado sem número de decisão (virou D16); o DoD não provava o movimento
+de `uf.ts` onde ele pode quebrar (4 telas que exibem **dinheiro**); e faltava o caso-limite da D6 —
+esconder cada seção nula, uma a uma, deixa **página em branco** para quem não tem permissão de
+módulo nenhum, indistinguível de falha silenciosa, então esse caso ganhou mensagem própria.
+
+**Risco de review: BAIXO pelo gate binário** — não toca schema, não regenera `generated.ts`, não
+toca Sanctum, auditoria nem documento legal, e não decide autorização (o payload já chega filtrado).
+**Divergência por alcance declarada:** 8 arquivos novos, `uf.ts` tocando 4 telas de dinheiro e uma
+catraca nova numa camada inteira — a segunda lente é decisão do João no `/revisar-sprint`.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-15: três medições corrigiram a spec antes de virar plano
+
+João aprovou a spec escrita ("aprovado pode continuar") e o `writing-plans` rodou. O plano tem
+**11 tasks** e vive em
+`docs/superpowers/plans/archive/2026-08-15-dashboard-frontend-central-controle.md` (arquivado no
+fechamento).
+
+**A escrita do plano exigiu medir o que a spec tinha afirmado, e três afirmações caíram:**
+
+1. **`formatUf` tem 5 sítios de import, não 4.** `grep -rn "lib/uf'" src/` acusa `BudgetStatCard`,
+   `BudgetsTable`, `QuoteRow`, `useQuoteForm` **e `DataStep.tsx`** — este último consome
+   `parseUfInput` e ficara de fora da contagem. O quinto é o mais caro dos cinco: é o caminho de
+   **escrita** do valor da cotação, onde um erro grava dinheiro errado em silêncio, e não o de
+   leitura. D13 e o DoD da spec foram corrigidos.
+2. **O backend já manda a descrição do item pronta, em espanhol.** Medido em
+   `CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
+   `CertificationMetricsQuery.php:38` e `IdentityMetricsQuery.php:46`: `description` é string fixa
+   ("Cotización pendiente de aprobación."). A D14 manda traduzir os 11 tipos, então **isso não é a
+   mesma coisa que o rótulo** — a spec ganhou a **D17**: rótulo do tipo traduzido é a linha
+   principal, `description` entra como detalhe e fica em es-CL nas outras duas locales. Ela não some
+   porque em `turma_docs_incomplete` carrega a lista de documentos faltantes, dado que o front não
+   deriva. Traduzir texto de servidor é trabalho do backend e nasce no `backlog.md` no fechamento.
+3. **O caso "nenhuma seção legível" cabe no corte do runner.** Ele era caso-limite do §4 sem prova
+   automatizada nenhuma; como é decisão do hook e não de componente PrimeReact, virou o **5º teste
+   de `useDashboard`**. A spec §6 foi de 5 para 6 cenários.
+
+**A catraca de cor foi medida com o próprio seletor, não com o grep que originou o débito** (a
+regra do `frontend-fsliced.md`): `npx eslint 'src/app/**/*.tsx' --rule '{…COR_HARDCODED…}'` acusa
+**exatamente 3** — `Sidebar.tsx:60`, `Sidebar.tsx:71`, `SidebarItem.tsx:24`. Bate com o grep e com o
+backlog. A conversão **não pode** usar `--text-color`: a sidebar é navy FIXA nos dois temas
+(§6/UI-04) e a tinta do tema claro seria texto escuro sobre navy — entram dois tokens novos em
+`brand-theme.css` com os valores literais que o Tailwind já rendia, para a entrada da catraca não
+mexer um pixel.
+
+**Uma adição de plano à estrutura da spec §3:** `DashboardItemRow.tsx`. `AlertData` e
+`PendingItemData` têm a mesma forma de linha (`severity`, `description`, `date`, `navigation`); só
+`module` distingue. A linha é um componente, e as duas listas o compõem.
+
+**Números do gate:** baseline **36 arquivos / 186 testes**; ao fim **38 / 204**. Os "6 testes" da
+spec são **cenários**; o vitest conta **casos**, e os `it.each` de `navigation.test.ts` rendem 13.
+
+**Handoff: `executor: claude`, main tree.** Três das onze tasks são de fronteira do repositório e
+não de escrita de tela — mover um utilitário de dinheiro entre camadas, ligar uma catraca de lint
+numa camada inteira (reescrevendo o comentário normativo que a decisão torna falso) e provar o DoD
+com papel-sonda de RBAC e contagem de tabela. **O `/lotus-ui-review` do Step 9 da Task 11 é passo do
+João** (`disable-model-invocation: true`); o bloco não fecha sem ele.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco dashboard-frontend-central-controle`,
+por instrução do João. O planejamento **não** implementa.
+
+### Execução — 2026-08-15: início, técnica `executing-plans`
+
+`/executar-bloco dashboard-frontend-central-controle` validou as âncoras (spec, plano e packet no
+disco; Git limpo na branch `feat/dashboard-frontend-central-controle`; `active_plan` cobrindo o work
+item).
+
+**Técnica: `executing-plans`, não `subagent-driven-development`.** O plano tem 11 tasks
+majoritariamente sequenciais por contrato (Task 6 consome Task 1, Task 7 consome Task 4, Task 10
+consome 5–9, Task 11 consome tudo) e o ambiente restringe o uso do Agent tool a pedido explícito do
+João, que não veio nesta invocação. `executor: claude`, main tree — handoff do plano já cobria isso.
+
+**Task 1 (`formatUf` sobe para `shared/lib`) completa.** Medido antes de mexer: exatamente 5 sítios
+de import (`BudgetStatCard.tsx`, `BudgetsTable.tsx`, `QuoteRow.tsx`, `DataStep.tsx`,
+`useQuoteForm.ts`), como o plano previa. `git mv` preservou histórico; barrel de `shared/lib`
+exporta `uf`; os 5 imports reapontados para `@shared/lib`; zero referência ao caminho antigo. Gate:
+`tsc -b` sem erro, eslint exit 0, **36 arquivos / 186 testes** — baseline intocado, como esperado de
+uma task que só move função pura.
+
+### Execução — 2026-08-16: as 11 tasks executadas, `ready_for_review`
+
+**Tasks 2–11 completas**, uma por commit, cada uma com o gate do plano rodado antes de commitar.
+Gate final: eslint exit 0, `tsc -b` sem erro, **38 arquivos / 204 testes** — exatamente o alvo do
+plano (baseline 36/186 + 13 casos da Task 4 + 5 da Task 5). Nenhum step do DoD exigiu conserto de
+código, então o commit de `fix` previsto na Task 11 Step 10 não existe.
+
+**Três achados durante a execução, todos consertados no próprio commit da task:**
+
+1. **Task 5 — `mockClear()` em `beforeEach` produz falha fantasma de rejeição não tratada.** O
+   `beforeEach(() => get.mockClear())`, adicionado para isolar a contagem de chamadas, fez dois
+   testes que já passavam falharem com um dump cru do valor rejeitado, sem mensagem de asserção.
+   Isolado empiricamente (repro mínimo confirmou a asserção PASSANDO enquanto o Vitest reportava
+   falha; `mockRejectedValue` é lazy e `mockClear` só zera histórico, então o mecanismo exato não
+   foi fixado — a condição de gatilho, sim, 3/3). Consertado adotando **contagem relativa**
+   (`const antes = get.mock.calls.length`), que é a convenção que `useValidationPage.test.tsx` já
+   usava — o `beforeEach` nunca foi necessário.
+2. **Task 5 — narrowing de TS perdido através do closure.** `act(() => result.current.retry())` não
+   compila depois de um `if (result.current.kind !== 'ready') throw`: reacessar `result.current`
+   dentro da arrow function é escopo novo. Estava assim no código literal do plano. Consertado
+   capturando `const antesDoRetry = result.current`. Pego pelo `pnpm build`, não pelo `pnpm test`.
+3. **Task 7 — `react-refresh/only-export-components` sobre `severityTagProps`.** Helper puro
+   convivendo com componentes no mesmo arquivo. Seguido o precedente que já existe no repo
+   (`AppToast.tsx`): `eslint-disable-next-line` com motivo declarado, em vez de um arquivo novo para
+   uma função de três linhas.
+
+**Prova do DoD (Task 11) — o que foi medido, não deduzido:**
+
+- **Dado real, 6 seções:** as 6 KPIs, 7 pendências, 3 alertas, agenda e funil renderizam com o seed;
+  nenhuma chave i18n crua na tela.
+- **3 locales × 2 temas:** rótulo traduzido nas três; detalhe do item **em espanhol** nas outras
+  duas, como D17 prevê; formato de data acompanha a locale; nenhum tom ilegível no tema oposto.
+- **Gate `null` por papel-sonda (3 papéis criados e removidos):** sem `commercial.*` → card de
+  cotações some e as duas etapas comerciais somem do funil; sem `operation.turma.view` → os 4 KPIs
+  de turma, a agenda e o funil somem; sem nenhuma das três → tela `noAccess`, não página em branco.
+  Sondas removidas ao fim (`forceDelete`), zero resíduo em `users` e `roles`.
+- **5 sítios de UF (D13):** `BudgetsTable` (450/80/120 UF), `BudgetStatCard` (450/120/80),
+  `QuoteRow` (120 UF), `DataStep` — `parseUfInput` aceita `1.250,75` e normaliza para `1250,75` — e
+  `useQuoteForm`, que **repõe formatado**: o backend manda `"250.0000"` (`decimal(12,4)`) e o campo
+  reabre com `"250"`. O caminho de escrita foi exercido, não só o de leitura.
+- **Catraca de cor nos dois sentidos (D11):** verde no estado atual; com `text-slate-400` injetado
+  em `PipelineFunnel.tsx`, reprova **nomeando arquivo e linha** (`20:31`). Sonda revertida.
+- **Zero mutação:** `turmas=6, quotes=9, budgets=8, certificates=5, enrollments=56, files=22` antes
+  e depois de uma rodada por todos os CTAs — números idênticos.
+- **Backend intocado:** `git diff main...HEAD -- backend/` e `-- generated.ts` ambos vazios. Pint e
+  `typescript:transform` são N/A por escopo, medido e não suposto.
+
+**Step 9 do plano (`/lotus-ui-review`) continua PENDENTE e é do João** (`disable-model-invocation:
+true`). É a revisão de viewport, hierarquia de cabeçalhos e estados na tela; o bloco não fecha sem
+ela. A transição para `ready_for_review` cobre o code review do diff, não substitui esse passo.
+
+**`backend/config/cors.php` está modificado no working tree e NÃO é deste bloco** (WIP do João:
+`allowed_origins` passa a aceitar lista separada por vírgula). Ficou fora de todo `git add` — os
+commits usaram paths exatos.
+
+### Review — 2026-08-16: `/revisar-sprint`, risco BAIXO, 3 achados 🟡
+
+**Divergência de registro encontrada na abertura, e ela não é sobre a etapa.** Cinco arquivos do
+Dashboard estão modificados no working tree, sem commit: `AgendaPanel`, `DashboardItemRow`,
+`DashboardPage`, `KpiRow` e `PipelineFunnel`. O conteúdo é correção de revisão visual — os
+comentários citam **UI-01 a UI-05 da "revisão de 2026-08-16"** com medidas em pixel (vazamento de
+19–55px em 390px, rótulo colapsado a ~33px, barras do funil no mínimo, truncagem em `lg`, 231px de
+KPI empurrando as listas para fora de 1440×900). O `/lotus-ui-review` do Step 9 **rodou**, portanto,
+mas a seção de execução acima ainda o declara PENDENTE e não existe artefato dele em
+`docs/superpowers/audits/`. Registro e árvore discordam sobre um fato, não sobre `workflow_state` —
+por isso a sessão seguiu para o review em vez de parar, e a reconciliação é decisão do João.
+
+**A revisão cobriu o working tree, não só o intervalo commitado**, porque é o working tree que vai
+para a `main`. Gate remedido nele: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
+**38 arquivos / 204 testes** — os mesmos números que o fechamento da execução mediu.
+
+**Classificação: BAIXO risco, pelo gate binário e medido, não pela projeção da spec.**
+`git diff main...HEAD -- backend/` e `-- generated.ts` vazios; nada de schema, Sanctum, auditoria,
+RBAC ou documento legal; `executor: claude`. O único toque em dinheiro é a promoção de `uf.ts`, e
+ela é `git mv` **byte-idêntico** (0 linhas no diffstat) com os 5 imports reapontados — nenhuma
+lógica de UF mudou. A segunda lente do Codex, que a spec §9 deixou como decisão do João pelo
+alcance (8 arquivos novos, `uf.ts` em 4 telas de dinheiro, catraca nova numa camada), **não foi
+acionada**; continua disponível se ele quiser.
+
+**Órfãos (Passo 1): três, todos dentro da pasta nova e todos virando achado.** `Kpi.hint` declarado
+e nunca preenchido; `severityTagProps` exportado sem consumidor externo; `dashboardKeys.all` sem
+consumidor. Fora deles: `features/commercial/lib/` sobreviveu ao `git mv` com `quoteStatus.ts`,
+`DashboardPage.tsx` antigo foi deletado de fato, e o `AppRouter` aponta para a pasta nova.
+
+**Conformidade verificada e limpa:** nenhum import de feature nem de `primereact` em
+`app/pages/Dashboard/` (lei §5.6); zero mutação e zero `can()`; `generated.ts` intocado (lei §5.3);
+as **50 chaves** de i18n existem idênticas nas 3 locales e cobrem os 6 `PendingItemType`, os 5
+`DashboardAlertType`, os 3 `DashboardModule`, as 3 severidades e as 6 `PipelineStage`; cor só por
+variável de tema, com a catraca `COR_HARDCODED` agora rodando em `src/app/**` sem `ignores`; o
+`sm:order-0` do `DashboardItemRow` foi conferido no CSS emitido (`.sm\:order-0{order:0}`) em vez de
+suposto válido no Tailwind v4. A política de estado do hook preserva a tese da rule verbatim.
+
+### Segunda lente (Codex) e correções — 2026-08-16
+
+**O João decidiu três coisas de uma vez:** os 3 achados entram, a segunda lente vem **antes** deles,
+e as 5 correções de UI review entram nesta branch. As correções foram commitadas primeiro
+(`3273cbf`), para o Codex revisar o intervalo Git completo em vez de um working tree sujo.
+
+**A segunda lente foi acionada mesmo com risco BAIXO, por decisão dele** — é a divergência por
+alcance que a spec §9 tinha deixado em aberto. Codex read-only (`mcp__codex__codex`, sandbox
+`read-only`) sobre `main...HEAD`, instruído a ler as leis §5, `docs/README.md`, os ADRs, a rule do
+frontend, a spec e o plano, e a devolver `arquivo:linha — problema — impacto`. **7 achados: 3
+coincidiram com os meus, 2 eram novos e verificados, 2 foram descartados com razão registrada.**
+Nenhuma divergência de julgamento entre as duas lentes — elas se complementaram, e nenhuma
+contradisse a outra.
+
+**O achado que só o Codex viu é o mais grave do review, e foi verificado no backend antes de
+aceito** (a regra da skill: achado que só o Codex viu não entra sem verificação própria). Ele
+apontou que `nenhumaSecaoLegivel` ignora alertas liberados por `identity.user.view`. Medido em
+`AdminDashboardAssembler.php:56-62,86,157`: essa permissão alimenta os alertas de documento de
+relator e **não liga KPI, pipeline nem agenda** — as três coisas que o predicado media. Um papel só
+com ela recebia todo KPI `null`, `pipeline: null`, `agenda: null` e uma lista de alertas **cheia**,
+e a tela anunciava *"Nenhum módulo visível — seu perfil não tem permissão de leitura sobre nenhum
+módulo"* enquanto escondia alerta autorizado. O bloco A mandou `null` justamente para a tela não
+mentir sobre o banco; aqui ela mentia na direção oposta, com dado de peso de RN-09. O argumento
+original do comentário vale para a lista **vazia** e se inverte na lista **cheia**: item na lista
+prova permissão, porque o gate age na origem.
+
+**Os dois descartados, com o porquê:** o `truncate` + `title` do detalhe é a UI-01 que o João
+acabara de aprovar, decisão declarada e não defeito; e o `unauthorized` devolvido antes de calcular
+`staleError` não custa nada — nesse ramo não há dado a preservar nem o que um retry recupere.
+
+**Cinco correções commitadas (`f38585e`), todas de esforço P:** `hint` do KPI passa a carregar chave
+i18n + valor e sai do `kpi.key === 'cotacoesPendentes'` no JSX; `severityTagProps` deixa de ser
+exportado e leva o `eslint-disable` junto; `dashboardKeys.all` removido; os 6 KPIs medidos por
+`Object.values` num lugar só; e o `min-w-1` do funil passa a valer só para contagem maior que zero.
+
+**O caso do Q-4 ganhou teste, com o vermelho visto antes do verde** (lição 10): payload com todo KPI
+nulo, seções nulas e **um** alerta devolve `ready`. Contra o predicado antigo ele falha e os 5
+anteriores seguem verdes — medido, não deduzido. Gate final: `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **38 arquivos / 205 testes** (204 + o caso de regressão).
+
+**A spec foi emendada onde o código passou a divergir dela**, em vez de a divergência ficar para o
+`/auditar-docs` achar depois: o §4 ganhou a emenda do predicado com o mecanismo medido, e o §6
+ganhou o 7º cenário. As emendas são datadas e dizem o que a spec afirmava antes.
+
+**Nenhum trabalho deferido:** tudo que o João aprovou foi corrigido nesta sessão, então nada desceu
+para o `backlog.md` e nada virou pendência documental.
+
+**Estado: `ready_for_closure`.** Próxima ação: `/fechar-sprint`, que **não** roda automaticamente.
+O fechamento herda o que já estava escrito para ele: fechar a P-34, deixar o BD-11 só com a D-03,
+criar o B2 (`dashboard-frontend-analitico-e-redator`) no backlog e nomear a tradução do
+`description` do backend (D17).
+
+### Fechamento — 2026-08-16: o gate parou uma vez, e não foi por causa do bloco
+
+**O item 1 do gate reprovou:** `php artisan test` deu **12 failed / 672 passed / 5 skipped**, todos
+`RuntimeException: Session store not set on request.` em `AuthController.php:47` — `AuthTest` (6),
+troca de senha (3) e `StaffUserCrudTest` (3). **A causa foi rastreada inteira antes de reportar, e é
+ambiente, não código do bloco:** `backend/tests/TestCase.php:18` faz
+`withHeader('Referer', env('FRONTEND_URL', …))` lendo a variável **crua**, e o `.env:38` passou a ser
+lista separada por vírgula (`http://localhost:5173,http://localhost:5174`); o host resultante não
+bate com `sanctum.stateful` (`.env:37`), o `EnsureFrontendRequestsAreStateful` não injeta o
+`StartSession` e a rota devolve 500. **Provado nos dois sentidos:** com
+`FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
+diferença é a variável.
+
+**Não é regressão deste bloco** — `git diff main...HEAD -- backend/` = 0 linhas. O `.env` é
+gitignored e não aparece em `git status`; o que aparece é a outra metade do mesmo WIP do João, o
+`config/cors.php` trocando `[env('FRONTEND_URL', …)]` por `explode(',', env('FRONTEND_URL', …))`.
+`TestCase.php` é o terceiro sítio que lê a variável e o único que ainda a trata como valor único.
+**O João decidiu fechar assim mesmo**, e o achado virou a **P-45** em vez de conserto dentro do
+fechamento: o bloco é frontend puro, e abrir arquivo de backend aqui seria o alargamento de escopo
+que o próprio gate recusa.
+
+**Prova do critério de aceite contra a API real, não a higiene genérica.** `GET
+/api/dashboard/metricas` como admin devolve as 5 seções do B1 com dado do seed — 6 KPIs, 7
+pendências, 3 alertas, agenda de 4 janelas, funil de 6 estágios. **O gate `null` foi provado ao
+vivo com papel-sonda criado e removido por API** (`POST /api/roles` + `POST /api/users`): `sonda-q4`
+com **só** `identity.user.view` recebeu `kpis` inteiramente `None`, `pipeline`, `agenda`,
+`compliance_turmas`, `redatores`, `series` e `rankings` `null`, 0 pendências e 0 alertas. Isso
+confirma ao vivo o mecanismo do achado do Codex (`AdminDashboardAssembler.php:62,157`): essa
+permissão alimenta só `alertasDocumentos()`, não KPI, pipeline nem agenda. Sondas removidas —
+`users=0 roles=0`.
+
+**A metade que NÃO foi reproduzida está declarada, sem maquiagem:** o payload "tudo `null` + alertas
+cheio" — o caso Q-4 exato que o review consertou — **não tem gatilho vivo no seed**. Os 3 alertas
+são `turma_overdue` (gate `operation.turma.view`) e nenhum documento de relator está dentro do
+horizonte de 30 dias. Ele segue provado pelo 7º teste de `useDashboard`, que foi vermelho antes de
+verde. Fabricar o gatilho exigiria mutar dado de documento, que é justamente o que o Step 6 do DoD
+conta.
+
+**Resto do gate:** zero mutação (`turmas=6 quotes=9 budgets=8 certificates=5 enrollments=56
+files=22`, idênticos ao snapshot da execução, com as sondas já removidas); catraca de cor provada
+nos dois sentidos (verde no HEAD; com `text-slate-400` injetado em `PipelineFunnel.tsx` o lint
+reprova nomeando `17:23`; sonda revertida); front `pnpm lint` exit 0, `pnpm build` verde,
+**38 arquivos / 205 testes**. **Pint e `typescript:transform` são N/A por escopo medido** — zero
+arquivo `backend/` e `generated.ts` com 0 linhas de diff. Código morto: os 3 órfãos do review saíram
+em `f38585e`; os seis `.gitkeep` de `features/*/stores|api|hooks` são alheios e não foram tocados
+por este bloco (`git diff main...HEAD` não os lista), então se mencionam e não se apagam.
+
+**Duas coisas ficam abertas, e nenhuma delas é achado novo do fechamento:**
+
+1. **A tela revisada não é exatamente a entregue.** `f38585e` tocou 3 componentes de render
+   (`DashboardItemRow`, `KpiRow`, `PipelineFunnel`) **depois** do commit da revisão visual
+   `3273cbf`. Os passos visuais do DoD (3 locales × 2 temas, 5 sítios de UF) não foram re-rodados
+   neste gate.
+2. **O `/lotus-ui-review` rodou mas não deixou artefato** em `docs/superpowers/audits/` — a
+   divergência de registro que o review já havia levantado segue aberta. `disable-model-invocation:
+   true`: o passo é do João, e o registro dele também.
+
+**Movimentos de backlog e pendências:** a **P-34** fecha (ficha em `pendencias/encerradas.md`, sai no
+próximo fechamento) e o **BD-11** fica só com a **D-03**; nasce a **P-45**; nasce a **D-18** (o
+`description` do backend em espanhol, atada à D-07 pelo mesmo motivo); a **P-44** tem o gatilho
+reapontado para o B2, porque quem mostra nome de redator é a carga de redatores e ela é seção do B2;
+e a trava de merge da **D-15** caiu — `DashboardWindows` está na `main`, medido —, sem que o
+fechamento a agrupe, porque escolher bloco é do João. O **B2**
+(`dashboard-frontend-analitico-e-redator`) nasceu no `backlog.md` com as três coisas que o B1
+empurrou para ele: a decisão de chart lib, o filtro de período e a D-16 sem consumidor que a peça.
+
+**Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
+João.
+
+## Antepenúltimo item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
 ### Seleção — 2026-08-14
 
@@ -1080,7 +1651,7 @@ já fechou** (`b9b8a30`, "fecha dashboard-backend-agregacoes; estado volta a idl
 mergeada na branch em `e60b7b4` à espera do PR). A exceção de dois itens ativos morreu pelas duas
 pontas; o D-15 segue travado até essa branch chegar à `main`.
 
-## Antepenúltimo item fechado — 2026-08-15 (`dashboard-backend-agregacoes`, Sprint 5 bloco A)
+## Quarto item fechado — 2026-08-15 (`dashboard-backend-agregacoes`, Sprint 5 bloco A)
 
 ### Seleção — 2026-08-14
 
@@ -1452,7 +2023,7 @@ a soma exata dos dois lados (628 deste bloco + 4 testes que a célula trouxe); P
 `Certificate.php` auto-mergeado; `pnpm lint` exit 0; `pnpm build` verde; `pnpm test` **36 arquivos /
 186 testes**, a contagem da `main` pós-célula — este bloco não adiciona teste de frontend.
 
-## Quarto item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
+## Quinto item fechado — 2026-08-14 (`celula-de-identidade`, item 4 de "Próximos blocos")
 
 ### Exceção declarada à invariante de um `active_work_item` — terceira ocorrência
 
@@ -1998,359 +2569,3 @@ depois**. A spec, o plano e o Context Packet do dashboard **continuam nas pastas
 arquivado, porque nada foi entregue —, e a narrativa da promoção segue logo abaixo, intacta.
 `state_basis_commit` aponta para `9ed7351`, o merge que integra a entrega; não para o commit deste
 fechamento.
-
-## Quinto item fechado — 2026-08-14 (`falha-vs-lista-vazia`, BD-6)
-
-### Seleção — 2026-08-14
-
-**BD-6 do `backlog.md:73`, promovido explicitamente pelo João** com o estado em `idle` e
-`active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre (BD-1, BD-2,
-BD-5, BD-7, BD-8, BD-9, login): o argumento era **título de seção**, não slug promovido. As três
-decisões dele fecharam o gate: o slug `falha-vs-lista-vazia`; **rota direta a `ready_for_planning`
-sem Context Packet**; e **main tree `/home/jvbat/projetos/lotus`**, na branch
-`feat/falha-vs-lista-vazia` criada de `0a1439f`.
-
-**A ausência de fonte externa foi medida, não presumida:** grep por `drive.google`, `notion.so`,
-`figma.com`, `docs.google` e `http` nas 15 linhas do BD-6 devolve **zero ocorrência**. As fontes são
-o repositório e o texto do backlog, que já traz os paths e a atualização de referência de 2026-08-10.
-
-**O main tree venceu por ausência de disputa, não por costume:** não há execução paralela nesta base
-— a worktree `fix-frontend` está em `fix/state-rotacao-pos-merge`, já mergeado em `0a1439f`, e a
-`lotus-preview` é preview de cliente. Sem os dois `active_work_item` de 2026-08-13, a invariante volta
-a valer sem exceção.
-
-**`state_basis_commit` passa de `024673a` a `0a1439f`** — o merge do PR #49, HEAD atual da `main`.
-Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
-derivado.
-
-### Brainstorming e spec — 2026-08-14
-
-Spec em `docs/superpowers/specs/archive/2026-08-14-falha-vs-lista-vazia-design.md`, com **nove decisões**
-(D1–D9): as quatro primeiras escolhidas pelo João entre alternativas com o custo medido, as cinco
-seguintes derivadas delas e declaradas como tais.
-
-**A medição achou quatro coisas que o backlog não tinha, e duas mudam o que o bloco é:**
-
-1. **O terceiro sítio escrito no BD-6 está vencido.** `useCommercialClients.clientName`
-   (`useCommercialClients.ts:19`) tem **um** consumidor, a `BudgetsTable`, que já agrega
-   `clients.loadError` e onde erro vence vazio (`BudgetsTable.tsx:35`) — sob falha o `'—'` **não
-   chega a renderizar**. Ele só aparece com GET bem-sucedido e id fora da lista, que é dado.
-   **D1:** o sítio sai e entra o disfarce vivo do mesmo hook — `clientOptions` no `BudgetDialog.tsx:22`,
-   onde GET falho rende dropdown vazio, sem motivo e sem Reintentar.
-2. **O molde pronto existe um módulo ao lado, sobre a mesma query:** `useRedatorCourses` +
-   `RedatorCourseSelector` fazem os cinco estados sobre `coursesApi.useList()` citando a **D11**
-   nominalmente; `useStudentClients` + `StudentClientField` fazem a versão de dropdown de form. Nada
-   aqui é padrão novo. **D4:** o par erro/dica sob campo é extraído para `shared/ui` como
-   `InlineLoadState` e o `StudentClientField` perde a cópia local — precedente exato do `mergePt`.
-3. **O runner cobre `features`, não só `shared/`** (`vite.config.ts:26` inclui
-   `src/**/*.test.{ts,tsx}`, e o `BudgetDetailPage.test.tsx` já testa ramo a ramo com o hook
-   mockado). Um bloco que muda comportamento de propósito **prova o comportamento em teste**, e não
-   só no navegador: três arquivos novos, projeção 35 arquivos / ~177 testes.
-4. **Um caso parecia trabalho e não é:** o `BudgetDialog` em `edit` mostra o cliente pelo label de
-   `clientOptions` e ficaria vazio sob falha, mas o único caminho até lá (`BudgetOverlays`, dentro do
-   `BudgetDetailPage`) já reprova a página inteira quando `clients` falha
-   (`useBudgetDetail.ts:89-92`). Fica declarado para não parecer esquecimento.
-
-**As decisões que mudam comportamento:** a falha de cursos na `QuotesList` é **local no card** e não
-promovida ao `loadError` da página (**D2**) — diverge da D16 por motivo medido, porque lá o nome do
-cliente era campo de busca e aqui não há busca, e esconder valor UF, status e arquivos por falha de
-nome seria o erro inverso; e **`canAdvance` fica `course_id > 0`** (**D3**), preservando escolha
-válida de quem edita, pelo mesmo critério do `unusable` do `useStudentClients` e para não repetir o
-`03280c6`, revertido justamente por travar com lista utilizável em cache.
-
-**Baseline medido nesta branch, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
-**32 arquivos / 163 testes** — bate com o placar pós-merge do PR #48, confirmando que a branch nasce
-da `main` sem deriva.
-
-**Risco de review BAIXO** pelo gate binário (zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
-dinheiro escrito ou documento legal; `executor: claude`). O risco próprio, na §9 da spec, é de
-alcance: `useCommercialClients` tem dois consumidores e o retrofit toca `identity`, fora do módulo do
-bloco.
-
-O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
-escrita e autorizar o `writing-plans`.
-
-### Plano — 2026-08-14
-
-**O João aprovou a spec sem pedir mudança**, e o plano saiu em
-`docs/superpowers/plans/archive/2026-08-14-falha-vs-lista-vazia.md`: **seis tasks**, uma por commit, na ordem
-componente compartilhado → retrofit → passo 1 do wizard → card de cotações → dropdown do orçamento →
-gate.
-
-**A ordem tem uma dependência e uma dívida:** o `InlineLoadState` vem primeiro porque as Tasks 2, 4 e
-5 o consomem; e o **retrofit vem em segundo, antes dos sítios novos**, para a duplicação não chegar a
-existir — escrever os três consumidores e só depois voltar em `identity` é o caminho que o review do
-BD-5 reprovou no `mergePt`.
-
-**Três coisas apareceram só ao escrever o plano, e as três mudam trabalho:**
-
-1. **`GET /api/courses` não tem middleware de permissão** (`app/Domains/Catalog/routes.php:11`, só
-   `auth:sanctum`), então **não há 403 a provocar por RBAC** — o texto original do B-7 falava em
-   "403/rede". A falha do gate se produz redirecionando o XHR da rota por `eval` no navegador, e o
-   caminho de volta é `window.__unpatch()`, sem tocar container.
-2. **O `CourseStep` recebe o hook inteiro, não `list`/`search` soltos.** Trazer o
-   `useQuoteCourseSearch` para dentro dele — que é o que o `RedatorCourseSelector` faz — **reiniciaria
-   o termo digitado** a cada ida e volta entre os passos, porque o passo desmonta e o wizard não. É
-   regressão silenciosa que nenhum teste do bloco pegaria.
-3. **A prova do "vazio de verdade" precisa do banco, e ele volta atrás.** `Course` usa `SoftDeletes`,
-   então o gate apaga o catálogo, mede que a tela diz "No hay cursos." **e não** a mensagem de falha,
-   e restaura — com a contagem de `onlyTrashed` medida **antes**, para o restore não ressuscitar
-   curso que já estava na lixeira.
-
-**Também entrou no gate a prova nos dois sentidos dos testes novos** (spec §7.2): cada ramo é
-derrubado por `perl -0pi`, o `grep` confirma que a sonda foi plantada **antes** do vitest rodar — sem
-ele "não reprovou" seria ambíguo entre teste cego e sonda ausente, que é a lição da Task 8 do login —
-e o `git checkout` devolve a árvore.
-
-**Baseline medido em `0c18595`, não herdado:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
-**32 arquivos / 163 testes**. Projeção do plano: **35 arquivos / 174 testes** (+3 arquivos, +11
-casos). A spec §6 dizia "~177" por estimativa; o plano fixa **174**, que é a soma exata dos casos
-escritos, e é esse o número que o gate confere.
-
-**Um risco de execução foi medido antes de virar bloqueio:** PrimeReact **renderiza em jsdom** e
-`fireEvent` funciona — probe com `AppInputText`/`AppRadioButton`/`AppButton` e com a `QuotesList`
-inteira (que monta `AppFileUpload`), as duas passando. Os três arquivos de teste do plano não
-dependem de mockar PrimeReact.
-
-`executor: claude`, sem `paths_autorizados`: o bloco muda comportamento em três telas, atravessa a
-fronteira de módulo (o retrofit toca `identity`), decide granularidade de estado por julgamento e o
-gate mexe no banco de dev com passo de restauração.
-
-**Um conflito conhecido fica declarado antes de acontecer:** o cabeçalho do plano pede
-`subagent-driven-development`, e esta sessão tem regra de não chamar o Agent tool sem pedido — o
-mesmo impasse do BD-4, do `rastro-unicidade-e-gates` e do login. Resolve-se no `/executar-bloco`, por
-pergunta direta ao João, não aqui.
-
-**Estado: `ready_for_execution`.** `/executar-bloco falha-vs-lista-vazia` exige instrução posterior
-do João.
-
-### Execução — 2026-08-14: início
-
-`/executar-bloco falha-vs-lista-vazia` validou as âncoras (spec, plano, `context_packet` `null`
-coerente com a ausência medida em §1.1, Git limpo em `3bebb39`, sem divergência) e confirmou o gate
-main tree/worktree: a decisão de main tree já estava tomada em `state.md` na Seleção de 2026-08-14
-("O main tree venceu por ausência de disputa"), então nenhuma worktree nova foi criada.
-
-**O mesmo conflito do BD-4, do `rastro-unicidade-e-gates` e do login reapareceu, e foi resolvido do
-mesmo jeito:** o plano recomenda `subagent-driven-development`; a sessão tem regra de não chamar o
-Agent tool sem pedido. Escalado ao João via pergunta direta — **subagent-driven-development**, com
-Agent tool autorizado para este bloco.
-
-Pre-flight scan do plano (6 tasks contra os Global Constraints e a spec): limpo, sem contradição —
-as projeções de arquivo/teste por task batem entre si e com o total final, e a duplicação estrutural
-dos dois ramos do `InlineLoadState` é decisão de design da spec, não achado a escalar.
-
-Baseline reproduzido nesta branch, não herdado: `pnpm lint` exit 0, `pnpm build` verde, `pnpm test`
-**32 arquivos / 163 testes** — bate com o baseline do plano. Ledger local reiniciado em
-`.superpowers/sdd/progress.md` (o anterior era do `login-fora-do-adr16`, já fechado).
-
-**Estado:** `executing`.
-
-### Execução — 2026-08-14: fechamento
-
-As seis tasks do plano completaram via `subagent-driven-development` — implementador + revisor por
-task, todas **Approved** sem achado Critical/Important (só Minor, cada um julgado e registrado em
-`.superpowers/sdd/progress.md`). Suíte final **35 arquivos / 174 testes**, `pnpm lint`/`pnpm build`
-verdes, `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts` vazio
-(lei §5.3 e P-03 fora de escopo, medidos).
-
-**Task 6 (gate final) mediu a spec §7 ponta a ponta contra a stack real** — sonda nos três testes
-novos nos dois sentidos (planta, confirma por grep, reprova nomeado, restaura), Playwright CLI com
-`--browser chromium` (canal `chrome` do playwright-cli tentava Chrome de sistema, ausente; o binário
-Chromium empacotado do Playwright resolveu sem instalar nada), falha real de `/api/courses` e
-`/api/clients` provocada via patch de XHR e medida nos dois sítios de cada vez, catálogo vazio de
-verdade provado e distinguido da falha via soft-delete com restauração (`vivos=4 trashed=0` antes e
-depois), e a aditividade das quatro chaves novas de `useCommercialClients` confirmada ao vivo contra
-o consumidor antigo (`BudgetsTable`) sem tocá-lo. Evidência completa por step em
-`.superpowers/sdd/progress.md`, entrada "Task 6 — GATE FINAL".
-
-**Revisão final de branch** (modelo opus, base `0a1439f`, head `d20bebc`): zero achado Critical.
-Um Important, não-código — este `state.md` preso em `executing`, que esta própria transição fecha.
-Sete achados Minor, nenhum bloqueante, todos registrados em `.superpowers/sdd/progress.md` (um é
-observação sobre a spec, não sobre a implementação segui-la; um é a pendência P-37 ganhando um
-segundo sítio já mapeado; um é dívida documental preexistente em `frontend-fsliced.md`; os demais são
-follow-up de escopo explicitamente fora deste bloco). **Ready to merge: With fixes** — o único fix é
-esta transição.
-
-Working tree e commits conferem com o plano: seis commits de implementação
-(`f64ba33`..`d20bebc`), `git status --porcelain` vazio, nenhum artefato de prova ficou no repositório
-ou no banco.
-
-**Estado:** `ready_for_review`. Próxima ação: revisão do trabalho ativo, por instrução explícita do
-João — não iniciada automaticamente aqui.
-
-### Review de sprint — 2026-08-14: BAIXO risco, duas lentes, 5 achados (3+1+1)
-
-**BAIXO pelo gate binário da skill:** zero schema, `generated.ts`, Sanctum, auditoria, RBAC,
-dinheiro escrito ou documento legal gerado; `executor: claude`. A spec §9 declara o mesmo BAIXO —
-sem divergência a mostrar. **Só lente Claude, sem Codex.**
-
-**Gate reproduzido, não herdado do relatório de execução:** `pnpm lint` exit 0, `pnpm build` verde,
-`pnpm test` **35 arquivos / 174 testes** — exatamente a projeção do plano (+3 arquivos, +11 casos
-sobre 32/163); `git diff --name-only 0a1439f..HEAD -- backend/ generated.ts` com **zero arquivo**,
-o que mantém backend/Pint/`typescript:transform` N/A por escopo medido; zero import de `primereact`
-e zero import cruzado `@features/*` dentro de `src/features` (§5.6, por busca); `CourseStep` em 94
-linhas, abaixo da régua de 150.
-
-**Órfãos: zero.** `InlineLoadState` tem 3 consumidores mais o barrel; toda chave nova dos três hooks
-tem leitor (`isEmpty`/`noResults` no `CourseStep`, `isError`/`errorDetail`/`refetch` na `QuotesList`,
-`unusable`/`showEmptyHint` no `BudgetDialog`); `budget.noClientsAvailable` é lida pelo
-`BudgetDialog` e coberta pelo `parity.test`; `dangerText` e `AppButton` continuam vivos depois de
-saírem do `StudentClientField`.
-
-**Duas afirmações da spec foram verificadas no código, não aceitas do relatório:** o `edit` do
-`BudgetDialog` é mesmo inalcançável sob falha de clientes — o segundo call site
-(`CommercialPage.tsx:66`) só produz `create`, porque a `BudgetsTable` navega para o detalhe em vez de
-abrir diálogo, e o detalhe reprova a página inteira; e `common.noResults` **tem** o `{{term}}` nos
-três locales, então a interpolação do ramo 4 não é decorativa.
-
-**A premissa central do Q-1 foi medida por sonda, não assumida:** `renderHook` com `queryFn` que
-resolve e depois rejeita, `retry: false` — o refetch falho deixa `isError === true` **com `data`
-ainda definido**. A sonda rodou como arquivo temporário sob `src/` e foi removida; árvore limpa.
-
-**Os três achados:**
-
-1. **Q-1 🟡 P** — `isError` cru ignora o cache, nos dois sítios que compartilham a mesma query
-   `['courses','list']`. `CourseStep.tsx:36-49` troca a lista inteira pelo `AppErrorState` mesmo com
-   `courses.list` populado; `QuotesList.tsx:33-38` anuncia falha mesmo com todo nome resolvido do
-   cache. O caminho é reentrada normal, não hipótese: `staleTime` é 0, então abrir o wizard sobre a
-   `QuotesList` refaz o GET, e um refetch falho apaga uma lista utilizável e o termo digitado. É o
-   inverso da própria D3 do bloco ("não travar com lista utilizável em cache", precedente `03280c6`)
-   e, na `QuotesList`, a tela afirma falha que não se vê — a tese do próprio bloco.
-2. **Q-2 🟡 M** — a derivação de load-state foi duplicada, não extraída: `isError`/`errorDetail`/
-   `refetch` em **6** hooks, o predicado de vazio **verbatim** em 3
-   (`!isError && isSuccess && length === 0`), e `errorDetail ?? t('common.loadErrorHint')` em **6**
-   call sites — com dois nomes para o mesmo predicado (`isEmpty` × `showEmptyHint`). O bloco extraiu
-   a **view** (D4, precedente `mergePt`) e replicou a **fonte**.
-3. **Q-3 🟢 P** — `BudgetDialog.tsx:63` desabilita o dropdown por `unusable`, que também é verdadeiro
-   **durante o carregamento**, e o `InlineLoadState` não fala nesse estado: controle morto e mudo,
-   enquanto o `CourseStep` do mesmo bloco mostra esqueleto para o mesmo estado. `isLoading` já existe
-   no hook e não é consumido ali.
-
-**O que NÃO virou achado, e por quê:** as duas utilities de cor grandfathered do `CourseStep` estão
-declaradas fora de escopo no plano; o segundo sítio do `<label>` sem `htmlFor` é a **P-37**, já
-registrada; a duplicação estrutural dos dois ramos do `InlineLoadState` é desenho explícito da
-spec §4; e o ramo "os dois juntos" ser inalcançável é contrato defensivo, não teste falso.
-
-**Duas divergências documentais propostas** (registram-se em `docs/pendencias.md` só depois da
-aprovação): `.claude/rules/frontend-fsliced.md` ainda diz que teste de componente com PrimeReact em
-jsdom fica fora do corte, e a spec §10 repete — este bloco montou três desses; e a P-37 passa a ter
-dois sítios (`StaffIdentifyFields` e `BudgetDialog`).
-
-**Veredito: o bloco está bom.** Seis commits, gate reproduzido nos números projetados, nenhuma lei §5
-tocada, nenhum órfão. Q-1 é comportamento reincidente (o molde `RedatorCourseSelector` tem a mesma
-forma) e candidato a regra, não só a fix; Q-2 é abstração faltando; Q-3 é acabamento.
-
-### Segunda lente — revisão independente do Codex (2026-08-14)
-
-**Pedida pelo João apesar do risco BAIXO**, que não a exigia. Codex rodou read-only sobre
-`0a1439f..HEAD`, restrito a `frontend/src/`, com spec, plano, CLAUDE.md §5, a rule da camada e
-`docs/pendencias.md` como gabarito. Devolveu 5 achados.
-
-**Três coincidem com a lente Claude** (Q-1 no `CourseStep`, Q-2 na derivação duplicada, Q-3 no
-dropdown mudo) — convergência independente: o prompt do Codex não citava achado nenhum do Claude.
-
-**Um achado é só do Codex e foi verificado no código antes de aceito (regra da skill): Q-4** — o
-`BudgetDialog` desabilitava o dropdown por `unusable` e **não** passava `disabled` ao `CrudDialog`,
-então Criar seguia vivo com o `client_id: 0` do form vazio. Verificação: o gêmeo
-`StudentDialog.tsx:57` já faz `disabled={clientsUnusable || busy}`, e o docblock do próprio
-`CrudDialog.tsx:23-26` nomeia exatamente este caso ("dependência externa que ainda não carregou,
-como a lista de clientes do create de aluno"). Achado real.
-
-**Um achado do Codex é corolário do Q-1 e foi absorvido nele:** `CourseStep.test.tsx:48` força
-`list: []` no ramo de falha, então o caso que quebra — `isError` **com** lista populada — não tinha
-teste e a regressão passava com a suíte verde.
-
-**Divergência entre as lentes, mostrada ao João em vez de resolvida em silêncio:** o aviso da
-`QuotesList` quando o cache resolve todos os nomes. Codex avaliou o sítio como bom (D2 cumprida, as
-cotações nunca somem); Claude o leu como falha anunciada e invisível. Eixos diferentes, cada um
-correto no seu. **João aprovou os dois lados**: as cotações continuam sempre visíveis **e** o aviso
-passou a depender do nome perdido.
-
-### Correções aplicadas — 2026-08-14 (João aprovou tudo)
-
-Cinco commits, um por achado, cada um com o gate verde na árvore do próprio commit (verificado com
-`git stash --keep-index`, não só no final):
-
-- `501d98c` **Q-2** — `shared/hooks/useLoadState.ts` centraliza `isLoading`/`isError`/`errorDetail`/
-  `loadError`/`isEmpty`/`unusable`/`failedWithoutData`/`refetch`; os 6 hooks passam a espalhá-lo. O
-  predicado de vazio fica com **um** nome (`isEmpty`), inclusive na prop do `StudentClientField`.
-- `08cb01a` **Q-1** — `CourseStep` troca a tela pelo erro só em `failedWithoutData`; com catálogo em
-  cache a falha vira `InlineLoadState` ao lado da lista, que segue utilizável com o termo digitado.
-  Entra o teste do ramo COM cache, que faltava.
-- `baf08e9` **Q-1b** — `QuotesList` avisa só quando a falha custou um nome (`hasCourse`); mais o
-  teste do caso "cache absorveu a falha, nenhum aviso".
-- `1ba7dbb` **Q-3** — `loading` + `aria-busy` no dropdown de cliente dos **dois** sítios (orçamento e
-  aluno, que compartilham o molde): desabilitado sem sinal era controle morto.
-- `4c7b61b` **Q-4** — `disabled={isCreate && clients.unusable}` no `CrudDialog` do `BudgetDialog`.
-
-**Gate final:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **35 arquivos / 176 testes**
-(+2 casos de regressão, ambos escritos para falhar no código antigo).
-
-**Documentação (`2511501`):** a **P-38** abre a divergência do corte do runner (a rule diz que teste
-de componente PrimeReact em jsdom fica fora, e o corte já tem três); a **P-37** ganha o segundo
-sítio (`BudgetDialog`); o padrão reincidente do Q-1 virou **regra** em
-`.claude/rules/frontend-fsliced.md` ("o que ramifica a tela é o dado que falta, não o `status` da
-query"), e os dois sítios fora de escopo (`RedatorCourseSelector`, `CourseRedatoresSection`) foram
-para o `backlog.md` com o fix de uma linha já descrito.
-
-**Estado:** `ready_for_closure`. Nenhum achado aberto, nenhuma correção pendente. O fechamento é
-passo explícito do João (`/fechar-sprint`) — não se executa sozinho.
-
-### Fechamento — 2026-08-14
-
-`/fechar-sprint` sem argumento, com o gate de estado conferido antes de qualquer medição
-(`ready_for_closure`, `active_work_item: falha-vs-lista-vazia`).
-
-**O item 0 foi REMEDIDO, não herdado — e essa era a única forma honesta:** os cinco commits de
-correção (`501d98c`, `08cb01a`, `baf08e9`, `1ba7dbb`, `4c7b61b`) entraram **depois** do e2e da Task 6
-e mexeram exatamente na ramificação de falha, então a evidência de `d20bebc` não vale para HEAD.
-Sete provas ao vivo, locale es-CL, sessão Sanctum real, falha injetada por patch de `XMLHttpRequest`:
-a `QuotesList` sob falha de cursos mantém as **3 cotações visíveis** (120/80/250 UF e status) com
-alerta, Reintentar e nomes `—`, e o unpatch + Reintentar resolve os nomes e limpa o alerta; **com
-cache quente, zero `[role=alert]`** e nomes renderizados (`baf08e9`); o wizard com cache quente
-mantém os 4 cursos selecionáveis com a falha inline (`08cb01a`) e, com cache frio, troca o passo
-pelo `AppErrorState` com `Siguiente [disabled]`, recuperando no Reintentar; o `BudgetDialog` sob
-falha de clientes mostra motivo + Reintentar, dropdown `p-disabled` com `data-p-disabled="true"` e
-**Crear presupuesto `[disabled]`** (Q-4); a `BudgetsTable`, o consumidor **antigo** do mesmo hook,
-segue com o estado de erro próprio dela — a aditividade das quatro chaves novas medida ao vivo, sem
-tocá-la; e o retrofit de `identity` (Personas → Alumnos) segue com motivo + Reintentar no dropdown
-de empresa, liberando o formulário depois do unpatch.
-
-**Dois percalços de método, registrados porque mudaram o resultado:** o patch de XHR foi instalado
-**duas vezes** no mesmo contexto, então `window.__unpatch()` descascava uma camada só e o Reintentar
-não recuperava — diagnosticado por `XMLHttpRequest.prototype.open.toString()` e resolvido restaurando
-o método nativo de um iframe novo (`function open() { [native code] }`); e o `playwright-cli` exige
-`--browser chromium` neste host, com o custo de abrir contexto novo e perder a sessão.
-
-**A Prova B ficou de fora e virou pendência, por decisão do João:** esvaziar o catálogo exige
-`artisan tinker`, recusado pelo classificador de auto mode, e **não há substituto pela API** (o
-índice de cursos não aceita filtro e o wizard filtra client-side, então 200 vazio legítimo só sairia
-de um mock — prova mais fraca que a do plano). Ela **rodou na execução**, em `d20bebc`, com
-soft-delete e restauração conferida (`vivos=4 trashed=0`); o que falta é a remedição contra HEAD, e o
-que a substitui é leitura de código — o predicado mudou de casa sem mudar de forma
-(`useLoadState.ts:32`) e o ramo `if (courses.isEmpty)` do `CourseStep` está byte a byte igual ao
-medido, porque o que os commits trocaram foi o gate ANTERIOR, que não dispara sem erro. Virou a
-**P-40**, com o gatilho escrito.
-
-**Ferramentas:** backend **591 passed, 5 skipped (2149 assertions)**; `pnpm lint` exit 0,
-`pnpm build` verde, `pnpm test` **35 arquivos / 176 testes**. **Pint e `typescript:transform` N/A por
-escopo medido** — dos 29 arquivos do diff, **zero** `.php` e `generated.ts` intocado. Zero código
-morto (os oito artefatos do bloco têm consumidor), zero import de `primereact` em `features/`, zero
-import cruzado `@features/*`, `shared/` sem importar feature — leis §5 limpas.
-
-**Pendências:** nasce a **P-39** (o plano afirma que `GET /api/courses` só tem `auth:sanctum`, e o
-`CourseController:19` declara `permission:catalog.course.view` — nenhuma prova cai por isso, porque
-403 e rota inexistente entram no mesmo ramo do frontend, mas a premissa escrita fica errada) e a
-**P-40** acima. Plano e spec **não** foram retro-editados: precedente da P-27, história de bloco
-fechado não se reescreve.
-
-**Arquivamento e histórico:** plano e spec foram para `plans/archive/` e `specs/archive/` por
-`git mv`, com as referências repontadas em `pendencias.md` e neste arquivo; a linha do BD-6 entrou em
-`progress.md` e a mais antiga das dez (`2026-08-11 · Hardening · guardas que faltam`) desceu
-**verbatim** para `progress-archive.md`, na forma de cinco colunas que a P-23 registra. O **BD-6 e o
-débito B-7** saíram do `backlog.md` — a fila de dívida agora está vazia nos dois lados, backend e
-frontend —, e **nada foi promovido no lugar**.
-
-**Estado: `idle`.** `state_basis_commit` segue em `2511501`, o commit que prova a entrega; a próxima
-ação é escolha explícita do João no `backlog.md`.

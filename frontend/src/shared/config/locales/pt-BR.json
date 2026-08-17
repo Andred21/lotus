@@ -16,6 +16,7 @@
     "language": "Idioma",
     "toggleMenu": "Alternar menu",
     "toggleTheme": "Alternar tema",
+    "skipToContent": "Pular para o conteúdo",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "save": "Salvar",
@@ -174,7 +175,81 @@
   },
   "dashboard": {
     "welcome": "Bem-vindo, {{name}}",
-    "subtitle": "Painel em construção."
+    "subtitle": "Estado operacional atual: o que precisa de ação hoje.",
+    "section": {
+      "action": "Requer ação",
+      "context": "Contexto"
+    },
+    "noAccess": {
+      "title": "Nenhum módulo visível",
+      "description": "Seu perfil não tem permissão de leitura sobre nenhum módulo do painel. Solicite acesso a um administrador."
+    },
+    "open": "Abrir",
+    "kpi": {
+      "turmasEmAndamento": "Turmas em andamento",
+      "turmasEncerrandoEmBreve": "Turmas encerrando",
+      "turmasAtrasadas": "Turmas atrasadas",
+      "conclusoesPorConfirmar": "Conclusões a confirmar",
+      "cotacoesPendentes": "Cotações pendentes",
+      "cotacoesValor": "{{value}} UF",
+      "certificadosAEmitir": "Certificados a emitir"
+    },
+    "module": {
+      "commercial": "Comercial",
+      "operation": "Operação",
+      "certification": "Certificação"
+    },
+    "severity": {
+      "high": "Alta",
+      "medium": "Média",
+      "normal": "Normal"
+    },
+    "pending": {
+      "title": "Pendências",
+      "empty": "Sem pendências",
+      "emptyHint": "Não há ações pendentes nos módulos que você pode ver.",
+      "type": {
+        "quote_awaiting_approval": "Cotação a aprovar",
+        "quote_approved_without_turma": "Cotação aprovada sem turma",
+        "turma_without_redator": "Turma sem relator",
+        "turma_docs_incomplete": "Documentação incompleta",
+        "turma_awaiting_conclusion": "Turma a confirmar conclusão",
+        "enrollment_awaiting_certificate": "Matrícula a certificar"
+      }
+    },
+    "alerts": {
+      "title": "Alertas",
+      "empty": "Sem alertas",
+      "emptyHint": "Nada vencido nem a vencer nos módulos que você pode ver.",
+      "type": {
+        "turma_overdue": "Turma vencida",
+        "certificate_expiring_soon": "Certificado a vencer",
+        "certificate_expired": "Certificado vencido",
+        "redator_document_expired": "Documento de relator vencido",
+        "redator_document_expiring_soon": "Documento de relator a vencer"
+      }
+    },
+    "agenda": {
+      "title": "Agenda",
+      "startingSoon": "Começam em breve",
+      "endingSoon": "Encerram em breve",
+      "inProgress": "Em andamento",
+      "overdue": "Atrasadas",
+      "empty": "Sem turmas na agenda",
+      "range": "{{start}} — {{end}}"
+    },
+    "pipeline": {
+      "title": "Fluxo comercial e operacional",
+      "empty": "Sem registros no fluxo",
+      "stage": {
+        "quote_pending": "Cotação pendente",
+        "quote_approved_without_turma": "Aprovada sem turma",
+        "turma_in_progress": "Turma em andamento",
+        "turma_ready_for_conclusion": "Pronta para concluir",
+        "concluded_pending_issuance": "Concluída, a emitir",
+        "fully_issued": "Totalmente emitida"
+      }
+    }
   },
   "placeholder": {
     "module": "Módulo em construção."

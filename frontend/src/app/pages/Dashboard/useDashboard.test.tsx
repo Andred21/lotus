@@ -1,0 +1,180 @@
+import { describe, expect, it, vi } from 'vitest'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
+import { useDashboard } from './useDashboard'
+import { api } from '@shared/api/axios'
+import type { ProblemDetails } from '@shared/api/axios'
+import type { AdminDashboardData } from '@shared/types/generated'
+
+vi.mock('@shared/api/axios', () => ({
+  api: { get: vi.fn() },
+}))
+
+const get = vi.mocked(api.get)
+
+function wrapper({ children }: { children: ReactNode }) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+}
+
+function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData {
+  return {
+    view: 'admin',
+    kpis: {
+      turmas_em_andamento: 4,
+      turmas_encerrando_em_breve: 1,
+      turmas_atrasadas: 0,
+      conclusoes_por_confirmar: 2,
+      cotacoes: { pending_count: 3, pending_value_uf: '450.0000' },
+      certificados_a_emitir: 5,
+    },
+    pendencias: [],
+    alertas: [],
+    pipeline: [{ stage: 'quote_pending', count: 3 }],
+    agenda: { starting_soon: [], ending_soon: [], in_progress: [], overdue: [] },
+    compliance_turmas: null,
+    redatores: null,
+    series: null,
+    rankings: null,
+    period_start: '2025-08-15',
+    period_end: '2026-08-15',
+    ...overrides,
+  }
+}
+
+/** Payload de quem não tem permissão de módulo nenhum: todo KPI nulo, as duas
+ * seções anuláveis do B1 nulas, e as duas listas não-anuláveis vazias. */
+function semNenhumaSecao(): AdminDashboardData {
+  return admin({
+    kpis: {
+      turmas_em_andamento: null,
+      turmas_encerrando_em_breve: null,
+      turmas_atrasadas: null,
+      conclusoes_por_confirmar: null,
+      cotacoes: null,
+      certificados_a_emitir: null,
+    },
+    pipeline: null,
+    agenda: null,
+  })
+}
+
+function problem(detail: string): ProblemDetails {
+  return {
+    type: 'https://lotus.cl/errors/x',
+    title: 'Error',
+    status: 500,
+    detail,
+    instance: '',
+  }
+}
+
+describe('useDashboard', () => {
+  it('sucesso devolve o payload admin tipado', async () => {
+    get.mockResolvedValue({ data: admin() })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('ready'))
+    if (result.current.kind !== 'ready') throw new Error('esperava kind ready')
+    expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
+    expect(result.current.staleError).toBeNull()
+  })
+
+  // Falhou E não há nada em cache: é o que autoriza SUBSTITUIR a tela pelo erro.
+  it('falha sem cache vira kind error', async () => {
+    get.mockRejectedValue(problem('sin conexión'))
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('error'))
+    if (result.current.kind !== 'error') throw new Error('esperava kind error')
+    expect(result.current.error.detail).toBe('sin conexión')
+  })
+
+  // Lição do BD-6 aplicada a objeto único: um refetch falho mantém `data`
+  // populado enquanto `status` vira `error`. Substituir a tela aí apaga
+  // informação utilizável — a falha vira aviso AO LADO do que já veio.
+  it('falha COM cache mantém os dados e avisa ao lado', async () => {
+    get.mockResolvedValueOnce({ data: admin() })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+    await waitFor(() => expect(result.current.kind).toBe('ready'))
+
+    get.mockRejectedValue(problem('caiu no refetch'))
+    if (result.current.kind !== 'ready') throw new Error('esperava kind ready')
+    // `result.current` acessado de novo dentro do closure do `act` perde o
+    // narrowing do `if` acima (é um novo escopo para o TS); captura local
+    // preserva o tipo estreitado até o retry.
+    const antesDoRetry = result.current
+    act(() => antesDoRetry.retry())
+
+    await waitFor(() => {
+      if (result.current.kind !== 'ready') throw new Error('a tela não pode virar erro com cache em mão')
+      expect(result.current.staleError).toBe('caiu no refetch')
+    })
+    if (result.current.kind !== 'ready') throw new Error('esperava kind ready')
+    expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
+  })
+
+  // D5: a fronteira do filtro nasce pronta, sem UI. É o que garante que o B2
+  // ligue o seletor de período sem mexer no cache.
+  it('a query key varia por período', async () => {
+    get.mockResolvedValue({ data: admin() })
+    // Contagem RELATIVA, não toHaveBeenCalledTimes absoluto: `get` é o mesmo
+    // mock dos testes anteriores deste arquivo (mesmo padrão de
+    // useValidationPage.test.tsx) — o total já vem com chamadas prévias.
+    const antes = get.mock.calls.length
+
+    const { rerender } = renderHook(({ p }: { p?: { start: string; end: string } }) => useDashboard(p), {
+      wrapper,
+      initialProps: { p: { start: '2026-01-01', end: '2026-06-30' } },
+    })
+    await waitFor(() => expect(get.mock.calls.length).toBe(antes + 1))
+
+    rerender({ p: { start: '2026-07-01', end: '2026-12-31' } })
+
+    await waitFor(() => expect(get.mock.calls.length).toBe(antes + 2))
+    expect(get.mock.calls[antes][1]).toEqual({ params: { period_start: '2026-01-01', period_end: '2026-06-30' } })
+    expect(get.mock.calls[antes + 1][1]).toEqual({ params: { period_start: '2026-07-01', period_end: '2026-12-31' } })
+  })
+
+  // O caso-limite do §4 da spec: esconder cada seção nula, uma a uma, deixaria
+  // uma página em branco indistinguível de falha silenciosa.
+  it('nenhuma seção legível tem estado próprio, distinto de vazio e de falha', async () => {
+    get.mockResolvedValue({ data: semNenhumaSecao() })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('unauthorized'))
+  })
+
+  // Papel só com `identity.user.view`: o backend alimenta os alertas de
+  // documento de relator por essa permissão (`AdminDashboardAssembler.php:157`)
+  // e ela não liga KPI, pipeline nem agenda. Item NA lista prova permissão, e
+  // dizer "nenhum módulo visível" aqui esconderia alerta autorizado.
+  it('alerta na lista impede o estado de sem acesso, mesmo com todo o resto nulo', async () => {
+    get.mockResolvedValue({
+      data: admin({
+        ...semNenhumaSecao(),
+        alertas: [
+          {
+            type: 'redator_document_expired',
+            severity: 'high',
+            entity_id: 5,
+            description: 'Documento del relator vencido.',
+            date: '2026-08-01',
+            navigation: { redator_id: 5 },
+          },
+        ],
+      }),
+    })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('ready'))
+    if (result.current.kind !== 'ready') throw new Error('esperava kind ready')
+    expect(result.current.data.alertas).toHaveLength(1)
+  })
+})

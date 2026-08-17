@@ -8,7 +8,7 @@ import {
 import { useTableFilter } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
-import { formatUf } from '../../lib/uf'
+import { formatUf } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
 
 const STATUSES: QuoteStatus[] = ['pending', 'approved', 'rejected']

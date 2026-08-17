@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppFileUpload, AppTag, AppFileRow, AppFilePreviewDialog, AppFileActions } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import { useFilePreview } from '@shared/hooks'
+import { dangerText } from '@shared/styles/tokens'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 
 type Props = {
@@ -86,7 +87,8 @@ export function DocumentTypeCard({
         {!delivered && <li className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.documents.empty')}</li>}
       </ul>
 
-      {sizeError && <p className="mt-2 text-sm" style={{ color: 'var(--red-500)' }}>{sizeError}</p>}
+      {/* Mesma correção do `QuoteRow`: `--red-500` cru mede 3,52:1 em 14px. */}
+      {sizeError && <p className="mt-2 text-sm" style={{ color: dangerText }}>{sizeError}</p>}
 
       <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
 

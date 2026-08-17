@@ -34,12 +34,35 @@ Central read-only operacional e analítica, com experiências distintas para Adm
 - **Exige `context_required`** antes do planejamento — o escopo é canônico do Drive, não do
   repositório, então o Context Packet vem antes do `/planejar-bloco`.
 
-**Bloco restante** (o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15 — ver
-`historico/progress.md`; o contrato do payload está em
-`specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` e os tipos, em `generated.ts`):
+**Bloco restante** (o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15 e o bloco
+B1, `dashboard-frontend-central-controle`, em 2026-08-16 — ver `historico/progress.md`; o contrato do
+payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` e os tipos, em
+`generated.ts`):
 
-1. **`dashboard-frontend-central-controle`** — TanStack Query, KPIs, pendências, alertas, pipeline,
-   séries históricas, compliance, análises gerenciais e Dashboard profissional do Redator.
+1. ~~**`dashboard-frontend-central-controle`** (B1)~~ — entregue em 2026-08-16
+   (`plans/archive/2026-08-15-dashboard-frontend-central-controle.md`). Levou as 5 seções que
+   respondem *"o que tenho para fazer agora"*: KPIs, pendências, alertas, agenda e pipeline.
+2. **`dashboard-frontend-analitico-e-redator`** (B2) — a outra metade do bloco B, criada pelo corte
+   da **D1** da spec do B1 (2026-08-15). Responde *"como a operação evoluiu"*: as 5 séries mensais,
+   os 2 rankings, `compliance_turmas`, a carga de redatores e **a view do Redator inteira**.
+
+   **Três coisas que o B1 empurrou para cá, medidas e não supostas:**
+
+   - **A decisão de biblioteca de gráficos é deste bloco.** Não existe chart lib no projeto:
+     `package.json` não tem `chart.js` — peer obrigatório do `Chart` do PrimeReact — nem alternativa,
+     e não há wrapper de chart em `shared/ui`. O B1 pôde ser entregue sem ela porque as 5 seções
+     dele não têm gráfico; as 5 séries mensais daqui têm.
+   - **O filtro de período nasce aqui.** A D3 da spec do bloco A fixou que estado operacional ignora
+     o período — só séries e rankings o obedecem. O `useDashboard` do B1 já nasceu **com o
+     parâmetro** e sem UI (D5), então este bloco liga a tela sem mexer no cache.
+   - **A D-16** (turma concluída sem matrícula caindo em `fully_issued` no funil) esperava o
+     consumidor dizer se a distinção paga. O consumidor do funil é o B1, e ele **não pediu** a
+     distinção — a linha segue no BD-15 com o gatilho intacto.
+
+   **Duas dependências externas ao bloco, já registradas:** a **P-44** (dois usuários de sonda
+   aparecem na carga de redatores) tem o gatilho apontando para cá; e o item 4 de "Próximos blocos"
+   (ativação de acesso do redator) **bloqueia o valor da view do Redator** — nenhum redator autentica
+   hoje. Nenhum dos dois é escopo deste bloco.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
 compliance e análises.
@@ -108,7 +131,8 @@ operação"*.
    metade: a regra diz que redator autentica, o cadastro nunca o habilita. Toca convite ou
    definição de senha, o gate de `is_active` e provavelmente `password_reset_tokens`; exige
    brainstorming, porque "como o redator recebe a credencial" é decisão de produto, não de código.
-   **Bloqueia o valor do bloco B do Dashboard para metade dos papéis.**
+   **Bloqueia o valor do bloco B2 do Dashboard**, que é onde a view do Redator é construída — o B1,
+   entregue em 2026-08-16, é a tela administrativa e não depende disto.
 
 ---
 
@@ -139,19 +163,21 @@ alcança toda tela de uma vez e não cabia num bloco de escopo estreito.
 **DoD:** o nome acessível medido em leitor de tela (ou por `accessibleName` no Playwright) nos dois
 sítios da P-37, não só o atributo no DOM.
 
-## BD-11 · Frontend · shell: catraca de cor e navegação no toque
+## BD-11 · Frontend · shell: navegação no toque
 
-**Cobre:** P-34, D-03 · **Frente:** frontend
-**Afinidade:** os dois vivem em `src/app/layouts/Sidebar/`. Converter as 3 classes `text-slate-*` é
-exatamente o que destrava a entrada da regra na camada, então o custo de fazer os dois juntos é menor
-que o de fazer um.
+**Cobre:** D-03 · **Frente:** frontend
 
-- **P-34** — `COR_HARDCODED` não roda em `src/app/**`, a única camada sem ela.
+**A P-34 saiu deste bloco em 2026-08-16, cumprida e não descartada.** A catraca `COR_HARDCODED`
+entrou em `src/app/**` sem `ignores` pela **D11** do `dashboard-frontend-central-controle`, com os 3
+sítios do shell convertidos para `--shell-ink`/`--shell-ink-muted` e a regra provada nos dois
+sentidos. Ficha em `pendencias/encerradas.md`. **O bloco fica só com a D-03** — e, sem a afinidade
+que juntava os dois, ele deixou de sair barato em conjunto.
+
 - **D-03** — menu recolhido a 390 tira o rótulo do DOM e deixa só `title`: no toque não há hover,
   então o nome do item de navegação fica inalcançável.
 
-**DoD:** a regra entrando em `src/app/**` **sem** bloco `ignores`, provada nos dois sentidos (sonda
-reintroduzindo uma classe de paleta e vendo o lint reprovar nomeando arquivo e linha).
+**DoD:** o nome do item de navegação alcançável no toque a 390px, medido no dispositivo emulado — não
+o atributo novo no DOM.
 
 ## BD-12 · Frontend · load-state: os dois sítios que sobraram do BD-6
 
@@ -318,18 +344,33 @@ sentada só — é o que torna o agrupamento barato.
   varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
   varredura de órfãos que os fechamentos já fazem à mão.
 
-## Travado no merge — não entra em bloco até o dashboard chegar à `main`
+## Destravado no merge — sem bloco atribuído
 
-- **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30` da
-  branch do dashboard.** Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14):
-  unificar antes do merge significaria importar de um domínio que na árvore `fix-frontend` ainda não
-  existe. Vira task de uma linha depois que `feat/dashboard-backend-agregacoes` chegar à `main` —
-  decidir o dono do número (Shared, ou um dos dois domínios) é parte da task, não desta linha.
+- **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`.**
+  Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14): unificar antes do merge
+  significaria importar de um domínio que na árvore `fix-frontend` ainda não existia. **O gatilho
+  venceu** — medido no `/fechar-sprint` de 2026-08-16,
+  `git ls-tree -r main -- backend/app/Domains/Dashboard/Services/DashboardWindows.php` acha o
+  arquivo, então os dois números convivem na **mesma** árvore e a unificação deixou de depender de
+  merge. Decidir o dono do número (Shared, ou um dos dois domínios) é parte da task. **Fica sem bloco
+  até o João agrupá-la** — o fechamento constata que a trava caiu, não escolhe onde ela entra.
 
 ## Travados em decisão — não entram em bloco
 
 Executar sem a decisão é escolher no lugar do João.
 
+- **D-18 · O `description` das pendências e alertas do Dashboard é string fixa em espanhol no
+  backend, e a tela do B1 já mostra as outras duas locales em volta dela.** Nasceu da **D17** da spec
+  do `dashboard-frontend-central-controle` (2026-08-15), e a medição que a produziu está nos quatro
+  produtores: `CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
+  `CertificationMetricsQuery.php:38` e `IdentityMetricsQuery.php:46` — todos montam frase pronta
+  (`"Cotización pendiente de aprobación."`). O front **não** pode traduzir: em
+  `turma_docs_incomplete` a string carrega a lista de documentos faltantes, dado que o React não
+  deriva. A D17 mitigou pelo que estava ao alcance do frontend — o **rótulo do tipo** é traduzido nas
+  3 locales e vira a linha principal, com o `description` como detalhe —, então o defeito hoje é
+  cosmético e localizado, não uma tela em espanhol. **Fecha junto da D-07, e pelo mesmo motivo:**
+  traduzir texto de servidor exige primeiro o idioma canônico e o mecanismo de i18n do backend, que
+  é a decisão que a D-07 espera. Fazer só este sítio criaria um terceiro padrão de idioma no repo.
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial
   escreve em PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`,
   `ConcludeTurmaAction`) — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente;
@@ -364,9 +405,11 @@ Lotus (P-08, P-09, P-10, P-13, P-15, P-16).
 Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
 divergência crítica de UI; **não são** — são módulo a construir.
 
-- **Dashboard** — coberto pela **Sprint 5** acima. Protótipo tem 4 KPIs, gráfico de turmas, gráfico
-  de certificados, tarefas pendentes, alertas recentes e estados sem dados. Real: saudação +
-  subtítulo (17 linhas).
+- **Dashboard** — coberto pela **Sprint 5** acima, e **não é mais placeholder**: o bloco A entregou o
+  contrato (2026-08-15) e o B1, a tela operacional (2026-08-16), que substituiu a saudação de 17
+  linhas por KPIs, pendências, alertas, agenda e pipeline. O que falta do protótipo é justamente o
+  **B2**: os gráficos de turmas e de certificados (as 5 séries mensais), os rankings, o compliance,
+  a carga de redatores e a view do Redator.
 - **Perfil do Usuário** — coberto pela **Sprint 6** acima. Página dedicada para usuário
   (administrativo e redator), visualizando seu perfil e dados.
 - ~~**Pessoas · Alunos**~~ — entregue em 2026-07-27
