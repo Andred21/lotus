@@ -12,6 +12,38 @@
 
 # Frontend
 
+## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
+
+**Bloco:** — · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
+gastar tempo neutralizando margem de UA à mão. Revisar em **2026-10-31**.
+
+O `frontend/src/index.css:1-9` omite o Preflight do Tailwind **de propósito**, para o reset global
+não sobrescrever a estilização do PrimeReact. A decisão está registrada e tem motivo. A consequência
+não estava: todo `h1`–`h6`, `p`, `ul` e `ol` da aplicação herda a margem do agente do usuário, que é
+**proporcional ao tamanho da fonte**.
+
+**Medido na revisão de UI de 2026-08-17, em dois sítios de custo diferente:**
+
+- `KpiRow` — o número em `text-3xl` recebia `margin: 30px 0` (1em de 30px), o que somava
+  75–95px de área morta por card e empurrava as duas listas do Dashboard para fora da dobra em
+  1024x768 e 390x844. É a UI-02 do relatório.
+- `AppCardHeader` — o `h3` recebia `margin: 16px 0`, e a faixa media **80px de altura para 24px de
+  texto**, em TODO card da aplicação. Não estava no relatório; apareceu ao corrigir.
+
+**O sintoma é conhecido do repositório desde antes.** O `PageHeader` crava `my-[0.83em]` no `h1` com
+o motivo escrito no docblock ("o projeto não carrega o Preflight"), e os `ul` do Dashboard, do funil
+e da agenda carregam `m-0 list-none p-0` à mão. São três grafias do mesmo remédio, aplicadas caso a
+caso, e ninguém as conta.
+
+**Não se conserta de carona.** O passe de correção de 2026-08-17 neutralizou onde custava — `[&_p]:m-0`
+no `AppCard variant="stat"`, `m-0` no `h3` do `AppCardHeader`, no `h2` da faixa de seção e no `h4` da
+janela da agenda —, e parou aí de propósito. Um `@layer base` com
+`h1,h2,h3,h4,h5,h6,p,ul,ol { margin: 0 }` fecharia a classe inteira, mas mexe no espaçamento de
+**todas** as telas de uma vez, num passe que não tem como medir todas; e contradiria o `PageHeader`,
+que crava a margem justamente para a correção semântica ficar invisível. Um mini-Preflight escopado
+aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
+provável, e é decisão do João.
+
 ## P-36 — a catraca `COR_HARDCODED` só enxerga `className`
 
 **Bloco:** BD-10 · **Gatilho:** fecha quando um bloco tocar `FormSection` ou `CoursesTable` por
