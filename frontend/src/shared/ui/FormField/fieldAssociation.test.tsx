@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { registerPrimeLocales } from '@shared/config/primeLocale'
@@ -57,16 +58,34 @@ describe('os wrappers de shared/ui se associam ao rótulo do FormField', () => {
     expect(controle.getAttribute('type')).toBe('password')
   })
 
-  it('o erro chega ao input de cada wrapper como aria-invalid + describedby', () => {
+  /**
+   * O erro é a SEGUNDA metade da associação, e ela tem a mesma armadilha da
+   * primeira: o nó que recebe o atributo. Este teste dizia "de cada wrapper" no
+   * nome e montava só o `AppInputText` — e o `AppDatePicker` passava
+   * `aria-invalid`/`aria-describedby` ao `<span.p-calendar>` raiz, porque o
+   * Calendar copia para dentro só `inputId`, `ariaLabelledBy` e `ariaLabel`
+   * (`calendar.cjs.js:3899-3924`) e despeja o resto na raiz (`:4127`). Medido no
+   * navegador com um 422 real, não deduzido. Agora a tabela é a mesma dos cinco
+   * wrappers acima.
+   */
+  const COM_CONTROLE: [string, ReactElement][] = [
+    ['AppInputText', <AppInputText />],
+    ['AppTextarea', <AppTextarea />],
+    ['AppDropdown', <AppDropdown options={[{ label: 'Admin', value: 'admin' }]} />],
+    ['AppDatePicker', <AppDatePicker value={null} onChange={() => {}} />],
+    ['AppPassword', <AppPassword />],
+  ]
+
+  it.each(COM_CONTROLE)('o erro chega ao INPUT do %s, nao ao no raiz', (_nome, controle) => {
     render(
-      <FormField label="Nombre" error="Requerido">
-        <AppInputText />
+      <FormField label="Campo" error="Requerido">
+        {controle}
       </FormField>,
     )
 
-    const controle = screen.getByLabelText('Nombre')
-    expect(controle.getAttribute('aria-invalid')).toBe('true')
-    const descrito = controle.getAttribute('aria-describedby') as string
+    const alvo = screen.getByLabelText('Campo')
+    expect(alvo.getAttribute('aria-invalid')).toBe('true')
+    const descrito = alvo.getAttribute('aria-describedby') as string
     expect(document.getElementById(descrito)?.textContent).toBe('Requerido')
   })
 
