@@ -190,6 +190,16 @@
       "start": "De",
       "end": "Até"
     },
+    "series": {
+      "countsTitle": "Evolução mensal",
+      "ufTitle": "UF aprovada por mês",
+      "empty": "Sem registros no período",
+      "turmas_iniciadas": "Turmas iniciadas",
+      "turmas_concluidas": "Turmas concluídas",
+      "matriculas": "Matrículas",
+      "certificados_emitidos": "Certificados emitidos",
+      "uf_aprovada": "UF aprovada"
+    },
     "noAccess": {
       "title": "Nenhum módulo visível",
       "description": "Seu perfil não tem permissão de leitura sobre nenhum módulo do painel. Solicite acesso a um administrador."

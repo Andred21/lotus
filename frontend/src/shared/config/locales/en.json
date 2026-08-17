@@ -190,6 +190,16 @@
       "start": "From",
       "end": "To"
     },
+    "series": {
+      "countsTitle": "Monthly trend",
+      "ufTitle": "Approved UF per month",
+      "empty": "No records in the period",
+      "turmas_iniciadas": "Classes started",
+      "turmas_concluidas": "Classes completed",
+      "matriculas": "Enrollments",
+      "certificados_emitidos": "Certificates issued",
+      "uf_aprovada": "Approved UF"
+    },
     "noAccess": {
       "title": "No modules visible",
       "description": "Your profile has no read permission on any dashboard module. Ask an administrator for access."

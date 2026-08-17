@@ -9,6 +9,7 @@ import { kpiCards } from './kpiCards'
 import { PendingList } from './PendingList'
 import { PipelineFunnel } from './PipelineFunnel'
 import { PeriodFilter } from './PeriodFilter'
+import { SeriesPanel } from './SeriesPanel'
 import type { PeriodPresetKey } from './periodPresets'
 
 /**
@@ -72,17 +73,20 @@ export function AdminView({
       {/* A janela histórica só alcança séries e rankings (D3 do bloco A), e é
         * por isso que o seletor mora DENTRO desta seção e não no cabeçalho da
         * página: no cabeçalho ele prometeria filtrar a tela inteira. */}
-      <section className="space-y-3">
-        <SectionLabel>{t('dashboard.section.analysis')}</SectionLabel>
-        <PeriodFilter
-          preset={preset}
-          period={period}
-          staleError={staleError}
-          onPresetChange={onPresetChange}
-          onPeriodChange={onPeriodChange}
-          onRetry={onRetry}
-        />
-      </section>
+      {(data.series !== null || data.rankings !== null) && (
+        <section className="space-y-3">
+          <SectionLabel>{t('dashboard.section.analysis')}</SectionLabel>
+          <PeriodFilter
+            preset={preset}
+            period={period}
+            staleError={staleError}
+            onPresetChange={onPresetChange}
+            onPeriodChange={onPeriodChange}
+            onRetry={onRetry}
+          />
+          {data.series !== null && <SeriesPanel series={data.series} />}
+        </section>
+      )}
     </div>
   )
 }
