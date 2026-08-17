@@ -20,7 +20,16 @@ export type AppFilePreviewDialogProps = {
 /** Pré-visualização de documento de `files`. Imagem e PDF renderizam inline
  * pela URL pré-assinada; formato sem preview mostra a linha do arquivo e o
  * botão de baixar (spec D9) — a ação NÃO some conforme o tipo, porque ação que
- * desaparece é falha escondida. */
+ * desaparece é falha escondida.
+ *
+ * **O foco vai ao contêiner do diálogo na montagem, e há um limite que o
+ * navegador é dono.** Com `activeElement` = `IFRAME`, Escape não fechava: o
+ * visor nativo do Chrome consome a tecla DENTRO do iframe e o handler do
+ * diálogo, que escuta no documento hospedeiro, nunca a recebe (D-25 do review de
+ * 2026-08-17). Focar o contêiner faz Escape funcionar em todo o caminho até o
+ * primeiro clique dentro do visor. Depois disso, a tecla é do navegador e o `X`
+ * é a saída garantida — não há correção possível do lado do documento pai, e
+ * fingir que há seria pior do que declarar. */
 export function AppFilePreviewDialog({ file, visible, onHide }: AppFilePreviewDialogProps) {
   const { t } = useTranslation()
   if (!file) return null
@@ -28,7 +37,13 @@ export function AppFilePreviewDialog({ file, visible, onHide }: AppFilePreviewDi
   const kind = isPreviewable(file.mime, file.original_name)
 
   return (
-    <AppDialog visible={visible} onHide={onHide} header={file.original_name} style={{ width: '70vw' }}>
+    <AppDialog
+      visible={visible}
+      onHide={onHide}
+      header={file.original_name}
+      style={{ width: '70vw' }}
+      focusOnShow
+    >
       {kind === 'image' && (
         <img
           src={file.download_url}
