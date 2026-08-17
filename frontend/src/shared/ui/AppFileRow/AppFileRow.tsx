@@ -74,7 +74,21 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
           <p className="font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+      {/* O grupo de ações quebra POR DENTRO, e ancora à direita. A quebra da
+          linha acima resolveu metade da D-19: o nome voltou a caber inteiro,
+          mas o grupo de três ações do perfil mede 243px (`Reemplazar` 139 + dois
+          ícones de 48, gaps de 4) contra os 226px de conteúdo do slot em 390px —
+          a barra lateral recolhida come 80px da viewport antes de a página
+          começar. O slot media `clientWidth` 242 contra `scrollWidth` 251 e os
+          botões vazavam 9px além da própria borda.
+          `justify-end` é inerte quando tudo cabe numa linha — o grupo é
+          `shrink-0` e não sobra espaço para distribuir —, então as três outras
+          telas que consomem esta linha não se mexem. */}
+      {actions && (
+        <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-1">
+          {actions}
+        </div>
+      )}
     </div>
   )
 }

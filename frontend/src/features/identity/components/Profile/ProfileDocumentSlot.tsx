@@ -1,25 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { AppFileActions, AppFileRow, AppFileUpload, AppTag } from '@shared/ui'
+import { AppFileActions, AppFileRow, AppFileUpload } from '@shared/ui'
 import type { FileUploadHandlerEvent, PreviewableFile } from '@shared/ui'
-import { formatDate } from '@shared/lib'
 import type {
-  DocumentValidityStatus,
   RedatorDocumentType,
   RedatorProfileDocumentData,
 } from '@shared/types/generated'
-
-/**
- * `ausente` é NEUTRO, não `danger` (spec D10): o perfil não recebe idoneidade no
- * DTO e não a calcula, então pintar ausência de vermelho seria emitir veredito
- * de compliance que este contrato não fornece — ela aparece como ação pendente,
- * pelo botão de envio.
- */
-const SEVERIDADE: Record<DocumentValidityStatus, 'success' | 'warning' | 'danger' | 'secondary'> = {
-  vigente: 'success',
-  vence_em_breve: 'warning',
-  vencido: 'danger',
-  ausente: 'secondary',
-}
+import { ProfileDocumentSlotHeader } from './ProfileDocumentSlotHeader'
 
 const UPLOAD_CHOOSE_OPTIONS = { icon: 'pi pi-upload', className: 'p-button-text p-button-sm' }
 
@@ -78,12 +64,8 @@ export function ProfileDocumentSlot({
   const upload = doc.self_service ? (
     <AppFileUpload
       chooseOptions={UPLOAD_CHOOSE_OPTIONS}
-      chooseLabel={file ? t('profile.documents.replace') : t('profile.documents.send')}
-      accessibleName={
-        file
-          ? t('profile.documents.replaceNamed', { tipo })
-          : t('profile.documents.sendNamed', { tipo })
-      }
+      chooseLabel={t(file ? 'profile.documents.replace' : 'profile.documents.send')}
+      accessibleName={t(file ? 'profile.documents.replaceNamed' : 'profile.documents.sendNamed', { tipo })}
       disabled={uploading}
       onSizeReject={onSizeReject}
       uploadHandler={(e) => onUpload(doc.type, e)}
@@ -92,30 +74,7 @@ export function ProfileDocumentSlot({
 
   return (
     <div className="rounded border p-2" style={{ borderColor: 'var(--surface-border)' }}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium">{tipo}</p>
-        {/* Status e validade na MESMA linha, validade em tinta de CORPO (D-21):
-            é o dado de peso legal — por ela o redator sabe quando renovar — e
-            saía `text-xs` secundária na última linha do slot, abaixo da nota
-            administrativa, enquanto o status que o backend deriva A PARTIR dela
-            era a pílula do topo. O ruído era real: três dos quatro slots têm
-            `valid_until` nulo e imprimiam "Sin fecha de vencimiento" — linha que
-            só diz que não há informação. Ela deixou de ser renderizada. */}
-        <div className="flex flex-wrap items-center gap-2">
-          <AppTag value={t(`profile.docStatus.${doc.status}`)} severity={SEVERIDADE[doc.status]} />
-          {doc.valid_until && (
-            <span className="font-mono text-sm" style={{ color: 'var(--text-color)' }}>
-              {t('profile.documents.validUntil', {
-                // `valid_until` vem só-data (`YYYY-MM-DD`) e `new Date` a lê
-                // como meia-noite UTC: num fuso a oeste ela VOLTA um dia.
-                // `T00:00:00` ancora no fuso local; o `formatDate` resolve o
-                // idioma ativo — sem ele o `Intl` cai no do navegador (UI-01).
-                date: formatDate(new Date(`${doc.valid_until}T00:00:00`)),
-              })}
-            </span>
-          )}
-        </div>
-      </div>
+      <ProfileDocumentSlotHeader tipo={tipo} status={doc.status} validUntil={doc.valid_until} />
 
       <div className="mt-2">
         {file ? (
@@ -126,7 +85,15 @@ export function ProfileDocumentSlot({
             actions={
               <>
                 {upload}
-                <AppFileActions file={file} onPreview={onPreview} />
+                {/* O par Ver/Descargar num NÓ só: em 390px o grupo de ações
+                    QUEBRA (ver `AppFileRow`), e solto ele quebrava ENTRE os dois
+                    ícones — `Ver` subia com o `Reemplazar` e parava em x=302,
+                    contra x=248 no slot vizinho, que é a D-22 desfeita numa
+                    faixa. Com o nó, quem desce é o par inteiro, e o fim do grupo
+                    fica em x=348 nos três slots com arquivo. */}
+                <div className="flex items-center gap-1">
+                  <AppFileActions file={file} onPreview={onPreview} />
+                </div>
               </>
             }
           />
