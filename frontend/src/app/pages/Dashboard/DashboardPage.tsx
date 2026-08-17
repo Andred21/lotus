@@ -98,10 +98,6 @@ export function DashboardPage() {
     )
   }
 
-  // D12: a view do Redator é do B2, e hoje nenhum redator autentica. Sem
-  // placeholder e sem tela de transição — só o cabeçalho.
-  if (state.kind === 'unsupported') return <div>{header}</div>
-
   // O caso-limite do §4: esconder cada seção nula, uma a uma, deixaria a página
   // em branco para quem não tem módulo nenhum — indistinguível de falha
   // silenciosa. A tela diz o que está acontecendo em vez de não dizer nada.
@@ -117,6 +113,10 @@ export function DashboardPage() {
       </div>
     )
   }
+
+  // A view do Redator chega na Task 10; até lá o ramo dela renderiza só o
+  // cabeçalho, como o `unsupported` fazia — mas agora com o tipo certo.
+  if (state.kind === 'ready-redator') return <div>{header}</div>
 
   const { data } = state
 
