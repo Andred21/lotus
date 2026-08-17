@@ -178,7 +178,17 @@
     "subtitle": "Current operating status: what needs action today.",
     "section": {
       "action": "Needs action",
-      "context": "Context"
+      "context": "Context",
+      "analysis": "Period analysis"
+    },
+    "period": {
+      "label": "Period",
+      "last12": "Last 12 months",
+      "last6": "Last 6 months",
+      "currentYear": "Current year",
+      "custom": "Custom",
+      "start": "From",
+      "end": "To"
     },
     "noAccess": {
       "title": "No modules visible",

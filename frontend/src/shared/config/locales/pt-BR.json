@@ -178,7 +178,17 @@
     "subtitle": "Estado operacional atual: o que precisa de ação hoje.",
     "section": {
       "action": "Requer ação",
-      "context": "Contexto"
+      "context": "Contexto",
+      "analysis": "Análise do período"
+    },
+    "period": {
+      "label": "Período",
+      "last12": "Últimos 12 meses",
+      "last6": "Últimos 6 meses",
+      "currentYear": "Ano corrente",
+      "custom": "Personalizado",
+      "start": "De",
+      "end": "Até"
     },
     "noAccess": {
       "title": "Nenhum módulo visível",

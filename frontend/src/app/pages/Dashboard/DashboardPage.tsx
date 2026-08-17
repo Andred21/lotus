@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PageHeader, AppErrorState, AppEmptyState, InlineLoadState } from '@shared/ui'
+import { PageHeader, AppErrorState, AppEmptyState } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { useDashboard } from './useDashboard'
 import { DashboardSkeleton } from './DashboardSkeleton'
 import { AdminView } from './admin/AdminView'
+import { PERIOD_PRESET_PADRAO, periodoDoPreset, periodoPadrao } from './admin/periodPresets'
+import type { PeriodPresetKey } from './admin/periodPresets'
 
 /**
  * Roteador de `kind` do Dashboard, e só isso (D3/D4). A query e a política de
@@ -12,7 +15,22 @@ import { AdminView } from './admin/AdminView'
 export function DashboardPage() {
   const { t } = useTranslation()
   const user = useSessionStore((s) => s.user)
-  const state = useDashboard()
+
+  // D12: a janela mora aqui. Não cruza fronteira além do par página/seletor, e
+  // a rule proíbe promover a Zustand o que não cruza fronteira. `useState` com
+  // inicializador de função para o `new Date()` rodar UMA vez, no mount, e não
+  // a cada render.
+  const [preset, setPreset] = useState<PeriodPresetKey>(PERIOD_PRESET_PADRAO)
+  const [period, setPeriod] = useState(() => periodoPadrao(new Date()))
+  const state = useDashboard(period)
+
+  // Trocar de preset recalcula a janela; "Personalizado" mantém a que estava e
+  // passa o comando para os dois campos.
+  const trocarPreset = (novo: PeriodPresetKey) => {
+    setPreset(novo)
+    const janela = periodoDoPreset(novo, new Date())
+    if (janela) setPeriod(janela)
+  }
 
   const header = (
     <PageHeader title={t('dashboard.welcome', { name: user?.name })} description={t('dashboard.subtitle')} />
@@ -66,9 +84,15 @@ export function DashboardPage() {
   return (
     <div>
       {header}
-      {/* Falha COM dado em mão: aviso ao lado, a tela permanece utilizável (BD-6). */}
-      <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.retry} />
-      <AdminView data={state.data} />
+      <AdminView
+        data={state.data}
+        preset={preset}
+        period={period}
+        staleError={state.staleError}
+        onPresetChange={trocarPreset}
+        onPeriodChange={setPeriod}
+        onRetry={state.retry}
+      />
     </div>
   )
 }

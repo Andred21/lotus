@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { AdminDashboardData } from '@shared/types/generated'
+import type { DashboardPeriod } from '../useDashboard'
 import { SectionLabel } from '../SectionLabel'
 import { KpiRow } from '../KpiRow'
 import { AlertList } from '../AlertList'
@@ -7,6 +8,8 @@ import { AgendaPanel } from '../AgendaPanel'
 import { kpiCards } from './kpiCards'
 import { PendingList } from './PendingList'
 import { PipelineFunnel } from './PipelineFunnel'
+import { PeriodFilter } from './PeriodFilter'
+import type { PeriodPresetKey } from './periodPresets'
 
 /**
  * Composição do administrador. Saiu do `DashboardPage` porque a página é o
@@ -19,7 +22,23 @@ import { PipelineFunnel } from './PipelineFunnel'
  * tela; abaixo, agenda e pipeline, que são leitura de contexto. Em telas
  * estreitas as colunas empilham.
  */
-export function AdminView({ data }: { data: AdminDashboardData }) {
+export function AdminView({
+  data,
+  preset,
+  period,
+  staleError,
+  onPresetChange,
+  onPeriodChange,
+  onRetry,
+}: {
+  data: AdminDashboardData
+  preset: PeriodPresetKey
+  period: DashboardPeriod
+  staleError: string | null
+  onPresetChange: (p: PeriodPresetKey) => void
+  onPeriodChange: (p: DashboardPeriod) => void
+  onRetry: () => void
+}) {
   const { t } = useTranslation()
 
   return (
@@ -49,6 +68,21 @@ export function AdminView({ data }: { data: AdminDashboardData }) {
           </div>
         </section>
       )}
+
+      {/* A janela histórica só alcança séries e rankings (D3 do bloco A), e é
+        * por isso que o seletor mora DENTRO desta seção e não no cabeçalho da
+        * página: no cabeçalho ele prometeria filtrar a tela inteira. */}
+      <section className="space-y-3">
+        <SectionLabel>{t('dashboard.section.analysis')}</SectionLabel>
+        <PeriodFilter
+          preset={preset}
+          period={period}
+          staleError={staleError}
+          onPresetChange={onPresetChange}
+          onPeriodChange={onPeriodChange}
+          onRetry={onRetry}
+        />
+      </section>
     </div>
   )
 }
