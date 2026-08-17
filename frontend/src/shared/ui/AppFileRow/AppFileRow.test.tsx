@@ -1,6 +1,17 @@
-import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import i18n from '@shared/config/i18n'
+import { formatDate } from '@shared/lib'
 import { AppFileRow } from './AppFileRow'
+
+// O idioma da INTERFACE, não o do runtime: em jsdom o detector resolve pelo
+// `navigator.language` (en-US), e é justamente a divergência entre os dois que
+// o D-18 relata. Pinado aqui, a guarda vale com qualquer TZ da máquina.
+beforeAll(async () => {
+  await i18n.changeLanguage('es-CL')
+})
+
+afterEach(cleanup)
 
 describe('AppFileRow', () => {
   it('expoe o nome inteiro em title, porque a linha trunca', () => {
@@ -10,5 +21,52 @@ describe('AppFileRow', () => {
 
     expect(screen.getByText('certificado-de-titulo-profesional-2026.pdf').getAttribute('title'))
       .toBe('certificado-de-titulo-profesional-2026.pdf')
+  })
+
+  it('formata a data no idioma da INTERFACE, nao no do navegador', () => {
+    // D-18: `new Date(createdAt).toLocaleDateString()` sem locale cai no idioma
+    // do navegador. `created_at` é data-hora completa, então NÃO carrega o
+    // problema de fuso do `valid_until` só-data — o defeito aqui é de idioma.
+    const createdAt = '2026-08-01T10:00:00Z'
+    render(<AppFileRow name="cv.pdf" size={1024} createdAt={createdAt} />)
+
+    const esperado = formatDate(new Date(createdAt))
+    expect(screen.getByText(new RegExp(esperado.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))).toBeTruthy()
+  })
+
+  it('deixa o grupo de acoes CAIR de linha em vez de vazar o container', () => {
+    // D-19, o unico C da revisao: em 390px o cartao media clientWidth 227
+    // contra scrollWidth 311, o rotulo saia cortado em "Reem" e o nome do
+    // arquivo ficava com largura 0. A quebra e dirigida pelo CONTAINER: o
+    // componente serve quatro larguras diferentes na MESMA viewport
+    // (comercial, turma, redator, perfil), e um breakpoint de viewport
+    // acertaria uma e erraria tres.
+    const { container } = render(
+      <AppFileRow name="cv.pdf" actions={<button type="button">Reemplazar</button>} />,
+    )
+
+    expect(container.firstElementChild?.className).toContain('flex-wrap')
+  })
+
+  it('mantem o truncamento ANTES da quebra', () => {
+    // A quebra nao substitui o truncamento: o bloco de nome continua
+    // `min-w-0 flex-1`, senao o nome volta a empurrar a linha inteira.
+    render(<AppFileRow name="certificado-de-titulo-profesional-2026.pdf" />)
+
+    const nome = screen.getByText('certificado-de-titulo-profesional-2026.pdf')
+    expect(nome.className).toContain('truncate')
+    expect(nome.parentElement?.className).toContain('min-w-0')
+  })
+
+  it('usa font-mono na linha de metadados', () => {
+    // D-29: data e tamanho sao dado tecnico, e o token ja existe
+    // (`index.css`). Alcanca comercial, turma e redator, que e consistencia.
+    render(<AppFileRow name="cv.pdf" size={1024} createdAt="2026-08-01T10:00:00Z" />)
+
+    // `formatFileSize(1024)` devolve exatamente "1 KB" (`shared/lib/upload.ts:13-17`:
+    // abaixo de 1 MiB e' `${Math.round(bytes / 1024)} KB`). Casar pelo tamanho e nao
+    // pela data porque a data depende da locale ativa, que a Task 4 acabou de mudar.
+    const meta = screen.getByText(/\b1 KB\b/)
+    expect(meta.className).toContain('font-mono')
   })
 })

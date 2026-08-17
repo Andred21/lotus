@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatFileSize } from '@shared/lib/upload'
+import { formatDate } from '@shared/lib'
 
 /** Ícone e cor por tipo. Decide por mime (spec D7); extensão é fallback quando
  * o mime é null. Cor por palette var do Lara, composta com --surface-card no
@@ -38,22 +39,40 @@ export type AppFileRowProps = {
  * divergentes (spec D8). A ESTRUTURA de cada tela continua com a tela. */
 export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowProps) {
   const { icon, hue } = fileIcon(mime, name)
+  // `toLocaleDateString()` sem locale cai no idioma do NAVEGADOR: a interface em
+  // es-CL exibia a data em en-US (D-18). O `formatDate` resolve pelo idioma
+  // ativo, num lugar só. `created_at` é data-hora completa e não carrega o
+  // problema de fuso do `valid_until` só-data — ali a âncora `T00:00:00`
+  // continua sendo o mecanismo certo, no `ProfileDocumentSlot`.
   const meta = [
-    createdAt ? new Date(createdAt).toLocaleDateString() : null,
+    createdAt ? formatDate(new Date(createdAt)) : null,
     size !== undefined ? formatFileSize(size) : null,
   ].filter(Boolean).join(' · ')
 
   return (
-    <div className="flex items-center gap-3">
+    // `flex-wrap`: em 390px o cartão do CV media `clientWidth` 227 contra
+    // `scrollWidth` 311, o rótulo saía cortado em "Reem" e o NOME do arquivo
+    // ficava com largura 0 (D-19, único C do review de 2026-08-17). A quebra é
+    // dirigida pelo CONTÊINER e não por breakpoint de viewport: este componente
+    // serve quatro larguras diferentes na MESMA viewport — comercial, turma,
+    // redator e perfil —, e um breakpoint acertaria uma e erraria três. O
+    // contra-exemplo que isolou a causa é o REUF: sem botão de upload, ele mede
+    // `scrollWidth` = `clientWidth` e não vaza.
+    <div className="flex flex-wrap items-center gap-3">
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
         style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}
       >
         <i className={icon} aria-hidden="true" />
       </span>
+      {/* `min-w-0 flex-1` é o que mantém o truncamento funcionando ANTES da
+          quebra — sem ele o nome volta a empurrar a linha inteira, e o `title`
+          (a leitura completa, desde 2026-08-16) deixa de ser o único recurso. */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium" title={name}>{name}</p>
-        {meta && <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>}
+        {meta && (
+          <p className="font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>
+        )}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
     </div>
