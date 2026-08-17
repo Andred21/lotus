@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: sprint-5-dashboard
+active_work_item: dashboard-frontend-analitico-e-redator
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: dashboard-frontend-central-controle
-state_basis_commit: 0afdb55
-updated_at: 2026-08-17T11:40:00-03:00
+state_basis_commit: c2ac9d4
+updated_at: 2026-08-17T12:31:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,94 @@ updated_at: 2026-08-17T11:40:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `dashboard-frontend-analitico-e-redator` (Sprint 5 · Dashboard, bloco B2)
+
+### Seleção — 2026-08-17
+
+**Último bloco da Sprint 5 (`backlog.md:45`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — e é
+a **décima primeira** vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
+`celula-de-identidade`, `dashboard-backend-agregacoes`, `meu-perfil-backend-self-service`,
+`dashboard-frontend-central-controle`): o argumento era **linha do backlog**, com numeração `2.` e
+markdown, não slug promovido.
+
+**Quatro decisões dele fecharam o gate:** o slug `dashboard-frontend-analitico-e-redator`; a rota
+**`context_required`**, como o backlog exige para a Sprint 5; **main tree** como área de trabalho; e
+**a view do Redator entra inteira** no escopo.
+
+**A branch nasceu ANTES deste commit**, seguindo o precedente do B1:
+`feat/dashboard-frontend-analitico-e-redator`, criada de `main@c2ac9d4`. Este arquivo já é escrito
+na branch, não na `main`.
+
+**A main tree é escolha dele, e o gatilho da P-03 não vencia.** O bloco é frontend puro; a pendência
+dispara com mais de um `active_work_item` **de backend**, e não há outro item ativo. Uma worktree
+seria admissível; ele escolheu a árvore principal, como no B1.
+
+**`state_basis_commit` passa de `0afdb55` a `c2ac9d4`, e isso não é divergência.** Com
+`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter derivado. `c2ac9d4` é o
+merge da revisão de UI de 2026-08-17 na `main`, e `main == origin/main` na hora da promoção, árvore
+limpa exceto `backend/config/cors.php`.
+
+**Fonte externa declarada, como em toda a Sprint 5:** o backlog aponta o escopo canônico no Drive
+(`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion (EAP
+8.4.0–8.4.7). O bloco A consumiu a sequência de backend (8.4.0→8.4.1→8.4.2→8.4.3→8.4.6) e o B1
+consumiu as de frontend pelo packet de 2026-08-15 — **este bloco não herda aquele packet**: ele foi
+escrito para as 5 seções operacionais, e o que sobra aqui são os 4 datasets analíticos e a view do
+Redator. O packet do B1
+(`context-packets/2026-08-15-dashboard-frontend-central-controle.md`) é insumo, não substituto.
+**O staleness trigger da troca 8.4.0 × 8.4.7 no Notion segue vivo** — descrição e critério de aceite
+invertidos entre si, medido duas vezes e não corrigido até o fechamento do B1; a resolução é a
+mesma, o Drive decide o escopo.
+
+**Cinco medições da abertura, feitas sobre `c2ac9d4` e não herdadas:**
+
+1. **Continua sem biblioteca de gráficos.** `package.json` não tem `chart.js` — peer obrigatório do
+   `Chart` do PrimeReact `^10.9.8` — nem `recharts`, `apexcharts`, `echarts`, `d3`, `victory`,
+   `nivo` ou `visx`; `shared/ui/` não tem wrapper de chart. **A decisão de chart lib é deste bloco**,
+   e ela é dependência de runtime nova, não escolha de estilo.
+2. **A D5 do B1 se paga aqui, medida.** `useDashboard(period?: DashboardPeriod)`
+   (`useDashboard.ts:77`) já nasceu com o parâmetro: a `queryKey` inclui `start`/`end`
+   (`useDashboard.ts:17-18`) e a chamada manda `period_start`/`period_end`
+   (`useDashboard.ts:83`). **Ligar a UI de período não mexe no cache** — o hook não precisa mudar de
+   forma para receber o filtro.
+3. **Os 4 datasets que faltam do admin são exatamente os 4 anuláveis que o B1 não consumiu:**
+   `compliance_turmas: TurmaComplianceData[] | null`, `redatores: RedatorLoadData[] | null`,
+   `series: SeriesData | null` e `rankings: RankingsData | null` (`generated.ts:8-11`). O B1 levou
+   `kpis`, `pendencias`, `alertas`, `pipeline` e `agenda`. O corte da D1 fecha sem sobra nem
+   sobreposição.
+4. **`RedatorDashboardData` tem 6 chaves e nenhuma anulável** (`generated.ts:376-383`): `view`,
+   `resumo`, `agenda`, `pendencias_documentais`, `alertas_documentos`, `historico`. A nulabilidade
+   de gate é só do admin, então **a política de estado do `useDashboard` não tem o que ramificar na
+   view do Redator** — o predicado `nenhumaSecaoLegivel`, que o review do B1 consertou, é do ramo
+   admin. Achado de desenho para o brainstorming, não do packet.
+5. **A catraca de cor já cobre onde o bloco escreve.** `COR_HARDCODED` roda em `src/app/**` desde a
+   D11 do B1 (P-34 fechada), e `app/pages/Dashboard/` tem 12 arquivos hoje. O bloco nasce sob a
+   guarda, sem precisar ligá-la.
+
+**A view do Redator entra inteira por decisão dele, com o custo declarado aqui e não descoberto no
+gate.** A lei §5 permite que o redator autentique, mas **a ativação não foi feita, e isso é medido,
+não suposto:** `CreateRedatorAction.php:20` diz "is_active=false até o fluxo de ativação" e
+`AuthController.php:52` recusa login de usuário inativo. **Consequência para o DoD: a view do
+Redator não pode ser provada com sessão de redator real** — a prova será por payload e render, e a
+ativação de acesso do redator (item 4 de "Próximos blocos") **não é escopo deste bloco**.
+
+**Duas linhas de backlog que tocam este bloco:** a **P-44** (dois usuários de sonda aparecem na
+carga de redatores) tem o gatilho apontando para cá e **a carga de redatores é seção deste bloco**,
+então o gatilho vence — tratar no planejamento; e a **D-16** (turma concluída sem matrícula caindo em
+`fully_issued`) **não é deste bloco**: o consumidor do funil era o B1 e ele não pediu a distinção,
+então a linha segue no BD-15 com o gatilho intacto.
+
+**`backend/config/cors.php` está modificado no working tree e não é deste bloco** (WIP do João, o
+outro lado da P-45). Fica fora de todo `git add`; os commits usam paths exatos.
+
+**Risco de review projetado: BAIXO pelo gate binário** — frontend puro, não toca schema, não regenera
+`generated.ts`, não toca Sanctum, auditoria nem documento legal. **Divergência por alcance já
+declarada:** a chart lib é dependência de runtime nova e a view do Redator é superfície inteira sem
+consumidor autenticável. A classificação final é do `/revisar-sprint`, não desta promoção.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/dashboard-frontend-analitico-e-redator` a partir de `main@c2ac9d4`.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
