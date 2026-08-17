@@ -144,6 +144,12 @@ Todas as rotas sob `auth:sanctum`, sem parâmetro de id — a posse é estrutura
 | PUT | `/api/profile/password` | `{ current_password, password, password_confirmation }` | 204 |
 | POST | `/api/profile/documents` | multipart `type`, `file`, `valid_until?` | `RedatorDocumentData` |
 
+**`valid_until` fica fora do que esta tela envia** (corrigido no review de 2026-08-17). A rota o
+aceita — a D5 do bloco 1 é literal: *"segue aceito, e só nos três tipos permitidos. Nenhum deles
+entra no gate da RN-09, que lê exclusivamente REUF"* —, e quem protege a RN-09 é o `Rule::in`
+sobre `selfServiceValues()`, que barra o REUF por TIPO. Nenhuma tela deste bloco declara validade,
+então a mutation não carrega o parâmetro; a capacidade continua existindo do lado do backend.
+
 Tipos vêm de `shared/types/generated.ts` e não se editam (lei §5.3): `ProfileData`,
 `ProfileUpdateData`, `ProfilePasswordData`, `RedatorProfileData`, `RedatorProfileDocumentData`,
 `DocumentValidityStatus`.

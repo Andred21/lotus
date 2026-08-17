@@ -9,9 +9,12 @@ import { useUploadProfileDocument } from '../api/useProfile'
  * Envio da própria documentação profissional.
  *
  * Não existe remoção self-service: o backend oferece substituição (D2 do bloco
- * 1), e a rota de `destroy` não existe neste caminho. `valid_until` também não
- * é enviado daqui — quem o declara é o administrador, e deixar o redator
- * declarar a própria validade fura a RN-09 (D5 do bloco 1).
+ * 1), e a rota de `destroy` não existe neste caminho.
+ *
+ * `valid_until` não é enviado daqui porque a tela não o oferece, e NÃO porque a
+ * regra o proíba: a D5 do bloco 1 aceita o campo nos três tipos self-service,
+ * nenhum dos quais entra no gate da RN-09 — o que a regra barra é o REUF, e
+ * quem o barra é o tipo, não a validade.
  *
  * Os quatro slots compartilham UMA instância de mutation, e por isso o estado
  * em voo é local, não lido dela. O observer do TanStack acompanha só a chamada

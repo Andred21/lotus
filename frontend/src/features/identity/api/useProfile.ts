@@ -76,11 +76,16 @@ export function useChangePassword() {
   })
 }
 
-/** Sem `valid_until` nas variables: quem declara validade é o administrador, e
- * o redator declarar a própria fura a RN-09 (D5 do bloco 1). O backend aceita o
- * campo nesta rota, então deixá-lo aqui — sem nenhum chamador que o passe — era
- * superfície morta convidando a ser preenchida; hoje o único guarda da regra é
- * o `selfServiceValues()` do controller. */
+/** Sem `valid_until` nas variables porque nenhuma tela o declara hoje — não
+ * porque a regra o proíba. A D5 do bloco 1 diz o contrário: o campo "segue
+ * aceito, e só nos três tipos permitidos. Nenhum deles entra no gate da RN-09,
+ * que lê exclusivamente REUF". Quem protege a RN-09 aqui é o `Rule::in`
+ * (`selfServiceValues()`), que barra o REUF por TIPO — validade de
+ * CV/TÍTULO/POSTGRADO é capacidade suportada, não brecha.
+ *
+ * Fica de fora enquanto não houver chamador: parâmetro que ninguém passa é
+ * superfície morta. Quando a tela oferecer o campo, ele volta — a spec §4 já o
+ * lista no contrato da rota. */
 export function useUploadProfileDocument() {
   const invalidate = useInvalidate(false)
   return useMutation<RedatorDocumentData, ProblemDetails, { type: RedatorDocumentType; file: File }>(

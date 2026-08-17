@@ -1639,7 +1639,15 @@ git commit -m "feat(identity): slot documental do perfil consumindo status do ba
 **Interfaces:**
 - Consumes: `useUploadProfileDocument` (Task 3), `ProfileDocumentSlot` (Task 8), `useFilePreview` e
   `useMutationErrors` de `@shared/hooks`.
-- Produces: `useProfileDocuments(onSent?: () => void)` → `{ upload: (type: RedatorDocumentType, e: FileUploadHandlerEvent) => void, uploadingType: RedatorDocumentType | null, error: string | null, setSizeError: (m: string) => void }`.
+- Produces: `useProfileDocuments(onSent?: () => void)` → `{ upload: (type: RedatorDocumentType, e: FileUploadHandlerEvent) => void, uploadingTypes: RedatorDocumentType[], error: string | null, setSizeError: (m: string) => void }`.
+
+> **Corrigido no review de sprint (Q-4, 2026-08-16):** esta assinatura prescrevia
+> `uploadingType: RedatorDocumentType | null`, derivado de `upload.variables`. Não se sustenta: os
+> quatro slots compartilham UMA instância de mutation e o observer do TanStack acompanha só a
+> chamada mais recente (`mutationObserver.mutate` faz `removeObserver` na anterior), então com dois
+> envios simultâneos o slot em voo reabilitava e a falha do primeiro sumia. Virou lista, alimentada
+> por `mutateAsync` por chamada. Pelo mesmo motivo, o `valid_until` da Task 4 saiu das variables
+> (Q-6) — ver a nota da spec §4: a rota o aceita, a tela é que não o declara.
 
 - [ ] **Step 1: Escreva o teste que falha**
 
