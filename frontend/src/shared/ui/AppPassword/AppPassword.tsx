@@ -6,6 +6,7 @@ import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { mergePt } from '../mergePt'
+import { useFieldProps } from '../FormField/fieldContext'
 
 export interface AppPasswordProps extends PasswordProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
@@ -41,6 +42,10 @@ export interface AppPasswordProps extends PasswordProps {
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {
     const { t } = useTranslation()
+    // `inputId`: o `id` do Password cai na `<span.p-password>` raiz e só `inputId`
+    // alcança o input (`password.cjs.js:704` vs `:713`). Associar a label à span
+    // seria o mesmo defeito da P-37 com outra roupa.
+    const fieldProps = useFieldProps('inputId')
     // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
     // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o
     // wrapper é a única porta (UI-08). Não vai pela locale global do Prime:
@@ -75,6 +80,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           inputRef={ref}
           toggleMask
           feedback={false}
+          {...fieldProps}
           {...props}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full ${props.inputClassName ?? ''}`}
@@ -93,6 +99,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           inputRef={ref}
           toggleMask
           feedback={false}
+          {...fieldProps}
           {...props}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full pl-10 ${props.inputClassName ?? ''}`}

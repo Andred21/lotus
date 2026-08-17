@@ -3,6 +3,7 @@ import { InputText } from 'primereact/inputtext'
 import type { InputTextProps } from 'primereact/inputtext'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
+import { useFieldProps } from '../FormField/fieldContext'
 
 export interface AppInputTextProps extends InputTextProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-envelope". */
@@ -15,13 +16,17 @@ export interface AppInputTextProps extends InputTextProps {
  * pintado pelas duas folhas do Lara, com especificidade que vence utility. */
 export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
   ({ leftIcon, ...props }, ref) => {
+    // Antes do spread do chamador: a associação é default, não imposição — quem
+    // passa `id` próprio continua vencendo (P-37, spec D5).
+    const fieldProps = useFieldProps('id')
+
     if (!leftIcon) {
-      return <InputText ref={ref} {...props} />
+      return <InputText ref={ref} {...fieldProps} {...props} />
     }
     return (
       <IconField iconPosition="left">
         <InputIcon className={leftIcon} />
-        <InputText ref={ref} {...props} className={`w-full ${props.className ?? ''}`} />
+        <InputText ref={ref} {...fieldProps} {...props} className={`w-full ${props.className ?? ''}`} />
       </IconField>
     )
   },

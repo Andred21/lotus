@@ -1,5 +1,6 @@
 import { Calendar } from 'primereact/calendar'
 import type { CalendarProps } from 'primereact/calendar'
+import { useFieldProps } from '../FormField/fieldContext'
 
 export type AppDatePickerProps = Omit<CalendarProps, 'value' | 'onChange' | 'ref'> & {
   /** Data em ISO `YYYY-MM-DD` (o formato que o backend espera). `null` = vazio. */
@@ -29,6 +30,10 @@ function dateToIso(date: Date | null | undefined): string | null {
  * conversão de fuso perigosa. Cores vêm do tema (ADR-16). Sem forwardRef: o
  * Calendar do Prime é class component (categoria AppDropdown). */
 export function AppDatePicker({ value, onChange, ...rest }: AppDatePickerProps) {
+  // `inputId`: no Calendar o `id` cai no nó raiz e só `inputId` alcança o input
+  // focável (`calendar.cjs.js:3900`).
+  const fieldProps = useFieldProps('inputId')
+
   return (
     <Calendar
       value={isoToDate(value)}
@@ -37,6 +42,7 @@ export function AppDatePicker({ value, onChange, ...rest }: AppDatePickerProps) 
       locale="es"
       showIcon
       className="w-full"
+      {...fieldProps}
       {...rest}
     />
   )
