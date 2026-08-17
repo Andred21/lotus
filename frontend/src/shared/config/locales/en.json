@@ -40,6 +40,7 @@
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
     "preview": "View",
     "previewUnavailable": "This format cannot be previewed. Download it to open.",
+    "noOptions": "No options available",
     "noResults": "No results for \"{{term}}\"",
     "noResultsFiltered": "No results for the applied filters",
     "noResultsFilteredHint": "Adjust or clear the applied filters.",

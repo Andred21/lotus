@@ -40,6 +40,7 @@
     "fileTooLarge": "El archivo pesa {{size}} y el máximo es {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato no se puede previsualizar. Descárgalo para abrirlo.",
+    "noOptions": "Sin opciones disponibles",
     "noResults": "Sin resultados para \"{{term}}\"",
     "noResultsFiltered": "Sin resultados para los filtros aplicados",
     "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
