@@ -85,13 +85,17 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     return (
       <IconField iconPosition="left">
         <InputIcon className={`${leftIcon} z-10`} />
+        {/* Mesclado DEPOIS do spread, igual ao ramo sem ícone. Antes dele, um
+            `inputClassName` do chamador apagava `w-full pl-10` inteiro — e o
+            `pl-10` é o offset que impede o texto de correr por baixo do ícone,
+            não enfeite. */}
         <Password
           inputRef={ref}
           toggleMask
           feedback={false}
-          className="w-full"
-          inputClassName="w-full pl-10"
           {...props}
+          className={`w-full ${props.className ?? ''}`}
+          inputClassName={`w-full pl-10 ${props.inputClassName ?? ''}`}
           pt={passwordPt}
         />
       </IconField>
