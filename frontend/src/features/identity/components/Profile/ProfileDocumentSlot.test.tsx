@@ -94,4 +94,54 @@ describe('ProfileDocumentSlot', () => {
     expect(screen.getByText('profile.documents.managedByAdmin')).toBeTruthy()
     expect(document.querySelector('input[type="file"]')).toBeNull()
   })
+  it('a validade sobe para a linha do STATUS, que e derivado dela', () => {
+    // D-21: `Vence el 10-08-2028` saia text-xs secundario como ULTIMA linha do
+    // slot, abaixo da nota administrativa, enquanto o `Vigente` -- que o backend
+    // calcula A PARTIR dessa data -- era a pilula do topo. Enquanto o status e
+    // `vigente` isso nao custa nada; quando vira `vence_em_breve`, a data e o
+    // texto mais dificil de ler do cartao.
+    montar({ valid_until: '2028-08-10', status: 'vence_em_breve' })
+
+    const status = screen.getByText('profile.docStatus.vence_em_breve')
+    const validade = screen.getByText(/profile\.documents\.validUntil/)
+
+    // Mesma linha: o status e a validade compartilham o conteiner.
+    expect(status.closest('div')).toBe(validade.closest('div'))
+  })
+
+  it('o caso SEM validade nao imprime linha nenhuma', () => {
+    // Tres dos quatro slots tem valid_until null e imprimiam
+    // `Sin fecha de vencimiento` -- uma linha que so diz que nao ha informacao,
+    // e que e ela quem rebaixou a que importa.
+    montar({ valid_until: null })
+
+    expect(screen.queryByText(/profile\.documents\.noValidity/)).toBeNull()
+  })
+
+  it('o upload vem ANTES do par Ver/Descargar, para o par ancorar sempre igual', () => {
+    // D-22: `Ver` ficava em x=1132 nos slots com tres acoes e x=1275 no que tem
+    // duas -- 143px entre linhas equivalentes separadas por 16px. Reservar
+    // largura falharia com o idioma (o rotulo do upload e texto traduzido); com
+    // o upload ANTES, o par de icones -- largura constante em qualquer locale --
+    // vira o fim do grupo e ancora na mesma borda nos quatro slots.
+    const { container } = montar()
+
+    const acoes = Array.from(
+      container.querySelectorAll('.p-fileupload-choose, button[aria-label]'),
+    )
+    const indiceUpload = acoes.findIndex((el) => el.className.includes('p-fileupload-choose'))
+    const indiceVer = acoes.findIndex((el) => el.getAttribute('aria-label') === 'common.preview')
+
+    expect(indiceUpload).toBeGreaterThanOrEqual(0)
+    expect(indiceVer).toBeGreaterThan(indiceUpload)
+  })
+
+  it('o nome acessivel do upload diz de QUAL documento se trata', () => {
+    // Tres slots repetem "Reemplazar" (D-23).
+    montar()
+
+    expect(
+      screen.getByRole('button', { name: /profile\.documents\.replaceNamed/ }),
+    ).toBeTruthy()
+  })
 })

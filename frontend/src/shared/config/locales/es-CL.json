@@ -286,6 +286,8 @@
       "hint": "Puedes subir y reemplazar tus documentos. No se eliminan: el nuevo reemplaza al anterior.",
       "send": "Subir documento",
       "replace": "Reemplazar",
+      "sendNamed": "Enviar {{tipo}}",
+      "replaceNamed": "Reemplazar {{tipo}}",
       "managedByAdmin": "Este documento lo gestiona el administrador.",
       "sent": "Documento subido.",
       "validUntil": "Vence el {{date}}",

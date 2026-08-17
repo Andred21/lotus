@@ -286,6 +286,8 @@
       "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
       "send": "Upload document",
       "replace": "Replace",
+      "sendNamed": "Upload {{tipo}}",
+      "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
       "validUntil": "Valid until {{date}}",

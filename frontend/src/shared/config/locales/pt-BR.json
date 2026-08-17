@@ -286,6 +286,8 @@
       "hint": "Você pode enviar e substituir seus documentos. Eles não são excluídos: o novo substitui o anterior.",
       "send": "Enviar documento",
       "replace": "Substituir",
+      "sendNamed": "Enviar {{tipo}}",
+      "replaceNamed": "Substituir {{tipo}}",
       "managedByAdmin": "Este documento é gerido pelo administrador.",
       "sent": "Documento enviado.",
       "validUntil": "Vence em {{date}}",
