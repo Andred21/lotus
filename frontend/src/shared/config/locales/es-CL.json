@@ -186,7 +186,7 @@
       "turmasAtrasadas": "Clases atrasadas",
       "conclusoesPorConfirmar": "Conclusiones por confirmar",
       "cotacoesPendentes": "Cotizaciones pendientes",
-      "cotacoesValor": "{{value}} UF pendientes",
+      "cotacoesValor": "{{value}} UF",
       "certificadosAEmitir": "Certificados por emitir"
     },
     "module": {

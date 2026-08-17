@@ -186,7 +186,7 @@
       "turmasAtrasadas": "Overdue classes",
       "conclusoesPorConfirmar": "Conclusions to confirm",
       "cotacoesPendentes": "Pending quotes",
-      "cotacoesValor": "{{value}} UF pending",
+      "cotacoesValor": "{{value}} UF",
       "certificadosAEmitir": "Certificates to issue"
     },
     "module": {
