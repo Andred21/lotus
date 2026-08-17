@@ -7,7 +7,7 @@
  * gerado, por decisão do João (D-P8): a cadeia de `:not()` do rascunho cobria
  * só `.p-button` e seria uma segunda fonte de verdade. */
 :root {
-  --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
+  --brand: #25a5e4; /* celeste-lotus — fonte CSS única; não há mais fonte JS (spec D7 do BD-16) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
   /* Tinta sobre as superfícies navy FIXAS do shell (sidebar, header). NÃO pode
@@ -25,7 +25,8 @@
   --shell-ink-muted: oklch(70.4% 0.04 256.788);
 
   /* Degradê do painel de marca do login (UI-05 do review de 2026-08-12). Era
-   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com BRAND_COLOR interpolado
+   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com a antiga constante JS
+   * `BRAND_COLOR` (morta no BD-16, spec D7) interpolada
    * em JS e o segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o
    * transform do tema gerado alcançam template string em `.tsx`.
    *
