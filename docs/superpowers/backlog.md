@@ -60,18 +60,26 @@ notificações interna e, depois, canais como e-mail. **Notifications não entra
 - **Execução detalhada:** Notion EAP 8.5.1–8.5.9
 - **Exige `context_required`** antes do planejamento, pelo mesmo motivo da Sprint 5.
 
-**Dois blocos sequenciais:**
+**Dois blocos sequenciais, os dois entregues:**
 
 1. ~~**`meu-perfil-backend-self-service`**~~ — entregue em 2026-08-15
    (`plans/archive/2026-08-14-meu-perfil-backend-self-service.md`).
-2. **`meu-perfil-frontend`** — página Meu Perfil, formulário pessoal, foto, segurança, documentos do
-   Redator, resumo profissional, estados loading/erro/vazio, responsividade e UI review.
+2. ~~**`meu-perfil-frontend`**~~ — entregue em 2026-08-17
+   (`plans/archive/2026-08-15-meu-perfil-frontend.md`). Levou a página em duas colunas com corte por
+   mutabilidade: identidade e resumo à esquerda, e à direita exatamente o que é self-service —
+   dados pessoais, troca de senha e os quatro slots documentais do Redator.
 
 **Escopo do self-service:** Admin e Redator alteram apenas dados pessoais permitidos e a própria
 senha. **E-mail, RUT, role, permissões, `type` e `is_active` não são self-service.**
 
 **Exclusivo do Redator:** upload/substituição dos próprios documentos regulatórios e resumo de
-idoneidade profissional, cursos habilitados, turmas atuais/próximas e pendências.
+idoneidade profissional, cursos habilitados, ~~turmas atuais/próximas e pendências~~.
+
+> **Turmas e pendências NÃO foram entregues, e não é lacuna de execução.** A **D1** da spec do bloco
+> 1 as cortou do contrato por decisão do João, para não abrir aresta de `Identity` para `Operation`
+> antes do bloco do Dashboard — `RedatorProfileData` tem `cursos_habilitados` e `cursos`, e nada de
+> turma. Reabrir isso é decisão de escopo, não conserto: quem responde *"o que tenho para fazer"* é o
+> Dashboard do Redator, que vive no **B2** da Sprint 5.
 
 **O resumo profissional não substitui o Dashboard do Redator.** Meu Perfil responde *"quem sou e
 qual minha situação profissional"*; o Dashboard responde *"o que tenho para fazer e como está minha
