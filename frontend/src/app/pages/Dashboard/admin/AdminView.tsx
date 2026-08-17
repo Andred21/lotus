@@ -41,7 +41,8 @@ export function AdminView({
   staleError: string | null
   onPresetChange: (p: PeriodPresetKey) => void
   onPeriodChange: (p: DashboardPeriod) => void
-  onRetry: () => void
+  /** Ausente quando repetir não recupera a falha (`useDashboard.podeRepetir`). */
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
 
@@ -57,7 +58,7 @@ export function AdminView({
           * 2026-08-16). */}
         <div className="grid gap-4 xl:grid-cols-2">
           <PendingList items={data.pendencias} />
-          <AlertList items={data.alertas} />
+          <AlertList items={data.alertas} emptyHint={t('dashboard.alerts.emptyHint')} />
         </div>
       </section>
 

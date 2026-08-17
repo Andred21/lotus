@@ -86,7 +86,7 @@ export function DashboardPage() {
         {/* Falha COM dado em mão: aviso ao lado (BD-6). O Redator não tem
           * seletor de janela, então o aviso mora aqui e não junto de um
           * controle. */}
-        <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.retry} />
+        <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.staleRetry} />
         <RedatorView data={state.data} />
       </div>
     )
@@ -102,7 +102,7 @@ export function DashboardPage() {
         staleError={state.staleError}
         onPresetChange={trocarPreset}
         onPeriodChange={setPeriod}
-        onRetry={state.retry}
+        onRetry={state.staleRetry}
       />
     </div>
   )

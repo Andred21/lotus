@@ -188,3 +188,27 @@ html:not(.dark) {
 .p-datatable .p-datatable-tbody > tr > td {
   font-variant-numeric: tabular-nums;
 }
+
+/* UI-10 da revisão de 2026-08-17: a rolagem horizontal da tabela existia e não
+ * se anunciava. Em 1024 e em 390 a tabela de cumplimiento parecia completa e
+ * escondia "Documentos faltantes" e "Habilitada" — as duas colunas pelas quais a
+ * seção existe.
+ *
+ * Quem desenha a sombra é o FUNDO do invólucro (`AppDataTable/style.ts`); esta
+ * regra é o que a deixa aparecer. O Lara pinta a linha do corpo com branco
+ * opaco, e o opaco cobria as quatro camadas de fundo do pai. Transparente, a
+ * linha mostra a superfície do card, que é a mesma cor — nada muda na pintura,
+ * exceto que a sombra passa a existir.
+ *
+ * A regra casa só o estado BASE: `(0,2,1)`, empatando com a do Lara e vencendo
+ * por ordem de origem. O hover dele é `(0,4,1)` e continua ganhando — trocar
+ * isto por `style` inline no `pt` desligaria o hover junto, porque inline vence
+ * tudo.
+ *
+ * Barra de rolagem sempre visível foi TENTADA antes e não serve aqui: o
+ * Chromium deste ambiente usa barra de sobreposição, e nem `::-webkit-scrollbar`
+ * nem `scrollbar-width` a fazem ocupar espaço — `offsetHeight - clientHeight`
+ * media 0 com 877px de conteúdo em 718px de vista. */
+.p-datatable .p-datatable-tbody > tr {
+  background: transparent;
+}

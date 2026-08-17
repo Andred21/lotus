@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState, AppButton } from '@shared/ui'
 import { formatDate } from '@shared/lib'
@@ -18,6 +18,7 @@ const dia = (iso: string) => formatDate(new Date(`${iso}T12:00:00`))
  */
 export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }) {
   const { t } = useTranslation()
+  const navegar = useNavigate()
 
   return (
     <AppCard>
@@ -26,10 +27,20 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
         count={items.length}
         actions={
           items.length > 0 ? (
+            // UM controle, e não `<Link>` embrulhando `<AppButton>`. Conteúdo
+            // interativo dentro de `<a>` é aninhamento inválido, e a árvore de
+            // acessibilidade mostrava o resultado: dois pontos de parada para uma
+            // ação, o primeiro deles um link SEM nome, porque o nome estava no
+            // botão de dentro (UI-08 da revisão de 2026-08-17). O `AppButton`
+            // embrulha um `Button` do Prime, que renderiza `<button>` e não
+            // aceita virar âncora — então quem navega é o router, por `navigate`.
+            //
             // `/perfil` — o path que o `AppRouter` registra. Não é `/mi-perfil`.
-            <Link to="/perfil" className="no-underline">
-              <AppButton label={t('dashboard.redator.pendencias.goToProfile')} text />
-            </Link>
+            <AppButton
+              label={t('dashboard.redator.pendencias.goToProfile')}
+              text
+              onClick={() => void navegar('/perfil')}
+            />
           ) : undefined
         }
       />

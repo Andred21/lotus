@@ -29,7 +29,9 @@ export function PeriodFilter({
   staleError: string | null
   onPresetChange: (p: PeriodPresetKey) => void
   onPeriodChange: (p: DashboardPeriod) => void
-  onRetry: () => void
+  /** Ausente na recusa de validação: ali "Reintentar" reemitiria a mesma janela
+   * invertida e receberia o mesmo 422 (`useDashboard.podeRepetir`). */
+  onRetry?: () => void
 }) {
   const { t } = useTranslation()
 

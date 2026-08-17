@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppCardToolbar, AppDropdown, AppEmptyState, AppBarChart } from '@shared/ui'
+import { AppCard, AppCardHeader, AppDropdown, AppEmptyState, AppBarChart } from '@shared/ui'
 import type { BarDatum } from '@shared/ui'
 import { formatUf } from '@shared/lib'
 import type { RankingRowData, RankingsData } from '@shared/types/generated'
@@ -76,20 +76,22 @@ export function RankingsPanel({ rankings }: { rankings: RankingsData }) {
 
   return (
     <div className="space-y-3">
-      <AppCardToolbar
-        start={
-          <div className="w-full sm:w-56">
-            <AppDropdown
-              value={metrica}
-              options={opcoes}
-              optionLabel="label"
-              optionValue="value"
-              onChange={(e) => setMetrica(e.value as Metrica)}
-              aria-label={t('dashboard.rankings.metric.label')}
-            />
-          </div>
-        }
-      />
+      {/* Sem `AppCardToolbar`: o toolbar carrega o `px-4` do card, e este seletor
+        * não está dentro de card nenhum — ele comanda os DOIS cards abaixo. Com o
+        * recuo, ele partia de x=296 enquanto o seletor de período, irmão dele na
+        * mesma seção, partia de x=280, junto com as `section` e todos os cards
+        * (UI-03 da revisão de 2026-08-17). A largura é a mesma do outro seletor:
+        * 14rem. */}
+      <div className="w-full sm:w-56">
+        <AppDropdown
+          value={metrica}
+          options={opcoes}
+          optionLabel="label"
+          optionValue="value"
+          onChange={(e) => setMetrica(e.value as Metrica)}
+          aria-label={t('dashboard.rankings.metric.label')}
+        />
+      </div>
       <div className="grid gap-4 xl:grid-cols-2">
         <Ranking titulo={t('dashboard.rankings.courses')} linhas={rankings.courses} metrica={metrica} inkIndex={0} />
         <Ranking titulo={t('dashboard.rankings.clients')} linhas={rankings.clients} metrica={metrica} inkIndex={2} />

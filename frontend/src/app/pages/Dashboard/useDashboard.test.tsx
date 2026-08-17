@@ -80,11 +80,11 @@ function redator(overrides: Partial<RedatorDashboardData> = {}): RedatorDashboar
   }
 }
 
-function problem(detail: string): ProblemDetails {
+function problem(detail: string, status = 500): ProblemDetails {
   return {
     type: 'https://lotus.cl/errors/x',
     title: 'Error',
-    status: 500,
+    status,
     detail,
     instance: '',
   }
@@ -254,5 +254,49 @@ describe('useDashboard', () => {
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
+  })
+
+  // UI-05 da revisão de 2026-08-17: a MESMA janela invertida do teste acima
+  // oferecia "Reintentar", e clicar reemitia a mesma URL para receber o mesmo
+  // 422. Repetir não é recuperação quando o servidor recusou a requisição.
+  it('a recusa de validação avisa sem oferecer repetição', async () => {
+    get.mockResolvedValue({ data: admin() })
+
+    const { result, rerender } = renderHook(
+      ({ p }: { p: { start: string; end: string } }) => useDashboard(p),
+      { wrapper, initialProps: { p: { start: '2026-01-01', end: '2026-06-30' } } },
+    )
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+
+    get.mockRejectedValue(problem('La fecha de término no puede ser anterior a la de inicio.', 422))
+    rerender({ p: { start: '2026-12-31', end: '2026-01-01' } })
+
+    await waitFor(() => {
+      if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+      expect(result.current.staleError).toBe('La fecha de término no puede ser anterior a la de inicio.')
+    })
+    if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+    expect(result.current.staleRetry).toBeUndefined()
+  })
+
+  // O simétrico, e o que impede a correção acima de calar o botão para todo
+  // mundo: falha de transporte continua oferecendo repetição, porque ali
+  // repetir É a recuperação.
+  it('a falha de transporte continua oferecendo repetição', async () => {
+    get.mockResolvedValue({ data: admin() })
+
+    const { result, rerender } = renderHook(
+      ({ p }: { p: { start: string; end: string } }) => useDashboard(p),
+      { wrapper, initialProps: { p: { start: '2025-01-01', end: '2025-06-30' } } },
+    )
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+
+    get.mockRejectedValue(problem('Error interno del servidor.', 500))
+    rerender({ p: { start: '2025-07-01', end: '2025-12-31' } })
+
+    await waitFor(() => {
+      if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+      expect(result.current.staleRetry).toBeTypeOf('function')
+    })
   })
 })

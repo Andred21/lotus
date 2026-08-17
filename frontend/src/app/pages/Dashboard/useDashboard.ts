@@ -39,8 +39,38 @@ export type DashboardState =
   | { kind: 'loading' }
   | { kind: 'error'; error: ProblemDetails; retry: () => void }
   | { kind: 'unauthorized' }
-  | { kind: 'ready-admin'; data: AdminDashboardData; staleError: string | null; retry: () => void }
-  | { kind: 'ready-redator'; data: RedatorDashboardData; staleError: string | null; retry: () => void }
+  | {
+      kind: 'ready-admin'
+      data: AdminDashboardData
+      staleError: string | null
+      /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
+      staleRetry?: () => void
+      retry: () => void
+    }
+  | {
+      kind: 'ready-redator'
+      data: RedatorDashboardData
+      staleError: string | null
+      staleRetry?: () => void
+      retry: () => void
+    }
+
+/**
+ * Repetir só recupera falha de TRANSPORTE. Um 4xx é a recusa desta requisição:
+ * reemitir a mesma URL devolve a mesma recusa, sem informação nova. O caso
+ * medido é a janela invertida do filtro — o backend sobe 422 com
+ * "La fecha de término no puede ser anterior a la de inicio.", e o "Reintentar"
+ * ao lado da mensagem tomava o mesmo 422 (UI-05 da revisão de 2026-08-17). Ali a
+ * recuperação é corrigir a data, e é o que a própria mensagem já diz.
+ *
+ * Sem `status` (o `{}` do interceptor que não populou o corpo), a falha é
+ * tratada como de transporte: oferecer o botão a mais é mais barato que negá-lo
+ * a quem só perdeu a rede.
+ */
+function podeRepetir(erro: ProblemDetails | null): boolean {
+  const status = erro?.status
+  return status === undefined || status < 400 || status >= 500
+}
 
 /**
  * Nenhuma seção do B1 legível: todo KPI nulo, as duas seções anuláveis nulas E
@@ -141,9 +171,10 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   // Com dado em mão, a falha do refetch é aviso AO LADO — a tela continua
   // utilizável (lição do BD-6).
   const staleError = query.isError ? (query.error?.detail ?? null) : null
+  const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
 
-  if (data.view === 'redator') return { kind: 'ready-redator', data, staleError, retry }
+  if (data.view === 'redator') return { kind: 'ready-redator', data, staleError, staleRetry, retry }
   if (nenhumaSecaoLegivel(data)) return { kind: 'unauthorized' }
 
-  return { kind: 'ready-admin', data, staleError, retry }
+  return { kind: 'ready-admin', data, staleError, staleRetry, retry }
 }

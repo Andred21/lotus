@@ -55,7 +55,12 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         <AppColumn
           header={t('dashboard.compliance.range')}
           body={(r: TurmaComplianceData) => (
-            <span className="font-mono text-xs">
+            // O intervalo empurra a rolagem em vez de se despedaçar: comprimida
+            // até 1024, a coluna quebrava UMA data em quatro linhas
+            // ("06-07- / 2026 — / 31-07- / 2026"), que é o formato de data
+            // deixando de ser legível como data (UI-10 da revisão de
+            // 2026-08-17).
+            <span className="font-mono text-xs whitespace-nowrap">
               {t('dashboard.agenda.range', { start: dia(r.start_date), end: dia(r.end_date) })}
             </span>
           )}

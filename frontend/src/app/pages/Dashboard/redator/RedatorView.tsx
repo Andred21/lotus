@@ -35,7 +35,7 @@ export function RedatorView({ data }: { data: RedatorDashboardData }) {
         <SectionLabel>{t('dashboard.redator.section.action')}</SectionLabel>
         <div className="grid gap-4 xl:grid-cols-2">
           <PendenciasList items={data.pendencias_documentais} />
-          <AlertList items={data.alertas_documentos} />
+          <AlertList items={data.alertas_documentos} emptyHint={t('dashboard.redator.alerts.emptyHint')} />
         </div>
       </section>
 

@@ -228,6 +228,9 @@
         "missing": "Missing: {{types}}",
         "until": "Until {{date}}",
         "goToProfile": "Go to My Profile"
+      },
+      "alerts": {
+        "emptyHint": "None of your documents are expired or expiring."
       }
     },
     "period": {

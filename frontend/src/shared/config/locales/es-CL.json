@@ -228,6 +228,9 @@
         "missing": "Falta: {{types}}",
         "until": "Hasta {{date}}",
         "goToProfile": "Ir a Mi Perfil"
+      },
+      "alerts": {
+        "emptyHint": "Ninguno de tus documentos está vencido ni por vencer."
       }
     },
     "period": {
