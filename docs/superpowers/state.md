@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: arquivados-roots-restantes
+active_work_item: arquivados-roots-restantes
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
-state_basis_commit: 3d02a46
-updated_at: 2026-08-18T19:30:00-03:00
+state_basis_commit: 6fd0ad8
+updated_at: 2026-08-18T20:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,113 @@ updated_at: 2026-08-18T19:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `arquivados-roots-restantes` (Próximos blocos, item 1)
+
+### Seleção — 2026-08-18
+
+**Primeiro item de "Próximos blocos" (`backlog.md:101`), promovido explicitamente pelo João** com o
+estado em `idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de
+sempre — **décima terceira** vez: o argumento `arquivados-roots-restantes` era **slug inventado por
+mim no turno anterior**, não slug promovido, e `active_work_item` estava `null`.
+
+**Três decisões dele fecharam o gate:** o slug `arquivados-roots-restantes`; a rota **direta a
+`ready_for_planning`, sem Context Packet novo**; e **main tree**, partindo de
+`feat/arquivados-e-restauracao@6fd0ad8` e não da `main`.
+
+**O gate pegou um erro meu de escopo, e ele é o registro mais importante desta seleção.** Ao oferecer
+as opções eu descrevi o escopo como `Budget`/`Quote`, `Redator`, **`Student`** e `Turma`/`Enrollment`
+— montado sobre os 8 roots do Context Packet de 2026-08-18. A linha 101 do backlog diz outra coisa:
+**`Budget`, `Quote`, `User`, `Redator`, `Turma` e `Enrollment`**, com `Student` em **"Fora de
+escopo"** por não ter `destroy` hoje. Eu **incluí `Student`** e **omiti `User`**. O João escolheu
+seguir o backlog, e o escopo do bloco são os **seis roots** da linha 101. A medição do próprio turno
+confirmou o motivo do backlog: `students` é `apiResource` com `index/store/show/update` apenas
+(`Identity/routes.php:46`), então arquivar aluno seria superfície nova com regra a inventar — não
+replicação.
+
+**Por que a branch não nasce da `main`.** `App\Shared\Concerns\ArchivesChildren`,
+`LoadsCascadedChildren`, `useArchivedPage`, `ArchiveSwitch` e o `archived` do `createCrudResource`
+existem **só** na `feat/arquivados-e-restauracao`, que segue sem merge por decisão do João. Nascer da
+`main` significaria reimplementar ou conflitar. A branch `feat/arquivados-roots-restantes` foi criada
+de `6fd0ad8` ANTES deste commit, seguindo o precedente do bloco anterior.
+
+**`state_basis_commit` passa de `3d02a46` a `6fd0ad8`, e isso não é divergência.** `3d02a46` era o
+baseline escrito quando o bloco anterior entrou em `ready_for_review`; os dois commits seguintes
+(`1e07786` correções do review, `3d7e95c` fechamento) e o `6fd0ad8` desta sessão vieram depois. Com
+`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse derivar.
+
+**Por que não há Context Packet novo.** O packet
+`context-packets/2026-08-18-arquivados-e-restauracao.md` já foi gerado **sobre os 8 aggregate roots**,
+não sobre os dois executados, e as fontes externas (Notion H.5.1–H.5.4 + Drive) foram esgotadas nele
+— inclusive a ausência medida de documento funcional no Drive. O molde de decisão vive em
+`specs/archive/2026-08-18-arquivados-e-restauracao-design.md` e a mecânica em código. Recuperação
+externa não se repete sem fonte nova.
+
+**`context_packet` aponta para o packet do bloco anterior, e isso é obedecer o invariante, não
+reciclar por preguiça.** O invariante diz que, quando o trabalho depende de contexto externo, o
+campo **não pode ser `null` em `ready_for_planning`**. O packet cobre os 8 roots, então é fonte
+válida para estes seis; herdá-lo declarado é mais honesto que apagar a dependência escrevendo
+`null`.
+
+**Um commit fora de bloco entrou antes desta promoção.** `6fd0ad8` (`fix(cors)`) fecha o lado de
+aplicação da **P-45**: `allowed_origins` tratava `FRONTEND_URL` como valor único e o `.env` de dev já
+é lista (`5173,5174`). Não é deste bloco nem do anterior — era o WIP do João que atravessou os dois,
+declarado na seleção anterior. Com ele, `php artisan test` dá **717 passed / 5 skipped** sem precisar
+de `FRONTEND_URL` no comando. Pint também limpou a formatação pré-existente da linha `paths`.
+
+### Medição da abertura — 2026-08-18, sobre `6fd0ad8`, não herdada
+
+Sete medições, feitas antes do brainstorming e registradas para ele.
+
+1. **Gates de arquivamento que já existem, por root.** `Budget` recusa se houver cotação **aprovada**
+   (`DeleteBudgetAction:20`, 422 "Recuse-a antes"); `Quote` recusa `status === Approved`
+   (`DeleteQuoteAction:19`); `Turma` recusa `status !== EmAndamento`
+   (`Turma::assertAcademicallyWritable():143`, RN-15); `Enrollment` recusa pela turma
+   (`RemoveEnrollmentAction:11`); `User` recusa o último superadmin ativo (`DeleteStaffUserAction` +
+   `SuperadminGuard`) e o controller ainda faz `abort_unless($user->type === 'admin', 404)`
+   (`UserController:60`). **`Redator` não tem gate nenhum** — `RedatorController:53-58` chama
+   `$redator->delete()` cru, sem Action.
+2. **Só dois dos seis roots cascateiam com a marca.** `Client` e `Course` usam `markAndDelete`
+   (feitos). `Budget → quotes`, `Redator → documents + user` e `Student → user` cascateiam com
+   `delete()` cru, **sem `archived_with_parent`**. `Turma` e `Enrollment` **não têm hook `deleting`
+   nenhum**: arquivar turma hoje deixa matrículas, documentos e o pivot ativos.
+3. **A coluna existe em 5 tabelas** — `client_addresses`, `client_contacts`, `users`,
+   `course_modules`, `course_certificate_templates`. Faltariam ao menos `quotes` e `files`; `users`
+   já tem e é reaproveitada por `Redator` e `Student`. **O bloco toca schema**, então o planejamento
+   lê `docs/adrs.md` e `docs/der-fisico.md`.
+4. **O gate de Operação torna a lista de Arquivados estruturalmente pequena.** `Concluida` é estado
+   **terminal** (enum, D5) e `assertAcademicallyWritable` exige `EmAndamento`, então turma concluída
+   e suas matrículas **nunca** chegam a Arquivados. Coerente com o peso legal; confirmar no
+   brainstorming se é o comportamento desejado antes de construir a tela.
+5. **`Certificate` é o piso legal e NÃO é soft-deletable.** `Certificate extends Model` sem
+   `SoftDeletes`, com `enrollment()`, `course()` e `redator()` os três `belongsTo(...)->withTrashed()`.
+   O certificado sobrevive ao arquivamento de tudo que o originou e lê os pais arquivados. Isso
+   **valida** o modelo e impõe que arquivar `Redator` ou `Course` não quebre essa leitura.
+6. **Redator arquivado some da turma em silêncio.** `turma_redator` é pivot cru (`id`, `turma_id`,
+   `redator_id`, `timestamps`) — sem `deleted_at`. A FK é `restrictOnDelete` ("redator com turma não é
+   apagado", lição #15), o que barra **hard** delete, não soft. `Turma::redatores()` é
+   `belongsToMany` **sem `withTrashed`** (`Turma.php:82`), então a linha do pivot fica viva e a turma
+   simplesmente para de listá-lo. Três saídas possíveis: gate, cascata do pivot, ou `withTrashed` na
+   relação.
+7. **Os dois restores automáticos seguem sem decisão.** `StudentResolver:71-79` restaura `User` e
+   `Student` ao reencontrar o RUT na importação; `EnrollStudentAction:38` restaura a matrícula ao
+   re-matricular. Com `*.restore` virando permissão por agregado, existem dois caminhos que
+   restauram **sem permissão e sem intenção do usuário**. Pendência aberta desde o Context Packet.
+
+**Débito com gatilho vencido, entra por construção:** `budget.confirmDeleteBody` e
+`quote.confirmDeleteBody` dizem *"Esta acción no se puede deshacer."* — deixa de ser verdade no
+instante em que `Budget`/`Quote` ganharem restore. Ficou registrado como gatilho no bloco anterior.
+
+**Débito ligado, não vencido:** a **D-34** (backfill de `archived_with_parent`) tem gatilho no
+primeiro deploy, não neste bloco. Cada tabela nova da medição 3 amplia o alcance dela — registrar,
+não resolver.
+
+**Risco de review projetado: ALTO.** O bloco **toca schema** (colunas novas), **toca RBAC**
+(permissões `*.restore` por agregado), **toca `generated.ts`** e **toca dado com peso legal**
+(`Turma`, `Enrollment` e os documentos do `Redator`). A classificação final é do `/revisar-sprint`,
+não desta promoção.
+
+**Estado: `ready_for_planning`.** Próxima ação: brainstorming das decisões abertas, depois plano.
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
 
