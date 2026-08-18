@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { screenDetail, type ScreenDetailSource } from '@shared/lib'
+import { loadErrorHint, screenDetail, type ScreenDetailSource } from '@shared/lib'
 import { AppErrorState } from '../AppErrorState'
 import { mergePt } from '../mergePt'
 import { appDataTablePt, appPaginatorPt } from './style'
@@ -85,7 +85,7 @@ export function AppDataTable<T extends DataTableValueArray>({
   const body = errored ? (
     <AppErrorState
       title={t('common.loadError')}
-      detail={screenDetail(error) ?? t('common.loadErrorHint')}
+      detail={screenDetail(error) ?? t(loadErrorHint(error))}
       retryLabel={onRetry ? t('common.retry') : undefined}
       onRetry={onRetry}
     />

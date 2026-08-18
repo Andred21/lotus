@@ -4,7 +4,7 @@ import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
 import { ConfirmIssueDialog } from '../Emission/ConfirmIssueDialog'
 import type { ReissueTarget } from '../../hooks/useHistorial'
-import { screenDetail } from '@shared/lib'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 type Props = {
   /** Matrícula/turma achada no painel de emissão (`useHistorial.findReissueTarget`),
@@ -46,7 +46,7 @@ export function ReissueDialog({
       <AppDialog visible header={t('certificate.reissue')} onHide={onHide}>
         <AppErrorState
           title={t('common.loadError')}
-          detail={screenDetail(panelError) ?? t('common.loadErrorHint')}
+          detail={screenDetail(panelError) ?? t(loadErrorHint(panelError))}
           retryLabel={t('common.retry')}
           onRetry={onRetryPanel}
         />

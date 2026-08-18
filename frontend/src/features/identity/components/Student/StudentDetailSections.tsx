@@ -17,7 +17,7 @@ import {
   formatMonthYear,
 } from "@shared/lib";
 import type { useStudentDetail } from "../../api/useStudentDetail";
-import { screenDetail } from '@shared/lib'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 /** As duas seções do modo view: histórico de vínculos e turmas do aluno. O
  * hook fica no diálogo — descê-lo cancelaria a requisição que hoje sai em modo
@@ -37,7 +37,7 @@ export function StudentDetailSections({
      dado tem peso legal. */
     <AppErrorState
       title={t("common.loadError")}
-      detail={screenDetail(detail.error) ?? t("common.loadErrorHint")}
+      detail={screenDetail(detail.error) ?? t(loadErrorHint(detail.error))}
       retryLabel={t("common.retry")}
       onRetry={detail.refetch}
     />

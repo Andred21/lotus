@@ -49,7 +49,7 @@ export function CourseStep({
         <FormSection title={t('quote.stepCourse')} />
         <AppErrorState
           title={t('common.loadError')}
-          detail={courses.errorDetail ?? t('common.loadErrorHint')}
+          detail={courses.errorDetail ?? t(courses.errorHint)}
           retryLabel={t('common.retry')}
           onRetry={courses.refetch}
         />
@@ -76,7 +76,7 @@ export function CourseStep({
         onChange={(e) => courses.setSearch(e.target.value)}
       />
       <InlineLoadState
-        error={courses.isError ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+        error={courses.isError ? (courses.errorDetail ?? t(courses.errorHint)) : null}
         retryLabel={t('common.retry')}
         onRetry={courses.refetch}
       />

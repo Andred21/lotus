@@ -28,6 +28,9 @@
 export interface ScreenDetailSource {
   detail?: string | null
   localDetail?: true
+  /** Status HTTP do envelope. Só a DICA o lê — o `detail` do servidor segue
+   * calado, mas a CAUSA da falha continua vindo dele. */
+  status?: number
 }
 
 export function screenDetail(problem: ScreenDetailSource | null | undefined): string | undefined {
@@ -36,4 +39,38 @@ export function screenDetail(problem: ScreenDetailSource | null | undefined): st
   // `''` devolvido cru não dispara o `?? hint` do chamador, e a tela mostraria
   // um erro sem texto. Erro nunca é só cor nem só ícone (peso legal).
   return problem.detail?.trim() ? problem.detail : undefined
+}
+
+/** As dicas que uma falha de CARGA pode mostrar. Chave, não texto: a tradução é
+ * de quem imprime (`t(loadErrorHint(problema))`), e assim a política não precisa
+ * importar o i18n dentro de `shared/lib`. */
+export type LoadErrorHintKey =
+  | 'common.loadErrorHint'
+  | 'common.forbiddenHint'
+  | 'common.notFoundHint'
+  | 'common.invalidDataHint'
+
+/**
+ * A dica que acompanha a falha, escolhida pelo STATUS.
+ *
+ * `screenDetail` cala o `detail` do servidor porque ele não é localizado — mas
+ * o envelope distingue mais que língua: distingue CAUSA. Com uma dica única,
+ * um 403, um 404 e um 422 saíam todos como "revise sua conexão", que é
+ * instrução errada e deixa quem lê sem ação. O default segue sendo a dica de
+ * conexão: é a certa para rede caída, 500 e para tudo que não se sabe nomear.
+ *
+ * 401 não entra: sessão expirada não chega a virar estado de carga — o
+ * interceptor do `shared/api/axios.ts` redireciona para o login.
+ */
+export function loadErrorHint(problem: ScreenDetailSource | null | undefined): LoadErrorHintKey {
+  switch (problem?.status) {
+    case 403:
+      return 'common.forbiddenHint'
+    case 404:
+      return 'common.notFoundHint'
+    case 422:
+      return 'common.invalidDataHint'
+    default:
+      return 'common.loadErrorHint'
+  }
 }

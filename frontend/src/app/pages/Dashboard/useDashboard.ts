@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
-import { screenDetail } from '@shared/lib'
+import { loadErrorHint, screenDetail } from '@shared/lib'
+import type { LoadErrorHintKey } from '@shared/lib'
 
 /** Janela histórica. Só séries e rankings a respeitam (D3 do bloco A). A UI do
  * seletor mora em `admin/PeriodFilter.tsx` (D5 do B2). */
@@ -57,6 +58,9 @@ export type DashboardState =
       /** Só o `detail` que o FRONT escreveu (`screenDetail`); `null` para o do
        * servidor, que não é localizado. */
       staleError: string | null
+      /** A dica a imprimir quando `staleError` é `null`, escolhida pelo STATUS:
+       * o 422 de janela invertida não é problema de conexão. */
+      staleHint: LoadErrorHintKey
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
       staleRetry?: () => void
     }
@@ -65,6 +69,7 @@ export type DashboardState =
       data: RedatorDashboardData
       staleErrored: boolean
       staleError: string | null
+      staleHint: LoadErrorHintKey
       staleRetry?: () => void
     }
 
@@ -187,10 +192,11 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   // `string | null`, e a linha só existe quando `isError`.
   const staleErrored = query.isError
   const staleError = staleErrored ? (screenDetail(query.error) ?? null) : null
+  const staleHint = loadErrorHint(query.error)
   const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
 
-  if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleRetry }
+  if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleHint, staleRetry }
   if (nenhumaSecaoLegivel(data)) return { kind: 'unauthorized' }
 
-  return { kind: 'ready-admin', data, staleErrored, staleError, staleRetry }
+  return { kind: 'ready-admin', data, staleErrored, staleError, staleHint, staleRetry }
 }

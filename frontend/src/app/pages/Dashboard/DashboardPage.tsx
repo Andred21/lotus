@@ -8,7 +8,7 @@ import { AdminView } from './admin/AdminView'
 import { RedatorView } from './redator/RedatorView'
 import { PERIOD_PRESET_PADRAO, periodoDoPreset, periodoPadrao } from './admin/periodPresets'
 import type { PeriodPresetKey } from './admin/periodPresets'
-import { screenDetail } from '@shared/lib'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 /**
  * Roteador de `kind` do Dashboard, e só isso (D3/D4). A query e a política de
@@ -43,8 +43,8 @@ export function DashboardPage() {
    * imprimir o campo cru fazia o aviso inteiro sumir num 500, inclusive no 422
    * de janela invertida que a D6 existe para mostrar. `staleErrored` é o
    * gatilho; a dica genérica é de quem imprime. */
-  const avisoStale = (s: { staleErrored: boolean; staleError: string | null }) =>
-    s.staleErrored ? (s.staleError ?? t('common.loadErrorHint')) : null
+  const avisoStale = (s: { staleErrored: boolean; staleError: string | null; staleHint: string }) =>
+    s.staleErrored ? (s.staleError ?? t(s.staleHint)) : null
 
   const header = (
     <PageHeader title={t('dashboard.welcome', { name: user?.name })} description={t('dashboard.subtitle')} />
@@ -67,7 +67,7 @@ export function DashboardPage() {
         {header}
         <AppErrorState
           title={t('common.loadError')}
-          detail={screenDetail(state.error) ?? t('common.loadErrorHint')}
+          detail={screenDetail(state.error) ?? t(loadErrorHint(state.error))}
           retryLabel={t('common.retry')}
           onRetry={state.retry}
         />

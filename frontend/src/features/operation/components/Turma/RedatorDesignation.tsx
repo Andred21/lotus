@@ -4,7 +4,7 @@ import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState } from '@shar
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
 import { dangerText } from '@shared/styles/tokens'
-import { screenDetail } from '@shared/lib'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 type Picker = ReturnType<typeof useRedatorPicker>
 
@@ -19,7 +19,7 @@ function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: nu
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={screenDetail(picker.loadError) ?? t('common.loadErrorHint')}
+        detail={screenDetail(picker.loadError) ?? t(loadErrorHint(picker.loadError))}
         retryLabel={t('common.retry')}
         onRetry={picker.reloadList}
       />

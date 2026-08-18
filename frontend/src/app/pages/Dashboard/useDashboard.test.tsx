@@ -282,13 +282,16 @@ describe('useDashboard', () => {
     )
     await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
 
-    get.mockRejectedValue(problem('La fecha de término no puede ser anterior a la de inicio.'))
+    get.mockRejectedValue(problem('La fecha de término no puede ser anterior a la de inicio.', 422))
     rerender({ p: { start: '2026-12-31', end: '2026-01-01' } })
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('a tela não pode virar erro com dado em mão')
       expect(result.current.staleErrored).toBe(true)
       expect(result.current.staleError).toBeNull()
+      // O texto do servidor não vai à tela, mas a CAUSA vai: janela invertida é
+      // 422, e a dica de conexão seria instrução errada (review do BD-13, Q-1).
+      expect(result.current.staleHint).toBe('common.invalidDataHint')
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
@@ -313,6 +316,7 @@ describe('useDashboard', () => {
       if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
       expect(result.current.staleErrored).toBe(true)
       expect(result.current.staleError).toBeNull()
+      expect(result.current.staleHint).toBe('common.invalidDataHint')
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.staleRetry).toBeUndefined()
