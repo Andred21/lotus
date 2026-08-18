@@ -52,7 +52,7 @@ não fazer nada.
 | D1 | Alcance do plural i18next (D-02) | as 3 chaves com `(s)` **mais** as 14 de plural fixo = **17 chaves** | só as 3 da ficha; as 19 incluindo as duas frases |
 | D2 | Custo de montagem das abas (D-04) | extrair as duas abas em componentes **e** `staleTime` nos dois hooks da página | só extrair (paga GET a cada troca de aba); gatear por `enabled` sem mover o sítio de chamada |
 | D3 | Contrato de erro na tela (D-05) | o front só imprime `detail` que **ele mesmo** escreveu; débito de backend registrado | localizar o envelope neste bloco; fazer os dois; não mexer |
-| D3b | Onde a política da D3 mora | nos **3 produtores** (`useLoadState`, `useResourceState`, `useDashboard`) mais os 13 sítios que leem o `ProblemDetails` cru | helper explícito nos 25 sítios; converter os 13 sítios crus a consumirem os hooks |
+| D3b | Onde a política da D3 mora | `screenDetail` em `shared/lib` (fronteira do `AppDataTable`), aplicado nos **3 produtores** (`useLoadState`, `useResourceState`, `useDashboard`) mais os 13 sítios que leem o `ProblemDetails` cru | helper explícito nos 25 sítios; converter os 13 sítios crus a consumirem os hooks |
 | D4 | Célula do snapshot corrompido (D-06) | texto i18n de campo ausente para o nome, `'—'` para o RUT, ambos tratando string vazia | travessão nos dois; cair para o `codigo` do certificado |
 
 **Derivadas** (consequência das quatro, não escolha nova):
@@ -157,8 +157,15 @@ mecanismo**, não código morto.
   (`shared/api/problemFromBlob.ts:21-27`). Esses três continuam na tela porque já são i18n **e dizem
   coisa distinta**: `common.unexpectedErrorHint` é "Não foi possível processar a resposta do
   servidor", que o `common.loadErrorHint` ("Verifique sua conexão e tente de novo") não diz.
-- Helper novo `screenDetail(problem)` em `shared/api`: devolve `problem.detail` quando `localDetail`,
-  senão `undefined`.
+- Helper novo `screenDetail(problem)` em **`shared/lib`**, não em `shared/api`, e tipado por uma
+  interface **estrutural** (`ScreenDetailSource = { detail?: string | null; localDetail?: true }`),
+  não por `ProblemDetails`. Devolve `problem.detail` quando `localDetail`, senão `undefined`.
+  O motivo é fronteira medida: `shared/ui/AppDataTable/AppDataTable.tsx:16-18` **documenta** que o
+  tipo do `error` dele é estruturalmente compatível com `ProblemDetails` *sem importar de
+  `shared/api`* — decisão deliberada. Pôr a política em `shared/api` obrigaria o `AppDataTable` a
+  quebrá-la, ou a duplicar o predicado inline, que é exatamente a divergência que o `useLoadState`
+  foi extraído para impedir. `shared/ui` → `shared/lib` já é padrão da casa (9 sítios hoje, entre
+  eles `CrudDialog` importando tipo).
 - **Três produtores** passam a aplicá-lo: `shared/hooks/useLoadState.ts:25`,
   `shared/hooks/useResourceState.ts:22` e `app/pages/Dashboard/useDashboard.ts:177` (`staleError`,
   que devolve `null` em vez de `undefined` por causa do tipo declarado em `:51,58`).
