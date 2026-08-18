@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-e-restauracao
 active_work_item: arquivados-e-restauracao
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
+resume_state: ready_for_planning
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: null
+context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
+blocker: "Packet status blocked: as fontes canonicas (Notion H.5.1-H.5.4, H.3.1 e a pasta Drive) enunciam a exigencia mas nao registram a decisao. Cinco fatos de negocio faltam e nenhuma fonte disponivel os fornece: (1) a matriz por aggregate root - cascata de filhos, o que permanece arquivado, conflitos de unicidade, mensagens e gates por estado downstream (certificado emitido, turma concluida); (2) quais papeis arquivam e quais restauram cada agregado, e quais permissoes novas isso cria sob ADR-07, com os cinco diretorios Policies/ vazios hoje; (3) a ordem de entrega entre os roots; (4) se 'rastreio' inclui superficie de consulta da auditoria para o usuario, e se por registro, global ou ambas; (5) se o manual PDF/DOCX pre-preenchido de backlog.md:430 entra neste bloco. Decisao do Joao Victor."
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T12:00:00-03:00
+updated_at: 2026-08-18T12:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -141,6 +141,52 @@ outro lado da P-45). Fica fora de todo `git add`; os commits usam paths exatos.
 
 **Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
 `feat/arquivados-e-restauracao` a partir de `main@b758068`.
+
+### Context Packet — 2026-08-18: gerado, contrato válido, veredito `blocked`
+
+**O Codex rodou read-only e o packet passou na validação de contrato:** markers exatos, frontmatter
+completo, 8 key facts (teto é 8), fontes endereçadas por ID e `RECOMMENDED_TRANSITION` presente.
+Nenhuma re-invocação foi necessária. Packet salvo em
+`context-packets/2026-08-18-arquivados-e-restauracao.md`.
+
+**Seis artefatos externos, um a mais que o teto de cinco, e a exceção está justificada no packet:**
+as quatro páginas Notion do bloco (H.5.1–H.5.4), a pasta canônica do Drive
+(`1ulKEELHIUIyAnpmqzsthzxeFwBZIVUu3`) e a **H.3.1**, consultada porque a H.5.3 a declara dependência
+e autorização é fato bloqueante. A H.3.1 cobre ownership e 403/404 — **não define papéis.**
+
+**O que as fontes DECIDEM, e isso é ganho real do packet:**
+
+1. **A superfície é de 8 aggregate roots em 6 grupos, não os 15 models soft-deletáveis:** `Client`,
+   `Redator`, `Student`, `Course`, `Budget`/`Quote` e `Turma`/`Enrollment`. Os demais models
+   soft-deletáveis são filhos ou infra até a matriz decidir o contrário. **Isso corrige a medição 1
+   da seleção**, que tratava os 15 como candidatos.
+2. **"Arquivado" NÃO é estado novo.** É o nome de usuário do soft-delete restaurável que já existe —
+   `deleted_at` não ganha companhia. **Consequência de schema: o bloco pode não tocar migration
+   nenhuma**, o que derruba metade do risco projetado na seleção.
+3. **Endpoints por domínio, com `onlyTrashed`/restore por root e módulo.** Proibido endpoint global
+   genérico que apague a diferença entre agregados.
+4. **A UI mínima é uma visão de Arquivados** com alternância, restauração, feedback e invalidação da
+   lista ativa. **Badge na listagem ativa não é exigido pela fonte** — se entrar, entra por decisão,
+   não por requisito.
+5. **Linguagem de exclusão irreversível sai da UI.** Confirmação de soft-delete não pode afirmar que
+   é permanente, e exclusão permanente não aparece em tela.
+
+**O que as fontes EXIGEM mas NÃO registram — e é por isso que o veredito é `blocked`.** A H.5.1 pede
+uma matriz por agregado e não a contém; a H.5.3 diz "autorização equivalente ao módulo" e a
+dependência que deveria detalhar isso só fala de ownership. **Cinco fatos de negócio faltam, e a
+regra do skill é explícita: falta de decisão sobre regra de negócio bloqueia; falta de fonte não.**
+Estão enumerados no `blocker` do frontmatter e nas Open questions do packet.
+
+**A pasta do Drive estava disponível e foi consultada — não há documento funcional deste bloco
+lá.** Isso não é fonte indisponível, é ausência medida: as buscas direcionadas só acharam material
+genérico de arquitetura e entidades. Por isso o packet é `blocked` e não `partial`.
+
+**A interseção da `backlog.md:430` (manual PDF/DOCX pré-preenchido) segue sem decisão externa** —
+nenhuma das quatro páginas nem o Drive a mencionam. Vira pergunta ao João, não suposição.
+
+**Estado: `blocked`, `resume_state: ready_for_planning`.** A recuperação externa está feita e não se
+repete; o que falta são cinco decisões do João. Respondidas, o bloco volta a `ready_for_planning` e
+o brainstorming começa com elas como entrada.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
