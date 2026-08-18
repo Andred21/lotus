@@ -98,8 +98,19 @@ export function ProfileDocumentSlot({
             }
           />
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+          /* `justify-end` + `mr-auto`, e não `justify-between`: o mesmo idiom
+             que o `AppFileRow` já usa na linha com arquivo, pela mesma razão.
+             Em 390px o slot tem 226px de conteúdo e o par não cabe ("No
+             cargado" 66 + 8 de vão + 175 do botão = 249), então a linha QUEBRA
+             — e `justify-between` com um item só na segunda linha degenera em
+             `flex-start`: o botão ancorava em x=122 e terminava em 297, contra
+             os 348 dos três slots com arquivo, o único fora do eixo sendo
+             justamente o que pede ação (UI-06 do review de 2026-08-18). Com a
+             âncora à direita ele volta para 348; enquanto os dois cabem numa
+             linha, o `mr-auto` do texto reproduz o `justify-between` de antes e
+             nada se mexe. */
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <p className="mr-auto text-xs" style={{ color: 'var(--text-color-secondary)' }}>
               {t('common.notLoaded')}
             </p>
             {upload}
