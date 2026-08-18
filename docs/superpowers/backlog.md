@@ -194,6 +194,25 @@ caminho de escrita de identidade (`UpdateStaffUserAction`, `UserProvisioner`, DT
 atual quando a chave falta × exigir a chave no `PUT`) e D-12 decide se chave computada no corpo vira
 422 ou segue ignorada. **DoD é o teste que mostra o RUT sobrevivendo à omissão, não o `if` novo.**
 
+**Escopo remedido em 2026-08-18 contra `b758068` (revisão de arquitetura, sem promoção).** Os dois
+débitos deste bloco estavam registrados menores do que são, e a diferença muda o desenho, não só a
+contagem: a D-13 não é um `if` num campo, é **uma decisão de contrato copiada em 5 Actions**, e a
+D-12 vale para **11** campos de foto, não 4. O detalhe de cada uma está na linha delas em
+`## Agrupados em bloco`.
+
+**Consequência para a P-35, medida e não suposta:** o alcance real da D-13 inclui
+`UpdateQuoteAction:30-32`, então quem executar este bloco **toca `Quote` por outro motivo** — que é
+o gatilho literal da ficha da P-35. Ela deixa de depender de payload observado e passa a fechar
+dentro do bloco.
+
+**Um achado de desenho para o brainstorming, não uma task:** a resposta "preservar na omissão" já
+existe escrita **uma vez**, em `UpdateStudentAction.php:31`
+(`$data->phone instanceof Optional ? $user->phone : $data->phone`), e nunca foi propagada. O mesmo
+campo `phone` tem hoje três comportamentos — apaga em `UpdateStaffUserAction:53`,
+`UpdateClientAction:42` e `UpdateRedatorAction:63`; preserva em `UpdateStudentAction:31`; e é pulado
+por `if` em `UpdateProfileAction:23`. Concentrar a tradução `Optional` → atributo num módulo só é o
+que dá à decisão do João **um** lugar para ser tomada.
+
 ## BD-15 · Docs e guardas de documentação
 
 **Cobre:** P-20, P-21, P-23, P-32, P-39, D-08 · **Frente:** documentação e mecanismo
@@ -237,8 +256,15 @@ sentada só — é o que torna o agrupamento barato.
 - **D-03 · Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** → **BD-11**. No toque não
   há hover, então o nome do item de navegação fica inalcançável
   (`src/app/layouts/Sidebar/SidebarItem.tsx`).
-- **D-04 · Cada montagem de página com abas busca as DUAS abas** → **BD-13**. Custo de rede dobrado
-  na abertura de `PeoplePage` e `CertificatesPage`; sem falha funcional, mas mensurável.
+- **D-04 · A `PeoplePage` busca as DUAS abas na montagem** → **BD-13**. Custo de rede dobrado na
+  abertura; sem falha funcional, mas mensurável. **Escopo REDUZIDO à metade em 2026-08-18**, medido
+  contra `b758068`: a `CertificatesPage` **não** tem o defeito. `AppTabView` não passa
+  `renderActiveOnly={false}`, então vale o default `true` do PrimeReact e só o conteúdo da aba ativa
+  monta — `EmissionPanel` e `HistorialTable` vivem dentro de `ModuleTab`
+  (`CertificatesPage.tsx:19,24`) e fazem 1 GET. Quem faz 2 é a `PeoplePage.tsx:16-17`, que chama
+  `useRedatoresPage()` e `useStudentsPage()` **no corpo da página**, acima das abas, onde o
+  `renderActiveOnly` não alcança. O defeito é de sítio de chamada, não de mecanismo de aba — e o DoD
+  do BD-13 ("1 GET por aba aberta, não 2 por montagem") só tem uma página a provar.
 - **D-05 · Bloco de erro bilíngue com caminho de campo cru na tela** → **BD-13**. Título vem do i18n
   do front e segue a sessão (`Could not load the data`), corpo vem do `detail` do RFC 7807 e chega
   sempre em espanhol, citando `aluno.name` (que ainda por cima é português). Medido no estado de erro
@@ -264,7 +290,12 @@ sentada só — é o que torna o agrupamento barato.
   alguém editar à mão. **DoD é a sonda:** editar `generated.ts` e ver o mecanismo reprovar nomeando o
   arquivo.
 - **D-12 · O backend aceita `photo_url` no corpo da escrita e devolve 200, em silêncio** →
-  **BD-14**. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
+  **BD-14**. **Alcance remedido em 2026-08-18** contra `b758068`: são **11** campos de foto em 11
+  DTOs — `StudentData:48`, `RedatorData:45`, `UserData:45`, `ClientData:66`, `ProfileData:32`,
+  `SessionUserData:29`, `EnrollmentData:36`, `TurmaData:54` (`client_photo_url`),
+  `TurmaRedatorData:28`, `CertificateData:41` (`aluno_photo_url`) e `EmissionPanelEnrollmentData:34`
+  (`student_photo_url`) —, não os 4 que o registro herdou do Q-4. Os 7 que faltavam nasceram na
+  `celula-de-identidade` (2026-08-14) e no Meu Perfil, depois da linha ter sido escrita. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
   frontend**: `FORBIDDEN_PAYLOAD_KEYS` no `useCrudForm` faz a chave lançar em DEV, então o `...form`
   ingênuo não a reintroduz mais. O defeito do outro lado foi **remedido no `/fechar-sprint` de
   2026-08-13**, não herdado: `PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo
@@ -273,7 +304,15 @@ sentada só — é o que torna o agrupamento barato.
   com foto, não só o `ClientData` que o texto original do Q-4 nomeava. **Uma afirmação do Q-4
   original não sobreviveu à medição:** `photo_url` **não** carrega path interno de storage — o
   `SignedUrlTransformer` roda na serialização e o front recebe URL pré-assinada.
-- **D-13 · `UpdateStaffUserAction` apaga o `rut` do staff num `PUT` que só o OMITE** → **BD-14**.
+- **D-13 · A omissão apaga o valor guardado, em 10 campos de 5 `Update*Action`** → **BD-14**.
+  **Título e escopo remedidos em 2026-08-18** contra `b758068`: o registro original nomeava um campo
+  (`rut`) numa Action, e a medição achou o mesmo idiom — `instanceof Optional ? null : $x` — em
+  `UpdateStaffUserAction:44,53` (`rut`, `phone`), `UpdateClientAction:42,48` (`phone`,
+  `business_activity`), `UpdateCourseAction:30,31` (`technical_name`, `description`),
+  `UpdateQuoteAction:30,31,32` (`purchase_order`, `planned_start_date`, `planned_end_date`) e
+  `UpdateRedatorAction:63` (`phone`). As `Create*Action` usam a mesma forma e **não** são defeito —
+  não há valor anterior a apagar. O texto original segue abaixo, porque a medição do `rut` continua
+  correta; o que mudou é o alcance.
   `UserData::$rut` é `Optional`, e a Action traduz `Optional` para `null` antes de gravar
   (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`,
   `UpdateStaffUserAction.php:44`): quem manda o formulário sem a chave zera o RUT de um usuário que
@@ -302,6 +341,37 @@ sentada só — é o que torna o agrupamento barato.
   varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Sem bloco atribuído
+
+- **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
+  Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce
+  em `AdminDashboardAssembler.php:56-62` como quatro booleanos, é passada posicionalmente para
+  `AnalyticsQuery::series()` (`:27-32`) e `::rankings()` (`:73-76`), e chega ao payload como
+  **ausência de dado** — `AnalyticsQuery.php:319` precisa do sentinela `'0.0000'` justamente porque o
+  contrato não tem onde dizer "proibido". Do outro lado, o navegador **reconstrói a permissão
+  farejando nulo**: `RankingsPanel.tsx:25` decide se o usuário tem `commercial.quote.view`
+  varrendo `[...rankings.courses, ...rankings.clients]` atrás de um `uf_aprovada` não nulo, e
+  `SeriesPanel.tsx:54` faz o mesmo teste na série. **Não é regressão nem achado teórico:** é o
+  desfecho do Q-2 do review do B2, que foi corrigido do lado do cliente — a correção está certa para
+  o defeito que tratava (a métrica de UF deixou de ser oferecida com o gate fechado) e **alargou** o
+  vazamento, porque agora duas telas sabem traduzir `null` em permissão. Custo hoje: um scan O(n) por
+  render e a regra de RBAC morando em dois repositórios. Custo se ficar: toda tela nova aprende a
+  farejar nulo. Fix: a visibilidade vira campo explícito no payload e módulo próprio no backend.
+  **Sem bloco até o João agrupá-lo** — toca contrato de API e regenera `generated.ts` (lei §5.3),
+  então não é emenda de bloco alheio.
+
+- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact.**
+  Medido em 2026-08-18 contra `b758068`. A lei §5.6 virou mecanismo em `eslint.config.js:362`, e o
+  bloco é escopado **por feature** (`src/features/${feature}/**`), então `src/app/**` não é visitado
+  por ele. O comentário de `:388-390` declara a exceção, mas só para a metade *feature→feature*
+  ("AppRouter importa 5 features, e compor rotas é o trabalho dele") — a metade **PrimeReact** fica
+  de fora sem razão escrita. A camada não é mais o shell de 3 arquivos que motivou a redação: ela
+  concentra hoje **28 arquivos** em `app/pages/Dashboard/`. **A régua nasceria verde:** zero import
+  de `primereact` em `src/app` hoje, medido — a mesma condição que a D11 do
+  `dashboard-frontend-central-controle` usou para ligar `COR_HARDCODED` nesta mesma camada sem
+  `ignores` (P-34, encerrada). É a quarta repetição do padrão "camada inteira sem a régua que as
+  outras têm", depois de P-34 (cor), D8 do B2 (`max-lines`) e P-38. Fix: acrescentar `src/app/**` ao
+  bloco `no-restricted-imports` **só** na fronteira PrimeReact, deixando *feature→feature* liberada.
+  **Sem bloco até o João agrupá-lo**; entra barato em qualquer bloco que toque `eslint.config.js`.
 
 - **D-33 · O foco cai no `<body>` quando o olho da senha alterna.**
   Medido no fechamento do BD-16 (2026-08-18) em Chromium real, `/perfil` como Redator: com o foco no
