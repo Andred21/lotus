@@ -162,20 +162,6 @@ o atributo novo no DOM.
 **DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
 falha deixa a regressão passar verde.
 
-## BD-13 · Frontend · listagens e abas: plural, ausência e custo de montagem
-
-**Cobre:** D-02, D-04, D-05, D-06 · **Frente:** frontend
-**Afinidade:** todos são a página de listagem e o que ela mostra ou custa; `CertificatesPage` aparece
-em três dos quatro, e os três locales são o arquivo comum de D-02 e D-05.
-
-- **D-02** — plural cru em duas das sete tabelas.
-- **D-04** — cada montagem de página com abas busca as **duas** abas.
-- **D-05** — bloco de erro bilíngue com caminho de campo cru na tela.
-- **D-06** — a linha do certificado corrompido mostra a célula de aluno vazia, sem o travessão.
-
-**DoD:** a paridade das 3 locales verde depois da chave de plural, e o custo de rede medido (1 GET
-por aba aberta, não 2 por montagem).
-
 ## BD-14 · Backend · o que a entrada pode escrever
 
 **Cobre:** D-13, D-12, P-29, P-35 · **Frente:** backend
@@ -249,29 +235,10 @@ sentada só — é o que torna o agrupamento barato.
 
 ## Agrupados em bloco
 
-- **D-02 · Plural cru em duas das sete tabelas** → **BD-13**. "3 course(s)" e "1 user(s)" contra "4
-  clients", "7 instructors" e "6 budgets". Rodapé do `AppDataTable` alimentado por chave sem plural
-  i18n; medido em 2026-08-14 ainda vivo nos 3 locales (`"{{count}} usuario(s)"`, `"{{count}}
-  curso(s)"`, `"{{count}} módulo(s)"`).
 - **D-03 · Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** → **BD-11**. No toque não
   há hover, então o nome do item de navegação fica inalcançável
   (`src/app/layouts/Sidebar/SidebarItem.tsx`).
-- **D-04 · A `PeoplePage` busca as DUAS abas na montagem** → **BD-13**. Custo de rede dobrado na
-  abertura; sem falha funcional, mas mensurável. **Escopo REDUZIDO à metade em 2026-08-18**, medido
-  contra `b758068`: a `CertificatesPage` **não** tem o defeito. `AppTabView` não passa
-  `renderActiveOnly={false}`, então vale o default `true` do PrimeReact e só o conteúdo da aba ativa
-  monta — `EmissionPanel` e `HistorialTable` vivem dentro de `ModuleTab`
-  (`CertificatesPage.tsx:19,24`) e fazem 1 GET. Quem faz 2 é a `PeoplePage.tsx:16-17`, que chama
-  `useRedatoresPage()` e `useStudentsPage()` **no corpo da página**, acima das abas, onde o
-  `renderActiveOnly` não alcança. O defeito é de sítio de chamada, não de mecanismo de aba — e o DoD
-  do BD-13 ("1 GET por aba aberta, não 2 por montagem") só tem uma página a provar.
-- **D-05 · Bloco de erro bilíngue com caminho de campo cru na tela** → **BD-13**. Título vem do i18n
-  do front e segue a sessão (`Could not load the data`), corpo vem do `detail` do RFC 7807 e chega
-  sempre em espanhol, citando `aluno.name` (que ainda por cima é português). Medido no estado de erro
-  real do `LOT-2026-1001` em `/certificados`.
-- **D-06 · A linha do certificado corrompido mostra a célula de aluno vazia, sem o travessão** →
-  **BD-13**. A lista não distingue "sem nome" de "campo faltando", e é o único lugar onde o registro
-  aparece antes do clique. O diálogo do mesmo registro explica a falha; a linha, não.
+
 - **D-08 · A lei §5.3 segue sem mecanismo** → **BD-15**. A linha original pedia Arch tests no backend
   mais `eslint-boundaries` no frontend; **as duas partes nomeadas existem** e foram remedidas em
   2026-08-14 contra `977586e`, não herdadas de relatório: `PersistenceLawsTest` cobre §5.1 (classe
@@ -398,15 +365,6 @@ sentada só — é o que torna o agrupamento barato.
   defeito de ordem por outro. O que resta é desenho — ou a D1 abre mão do lado, ou a D-27 abre mão
   da precedência abaixo de `xl`, ou o cartão de identidade encolhe o bastante para não precisar da
   inversão. **Decisão do João**, e é por isso que entra sem bloco.
-
-- **D-31 · Duas chaves i18n órfãs no dicionário de `/perfil`.**
-  `profile.documents.noValidity` e `profile.identity.role` existem nos três locales e **nenhum
-  `.tsx` as consome** — medido no gate do BD-16 (2026-08-17) e reconfirmado no fechamento
-  (2026-08-18), com grep em `src/**` fora de `locales/`. Não quebram nada: a paridade de chaves
-  entre `pt-BR`, `es-CL` e `en` continua exata, que é o que a rule exige. O custo é de leitura —
-  quem procura o rótulo de um dado acha uma chave que a tela não usa e não sabe se é a errada ou se
-  a tela é que esqueceu de usá-la. **Apagar as três cópias de cada uma** é a limpeza; entra em
-  qualquer bloco que toque os dicionários por outro motivo.
 
 - **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`.**
   Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14): unificar antes do merge

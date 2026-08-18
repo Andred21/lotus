@@ -16,7 +16,7 @@ três produtores de estado de carga, o que faz 12 telas mudarem de comportamento
 **Tech Stack:** React 19 + TS, Vite, i18next 26 (JSON v4), TanStack Query v5, PrimeReact via
 `shared/ui`, Vitest + Testing Library (jsdom).
 
-**Spec:** `docs/superpowers/specs/2026-08-18-bd13-listagens-e-abas-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-18-bd13-listagens-e-abas-design.md`
 
 ## Global Constraints
 

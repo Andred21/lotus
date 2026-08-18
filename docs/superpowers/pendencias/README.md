@@ -60,14 +60,10 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (2)
+## Encerradas (0)
 
-| ID | Pendência | Encerrada em | Como | Sai em |
-|---|---|---|---|---|
-| P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormSection` pelo DS-01 e fechou os **dois** sítios com a guarda decidida — a catraca passou a olhar o valor, não a grafia (`8ffdefa`, `efd5bfe`); medido 11,4:1/10,35:1 no título e 6,21:1/7,58:1 no ícone | próximo `/fechar-sprint` |
-| P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormField` pela D-24 e levou o molde inteiro (`htmlFor`/`id`, `aria-describedby`, `aria-invalid`) para o kit e os cinco wrappers (`0672019`, `2ad35d7`); nome acessível **medido** no navegador | próximo `/fechar-sprint` |
-
-Saíram por sprint de rastro cumprida, pelo precedente da **P-26** (que saiu no `/fechar-sprint` de
-2026-08-14, `celula-de-identidade`): a **P-38** e a **P-34**, no fechamento do
-`bd16-perfil-e-kit-compartilhado` (2026-08-18). A **P-36** e a **P-37** ficam: foram encerradas
-**dentro** deste bloco, então a sprint de rastro delas é esta, e elas saem no fechamento seguinte.
+Nenhuma em rastro. A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
+`bd16-perfil-e-kit-compartilhado`, cumpriram a sprint de rastro e saíram no fechamento do
+`bd13-listagens-e-abas` (2026-08-18), pelo mesmo precedente da **P-26**, da **P-38** e da **P-34**.
+O rastro durável delas está nos commits e na linha do BD-16 em
+[`../historico/progress.md`](../historico/progress.md).
