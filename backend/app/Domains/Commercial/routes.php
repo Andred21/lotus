@@ -11,6 +11,10 @@ use App\Domains\Commercial\Http\Controllers\QuoteFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
+    // ANTES do apiResource, senão `clients/archived` casa como `clients/{client}`.
+    Route::get('clients/archived', [ClientController::class, 'archived']);
+    Route::post('clients/{client}/restore', [ClientController::class, 'restore']);
+
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('budgets', BudgetController::class);
 
