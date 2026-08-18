@@ -1,0 +1,52 @@
+import { describe, expect, it } from 'vitest'
+import { renderHook } from '@testing-library/react'
+import type { UseQueryResult } from '@tanstack/react-query'
+import type { ProblemDetails } from '@shared/api/axios'
+import { useLoadState } from './useLoadState'
+
+type Item = { id: number }
+
+/** O hook não chama hook nenhum: é derivação pura sobre o resultado da query.
+ * `renderHook` está aqui só para não violar `react-hooks/rules-of-hooks` — o
+ * mesmo arranjo do `useResourceState.test.ts`. */
+function query(
+  over: Partial<Omit<UseQueryResult<Item[], ProblemDetails>, 'error'>> & {
+    error?: ProblemDetails | null
+  },
+) {
+  return {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    isSuccess: false,
+    error: null,
+    refetch: () => Promise.resolve(),
+    ...over,
+  } as unknown as UseQueryResult<Item[], ProblemDetails>
+}
+
+const DO_SERVIDOR = { detail: 'Ocorreu um erro inesperado. Tente novamente.' } as ProblemDetails
+const DO_FRONT = { detail: 'Revisa tu conexión.', localDetail: true } as ProblemDetails
+
+describe('useLoadState — o detail que pode ir à tela', () => {
+  it('detail do SERVIDOR não sai do hook', () => {
+    const { result } = renderHook(() => useLoadState(query({ isError: true, error: DO_SERVIDOR })))
+
+    expect(result.current.errorDetail).toBeUndefined()
+    // `loadError` continua carregando o envelope INTEIRO: quem precisa do
+    // objeto (o `AppDataTable`) segue recebendo, e a política é de quem imprime.
+    expect(result.current.loadError).toBe(DO_SERVIDOR)
+  })
+
+  it('detail do FRONT sai, porque já é i18n', () => {
+    const { result } = renderHook(() => useLoadState(query({ isError: true, error: DO_FRONT })))
+
+    expect(result.current.errorDetail).toBe('Revisa tu conexión.')
+  })
+
+  it('sem erro: undefined', () => {
+    const { result } = renderHook(() => useLoadState(query({ isSuccess: true, data: [] })))
+
+    expect(result.current.errorDetail).toBeUndefined()
+  })
+})

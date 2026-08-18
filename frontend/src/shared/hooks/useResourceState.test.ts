@@ -31,7 +31,10 @@ function query(
   } as unknown as UseQueryResult<Perfil, ProblemDetails>
 }
 
-const BOOM = { detail: 'boom' } as ProblemDetails
+// Marcado como envelope do FRONT de propósito: os casos abaixo medem que a
+// falha CHEGA à tela, e depois da D-05 só o `detail` de autoria do front chega.
+// Relaxar a asserção esconderia o que o caso guarda.
+const BOOM = { detail: 'boom', localDetail: true } as ProblemDetails
 
 describe('useResourceState', () => {
   it('falhou sem nada em cache: autoriza substituir a tela', () => {
@@ -61,6 +64,25 @@ describe('useResourceState', () => {
 
     expect(result.current.loadError).toEqual({})
     expect(result.current.failedWithoutData).toBe(true)
+  })
+
+  it('detail do SERVIDOR não sai do hook, mas o envelope continua em loadError', () => {
+    const DO_SERVIDOR = { detail: 'Erro interno' } as ProblemDetails
+
+    const { result } = renderHook(() =>
+      useResourceState(query({ isError: true, error: DO_SERVIDOR })),
+    )
+
+    expect(result.current.errorDetail).toBeUndefined()
+    expect(result.current.loadError).toBe(DO_SERVIDOR)
+  })
+
+  it('detail do FRONT sai, porque já é i18n', () => {
+    const DO_FRONT = { detail: 'Revisa tu conexión.', localDetail: true } as ProblemDetails
+
+    const { result } = renderHook(() => useResourceState(query({ isError: true, error: DO_FRONT })))
+
+    expect(result.current.errorDetail).toBe('Revisa tu conexión.')
   })
 
   it('sucesso não deixa resíduo de erro', () => {

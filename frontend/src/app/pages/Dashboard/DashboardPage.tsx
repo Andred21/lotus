@@ -33,6 +33,18 @@ export function DashboardPage() {
     if (janela) setPeriod(janela)
   }
 
+  /** O texto do aviso lateral, resolvido num lugar só e descido pronto para o
+   * `AdminView`/`PeriodFilter`.
+   *
+   * `staleError` carrega só o `detail` que o FRONT escreveu (D-05): o do
+   * servidor não é localizado e é calado no `useDashboard`. Mas ali `staleError`
+   * é mensagem E gatilho — o `InlineLoadState` desiste no `!error` —, então
+   * imprimir o campo cru fazia o aviso inteiro sumir num 500, inclusive no 422
+   * de janela invertida que a D6 existe para mostrar. `staleErrored` é o
+   * gatilho; a dica genérica é de quem imprime. */
+  const avisoStale = (s: { staleErrored: boolean; staleError: string | null }) =>
+    s.staleErrored ? (s.staleError ?? t('common.loadErrorHint')) : null
+
   const header = (
     <PageHeader title={t('dashboard.welcome', { name: user?.name })} description={t('dashboard.subtitle')} />
   )
@@ -86,7 +98,7 @@ export function DashboardPage() {
         {/* Falha COM dado em mão: aviso ao lado (BD-6). O Redator não tem
           * seletor de janela, então o aviso mora aqui e não junto de um
           * controle. */}
-        <InlineLoadState error={state.staleError} retryLabel={t('common.retry')} onRetry={state.staleRetry} />
+        <InlineLoadState error={avisoStale(state)} retryLabel={t('common.retry')} onRetry={state.staleRetry} />
         <RedatorView data={state.data} />
       </div>
     )
@@ -99,7 +111,7 @@ export function DashboardPage() {
         data={state.data}
         preset={preset}
         period={period}
-        staleError={state.staleError}
+        staleError={avisoStale(state)}
         onPresetChange={trocarPreset}
         onPeriodChange={setPeriod}
         onRetry={state.staleRetry}

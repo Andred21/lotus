@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
+import { screenDetail } from '@shared/lib'
 
 /** Janela histórica. Só séries e rankings a respeitam (D3 do bloco A). A UI do
  * seletor mora em `admin/PeriodFilter.tsx` (D5 do B2). */
@@ -48,6 +49,13 @@ export type DashboardState =
   | {
       kind: 'ready-admin'
       data: AdminDashboardData
+      /** Houve falha com dado em mão. Separado de `staleError` porque a D-05
+       * cala o `detail` de servidor: sem este sinal, um 500 fazia o aviso
+       * inteiro sumir — o `InlineLoadState` desiste no `!error`, e a tela
+       * voltava a falhar em silêncio. Quem imprime escolhe a dica. */
+      staleErrored: boolean
+      /** Só o `detail` que o FRONT escreveu (`screenDetail`); `null` para o do
+       * servidor, que não é localizado. */
       staleError: string | null
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
       staleRetry?: () => void
@@ -55,6 +63,7 @@ export type DashboardState =
   | {
       kind: 'ready-redator'
       data: RedatorDashboardData
+      staleErrored: boolean
       staleError: string | null
       staleRetry?: () => void
     }
@@ -174,11 +183,14 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
 
   // Com dado em mão, a falha do refetch é aviso AO LADO — a tela continua
   // utilizável (lição do BD-6).
-  const staleError = query.isError ? (query.error?.detail ?? null) : null
+  // `?? null` e não `?? undefined`: o tipo declarado em `:51,58` é
+  // `string | null`, e a linha só existe quando `isError`.
+  const staleErrored = query.isError
+  const staleError = staleErrored ? (screenDetail(query.error) ?? null) : null
   const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
 
-  if (data.view === 'redator') return { kind: 'ready-redator', data, staleError, staleRetry }
+  if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleRetry }
   if (nenhumaSecaoLegivel(data)) return { kind: 'unauthorized' }
 
-  return { kind: 'ready-admin', data, staleError, staleRetry }
+  return { kind: 'ready-admin', data, staleErrored, staleError, staleRetry }
 }

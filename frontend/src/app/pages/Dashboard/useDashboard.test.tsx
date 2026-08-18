@@ -145,7 +145,11 @@ describe('useDashboard', () => {
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('a tela não pode virar erro com cache em mão')
-      expect(result.current.staleError).toBe('caiu no refetch')
+      // D-05: `detail` de servidor não é localizado, então não sai do hook. O
+      // aviso continua existindo — quem o dispara é `staleErrored`, e a dica
+      // genérica é escolhida por quem imprime (`DashboardPage.avisoStale`).
+      expect(result.current.staleErrored).toBe(true)
+      expect(result.current.staleError).toBeNull()
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
@@ -245,6 +249,26 @@ describe('useDashboard', () => {
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
   })
 
+  // O outro ramo da D-05, para o silêncio acima não virar "o hook nunca fala":
+  // envelope que o PRÓPRIO front sintetizou (rede caída) já é i18n e sai.
+  it('detail escrito pelo FRONT sobrevive ao filtro da D-05', async () => {
+    get.mockResolvedValueOnce({ data: admin() })
+    const { qc, Wrapper } = comCliente()
+
+    const { result } = renderHook(() => useDashboard(), { wrapper: Wrapper })
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+
+    get.mockRejectedValue({ ...problem('Revisa tu conexión.', 0), localDetail: true })
+    await act(async () => {
+      await qc.refetchQueries()
+    })
+
+    await waitFor(() => {
+      if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+      expect(result.current.staleError).toBe('Revisa tu conexión.')
+    })
+  })
+
   // Cenário 4, e o que a D6 existe para impedir: janela invertida sobe 422
   // (`DashboardFilterData.php`), e sem piso a tela INTEIRA virava AppErrorState
   // por um erro de digitação no filtro. `staleError` não alcançava, porque o
@@ -263,7 +287,8 @@ describe('useDashboard', () => {
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('a tela não pode virar erro com dado em mão')
-      expect(result.current.staleError).toBe('La fecha de término no puede ser anterior a la de inicio.')
+      expect(result.current.staleErrored).toBe(true)
+      expect(result.current.staleError).toBeNull()
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
@@ -286,7 +311,8 @@ describe('useDashboard', () => {
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
-      expect(result.current.staleError).toBe('La fecha de término no puede ser anterior a la de inicio.')
+      expect(result.current.staleErrored).toBe(true)
+      expect(result.current.staleError).toBeNull()
     })
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.staleRetry).toBeUndefined()
