@@ -11,9 +11,14 @@
  * intacta, em qualquer profundidade — inclusive nós aninhados como
  * `iconField.root`.
  *
- * Valor de função no `pt` do chamador (o PrimeReact aceita
- * `(options) => props`) é preservado por composição: a saída dele é fundida com
- * o `pins` na hora da chamada.
+ * Valor de função (o PrimeReact aceita `(options) => props`) é preservado por
+ * composição, **dos dois lados**: a saída da função é fundida com o nó do outro
+ * lado na hora da chamada, e `pins` continua vencendo folha a folha. A metade
+ * que faltava era função no `pins` sobre nó do chamador — a forma que o
+ * `maximizableButton` do `AppDialog` tem —, e ali a folha do chamador caía no
+ * ramo de substituição e sumia em silêncio: exatamente a falha que este arquivo
+ * existe para matar, na direção que ele ainda não cobria (Q-3 do review de
+ * 2026-08-18).
  */
 type PtNode = Record<string, unknown>
 
@@ -32,6 +37,9 @@ export function mergePt<T>(base: unknown, pins: unknown): T {
     } else if (typeof current === 'function' && isPlainNode(value)) {
       const resolve = current as (options: unknown) => unknown
       merged[key] = (options: unknown) => mergePt<PtNode>(resolve(options), value)
+    } else if (isPlainNode(current) && typeof value === 'function') {
+      const resolve = value as (options: unknown) => unknown
+      merged[key] = (options: unknown) => mergePt<PtNode>(current, resolve(options))
     } else {
       merged[key] = value
     }

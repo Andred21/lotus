@@ -53,6 +53,29 @@ describe('mergePt', () => {
     expect(merged.showIcon('lg')).toEqual({ className: 'icon-lg', role: 'button' })
   })
 
+  it('compõe função do WRAPPER sobre o nó do chamador', () => {
+    // A direção espelhada, que faltava (Q-3 do review de 2026-08-18): a forma
+    // do `maximizableButton` do `AppDialog` é função no `pins`, e a folha do
+    // chamador caía no ramo de substituição — o mesmo silêncio que este arquivo
+    // existe para matar, na direção que ele não cobria.
+    const merged = mergePt<{ maximizableButton: (options: unknown) => Record<string, unknown> }>(
+      { maximizableButton: { className: 'text-lg' } },
+      { maximizableButton: (options: unknown) => ({ 'aria-label': `max-${String(options)}` }) },
+    )
+    expect(merged.maximizableButton('on')).toEqual({
+      className: 'text-lg',
+      'aria-label': 'max-on',
+    })
+  })
+
+  it('o wrapper vence a folha em conflito também quando é função', () => {
+    const merged = mergePt<{ showIcon: (options: unknown) => Record<string, unknown> }>(
+      { showIcon: { 'aria-label': 'do chamador' } },
+      { showIcon: () => ({ 'aria-label': 'do wrapper' }) },
+    )
+    expect(merged.showIcon(null)['aria-label']).toBe('do wrapper')
+  })
+
   it('sem `pins` devolve a base intacta', () => {
     const base = { input: { className: 'w-40' } }
     expect(mergePt<typeof base>(base, undefined)).toBe(base)
