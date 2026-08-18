@@ -60,14 +60,14 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (4)
+## Encerradas (2)
 
 | ID | Pendência | Encerrada em | Como | Sai em |
 |---|---|---|---|---|
 | P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormSection` pelo DS-01 e fechou os **dois** sítios com a guarda decidida — a catraca passou a olhar o valor, não a grafia (`8ffdefa`, `efd5bfe`); medido 11,4:1/10,35:1 no título e 6,21:1/7,58:1 no ícone | próximo `/fechar-sprint` |
 | P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormField` pela D-24 e levou o molde inteiro (`htmlFor`/`id`, `aria-describedby`, `aria-invalid`) para o kit e os cinco wrappers (`0672019`, `2ad35d7`); nome acessível **medido** no navegador | próximo `/fechar-sprint` |
-| P-38 | A rule dizia que teste PrimeReact/jsdom está fora do corte do runner | 2026-08-16 (`meu-perfil-frontend`) | gatilho literal: o bloco tocou `frontend-fsliced.md` e trocou a frase pelo corte **medido** — 13 testes de componente, 9 com PrimeReact | próximo `/fechar-sprint` |
-| P-34 | Catraca `COR_HARDCODED` não roda em `src/app/**` | 2026-08-16 (`dashboard-frontend-central-controle`) | a **D11** do B1 ampliou o bloco: a catraca entrou em `src/app/**` e as 3 classes `text-slate-*` do `Sidebar/` viraram `--shell-ink`/`--shell-ink-muted` | próximo `/fechar-sprint` |
 
-A **P-26** saiu no `/fechar-sprint` de 2026-08-14 (`celula-de-identidade`), cumprida a sprint de
-rastro.
+Saíram por sprint de rastro cumprida, pelo precedente da **P-26** (que saiu no `/fechar-sprint` de
+2026-08-14, `celula-de-identidade`): a **P-38** e a **P-34**, no fechamento do
+`bd16-perfil-e-kit-compartilhado` (2026-08-18). A **P-36** e a **P-37** ficam: foram encerradas
+**dentro** deste bloco, então a sprint de rastro delas é esta, e elas saem no fechamento seguinte.

@@ -139,83 +139,10 @@ operação"*.
 # Blocos de execução de dívida
 
 > **Fila vazia até promoção explícita do João.** BD-1..BD-9 foram entregues entre 2026-08-11 e
-> 2026-08-14 e saíram desta lista com os débitos que cobriam; o histórico de cada um está na linha da
-> entrega em `historico/progress.md`. Os BD-10..BD-15 abaixo são o reagrupamento de 2026-08-14 do que
-> sobrou — nenhum foi promovido.
-
-## BD-16 · Frontend · `/perfil` + kit compartilhado: contraste, contenção, semântica e densidade
-
-**Cobre:** P-36, P-37, D-01, D-18 (data do `AppFileRow`), D-19…D-30 · **Frente:** frontend
-**Promovido em:** 2026-08-17, por seleção explícita do João (escopo A+B+C, com DS-02 dentro)
-**Origem:** `audits/2026-08-17-perfil-ui-review-e-design.md` — `/lotus-ui-review` (1 achado C, 8 B)
-cruzado com `frontend-design` (7 achados). **A auditoria é a fonte do detalhe**; as linhas de
-`## Débitos técnicos` são o registro canônico de cada item.
-
-**Absorve o BD-10 inteiro.** O BD-10 (`kit de formulário: nome acessível e cor de marca`) cobria
-P-37, P-36, D-01 e D-18, e os quatro moram nos mesmos dois arquivos que esta revisão manda tocar
-(`FormSection`, `AppFileRow`) e nos mesmos dois temas do título dele. Planejar separado significa
-reescrever `FormSection.tsx:19` duas vezes.
-
-**O gatilho da P-36 disparou.** A ficha pede *"um bloco que toque `FormSection` ou `CoursesTable` por
-outro motivo"*: o DS-01 é esse outro motivo — a tinta de marca pinta sete papéis distintos na mesma
-dobra (título, ação primária, ação **destrutiva**, secundária, upload, tag, ícone), então o contraste
-de 2,77:1 é sintoma e a ambiguidade de papel é a causa. O impedimento original (`FormField`/
-`FormSection` sob reescrita ativa do BD-5) venceu com a entrega do BD-5.
-
-**Três frentes, na ordem em que se pagam:**
-
-- **A · contraste e contenção** — D-19 (o único **C**: a linha de arquivo vaza 84px em 390px, apaga o
-  nome e corta `Reemplazar`) + D-01 (a metade da *quebra*, já que a do `title` foi paga em
-  2026-08-16) + D-18 + D-20/D-21 (tag saturada a 2,28:1 e a validade que a gera, rebaixada abaixo
-  dela) + P-36 + D-30 + D-22.
-- **B · semântica e teclado** — D-23 (upload sem `role`), D-24 + P-37 (`AppPassword`: Espaço,
-  `aria-pressed`, e o `<label>` sem `htmlFor` que soma o rótulo do controle), D-25 (Escape no
-  `<iframe>`).
-- **C · conteúdo e densidade** — D-26 (subtítulo mente ao Admin), **D-28 antes de D-27** (dar marca
-  visual ao corte de mutabilidade antes de reordenar; inverter sem marca só troca qual metade fica
-  por último), D-29 (`font-mono`).
-
-**DoD — três provas que o bloco não pode entregar sem:**
-
-1. **A P-36 fecha nos DOIS sítios e com a guarda decidida.** `FormSection.tsx:19` (texto, 4,5:1) e
-   `CoursesTable.tsx:43` (ícone, 3:1), mais o seletor da catraca `COR_HARDCODED` — lembrando que cor
-   por `style` é a grafia **certa** quando o valor é `var(--…)`, que é o que sempre adiou o desenho.
-2. **A P-37 copia o molde inteiro** do `LoginForm.tsx:40-85` (`htmlFor`/`id`, `aria-describedby`,
-   `aria-invalid`), não só o `htmlFor`, e o nome acessível é **medido** (`accessibleName` no
-   Playwright), não conferido no DOM.
-3. **O alcance fora de `/perfil` é provado.** `FormSection` tem 16 consumidores, `AppPassword` tem 5
-   sítios, `AppFileRow` serve comercial/turma/redator e `AppTag` aparece fora desta tela. O plano
-   declara os sítios; o DoD mostra que nenhum regrediu.
-
-**Fora do bloco, por decisão pendente do João:** DS-05 (trocar `scale-200` do avatar por tamanho
-real — a previsão de recorte é aritmética, precisa de medição no navegador antes de virar task) e
-DS-07 (mural de credenciais como assinatura da tela — inverte a ordem da spec D1, é bloco próprio
-com brainstorming).
-
-## ~~BD-10~~ · Frontend · kit de formulário: nome acessível e cor de marca
-
-> **Absorvido pelo BD-16 em 2026-08-17.** Nunca foi promovido. Os quatro itens (P-37, P-36, D-01,
-> D-18) seguem com os mesmos IDs e as mesmas fichas — mudou só o bloco que os cobre. O texto
-> original fica abaixo porque a análise de afinidade dele continua valendo e é parte do porquê da
-> absorção.
-
-**Cobre:** P-37, P-36, D-01, D-18 · **Frente:** frontend
-**Afinidade:** os três tocam `shared/ui` (`FormField`, `FormSection`) ou o diálogo que os consome, e
-os dois primeiros foram adiados **pelo mesmo motivo** — o kit inteiro passa pelo arquivo, então o fix
-alcança toda tela de uma vez e não cabia num bloco de escopo estreito.
-
-- **P-37** — `FormField` embrulha o controle em `<label>` sem `htmlFor`: o campo soma o rótulo do
-  controle no nome acessível. Dois sítios (`StaffIdentifyFields`, `BudgetDialog`). O molde está
-  medido em `LoginForm.tsx:40-85` e **copia-se inteiro**, com `aria-describedby` e `aria-invalid`.
-- **P-36** — cor por `style={{ }}` passa verde na catraca `COR_HARDCODED`. Dois sítios a 2,77:1:
-  `FormSection.tsx:19` e `CoursesTable.tsx:43`. Fechar os sítios **e** decidir o seletor da guarda —
-  `style` também é a grafia certa quando o valor é `var(--…)`.
-- **D-01** — nome de arquivo truncado sem `title` nem quebra a 390x844.
-- **D-18** — a data da MESMA linha de arquivo sai no idioma do navegador, não no da
-  interface. Mesmo componente do D-01, e é o que torna os dois baratos juntos.
-
-**DoD:** o nome acessível medido em leitor de tela (ou por `accessibleName` no Playwright) nos dois
-sítios da P-37, não só o atributo no DOM.
+> 2026-08-14, e o **BD-16** em 2026-08-18 — cada um saiu desta lista com os débitos que cobria, e o
+> histórico está na linha da entrega em `historico/progress.md`. O BD-16 levou junto o **BD-10**, que
+> ele havia absorvido em 2026-08-17 e que nunca chegou a ser promovido. Os BD-11..BD-15 abaixo são o
+> que sobrou do reagrupamento de 2026-08-14 — nenhum foi promovido.
 
 ## BD-11 · Frontend · shell: navegação no toque
 
@@ -317,11 +244,6 @@ sentada só — é o que torna o agrupamento barato.
 
 ## Agrupados em bloco
 
-- **D-01 · Nome de arquivo truncado sem `title` nem quebra a 390x844** (`RedatorDialog`, seção
-  DOCUMENTS) → **BD-16** (era BD-10). O valor some sem mecanismo de leitura — mesma classe do débito
-  de campo desabilitado que o BD-3 pagou, num controle que ele não cobria. **Metade paga:** o
-  `title` existe desde 2026-08-16 (`AppFileRow.tsx`, com teste que cita o UI-01 daquele review). A
-  metade da **quebra** segue aberta e a revisão de 2026-08-17 a mediu pior — ver D-19.
 - **D-02 · Plural cru em duas das sete tabelas** → **BD-13**. "3 course(s)" e "1 user(s)" contra "4
   clients", "7 instructors" e "6 budgets". Rodapé do `AppDataTable` alimentado por chave sem plural
   i18n; medido em 2026-08-14 ainda vivo nos 3 locales (`"{{count}} usuario(s)"`, `"{{count}}
@@ -386,18 +308,6 @@ sentada só — é o que torna o agrupamento barato.
   que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
   Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
   contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
-- **D-18 · A data do `AppFileRow` sai no idioma do NAVEGADOR, não no da interface** → **BD-16**
-  (era BD-10).
-  > ⚠️ **Colisão de ID a resolver.** Existe um segundo `D-18` em `## Travados em decisão` (o
-  > `description` das pendências do Dashboard em espanhol fixo no backend). São dois débitos
-  > distintos com o mesmo número, e o BD-16 cobre **este**, o do `AppFileRow`. Renumerar é decisão
-  > do João — mexer no ID sem ele quebra as referências cruzadas já escritas nos dois lados.
-  `AppFileRow.tsx:42` chama `new Date(createdAt).toLocaleDateString()` sem locale: numa interface
-  es-CL a linha do documento exibe `8/16/2026` (en-US) enquanto o slot logo abaixo, corrigido em
-  2026-08-16, exibe `10-08-2028`. Como `created_at` é timestamp completo, aqui só o **formato** erra
-  — o dia não volta, ao contrário do UI-01 que originou a correção. Fix de uma linha (`formatDate`
-  de `@shared/lib`), adiado porque `AppFileRow` é `shared/ui` de outras telas e o próprio review de
-  UI o declarou decisão fora do bloco.
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
   em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do
@@ -405,84 +315,17 @@ sentada só — é o que torna o agrupamento barato.
   varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
   varredura de órfãos que os fechamentos já fazem à mão.
 
-Os doze abaixo nasceram na auditoria de `/perfil` de **2026-08-17**
-(`audits/2026-08-17-perfil-ui-review-e-design.md`), que cruzou o `/lotus-ui-review` com o
-`frontend-design`. A auditoria guarda a reprodução, a medição e a evidência de cada um; a linha aqui
-é o registro canônico e o ponteiro para o bloco.
-
-- **D-19 · Em 390px a linha de arquivo vaza 84px do cartão, apaga o nome e corta o botão de
-  substituição** → **BD-16**. Único **C** da revisão. O cartão do CV mede `clientWidth` 227 contra
-  `scrollWidth` 311; `Reemplazar` vai de x=286 a x=425 com o cartão terminando em 342 e a tela em
-  390, rótulo cortado em "Reem"; o nome do arquivo fica com largura 0 e some; o ícone `Ver` sobrepõe
-  a linha de metadados. O REUF, **sem** botão de upload, mede `scrollWidth` = `clientWidth` e não
-  vaza — o contra-exemplo isola a causa no botão de texto dentro da linha, não no cartão. Peso:
-  substituir apaga o anterior de forma irreversível e o rótulo é o único aviso disso (spec §6).
-  `AppFileRow` + `AppFileActions`, `shared/ui`. É a metade não paga da **D-01**.
-- **D-20 · `AppTag` de tom preenchida reprova AA, inclusive no status documental** → **BD-16**.
-  `Vigente` mede branco sobre `rgb(34,197,94)` a 12px/700 — **2,28:1**; as tags de curso, branco
-  sobre `rgb(14,165,233)` — **2,77:1**. 12px bold não é "texto grande" para a WCAG (o corte é
-  18,66px), então o critério é 4,5:1. A `secondary`, corrigida em 2026-08-16, é a única que passa
-  (8,4:1). Contradiz a tese que o passe de 2026-08-17 fixou no Dashboard — cor de sinal em traço e
-  marca, texto em contraste cheio —, que não alcançou as tags preenchidas.
-- **D-21 · A validade do documento está rebaixada abaixo da sua própria derivação** → **BD-16**.
-  `Vence el 10-08-2028` sai `text-xs` em `--text-color-secondary`, como última linha do slot, abaixo
-  da nota administrativa (`ProfileDocumentSlot.tsx:119-127`); o `Vigente`, que o backend calcula **a
-  partir dessa data**, é a pílula saturada no topo. Enquanto o status é `vigente` isso não custa
-  nada; quando vira `vence_em_breve` — estado que a revisão não alcançou sem mutação — a data é o
-  texto mais difícil de ler do cartão. Ruído que causou o rebaixamento: três dos quatro slots têm
-  `valid_until: null` e imprimem `Sin fecha de vencimiento`. Fecha junto da D-20, na mesma linha.
-- **D-22 · As ações dos slots documentais não formam coluna** → **BD-16**. `Ver` fica em x=1132 nos
-  slots com três ações e x=1275 no que tem duas — 143px de deslocamento entre linhas equivalentes
-  separadas por 16px. O grupo é justificado à direita e desliza quando falta o botão de upload.
-- **D-23 · O disparador de upload é um `<span>` sem papel de botão** → **BD-16**.
-  `<span class="p-button p-component p-fileupload-choose" tabindex="0">` com `role` nulo e
-  `aria-label` nulo, recebendo foco na sequência natural. É o `FileUpload` do PrimeReact no modo
-  básico, exposto por `AppFileUpload` sem papel acrescentado — e é o controle que substitui documento
-  de peso legal de forma irreversível. O nome acessível também não diz **de qual** documento: três
-  slots repetem "Reemplazar".
-- **D-24 · O toggle de senha se anuncia como botão e não responde a Espaço** → **BD-16**.
-  `<svg role="button" tabindex="0" aria-label="Mostrar contraseña">` sem `aria-pressed`. Enter
-  alterna `password` → `text`; Espaço, com o mesmo foco, não. A WAI-ARIA exige as duas teclas para
-  `role="button"`. Mesmo controle da **P-37**, defeito diferente. `AppPassword`, 5 sítios.
-- **D-25 · Escape não fecha o preview quando o foco está no visor de PDF** → **BD-16**. Com
-  `activeElement` = `IFRAME` o `.p-dialog` permanece; com `activeElement` = `BUTTON`, fecha; o `X`
-  fecha nos dois casos. O visor nativo do Chrome consome a tecla dentro do iframe e o handler do
-  diálogo, que escuta no documento hospedeiro, não a recebe. Não bloqueia — custa uma tentativa
-  perdida logo após a interação mais provável. `AppFilePreviewDialog`.
-- **D-26 · O subtítulo de `/perfil` promete ao Admin uma seção que ele nunca vê** → **BD-16**.
-  `ProfilePage.tsx:40` passa `t('profile.subtitle')` sem ramificar por papel enquanto o corpo ramifica
-  em `profile.redator` (linhas 56 e 61): o Admin lê "…y tu documentación profesional" e rola até o fim
-  para descobrir que não existe. **Esta frase já enganou uma medição do fechamento de 2026-08-17**,
-  que checava a presença da seção documental por texto. Item mais barato da fila.
-- **D-27 · Abaixo de `xl`, tudo que é editável cai atrás de uma dobra e meia** → **BD-16**. Em
-  1024x768 (688px úteis): Admin com `Datos personales` em y=829 e total de 1476px; Redator com
-  `Documentación profesional` em y=1809 e total de 2544px — 3,7 dobras. A primeira dobra contém só o
-  cartão de identidade, cujo único controle é o de foto. Soma-se a que esse cartão é majoritariamente
-  duplicata: `Juan Morales` aparece três vezes simultaneamente na tela (header, sob a foto, input
-  `Nombre`) e `Redactor` também três. **Depende da D-28** — reordenar sem marca visual só troca qual
-  metade fica por último.
-- **D-28 · O corte por mutabilidade da spec D1 não tem marca visual e some abaixo de `xl`** →
-  **BD-16**. A única ideia estrutural da tela — à esquerda o que o usuário não controla, à direita o
-  self-service — é expressa **apenas** por posição horizontal, que existe a partir de 1280px. Os dois
-  lados renderizam o mesmo `AppCard`. Abaixo de `xl` a regra vira ordem vertical, e ordem sem marca
-  não lê como regra. Hoje o único portador é uma nota de 12px em cinza
-  (`profile.identity.managedByAdmin`). **Muda o desenho da spec D1** — João aprovou explicitamente a
-  inclusão em 2026-08-17. Mecânica sem invenção: o `AppCard` já tem trilho de `variant="stat"` e
-  superfície tingida.
-- **D-29 · `/perfil` não usa `font-mono` para o dado técnico que o resto do app já usa** → **BD-16**.
-  A spec §5 define três papéis tipográficos e `index.css:20-24` os declara. O RUT sai `font-mono` em
-  `StudentsTable.tsx:46`, `RedatoresTable.tsx:47` e `RedatorCard.tsx:41` — mas **não** em
-  `ProfileIdentityCard.tsx:33-37`, que é o RUT do próprio dono. Vale também para telefone, datas e
-  tamanho de arquivo. `font-display` e `font-mono` têm zero uso nos componentes desta tela. Sem cor
-  nova e sem escala nova: só aplicação de token existente.
-- **D-30 · A ação destrutiva do bloco de foto pinta a mesma cor da primária ao lado** → **BD-16**.
-  `Eliminar foto` — que apaga a foto sem desfazer — é texto celeste imediatamente abaixo do
-  `Reemplazar` celeste preenchido. Das duas, a destrutiva é a de **menor** peso visual, o que lê
-  como "menos importante" e não como "mais perigosa". `dangerText` já existe em
-  `shared/styles/tokens.ts` e já passa 4,5:1 nos dois temas. É o caso pior do padrão que a **P-36**
-  registra: a tinta de marca acumulando papéis até deixar de sinalizar.
-
 ## Sem bloco atribuído
+
+- **D-33 · O foco cai no `<body>` quando o olho da senha alterna.**
+  Medido no fechamento do BD-16 (2026-08-18) em Chromium real, `/perfil` como Redator: com o foco no
+  olho, Espaço alterna o campo (`password` → `text`) e o `document.activeElement` vira `BODY`. O
+  ícone é trocado pelo Prime na alternância e o nó focado sai do DOM, então quem navega por teclado
+  volta ao topo do documento e perde o lugar a cada toggle. **Não é regressão deste bloco:** o mesmo
+  teste no main tree (`:5173`, sem os commits do BD-16) devolve `BODY` igual — muda só o alvo, que lá
+  mede 16x16 e aqui 28x28 (UI-04). É a terceira ponta do mesmo `AppPassword`, depois da tecla (D-24,
+  não reproduzida) e do alvo (UI-04, pago). O fix mora no wrapper — devolver o foco ao novo ícone
+  depois da troca —, e entra em qualquer bloco que toque `AppPassword` por outro motivo.
 
 - **D-32 · A ordem de foco de `/perfil` diverge da visual abaixo de `xl`.**
   `ProfilePage.tsx` usa `order-*` para inverter as duas colunas abaixo de 1280px, e `order` reordena
@@ -555,6 +398,16 @@ Executar sem a decisão é escolher no lugar do João.
   **visível** (dropdown desabilitado + motivo + "Reintentar"), não escondida. **Alinhar de verdade
   exige decisão do João sobre RBAC/spec:** endpoint de clientes sob `identity.user.view`, permissão
   nova, ou aceitar o acoplamento.
+
+- **DS-05 · O avatar de `/perfil` é `scale-200` sobre imagem pequena, não tamanho real.**
+  Achado estético da auditoria de 2026-08-17 (`audits/2026-08-17-perfil-ui-review-e-design.md`),
+  **deixado fora do BD-16 por decisão explícita do João**: a previsão de recorte é aritmética e pede
+  medição no navegador antes de virar task. O risco chegou a reabrir durante a execução — a faixa da
+  D8 esbarra no `transform` —, e a Task 15 mediu que não recortava. Segue de pé como estética, não
+  como defeito.
+- **DS-07 · O mural de credenciais como assinatura da tela.** Mesma auditoria, mesma decisão: inverte
+  a ordem da spec D1 (imutável à esquerda, self-service à direita) e é bloco próprio, com
+  brainstorming — não emenda de bloco alheio.
 
 **Pendências no mesmo estado** (detalhe em `pendencias/abertas.md`): P-02 e P-33 (retenção de
 `audits` e `login_logs`), P-05 (consolidar migrations), P-03 (compose por worktree), P-30 (âmbar de
