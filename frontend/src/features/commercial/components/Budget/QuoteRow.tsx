@@ -85,9 +85,6 @@ export function QuoteRow({
           <AppFileUpload
             chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
             chooseLabel=""
-            // aria-label no span clicável do modo básico via passthrough tipado:
-            // o FileUpload do Prime descarta chaves desconhecidas de chooseOptions.
-            pt={{ basicButton: { 'aria-label': t('common.upload') } }}
             disabled={uploading}
             onSizeReject={onSizeReject}
             uploadHandler={onUpload}
