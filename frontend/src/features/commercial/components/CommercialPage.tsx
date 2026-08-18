@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
+import type { ClientData } from '@shared/types/generated'
 import { useClientsPage } from '../hooks/useClientsPage'
+import { useClientsArchived } from '../hooks/useClientsArchived'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
 import { ClientsTable } from './Client/ClientsTable'
 import { ClientDialog } from './Client/ClientDialog'
@@ -15,8 +17,11 @@ export function CommercialPage() {
   const navigate = useNavigate()
   const { can } = usePermissions()
   const clients = useClientsPage()
+  const clientsArchived = useClientsArchived()
   const budgets = useBudgetsPage()
   const [tab, setTab] = useState(0)
+  const [toArchive, setToArchive] = useState<ClientData | null>(null)
+  const archived = clientsArchived.mode === 'archived'
 
   return (
     <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
@@ -24,10 +29,14 @@ export function CommercialPage() {
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('client.tabClients')}>
             <ClientsTable
-              clients={clients.items}
-              loading={clients.loading}
-              error={clients.error}
-              onRetry={clients.refetch}
+              clients={archived ? clientsArchived.items : clients.items}
+              loading={archived ? clientsArchived.loading : clients.loading}
+              error={archived ? clientsArchived.error : clients.error}
+              onRetry={archived ? clientsArchived.refetch : clients.refetch}
+              mode={clientsArchived.mode}
+              onModeChange={clientsArchived.setMode}
+              onArchive={setToArchive}
+              onRestore={(c) => c.id != null && clientsArchived.restore(c.id)}
               onView={clients.openView}
               actions={
                 can('commercial.client.create')
@@ -59,6 +68,23 @@ export function CommercialPage() {
           client={clients.dialog.entity}
           onHide={clients.close}
           onEdit={clients.startEdit}
+        />
+      )}
+
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (spec D9). */}
+      {toArchive && (
+        <ConfirmDialog
+          visible
+          title={t('archive.confirmArchiveTitle')}
+          message={t('archive.confirmArchiveBody')}
+          confirmLabel={t('archive.archiveAction')}
+          severity="danger"
+          pending={clientsArchived.archive.isPending}
+          onConfirm={() =>
+            toArchive.id != null &&
+            clientsArchived.archive.mutate(toArchive.id, { onSuccess: () => setToArchive(null) })
+          }
+          onCancel={() => setToArchive(null)}
         />
       )}
 

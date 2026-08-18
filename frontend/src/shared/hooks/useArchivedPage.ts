@@ -36,7 +36,7 @@ interface ArchivableResource<TArchived> {
  * D8); a tabela, porém, não pode ter duas formas. Achatar na tela obrigaria
  * cada tabela a repetir a mesma desestruturação.
  */
-export function useArchivedPage<TArchived extends ArchivedRow>(
+export function useArchivedPage<T, TArchived extends ArchivedRow>(
   resource: ArchivableResource<TArchived>,
 ) {
   const [mode, setMode] = useState<ArchiveMode>('active')
@@ -50,7 +50,7 @@ export function useArchivedPage<TArchived extends ArchivedRow>(
       // exatamente três campos.
       const agregado = Object.values(resto)[0] as Record<string, unknown>
 
-      return { ...agregado, archived_at, archived_by }
+      return { ...agregado, archived_at, archived_by } as T & ArchivedRow
     })
   }, [query.data])
 
