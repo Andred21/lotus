@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
 active_plan: docs/superpowers/plans/2026-08-17-bd16-perfil-e-kit-compartilhado.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: 254d691
-updated_at: 2026-08-18T11:05:00-03:00
+updated_at: 2026-08-18T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -314,6 +314,78 @@ somou 1 arquivo e 9 testes (a catraca da tinta `danger`, o alvo do olho e o cont
 download). `state_basis_commit` segue em `254d691`: ele marca a base do item ativo, e a entrega ainda
 não foi para a `main`. A próxima instrução do João aciona `/revisar-sprint`; este passo não inicia
 review.
+
+### Revisão de sprint — 2026-08-18: risco BAIXO, uma lente, 3 achados, zero violação de lei
+
+`/revisar-sprint` sobre `254d691..dc46eb3` — 36 commits, 57 arquivos, +2260/−273.
+
+**Risco BAIXO, e a classificação é o que decide o número de lentes.** O bloco não tocou nenhum
+domínio das leis §5 (nenhuma migration, `generated.ts` intocado, nada de Sanctum, auditoria ou
+RBAC), não tocou dinheiro nem emissão de certificado, e o executor foi o Claude. Uma lente,
+sem segunda opinião do Codex.
+
+**O gate foi reconferido, não citado.** O `state.md` afirmava 54 arquivos / 321 testes; a suíte
+rodou de novo no review e devolveu o mesmo número, com `pnpm build` verde e `pnpm lint` 0. O
+wrapper composto do gate devolveu `exit 1` com `BUILD=0 LINT=0 TEST=0` nos logs — o código de saída
+era do encadeamento, não de checagem nenhuma.
+
+**Passo 1 — órfãos: nenhum.** `AppDownloadButton` (2 consumidores + barrel), `ProfileDocumentSlotHeader`
+(1) e `fieldContext` (5 wrappers + o `FormField`) estão todos consumidos; `BRAND_COLOR` foi apagada
+e não deixou referência. Os 3 locales medem **636 chaves idênticas**, zero faltando e zero extra. As
+duas chaves i18n sem consumidor já são o débito **D-31** — decisão registrada não é achado. A
+contagem de consumidores do `FormSection` no `backlog.md` bate: 17 arquivos casam `<FormSection`,
+menos o próprio teste, **16**.
+
+**Leis e convenções, medidas:** zero import direto de `primereact` sob `src/features` ou `src/app`,
+zero import cruzado entre features, nenhum `Field`/`UnmappedErrors` local, nenhum `useEffect` de
+reset, nenhum `setForm` solto, e nenhum `any`/`@ts-ignore`/catch vazio/`console.*` no diff inteiro.
+
+| Achado | Onde | Severidade | Esforço |
+|---|---|---|---|
+| **Q-1** · `role="button"` cravado sem o resto do contrato: Espaço não ativa e `disabled` não se anuncia | `shared/ui/AppFileUpload/AppFileUpload.tsx` | 🟡 | P |
+| **Q-2** · `pt` que não pode vencer — o wrapper crava o mesmo `aria-label` pelo `pins` | `features/commercial/.../QuoteRow.tsx:90` | 🟢 | P |
+| **Q-3** · `mergePt` compunha função num sentido só; no outro a folha do chamador sumia | `shared/ui/mergePt.ts:32-36` | 🟢 | P |
+
+**Dois candidatos morreram na verificação, e é por isso que se verifica.** O `AppDownloadButton`
+parecia abrir popup sem barra (`window.open(href, '_blank', 'noopener,noreferrer')`): a
+especificação **remove** `noopener`/`noreferrer` do `tokenizedFeatures` antes do teste de popup, que
+sai vazio — é aba, como o docblock diz. E um parser próprio acusou dois controles dentro de um
+`FormField` no `StaffUserDialog:93`: ele engasgou com `<FormField ... />` autofechado, e a leitura
+das linhas 84–135 mostrou três campos, um controle cada.
+
+**Nada de decisão registrada virou achado:** D-32 (ordem de foco), DS-05 (avatar), D-31 (chaves
+órfãs), a colisão dos dois `D-18` e o `--text-color-secondary` separado do interno compilado do
+Prime estão todos escritos com número medido. **Nenhum padrão reincidente** apareceu — nada a
+promover para rule ou ADR.
+
+### Correções — 2026-08-18: os 3 achados aprovados pelo João, todos aplicados
+
+Autorizado pelo João (*"Vamos aplicar de Q-1 á Q-3"*). Um commit por achado:
+
+| Achado | Antes | Depois | Commit |
+|---|---|---|---|
+| Q-1 · contrato do disparador de upload | Espaço inerte; `disabled` focável e mudo | Espaço ativa; `aria-disabled` anunciado | `e9f53f3` |
+| Q-2 · `pt` morto na cotação | 3 linhas que não valiam | removidas; nome vem do piso do wrapper | `a4eac5c` |
+| Q-3 · assimetria do `mergePt` | função no `pins` descartava a folha do chamador | compõe nos dois sentidos | `fb2d38b` |
+
+**A Q-1 é a metade que faltava da D-24.** O `mergeProps` do PrimeReact COMPÕE função de mesmo nome —
+chama a existente e depois a do `pt` (`utils.cjs.js:2694-2700`) —, então o `onKeyDown` novo soma ao
+`Enter` do Prime em vez de trocá-lo, e há teste travando as duas teclas. O `aria-disabled` entra
+sem tirar o alvo do Tab: botão desabilitado que some da navegação é botão que o leitor de tela nunca
+encontra para descobrir por que não responde.
+
+**Os testes viram o defeito antes de virarem verde** (lição 10): as duas correções de comportamento
+foram rodadas contra o código anterior e **5 dos 6 testes novos ficaram vermelhos** — o sexto é a
+guarda do caso negativo (`aria-disabled` ausente quando habilitado), que passa dos dois lados por
+construção. A Q-2 não ganha teste: é remoção de linha morta, e o nome acessível que ela repetia já
+está travado por teste desde o BD-16.
+
+**Gate após as correções:** `pnpm build` verde, `pnpm lint` 0, **54 arquivos / 327 testes** — os 321
+anteriores mais 6. Nenhuma chave i18n virou órfã: `common.upload`, que saiu do `QuoteRow`, continua
+consumida pelo próprio wrapper.
+
+**Estado: `ready_for_closure`.** Nenhum achado aguardando decisão ou correção. `/fechar-sprint` é o
+próximo passo e **não** foi executado aqui.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
