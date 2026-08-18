@@ -120,3 +120,59 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
     }
   })
 })
+
+/**
+ * UI-02 do review de 2026-08-18. O `Eliminar foto` do `AppPhotoField` — a única
+ * ação irreversível do cartão de identidade — media 3,44:1 no tema claro.
+ *
+ * A causa não é o token acima: é o gerador do tema, que deixa as paletas de
+ * severidade INTACTAS de propósito, e com isso o `#ef4444` compilado do Lara
+ * seguia pintando o rótulo dos variants `text` e `outlined` — os dois em que o
+ * vermelho é primeiro plano, e não fundo. A régua é 4,5:1 porque 16px em negrito
+ * não é texto grande (o limiar é 18,66px).
+ *
+ * Mede sobre `--surface-ground` porque é ali que o botão vive: o cartão `sunken`
+ * do `/perfil` (D-28) pinta o fundo do shell, e ele é o fundo MAIS escuro dos
+ * dois no claro — se passa nele, passa no card.
+ */
+describe('tinta do botão `danger` text/outlined (UI-02)', () => {
+  /** O fundo como o CSS o resolve: a camada de marca sobrescreve o ground do
+   * claro (`#f1f5f9`, D-28) e não toca o do escuro. */
+  const ground = (bloco: string, folha: string) =>
+    hex(bloco, '--surface-ground') || hex(folha, '--surface-ground')
+
+  it('a camada de marca aponta os dois variants para o token de tom', () => {
+    expect(camadaDeMarca).toMatch(
+      /:root \.p-button\.p-button-danger\.p-button-text,[\s\S]*?\{\s*color: var\(--tone-danger-ink\);\s*\}/,
+    )
+    expect(camadaDeMarca).toContain(':root .p-button.p-button-danger.p-button-outlined,')
+  })
+
+  /** A regra base do Lara é (0,3,0), mas `:hover` e `:active` chegam a (0,5,0)
+   * repetindo o MESMO `#ef4444`: sem uma linha por estado, passar o mouse
+   * devolvia os 3,44:1 e a captura de tela não acusaria. */
+  it('cobre `:hover` e `:active`, onde o Lara repete a cor com especificidade maior', () => {
+    for (const variant of ['text', 'outlined']) {
+      for (const estado of [':hover', ':active']) {
+        expect(camadaDeMarca).toContain(
+          `:root .p-button.p-button-danger.p-button-${variant}:not(:disabled)${estado}`,
+        )
+      }
+    }
+  })
+
+  it.each([
+    { tema: 'claro', bloco: blocoClaro, folha: temaClaro },
+    { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro },
+  ])('no tema $tema a tinta passa AA (4,5:1) sobre o cartão recuado', ({ bloco, folha }) => {
+    const degrau = bloco.match(/--tone-danger-ink:\s*var\((--[a-z]+-\d+)\)/)?.[1] ?? ''
+    expect(degrau).toMatch(/^--red-\d00$/)
+    expect(contraste(hex(folha, `\\${degrau}`), ground(bloco, folha))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  /** O controle que faz o teste discriminar: reverter para o vermelho do Lara
+   * cai aqui, não na captura de tela. */
+  it('o vermelho compilado do Lara reprova sobre o cartão recuado do claro', () => {
+    expect(contraste('#ef4444', '#f1f5f9')).toBeLessThan(4.5)
+  })
+})

@@ -193,3 +193,36 @@ html:not(.dark) {
 .p-datatable .p-datatable-tbody > tr > td {
   font-variant-numeric: tabular-nums;
 }
+
+/* Botão `text`/`outlined` de severidade `danger`: a tinta vem do TOKEN de tom,
+ * não do vermelho compilado do Lara.
+ *
+ * O gerador deixa as paletas de severidade intactas de propósito — elas
+ * comunicam significado, não marca —, e por isso `#ef4444` seguiu sendo o
+ * PRIMEIRO PLANO desses dois variants. Sobre o card rebaixado do claro
+ * (`#f1f5f9`) ele mede 3,44:1 a 16px/700, e 16px em negrito não é texto grande:
+ * a régua é 4,5:1 e ele reprova (UI-02 do review de 2026-08-18, no `Eliminar
+ * foto` do `AppPhotoField` — a única ação irreversível do cartão era a de menor
+ * legibilidade da tela). No escuro o mesmo botão media 6,77:1 e nunca foi o
+ * problema, mas a tinta troca nos dois temas pela mesma razão que o
+ * `--tone-danger-ink` já existe: quem muda é a variável, não a regra.
+ *
+ * Medido depois da troca: 5,83:1 sobre `#f1f5f9` no claro (`--red-700`) e
+ * 4,98:1 sobre o card do escuro (`--red-400`) — os mesmos números que a guarda
+ * de `tests/tone-ink.test.ts` já defende para os quatro tons do `AppCard`.
+ *
+ * NÃO vale para o botão preenchido (`p-button-danger` sozinho): ali o vermelho
+ * é FUNDO e o rótulo é branco. É a mesma fronteira do `--brand-ink`, que só
+ * troca o degrau quando a cor vira primeiro plano.
+ *
+ * Cada estado tem a própria linha porque a especificidade é do Lara: a regra
+ * base dele é (0,3,0), mas `:hover` e `:active` chegam a (0,5,0) repetindo o
+ * mesmo `#ef4444` — sem elas, passar o mouse devolvia os 3,44:1. */
+:root .p-button.p-button-danger.p-button-text,
+:root .p-button.p-button-danger.p-button-text:not(:disabled):hover,
+:root .p-button.p-button-danger.p-button-text:not(:disabled):active,
+:root .p-button.p-button-danger.p-button-outlined,
+:root .p-button.p-button-danger.p-button-outlined:not(:disabled):hover,
+:root .p-button.p-button-danger.p-button-outlined:not(:disabled):active {
+  color: var(--tone-danger-ink);
+}
