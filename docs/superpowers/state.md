@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-18-identity-ativacao-acesso-redator-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
 blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-18T19:52:00-03:00
+updated_at: 2026-08-18T20:06:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -190,6 +190,28 @@ o admin revoga, se o bloco entrega backend e frontend juntos — "esqueci minha 
 senha" são telas **públicas** que não existem — e como o DoD prova o e-mail com `MAIL_MAILER=log`.
 
 **Estado: `ready_for_planning`.** Packet atualizado no lugar (`status: ready`), não regerado.
+
+### Brainstorming e spec — 2026-08-18: seis decisões, e uma delas nasceu de medição, não de pergunta
+
+Cinco perguntas fecharam o desenho, e uma sexta decisão entrou **porque a medição a exigiu**: sem
+reenvio de convite não há caminho para os redatores já cadastrados, que nasceram `is_active=false`
+com senha aleatória — o switch liga a conta e ninguém sabe a senha, e eles não sabem que existem
+para pedir recuperação.
+
+**As escolhas:** só redator agora (staff segue com senha digitada, e isso vira débito contra o
+RF-USR-09); bloco único ponta a ponta, fugindo do corte por camada do Dashboard e do Meu Perfil,
+porque o DoD é "o redator autentica" e isso não se prova sem as telas públicas; dois brokers sobre
+`password_reset_tokens` (7 dias para convite, 60 min para recuperação), com link morto caindo na
+tela de recuperação em vez de virar chamado; `is_active=true` no cadastro com switch de revogação
+no formulário do redator, encerrando todas as sessões; e Mailpit no compose, para o DoD clicar o
+link real em vez de ler o `laravel.log`.
+
+**Uma medição nova durante o brainstorming mudou o alcance da pergunta, e foi respondida:** staff
+hoje recebe senha digitada pelo admin no formulário (`CreateStaffUserAction.php:41`), enquanto o
+RF-USR-09 fala de admin **e** redator. O mecanismo novo tem um segundo consumidor óbvio; o João o
+deixou fora, com o custo declarado.
+
+Spec em `specs/2026-08-18-identity-ativacao-acesso-redator-design.md`.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
