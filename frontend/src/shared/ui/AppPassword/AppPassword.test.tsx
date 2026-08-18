@@ -86,3 +86,46 @@ describe('AppPassword — o olho responde às DUAS teclas de botão', () => {
     expect(olho().getAttribute('aria-checked')).toBeNull()
   })
 })
+
+/**
+ * UI-04 do review de 2026-08-18: o olho media 16x16px, contra o mínimo de 24x24
+ * de AA (WCAG 2.5.8), nos quatro campos de senha da aplicação.
+ *
+ * O jsdom não calcula layout, então a asserção é sobre o MECANISMO — que é onde
+ * a correção pode regredir em silêncio: sem `box-content` o padding come o
+ * glifo (o `.p-icon` do tema crava `width: 1rem` e o preflight do Tailwind põe
+ * `border-box` em tudo), e sem o `transform` da span o glifo desce 6px porque o
+ * `margin-top: -0.5rem` do tema assume 1rem de altura. A medida real está no
+ * relatório do review; aqui fica a catraca.
+ */
+describe('AppPassword — o olho tem alvo de toque de 24px para cima (UI-04)', () => {
+  it('a folga vai na `<svg>` que carrega o clique, e SOMA ao glifo', () => {
+    render(<AppPassword aria-label="senha" />)
+    // 16px de glifo + 6px de cada lado = 28px. `content-box` é obrigatório: o
+    // `.p-icon` do tema crava `width: 1rem`, e sem ele o padding come o glifo.
+    const olho = screen.getByRole('button', { name: 'common.showPassword' }) as unknown as SVGElement
+    const estilo = (olho as unknown as HTMLElement).style
+
+    expect(estilo.boxSizing).toBe('content-box')
+    expect(estilo.padding).toBe('0.375rem')
+    // Não pela utilitária `box-content`: o `*` de `src/index.css` está fora de
+    // `@layer` e vence as utilitárias do Tailwind, que estão dentro de
+    // `@layer utilities` — medido no navegador, com a classe aplicada e o
+    // `box-sizing` resolvendo `border-box` assim mesmo.
+    expect(olho.getAttribute('class')).not.toContain('box-content')
+    // A classe do Prime sobrevive: o `mergeProps` dele CONCATENA className.
+    expect(olho.getAttribute('class')).toContain('p-password-show-icon')
+  })
+
+  it('a span posicionada recentra o alvo sem depender da altura dele', () => {
+    const { container } = render(<AppPassword aria-label="senha" />)
+    const span = container.querySelector('.p-input-icon') as HTMLElement
+
+    expect(span.style.marginTop).toBe('0px')
+    expect(span.style.transform).toContain('-50%')
+    // Sem `flex` a span fica 4px mais alta que o alvo (vão de linha do `<svg>`
+    // inline) e `translateY(-50%)` centra a LINHA, não o glifo — medido: 2px
+    // acima do eixo do campo.
+    expect(span.style.display).toBe('flex')
+  })
+})
