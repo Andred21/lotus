@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: listagens-e-abas
 active_work_item: bd13-listagens-e-abas
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-bd13-listagens-e-abas-design.md
 active_plan: docs/superpowers/plans/2026-08-18-bd13-listagens-e-abas.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T16:30:00-03:00
+updated_at: 2026-08-18T17:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -170,6 +170,60 @@ plano já estava tomado pela ordem de foco de `/perfil`).
 
 **Estado: `ready_for_review`.** Próxima ação: `request_code_review`. **A revisão não foi iniciada
 aqui.**
+
+### Revisão de sprint — 2026-08-18: risco BAIXO, uma lente, 3 achados, zero violação de lei
+
+**Classificação: BAIXO risco.** Frontend puro (`git diff b758068..HEAD -- backend/ frontend/src/shared/types/generated.ts` vazio), sem schema, `generated.ts`, Sanctum, auditoria, RBAC, dinheiro ou emissão de certificado; `executor: claude`. Uma lente — sem revisão independente do Codex.
+
+**Catracas re-rodadas nesta revisão:** `pnpm test` 65 arquivos / 394 testes verdes, `pnpm lint` exit 0, `pnpm build` verde.
+
+**Órfãos:** zero componente, hook ou página sem consumidor. `RedatoresTab`/`StudentsTab` entram pela `PeoplePage`; os 12 sítios de `screenDetail` importam de `@shared/lib`. Uma chave de i18n órfã achada — o Q-2 abaixo.
+
+**Gabarito:** nenhuma das 8 leis do §5 contrariada; nenhuma lição do `docs/README.md` repetida; ADRs e `frontend-fsliced.md` respeitados (nenhum import de `primereact` em feature, nenhum cruzamento entre features).
+
+#### [Q-1] Dica de conexão para falha que não é de conexão — `frontend/src/shared/lib/screenDetail.ts` + 21 sítios · 🟡 · M
+
+`screenDetail` cala TODO `detail` de servidor, e o fallback único dos chamadores é `common.loadErrorHint` = "Revisa tu conexión e inténtalo de nuevo." O envelope do backend não distingue só língua: distingue CAUSA. Depois da D-05, 403 (`Acesso negado`), 404 (`Recurso não encontrado`) e 422 (janela invertida do dashboard) chegam à tela como "revise sua conexão" — instrução errada, e o usuário não tem como agir. O caso do dashboard já subiu declarado na execução; o alcance é maior que ele: vale para os 12 sítios de `AppErrorState` e os 9 de `errorDetail`.
+
+A spec §6.4 afirma "nenhuma mensagem de 422 some da tela" — o `useDashboard.test.tsx` do bloco prova o contrário (`staleError` vira `null` no 422 de janela invertida).
+
+**Sênior faria:** dica por `status` no mesmo lugar da política — `403` → chave de sem permissão, `404` → não encontrado, `422` → dados inválidos, resto → `loadErrorHint`. Sai i18n do front (localizado hoje), não texto do servidor, então a D3 continua de pé.
+
+**Fere:** catálogo universal (erro que não orienta) + a própria afirmação da spec §6.4. Não é lei do §5.
+
+#### [Q-2] `certificate.certCount` é órfã, e a D-31 a pluralizou em vez de apagá-la — `frontend/src/shared/config/locales/{es-CL,pt-BR,en}.json:860-861` · 🟢 · P
+
+A D-31 apagou as duas chaves órfãs de `/perfil`. `certificate.certCount` não tem consumidor nenhum em `.tsx`/`.ts` fora de `locales/` — e o bloco a transformou em `certCount_one`/`certCount_other` nos 3 dicionários e a inscreveu na lista de 17 do `plural.test.ts`. Resultado: uma chave morta agora tem teste que a segura viva.
+
+**Sênior faria:** apagar as 6 linhas e tirar a chave do `CHAVES` do `plural.test.ts` (16 chaves), ou registrar no backlog o consumidor previsto.
+
+#### [Q-3] Import duplicado do mesmo módulo — `frontend/src/features/identity/components/Student/StudentDetailSections.tsx:20` · 🟢 · P
+
+O arquivo já importa de `@shared/lib` (`formatMonthYear` e companhia); a task acrescentou `import { screenDetail } from '@shared/lib'` como segunda declaração, em vez de entrar no grupo existente. O eslint atual não pega. Mesmo padrão, menor, em `TurmaDetailPage.tsx`, `BudgetDetailPage.tsx`, `TurmaDocuments.tsx`, `PendingQuotesPanel.tsx`, `RedatorDesignation.tsx` e `ReissueDialog.tsx` — ali o import é novo e não duplica, só ficou fora do bloco de imports de `@shared`.
+
+**Sênior faria:** juntar ao import existente; se o padrão reincidir, `no-duplicate-imports` no eslint fecha a classe inteira.
+
+#### O que NÃO é achado
+
+`staleTime: 30_000` repetido nos dois hooks (dois sítios, comentado nos dois); a marca `localDetail` depender de o próximo autor lembrar de pô-la nos envelopes que o front sintetiza (os 3 de hoje estão marcados); o `detail` cru do `CertificateViewDialog` (D8, com teste que o prova); e a não localização do envelope no backend (**D-36** já no `backlog.md`).
+
+**Pendente do João, herdado da execução:** Step 3 da Task 9 — contagem de GET no devtools de `/pessoas`. O `PeoplePage.test.tsx` mede o mesmo no limite do axios, mas o DoD do bloco pede o navegador.
+
+**Estado: `blocked`.** `next_action: approve_review_findings`; `resume_state: reviewing`. Só achado aprovado vira código.
+
+### Correções — 2026-08-18: os 3 achados aprovados pelo João, todos aplicados
+
+`Q-1 a Q-3 entra` — os três, um commit cada, com as catracas re-rodadas ao fim: `pnpm test` 65 arquivos / **398** testes verdes (4 novos), `pnpm lint` exit 0, `pnpm build` verde.
+
+**Q-1 (`cfdd626`) — a dica passa a vir do status.** `loadErrorHint(problema)` mora ao lado do `screenDetail` em `shared/lib` e devolve **chave** i18n, não texto: a tradução continua sendo de quem imprime, e a política não importa i18n dentro de `shared/lib`. `403` → `common.forbiddenHint`, `404` → `common.notFoundHint`, `422` → `common.invalidDataHint`, resto → `common.loadErrorHint` (rede caída e 500 seguem sendo dica de conexão, que ali é a certa). `401` fica de fora por medição: o interceptor do axios redireciona antes de virar estado de carga. Os três produtores expõem a chave (`errorHint` no `useLoadState`/`useResourceState`, `staleHint` no `useDashboard`), os 21 sítios trocam o literal, e `StudentClientField` ganhou a prop porque recebe estado por prop, não por hook.
+
+**Uma imprecisão de teste apareceu no caminho, e foi corrigida junto:** o caso de janela invertida do `useDashboard.test.tsx` chamava `problem(...)` **sem status**, então rodava com o default `500` — não com o 422 que o cenário descreve. Com o status certo, o teste agora afirma `staleHint === 'common.invalidDataHint'`, e é ele que prova o achado.
+
+**Q-2 (`6a39f9a`) — `certificate.certCount` apagada dos 3 dicionários** e retirada da lista do `plural.test.ts` (16 chaves). A D-31 tinha apagado as órfãs de `/perfil`; esta escapou por ter sido pluralizada pela D-02 no mesmo bloco.
+
+**Q-3 (`a160e07`) — o import de `@shared/lib` volta a ser um só** em `StudentDetailSections.tsx`. **A regra de eslint sugerida NÃO entrou, e a medição é o motivo:** `no-duplicate-imports` do core não distingue `import type` de `import` de valor, e a casa separa os dois de propósito — **55 pares legítimos** em `src/` virariam erro. Duplicação valor+valor existia em **um** arquivo, o que o commit conserta. Custo da regra maior que a classe que ela fecharia.
+
+**Estado: `ready_for_closure`.** Revisão sem achado pendente. Segue aberto, herdado da execução e para o fechamento: **Step 3 da Task 9** — contagem de GET no devtools de `/pessoas`, que precisa de navegador. O fechamento **não** foi executado aqui.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
