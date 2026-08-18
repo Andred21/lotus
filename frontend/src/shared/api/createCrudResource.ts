@@ -6,13 +6,14 @@ import { crudEndpoints } from './crud'
 /** Fábrica de hooks CRUD sobre TanStack Query para um recurso REST padrão
  * (index/show/store/update/destroy). Sub-recursos aninhados ficam fora daqui,
  * como hooks pequenos por feature que invalidam `keys.all`. */
-export function createCrudResource<T>(resource: string) {
+export function createCrudResource<T, TArchived = T>(resource: string) {
   const keys = {
     all: [resource] as const,
     lists: () => [resource, 'list'] as const,
+    archived: () => [resource, 'archived'] as const,
     detail: (id: number | string) => [resource, 'detail', id] as const,
   }
-  const endpoints = crudEndpoints<T>(resource)
+  const endpoints = crudEndpoints<T, TArchived>(resource)
 
   function useList(options?: Partial<UseQueryOptions<T[], ProblemDetails>>) {
     return useQuery<T[], ProblemDetails>({ queryKey: keys.lists(), queryFn: endpoints.list, ...options })
@@ -51,5 +52,41 @@ export function createCrudResource<T>(resource: string) {
     })
   }
 
-  return { keys, endpoints, useList, useOne, useCreate, useUpdate, useRemove }
+  /**
+   * `enabled` é PARÂMETRO, não default: a visão de arquivados não pode buscar
+   * na montagem. É a lição medida na D-04 — carregar as duas visões de uma vez
+   * dobra a rede sem ganho nenhum.
+   */
+  function useArchivedList(enabled: boolean) {
+    return useQuery<TArchived[], ProblemDetails>({
+      queryKey: keys.archived(),
+      queryFn: endpoints.archived,
+      enabled,
+    })
+  }
+
+  /**
+   * Invalida `keys.all`, que é `[resource]` e cobre a lista ativa E a de
+   * arquivados. `useRemove` já invalida o mesmo, então arquivar atualiza a
+   * lista de arquivados sem código novo.
+   */
+  function useRestore() {
+    const qc = useQueryClient()
+    return useMutation<T, ProblemDetails, number | string>({
+      mutationFn: (id) => endpoints.restore(id),
+      onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+    })
+  }
+
+  return {
+    keys,
+    endpoints,
+    useList,
+    useOne,
+    useCreate,
+    useUpdate,
+    useRemove,
+    useArchivedList,
+    useRestore,
+  }
 }

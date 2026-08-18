@@ -5,6 +5,8 @@ export { useCrudPage } from './useCrudPage'
 // classificação, e o único consumidor é o teste ao lado, por caminho relativo
 // (Q-2 do review de 2026-08-05). Barrel é fronteira pública.
 export { useCrudForm } from './useCrudForm'
+export { useArchivedPage } from './useArchivedPage'
+export type { ArchiveMode } from './useArchivedPage'
 export { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 export type { CrudFormPhotoOptions } from './useCrudFormWithPhoto'
 export { useEntityForm, useMutationErrors } from './useEntityForm'
