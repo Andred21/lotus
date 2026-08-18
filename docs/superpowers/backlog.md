@@ -98,10 +98,17 @@ operação"*.
 
 # Próximos blocos
 
-1. **Arquivados e restauração de soft-delete** — Notion H.5.1–H.5.4.
-   Objetivo: tornar o lifecycle de archive/restore explícito e seguro por agregado.
-   Ordem: semântica → Actions → endpoints → UI.
-   **Fora de escopo:** `forceDelete` e exclusão permanente.
+1. **Arquivados e restauração — replicar o padrão nos seis roots que faltam** — Notion H.5.1–H.5.4.
+   `Client` e `Course` fecharam ponta a ponta em 2026-08-18 (bloco `arquivados-e-restauracao`), e a
+   fatia vertical era isso: provado o padrão nos dois, **`Budget`, `Quote`, `User`, `Redator`,
+   `Turma` e `Enrollment` viram replicação.** O molde está em
+   `specs/archive/2026-08-18-arquivados-e-restauracao-design.md` (D2 é a cascata por
+   `archived_with_parent`) e a mecânica já mora em `App\Shared\Concerns\ArchivesChildren` +
+   `LoadsCascadedChildren` — replicar é ligar os hooks, a Action, o endpoint e a tela, não reescrever
+   a semântica. Cada root traz o seu gate próprio (`DeleteTurmaAction` recusa turma concluída,
+   `DeleteBudgetAction` recusa orçamento com cotação aprovada).
+   **Fora de escopo:** `forceDelete`, exclusão permanente e `Student` (não tem `destroy` hoje).
+   **Ver também a D-34**, que é a dívida de backfill nascida com a migration da coluna.
 2. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
    (lista de roles à esquerda; detalhe + matriz de permissões à direita, com marcação de permissão
    essencial); o real tem tabela + diálogo. **Não é refinamento visual, é redesenho de tela** — exige
@@ -302,6 +309,17 @@ sentada só — é o que torna o agrupamento barato.
   varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Sem bloco atribuído
+
+- **D-34 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo.**
+  A coluna marcadora da cascata de arquivamento (migration `2026_08_18_000001`) entra com `false`
+  em todas as linhas: qualquer agregado arquivado **antes** de 2026-08-18 restaura o pai sem os
+  filhos, em silêncio. Não há backfill correto possível — casar por `deleted_at` é o que a spec D2
+  do bloco recusou (`timestamp` de precisão 0: segundo inteiro não é identidade) e marcar todo
+  filho arquivado ressuscitaria o que alguém arquivou de propósito. Medido no review de 2026-08-18
+  (Q-7) e documentado no docblock da própria migration. **Sem produção, o alcance é só banco de
+  desenvolvimento já semeado.** O gatilho é o primeiro deploy: antes dele, conferir se existe
+  agregado arquivado de antes dessa data e, se existir, decidir caso a caso — corrigir à mão ou
+  aceitar o restore incompleto.
 
 - **D-33 · O foco cai no `<body>` quando o olho da senha alterna.**
   Medido no fechamento do BD-16 (2026-08-18) em Chromium real, `/perfil` como Redator: com o foco no

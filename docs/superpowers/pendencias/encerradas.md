@@ -5,100 +5,60 @@
 > [`../historico/progress.md`](../historico/progress.md) ou
 > [`../historico/progress-archive.md`](../historico/progress-archive.md).
 
-## P-36 — a catraca `COR_HARDCODED` só enxerga `className`
+## P-45 — o `TestCase` lê `FRONTEND_URL` cru, e o ambiente já é lista de origens
 
-**Bloco:** BD-10 · **Gatilho:** fecha quando um bloco tocar `FormSection` ou `CoursesTable` por
-outro motivo e puder absorver os dois sítios junto com a guarda — ou quando a família reincidir uma
-terceira vez em código vivo, que é o dado que falta para desenhar o seletor sem falso-positivo (cor
-por `style` também é a grafia CERTA quando o valor é `var(--…)`). Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** o commit que ligar multi-origin de verdade (o `config/cors.php` com
+`explode` já está no working tree do João), ou o próximo `/fechar-sprint` que encontrar a suíte
+vermelha por este motivo. Revisar em **2026-10-31**.
 
-Cor entrando por `style={{ … }}` ou por template string em `.tsx` passa verde.
+`backend/tests/TestCase.php:18` faz `$this->withHeader('Referer', env('FRONTEND_URL',
+'http://localhost:5173'))`. A variável passou a ser **lista separada por vírgula**
+(`backend/.env:38`: `http://localhost:5173,http://localhost:5174`), então o `Referer` sai com a
+string inteira, o host não bate com `sanctum.stateful` (`.env:37`) e o
+`EnsureFrontendRequestsAreStateful` não injeta o `StartSession`. `$request->session()` explode em
+`AuthController.php:47` e a rota devolve **500**.
 
-O próprio `frontend/src/shared/styles/tokens.ts:11-13` já registrava a lacuna ("uma cor errada
-entrando por `style` passava verde"); o bloco `login-fora-do-adr16` (2026-08-13) a mediu com dois
-sítios vivos, ambos pintando o celeste como PRIMEIRO PLANO sobre superfície clara a **2,77:1** — que
-é exatamente o número que o `--brand-ink` existe para consertar:
+**Medido no `/fechar-sprint` de 2026-08-16, nos dois sentidos:** com o `.env` como está,
+`php artisan test` dá **12 failed / 672 passed / 5 skipped** — os 12 são `AuthTest` (6), troca de
+senha (3) e `StaffUserCrudTest` (3), todos com `RuntimeException: Session store not set on request.`
+Com `FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
+diferença é a variável, não o código.
 
-- `frontend/src/shared/ui/FormSection/FormSection.tsx:19` — `style={{ color: BRAND_COLOR }}` num
-  `<h3>`, texto, reprova o 4,5:1;
-- `frontend/src/features/catalog/components/Course/CoursesTable.tsx:43` — mesmo `style` num ícone,
-  reprova o 3:1.
+**Não é regressão do bloco que a encontrou:** o `dashboard-frontend-central-controle` é frontend
+puro (`git diff main...HEAD -- backend/` = 0 linhas). O `.env` é gitignored, então a mudança não
+aparece em `git status`; o que aparece é a outra metade do mesmo WIP, o `config/cors.php` trocando
+`[env('FRONTEND_URL', …)]` por `explode(',', env('FRONTEND_URL', …))`. **`TestCase.php` é o terceiro
+sítio que lê a variável e o único que ainda a trata como valor único.**
 
-O `#1b7fb8` do login era a terceira grafia da mesma família e morreu no próprio bloco.
+**Medido de novo no `/fechar-sprint` de 2026-08-17 (B2), com os mesmos números:** `12 failed / 672
+passed / 5 skipped` com o `.env` como está, `684 passed / 5 skipped / zero falha` com
+`FRONTEND_URL=http://localhost:5173`. **O gatilho venceu** — este é o segundo fechamento que
+encontra a suíte vermelha por este motivo, e o segundo bloco de frontend puro a encontrá-la
+(`git diff main...HEAD -- backend/` = 0 linhas nos dois).
 
-**Ficaram de fora por decisão do João (D10 da spec), não por esquecimento:** `FormSection` tem **11
-consumidores**, quatro deles os diálogos que o BD-5 reescrevia em paralelo naquele dia, então
-consertá-lo mudaria cor de título de seção na aplicação inteira dentro de um bloco de login. Guarda
-com `ignores` foi recusada no mesmo passo: criaria catraca nova logo depois de o projeto ter zerado
-duas, e nasceria verde com a exceção embutida.
+**Não se conserta aqui:** o fechamento de um bloco de frontend não abre arquivo de backend. O fix
+provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
+commit que fecha o multi-origin — decisão do João.
 
-**Encerrada em 2026-08-18, no BD-16, pelo gatilho literal.** O bloco tocou `FormSection` pelo DS-01
-da auditoria de `/perfil` e absorveu os dois sítios junto com a guarda, como a ficha mandava.
-`8ffdefa` tira a tinta de marca do `<h3>` do `FormSection` e do ícone de `CoursesTable`; `efd5bfe`
-desenha a régua que faltava — a catraca passa a olhar o **valor**, não a grafia, então cor por
-`style` continua sendo a forma certa quando vale `var(--…)` e reprova quando vale um hex de marca.
-`BRAND_COLOR` morre no mesmo commit.
+**Encerrada em 2026-08-18, no `arquivados-e-restauracao`, pelo gatilho literal — os dois ramos.** O
+gatilho previa "o commit que ligar multi-origin, ou o próximo `/fechar-sprint` que encontrar a suíte
+vermelha por este motivo": o segundo venceu de novo, no `/revisar-sprint` deste bloco, com os mesmos
+**12 failed** e a mesma exceção `RuntimeException: Session store not set on request.` Desta vez o
+bloco é de backend e a ficha não tinha por que segurar o arquivo.
 
-**Provado nos dois sentidos, que é o que a ficha pedia.** O título de seção mede **11,4:1** no escuro
-sobre card e **10,35:1** no claro (era 2,77:1, régua 4,5:1); o ícone de curso mede **6,21:1** e
-**7,58:1** (era 2,53:1, régua 3:1). A medição compõe o alfa da tinta sobre o fundo opaco mais
-próximo — ignorá-lo inflava as razões. E a catraca pega: `style={{ color: '#25A5E4' }}` reintroduzido
-em `FormSection.tsx` faz o `pnpm lint` reprovar nomeando arquivo, linha e regra; sonda revertida com
-a árvore limpa.
+**Medido nos dois sentidos antes de tocar em código, e a montante da suspeita errada.** A primeira
+hipótese era `SANCTUM_STATEFUL_DOMAINS` sem o `localhost` pelado — testada e **refutada**, com o
+`.env` restaurado do backup nas duas vezes. `git stash push -u` provou que o HEAD limpo falha
+igual, então não era regressão das correções do review; e `FRONTEND_URL=http://localhost:5173 php
+artisan test` devolveu os **12 passed** que a ficha previa.
 
-**O número de consumidores da ficha estava vencido:** `FormSection` tem **16**, não 11 — os cinco
-arquivos de `Profile/` nasceram depois da medição de 2026-08-13. O registro foi corrigido no
-`backlog.md` neste fechamento.
+**O conserto é o `explode` + `[0]` que a ficha desenhou**, em `backend/tests/TestCase.php`:
 
-## P-37 — `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível
+```php
+$origens = explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'));
 
-**Bloco:** BD-10 · **Gatilho:** fecha quando um bloco tocar `FormField` por outro motivo e puder
-absorver a associação por `htmlFor`/`id` para todos os campos do kit de uma vez. Revisar em
-**2026-10-31**.
+$this->withHeader('Referer', trim($origens[0]));
+```
 
-O `FormField` embrulha o controle num `<label className="block">` sem `htmlFor`, então todo campo
-cujo controle carrega rótulo próprio soma os dois no nome acessível. Dois sítios hoje: o olho do
-`AppPassword` dentro do `StaffUserDialog` **e** o dropdown de cliente do `BudgetDialog`.
-
-Mesmo defeito que o **UI-01** do login (`/lotus-ui-review` de 2026-08-13), corrigido lá e **não**
-aqui. O mecanismo foi medido no login antes do fix: o algoritmo de nome acessível soma todo o
-conteúdo textual do `<label>`, então o campo passa a se chamar "Contraseña Mostrar contraseña".
-`frontend/src/shared/ui/FormField/FormField.tsx:34-36` renderiza `<label className="block">` com
-`<span>` do rótulo mais `children`, sem `htmlFor`/`id`; o call site é
-`frontend/src/features/identity/components/Admin/StaffIdentifyFields.tsx:83`. O bloco do login
-**piorou a forma, não criou o defeito**: antes da Task 6 o olho já concatenava, com o texto em
-inglês do Prime.
-
-**Ficou de fora por decisão do João no fechamento (2026-08-13), no precedente exato da D10/P-36:**
-`FormField` é `shared/ui` e o kit inteiro passa por ele, então dar `htmlFor`/`id` ali muda a
-marcação de todo diálogo do sistema — e o arquivo estava sob reescrita ativa do BD-5
-(`usecrudform-mais-fundo`, worktree `fix-frontend`), o mesmo motivo que tirou `FormSection` do
-escopo. Não é bug de dado: o campo tem nome utilizável e recebe foco; o que degrada é o anúncio em
-leitor de tela.
-
-**Copiar o molde inteiro, não só o `htmlFor`.** O molde existe e está medido:
-`frontend/src/features/identity/components/Login/LoginForm.tsx:40-85` (commits `5e005f1` e
-`1952075`). O `<label>` que embrulha é o que faz o `error` do kit ser anunciado hoje, então trocar
-por `htmlFor`/`id` obriga a levar junto o `aria-describedby` condicional e o `aria-invalid` do par —
-o PrimeReact não escreve `aria-invalid`, o `invalid` dele só pinta `.p-invalid` (Q-2 do review de
-sprint de 2026-08-13, medido contra um 422 real).
-
-**Segundo sítio registrado no review do BD-6 (2026-08-14):**
-`frontend/src/features/commercial/components/Budget/BudgetDialog.tsx:54-59` passa pelo mesmo
-`FormField`, então o dropdown de cliente herda a mesma concatenação. Não muda o diagnóstico nem a
-data — muda o tamanho do que o fix único em `shared/ui` resolve de uma vez.
-
-**Encerrada em 2026-08-18, no BD-16, pelo gatilho literal.** O bloco tocou `FormField` pela D-24 e
-absorveu a associação para o kit inteiro de uma vez. `0672019` faz a label virar **irmã** do
-controle, com `htmlFor`/`id`, e leva junto o `aria-describedby` condicional e o `aria-invalid` que
-o molde do `LoginForm` exigia — não só o `htmlFor`, como a ficha alertava. `2ad35d7` põe os cinco
-wrappers para se associarem sozinhos, para o call site não precisar lembrar.
-
-**Medido no navegador, não conferido no DOM**, que é o que a ficha pedia: nos cinco wrappers o nome
-acessível é **só o rótulo**; sob um 422 real o `aria-invalid="true"` e o `aria-describedby` pousam no
-**input** e não na casca — inclusive no `AppDatePicker`, onde prop desconhecida cai no `<span>` raiz
-e o caminho certo é o `pt.input.root`; e clicar no texto do rótulo põe o foco no controle.
-
-Os dois sítios da ficha (`StaffIdentifyFields.tsx` e `BudgetDialog.tsx`) saem pelo fix único em
-`shared/ui`, sem passe por call site. Onde o rótulo **deliberadamente** não tem `htmlFor` é o modo
-leitura, para "Carga horaria (del curso, solo lectura)" não apontar para o vazio.
+O terceiro sítio que lê a variável passa a tratá-la como lista, igual ao `config/cors.php`. A suíte
+fecha em **717 passed / 5 skipped** com o `.env` multi-origin do João intacto.

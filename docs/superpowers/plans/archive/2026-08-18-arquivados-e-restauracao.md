@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3 · spatie/laravel-data + typescript-transformer · spatie/laravel-permission · owen-it/laravel-auditing · React 19 + TS · TanStack Query · PrimeReact via `shared/ui` · vitest/jsdom · PHPUnit (sqlite `:memory:`)
 
-**Spec:** `docs/superpowers/specs/2026-08-18-arquivados-e-restauracao-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-18-arquivados-e-restauracao-design.md`
 **Context Packet:** `docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md`
 
 ## Global Constraints

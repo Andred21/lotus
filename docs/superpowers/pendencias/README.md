@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (29)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -40,7 +40,6 @@ ou de escrita fora do repositório.
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
-| P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | João | **gatilho vencido** (2º fechamento com a suíte vermelha por isso, 2026-08-17); espera o commit que fechar o multi-origin; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | João | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | João | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | João | fecha junto da P-02, ou antes de produção |
@@ -60,14 +59,13 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (2)
+## Encerradas (1)
 
 | ID | Pendência | Encerrada em | Como | Sai em |
 |---|---|---|---|---|
-| P-36 | Catraca `COR_HARDCODED` não vê cor por `style={{ }}` — 2 sítios a 2,77:1 | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormSection` pelo DS-01 e fechou os **dois** sítios com a guarda decidida — a catraca passou a olhar o valor, não a grafia (`8ffdefa`, `efd5bfe`); medido 11,4:1/10,35:1 no título e 6,21:1/7,58:1 no ícone | próximo `/fechar-sprint` |
-| P-37 | `FormField` sem `htmlFor` soma o rótulo do controle no nome acessível — 2 sítios | 2026-08-18 (`bd16-perfil-e-kit-compartilhado`) | gatilho literal: o bloco tocou `FormField` pela D-24 e levou o molde inteiro (`htmlFor`/`id`, `aria-describedby`, `aria-invalid`) para o kit e os cinco wrappers (`0672019`, `2ad35d7`); nome acessível **medido** no navegador | próximo `/fechar-sprint` |
+| P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | 2026-08-18 (`arquivados-e-restauracao`) | gatilho literal, ramo "próximo `/fechar-sprint` com a suíte vermelha": o `/revisar-sprint` reencontrou os mesmos 12 `Session store not set on request`, e desta vez o bloco é de backend — `explode(',')` + `[0]` no `Referer`, suíte em 717 passed | próximo `/fechar-sprint` |
 
-Saíram por sprint de rastro cumprida, pelo precedente da **P-26** (que saiu no `/fechar-sprint` de
-2026-08-14, `celula-de-identidade`): a **P-38** e a **P-34**, no fechamento do
-`bd16-perfil-e-kit-compartilhado` (2026-08-18). A **P-36** e a **P-37** ficam: foram encerradas
-**dentro** deste bloco, então a sprint de rastro delas é esta, e elas saem no fechamento seguinte.
+Saíram por sprint de rastro cumprida, pelo precedente da **P-26**: a **P-36** e a **P-37**, no
+fechamento do `arquivados-e-restauracao` (2026-08-18). Foram encerradas dentro do
+`bd16-perfil-e-kit-compartilhado`, então a sprint de rastro delas era esta. A **P-45** fica: foi
+encerrada **dentro** deste bloco, e sai no fechamento seguinte.
