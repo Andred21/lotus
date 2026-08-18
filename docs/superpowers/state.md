@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-e-restauracao
 active_work_item: arquivados-e-restauracao
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-e-restauracao-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-18-arquivados-e-restauracao.md
 context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T13:10:00-03:00
+updated_at: 2026-08-18T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -242,7 +242,48 @@ temia — `arquivado` é o `deleted_at` existente, sem estado novo. Sobra que o 
 (coluna marcadora), abre o primeiro caminho de leitura de `audits` e tira `useRemove` de zero
 consumidores. Classificação final é do `/revisar-sprint`.
 
-**Estado: `planning`.** Próxima ação: `writing-plans` sobre esta spec.
+### Plano — 2026-08-18: 11 tasks, executor Claude, e o plano corrigiu um mecanismo da própria spec
+
+**11 tasks, executor `claude`.** Seis de backend, quatro de frontend e uma de DoD. Cada uma fecha com
+teste próprio; nenhuma depende de julgamento fora do plano, mas o conjunto toca lei demais para ir
+ao Codex — ver o Handoff no fim do plano.
+
+**O plano derrubou um mecanismo que a spec tinha escrito errado.** A spec (D2/D3) manda hook
+**`restoring`**; o plano usa **`restored`**. Com `restoring`, os filhos voltariam a ativos enquanto o
+**pai ainda está arquivado**. O par correto é `deleting` (antes) / `restored` (depois): os filhos
+saem antes do pai e voltam depois dele. Nada mais da spec mudou.
+
+**Uma medição obrigou um passo que a spec não previa: `Client::lockForWrite()` RECUSA cliente
+arquivado.** Ele lança `ValidationException` quando `trashed()` — comportamento certo para escrita,
+e exatamente o estado de quem vai ser restaurado. A Task 2 extrai `Client::lockRow()` (trava sem
+julgar) e reescreve `lockForWrite` sobre ela, preservando a guarda. **É mutex com história de review
+(Q-2, Q-5) e não quebra teste em sqlite** — `SQLiteGrammar::compileLock()` devolve string vazia —,
+então errar ali só apareceria em produção. Está declarado no Handoff.
+
+**Como a marca é gravada, e por que não polui a trilha.** `SoftDeletes::runSoftDelete()` só persiste
+`deleted_at`/`updated_at`, então um atributo sujo **não chega ao banco pelo `delete()`**. O plano usa
+`saveQuietly()` antes do `delete()`: grava a marca sem emitir evento, e por isso não cria um
+`updated` por filho na trilha. O evento que importa — `deleted` — continua auditado normalmente
+(ADR-08).
+
+**`MAX(id)` e não `MAX(created_at)` no `ArchiveTrailQuery`:** `audits.created_at` é `timestamp` de
+segundo inteiro, e dois `deleted` no mesmo segundo empatariam. O id é monotônico. É a mesma classe de
+erro que a D2 evita na cascata.
+
+**Três correções da auto-revisão do plano contra a spec, aplicadas inline:** um `actions={...}`
+placeholder na Task 9 (substituído pelo bloco real da `CommercialPage`), a assinatura do
+`ArchiveSwitch` escrita com três props na linha `Produces` quando são duas, e uma condicional
+inútil na Task 6 — `Course::query()->withListingData()` existe e é o que o `index` já usa. Uma
+quarta: `RestoreCourseAction` devolvia o curso sem `loadListingData()`, o que faria `CourseData`
+montar sem a carga da projeção.
+
+**Um item da spec estava sem task e ganhou uma.** O §5 pede que o restore invalide as **duas**
+listas; o teste do `useArchivedPage` usa fake estrutural e não exercita isso. Entrou
+`createCrudResource.test.ts`, que prova pelo **prefixo das chaves** que
+`invalidateQueries({ queryKey: keys.all })` alcança tanto `[resource, 'list']` quanto
+`[resource, 'archived']` — sem TanStack no teste, mantendo o padrão do repositório.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-e-restauracao`.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
