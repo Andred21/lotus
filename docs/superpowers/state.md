@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-e-restauracao
 active_work_item: arquivados-e-restauracao
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
-resume_state: ready_for_planning
-active_spec: null
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+resume_state: null
+active_spec: docs/superpowers/specs/2026-08-18-arquivados-e-restauracao-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
-blocker: "Packet status blocked: as fontes canonicas (Notion H.5.1-H.5.4, H.3.1 e a pasta Drive) enunciam a exigencia mas nao registram a decisao. Cinco fatos de negocio faltam e nenhuma fonte disponivel os fornece: (1) a matriz por aggregate root - cascata de filhos, o que permanece arquivado, conflitos de unicidade, mensagens e gates por estado downstream (certificado emitido, turma concluida); (2) quais papeis arquivam e quais restauram cada agregado, e quais permissoes novas isso cria sob ADR-07, com os cinco diretorios Policies/ vazios hoje; (3) a ordem de entrega entre os roots; (4) se 'rastreio' inclui superficie de consulta da auditoria para o usuario, e se por registro, global ou ambas; (5) se o manual PDF/DOCX pre-preenchido de backlog.md:430 entra neste bloco. Decisao do Joao Victor."
+blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T12:20:00-03:00
+updated_at: 2026-08-18T13:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -187,6 +187,62 @@ nenhuma das quatro páginas nem o Drive a mencionam. Vira pergunta ao João, nã
 **Estado: `blocked`, `resume_state: ready_for_planning`.** A recuperação externa está feita e não se
 repete; o que falta são cinco decisões do João. Respondidas, o bloco volta a `ready_for_planning` e
 o brainstorming começa com elas como entrada.
+
+### Brainstorming e spec — 2026-08-18: o bloqueio caiu, e a medição derrubou duas afirmações minhas
+
+**O João destravou mandando o brainstorming absorver as cinco perguntas**, em vez de respondê-las
+soltas. Estado vai de `blocked` direto a `planning` — a fronteira durável é esta spec, e ela entra
+no mesmo commit.
+
+**Duas correções à medição da própria seleção, ambas minhas e ambas medidas:**
+
+1. **"A maioria dos agregados nem tem rota `DELETE`" estava errado.** O grep de `Route::delete` não
+   enxerga `apiResource`. `route:list --method=DELETE` devolve 21 rotas, e **sete dos oito roots já
+   têm `destroy`** — só `Student` não tem. A superfície nova do bloco é menor do que a promoção
+   projetou.
+2. **A cascata de arquivamento já existe, e é boa.** Hooks `deleting` instância a instância em
+   `Client`, `Budget`, `Course`, `Redator`, `Student` e `Role`; `DeleteClientAction` com transação e
+   `lockForWrite`; gates de negócio escritos (`DeleteTurmaAction` recusa turma concluída, RN-15;
+   `DeleteBudgetAction` recusa orçamento com cotação aprovada). O código **já chama a operação de
+   "Arquiva"**. O bloco não é archive/restore: é **o lado do restore**, que não existe.
+
+**As cinco decisões do João, todas tomadas:**
+
+1. **Escopo: `Client` + `Course`**, fatia vertical. Cobrem toda a dificuldade — `Client` com três
+   relações heterogêneas e filhos com rota própria, `Course` com cascata simples e zero gate.
+2. **Cascata de restore por coluna marcadora** (`archived_with_parent` em 5 tabelas). Casar pai e
+   filho por `deleted_at` foi **medido e descartado**: a coluna é `timestamp` de precisão 0 nas sete
+   tabelas, e segundo inteiro não é identidade.
+3. **Permissão `*.restore` nova por agregado**, admin e superadmin, fora de `SEGREGATED`; a lista de
+   arquivados abre com a `*.view` do módulo.
+4. **Rastreio = data + autor na lista**, lido da última audit `deleted`. É o **primeiro caminho de
+   leitura de `audits` do projeto** — a tabela era write-only, com 16 models `Auditable`.
+5. **Alternância na própria tabela**, não aba: `CommercialPage` tem abas e `CatalogPage` não.
+
+**A quinta pergunta do packet caiu sem decisão nova.** A interseção do manual PDF/DOCX é com a
+**FUT-1** e trata de documento de **turma**; com o escopo em `Client` + `Course` ela sai por
+construção.
+
+**Um achado do brainstorming ampliou o bloco, e o motivo é DoD, não escopo criativo:** `useRemove`
+de `createCrudResource.ts:46` tem **zero consumidores** e nem `ClientsTable` nem `CoursesTable` têm
+botão de excluir. Os endpoints `DELETE /clients/{client}` e `/courses/{course}` existem e são
+**inalcançáveis pela UI**. Sem o botão de arquivar, a visão de Arquivados listaria registros que
+ninguém produz pelo app e o DoD só seria demonstrável semeando o banco. **Arquivar entrou** (D9).
+
+**Um débito NÃO foi corrigido, de propósito:** `budget.confirmDeleteBody` e
+`quote.confirmDeleteBody` seguem dizendo *"Esta acción no se puede deshacer."* Para orçamento e
+cotação isso é **verdade hoje** — o restore deles não existe. Trocar a frase antes do restore
+substituiria um texto certo por um errado. Gatilho no bloco que trouxer `Budget`/`Quote`.
+
+**O bloco não escreve `ValidationException` nova** — registro ativo no restore dá 404, não 422. Isso
+o mantém fora da **D-07**, o débito de idioma canônico travado em decisão.
+
+**Risco reavaliado: de MÉDIO-ALTO para MÉDIO.** A D1 derruba a metade de schema que a promoção
+temia — `arquivado` é o `deleted_at` existente, sem estado novo. Sobra que o bloco **toca `users`**
+(coluna marcadora), abre o primeiro caminho de leitura de `audits` e tira `useRemove` de zero
+consumidores. Classificação final é do `/revisar-sprint`.
+
+**Estado: `planning`.** Próxima ação: `writing-plans` sobre esta spec.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
