@@ -41,6 +41,16 @@ description: string,
 date: string | null,
 navigation: Record<string, number>,
 };
+export type ArchivedClientData = {
+client: ClientData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedCourseData = {
+course: CourseData,
+archived_at: string,
+archived_by: string | null,
+};
 export type BatchIssueData = {
 enrollment_ids: number[],
 redator_id: number,

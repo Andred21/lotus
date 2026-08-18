@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Route;
 // Rotas do domínio Catalog (agregadas por routes/api.php sob prefixo `api/`).
 Route::middleware('auth:sanctum')->group(function () {
 
+    // ANTES do apiResource, senão `courses/archived` casa como `courses/{course}`.
+    Route::get('courses/archived', [CourseController::class, 'archived']);
+    Route::post('courses/{course}/restore', [CourseController::class, 'restore']);
+
     Route::apiResource('courses', CourseController::class);
 
     // Templates e habilitação = editar o curso → catalog.course.update.
