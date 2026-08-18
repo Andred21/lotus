@@ -87,6 +87,32 @@ describe('ValidationPage titula todos os seus estados', () => {
     expect(h1[0].className).toContain('sr-only')
   })
 
+  it('500 de snapshot corrompido: a tela PUBLICA nao imprime os campos do documento', () => {
+    // A rota do QR é pública: quem escaneou não é o suporte. Ela imprimia o
+    // `detail` cru do backend — `El certificado LOT-2026-1001 no puede
+    // presentarse: su documento congelado no tiene los campos aluno.name,
+    // curso.name.` — mensagem escrita em es-CL fixo para o OPERADOR ler no
+    // `CertificateViewDialog` (D8), não para um terceiro. Aqui vale a dica
+    // genérica, no idioma da sessão.
+    validation.current = {
+      kind: 'error',
+      error: {
+        type: 'https://lotus.cl/errors/server',
+        title: 'Erro interno',
+        status: 500,
+        detail:
+          'El certificado LOT-2026-1001 no puede presentarse: su documento congelado no tiene los campos aluno.name, curso.name.',
+        instance: '/api/validate/LOT-2026-1001',
+      },
+      retry: () => {},
+    }
+
+    const { container } = renderPage()
+
+    expect(container.textContent).not.toContain('aluno.name')
+    expect(container.textContent).toContain('common.loadErrorHint')
+  })
+
   it('no certificado válido segue tendo um h1 só — o do StatusHeading', () => {
     validation.current = { kind: 'valid', cert: CERT }
 

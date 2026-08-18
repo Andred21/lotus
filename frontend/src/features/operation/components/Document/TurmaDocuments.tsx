@@ -6,6 +6,7 @@ import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
 import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
 import { DocumentTypeCard } from './DocumentTypeCard'
 import { ManualButton } from './ManualButton'
+import { screenDetail } from '@shared/lib'
 
 export function TurmaDocuments({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
@@ -17,7 +18,7 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={s.loadError.detail ?? t('common.loadErrorHint')}
+        detail={screenDetail(s.loadError) ?? t('common.loadErrorHint')}
         retryLabel={t('common.retry')}
         onRetry={s.reload}
       />

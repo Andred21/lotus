@@ -22,6 +22,7 @@ import { RedatorDesignation } from "./RedatorDesignation";
 import { EnrollmentSection } from "../Enrollment/EnrollmentSection";
 import { TurmaDocuments } from "../Document/TurmaDocuments";
 import { ConcludePanel } from "../Document/ConcludePanel";
+import { screenDetail } from '@shared/lib'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export function TurmaDetailPage() {
         <DetailHeader back={back} title={t("common.loadError")} titleHidden />
         <AppErrorState
           title={t("common.loadError")}
-          detail={d.loadError.detail ?? t("common.loadErrorHint")}
+          detail={screenDetail(d.loadError) ?? t("common.loadErrorHint")}
           retryLabel={t("common.retry")}
           onRetry={d.reload}
         />

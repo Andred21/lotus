@@ -8,6 +8,7 @@ import { AdminView } from './admin/AdminView'
 import { RedatorView } from './redator/RedatorView'
 import { PERIOD_PRESET_PADRAO, periodoDoPreset, periodoPadrao } from './admin/periodPresets'
 import type { PeriodPresetKey } from './admin/periodPresets'
+import { screenDetail } from '@shared/lib'
 
 /**
  * Roteador de `kind` do Dashboard, e só isso (D3/D4). A query e a política de
@@ -66,7 +67,7 @@ export function DashboardPage() {
         {header}
         <AppErrorState
           title={t('common.loadError')}
-          detail={state.error.detail ?? t('common.loadErrorHint')}
+          detail={screenDetail(state.error) ?? t('common.loadErrorHint')}
           retryLabel={t('common.retry')}
           onRetry={state.retry}
         />

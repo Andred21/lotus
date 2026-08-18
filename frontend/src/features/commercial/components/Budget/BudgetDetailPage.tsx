@@ -7,6 +7,7 @@ import { QuotesList } from './QuotesList'
 import { BudgetDocumentsCard } from './BudgetDocumentsCard'
 import { BudgetOverlays } from './BudgetOverlays'
 import { BudgetStatCard } from './BudgetStatCard'
+import { screenDetail } from '@shared/lib'
 
 export function BudgetDetailPage() {
   const { t } = useTranslation()
@@ -40,7 +41,7 @@ export function BudgetDetailPage() {
         <DetailHeader back={back} title={t('common.loadError')} titleHidden />
         <AppErrorState
           title={t('common.loadError')}
-          detail={d.loadError.detail ?? t('common.loadErrorHint')}
+          detail={screenDetail(d.loadError) ?? t('common.loadErrorHint')}
           retryLabel={t('common.retry')}
           onRetry={d.reload}
         />

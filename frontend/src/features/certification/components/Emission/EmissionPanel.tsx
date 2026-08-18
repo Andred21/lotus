@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatDate, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
@@ -17,7 +17,7 @@ export function EmissionPanel() {
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={s.loadError.detail ?? t('common.loadErrorHint')}
+        detail={screenDetail(s.loadError) ?? t('common.loadErrorHint')}
         retryLabel={t('common.retry')}
         onRetry={s.reload}
       />
