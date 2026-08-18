@@ -4,6 +4,7 @@ namespace App\Domains\Commercial\Models;
 
 use App\Domains\Commercial\QueryBuilders\ClientQueryBuilder;
 use App\Domains\Identity\Models\User;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Client extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -48,12 +49,10 @@ class Client extends Model implements Auditable
                 // que abre a transação e toma `Client::lockForWrite()` antes de
                 // chamar `$client->delete()`. Não arquive cliente por fora dela.
                 //
-                // `markAndDelete` grava a marca com `saveQuietly()` ANTES do delete:
-                // `SoftDeletes::runSoftDelete()` só persiste `deleted_at`/`updated_at`,
-                // então um atributo sujo não chegaria ao banco pelo `delete()`. O
-                // `saveQuietly` não emite evento, e por isso não polui a trilha com um
-                // `updated` por filho — o evento que importa é o `deleted`, que o
-                // `delete()` logo abaixo audita normalmente (ADR-08).
+                // `markAndDelete` mora no trait `ArchivesChildren` (Shared): ele
+                // grava a marca antes do delete e IGNORA filho já arquivado —
+                // `user()` é `withTrashed()` e traria um User arquivado antes do
+                // pai para dentro desta cascata (Q-1 do review de 2026-08-18).
                 $client->addresses()->get()->each(fn (ClientAddress $a) => self::markAndDelete($a));
                 $client->contacts()->get()->each(fn (ClientContact $c) => self::markAndDelete($c));
 
@@ -82,26 +81,6 @@ class Client extends Model implements Auditable
                 self::restoreAndUnmark($user);
             }
         });
-    }
-
-    /**
-     * Restaura o filho e apaga a marca. `restore()` audita (ADR-08); o
-     * `saveQuietly()` que limpa a marca não emite evento, pela mesma razão do
-     * `markAndDelete`: o evento que importa é o `restored`.
-     */
-    private static function restoreAndUnmark(Model $child): void
-    {
-        $child->restore();
-        $child->archived_with_parent = false;
-        $child->saveQuietly();
-    }
-
-    /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
-    private static function markAndDelete(Model $child): void
-    {
-        $child->archived_with_parent = true;
-        $child->saveQuietly();
-        $child->delete();
     }
 
     public function user(): BelongsTo

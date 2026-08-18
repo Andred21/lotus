@@ -14,12 +14,15 @@ import type { CourseData } from '@shared/types/generated'
 export function CourseRowActions({
   course,
   archived,
+  busy,
   onView,
   onArchive,
   onRestore,
 }: {
   course: CourseData
   archived: boolean
+  /** Mutation em voo: sem isto o clique duplo dispara dois POSTs (Q-2). */
+  busy: boolean
   onView: (c: CourseData) => void
   onArchive: (c: CourseData) => void
   onRestore: (c: CourseData) => void
@@ -34,6 +37,7 @@ export function CourseRowActions({
         icon="pi pi-undo"
         text
         size="small"
+        disabled={busy}
         onClick={() => onRestore(course)}
       />
     ) : null
@@ -47,6 +51,7 @@ export function CourseRowActions({
           text
           rounded
           aria-label={t('archive.archiveAction')}
+          disabled={busy}
           onClick={() => onArchive(course)}
         />
       )}

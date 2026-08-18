@@ -1,107 +1,192 @@
-import { describe, expect, it, vi } from 'vitest'
-import { act, renderHook } from '@testing-library/react'
-import { useArchivedPage } from './useArchivedPage'
-import type { ProblemDetails } from '@shared/api/axios'
+import { describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { useArchivedPage } from "./useArchivedPage";
+import type { ProblemDetails } from "@shared/api/axios";
 
 interface Item {
-  id?: number
-  name: string
+  id?: number;
+  name: string;
 }
 interface Archived {
-  client: Item
-  archived_at: string
-  archived_by: string | null
+  client: Item;
+  archived_at: string;
+  archived_by: string | null;
 }
 
 /** Estrutural, como `useCrudPage.test.ts`: sem TanStack no teste. */
 function fakeResource(state: {
-  data?: Archived[]
-  isLoading?: boolean
-  isError?: boolean
-  error?: ProblemDetails | null
-  onEnabled?: (enabled: boolean) => void
-  onRestore?: (id: number) => void
+  data?: Archived[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: ProblemDetails | null;
+  onEnabled?: (enabled: boolean) => void;
+  onRestore?: (id: number) => void;
+  restoreFails?: ProblemDetails;
 }) {
   return {
     useArchivedList: (enabled: boolean) => {
-      state.onEnabled?.(enabled)
+      state.onEnabled?.(enabled);
       return {
         data: state.data,
         isLoading: state.isLoading ?? false,
         isError: state.isError ?? false,
         error: state.error ?? null,
         refetch: () => Promise.resolve(),
-      }
+      };
     },
     useRestore: () => ({
-      mutate: (id: number) => state.onRestore?.(id),
+      mutate: (
+        id: number,
+        options?: {
+          onSuccess?: () => void;
+          onError?: (p: ProblemDetails) => void;
+        },
+      ) => {
+        state.onRestore?.(id);
+        if (state.restoreFails) options?.onError?.(state.restoreFails);
+        else options?.onSuccess?.();
+      },
       isPending: false,
     }),
-  }
+  };
 }
 
-describe('useArchivedPage', () => {
-  it('não busca em modo active e busca ao trocar para archived (D10)', () => {
+describe("useArchivedPage", () => {
+  it("não busca em modo active e busca ao trocar para archived (D10)", () => {
     // A lição da D-04: buscar as duas visões na montagem dobra a rede sem ganho.
-    const enabled: boolean[] = []
+    const enabled: boolean[] = [];
     const { result } = renderHook(() =>
-      useArchivedPage(fakeResource({ data: [], onEnabled: (e) => enabled.push(e) })),
-    )
+      useArchivedPage(
+        fakeResource({ data: [], onEnabled: (e) => enabled.push(e) }),
+        (r) => r.client,
+      ),
+    );
 
-    expect(result.current.mode).toBe('active')
-    expect(enabled.at(-1)).toBe(false)
+    expect(result.current.mode).toBe("active");
+    expect(enabled.at(-1)).toBe(false);
 
-    act(() => result.current.setMode('archived'))
+    act(() => result.current.setMode("archived"));
 
-    expect(enabled.at(-1)).toBe(true)
-  })
+    expect(enabled.at(-1)).toBe(true);
+  });
 
-  it('achata o DTO composto para uma forma só', () => {
+  it("achata o DTO composto para uma forma só", () => {
     // A tabela não pode ter duas formas: o achatamento vive aqui, não na tela.
     const { result } = renderHook(() =>
       useArchivedPage(
         fakeResource({
           data: [
             {
-              client: { id: 7, name: 'Switch' },
-              archived_at: '2026-08-18T10:00:00-03:00',
-              archived_by: 'Ana Torres',
+              client: { id: 7, name: "Switch" },
+              archived_at: "2026-08-18T10:00:00-03:00",
+              archived_by: "Ana Torres",
             },
           ],
         }),
+        (r) => r.client,
       ),
-    )
+    );
 
-    act(() => result.current.setMode('archived'))
+    act(() => result.current.setMode("archived"));
 
     expect(result.current.items).toEqual([
-      { id: 7, name: 'Switch', archived_at: '2026-08-18T10:00:00-03:00', archived_by: 'Ana Torres' },
-    ])
-  })
+      {
+        id: 7,
+        name: "Switch",
+        archived_at: "2026-08-18T10:00:00-03:00",
+        archived_by: "Ana Torres",
+      },
+    ]);
+  });
 
-  it('distingue lista vazia de GET falho', () => {
-    const vazio = renderHook(() => useArchivedPage(fakeResource({ data: [] })))
-    expect(vazio.result.current.items).toEqual([])
-    expect(vazio.result.current.error).toBeNull()
+  it("campo novo no DTO não rouba o lugar do agregado (Q-3)", () => {
+    // A versão antiga pescava o agregado com `Object.values(resto)[0]`: bastava
+    // o backend regenerar o DTO com um campo a mais para o achatamento devolver
+    // outra coisa, em silêncio e com o `tsc` calado.
+    const comCampoExtra = [
+      {
+        archived_reason: "duplicado",
+        client: { id: 9, name: "Switch" },
+        archived_at: "2026-08-18T10:00:00-03:00",
+        archived_by: null,
+      },
+    ] as unknown as Archived[];
+
+    const { result } = renderHook(() =>
+      useArchivedPage(fakeResource({ data: comCampoExtra }), (r) => r.client),
+    );
+
+    act(() => result.current.setMode("archived"));
+
+    expect(result.current.items).toEqual([
+      {
+        id: 9,
+        name: "Switch",
+        archived_at: "2026-08-18T10:00:00-03:00",
+        archived_by: null,
+      },
+    ]);
+  });
+
+  it("propaga sucesso e falha do restore para quem chamou (Q-2)", () => {
+    // Sem estes callbacks um 403 de quem não tem `*.restore` não muda nada na
+    // tela: a linha continua lá e o usuário não sabe se o clique valeu.
+    const ok = vi.fn();
+    const { result } = renderHook(() =>
+      useArchivedPage(fakeResource({ data: [] }), (r) => r.client),
+    );
+    act(() => result.current.restore(7, { onSuccess: ok }));
+    expect(ok).toHaveBeenCalled();
+
+    const falhou = vi.fn();
+    const comErro = renderHook(() =>
+      useArchivedPage(
+        fakeResource({
+          data: [],
+          restoreFails: { detail: "sin permiso" } as ProblemDetails,
+        }),
+        (r) => r.client,
+      ),
+    );
+    act(() => comErro.result.current.restore(7, { onError: falhou }));
+    expect(falhou).toHaveBeenCalledWith({ detail: "sin permiso" });
+  });
+
+  it("distingue lista vazia de GET falho", () => {
+    const vazio = renderHook(() =>
+      useArchivedPage(fakeResource({ data: [] }), (r) => r.client),
+    );
+    expect(vazio.result.current.items).toEqual([]);
+    expect(vazio.result.current.error).toBeNull();
 
     const falho = renderHook(() =>
-      useArchivedPage(fakeResource({ isError: true, error: { detail: 'boom' } as ProblemDetails })),
-    )
-    expect(falho.result.current.error?.detail).toBe('boom')
-  })
+      useArchivedPage(
+        fakeResource({
+          isError: true,
+          error: { detail: "boom" } as ProblemDetails,
+        }),
+        (r) => r.client,
+      ),
+    );
+    expect(falho.result.current.error?.detail).toBe("boom");
+  });
 
-  it('restore repassa o id', () => {
-    const onRestore = vi.fn()
-    const { result } = renderHook(() => useArchivedPage(fakeResource({ data: [], onRestore })))
+  it("restore repassa o id", () => {
+    const onRestore = vi.fn();
+    const { result } = renderHook(() =>
+      useArchivedPage(fakeResource({ data: [], onRestore }), (r) => r.client),
+    );
 
-    act(() => result.current.restore(7))
+    act(() => result.current.restore(7));
 
-    expect(onRestore).toHaveBeenCalledWith(7)
-  })
+    expect(onRestore).toHaveBeenCalledWith(7);
+  });
 
-  it('refetch devolve a promise (Q-14)', () => {
-    const { result } = renderHook(() => useArchivedPage(fakeResource({ data: [] })))
+  it("refetch devolve a promise (Q-14)", () => {
+    const { result } = renderHook(() =>
+      useArchivedPage(fakeResource({ data: [] }), (r) => r.client),
+    );
 
-    expect(result.current.refetch()).toBeInstanceOf(Promise)
-  })
-})
+    expect(result.current.refetch()).toBeInstanceOf(Promise);
+  });
+});

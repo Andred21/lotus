@@ -37,6 +37,7 @@ export function CommercialPage() {
               onModeChange={clientsArchived.setMode}
               onArchive={setToArchive}
               onRestore={(c) => c.id != null && clientsArchived.restore(c.id)}
+              busy={clientsArchived.restoring || clientsArchived.archiving}
               onView={clients.openView}
               actions={
                 can('commercial.client.create')
@@ -79,10 +80,10 @@ export function CommercialPage() {
           message={t('archive.confirmArchiveBody')}
           confirmLabel={t('archive.archiveAction')}
           severity="danger"
-          pending={clientsArchived.archive.isPending}
+          pending={clientsArchived.archiving}
           onConfirm={() =>
             toArchive.id != null &&
-            clientsArchived.archive.mutate(toArchive.id, { onSuccess: () => setToArchive(null) })
+            clientsArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
           }
           onCancel={() => setToArchive(null)}
         />

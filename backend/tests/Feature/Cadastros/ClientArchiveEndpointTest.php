@@ -35,6 +35,45 @@ class ClientArchiveEndpointTest extends TestCase
             ->assertJsonPath('0.id', $ativo->id);
     }
 
+    public function test_arquivado_mostra_comuna_e_contatos_que_a_cascata_levou(): void
+    {
+        // Sem o eager load com `withTrashed()` a linha aparece com comuna `—` e
+        // `0` contatos — a cascata acabou de arquivar os dois e o global scope
+        // os esconde. O operador reconhece o registro por essas colunas antes de
+        // restaurar (Q-8 do review de 2026-08-18).
+        $this->actingAsAdmin();
+
+        $client = $this->makeClientWithUser(['legal_name' => 'Con Dirección Ltda'], ['rut' => '15.678.901-6']);
+        $client->addresses()->create(['commune' => 'Providencia', 'city' => 'Santiago', 'region' => 'RM', 'is_primary' => true]);
+        $client->contacts()->create(['name' => 'Vivo', 'email' => 'v@s.cl', 'is_primary' => true]);
+
+        $client->delete();
+
+        $this->getJson('/api/clients/archived')
+            ->assertOk()
+            ->assertJsonPath('0.client.addresses.0.commune', 'Providencia')
+            ->assertJsonCount(1, '0.client.contacts');
+    }
+
+    public function test_arquivado_nao_mostra_o_filho_arquivado_antes_do_pai(): void
+    {
+        // O contorno do teste acima: quem foi arquivado por vontade própria não
+        // volta no restore (spec D2), então mostrá-lo aqui prometeria uma
+        // restauração que não acontece.
+        $this->actingAsAdmin();
+
+        $client = $this->makeClientWithUser(['legal_name' => 'Contato Antigo Ltda'], ['rut' => '16.789.012-0']);
+        $client->contacts()->create(['name' => 'Antigo', 'email' => 'a@s.cl', 'is_primary' => false])->delete();
+        $client->contacts()->create(['name' => 'Vivo', 'email' => 'v@s.cl', 'is_primary' => true]);
+
+        $client->delete();
+
+        $this->getJson('/api/clients/archived')
+            ->assertOk()
+            ->assertJsonCount(1, '0.client.contacts')
+            ->assertJsonPath('0.client.contacts.0.name', 'Vivo');
+    }
+
     public function test_archived_by_e_nulo_sem_audit_de_usuario(): void
     {
         $arquivado = $this->makeClientWithUser(['legal_name' => 'Sem Autor'], ['rut' => '13.456.789-9']);

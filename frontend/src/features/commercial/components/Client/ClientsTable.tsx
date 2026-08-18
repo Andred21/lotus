@@ -32,6 +32,7 @@ export function ClientsTable({
   onModeChange,
   onArchive,
   onRestore,
+  busy,
 }: {
   clients: ClientRow[];
   loading: boolean;
@@ -40,6 +41,8 @@ export function ClientsTable({
   onModeChange: (mode: ArchiveMode) => void;
   onArchive: (c: ClientData) => void;
   onRestore: (c: ClientData) => void;
+  /** Arquivar/restaurar em voo — trava os botões da linha (Q-2). */
+  busy: boolean;
   actions?: ReactNode;
   error?: { detail?: string | null } | null;
   /** Repassa o refetch da página: é a promise que mantém o Reintentar do
@@ -122,6 +125,7 @@ export function ClientsTable({
           <ClientRowActions
             client={c}
             archived={archived}
+            busy={busy}
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}

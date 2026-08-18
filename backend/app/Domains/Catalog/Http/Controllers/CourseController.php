@@ -2,6 +2,7 @@
 
 namespace App\Domains\Catalog\Http\Controllers;
 
+use App\Domains\Catalog\Actions\ArchiveCourseAction;
 use App\Domains\Catalog\Actions\CreateCourseAction;
 use App\Domains\Catalog\Actions\RestoreCourseAction;
 use App\Domains\Catalog\Actions\UpdateCourseAction;
@@ -40,7 +41,7 @@ class CourseController extends Controller implements HasMiddleware
     /** @return array<ArchivedCourseData> */
     public function archived(): array
     {
-        $courses = Course::onlyTrashed()->withListingData()->get();
+        $courses = Course::onlyTrashed()->withArchivedListingData()->get();
 
         $autores = ArchiveTrailQuery::archivedBy(Course::class, $courses->pluck('id')->all());
 
@@ -80,9 +81,9 @@ class CourseController extends Controller implements HasMiddleware
         return CourseData::fromModel($action->execute($course, $data));
     }
 
-    public function destroy(Course $course): Response
+    public function destroy(Course $course, ArchiveCourseAction $action): Response
     {
-        $course->delete();
+        $action->execute($course);
 
         return response()->noContent();
     }

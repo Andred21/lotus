@@ -14,12 +14,15 @@ import type { ClientData } from "@shared/types/generated";
 export function ClientRowActions({
   client,
   archived,
+  busy,
   onView,
   onArchive,
   onRestore,
 }: {
   client: ClientData;
   archived: boolean;
+  /** Mutation em voo: sem isto o clique duplo dispara dois POSTs (Q-2). */
+  busy: boolean;
   onView: (c: ClientData) => void;
   onArchive: (c: ClientData) => void;
   onRestore: (c: ClientData) => void;
@@ -34,6 +37,7 @@ export function ClientRowActions({
         icon="pi pi-undo"
         text
         size="small"
+        disabled={busy}
         onClick={() => onRestore(client)}
       />
     ) : null;
@@ -47,6 +51,7 @@ export function ClientRowActions({
           text
           rounded
           aria-label={t("archive.archiveAction")}
+          disabled={busy}
           onClick={() => onArchive(client)}
         />
       )}

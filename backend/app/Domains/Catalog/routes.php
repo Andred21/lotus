@@ -10,7 +10,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ANTES do apiResource, senão `courses/archived` casa como `courses/{course}`.
     Route::get('courses/archived', [CourseController::class, 'archived']);
-    Route::post('courses/{course}/restore', [CourseController::class, 'restore']);
+    // `whereNumber`: sem ele um id não numérico estoura `TypeError` (500) na
+    // assinatura `int $course` antes de qualquer consulta, em vez do 404 da spec
+    // D5 (Q-6 do review de 2026-08-18).
+    Route::post('courses/{course}/restore', [CourseController::class, 'restore'])->whereNumber('course');
 
     Route::apiResource('courses', CourseController::class);
 

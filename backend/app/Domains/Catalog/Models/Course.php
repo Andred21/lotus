@@ -4,6 +4,7 @@ namespace App\Domains\Catalog\Models;
 
 use App\Domains\Catalog\QueryBuilders\CourseQueryBuilder;
 use App\Domains\Identity\Models\Redator;
+use App\Shared\Concerns\ArchivesChildren;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +20,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Course extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -40,8 +41,8 @@ class Course extends Model implements Auditable
         static::deleting(function (Course $course) {
             if (! $course->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
-                // `markAndDelete` grava a marca com `saveQuietly()` antes do delete —
-                // ver a nota gêmea em `Client::booted()`.
+                // `markAndDelete` vem do trait `ArchivesChildren` (Shared) —
+                // ver a nota lá, inclusive a guarda do filho já arquivado.
                 $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => self::markAndDelete($t));
                 $course->modules()->get()->each(fn (CourseModule $m) => self::markAndDelete($m));
             }
@@ -55,22 +56,6 @@ class Course extends Model implements Auditable
             $course->modules()->onlyTrashed()->where('archived_with_parent', true)->get()
                 ->each(fn (CourseModule $m) => self::restoreAndUnmark($m));
         });
-    }
-
-    /** Restaura o filho e apaga a marca. Ver a nota gêmea em `Client`. */
-    private static function restoreAndUnmark(Model $child): void
-    {
-        $child->restore();
-        $child->archived_with_parent = false;
-        $child->saveQuietly();
-    }
-
-    /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
-    private static function markAndDelete(Model $child): void
-    {
-        $child->archived_with_parent = true;
-        $child->saveQuietly();
-        $child->delete();
     }
 
     public function certificateTemplates(): HasMany

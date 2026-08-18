@@ -41,7 +41,7 @@ class ClientController extends Controller implements HasMiddleware
     /** @return array<ArchivedClientData> */
     public function archived(): array
     {
-        $clients = Client::onlyTrashed()->withListingData()->get();
+        $clients = Client::onlyTrashed()->withArchivedListingData()->get();
 
         $autores = ArchiveTrailQuery::archivedBy(Client::class, $clients->pluck('id')->all());
 

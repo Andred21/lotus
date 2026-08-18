@@ -13,7 +13,7 @@ export type CourseRow = CourseData & {
 }
 
 export function CoursesTable({
-  courses, loading, onView, actions, error, onRetry, mode, onModeChange, onArchive, onRestore,
+  courses, loading, onView, actions, error, onRetry, mode, onModeChange, onArchive, onRestore, busy,
 }: {
   courses: CourseRow[]
   loading: boolean
@@ -22,6 +22,8 @@ export function CoursesTable({
   onModeChange: (mode: ArchiveMode) => void
   onArchive: (c: CourseData) => void
   onRestore: (c: CourseData) => void
+  /** Arquivar/restaurar em voo — trava os botões da linha (Q-2). */
+  busy: boolean
   actions?: ReactNode
   error?: { detail?: string | null } | null
   /** Repassa o refetch da página: é a promise que mantém o Reintentar do
@@ -101,6 +103,7 @@ export function CoursesTable({
           <CourseRowActions
             course={c}
             archived={archived}
+            busy={busy}
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}

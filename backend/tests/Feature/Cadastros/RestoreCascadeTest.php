@@ -6,6 +6,7 @@ use App\Domains\Catalog\Actions\RestoreCourseAction;
 use App\Domains\Commercial\Actions\RestoreClientAction;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
+use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
@@ -44,6 +45,30 @@ class RestoreCascadeTest extends TestCase
 
         // NÃO voltou: já estava arquivado antes.
         $this->assertNotNull(ClientContact::withTrashed()->find($antigo->id)->deleted_at);
+    }
+
+    public function test_user_arquivado_antes_do_cliente_nao_volta_na_cascata(): void
+    {
+        // O caso que o teste acima NÃO cobria: `contacts()`/`addresses()` já
+        // escondem o filho arquivado pelo escopo global, mas `user()` é
+        // `withTrashed()` — e por isso o User arquivado de propósito entrava na
+        // cascata, voltava junto com o pai e ainda tinha o `deleted_at`
+        // reescrito, falsificando quando foi arquivado (Q-1 do review de
+        // 2026-08-18).
+        $client = $this->makeClientWithUser();
+        $user = User::withTrashed()->findOrFail($client->user_id);
+
+        $user->delete();
+        $arquivadoEm = $user->fresh()->deleted_at;
+
+        $client->delete();
+        app(RestoreClientAction::class)->execute($client);
+
+        $depois = User::withTrashed()->findOrFail($client->user_id);
+
+        $this->assertNotNull($depois->deleted_at, 'o User arquivado antes do pai voltou na cascata');
+        $this->assertEquals($arquivadoEm, $depois->deleted_at, 'a cascata reescreveu o deleted_at do User');
+        $this->assertFalse((bool) $depois->archived_with_parent, 'o User ganhou a marca de uma cascata que não é dele');
     }
 
     public function test_restaurar_curso_traz_so_os_filhos_da_cascata(): void

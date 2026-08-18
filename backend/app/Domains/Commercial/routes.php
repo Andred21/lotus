@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
     // ANTES do apiResource, senão `clients/archived` casa como `clients/{client}`.
     Route::get('clients/archived', [ClientController::class, 'archived']);
-    Route::post('clients/{client}/restore', [ClientController::class, 'restore']);
+    // `whereNumber`: sem ele um id não numérico estoura `TypeError` (500) na
+    // assinatura `int $client` antes de qualquer consulta, em vez do 404 da spec
+    // D5 (Q-6 do review de 2026-08-18).
+    Route::post('clients/{client}/restore', [ClientController::class, 'restore'])->whereNumber('client');
 
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('budgets', BudgetController::class);

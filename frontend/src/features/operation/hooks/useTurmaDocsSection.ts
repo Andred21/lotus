@@ -1,5 +1,6 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
+import { problemMessage } from '@shared/api/problemMessage'
 import { useMutationErrors, usePermissions } from '@shared/hooks'
 import { useToast } from '@shared/ui'
 import { useTranslation } from 'react-i18next'
@@ -9,13 +10,6 @@ import {
   useUploadTurmaDocument,
 } from '../api/useTurmaDocuments'
 import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
-
-/** Mesma resolução de mensagem do `useMutationErrors` (detail do 422/403, ou o
- * 1º erro de campo), mas como função simples: dentro do `onError` de uma
- * mutation não se pode chamar um hook. */
-function problemMessage(problem: ProblemDetails): string | null {
-  return problem.errors ? (Object.values(problem.errors)[0]?.[0] ?? null) : (problem.detail ?? null)
-}
 
 /** Orquestra a aba Documentación. O componente só consome.
  * `habilitada` NÃO é recalculada aqui: vem derivada do backend em `TurmaData`. */

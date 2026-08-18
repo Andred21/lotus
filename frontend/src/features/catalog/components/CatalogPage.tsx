@@ -28,6 +28,7 @@ export function CatalogPage() {
           onModeChange={archivedPage.setMode}
           onArchive={setToArchive}
           onRestore={(c) => c.id != null && archivedPage.restore(c.id)}
+          busy={archivedPage.restoring || archivedPage.archiving}
           onView={page.openView}
           actions={
             can('catalog.course.create')
@@ -45,10 +46,10 @@ export function CatalogPage() {
           message={t('archive.confirmArchiveBody')}
           confirmLabel={t('archive.archiveAction')}
           severity="danger"
-          pending={archivedPage.archive.isPending}
+          pending={archivedPage.archiving}
           onConfirm={() =>
             toArchive.id != null &&
-            archivedPage.archive.mutate(toArchive.id, { onSuccess: () => setToArchive(null) })
+            archivedPage.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
           }
           onCancel={() => setToArchive(null)}
         />
