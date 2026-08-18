@@ -2,10 +2,17 @@ import { useState } from 'react'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
 
+/** Opções de query que a PÁGINA pode pedir. Estreito de propósito: quem precisa
+ * de `enabled`, `select` ou `queryKey` está usando o recurso direto, não a
+ * página, e alargar isto transformaria o hook em porta aberta para o TanStack. */
+export interface CrudPageQueryOptions {
+  staleTime?: number
+}
+
 /** Contrato mínimo que `createCrudResource<T>` satisfaz. Tipado por estrutura
  * para o hook não depender da fábrica inteira. */
 interface ListableResource<T> {
-  useList: () => {
+  useList: (options?: CrudPageQueryOptions) => {
     data?: T[]
     isLoading: boolean
     isError: boolean
@@ -31,8 +38,11 @@ interface ListableResource<T> {
  * registros" de "não deu para perguntar" (spec D16): o GET falhava e a tabela
  * exibia o empty state que convida a cadastrar.
  */
-export function useCrudPage<T extends { id?: number }>(resource: ListableResource<T>) {
-  const query = resource.useList()
+export function useCrudPage<T extends { id?: number }>(
+  resource: ListableResource<T>,
+  options?: CrudPageQueryOptions,
+) {
+  const query = resource.useList(options)
   const [dialog, setDialog] = useState<{ mode: DialogMode; id: number | null } | null>(null)
 
   const items = query.data ?? []
