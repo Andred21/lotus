@@ -2,17 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: decide_mecanismo_de_credencial_e_evento_de_ativacao
+resume_state: context_required
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: null
+context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
+blocker: "O packet voltou status blocked: o Drive decide que a credencial de admin e redator vai por e-mail (RF-USR-09), mas nenhuma fonte decide O QUE o e-mail entrega (senha gerada x convite para definir senha x link assinado de ativacao/redefinicao) nem em qual evento is_active passa a true (cadastro x envio do convite x conclusao do link x acao administrativa). A EAP nao tem task de ativacao, convite, primeiro acesso ou verificacao de e-mail. Escolher no lugar do Joao seria inventar regra de negocio."
+
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-18T19:31:48-03:00
+updated_at: 2026-08-18T19:42:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -124,6 +125,47 @@ vem antes** — nenhuma dessas respostas se supõe a partir do código.
 
 **Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
 `feat/identity-ativacao-acesso-redator` a partir de `main@2c7b249`.
+
+### Context Packet — 2026-08-18: a fonte canônica decide o canal e não decide o mecanismo
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `03a0b72`) e validado contra o
+contrato item a item: marcadores exatos, frontmatter completo com `plan_path`/`spec_path` em
+**`null`** (registrados, não omitidos), **8 key facts** — o teto —, fonte indisponível registrada
+como tal e `RECOMMENDED_TRANSITION` presente. Salvo em
+`context-packets/2026-08-18-identity-ativacao-acesso-redator.md`. **Uma re-invocação não se
+justifica:** o contrato não foi violado, o packet respondeu o que pôde e nomeou o que falta.
+
+**O que o Drive decide, e o backlog não sabia:** a credencial de admin e de redator **vai por
+e-mail do sistema** (RF-USR-09 em `requisitos-negocio.md`), não há auto-registro, e a role
+correspondente ao tipo deve ser associada **automaticamente no cadastro** (RF-ROL-05) — o que
+transforma a medição 3 da abertura de "achado de desenho" em **divergência com a fonte canônica**:
+o código não atribui role nenhuma ao redator.
+
+**O que nenhuma fonte decide, e é por isso que o estado vai a `blocked`:** o Drive fixa o canal e
+não o conteúdo — senha gerada, senha escolhida pelo admin, convite para definir senha ou link
+assinado de ativação são todos compatíveis com o que está escrito. `modulo-identidade-acesso.md`
+prevê recuperação de senha e verificação de e-mail, **e prever recuperação não autoriza usá-la como
+convite**. A EAP do Notion não tem task de ativação, convite, primeiro acesso ou verificação: as
+adjacentes são login (2.2.2), administração de staff (2.6.2), CRUD de redator (4.1.4/4.2.2), troca
+autenticada da própria senha (8.5.7) e rate limit (9.1.1).
+
+**Figma ficou `unavailable` e isso está registrado, não maquiado:** o runtime do Codex não tem
+ferramenta de descoberta de arquivo, e nenhuma fonte consultada forneceu `fileKey`/`nodeId`. Se
+existir tela de primeiro acesso no protótipo, ela não foi vista — e virou staleness trigger.
+
+**Duas perguntas bloqueiam o brainstorming**, e as duas são de produto, não de código:
+
+1. **O que o e-mail entrega** — senha gerada, convite para definir senha, link assinado de
+   ativação/redefinição, ou mecanismo já acordado com a Lotus.
+2. **Em que evento `is_active` passa a `true`** — no cadastro, no envio do convite, na conclusão do
+   link, ou por ação administrativa explícita.
+
+Expiração, reenvio, revogação e e-mail não recebido dependem da primeira e ficam registrados como
+terceira pergunta, não bloqueante.
+
+**Estado: `blocked`, com `resume_state: context_required`.** Respondidas as duas, o packet é
+atualizado (não regerado do zero) e o estado retorna a `ready_for_planning`. **Não implemento, não
+escolho por ele, e não trato "recuperação de senha" como convite por conveniência.**
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
