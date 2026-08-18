@@ -867,5 +867,20 @@
       "attendance": "Attendance (%)",
       "status": "Academic status"
     }
+  },
+  "archive": {
+    "active": "Active",
+    "archived": "Archived",
+    "archiveAction": "Archive",
+    "restoreAction": "Restore",
+    "archivedAt": "Archived on",
+    "archivedBy": "Archived by",
+    "unknownAuthor": "—",
+    "confirmArchiveTitle": "Archive this record?",
+    "confirmArchiveBody": "It leaves the active list. You can restore it from Archived.",
+    "archivedToast": "Record archived.",
+    "restoredToast": "Record restored.",
+    "empty": "No archived records",
+    "emptyHint": "Anything you archive shows up here and can be restored."
   }
 }

@@ -867,5 +867,20 @@
       "attendance": "Presença (%)",
       "status": "Estado acadêmico"
     }
+  },
+  "archive": {
+    "active": "Ativos",
+    "archived": "Arquivados",
+    "archiveAction": "Arquivar",
+    "restoreAction": "Restaurar",
+    "archivedAt": "Arquivado em",
+    "archivedBy": "Arquivado por",
+    "unknownAuthor": "—",
+    "confirmArchiveTitle": "Arquivar este registro?",
+    "confirmArchiveBody": "Ele sai da lista ativa. Você poderá restaurá-lo em Arquivados.",
+    "archivedToast": "Registro arquivado.",
+    "restoredToast": "Registro restaurado.",
+    "empty": "Nenhum registro arquivado",
+    "emptyHint": "O que você arquivar aparece aqui e pode ser restaurado."
   }
 }

@@ -867,5 +867,20 @@
       "attendance": "Asistencia (%)",
       "status": "Estado académico"
     }
+  },
+  "archive": {
+    "active": "Activos",
+    "archived": "Archivados",
+    "archiveAction": "Archivar",
+    "restoreAction": "Restaurar",
+    "archivedAt": "Archivado el",
+    "archivedBy": "Archivado por",
+    "unknownAuthor": "—",
+    "confirmArchiveTitle": "¿Archivar este registro?",
+    "confirmArchiveBody": "Saldrá de la lista activa. Podrás restaurarlo desde Archivados.",
+    "archivedToast": "Registro archivado.",
+    "restoredToast": "Registro restaurado.",
+    "empty": "No hay registros archivados",
+    "emptyHint": "Lo que archives aparecerá aquí y podrás restaurarlo."
   }
 }
