@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: listagens-e-abas
+active_work_item: bd13-listagens-e-abas
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
-state_basis_commit: 0a1918b
-updated_at: 2026-08-18T00:00:00-03:00
+state_basis_commit: b758068
+updated_at: 2026-08-18T12:50:43-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,78 @@ updated_at: 2026-08-18T00:00:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `bd13-listagens-e-abas` (promovido em 2026-08-18)
+
+**Promoção explícita do João**, com o estado em `idle` e `active_work_item` `null`. O gate do
+`/planejar-bloco` não chegou a rodar: a seleção veio de uma revisão de arquitetura
+(`improve-codebase-architecture`) que cruzou o código de `b758068` contra o `backlog.md` item a item.
+O commit anterior a este grava o resultado dessa revisão no backlog; **este** grava a promoção.
+
+**Escopo: o BD-13 inteiro, mais a D-31 pelo gatilho dela.** O bloco cobre D-02, D-04, D-05 e D-06;
+a **D-31** entra porque o gatilho literal dela é *"entra em qualquer bloco que toque os dicionários
+por outro motivo"*, e a D-02 toca os três locales. Não é alargamento de escopo — é gatilho vencido.
+
+**Rota `ready_for_planning`, sem Context Packet, por ausência MEDIDA de fonte externa.** Grep por
+`drive.google`, `notion.so`, `figma.com`, `docs.google` e `http` nas 100 linhas de escopo (o bloco no
+`backlog.md` mais as fichas de D-02, D-04, D-05, D-06 e D-31) devolve **zero**. Mesmo precedente de
+BD-4, BD-5, BD-6 e BD-16 — e o oposto das Sprints 5 e 6, cujo escopo era canônico do Drive.
+
+**Área de trabalho: a worktree `fix-frontend`**, branch `feat/bd13-listagens-e-abas` a partir de
+`main@b758068`, que é `origin/main` na hora da promoção. Escolha do João. A árvore da worktree estava
+em `b758068` detached e limpa; `backend/config/cors.php` (WIP dele, o outro lado da P-45) fica no main
+tree e fora de todo `git add`.
+
+### A invariante de um `active_work_item` está quebrada, e é a QUARTA exceção declarada
+
+O `arquivados-e-restauracao` foi promovido a `context_required` em `34aa0be`, na branch
+`feat/arquivados-e-restauracao`, e segue ativo com `next_owner: codex`. Este bloco corre em paralelo
+**por decisão explícita do João**, tomada depois de o custo ser mostrado, não descoberto no gate.
+Precedentes: BD-4 × BD-9, BD-5 × `login-fora-do-adr16` e `celula-de-identidade` × BD-6.
+
+**A P-03 não dispara, e isso é medição do gatilho, não conveniência.** A ficha exige *"mais de um
+`active_work_item` de backend"*; este é frontend puro e o outro é backend, então a condição não se
+satisfaz. O custo conhecido do arranjo continua valendo: a worktree não sobe stack própria e depende
+do main tree como servidor do `:8080` — que estará servindo a branch do `arquivados`. Para este bloco
+isso é barato, porque nenhum item dele precisa de API viva; o que precisa de navegador é a D-04
+(contagem de GET) e ela se mede no devtools contra qualquer backend.
+
+**O risco de merge deste arranjo está medido e é o que o PR #57 já cobrou.** Duas branches escrevendo
+`state.md` produzem frontmatter auto-mesclado que ninguém escreveu, e ele fica verde, sem marcador de
+conflito. Quem mergear qualquer uma das duas **lê o frontmatter antes do `git push`** — a lição está
+escrita na seção do B2 e vale literal aqui.
+
+### Quatro medições da abertura, feitas sobre `b758068` e não herdadas do backlog
+
+1. **O escopo da D-04 é METADE do registrado, e isso muda o DoD do bloco.** `AppTabView` não passa
+   `renderActiveOnly={false}`, então vale o default `true` do PrimeReact e só o conteúdo da aba ativa
+   monta — `CertificatesPage.tsx:19,24` põe `EmissionPanel` e `HistorialTable` dentro de `ModuleTab` e
+   faz **1** GET. Quem faz 2 é a `PeoplePage.tsx:16-17`, que chama `useRedatoresPage()` e
+   `useStudentsPage()` **no corpo da página**, acima das abas, onde o `renderActiveOnly` não alcança.
+   O defeito é de sítio de chamada, não de mecanismo de aba. **O DoD do backlog ("1 GET por aba
+   aberta, não 2 por montagem") tem uma página a provar, não duas.**
+2. **A D-05 tem uma decisão dentro, não só um fix.** `AppErrorState.tsx:47` renderiza o `detail` cru
+   e `useLoadState.ts:25` é quem o entrega (`query.error?.detail`). Mostrar `detail` de servidor ×
+   trocar por dica genérica do i18n é escolha de contrato de erro, e ela **não** depende da decisão de
+   idioma canônico que trava a D-07/D-18 — o que se decide aqui é se a tela repete o servidor, não em
+   que língua o servidor fala.
+3. **A D-06 é uma linha e mente sobre registro de peso legal.** `HistorialTable.tsx:60` passa
+   `description={c.snapshot.aluno.rut ?? '—'}` e `title={c.snapshot.aluno.name}` **sem fallback**: o
+   certificado corrompido aparece na lista com a célula de aluno vazia, e a lista é o único lugar onde
+   o registro aparece antes do clique.
+4. **A D-02 segue viva nas três locales, nas mesmas linhas do registro:** `:91` (`usuario(s)`), `:449`
+   (`curso(s)`) e `:471` (`módulo(s)`), com o rodapé do `AppDataTable` alimentado por chave sem plural
+   do i18next. O repositório **não** usa plural do i18next em lugar nenhum hoje — `role.count` é forma
+   única —, então a chave de plural é padrão novo no projeto, não adoção de padrão existente.
+
+**Risco de review projetado: BAIXO pelo gate binário** — frontend puro, não toca schema, não regenera
+`generated.ts`, não toca Sanctum, auditoria, RBAC nem documento legal. **Divergência por alcance já
+declarada:** o bloco introduz plural do i18next, que é forma nova nos três dicionários, e mexe em
+`AppErrorState`/`useLoadState`, que são `shared/` com muitos consumidores. A classificação final é do
+`/revisar-sprint`, não desta promoção.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco bd13-listagens-e-abas`
+(brainstorming → spec → plano). Este commit **não** inicia o planejamento.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
