@@ -304,6 +304,60 @@ testes / 8 asserções. `php artisan test` dá **12 failed / 675 passed / 5 skip
 pelo terceiro fechamento seguido — `Session store not set on request.` no `.env` multi-origin —, não
 regressão desta task.
 
+### DoD end-to-end — 2026-08-18 (Task 11): provado no navegador, com dois defeitos de ambiente achados no caminho
+
+**Ferramentas antes do navegador.** Backend `710 passed / 5 skipped` (2616 asserções) com
+`FRONTEND_URL=http://localhost:5173`; sem a variável a P-45 continua devolvendo as mesmas 12 falhas
+de sessão, que não são deste bloco. Frontend `376 passed` em 62 arquivos, `pnpm lint` e `pnpm build`
+exit 0. O `typescript-transformer-manifest.json` estava sujo desde a Task 6 (o hash do `generated.ts`
+mudou e o manifesto não entrou naquele commit) — corrigido em commit próprio antes da prova.
+
+**O que só o navegador achou: o banco de dev não tinha nem a migration nem as permissões.** A suíte
+roda em sqlite `:memory:` e migra do zero a cada execução, então verde na suíte não diz nada sobre o
+MySQL de desenvolvimento. Ao arquivar o cliente pela tela, o `DELETE /api/clients/13` voltou **500**
+com `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'archived_with_parent' in 'field list'`;
+depois de `php artisan migrate`, o arquivamento passou, mas a lista de Arquivados abriu **sem botão
+Restaurar para o superadmin** — `commercial.client.restore` e `catalog.course.restore` existiam no
+`PermissionCatalog` e não no banco, porque o `RolePermissionSeeder` nunca foi re-executado.
+`db:seed --class=RolePermissionSeeder` resolveu. Nenhum dos dois é defeito de código do bloco; ambos
+são exatamente a classe de falha que a lei §8 existe para pegar — build verde não é DoD.
+
+**Roteiro do cliente (Steps 3 e 7), provado ponta a ponta em `E2E Gate Client D` (id 13).** Arquivar
+um contato "pela ficha" tem uma mecânica que o plano não previa: o `UpdateClientAction` faz *replace*
+dos nested, então remover o contato no dialog e salvar soft-deleta a coleção inteira e recria os
+sobreviventes (contatos 33 e 34 arquivados, contato 39 recriado vivo). O efeito exigido pelo roteiro
+— filho arquivado ANTES da cascata, portanto com `archived_with_parent = false` — foi obtido do mesmo
+jeito, e é justamente o que a spec D2 distingue. Sequência medida: `DELETE /api/clients/13` **204**;
+o cliente sai da lista ativa ("No results"); em **Arquivados** ele aparece com `ARCHIVED ON 8/18/2026`
+e `ARCHIVED BY Andreoli` — primeira leitura de `audits` chegando à tela; `POST /api/clients/13/restore`
+**200**; e o estado do banco volta idêntico ao de antes: endereço 25 e contato 39 vivos, contatos
+31–34 e endereços 19–21 (pré-arquivados) **continuam arquivados**, marca `archived_with_parent` de
+volta em `false` em todos. A ficha reaberta mostra o endereço e só o contato vivo — "Joao Andreoli",
+arquivado antes da cascata, **não voltou**.
+
+**Step 4 (403), provado nas duas camadas.** Usuário temporário `dod.viewonly@lotus.cl` sem role e com
+`commercial.client.view` avulsa: `/comercial` abre, o switch alterna, `GET /api/clients/archived`
+volta **200** com as quatro linhas e **nenhum botão Restaurar renderiza**. O mesmo usuário em
+`POST /api/clients/1/restore` recebe **403** RFC 7807 (`"detail": "User does not have the right
+permissions."`). O usuário foi apagado com `forceDelete()` ao fim da prova; o banco de dev não ficou
+com resíduo.
+
+**Gêmeo do Catálogo, provado com verificação imediata no banco.** `DELETE /api/courses/3` **204**
+marca `archived_with_parent = 1` e arquiva os módulos 6–8; `POST /api/courses/3/restore` **200**
+devolve os três e zera a marca. A primeira tentativa (curso 1) foi descartada porque a auditoria
+mostrou um `restored` do curso 1 e um `deleted` do curso 8 **entre os meus comandos** — outra sessão
+mexendo no mesmo banco de dev. Nada a corrigir no código; o curso 8 (`GATE T7`) permanece arquivado
+por mão alheia e foi deixado como está.
+
+**Observação registrada, não corrigida:** na lista de Arquivados as colunas COMMUNE e CONTACTS
+aparecem como `—` e `0`, porque o listing lê endereço e contatos ativos e a cascata acabou de
+arquivá-los. É consequência coerente do desenho (a listagem não olha `onlyTrashed`), mas empobrece a
+linha justamente onde ela precisa identificar o registro. Fica como achado para o review decidir.
+
+**Ambiente durante a prova:** o Docker Desktop caiu no meio da sessão (daemon fora, stack inteira
+parada) e o Vite junto; ambos foram religados e a prova refeita do início. Nenhum dado do bloco
+dependeu do que rodou antes da queda.
+
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
 **Promoção explícita do João**, a partir da auditoria
