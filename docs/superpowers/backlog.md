@@ -484,6 +484,22 @@ Os doze abaixo nasceram na auditoria de `/perfil` de **2026-08-17**
 
 ## Sem bloco atribuído
 
+- **D-32 · A ordem de foco de `/perfil` diverge da visual abaixo de `xl`.**
+  `ProfilePage.tsx` usa `order-*` para inverter as duas colunas abaixo de 1280px, e `order` reordena
+  a PINTURA, não a árvore de acessibilidade. Medido no review de 2026-08-18 (UI-01): em 390px o foco
+  salta `main.scrollTop` 0 → 1862 → 2230 → 0 ao longo do Tab; em 1024px o `y` do elemento focado vai
+  1875 → 2383 e volta para 323. WCAG 1.3.2 (Meaningful Sequence) e 2.4.3 (Focus Order). Nenhum
+  controle fica inalcançável ou sem nome — o custo é desorientação e scroll evitável em teclado e
+  leitor de tela, nas duas viewports em que a página é mais longa.
+  **A correção existiu e foi revertida por decisão do João (2026-08-18):** virar as colunas em `xl`
+  (leitura à direita, self-service à esquerda) alinha DOM e pintura nas três larguras e dispensa o
+  `order-*`, mas tira a identidade da esquerda no desktop — e o layout venceu. Inverter só o DOM
+  **não** serve: mudaria a viewport em que a violação acontece, já que a ordem de leitura de duas
+  colunas em LTR é a esquerda inteira e depois a direita. `tabIndex` positivo também não: troca um
+  defeito de ordem por outro. O que resta é desenho — ou a D1 abre mão do lado, ou a D-27 abre mão
+  da precedência abaixo de `xl`, ou o cartão de identidade encolhe o bastante para não precisar da
+  inversão. **Decisão do João**, e é por isso que entra sem bloco.
+
 - **D-31 · Duas chaves i18n órfãs no dicionário de `/perfil`.**
   `profile.documents.noValidity` e `profile.identity.role` existem nos três locales e **nenhum
   `.tsx` as consome** — medido no gate do BD-16 (2026-08-17) e reconfirmado no fechamento

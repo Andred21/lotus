@@ -8,24 +8,9 @@ import { ProfileDocumentsSection } from './ProfileDocumentsSection'
 import { ProfileSummaryCard } from './ProfileSummaryCard'
 
 /**
- * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): de um lado
- * exatamente o que é self-service, do outro o que o usuário não controla
- * (identidade, papel, resumo). A regra do bloco é a regra visível do layout.
- *
- * **O self-service vem PRIMEIRO, e agora em todas as larguras** (decisão do
- * João, 2026-08-18). A D1 punha o imutável à ESQUERDA em `xl`, e a D-27 punha o
- * self-service em cima abaixo de `xl` — duas ordens visuais para um DOM só, que
- * só se conciliavam com `order-*`. `order` reordena a PINTURA e não a árvore de
- * acessibilidade: em 390px o foco saltava `main.scrollTop` 0 → 1862 → 2230 → 0
- * ao longo do Tab, e em 1024px o `y` do elemento focado ia 1875 → 2383 e voltava
- * para 323 (UI-01 do review de 2026-08-18, WCAG 1.3.2 e 2.4.3). Trocar o lado
- * em `xl` não move o defeito de viewport: a ordem de leitura de duas colunas em
- * LTR é a coluna esquerda inteira e depois a direita, então DOM e pintura
- * coincidem em `xl` E abaixo dele — sem uma classe `order` na tela.
- *
- * O que a D1 perde com a troca é só o LADO, não a marca: quem diz "isto você
- * não edita" é a superfície recuada (D-28), que já era o portador da regra
- * abaixo de `xl` e agora vale nas três larguras.
+ * Mi perfil. Duas colunas com corte por MUTABILIDADE (spec D1): à esquerda o
+ * que o usuário não controla (identidade, papel, resumo), à direita exatamente
+ * o que é self-service. A regra do bloco é a regra visível do layout.
  *
  * O que ramifica a tela é o DADO que falta, não o `status` da query:
  * `failedWithoutData` é o único que troca o conteúdo pelo erro; falha COM
@@ -74,22 +59,35 @@ export function ProfilePage() {
           2026-08-16). Nessa faixa, uma coluna só é mais confortável que duas
           iguais.
 
-          O self-service vem primeiro no DOM, e o `1fr` vem primeiro no template:
-          é o par que dispensa `order-*` e mantém foco e pintura na mesma ordem
-          nas três larguras — ver o docblock. A razão de o self-service ser o
-          primeiro é a D-27, medida: em 1024x768 o Admin tinha `Datos personales`
-          em y=829 de 1476px e o Redator, `Documentación profesional` em y=1809
-          de 2544px — 3,7 dobras, com a primeira contendo só o cartão de
-          identidade, cujo único controle é o de foto. */}
-      <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        <div className="flex flex-col gap-4">
+          Abaixo de `xl`, o self-service vem PRIMEIRO (D-27). Em 1024x768 o Admin
+          tinha `Datos personales` em y=829 e 1476px de total; o Redator,
+          `Documentación profesional` em y=1809 e 2544px — 3,7 dobras, com a
+          primeira contendo só o cartão de identidade, cujo único controle é o de
+          foto. A ordem em `xl` fica intocada: ali a posição horizontal já
+          carrega a regra, e quem a carrega abaixo disso é a superfície recuada
+          (D-28), que precisou vir antes — reordenar sem marca visual só troca
+          qual metade fica por último.
+
+          **O custo do `order-*` está medido e aceito (decisão do João,
+          2026-08-18).** `order` reordena a PINTURA, não a árvore de
+          acessibilidade: abaixo de `xl` o Tab percorre a coluna de leitura
+          antes da de self-service, e o foco salta `main.scrollTop`
+          0 → 1862 → 2230 → 0 em 390px; em 1024px o `y` do elemento focado vai
+          1875 → 2383 e volta para 323 (UI-01 do review de 2026-08-18, WCAG
+          1.3.2 e 2.4.3). A correção existiu e foi revertida: virar as colunas
+          em `xl` alinharia DOM e pintura nas três larguras, ao preço de tirar
+          a identidade da esquerda no desktop, e o layout venceu. Nada de
+          `tabIndex` positivo aqui — trocaria um defeito de ordem por outro. O
+          débito é o **D-32** do `backlog.md`. */}
+      <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <div className="order-2 flex flex-col gap-4 xl:order-1">
+          <ProfileIdentityCard profile={profile} />
+          {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
+        </div>
+        <div className="order-1 flex flex-col gap-4 xl:order-2">
           <ProfilePersonalSection profile={profile} />
           <ProfileSecuritySection email={profile.email} />
           {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}
-        </div>
-        <div className="flex flex-col gap-4">
-          <ProfileIdentityCard profile={profile} />
-          {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
         </div>
       </div>
     </ModulePage>

@@ -21,8 +21,8 @@ export function ProfileSummaryCard({ redator }: { redator: RedatorProfileData })
     <AppCard variant="sunken" className="p-4">
       <FormSection title={t('profile.summary.title')} />
 
-      {/* `max-w-[22rem]` = os mesmos 22rem da coluna para a qual o par foi desenhado
-          (a segunda coluna do grid de `ProfilePage`). Sem o teto, o
+      {/* `max-w-[22rem]` = os mesmos 22rem da coluna para a qual o par foi
+          desenhado (`ProfilePage`, `xl:grid-cols-[minmax(0,22rem)…]`). Sem o teto, o
           `justify-between` estica com o CARTÃO, e abaixo de `xl` o cartão ocupa
           a largura inteira: em 1024px o vão entre `Cursos habilitados` e o `3`
           media 548px, meio cartão vazio entre um rótulo e o número dele (UI-07

@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: 254d691
-updated_at: 2026-08-18T10:45:00-03:00
+updated_at: 2026-08-18T11:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -264,7 +264,7 @@ uma medida no navegador antes e depois, um commit por achado:
 | UI-03 · nome acessível do upload | `Subir documento` vs `Enviar Post-Grado` | `Subir documento` vs `Subir Post-Grado` | `ef46d37` |
 | UI-04 · alvo do olho da senha | 16x16 | **28x28**, glifo no mesmo pixel | `557565e` |
 | UI-05 · baixar arquivo | 6 paradas de Tab para 3 ações, 3 mudas | **3 paradas**, todas nomeadas | `c15dfbf` |
-| UI-01 · ordem de foco | `scrollTop` 0 → 1862 → 2230 → 0 em 390px | monotônica em 390 e 1024 | `da26b89` |
+| UI-01 · ordem de foco | `scrollTop` 0 → 1862 → 2230 → 0 em 390px | ~~monotônica em 390 e 1024~~ — **revertido**, ver abaixo | `da26b89`, desfeito |
 | UI-06 · ação do slot vazio em 390px | x=297 contra 348 | **348 nos quatro** | `c9289fb` |
 | UI-07 · vão rótulo/valor em 1024px | 548px | **214px** | `058b80f` |
 
@@ -272,10 +272,16 @@ uma medida no navegador antes e depois, um commit por achado:
 punha o imutável à esquerda em `xl` e a D-27 punha o self-service em cima abaixo de `xl`: duas ordens
 visuais para um DOM só, conciliadas com `order-*` — que reordena a pintura e não a árvore de
 acessibilidade. Inverter só o DOM mudaria a viewport em que a violação acontece, não a eliminaria, e
-1440 é a viewport de trabalho. **O João escolheu virar as colunas em `xl`:** o self-service vem
-primeiro no DOM nas três larguras e a coluna de leitura vira trilho à direita. A D1 perde o LADO, não
-a marca — quem diz "isto você não edita" é a superfície recuada (D-28), que já era o portador da
-regra abaixo de `xl`.
+1440 é a viewport de trabalho. O João escolheu virar as colunas em `xl`, e **depois, vendo a tela
+pronta, reverteu** (*"deixe o meu perfil como estava"*): o desktop volta com a identidade à esquerda
+e o `order-*` de volta abaixo de `xl`. **A revisão continua certa e o layout venceu** — não é o
+achado que caiu, é o preço dele que foi aceito, e aceito com o número na mão.
+
+O que sobrou está escrito onde se tropeça nele: o docblock do `ProfilePage` carrega a medição e diz
+por que `tabIndex` positivo não é saída, e o débito é o **D-32** do `backlog.md`, sem bloco, porque a
+saída restante é desenho — ou a D1 abre mão do lado, ou a D-27 abre mão da precedência abaixo de
+`xl`, ou o cartão de identidade encolhe o bastante para dispensar a inversão. As outras seis
+correções não dependiam desta e ficaram todas de pé.
 
 **Duas correções não couberam na feature e subiram para `shared/ui`,** porque o defeito não era de
 `/perfil`: o alvo do olho vale para os 4 campos de senha da aplicação, e o par `<a>`+`<button>` do
@@ -301,7 +307,8 @@ três locales e nenhum `.tsx` as consome).
 sem ele quebra as referências cruzadas já escritas dos dois lados.
 
 **Estado: `ready_for_review`.** Working tree limpo, branch `feat/bd16-perfil-e-kit-compartilhado` com
-15 commits de task, 10 do gate visual, 7 do passe de revisão e os de doc. Gate final: `pnpm build`
+15 commits de task, 10 do gate visual, 7 do passe de revisão (um deles desfeito por decisão) e os de
+doc. Gate final: `pnpm build`
 verde, `pnpm lint` 0, **54 arquivos / 321 testes** contra a baseline de 45/250 — o passe de revisão
 somou 1 arquivo e 9 testes (a catraca da tinta `danger`, o alvo do olho e o controle único de
 download). `state_basis_commit` segue em `254d691`: ele marca a base do item ativo, e a entrega ainda
