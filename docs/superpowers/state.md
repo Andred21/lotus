@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: listagens-e-abas
 active_work_item: bd13-listagens-e-abas
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-bd13-listagens-e-abas-design.md
 active_plan: docs/superpowers/plans/2026-08-18-bd13-listagens-e-abas.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T15:20:00-03:00
+updated_at: 2026-08-18T15:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -119,6 +119,25 @@ declarada:** o bloco introduz plural do i18next, que é forma nova nos três dic
 
 **Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco bd13-listagens-e-abas`
 (brainstorming → spec → plano). Este commit **não** inicia o planejamento.
+
+### Execução — 2026-08-18: início, técnica `executing-plans`
+
+O `/planejar-bloco` fechou spec e plano (9 tasks, `executor: claude`) e o estado entrou em
+`ready_for_execution` em `947194f`. Este commit abre a execução junto com a **Task 1** (D-31), que é
+a primeira fronteira durável: as duas chaves órfãs saem dos três locales e o comentário do
+`ProfileDocumentSlot.test.tsx` registra por que a asserção negativa sobrevive à remoção.
+
+**Técnica: `executing-plans`, não `subagent-driven-development`** — a sessão corre sem delegação a
+subagente por instrução do João; o ciclo task a task, com verificação por task, é o mesmo.
+
+**Uma medição corrigiu o plano na primeira linha executada.** O grep do Step 1 da Task 1
+(`grep -rn "documents\.noValidity"`) devolve **zero**, não a linha esperada: o único consumidor cita
+a chave dentro de um regex (`/profile\.documents\.noValidity/`), com os pontos escapados no fonte.
+Regrepado sem os pontos, a linha aparece — `ProfileDocumentSlot.test.tsx:118`, asserção negativa,
+exatamente como a spec registrou. As chaves seguem órfãs; o passo do plano é que media com o padrão
+errado.
+
+**Estado: `executing`.** Próxima ação: Task 2 (D-02, plural do i18next em 17 chaves).
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 

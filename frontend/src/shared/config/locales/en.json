@@ -347,7 +347,6 @@
       "title": "Identity",
       "email": "Email",
       "rut": "RUT",
-      "role": "Profile",
       "noRut": "No RUT on file",
       "managedByAdmin": "This information is managed by the Lotus team."
     },
@@ -376,8 +375,7 @@
       "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
-      "validUntil": "Valid until {{date}}",
-      "noValidity": "No expiry date"
+      "validUntil": "Valid until {{date}}"
     },
     "docStatus": {
       "vigente": "Valid",

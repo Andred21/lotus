@@ -113,6 +113,11 @@ describe('ProfileDocumentSlot', () => {
     // Tres dos quatro slots tem valid_until null e imprimiam
     // `Sin fecha de vencimiento` -- uma linha que so diz que nao ha informacao,
     // e que e ela quem rebaixou a que importa.
+    //
+    // A chave `profile.documents.noValidity` foi APAGADA dos 3 locales na D-31
+    // (2026-08-18), justamente por nao ter consumidor. A assercao segue valendo:
+    // o `t` esta mockado devolvendo a chave, entao ela nao depende do dicionario
+    // -- e continua guardando a decisao de nao imprimir a linha.
     montar({ valid_until: null })
 
     expect(screen.queryByText(/profile\.documents\.noValidity/)).toBeNull()
