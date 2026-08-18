@@ -21,11 +21,19 @@ export function ProfilePage() {
   const { data: profile, isLoading, loadError, errorDetail, failedWithoutData, refetch } =
     useProfilePage()
 
+  // O MESMO predicado que ramifica o corpo (linhas do `profile.redator` abaixo),
+  // não uma checagem de role: o backend já decide quem tem perfil profissional,
+  // e `usePermissions`/`can()` é conveniência de interface, não autoridade
+  // (ADR-07). Enquanto o subtítulo não ramificava, o Admin lia
+  // "…y tu documentación profesional" e rolava até o fim para descobrir que a
+  // seção não existe — e a frase já enganou uma medição de fechamento (D-26).
+  const subtitulo = profile?.redator ? t('profile.subtitleRedator') : t('profile.subtitleAdmin')
+
   if (isLoading) return <AppDetailSkeleton />
 
   if (failedWithoutData || !profile) {
     return (
-      <ModulePage title={t('userMenu.profile')} description={t('profile.subtitle')}>
+      <ModulePage title={t('userMenu.profile')} description={subtitulo}>
         <AppErrorState
           title={t('profile.loadError')}
           detail={errorDetail ?? t('common.loadErrorHint')}
@@ -37,7 +45,7 @@ export function ProfilePage() {
   }
 
   return (
-    <ModulePage title={t('userMenu.profile')} description={t('profile.subtitle')}>
+    <ModulePage title={t('userMenu.profile')} description={subtitulo}>
       <InlineLoadState
         error={loadError ? (errorDetail ?? t('common.loadErrorHint')) : null}
         retryLabel={t('common.retry')}
@@ -49,13 +57,34 @@ export function ProfilePage() {
           coluna que recebe TODOS os controles editáveis ficava menor que a de
           leitura, invertendo a hierarquia que a D1 desenhou (UI-04 do review de
           2026-08-16). Nessa faixa, uma coluna só é mais confortável que duas
-          iguais. */}
+          iguais.
+
+          Abaixo de `xl`, o self-service vem PRIMEIRO (D-27). Em 1024x768 o Admin
+          tinha `Datos personales` em y=829 e 1476px de total; o Redator,
+          `Documentación profesional` em y=1809 e 2544px — 3,7 dobras, com a
+          primeira contendo só o cartão de identidade, cujo único controle é o de
+          foto. A ordem em `xl` fica intocada: ali a posição horizontal já
+          carrega a regra, e quem a carrega abaixo disso é a superfície recuada
+          (D-28), que precisou vir antes — reordenar sem marca visual só troca
+          qual metade fica por último.
+
+          **O custo do `order-*` está medido e aceito (decisão do João,
+          2026-08-18).** `order` reordena a PINTURA, não a árvore de
+          acessibilidade: abaixo de `xl` o Tab percorre a coluna de leitura
+          antes da de self-service, e o foco salta `main.scrollTop`
+          0 → 1862 → 2230 → 0 em 390px; em 1024px o `y` do elemento focado vai
+          1875 → 2383 e volta para 323 (UI-01 do review de 2026-08-18, WCAG
+          1.3.2 e 2.4.3). A correção existiu e foi revertida: virar as colunas
+          em `xl` alinharia DOM e pintura nas três larguras, ao preço de tirar
+          a identidade da esquerda no desktop, e o layout venceu. Nada de
+          `tabIndex` positivo aqui — trocaria um defeito de ordem por outro. O
+          débito é o **D-32** do `backlog.md`. */}
       <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-4">
+        <div className="order-2 flex flex-col gap-4 xl:order-1">
           <ProfileIdentityCard profile={profile} />
           {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="order-1 flex flex-col gap-4 xl:order-2">
           <ProfilePersonalSection profile={profile} />
           <ProfileSecuritySection email={profile.email} />
           {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}

@@ -83,14 +83,24 @@ export function StaffUserDialog({
         <div className="grid gap-4 sm:grid-cols-3 mt-10">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.
               Tag em vez de input desabilitado: sinaliza "valor imutável", não
-              "campo editável acinzentado". */}
-          <FormField label={t("admin.type")}>
-            <AppTag
-              value={t("admin.typeAdmin")}
-              severity="info"
-              className="mt-2 w-1/2"
-            />
-          </FormField>
+              "campo editável acinzentado".
+
+              Entra por `readOnly`, e não por `children`: a pílula não é
+              controle, e por `children` a label saía com `htmlFor` apontando
+              para um id que nenhum elemento carrega — label morta, o caso que o
+              próprio docblock do `FormField` descreve (P-37, medido no gate do
+              BD-16). */}
+          <FormField
+            label={t("admin.type")}
+            readOnly
+            value={
+              <AppTag
+                value={t("admin.typeAdmin")}
+                severity="info"
+                className="mt-2 w-1/2"
+              />
+            }
+          />
           <FormField
             label={t("admin.role")}
             error={fieldErrors?.role?.[0]}

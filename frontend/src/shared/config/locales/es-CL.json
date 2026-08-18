@@ -42,6 +42,7 @@
     "fileTooLarge": "El archivo pesa {{size}} y el máximo es {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato no se puede previsualizar. Descárgalo para abrirlo.",
+    "noOptions": "Sin opciones disponibles",
     "noResults": "Sin resultados para \"{{term}}\"",
     "noResultsFiltered": "Sin resultados para los filtros aplicados",
     "noResultsFilteredHint": "Ajusta o limpia los filtros aplicados.",
@@ -339,7 +340,8 @@
     "module": "Módulo en construcción."
   },
   "profile": {
-    "subtitle": "Tus datos personales, tu seguridad y tu documentación profesional.",
+    "subtitleRedator": "Tus datos personales, tu seguridad y tu documentación profesional.",
+    "subtitleAdmin": "Revisa tus datos y administra tu contraseña.",
     "loadError": "No se pudo cargar tu perfil",
     "identity": {
       "title": "Identidad",
@@ -370,6 +372,8 @@
       "hint": "Puedes subir y reemplazar tus documentos. No se eliminan: el nuevo reemplaza al anterior.",
       "send": "Subir documento",
       "replace": "Reemplazar",
+      "sendNamed": "Subir {{tipo}}",
+      "replaceNamed": "Reemplazar {{tipo}}",
       "managedByAdmin": "Este documento lo gestiona el administrador.",
       "sent": "Documento subido.",
       "validUntil": "Vence el {{date}}",

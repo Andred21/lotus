@@ -6,6 +6,7 @@ import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { mergePt } from '../mergePt'
+import { useFieldProps } from '../FormField/fieldContext'
 
 export interface AppPasswordProps extends PasswordProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
@@ -37,10 +38,22 @@ export interface AppPasswordProps extends PasswordProps {
  * regra no wrapper e metade no chamador foi o que reproduziu o débito três
  * vezes. Mesclado, não cravado: o chamador acrescenta classe, não perde a
  * largura (idiom do `AppInputText`).
+ *
+ * **A D-24 pediu Espaço, e o Espaço já funciona.** O `onToggleMaskKeyDown` do
+ * Prime trata `event.key === 'Enter' || event.code === 'Space'`
+ * (`password.cjs.js:588-593`) e o `pt` deste wrapper não o sobrescreve — há
+ * teste medindo as duas teclas. Acrescentar handler próprio alternaria DUAS
+ * vezes e o campo voltaria ao estado inicial: defeito pior e invisível. Se o
+ * Espaço falhar no navegador, a causa não é este componente, e o achado precisa
+ * ser remedido lá antes de virar código aqui.
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {
     const { t } = useTranslation()
+    // `inputId`: o `id` do Password cai na `<span.p-password>` raiz e só `inputId`
+    // alcança o input (`password.cjs.js:704` vs `:713`). Associar a label à span
+    // seria o mesmo defeito da P-37 com outra roupa.
+    const fieldProps = useFieldProps('inputId')
     // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
     // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o
     // wrapper é a única porta (UI-08). Não vai pela locale global do Prime:
@@ -55,10 +68,51 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // NOME muda a cada clique é botão; switch tem nome estável e estado que
     // varia. Trocar o papel preserva os dois rótulos medidos na API instalada
     // (`passwordShow`/`passwordHide`) e apaga o estado que mentia.
-    const togglePt = { role: 'button', 'aria-checked': undefined }
+    //
+    // O ALVO é do wrapper pela mesma régua do nome: o olho mede 16x16px em toda
+    // tela com senha — 4 campos só entre `/perfil` e o cadastro de staff — e o
+    // mínimo de AA é 24x24 (WCAG 2.5.8, UI-04 do review de 2026-08-18). A folga
+    // vai na PRÓPRIA `<svg>` porque é ela que carrega o `onClick` do Prime:
+    // padding na `<span>` de fora cresceria a área sem tornar nada clicável.
+    // `content-box` é o que faz o padding SOMAR — o `.p-icon` do tema crava
+    // `width/height: 1rem`, então sem ele os 6px comeriam o glifo em vez de
+    // cercá-lo. 16 + 6 + 6 = 28. Vai em `style`, e não pela utilitária
+    // `box-content`: o `*` de `src/index.css` está FORA de `@layer` e as
+    // utilitárias do Tailwind estão DENTRO de `@layer utilities`, então o
+    // seletor universal do projeto vence a classe — medido no navegador, com a
+    // classe aplicada e `box-sizing` resolvendo `border-box` mesmo assim.
+    const togglePt = {
+      role: 'button',
+      'aria-checked': undefined,
+      style: { boxSizing: 'content-box' as const, padding: '0.375rem' },
+    }
     const ariaPt = {
       showIcon: { ...togglePt, 'aria-label': t('common.showPassword') },
       hideIcon: { ...togglePt, 'aria-label': t('common.hidePassword') },
+      // A `<span.p-input-icon>` que o Prime posiciona centra o ícone com
+      // `top: 50%; margin-top: -0.5rem` — um número que assume 1rem de altura e
+      // que a folga acima invalida (o glifo desceria 6px). `translateY(-50%)`
+      // centra em qualquer altura, então a correção não volta a quebrar se o
+      // alvo mudar de tamanho; o eixo X compensa os 6px que o padding empurrou
+      // para dentro, e o glifo fica onde sempre esteve. Vai em `style` e não em
+      // classe porque a regra do tema é (0,2,0) e uma utilitária do Tailwind é
+      // (0,1,0): pela classe, a correção perderia em silêncio.
+      // `root` porque o Prime repassa este nó como o `pt` INTEIRO do
+      // `InputIcon` (`password.cjs.js:741`), não como as props dele — o mesmo
+      // caminho do `iconField` logo abaixo.
+      inputIcon: {
+        root: {
+          style: {
+            // `flex` mata o vão de linha: `<svg>` é inline, e a `<span>` ficava
+            // 4px mais alta que ele, o que jogava o glifo 2px acima do eixo do
+            // campo depois que a folga acima cresceu o alvo. Com a span colada
+            // na altura do alvo, `translateY(-50%)` centra o glifo, não a linha.
+            display: 'flex' as const,
+            marginTop: 0,
+            transform: 'translate(0.375rem, -50%)',
+          },
+        },
+      },
       // O IconField interno do Password (o que abriga o olho) é shrink-to-fit e
       // não herda o `w-full` do input — ver o docblock. Pinado como o rótulo:
       // largura de campo não é opcional.
@@ -75,6 +129,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           inputRef={ref}
           toggleMask
           feedback={false}
+          {...fieldProps}
           {...props}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full ${props.inputClassName ?? ''}`}
@@ -93,6 +148,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           inputRef={ref}
           toggleMask
           feedback={false}
+          {...fieldProps}
           {...props}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full pl-10 ${props.inputClassName ?? ''}`}

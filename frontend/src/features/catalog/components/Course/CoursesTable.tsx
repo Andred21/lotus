@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import { AppColumn, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
-import { BRAND_COLOR } from '@shared/config/brand'
 
 export function CoursesTable({
   courses, loading, onView, actions, error, onRetry,
@@ -40,7 +39,10 @@ export function CoursesTable({
         sortable
         body={(c: CourseData) => (
           <div className="flex items-center gap-3">
-            <i className="pi pi-book" style={{ color: BRAND_COLOR, fontSize: '1.25rem' }} />
+            <i
+              className="pi pi-book"
+              style={{ color: 'var(--text-color-secondary)', fontSize: '1.25rem' }}
+            />
             <span className="font-medium">{c.name}</span>
           </div>
         )}

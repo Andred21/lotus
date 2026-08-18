@@ -7,7 +7,7 @@
  * gerado, por decisão do João (D-P8): a cadeia de `:not()` do rascunho cobria
  * só `.p-button` e seria uma segunda fonte de verdade. */
 :root {
-  --brand: #25a5e4; /* celeste-lotus — fonte CSS única (brand.ts é a fonte JS) */
+  --brand: #25a5e4; /* celeste-lotus — fonte CSS única; não há mais fonte JS (spec D7 do BD-16) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
   /* Tinta sobre as superfícies navy FIXAS do shell (sidebar, header). NÃO pode
@@ -25,7 +25,8 @@
   --shell-ink-muted: oklch(70.4% 0.04 256.788);
 
   /* Degradê do painel de marca do login (UI-05 do review de 2026-08-12). Era
-   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com BRAND_COLOR interpolado
+   * `linear-gradient(135deg, BRAND_COLOR, #1b7fb8)`, com a antiga constante JS
+   * `BRAND_COLOR` (morta no BD-16, spec D7) interpolada
    * em JS e o segundo ponto fora de qualquer fonte de verdade — nem grep de hex nem o
    * transform do tema gerado alcançam template string em `.tsx`.
    *
@@ -78,6 +79,16 @@
   --tone-warning-ink: var(--yellow-400);
   --tone-danger-ink: var(--red-400);
 
+  /* Tom sem severidade e com hue próprio (a modalidade `Online` do `AppTag`).
+   * Entrou neste mapa no BD-16, um bloco depois dos quatro acima, porque era o
+   * ÚLTIMO sobrevivente do `color-mix(hue 70%, --text-color)` — e ali a fórmula
+   * reprovava nos DOIS temas, não só no claro: 4,41:1 no escuro e 4,44:1 no
+   * claro, medidos na tabela de turmas contra o 4,5:1 de texto normal. O degrau
+   * do escuro é o 300, e não o 400 dos irmãos, porque o roxo é mais escuro que
+   * eles na mesma altura da rampa: `--purple-400` mede 4,10:1 sobre o fundo
+   * tingido a 15% e continuaria reprovando. O 300 mede 5,42:1. */
+  --tone-accent-ink: var(--purple-300);
+
   /* Tom neutro não tem severidade: o trilho existe como elemento de estrutura,
    * sem cor de sinal. Cinza da rampa de superfície, não `--text-color` — um
    * traço na tinta do corpo seria o mais escuro da fileira e leria como o mais
@@ -129,6 +140,29 @@
  * traço vale por especificidade, não por ordem. */
 html:not(.dark) {
   --surface-ground: #f1f5f9;
+
+  /* O degrau que a rampa do tema pula (decisão do João, 2026-08-17, D-28).
+   *
+   * O gerado dá `#64748b` (slate-500) à tinta secundária, e ele mede 4,34:1
+   * sobre o humo — reprova o 4,5:1 de texto normal assim que um bloco pousa no
+   * FUNDO da aplicação em vez do card branco, onde os mesmos 4,76:1 passavam
+   * raspando. Não é achado novo: o `SectionLabel` do Dashboard mediu este mesmo
+   * 4,34 e escapou trocando por tinta de CORPO. Essa saída não serve ao perfil
+   * recuado do BD-16, porque lá a secundária é o RÓTULO do `FormField` em
+   * leitura — em tinta de corpo, rótulo e valor ficam no mesmo cinza e no mesmo
+   * `text-sm`, e o par "E-mail / joao@…" perde a hierarquia.
+   *
+   * `#475569` é o slate-600, e a rampa do tema realmente o pula: `--surface-500`
+   * é o slate-500 e `--surface-600` já é o slate-700 (`#334155`, a tinta de
+   * corpo). Mede 6,92:1 sobre o humo e 7,58:1 sobre o branco, contra 4,34/4,76.
+   *
+   * Escopado ao claro porque no escuro não há o que consertar: a secundária de
+   * lá é `rgba(255,255,255,0.6)` e mede 7,16:1 sobre o noche. E vale só para
+   * quem consome a VAR — os 117 `#64748b` literais que o gerador escreve dentro
+   * das regras do Prime seguem como estão, de propósito: o que a régua do bloco
+   * mediu foi o texto dos nossos componentes, não o miolo compilado do Lara. */
+  --text-color-secondary: #475569;
+
   /* Achado 3 (decisão do João, 2026-08-12): celeste como TRAÇO sobre claro mede
    * 2,77:1 no branco e 2,53:1 no humo — reprova o 3:1 de elemento gráfico. O
    * azul-poste mede 13,37:1 no humo. Aqui ele cabe porque é traço e não texto:
@@ -148,6 +182,8 @@ html:not(.dark) {
   --tone-warning-ink: var(--yellow-800);
   --tone-danger-ink: var(--red-700);
   --tone-neutral-ink: var(--surface-400);
+  /* 5,80:1 sobre o fundo tingido a 15%, contra os 4,44:1 da fórmula antiga. */
+  --tone-accent-ink: var(--purple-700);
 
   /* Degraus do claro. NÃO é o mesmo índice dos quatro tons: o que iguala os
    * cinco é a razão medida sobre `--surface-card`, e o piso aqui é 3:1 —
@@ -187,6 +223,39 @@ html:not(.dark) {
  * tabela — só afeta a largura dos algarismos, texto comum não muda. */
 .p-datatable .p-datatable-tbody > tr > td {
   font-variant-numeric: tabular-nums;
+}
+
+/* Botão `text`/`outlined` de severidade `danger`: a tinta vem do TOKEN de tom,
+ * não do vermelho compilado do Lara.
+ *
+ * O gerador deixa as paletas de severidade intactas de propósito — elas
+ * comunicam significado, não marca —, e por isso `#ef4444` seguiu sendo o
+ * PRIMEIRO PLANO desses dois variants. Sobre o card rebaixado do claro
+ * (`#f1f5f9`) ele mede 3,44:1 a 16px/700, e 16px em negrito não é texto grande:
+ * a régua é 4,5:1 e ele reprova (UI-02 do review de 2026-08-18, no `Eliminar
+ * foto` do `AppPhotoField` — a única ação irreversível do cartão era a de menor
+ * legibilidade da tela). No escuro o mesmo botão media 6,77:1 e nunca foi o
+ * problema, mas a tinta troca nos dois temas pela mesma razão que o
+ * `--tone-danger-ink` já existe: quem muda é a variável, não a regra.
+ *
+ * Medido depois da troca: 5,83:1 sobre `#f1f5f9` no claro (`--red-700`) e
+ * 4,98:1 sobre o card do escuro (`--red-400`) — os mesmos números que a guarda
+ * de `tests/tone-ink.test.ts` já defende para os quatro tons do `AppCard`.
+ *
+ * NÃO vale para o botão preenchido (`p-button-danger` sozinho): ali o vermelho
+ * é FUNDO e o rótulo é branco. É a mesma fronteira do `--brand-ink`, que só
+ * troca o degrau quando a cor vira primeiro plano.
+ *
+ * Cada estado tem a própria linha porque a especificidade é do Lara: a regra
+ * base dele é (0,3,0), mas `:hover` e `:active` chegam a (0,5,0) repetindo o
+ * mesmo `#ef4444` — sem elas, passar o mouse devolvia os 3,44:1. */
+:root .p-button.p-button-danger.p-button-text,
+:root .p-button.p-button-danger.p-button-text:not(:disabled):hover,
+:root .p-button.p-button-danger.p-button-text:not(:disabled):active,
+:root .p-button.p-button-danger.p-button-outlined,
+:root .p-button.p-button-danger.p-button-outlined:not(:disabled):hover,
+:root .p-button.p-button-danger.p-button-outlined:not(:disabled):active {
+  color: var(--tone-danger-ink);
 }
 
 /* UI-10 da revisão de 2026-08-17: a rolagem horizontal da tabela existia e não

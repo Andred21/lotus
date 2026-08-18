@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { dangerSurface, dangerText } from '../../styles/tokens'
+import { FieldContext, type FieldContextValue } from './fieldContext'
 
 /** Texto de leitura: quebra linha, seleciona e copia. Usa `--text-color` e não
  * o secundário — leitura não é texto de apoio, e o cinza de desabilitado é
@@ -30,21 +31,60 @@ export type FormFieldProps = {
   children?: ReactNode
 }
 
-/** Campo de formulário: label + controle + mensagem de erro do backend. */
+/**
+ * Campo de formulário: label + controle + mensagem de erro do backend.
+ *
+ * **A label é IRMÃ do controle, não mãe dele (P-37).** Enquanto ela o envolvia,
+ * o nome acessível do input somava o texto do rótulo e, com erro presente, a
+ * mensagem junto — o leitor de tela anunciava "RUT RUT inválido" em vez de
+ * "RUT". O molde correto já vivia no `LoginForm`; o que faltava era um lugar
+ * onde ele valesse para os 55 campos com controle sem editar os 55 call sites.
+ *
+ * O id nasce aqui (`useId`) e viaja por contexto até o wrapper, que sabe qual é
+ * a própria porta (`id` ou `inputId`) — ver `fieldContext.ts`. Prop do chamador
+ * vence a do contexto, sempre.
+ */
 export function FormField({ label, error, readOnly, value, children }: FormFieldProps) {
+  const id = useId()
+  const errorId = `${id}-error`
+  const field: FieldContextValue = {
+    id,
+    invalid: !!error,
+    describedBy: error ? errorId : undefined,
+  }
+
   return (
-    <label className="block">
-      <span className="mb-1 block text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</span>
-      {readOnly ? <ReadOnlyValue value={value} /> : children}
+    <div className="block">
+      {/* Sem `htmlFor` em leitura: não há controle a apontar, e label pendurada
+          num id inexistente é label morta.
+          Quem decide isso é a PROP, não o conteúdo: `children` que não monta
+          controle — uma `AppTag` de valor imutável, por exemplo — passa por aqui
+          como se montasse, e a label sai apontando para o vazio. Aconteceu em
+          dois sítios (`StaffUserDialog`, `CertificateViewDialog`), medidos no
+          gate do BD-16. Valor que só se lê entra por `readOnly` + `value`, que
+          aceita `ReactNode` justamente para isso. */}
+      <label
+        htmlFor={readOnly ? undefined : id}
+        className="mb-1 block text-sm"
+        style={{ color: 'var(--text-color-secondary)' }}
+      >
+        {label}
+      </label>
+      {readOnly ? (
+        <ReadOnlyValue value={value} />
+      ) : (
+        <FieldContext.Provider value={field}>{children}</FieldContext.Provider>
+      )}
       {error && (
         <span
+          id={errorId}
           className="mt-1 block text-sm"
           style={{ color: dangerText }}
         >
           {error}
         </span>
       )}
-    </label>
+    </div>
   )
 }
 

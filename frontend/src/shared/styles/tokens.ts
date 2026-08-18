@@ -45,6 +45,14 @@ export const warningSurface = 'color-mix(in srgb, var(--yellow-500) 12%, var(--s
  * onde o tom precisa ocupar o lugar sem afirmar urgência. */
 export const neutralInk = 'var(--tone-neutral-ink)'
 
+/** Tom SEM severidade e com hue próprio: hoje só a modalidade `Online` do
+ * `AppTag`. Chegou por último ao mesmo mapa porque era o último sobrevivente da
+ * fórmula `color-mix(hue 70%, --text-color)` que os quatro tons acima
+ * abandonaram — e ele reprovava nos DOIS temas, 4,44:1 no claro e 4,41:1 no
+ * escuro, medidos na tabela de turmas contra a régua de 4,5:1 de texto normal
+ * (as tags são 12px/700, e 12px bold não é texto grande). */
+export const accentText = 'var(--tone-accent-ink)'
+
 /**
  * Tinta de SÉRIE, por índice. Mora aqui pela mesma razão das tintas de
  * severidade acima — uma cor com um dono —, e não junto do gráfico: a catraca

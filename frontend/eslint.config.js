@@ -113,6 +113,65 @@ const COR_HARDCODED = {
   message:
     'Cor Tailwind hardcoded: Tailwind é layout, cor vem de variável do tema (ADR-16). Use style={{ color: "var(--text-color-secondary)" }} e irmãs.',
 }
+// Propriedades cujo VALOR é cor. `borderInlineStartColor` está aqui porque é a
+// que o `AppCard` usa no trilho do `stat`.
+const PROPS_DE_COR = [
+  'color', 'background', 'backgroundColor',
+  'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+  'borderInlineStartColor', 'borderInlineEndColor', 'borderBlockStartColor', 'borderBlockEndColor',
+  'outlineColor', 'fill', 'stroke', 'caretColor', 'accentColor',
+  'textDecorationColor', 'columnRuleColor',
+].join('|')
+
+// Referência de tema, ou palavra-chave que não é cor. Tudo o mais é literal cru.
+const VALOR_DE_TEMA = 'var\\(|color-mix\\(|transparent$|inherit$|currentColor$|none$|unset$|initial$'
+
+const MSG_COR_EM_STYLE =
+  'Cor crua em propriedade de cor: cor vem de variável do tema (ADR-16). ' +
+  'Use var(--text-color-secondary), color-mix(in srgb, var(--…) 15%, var(--surface-card)) e irmãs.'
+
+// A catraca `COR_HARDCODED` acima mede `className` e é CEGA a `style`. Esta mede
+// o VALOR, que é a única régua possível aqui: cor por `style` é a grafia CERTA
+// quando o valor é `var(--…)`, e foi exatamente isso que adiou a guarda desde
+// 2026-08-13 (P-36). A medição que a destravou: `src/` tem ZERO literais de cor
+// crua em propriedade de cor, então ela nasce sem nenhum `ignores` — que era o
+// medo registrado na ficha ("nasceria verde com a exceção embutida").
+//
+// Descendente, não filho direto: o valor real da propriedade costuma ser
+// ternário (`AppCard.tsx` — `hue && !stat ? color-mix(…) : 'var(--surface-card)'`),
+// e um seletor `>` seria contornado por toda condicional. `Literal[raw=/^['"]/]`
+// restringe a literal de STRING: sem isso, o `0` de um `arr[0]` dentro da
+// expressão contaria como cor crua.
+//
+// O que ela deliberadamente NÃO alcança é Identifier — resolver binding não é
+// trabalho de seletor sintático. É por isso que `BRAND_COLOR` foi APAGADA em vez
+// de só regulada: sem segunda grafia da marca em JS, não há porta de fuga.
+const COR_LITERAL_EM_STYLE = [
+  {
+    selector: `Property[key.name=/^(${PROPS_DE_COR})$/] Literal[raw=/^['"]/]:not([value=/^(${VALOR_DE_TEMA})/])`,
+    message: MSG_COR_EM_STYLE,
+  },
+  // `{ 'background': '#fff' }` é o mesmo defeito com a chave em string. O
+  // `:not(.key)` é obrigatório aqui e foi medido, não previsto: sem ele o
+  // seletor descendente marca a PRÓPRIA chave — `'background'` é literal de
+  // string e não começa por `var(` —, então `{ 'color': 'var(--x)' }`, que é
+  // código correto, reprovaria sozinho. Guarda que reprova código certo é a
+  // armadilha oposta à da P-36, e igualmente cara.
+  {
+    selector: `Property[key.value=/^(${PROPS_DE_COR})$/] Literal[raw=/^['"]/]:not(.key):not([value=/^(${VALOR_DE_TEMA})/])`,
+    message: MSG_COR_EM_STYLE,
+  },
+  // Template literal entra pela mesma régua, olhando o PRIMEIRO quasi — é a
+  // grafia do `AppFileRow` e do `AppCard`, e `color-mix(in srgb, ${hue} …` passa.
+  {
+    selector: `Property[key.name=/^(${PROPS_DE_COR})$/] TemplateLiteral:not([quasis.0.value.raw=/^(var\\(|color-mix\\()/])`,
+    message: MSG_COR_EM_STYLE,
+  },
+  {
+    selector: `Property[key.value=/^(${PROPS_DE_COR})$/] TemplateLiteral:not([quasis.0.value.raw=/^(var\\(|color-mix\\()/])`,
+    message: MSG_COR_EM_STYLE,
+  },
+]
 // O seletor mede a FORMA do defeito, não a string que o grep achou. A primeira
 // versão exigia `JSXExpressionContainer > Identifier[name="readOnly"]` — casava
 // só `disabled={readOnly}`, que era a grafia dos 40 sítios convertidos — e
@@ -192,17 +251,20 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
   // é o único ponto onde a cor segue hardcoded de propósito. `files: CATRACA_COR`
   // aqui e `ignores: CATRACA_COR` acima particionam o mesmo glob; nenhum
   // arquivo casa os dois blocos.
+  // A régua de VALOR entra aqui também, e sem exceção: o que estes 4 arquivos
+  // carregam é a exceção da classe Tailwind, não a de cor em `style` — e eles
+  // não têm nenhuma (medido em 2026-08-17).
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -223,7 +285,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
+      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -363,7 +425,7 @@ export default defineConfig([
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED],
+      'no-restricted-syntax': ['error', DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
     },
   },
   // A catraca de cor entra em `src/app/**` (D11 de
@@ -389,7 +451,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', COR_HARDCODED],
+      'no-restricted-syntax': ['error', COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
     },
   },
 ])

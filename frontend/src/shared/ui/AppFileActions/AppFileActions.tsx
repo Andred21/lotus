@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '../AppButton'
+import { AppDownloadButton } from '../AppDownloadButton'
 import type { PreviewableFile } from '../AppFilePreviewDialog'
 
 export type AppFileActionsProps<T extends PreviewableFile> = {
@@ -49,9 +50,7 @@ export function AppFileActions<T extends PreviewableFile>({
         aria-label={t('common.preview')}
         onClick={() => onPreview(file)}
       />
-      <a href={file.download_url} target="_blank" rel="noreferrer">
-        <AppButton icon="pi pi-download" text rounded aria-label={t('common.download')} />
-      </a>
+      <AppDownloadButton href={file.download_url} />
       {children}
       {onRemove && (
         <AppButton

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatFileSize } from '@shared/lib/upload'
+import { formatDate } from '@shared/lib'
 
 /** Ícone e cor por tipo. Decide por mime (spec D7); extensão é fallback quando
  * o mime é null. Cor por palette var do Lara, composta com --surface-card no
@@ -38,24 +39,77 @@ export type AppFileRowProps = {
  * divergentes (spec D8). A ESTRUTURA de cada tela continua com a tela. */
 export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowProps) {
   const { icon, hue } = fileIcon(mime, name)
+  // `toLocaleDateString()` sem locale cai no idioma do NAVEGADOR: a interface em
+  // es-CL exibia a data em en-US (D-18). O `formatDate` resolve pelo idioma
+  // ativo, num lugar só. `created_at` é data-hora completa e não carrega o
+  // problema de fuso do `valid_until` só-data — ali a âncora `T00:00:00`
+  // continua sendo o mecanismo certo, no `ProfileDocumentSlot`.
   const meta = [
-    createdAt ? new Date(createdAt).toLocaleDateString() : null,
+    createdAt ? formatDate(new Date(createdAt)) : null,
     size !== undefined ? formatFileSize(size) : null,
   ].filter(Boolean).join(' · ')
 
   return (
-    <div className="flex items-center gap-3">
+    // `flex-wrap`: em 390px o cartão do CV media `clientWidth` 227 contra
+    // `scrollWidth` 311, o rótulo saía cortado em "Reem" e o NOME do arquivo
+    // ficava com largura 0 (D-19, único C do review de 2026-08-17). A quebra é
+    // dirigida pelo CONTÊINER e não por breakpoint de viewport: este componente
+    // serve quatro larguras diferentes na MESMA viewport — comercial, turma,
+    // redator e perfil —, e um breakpoint acertaria uma e erraria três. O
+    // contra-exemplo que isolou a causa é o REUF: sem botão de upload, ele mede
+    // `scrollWidth` = `clientWidth` e não vaza.
+    // `justify-end` é da LINHA e vale só depois que ela quebra: enquanto tudo
+    // cabe numa linha, o bloco de nome é `flex-1` e come a folga inteira, então
+    // não há espaço para distribuir e nada se mexe (medido: em 1440px os quatro
+    // slots do perfil mantêm nome de 413/556px e `Ver` em x=1290 com e sem a
+    // classe). Quando o grupo de ações desce, ele passa a ser o único item da
+    // segunda linha, e sem isto ancorava à ESQUERDA: em 390px o slot do REUF
+    // punha `Ver` em x=122 enquanto os outros dois, que ainda cabiam ao lado,
+    // ficavam em x=248 — a coluna de ação deixava de ser uma coluna, que é
+    // justamente o que a D-22 mediu em 1440px (x=1132 contra x=1275). Com a
+    // âncora à direita os três voltam a x=248.
+    <div className="flex flex-wrap items-center justify-end gap-3">
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
         style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}
       >
         <i className={icon} aria-hidden="true" />
       </span>
-      <div className="min-w-0 flex-1">
+      {/* `min-w-0 flex-1` é o que mantém o truncamento funcionando ANTES da
+          quebra — sem ele o nome volta a empurrar a linha inteira, e o `title`
+          (a leitura completa, desde 2026-08-16) deixa de ser o único recurso.
+
+          `basis-40` é o que DECIDE a quebra, e ele foi medido no gate do BD-16:
+          sem base, `min-w-0` deixa o nome encolher sem limite, então o grupo de
+          ações nunca quebra e o nome é que paga. O REUF do perfil em 390px
+          media 66px de nome ("reuf-jua…") com a data partida em TRÊS linhas —
+          `clientWidth` = `scrollWidth`, sem vazar, e ainda assim ilegível: ele
+          é o slot sem botão de upload, e era justamente o contra-exemplo que a
+          primeira metade da D-19 usou para se declarar resolvida. Com a base de
+          10rem o mesmo slot mede 178px, o nome cabe inteiro, a data volta a uma
+          linha e o par de ícones desce. Onde sobra espaço nada muda: a base é
+          menor que a linha e o grupo continua ao lado. */}
+      <div className="min-w-0 flex-1 basis-40">
         <p className="truncate text-sm font-medium" title={name}>{name}</p>
-        {meta && <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>}
+        {meta && (
+          <p className="font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>
+        )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+      {/* O grupo de ações quebra POR DENTRO, e ancora à direita. A quebra da
+          linha acima resolveu metade da D-19: o nome voltou a caber inteiro,
+          mas o grupo de três ações do perfil mede 243px (`Reemplazar` 139 + dois
+          ícones de 48, gaps de 4) contra os 226px de conteúdo do slot em 390px —
+          a barra lateral recolhida come 80px da viewport antes de a página
+          começar. O slot media `clientWidth` 242 contra `scrollWidth` 251 e os
+          botões vazavam 9px além da própria borda.
+          `justify-end` é inerte quando tudo cabe numa linha — o grupo é
+          `shrink-0` e não sobra espaço para distribuir —, então as três outras
+          telas que consomem esta linha não se mexem. */}
+      {actions && (
+        <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-1">
+          {actions}
+        </div>
+      )}
     </div>
   )
 }

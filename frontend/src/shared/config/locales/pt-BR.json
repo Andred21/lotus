@@ -42,6 +42,7 @@
     "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato não tem pré-visualização. Baixe o arquivo para abri-lo.",
+    "noOptions": "Sem opções disponíveis",
     "noResults": "Sem resultados para \"{{term}}\"",
     "noResultsFiltered": "Sem resultados para os filtros aplicados",
     "noResultsFilteredHint": "Ajuste ou limpe os filtros aplicados.",
@@ -339,7 +340,8 @@
     "module": "Módulo em construção."
   },
   "profile": {
-    "subtitle": "Seus dados pessoais, sua segurança e sua documentação profissional.",
+    "subtitleRedator": "Seus dados pessoais, sua segurança e sua documentação profissional.",
+    "subtitleAdmin": "Revise seus dados e administre sua senha.",
     "loadError": "Não foi possível carregar seu perfil",
     "identity": {
       "title": "Identidade",
@@ -370,6 +372,8 @@
       "hint": "Você pode enviar e substituir seus documentos. Eles não são excluídos: o novo substitui o anterior.",
       "send": "Enviar documento",
       "replace": "Substituir",
+      "sendNamed": "Enviar {{tipo}}",
+      "replaceNamed": "Substituir {{tipo}}",
       "managedByAdmin": "Este documento é gerido pelo administrador.",
       "sent": "Documento enviado.",
       "validUntil": "Vence em {{date}}",

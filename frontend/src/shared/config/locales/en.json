@@ -42,6 +42,7 @@
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
     "preview": "View",
     "previewUnavailable": "This format cannot be previewed. Download it to open.",
+    "noOptions": "No options available",
     "noResults": "No results for \"{{term}}\"",
     "noResultsFiltered": "No results for the applied filters",
     "noResultsFilteredHint": "Adjust or clear the applied filters.",
@@ -339,7 +340,8 @@
     "module": "Module under construction."
   },
   "profile": {
-    "subtitle": "Your personal data, your security and your professional documents.",
+    "subtitleRedator": "Your personal data, your security and your professional documents.",
+    "subtitleAdmin": "Review your details and manage your password.",
     "loadError": "Could not load your profile",
     "identity": {
       "title": "Identity",
@@ -370,6 +372,8 @@
       "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
       "send": "Upload document",
       "replace": "Replace",
+      "sendNamed": "Upload {{tipo}}",
+      "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
       "validUntil": "Valid until {{date}}",

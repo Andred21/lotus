@@ -427,9 +427,12 @@ os números que a auditoria registrou.
   do BD-16 no `backlog.md` herdou o número velho. A correção do número é registro, e sai no
   fechamento junto com o encerramento das duas pendências.
 - **`profile.documents.noValidity` fica órfã nos três locales.** A D10 deixa de renderizá-la.
-  Remover chave i18n é varredura de outro tipo (nenhuma guarda protege paridade nem uso — só a
-  sincronia de `<html lang>` é testada); a chave fica, declarada como órfã, e sai com a próxima
-  limpeza de dicionário.
+  `shared/config/locales/parity.test.ts` guarda a **estrutura** — toda chave de `es-CL` existe em
+  `en` e `pt-BR` —, mas nada guarda o **uso**: chave presente nas três e consumida por ninguém passa
+  verde. Removê-la é varredura de outro tipo (o critério é "sem consumidor", que exige medir o
+  repositório inteiro, não este bloco); a chave fica, declarada como órfã, e sai com a próxima
+  limpeza de dicionário. As chaves **novas** deste bloco entram nas três locales no mesmo commit,
+  que é o que o `parity.test.ts` reprova se esquecido.
 - **O `flex-wrap` da D3 alcança quatro contêineres de largura diferente.** A quebra é a resposta
   certa para os quatro, mas a largura em que cada um quebra é diferente, e o comportamento no
   comercial e na turma precisa ser **visto**, não inferido do perfil. Está no DoD, e é a parte dele

@@ -26,19 +26,33 @@ const contraste = (a: string, b: string) => {
   return (claro + 0.05) / (escuro + 0.05)
 }
 
-/** O `AppCard tone` compõe o fundo com `color-mix(hue 8%, --surface-card)`. A
- * tinta pousa nele tanto quanto no card puro, e é lá que ela é MAIS fraca. */
-const tingido = (hue: string, card: string) =>
+/** O `AppCard tone` compõe o fundo com `color-mix(hue 8%, --surface-card)`; o
+ * `AppTag` usa 15% do mesmo hue. A tinta pousa nele tanto quanto no card puro, e
+ * é lá que ela é MAIS fraca — por isso cada tom traz a SUA proporção. */
+const tingido = (hue: string, card: string, parte: number) =>
   '#' +
   rgb(hue)
-    .map((v, i) => Math.round(v * 0.08 + rgb(card)[i] * 0.92))
+    .map((v, i) => Math.round(v * parte + rgb(card)[i] * (1 - parte)))
     .map((v) => v.toString(16).padStart(2, '0'))
     .join('')
 
-/** As quatro tintas como o CSS as resolve: o bloco da camada de marca diz qual
- * DEGRAU vale no tema, e a folha do tema diz quanto vale o degrau. */
+/** O hue e a proporção de fundo de cada tom. `accent` não é severidade — é a
+ * modalidade `Online`, que tem hue próprio e nunca entra na escala
+ * success/info/warning/danger —, mas a régua é a mesma, e ele entrou aqui
+ * quando o BD-16 mediu que era o último sítio da fórmula que os outros quatro
+ * já tinham abandonado. */
+const TONS = {
+  info: { hue: 'blue', parte: 0.08 },
+  success: { hue: 'green', parte: 0.08 },
+  warning: { hue: 'yellow', parte: 0.08 },
+  danger: { hue: 'red', parte: 0.08 },
+  accent: { hue: 'purple', parte: 0.15 },
+}
+
+/** As tintas como o CSS as resolve: o bloco da camada de marca diz qual DEGRAU
+ * vale no tema, e a folha do tema diz quanto vale o degrau. */
 function tintasDe(bloco: string, tema: string) {
-  return ['info', 'success', 'warning', 'danger'].map((tom) => {
+  return Object.keys(TONS).map((tom) => {
     const degrau = bloco.match(new RegExp(`--tone-${tom}-ink:\\s*var\\((--[a-z]+-\\d+)\\)`))?.[1] ?? ''
     return { tom, degrau, tinta: hex(tema, `\\${degrau}`) }
   })
@@ -68,16 +82,16 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
     it.each(tintasDe(bloco, folha))(
       'o tom $tom aponta para um degrau da rampa e passa AA em texto normal (4,5:1)',
       ({ degrau, tinta }) => {
-        expect(degrau).toMatch(/^--(blue|green|yellow|red)-\d00$/)
+        expect(degrau).toMatch(/^--(blue|green|yellow|red|purple)-\d00$/)
         expect(contraste(tinta, card)).toBeGreaterThanOrEqual(4.5)
       },
     )
 
     it.each(tintasDe(bloco, folha))(
-      'o tom $tom continua passando sobre o card tingido a 8% pelo próprio tom',
+      'o tom $tom continua passando sobre a superfície tingida pelo próprio tom',
       ({ tom, tinta }) => {
-        const hue = hex(folha, `--${{ info: 'blue', success: 'green', warning: 'yellow', danger: 'red' }[tom]}-500`)
-        expect(contraste(tinta, tingido(hue, card))).toBeGreaterThanOrEqual(4.5)
+        const { hue, parte } = TONS[tom as keyof typeof TONS]
+        expect(contraste(tinta, tingido(hex(folha, `--${hue}-500`), card, parte))).toBeGreaterThanOrEqual(4.5)
       },
     )
   })
@@ -100,9 +114,65 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
   })
 
   it('as tintas de `tokens.ts` leem o token de tom, não uma mistura própria', () => {
-    for (const nome of ['dangerText', 'infoText', 'successText', 'warningText']) {
+    for (const nome of ['dangerText', 'infoText', 'successText', 'warningText', 'accentText']) {
       const linha = tokens.match(new RegExp(`export const ${nome} = (.+)`))?.[1] ?? ''
       expect(linha).toMatch(/^'var\(--tone-\w+-ink\)'$/)
     }
+  })
+})
+
+/**
+ * UI-02 do review de 2026-08-18. O `Eliminar foto` do `AppPhotoField` — a única
+ * ação irreversível do cartão de identidade — media 3,44:1 no tema claro.
+ *
+ * A causa não é o token acima: é o gerador do tema, que deixa as paletas de
+ * severidade INTACTAS de propósito, e com isso o `#ef4444` compilado do Lara
+ * seguia pintando o rótulo dos variants `text` e `outlined` — os dois em que o
+ * vermelho é primeiro plano, e não fundo. A régua é 4,5:1 porque 16px em negrito
+ * não é texto grande (o limiar é 18,66px).
+ *
+ * Mede sobre `--surface-ground` porque é ali que o botão vive: o cartão `sunken`
+ * do `/perfil` (D-28) pinta o fundo do shell, e ele é o fundo MAIS escuro dos
+ * dois no claro — se passa nele, passa no card.
+ */
+describe('tinta do botão `danger` text/outlined (UI-02)', () => {
+  /** O fundo como o CSS o resolve: a camada de marca sobrescreve o ground do
+   * claro (`#f1f5f9`, D-28) e não toca o do escuro. */
+  const ground = (bloco: string, folha: string) =>
+    hex(bloco, '--surface-ground') || hex(folha, '--surface-ground')
+
+  it('a camada de marca aponta os dois variants para o token de tom', () => {
+    expect(camadaDeMarca).toMatch(
+      /:root \.p-button\.p-button-danger\.p-button-text,[\s\S]*?\{\s*color: var\(--tone-danger-ink\);\s*\}/,
+    )
+    expect(camadaDeMarca).toContain(':root .p-button.p-button-danger.p-button-outlined,')
+  })
+
+  /** A regra base do Lara é (0,3,0), mas `:hover` e `:active` chegam a (0,5,0)
+   * repetindo o MESMO `#ef4444`: sem uma linha por estado, passar o mouse
+   * devolvia os 3,44:1 e a captura de tela não acusaria. */
+  it('cobre `:hover` e `:active`, onde o Lara repete a cor com especificidade maior', () => {
+    for (const variant of ['text', 'outlined']) {
+      for (const estado of [':hover', ':active']) {
+        expect(camadaDeMarca).toContain(
+          `:root .p-button.p-button-danger.p-button-${variant}:not(:disabled)${estado}`,
+        )
+      }
+    }
+  })
+
+  it.each([
+    { tema: 'claro', bloco: blocoClaro, folha: temaClaro },
+    { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro },
+  ])('no tema $tema a tinta passa AA (4,5:1) sobre o cartão recuado', ({ bloco, folha }) => {
+    const degrau = bloco.match(/--tone-danger-ink:\s*var\((--[a-z]+-\d+)\)/)?.[1] ?? ''
+    expect(degrau).toMatch(/^--red-\d00$/)
+    expect(contraste(hex(folha, `\\${degrau}`), ground(bloco, folha))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  /** O controle que faz o teste discriminar: reverter para o vermelho do Lara
+   * cai aqui, não na captura de tela. */
+  it('o vermelho compilado do Lara reprova sobre o cartão recuado do claro', () => {
+    expect(contraste('#ef4444', '#f1f5f9')).toBeLessThan(4.5)
   })
 })

@@ -77,9 +77,15 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
                 : t('certificate.vigenciaIndefinida')
             }
           />
-          <FormField label={t('certificate.fieldEstado')}>
-            <AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />
-          </FormField>
+          {/* `readOnly`, e não `children`: a pílula não é controle, e por
+              `children` a label saía com `htmlFor` apontando para um id que
+              nenhum elemento carrega — label morta, o caso que o próprio
+              docblock do `FormField` descreve (P-37, medido no gate do BD-16). */}
+          <FormField
+            label={t('certificate.fieldEstado')}
+            readOnly
+            value={<AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />}
+          />
 
           {status === 'revocado' && (
             <>

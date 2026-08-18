@@ -1,5 +1,7 @@
-// Cor primária do produto — fonte JS. A fonte CSS é `--brand` em
-// shared/styles/brand-theme.css (mesmo hex; TS não lê CSS var). Mudou aqui,
-// muda lá e re-roda `pnpm brand-theme` (ADR-16 §5 — fechado em 2026-08-11).
-export const BRAND_COLOR = '#25A5E4'
+// A cor primária do produto vive SÓ no CSS, como `--brand` em
+// shared/styles/brand-theme.css. Havia aqui um `BRAND_COLOR` com o mesmo hex,
+// e ele era a porta de fuga da catraca de cor: o seletor mede literal, não
+// resolve binding, então `style={{ color: BRAND_COLOR }}` passava verde. Os
+// dois consumidores foram pagos (FormSection, CoursesTable) e a constante saiu
+// junto — sem segunda grafia, não há o que perseguir (spec D7).
 export const APP_VERSION = 'v0.1.0'

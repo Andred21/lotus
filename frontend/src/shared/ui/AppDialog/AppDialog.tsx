@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Dialog } from 'primereact/dialog'
 import type { DialogProps } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
+import { mergePt } from '../mergePt'
 import { appDialogPt } from './style'
 
 export type { DialogProps as AppDialogProps } from 'primereact/dialog'
@@ -57,18 +58,28 @@ export function AppDialog({ pt, visible, ...props }: DialogProps) {
       maximizable
       draggable={false}
       visible={visible}
-      pt={{
-        ...appDialogPt,
-        ...pt,
-        // Pinado DEPOIS do spread do caller: o nome do controle é acessibilidade,
+      pt={mergePt<DialogProps['pt']>(mergePt(appDialogPt, pt), {
+        // Pinado DEPOIS do `pt` do caller: o nome do controle é acessibilidade,
         // não estilo, e não pode ser desligado por quem customiza o `pt` (mesma
-        // regra do `customUpload` em `AppFileUpload`). O rótulo é DINÂMICO — o
+        // regra do `customUpload` em `AppFileUpload`). Funde por `mergePt`, e
+        // não por spread raso, porque o spread trocaria a chave INTEIRA: quem
+        // passasse `pt.closeButton.className` perdia o nome acessível, e quem
+        // não passasse nada perdia a customização — o mesmo silêncio que o
+        // `AppFileUpload` já tinha pago. O rótulo de maximizar é DINÂMICO — o
         // `pt` do Dialog recebe `state` (`dialog.cjs.js:453-455`) —, porque um
         // rótulo fixo mentiria em metade dos estados.
         maximizableButton: ({ state }: { state: { maximized: boolean } }) => ({
           'aria-label': state.maximized ? t('common.restoreDialog') : t('common.maximizeDialog'),
         }),
-      }}
+        // O irmão que faltava. O botão de maximizar ganhou nome traduzido e o de
+        // FECHAR ficou no default do Prime — `localeOption('close')`, isto é
+        // "Close" em inglês, em TODO diálogo da aplicação (medido no gate do
+        // BD-16). Não vem pela locale global do Prime porque `locale('es')`
+        // nunca é chamado no projeto: `primeLocale.ts` só faz `addLocale`, e um
+        // rótulo pendurado lá ficaria congelado na troca de idioma — o mesmo
+        // motivo pelo qual o olho do `AppPassword` se nomeia no wrapper (UI-08).
+        closeButton: { 'aria-label': t('common.close') },
+      })}
       {...props}
     />
   )
