@@ -860,8 +860,6 @@
     "revokeBody": "This action is irreversible: the certificate will no longer be valid.",
     "revokeReason": "Revocation reason",
     "revokeConfirm": "Revoke",
-    "certCount_one": "{{count}} certificate",
-    "certCount_other": "{{count}} certificates",
     "statusSummary": "{{vigentes}} valid · {{porVencer}} expiring · {{vencidos}} expired · {{revocados}} revoked",
     "popupBlocked": "The browser blocked the PDF tab",
     "validation": {

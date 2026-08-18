@@ -860,8 +860,6 @@
     "revokeBody": "Esta acción es irreversible: el certificado dejará de ser válido.",
     "revokeReason": "Motivo de la revocación",
     "revokeConfirm": "Revocar",
-    "certCount_one": "{{count}} certificado",
-    "certCount_other": "{{count}} certificados",
     "statusSummary": "{{vigentes}} vigentes · {{porVencer}} por vencer · {{vencidos}} vencidos · {{revocados}} revocados",
     "popupBlocked": "El navegador bloqueó la pestaña del PDF",
     "validation": {

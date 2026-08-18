@@ -10,6 +10,9 @@ import i18n from '../i18n'
  * "1 usuario" e "2 usuarios" diferem sempre, inclusive quando as duas formas
  * carregam o mesmo substantivo — que é exatamente o defeito que se quer pegar.
  */
+// `certificate.certCount` NAO entra: nao tem consumidor em `.tsx`/`.ts`, e foi
+// apagada dos 3 dicionarios no review do BD-13 (Q-2). Chave morta com teste em
+// volta e chave que ninguem consegue apagar depois.
 const CHAVES = [
   'admin.count',
   'course.count',
@@ -26,7 +29,6 @@ const CHAVES = [
   'operation.table.count',
   'operation.enrollment.footerCount',
   'certificate.vigenciaMeses',
-  'certificate.certCount',
   'certificate.validation.hours',
 ] as const
 
