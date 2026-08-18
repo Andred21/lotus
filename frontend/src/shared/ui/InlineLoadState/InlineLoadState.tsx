@@ -10,7 +10,11 @@ export interface InlineLoadStateProps {
    * a reintentar, e trocar um pelo outro faz a tela mentir. */
   emptyHint?: string | null
   retryLabel: string
-  onRetry: () => void
+  /** Ausente => a linha explica e não oferece botão. Existe porque repetir NEM
+   * SEMPRE é recuperação: numa recusa de validação (422) o "Reintentar" reemite
+   * a mesma requisição e recebe a mesma recusa, e a correção está no controle ao
+   * lado, que a própria mensagem já indica (UI-05 da revisão de 2026-08-17). */
+  onRetry?: () => void
 }
 
 /**
@@ -23,6 +27,11 @@ export interface InlineLoadStateProps {
  *
  * Só a falha carrega `role="alert"`: lista vazia não é anomalia a interromper
  * leitura de tela.
+ *
+ * O botão fica JUNTO da mensagem, não na ponta oposta da linha: sob um campo de
+ * formulário o `justify-between` era invisível, mas sob um controle de largura de
+ * seção ele afastava a solução do problema em 1075px numa viewport de 1440
+ * (UI-05 da revisão de 2026-08-17).
  */
 export function InlineLoadState({ error, emptyHint, retryLabel, onRetry }: InlineLoadStateProps) {
   if (!error && !emptyHint) return null
@@ -30,22 +39,18 @@ export function InlineLoadState({ error, emptyHint, retryLabel, onRetry }: Inlin
   return (
     <>
       {error && (
-        <p
-          role="alert"
-          className="mt-1 flex items-center justify-between gap-2 text-xs"
-          style={{ color: dangerText }}
-        >
+        <p role="alert" className="mt-1 flex flex-wrap items-center gap-2 text-xs" style={{ color: dangerText }}>
           <span>{error}</span>
-          <AppButton label={retryLabel} text onClick={onRetry} />
+          {onRetry && <AppButton label={retryLabel} text onClick={onRetry} />}
         </p>
       )}
       {emptyHint && (
         <p
-          className="mt-1 flex items-center justify-between gap-2 text-xs"
+          className="mt-1 flex flex-wrap items-center gap-2 text-xs"
           style={{ color: 'var(--text-color-secondary)' }}
         >
           <span>{emptyHint}</span>
-          <AppButton label={retryLabel} text onClick={onRetry} />
+          {onRetry && <AppButton label={retryLabel} text onClick={onRetry} />}
         </p>
       )}
     </>

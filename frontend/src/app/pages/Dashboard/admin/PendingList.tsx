@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
 import type { PendingItemData } from '@shared/types/generated'
-import { DashboardItemRow } from './DashboardItemRow'
-import { pendingItemRoute } from './navigation'
+import { DashboardItemRow } from '../DashboardItemRow'
+import { pendingItemRoute } from '../navigation'
 
 /** `pendencias` é lista NÃO-anulável: chega `[]` tanto para quem não tem
  * permissão quanto para quem tem e não tem pendência. Por isso a seção sempre

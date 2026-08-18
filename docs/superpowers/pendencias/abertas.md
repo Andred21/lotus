@@ -69,6 +69,12 @@ aparece em `git status`; o que aparece é a outra metade do mesmo WIP, o `config
 `[env('FRONTEND_URL', …)]` por `explode(',', env('FRONTEND_URL', …))`. **`TestCase.php` é o terceiro
 sítio que lê a variável e o único que ainda a trata como valor único.**
 
+**Medido de novo no `/fechar-sprint` de 2026-08-17 (B2), com os mesmos números:** `12 failed / 672
+passed / 5 skipped` com o `.env` como está, `684 passed / 5 skipped / zero falha` com
+`FRONTEND_URL=http://localhost:5173`. **O gatilho venceu** — este é o segundo fechamento que
+encontra a suíte vermelha por este motivo, e o segundo bloco de frontend puro a encontrá-la
+(`git diff main...HEAD -- backend/` = 0 linhas nos dois).
+
 **Não se conserta aqui:** o fechamento de um bloco de frontend não abre arquivo de backend. O fix
 provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
 commit que fecha o multi-origin — decisão do João.
@@ -295,6 +301,12 @@ Nada disso é regressão deste bloco: as suas próprias sondas (3 roles `GATE-SI
 foram removidas no mesmo gate, com `users`, `roles`, `role_has_permissions` e `model_has_roles` de
 volta aos números exatos do snapshot (79/3/70/5). O que falta é o mecanismo — a receita de e2e
 declara a limpeza como passo do gate, e passo de gate depende de quem executa lembrar.
+
+**O gatilho apontava para o bloco B do Dashboard, e ele fechou em 2026-08-17 sem apagar nada** — a
+**D10** da spec do B2 decidiu declarar a residência em vez de removê-la, e as duas sondas apareceram
+na carga de redatores como previsto. As sondas do próprio B2 (dois papéis `sonda-cierre-*` e um
+usuário, criados e removidos dentro do gate de fechamento) **não engrossaram a lista**: `users` com
+`sonda.cierre.b2@lotus.cl` = 0 e `roles like 'sonda-cierre%'` = 0 depois do gate.
 
 **Não se deleta agora:** linha alheia de bloco fechado se menciona, não se apaga — a decisão de
 reseedar o dev é do João.

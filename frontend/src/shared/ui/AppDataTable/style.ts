@@ -12,8 +12,32 @@ export const appDataTablePt: DataTablePassThroughOptions = {
    * palavra; abaixo disso o wrapper rola na horizontal.
    *
    * Colapsar coluna foi rejeitado: escolher qual dado some é julgamento de
-   * domínio, e esconder coluna em tela com peso de auditoria é perda silenciosa. */
-  wrapper: { className: 'overflow-x-auto' },
+   * domínio, e esconder coluna em tela com peso de auditoria é perda silenciosa.
+   *
+   * A rolagem SE ANUNCIA (UI-10 da revisão de 2026-08-17). Quatro camadas de
+   * fundo, na ordem em que o CSS as pinta: duas CAPAS na cor do card, presas ao
+   * CONTEÚDO (`local`), e atrás delas duas SOMBRAS presas à MOLDURA (`scroll`).
+   * Com conteúdo fora da vista, a capa daquele lado já rolou para fora e a
+   * sombra aparece; ao chegar ao fim da rolagem a capa volta e a cobre. Sem
+   * listener de rolagem e sem nó novo no markup.
+   *
+   * A contraparte obrigatória mora na `brand-theme.css`: a linha do corpo do
+   * Lara é branco OPACO e cobria estas camadas. */
+  wrapper: {
+    className: 'overflow-x-auto',
+    style: {
+      backgroundImage: [
+        'linear-gradient(to right, var(--surface-card), transparent)',
+        'linear-gradient(to left, var(--surface-card), transparent)',
+        'linear-gradient(to right, color-mix(in srgb, var(--text-color) 22%, transparent), transparent)',
+        'linear-gradient(to left, color-mix(in srgb, var(--text-color) 22%, transparent), transparent)',
+      ].join(', '),
+      backgroundPosition: 'left center, right center, left center, right center',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: '2.5rem 100%, 2.5rem 100%, 1rem 100%, 1rem 100%',
+      backgroundAttachment: 'local, local, scroll, scroll',
+    },
+  },
   table: { className: 'min-w-[48rem]' },
   headerRow: { className: 'text-xs uppercase tracking-wide' },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a

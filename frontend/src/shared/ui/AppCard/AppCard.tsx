@@ -122,14 +122,24 @@ export interface AppCardHeaderProps {
  * O `m-0` do título é a mesma correção do `[&_p]:m-0` do `AppCard`: sem
  * Preflight, o `h3` carrega `margin: 1em` do agente do usuário e a faixa media
  * 80px de altura para 24px de texto, em TODO card da aplicação. Zerado, ela
- * passa a valer o `py-3` que o markup declara. */
+ * passa a valer o `py-3` que o markup declara.
+ *
+ * A faixa QUEBRA quando os dois lados não cabem. Em linha única a ação era
+ * empurrada para fora do card e da viewport: em 390px o "Ir a Mi Perfil" do card
+ * de pendências do Redator ia de x=279 a x=413 com a tela em 390, e o `<main>`
+ * não tinha rolagem horizontal que alcançasse o pedaço cortado (UI-02 da revisão
+ * de 2026-08-17). Quebrar preserva o rótulo inteiro; truncar o título, não —
+ * título de card é o que identifica o bloco. */
 export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
   return (
     <div
-      className="flex items-center justify-between gap-3 border-b px-4 py-3"
+      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-3"
       style={{ borderColor: 'var(--surface-border)' }}
     >
-      <div className="flex items-center gap-2">
+      {/* `min-w-0` para o grupo do título poder encolher até o min-content e
+        * deixar a ação decidir se cabe: sem ele o grupo trava na largura do
+        * texto inteiro e não há quebra que aconteça. */}
+      <div className="flex min-w-0 items-center gap-2">
         <h3
           className="m-0 text-base font-semibold"
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}

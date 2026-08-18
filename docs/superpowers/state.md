@@ -461,6 +461,557 @@ entrega, não por renumeração** — o gêmeo do `AppFileRow` foi pago e saiu, 
 `DashboardPage.tsx`, os 3 locales, `brand-theme.css`, `tokens.ts`, `AppCard.tsx` e o barrel de
 `shared/ui`. O merge é trabalho a fazer, não defeito — e os arquivos de doc vão conflitar por
 construção, porque os dois lados fecharam bloco no mesmo período.
+### Integração — 2026-08-18: merge da `main` (fechamento do `dashboard-frontend-analitico-e-redator`)
+
+**A `main` andou 21 commits desde o `254d691` de onde este bloco partiu** — o PR #57 fechou o
+`dashboard-frontend-analitico-e-redator` (B2 da Sprint 5) em 2026-08-17. As duas frentes correram em
+paralelo por exceção declarada, então este merge é a costura prevista.
+
+**Merge, não rebase, e a razão é a mesma de 2026-08-17: documental.** O fechamento deste bloco
+**cita SHAs** — `state_basis_commit: 0a1918b` e o intervalo `86ec2dd..0a1918b` na linha do
+`progress.md`. Rebase reescreveria todos eles e a prova da entrega passaria a apontar para commits
+que não existem.
+
+**Cinco conflitos: dois de documento e três de código.** Documento: `state.md` e `progress.md`.
+Código: `DashboardPage.tsx`, `brand-theme.css` e `tokens.ts`. Auto-mergearam `backlog.md`,
+`pendencias/README.md`, `pendencias/abertas.md`, `progress-archive.md`, `eslint.config.js`, os três
+locales, `AppCard.tsx` e o barrel de `shared/ui`.
+
+**Os dois conflitos de CSS e token eram adição pura dos dois lados** — o `accentText` daqui e o
+`chartInks` da `main`; a tinta `danger` de botão `text`/`outlined` daqui e a linha transparente da
+tabela lá. Ficaram os quatro; nenhum decidia sobre o outro.
+
+**O conflito de `DashboardPage` era estrutural, e a resolução foi rastrear o código, não o arquivo.**
+A `main` transformou a página no roteador de `kind` (admin × redator) e **extraiu o `SectionLabel`
+para arquivo próprio**; este bloco tinha mudado, no mesmo trecho, **só o docblock** — a D-28 matou a
+razão original da tinta de corpo (a secundária do claro desceu ao slate-600 e hoje mede 6,92:1 no
+humo), e a tinta fica por hierarquia. Ficou o arquivo da `main` inteiro, e a medição foi portada para
+`SectionLabel.tsx`. Resolver por arquivo teria apagado a estrutura nova ou perdido a medição.
+
+> Herdado da extração da `main` e **não corrigido aqui**: o docblock do `SectionLabel` ainda diz que
+> os dois registros "estavam escritos no docblock abaixo", e abaixo não há mais docblock nenhum — ele
+> ficou no `DashboardPage`. Comentário alheio se menciona, não se reescreve no meio de um merge.
+
+**O frontmatter foi lido antes do push, que é exatamente o que a lição da `main` pede** (ela nasceu
+de um frontmatter auto-mesclado que ninguém escreveu e que ficava **verde**). Os dois lados estavam
+`idle`; venceu a entrega mais recente — `last_completed_work_item: bd16-perfil-e-kit-compartilhado`,
+`state_basis_commit: 0a1918b`, `updated_at` de 2026-08-18.
+
+**A escada de itens fechados ficou com os dois fechamentos** — BD-16 como último, o B2 do Dashboard
+como penúltimo — e desceu um degrau: o `dashboard-backend-agregacoes` (2026-08-15) saiu do arquivo,
+como o `celula-de-identidade` saiu no fechamento anterior. No `progress.md` as duas linhas de entrega
+ficaram e o **BD-5** desceu **verbatim** para o `progress-archive.md`, mantendo as dez.
+
+**Os números foram contados, não herdados** — é a classe de deriva que o merge de 2026-08-17 pegou.
+Pendências: **29 abertas e 2 encerradas**, com o índice batendo ficha a ficha (zero ID de diferença
+nos dois sentidos). Locales: **698 chaves idênticas** nos três. Desta vez não havia deriva a
+corrigir.
+
+**Gate depois do merge:** `pnpm build` verde, `pnpm lint` 0, **59 arquivos / 368 testes** — os 54/327
+deste bloco mais os 5 arquivos e 41 testes que a `main` trouxe.
+
+## Penúltimo item fechado — 2026-08-17 (`dashboard-frontend-analitico-e-redator`, Sprint 5 · Dashboard, bloco B2)
+
+### Seleção — 2026-08-17
+
+**Último bloco da Sprint 5 (`backlog.md:45`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — e é
+a **décima primeira** vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
+`celula-de-identidade`, `dashboard-backend-agregacoes`, `meu-perfil-backend-self-service`,
+`dashboard-frontend-central-controle`): o argumento era **linha do backlog**, com numeração `2.` e
+markdown, não slug promovido.
+
+**Quatro decisões dele fecharam o gate:** o slug `dashboard-frontend-analitico-e-redator`; a rota
+**`context_required`**, como o backlog exige para a Sprint 5; **main tree** como área de trabalho; e
+**a view do Redator entra inteira** no escopo.
+
+**A branch nasceu ANTES deste commit**, seguindo o precedente do B1:
+`feat/dashboard-frontend-analitico-e-redator`, criada de `main@c2ac9d4`. Este arquivo já é escrito
+na branch, não na `main`.
+
+**A main tree é escolha dele, e o gatilho da P-03 não vencia.** O bloco é frontend puro; a pendência
+dispara com mais de um `active_work_item` **de backend**, e não há outro item ativo. Uma worktree
+seria admissível; ele escolheu a árvore principal, como no B1.
+
+**`state_basis_commit` passa de `0afdb55` a `c2ac9d4`, e isso não é divergência.** Com
+`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter derivado. `c2ac9d4` é o
+merge da revisão de UI de 2026-08-17 na `main`, e `main == origin/main` na hora da promoção, árvore
+limpa exceto `backend/config/cors.php`.
+
+**Fonte externa declarada, como em toda a Sprint 5:** o backlog aponta o escopo canônico no Drive
+(`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion (EAP
+8.4.0–8.4.7). O bloco A consumiu a sequência de backend (8.4.0→8.4.1→8.4.2→8.4.3→8.4.6) e o B1
+consumiu as de frontend pelo packet de 2026-08-15 — **este bloco não herda aquele packet**: ele foi
+escrito para as 5 seções operacionais, e o que sobra aqui são os 4 datasets analíticos e a view do
+Redator. O packet do B1
+(`context-packets/2026-08-15-dashboard-frontend-central-controle.md`) é insumo, não substituto.
+**O staleness trigger da troca 8.4.0 × 8.4.7 no Notion segue vivo** — descrição e critério de aceite
+invertidos entre si, medido duas vezes e não corrigido até o fechamento do B1; a resolução é a
+mesma, o Drive decide o escopo.
+
+**Cinco medições da abertura, feitas sobre `c2ac9d4` e não herdadas:**
+
+1. **Continua sem biblioteca de gráficos.** `package.json` não tem `chart.js` — peer obrigatório do
+   `Chart` do PrimeReact `^10.9.8` — nem `recharts`, `apexcharts`, `echarts`, `d3`, `victory`,
+   `nivo` ou `visx`; `shared/ui/` não tem wrapper de chart. **A decisão de chart lib é deste bloco**,
+   e ela é dependência de runtime nova, não escolha de estilo.
+2. **A D5 do B1 se paga aqui, medida.** `useDashboard(period?: DashboardPeriod)`
+   (`useDashboard.ts:77`) já nasceu com o parâmetro: a `queryKey` inclui `start`/`end`
+   (`useDashboard.ts:17-18`) e a chamada manda `period_start`/`period_end`
+   (`useDashboard.ts:83`). **Ligar a UI de período não mexe no cache** — o hook não precisa mudar de
+   forma para receber o filtro.
+3. **Os 4 datasets que faltam do admin são exatamente os 4 anuláveis que o B1 não consumiu:**
+   `compliance_turmas: TurmaComplianceData[] | null`, `redatores: RedatorLoadData[] | null`,
+   `series: SeriesData | null` e `rankings: RankingsData | null` (`generated.ts:8-11`). O B1 levou
+   `kpis`, `pendencias`, `alertas`, `pipeline` e `agenda`. O corte da D1 fecha sem sobra nem
+   sobreposição.
+4. **`RedatorDashboardData` tem 6 chaves e nenhuma anulável** (`generated.ts:376-383`): `view`,
+   `resumo`, `agenda`, `pendencias_documentais`, `alertas_documentos`, `historico`. A nulabilidade
+   de gate é só do admin, então **a política de estado do `useDashboard` não tem o que ramificar na
+   view do Redator** — o predicado `nenhumaSecaoLegivel`, que o review do B1 consertou, é do ramo
+   admin. Achado de desenho para o brainstorming, não do packet.
+5. **A catraca de cor já cobre onde o bloco escreve.** `COR_HARDCODED` roda em `src/app/**` desde a
+   D11 do B1 (P-34 fechada), e `app/pages/Dashboard/` tem 12 arquivos hoje. O bloco nasce sob a
+   guarda, sem precisar ligá-la.
+
+**A view do Redator entra inteira por decisão dele, com o custo declarado aqui e não descoberto no
+gate.** A lei §5 permite que o redator autentique, mas **a ativação não foi feita, e isso é medido,
+não suposto:** `CreateRedatorAction.php:20` diz "is_active=false até o fluxo de ativação" e
+`AuthController.php:52` recusa login de usuário inativo. **Consequência para o DoD: a view do
+Redator não pode ser provada com sessão de redator real** — a prova será por payload e render, e a
+ativação de acesso do redator (item 4 de "Próximos blocos") **não é escopo deste bloco**.
+
+**Duas linhas de backlog que tocam este bloco:** a **P-44** (dois usuários de sonda aparecem na
+carga de redatores) tem o gatilho apontando para cá e **a carga de redatores é seção deste bloco**,
+então o gatilho vence — tratar no planejamento; e a **D-16** (turma concluída sem matrícula caindo em
+`fully_issued`) **não é deste bloco**: o consumidor do funil era o B1 e ele não pediu a distinção,
+então a linha segue no BD-15 com o gatilho intacto.
+
+**`backend/config/cors.php` está modificado no working tree e não é deste bloco** (WIP do João, o
+outro lado da P-45). Fica fora de todo `git add`; os commits usam paths exatos.
+
+**Risco de review projetado: BAIXO pelo gate binário** — frontend puro, não toca schema, não regenera
+`generated.ts`, não toca Sanctum, auditoria nem documento legal. **Divergência por alcance já
+declarada:** a chart lib é dependência de runtime nova e a view do Redator é superfície inteira sem
+consumidor autenticável. A classificação final é do `/revisar-sprint`, não desta promoção.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/dashboard-frontend-analitico-e-redator` a partir de `main@c2ac9d4`.
+
+### Context Packet — 2026-08-17: a metade externa foi verificada por conta própria
+
+Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `e48b4ae`) e validado contra o
+contrato da skill item a item: marcadores exatos e nada fora deles, frontmatter completo com
+`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha` corretamente em **`null`** (registrados, não
+inventados, porque os ponteiros do estado eram `null`), **8 key facts** — o teto exato —, corpo em
+**718 palavras** contra o orçamento de 1.200, toda fonte com status `retrieved` (nenhuma
+`unavailable`, então a regra das duas evidências não se aplica), e **nenhum staleness trigger**
+apontando para hash de proveniência, para a transição promotora ou para edição de `state.md` que só
+move campo de workflow. Salvo em
+`docs/superpowers/context-packets/2026-08-17-dashboard-frontend-analitico-e-redator.md`.
+
+**Os três hashes de proveniência foram medidos antes da invocação e batem:** `base_commit`
+`e48b4aebedc0…`, `state_blob_sha` `98f93dac…` e `progress_blob_sha` `04ded854…`, obtidos por
+`git rev-parse`/`git hash-object` e não aceitos de chegada.
+
+**Seis afirmações de repositório foram medidas contra o código antes de salvar o packet, e as seis
+batem:** `SeriesData` tem as cinco séries com os nomes que o packet lista e **cada uma anulável**
+(`generated.ts:454-460`); `TurmaComplianceData` e `RedatorLoadData` batem campo a campo com o que o
+packet atribui ao Drive (`present_types`/`missing_types`/`habilitada`/`redatores`/datas e
+`current_turmas`/`upcoming_turmas`/`expired_documents`/`expiring_documents`); `DashboardPage.tsx:71`
+chama `useDashboard()` **sem período**, como o packet afirma; os dois blob SHAs dos packets citados
+como insumo batem exatamente; a spec do B1 (linha 16) confirma o corte da D1; e a D3 do bloco A está
+verbatim onde o packet a cita.
+
+**A metade externa não foi aceita de chegada — foi remedida por ferramenta própria, porque ela é a
+parte que só o Codex tinha visto.** O Drive `1HlT8kUsnoGsRJpYmryHacZ8zBZnDQgRa` existe, é
+`dashboard-escopo-funcional-analitico.md` e tem `modifiedTime` **`2026-08-14T18:38:17.992Z`** —
+idêntico ao que o registro de fontes declara. E a EAP 8.4.0 foi buscada direto pelo ID
+`3bcbc960-3dfa-81c8-9df1-de7d7805816b`.
+
+**A troca 8.4.0 × 8.4.7 PERSISTE, e agora está medida em terceira mão independente.** A 8.4.0 tem
+título "Estruturar domínio read-only Dashboard e dependências cross-domain", `Camada: Backend` e
+`ADR ref: ADR-02` — **título, camada e ADR corretos** —, enquanto a `Descrição` diz "Validar a
+central do Dashboard com harness/lotus-ui-review" e o `Critério de aceite` diz "UI review não
+encontra falhas bloqueantes de hierarquia, leitura, overflow ou estados". O `parent-data-source` é
+`collection://e64b7d57-d000-4433-b652-a410e75193cc`, **a base canônica** — não a homônima obsoleta
+que produziu 12 divergências falsas em 2026-07-30. A resolução é a de sempre: o Drive decide o
+escopo, e a UI review pertence ao frontend.
+
+**A medição direta trouxe um fato que o packet não destaca e que muda o DoD deste bloco:** o corpo
+de UI review da 8.4.0 exige validar "separadamente perfil administrativo e Redator" e, para o
+Redator, "ownership visual, ausência de dados comerciais/terceiros". **O B1 não podia satisfazer
+isso** — ele não tinha view do Redator. O aceite da 8.4.0 só fecha inteiro aqui.
+
+**Uma linha do packet foi medida e não é divergência de verdade, e fica registrada em vez de
+aceita.** A terceira linha da tabela ("Alcance do período") opõe o Drive à D3 local; medido, a
+própria D3 cita **"§5 do Drive"** como base — ela deriva do Drive, não o contradiz. A resolução
+registrada continua correta (só séries e rankings obedecem ao período), então **isto não foi motivo
+de re-invocação**: nenhum item da validação da skill é violado, e o custo é registro a mais, não
+decisão errada. Mesmo padrão do packet do B1, onde a medição também mostrou convergência onde o
+packet via imposição externa.
+
+**Uma tensão entre o packet e esta promoção fica declarada em vez de resolvida em silêncio.** A
+seleção acima escreveu que o gatilho da **P-44** vence aqui; o packet põe a limpeza em `Deferred`.
+Medida a ficha (`pendencias/abertas.md:369-371`), o gatilho é "quando um bloco puder reseedar o banco
+de dev, **ou** quando a residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o
+primeiro candidato: a tela vai mostrar estes nomes)". As duas leituras cabem: a tela **vai** mostrar
+os nomes de sonda, e este bloco **não** pode reseedar. É decisão do João no brainstorming, não
+escolha por heurística.
+
+**`status: ready`, e as duas open questions não bloqueiam:** ambas são de **apresentação** — qual
+chart lib e qual visualização por dataset, e qual UX do seletor de período —, e o Drive delega essa
+decisão ao frontend, o mesmo teste que o packet do B1 passou. Nenhuma regra de negócio, critério de
+aceite ou comportamento de peso legal ficou por adivinhar, que é o teste da própria skill para
+`blocked`.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
+(brainstorming → spec → plano).
+
+### Brainstorming e spec — 2026-08-17: o terreno mudou três decisões
+
+Spec em `docs/superpowers/specs/archive/2026-08-17-dashboard-frontend-analitico-e-redator-design.md`, com
+**treze decisões**: D1–D10 escolhidas pelo João entre alternativas com o custo declarado, D11–D13
+derivadas e declaradas como tais.
+
+**Baseline medido nesta branch antes de desenhar:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **39 arquivos / 223 testes**.
+
+**A D1 se decidiu por medição de mecanismo, não por preferência de biblioteca.** O tema troca em
+runtime trocando o `href` de um `<link>` (`primeTheme.ts:15`), sem re-render React. SVG aceita
+`stroke="var(--chart-1)"` e acompanha a troca **sem JS**; canvas exige `getComputedStyle` mais
+redraw forçado. **Recharts venceu por isso**, e não por bundle ou API.
+
+**Quatro achados de terreno mudaram o desenho, e nenhum estava no packet:**
+
+1. **A catraca de cor é cega para gráfico.** `COR_HARDCODED` casa só `className` com classe Tailwind
+   (`eslint.config.js:110-115`) — hex dentro de objeto de configuração de dataset passa em silêncio.
+   É a **P-36**, e a consequência entrou na D11: o wrapper de `shared/ui` é o **único** sítio que
+   nomeia token de cor, e o call-site passa índice de série. Cor vira mecanismo num lugar só, porque
+   lint não a alcança.
+2. **`src/app/**` é a camada sem a régua de linhas** — `max-lines` roda só em
+   `src/features/*/components/**` (`eslint.config.js:248-251`) —, e **2 dos 24 arquivos dela já a
+   excedem**, os dois criados pelo B1. É o mesmo formato da P-34 que o B1 fechou para a catraca de
+   cor, agora com `max-lines`. Virou a **D8**, e o custo medido é **um** arquivo, porque a D4 já
+   encolhe o `DashboardPage`.
+3. **A query key varia pelo período, e isso quebrava a tela.** Trocar a janela cria key nova,
+   `query.data` volta `undefined` e o hook cai em `kind: 'error'` — **a tela inteira viraria
+   `AppErrorState` por um erro de digitação no filtro**, e o `staleError` do B1 não alcança porque o
+   cache é da key antiga. A **D6** (`keepPreviousData`) fecha isso, e some de brinde o flash de tela
+   em branco na troca **normal** de período.
+4. **O reuso entre as duas views é maior do que parecia, e por forma do contrato.** `AgendaData` e
+   `RedatorAgendaData` têm as **mesmas 4 janelas** e a linha difere em **exatamente um campo**,
+   `client_name` — que é a regra de ownership. Genericizar `AgendaPanel` faz **o ownership virar
+   consequência do tipo**, não condicional de tela. E `alertas_documentos` é `AlertData[]`, o mesmo
+   tipo do `AlertList`: reuso sem tocar no arquivo.
+
+**O self-review da spec achou quatro coisas e as corrigiu antes do commit:** eu havia escrito "os 7
+cenários que o B1 deixou" e o arquivo tem **6 casos** (o "7º" do registro do B1 era contagem de
+**cenário da spec**, e o próprio fechamento dele anotou que o vitest conta **casos**); o mapeamento
+das 5 seções do Redator estava implícito e virou tabela, porque a D13 dispensou os componentes
+`ResumoRow`/`HistoricoRow` que o desenho apresentado previa; o glob `.tsx` da D8 parecia arbitrário e
+ganhou a razão (é o mesmo recorte da regra das features — hook e derivação longos são legítimos); e o
+alvo do gate projetava número de casos, que é justamente a projeção que o fechamento do B1 teve de
+declarar como divergência.
+
+**Uma verificação que evitou um falso problema:** a spec cita paths que ainda não existem, e
+`frontend/tests/repo-docs-refs.test.ts` reprova path fantasma em doc normativo. Medido,
+`docs/superpowers/**` está **excluído de propósito** dele (`:35,138-140`). Nenhum risco, e isso fica
+escrito para não ser remedido no próximo bloco.
+
+**Risco de review: BAIXO pelo gate binário** — não toca schema, não regenera `generated.ts`, não
+toca Sanctum, auditoria nem RBAC. **Divergência por alcance declarada:** dependência de runtime nova
+(Recharts), 2 wrappers novos em `shared/ui`, 5 tokens de cor novos, régua nova numa camada inteira e
+uma superfície de tela sem consumidor autenticável.
+
+O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
+escrita e autorizar o `writing-plans`.
+
+### Plano — 2026-08-17: escrever o plano derrubou o mecanismo de uma decisão aprovada
+
+**O João aprovou a spec sem pedir mudança**, e o plano saiu em
+`docs/superpowers/plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`: **onze tasks**, uma
+por commit, na ordem paleta → wrappers → hook → pastas → régua → período → séries → rankings →
+compliance/carga → Redator → DoD.
+
+**A ordem tem uma inversão deliberada.** A régua da D8 entra na Task 5, **antes** das cinco tasks
+que escrevem seções novas, e não no fim. Catraca serve para o código nascer conforme: ligada
+depois, as 4 seções nasceriam grandes e a task de ligar viraria refatoração retroativa. É a mesma
+sequência da D11 do B1.
+
+**Três coisas apareceram só ao escrever o plano, e as três viram emenda à spec.**
+
+1. **A D6 nomeava um mecanismo que não faz o que ela pede.** Medido no observador da versão
+   instalada — `@tanstack/query-core@5.101.1`, `src/queryObserver.ts:486-491` —,
+   `placeholderData: keepPreviousData` só entra com `status === 'pending'`. Quando o fetch da
+   janela nova **falha**, `status` vira `'error'`, `data` volta `undefined` e a tela vira
+   `AppErrorState`: exatamente o que a D6 foi escrita para impedir. Ele cobre a troca normal — o
+   "ganho de brinde" que a decisão citava — e **não cobre a troca falhada**, que era o objetivo
+   declarado. Substituído por um piso único no hook (o último payload bom). Um mecanismo cobre as
+   duas metades; manter os dois seria a segunda fonte da mesma verdade. **O objetivo da D6 e o
+   cenário 4 do §6 não mudaram** — mudou o mecanismo nomeado.
+2. **A §4 e a D8 não se satisfazem juntas.** A §4 dava ao `DashboardPage.tsx` dois papéis — roteador
+   de `kind` e compositor das seções do admin — e a D8 põe 150 linhas sobre ele. Ele tem **159
+   ANTES** das 4 seções novas. Resolvido pelo critério da própria D4: `admin/AdminView.tsx`,
+   simétrico ao `RedatorView.tsx` que a §4 já previa, mais `SectionLabel.tsx` e
+   `DashboardSkeleton.tsx` na raiz, que é onde mora o que as duas views usam.
+3. **A chave i18n do KPI vira completa.** `KpiRow` montava `dashboard.kpi.${key}` dentro do render;
+   com o Redator em `dashboard.redator.kpi.*` o prefixo implícito quebra, e uma prop de prefixo
+   poria metade da chave no call-site e metade no JSX. Mesma correção que o Q-1 do review de
+   2026-08-16 já fez neste arquivo.
+
+**Quatro coisas que o plano mediu em vez de supor**, e as quatro mudaram código escrito:
+`common.yes`/`common.no` **não existem** em nenhuma das 3 locales; a contagem de rodapé do
+repositório **não usa plural do i18next** (`role.count` é `"{{count}} roles"`, forma única); **não
+existe rota de detalhe de relator** — o `AppRouter` registra só `/personas`, e `navigation.ts:49-50`
+já resolveu o mesmo caso com `key: null`; e o Meu Perfil é **`/perfil`**, não `/mi-perfil`.
+
+**As 5 cores da D2 saíram medidas, não escolhidas por olho:** teal/laranja/roxo/rosa/índigo, nenhum
+deles um hue dos `--tone-*-ink`, todos apontando para degraus que a rampa do tema já tem — **zero
+hex novo**. No claro medem 3,41 / 3,78 / 3,96 / 3,53 / 4,47:1 sobre o card; no escuro, 4,52 a 6,89.
+A régua (`frontend/tests/chart-tokens.test.ts`) cobra 3:1 e **30° de matiz entre quaisquer duas**,
+com um controle que reprova a alternativa rejeitada da D2 — o amarelo do tom de aviso fica a 21° do
+laranja da paleta.
+
+**Um cenário além dos 6 do §6, e o motivo:** `periodoDoPreset` manda data ao servidor sem validação
+de cliente (a D6 deixou a regra só no backend). Errar o recuo de mês manda uma janela que o backend
+**aceita** e a tela mostra errada, sem nenhum 422 — mesma categoria do `parseUfInput`.
+
+**`executor: claude`**, com o `/lotus-ui-review` da Task 11 reservado ao João
+(`disable-model-invocation: true`). O aceite da EAP 8.4.0 exige validar admin e Redator
+**separadamente** — coisa que o B1 não podia satisfazer.
+
+### Execução — 2026-08-17: início, técnica `executing-plans`
+
+`/executar-bloco dashboard-frontend-analitico-e-redator` validou as âncoras (spec, plano e packet no
+disco; branch `feat/dashboard-frontend-analitico-e-redator` em `d479956`, árvore limpa exceto
+`backend/config/cors.php`; `active_plan` cobrindo o work item).
+
+**Técnica: `executing-plans`, não `subagent-driven-development`** — o ambiente restringe o Agent tool
+a pedido explícito do João, que não veio nesta invocação. Mesmo precedente do B1. `executor: claude`,
+main tree, como o handoff do plano já fixava.
+
+**Baseline remedida nesta branch antes da Task 1, e bate com o plano:** `pnpm lint` exit 0,
+`pnpm build` verde, `pnpm test` **39 arquivos / 223 testes**. Bundle antes: `index.js` 1.264,48 kB
+(gzip 350,52 kB).
+
+**Task 1 (paleta de série) completa.** Recharts **3.10.1** instalado e o peer medido, não suposto:
+`^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0` — aceita o React 19.2 do projeto, então a D1 se sustenta
+sem o PARE que o Step 2 previa. **O bundle não mexeu um byte** (mesmo hash `index--CYbGOcU.js`,
+1.264,48 kB): a dependência entrou sem importador, e o custo real só aparece na Task 2 — o número que
+o Step 3 manda declarar é este, e ele não é o custo do Recharts.
+
+**Os 5 tokens `--chart-1..5` saíram com zero hex novo** e a régua mediu razão em vez de conferir hex:
+claro **3,41 / 3,78 / 3,96 / 3,53 / 4,47:1** sobre o card, escuro **6,89 / 6,28 / 4,86 / 5,16 /
+4,52:1** — os mesmos números que o plano projetou, remedidos aqui. A catraca da D11 fixa que só
+`brand-theme.css` e `tokens.ts` nomeiam o token.
+
+**Uma divergência de contagem, da classe que a §8 da spec previu:** o Step 9 projetava **22 casos** e
+o runner deu **14**. A projeção contou *asserção* onde o vitest conta *caso* — os `it.each` de 5
+tokens × 2 temas rendem 10 casos com 2 asserções cada, mais 2 de matiz, o controle do amarelo e a
+catraca. Gate da task: lint exit 0, build verde, **40 arquivos / 237 testes**.
+
+**Um registro de relógio, não divergência de estado:** o `updated_at` que o commit do plano gravou
+(`14:20:00-03:00`) é 23 minutos adiantado em relação ao commit real (`13:57:55`). Este commit grava a
+hora medida, então o campo **anda para trás** uma vez. Ponteiros, `workflow_state` e `next_action`
+seguem coerentes — nada aqui bloqueia.
+
+### Execução concluída — 2026-08-17: DoD provado item a item, e a revisão de UI custou mais que qualquer task
+
+**As onze tasks fecharam, uma por commit** (`64bfc43`…`70e0129`), mais o passe de correção da
+revisão de UI (`a71e11d`). As três emendas que o plano previa entraram na §11 da spec com o texto
+que ele fixou — nenhuma emenda nova apareceu na execução.
+
+**O DoD foi provado item a item, e não por ferramenta verde:**
+
+| DoD | Prova |
+|---|---|
+| 1-2 · janela alcança só séries e rankings | 7 seções byte-idênticas entre janelas, medidas por API nas Tasks 6-7; a metade visual fechou no `/lotus-ui-review` (KPIs em 4/0/3/1/1(250 UF)/9 antes e depois da troca de preset) |
+| 3 · janela invertida | 422 com `La fecha de término no puede ser anterior a la de inicio.`, tela **mantendo** o dado anterior |
+| 4 · gate `null` | papel-sonda criado e removido por API: `redatores: null` some a tabela inteira, `series.uf_aprovada: null` some do gráfico **e** da legenda, `rankings.*.uf_aprovada: null` devolve zero barras e empty state |
+| 5 · view do Redator | payload real capturado com `acting-as` e alimentado a sonda de render: 4 faixas, zero chave crua, zero `client`/`Cliente`, zero `UF`, `href=/perfil` presente. Confirmado depois no navegador, com sessão de verdade |
+| 6 · 3 locales × 2 temas | sem chave crua nas 3 locales; `chart-tokens` verde; os 2 temas fechados na revisão de UI, com a troca repintando traço, barra e legenda sem recarregar — o motivo declarado de escolher SVG na D1 |
+| 7 · régua da D8 | verde no HEAD; sonda de 200 linhas reprova (`File has too many lines (230). Maximum allowed is 150`); `--print-config` confirma o recorte `.tsx` |
+| 8 · zero mutação | `COUNT(*)` nas 35 tabelas, 6 chamadas: `SEM MUTACAO`. O `+1 login_logs / +1 sessions` da primeira medição veio do **login**, não da travessia |
+| 9 · escopo medido | `git diff main...HEAD -- backend/` e `-- generated.ts` vazios; Pint e `typescript:transform` **N/A por medição** |
+| 10 · `/lotus-ui-review` | passo do João, `disable-model-invocation: true`. 10 achados, todos corrigidos e provados |
+
+**Um desvio de procedimento, registrado e não escondido:** o Step 3 mandava criar o usuário-sonda
+**pela UI**; sem navegador no momento, ele nasceu e morreu por `tinker` (`forceDelete`, sem redator
+ligado), com papel e usuário conferidos como ausentes depois. A prova de comportamento é a mesma; o
+caminho não foi o do plano.
+
+**A revisão de UI achou 10, e os dois C eram leitura errada de número.** O `AppLineChart` fixava
+`dot={false}`, e **série com um mês dentro de um gráfico de vários não desenhava nada** — três das
+quatro curvas eram `M526,207.405Z`, e o eixo ia a 60 por causa das 55 matrículas que ninguém via.
+Em 390px o CTA "Ir a Mi Perfil" saía do card **e da viewport**, sem rolagem que o alcançasse. Os
+oito B e as medições de antes e depois estão no artefato, não aqui.
+
+**A ativação do redator para a revisão é do João, não deste bloco.** A limitação 1 da spec §9
+continua verdadeira sobre o fluxo (`CreateRedatorAction.php:20` segue criando `is_active=false`); o
+que mudou é que a jornada do Redator foi percorrida com sessão de verdade, e isso fecha o aceite da
+EAP 8.4.0 no ponto que o B1 não podia satisfazer.
+
+**Três mecanismos tiveram de ser trocados durante o passe, os três por medição, e os três estão no
+artefato:** `mt-auto` é letra morta contra o `[&_p]:m-0` do `AppCard`; a sombra de rolagem da tabela
+nasceu invisível sob a linha opaca do Lara; e a barra de rolagem sempre visível é impossível neste
+Chromium, que força overlay.
+
+**Um desvio do Step 12, deliberado:** ele lista três paths no `git add`, e entrou um quarto —
+`audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`. O motivo é o precedente que
+este mesmo arquivo registra logo abaixo: o `/lotus-ui-review` do B1 rodou e **não deixou artefato**,
+e o fechamento teve de anotar isso como divergência. O `report.txt` vive em `.artifacts/`, coberto
+por `.gitignore:24-25`; o relatório é o que se versiona.
+
+**Gate final:** `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos / 262 testes** (baseline
+39/223); bundle `index.js` de **1.264,48 kB para 1.672,59 kB** (gzip 350,52 → 464,97), que é o custo
+do Recharts a partir do momento em que a Task 7 lhe deu consumidor. `backend/config/cors.php` (WIP
+do João) fora de todo `git add`.
+
+**Estado: `ready_for_review`.** `active_spec`, `active_plan` e `context_packet` **permanecem
+preenchidos** — quem os arquiva é o `/fechar-sprint`. Próxima ação: revisão de código do bloco, por
+instrução explícita do João; este commit **não** a inicia.
+
+### Revisão de código — 2026-08-17: 4 achados, nenhum de lei, e uma classe repetida do B1
+
+`/revisar-sprint` sobre `main..891bcdc` (16 commits, 50 arquivos). O estado passou por `reviewing`,
+parou em `blocked` para a decisão do João, e voltou a `reviewing` com **os quatro achados
+aprovados**. Todos corrigidos — o passe está registrado logo abaixo.
+
+**Risco: BAIXO pelo gate binário, remedido e não herdado da spec** — `git diff main...HEAD -- backend/`
+e `-- generated.ts` vazios, zero import de `primereact` fora de `shared/ui`, nada de Sanctum,
+auditoria, RBAC ou documento legal. **Sem segunda lente do Codex**, que a skill só exige em alto
+risco. Gate remedido nesta sessão: `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos / 262
+testes** — os mesmos números do fechamento.
+
+**Órfãos: nenhum.** Os 13 arquivos novos têm consumidor; `recharts` tem importador; as 3 chaves i18n
+novas existem idênticas nas 3 locales (658 chaves, zero divergência medida).
+
+**Um falso positivo morreu na medição, e fica escrito para não renascer:** a sombra de rolagem do
+UI-10 pinta as capas com `var(--surface-card)` e o `StudentDetailSections` põe `AppDataTable` dentro
+de um `Dialog`, cuja superfície é `--surface-overlay`. Medido, `--surface-card` e `--surface-overlay`
+são **o mesmo hex** nos dois temas (`#ffffff` / `#1e293b`) — não há banda de cor a aparecer, e o
+alcance da mudança em `shared/ui` não é achado.
+
+| Achado | Severidade | Esforço |
+|---|---|---|
+| Q-1 · o aviso de falha some para o admin sem seção analítica | 🟡 | P |
+| Q-2 · a métrica UF é oferecida com o gate comercial fechado e o vazio mente | 🟡 | P |
+| Q-3 · a âncora de meio-dia é copiada em 5 sítios, 2 deles novos | 🟡 | P |
+| Q-4 · `retry` é campo sem consumidor nas duas variantes `ready` | 🟢 | P |
+
+**Nada aqui viola as leis §5.** O relatório completo (trecho encontrado, versão alvo, princípio e
+consequência) está na sessão.
+
+### Passe de correção — 2026-08-17: os 4 achados aprovados, aplicados
+
+**O João aprovou os quatro**, e os quatro estão corrigidos. O que mudou, achado a achado:
+
+- **Q-1 — `admin/AdminView.tsx`.** A condição da seção de análise virou `temAnalise`, e o
+  `InlineLoadState` do admin passa a existir também **fora** dela: quando não há `series` nem
+  `rankings`, não há `PeriodFilter` — e era dentro dele que o único aviso de falha do ramo admin
+  morava. Os dois sítios são mutuamente exclusivos, então nenhum papel vê o aviso duas vezes. O caso
+  medido é o papel só com `identity.user.view`, que é `ready-admin` pelos alertas e tinha as duas
+  seções nulas: um refetch falho ficava mudo e a tela seguia com dado velho.
+- **Q-2 — `admin/RankingsPanel.tsx`.** `metricasDisponiveis(rankings)` remove a opção `uf_aprovada`
+  quando **toda** linha a traz nula. Isso equivale exatamente ao gate comercial fechado:
+  `rankingRows` preenche `'0.0000'` sempre que `includeUf` é verdadeiro
+  (`AnalyticsQuery.php:319`), e `includeUf` é `$canCommercial` (`AdminDashboardAssembler.php:204`) —
+  medido, não inferido. A seção deixa de renderizar "não pode ler" como "não há", e passa a falar a
+  mesma língua do `SeriesPanel`, que já escondia a série de UF pelo mesmo gate. `turmas` é o valor
+  inicial e nunca sai da lista, então não há estado apontando para opção inexistente.
+- **Q-3 — `shared/lib/datetime.ts` + 5 sítios.** A âncora de meio-dia virou a função interna
+  `meioDia`, e nasceu `formatIsoDate` ao lado do `formatMonthYear`, que agora a compõe. As cinco
+  cópias morreram: `AgendaPanel`, `DashboardItemRow`, `admin/CompliancePanel`,
+  `redator/PendenciasList` e `certification/.../ValidationPage` (esta mantém `formatDate` para
+  `revoked_at`, que é timestamp e não data pura). Dois testes novos guardam a regra em
+  `datetime.test.ts`, sem depender do fuso da máquina: a data ISO tem de cair no mesmo dia do
+  calendário **local**, e o `new Date(iso)` cru só coincide com ela fora dos fusos a oeste.
+- **Q-4 — `useDashboard.ts`.** `retry` saiu das duas variantes `ready`; repetir agora é oferecido
+  só onde a tela oferece — `retry` no ramo `error` (`AppErrorState`) e `staleRetry` nos `ready`
+  (`InlineLoadState`). O único consumidor do campo morto era o teste do BD-6, que passou a forçar o
+  refetch pelo `queryClient.refetchQueries()` — o que o TanStack Query faz sozinho no produto
+  (montagem, foco), e não uma porta que só o teste usava.
+
+**Gate remedido depois das correções:** `pnpm lint` exit 0, `pnpm build` verde, **44 arquivos /
+264 testes** (262 + os 2 do `formatIsoDate`).
+
+**Estado: `ready_for_closure`.** Nenhum achado aguarda decisão ou correção. Próxima ação:
+`/fechar-sprint`, por instrução explícita do João — a skill de review não fecha sozinha.
+
+### Fechamento — 2026-08-17: o B2 fecha, e a P-45 vence o gatilho pela segunda vez
+
+`/fechar-sprint` sobre `dashboard-frontend-analitico-e-redator`, com o estado em `ready_for_closure`
+e sem argumento a conferir.
+
+**Item 0 — o critério de aceite do bloco, remedido contra a API real e não pela suíte.** As duas
+correções que mudaram comportamento observável mexem no mesmo lugar do DoD 4 (o gate `null` da D7),
+então é ele que se reprova. Papel-sonda criado e removido por API, como o plano manda:
+
+- **`sonda-cierre-op-cert`** (`operation.turma.view` + `certification.certificate.view`, **sem**
+  comercial) → `rankings` presente com 4 cursos e 4 clientes, **`uf_aprovada` nula em todas**, e
+  `series.uf_aprovada` nula. É o payload exato em que a métrica de UF era oferecida e devolvia
+  empty state; agora a opção não existe.
+- **`sonda-cierre-identity`** (só `identity.user.view`) → `series` e `rankings` **nulas**, todo KPI
+  nulo, pipeline/agenda/compliance/redatores nulos. Com `alertas: []` a tela é `unauthorized` — e
+  foi isso que a primeira medição devolveu. **Para provar que o Q-1 não era teórico**, um
+  `valid_until` de documento de relator foi movido para dentro do horizonte e restaurado em seguida
+  (doc 1, de `2028-08-10` para ontem e de volta): com **um** alerta, `nenhumaSecaoLegivel` é falso,
+  a tela é `ready-admin` e as duas seções analíticas continuam nulas. O caso é alcançável, a
+  correção não é código morto.
+
+As sondas saíram: `users` com `sonda.cierre.b2@lotus.cl` = 0, `roles like 'sonda-cierre%'` = 0.
+
+**Item 1 — `php artisan test`: ❌ registrado, e é a P-45.** `12 failed / 672 passed / 5 skipped`,
+todos `RuntimeException: Session store not set on request.` Com
+`FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
+diferença é a variável, não o código: `tests/TestCase.php:18` manda `Referer` com o valor cru de
+`FRONTEND_URL`, que no `.env` do João já é lista de duas origens. Números idênticos aos do
+fechamento do B1 — **o gatilho da P-45 venceu**, e ela segue com o João, porque o fechamento de um
+bloco de frontend não abre arquivo de backend.
+
+**Itens 2 a 6.** Front: `pnpm lint` exit 0, `pnpm build` verde, 44 arquivos / 264 testes. Pint e
+`typescript:transform`: **N/A por escopo medido** — `git diff main...HEAD -- backend/` e
+`-- generated.ts` vazios, e nenhum DTO mudou. Código morto: o passe de correção **removeu** cinco
+helpers locais e não criou nenhum; zero órfão no review. Leis §5: nenhuma contrariada — o único
+`primereact` fora de `shared/ui` é `shared/config/primeLocale.ts`, que não é feature.
+`backend/config/cors.php` ficou fora de todo `git add`, como em todos os commits deste bloco.
+
+**Item 7 — pendências.** Dois gatilhos venceram e nenhuma pendência nasceu. A **P-45** ganhou a
+segunda medição, nos dois sentidos. A **P-44** apontava para este bloco: ele fechou **declarando** a
+residência pela D10 em vez de apagá-la, e as sondas do próprio gate não engrossaram a lista. A P-34,
+única encerrada, **fica** — foi fechada dentro da Sprint 5, que só agora termina, e o rastro é de uma
+sprint, não de um bloco.
+
+**Itens 8 e 9.** Plano e spec arquivados (`plans/archive/`, `specs/archive/`), com as referências
+atualizadas aqui e no `progress.md`. O `progress.md` voltou ao teto de dez entregas — as duas mais
+antigas (BD-8 e BD-9, ambas de 2026-08-13) foram para o `progress-archive.md` **verbatim**. O item 2
+do Sprint 5 saiu do `backlog.md`; **nenhum item foi promovido**.
+
+**Estado ao fim do gate: `idle`**, com `state_basis_commit: 121ee1b` — o commit do passe de
+correção, o último a provar a entrega. A Sprint 5 ficou sem bloco restante.
+
+### Reconciliação do merge — 2026-08-17: duas linhas de história, um estado só
+
+**O `idle` do parágrafo acima durou o que durou a branch.** O bloco B2 correu em branch enquanto o
+`main` local recebia, no mesmo dia e sem passar pelo `origin`, a auditoria de `/perfil` e a promoção
+do **BD-16** (`135e468` 13:46, `94b533d` 14:22, `254d691` 14:45). Quando o PR #57 entrou, as duas
+linhas afirmavam coisas diferentes sobre a etapa atual — e o merge automático do GitHub
+(`6d32609`) resolveu o `state.md` **pelo pior lado possível**: manteve os dois corpos, e trocou o
+frontmatter pelo da `main` de meio-dia. O arquivo passou a documentar o fechamento do B2 às 19:00 e
+a afirmar, no cabeçalho, que o último item fechado era o `meu-perfil-frontend` das 12:10.
+
+**Resolvido à mão, sem heurística, no merge `origin/main` → `main`:** o **BD-16 é o item ativo**
+(promovido explicitamente pelo João, plano escrito, `ready_for_execution`), o **B2 é o último item
+fechado** (`last_completed_work_item`), e `state_basis_commit` fica em `135e468` porque é o commit
+que prova o estado ATUAL — a promoção do item ativo —, não a entrega anterior. A escada de itens
+fechados desceu um degrau e o sexto (`celula-de-identidade`, 2026-08-14) saiu do arquivo, como o
+`falha-vs-lista-vazia` saiu quando o `meu-perfil-frontend` entrou.
+
+**A lição é de mecanismo, não de disciplina:** `state.md` é arquivo de UMA verdade e o merge textual
+não sabe disso. Duas frentes em paralelo com fronteiras duráveis no mesmo arquivo produzem
+frontmatter auto-mesclado que ninguém escreveu — e ele fica **verde**, sem marcador de conflito.
+Merge de branch que mexa em `state.md` pede leitura do frontmatter antes do `git push`.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
@@ -516,7 +1067,7 @@ commits usaram paths exatos.
 **Estado: `idle`.** O passe está entregue e o merge é decisão do João. O backlog não promove nada
 sozinho.
 
-## Penúltimo item fechado — 2026-08-17 (`meu-perfil-frontend`, Sprint 6 · Meu Perfil, bloco 2 de 2)
+## Antepenúltimo item fechado — 2026-08-17 (`meu-perfil-frontend`, Sprint 6 · Meu Perfil, bloco 2 de 2)
 
 ### Seleção — 2026-08-15
 
@@ -1162,7 +1713,7 @@ mais recente, e continua sendo ancestral desta árvore.
 **684 passed / 5 skipped (2537 asserções)**, idêntico ao medido no fechamento — o merge não trouxe
 **nenhum** arquivo de `backend/`, e a suíte só passa com `FRONTEND_URL` de uma URL só, que é a P-45.
 
-## Antepenúltimo item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
+## Quarto item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
 
 ### Seleção — 2026-08-15
 
@@ -1619,7 +2170,7 @@ empurrou para ele: a decisão de chart lib, o filtro de período e a D-16 sem co
 **Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
 João.
 
-## Quarto item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
+## Quinto item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
 
 ### Seleção — 2026-08-14
 
@@ -2064,375 +2615,3 @@ promovido** — seleção é do João.
 já fechou** (`b9b8a30`, "fecha dashboard-backend-agregacoes; estado volta a idle", com a `main`
 mergeada na branch em `e60b7b4` à espera do PR). A exceção de dois itens ativos morreu pelas duas
 pontas; o D-15 segue travado até essa branch chegar à `main`.
-
-## Quinto item fechado — 2026-08-15 (`dashboard-backend-agregacoes`, Sprint 5 bloco A)
-
-### Seleção — 2026-08-14
-
-**Primeiro bloco da Sprint 5 (`backlog.md:39`), promovido explicitamente pelo João** com o estado em
-`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre: o
-argumento era **título de seção** (`## Sprint 5 · Dashboard`), não slug promovido. As duas decisões
-dele fecharam o gate: o slug `dashboard-backend-agregacoes` (a ordem escrita do backlog — backend
-antes do frontend); e a **rota `context_required`**, exatamente como o backlog exige para a Sprint 5.
-
-**Aqui a fonte externa EXISTE declarada — o oposto dos BDs:** o backlog aponta o escopo canônico no
-Drive (`Planejamento/dashboard-escopo-funcional-analitico.md`) e a execução detalhada no Notion
-(EAP 8.4.0–8.4.7). Nenhuma rota direta a `ready_for_planning` se aplica; o Context Packet do Codex
-(`lotus-context-packet`, read-only) vem antes de qualquer brainstorming.
-
-**`state_basis_commit` passa de `2511501` a `1e40acb`** — o merge do PR #51, HEAD atual da `main`.
-Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse
-ter derivado.
-
-**Árvore ainda não decidida:** bloco de backend assume main tree pela P-03; branch nasce no
-planejamento/execução, não nesta promoção. O packet é gerado sobre `main@1e40acb`.
-
-### Context Packet — 2026-08-14
-
-Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `a3833e0`) e validado contra o
-contrato da skill: markers exatos, frontmatter completo (`plan`/`spec` `null` registrados, não
-inventados), **8 key facts**, fontes por ID, `status: ready`,
-`RECOMMENDED_TRANSITION: ready_for_planning`. Salvo em
-`docs/superpowers/context-packets/2026-08-14-dashboard-backend-agregacoes.md`.
-
-**As duas fontes canônicas foram recuperadas, não presumidas:** o Drive
-(`dashboard-escopo-funcional-analitico.md`, ID `1HlT8kUsnoGsRJpYmryHacZ8zBZnDQgRa`) e as oito tasks
-EAP 8.4.0–8.4.7 na base canônica do Notion, endereçadas por ID de página — a lição das 12 falsas
-divergências de 2026-07-30 aplicada.
-
-**Uma divergência externa foi achada e reconciliada com base declarada, não em silêncio:** as
-descrições e critérios de aceite das EAP **8.4.0 e 8.4.7 estão trocados entre si** no Notion (títulos
-apontam backend/frontend correto; corpos invertidos). Resolução: o Drive decide o escopo — domínio e
-dependências ficam neste bloco, UI review fica no bloco frontend. A correção da troca no Notion é
-staleness trigger do packet.
-
-**O que o packet fixa para o desenho:** domínio `App\Domains\Dashboard` read-only **sem** Model,
-migration ou tabela; `GET /api/dashboard/metricas`; ownership e filtros aplicados **antes** da
-agregação no backend (nada de payload administrativo ocultado no React); sequência backend
-EAP 8.4.0→8.4.1→8.4.2→8.4.3→8.4.6; Notifications fora. Open questions não bloqueantes (semântica dos
-KPIs, filtros MVP, ranking do Redator) vão para o brainstorming.
-
-**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
-(brainstorming → spec → plano).
-
-### Brainstorming e spec — 2026-08-14
-
-Spec em `docs/superpowers/specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md`, com **nove
-decisões**: D1–D6 escolhidas pelo João entre alternativas com o custo declarado (recorte analítico
-sem tempos de ciclo; sem ranking de redatores nem séries próprias do Redator; filtro só de período;
-janelas 7d/30d; **dois DTOs raiz num endpoint só** — vazamento de payload vira erro de tipo, não bug
-de runtime; certificado revogado não devolve a matrícula a "a emitir"), D7–D9 derivadas e declaradas
-(sem permissão `dashboard.*` nova — view por `type`, seções por permissão existente com `null`
-tipado; regra de domínio reusada de `TurmaHabilitacaoService`/`BudgetSummaryService`, nunca
-duplicada; agregação por query, sem cache).
-
-**Três medições entraram na spec, não em memória:** o catálogo RBAC real (33 permissões, redator só
-com `operation.turma.view`/`submit_docs`/feedback) sustenta a D7; `certificates` **não tem coluna de
-data de emissão** — `created_at` é a data do ato, não proxy, e foi isso que expôs a ambiguidade do
-revogado que virou a D6; e o funil do Drive §3.4 tem sete rótulos com dois sobrepostos ("concluída"
-× "a emitir") — a spec fixa **seis baldes exclusivos** com o split por estado de emissão declarado.
-
-**Risco de review declarado ALTO** pelo gate binário (regenera `generated.ts`; eixo central é
-RBAC/ownership) — duas lentes no `/revisar-sprint`. O `der-fisico.md` listando `certificates` como
-"planejada" é divergência preexistente, registrada na §10 da spec para o fechamento.
-
-O estado entra em `planning` no commit da spec; `active_plan` segue `null` até o João ler a spec
-escrita e autorizar o `writing-plans`.
-
-### Plano — 2026-08-14
-
-**O João aprovou a spec e cravou execução MESCLADA claude/codex** ("delegue tarefas de backend ao
-codex, mesclando entre você e ele"). O plano saiu em
-`docs/superpowers/plans/archive/2026-08-14-dashboard-backend-agregacoes.md`: **oito tasks**, uma por commit,
-na ordem contrato → queries por área (Operation, Commercial, Certification/Analytics) → ownership do
-Redator → assemblers/endpoint/gates → feature tests do endpoint → gate final e2e.
-
-**O handoff estende o contrato do comando por instrução explícita dele:** `executor: misto`, task a
-task — **codex nas Tasks 2, 3 e 4** (queries mecânicas com contrato fechado na Task 1, verificação
-executável e `paths_autorizados` de globs exatos, incluindo o `DomainDependencyTest` restrito à
-chave `'Dashboard'`); **claude nas Tasks 1, 5, 6, 7 e 8** (contrato/`generated.ts` §5.3, ownership
-do Redator, gates RBAC por seção, classificação do pipeline, gate final). Task de codex só fecha
-depois de revisão do claude; violação de path reprova a task.
-
-**Três coisas apareceram só ao escrever o plano:**
-
-1. **D-P1** — agrupar série por mês em SQL diverge entre engines (a suíte roda sqlite, sem
-   `DATE_FORMAT`): o bucketing `YYYY-MM` vai para PHP sobre projeção mínima, exceção declarada à
-   D9; contagens e somas de KPI seguem 100% em SQL.
-2. **`Enrollment` não tem relação com `Certificate`** — o vínculo é unidirecional
-   (`certificates.enrollment_id`). O "sem certificado" da D6 sai por `whereNotIn` sobre subselect,
-   sem criar relação nova em model de outro domínio.
-3. **O self-review achou dois órfãos de spec antes de commitar:** ninguém produzia
-   `RedatorLoadData` (seção `redatores` da D2 — nasceu o `RedatorLoadQuery` na Task 6) e o alerta
-   `TurmaOverdue` não tinha dono declarado (composição no `AdminDashboardAssembler`, registrada no
-   plano).
-
-**Baseline declarado:** backend `591 passed, 5 skipped`; frontend 35 arquivos / 176 testes.
-Projeção: +~24 testes backend, frontend inalterado (nenhum consumidor novo do `generated.ts`).
-
-**Estado: `ready_for_execution`.** `/executar-bloco dashboard-backend-agregacoes` exige instrução
-posterior do João. Branch `feat/dashboard-backend-agregacoes` nasce no `/executar-bloco` (main
-tree, P-03).
-
-### Execução — 2026-08-14: início
-
-`/executar-bloco dashboard-backend-agregacoes` validou as âncoras (spec, packet, plano, Git limpo em
-`2de9d64`, sem divergência) e aplicou o gate main tree/worktree: **bloco toca backend, então main
-tree pela P-03** — nenhuma worktree criada. Branch `feat/dashboard-backend-agregacoes` criada de
-`main@2de9d64`.
-
-**As duas decisões do João no início:** `subagent-driven-development` com Agent tool autorizado para
-este bloco (mesmo impasse do BD-4, do login, do `rastro-unicidade-e-gates` e do `falha-vs-lista-vazia`,
-resolvido do mesmo jeito, por pergunta direta); e **o `executor: misto` do plano mantido** — Tasks 2,
-3 e 4 no Codex via `lotus-execute-block`, Tasks 1, 5, 6, 7 e 8 no claude.
-
-Baseline reproduzido nesta branch, não herdado: `docker compose exec -T app php artisan test` →
-**591 passed, 5 skipped (2149 assertions)**, exit 0 — bate com o baseline do plano. Ledger local
-reiniciado em `.superpowers/sdd/progress.md` (o anterior era do `falha-vs-lista-vazia`, já fechado).
-
-**O pre-flight scan achou uma contradição real entre spec e plano, e ela mudou o contrato antes da
-primeira linha de código.** A spec §4.2 afirma duas coisas incompatíveis: `AgendaTurmaData` é DTO
-compartilhado entre as duas views, **e** o payload do Redator não contém cliente "por construção do
-tipo, não por omissão em runtime" (D5, Drive §7.4). O plano deu `?string $client_name` ao
-`AgendaTurmaData`, e `RedatorDashboardData` carrega quatro coleções dele — ou seja, o campo proibido
-chegava ao Redator pelo tipo. **O João escolheu o split:** nascem `RedatorAgendaTurmaData` (sem
-`client_name`) e `RedatorAgendaData`, a Task 1 passa de 19 para **21 DTOs**, e a agenda do admin
-mantém o nome do cliente. Vazamento volta a ser erro de tipo, que é a tese da D5.
-
-Dois outros achados do scan **não** foram escalados, e o motivo está no ledger: a lista de arestas
-pré-escrita da Task 2 é indicativa (o próprio passo manda conferir contra os `use` do arquivo final),
-e o parêntese da turma (c) na Task 2 é ambiguidade de redação que a asserção da linha seguinte
-resolve.
-
-**Estado:** `executing`.
-
-### Execução — 2026-08-14: fechamento
-
-As oito tasks do plano completaram em **sete commits** (`8c53f60`..`cdccb12`; a Task 8 é gate, não
-entrega). O `executor: misto` foi cumprido como escrito: **Tasks 2, 3 e 4 no Codex** via
-`lotus-execute-block` (`sandbox: workspace-write`, sem acesso ao socket do Docker — decisão explícita
-do João: "Codex escreve, eu rodo"), cada uma com o diff real lido contra o plano antes de aceita, a
-verificação rodada por mim e os `paths_autorizados` conferidos; **Tasks 1, 5, 6, 7 e 8 no claude**.
-
-**A Task 8 provou o DoD contra a API real com três atores**, não contra a suíte. Admin com todo KPI
-conferido por SQL independente (turmas 4/1/2; `certificados_a_emitir=9` respeitando a D6, com um
-certificado revogado que **não** volta a "a emitir"; cotação 1 / `250.0000 UF`), e a coerência interna
-fechando sozinha — `conclusoes_por_confirmar` = as turmas `habilitada` do `compliance_turmas`, e os
-`alertas` = os `overdue` da agenda, que é a D8 viva. Papel **sem permissão comercial** criado pela API
-real (`POST /api/roles` + `POST /api/users`): `cotacoes`, `uf_aprovada` das séries e as 8 UF de ranking
-saem `null`, o pipeline perde as duas etapas de cotação, e a rede de string no corpo bruto mostra que
-`uf`/`cotac` só aparecem como **nome de chave seguido de `null`** — zero valor comercial atravessa.
-Redator ativado de forma temporária e reversível: 6 chaves, nenhuma de admin, e o escopo conferido por
-SQL (só as turmas dela). **Restauração conferida byte a byte** (hash comparado com o capturado antes)
-e as 6 tabelas de RBAC/auditoria de volta aos números exatos do snapshot inicial.
-
-**Mutação zero foi medida, não afirmada:** contagem de 14 tabelas — incluindo `audits` e `login_logs`
-— antes e depois de uma rodada dos quatro GETs (sem filtro, filtro válido, intervalo invertido, data
-lixo). `diff` idêntico. Os dois caminhos de erro devolvem 422 `application/problem+json` pelo handler
-global; sem sessão, 401 no mesmo formato.
-
-**Placar final:** backend **617 passed, 5 skipped (2334 assertions)** — a projeção do plano era
-591 + ~24, e vieram **+26**. `pnpm lint` limpo, `pnpm test` **35 arquivos / 176 testes**, `pnpm build`
-verde, Pint `passed` nos `.php` do bloco, `typescript:transform` **sem diff novo** (`generated.ts` foi
-escrito na Task 1 e a árvore segue limpa depois de reexecutar o comando — lei §5.3 cumprida pela
-regeneração, não pela mão). `git status --porcelain` vazio; nenhum artefato de prova ficou no
-repositório ou no banco.
-
-**Quatro coisas ficam declaradas para o review, e nenhuma é regressão deste bloco:** (1) **nenhum
-redator autentica em produção** — `CreateRedatorAction` cria com `is_active=false` "até o fluxo de
-ativação", que não existe, então o dashboard do redator está correto e provado mas hoje inalcançável;
-(2) uma turma concluída com **zero matrículas** cai em `fully_issued` no funil, defensável mas lê como
-"tudo emitido" onde não havia o que emitir; (3) `DomainDependencyTest` detecta aresta **usada e não
-declarada**, mas a direção contrária passa em silêncio — o cenário (9) cobre isso só para Dashboard, e
-generalizar é candidato a follow-up; (4) **quatro premissas do plano venceram durante a execução** e
-estão registradas uma a uma no ledger, sendo a última o `preventLazyLoading` dito "já global" que é
-por teste.
-
-**Estado:** `ready_for_review`. Próxima ação: revisão do trabalho ativo, por instrução explícita do
-João — **não iniciada automaticamente aqui**.
-
-### Review de sprint — 2026-08-14: ALTO risco, duas lentes, 9 achados (2🔴 + 3🟡 + 4🟢)
-
-**ALTO pelo gate binário**, como a spec §9 já declarava: o bloco regenera `generated.ts` e o eixo
-central é RBAC/ownership. Duas lentes, sem divergência a mostrar — o Codex (read-only, sobre
-`main...HEAD`, com CLAUDE.md §5, spec, plano e as duas rules como gabarito) devolveu 8 achados e
-**quatro coincidem** com a lente Claude, sem que o prompt dele citasse achado nenhum.
-
-**Gate reproduzido, não herdado:** suíte backend **617 passed, 5 skipped (2334 assertions)**, exit 0;
-Pint `passed` nos `.php` do bloco; `typescript:transform` reexecutado **sem diff** (lei §5.3 cumprida
-pela regeneração); `route:list --path=dashboard` com **uma** rota. **Órfãos: zero** — cada uma das 34
-classes do domínio tem ao menos um consumidor fora de si.
-
-**Três achados foram medidos por sonda temporária, não deduzidos** (arquivos removidos, árvore
-limpa):
-
-1. **Q-1** — papel com todas as permissões **menos** `identity.*`: `redatores` sai `null`, e ainda
-   assim `alertas` traz `{"type":"redator_document_expired", ..., "navigation":{"redator_id":1}}`.
-2. **Q-4** — `rankings.courses` com uma linha; `$course->delete()`; `rankings.courses` vira `[]`
-   enquanto `series.turmas_iniciadas` segue `[{"month":"2026-08","count":1}]`.
-3. **Q-2** (o único achado só do Codex, verificado antes de aceito, como a skill exige) —
-   `?period_end=2020-01-01` devolve **HTTP 200** com `period_start=2025-08-14`,
-   `period_end=2020-01-01`; `?period_start=2030-01-01` devolve 200 com o par invertido no outro
-   sentido. A spec §4.1 promete 422, e o cenário 6 só cobre os dois limites presentes.
-
-**Um achado do Codex NÃO foi aceito:** o `RedatorLoadQuery` contar carga em PHP não é violação da D9
-— o docblock dele declara o motivo (uma query para toda a equipe em vez de subquery por linha), a
-projeção é mínima (`id`, `start_date`, pivô) e a alternativa é o N+1 que o `preventLazyLoading`
-existe para barrar.
-
-### Correções — 2026-08-14: os 9 achados aprovados pelo João, todos aplicados
-
-**João aprovou Q-1 a Q-9 em bloco.** Nenhum achado foi diferido para o `backlog.md`.
-
-| # | O que entrou |
-|---|---|
-| Q-1 | `IdentityMetricsQuery` novo: alerta de documento de relator sai do `CertificationMetricsQuery` e passa a responder a `identity.user.view` no assembler |
-| Q-2 | `DashboardFilterData::withValidator()` compara a janela **resolvida**; `after_or_equal` saiu das `rules()`, e a recusa tem texto único (`PERIODO_INVERTIDO`) |
-| Q-3 | os quatro KPIs de turma viraram `?int` em `AdminKpisData`; `generated.ts` regenerado (4 campos `number \| null`) |
-| Q-4 | `withTrashed()` na resolução de nome de curso/cliente **e** nos três agregados de cliente — a query nasce em `clients`, o escopo apagava a linha antes de haver nome |
-| Q-5 | `Certificate::scopeEmitidos()`: uma definição de "emitido" para série, ranking e histórico do redator |
-| Q-6 | `PipelineQuery` deixou de injetar os três serviços e recebe as contagens prontas do assembler — o funil só particiona |
-| Q-7 | `fileable_type` sai de `(new Redator)->getMorphClass()` (ADR-10); zero literal `'redator'` em `app/` |
-| Q-8 | `RedatorDocumentType::values()` como lista canônica, usada pelos três sítios; a carga do redator parou de contar arquivo não regulatório |
-| Q-9 | UF do ranking e série de UF só são lidas sob gate comercial; a razão do `bcadd` (DECIMAL exato no MySQL × float no sqlite) ficou declarada nos dois sítios |
-
-**Cada guarda foi vista reprovar contra o código antigo** (reversão pontual, medida, revertida):
-Q-1 3 asserções, Q-2 1, Q-3 2, Q-4 1, Q-5 2, Q-8 1, Q-9 2; Q-6 mediu **20 queries contra `turmas`**
-antes e **13** depois, no mesmo cenário. **Q-7 não tem guarda que morda** — o morph map já mapeava
-`Redator` para `'redator'`, então a troca é de convenção, sem delta de comportamento; o
-`IdentityMetricsQueryTest` prova o comportamento correto, não o regresso.
-
-**Gate após as correções:** suíte **628 passed, 5 skipped (2384 assertions)**, exit 0 (+11 casos);
-Pint `passed`; `typescript:transform` regenerado com o diff esperado (4 campos de `AdminKpisData`);
-`pnpm build` verde — nenhum consumidor TS do `generated.ts` tocava esses campos.
-
-**Spec corrigida no mesmo passo** (§4.1 janela resolvida; §4.2 gate de `kpis` e de `alertas`) — o
-texto descrevia o comportamento antigo.
-
-**Padrão reincidente proposto:** Q-2 é a terceira aparição de "entrada inválida vira lista vazia".
-Vale texto na rule da camada, não só o fix — proposta abaixo, para o João decidir.
-
-### Fechamento — 2026-08-15
-
-`/fechar-sprint` sem argumento, com o gate de estado conferido antes de qualquer medição
-(`ready_for_closure`, `active_work_item: dashboard-backend-agregacoes`).
-
-**A primeira coisa medida foi uma divergência Git, e ela não era conflito:** o HEAD (`18f0856`)
-dizia `ready_for_review` e a árvore de trabalho dizia `ready_for_closure`, com as **nove correções
-do review não commitadas** (22 arquivos, 2 novos). O estado estava à frente do Git de forma
-coerente com o código presente — a fase de correção terminou sem fronteira durável. Resolvido sem
-heurística: o gate rodou contra a árvore, as correções viraram o commit `59b4f4d` e o fechamento
-veio depois.
-
-**O item 0 foi REMEDIDO, não herdado — e essa era a única forma honesta:** as nove correções
-entraram depois do e2e da Task 8 e mexeram em gate por seção, contrato de filtro e escopo de
-certificado, então a evidência de `cdccb12` não vale para HEAD. **Quatro atores**, sessão Sanctum
-cookie+CSRF:
-
-- **Admin:** todo KPI conferido por SQL independente — `em_andamento` 4, `encerrando` 0,
-  `atrasadas` 3, `conclusoes_por_confirmar` 1, cotação 1 / `250.0000` UF, `certificados_a_emitir` 9.
-  O 4/1/2 do gate de execução virou 4/0/3 porque a data do container passou de 14 para **15/08** e
-  uma turma cruzou o limite dos 7 dias — deriva de calendário, conferida em SQL, não regressão. A
-  coerência interna fecha sozinha: `conclusoes_por_confirmar` = as turmas `turma_ready_for_conclusion`
-  do funil, e os `alertas` = os `overdue` da agenda (D8 viva). **Q-5 provado ao vivo:** existem 5
-  certificados, 1 revogado, e ranking e série contam **4**.
-- **Três papéis-sonda criados pela API real** (`POST /api/roles` + `POST /api/users`), cada um cego
-  a um módulo. Sem comercial: `cotacoes` `null`, `series.uf_aprovada` `null`, **as quatro linhas de
-  ranking com `uf_aprovada: null`**, o funil perdendo as duas etapas de cotação, e a rede de string
-  no corpo bruto devolvendo `uf` **só** como nome de chave `"uf_aprovada"` seguido de null (Q-9).
-  Sem `identity.user.view`: `redatores` `null` (Q-1). Sem `operation.turma.view`: os **quatro KPIs
-  de turma saem `null`, não 0** (Q-3).
-- **Redator** ativado de forma temporária e reversível (o `UserProvisioner` dá senha aleatória, então
-  senha e `is_active` foram mutados no banco de dev): payload com **6 chaves**, nenhuma de admin;
-  `resumo` 2 em andamento + 1 próxima e `historico` 1 concluída, batendo com as 4 turmas dele em SQL;
-  turma_ids `[1,4,6]` ⊆ `{1,4,5,6}`, **nenhuma turma alheia**; e **zero ocorrência** das strings
-  `uf`, `cotac`, `client`, `quote`, `budget`, `series` e `ranking` no corpo.
-
-**Q-2 provado nos dois sentidos**, que é onde ele nascia 200: só `period_end=2020-01-01` e só
-`period_start=2030-01-01` devolvem **422 `application/problem+json`** com
-`La fecha de término no puede ser anterior a la de inicio.`; data lixo, 422; janela válida, 200; sem
-sessão, **401** no mesmo envelope.
-
-**Mutação zero foi medida, não afirmada:** contagem de **17 tabelas** — `audits` e `login_logs`
-inclusive — antes e depois de **8 GETs** (quatro formas de query × dois atores). `diff` vazio.
-
-**Restauração conferida:** o redator voltou byte a byte (`is_active`, hash e `updated_at`, com o MD5
-do conjunto de usuários idêntico ao capturado antes) e as sondas saíram, devolvendo `users`,
-`roles`, `role_has_permissions` e `model_has_roles` a **79/3/70/5**, os números exatos do snapshot.
-
-**Ferramentas:** backend **628 passed, 5 skipped (2384 assertions)**, exit 0; `pnpm lint` exit 0 e
-`pnpm build` verde; Pint `passed` nos 18 `.php` do bloco; `typescript:transform` reexecutado **sem
-diff novo** — a regeneração é idempotente e o diff da árvore é exatamente os 4 campos de
-`AdminKpisData` que o Q-3 anulou (lei §5.3 cumprida pela regeneração). **Zero órfão** nas 34 classes
-do domínio; zero `Repository`, zero `abort(4xx)`, zero Model/migration no Dashboard; o único uso de
-morph é `(new Redator)->getMorphClass()` (Q-7/ADR-10). Leis §5 limpas.
-
-**O fechamento achou uma divergência spec × código e a corrigiu antes de arquivar.** Medido ao vivo:
-um papel com `identity.user.view` e comercial mas **sem** `operation.turma.view` recebe `redatores`,
-`rankings` **e** `pipeline` nulos. A tabela §4.2 da spec declarava só `identity.user.view` para
-`redatores` e nenhum gate para os outros dois. O código está certo e a regra vive escrita no docblock
-do `AdminDashboardAssembler` — "uma seção exige TODOS os gates dos módulos de que ela lê", com
-degradação parcial só onde o TIPO admite ausência. A §4.2 foi **completada**, não retro-editada: a
-fase de correção deste mesmo bloco já a emendara para `kpis` e `alertas` e parou no meio, e o
-precedente P-27 protege história de bloco **fechado** — este fechava agora, e a tabela é o contrato
-que o bloco B vai ler.
-
-**O que o gate NÃO provou, sem maquiagem:** a **D6** não é distinguível no banco de dev — a matrícula
-22 tem certificado revogado **e** emitido, então as duas definições de "a emitir" dão 9 igual; e o
-**Q-4**, o **Q-7** e o **Q-8** não têm caminho vivo lá (zero curso arquivado, nenhum cliente
-arquivado com cotação, um só tipo de documento de relator com zero vencido). Os quatro valem pelos
-testes, cada um com a guarda vista reprovar contra o código antigo, e o Q-7 declaradamente **sem**
-guarda que morda (troca de convenção, sem delta). **Nenhuma tela foi vista** — é o bloco B.
-
-**Pendências:** nascem a **P-43** (`der-fisico.md` chama `certificates` de "planejada" em quatro
-sítios e a tabela existe desde a Sprint 4 — a §10 da spec já previa esta ficha) e a **P-44** (onze
-usuários de sonda de gates antigos vivem no banco de dev, e **dois aparecem na carga do dashboard**
-como "E2E Gate Redator 1/2"; as sondas deste bloco foram removidas, as alheias se mencionam e não
-se apagam). A **P-26** cumpriu a sprint de rastro e saiu de `encerradas.md`. Nenhum outro gatilho
-venceu.
-
-**Arquivamento, histórico e backlog:** plano e spec foram para `plans/archive/` e `specs/archive/`
-por `git mv`, com as referências repontadas neste arquivo; a linha do bloco entrou em
-`progress.md` e a mais antiga das dez (`2026-08-11 · Hardening · integridade e concorrência no
-backend`) desceu **verbatim** para `progress-archive.md`. O bloco A saiu da Sprint 5 do
-`backlog.md` — o bloco B permanece, e **nada foi promovido no lugar**. As três não-regressões
-declaradas no review ganharam dono: **D-16** (turma concluída sem matrícula em `fully_issued`) e
-**D-17** (`DomainDependencyTest` unidirecional) como débitos agrupados no BD-15, e a **ativação de
-acesso do redator** como item 4 de "Próximos blocos" — é a que bloqueia uso real, porque a view do
-redator está provada e hoje inalcançável.
-
-**Estado: `idle`.** `state_basis_commit` passa a `59b4f4d`, o commit que prova a entrega fechada; a
-próxima ação é escolha explícita do João no `backlog.md`.
-
-### Integração — 2026-08-15: merge da `main` (fechamento da `celula-de-identidade`)
-
-**A `main` andou 30 commits desde o `1e40acb` de onde este bloco partiu** — o PR #52 fechou a
-`celula-de-identidade` em 2026-08-14, e aquele fechamento havia **desfeito a promoção deste bloco**,
-com a repromoção declarada como instrução explícita do João. A repromoção aconteceu: o bloco foi
-executado e fechado nesta branch em 2026-08-15, então o disclaimer "Promoção desfeita no fechamento"
-que veio da `main` saiu neste merge — o item foi entregue e a narrativa dele vive acima, como último
-item fechado. A `celula-de-identidade` entra como penúltimo, com a narrativa íntegra; a cadeia
-rotaciona (BD-6 → antepenúltimo, login → quarto, BD-5 → quinto).
-
-**Cinco conflitos, todos de documento ou de artefato gerado** (`state.md`, `progress.md`,
-`pendencias/README.md`, `pendencias/encerradas.md`, `typescript-transformer-manifest.json`); zero
-conflito de código — `Certificate.php`, `generated.ts` e os locales auto-mergearam.
-
-**P-41 e P-42 deste bloco colidiram de ID e foram renumeradas para P-43 e P-44**, pelo precedente que
-o repositório já fixou três vezes (P-32, P-33 e as próprias P-41/P-42 da célula): o fechamento da
-`celula-de-identidade` chegou à `main` primeiro usando esses IDs, e quem renumera é a recém-chegada.
-Fichas, índice, este arquivo e o `progress.md` acompanham.
-
-**A saída da P-26 fica creditada ao fechamento da `celula-de-identidade` (2026-08-14)** — os dois
-fechamentos a removeram em paralelo e a decisão publicada prevalece. O `progress-archive.md` havia
-recebido a MESMA linha (BD-2, 2026-08-11) uma vez por cada fechamento; a duplicata saiu, e o
-`progress.md` volta ao teto de dez descendo a Estilização (2026-08-12) verbatim.
-
-**O manifest do `generated.ts` não se resolve à mão (lei §5.3):** `typescript:transform` reexecutado
-depois do merge — `generated.ts` saiu **idêntico ao auto-merge** (regeneração idempotente) e o
-manifest passou a apontar o hash real do arquivo unido.
-
-**Gates remedidos pós-merge, não herdados:** backend **632 passed / 5 skipped (2397 asserções)** —
-a soma exata dos dois lados (628 deste bloco + 4 testes que a célula trouxe); Pint `passed` no
-`Certificate.php` auto-mergeado; `pnpm lint` exit 0; `pnpm build` verde; `pnpm test` **36 arquivos /
-186 testes**, a contagem da `main` pós-célula — este bloco não adiciona teste de frontend.

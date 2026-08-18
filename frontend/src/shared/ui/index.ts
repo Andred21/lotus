@@ -1,6 +1,7 @@
 // Barrel raiz de shared/ui. Features importam SÓ daqui, nunca de primereact.
 // Regra: um `export * from './X'` por pasta. Nada de caminho fundo ('./X/X').
 export * from './AppAvatar'
+export * from './AppBarChart'
 export * from './AppButton'
 export * from './AppCard'
 export * from './AppCheckbox'
@@ -18,6 +19,7 @@ export * from './AppFileRow'
 export * from './AppFileUpload'
 export * from './AppHeader'
 export * from './AppInputText'
+export * from './AppLineChart'
 export * from './AppMenu'
 export * from './AppPassword'
 export * from './AppPhotoField'

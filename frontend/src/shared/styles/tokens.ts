@@ -52,3 +52,23 @@ export const neutralInk = 'var(--tone-neutral-ink)'
  * escuro, medidos na tabela de turmas contra a régua de 4,5:1 de texto normal
  * (as tags são 12px/700, e 12px bold não é texto grande). */
 export const accentText = 'var(--tone-accent-ink)'
+
+/**
+ * Tinta de SÉRIE, por índice. Mora aqui pela mesma razão das tintas de
+ * severidade acima — uma cor com um dono —, e não junto do gráfico: a catraca
+ * de cor do `eslint.config.js` só enxerga `className`, então um hex dentro de
+ * um objeto de configuração de gráfico passaria verde (P-36). Com a paleta num
+ * módulo só, o call-site passa ÍNDICE de série e nunca nomeia cor (D11).
+ *
+ * `as const` e não `string[]`: o índice fora de faixa vira erro de tipo em vez
+ * de `undefined` virando traço invisível. Régua medida — contraste de 3:1 nos
+ * dois temas e 30° de matiz entre quaisquer duas — em
+ * `frontend/tests/chart-tokens.test.ts`.
+ */
+export const chartInks = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+] as const
