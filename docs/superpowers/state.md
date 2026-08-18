@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-e-restauracao
 active_work_item: arquivados-e-restauracao
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-e-restauracao-design.md
 active_plan: docs/superpowers/plans/2026-08-18-arquivados-e-restauracao.md
 context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
-state_basis_commit: b758068
-updated_at: 2026-08-18T15:20:00-03:00
+state_basis_commit: 49108aa
+updated_at: 2026-08-18T16:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
