@@ -10,6 +10,11 @@ import { ReissueDialog } from './ReissueDialog'
 
 const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
 
+/** Vazio aqui não é `null`: o snapshot corrompido chega com string VAZIA — é o
+ * que `CertificateSnapshotData::missingRequiredFields()` mede (`trim === ''`).
+ * O `?? '—'` de antes só pegava `null`/`undefined` e deixava a célula em branco. */
+const ausente = (valor: string | null | undefined) => (valor ?? '').trim() === ''
+
 /** Aba Historial: tabela de todos os certificados emitidos, com busca, filtro
  * de estado, Ver/Revocar/Reemitir por linha. Estado e queries vivem em
  * `useHistorial` — este componente só monta o JSX (frontend-fsliced.md). */
@@ -57,7 +62,19 @@ export function HistorialTable() {
              * reverteu em 2026-08-14 — a fronteira ficou onde o documento é
              * apresentado como documento: o PDF e a rota pública do QR
              * continuam só-snapshot, e é lá que a lei mora. */
-            <IdentityCell title={c.snapshot.aluno.name} description={c.snapshot.aluno.rut ?? '—'} image={c.aluno_photo_url} />
+            <IdentityCell
+              /* Nome vazio é CORRUPÇÃO (o campo está em `missingRequiredFields`
+               * no backend), e a lista é o único lugar onde o registro aparece
+               * antes do clique: a célula diz o que falta em vez de ficar em
+               * branco, e casa com a tag de defeito na coluna de estado.
+               *
+               * RUT vazio é ausência LEGÍTIMA (fora de `missingRequiredFields`
+               * — aluno estrangeiro), então segue travessão. A assimetria é o
+               * contrato do backend, não estética. */
+              title={ausente(c.snapshot.aluno.name) ? t('certificate.snapshotMissingField') : c.snapshot.aluno.name}
+              description={ausente(c.snapshot.aluno.rut) ? '—' : c.snapshot.aluno.rut}
+              image={c.aluno_photo_url}
+            />
           )}
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />

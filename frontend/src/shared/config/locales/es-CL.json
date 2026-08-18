@@ -845,6 +845,7 @@
     "colValidUntil": "Vigencia hasta",
     "colStatus": "Estado",
     "snapshotCorrupted": "Documento corrupto",
+    "snapshotMissingField": "Nombre ausente",
     "viewTitle": "Detalle del certificado",
     "fieldCodigo": "Código",
     "fieldEstado": "Estado",

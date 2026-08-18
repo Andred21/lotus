@@ -845,6 +845,7 @@
     "colValidUntil": "Valid until",
     "colStatus": "Status",
     "snapshotCorrupted": "Corrupted document",
+    "snapshotMissingField": "Name missing",
     "viewTitle": "Certificate detail",
     "fieldCodigo": "Code",
     "fieldEstado": "Status",
