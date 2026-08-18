@@ -63,14 +63,12 @@ export function HistorialTable() {
              * apresentado como documento: o PDF e a rota pública do QR
              * continuam só-snapshot, e é lá que a lei mora. */
             <IdentityCell
-              /* Nome vazio é CORRUPÇÃO (o campo está em `missingRequiredFields`
-               * no backend), e a lista é o único lugar onde o registro aparece
-               * antes do clique: a célula diz o que falta em vez de ficar em
-               * branco, e casa com a tag de defeito na coluna de estado.
-               *
-               * RUT vazio é ausência LEGÍTIMA (fora de `missingRequiredFields`
-               * — aluno estrangeiro), então segue travessão. A assimetria é o
-               * contrato do backend, não estética. */
+              /* Nome vazio é CORRUPÇÃO (está em `missingRequiredFields` no
+               * backend) e a lista é o único lugar onde o registro aparece antes
+               * do clique: a célula diz o que falta em vez de ficar em branco, e
+               * casa com a tag de defeito na coluna de estado. RUT vazio é
+               * ausência LEGÍTIMA (aluno estrangeiro), então segue travessão —
+               * a assimetria é o contrato do backend, não estética. */
               title={ausente(c.snapshot.aluno.name) ? t('certificate.snapshotMissingField') : c.snapshot.aluno.name}
               description={ausente(c.snapshot.aluno.rut) ? '—' : c.snapshot.aluno.rut}
               image={c.aluno_photo_url}
