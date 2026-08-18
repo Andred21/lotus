@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog } from '../AppDialog'
-import { AppButton } from '../AppButton'
+import { AppDownloadButton } from '../AppDownloadButton'
 import { AppFileRow } from '../AppFileRow'
 import { isPreviewable } from '@shared/lib/upload'
 
@@ -119,9 +119,11 @@ export function AppFilePreviewDialog({ file, visible, onHide }: AppFilePreviewDi
             <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
               {t('common.previewUnavailable')}
             </p>
-            <a href={file.download_url} target="_blank" rel="noreferrer" className="self-start">
-              <AppButton icon="pi pi-download" label={t('common.download')} />
-            </a>
+            <AppDownloadButton
+              href={file.download_url}
+              label={t('common.download')}
+              className="self-start"
+            />
           </div>
         )}
       </div>
