@@ -41,6 +41,7 @@ class PermissionCatalog
             'commercial.client.create' => 'Criar clientes',
             'commercial.client.update' => 'Editar clientes, endereços e contatos',
             'commercial.client.delete' => 'Remover clientes',
+            'commercial.client.restore' => 'Restaurar clientes arquivados',
             'commercial.budget.view' => 'Ver orçamentos',
             'commercial.budget.create' => 'Criar orçamentos',
             'commercial.budget.update' => 'Editar orçamentos',
@@ -56,6 +57,7 @@ class PermissionCatalog
             'catalog.course.create' => 'Criar cursos',
             'catalog.course.update' => 'Editar cursos, templates e habilitação de redatores',
             'catalog.course.delete' => 'Remover cursos',
+            'catalog.course.restore' => 'Restaurar cursos arquivados',
 
             // ---- Operation ----
             'operation.turma.view' => 'Ver turmas',
