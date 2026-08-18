@@ -3,7 +3,7 @@ schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
 workflow_state: executing
-next_owner: claude
+next_owner: joao
 next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: 254d691
-updated_at: 2026-08-17T15:35:00-03:00
+updated_at: 2026-08-17T20:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -143,6 +143,91 @@ plano que executa. `state_basis_commit` acompanha, pelo mesmo critério das prom
 `using-git-worktrees` parou no passo 0 — nenhuma worktree nova foi criada, só a branch
 `feat/bd16-perfil-e-kit-compartilhado`. Baseline medida antes de tocar arquivo: **45 arquivos /
 250 testes**, verde.
+
+### Tasks 1–15 — 2026-08-17: 15 commits, um por task, na ordem do plano
+
+`8ffdefa` (tinta de marca sai do título de seção e do ícone de curso) · `efd5bfe` (régua de valor
+para cor em `style`, `BRAND_COLOR` morre) · `e51e1cc` (tag de tom sai do preenchido saturado) ·
+`7a1705a` (linha de arquivo quebra por contêiner e fala o idioma da interface) · `cfe0e19`
+(`AppCard` ganha `sunken`) · `0672019` (a label do `FormField` vira **irmã** do controle) ·
+`2ad35d7` (os cinco wrappers se associam ao rótulo sozinhos) · `d460528` (**Task 8 virou registro
+medido, não correção** — o olho da senha já responde às duas teclas; a D-24 não reproduz, exatamente
+o ramo que o planejamento previu) · `ebc6596` (disparador de upload vira botão nomeado) · `c1f7a79`
+(o preview foca o próprio contêiner) · `836197f` (ação destrutiva da foto sai da tinta de marca) ·
+`d038e67` (slot documental: validade sobe, ações alinham, upload se nomeia) · `09a22e2` (o subtítulo
+ramifica pelo mesmo predicado do corpo) · `e6c1f4b` (coluna de leitura recua, o corte ganha marca
+visual) · `b77ce75` (abaixo de `xl`, self-service primeiro).
+
+**A Task 15 não precisou reabrir a DS-05.** O risco escrito no planejamento (a faixa horizontal
+recortar o `scale-200` do `AppPhotoField`) foi medido no navegador e não se materializou.
+
+### Task 16 — 2026-08-17: o gate achou 10 defeitos que o build não vê
+
+**Step 1 — gate executável:** `pnpm build` verde, `pnpm lint` 0, suíte **53 arquivos / 312 testes**
+contra a baseline de 45/250.
+
+**Step 2 — a P-36 medida nos dois temas, e a catraca provada nos dois sentidos.** Título de seção
+(régua 4,5:1, era 2,77:1): **11,4:1** no escuro sobre card e **10,35:1** no claro; o `h1`/`Identidad`
+sobre o fundo mede 14,17:1 e 9,45:1. Ícone de curso em `/cursos` (régua 3:1, era 2,53:1): **6,21:1**
+no escuro, **7,58:1** no claro. A medição **compõe o alfa da tinta sobre o fundo opaco mais próximo**
+— ignorá-lo inflava as razões (`rgba(255,255,255,.6)` sobre ardósia mede 6,2:1, não 14,6:1). Catraca:
+`style={{ color: '#25A5E4' }}` reintroduzido em `FormSection.tsx` faz o `pnpm lint` reprovar
+**nomeando arquivo, linha e regra**; sonda revertida com a árvore limpa.
+
+**Step 3 — a P-37 medida no navegador, não conferida no DOM.** Nos cinco wrappers, o nome acessível
+é **só o rótulo**; sob um 422 real o `aria-invalid="true"` e o `aria-describedby` pousam no **input**
+(não na casca), inclusive no `AppDatePicker`, onde prop desconhecida cai no `<span>` raiz e o
+caminho é o `pt.input.root`; clicar no texto do rótulo põe o foco no controle. Onde o rótulo
+**deliberadamente** não tem `htmlFor` é o modo leitura, para "Carga horaria (del curso, solo
+lectura)" não apontar para o vazio.
+
+**Step 4 — alcance fora de `/perfil`, visto e não deduzido**, nos seis grupos da tabela do plano.
+`FormSection` mede **16 consumidores** com o seletor, não 11 (a correção do registro é do Step 7).
+
+**Step 5 — as medições da auditoria refeitas**, nos dois papéis, nos **três locales**, nos dois temas
+e em 390/1024/1440:
+
+| Item | Auditoria | Medido agora |
+|---|---|---|
+| D-19 | `clientWidth` 227 vs `scrollWidth` 311 | 242 = 242 nos três slots em 390px, nome inteiro em 178px, zero truncamento |
+| D-20 | 2,28:1 e 2,77:1 | ver Step 2 — nenhum sítio abaixo da régua |
+| D-21 | validade como última linha `text-xs` | validade na linha do status, tinta de corpo (`d038e67`) |
+| D-22 | `Ver` em x=1132 e x=1275 | mesma coordenada nos slots: 1290 / 874 / 248 por viewport |
+| D-24 | Espaço não alterna | não reproduz — registro medido da Task 8 (`d460528`) |
+| D-25 | Escape inerte com foco no iframe | Escape fecha antes do primeiro clique no visor (`a38aec5`) |
+| D-27 | y=829 de 1476px (Admin) | `Datos personales` em **y=265** (1440) e **y=277** (390), nos dois papéis e nos três locales |
+
+**Os três locales não mudam layout nenhum**, e isso é medição, não suposição: mesma contagem de
+slots, zero vazamento, zero truncamento e as mesmas coordenadas de ação em es-CL, pt-BR e en. A maior
+chave `profile.*` cresce 11% do es-CL para o pt-BR/en (89 → 99 caracteres) e é parágrafo de ajuda,
+não rótulo.
+
+**O gate rendeu 10 correções, uma por commit** (`6a5df00`…`a38aec5`) — cada uma um defeito que o
+build, o lint e a suíte não veem: o grupo de ações vazando 9px do slot em 390px; o erro do campo
+pousando na casca do `AppDatePicker`; a tag de modalidade fora do mapa de tom; valor imutável em
+`disabled` em vez de `readOnly`; o disparador só-ícone anunciando "Choose"; o botão de fechar diálogo
+falando inglês; a lista vazia de dropdown em inglês; o nome de arquivo sem base para quebrar; a
+coluna de ação deixando de ser coluna depois da quebra; e a D-25, que **sobreviveu à primeira
+correção** — `focusOnShow` do Prime foca o primeiro FOCÁVEL, que no PDF é o próprio `<iframe>`, e o
+visor nativo ainda toma o foco ~200ms depois de abrir, sem clique (sonda de 100 em 100ms). A
+devolução é única por abertura; depois do primeiro clique dentro do visor a tecla é do navegador e o
+`X` é a saída garantida — limite declarado no docblock, não maquiado.
+
+**Step 6 é do João:** `/lotus-ui-review` tem `disable-model-invocation: true`. **Step 7 (registro,
+encerramento da P-36/P-37, contagem do `FormSection`, débito das chaves i18n órfãs e transição de
+estado) fica retido até depois dele** — a ordem é do plano, e escrever a linha de entrega antes da
+revisão registraria um resultado que ela ainda pode mudar.
+
+**O que o gate achou e NÃO virou correção, para decisão do João:** o paginador do `DataTable` ainda
+se anuncia em inglês (a raiz é o `locale('es')` global do Prime, que o projeto nunca chamou — hoje
+cada wrapper pina o rótulo traduzido, e trocar isso é decisão de arquitetura); o `AppDatePicker` fixa
+`locale="es"` no código; o `<a>` que embrulha o `<button aria-label="Descargar">` aninha dois
+interativos; o olho do `AppPassword` **perde o foco para o `<body>`** quando alternado por teclado
+(o Prime troca o nó do ícone; um handler no `pt` provavelmente substituiria o handler dele, e a Task
+8 registrou por que não duplicá-lo); o dropdown de filtro do Historial de certificados não tem nome
+acessível (`textbox: Todos`); e o backend devolve mensagem em espanhol com **nome de atributo em
+inglês** ("El campo end date debe ser una fecha posterior o igual a start date."), além de "debe ser
+una cadena de caracteres" para campo obrigatório vazio.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
