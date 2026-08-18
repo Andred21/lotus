@@ -88,7 +88,8 @@
     "create": "Criar",
     "empty": "Sem usuários",
     "emptyHint": "Crie o primeiro usuário para começar.",
-    "count": "{{count}} usuário(s)",
+    "count_one": "{{count}} usuário",
+    "count_other": "{{count}} usuários",
     "searchPlaceholder": "Buscar por nome ou e-mail...",
     "name": "Nome",
     "role": "Papel",
@@ -169,7 +170,8 @@
     "permissions": "Permissões",
     "empty": "Sem perfis",
     "emptyHint": "Crie o primeiro papel personalizado para começar.",
-    "count": "{{count}} papéis",
+    "count_one": "{{count}} papel",
+    "count_other": "{{count}} papéis",
     "systemReadOnly": "As permissões dos perfis de sistema são somente leitura."
   },
   "userMenu": {
@@ -188,7 +190,8 @@
     "compliance": {
       "title": "Conformidade documental das turmas",
       "empty": "Sem turmas a revisar",
-      "count": "{{count}} turmas",
+      "count_one": "{{count}} turma",
+      "count_other": "{{count}} turmas",
       "course": "Curso",
       "redatores": "Relatores",
       "noRedator": "Sem relator",
@@ -200,7 +203,8 @@
     "redatorLoad": {
       "title": "Carga de relatores",
       "empty": "Sem relatores",
-      "count": "{{count}} relatores",
+      "count_one": "{{count}} relator",
+      "count_other": "{{count}} relatores",
       "name": "Relator",
       "current": "Turmas em curso",
       "upcoming": "Próximas turmas",
@@ -403,7 +407,8 @@
     "tabClients": "Clientes",
     "empty": "Sem clientes",
     "emptyHint": "Cadastre o primeiro cliente para começar.",
-    "count": "{{count}} clientes",
+    "count_one": "{{count}} cliente",
+    "count_other": "{{count}} clientes",
     "searchPlaceholder": "Buscar por razão social ou RUT...",
     "legalName": "Razão social",
     "type": "Tipo",
@@ -444,7 +449,8 @@
     "searchPlaceholder": "Buscar curso...",
     "empty": "Nenhum curso.",
     "emptyHint": "Crie o primeiro curso para começar.",
-    "count": "{{count}} curso(s)",
+    "count_one": "{{count}} curso",
+    "count_other": "{{count}} cursos",
     "redatorCount": "Redatores",
     "workloadShort": "{{hours}} h",
     "redatoresSelectNote": "Selecione os redatores habilitados para este curso."
@@ -466,7 +472,8 @@
     "modulesTotal": "Total dos módulos: {{hours}} h",
     "hoursMismatch": "A soma dos módulos ({{modules}} h) difere da carga horária do curso ({{workload}} h). Você pode salvar assim mesmo.",
     "empty": "Nenhum módulo cadastrado.",
-    "countShort": "{{count}} módulo(s)"
+    "countShort_one": "{{count}} módulo",
+    "countShort_other": "{{count}} módulos"
   },
   "budget": {
     "tab": "Orçamentos",
@@ -484,7 +491,8 @@
     "paymentTerms": "Forma de pagamento",
     "empty": "Nenhum orçamento",
     "emptyHint": "Crie o primeiro orçamento para começar.",
-    "count": "{{count}} orçamentos",
+    "count_one": "{{count}} orçamento",
+    "count_other": "{{count}} orçamentos",
     "back": "Voltar ao Comercial",
     "totalQuoted": "Total cotado",
     "totalApproved": "Total aprovado",
@@ -528,7 +536,8 @@
     "confirmDeleteTitle": "Excluir cotação?",
     "confirmDeleteBody": "Esta ação não pode ser desfeita.",
     "documents": "Documentos",
-    "studentsShort": "{{count}} alunos"
+    "studentsShort_one": "{{count}} aluno",
+    "studentsShort_other": "{{count}} alunos"
   },
   "quoteStatus": {
     "pending": "Pendente",
@@ -547,7 +556,8 @@
     "tabStudents": "Alunos",
     "empty": "Sem redatores",
     "emptyHint": "Cadastre o primeiro redator para começar.",
-    "count": "{{count}} redatores",
+    "count_one": "{{count}} redator",
+    "count_other": "{{count}} redatores",
     "searchPlaceholder": "Buscar por nome ou RUT...",
     "name": "Nome completo",
     "sectionUser": "Dados de usuário",
@@ -562,7 +572,8 @@
     "create": "Cadastrar aluno",
     "empty": "Sem alunos",
     "emptyHint": "Cadastre o primeiro aluno para começar.",
-    "count": "{{count}} alunos",
+    "count_one": "{{count}} aluno",
+    "count_other": "{{count}} alunos",
     "searchPlaceholder": "Buscar por nome ou RUT...",
     "name": "Nome completo",
     "currentClient": "Cliente atual",
@@ -604,7 +615,8 @@
   "operation": {
     "pending": {
       "title": "Cotações aprovadas pendentes de configuração",
-      "students": "{{count}} alunos",
+      "students_one": "{{count}} aluno",
+      "students_other": "{{count}} alunos",
       "configure": "Configurar turma"
     },
     "table": {
@@ -617,7 +629,8 @@
       "status": "Estado",
       "search": "Buscar por curso, cliente ou código…",
       "filterAll": "Todos",
-      "count": "{{count}} turmas",
+      "count_one": "{{count}} turma",
+      "count_other": "{{count}} turmas",
       "empty": "Nenhuma turma ainda.",
       "emptyHint": "As turmas são criadas a partir de uma cotação aprovada.",
       "noRedator": "— Sem designar"
@@ -669,7 +682,8 @@
       "importSheet": "Importar planilha (xlsx/csv)",
       "empty": "Ainda não há alunos matriculados.",
       "emptyHint": "Adicione alunos um a um ou importe uma planilha para começar.",
-      "footerCount": "{{count}} alunos matriculados",
+      "footerCount_one": "{{count}} aluno matriculado",
+      "footerCount_other": "{{count}} alunos matriculados",
       "table": {
         "name": "NOME",
         "rut": "RUT",
@@ -803,7 +817,8 @@
     "fieldVigencia": "Validade",
     "fieldRedator": "Redator",
     "vigenciaIndefinida": "Indeterminada",
-    "vigenciaMeses": "{{count}} meses",
+    "vigenciaMeses_one": "{{count}} mês",
+    "vigenciaMeses_other": "{{count}} meses",
     "confirmEmit": "Confirmar emissão",
     "issuedTitle": "Certificado emitido",
     "issuedHeading": "CERTIFICADO DE APROVAÇÃO",
@@ -841,7 +856,8 @@
     "revokeBody": "Esta ação é irreversível: o certificado deixará de ser válido.",
     "revokeReason": "Motivo da revogação",
     "revokeConfirm": "Revogar",
-    "certCount": "{{count}} certificados",
+    "certCount_one": "{{count}} certificado",
+    "certCount_other": "{{count}} certificados",
     "statusSummary": "{{vigentes}} vigentes · {{porVencer}} a vencer · {{vencidos}} vencidos · {{revocados}} revogados",
     "popupBlocked": "O navegador bloqueou a aba do PDF",
     "validation": {
@@ -851,7 +867,8 @@
       "notFound": "Certificado não encontrado",
       "issuedTo": "Emitido para",
       "course": "Curso",
-      "hours": "{{count}} horas",
+      "hours_one": "{{count}} hora",
+      "hours_other": "{{count}} horas",
       "completedAt": "Turma concluída em {{date}}",
       "validUntil": "Válido até {{date}}",
       "revokedAt": "Revogado em {{date}}"
