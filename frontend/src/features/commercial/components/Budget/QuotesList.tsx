@@ -37,7 +37,7 @@ export function QuotesList({
          * todos os ids, gatear por `isError` cru anunciava uma falha que ninguém
          * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */}
         <InlineLoadState
-          error={nameLost ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+          error={nameLost ? (courses.errorDetail ?? t(courses.errorHint)) : null}
           retryLabel={t('common.retry')}
           onRetry={courses.refetch}
         />

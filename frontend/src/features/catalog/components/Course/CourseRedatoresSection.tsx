@@ -28,7 +28,7 @@ export function CourseRedatoresSection({
   ) : redatores.isError ? (
     <AppErrorState
       title={t('common.loadError')}
-      detail={redatores.errorDetail ?? t('common.loadErrorHint')}
+      detail={redatores.errorDetail ?? t(redatores.errorHint)}
       retryLabel={t('common.retry')}
       onRetry={redatores.refetch}
     />

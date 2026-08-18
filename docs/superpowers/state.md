@@ -10,9 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: bd16-perfil-e-kit-compartilhado
-state_basis_commit: 0a1918b
-updated_at: 2026-08-18T00:00:00-03:00
+last_completed_work_item: bd13-listagens-e-abas
+state_basis_commit: ddff65b
+updated_at: 2026-08-18T19:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,237 @@ updated_at: 2026-08-18T00:00:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
+## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
+
+**Promoção explícita do João**, com o estado em `idle` e `active_work_item` `null`. O gate do
+`/planejar-bloco` não chegou a rodar: a seleção veio de uma revisão de arquitetura
+(`improve-codebase-architecture`) que cruzou o código de `b758068` contra o `backlog.md` item a item.
+O commit anterior a este grava o resultado dessa revisão no backlog; **este** grava a promoção.
+
+**Escopo: o BD-13 inteiro, mais a D-31 pelo gatilho dela.** O bloco cobre D-02, D-04, D-05 e D-06;
+a **D-31** entra porque o gatilho literal dela é *"entra em qualquer bloco que toque os dicionários
+por outro motivo"*, e a D-02 toca os três locales. Não é alargamento de escopo — é gatilho vencido.
+
+**Rota `ready_for_planning`, sem Context Packet, por ausência MEDIDA de fonte externa.** Grep por
+`drive.google`, `notion.so`, `figma.com`, `docs.google` e `http` nas 100 linhas de escopo (o bloco no
+`backlog.md` mais as fichas de D-02, D-04, D-05, D-06 e D-31) devolve **zero**. Mesmo precedente de
+BD-4, BD-5, BD-6 e BD-16 — e o oposto das Sprints 5 e 6, cujo escopo era canônico do Drive.
+
+**Área de trabalho: a worktree `fix-frontend`**, branch `feat/bd13-listagens-e-abas` a partir de
+`main@b758068`, que é `origin/main` na hora da promoção. Escolha do João. A árvore da worktree estava
+em `b758068` detached e limpa; `backend/config/cors.php` (WIP dele, o outro lado da P-45) fica no main
+tree e fora de todo `git add`.
+
+### A invariante de um `active_work_item` está quebrada, e é a QUARTA exceção declarada
+
+O `arquivados-e-restauracao` foi promovido a `context_required` em `34aa0be`, na branch
+`feat/arquivados-e-restauracao`, e segue ativo com `next_owner: codex`. Este bloco corre em paralelo
+**por decisão explícita do João**, tomada depois de o custo ser mostrado, não descoberto no gate.
+Precedentes: BD-4 × BD-9, BD-5 × `login-fora-do-adr16` e `celula-de-identidade` × BD-6.
+
+**A P-03 não dispara, e isso é medição do gatilho, não conveniência.** A ficha exige *"mais de um
+`active_work_item` de backend"*; este é frontend puro e o outro é backend, então a condição não se
+satisfaz. O custo conhecido do arranjo continua valendo: a worktree não sobe stack própria e depende
+do main tree como servidor do `:8080` — que estará servindo a branch do `arquivados`. Para este bloco
+isso é barato, porque nenhum item dele precisa de API viva; o que precisa de navegador é a D-04
+(contagem de GET) e ela se mede no devtools contra qualquer backend.
+
+**O risco de merge deste arranjo está medido e é o que o PR #57 já cobrou.** Duas branches escrevendo
+`state.md` produzem frontmatter auto-mesclado que ninguém escreveu, e ele fica verde, sem marcador de
+conflito. Quem mergear qualquer uma das duas **lê o frontmatter antes do `git push`** — a lição está
+escrita na seção do B2 e vale literal aqui.
+
+### Quatro medições da abertura, feitas sobre `b758068` e não herdadas do backlog
+
+1. **O escopo da D-04 é METADE do registrado, e isso muda o DoD do bloco.** `AppTabView` não passa
+   `renderActiveOnly={false}`, então vale o default `true` do PrimeReact e só o conteúdo da aba ativa
+   monta — `CertificatesPage.tsx:19,24` põe `EmissionPanel` e `HistorialTable` dentro de `ModuleTab` e
+   faz **1** GET. Quem faz 2 é a `PeoplePage.tsx:16-17`, que chama `useRedatoresPage()` e
+   `useStudentsPage()` **no corpo da página**, acima das abas, onde o `renderActiveOnly` não alcança.
+   O defeito é de sítio de chamada, não de mecanismo de aba. **O DoD do backlog ("1 GET por aba
+   aberta, não 2 por montagem") tem uma página a provar, não duas.**
+2. **A D-05 tem uma decisão dentro, não só um fix.** `AppErrorState.tsx:47` renderiza o `detail` cru
+   e `useLoadState.ts:25` é quem o entrega (`query.error?.detail`). Mostrar `detail` de servidor ×
+   trocar por dica genérica do i18n é escolha de contrato de erro, e ela **não** depende da decisão de
+   idioma canônico que trava a D-07/D-18 — o que se decide aqui é se a tela repete o servidor, não em
+   que língua o servidor fala.
+3. **A D-06 é uma linha e mente sobre registro de peso legal.** `HistorialTable.tsx:60` passa
+   `description={c.snapshot.aluno.rut ?? '—'}` e `title={c.snapshot.aluno.name}` **sem fallback**: o
+   certificado corrompido aparece na lista com a célula de aluno vazia, e a lista é o único lugar onde
+   o registro aparece antes do clique.
+4. **A D-02 segue viva nas três locales, nas mesmas linhas do registro:** `:91` (`usuario(s)`), `:449`
+   (`curso(s)`) e `:471` (`módulo(s)`), com o rodapé do `AppDataTable` alimentado por chave sem plural
+   do i18next. O repositório **não** usa plural do i18next em lugar nenhum hoje — `role.count` é forma
+   única —, então a chave de plural é padrão novo no projeto, não adoção de padrão existente.
+
+**Risco de review projetado: BAIXO pelo gate binário** — frontend puro, não toca schema, não regenera
+`generated.ts`, não toca Sanctum, auditoria, RBAC nem documento legal. **Divergência por alcance já
+declarada:** o bloco introduz plural do i18next, que é forma nova nos três dicionários, e mexe em
+`AppErrorState`/`useLoadState`, que são `shared/` com muitos consumidores. A classificação final é do
+`/revisar-sprint`, não desta promoção.
+
+**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco bd13-listagens-e-abas`
+(brainstorming → spec → plano). Este commit **não** inicia o planejamento.
+
+### Execução — 2026-08-18: início, técnica `executing-plans`
+
+O `/planejar-bloco` fechou spec e plano (9 tasks, `executor: claude`) e o estado entrou em
+`ready_for_execution` em `947194f`. Este commit abre a execução junto com a **Task 1** (D-31), que é
+a primeira fronteira durável: as duas chaves órfãs saem dos três locales e o comentário do
+`ProfileDocumentSlot.test.tsx` registra por que a asserção negativa sobrevive à remoção.
+
+**Técnica: `executing-plans`, não `subagent-driven-development`** — a sessão corre sem delegação a
+subagente por instrução do João; o ciclo task a task, com verificação por task, é o mesmo.
+
+**Uma medição corrigiu o plano na primeira linha executada.** O grep do Step 1 da Task 1
+(`grep -rn "documents\.noValidity"`) devolve **zero**, não a linha esperada: o único consumidor cita
+a chave dentro de um regex (`/profile\.documents\.noValidity/`), com os pontos escapados no fonte.
+Regrepado sem os pontos, a linha aparece — `ProfileDocumentSlot.test.tsx:118`, asserção negativa,
+exatamente como a spec registrou. As chaves seguem órfãs; o passo do plano é que media com o padrão
+errado.
+
+**Estado: `executing`.** Próxima ação: Task 2 (D-02, plural do i18next em 17 chaves).
+
+### Execução — 2026-08-18: as 9 tasks fechadas, estado em `ready_for_review`
+
+As 9 tasks do plano estão nos commits `27bbd6d` (D-31), `35539aa` (D-02), `bb7b639` (D-06),
+`c6fd4cb` + `069265a` + `70280ea` (D-05, 3 tasks), `34c0c3d` + `925e3ad` (D-04, 2 tasks) e este
+commit (gate). O `d6912e5` no meio é conserto de `max-lines`: os comentários das tasks 1 e 3
+empurraram dois arquivos para 152 linhas.
+
+**Fronteira do bloco provada:** `git diff main...HEAD --name-only -- backend/ frontend/src/shared/types/generated.ts`
+devolve vazio — frontend puro, P-03 não dispara. **Três catracas:** `pnpm test` 65 arquivos / 394
+testes verdes, `pnpm lint` exit 0, `pnpm build` verde.
+
+**Duas coisas saem daqui para o review, não fechadas por esta sessão.**
+
+1. **Desenho novo no Dashboard, sem confirmação humana registrada.** A spec §6.2 contou os 3 sítios
+   de `staleError` entre "as telas que já escrevem `?? hint`" — não escrevem: ali o `staleError` é
+   mensagem **e** gatilho, e aplicar a D-05 apagava o aviso junto com o texto (3 testes de
+   `useDashboard` ficaram vermelhos e provaram). Separado em `staleErrored: boolean` + `staleError`,
+   com `DashboardPage.avisoStale()` caindo em `common.loadErrorHint`. **Consequência:** a mensagem de
+   janela invertida (422, "La fecha de término no puede ser anterior a la de inicio.") deixa de
+   aparecer na tela — o aviso continua, o texto do servidor não. Decisão do João no review.
+
+2. **Step 3 da Task 9 não rodou.** A contagem de GET no devtools de `/pessoas` precisa de navegador,
+   que esta sessão não tem. O `PeoplePage.test.tsx` espiona `api.get` (limite do axios, caminho real
+   do componente) e mede a mesma coisa — 1/0 na montagem, 1 na 2ª aba, 0 na volta — mas a
+   confirmação no navegador é passo do João.
+
+Débito que sai do bloco: **D-36** no `backlog.md` (o envelope RFC 7807 não é localizado; o `D-32` do
+plano já estava tomado pela ordem de foco de `/perfil`).
+
+**Estado: `ready_for_review`.** Próxima ação: `request_code_review`. **A revisão não foi iniciada
+aqui.**
+
+### Revisão de sprint — 2026-08-18: risco BAIXO, uma lente, 3 achados, zero violação de lei
+
+**Classificação: BAIXO risco.** Frontend puro (`git diff b758068..HEAD -- backend/ frontend/src/shared/types/generated.ts` vazio), sem schema, `generated.ts`, Sanctum, auditoria, RBAC, dinheiro ou emissão de certificado; `executor: claude`. Uma lente — sem revisão independente do Codex.
+
+**Catracas re-rodadas nesta revisão:** `pnpm test` 65 arquivos / 394 testes verdes, `pnpm lint` exit 0, `pnpm build` verde.
+
+**Órfãos:** zero componente, hook ou página sem consumidor. `RedatoresTab`/`StudentsTab` entram pela `PeoplePage`; os 12 sítios de `screenDetail` importam de `@shared/lib`. Uma chave de i18n órfã achada — o Q-2 abaixo.
+
+**Gabarito:** nenhuma das 8 leis do §5 contrariada; nenhuma lição do `docs/README.md` repetida; ADRs e `frontend-fsliced.md` respeitados (nenhum import de `primereact` em feature, nenhum cruzamento entre features).
+
+#### [Q-1] Dica de conexão para falha que não é de conexão — `frontend/src/shared/lib/screenDetail.ts` + 21 sítios · 🟡 · M
+
+`screenDetail` cala TODO `detail` de servidor, e o fallback único dos chamadores é `common.loadErrorHint` = "Revisa tu conexión e inténtalo de nuevo." O envelope do backend não distingue só língua: distingue CAUSA. Depois da D-05, 403 (`Acesso negado`), 404 (`Recurso não encontrado`) e 422 (janela invertida do dashboard) chegam à tela como "revise sua conexão" — instrução errada, e o usuário não tem como agir. O caso do dashboard já subiu declarado na execução; o alcance é maior que ele: vale para os 12 sítios de `AppErrorState` e os 9 de `errorDetail`.
+
+A spec §6.4 afirma "nenhuma mensagem de 422 some da tela" — o `useDashboard.test.tsx` do bloco prova o contrário (`staleError` vira `null` no 422 de janela invertida).
+
+**Sênior faria:** dica por `status` no mesmo lugar da política — `403` → chave de sem permissão, `404` → não encontrado, `422` → dados inválidos, resto → `loadErrorHint`. Sai i18n do front (localizado hoje), não texto do servidor, então a D3 continua de pé.
+
+**Fere:** catálogo universal (erro que não orienta) + a própria afirmação da spec §6.4. Não é lei do §5.
+
+#### [Q-2] `certificate.certCount` é órfã, e a D-31 a pluralizou em vez de apagá-la — `frontend/src/shared/config/locales/{es-CL,pt-BR,en}.json:860-861` · 🟢 · P
+
+A D-31 apagou as duas chaves órfãs de `/perfil`. `certificate.certCount` não tem consumidor nenhum em `.tsx`/`.ts` fora de `locales/` — e o bloco a transformou em `certCount_one`/`certCount_other` nos 3 dicionários e a inscreveu na lista de 17 do `plural.test.ts`. Resultado: uma chave morta agora tem teste que a segura viva.
+
+**Sênior faria:** apagar as 6 linhas e tirar a chave do `CHAVES` do `plural.test.ts` (16 chaves), ou registrar no backlog o consumidor previsto.
+
+#### [Q-3] Import duplicado do mesmo módulo — `frontend/src/features/identity/components/Student/StudentDetailSections.tsx:20` · 🟢 · P
+
+O arquivo já importa de `@shared/lib` (`formatMonthYear` e companhia); a task acrescentou `import { screenDetail } from '@shared/lib'` como segunda declaração, em vez de entrar no grupo existente. O eslint atual não pega. Mesmo padrão, menor, em `TurmaDetailPage.tsx`, `BudgetDetailPage.tsx`, `TurmaDocuments.tsx`, `PendingQuotesPanel.tsx`, `RedatorDesignation.tsx` e `ReissueDialog.tsx` — ali o import é novo e não duplica, só ficou fora do bloco de imports de `@shared`.
+
+**Sênior faria:** juntar ao import existente; se o padrão reincidir, `no-duplicate-imports` no eslint fecha a classe inteira.
+
+#### O que NÃO é achado
+
+`staleTime: 30_000` repetido nos dois hooks (dois sítios, comentado nos dois); a marca `localDetail` depender de o próximo autor lembrar de pô-la nos envelopes que o front sintetiza (os 3 de hoje estão marcados); o `detail` cru do `CertificateViewDialog` (D8, com teste que o prova); e a não localização do envelope no backend (**D-36** já no `backlog.md`).
+
+**Pendente do João, herdado da execução:** Step 3 da Task 9 — contagem de GET no devtools de `/pessoas`. O `PeoplePage.test.tsx` mede o mesmo no limite do axios, mas o DoD do bloco pede o navegador.
+
+**Estado: `blocked`.** `next_action: approve_review_findings`; `resume_state: reviewing`. Só achado aprovado vira código.
+
+### Correções — 2026-08-18: os 3 achados aprovados pelo João, todos aplicados
+
+`Q-1 a Q-3 entra` — os três, um commit cada, com as catracas re-rodadas ao fim: `pnpm test` 65 arquivos / **398** testes verdes (4 novos), `pnpm lint` exit 0, `pnpm build` verde.
+
+**Q-1 (`cfdd626`) — a dica passa a vir do status.** `loadErrorHint(problema)` mora ao lado do `screenDetail` em `shared/lib` e devolve **chave** i18n, não texto: a tradução continua sendo de quem imprime, e a política não importa i18n dentro de `shared/lib`. `403` → `common.forbiddenHint`, `404` → `common.notFoundHint`, `422` → `common.invalidDataHint`, resto → `common.loadErrorHint` (rede caída e 500 seguem sendo dica de conexão, que ali é a certa). `401` fica de fora por medição: o interceptor do axios redireciona antes de virar estado de carga. Os três produtores expõem a chave (`errorHint` no `useLoadState`/`useResourceState`, `staleHint` no `useDashboard`), os 21 sítios trocam o literal, e `StudentClientField` ganhou a prop porque recebe estado por prop, não por hook.
+
+**Uma imprecisão de teste apareceu no caminho, e foi corrigida junto:** o caso de janela invertida do `useDashboard.test.tsx` chamava `problem(...)` **sem status**, então rodava com o default `500` — não com o 422 que o cenário descreve. Com o status certo, o teste agora afirma `staleHint === 'common.invalidDataHint'`, e é ele que prova o achado.
+
+**Q-2 (`6a39f9a`) — `certificate.certCount` apagada dos 3 dicionários** e retirada da lista do `plural.test.ts` (16 chaves). A D-31 tinha apagado as órfãs de `/perfil`; esta escapou por ter sido pluralizada pela D-02 no mesmo bloco.
+
+**Q-3 (`a160e07`) — o import de `@shared/lib` volta a ser um só** em `StudentDetailSections.tsx`. **A regra de eslint sugerida NÃO entrou, e a medição é o motivo:** `no-duplicate-imports` do core não distingue `import type` de `import` de valor, e a casa separa os dois de propósito — **55 pares legítimos** em `src/` virariam erro. Duplicação valor+valor existia em **um** arquivo, o que o commit conserta. Custo da regra maior que a classe que ela fecharia.
+
+**Estado: `ready_for_closure`.** Revisão sem achado pendente. Segue aberto, herdado da execução e para o fechamento: **Step 3 da Task 9** — contagem de GET no devtools de `/pessoas`, que precisa de navegador. O fechamento **não** foi executado aqui.
+
+### Fechamento — 2026-08-18: o critério de aceite provado no navegador, contra a API real
+
+**Item 0 — critério de aceite do bloco, não higiene genérica.** O passo que faltava desde a execução
+(Step 3 da Task 9) **rodou**: Chromium via `@playwright/cli` (a lib global, dirigida por script), Vite
+desta worktree em `:5173` e a API real em `:8080`, logado como `admin@lotus.cl`. Em `/personas`
+(a rota é `/personas`, não `/pessoas` — o plano escreveu o nome em português):
+
+1. **montagem:** `GET /api/redatores` **uma vez**, `/api/students` **zero** (o `GET /api/me` é a sessão);
+2. **clique na aba de alunos:** `GET /api/students` **uma vez**;
+3. **volta à primeira aba dentro dos 30s:** **nenhuma** request.
+
+É o DoD do BD-13 ("1 GET por aba aberta, não 2 por montagem") medido no navegador, e não mais só no
+limite do axios do `PeoplePage.test.tsx`.
+
+**A D-05 e o Q-1 também foram exercitados contra a API real, na tela:** `/operacion/turmas/999999`
+devolve 404 com `detail` cru do framework (`No query results for model [App\Domains\Operation…`), e o
+que chega ao `AppErrorState` é **"No se pudieron cargar los datos" + "No encontramos este registro."** —
+o `detail` do servidor calado pela política, e a dica vinda do **status**, que é exatamente o que o
+Q-1 consertou. A paridade das 3 locales (a outra metade do DoD) é o `plural.test.ts`, verde.
+
+**Catracas.** Frontend: `pnpm test` **65 arquivos / 398 testes** verdes, `pnpm lint` exit 0,
+`pnpm build` verde. Backend: **713 passed / 5 skipped** — mas o registro honesto é que essa suíte é a
+do **main tree**, que está na `feat/arquivados-e-restauracao`; o bloco tem `git diff main...HEAD --
+backend/ frontend/src/shared/types/generated.ts` **vazio**, então Pint e `typescript:transform` são
+**N/A por escopo medido**, e não há suíte de backend deste bloco para rodar. Código morto: nenhum
+`.gitkeep`, placeholder ou import órfão criado aqui; as 3 chaves novas (`forbiddenHint`,
+`notFoundHint`, `invalidDataHint`) têm consumidor nas 3 locales e no `screenDetail.ts`.
+
+**Leis §5:** nenhuma contrariada — o bloco não tocou schema, `generated.ts`, Sanctum, auditoria, RBAC
+nem financeiro, e nenhuma feature passou a importar `primereact` ou outra feature.
+
+**Pendências.** Nenhuma nasceu e nenhuma fechou neste bloco; seguem **29 abertas**. A **P-36** e a
+**P-37** cumpriram a sprint de rastro e saíram das `encerradas.md`. Dois gatilhos foram conferidos e
+**não** disparam aqui: a **P-16** (o Figma quer `Alumnos` como primeira aba) continua esperando a
+Lotus — a casca de abas nova manteve `Redactores` na frente, sem agravar nada; e a **P-45** teve a
+correção **medida viva no main tree** (`TestCase.php` já pega a primeira origem da lista e a suíte
+passa inteira), mas em outra branch — ela fecha no bloco de backend que levar esse commit à `main`,
+não neste fechamento.
+
+**Uma divergência documental fica declarada, sem virar pendência:** a §6.4 da spec afirma "nenhuma
+mensagem de 422 some da tela", e some — o texto do servidor é calado pela D-05, e o que resta é a
+dica de dados inválidos do Q-1. A spec é snapshot datado e foi arquivada como está; o desvio está
+registrado no review e nas correções acima, que é onde quem for ler o comportamento vai procurar.
+
+**Arquivados:** `plans/archive/2026-08-18-bd13-listagens-e-abas.md` e
+`specs/archive/2026-08-18-bd13-listagens-e-abas-design.md` (a spec não é compartilhada — só o plano a
+referenciava, e a referência foi atualizada). Do `backlog.md` saíram o **BD-13** e as linhas dos
+débitos pagos (**D-02**, **D-04**, **D-05**, **D-06**, **D-31**); o **D-36**, nascido aqui, fica.
+A entrega entrou no `historico/progress.md`, e o Login de 2026-08-13 foi para o
+`progress-archive.md` para manter as dez.
+
+**Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
+
+## Penúltimo item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
 **Promoção explícita do João**, a partir da auditoria
 `audits/2026-08-17-perfil-ui-review-e-design.md`. O estado saiu de `idle` para `ready_for_planning`
@@ -510,7 +740,7 @@ corrigir.
 **Gate depois do merge:** `pnpm build` verde, `pnpm lint` 0, **59 arquivos / 368 testes** — os 54/327
 deste bloco mais os 5 arquivos e 41 testes que a `main` trouxe.
 
-## Penúltimo item fechado — 2026-08-17 (`dashboard-frontend-analitico-e-redator`, Sprint 5 · Dashboard, bloco B2)
+## Antepenúltimo item fechado — 2026-08-17 (`dashboard-frontend-analitico-e-redator`, Sprint 5 · Dashboard, bloco B2)
 
 ### Seleção — 2026-08-17
 
@@ -1067,7 +1297,7 @@ commits usaram paths exatos.
 **Estado: `idle`.** O passe está entregue e o merge é decisão do João. O backlog não promove nada
 sozinho.
 
-## Antepenúltimo item fechado — 2026-08-17 (`meu-perfil-frontend`, Sprint 6 · Meu Perfil, bloco 2 de 2)
+## Quarto item fechado — 2026-08-17 (`meu-perfil-frontend`, Sprint 6 · Meu Perfil, bloco 2 de 2)
 
 ### Seleção — 2026-08-15
 
@@ -1713,7 +1943,7 @@ mais recente, e continua sendo ancestral desta árvore.
 **684 passed / 5 skipped (2537 asserções)**, idêntico ao medido no fechamento — o merge não trouxe
 **nenhum** arquivo de `backend/`, e a suíte só passa com `FRONTEND_URL` de uma URL só, que é a P-45.
 
-## Quarto item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
+## Quinto item fechado — 2026-08-16 (`dashboard-frontend-central-controle`, Sprint 5 · Dashboard, bloco B1)
 
 ### Seleção — 2026-08-15
 
@@ -2169,449 +2399,3 @@ empurrou para ele: a decisão de chart lib, o filtro de período e a D-16 sem co
 
 **Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
 João.
-
-## Quinto item fechado — 2026-08-15 (`meu-perfil-backend-self-service`, Sprint 6 · Meu Perfil, bloco 1 de 2)
-
-### Seleção — 2026-08-14
-
-**Primeiro bloco da Sprint 6 (`backlog.md:66`), promovido explicitamente pelo João** com o estado em
-`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre — e é
-a nona vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, login, `celula-de-identidade`, dashboard): o
-argumento era **título de seção** (`## Sprint 6 · Meu Perfil`), não slug promovido. Três decisões
-dele fecharam o gate: o slug `meu-perfil-backend-self-service` (a ordem escrita do backlog — backend
-antes do frontend); a **worktree `fix-frontend`** como área de trabalho, com branch
-`feat/meu-perfil-backend-self-service` nascida de `84b0838`; e a rota **`context_required`**,
-exatamente como o backlog exige para a Sprint 6.
-
-**A fonte externa EXISTE declarada, como na Sprint 5 e ao contrário dos BDs:** o backlog aponta o
-escopo canônico no Drive (`Planejamento/meu-perfil-escopo-funcional.md`) e a execução detalhada no
-Notion (EAP 8.5.1–8.5.9). Nenhuma rota direta a `ready_for_planning` se aplica; o Context Packet do
-Codex (`lotus-context-packet`, read-only) vem antes de qualquer brainstorming.
-
-**`state_basis_commit` passa de `9ed7351` a `84b0838`** — o merge do PR #52, HEAD atual da `main`.
-Não era divergência: com `active_work_item` `null` não havia trabalho ativo cujo baseline pudesse ter
-derivado.
-
-### Exceção declarada à invariante de um `active_work_item` — quarta ocorrência, e a primeira que é backend × backend
-
-**Existem dois itens ativos ao mesmo tempo, por decisão explícita do João em 2026-08-14**, e isto
-está escrito porque a invariante do topo deste arquivo diz o contrário. O
-`dashboard-backend-agregacoes` (Sprint 5, bloco 1 de 2) está em `workflow_state: executing` no main
-tree `/home/jvbat/projetos/lotus`, branch `feat/dashboard-backend-agregacoes` (`8c53f60`,
-`state_basis_commit: 1e40acb`), com **uma task commitada e WIP não commitado na Task 2**
-(`OperationMetricsQuery.php` e `OperationMetricsQueryTest.php` untracked,
-`DomainDependencyTest.php` modificado).
-
-**A diferença para as três ocorrências anteriores é que esta é a que a P-03 descreve.** BD-4 × BD-9,
-BD-5 × login e BD-6 × `celula-de-identidade` foram todas backend × frontend, e a P-03 não disparava
-por definição. Aqui **os dois blocos são de backend**, que é o gatilho literal e verificável da
-pendência (`pendencias/abertas.md:331-333`: "mais de um `active_work_item` de backend"). **O gatilho
-da P-03 venceu neste bloco.** Fechá-la é decisão separada do João — o registro entra aqui para não
-voltar como achado novo no review.
-
-**O dano que a P-03 descreve foi medido e já está mitigado por mecanismo existente, não por sorte.**
-O texto dela diz: "o stack monta o main tree e o teste rodaria contra o código errado". Medido com
-`docker inspect`, não deduzido:
-
-| Container | Monta | Serve |
-|---|---|---|
-| `lotus-app-1` | `/home/jvbat/projetos/lotus/backend` | main tree = dashboard |
-| `fix-frontend-app-1` | `/home/jvbat/projetos/fix-frontend/backend` | **esta worktree** |
-
-`fix-frontend-app-1` está `Up` e vive nas duas redes (`fix-frontend_default` + `lotus_default`),
-então alcança o MySQL e o MinIO do stack principal — é exatamente o arranjo construído durante o
-`celula-de-identidade` e ele sobreviveu. `php artisan test` neste container mede **esta** branch. O
-`fix-frontend-nginx` em `:8081` segue de pé para o e2e; `:8080` e `:5173` seguem do main tree.
-
-**A sobreposição foi medida antes da decisão, não depois — quatro pontos:**
-
-1. `frontend/src/shared/types/generated.ts` — **colisão certa, não provável.** O dashboard já
-   regenerou (+146 linhas commitadas, 21 DTOs e 5 enums); este bloco cria contrato próprio de perfil
-   e regenera de novo. Cada árvore produz o arquivo correto para o próprio backend; o conflito é no
-   merge, e o remédio é regenerar depois dele — mecânico, com precedente no merge do BD-6.
-2. `backend/tests/Feature/Shared/DomainDependencyTest.php` — **colisão provável na abertura,
-   eliminada no brainstorming.** Era allowlist compartilhada de arestas entre domínios, com o WIP do
-   dashboard justamente nela (`'Dashboard'` ganhando quatro arestas para `Operation`); a colisão
-   dependia de o resumo profissional do Redator ler Operation de dentro de Identity. O João cortou
-   exatamente essa parte do escopo (D1 da spec), então **o arquivo não é tocado por este bloco** e a
-   previsão não se confirmou. Registro mantido: a medição valia na hora em que foi feita, e o que
-   mudou foi o escopo, não o fato.
-3. `backend/app/Domains/**` — **zero colisão, medida.** O dashboard vive inteiro em
-   `Domains/Dashboard/` (27 arquivos, domínio novo); este bloco vive em `Domains/Identity/`. Nenhum
-   arquivo em comum.
-4. `backend/routes/api.php` — **zero colisão, e por mecanismo, não por acaso.** O arquivo tem 14
-   linhas e agrega por glob (`app_path('Domains/*/routes.php')`); cada domínio declara as próprias
-   rotas no próprio arquivo. Dashboard escreve em `Domains/Dashboard/routes.php`, este bloco em
-   `Domains/Identity/routes.php`.
-
-**Alternativa recusada por ele:** fechar o dashboard primeiro e só então promover a Sprint 6, o que
-manteria a invariante, respeitaria a ordem escrita do backlog e eliminaria as duas colisões na
-origem, ao custo de o bloco não começar hoje.
-
-### Superfície declarada do bloco, medida na abertura
-
-`SessionUserData` tem hoje **9 campos** (`id`, `uuid`, `name`, `email`, `type`, `is_active`, `roles`,
-`permissions`, `photo_url` — o último acrescentado pela extensão do `celula-de-identidade`). O
-backlog é explícito em **não inflar** este DTO: o contrato de perfil é próprio. `Identity/Data/` tem
-10 DTOs, e `RedatorDocumentData` já existe — a documentação profissional do Redator não nasce do
-zero. O que é self-service está fechado no backlog (`backlog.md:72-73`): nome, telefone, foto e a
-própria senha; **e-mail, RUT, role, permissões, `type` e `is_active` não são**.
-
-**Risco de review projetado ALTO** pelo gatilho binário do projeto: regenera `generated.ts` (lei
-§5.3), toca eixo de autenticação (troca da própria senha) e ownership de documento de Redator. A
-classificação final é do `/revisar-sprint`, não desta promoção.
-
-### Context Packet — 2026-08-14: `ready`, e a rota se pagou de novo — agora com fonte que existe
-
-Packet em `docs/superpowers/context-packets/2026-08-14-meu-perfil-backend-self-service.md`, gerado
-pelo Codex read-only com a skill `lotus-context-packet`. **Contrato validado item a item, não aceito
-de chegada:** marcadores exatos, frontmatter completo com `plan_path`/`spec_path` corretamente em
-`null` (os ponteiros do estado eram `null`, e a skill proíbe inventá-los), **8 key facts** — o teto
-exato —, `status: ready`, `RECOMMENDED_TRANSITION: ready_for_planning`, e nenhum staleness trigger
-apontando para hash de proveniência ou para a própria transição promotora, que é a armadilha que a
-skill documenta em §"Provenance versus staleness".
-
-**Os três hashes de proveniência foram remedidos e batem:** `base_commit` `8964777024e8…`,
-`state_blob_sha` `7af48af2…` e `progress_blob_sha` `a494bf83…`. Obtidos, não adivinhados.
-
-**A diferença desta rota para todas as anteriores é que aqui a fonte externa EXISTE — e o packet a
-recuperou por ID.** Nos BDs a rota se justificava por ausência **medida** de fonte; no
-`celula-de-identidade` o retorno foi **prova de ausência**. Aqui o Drive
-`meu-perfil-escopo-funcional.md` (file ID `1lI3IEOx9_2H0…`) foi criado às **18:37:45Z de hoje**,
-três minutos antes desta promoção, e prescreve o bloco inteiro: os três campos self-service
-(`name`, `phone`, foto), os seis proibidos, o fluxo próprio de senha, os quatro tipos documentais,
-a fronteira Meu Perfil × Dashboard e o DoD de backend com dez itens. Não havia o que supor.
-
-**Duas afirmações do Codex foram verificadas contra a fonte pelo revisor, não aceitas pela citação:**
-
-1. **A linha "Validade documental" da tabela de divergências inverte design já implementado**, então
-   ela precisava ser real. O código diz o oposto do packet — `RedatorDocumentData.php:12-13`:
-   *"O status (vigente/por vencer/vencido) é derivado no front a partir de `valid_until`"*. O Drive
-   §5 diz **verbatim**: *"A regra que decide validade/idoneidade permanece no backend/domínio dono.
-   O React não calcula compliance a partir de datas cruas quando o contrato puder fornecer o estado
-   semântico."* O Drive vence pela hierarquia, e a regra de reconciliação que protege decisão
-   fechada **não se aplica**: ela protege contra reabrir decisão por causa de snapshot **antigo**, e
-   este documento é de hoje.
-2. **A EAP 8.5.1 foi buscada por page ID e confere:** `Camada: Backend`, `Sprint 6 · Meu Perfil`,
-   `ADR ref: ADR-04, ADR-06`. Mais importante, ela está ancorada na collection **canônica**
-   `e64b7d57-…`, não na obsoleta `6adbc960-…` que ainda responde a busca e produziu as **12 falsas
-   divergências** de 2026-07-30. O packet endereçou a base certa.
-
-**Uma emenda do revisor, registrada e não silenciosa:** o terceiro bullet de `## Constraints`
-afirmava as 15 linhas do dashboard na allowlist **sem chave de fonte**, e o contrato exige que todo
-fato externo cite uma. A chave `[DASH]` entrou e a emenda está no cabeçalho do packet; o fato foi
-remedido e confere. É a mesma forma da correção do packet do `celula-de-identidade` — resto
-verbatim, correção no cabeçalho.
-
-**O Codex corrigiu a minha instrução, e isso é o mecanismo funcionando na direção certa.** Eu passei
-o dashboard como `8c53f60` com WIP não commitado — medição minha, de 18:35. Ele remediu às 18:48 e
-achou `4b3d6e3f7c49…` com **árvore limpa**: a branch avançou entre as duas leituras e commitou o
-WIP. A linha entrou na tabela de divergências dele em vez de a minha descrição ser copiada. Foi
-exatamente o que o prompt exigia ("se não mediu, não escreva"), e é o oposto do que aconteceu no
-packet anterior, onde uma afirmação de árvore não medida teve de ser removida na revisão.
-
-**`status: ready`, não `partial`** — as duas fontes canônicas foram recuperadas, nenhuma ficou
-`unavailable`, e não sobra fato bloqueante. As **cinco open questions são as do próprio Drive**
-(§14, "Pontos para Context Packet / brainstorming técnico"), não lacunas que o Codex inventou:
-paths HTTP sem conflitar com `/api/me`, limiar de "vence em breve" e janela de próximas turmas,
-seam comum com o Dashboard, remoção self-service por tipo documental e comportamento da sessão
-após troca de nome/foto e de senha. São decisões de desenho do João e pertencem ao brainstorming.
-
-**Estado: `ready_for_planning`.** Próxima ação: `/planejar-bloco` prossegue para `planning`
-(brainstorming → spec → plano).
-
-### Brainstorming e spec — 2026-08-14: o bloco encolheu por decisão, e encolheu para melhor
-
-Spec em `docs/superpowers/specs/2026-08-14-meu-perfil-backend-self-service-design.md`. As **cinco
-open questions do packet eram as cinco perguntas do próprio Drive §14**, e as cinco foram fechadas
-pelo João: `/api/profile` como recurso próprio (D4), limiar de 30 dias em Identity (D6), sem seam
-com o Dashboard (D1), substituição sem remoção self-service (D2), REUF administrativo (D5).
-
-**O corte é a decisão do bloco.** O desenho apresentado primeiro construía uma camada comum em
-`Operation` (`OperationWindows`, `RedatorAtividadeQuery`) para o resumo de atividade do Redator, e
-com ela **três arestas novas de Identity para Operation**. O João recusou: *"Vamos excluir a parte
-que vem de dashboard, esperando a finalização do seu bloco na branch e worktree paralela, acredito
-que evita fazer cross-domain com operation. O restante implementamos."* Perguntado se o corte era
-por bloco inteiro ou pelo que de fato depende de Operation, escolheu o segundo. Saíram
-`turmas_em_andamento`, `proximas_turmas`, `proxima_turma` e `pendencias`; **ficou
-`cursos_habilitados`**, que sai de `Redator::courses()` — `belongsToMany` para `Catalog\Models\Course`,
-aresta **já** na allowlist. O bloco fica inteiro dentro de Identity, sem aresta nova, e a colisão
-prevista em `DomainDependencyTest.php` desapareceu com o escopo.
-
-**Um furo de regra de negócio apareceu na medição e não estava em fonte nenhuma.** A rota
-administrativa de documento aceita `valid_until` do corpo da request, e o
-`RedatorIdoneidadeService` decide habilitação de turma lendo exatamente REUF + `valid_until`.
-Self-service irrestrito deixaria o Redator declarar a própria validade de REUF e **se auto-habilitar
-por payload** — RN-09 furada sem nenhum código malicioso. Levantado como pergunta, não resolvido por
-conta própria; o João manteve o REUF administrativo (D5).
-
-**Uma armadilha de teste foi medida antes de o plano existir:** `backend/phpunit.xml` define
-`SESSION_DRIVER=array`, então a suíte não usa a tabela `sessions` e o teste do encerramento de
-sessões (D3) passaria verde **sem exercitar nada** — cobertura fantasma, a lição 10. A spec fixa
-dois testes que medem coisas diferentes (contagem de linhas na tabela; sessão corrente sobrevive ao
-HTTP) e obriga o override do driver. Igual sorte teve a asserção de N+1: `Model::preventLazyLoading()`
-**não está ligado globalmente** na suíte e só marca instância hidratada com mais de uma linha — no
-perfil, que hidrata um usuário, a guarda nunca dispararia. A spec troca por contagem de queries e
-registra o porquê, para o plano não repetir a tentativa.
-
-**Divergência do packet resolvida contra a fonte, não por gosto:** `RedatorDocumentData.php:12-13`
-afirma que o status documental é derivado no front; o Drive §5 diz o contrário. O Drive vence e o
-cálculo vai para o backend (enum `DocumentValidityStatus`), **mas o DTO administrativo não muda** —
-o contrato novo é do perfil, e reescrever `RedatorDocumentData` é escopo de outro bloco.
-
-Duplicação declarada e datada: `DIAS_AVISO = 30` em Identity coexiste com
-`DashboardWindows::EXPIRY_WINDOW_DAYS = 30` da branch paralela. Unificar é **tarefa nomeada no
-fechamento**, depois do merge — antes dele significaria importar de um domínio que nesta árvore
-ainda não existe.
-
-**Estado: `planning`.** Próxima ação: `writing-plans` para o plano executável.
-
-### Plano — 2026-08-14: 8 tasks, executor único, e três armadilhas de teste fechadas antes da execução
-
-Plano em `docs/superpowers/plans/2026-08-14-meu-perfil-backend-self-service.md`. Ordem: enum
-(regras) → DTOs → `GET` → `PUT` → foto → senha → documentos → `generated.ts`. Cada task fecha com
-Pint dos arquivos tocados e um commit próprio.
-
-**A spec foi aprovada sem emenda pelo João**, e o self-review do plano contra ela reprovou **três
-coisas minhas**, todas medidas no repo, nenhuma vinda de suposição:
-
-1. **`@dataProvider` não existe mais.** O repo roda `phpunit/phpunit ^12.5.12`, e a anotação foi
-   removida na 12 — `EnrollmentResultTest` já usa `#[DataProvider]`. Os sete casos de campo proibido
-   teriam sido silenciosamente **não executados**.
-2. **O segundo teste de sessão, como eu o escrevi primeiro, não provava nada.** Ele usava
-   `actingAs()`, que autentica direto no guard e **não grava linha em `sessions`** — com
-   `SESSION_DRIVER=array` a tabela fica vazia, o purge vira no-op e o teste passa verde. Reescrito
-   para forçar `session.driver = database`, **logar por HTTP** (é o login que grava a linha com
-   `user_id`), plantar uma sessão de outro dispositivo e então asserir que a do outro morreu, que
-   sobrou exatamente uma, e que quem trocou continua navegando. É a mesma armadilha que a spec já
-   tinha nomeado — ela quase escapou na hora de virar código.
-3. **`post()` com arquivo devolveria a validação no formato errado.** O idioma do repo é
-   `postJson()` com `UploadedFile` no payload (`RedatorDocumentTest.php:85`); o cliente de teste
-   extrai os arquivos antes de serializar, e o `Accept: application/json` é o que garante 422 JSON.
-
-**Uma dúvida de mecanismo foi resolvida lendo o pacote, não a documentação.** A recusa 422 de campo
-proibido depende de `rules()` aceitar chave **sem propriedade correspondente** no DTO.
-`DataValidationRulesResolver::applyOverwrittenRules` itera as chaves devolvidas e as adiciona ao
-ruleset sem checar se existe propriedade com aquele nome — então funciona, e o plano cita o arquivo
-em vez de deixar contingência escrita.
-
-**Executor: `claude`**, para as oito tasks. Duas tocam lei do §5 diretamente (senha/sessão e a
-regeneração de `generated.ts`), a de documentos decide ownership com a RN-09 ao lado, e a de campos
-proibidos depende do comportamento de pacote acima. O plano registra que as tasks 1, 2 e 5
-qualificariam para `codex` com `paths_autorizados` fechados, e por que dividir não compensa: as
-demais consomem o contrato que elas fixam.
-
-**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco meu-perfil-backend-self-service`,
-em instrução posterior — o planejamento não implementa.
-
-### Execução — 2026-08-14: início, técnica `executing-plans`
-
-`/executar-bloco meu-perfil-backend-self-service` validou as âncoras (spec, plano e packet no
-disco; Git limpo na branch `feat/meu-perfil-backend-self-service`; `active_plan` cobrindo o work
-item) e abriu com `fix-frontend-app-1` já `Up` (3h), montando esta worktree — a P-03 já estava
-mitigada, sem novo `docker compose up` necessário.
-
-**Técnica: `executing-plans`, não `subagent-driven-development`.** As oito tasks são sequenciais
-por contrato (3 consome 1+2, 4 consome 2+3, 8 consome todas) — não há paralelismo genuíno a
-explorar — e o ambiente restringe o uso do Agent tool a pedido explícito. `executor: claude` no
-plano já cobre a delegação ao Codex; nenhuma reabertura desse handoff aqui.
-
-**Task 1 (enum de validade documental) completa** (commit a seguir). Vermelho medido antes do
-código: `Call to undefined method RedatorDocumentType::isSelfService()`. 7 testes verdes depois do
-enum `DocumentValidityStatus` e dos dois métodos em `RedatorDocumentType`. Pint `passed` nos três
-arquivos.
-
-**Task 2 (DTOs de leitura) completa.** `ProfileData`, `RedatorProfileData` e
-`RedatorProfileDocumentData` seguem a forma da spec §3 sem desvio — 7 testes verdes, catraca
-`PersistenceLawsTest` verde confirmando `#[DataCollectionOf]` + `#[ReadOnlyCollection]` corretos.
-Pint removeu um import não usado no teste (`File`), sem efeito de comportamento.
-
-**Task 3 (`GET /api/profile`) completa, e uma quarta armadilha de teste apareceu na hora — nova,
-fora das três que a spec já tinha fechado.** O teste `test_perfil_nao_faz_n_mais_um`, copiado
-verbatim do plano, dava `0 identical to 4` com corpo idêntico entre as duas chamadas — sintoma de
-N+1 zerado por dado velho, não de N+1 ausente. Isolado por medição, não suposição: `auth:sanctum`
-resolve `$request->user()` via `Illuminate\Auth\RequestGuard` (Sanctum registra por
-`Auth::viaRequest`), que **cacheia o usuário internamente na primeira resolução** e é singleton no
-container durante o método de teste inteiro. `actingAs($novoUser, 'web')` sozinho não basta — troca
-só o guard `web`; `$request->user()` continua batendo no `sanctum` cacheado, que devolve o objeto
-velho com `redator` já carregado (`loadMissing` vira no-op). A prova ficou em três camadas de
-instrumentação temporária (contador estático no controller, `spl_object_id` dos dois guards,
-`DB::listen()` cru) — removida do commit, só o achado fica. Corrigido com
-`$this->app['auth']->forgetGuards()` antes de reautenticar com um `User::findOrFail` fresco. É
-artefato do container persistir entre chamadas de teste no mesmo método, não bug de produção: lá
-cada request boota o guard do zero. 4 testes verdes; `AuthTest`/`RbacAuthTest` confirmam `/api/me`
-intocado (D4). Pint `passed`.
-
-**Task 4 (`PUT /api/profile`) completa.** 12 testes verdes (5 diretos + 7 do `#[DataProvider]`) —
-o plano previa 11, mas contou errado; o `#[DataProvider]` funcionou de primeira, sem repetir a
-armadilha do `@dataProvider` antigo. `prohibited` recusou os sete campos forjados nomeando o campo,
-como a D8 exige. Pint removeu import não usado no teste (`User`), sem efeito de comportamento.
-
-**Task 5 (foto do perfil) completa.** Reuso integral de `UserPhotoService`, sem gate administrativo
-— 6 testes verdes, redator sem `identity.user.update` troca a própria foto (D7). Pint `passed`.
-
-**Task 6 (senha e sessões) completa, com a task mais sensível do bloco entregando DUAS armadilhas
-de teste novas — nenhuma das duas estava na spec, e as duas isoladas por medição em três camadas de
-instrumentação temporária (contador estático, `spl_object_id`, `DB::listen()` cru), removida do
-commit.**
-
-1. Mesma classe de bug da Task 3 (`RequestGuard` do Sanctum cacheado por processo), mas aqui o
-   sintoma inverteu: o `test_a_sessao_corrente_sobrevive_…` copiado do plano dava
-   `assertSame(1, 0)` — a "sessão corrente" desaparecia junto com a de terceiro. Causa em DUAS
-   camadas, as duas comprovadas antes do fix: (a) `postJson`/`putJson` resolvem cookies por
-   `MakesHttpRequests::prepareCookiesForJsonRequest()`, que devolve array **vazio** a menos que
-   `withCredentials()` esteja ligado — medido com `ALL_COOKIES=[]` no request do `PUT`; (b) mesmo
-   com `withCredentials()`, `prepareCookiesForRequest()` **criptografa sozinho** o valor passado a
-   `withCookie()` — ele espera texto puro, não o `Set-Cookie` já criptografado que
-   `getCookie(..., decrypt: false)` devolveria. Corrigido com `withCredentials()` +
-   `withCookie(config('session.cookie'), $login->getCookie(...)->getValue())` usando o decrypt
-   padrão. Autenticação (via guard cacheado) já funcionava mesmo sem o fix; só o ID de sessão
-   "corrente" estava errado — por isso o purge matava a sessão real do login junto com a de
-   terceiro.
-2. A nota do próprio plano ("se `assertSame(1, …)` falhar com `0`, o driver não trocou a tempo")
-   **não bateu com a causa medida** — `DB::table('sessions')->count()` logo após o login já dava 1,
-   a linha existia. O plano previu o sintoma certo com a causa errada; o registro fica para não se
-   repetir a heurística errada num teste parecido.
-
-7 testes verdes; `AuthTest`/`LoginLogTest`/`RbacAuthTest` confirmam login e RBAC intocados. Pint
-`passed`.
-
-**Task 7 (documentos do redator) completa.** `POST /api/profile/documents` reusa
-`StoreRedatorDocumentAction` inteiro; `REUF` recusa com 422 nomeando o campo (nunca 403), fechando
-a RN-09 do jeito que a spec D5 prescreveu. 6 testes verdes; `RedatorIdoneidadeServiceTest` +
-`TurmaHabilitacaoServiceTest` + `TurmaDesignationTest` (23 testes) confirmam a RN-09 intocada. Pint
-removeu um import não usado, sem efeito de comportamento.
-
-**Task 8 (`generated.ts`) completa, fecha o bloco.** `typescript:transform` saiu aditivo — 37
-linhas, zero remoção — com as seis entradas da spec §3 presentes e `DocumentValidityStatus`
-serializando exatamente como previsto. `pnpm build` verde. Suíte de backend inteira: **644 passed /
-5 skipped (2292 asserções)**, contra baseline 592/5 (2154) — +52 testes e +138 asserções, exatamente
-as sete tasks de conteúdo do bloco, zero regressão e zero skip novo. `DomainDependencyTest` verde
-**sem ter sido tocado** — prova de que o corte D1 (sem aresta nova para Operation) segurou o bloco
-inteiro dentro de Identity, como a spec prometeu.
-
-**O bloco produziu duas descobertas de mecanismo de teste que não estavam em fonte nenhuma — a
-spec já havia fechado três armadilhas conhecidas (`@dataProvider`, `SESSION_DRIVER`, `postJson`
-com arquivo), e a execução mediu mais duas, ambas raiz no MESMO comportamento do Sanctum
-(`Illuminate\Auth\RequestGuard` cacheado por processo de teste), com sintomas opostos**: na Task 3
-o cache fazia o segundo `getJson` devolver dado VELHO (`redator` já carregado, N+1 mascarado); na
-Task 6 o mesmo cache fazia a autenticação sobreviver mas a sessão HTTP real não replicar entre
-chamadas, fazendo o purge matar a sessão "corrente" por engano. As duas ficam registradas nos
-comentários dos testes correspondentes (`ProfileReadTest`, `ProfilePasswordTest`) para não se
-repetir a investigação num bloco futuro que também misture duas chamadas HTTP autenticadas no mesmo
-método de teste.
-
-**Executor `claude` nas oito tasks, como o plano previu — nenhum subagente disparado.** O ambiente
-restringe o uso do Agent tool a pedido explícito do João; como as tasks são sequenciais por
-contrato (cada uma consome o que a anterior fixou), `subagent-driven-development` não teria
-paralelismo genuíno para explorar mesmo se disponível — `executing-plans` foi a técnica correta, não
-uma segunda escolha.
-
-**Estado: `ready_for_review`.** Working tree limpo, 8 commits de task na branch
-`feat/meu-perfil-backend-self-service` (`3499439`..`0765ed6`) sobre o commit de abertura que já
-trouxe a transição a `executing`. Este comando não inicia review — a próxima instrução do João aciona
-a revisão do trabalho ativo. O bloco 2 (frontend de Meu Perfil) só começa depois disso.
-
-### Review — 2026-08-15: risco ALTO, duas lentes, 5 achados, nenhum 🔴
-
-`/revisar-sprint` sobre `3499439`..`0765ed6`. **Risco ALTO** pelo gatilho binário: `generated.ts`
-regenerado (§5.3), senha/sessões (eixo Sanctum) e ownership de documento (RN-09). Revisão Claude
-com o gabarito do projeto + revisão independente do Codex (read-only, mesma janela Git); os achados
-das duas lentes foram deduplicados e **cada achado do Codex foi verificado no código/vendor antes de
-aceito** — nenhum entrou por citação.
-
-**O que está limpo, medido:** zero órfão (todas as rotas registradas, enums e Actions consumidos,
-nenhuma dep nova); leis §5 sem violação — `generated.ts` aditivo e regenerado (diff confere com os
-DTOs), nenhum `abort(422)`, D1 (zero aresta para Operation, `DomainDependencyTest` intocado), D4
-(`/api/me` e `SessionUserData` intocados), D5/RN-09 (REUF recusa 422 nomeando campo), D7 (nenhuma
-permissão nova). Lições 5/10/11 respeitadas.
-
-**Achados aguardando aprovação (Q-1 a Q-5):**
-
-1. **Q-1 🟡 P** — `ProfilePasswordController.php:22-24`: escrita de senha direta no controller,
-   fora de Action e fora de `DB::transaction` — a rule `backend-ddd.md` exige Action transacional
-   para escrita (o `UpdateProfileAction` do mesmo bloco segue); se o purge falhar, senha trocada +
-   sessões vivas + 500 (D3 não-atômica). Convergência das duas lentes (Codex apontou a transação;
-   o gabarito, a Action).
-2. **Q-2 🟡 P** — `ProfileUpdateData.php:36-44`: `prohibited` é `! validateRequired`
-   (`ValidatesAttributes.php:2222` — medido no vendor), então campo proibido presente-mas-vazio
-   (`email: null`, `roles: []`, `''`) responde **200 silencioso**, furando a D8 na borda. Remédio:
-   `missing`. Achado do Codex, confirmado por medição.
-3. **Q-3 🟢 P** — `ProfilePasswordTest.php` prova 2: não assere que a linha sobrevivente é
-   `$sessionId` (o `assertSame(1, …)` discrimina o cenário de falha já medido, mas não um futuro em
-   que o PUT grave sessão nova própria), e o `getJson` final não prova nada — o guard cacheado
-   autentica mesmo com a sessão morta, como o próprio comentário do teste registra. Codex apontou;
-   aceito parcialmente (a parte "sem prova confiável" é exagero — a asserção de contagem discrimina).
-4. **Q-4 🟡 P** — `ProfileUpdateTest.php:33-40`: o teste de auditoria só assere a EXISTÊNCIA da
-   linha `updated`; `config/audit.php:104` tem `empty_values => true` (medido), então remover `name`
-   de `$auditInclude` manteria o teste verde com trilha vazia — cobertura fantasma (lição 10) em
-   superfície de peso legal. Achado do Codex; minha primeira leitura o rejeitou e a medição da
-   config me desmentiu.
-5. **Q-5 🟢 P** — `ProfilePasswordData.php`: a spec §3 diz *"password_confirmation é chave do
-   payload, lida pela regra `confirmed`, não propriedade"*; o código a fez propriedade, com
-   justificativa em comentário (tipo TS gerado não mentir para o bloco 2). Comportamento idêntico e
-   provavelmente melhor — mas é desvio de spec vinculante não emendada: aceitar e emendar a spec, ou
-   reverter.
-
-**Divergência entre revisores, mostrada e não resolvida em silêncio:** só o Q-3 teve downgrade meu
-sobre o texto do Codex, pelo motivo registrado acima. Nenhum achado meu ficou fora da lista dele por
-discordância — as lentes convergiram.
-
-**Correções — 2026-08-15, os 5 achados aprovados pelo João e aplicados:** Q-1
-`ChangeOwnPasswordAction` (update + purge em `DB::transaction`, controller fino); Q-2 `missing` nos
-sete campos vetados + três casos vazios no dataprovider, **provados reprovando contra o
-`prohibited` antigo** (stash: 3 failed); Q-3 `assertDatabaseHas('sessions', ['id' => $sessionId])`
-e GET decorativo removido, **provado por mutação no purge** (assert novo da linha 177 reprovou);
-Q-4 assert de conteúdo em `new_values`, **provado por mutação no `$auditInclude`** (1 failed);
-Q-5 spec §3 emendada aceitando `password_confirmation` como propriedade. Suíte completa: 647
-passed, 5 skipped (pré-existentes). `generated.ts` intocado — só `rules()` mudou, nenhuma
-propriedade de DTO. Pint verde nos arquivos tocados. Recheck: Action nova consumida pelo
-controller (zero órfão). Revisão limpa — **`ready_for_closure`**.
-
-### Fechamento — 2026-08-15: gate completo, e2e contra a API real desta worktree
-
-**O critério de aceite do bloco foi provado ponta a ponta contra a API real, não pela suíte.** O
-stack `fix-frontend-*` inteiro estava de pé servindo esta árvore (o main tree estava parado, e o
-nginx desta worktree ocupou o `:8080`); o banco de dev nasceu vazio no stack novo e foi migrado e
-seedado no gate. Sessão Sanctum SPA completa por curl — `csrf-cookie`, login, e **o XSRF-TOKEN
-rotaciona no login**, então o token vai relido do jar depois dele (a primeira rodada inteira deu 419
-por usar o token pré-login). Com o redator demo (`juan.morales@lotus.cl`, senha e `is_active`
-mutados temporária e reversivelmente, restauração executada): `GET /api/profile` com o contrato
-completo (4 tipos documentais com `status` calculado no backend, REUF `vigente` com `download_url`
-assinada, `cursos_habilitados: 2`); `PUT` de nome+telefone **200** persistindo; `email` forjado e
-`roles: []` presente-mas-vazio **422 nomeando o campo** (a correção Q-2 provada na API); REUF por
-self-service **422 nomeando `type`** (nunca 403, D5/RN-09); CV **201**; foto própria **204** sem
-gate administrativo (D7) com `photo_url` presente no GET seguinte; e a prova de sessões com dois
-jars — senha trocada **204** no jar A, jar B **401** no request seguinte, jar A **200** (D3 na
-superfície real, não só no teste com driver forçado).
-
-**Higiene do gate:** suíte completa **647 passed / 5 skipped (2302 asserções)**; `pnpm lint` e
-`pnpm build` exit 0; Pint `passed` nos 22 `.php` do bloco com zero alteração; `typescript:transform`
-re-rodado **sem drift** contra o `generated.ts` commitado. Zero código morto criado pelo bloco (o
-review já tinha medido zero órfão); nenhuma lei do §5 contrariada.
-
-**Um acidente do próprio fechamento, declarado e revertido antes de qualquer commit:** na primeira
-tentativa do Pint a lista de arquivos chegou **vazia** (pathspec `backend/` avaliado com cwd já
-dentro de `backend/`) e o Pint rodou **sem argumento**, reformatando 37 arquivos alheios — a
-ocorrência exata que o CLAUDE.md §6 proíbe, e ela falha em silêncio quando a expansão do shell
-devolve vazio. Revertido por `git stash` (recuperável, não destrutivo), árvore conferida limpa, e a
-segunda rodada usou SHA completo da base e lista conferida (`22` antes de executar).
-
-**Pendências:** o gatilho da P-03 **venceu neste bloco** (backend × backend) e já estava registrado
-na seleção; fechá-la segue decisão separada do João — o arranjo que este bloco provou (stack compose
-completo por worktree, mounts relativos) é exatamente o mecanismo que a ficha pede, então a decisão
-tem agora um precedente medido. Nenhuma outra venceu; nenhuma fechou. Nasce **D-15** no backlog
-(unificar `DIAS_AVISO`/`EXPIRY_WINDOW_DAYS`, travado no merge do dashboard) — a task que a spec
-nomeou para o fechamento, registrada onde não envelhece.
-
-**Arquivamento:** plano em `plans/archive/2026-08-14-meu-perfil-backend-self-service.md`, spec em
-`specs/archive/2026-08-14-meu-perfil-backend-self-service-design.md` (não compartilhada: o bloco 2
-terá spec própria), ponteiro de spec dentro do plano arquivado atualizado. `progress.md` ganhou a
-entrega e devolveu a mais antiga (estilização ADR-16) ao `progress-archive.md` verbatim, mantendo o
-teto de dez. Backlog: bloco 1 da Sprint 6 riscado; **o bloco 2 (`meu-perfil-frontend`) NÃO foi
-promovido** — seleção é do João.
-
-**Estado: `idle`.** O `dashboard-backend-agregacoes` foi medido no main tree neste gate — **também
-já fechou** (`b9b8a30`, "fecha dashboard-backend-agregacoes; estado volta a idle", com a `main`
-mergeada na branch em `e60b7b4` à espera do PR). A exceção de dois itens ativos morreu pelas duas
-pontas; o D-15 segue travado até essa branch chegar à `main`.

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppSkeleton, AppErrorState } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
-import { formatDate } from '@shared/lib'
+import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
 import { dangerText } from '@shared/styles/tokens'
 
@@ -61,7 +61,7 @@ export function IssuedDialog({
       {error && (
         <AppErrorState
           title={t('common.loadError')}
-          detail={error.detail ?? t('common.loadErrorHint')}
+          detail={screenDetail(error) ?? t(loadErrorHint(error))}
           retryLabel={t('common.retry')}
           onRetry={onRetry}
         />

@@ -85,6 +85,7 @@ export function StudentDialog({
           isLoading={clients.isLoading}
           isError={clients.isError}
           errorDetail={clients.errorDetail}
+          errorHint={clients.errorHint}
           isEmpty={clients.isEmpty}
           unusable={clientsUnusable}
           refetch={clients.refetch}

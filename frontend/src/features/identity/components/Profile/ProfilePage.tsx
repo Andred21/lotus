@@ -18,7 +18,7 @@ import { ProfileSummaryCard } from './ProfileSummaryCard'
  */
 export function ProfilePage() {
   const { t } = useTranslation()
-  const { data: profile, isLoading, loadError, errorDetail, failedWithoutData, refetch } =
+  const { data: profile, isLoading, loadError, errorDetail, errorHint, failedWithoutData, refetch } =
     useProfilePage()
 
   // O MESMO predicado que ramifica o corpo (linhas do `profile.redator` abaixo),
@@ -36,7 +36,7 @@ export function ProfilePage() {
       <ModulePage title={t('userMenu.profile')} description={subtitulo}>
         <AppErrorState
           title={t('profile.loadError')}
-          detail={errorDetail ?? t('common.loadErrorHint')}
+          detail={errorDetail ?? t(errorHint)}
           retryLabel={t('common.retry')}
           onRetry={refetch}
         />
@@ -47,7 +47,7 @@ export function ProfilePage() {
   return (
     <ModulePage title={t('userMenu.profile')} description={subtitulo}>
       <InlineLoadState
-        error={loadError ? (errorDetail ?? t('common.loadErrorHint')) : null}
+        error={loadError ? (errorDetail ?? t(errorHint)) : null}
         retryLabel={t('common.retry')}
         onRetry={refetch}
       />

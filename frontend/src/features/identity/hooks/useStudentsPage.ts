@@ -10,5 +10,7 @@ import { studentsApi } from '@shared/api/studentsApi'
  * seletor casava `studentsApi.useList()` e não `useCrudPage(studentsApi)`.
  * Esse escape foi fechado em 2026-08-04 (spec D5); o alias é o caminho suportado. */
 export function useStudentsPage() {
-  return useCrudPage(studentsApi)
+  // `staleTime` pelo mesmo motivo da `useRedatoresPage` (D-04): a aba desmonta
+  // na troca, e sem ele a volta paga GET.
+  return useCrudPage(studentsApi, { staleTime: 30_000 })
 }

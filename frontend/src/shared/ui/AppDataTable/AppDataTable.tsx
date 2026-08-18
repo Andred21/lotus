@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { loadErrorHint, screenDetail, type ScreenDetailSource } from '@shared/lib'
 import { AppErrorState } from '../AppErrorState'
 import { mergePt } from '../mergePt'
 import { appDataTablePt, appPaginatorPt } from './style'
@@ -13,9 +14,11 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
    * controles de página à direita — e só quando há mais de uma página. */
   footerCount?: ReactNode
   /** Problema que impediu o carregamento. Truthy => o corpo vira
-   * `AppErrorState` (spec D16). Estruturalmente compatível com `ProblemDetails`
-   * sem importar de `shared/api`. */
-  error?: { detail?: string | null } | null
+   * `AppErrorState` (spec D16). `ScreenDetailSource` vem de `shared/lib`, não de
+   * `shared/api`: a fronteira registrada aqui — não importar do cliente HTTP —
+   * continua de pé, e a política de qual `detail` pode ir à tela deixa de ser
+   * duplicada inline. `ProblemDetails` satisfaz a interface. */
+  error?: ScreenDetailSource | null
   /** Recarrega a lista. Sem ele o estado de erro não oferece botão.
    * Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
    * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
@@ -82,7 +85,7 @@ export function AppDataTable<T extends DataTableValueArray>({
   const body = errored ? (
     <AppErrorState
       title={t('common.loadError')}
-      detail={error?.detail ?? t('common.loadErrorHint')}
+      detail={screenDetail(error) ?? t(loadErrorHint(error))}
       retryLabel={onRetry ? t('common.retry') : undefined}
       onRetry={onRetry}
     />

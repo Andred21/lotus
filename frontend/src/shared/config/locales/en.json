@@ -51,6 +51,9 @@
     "clearSearch": "Clear search",
     "loadError": "Could not load the data",
     "loadErrorHint": "Check your connection and try again.",
+    "forbiddenHint": "You do not have permission to view this information.",
+    "notFoundHint": "We could not find this record.",
+    "invalidDataHint": "Check the data submitted and try again.",
     "retry": "Retry",
     "networkError": "Cannot reach the server",
     "networkErrorHint": "Check your connection and try again.",
@@ -88,7 +91,8 @@
     "create": "Create",
     "empty": "No users",
     "emptyHint": "Create the first user to get started.",
-    "count": "{{count}} user(s)",
+    "count_one": "{{count}} user",
+    "count_other": "{{count}} users",
     "searchPlaceholder": "Search by name or email...",
     "name": "Name",
     "role": "Role",
@@ -169,7 +173,8 @@
     "permissions": "Permissions",
     "empty": "No roles",
     "emptyHint": "Create the first custom role to get started.",
-    "count": "{{count}} roles",
+    "count_one": "{{count}} role",
+    "count_other": "{{count}} roles",
     "systemReadOnly": "System role permissions are read-only."
   },
   "userMenu": {
@@ -188,7 +193,8 @@
     "compliance": {
       "title": "Class document compliance",
       "empty": "No classes to review",
-      "count": "{{count}} classes",
+      "count_one": "{{count}} class",
+      "count_other": "{{count}} classes",
       "course": "Course",
       "redatores": "Instructors",
       "noRedator": "No instructor",
@@ -200,7 +206,8 @@
     "redatorLoad": {
       "title": "Instructor workload",
       "empty": "No instructors",
-      "count": "{{count}} instructors",
+      "count_one": "{{count}} instructor",
+      "count_other": "{{count}} instructors",
       "name": "Instructor",
       "current": "Classes in progress",
       "upcoming": "Upcoming classes",
@@ -347,7 +354,6 @@
       "title": "Identity",
       "email": "Email",
       "rut": "RUT",
-      "role": "Profile",
       "noRut": "No RUT on file",
       "managedByAdmin": "This information is managed by the Lotus team."
     },
@@ -376,8 +382,7 @@
       "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
-      "validUntil": "Valid until {{date}}",
-      "noValidity": "No expiry date"
+      "validUntil": "Valid until {{date}}"
     },
     "docStatus": {
       "vigente": "Valid",
@@ -405,7 +410,8 @@
     "tabClients": "Clients",
     "empty": "No clients",
     "emptyHint": "Register the first client to get started.",
-    "count": "{{count}} clients",
+    "count_one": "{{count}} client",
+    "count_other": "{{count}} clients",
     "searchPlaceholder": "Search by legal name or RUT...",
     "legalName": "Legal name",
     "type": "Type",
@@ -446,7 +452,8 @@
     "searchPlaceholder": "Search course...",
     "empty": "No courses.",
     "emptyHint": "Create the first course to get started.",
-    "count": "{{count}} course(s)",
+    "count_one": "{{count}} course",
+    "count_other": "{{count}} courses",
     "redatorCount": "Writers",
     "workloadShort": "{{hours}} h",
     "redatoresSelectNote": "Select the writers enabled for this course."
@@ -468,7 +475,8 @@
     "modulesTotal": "Modules total: {{hours}} h",
     "hoursMismatch": "The modules sum ({{modules}} h) differs from the course workload ({{workload}} h). You can save anyway.",
     "empty": "No modules registered.",
-    "countShort": "{{count}} module(s)"
+    "countShort_one": "{{count}} module",
+    "countShort_other": "{{count}} modules"
   },
   "budget": {
     "tab": "Budgets",
@@ -486,7 +494,8 @@
     "paymentTerms": "Payment terms",
     "empty": "No budgets",
     "emptyHint": "Create the first budget to get started.",
-    "count": "{{count}} budgets",
+    "count_one": "{{count}} budget",
+    "count_other": "{{count}} budgets",
     "back": "Back to Commercial",
     "totalQuoted": "Total quoted",
     "totalApproved": "Total approved",
@@ -530,7 +539,8 @@
     "confirmDeleteTitle": "Delete quote?",
     "confirmDeleteBody": "This action cannot be undone.",
     "documents": "Documents",
-    "studentsShort": "{{count}} students"
+    "studentsShort_one": "{{count}} student",
+    "studentsShort_other": "{{count}} students"
   },
   "quoteStatus": {
     "pending": "Pending",
@@ -549,7 +559,8 @@
     "tabStudents": "Students",
     "empty": "No instructors",
     "emptyHint": "Register the first instructor to get started.",
-    "count": "{{count}} instructors",
+    "count_one": "{{count}} instructor",
+    "count_other": "{{count}} instructors",
     "searchPlaceholder": "Search by name or RUT...",
     "name": "Full name",
     "sectionUser": "User information",
@@ -564,7 +575,8 @@
     "create": "Register student",
     "empty": "No students",
     "emptyHint": "Register the first student to get started.",
-    "count": "{{count}} students",
+    "count_one": "{{count}} student",
+    "count_other": "{{count}} students",
     "searchPlaceholder": "Search by name or RUT...",
     "name": "Full name",
     "currentClient": "Current client",
@@ -606,7 +618,8 @@
   "operation": {
     "pending": {
       "title": "Approved quotes pending configuration",
-      "students": "{{count}} students",
+      "students_one": "{{count}} student",
+      "students_other": "{{count}} students",
       "configure": "Configure class"
     },
     "table": {
@@ -619,7 +632,8 @@
       "status": "Status",
       "search": "Search by course, client or code…",
       "filterAll": "All",
-      "count": "{{count}} classes",
+      "count_one": "{{count}} class",
+      "count_other": "{{count}} classes",
       "empty": "No classes yet.",
       "emptyHint": "Classes are created from an approved quote.",
       "noRedator": "— Unassigned"
@@ -671,7 +685,8 @@
       "importSheet": "Import sheet (xlsx/csv)",
       "empty": "No students enrolled yet.",
       "emptyHint": "Add students one by one or import a spreadsheet to start.",
-      "footerCount": "{{count}} students enrolled",
+      "footerCount_one": "{{count}} student enrolled",
+      "footerCount_other": "{{count}} students enrolled",
       "table": {
         "name": "NAME",
         "rut": "RUT",
@@ -805,7 +820,8 @@
     "fieldVigencia": "Validity",
     "fieldRedator": "Redator",
     "vigenciaIndefinida": "Indefinite",
-    "vigenciaMeses": "{{count}} months",
+    "vigenciaMeses_one": "{{count}} month",
+    "vigenciaMeses_other": "{{count}} months",
     "confirmEmit": "Confirm issuance",
     "issuedTitle": "Certificate issued",
     "issuedHeading": "CERTIFICATE OF COMPLETION",
@@ -832,6 +848,7 @@
     "colValidUntil": "Valid until",
     "colStatus": "Status",
     "snapshotCorrupted": "Corrupted document",
+    "snapshotMissingField": "Name missing",
     "viewTitle": "Certificate detail",
     "fieldCodigo": "Code",
     "fieldEstado": "Status",
@@ -843,7 +860,6 @@
     "revokeBody": "This action is irreversible: the certificate will no longer be valid.",
     "revokeReason": "Revocation reason",
     "revokeConfirm": "Revoke",
-    "certCount": "{{count}} certificates",
     "statusSummary": "{{vigentes}} valid · {{porVencer}} expiring · {{vencidos}} expired · {{revocados}} revoked",
     "popupBlocked": "The browser blocked the PDF tab",
     "validation": {
@@ -853,7 +869,8 @@
       "notFound": "Certificate not found",
       "issuedTo": "Issued to",
       "course": "Course",
-      "hours": "{{count}} hours",
+      "hours_one": "{{count}} hour",
+      "hours_other": "{{count}} hours",
       "completedAt": "Class concluded on {{date}}",
       "validUntil": "Valid until {{date}}",
       "revokedAt": "Revoked on {{date}}"

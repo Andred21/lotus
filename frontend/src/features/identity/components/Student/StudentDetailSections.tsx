@@ -15,6 +15,8 @@ import {
   enrollmentStatusLabelKey,
   enrollmentStatusSeverity,
   formatMonthYear,
+  loadErrorHint,
+  screenDetail,
 } from "@shared/lib";
 import type { useStudentDetail } from "../../api/useStudentDetail";
 
@@ -36,7 +38,7 @@ export function StudentDetailSections({
      dado tem peso legal. */
     <AppErrorState
       title={t("common.loadError")}
-      detail={detail.error?.detail ?? t("common.loadErrorHint")}
+      detail={screenDetail(detail.error) ?? t(loadErrorHint(detail.error))}
       retryLabel={t("common.retry")}
       onRetry={detail.refetch}
     />

@@ -9,6 +9,10 @@ export interface ProblemDetails {
     detail: string
     instance: string
     errors?: Record<string, string[]>
+    /** Envelope montado pelo FRONT, não pelo servidor: o `detail` dele já é
+     * i18n e pode ir à tela. Sem a marca, `screenDetail` (shared/lib) o
+     * silencia junto com os do backend, que não são localizados. */
+    localDetail?: true
 }
 
 // NÃO fixe "Content-Type" aqui. O axios já o deriva do payload: objeto simples
@@ -63,6 +67,7 @@ api.interceptors.response.use(
                 status: 0,
                 detail: i18n.t('common.networkErrorHint'),
                 instance: '',
+                localDetail: true,
             } satisfies ProblemDetails);
         }
 
@@ -94,6 +99,7 @@ api.interceptors.response.use(
             status: error.response.status,
             detail: i18n.t('common.unexpectedErrorHint'),
             instance: '',
+            localDetail: true,
         };
 
         return Promise.reject(normalized);
