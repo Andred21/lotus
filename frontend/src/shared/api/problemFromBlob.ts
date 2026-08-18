@@ -24,6 +24,7 @@ export async function problemFromBlob(error: unknown): Promise<ProblemDetails> {
         status: 0,
         detail: i18n.t('common.unexpectedErrorHint'),
         instance: '',
+        localDetail: true,
       }
     }
   }
