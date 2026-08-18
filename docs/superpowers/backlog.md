@@ -183,7 +183,7 @@ de 2,77:1 é sintoma e a ambiguidade de papel é a causa. O impedimento original
 2. **A P-37 copia o molde inteiro** do `LoginForm.tsx:40-85` (`htmlFor`/`id`, `aria-describedby`,
    `aria-invalid`), não só o `htmlFor`, e o nome acessível é **medido** (`accessibleName` no
    Playwright), não conferido no DOM.
-3. **O alcance fora de `/perfil` é provado.** `FormSection` tem 11 consumidores, `AppPassword` tem 5
+3. **O alcance fora de `/perfil` é provado.** `FormSection` tem 16 consumidores, `AppPassword` tem 5
    sítios, `AppFileRow` serve comercial/turma/redator e `AppTag` aparece fora desta tela. O plano
    declara os sítios; o DoD mostra que nenhum regrediu.
 
@@ -482,7 +482,16 @@ Os doze abaixo nasceram na auditoria de `/perfil` de **2026-08-17**
   `shared/styles/tokens.ts` e já passa 4,5:1 nos dois temas. É o caso pior do padrão que a **P-36**
   registra: a tinta de marca acumulando papéis até deixar de sinalizar.
 
-## Destravado no merge — sem bloco atribuído
+## Sem bloco atribuído
+
+- **D-31 · Duas chaves i18n órfãs no dicionário de `/perfil`.**
+  `profile.documents.noValidity` e `profile.identity.role` existem nos três locales e **nenhum
+  `.tsx` as consome** — medido no gate do BD-16 (2026-08-17) e reconfirmado no fechamento
+  (2026-08-18), com grep em `src/**` fora de `locales/`. Não quebram nada: a paridade de chaves
+  entre `pt-BR`, `es-CL` e `en` continua exata, que é o que a rule exige. O custo é de leitura —
+  quem procura o rótulo de um dado acha uma chave que a tela não usa e não sabe se é a errada ou se
+  a tela é que esqueceu de usá-la. **Apagar as três cópias de cada uma** é a limpeza; entra em
+  qualquer bloco que toque os dicionários por outro motivo.
 
 - **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`.**
   Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14): unificar antes do merge

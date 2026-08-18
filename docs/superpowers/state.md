@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: perfil-e-kit-compartilhado
 active_work_item: bd16-perfil-e-kit-compartilhado
-workflow_state: executing
-next_owner: joao
-next_action: continue_active_plan
+workflow_state: ready_for_review
+next_owner: claude
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md
 active_plan: docs/superpowers/plans/2026-08-17-bd16-perfil-e-kit-compartilhado.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: meu-perfil-frontend
 state_basis_commit: 254d691
-updated_at: 2026-08-17T20:55:00-03:00
+updated_at: 2026-08-18T10:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -228,6 +228,85 @@ interativos; o olho do `AppPassword` **perde o foco para o `<body>`** quando alt
 acessível (`textbox: Todos`); e o backend devolve mensagem em espanhol com **nome de atributo em
 inglês** ("El campo end date debe ser una fecha posterior o igual a start date."), além de "debe ser
 una cadena de caracteres" para campo obrigatório vazio.
+
+### Task 16 Step 6 — 2026-08-18: a revisão de UI achou 0 defeitos e 7 melhorias
+
+`/lotus-ui-review perfil`, invocado pelo João. Papel **Redator** (`juan.morales@lotus.cl`, o único
+redator ativo do seed), locale **es-CL**, tema claro e escuro em 1440x900 e tema claro em 1024x768 e
+390x844. Jornada read-only: nenhuma mutação, nenhuma mudança de código como consequência da revisão —
+o passo 16 da skill proíbe, e o passo 17 fecha só a sessão que ela abriu. Relatório e 14 capturas em
+`.artifacts/ui-review/2026-08-17-2108-perfil/` (a pasta está no `.gitignore`, por desenho).
+
+**Resultado: 0 achados C, 7 B e 1 bloco A agrupado** (8 observações de conformidade). Os B, com a
+medição de cada um: ordem de foco divergindo da visual abaixo de `xl`; `Eliminar foto` a 3,44:1 no
+tema claro; nome acessível do upload sem o rótulo visível; olho da senha com alvo de 16x16; download
+consumindo duas paradas de Tab, a primeira sem nome; ação do slot vazio em x=297 contra 348 dos
+outros três em 390px; e o vão de 548px entre `Cursos habilitados` e o valor em 1024px.
+
+**O que a revisão confirmou funcionando**, e é o que fecha o gate: a jornada conclui nas três
+viewports; a D-25 se sustenta (Escape fecha a prévia e devolve o foco ao `Ver` que a abriu); não há
+overflow horizontal em 390px; o texto está em es-CL na superfície inteira; console com **0 erros e 0
+warnings**; rede com `/api/me` 200 e `/api/profile` 200, sem repetição inesperada.
+
+**Um falso defeito foi descartado com prova, não com suposição.** A prévia de CV e Título falha, mas
+o arquivo-semente dos dois slots é uma fixture **truncada de 69 bytes** — só o header `%PDF-1.4`, sem
+xref. O REUF, com PDF válido de 596 B, renderiza. É dado de seed, não comportamento da tela, e
+entrou no relatório como limitação, não como achado.
+
+### Task 16 Step 7 — 2026-08-18: as 7 melhorias viradas em código, uma por commit
+
+Autorizado pelo João (*"vamos aplicar as correções para seguir para o state ready_for_review"*). Cada
+uma medida no navegador antes e depois, um commit por achado:
+
+| Achado | Antes | Depois | Commit |
+|---|---|---|---|
+| UI-02 · tinta `danger` de texto no claro | 3,44:1 | **5,83:1** (e 6,37:1 no escuro) | `4006ead` |
+| UI-03 · nome acessível do upload | `Subir documento` vs `Enviar Post-Grado` | `Subir documento` vs `Subir Post-Grado` | `ef46d37` |
+| UI-04 · alvo do olho da senha | 16x16 | **28x28**, glifo no mesmo pixel | `557565e` |
+| UI-05 · baixar arquivo | 6 paradas de Tab para 3 ações, 3 mudas | **3 paradas**, todas nomeadas | `c15dfbf` |
+| UI-01 · ordem de foco | `scrollTop` 0 → 1862 → 2230 → 0 em 390px | monotônica em 390 e 1024 | `da26b89` |
+| UI-06 · ação do slot vazio em 390px | x=297 contra 348 | **348 nos quatro** | `c9289fb` |
+| UI-07 · vão rótulo/valor em 1024px | 548px | **214px** | `058b80f` |
+
+**A UI-01 foi decisão do João, não escolha do executor, porque não tinha correção neutra.** A D1
+punha o imutável à esquerda em `xl` e a D-27 punha o self-service em cima abaixo de `xl`: duas ordens
+visuais para um DOM só, conciliadas com `order-*` — que reordena a pintura e não a árvore de
+acessibilidade. Inverter só o DOM mudaria a viewport em que a violação acontece, não a eliminaria, e
+1440 é a viewport de trabalho. **O João escolheu virar as colunas em `xl`:** o self-service vem
+primeiro no DOM nas três larguras e a coluna de leitura vira trilho à direita. A D1 perde o LADO, não
+a marca — quem diz "isto você não edita" é a superfície recuada (D-28), que já era o portador da
+regra abaixo de `xl`.
+
+**Duas correções não couberam na feature e subiram para `shared/ui`,** porque o defeito não era de
+`/perfil`: o alvo do olho vale para os 4 campos de senha da aplicação, e o par `<a>`+`<button>` do
+download vivia em **dois** sítios (`AppFileActions` e `AppFilePreviewDialog`) — corrigir um deixaria
+o débito vivo no irmão. Nasceu daí o `AppDownloadButton`. A tinta `danger` foi ainda mais fundo: é
+regra de tema, não de componente, e vale para todo botão `text`/`outlined` de severidade.
+
+**A porta do dev server virou armadilha e fica registrado.** A revisão rodou em `:5173`, que era o
+Vite deste worktree naquele momento. No passe de correção, `:5173` já era o Vite do **main tree
+`lotus`** e este worktree servia em `:5174` — a primeira leva de medições saiu do app errado e foi
+descartada (o sintoma foi `Eliminar foto` medindo `#186b94` em peso 400, que é outro componente).
+`backend/.env:38` já lista as duas origens, então as duas autenticam com o mesmo cookie e nada
+denuncia a troca. **Confira o `cwd` do processo, não a porta.**
+
+**Fechamento documental do Step 7:** a linha da entrega entrou em `historico/progress.md`; **P-36 e
+P-37** foram para `pendencias/encerradas.md` com os commits que as pagam (`8ffdefa`/`efd5bfe` e
+`0672019`/`2ad35d7`) e saíram do índice, que passa a 29 abertas e 4 encerradas; a contagem de
+consumidores do `FormSection` no `backlog.md` foi corrigida de 11 para **16**; e as duas chaves i18n
+órfãs viraram o débito **D-31** (`profile.documents.noValidity` e `profile.identity.role` existem nos
+três locales e nenhum `.tsx` as consome).
+
+**A colisão de ID dos dois `D-18` não se resolve aqui** — renumerar é decisão do João, e mexer no ID
+sem ele quebra as referências cruzadas já escritas dos dois lados.
+
+**Estado: `ready_for_review`.** Working tree limpo, branch `feat/bd16-perfil-e-kit-compartilhado` com
+15 commits de task, 10 do gate visual, 7 do passe de revisão e os de doc. Gate final: `pnpm build`
+verde, `pnpm lint` 0, **54 arquivos / 321 testes** contra a baseline de 45/250 — o passe de revisão
+somou 1 arquivo e 9 testes (a catraca da tinta `danger`, o alvo do olho e o controle único de
+download). `state_basis_commit` segue em `254d691`: ele marca a base do item ativo, e a entrega ainda
+não foi para a `main`. A próxima instrução do João aciona `/revisar-sprint`; este passo não inicia
+review.
 
 ## Trabalho fora de bloco — 2026-08-17 (revisão de UI do Dashboard e passe de correção)
 
