@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: listagens-e-abas
 active_work_item: bd13-listagens-e-abas
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-bd13-listagens-e-abas-design.md
 active_plan: docs/superpowers/plans/2026-08-18-bd13-listagens-e-abas.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T15:45:00-03:00
+updated_at: 2026-08-18T16:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -138,6 +138,38 @@ exatamente como a spec registrou. As chaves seguem órfãs; o passo do plano é 
 errado.
 
 **Estado: `executing`.** Próxima ação: Task 2 (D-02, plural do i18next em 17 chaves).
+
+### Execução — 2026-08-18: as 9 tasks fechadas, estado em `ready_for_review`
+
+As 9 tasks do plano estão nos commits `27bbd6d` (D-31), `35539aa` (D-02), `bb7b639` (D-06),
+`c6fd4cb` + `069265a` + `70280ea` (D-05, 3 tasks), `34c0c3d` + `925e3ad` (D-04, 2 tasks) e este
+commit (gate). O `d6912e5` no meio é conserto de `max-lines`: os comentários das tasks 1 e 3
+empurraram dois arquivos para 152 linhas.
+
+**Fronteira do bloco provada:** `git diff main...HEAD --name-only -- backend/ frontend/src/shared/types/generated.ts`
+devolve vazio — frontend puro, P-03 não dispara. **Três catracas:** `pnpm test` 65 arquivos / 394
+testes verdes, `pnpm lint` exit 0, `pnpm build` verde.
+
+**Duas coisas saem daqui para o review, não fechadas por esta sessão.**
+
+1. **Desenho novo no Dashboard, sem confirmação humana registrada.** A spec §6.2 contou os 3 sítios
+   de `staleError` entre "as telas que já escrevem `?? hint`" — não escrevem: ali o `staleError` é
+   mensagem **e** gatilho, e aplicar a D-05 apagava o aviso junto com o texto (3 testes de
+   `useDashboard` ficaram vermelhos e provaram). Separado em `staleErrored: boolean` + `staleError`,
+   com `DashboardPage.avisoStale()` caindo em `common.loadErrorHint`. **Consequência:** a mensagem de
+   janela invertida (422, "La fecha de término no puede ser anterior a la de inicio.") deixa de
+   aparecer na tela — o aviso continua, o texto do servidor não. Decisão do João no review.
+
+2. **Step 3 da Task 9 não rodou.** A contagem de GET no devtools de `/pessoas` precisa de navegador,
+   que esta sessão não tem. O `PeoplePage.test.tsx` espiona `api.get` (limite do axios, caminho real
+   do componente) e mede a mesma coisa — 1/0 na montagem, 1 na 2ª aba, 0 na volta — mas a
+   confirmação no navegador é passo do João.
+
+Débito que sai do bloco: **D-36** no `backlog.md` (o envelope RFC 7807 não é localizado; o `D-32` do
+plano já estava tomado pela ordem de foco de `/perfil`).
+
+**Estado: `ready_for_review`.** Próxima ação: `request_code_review`. **A revisão não foi iniciada
+aqui.**
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 

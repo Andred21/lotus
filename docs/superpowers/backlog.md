@@ -417,6 +417,20 @@ sentada só — é o que torna o agrupamento barato.
   merge. Decidir o dono do número (Shared, ou um dos dois domínios) é parte da task. **Fica sem bloco
   até o João agrupá-la** — o fechamento constata que a trava caiu, não escolhe onde ela entra.
 
+- **D-36 · O envelope RFC 7807 não é localizado, e o front teve de calar o `detail` por causa disso.**
+  `backend/app/Shared/Exceptions/ProblemDetails.php:22-36,68,71` devolve `title` e `detail` genéricos
+  LITERAIS em português ("Erro interno", "Ocorreu um erro inesperado. Tente novamente.", "Erro ao
+  processar a requisição."), apesar de `App\Shared\Http\Middleware\SetLocale` já traduzir por
+  `Accept-Language` e de existirem `backend/lang/{en,es,es_CL,pt_BR}`. Num 500 o cliente chileno lia
+  português. `CorruptedSnapshotException::missingFields()` é es-CL fixo pelo mesmo motivo — ali é
+  deliberado (D8), mas continuaria fixo se a sessão fosse pt-BR ou en. **Medido em 2026-08-18, no
+  BD-13.** O `title` nunca chegou à tela (o front usa `t('common.loadError')`), e a D-05 do BD-13
+  acabou de calar o `detail` nos estados de carga — então o custo hoje é o `CertificateViewDialog`,
+  que imprime o `detail` cru por desenho, e qualquer consumidor futuro da API. **A correção é `__()`
+  com chaves nas 4 `lang/`**; entra em bloco de backend, onde o custo da P-03 já esteja pago.
+  Frente: backend. (O ID `D-32` do plano do BD-13 já estava tomado pela ordem de foco de `/perfil`;
+  este débito ficou com o próximo livre.)
+
 ## Travados em decisão — não entram em bloco
 
 Executar sem a decisão é escolher no lugar do João.
