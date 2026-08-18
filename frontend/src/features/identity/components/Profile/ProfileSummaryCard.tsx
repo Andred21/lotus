@@ -21,7 +21,14 @@ export function ProfileSummaryCard({ redator }: { redator: RedatorProfileData })
     <AppCard variant="sunken" className="p-4">
       <FormSection title={t('profile.summary.title')} />
 
-      <div className="mt-3 flex items-baseline justify-between gap-2">
+      {/* `max-w-[22rem]` = os mesmos 22rem da coluna para a qual o par foi desenhado
+          (a segunda coluna do grid de `ProfilePage`). Sem o teto, o
+          `justify-between` estica com o CARTÃO, e abaixo de `xl` o cartão ocupa
+          a largura inteira: em 1024px o vão entre `Cursos habilitados` e o `3`
+          media 548px, meio cartão vazio entre um rótulo e o número dele (UI-07
+          do review de 2026-08-18). Em 390px o cartão já é menor que o teto e
+          nada muda; em `xl` a coluna É o teto, e nada muda também. */}
+      <div className="mt-3 flex max-w-[22rem] items-baseline justify-between gap-2">
         <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.summary.enabledCourses')}
         </span>
