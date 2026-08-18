@@ -62,6 +62,38 @@ class Client extends Model implements Auditable
                 }
             }
         });
+
+        static::restored(function (Client $client) {
+            // `restored`, não `restoring`: com `restoring` os filhos voltariam a
+            // ativos enquanto o PAI ainda está arquivado. O par correto é
+            // `deleting` (antes) / `restored` (depois) — os filhos saem antes do
+            // pai e voltam depois dele.
+            //
+            // `onlyTrashed()` + a marca: só volta quem ESTA cascata arquivou.
+            // Filho arquivado por vontade própria antes do pai não tem a marca e
+            // fica onde está (spec D2).
+            $client->addresses()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (ClientAddress $a) => self::restoreAndUnmark($a));
+            $client->contacts()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (ClientContact $c) => self::restoreAndUnmark($c));
+
+            $user = $client->user()->first();
+            if ($user !== null && $user->trashed() && $user->archived_with_parent) {
+                self::restoreAndUnmark($user);
+            }
+        });
+    }
+
+    /**
+     * Restaura o filho e apaga a marca. `restore()` audita (ADR-08); o
+     * `saveQuietly()` que limpa a marca não emite evento, pela mesma razão do
+     * `markAndDelete`: o evento que importa é o `restored`.
+     */
+    private static function restoreAndUnmark(Model $child): void
+    {
+        $child->restore();
+        $child->archived_with_parent = false;
+        $child->saveQuietly();
     }
 
     /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
@@ -127,14 +159,29 @@ class Client extends Model implements Auditable
      */
     public static function lockForWrite(int $clientId): static
     {
-        /** @var static $client */
-        $client = static::withTrashed()->whereKey($clientId)->lockForUpdate()->firstOrFail();
+        $client = static::lockRow($clientId);
 
         if ($client->trashed()) {
             throw ValidationException::withMessages([
                 'client' => 'Este cliente foi arquivado e não aceita mais alterações.',
             ]);
         }
+
+        return $client;
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre cliente arquivado — é o estado de quem vai ser
+     * restaurado, e pular a linha faria a operação seguir SEM mutex nenhum.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Quem prova que ele funciona é `PrimaryConcurrencyTest`, em MySQL.
+     */
+    public static function lockRow(int $clientId): static
+    {
+        /** @var static $client */
+        $client = static::withTrashed()->whereKey($clientId)->lockForUpdate()->firstOrFail();
 
         return $client;
     }

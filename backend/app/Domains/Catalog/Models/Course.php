@@ -46,6 +46,23 @@ class Course extends Model implements Auditable
                 $course->modules()->get()->each(fn (CourseModule $m) => self::markAndDelete($m));
             }
         });
+
+        static::restored(function (Course $course) {
+            // Ver a nota gêmea em `Client::booted()`: `restored` e não
+            // `restoring`, e só o filho que ESTA cascata arquivou.
+            $course->certificateTemplates()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (CourseCertificateTemplate $t) => self::restoreAndUnmark($t));
+            $course->modules()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (CourseModule $m) => self::restoreAndUnmark($m));
+        });
+    }
+
+    /** Restaura o filho e apaga a marca. Ver a nota gêmea em `Client`. */
+    private static function restoreAndUnmark(Model $child): void
+    {
+        $child->restore();
+        $child->archived_with_parent = false;
+        $child->saveQuietly();
     }
 
     /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
