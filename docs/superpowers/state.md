@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: arquivados-e-restauracao
+active_work_item: arquivados-e-restauracao
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
-state_basis_commit: 0a1918b
-updated_at: 2026-08-18T00:00:00-03:00
+state_basis_commit: b758068
+updated_at: 2026-08-18T12:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,100 @@ updated_at: 2026-08-18T00:00:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — `arquivados-e-restauracao` (Próximos blocos, item 1)
+
+### Seleção — 2026-08-18
+
+**Primeiro item de "Próximos blocos" (`backlog.md:101`), promovido explicitamente pelo João** com o
+estado em `idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de
+sempre — **décima segunda** vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
+`celula-de-identidade`, `dashboard-backend-agregacoes`, `meu-perfil-backend-self-service`,
+`dashboard-frontend-central-controle`, `dashboard-frontend-analitico-e-redator`): o argumento era
+**linha do backlog** ("**Arquivados e restauração de soft-delete** adicionando o rastreio dos dados e
+objetos soft-deletados e 'restaurados'"), não slug promovido.
+
+**Três decisões dele fecharam o gate:** o slug `arquivados-e-restauracao`; a rota
+**`context_required`**, porque o detalhe canônico é Notion H.5.1–H.5.4 e não vive no repositório; e
+**main tree** como área de trabalho.
+
+**A área de trabalho mudou durante a própria seleção, e o motivo fica registrado.** A escolha inicial
+foi a worktree `fix-frontend`, onde a sessão rodava. A **P-03 proíbe worktree para bloco de backend**
+em texto literal — *"o stack monta o main tree e o teste rodaria contra o código errado"* — e este
+bloco toca backend. A medição da hora: stack `lotus` up montando `/projetos/lotus/backend`, portas
+`8080`, `3307` e `9000-9001` ocupadas por ela; `docker compose` a partir de `fix-frontend` seria
+projeto separado e colidiria nas mesmas portas, então provar backend de lá exigiria derrubar o stack
+do main tree. Apresentado o conflito, **o João trocou para main tree**. O gatilho formal da P-03
+(mais de um `active_work_item` de backend) **não venceu** — não há outro item ativo.
+
+**A branch nasceu ANTES deste commit**, seguindo o precedente: `feat/arquivados-e-restauracao`,
+criada de `main@b758068`. Este arquivo já é escrito na branch, não na `main`.
+
+**`state_basis_commit` passa de `0a1918b` a `b758068`, e isso não é divergência.** Com
+`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse derivar. `b758068` é o merge
+do fechamento do BD-16 na `main`, e `main == origin/main` na hora da promoção, árvore limpa exceto
+`backend/config/cors.php`.
+
+**Fonte externa declarada:** o backlog aponta Notion **H.5.1–H.5.4** como detalhe do bloco, com o
+objetivo *"tornar o lifecycle de archive/restore explícito e seguro por agregado"*, a ordem
+*semântica → Actions → endpoints → UI* e **`forceDelete` e exclusão permanente fora de escopo**. Não
+há arquivo de escopo funcional no Drive citado para este bloco; se o packet não achar um, a fonte é
+o Notion e a lacuna vira limitação declarada, não suposição.
+
+**Seis medições da abertura, feitas sobre `b758068` e não herdadas:**
+
+1. **15 models usam `SoftDeletes` hoje.** `Shared/Files/File`; `Commercial/{Budget, Client, Quote,
+   ClientAddress, ClientContact}`; `Operation/{Enrollment, Turma}`; `Catalog/{Course, CourseModule,
+   CourseCertificateTemplate}`; `Identity/{User, Student, Redator, StudentClientLog}`. **A superfície
+   candidata do bloco é essa lista**, e decidir *quais* agregados ganham archive/restore é decisão de
+   escopo — não se supõe que sejam os 15.
+2. **A maioria dos agregados nem tem rota `DELETE`.** As 15 rotas `DELETE` existentes cobrem
+   `turmas/{turma}`, `templates/{template}` e sub-recursos (addresses, contacts, photos, files,
+   `turmas/{turma}/alunos/{enrollment}`, `turmas/{turma}/redatores/{redator}`,
+   `redatores/{redator}/documents/{document}`). **`Client`, `Course`, `Budget`, `Quote`, `User`,
+   `Redator` e `Student` não têm `destroy` exposto** — então "arquivar" nesses casos é **superfície
+   nova**, não renomeação de rota existente.
+3. **`restore()` já existe, mas implícito e sem intenção do usuário.** Só dois sítios:
+   `Identity/Services/StudentResolver.php:72,78` (revive `User` e `Student` ao reencontrar o RUT) e
+   `Operation/Actions/EnrollStudentAction.php:38` (revive matrícula soft-deletada ao re-matricular).
+   **Tornar o restore explícito precisa decidir o que acontece com esses dois caminhos** — se
+   continuam automáticos, se passam a exigir ação, ou se ficam como estão.
+4. **`withTrashed()` é onipresente na leitura, e por desenho.** 20+ sítios, com comentário de motivo
+   nos principais: relações de histórico (`Enrollment::turma()`, `Quote::budget()`), unicidade
+   (`UserProvisioner`, `CreateQuoteAction`) e projeção do Dashboard (`AnalyticsQuery`, 6 sítios).
+   **Isso é a favor do bloco:** o dado arquivado já é legível; o que falta é o lifecycle explícito.
+5. **A auditoria já cobre o evento — `config/audit.php:59-63` audita `deleted` e `restored`.** Então
+   o rastreio pedido no argumento do João **não parte do zero**: a trilha existe em `audits`; o que
+   não existe é *superfície de consulta* dela. Se "rastreio" significa expor a trilha na UI, isso é
+   decisão de escopo para o brainstorming, não implementação nova de auditoria — e a **lei 2** segue
+   valendo (auditoria só na aplicação, nunca em trigger de banco).
+6. **Zero UI de arquivado ou restauração no frontend.** `grep -riE "arquivad|restaur"` em
+   `frontend/src` retorna **nenhuma ocorrência**; os únicos hits de `inativ` são
+   `shared/api/axios.ts`, `useLoginForm.ts` e um teste de filtro. **Toda a camada de UI do bloco é
+   superfície nova.**
+
+**Autorização é lacuna medida, não detalhe de implementação.** Os cinco diretórios
+`app/Domains/*/Policies/` **estão vazios** — não há Policy nenhuma no projeto, e nenhuma permissão
+`*.delete` / `*.restore` no `RolePermissionSeeder`. "Seguro por agregado", que é o objetivo do bloco
+no backlog, **exige decidir o mecanismo de autorização** — permissão do spatie por agregado, Policy
+nova, ou ambos. Isso toca ADR-07 e é assunto do brainstorming, não do packet.
+
+**Interseção anotada no próprio backlog (`backlog.md:430`):** o manual em PDF/DOCX pré-preenchido é
+apontado como interseção com "Arquivados e restauração". Verificar no planejamento se ela vence
+agora ou segue no bloco de origem.
+
+**Risco de review projetado: MÉDIO-ALTO pelo gate binário** — o bloco **toca schema em potencial**
+(se algum agregado precisar de coluna própria de arquivamento além de `deleted_at`), **toca
+autorização** (superfície inexistente hoje) e **toca dado com peso legal** (certificados, documentos
+de redator e matrículas estão entre os agregados soft-deletáveis). A classificação final é do
+`/revisar-sprint`, não desta promoção; toca schema → o planejamento lê `docs/adrs.md` e
+`docs/der-fisico.md`.
+
+**`backend/config/cors.php` está modificado no working tree e não é deste bloco** (WIP do João, o
+outro lado da P-45). Fica fora de todo `git add`; os commits usam paths exatos.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/arquivados-e-restauracao` a partir de `main@b758068`.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 
