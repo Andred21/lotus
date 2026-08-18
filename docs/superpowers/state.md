@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: blocked
-next_owner: joao
-next_action: decide_mecanismo_de_credencial_e_evento_de_ativacao
-resume_state: context_required
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
+resume_state: null
 active_spec: null
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
-blocker: "O packet voltou status blocked: o Drive decide que a credencial de admin e redator vai por e-mail (RF-USR-09), mas nenhuma fonte decide O QUE o e-mail entrega (senha gerada x convite para definir senha x link assinado de ativacao/redefinicao) nem em qual evento is_active passa a true (cadastro x envio do convite x conclusao do link x acao administrativa). A EAP nao tem task de ativacao, convite, primeiro acesso ou verificacao de e-mail. Escolher no lugar do Joao seria inventar regra de negocio."
+blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-18T19:42:00-03:00
+updated_at: 2026-08-18T19:52:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,6 +166,30 @@ terceira pergunta, não bloqueante.
 **Estado: `blocked`, com `resume_state: context_required`.** Respondidas as duas, o packet é
 atualizado (não regerado do zero) e o estado retorna a `ready_for_planning`. **Não implemento, não
 escolho por ele, e não trato "recuperação de senha" como convite por conveniência.**
+
+### Bloqueio resolvido — 2026-08-18: as duas decisões de produto saíram do João
+
+O packet voltou `blocked` porque nem Drive nem Notion decidiam o mecanismo. **O João decidiu os
+dois pontos, e a decisão é dele — não está escrita no Drive**, então virou fonte `[JOAO-DEC]` no
+packet e staleness trigger no sentido contrário: se a Lotus registrar algo que contradiga, o packet
+envelhece.
+
+1. **Um mecanismo, dois fluxos: link por e-mail.** O mesmo caminho serve **primeiro acesso**
+   (disparado no cadastro do redator) e **recuperação de senha** (self-service). Isso põe em uso a
+   `password_reset_tokens` que a medição 1 da abertura achou pronta e órfã, e satisfaz o canal que o
+   RF-USR-09 exige sem inventar um segundo padrão de credencial.
+2. **`is_active` nasce `true` para o redator, no cadastro, e o admin pode revogar.** Cliente e aluno
+   continuam `false` por padrão — a RN-01 fica intacta onde ela vale. A consequência prática é que
+   o gate de acesso do redator passa a ser *saber a senha*, não *estar ativo*: `UserProvisioner`
+   grava `false` para todo ator hoje (`:40`), então o default deixa de ser único e passa a depender
+   do `type`.
+
+**O que a decisão NÃO fecha, e é o que o brainstorming resolve:** expiração/reenvio do link de
+primeiro acesso (a política de 60 min do broker foi desenhada para recuperação), por qual superfície
+o admin revoga, se o bloco entrega backend e frontend juntos — "esqueci minha senha" e "definir
+senha" são telas **públicas** que não existem — e como o DoD prova o e-mail com `MAIL_MAILER=log`.
+
+**Estado: `ready_for_planning`.** Packet atualizado no lugar (`status: ready`), não regerado.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 

@@ -2,8 +2,9 @@
 schema_version: 1
 packet_id: identity-ativacao-acesso-redator-v1
 block_id: identity-ativacao-acesso-redator
-status: blocked
+status: ready
 generated_at: 2026-08-18T19:38:44-03:00
+amended_at: 2026-08-18T19:52:00-03:00
 base_ref: feat/identity-ativacao-acesso-redator
 base_commit: 03a0b72a2c04ca0e8ea49717c99159e8b8881383
 state_path: docs/superpowers/state.md
@@ -37,6 +38,7 @@ word_budget: 1200
 | DRIVE-ID | Google Drive | `modulo-identidade-acesso.md` — file ID `1WIJpyCEkQFG_CC1ecTZxM5mjBugtJFaA` | 2026-06-14T19:02:09Z | retrieved | Fronteira de Identity e funcionalidades de autenticação |
 | DRIVE-ADMIN | Google Drive | `tela-administracao-acesso.md` — file ID `1BrnI5WLOfQFqLVa-hiSJxzWzhIXatYj1` | 2026-06-16T14:56:51Z | retrieved | Alcance registrado da administração de acesso |
 | NOTION-EAP | Notion | `Tasks · Lotus Fase 2` — `collection://e64b7d57-d000-4433-b652-a410e75193cc`, database `7e55d684-cdd4-4bf3-b152-e15ce70d324b` | not exposed by connector | retrieved; direct-match query returned 0 | Task correspondente e adjacências de Identity/autenticação |
+| JOAO-DEC | João Victor (decisão de produto, 2026-08-18) | Resposta direta às duas perguntas bloqueantes desta ficha | 2026-08-18 | retrieved | Mecanismo de credencial e política de `is_active` |
 | FIGMA | Figma | Arquivo/nó não identificado | n/a | **unavailable** — tool discovery returned no `mcp__codex_apps__figma_search` or `mcp__codex_apps__figma_list_files`; available `get_*` tools require a `fileKey`/`nodeId`, absent from the consulted sources | Tela de convite, primeiro acesso ou ativação |
 
 ## Key facts
@@ -55,9 +57,9 @@ word_budget: 1200
 | Topic | External snapshot | Current decision | Resolution basis |
 |---|---|---|---|
 | Canal de entrega | Credenciais de admins e redatores são enviadas por e-mail | E-mail é obrigatório | RF-USR-09 no Drive canônico |
-| Mecanismo entregue | Não especificado | **Unresolved** | Drive e Notion não distinguem senha, convite ou link |
+| Mecanismo entregue | Não especificado | **Link por e-mail**, um mecanismo servindo dois fluxos: primeiro acesso (disparado no cadastro) e recuperação de senha (self-service) | Decisão do João, 2026-08-18 `[JOAO-DEC]`; compatível com RF-USR-09 e com a recuperação já prevista em `[DRIVE-ID]` |
 | Role do redator | Role correspondente é associada automaticamente no cadastro | Produto exige role `redator`; código atual diverge | RF-ROL-05, com prioridade do Drive |
-| Ativação | Nenhuma regra para `is_active` ou momento da ativação | **Unresolved** | Ausência nas fontes disponíveis; não inferir do código |
+| Ativação | Nenhuma regra para `is_active` ou momento da ativação | O redator nasce `is_active=true` **no cadastro**; o admin pode **revogar** o acesso depois. Cliente e aluno continuam `false` por padrão | Decisão do João, 2026-08-18 `[JOAO-DEC]`; a RN-01 permanece intacta para cliente e aluno |
 | Tela administrativa | Gestão registrada cobre admins e roles/permissões | Não prova que essa tela deva ativar redatores | Limite explícito de `[DRIVE-ADMIN]` |
 
 ## Constraints
@@ -73,13 +75,24 @@ word_budget: 1200
 - Um redator cadastrado pelo admin recebe pelo sistema um e-mail que efetivamente lhe permite obter acesso. `[DRIVE-RN]`
 - Concluído o fluxo decidido, o redator autentica com a role `redator` e permanece segregado dos módulos administrativos/financeiros. `[DRIVE-RN]`
 - Cliente e aluno continuam incapazes de autenticar. `[DRIVE-RN]`
-- O critério de aceite não pode ser fechado enquanto o conteúdo do e-mail e o evento que ativa a conta não forem decididos.
+- Um redator cadastrado hoje autentica: recebe o link, define a senha e entra com a role `redator`.
+- Um redator com acesso revogado pelo admin deixa de autenticar, sem ser apagado.
+- Um redator que esqueceu a senha se recupera sozinho, sem intervenção do admin.
 
 ## Open questions
 
-- **Blocking:** qual mecanismo o e-mail entrega — senha, convite para definir senha, link assinado de ativação/redefinição ou outro mecanismo já aprovado pela Lotus?
-- **Blocking:** em qual evento `is_active` passa a `true` — cadastro, envio do convite, conclusão do link ou ação administrativa explícita?
-- Quais são as regras de expiração, reenvio, revogação e tratamento de e-mail inválido/não recebido?
+**As duas bloqueantes foram respondidas pelo João em 2026-08-18 `[JOAO-DEC]` e migraram para a
+tabela de decisões acima.** O que sobra é escopo e detalhe, resolvido no brainstorming, não fonte
+externa faltando:
+
+- Expiração, reenvio e tratamento de e-mail não recebido do link de primeiro acesso — a política
+  padrão do broker do Laravel (60 min) foi desenhada para recuperação, não para primeiro acesso.
+- Se a revogação de acesso do redator entra neste bloco ou vira item próprio, e por qual superfície
+  (tela de redator × tela de usuários administrativos).
+- Se o bloco entrega backend e frontend juntos, dado que "esqueci minha senha" e "definir senha" são
+  telas públicas que hoje não existem.
+- Transporte de e-mail em desenvolvimento: `MAIL_MAILER=log` prova o disparo sem entregar nada, e a
+  decisão de canal agora torna a prova ponta a ponta parte do DoD. `[LOCAL-BASE]`
 
 ## Deferred
 
@@ -90,7 +103,9 @@ word_budget: 1200
 ## Staleness triggers
 
 - `active_work_item`, `active_spec` ou `active_plan` passar a apontar para outro escopo.
-- João Victor ou a Lotus registrar o mecanismo de credencial ou o evento de ativação.
+- A Lotus registrar no Drive mecanismo de credencial ou política de ativação que contradiga a
+  decisão do João de 2026-08-18 `[JOAO-DEC]` — que hoje é a fonte destas duas respostas, e não está
+  escrita no Drive.
 - O Drive canônico ou a EAP ganhar ou alterar requisito/task de convite, primeiro acesso ou ativação.
 - Um arquivo/nó Figma relevante ser identificado ou contradizer este packet.
 - O código de cadastro, provisionamento, autenticação, RBAC ou e-mail mudar de forma que altere as lacunas locais registradas.
