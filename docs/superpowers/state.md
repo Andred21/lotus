@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: ativacao-acesso-redator
+active_work_item: identity-ativacao-acesso-redator
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd13-listagens-e-abas
-state_basis_commit: ddff65b
-updated_at: 2026-08-18T19:15:00-03:00
+state_basis_commit: 2c7b249
+updated_at: 2026-08-18T19:31:48-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,83 @@ updated_at: 2026-08-18T19:15:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `identity-ativacao-acesso-redator` (promovido em 2026-08-18)
+
+### Seleção — 2026-08-18
+
+**Item 4 de "Próximos blocos" (`backlog.md`), promovido explicitamente pelo João** com o estado em
+`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre: o
+argumento era a **linha do backlog** ("Identity · ativação de acesso do redator"), com bullet e
+markdown, não slug promovido.
+
+**Três decisões dele fecharam o gate:** o slug `identity-ativacao-acesso-redator`; a rota
+**`context_required`**, porque "como o redator recebe a credencial" é decisão de produto e a fonte é
+externa ao repositório; e a **worktree `fix-frontend`** como área de trabalho, contra a regra do
+comando — a exceção está declarada abaixo, não descoberta na execução.
+
+**A branch nasceu ANTES deste commit**, seguindo o precedente do B1 e do B2:
+`feat/identity-ativacao-acesso-redator`, criada de `main@2c7b249`. Este arquivo já é escrito na
+branch, não na `main`. Árvore limpa na promoção.
+
+### Duas regras cedem por decisão explícita do João — declaradas na abertura
+
+1. **P-03 · bloco de backend rodando em worktree linkada.** A regra do `/planejar-bloco` é "toque
+   backend assume main tree por causa da P-03", e a main tree é `/home/jvbat/projetos/lotus`
+   (primeira linha de `git worktree list`), não esta árvore. **Não há compose por worktree:** o
+   MySQL e o container `app` são um só, então migration, seed e teste de integração deste bloco
+   disputam o mesmo banco com a outra árvore. A mitigação não está desenhada — entra como custo do
+   planejamento, e o gatilho da P-03 vence aqui em vez de ser adiado de novo.
+
+2. **A base não contém `arquivados-e-restauracao`.** Medido na promoção: `/home/jvbat/projetos/lotus`
+   está em `feat/arquivados-e-restauracao@3d7e95c` ("docs(state): fecha o bloco
+   arquivados-e-restauracao"), com `state.md` próprio em `idle` e
+   `last_completed_work_item: arquivados-e-restauracao` — e a `main` **não tem esse merge**
+   (`main@2c7b249` é o PR #59, do BD-13). Os dois `state.md` concordam na **etapa** (`idle` nos
+   dois) e divergem na **história**: o `backlog.md` desta árvore ainda lista "Arquivados e
+   restauração de soft-delete" como Próximos blocos #1, e o estado daqui não sabe do fechamento.
+   **Conflito de merge é provável e está previsto** — aquele bloco mexe no lifecycle de arquivamento
+   dos agregados e este mexe em `User`/Identity. Integrar primeiro foi oferecido e recusado; a
+   reconciliação fica para o fechamento.
+
+### Quatro medições da abertura, feitas sobre `2c7b249` e não herdadas do backlog
+
+1. **`password_reset_tokens` existe e ninguém a usa.** A tabela nasce em
+   `database/migrations/0001_01_01_000000_create_users_table.php` e `config/auth.php:98` a aponta;
+   não há uso do broker `Password::` no `app/` nem rota de reset em
+   `app/Domains/Identity/routes.php`, que expõe apenas `/login`, `/logout`, `/me` e `profile/*`.
+   **A infra está pronta e o fluxo é o que falta** — o bloco decide se a usa ou não.
+
+2. **Não existe transporte de e-mail.** `MAIL_MAILER=log` no `.env.example` e nenhum
+   `app/Notifications`. Se a decisão de produto for convite por e-mail, o custo não é "escrever a
+   Notification": é escolher e configurar transporte para dev e para produção, e isso é infra nova
+   num bloco de identidade.
+
+3. **Ativar o login não basta: o redator nasce sem role.** `syncRoles` só existe em
+   `CreateStaffUserAction.php:45` e `UpdateStaffUserAction.php:62` — `CreateRedatorAction` e
+   `UserProvisioner` não atribuem nada, embora `RolePermissionSeeder.php:38` já defina a role
+   `redator` com quatro permissões (`operation.turma.view`, `operation.turma.submit_docs`,
+   `feedback.feedback.view`, `feedback.feedback.manage`). **Um redator ativado hoje autenticaria sem
+   permissão nenhuma**, e a view do dashboard dele abriria assim mesmo, porque o gate é por `type`
+   (`DashboardController.php:37`) e não por role. É a metade do defeito que o backlog não registrava.
+
+4. **Nenhuma escrita de `is_active = true` alcança um redator.** `UserProvisioner.php:40` grava
+   `false` para todo ator (RN-01), e o campo só é escrito depois em `CreateStaffUserAction:42` e
+   `UpdateStaffUserAction:54`, que são staff. `AuthController.php:52` recusa o inativo. Não há
+   endpoint, tela ou comando que vire o bit para redator — a promoção confirma o que o fechamento do
+   `dashboard-backend-agregacoes` mediu em 2026-08-15.
+
+**Risco de review projetado: ALTO pelo gate binário.** O bloco toca autenticação (lei §5.4, Sanctum
+cookie/CSRF), a RN-01 (lei §5.5) e RBAC, e provavelmente cria caminho de credencial. A classificação
+final é do `/revisar-sprint`, não desta promoção.
+
+**O que a promoção NÃO decide, e é entrada do brainstorming:** o mecanismo de entrega da credencial
+(convite por e-mail × senha definida no cadastro × link de ativação assinado), se `is_active` vira
+ação administrativa explícita, e se a role `redator` passa a ser atribuída no cadastro. **O packet
+vem antes** — nenhuma dessas respostas se supõe a partir do código.
+
+**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
+`feat/identity-ativacao-acesso-redator` a partir de `main@2c7b249`.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
