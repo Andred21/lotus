@@ -62,6 +62,13 @@ destino, TTL de 60 min.
 
 **Link morto cai na tela de recuperação.** Expiração não vira chamado para o admin.
 
+**Sem login automático depois de definir a senha.** A tela manda para `/login` com a senha já
+gravada, e o redator autentica pela porta de sempre. Autenticar de dentro do fluxo de token criaria
+um segundo caminho que cria sessão, e hoje só `AuthController::login` faz isso — é ele quem regenera
+a sessão contra fixation e quem chama `RecordLoginAction`. Um acesso não registrado em `login_logs`
+envelheceria a coluna "último acesso" pelo mesmo motivo que o `remember` foi recusado
+(`AuthController.php:31-39`).
+
 `config('app.frontend_url')` já existe (`config/app.php:57`) e `FRONTEND_URL` já está no
 `.env.example:40` — o link não precisa de env nova.
 
@@ -130,6 +137,9 @@ Comportamento provado no navegador, contra a API real:
 Testes de backend: convite disparado no cadastro; token de 7 dias aceito e token de 60 min expirado
 recusado; `forgot` genérico; throttle; role `redator` atribuída no cadastro; **cliente e aluno
 continuam `is_active=false`** — a RN-01 não pode ser afrouxada de carona.
+
+Testes de frontend: `vitest` nos hooks das duas telas públicas — o ramo de token inválido/expirado é
+o que manda o usuário para a recuperação, e é o único caminho de erro que a tela trata sozinha.
 
 Build verde não é DoD (lei §5.8).
 
