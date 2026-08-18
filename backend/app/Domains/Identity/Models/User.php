@@ -48,6 +48,7 @@ class User extends Authenticatable implements Auditable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'archived_with_parent' => 'boolean',
         ];
     }
 

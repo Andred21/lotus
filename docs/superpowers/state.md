@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: arquivados-e-restauracao
 active_work_item: arquivados-e-restauracao
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-e-restauracao-design.md
 active_plan: docs/superpowers/plans/2026-08-18-arquivados-e-restauracao.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restaur
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T14:05:00-03:00
+updated_at: 2026-08-18T15:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -284,6 +284,25 @@ listas; o teste do `useArchivedPage` usa fake estrutural e não exercita isso. E
 `[resource, 'archived']` — sem TanStack no teste, mantendo o padrão do repositório.
 
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-e-restauracao`.
+
+### Execução — 2026-08-18: início, técnica `executing-plans`
+
+**Main tree**, conforme a decisão do João na seleção e a P-03. Técnica `executing-plans` e não
+`subagent-driven-development`: a sessão está sob restrição de AgentTool, e o precedente dos dois
+últimos blocos é o mesmo.
+
+**O fixture da Task 1 do plano não batia com o schema e foi corrigido na escrita do teste.** O plano
+escreve `modules()->create(['name' => …, 'order' => 1])` — a coluna é `sort_order` — e
+`certificateTemplates()->create(['version' => 2, 'body' => …])`, mas `version` está **fora do
+`$fillable`** por decisão registrada (D10 do bloco de templates) e `body` não é coluna. O teste usa
+`sort_order` e o helper `Tests\Support\CreatesCertificateTemplates::makeTemplate()`, que existe
+exatamente para esse caso. Nenhum comportamento sob teste mudou.
+
+**Task 1 verde e a suíte inteira medida nos dois sentidos.** `ArchiveCascadeMarkTest` passa com 3
+testes / 8 asserções. `php artisan test` dá **12 failed / 675 passed / 5 skipped**; com
+`FRONTEND_URL=http://localhost:5173`, **687 passed / 5 skipped / zero falha**. As 12 são a **P-45**
+pelo terceiro fechamento seguido — `Session store not set on request.` no `.env` multi-origin —, não
+regressão desta task.
 
 ## Último item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
 

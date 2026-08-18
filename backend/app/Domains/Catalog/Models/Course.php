@@ -40,10 +40,20 @@ class Course extends Model implements Auditable
         static::deleting(function (Course $course) {
             if (! $course->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
-                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
-                $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
+                // `markAndDelete` grava a marca com `saveQuietly()` antes do delete —
+                // ver a nota gêmea em `Client::booted()`.
+                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => self::markAndDelete($t));
+                $course->modules()->get()->each(fn (CourseModule $m) => self::markAndDelete($m));
             }
         });
+    }
+
+    /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
+    private static function markAndDelete(Model $child): void
+    {
+        $child->archived_with_parent = true;
+        $child->saveQuietly();
+        $child->delete();
     }
 
     public function certificateTemplates(): HasMany

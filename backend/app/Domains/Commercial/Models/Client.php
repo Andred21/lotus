@@ -47,11 +47,29 @@ class Client extends Model implements Auditable
                 // cliente arquivado. Quem fecha a janela é a `DeleteClientAction`,
                 // que abre a transação e toma `Client::lockForWrite()` antes de
                 // chamar `$client->delete()`. Não arquive cliente por fora dela.
-                $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
-                $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
-                $client->user?->delete();
+                //
+                // `markAndDelete` grava a marca com `saveQuietly()` ANTES do delete:
+                // `SoftDeletes::runSoftDelete()` só persiste `deleted_at`/`updated_at`,
+                // então um atributo sujo não chegaria ao banco pelo `delete()`. O
+                // `saveQuietly` não emite evento, e por isso não polui a trilha com um
+                // `updated` por filho — o evento que importa é o `deleted`, que o
+                // `delete()` logo abaixo audita normalmente (ADR-08).
+                $client->addresses()->get()->each(fn (ClientAddress $a) => self::markAndDelete($a));
+                $client->contacts()->get()->each(fn (ClientContact $c) => self::markAndDelete($c));
+
+                if ($client->user !== null) {
+                    self::markAndDelete($client->user);
+                }
             }
         });
+    }
+
+    /** Marca o filho como cascateado e o arquiva. Ver a nota no `deleting`. */
+    private static function markAndDelete(Model $child): void
+    {
+        $child->archived_with_parent = true;
+        $child->saveQuietly();
+        $child->delete();
     }
 
     public function user(): BelongsTo

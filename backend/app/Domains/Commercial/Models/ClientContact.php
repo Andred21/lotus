@@ -32,6 +32,7 @@ class ClientContact extends Model implements Auditable
 
     protected $casts = [
         'is_primary' => 'boolean',
+        'archived_with_parent' => 'boolean',
     ];
 
     public function client(): BelongsTo

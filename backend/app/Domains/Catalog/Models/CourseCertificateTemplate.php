@@ -43,6 +43,7 @@ class CourseCertificateTemplate extends Model implements Auditable
 
     protected $casts = [
         'layout_config' => 'array',
+        'archived_with_parent' => 'boolean',
     ];
 
     public function course(): BelongsTo
