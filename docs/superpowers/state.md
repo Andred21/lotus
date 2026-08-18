@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: listagens-e-abas
 active_work_item: bd13-listagens-e-abas
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-18-bd13-listagens-e-abas-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd16-perfil-e-kit-compartilhado
 state_basis_commit: b758068
-updated_at: 2026-08-18T12:50:43-03:00
+updated_at: 2026-08-18T14:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
