@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('budgets/{budget}/quotes', [QuoteController::class, 'index']);
     Route::post('budgets/{budget}/quotes', [QuoteController::class, 'store']);
+    Route::get('budgets/{budget}/quotes/archived', [QuoteController::class, 'archived']);
+    Route::post('quotes/{quote}/restore', [QuoteController::class, 'restore'])->whereNumber('quote');
     Route::apiResource('quotes', QuoteController::class)->only(['show', 'update', 'destroy']);
     Route::post('quotes/{quote}/approve', [QuoteController::class, 'approve']);
     Route::post('quotes/{quote}/reject', [QuoteController::class, 'reject']);
