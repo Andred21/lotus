@@ -31,6 +31,24 @@ vi.mock('../../hooks/useBudgetDetail', () => ({
   useBudgetDetail: () => detail.current as BudgetDetail,
 }))
 
+/** Task 6 (spec D5): a página agora chama `useBudgetQuotesArchived` ACIMA dos
+ * três `if` de ramo (regra: hook antes de qualquer return). Sem este mock, os
+ * três casos deste arquivo — que não passam por `QueryClientProvider` — quebram
+ * em `useQuery` mesmo antes de chegar ao `QuotesList`. O que este teste prova é
+ * a titulação por ramo, então um retorno estático basta. */
+vi.mock('../../hooks/useBudgetQuotesArchived', () => ({
+  useBudgetQuotesArchived: () => ({
+    mode: 'active',
+    setMode: () => {},
+    items: [],
+    loading: false,
+    error: null,
+    refetch: () => {},
+    restore: () => {},
+    restoring: false,
+  }),
+}))
+
 /** Quantas vezes a frase aparece na tela — é assim que se prova que o título do
  * estado não virou eco de um parágrafo com o mesmo texto. */
 const vezesNaTela = (texto: string, trecho: string) => texto.split(trecho).length - 1

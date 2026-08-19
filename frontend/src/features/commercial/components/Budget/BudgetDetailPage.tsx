@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { AppButton, AppTag, DetailHeader, IdentityCell, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
+import { useBudgetQuotesArchived } from '../../hooks/useBudgetQuotesArchived'
 import { QuotesList } from './QuotesList'
 import { BudgetDocumentsCard } from './BudgetDocumentsCard'
 import { BudgetOverlays } from './BudgetOverlays'
@@ -13,6 +14,7 @@ export function BudgetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const budgetId = Number(id)
   const d = useBudgetDetail(budgetId)
+  const quotesArchived = useBudgetQuotesArchived(budgetId)
 
   // Erro e notFound mantêm o `back`: sem ele um GET que falha e continua falhando
   // prende o usuário na rota — Reintentar recarrega, não sai.
@@ -114,6 +116,16 @@ export function BudgetDetailPage() {
             onRemove={(q) => d.askConfirm('remove', q)}
             onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
             onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
+            mode={quotesArchived.mode}
+            onModeChange={quotesArchived.setMode}
+            archived={{
+              items: quotesArchived.items,
+              loading: quotesArchived.loading,
+              error: quotesArchived.error,
+              refetch: quotesArchived.refetch,
+              restoring: quotesArchived.restoring,
+            }}
+            onRestore={quotesArchived.restore}
           />
         </AppCard>
 

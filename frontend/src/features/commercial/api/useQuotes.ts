@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import type { QuoteData } from '@shared/types/generated'
+import type { ArchivedQuoteData, QuoteData } from '@shared/types/generated'
 import { budgetsApi } from '@shared/api/budgetsApi'
 
 /** Campos que a UI escreve numa cotação. `client_id` NÃO entra: vem do orçamento
@@ -61,6 +61,36 @@ export function useRejectQuote() {
   const invalidate = useInvalidate()
   return useMutation<QuoteData, ProblemDetails, number>({
     mutationFn: (quoteId) => api.post<QuoteData>(`/api/quotes/${quoteId}/reject`).then((r) => r.data),
+    onSuccess: invalidate,
+  })
+}
+
+/**
+ * Cotações arquivadas DE UM orçamento. Escopada pelo pai porque a cotação não
+ * tem lista de topo — ela vive dentro do detalhe (spec D5).
+ *
+ * A chave começa em `budgetsApi.keys.detail(budgetId)`, que por sua vez começa em
+ * `['budgets']` — o mesmo prefixo que `useInvalidate()` invalida. Efeito: arquivar
+ * uma cotação repinta a lista de arquivados sem código novo, igual ao molde.
+ *
+ * `enabled` é PARÂMETRO, não default, pela mesma lição da fábrica: a visão de
+ * arquivados não pode buscar na montagem.
+ */
+export function useQuotesArchived(budgetId: number, enabled: boolean) {
+  return useQuery<ArchivedQuoteData[], ProblemDetails>({
+    queryKey: [...budgetsApi.keys.detail(budgetId), 'quotes', 'archived'],
+    queryFn: () =>
+      api.get<ArchivedQuoteData[]>(`/api/budgets/${budgetId}/quotes/archived`).then((r) => r.data),
+    enabled,
+  })
+}
+
+/** O restore NÃO é escopado pelo pai: a rota é `POST /api/quotes/{quote}/restore`,
+ * plana, porque a cotação já é identificada globalmente pelo id (spec D5). */
+export function useRestoreQuote() {
+  const invalidate = useInvalidate()
+  return useMutation<QuoteData, ProblemDetails, number>({
+    mutationFn: (quoteId) => api.post<QuoteData>(`/api/quotes/${quoteId}/restore`).then((r) => r.data),
     onSuccess: invalidate,
   })
 }
