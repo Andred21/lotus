@@ -22,7 +22,7 @@ function recursoDeCotacoes(budgetId: number) {
       return useQuotesArchived(budgetId, enabled)
     },
     useRestore: function useRestore() {
-      return useRestoreQuote()
+      return useRestoreQuote(budgetId)
     },
   }
 }
