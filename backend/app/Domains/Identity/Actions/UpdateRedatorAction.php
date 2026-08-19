@@ -27,6 +27,7 @@ class UpdateRedatorAction
         private UserProvisioner $users,
         private StoreRedatorDocumentAction $documents,
         private UploadFileAction $uploads,
+        private PurgeOtherSessionsAction $sessions,
     ) {}
 
     public function execute(Redator $redator, RedatorData $data, array $documents = []): Redator
@@ -56,12 +57,24 @@ class UpdateRedatorAction
                 // fonte única desse descarte — RedatorDocumentRollbackTest.
                 $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $redator->user_id);
 
+                // Revogação é transição, não estado: só purga quem estava
+                // ativo e passou a inativo. Reenviar `false` para quem já
+                // estava inativo não derruba sessão nenhuma.
+                $revogando = ! $data->is_active instanceof Optional
+                    && $data->is_active === false
+                    && $redator->user->is_active === true;
+
                 $redator->user->update([
                     'name' => $data->name,
                     'rut' => $rut,
                     'email' => $data->email,
                     'phone' => $data->phone instanceof Optional ? null : $data->phone,
+                    ...($data->is_active instanceof Optional ? [] : ['is_active' => $data->is_active]),
                 ]);
+
+                if ($revogando) {
+                    $this->sessions->all($redator->user);
+                }
 
                 if (! $data->course_ids instanceof Optional) {
                     PivotAudit::sync($redator, 'courses', $data->course_ids);

@@ -47,8 +47,10 @@ payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.m
    (`plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`). Levou a outra metade:
    as 5 séries mensais, os 2 rankings, `compliance_turmas`, a carga de redatores e a view do
    Redator inteira. **A P-44 continua aberta** — a carga mostra dois usuários de sonda, declarados
-   pela D10 em vez de apagados —, e o item 4 de "Próximos blocos" (ativação de acesso do redator)
-   segue bloqueando o VALOR da view do Redator: nenhum redator autentica hoje.
+   pela D10 em vez de apagados. O que bloqueava o VALOR desta view **caiu em 2026-08-19**: o
+   `identity-ativacao-acesso-redator` entregou convite, primeiro acesso, recuperação e revogação
+   (`plans/archive/2026-08-18-identity-ativacao-acesso-redator.md`), então o redator já autentica e
+   alcança a própria view.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
 compliance e análises.
@@ -108,18 +110,6 @@ operação"*.
    brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
    (permissões essenciais não editáveis).
 3. **Hardening** — ownership em rotas nested e política de retenção documental.
-4. **Identity · ativação de acesso do redator.** `CreateRedatorAction` cria o `User` com
-   `is_active=false` "até o fluxo de ativação", e **o fluxo não existe** — o `UserProvisioner` gera
-   senha aleatória (`bin2hex(random_bytes(16))`) que ninguém recebe, e nenhuma tela ativa a conta.
-   Consequência medida no fechamento do `dashboard-backend-agregacoes` (2026-08-15): **nenhum redator
-   autentica em produção**, então a view `redator` do dashboard está implementada, testada e provada
-   ponta a ponta contra a API real — e hoje **inalcançável** por quem deveria usá-la. É a RN-01 pela
-   metade: a regra diz que redator autentica, o cadastro nunca o habilita. Toca convite ou
-   definição de senha, o gate de `is_active` e provavelmente `password_reset_tokens`; exige
-   brainstorming, porque "como o redator recebe a credencial" é decisão de produto, não de código.
-   **Bloqueia o valor do bloco B2 do Dashboard**, que é onde a view do Redator é construída — o B1,
-   entregue em 2026-08-16, é a tela administrativa e não depende disto.
-
 ---
 
 # Blocos de execução de dívida

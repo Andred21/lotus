@@ -17,7 +17,8 @@ use Throwable;
  * Cria o redator (usuário-redator + redator + habilitação de cursos + documentos)
  * numa transação. O provisionamento do User é delegado ao UserProvisioner, e o
  * upload de documento ao StoreRedatorDocumentAction — mesma regra de replace do
- * update e da rota aninhada. is_active=false até o fluxo de ativação.
+ * update e da rota aninhada. O redator nasce ativo (RN-01) e com a role
+ * `redator` (RF-ROL-05); a credencial dele chega pelo convite.
  *
  * @param  array<string,UploadedFile>  $documents
  */
@@ -27,6 +28,7 @@ class CreateRedatorAction
         private UserProvisioner $users,
         private StoreRedatorDocumentAction $documents,
         private UploadFileAction $uploads,
+        private SendRedatorAccessInvitationAction $invitations,
     ) {}
 
     public function execute(RedatorData $data, array $documents = []): Redator
@@ -47,7 +49,7 @@ class CreateRedatorAction
                 ];
             }
 
-            return DB::transaction(function () use ($data, $uploaded) {
+            $redator = DB::transaction(function () use ($data, $uploaded) {
                 $user = $this->users->provision(
                     type: 'redator',
                     name: $data->name,
@@ -55,6 +57,11 @@ class CreateRedatorAction
                     email: $data->email,
                     phone: $data->phone instanceof Optional ? null : $data->phone,
                 );
+
+                // RF-ROL-05: a role corresponde ao tipo e é associada no
+                // cadastro. Sem isto o redator autentica e não enxerga nada —
+                // o gate de todo módulo é permissão, não `type`.
+                $user->syncRoles(['redator']);
 
                 $redator = $user->redator()->create([]);
 
@@ -75,5 +82,17 @@ class CreateRedatorAction
 
             throw $e;
         }
+
+        // Disparo FORA da transação e fora do try/catch dos uploads: e-mail
+        // que falha não desfaz cadastro nem descarta binário já subido. Se
+        // cair, o admin reenvia o convite pela tela — é justamente por isso
+        // que o reenvio existe.
+        try {
+            $this->invitations->execute($redator->user);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        return $redator;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Identity\Http\Controllers\AuthController;
+use App\Domains\Identity\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Http\Controllers\PermissionController;
 use App\Domains\Identity\Http\Controllers\ProfileController;
 use App\Domains\Identity\Http\Controllers\ProfileDocumentController;
@@ -8,6 +9,7 @@ use App\Domains\Identity\Http\Controllers\ProfilePasswordController;
 use App\Domains\Identity\Http\Controllers\ProfilePhotoController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
+use App\Domains\Identity\Http\Controllers\RedatorInvitationController;
 use App\Domains\Identity\Http\Controllers\RedatorPhotoController;
 use App\Domains\Identity\Http\Controllers\RoleController;
 use App\Domains\Identity\Http\Controllers\StudentController;
@@ -19,6 +21,15 @@ use Illuminate\Support\Facades\Route;
 // Rotas do domínio Identity. Já entram sob prefixo `api/` e middleware `api`
 // (agregadas por routes/api.php).
 Route::post('/login', [AuthController::class, 'login']);
+
+// Públicas por definição: quem pede acesso ainda não tem sessão. `throttle`
+// porque são as únicas rotas anônimas que escrevem — 6 tentativas por minuto
+// por IP.
+Route::middleware('throttle:6,1')->group(function () {
+    Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+    Route::post('/password/reset', [PasswordResetController::class, 'reset']);
+    Route::post('/invitation/accept', [PasswordResetController::class, 'accept']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -50,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('permissions', [PermissionController::class, 'index']);
 
     Route::middleware('permission:identity.user.update')->group(function () {
+        Route::post('redatores/{redator}/invitation', [RedatorInvitationController::class, 'store']);
+
         Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store']);
         Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy'])
             ->scopeBindings();   // {document} resolve por $redator->documents() — cross-redator = 404

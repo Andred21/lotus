@@ -10,6 +10,7 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Models\File;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -89,6 +90,10 @@ class RedatorDocumentRollbackTest extends TestCase
         /** @var FilesystemAdapter $storage */
         $storage = Storage::fake('s3');
         config(['filesystems.default' => 's3']);
+        // O cadastro passou a exigir a role `redator` (RF-ROL-05), então o
+        // cenário precisa do seeder — sem ele a falha vem da role ausente e
+        // não do insert que este teste quer provar.
+        $this->seed(RolePermissionSeeder::class);
         $this->failOnFileInsert();
 
         $data = RedatorData::from([

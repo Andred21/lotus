@@ -3,13 +3,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useLogin } from "../api/authApi";
 
 /**
- * Lógica do formulário de login: estado dos campos, mutation de login,
- * navegação pós-sucesso e derivação de erros. O componente LoginForm apenas
- * consome este hook e renderiza — nenhuma lógica vive no JSX.
+ * Lógica do formulário de login: senha, mutation de login, navegação pós-sucesso
+ * e derivação de erros. O componente LoginForm apenas consome este hook e
+ * renderiza — nenhuma lógica vive no JSX.
+ *
+ * O e-mail vem de fora (`useAuthPanel`) porque é compartilhado com a
+ * recuperação na mesma tela; a senha continua aqui e morre na troca de modo, de
+ * propósito.
  */
-export function useLoginForm() {
-  
-  const [email, setEmail] = useState("");
+export function useLoginForm(email: string) {
   const [password, setPassword] = useState("");
 
   const login = useLogin();
@@ -31,8 +33,6 @@ export function useLoginForm() {
   }
 
   return {
-    email,
-    setEmail,
     password,
     setPassword,
     submit,

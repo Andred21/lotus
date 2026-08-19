@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (29)
+## Abertas (30)
 
 ### Agrupadas em bloco de execução
 
@@ -35,6 +35,7 @@ ou de escrita fora do repositório.
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
 | P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | BD-15 | bloco que puder reseedar o dev (o B2 fechou declarando pela D10, não apagando); revisar 2026-10-31 |
+| P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | BD-15 | bloco que puder reseedar o dev, ou primeiro gate `permission:` sobre rota de redator; revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 

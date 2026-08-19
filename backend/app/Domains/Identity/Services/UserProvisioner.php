@@ -12,8 +12,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Normaliza o RUT, garante unicidade de RUT **e** e-mail (incluindo
  * soft-deletados, pois os índices únicos de users.rut/users.email não
- * distinguem deleted_at) e cria o User inativo com senha placeholder: atores
- * não logam até o fluxo de ativação (RN-01).
+ * distinguem deleted_at) e cria o User com senha placeholder e o acesso que o
+ * tipo permite (RN-01).
  *
  * É a fonte única desta regra — as Actions de cada domínio
  * (CreateClientAction, CreateRedatorAction, ...) chamam este service em vez de
@@ -37,8 +37,18 @@ class UserProvisioner
             'phone' => $phone,
             'password' => bin2hex(random_bytes(16)),
             'type' => $type,
-            'is_active' => false,
+            'is_active' => $this->accessDefaultFor($type),
         ]);
+    }
+
+    /**
+     * O default de acesso depende do ator (RN-01). Redator autentica, então
+     * nasce ativo e o gate real dele passa a ser SABER a senha — que só chega
+     * pelo convite. Cliente e aluno não logam e continuam inativos.
+     */
+    private function accessDefaultFor(string $type): bool
+    {
+        return $type === 'redator';
     }
 
     /**

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, SearchableTableFrame, useToast } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
+import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
@@ -20,6 +21,16 @@ export function RedatoresTable({
 }) {
   const { t } = useTranslation()
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
+  const toast = useToast()
+  const invitation = useRedatorInvitation()
+
+  // O convite é o ÚNICO caminho de credencial: quem foi cadastrado antes deste
+  // bloco nasceu com senha aleatória que ninguém recebeu.
+  const reenviar = (id: number) =>
+    invitation.mutate(id, {
+      onSuccess: () => toast.success(t('redator.invitationSent')),
+      onError: () => toast.error(t('redator.invitationFailed')),
+    })
 
   return (
     <SearchableTableFrame
@@ -64,8 +75,21 @@ export function RedatoresTable({
         body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
       />
       <AppColumn
-        body={(r: RedatorData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
-        style={{ width: '4rem' }}
+        body={(r: RedatorData) => (
+          <div className="flex justify-end">
+            <AppButton
+              icon="pi pi-envelope"
+              text
+              rounded
+              aria-label={t('redator.resendInvitation')}
+              tooltip={t('redator.resendInvitation')}
+              disabled={invitation.isPending}
+              onClick={() => reenviar(r.id!)}
+            />
+            <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />
+          </div>
+        )}
+        style={{ width: '7rem' }}
       />
     </SearchableTableFrame>
   )

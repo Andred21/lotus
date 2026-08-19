@@ -6,7 +6,23 @@
     "emailPlaceholder": "correo@empresa.cl",
     "password": "Contraseña",
     "submit": "Iniciar sesión",
-    "forgot": "¿Perdiste el acceso? Pídelo al administrador de la plataforma."
+    "forgotPassword": "¿Olvidaste tu clave?"
+  },
+  "password": {
+    "title": "Define tu clave",
+    "subtitle": "Elige una clave de al menos 8 caracteres para entrar a la plataforma.",
+    "newPassword": "Nueva clave",
+    "confirmation": "Repite la clave",
+    "submit": "Guardar clave",
+    "expired": "Este enlace ya no sirve",
+    "expiredAction": "Pedir un enlace nuevo",
+    "success": "Clave definida",
+    "successAction": "Ir a iniciar sesión",
+    "forgotTitle": "Recuperar clave",
+    "forgotSubtitle": "Ingresa tu correo y te enviamos un enlace para cambiar la clave.",
+    "forgotSubmit": "Enviar enlace",
+    "forgotSent": "Si el correo existe, enviamos un enlace para cambiar la clave. Revisa tu bandeja.",
+    "backToLogin": "Volver a iniciar sesión"
   },
   "brand": {
     "tagline": "Plataforma de capacitación profesional",
@@ -568,7 +584,11 @@
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
     "suitability": "Idoneidad",
-    "noCourses": "Sin cursos habilitados."
+    "noCourses": "Sin cursos habilitados.",
+    "accessState": "Estado de acceso",
+    "resendInvitation": "Reenviar invitación",
+    "invitationSent": "Invitación reenviada.",
+    "invitationFailed": "No se pudo reenviar la invitación."
   },
   "student": {
     "new": "Nuevo alumno",
@@ -638,8 +658,15 @@
       "emptyHint": "Las turmas se crean desde una cotización aprobada.",
       "noRedator": "— Sin asignar"
     },
-    "modality": { "presencial": "Presencial", "online": "Online" },
-    "status": { "em_andamento": "En curso", "habilitada": "Habilitada", "concluida": "Concluida" },
+    "modality": {
+      "presencial": "Presencial",
+      "online": "Online"
+    },
+    "status": {
+      "em_andamento": "En curso",
+      "habilitada": "Habilitada",
+      "concluida": "Concluida"
+    },
     "detail": {
       "back": "Volver a Operación",
       "notFound": "Turma no encontrada",
