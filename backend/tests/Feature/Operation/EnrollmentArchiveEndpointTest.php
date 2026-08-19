@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Operation;
 
+use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\Models\Enrollment;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
@@ -43,6 +45,40 @@ class EnrollmentArchiveEndpointTest extends TestCase
         $this->getJson("/api/turmas/{$a->turmaModel()->id}/alunos")
             ->assertOk()
             ->assertJsonCount(0);
+    }
+
+    public function test_lista_de_arquivadas_vem_ordenada_por_nome_do_aluno(): void
+    {
+        // O `orderByStudentName()` do `archived` não tinha dente: sem ele a
+        // lista sai por id, e as duas ordens só divergem quando a segunda
+        // matrícula da MESMA turma tem nome que vem antes no alfabeto.
+        $this->actingAsAdmin();
+
+        $builder = IssuableEnrollmentBuilder::make()->turmaNaoConcluida()
+            ->student(['name' => 'Zulema Ramírez'])
+            ->create();
+        $turma = $builder->turmaModel();
+
+        $ana = Enrollment::create([
+            'turma_id' => $turma->id,
+            'student_id' => Student::create([
+                'user_id' => User::factory()->aluno()->create([
+                    'name' => 'Ana Beltrán',
+                    'rut' => '11.111.111-1',
+                ])->id,
+                'current_client_id' => $builder->clientModel()->id,
+            ])->id,
+        ]);
+
+        $this->deleteJson("/api/turmas/{$turma->id}/alunos/{$builder->enrollmentModel()->id}")
+            ->assertNoContent();
+        $this->deleteJson("/api/turmas/{$turma->id}/alunos/{$ana->id}")->assertNoContent();
+
+        $this->getJson("/api/turmas/{$turma->id}/alunos/archived")
+            ->assertOk()
+            ->assertJsonCount(2)
+            ->assertJsonPath('0.enrollment.name', 'Ana Beltrán')
+            ->assertJsonPath('1.enrollment.name', 'Zulema Ramírez');
     }
 
     public function test_restore_devolve_200_e_reativa_a_matricula(): void
