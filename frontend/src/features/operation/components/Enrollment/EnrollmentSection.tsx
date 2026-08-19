@@ -43,9 +43,16 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         end={<ArchiveSwitch value={arquivadas.mode} onChange={arquivadas.setMode} />}
       />
 
-      <div className="mx-4 empty:m-0">
-        <FormErrorBanner message={s.error} />
-      </div>
+      {/* O `s.error` é do REMOVER, que só existe na visão ativa. Sem a guarda o
+        * banner de uma remoção que falhou sobrevive à troca de visão e fica
+        * pendurado sobre a lista de arquivadas, e o único jeito de limpá-lo
+        * (`s.resetRemove`) mora no diálogo do `EnrollmentTable`, que ali nem
+        * está montado. */}
+      {!emArquivados && (
+        <div className="mx-4 empty:m-0">
+          <FormErrorBanner message={s.error} />
+        </div>
+      )}
 
       {emArquivados ? (
         <ArchivedEnrollmentsList
