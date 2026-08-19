@@ -39,7 +39,7 @@ export function RedatorCourseSelector({
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={courses.errorDetail ?? t('common.loadErrorHint')}
+        detail={courses.errorDetail ?? t(courses.errorHint)}
         retryLabel={t('common.retry')}
         onRetry={courses.refetch}
       />

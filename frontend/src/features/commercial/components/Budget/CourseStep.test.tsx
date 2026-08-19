@@ -24,6 +24,7 @@ const base: Courses = {
   isLoading: false,
   isError: false,
   errorDetail: undefined,
+  errorHint: 'common.loadErrorHint',
   loadError: null,
   refetch: () => {},
   isEmpty: false,

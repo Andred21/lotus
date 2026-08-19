@@ -14,9 +14,12 @@ function fakeResource(state: {
   isLoading?: boolean
   isError?: boolean
   error?: ProblemDetails | null
+  recebido?: Array<{ staleTime?: number } | undefined>
 }) {
   return {
-    useList: () => ({
+    /** Grava o que recebeu em `state.recebido` (quando o caso passa o array):
+     * é assim que o teste de forwarding distingue "repassou" de "engoliu". */
+    useList: (options?: { staleTime?: number }) => (state.recebido?.push(options), {
       data: state.data,
       isLoading: state.isLoading ?? false,
       isError: state.isError ?? false,
@@ -104,6 +107,25 @@ describe('useCrudPage', () => {
 
     expect(result.current.dialog?.mode).toBe('edit')
     expect(result.current.dialog?.entity?.name).toBe('chegou')
+  })
+
+  it('repassa as opcoes de query ao useList do recurso', () => {
+    // Sem isto a pagina nao tem como pedir `staleTime`, e a aba desmontada
+    // pelo `renderActiveOnly` refaz o GET a cada volta (staleTime default 0
+    // com refetchOnMount ligado, medido em AppProviders.tsx:6-10).
+    const recebido: Array<{ staleTime?: number } | undefined> = []
+
+    renderHook(() => useCrudPage(fakeResource({ data: [], recebido }), { staleTime: 30_000 }))
+
+    expect(recebido[0]).toEqual({ staleTime: 30_000 })
+  })
+
+  it('sem opcoes, chama o useList sem argumento nenhum', () => {
+    const recebido: Array<{ staleTime?: number } | undefined> = []
+
+    renderHook(() => useCrudPage(fakeResource({ data: [], recebido })))
+
+    expect(recebido[0]).toBeUndefined()
   })
 
   it('refetch devolve a promise em vez de descartá-la', async () => {

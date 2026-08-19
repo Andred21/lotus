@@ -2,9 +2,10 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
+import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
 import { RedatorRowActions } from './RedatorRowActions'
 
 /** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
@@ -38,6 +39,16 @@ export function RedatoresTable({
   const { t } = useTranslation()
   const archived = mode === 'archived'
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
+  const toast = useToast()
+  const invitation = useRedatorInvitation()
+
+  // O convite é o ÚNICO caminho de credencial: quem foi cadastrado antes deste
+  // bloco nasceu com senha aleatória que ninguém recebeu.
+  const reenviar = (id: number) =>
+    invitation.mutate(id, {
+      onSuccess: () => toast.success(t('redator.invitationSent')),
+      onError: () => toast.error(t('redator.invitationFailed')),
+    })
 
   return (
     <SearchableTableFrame
@@ -103,16 +114,32 @@ export function RedatoresTable({
       )}
       <AppColumn
         body={(r: RedatorRow) => (
-          <RedatorRowActions
-            redator={r}
-            archived={archived}
-            busy={busy}
-            onView={onView}
-            onArchive={onArchive}
-            onRestore={onRestore}
-          />
+          <div className="flex justify-end">
+            {/* Reenviar convite é ação de acesso, e acesso arquivado não existe:
+              * o `User` do redator desce com a cascata, então o botão só aparece
+              * na lista ativa. */}
+            {!archived && (
+              <AppButton
+                icon="pi pi-envelope"
+                text
+                rounded
+                aria-label={t('redator.resendInvitation')}
+                tooltip={t('redator.resendInvitation')}
+                disabled={invitation.isPending}
+                onClick={() => reenviar(r.id!)}
+              />
+            )}
+            <RedatorRowActions
+              redator={r}
+              archived={archived}
+              busy={busy}
+              onView={onView}
+              onArchive={onArchive}
+              onRestore={onRestore}
+            />
+          </div>
         )}
-        style={{ width: '8rem' }}
+        style={{ width: '10rem' }}
       />
     </SearchableTableFrame>
   )

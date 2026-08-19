@@ -55,7 +55,7 @@ export function QuotesList({
    * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */
   const avisoDeNome = (
     <InlineLoadState
-      error={nameLost ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+      error={nameLost ? (courses.errorDetail ?? t(courses.errorHint)) : null}
       retryLabel={t('common.retry')}
       onRetry={courses.refetch}
     />

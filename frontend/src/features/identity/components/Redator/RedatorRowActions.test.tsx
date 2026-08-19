@@ -30,7 +30,7 @@ function comPermissoes(permissions: string[]) {
 
 const redator: RedatorData = {
   id: 3, name: 'Redactor', rut: '11.111.111-1', email: 'r@lotus.cl', phone: null,
-  course_ids: [], documents: [], photo_url: null, last_login: null,
+  is_active: true, course_ids: [], documents: [], photo_url: null, last_login: null,
 }
 
 function montar(archived: boolean) {

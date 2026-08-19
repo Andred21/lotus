@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { LoginPage } from '@features/identity/components/Login/LoginPage'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -16,11 +16,12 @@ import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetai
 import { TurmaCreatePage } from '@features/operation/components/Turma/TurmaCreatePage'
 import { CertificatesPage } from '@features/certification/components/CertificatesPage'
 import { ValidationPage } from '@features/certification/components/Validation/ValidationPage'
+import { SetPasswordPage } from '@features/identity/components/Password/SetPasswordPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
   if (status === 'authenticated') return <Navigate to="/" replace />
-  return <LoginPage />
+  return <Outlet />
 }
 
 export function AppRouter() {
@@ -32,16 +33,28 @@ export function AppRouter() {
             `GET /api/me`. */}
         <Route path="/validar/:uuid" element={<ValidationPage />} />
 
-        {/* Login segue sob o bootstrap: o redirect "já autenticado" depende do
-            `GET /api/me` já ter resolvido a sessão. */}
+        {/* Primeiro acesso: pública, sem cookie de sessão. O `flow` da query
+            decide o endpoint (convite × recuperação). Fora do SessionBootstrap —
+            quem define a senha ainda não tem sessão e não deve disparar
+            `GET /api/me`. */}
+        <Route path="/definir-clave/:token" element={<SetPasswordPage />} />
+
+        {/* Login e recuperação são a MESMA tela, e por isso o mesmo `element`:
+            o react-router monta cada match sem `key`, então a troca de rota
+            reconcilia em vez de remontar e o e-mail digitado sobrevive.
+            As duas seguem sob o bootstrap: o redirect "já autenticado" depende
+            do `GET /api/me` já ter resolvido a sessão, e agora vale para as
+            duas — quem tem sessão troca a senha no perfil. */}
         <Route
-          path="/login"
           element={
             <SessionBootstrap>
               <LoginRoute />
             </SessionBootstrap>
           }
-        />
+        >
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/recuperar-clave" element={<LoginPage />} />
+        </Route>
 
         {/* Filtro de permissão do Sidebar é só de exibição (RBAC visual); a API é a
             fronteira de acesso autoritativa. Guard de rota por módulo é follow-up

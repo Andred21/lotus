@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { APP_VERSION } from "@shared/config/brand";
-import { LoginForm } from "./LoginForm";
+import { AuthPanel } from "./AuthPanel";
 import { AppearanceControls, AppLogo } from "@/shared/ui";
 
 export function LoginPage() {
@@ -61,7 +61,7 @@ export function LoginPage() {
       >
         <AppearanceControls className="self-end md:absolute md:top-4 md:right-4 select-none" />
 
-        <LoginForm />
+        <AuthPanel />
 
       </main>
     </div>

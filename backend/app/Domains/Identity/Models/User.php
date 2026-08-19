@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Identity\Notifications\PasswordResetLink;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -119,6 +120,16 @@ class User extends Authenticatable implements Auditable
     public function latestLogin(): HasOne
     {
         return $this->hasOne(LoginLog::class)->latestOfMany(['created_at', 'id']);
+    }
+
+    /**
+     * O broker chama este método no `sendResetLink`. Sobrescrito para usar a
+     * notificação do domínio (texto traduzido, URL do SPA) em vez da default
+     * do framework, que aponta para uma rota web inexistente aqui.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify((new PasswordResetLink($token))->locale('es_CL'));
     }
 
     /**

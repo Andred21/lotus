@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppSkeleton, AppErrorState, AppTag, FormField } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
-import { formatDate } from '@shared/lib'
+import { formatDate, loadErrorHint } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
 import { certStatus, STATUS_SEVERITY } from '../../lib/certStatus'
 import { CertificateIdentityFields } from './CertificateIdentityFields'
@@ -52,9 +52,16 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
       {loading && <AppSkeleton height="14rem" />}
 
       {error && (
+        /* A UNICA tela que imprime o `detail` CRU do servidor, e é deliberado:
+           `CorruptedSnapshotException` implementa `PublicDetail` justamente
+           para o suporte descobrir aqui QUAIS campos do snapshot faltam (D8 da
+           spec de certificação). Todas as outras passam por `screenDetail`
+           (shared/lib) porque o envelope do backend não é localizado; esta não
+           passa, e trocá-la por `screenDetail` desfaz a D8. A rota pública do
+           QR (`ValidationPage`) NÃO é exceção: lá quem lê não é o suporte. */
         <AppErrorState
           title={t('common.loadError')}
-          detail={error.detail ?? t('common.loadErrorHint')}
+          detail={error.detail ?? t(loadErrorHint(error))}
           retryLabel={t('common.retry')}
           onRetry={onRetry}
         />

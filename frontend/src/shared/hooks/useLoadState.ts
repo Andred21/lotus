@@ -1,5 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 /**
  * Os estados de carga de uma query de LISTA, derivados num lugar só.
@@ -22,7 +23,16 @@ export function useLoadState<T>(query: UseQueryResult<T[], ProblemDetails>) {
     data,
     isLoading: query.isLoading,
     isError: query.isError,
-    errorDetail: query.error?.detail,
+    /** O `detail` que pode ir à TELA, não o do envelope. O do servidor não é
+     * localizado (`ProblemDetails.php` devolve português literal), então
+     * `screenDetail` o silencia e o `?? t('common.loadErrorHint')` que os
+     * consumidores já escrevem assume. Quem precisa do envelope inteiro usa
+     * `loadError` — a política é de quem IMPRIME. */
+    errorDetail: screenDetail(query.error),
+    /** A dica que acompanha a falha, escolhida pelo STATUS (`loadErrorHint`).
+     * Com o `detail` do servidor calado, dica única fazia 403, 404 e 422
+     * saírem como "revise sua conexão"; quem imprime traduz esta chave. */
+    errorHint: loadErrorHint(query.error),
     /** Falha no formato que `AppDataTable`/`AppErrorState` leem. `{}` quando o
      * interceptor não populou o corpo: `isError` sem `error` ainda é falha, e
      * devolver `null` a esconderia. */

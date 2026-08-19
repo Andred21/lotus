@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppLogo, AppCard, AppSkeleton, AppErrorState } from '@shared/ui'
-import { formatDate, formatIsoDate } from '@shared/lib'
+import { formatDate, formatIsoDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useValidationPage } from '../../hooks/useValidationPage'
 import type { PublicCertificateData } from '@shared/types/generated'
 
@@ -99,7 +99,7 @@ export function ValidationPage() {
             <h1 className="sr-only">{t('common.loadError')}</h1>
             <AppErrorState
               title={t('common.loadError')}
-              detail={state.error.detail ?? t('common.loadErrorHint')}
+              detail={screenDetail(state.error) ?? t(loadErrorHint(state.error))}
               retryLabel={t('common.retry')}
               onRetry={state.retry}
             />

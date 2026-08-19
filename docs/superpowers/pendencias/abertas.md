@@ -104,11 +104,15 @@ erro por coluna, decisão de contrato de erro que a spec preferiu não tomar den
 concorrência. Proporcional a ~10 usuários internos: a colisão exige dois cadastros do mesmo RUT no
 mesmo segundo.
 
-## P-47 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
+## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
 **Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
 listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
 arquivado for observado em uso real. Revisar em **2026-10-31**.
+
+**Nasceu como `P-47` e foi renumerada no merge da `main` (2026-08-19), que já havia publicado uma
+P-47 — a das roles do seed. Mesmo precedente da [P-35](#p-35).** Texto e blocos que a citam como
+`P-47` são anteriores a esse merge.
 
 `ArchiveRedatorAction:31` abre transação e toma `Redator::lockRow()` antes da cascata. Um lock de
 linha só fecha janela se **os dois lados** o tomarem — e do lado do redator só existe um tomador.
@@ -197,6 +201,35 @@ e `RestoreQuoteAction` — mas **não** `CreateQuoteAction`, que é o sítio do 
 passar a escrevê-lo explicitamente na Action, o que muda o caminho de criação de cotação num bloco
 cujo escopo era arquivar e restaurar. Fica registrado que o gatilho já foi visto vencer: o próximo
 bloco que abrir `CreateQuoteAction` não tem mais desculpa de contexto.
+
+## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
+
+**Bloco:** — · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
+ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
+
+Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
+juntas — **828 testes** —, o comando que o `CLAUDE.md` §6 documenta,
+`docker compose exec -T app php artisan test`, morre em
+
+```
+Fatal error: Allowed memory size of 134217728 bytes exhausted … PhpEngine.php on line 62
+Fatal error: Premature end of PHP process when running Tests\Feature\Operation\ManualTurmaTest::test_turma_maior_que_o_formulario_estende_as_grades.
+```
+
+**Não é defeito do teste nem do merge:** `--filter=ManualTurmaTest` passa em 2,35s (13 testes), e a
+suíte inteira fecha **verde** quando o limite sobe —
+`docker compose exec -T app php -d memory_limit=1G vendor/bin/phpunit` devolve
+**828 passed / 5 skipped, 3006 asserções**, com **pico de 129 MB**. São 129 contra 128: a suíte
+cresceu 1 MB além do default do PHP, e quem estoura é o render de Blade do manual porque ele é o que
+aloca mais no fim da corrida.
+
+**O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
+diretiva da linha de comando — por isso a medição usa o binário direto.
+
+**Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
+imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
+processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
+**Enquanto não fecha, o gate de backend roda pelo binário direto com `-d memory_limit=1G`.**
 
 ---
 
@@ -357,6 +390,33 @@ clientes mostra `E2E Gate Client D` e `Gate BD9 RENOMEADA`. O bloco não criou n
 apagou nenhum: o efeito é que a residência, que antes só vazava na carga de redatores do dashboard,
 agora aparece em três listas de produto. O gatilho segue o mesmo — reseedar é decisão do João.
 
+**Rastro do `identity-ativacao-acesso-redator` (2026-08-19):** o gate da Task 14 daquele bloco criou
+`gate.task14@lotus.cl` (user 58 / redator 8) e o deixou vivo; o `/fechar-sprint` o **removeu**, com
+`users` de 58 para 57 e `redatores` de 8 para 7, porque era sonda criada por ESTE bloco. Foram
+removidos junto os dois `password_reset_tokens` deixados pelos gates dele (`admin@lotus.cl`,
+`gate.task14@lotus.cl`). As onze linhas de gates anteriores continuam intactas — são de blocos
+fechados.
+
+## P-47 — os redatores do seed não têm a role `redator`, e o bloco que a criou só a atribui adiante
+
+**Bloco:** BD-15 · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
+[P-44](#p-44)), ou o primeiro gate `permission:` aplicado sobre rota de redator — é quando a falta
+deixa de ser cosmética. Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-19: dos 7 redatores do `OperationDemoSeeder`, **nenhum** carrega
+a role `redator` que o `RolePermissionSeeder.php:38` define. O bloco `identity-ativacao-acesso-redator`
+fechou as duas portas por onde a role passa a ser atribuída — `CreateRedatorAction` (cadastro novo) e
+`SendRedatorAccessInvitationAction` (reenvio de convite, o achado **Q-1** do review) —, mas nenhuma
+delas alcança linha que já existe no banco sem convite reenviado. Provado na própria prova e2e deste
+fechamento: `juan.morales@lotus.cl` (user 2) saiu de `roles=[]` para `roles=[redator]` **só** depois do
+`POST /api/redatores/1/invitation`; o estado foi restaurado ao fim do gate, e os 7 seguem sem role.
+
+**Não é defeito do código entregue, e não é o mesmo caso da P-44.** A P-44 é sonda de gate que
+sobreviveu; esta é **dado de seed que nasceu antes do mecanismo existir**. Hoje não impede nada — o
+gate do Dashboard é por `user.type` (`DashboardController.php:37`), não por role —, e em produção o
+caminho de remediação existe e está provado (reenviar convite atribui a role). O que falta é decidir se
+o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseedar.
+
 ---
 
 # Travadas em decisão do João
@@ -410,6 +470,17 @@ em paralelo): o e2e do S3 rodou inteiro contra o main tree, porque `git diff mai
 naquele tree estava **vazio no momento da prova** — o custo da P-03 não é constante, é contingente ao
 que a branch alheia toca, e a prova só é válida com essa conferência feita na hora. O que mudou é que
 a falta já cobra de quem a P-03 dizia não afetar.
+
+**Primeiro bloco de BACKEND rodado em worktree linkada — 2026-08-19, `identity-ativacao-acesso-redator`,
+por decisão explícita do João declarada na abertura.** O arranjo que segurou a execução, os dois gates
+de prova e este fechamento foi **override efêmero de portas fora do repositório** (nginx 8081, MySQL
+3308, MinIO 9002/9003, Mailpit 8025, Vite 5174 no gate da emenda), com o compose do worktree subindo
+projeto próprio (`fix-frontend`) e, portanto, **volume de banco próprio** — a disputa que a ficha
+previa (um MySQL só para as duas árvores) não chegou a acontecer. No `/fechar-sprint` a stack do main
+tree estava **desligada**, então a prova e2e correu nas portas padrão (8080/3307/8025) sem override
+nenhum. **Não fecha:** compose por worktree continua não existindo, e o que existe é receita manual
+que depende de quem executa lembrar — a decisão de construí-lo é do João. O gatilho formal
+(dois blocos de **backend** em paralelo) segue sem vencer: houve um só.
 
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
@@ -504,32 +575,6 @@ O `gap-2` × N linhas muda a altura de toda tabela que usa a célula, então nã
 invisível.
 
 **Nasceu como `P-39` e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-41](#p-41).**
-
-## P-48 — o `title` do RFC 7807 é português nos seis ramos, e os `detail` novos são es-CL
-
-**Bloco:** — · **Gatilho:** fecha com a decisão de idioma canônico que a **D-07** espera, ou com o
-bloco que tocar `ProblemDetails` por outro motivo (a **P-29** tem o mesmo gatilho de arquivo e sai
-barata junto). Revisar em **2026-10-31**.
-
-`backend/app/Shared/Exceptions/ProblemDetails.php:22-37` crava os seis títulos em português —
-`Erro de validação`, `Não autenticado`, `Acesso negado`, `Recurso não encontrado`,
-`Erro na requisição`, `Erro interno` — enquanto o `detail` de cada 422 vem da Action, e as duas
-mensagens novas do `arquivados-roots-restantes` saíram em es-CL por decisão da spec (P2 do plano).
-O envelope de um mesmo 422 carrega, hoje, os dois idiomas.
-
-**Medido no `/fechar-sprint` de 2026-08-19, contra a API real:** `POST /api/quotes/11/restore` com o
-orçamento arquivado devolveu
-`{"title":"Erro de validação", "detail":"El presupuesto de esta cotización está archivado: restáuralo primero."}`.
-
-**Não é bug vivo, e a medição diz por quê:** nenhuma tela lê o campo. `problemMessage`
-(`frontend/src/shared/api/problemMessage.ts:13`) devolve o primeiro erro de campo ou o `detail`, e
-`title` não é renderizado em lugar nenhum do frontend. O que fica é a mistura no contrato — quem
-consumir a API por fora (log, integração ou uma futura tela genérica de erro) recebe português numa
-interface es-CL.
-
-**Por que não se conserta de carona:** traduzir os seis títulos é escolher o idioma canônico do
-backend, que é exatamente a decisão que a **D-07** e a **D-18** esperam do João. Fazer só este
-arquivo criaria um quarto padrão de idioma no repo.
 
 ---
 

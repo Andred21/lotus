@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, FormField } from '@shared/ui'
+import { AppDropdown, AppInputText, FormField } from '@shared/ui'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
 /** Os quatro campos de identificação do redator, no grid 2×2 de sempre.
@@ -61,6 +61,29 @@ export function RedatorIdentityFields({
             className="w-full"
           />
         </FormField>
+
+        {/* Só em redator já existente: no cadastro o acesso nasce ativo pelo
+            `UserProvisioner`, e um controle que o POST ignora mentiria. Molde
+            de `StaffUserDialog` — não existe `AppSwitch` em `shared/ui` e
+            feature não importa PrimeReact direto (lei §5.6). */}
+        {form.id !== undefined && (
+          <FormField
+            label={t('redator.accessState')}
+            readOnly={readOnly}
+            value={(form.is_active ?? true) ? t('common.active') : t('common.inactive')}
+          >
+            <AppDropdown
+              value={form.is_active ?? true}
+              options={[
+                { label: t('common.active'), value: true },
+                { label: t('common.inactive'), value: false },
+              ]}
+              optionLabel="label"
+              optionValue="value"
+              onChange={(e) => set('is_active', e.value)}
+            />
+          </FormField>
+        )}
       </div>
     </>
   )

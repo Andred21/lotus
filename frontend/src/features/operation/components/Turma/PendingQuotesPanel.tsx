@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { AppButton, AppCard, AppCardHeader, AppErrorState } from '@shared/ui'
 import type { PendingQuoteData } from '@shared/types/generated'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 
 export function PendingQuotesPanel({
   items, error, onRetry,
@@ -24,7 +25,7 @@ export function PendingQuotesPanel({
       <AppCard tone="info">
         <AppErrorState
           title={t('common.loadError')}
-          detail={error.detail ?? t('common.loadErrorHint')}
+          detail={screenDetail(error) ?? t(loadErrorHint(error))}
           retryLabel={onRetry ? t('common.retry') : undefined}
           onRetry={onRetry}
         />

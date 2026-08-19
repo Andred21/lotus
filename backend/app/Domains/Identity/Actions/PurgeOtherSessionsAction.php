@@ -31,4 +31,16 @@ class PurgeOtherSessionsAction
             ->where('id', '!=', $keepSessionId)
             ->delete();
     }
+
+    /**
+     * Encerra TODAS as sessões do usuário. Usado na revogação de acesso, onde
+     * não há sessão a preservar — o `execute()` preserva a corrente porque
+     * nasceu para a troca da própria senha.
+     *
+     * @return int quantas sessões foram encerradas
+     */
+    public function all(User $user): int
+    {
+        return DB::table('sessions')->where('user_id', $user->id)->delete();
+    }
 }

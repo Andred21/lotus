@@ -47,8 +47,10 @@ payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.m
    (`plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`). Levou a outra metade:
    as 5 séries mensais, os 2 rankings, `compliance_turmas`, a carga de redatores e a view do
    Redator inteira. **A P-44 continua aberta** — a carga mostra dois usuários de sonda, declarados
-   pela D10 em vez de apagados —, e o item 3 de "Próximos blocos" (ativação de acesso do redator)
-   segue bloqueando o VALOR da view do Redator: nenhum redator autentica hoje.
+   pela D10 em vez de apagados. O que bloqueava o VALOR desta view **caiu em 2026-08-19**: o
+   `identity-ativacao-acesso-redator` entregou convite, primeiro acesso, recuperação e revogação
+   (`plans/archive/2026-08-18-identity-ativacao-acesso-redator.md`), então o redator já autentica e
+   alcança a própria view.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
 compliance e análises.
@@ -104,18 +106,6 @@ operação"*.
    brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
    (permissões essenciais não editáveis).
 2. **Hardening** — ownership em rotas nested e política de retenção documental.
-3. **Identity · ativação de acesso do redator.** `CreateRedatorAction` cria o `User` com
-   `is_active=false` "até o fluxo de ativação", e **o fluxo não existe** — o `UserProvisioner` gera
-   senha aleatória (`bin2hex(random_bytes(16))`) que ninguém recebe, e nenhuma tela ativa a conta.
-   Consequência medida no fechamento do `dashboard-backend-agregacoes` (2026-08-15): **nenhum redator
-   autentica em produção**, então a view `redator` do dashboard está implementada, testada e provada
-   ponta a ponta contra a API real — e hoje **inalcançável** por quem deveria usá-la. É a RN-01 pela
-   metade: a regra diz que redator autentica, o cadastro nunca o habilita. Toca convite ou
-   definição de senha, o gate de `is_active` e provavelmente `password_reset_tokens`; exige
-   brainstorming, porque "como o redator recebe a credencial" é decisão de produto, não de código.
-   **Bloqueia o valor do bloco B2 do Dashboard**, que é onde a view do Redator é construída — o B1,
-   entregue em 2026-08-16, é a tela administrativa e não depende disto.
-
 ---
 
 # Blocos de execução de dívida
@@ -158,20 +148,6 @@ o atributo novo no DOM.
 **DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
 falha deixa a regressão passar verde.
 
-## BD-13 · Frontend · listagens e abas: plural, ausência e custo de montagem
-
-**Cobre:** D-02, D-04, D-05, D-06 · **Frente:** frontend
-**Afinidade:** todos são a página de listagem e o que ela mostra ou custa; `CertificatesPage` aparece
-em três dos quatro, e os três locales são o arquivo comum de D-02 e D-05.
-
-- **D-02** — plural cru em duas das sete tabelas.
-- **D-04** — cada montagem de página com abas busca as **duas** abas.
-- **D-05** — bloco de erro bilíngue com caminho de campo cru na tela.
-- **D-06** — a linha do certificado corrompido mostra a célula de aluno vazia, sem o travessão.
-
-**DoD:** a paridade das 3 locales verde depois da chave de plural, e o custo de rede medido (1 GET
-por aba aberta, não 2 por montagem).
-
 ## BD-14 · Backend · o que a entrada pode escrever
 
 **Cobre:** D-13, D-12, P-29, P-35 · **Frente:** backend
@@ -189,6 +165,25 @@ caminho de escrita de identidade (`UpdateStaffUserAction`, `UserProvisioner`, DT
 **Decisão do João dentro do bloco, não antes:** D-13 muda contrato de entrada (preservar o valor
 atual quando a chave falta × exigir a chave no `PUT`) e D-12 decide se chave computada no corpo vira
 422 ou segue ignorada. **DoD é o teste que mostra o RUT sobrevivendo à omissão, não o `if` novo.**
+
+**Escopo remedido em 2026-08-18 contra `b758068` (revisão de arquitetura, sem promoção).** Os dois
+débitos deste bloco estavam registrados menores do que são, e a diferença muda o desenho, não só a
+contagem: a D-13 não é um `if` num campo, é **uma decisão de contrato copiada em 5 Actions**, e a
+D-12 vale para **11** campos de foto, não 4. O detalhe de cada uma está na linha delas em
+`## Agrupados em bloco`.
+
+**Consequência para a P-35, medida e não suposta:** o alcance real da D-13 inclui
+`UpdateQuoteAction:30-32`, então quem executar este bloco **toca `Quote` por outro motivo** — que é
+o gatilho literal da ficha da P-35. Ela deixa de depender de payload observado e passa a fechar
+dentro do bloco.
+
+**Um achado de desenho para o brainstorming, não uma task:** a resposta "preservar na omissão" já
+existe escrita **uma vez**, em `UpdateStudentAction.php:31`
+(`$data->phone instanceof Optional ? $user->phone : $data->phone`), e nunca foi propagada. O mesmo
+campo `phone` tem hoje três comportamentos — apaga em `UpdateStaffUserAction:53`,
+`UpdateClientAction:42` e `UpdateRedatorAction:63`; preserva em `UpdateStudentAction:31`; e é pulado
+por `if` em `UpdateProfileAction:23`. Concentrar a tradução `Optional` → atributo num módulo só é o
+que dá à decisão do João **um** lugar para ser tomada.
 
 ## BD-15 · Docs e guardas de documentação
 
@@ -226,22 +221,10 @@ sentada só — é o que torna o agrupamento barato.
 
 ## Agrupados em bloco
 
-- **D-02 · Plural cru em duas das sete tabelas** → **BD-13**. "3 course(s)" e "1 user(s)" contra "4
-  clients", "7 instructors" e "6 budgets". Rodapé do `AppDataTable` alimentado por chave sem plural
-  i18n; medido em 2026-08-14 ainda vivo nos 3 locales (`"{{count}} usuario(s)"`, `"{{count}}
-  curso(s)"`, `"{{count}} módulo(s)"`).
 - **D-03 · Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** → **BD-11**. No toque não
   há hover, então o nome do item de navegação fica inalcançável
   (`src/app/layouts/Sidebar/SidebarItem.tsx`).
-- **D-04 · Cada montagem de página com abas busca as DUAS abas** → **BD-13**. Custo de rede dobrado
-  na abertura de `PeoplePage` e `CertificatesPage`; sem falha funcional, mas mensurável.
-- **D-05 · Bloco de erro bilíngue com caminho de campo cru na tela** → **BD-13**. Título vem do i18n
-  do front e segue a sessão (`Could not load the data`), corpo vem do `detail` do RFC 7807 e chega
-  sempre em espanhol, citando `aluno.name` (que ainda por cima é português). Medido no estado de erro
-  real do `LOT-2026-1001` em `/certificados`.
-- **D-06 · A linha do certificado corrompido mostra a célula de aluno vazia, sem o travessão** →
-  **BD-13**. A lista não distingue "sem nome" de "campo faltando", e é o único lugar onde o registro
-  aparece antes do clique. O diálogo do mesmo registro explica a falha; a linha, não.
+
 - **D-08 · A lei §5.3 segue sem mecanismo** → **BD-15**. A linha original pedia Arch tests no backend
   mais `eslint-boundaries` no frontend; **as duas partes nomeadas existem** e foram remedidas em
   2026-08-14 contra `977586e`, não herdadas de relatório: `PersistenceLawsTest` cobre §5.1 (classe
@@ -260,7 +243,12 @@ sentada só — é o que torna o agrupamento barato.
   alguém editar à mão. **DoD é a sonda:** editar `generated.ts` e ver o mecanismo reprovar nomeando o
   arquivo.
 - **D-12 · O backend aceita `photo_url` no corpo da escrita e devolve 200, em silêncio** →
-  **BD-14**. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
+  **BD-14**. **Alcance remedido em 2026-08-18** contra `b758068`: são **11** campos de foto em 11
+  DTOs — `StudentData:48`, `RedatorData:45`, `UserData:45`, `ClientData:66`, `ProfileData:32`,
+  `SessionUserData:29`, `EnrollmentData:36`, `TurmaData:54` (`client_photo_url`),
+  `TurmaRedatorData:28`, `CertificateData:41` (`aluno_photo_url`) e `EmissionPanelEnrollmentData:34`
+  (`student_photo_url`) —, não os 4 que o registro herdou do Q-4. Os 7 que faltavam nasceram na
+  `celula-de-identidade` (2026-08-14) e no Meu Perfil, depois da linha ter sido escrita. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
   frontend**: `FORBIDDEN_PAYLOAD_KEYS` no `useCrudForm` faz a chave lançar em DEV, então o `...form`
   ingênuo não a reintroduz mais. O defeito do outro lado foi **remedido no `/fechar-sprint` de
   2026-08-13**, não herdado: `PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo
@@ -269,7 +257,15 @@ sentada só — é o que torna o agrupamento barato.
   com foto, não só o `ClientData` que o texto original do Q-4 nomeava. **Uma afirmação do Q-4
   original não sobreviveu à medição:** `photo_url` **não** carrega path interno de storage — o
   `SignedUrlTransformer` roda na serialização e o front recebe URL pré-assinada.
-- **D-13 · `UpdateStaffUserAction` apaga o `rut` do staff num `PUT` que só o OMITE** → **BD-14**.
+- **D-13 · A omissão apaga o valor guardado, em 10 campos de 5 `Update*Action`** → **BD-14**.
+  **Título e escopo remedidos em 2026-08-18** contra `b758068`: o registro original nomeava um campo
+  (`rut`) numa Action, e a medição achou o mesmo idiom — `instanceof Optional ? null : $x` — em
+  `UpdateStaffUserAction:44,53` (`rut`, `phone`), `UpdateClientAction:42,48` (`phone`,
+  `business_activity`), `UpdateCourseAction:30,31` (`technical_name`, `description`),
+  `UpdateQuoteAction:30,31,32` (`purchase_order`, `planned_start_date`, `planned_end_date`) e
+  `UpdateRedatorAction:63` (`phone`). As `Create*Action` usam a mesma forma e **não** são defeito —
+  não há valor anterior a apagar. O texto original segue abaixo, porque a medição do `rut` continua
+  correta; o que mudou é o alcance.
   `UserData::$rut` é `Optional`, e a Action traduz `Optional` para `null` antes de gravar
   (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`,
   `UpdateStaffUserAction.php:44`): quem manda o formulário sem a chave zera o RUT de um usuário que
@@ -299,7 +295,38 @@ sentada só — é o que torna o agrupamento barato.
 
 ## Sem bloco atribuído
 
-- **D-34 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo.**
+- **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
+  Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce
+  em `AdminDashboardAssembler.php:56-62` como quatro booleanos, é passada posicionalmente para
+  `AnalyticsQuery::series()` (`:27-32`) e `::rankings()` (`:73-76`), e chega ao payload como
+  **ausência de dado** — `AnalyticsQuery.php:319` precisa do sentinela `'0.0000'` justamente porque o
+  contrato não tem onde dizer "proibido". Do outro lado, o navegador **reconstrói a permissão
+  farejando nulo**: `RankingsPanel.tsx:25` decide se o usuário tem `commercial.quote.view`
+  varrendo `[...rankings.courses, ...rankings.clients]` atrás de um `uf_aprovada` não nulo, e
+  `SeriesPanel.tsx:54` faz o mesmo teste na série. **Não é regressão nem achado teórico:** é o
+  desfecho do Q-2 do review do B2, que foi corrigido do lado do cliente — a correção está certa para
+  o defeito que tratava (a métrica de UF deixou de ser oferecida com o gate fechado) e **alargou** o
+  vazamento, porque agora duas telas sabem traduzir `null` em permissão. Custo hoje: um scan O(n) por
+  render e a regra de RBAC morando em dois repositórios. Custo se ficar: toda tela nova aprende a
+  farejar nulo. Fix: a visibilidade vira campo explícito no payload e módulo próprio no backend.
+  **Sem bloco até o João agrupá-lo** — toca contrato de API e regenera `generated.ts` (lei §5.3),
+  então não é emenda de bloco alheio.
+
+- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact.**
+  Medido em 2026-08-18 contra `b758068`. A lei §5.6 virou mecanismo em `eslint.config.js:362`, e o
+  bloco é escopado **por feature** (`src/features/${feature}/**`), então `src/app/**` não é visitado
+  por ele. O comentário de `:388-390` declara a exceção, mas só para a metade *feature→feature*
+  ("AppRouter importa 5 features, e compor rotas é o trabalho dele") — a metade **PrimeReact** fica
+  de fora sem razão escrita. A camada não é mais o shell de 3 arquivos que motivou a redação: ela
+  concentra hoje **28 arquivos** em `app/pages/Dashboard/`. **A régua nasceria verde:** zero import
+  de `primereact` em `src/app` hoje, medido — a mesma condição que a D11 do
+  `dashboard-frontend-central-controle` usou para ligar `COR_HARDCODED` nesta mesma camada sem
+  `ignores` (P-34, encerrada). É a quarta repetição do padrão "camada inteira sem a régua que as
+  outras têm", depois de P-34 (cor), D8 do B2 (`max-lines`) e P-38. Fix: acrescentar `src/app/**` ao
+  bloco `no-restricted-imports` **só** na fronteira PrimeReact, deixando *feature→feature* liberada.
+  **Sem bloco até o João agrupá-lo**; entra barato em qualquer bloco que toque `eslint.config.js`.
+
+- **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo.**
   A coluna marcadora da cascata de arquivamento (migration `2026_08_18_000001`) entra com `false`
   em todas as linhas: qualquer agregado arquivado **antes** de 2026-08-18 restaura o pai sem os
   filhos, em silêncio. Não há backfill correto possível — casar por `deleted_at` é o que a spec D2
@@ -336,15 +363,6 @@ sentada só — é o que torna o agrupamento barato.
   da precedência abaixo de `xl`, ou o cartão de identidade encolhe o bastante para não precisar da
   inversão. **Decisão do João**, e é por isso que entra sem bloco.
 
-- **D-31 · Duas chaves i18n órfãs no dicionário de `/perfil`.**
-  `profile.documents.noValidity` e `profile.identity.role` existem nos três locales e **nenhum
-  `.tsx` as consome** — medido no gate do BD-16 (2026-08-17) e reconfirmado no fechamento
-  (2026-08-18), com grep em `src/**` fora de `locales/`. Não quebram nada: a paridade de chaves
-  entre `pt-BR`, `es-CL` e `en` continua exata, que é o que a rule exige. O custo é de leitura —
-  quem procura o rótulo de um dado acha uma chave que a tela não usa e não sabe se é a errada ou se
-  a tela é que esqueceu de usá-la. **Apagar as três cópias de cada uma** é a limpeza; entra em
-  qualquer bloco que toque os dicionários por outro motivo.
-
 - **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`.**
   Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14): unificar antes do merge
   significaria importar de um domínio que na árvore `fix-frontend` ainda não existia. **O gatilho
@@ -353,6 +371,27 @@ sentada só — é o que torna o agrupamento barato.
   arquivo, então os dois números convivem na **mesma** árvore e a unificação deixou de depender de
   merge. Decidir o dono do número (Shared, ou um dos dois domínios) é parte da task. **Fica sem bloco
   até o João agrupá-la** — o fechamento constata que a trava caiu, não escolhe onde ela entra.
+
+- **D-36 · O envelope RFC 7807 não é localizado, e o front teve de calar o `detail` por causa disso.**
+  `backend/app/Shared/Exceptions/ProblemDetails.php:22-36,68,71` devolve `title` e `detail` genéricos
+  LITERAIS em português ("Erro interno", "Ocorreu um erro inesperado. Tente novamente.", "Erro ao
+  processar a requisição."), apesar de `App\Shared\Http\Middleware\SetLocale` já traduzir por
+  `Accept-Language` e de existirem `backend/lang/{en,es,es_CL,pt_BR}`. Num 500 o cliente chileno lia
+  português. `CorruptedSnapshotException::missingFields()` é es-CL fixo pelo mesmo motivo — ali é
+  deliberado (D8), mas continuaria fixo se a sessão fosse pt-BR ou en. **Medido em 2026-08-18, no
+  BD-13.** O `title` nunca chegou à tela (o front usa `t('common.loadError')`), e a D-05 do BD-13
+  acabou de calar o `detail` nos estados de carga — então o custo hoje é o `CertificateViewDialog`,
+  que imprime o `detail` cru por desenho, e qualquer consumidor futuro da API. **A correção é `__()`
+  com chaves nas 4 `lang/`**; entra em bloco de backend, onde o custo da P-03 já esteja pago.
+  Frente: backend. (O ID `D-32` do plano do BD-13 já estava tomado pela ordem de foco de `/perfil`;
+  este débito ficou com o próximo livre.)
+  **Medido de novo no fechamento do `arquivados-roots-restantes` (2026-08-19), agora com os dois
+  idiomas no MESMO envelope:** `POST /api/quotes/11/restore` sob orçamento arquivado devolveu
+  `title` `"Erro de validação"` com `detail` `"El presupuesto de esta cotización está archivado:
+  restáuralo primero."` — as mensagens novas daquele bloco saíram em es-CL por decisão de spec,
+  então o 422 carrega português no envelope e espanhol no conteúdo. Segue sem custo de tela
+  (`problemMessage` lê `errors`/`detail`, nunca `title`), e segue esperando a mesma decisão da
+  **D-07**.
 
 ## Travados em decisão — não entram em bloco
 

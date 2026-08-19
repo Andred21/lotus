@@ -10,15 +10,22 @@ export type RedatorDialogMode = DialogMode
  * Só os campos que o formulário edita. `documents` NÃO entra aqui: eles são
  * geridos por mutações próprias contra o servidor e lidos da entidade viva.
  */
-export type RedatorFormFields = Pick<RedatorData, 'id' | 'name' | 'rut' | 'email' | 'phone' | 'course_ids'>
+/** `is_active` é o acesso do usuário-redator, e só o UPDATE o escreve: no
+ * cadastro o redator nasce ativo pelo `UserProvisioner` (RN-01), então mandar
+ * o campo no POST daria ao formulário um controle que o backend ignora.
+ * `undefined` (o `Optional` do DTO) vale como ativo — é o default do cadastro. */
+export type RedatorFormFields = Pick<
+  RedatorData,
+  'id' | 'name' | 'rut' | 'email' | 'phone' | 'course_ids' | 'is_active'
+>
 
 const EMPTY: RedatorFormFields = {
-  id: undefined, name: '', rut: '', email: '', phone: null, course_ids: [],
+  id: undefined, name: '', rut: '', email: '', phone: null, course_ids: [], is_active: true,
 }
 
 const toFields = (r: RedatorFormFields): RedatorFormFields => {
-  const { id, name, rut, email, phone, course_ids } = r
-  return structuredClone({ id, name, rut, email, phone, course_ids })
+  const { id, name, rut, email, phone, course_ids, is_active } = r
+  return structuredClone({ id, name, rut, email, phone, course_ids, is_active: is_active ?? true })
 }
 
 export function useRedatorForm(
@@ -78,7 +85,10 @@ export function useRedatorForm(
       })
       return
     }
-    const payload = { name: form.name, rut: form.rut, email: form.email, phone: form.phone, course_ids: form.course_ids }
+    const payload = {
+      name: form.name, rut: form.rut, email: form.email, phone: form.phone,
+      course_ids: form.course_ids, is_active: form.is_active ?? true,
+    }
     update.mutate({ id: redator!.id!, payload }, { onSuccess: onDone })
   }
 

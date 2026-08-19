@@ -1,5 +1,6 @@
 export { useClock } from './useClock'
 export { useCrudPage } from './useCrudPage'
+export type { CrudPageQueryOptions } from './useCrudPage'
 // `unclassifiedPayloadKeys`, `classificationConflicts`, `MutableResource` e
 // `CrudFormOptions` NÃO saem daqui: são o mecanismo interno da guarda de
 // classificação, e o único consumidor é o teste ao lado, por caminho relativo

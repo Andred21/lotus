@@ -30,6 +30,11 @@ class RedatorData extends Data
         public string $email,
         public string|Optional|null $phone,
         /**
+         * Acesso do redator. `Optional` de propósito: um PUT que não fala de
+         * acesso não pode revogá-lo (é a classe de defeito da D-13).
+         */
+        public bool|Optional $is_active,
+        /**
          * Cursos que o redator está habilitado a ministrar. Optional: se
          * ausente no request, a habilitação NÃO é tocada (evita apagar o que
          * foi setado pelo lado-curso). No fromModel vem sempre preenchido.
@@ -85,6 +90,7 @@ class RedatorData extends Data
             rut: $redator->user->rut,
             email: $redator->user->email,
             phone: $redator->user->phone,
+            is_active: $redator->user->is_active,
             course_ids: $redator->courses->pluck('id')->all(),
             documents: $redator->documents->map(
                 fn ($f) => RedatorDocumentData::fromModel($f)
