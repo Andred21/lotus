@@ -7,7 +7,9 @@ export { useCrudPage } from './useCrudPage'
 export { useCrudForm } from './useCrudForm'
 export { useArchivedPage } from './useArchivedPage'
 export { useArchiveAction } from './useArchiveAction'
-export { useArchiveToasts } from './useArchiveToasts'
+// `useArchiveToasts` NÃO sai daqui: é o mecanismo interno das duas linhas acima,
+// consumido por caminho relativo. Barrel é fronteira pública (mesma nota da
+// guarda de classificação do `useCrudForm`).
 export type { ArchiveMode, RestoreOptions } from './useArchivedPage'
 export { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 export type { CrudFormPhotoOptions } from './useCrudFormWithPhoto'
