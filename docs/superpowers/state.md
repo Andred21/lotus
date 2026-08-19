@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-roots-restantes
 active_work_item: arquivados-roots-restantes
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-18-arquivados-roots-restantes-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
 state_basis_commit: 6fd0ad8
-updated_at: 2026-08-18T20:10:00-03:00
+updated_at: 2026-08-18T20:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -154,6 +154,77 @@ não resolver.
 não desta promoção.
 
 **Estado: `ready_for_planning`.** Próxima ação: brainstorming das decisões abertas, depois plano.
+
+### Brainstorming e spec — 2026-08-18: sete decisões, e a medição achou um 500 alcançável
+
+**O bloco não era o que o backlog previa, e a medição é que mostrou.** A linha 101 diz *"replicar é
+ligar os hooks, a Action, o endpoint e a tela, não reescrever a semântica"*. Isso descreve `Budget`,
+`User` e `Redator` — e é falso para os outros três. Os seis roots se separam em **três classes**:
+replicação limpa (lista de topo + `createCrudResource`: `Budget`, `User`, `Redator`), lista de topo
+fora da fábrica (`Turma`, com `useTurmas` artesanal) e **sem lista de topo** (`Quote` e `Enrollment`,
+que vivem dentro do detalhe do pai).
+
+**O achado que justifica o bloco inteiro: restaurar uma turma pode dar 500.** `turmas.active_quote_id`
+é coluna gerada STORED `CASE WHEN deleted_at IS NULL THEN quote_id END` com `UNIQUE`, e
+`Quote::turma()` é `hasOne` **sem `withTrashed`**, então `CreateTurmaAction:25` deixa criar turma
+nova sobre a cotação de uma arquivada — por desenho, dito em texto no comentário da migration.
+Restaurar a primeira estoura `SQLSTATE[23000]`. É o **primeiro conflito de unicidade alcançável** do
+tema: a D4 do molde ("conflito não é alcançável") vale para `Client`, `Course` e também `Quote` —
+`CreateQuoteAction:22` deriva `seq_in_budget` com `withTrashed()`, medido —, e é falsa só para
+`Turma`.
+
+**O segundo achado tem peso legal e é silencioso.** `turma_redator` não tem `deleted_at` e
+`Turma::redatores()` é `belongsToMany` sem `withTrashed` (`Turma.php:82`). Arquivar um redator deixa
+a linha do pivot viva e o faz **desaparecer** de três sítios — a listagem
+(`TurmaQueryBuilder::LISTING:26`), o painel de emissão (`EmissionPanelQuery:94`) e
+`CertificateEligibility:118`, que passa a **recusar a emissão de certificado** de turma concluída que
+ele ministrou. Nada no código avisa.
+
+**As sete decisões do João:**
+
+1. **D1 — gate de conflito na `RestoreTurmaAction` → 422.** Aceita escrever a primeira
+   `ValidationException` nova desde a **D-07** e reabri-la, porque a alternativa é 500 em operação de
+   usuário sobre dado com peso legal.
+2. **D2 — `Turma` ganha a cascata que nunca teve** (`enrollments` + `files`). Pivot fora.
+3. **D3 — `Redator` ganha gate** (turma em andamento → 422) **e `redatores()` passa a `withTrashed`**.
+   Os dois são necessários: o gate cobre turma em andamento, o `withTrashed` cobre a concluída, que é
+   onde a emissão acontece.
+4. **D4 — os dois restores automáticos ficam automáticos**, como exceção declarada com teste. A
+   permissão guarda a ação Restaurar da tela, não todo caminho que revive uma linha.
+5. **D5 — `Quote` e `Enrollment` têm Arquivados dentro do detalhe do pai**, com endpoints escopados.
+   Os dois têm `DELETE` próprio hoje, então sem superfície de restauração o registro ficaria
+   inalcançável para sempre.
+6. **D6 — um bloco, três fases por módulo** (Commercial → Identity → Operation), um DoD no fim.
+7. **D7 — o RBAC espelha o guard do arquivar: cinco permissões novas, não seis.** `User` staff **não
+   ganha permissão nova** — seu `destroy` é guardado por `identity.access.manage`, que é
+   `SEGREGATED`, e um `identity.user.restore` normal deixaria restaurar mais frouxo que arquivar.
+   `identity.user.restore` cobre `Redator`, porque o módulo já usa `identity.user.*` para os três
+   tipos de ator.
+
+**Quatro decisões derivadas, tomadas por mim e declaradas na spec:** três colunas novas (`quotes`,
+`files`, `enrollments`; `users` reaproveitada); as cascatas passam a marcar e **três Actions ganham
+transação que não tinham** (`DeleteQuoteAction`, `DeleteTurmaAction`, e a `ArchiveRedatorAction` que
+nasce) porque enumera-e-apaga sem transação é check-then-act; a lista de arquivados de `User` filtra
+`type === 'admin'` espelhando o `abort_unless` do `destroy`, senão os usuários de cliente, redator e
+aluno arquivados pelas cascatas vazam na tela de staff; e a **dívida de copy do molde é paga** —
+`budget.confirmDeleteBody` e `quote.confirmDeleteBody` param de dizer "no se puede deshacer", cujo
+gatilho era exatamente este bloco.
+
+**A auto-revisão da spec achou três defeitos e os corrigiu inline.** Um glob (`useBudgetQuotes*`) no
+lugar de path exato; a sigla `D10` colidindo entre esta spec e o molde; e uma **lacuna real** — o
+binding do restore aninhado. `->scopeBindings()` resolve `{enrollment}` por `$turma->enrollments()`,
+que é escopada por `deleted_at IS NULL`, então matrícula arquivada daria **404 antes de chegar à
+Action**. A spec passou a exigir `onlyTrashed()` explícito no binding.
+
+**O frontend não migra nada, e isso foi medido:** `useArchivedPage` aceita `ArchivableResource`
+**estrutural** (`useArchivedList` + `useRestore`), não a fábrica. `Turma` satisfaz o contrato à mão
+no `useTurmas.ts` artesanal, e os aninhados fecham o id do pai no próprio hook.
+
+**Risco reavaliado: segue ALTO.** Schema (3 colunas), RBAC (5 permissões), `generated.ts` e dado com
+peso legal — agora com um item a mais que a promoção não previa: o bloco **toca o caminho de emissão
+de certificado**.
+
+**Estado: `planning`.** Próxima ação: escrever o plano.
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
 
