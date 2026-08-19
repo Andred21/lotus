@@ -41,7 +41,7 @@ não integrado). Conflito de merge em `User`/Identity é previsto, não descober
 | D2 | Corte | **Bloco único ponta a ponta** | Partir backend × frontend; partir primeiro-acesso × recuperação |
 | D3 | Mecanismo | **Link por e-mail**, um mecanismo servindo primeiro acesso e recuperação | Senha gerada no e-mail; senha escolhida pelo admin |
 | D4 | `is_active` do redator | **`true` no cadastro**, com revogação pelo admin | Ativar na conclusão do link; ativar por ação administrativa separada |
-| D5 | TTL | **Dois brokers na mesma tabela**: `invites` 7 dias, `users` 60 min | TTL único de 24h; padrão 60 min com reenvio obrigatório |
+| D5 | TTL | **Dois brokers, duas tabelas**: `invites`/`invitation_tokens` 7 dias, `users`/`password_reset_tokens` 60 min — ver a emenda do §9 | TTL único de 24h; padrão 60 min com reenvio obrigatório; dois brokers sobre a mesma tabela |
 | D6 | Superfície da revogação | **Switch no formulário do redator**, encerrando todas as sessões | Ação dedicada "revogar acesso"; deixar revogação fora do bloco |
 | D7 | E-mail em dev | **Mailpit no compose**, como gotenberg e minio | Manter `MAIL_MAILER=log`; decidir na execução |
 | D8 | Reenvio de convite | **Entra no bloco** | Ficar fora |
@@ -80,6 +80,7 @@ Rotas públicas, fora de `auth:sanctum`, com `throttle` — o repo hoje não tem
 |---|---|---|
 | `POST /api/password/forgot` | `email` | **200 genérico sempre**, existindo o e-mail ou não |
 | `POST /api/password/reset` | `token`, `email`, `password`, `password_confirmation` | 204; token inválido ou expirado sobe **422 pelo handler RFC 7807**, nunca `abort()` |
+| `POST /api/invitation/accept` | mesma entrada | 204; valida pelo broker `invites` (§9) |
 | `POST /api/redatores/{redator}/invitation` | — | 204; sob `permission:identity.user.update` |
 
 **A resposta genérica do `forgot` é decisão de segurança, não economia:** resposta distinta por
@@ -92,7 +93,8 @@ Senha: `min:8` + `confirmed`, a régua já vigente em `ProfilePasswordData.php:3
 
 **Backend**
 
-- `config/auth.php` — broker `invites` novo (expire 10080), `users` permanece em 60.
+- `database/migrations/*_create_invitation_tokens_table.php` — tabela própria do convite (§9).
+- `config/auth.php` — broker `invites` novo (expire 10080, tabela `invitation_tokens`), `users` permanece em 60.
 - `app/Domains/Identity/Services/UserProvisioner.php` — `is_active` deixa de ser `false` fixo e passa
   a mapear por `type`: `redator` → `true`; `cliente` e `aluno` → `false`. Fonte única, como a
   checagem de identidade já é.
@@ -101,7 +103,9 @@ Senha: `min:8` + `confirmed`, a régua já vigente em `ProfilePasswordData.php:3
 - `app/Domains/Identity/Actions/SendRedatorAccessInvitationAction.php` — nova; gera o token pelo
   broker `invites` e envia a notificação. Serve o cadastro e o reenvio.
 - `app/Domains/Identity/Actions/UpdateRedatorAction.php` + `Data/RedatorData.php` — `is_active` vira
-  campo de entrada; desligar encerra **todas** as sessões.
+  campo de entrada (`Optional`: omitir não revoga); desligar encerra **todas** as sessões. Na tela, o
+  controle é `FormField` + `AppDropdown` Activo/Inactivo, o molde de `StaffUserDialog.tsx:118-130` —
+  não existe `AppSwitch` em `shared/ui` e feature não importa PrimeReact direto.
 - `app/Domains/Identity/Actions/PurgeOtherSessionsAction.php` — ganha o caminho "purgar tudo". Hoje
   preserva `keepSessionId` porque nasceu para troca de senha própria; revogação não preserva nada.
 - `app/Domains/Identity/Notifications/RedatorAccessInvitation.php` e `PasswordResetLink.php` — novas.
@@ -151,3 +155,17 @@ Build verde não é DoD (lei §5.8).
   padrão dela.
 - Verificação de e-mail e o hardening de rate limit da EAP 9.1.1 além do throttle destas rotas.
 - Expiração, reenvio e revogação **do token** além do que a D5 e a D8 fixam.
+
+## 9. Emenda — o planejamento derrubou o mecanismo da D5
+
+A D5 dizia "dois brokers sobre a **mesma** tabela". **Medido ao escrever o plano, não funciona:** o
+`expire` é aplicado na validação, pelo broker que valida, então com uma tabela só o endpoint de
+reset não distingue um token de convite (7 dias) de um de recuperação (60 min) — e validar pelo
+broker errado daria 7 dias à recuperação. Além disso `password_reset_tokens` tem **uma linha por
+e-mail**: um "esqueci minha senha" apagaria o convite pendente do mesmo redator.
+
+**Correção:** tabela `invitation_tokens` própria, broker `invites` sobre ela, e **dois endpoints** —
+`POST /api/invitation/accept` (broker `invites`) e `POST /api/password/reset` (broker `users`). A
+tela pública é a mesma; o link do e-mail carrega `?flow=invite|reset` e o hook escolhe o endpoint.
+A decisão de produto do João (um mecanismo servindo dois fluxos) fica intacta: o que muda é a
+mecânica que a sustenta.

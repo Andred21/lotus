@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-identity-ativacao-acesso-redator-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-18-identity-ativacao-acesso-redator.md
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
 blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-18T20:06:00-03:00
+updated_at: 2026-08-18T20:24:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -212,6 +212,28 @@ RF-USR-09 fala de admin **e** redator. O mecanismo novo tem um segundo consumido
 deixou fora, com o custo declarado.
 
 Spec em `specs/2026-08-18-identity-ativacao-acesso-redator-design.md`.
+
+### Plano — 2026-08-18: escrever o plano derrubou o mecanismo da D5
+
+14 tasks, executor **claude**. O critério do `/executar-bloco` não deixa margem: o bloco toca lei do
+§5 em três pontos — §5.3 (`generated.ts` regenerado), §5.4 (rotas públicas novas, purga de sessões,
+`sendPasswordResetNotification`) e §5.5 (o default de `is_active` deixa de ser único) — e decide
+contrato de API em duas tasks. Nada disso é mecânico com paths fechados, então não vai ao Codex.
+
+**A D5 aprovada não sobreviveu à escrita do plano, e a spec foi emendada (§9).** "Dois brokers sobre
+a mesma tabela" não funciona: o `expire` é aplicado na validação, pelo broker que valida, então com
+uma tabela só o endpoint de reset não distingue token de convite (7 dias) de token de recuperação
+(60 min) — e validar pelo broker errado daria 7 dias à recuperação. Pior, `password_reset_tokens`
+tem uma linha por e-mail: um "esqueci minha senha" apagaria o convite pendente do mesmo redator.
+**Correção:** tabela `invitation_tokens` própria e dois endpoints (`/api/invitation/accept` e
+`/api/password/reset`), com a tela pública única decidindo pelo `?flow=`. A decisão de produto do
+João fica intacta; muda a mecânica que a sustenta.
+
+**Segunda correção, menor, também medida:** a spec falava em "switch" de acesso, e não existe
+`AppSwitch` em `shared/ui` — feature não importa PrimeReact direto (§5.6). O controle copia o molde
+já existente do staff (`StaffUserDialog.tsx:118-130`): `FormField` + `AppDropdown` Activo/Inactivo.
+
+Plano em `plans/2026-08-18-identity-ativacao-acesso-redator.md`.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
