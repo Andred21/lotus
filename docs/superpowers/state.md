@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: write_implementation_plan
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-19-login-recuperacao-inline.md
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
 blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-19T11:15:00-03:00
+updated_at: 2026-08-19T11:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -294,8 +294,13 @@ redirecionado para `/`, porque herda o `LoginRoute`.
 plano existir. O par de 2026-08-18 continua válido como spec e plano do bloco — a emenda substitui
 só o desenho da superfície `/recuperar-clave`.
 
-**Estado: `planning`.** Próxima ação: escrever o plano da emenda com `writing-plans`. O
-`/revisar-sprint` permanece na fila, para depois da emenda executada.
+**Plano — 2026-08-19:** `plans/2026-08-19-login-recuperacao-inline.md`, 6 tasks. A ordem existe para
+que **toda task deixe a árvore compilando**: o `ForgotPasswordPage` vira ponte de 13 linhas na Task 3
+e só é apagado na Task 5, quando a rota muda de dono. Task 6 é o gate — catracas, prova de navegador
+e fechamento do estado.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco identity-ativacao-acesso-redator`.
+O `/revisar-sprint` permanece na fila, para depois da emenda executada.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
