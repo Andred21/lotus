@@ -30,6 +30,10 @@ services:
   gotenberg:
     image: gotenberg/gotenberg:8
 
+  mailpit:
+    image: axllent/mailpit
+    ports: ["8025:8025"]
+
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
