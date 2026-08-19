@@ -41,6 +41,11 @@ description: string,
 date: string | null,
 navigation: Record<string, number>,
 };
+export type ArchivedBudgetData = {
+budget: BudgetData,
+archived_at: string,
+archived_by: string | null,
+};
 export type ArchivedClientData = {
 client: ClientData,
 archived_at: string,
@@ -48,6 +53,31 @@ archived_by: string | null,
 };
 export type ArchivedCourseData = {
 course: CourseData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedEnrollmentData = {
+enrollment: EnrollmentData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedQuoteData = {
+quote: QuoteData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedRedatorData = {
+redator: RedatorData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedTurmaData = {
+turma: TurmaData,
+archived_at: string,
+archived_by: string | null,
+};
+export type ArchivedUserData = {
+user: UserData,
 archived_at: string,
 archived_by: string | null,
 };
