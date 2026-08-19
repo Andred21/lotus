@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: arquivados-roots-restantes
 active_work_item: arquivados-roots-restantes
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-roots-restantes-design.md
 active_plan: docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restaur
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
 state_basis_commit: 6fd0ad8
-updated_at: 2026-08-19T20:20:00-03:00
+updated_at: 2026-08-19T23:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -368,6 +368,98 @@ Dois desvios do plano, ambos registrados no ledger com a evidência:
    não faz isso** — no redator (Task 7) e na turma (Task 11). Os comentários dizem o que o código
    faz, e a P-47 passou a cobrir os dois roots. **O plano não é fonte sobre o comportamento do
    código.**
+
+
+### Review — 2026-08-19: risco ALTO, duas lentes, seis achados e zero violação de lei
+
+**Classificação ALTO e a segunda lente foi acionada.** Schema (3 colunas), RBAC (5 permissões),
+`generated.ts` e o caminho de emissão de certificado — quatro dos gatilhos da skill num bloco só.
+Codex rodou read-only sobre `6fd0ad8..HEAD` contra plano, spec e leis §5; os seis achados dele foram
+verificados por mim no código antes de qualquer um entrar no relatório.
+
+**Órfãos: zero**, nos dois lados. **Leis §5: nenhuma violação** — sem Repository, sem regra em
+controller, cascata instância a instância, `generated.ts` regenerado com manifesto no mesmo commit,
+`ValidationException` nas duas frases novas, zero `primereact` direto e zero import cruzado em
+`features/`, financeiro não gateia nada. Suítes conferidas na hora: backend **795 passed / 5
+skipped**, frontend **391 testes**.
+
+**Seis achados, nenhum 🔴:**
+
+1. **Q-1 🟡 P — `RestoreQuoteAction:34-47` restaura cotação sem exigir orçamento ativo.** A rota é
+   plana e a Action não olha o pai, então cotação de orçamento arquivado volta sozinha: some da tela
+   (o binding do pai dá 404) mas segue aprovável por API, e cotação aprovada origina turma. É o
+   raciocínio da própria **D10** — aplicado a `User` e não a `Quote`.
+2. **Q-2 🟡 P — `QuotesList.tsx:44-59`.** `nameLost` e o `InlineLoadState` com Reintentar existem só
+   no ramo ativo; o ramo `archived` volta a pintar `—` em silêncio quando o GET de cursos falha,
+   justamente na tela que existe para reconhecer a cotação antes de restaurar. É o defeito do BD-6
+   reentrando pela porta nova.
+3. **Q-3 🟡 M — o kit de arquivados está copiado por root em três camadas:** 6 `*RowActions.tsx` (397
+   linhas), 6 hooks `use*Archived`, e o par `toArchive` + `ConfirmDialog` em cinco Pages.
+   **Reincidente (2ª sprint)** — proposta de regra para `.claude/rules/frontend-fsliced.md`
+   apresentada ao João junto do relatório.
+4. **Q-4 🟢 P — o teste 9 da spec §5 não foi escrito, e o código faz o contrário do que ele
+   prometia:** `useQuotes.ts:21` invalida `budgetsApi.keys.all`, não a chave do pai.
+5. **Q-5 🟢 P — `RestoreTurmaAction:40-55` é check-then-act:** trava a turma que volta e pergunta
+   sobre a cotação, que ninguém trava. Mesma classe da **P-47**, ator diferente (criador de irmã, não
+   escritor de filho) — a ficha atual não alcança.
+6. **Q-6 🟢 — o gate D3 não vale na volta.** Arquivar turma, arquivar redator, restaurar turma
+   devolve turma em andamento com redator arquivado. Fecha com gate no restore ou com declaração na
+   spec, como a exceção da D4.
+
+**Três achados do Codex foram descartados, com razão registrada:** a audit `restored` duplicada sob
+concorrência é simetria deliberada e comentada (decisão consciente não é achado); o `—` do cliente em
+`ArchivedBudgetData` é pré-existente e aparece igual na visão ativa, com o erro já escalando; e o
+redator no restore de turma entrou rebaixado a 🟢 porque a emissão segue íntegra pelas três peças da
+D3. **Zero divergência de julgamento entre as duas lentes.**
+
+**Estado: `blocked`, `resume_state: reviewing`.** Próxima ação: o João aprova o que entra. Somente
+achado aprovado vira código.
+
+
+### Correções do review — 2026-08-19: os seis achados aprovados, em seis commits
+
+O João aprovou **Q-1 a Q-6**. Nenhum foi deferido para o backlog.
+
+**Q-1 — o restore da cotação passou a exigir orçamento ativo.** `RestoreQuoteAction` lê
+`$quote->budget->trashed()` e recusa com **422** em es-CL. O teste que provava a limpeza da marca
+virou dois: o 422 do gate e o caminho que ele obriga a usar (restaurar o pai devolve a cotação com
+`archived_with_parent` em `false`) — sob o gate, cotação marcada implica orçamento arquivado, então
+o antigo cenário deixou de ser alcançável.
+
+**Q-5 e Q-6 saíram no mesmo commit, porque tocam a mesma Action.** `Quote::lockRow()` nasceu e os
+DOIS caminhos que decidem sobre a cotação a travam: `CreateTurmaAction` — que também moveu as duas
+checagens para dentro da transação — e `RestoreTurmaAction`. É o **primeiro eixo com tomador dos dois
+lados** desde que a P-47 foi aberta. O segundo gate da turma recusa restaurar turma **em andamento**
+com redator arquivado; turma concluída fica de fora, porque é nela que o certificado é emitido e a
+emissão já lê redator arquivado pelo `withTrashed` da D3.
+
+**Q-2 — o aviso de nome perdido passou a valer nos dois modos** do `QuotesList`, com o cálculo sobre
+a lista VISÍVEL e o `InlineLoadState` extraído para um nó reaproveitado — para não haver um terceiro
+sítio onde esquecer.
+
+**Q-4 — o critério 9 da spec §5 existe e o código passou a cumpri-lo.** `useRestoreQuote` recebe o
+`budgetId` e invalida o detalhe do pai (que alcança a lista de arquivadas por prefixo) mais a lista
+de orçamentos, cujos totais mudam. As outras mutações seguem em `keys.all`: nascem dentro do detalhe
+do pai, onde não há outro orçamento montado. O teste vive em `quoteKeys.invalidatedByRestore` e
+reprova contra o código antigo.
+
+**Q-3 — o kit de arquivados virou um só, e a regra foi escrita.** Nascem `useArchiveToasts` (interno,
+fora do barrel), `useArchiveAction`, `ArchiveRowActions` e `ArchiveConfirmDialog`; `useArchivedPage`
+absorveu os toasts do restore e continua propagando os callbacks de quem chama. Os oito hooks de
+página caíram de **370 para 162 linhas**, os seis `*RowActions` viraram adaptadores que só chamam
+`can()` e passam **booleanos** — `shared/ui` não importa `shared/hooks` —, e os cinco blocos de
+`ConfirmDialog` viraram cinco chamadas de cinco linhas. Saldo do commit: **603 linhas a menos, 403 a
+mais**. O padrão reincidente virou o item **"Kit de arquivados"** em `.claude/rules/frontend-fsliced.md`.
+
+**Verificação depois das correções:** backend **797 passed / 5 skipped** (era 795: +3 testes novos,
+−1 que deixou de ser alcançável); frontend **394 testes em 67 arquivos**, `lint` e `build` limpos.
+Zero `primereact` direto e zero import cruzado em `features/`. Nenhuma peça nova órfã. `generated.ts`
+não foi tocado — nenhum DTO mudou.
+
+**O que NÃO foi feito, e é do fechamento:** a prova no navegador dos dois 422 novos (cotação sob
+orçamento arquivado; turma com redator arquivado) e das três telas que o Q-2/Q-3 tocaram. As suítes
+provam os endpoints e o `pnpm build` prova os tipos; o DoD da lei §8 pede a tela, e esta sessão não
+teve navegador. **Entra no `/fechar-sprint` como item obrigatório, não como opcional.**
 
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
