@@ -2,18 +2,25 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md
 active_plan: docs/superpowers/plans/2026-08-19-login-recuperacao-inline.md
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
 blocker: null
-
+review_findings_approved: >-
+  Joao aprovou os 6 achados do review em 2026-08-19 e os 6 foram corrigidos com regressao
+  provada contra o codigo antigo: Q-1 (role `redator` no reenvio do convite), Q-2 (enumeracao
+  de usuarios nas rotas publicas de senha), Q-3 (convite de senha enviado a cliente/aluno),
+  Q-4 (caminho de erro mudo no SetPasswordPage), Q-5 (recuperacao de senha nao encerra as
+  sessoes vivas), Q-6 (TTL provado por comportamento, nao por config). Catracas: pnpm lint
+  limpo, pnpm build verde, pnpm test 409/409, backend 710 passed / 5 skipped. Correcoes ainda
+  NAO commitadas.
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-19T18:40:00-03:00
+updated_at: 2026-08-19T19:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
