@@ -33,7 +33,12 @@ export function QuotesList({
   const files = useQuoteFiles()
   const arquivados = mode === 'archived'
 
-  const nameLost = courses.isError && quotes.some((q) => !courses.hasCourse(q.course_id))
+  // A lista VISÍVEL, não a ativa: o aviso de nome perdido vale nos dois modos, e
+  // gatear por `quotes` deixava a tela de arquivados pintar `—` em silêncio
+  // quando o GET de cursos falha — justamente onde o nome é o que o operador tem
+  // para RECONHECER a cotação antes de restaurar (Q-2 do review de 2026-08-19).
+  const visiveis = mode === 'archived' ? archived.items : quotes
+  const nameLost = courses.isError && visiveis.some((q) => !courses.hasCourse(q.course_id))
 
   const cabecalho = (
     <div className="flex justify-end px-4 pt-4">
@@ -41,10 +46,26 @@ export function QuotesList({
     </div>
   )
 
+  /* Falha do GET de cursos NÃO esconde as cotações (D2): o que ela explica é o
+   * `—` no lugar do nome. Erro de mutação de arquivo é outra categoria e vive
+   * nos banners da lista ativa.
+   *
+   * O aviso só sai quando a falha CUSTOU algum nome: com o cache resolvendo
+   * todos os ids, gatear por `isError` cru anunciava uma falha que ninguém
+   * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */
+  const avisoDeNome = (
+    <InlineLoadState
+      error={nameLost ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
+      retryLabel={t('common.retry')}
+      onRetry={courses.refetch}
+    />
+  )
+
   if (arquivados) {
     return (
       <div>
         {cabecalho}
+        <div className="m-4 empty:m-0">{avisoDeNome}</div>
         <ArchivedQuotesList
           quotes={archived.items}
           courseName={courses.courseName}
@@ -73,18 +94,7 @@ export function QuotesList({
       <div className="m-4 empty:m-0">
         <FormErrorBanner message={files.fileError} />
         {files.sizeError && <FormErrorBanner message={files.sizeError} />}
-        {/* Falha do GET de cursos NÃO esconde as cotações (D2): o que ela explica
-         * é o `—` no lugar do nome. Erro de mutação de arquivo é outra categoria
-         * e continua nos banners acima.
-         *
-         * O aviso só sai quando a falha CUSTOU algum nome: com o cache resolvendo
-         * todos os ids, gatear por `isError` cru anunciava uma falha que ninguém
-         * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */}
-        <InlineLoadState
-          error={nameLost ? (courses.errorDetail ?? t('common.loadErrorHint')) : null}
-          retryLabel={t('common.retry')}
-          onRetry={courses.refetch}
-        />
+        {avisoDeNome}
       </div>
       {/* Contêiner próprio: `first:border-t-0` mira o primeiro filho DESTA div,
        * não o primeiro filho do wrapper de cima (que sempre existe por causa do
