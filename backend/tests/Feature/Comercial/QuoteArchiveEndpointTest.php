@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Comercial;
 
+use App\Domains\Commercial\Actions\DeleteBudgetAction;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
@@ -117,6 +118,27 @@ class QuoteArchiveEndpointTest extends TestCase
         ])->assertCreated()->assertJsonPath('seq_in_budget', 2);
 
         $this->postJson("/api/quotes/{$primeira->id}/restore")->assertOk();
+    }
+
+    public function test_restaurar_cotacao_sozinha_limpa_a_marca_da_cascata(): void
+    {
+        // Cotação é ao mesmo tempo filho da cascata (do orçamento) e raiz com
+        // endpoint próprio de restore — a primeira neste código a ser as duas
+        // coisas. Restaurá-la sozinha tem de apagar a marca que a cascata
+        // deixou, senão ela mente sobre como voltou: uma futura cascata do
+        // orçamento a devolveria por engano (spec D2).
+        $this->actingAsAdmin();
+        $budget = $this->makeBudget();
+        $quote = $this->makeQuote($budget);
+
+        app(DeleteBudgetAction::class)->execute($budget);
+        $this->assertDatabaseHas('quotes', ['id' => $quote->id, 'archived_with_parent' => true]);
+
+        $this->postJson("/api/quotes/{$quote->id}/restore")->assertOk();
+
+        $this->assertDatabaseHas('quotes', [
+            'id' => $quote->id, 'deleted_at' => null, 'archived_with_parent' => false,
+        ]);
     }
 
     public function test_restaurar_cotacao_ativa_da_404(): void
