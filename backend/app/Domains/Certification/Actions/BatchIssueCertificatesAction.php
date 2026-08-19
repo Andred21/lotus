@@ -38,7 +38,14 @@ class BatchIssueCertificatesAction
     {
         // Uma vez para o lote inteiro: o redator é o mesmo em todos os itens
         // (D11), e resolvê-lo por item custaria um SELECT por matrícula.
-        $redator = Redator::query()->findOrFail($data->redator_id);
+        //
+        // `withTrashed` pelo mesmo motivo do sítio individual: a designação na
+        // turma (porta 6) é que autoriza, e ela sobrevive ao arquivamento —
+        // `turma_redator` não tem `deleted_at`. Aqui o escopo de `SoftDeletes`
+        // custava ainda mais caro: esta linha roda FORA do `try` por item, e a
+        // `ModelNotFoundException` derrubava o request inteiro com 404 —
+        // o modo de falha que o bloco 4 acima existe para evitar.
+        $redator = Redator::withTrashed()->findOrFail($data->redator_id);
 
         return collect($data->enrollment_ids)
             ->map(fn (int $enrollmentId): BatchIssueItemResultData => $this->item($enrollmentId, $redator))

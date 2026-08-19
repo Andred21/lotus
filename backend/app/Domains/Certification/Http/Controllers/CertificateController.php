@@ -73,7 +73,13 @@ class CertificateController extends Controller implements HasMiddleware
         Enrollment $enrollment,
         IssueCertificateAction $action,
     ): JsonResponse {
-        $redator = Redator::query()->findOrFail($data->redator_id);
+        // `withTrashed`: redator arquivado tem de continuar RESOLVÍVEL. Quem
+        // autoriza a emissão é a porta 6 do `CertificateEligibility` — estar
+        // designado na turma —, e a turma foi ministrada ANTES do
+        // arquivamento. Escopado por `SoftDeletes`, este `findOrFail` recusava
+        // com 404 antes de qualquer porta rodar, quebrando em silêncio o
+        // certificado de uma turma concluída (spec §5.2/D3).
+        $redator = Redator::withTrashed()->findOrFail($data->redator_id);
         $certificate = $action->execute($enrollment, $redator);
 
         return CertificateData::fromModel($certificate->loadListingData())
