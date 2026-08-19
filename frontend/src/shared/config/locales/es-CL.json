@@ -583,7 +583,11 @@
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
     "suitability": "Idoneidad",
-    "noCourses": "Sin cursos habilitados."
+    "noCourses": "Sin cursos habilitados.",
+    "accessState": "Estado de acceso",
+    "resendInvitation": "Reenviar invitación",
+    "invitationSent": "Invitación reenviada.",
+    "invitationFailed": "No se pudo reenviar la invitación."
   },
   "student": {
     "new": "Nuevo alumno",

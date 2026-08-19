@@ -583,7 +583,11 @@
     "sectionCourses": "Enabled courses",
     "enabledCourses": "Enabled courses",
     "suitability": "Suitability",
-    "noCourses": "No enabled courses."
+    "noCourses": "No enabled courses.",
+    "accessState": "Access state",
+    "resendInvitation": "Resend invitation",
+    "invitationSent": "Invitation resent.",
+    "invitationFailed": "Could not resend the invitation."
   },
   "student": {
     "new": "New student",
