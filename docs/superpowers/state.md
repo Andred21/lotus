@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: arquivados-roots-restantes
 active_work_item: arquivados-roots-restantes
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-roots-restantes-design.md
 active_plan: docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restaur
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
 state_basis_commit: 6fd0ad8
-updated_at: 2026-08-19T00:00:00-03:00
+updated_at: 2026-08-19T20:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -284,8 +284,9 @@ de cada fase o backend precede o frontend.
 
 ### Execução — 2026-08-19
 
-Técnica `executing-plans` (a sessão está sob restrição de AgentTool, como no bloco anterior), main
-tree pela P-03. Ledger task a task em `.superpowers/sdd/progress.md`.
+Técnica `subagent-driven-development` a partir da Task 2 — a restrição de AgentTool caiu no meio do
+bloco e o João pediu a troca; a Task 1 saiu inline, sob `executing-plans`. Main tree pela P-03.
+Ledger task a task em `.superpowers/sdd/progress.md`, com implementador e revisor próprios por task.
 
 **A Task 1 achou um gap do plano, e ele é de guardrail.** `PermissionI18nParityTest` exige paridade
 exata entre `PermissionCatalog::descriptions()` e as chaves `perm.*` das três locales — permissão
@@ -293,6 +294,80 @@ nova sem tradução reprova a suíte. O plano registrou "nenhuma chave de locale
 `archive.*`; `perm.*` é outro namespace e as cinco permissões novas o obrigam. As cinco chaves
 entraram no mesmo commit da Task 1, ao lado de cada `*_delete` correspondente. Sem isso a Task 15
 descobriria o vermelho no fim, com cinco fases de distância da causa.
+
+
+### DoD end-to-end — 2026-08-19 (Task 15): as três fases encadeadas, provadas no navegador
+
+Chromium contra a API real e a MySQL de desenvolvimento. O frontend do main tree subiu na **5174** —
+a 5173 é o `pnpm dev` do worktree `fix-frontend` do João, e provar a tela nela teria provado o
+código de outro branch. O `.env` já previa a porta.
+
+**Fase 1 — Comercial.** O primeiro alvo (`Scap 1`) recusou com **422** e uma frase em PORTUGUÊS:
+*"Orçamento com cotação aprovada não pode ser excluído. Recuse-a antes."* É gate pré-existente e
+correto (`DeleteBudgetAction:21`), mas a frase está hard-coded na Action e fora do idioma da tela —
+achado registrado abaixo. Refeito em `Scap 8`, com cotação e anexo criados pelo próprio app:
+arquivar levou cotação e anexo com `archived_with_parent = true`; Arquivados mostrou **`Quotes = 1`**
+com a cotação já soft-deletada (a contagem as-of-archiving); restaurar devolveu os três totais
+(**42 / 0 / 0 UF**), a cotação e o `anexo-dod.pdf`, com a marca limpa.
+
+**Fase 2 — Identity, e o caso com peso legal (D3).** Nenhum redator do banco tinha só turma
+concluída, então Ana Reyes saiu da turma 6 (em andamento, que ficou com Juan Morales) — ação do
+próprio app, desfeita no fim. Com só a turma 3 (concluída), arquivá-la passou o gate; a cascata
+levou `user#4` e o REUF. **Em `/certificados`, o diálogo de emissão listou `Redator: Ana Reyes` —
+arquivada — e a emissão respondeu `201`**, gerando `LOT-2026-1005` (`redator_id = 3`, status
+`emitido`, com UUID de validação). É o `Turma::redatores()->withTrashed()` da Task 7 provado onde
+importa: sem ele o certificado não sairia. Restaurar devolveu redator, usuário e REUF com a marca
+limpa, e Ana voltou à turma 6.
+
+**Fase 3 — Operação.** Turma 2 (`Scap 4 - Cot 1`, 8 alunos, 3 documentos) arquivada pelo botão da
+linha (P7): cascata de 8 matrículas e 3 documentos, todas com marca. Arquivados mostrou
+**`Students = 8`** com as oito já soft-deletadas. Restore devolveu **200 — não 201** — e trouxe as
+onze peças com marca zerada; o detalhe mostrou os 8 alunos e o switch local da D5. Arquivar e
+restaurar UMA matrícula fechou o ciclo: a lista de arquivadas veio escopada pela turma, com data e
+autor, e o restore (`POST /api/turmas/2/alunos/13/restore` → **200**) invalidou as duas listas.
+
+**D10 na tela.** Com `user#5` (`type = redator`) arquivado, `/administracion` → Arquivados mostrou
+**"No archived records"**. Usuário de redator não vaza para a lista de staff.
+
+**O gate D1 na MySQL real.** A suíte roda em sqlite, então a premissa de banco foi conferida no
+motor de verdade: `turmas.active_quote_id` existe como coluna gerada
+`(case when (deleted_at is null) then quote_id end)` com o índice `turmas_active_quote_id_unique`
+(`Non_unique = 0`). É o que torna o gate da `RestoreTurmaAction` um 422 em vez de um 500.
+
+**O que ficou no banco de desenvolvimento.** Uma cotação (`Scap 8 - Cot 1`, 42 UF, pendente) e um
+anexo em `Scap 8`, e o certificado `LOT-2026-1005` — artefatos que o próprio roteiro do DoD manda
+criar. O anexo de teste que subiu em `Scap 1` foi removido. Todo o resto voltou ao estado anterior:
+Ana Reyes na turma 6, Carlos Fuentes ativo, turma 2 e suas onze peças vivas.
+
+### Achados fora do escopo do bloco, para a triagem do review
+
+- **`DeleteBudgetAction:21` responde em português numa interface es-CL**, com a frase hard-coded na
+  Action em vez de locale. Pré-existente; é a mesma D-07 que a spec deste bloco reabriu para as duas
+  frases novas (que saíram em es-CL).
+- **Requisição não autenticada sem `Accept: application/json` responde 500** (`Route [login] not
+  defined`) em vez de 401. No `laravel.log` desde 2026-08-16, não é regressão deste branch.
+- **Aviso do React `Each child in a list should have a unique "key" prop` no `TableBody`** do painel
+  de emissão de certificados. Fora dos arquivos deste bloco.
+
+### Encerramento da execução — 2026-08-19
+
+Quinze tasks provadas, em **28 commits** sobre `6fd0ad8`. Backend **795 passed / 5 skipped**;
+frontend `lint`, `build` e **391 testes** limpos. `backend/config/cors.php` não foi tocado por
+nenhum commit do bloco — o único commit que o altera é `6fd0ad8`, do João, que é a base.
+
+Os tipos gerados entraram num commit só, no fim (`fdc043e`): 30 inserções, zero remoções, com o
+manifesto junto.
+
+Dois desvios do plano, ambos registrados no ledger com a evidência:
+
+1. **O Step 6 da Task 14, ao pé da letra, reprova o `pnpm lint`.** As colunas do rastreio mais a de
+   ações levaram `TurmasTable.tsx` a 185 linhas contra a régua de 150 (catraca do D8 do B2). O
+   implementador parou em vez de partir o arquivo sozinho; parti eu, em `c2e6c37` — cinco corpos de
+   célula para `TurmaCells.tsx`, tabela em 143 linhas, comportamento intacto.
+2. **O plano afirmou duas vezes que o `lockRow` fecha a janela contra quem escreve filho, e o código
+   não faz isso** — no redator (Task 7) e na turma (Task 11). Os comentários dizem o que o código
+   faz, e a P-47 passou a cobrir os dois roots. **O plano não é fonte sobre o comportamento do
+   código.**
 
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
