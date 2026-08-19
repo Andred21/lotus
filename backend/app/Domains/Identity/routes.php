@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Identity\Http\Controllers\AuthController;
+use App\Domains\Identity\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Http\Controllers\PermissionController;
 use App\Domains\Identity\Http\Controllers\ProfileController;
 use App\Domains\Identity\Http\Controllers\ProfileDocumentController;
@@ -19,6 +20,15 @@ use Illuminate\Support\Facades\Route;
 // Rotas do domínio Identity. Já entram sob prefixo `api/` e middleware `api`
 // (agregadas por routes/api.php).
 Route::post('/login', [AuthController::class, 'login']);
+
+// Públicas por definição: quem pede acesso ainda não tem sessão. `throttle`
+// porque são as únicas rotas anônimas que escrevem — 6 tentativas por minuto
+// por IP.
+Route::middleware('throttle:6,1')->group(function () {
+    Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+    Route::post('/password/reset', [PasswordResetController::class, 'reset']);
+    Route::post('/invitation/accept', [PasswordResetController::class, 'accept']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

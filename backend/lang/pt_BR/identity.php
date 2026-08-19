@@ -9,6 +9,9 @@ return [
         'expiry' => 'Este link vence em 7 dias. Se vencer, peça um novo em "Esqueci minha senha".',
     ],
     'reset' => [
+        // Mesma frase exista ou não a conta: a rota pública não pode
+        // virar enumerador de usuários.
+        'requested' => 'Se o e-mail existir, enviaremos um link para alterar a senha.',
         'subject' => 'Recuperação de senha — Lotus',
         'greeting' => 'Olá :name,',
         'line' => 'Recebemos uma solicitação para alterar sua senha.',
