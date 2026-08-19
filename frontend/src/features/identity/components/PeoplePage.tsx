@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
+import type { RedatorData } from '@shared/types/generated'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
+import { useRedatoresArchived } from '../hooks/useRedatoresArchived'
 import { useStudentsPage } from '../hooks/useStudentsPage'
 import { RedatoresTable } from './Redator/RedatoresTable'
 import { RedatorDialog } from './Redator/RedatorDialog'
@@ -15,6 +17,9 @@ export function PeoplePage() {
   const { can } = usePermissions()
   const page = useRedatoresPage()
   const students = useStudentsPage()
+  const redatoresArchived = useRedatoresArchived()
+  const [toArchive, setToArchive] = useState<RedatorData | null>(null)
+  const archived = redatoresArchived.mode === 'archived'
 
   const [params, setParams] = useSearchParams()
   const deepLinkId = params.get('redator')
@@ -43,10 +48,15 @@ export function PeoplePage() {
         <ModuleTabs>
           <ModuleTab header={t('redator.tabRedatores')}>
             <RedatoresTable
-              redatores={page.items}
-              loading={page.loading}
-              error={page.error}
-              onRetry={page.refetch}
+              redatores={archived ? redatoresArchived.items : page.items}
+              loading={archived ? redatoresArchived.loading : page.loading}
+              error={archived ? redatoresArchived.error : page.error}
+              onRetry={archived ? redatoresArchived.refetch : page.refetch}
+              mode={redatoresArchived.mode}
+              onModeChange={redatoresArchived.setMode}
+              onArchive={setToArchive}
+              onRestore={(r) => r.id != null && redatoresArchived.restore(r.id)}
+              busy={redatoresArchived.restoring || redatoresArchived.archiving}
               onView={page.openView}
               actions={
                 can('identity.user.create')
@@ -93,6 +103,23 @@ export function PeoplePage() {
           student={students.dialog.entity}
           onHide={students.close}
           onEdit={can('identity.user.update') ? students.startEdit : undefined}
+        />
+      )}
+
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      {toArchive && (
+        <ConfirmDialog
+          visible
+          title={t('archive.confirmArchiveTitle')}
+          message={t('archive.confirmArchiveBody')}
+          confirmLabel={t('archive.archiveAction')}
+          severity="danger"
+          pending={redatoresArchived.archiving}
+          onConfirm={() =>
+            toArchive.id != null &&
+            redatoresArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
+          }
+          onCancel={() => setToArchive(null)}
         />
       )}
     </ModulePage>

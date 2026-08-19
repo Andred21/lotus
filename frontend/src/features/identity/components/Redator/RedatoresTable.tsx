@@ -1,16 +1,33 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, SearchableTableFrame } from '@shared/ui'
+import type { ArchiveMode } from '@shared/hooks'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
+import { RedatorRowActions } from './RedatorRowActions'
+
+/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
+ * vêm preenchidas pelo achatamento do `useArchivedPage`; em `active` elas nem são
+ * renderizadas. Molde: `ClientRow`. */
+export type RedatorRow = RedatorData & {
+  archived_at?: string
+  archived_by?: string | null
+}
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
+  mode, onModeChange, onArchive, onRestore, busy,
 }: {
-  redatores: RedatorData[]
+  redatores: RedatorRow[]
   loading: boolean
   onView: (r: RedatorData) => void
+  mode: ArchiveMode
+  onModeChange: (mode: ArchiveMode) => void
+  onArchive: (r: RedatorData) => void
+  onRestore: (r: RedatorData) => void
+  /** Arquivar/restaurar em voo — trava os botões da linha (Q-2). */
+  busy: boolean
   actions?: ReactNode
   error?: { detail?: string | null } | null
   /** Repassa o refetch da página: é a promise que mantém o Reintentar do
@@ -19,6 +36,7 @@ export function RedatoresTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const archived = mode === 'archived'
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
 
   return (
@@ -26,10 +44,16 @@ export function RedatoresTable({
       table={table}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
-        <AppEmptyState icon="pi pi-users" title={t('redator.empty')} description={t('redator.emptyHint')} action={actions} />
+        <AppEmptyState
+          icon={archived ? 'pi pi-inbox' : 'pi pi-users'}
+          title={archived ? t('archive.empty') : t('redator.empty')}
+          description={archived ? t('archive.emptyHint') : t('redator.emptyHint')}
+          action={archived ? undefined : actions}
+        />
       }
       footerCount={t('redator.count', { count: table.rows.length })}
-      actions={actions}
+      actions={archived ? undefined : actions}
+      viewSwitch={<ArchiveSwitch value={mode} onChange={onModeChange} />}
       loading={loading}
       error={error}
       onRetry={onRetry}
@@ -63,9 +87,32 @@ export function RedatoresTable({
         sortable
         body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
       />
+      {archived && (
+        <AppColumn
+          field="archived_at"
+          header={t('archive.archivedAt')}
+          body={(r: RedatorRow) => (r.archived_at ? new Date(r.archived_at).toLocaleDateString() : '—')}
+        />
+      )}
+      {archived && (
+        <AppColumn
+          field="archived_by"
+          header={t('archive.archivedBy')}
+          body={(r: RedatorRow) => r.archived_by ?? t('archive.unknownAuthor')}
+        />
+      )}
       <AppColumn
-        body={(r: RedatorData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
-        style={{ width: '4rem' }}
+        body={(r: RedatorRow) => (
+          <RedatorRowActions
+            redator={r}
+            archived={archived}
+            busy={busy}
+            onView={onView}
+            onArchive={onArchive}
+            onRestore={onRestore}
+          />
+        )}
+        style={{ width: '8rem' }}
       />
     </SearchableTableFrame>
   )

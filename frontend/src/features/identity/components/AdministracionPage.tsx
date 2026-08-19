@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
+import type { UserData } from '@shared/types/generated'
 import { useUsersPage } from '../hooks/useUsersPage'
+import { useUsersArchived } from '../hooks/useUsersArchived'
 import { useRolesPage } from '../hooks/useRolesPage'
 import { UsersTable } from './Admin/UsersTable'
 import { StaffUserDialog } from './Admin/StaffUserDialog'
@@ -15,6 +17,9 @@ export function AdministracionPage() {
   const canManage = can('identity.access.manage')
   const page = useUsersPage()
   const rolesPage = useRolesPage()
+  const usersArchived = useUsersArchived()
+  const [toArchive, setToArchive] = useState<UserData | null>(null)
+  const archived = usersArchived.mode === 'archived'
   const [tab, setTab] = useState(0)
 
   return (
@@ -23,10 +28,15 @@ export function AdministracionPage() {
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('admin.tabUsers')}>
             <UsersTable
-              users={page.items}
-              loading={page.loading}
-              error={page.error}
-              onRetry={page.refetch}
+              users={archived ? usersArchived.items : page.items}
+              loading={archived ? usersArchived.loading : page.loading}
+              error={archived ? usersArchived.error : page.error}
+              onRetry={archived ? usersArchived.refetch : page.refetch}
+              mode={usersArchived.mode}
+              onModeChange={usersArchived.setMode}
+              onArchive={setToArchive}
+              onRestore={(u) => u.id != null && usersArchived.restore(u.id)}
+              busy={usersArchived.restoring || usersArchived.archiving}
               onView={page.openView}
               actions={
                 canManage
@@ -69,6 +79,23 @@ export function AdministracionPage() {
           canManage={canManage}
           onHide={rolesPage.close}
           onEdit={rolesPage.startEdit}
+        />
+      )}
+
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      {toArchive && (
+        <ConfirmDialog
+          visible
+          title={t('archive.confirmArchiveTitle')}
+          message={t('archive.confirmArchiveBody')}
+          confirmLabel={t('archive.archiveAction')}
+          severity="danger"
+          pending={usersArchived.archiving}
+          onConfirm={() =>
+            toArchive.id != null &&
+            usersArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
+          }
+          onCancel={() => setToArchive(null)}
         />
       )}
     </ModulePage>
