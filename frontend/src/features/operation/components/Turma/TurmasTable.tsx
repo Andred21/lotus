@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppTag, IdentityCell,
-  AppEmptyState, ArchiveSwitch, SearchableTableFrame,
+  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
+import { turmaDisplayStatus, type TurmaDisplayStatus } from '../../lib/turmaStatus'
 import {
-  turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps, type TurmaDisplayStatus,
-} from '../../lib/turmaStatus'
+  TurmaClientCell, TurmaCodeCell, TurmaModalidadeCell, TurmaRedatoresCell, TurmaStatusCell,
+} from './TurmaCells'
 import { TurmaRowActions } from './TurmaRowActions'
 
 const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
@@ -86,59 +86,20 @@ export function TurmasTable({
     >
       <AppColumn
         header={t('operation.table.code')}
-        body={(turma: TurmaData) => (
-          <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>
-            {turma.quote_code ?? '—'}
-          </span>
-        )}
+        body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
       />
       <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
       <AppColumn
         header={t('operation.table.client')}
-        body={(turma: TurmaData) => (
-          <IdentityCell
-            title={turma.client_name ?? '—'}
-            description={turma.client_rut}
-            image={turma.client_photo_url}
-          />
-        )}
+        body={(turma: TurmaData) => <TurmaClientCell turma={turma} />}
       />
       <AppColumn
         header={t('operation.table.modality')}
-        body={(turma: TurmaData) => (
-          <AppTag
-            value={t(`operation.modality.${turma.modalidade}`)}
-            {...turmaModalidadeTagProps(turma.modalidade)}
-          />
-        )}
+        body={(turma: TurmaData) => <TurmaModalidadeCell turma={turma} />}
       />
       <AppColumn
         header={t('operation.table.redator')}
-        body={(turma: TurmaData) => {
-          const [primeiro, ...resto] = turma.redatores
-
-          if (primeiro === undefined)
-            return <span style={{ color: 'var(--text-color-secondary)' }}>{t('operation.table.noRedator')}</span>
-
-          /* Primeiro + contador, não N células empilhadas: a altura da linha
-           * tem de ser constante na tabela inteira. O `+N` é numeral puro,
-           * então não abre chave de i18n; os nomes restantes vão no `title`,
-           * que é dado e não copy. */
-          return (
-            <div className="flex items-center gap-2">
-              <IdentityCell title={primeiro.name} description={primeiro.email} image={primeiro.photo_url} />
-              {resto.length > 0 && (
-                <span
-                  className="text-xs"
-                  style={{ color: 'var(--text-color-secondary)' }}
-                  title={resto.map((r) => r.name).join(', ')}
-                >
-                  +{resto.length}
-                </span>
-              )}
-            </div>
-          )
-        }}
+        body={(turma: TurmaData) => <TurmaRedatoresCell turma={turma} />}
       />
       <AppColumn
         header={t('operation.table.students')}
@@ -146,10 +107,7 @@ export function TurmasTable({
       />
       <AppColumn
         header={t('operation.table.status')}
-        body={(turma: TurmaData) => {
-          const s = turmaDisplayStatus(turma)
-          return <AppTag value={t(`operation.status.${s}`)} severity={turmaStatusSeverity(s)} />
-        }}
+        body={(turma: TurmaData) => <TurmaStatusCell turma={turma} />}
       />
       {archived && (
         <AppColumn
