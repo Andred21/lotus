@@ -118,6 +118,28 @@ class Quote extends Model implements Auditable
         return $this->load(QuoteQueryBuilder::LISTING);
     }
 
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre cotação arquivada — o restore da turma pergunta sobre
+     * uma cotação que pode estar em qualquer estado, e pular a linha faria a
+     * operação seguir SEM mutex nenhum.
+     *
+     * A COTAÇÃO é o recurso disputado do gate da spec D1, não a turma:
+     * `turmas.active_quote_id` é UNIQUE sobre `quote_id`, e os dois lados que
+     * decidem sobre ela — `CreateTurmaAction` e `RestoreTurmaAction` — travam
+     * ESTA linha. Lock de um lado só não fecha janela nenhuma (P-47).
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Molde: `Client::lockRow()`.
+     */
+    public static function lockRow(int $quoteId): static
+    {
+        /** @var static $quote */
+        $quote = static::withTrashed()->whereKey($quoteId)->lockForUpdate()->firstOrFail();
+
+        return $quote;
+    }
+
     /** @param  QueryBuilder  $query */
     public function newEloquentBuilder($query): QuoteQueryBuilder
     {

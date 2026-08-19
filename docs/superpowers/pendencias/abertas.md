@@ -156,6 +156,20 @@ concorrente. O review da Task 11 mediu que não fecha; o comentário foi reescri
 `ArchiveRedatorAction` e a ficha passou a cobrir os dois roots. É o segundo bloco a copiar a
 afirmação do plano sem medir: **o plano não é fonte sobre o que o código faz.**
 
+**O eixo da COTAÇÃO foi fechado no review de 2026-08-19 (Q-5), e o resto da ficha segue aberto.**
+O gate da `RestoreTurmaAction` perguntava sobre a turma irmã travando a turma que volta — a linha
+disputada é a **cotação**, que o `UNIQUE` de `turmas.active_quote_id` protege. `Quote::lockRow()`
+nasceu e os DOIS caminhos que decidem sobre ela a travam: `CreateTurmaAction` (que também moveu as
+duas checagens para dentro da transação) e `RestoreTurmaAction`. É o primeiro eixo desta ficha com
+tomador dos dois lados. Os três escritores de filho da tabela acima **continuam sem tomar o lock da
+turma**, e o eixo do redator continua inteiro.
+
+**Uma janela nova, da mesma classe, entrou com o gate do Q-1.** `RestoreQuoteAction` recusa
+restaurar cotação sob orçamento arquivado lendo `$quote->budget->trashed()` sem travar o orçamento —
+arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo sob pai arquivado. Não
+foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
+plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
+
 ## P-35 — o ADR-17 é defendido em duas profundidades
 
 **Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `CreateQuoteAction`/`Quote` por outro

@@ -107,6 +107,38 @@ class TurmaArchiveEndpointTest extends TestCase
         $this->assertNotSoftDeleted('turmas', ['id' => $turmaB->id]);
     }
 
+    public function test_restore_de_turma_com_redator_arquivado_da_422(): void
+    {
+        // O gate da spec D3 furado na direção inversa (Q-6 do review de
+        // 2026-08-19): `Redator::turmas()` não enxerga turma arquivada, então
+        // arquivar a turma primeiro faz o gate do redator passar — e o restore
+        // devolvia uma turma EM ANDAMENTO com redator arquivado, que é `User`
+        // sem login. Três passos legítimos chegando ao estado que a D3 proíbe.
+        $this->actingAsAdmin();
+        $builder = IssuableEnrollmentBuilder::make()->turmaNaoConcluida()->create();
+        $turma = $builder->turmaModel();
+        $redator = $builder->redatorModel();
+
+        $this->deleteJson("/api/turmas/{$turma->id}")->assertNoContent();
+        // Passa: a única turma dele está arquivada, e turma arquivada não é
+        // trabalho pendente.
+        $this->deleteJson("/api/redatores/{$redator->id}")->assertNoContent();
+
+        $this->postJson("/api/turmas/{$turma->id}/restore")
+            ->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.turma.0',
+                'Un redactor de esta clase está archivado: restáuralo antes de restaurar la clase.',
+            );
+
+        $this->assertSoftDeleted('turmas', ['id' => $turma->id]);
+
+        // Restaurado o redator, a turma volta — o gate é ordem, não bloqueio.
+        $this->postJson("/api/redatores/{$redator->id}/restore")->assertOk();
+        $this->postJson("/api/turmas/{$turma->id}/restore")->assertOk();
+        $this->assertNotSoftDeleted('turmas', ['id' => $turma->id]);
+    }
+
     public function test_restore_de_turma_ativa_da_404(): void
     {
         $this->actingAsAdmin();
