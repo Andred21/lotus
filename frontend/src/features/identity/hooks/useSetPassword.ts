@@ -13,6 +13,11 @@ export function useSetPassword(token: string, flow: PasswordFlow, email: string)
 
   const fieldErrors = mutation.error?.errors ?? null
   const tokenRejected = Boolean(fieldErrors?.token)
+  // 429 (a rota é throttle:6,1), 419 (CSRF) e 500 não trazem `errors`: sem
+  // isto o botão para de girar e a tela não diz nada. Mesmo molde do
+  // `useForgotPassword` — o hook irmão da mesma tela.
+  const generalError =
+    mutation.error && !mutation.error.errors ? mutation.error.detail : null
 
   function submit() {
     mutation.mutate({ token, email, password, password_confirmation: confirmation })
@@ -27,6 +32,7 @@ export function useSetPassword(token: string, flow: PasswordFlow, email: string)
     isSubmitting: mutation.isPending,
     succeeded: mutation.isSuccess,
     fieldErrors,
+    generalError,
     tokenRejected,
   }
 }

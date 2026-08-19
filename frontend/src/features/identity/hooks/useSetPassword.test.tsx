@@ -40,4 +40,21 @@ describe('useSetPassword', () => {
     // preso numa tela que nunca vai funcionar.
     await waitFor(() => expect(result.current.tokenRejected).toBe(true))
   })
+
+  it('expõe generalError quando a falha não nomeia campo (429 do throttle, 419 de CSRF, 500)', async () => {
+    vi.mocked(api.post).mockRejectedValue({
+      status: 429,
+      detail: 'Demasiadas solicitudes. Inténtalo de nuevo más tarde.',
+    })
+
+    const { result } = renderHook(() => useSetPassword('tok', 'reset', 'ana@lotus.cl'), { wrapper })
+    act(() => result.current.submit())
+
+    // Sem isto o botão para de girar e a tela não diz nada: a rota é
+    // throttle:6,1, então quem erra a confirmação seis vezes chega aqui.
+    await waitFor(() =>
+      expect(result.current.generalError).toBe('Demasiadas solicitudes. Inténtalo de nuevo más tarde.'),
+    )
+    expect(result.current.tokenRejected).toBe(false)
+  })
 })

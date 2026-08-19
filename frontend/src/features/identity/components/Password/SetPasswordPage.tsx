@@ -15,7 +15,7 @@ export function SetPasswordPage() {
 
   const {
     password, setPassword, confirmation, setConfirmation,
-    submit, isSubmitting, succeeded, fieldErrors, tokenRejected,
+    submit, isSubmitting, succeeded, fieldErrors, generalError, tokenRejected,
   } = useSetPassword(token, flow, email)
 
   // Link vencido não deixa o usuário preso: a saída é pedir outro.
@@ -54,7 +54,9 @@ export function SetPasswordPage() {
           <p style={{ color: 'var(--text-color-secondary)' }}>{t('password.subtitle')}</p>
         </div>
 
-        <FormErrorBanner message={fieldErrors?.email?.[0] ?? null} variant="inline" />
+        {/* `generalError` primeiro: 429/419/500 não trazem `errors`, então os
+            dois nunca coexistem — e sem ele a falha de transporte ficaria muda. */}
+        <FormErrorBanner message={generalError ?? fieldErrors?.email?.[0] ?? null} variant="inline" />
 
         {/* Rótulo por htmlFor + `inputId`, nunca embrulhando o campo: o olho do
             AppPassword tem nome acessível próprio e seria somado ao do input
