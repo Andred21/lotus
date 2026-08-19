@@ -2,18 +2,18 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: ready_for_review
+workflow_state: planning
 next_owner: claude
-next_action: request_code_review
+next_action: write_implementation_plan
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-18-identity-ativacao-acesso-redator-design.md
-active_plan: docs/superpowers/plans/2026-08-18-identity-ativacao-acesso-redator.md
+active_spec: docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md
+active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-18-identity-ativacao-acesso-redator.md
 blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-19T11:05:00-03:00
+updated_at: 2026-08-19T11:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -267,6 +267,35 @@ os barraria. É dado de seed, não código do bloco.
 
 **Estado: `ready_for_review`.** Próxima ação: `/revisar-sprint` para `identity-ativacao-acesso-redator`.
 O review **não** foi iniciado por este comando.
+
+### Emenda — 2026-08-19: a recuperação de senha volta para dentro da tela de login
+
+Pedido do João com o bloco em `ready_for_review`: *"quero deixar a recuperação de senha na mesma
+tela de login mudando apenas os campos (inputs) quando clicado"*. **Não é bloco novo.** A tela
+`/recuperar-clave` é entrega deste bloco (`9726eab`, `112b145`), então o pedido muda a forma de uma
+superfície já entregue e o estado volta para `planning`, com o review adiado — não iniciado e não
+cancelado.
+
+**O que a emenda troca:** `ForgotPasswordPage` deixa de ser página. `/login` e `/recuperar-clave`
+viram rotas irmãs do mesmo layout, as duas renderizando `LoginPage`; o modo sai do `pathname` e a
+troca é um `<Link>`. O e-mail digitado sobe para um painel comum e sobrevive ao clique — é o ganho
+que justifica a mudança, não a estética.
+
+**A premissa foi medida antes de virar decisão.** Em `react-router@7.18.0`, `_renderMatches` monta
+cada match dentro de `RenderedRoute` **sem `key`**: duas rotas irmãs com o mesmo `element`
+reconciliam em vez de remontar, e o estado do painel sobrevive à troca de URL. Sem isso o desenho
+inteiro cairia — o e-mail morreria na navegação, que é exatamente o defeito que a emenda fecha.
+
+**Dois efeitos declarados, não descobertos:** visitante anônimo em `/recuperar-clave` passa a
+disparar `GET /api/me` (a rota entra no `SessionBootstrap`), e usuário autenticado que abrir a URL é
+redirecionado para `/`, porque herda o `LoginRoute`.
+
+**Ponteiros:** `active_spec` passa a apontar a spec da emenda; `active_plan` volta a `null` até o
+plano existir. O par de 2026-08-18 continua válido como spec e plano do bloco — a emenda substitui
+só o desenho da superfície `/recuperar-clave`.
+
+**Estado: `planning`.** Próxima ação: escrever o plano da emenda com `writing-plans`. O
+`/revisar-sprint` permanece na fila, para depois da emenda executada.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
