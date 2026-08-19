@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md
 active_plan: docs/superpowers/plans/2026-08-19-login-recuperacao-inline.md
@@ -13,7 +13,7 @@ blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-19T12:10:00-03:00
+updated_at: 2026-08-19T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -319,6 +319,54 @@ Este commit abre a execução junto com a **Task 1** (`useAuthPanel`), que é a 
 durável.
 
 **Estado: `executing`.** Próxima ação: seguir o plano task a task.
+
+### Emenda executada — 2026-08-19: as 6 tasks fechadas e o gate provado no navegador
+
+As 6 tasks do `plans/2026-08-19-login-recuperacao-inline.md` estão commitadas, uma por commit:
+`37e4c61` (`useAuthPanel`), `b7c6d98` (`password.forgotSubtitle` nos 3 dicionários), `186f07f`
+(`ForgotForm` controlado por props), `c04c27a` (`AuthPanel`), `df8f5e0` (rotas irmãs e morte do
+`ForgotPasswordPage`) e este commit (gate). Ledger com a prova task a task e os achados de review em
+`.superpowers/sdd/progress.md`.
+
+**Catracas (Task 6, Step 1):** `pnpm lint` exit 0 sem saída, `pnpm build` verde, `pnpm test`
+**69 arquivos / 408 testes** — frontend puro, sem Pint, migration ou `typescript:transform`.
+
+**A prova no navegador, contra a API real, com a stack do João intacta.** Override efêmero de portas
+fora do repositório (nginx **8081**, MySQL **3308**, MinIO 9002/9003, Mailpit 8025) e Vite do worktree
+em **5174**. Medido: em `/login`, e-mail digitado, clique em "Forgot your password?" leva a
+`/recuperar-clave` **com o e-mail preservado no campo**, foco no `<h1>` e
+`performance.getEntriesByType('navigation')` ainda com **uma** entrada — a premissa da emenda (rotas
+irmãs reconciliam, não remontam) confirmada na tela e não só na leitura do `react-router`. O envio
+entrega no Mailpit para e-mail existente, devolve **a mesma** mensagem genérica para e-mail que não
+existe e **não** entrega — a anti-enumeração sobrevive à mudança de superfície. Voltar (browser back)
+devolve o campo de senha; deep link direto em `/recuperar-clave` abre em recuperação **sem roubar o
+foco** (`document.activeElement` = `BODY`); link de definição expirado cai em "This link no longer
+works" e "Request a new link" aterrissa em `/recuperar-clave`; autenticado, `/recuperar-clave`
+redireciona para `/` — os dois efeitos declarados na abertura da emenda, medidos.
+
+**Dois desvios do plano, decididos pelo João durante a execução, não pelo executor.**
+
+1. **`eslint-disable react-hooks/refs` escopado no `useAuthPanel`.** O código do próprio plano reprova
+   na régua, e o molde da casa para "ajustar estado no render" (`useEntityForm.ts`) foi **medido e
+   quebra a feature**: o setState descarta o primeiro render e `switched` chega `false`, matando o
+   movimento de foco. O disable tem precedente (`AppDialog.tsx:24-36`) e comentário com a medição.
+2. **O caminho de erro da recuperação entrou na Task 3.** O review de task apontou que
+   `ForgotForm`/`useForgotPassword` não davam retorno nenhum de falha; medido em
+   `git show b7c6d98:…/ForgotPasswordPage.tsx`, o buraco é **pré-existente** (veio em `9726eab`), não
+   regressão da emenda. Consertado agora com o molde do `LoginForm` (`FormErrorBanner` +
+   `aria-invalid`/`aria-describedby`) e teste do ramo de falha. **A spec foi emendada** (§5, §6 e a
+   nova §6.1): `generalError` e `fieldErrors` são falha de transporte e não desmentem a resposta
+   genérica.
+
+**Uma lacuna do plano ficou registrada:** ele afirmava que `FRONTEND_URL` não precisaria mudar para a
+prova de navegador, e precisou — `config/cors.php:22` deriva a origem permitida dela, e o Vite do
+worktree corre na 5174. `backend/.env` e `frontend/.env.local` foram alterados para o gate e
+**restaurados** ao fim; ao término só `fix-frontend-app-1` ficou de pé, como a sessão encontrou o
+ambiente.
+
+**Estado: `ready_for_review`.** Próxima ação: `/revisar-sprint` para
+`identity-ativacao-acesso-redator`, cobrindo o bloco de 2026-08-18 **e** esta emenda. O review **não**
+foi iniciado por este comando.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
