@@ -99,6 +99,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        // Convite de primeiro acesso. Tabela própria e janela longa: o admin
+        // cadastra e o redator costuma abrir o e-mail no dia seguinte. A
+        // recuperação segue com os 60 minutos padrão, que é janela de ataque.
+        'invites' => [
+            'provider' => 'users',
+            'table' => 'invitation_tokens',
+            'expire' => 10080,
+            'throttle' => 60,
+        ],
     ],
 
     /*
