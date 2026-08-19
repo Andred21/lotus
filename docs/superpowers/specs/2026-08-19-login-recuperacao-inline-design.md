@@ -122,7 +122,7 @@ Os dois hooks de submit deixam de guardar e-mail e passam a recebê-lo:
 | hook | assinatura | devolve |
 |---|---|---|
 | `useLoginForm` | `(email: string)` | `password`, `setPassword`, `submit`, `isSubmitting`, `fieldErrors`, `generalError` |
-| `useForgotPassword` | `(email: string)` | `submit`, `isSubmitting`, `sent` |
+| `useForgotPassword` | `(email: string)` | `submit`, `isSubmitting`, `sent`, `fieldErrors`, `generalError` |
 
 **Só o e-mail atravessa, e é intencional.** Senha digitada, erro de credencial e o `sent` da
 recuperação morrem com o formulário que os produziu. Voltar da recuperação para o login dá tela
@@ -138,12 +138,25 @@ cada formulário consome só o seu hook.
 |---|---|---|---|
 | título | `login.title` | `password.forgotTitle` | `password.forgotTitle` |
 | subtítulo | `login.subtitle` | `password.forgotSubtitle` (nova) | — |
-| banner de erro | `generalError` | — | — |
+| banner de erro | `generalError` | `generalError` | — |
 | campo e-mail | `login-email` | `forgot-email` | — |
 | campo senha | sim | — | — |
 | mensagem | — | — | `password.forgotSent` |
 | botão | `login.submit` | `password.forgotSubmit` | — |
 | link | `login.forgotPassword` → `/recuperar-clave` | `password.backToLogin` → `/login` | `password.backToLogin` → `/login` |
+
+**Emenda §6.1 — 2026-08-19, durante a execução da Task 3: a recuperação ganha caminho de erro.**
+Esta tabela nasceu tirando o banner de erro do modo recuperação, e o review da Task 3 mostrou o
+preço: `useForgotPassword` não lia `mutation.error`, então 422 (e-mail malformado), 429 (o
+`throttle:6,1` do backend), 419 (CSRF) e 500 paravam o loading do botão e não diziam nada — tela
+muda. **Não era regressão da emenda:** medido, o `ForgotPasswordPage` de `9726eab` já era assim.
+A decisão do João foi fechar o buraco aqui em vez de adiá-lo para o review do bloco.
+
+O molde é o mesmo do `LoginForm`, não um segundo padrão: `FormErrorBanner` para `generalError`,
+`invalid`/`aria-invalid`/`aria-describedby` no campo para `fieldErrors.email`. **Isso não desmente a
+resposta genérica do backend** e a distinção é a que sustenta a decisão: "existe conta com este
+e-mail?" continua sempre oculto — `sent` segue sendo `isSuccess` e nada mais —, enquanto "o pedido
+chegou ao servidor?" é transporte e limite, e esconder isso não protege ninguém.
 
 Todas as chaves já existem menos `password.forgotSubtitle`, criada nos três dicionários
 (`es-CL`, `pt-BR`, `en`). O texto informa que o link vai por e-mail **sem afirmar que a conta
