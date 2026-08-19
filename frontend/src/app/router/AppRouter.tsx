@@ -16,6 +16,8 @@ import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetai
 import { TurmaCreatePage } from '@features/operation/components/Turma/TurmaCreatePage'
 import { CertificatesPage } from '@features/certification/components/CertificatesPage'
 import { ValidationPage } from '@features/certification/components/Validation/ValidationPage'
+import { SetPasswordPage } from '@features/identity/components/Password/SetPasswordPage'
+import { ForgotPasswordPage } from '@features/identity/components/Password/ForgotPasswordPage'
 
 function LoginRoute() {
   const status = useSessionStore((s) => s.status)
@@ -31,6 +33,13 @@ export function AppRouter() {
             SessionBootstrap de propósito — quem escaneia o QR nunca deve disparar
             `GET /api/me`. */}
         <Route path="/validar/:uuid" element={<ValidationPage />} />
+
+        {/* Primeiro acesso e recuperação: públicas, sem cookie de sessão. O
+            `flow` da query decide o endpoint (convite × recuperação). Fora do
+            SessionBootstrap — quem define a senha ainda não tem sessão e não
+            deve disparar `GET /api/me`. */}
+        <Route path="/definir-clave/:token" element={<SetPasswordPage />} />
+        <Route path="/recuperar-clave" element={<ForgotPasswordPage />} />
 
         {/* Login segue sob o bootstrap: o redirect "já autenticado" depende do
             `GET /api/me` já ter resolvido a sessão. */}

@@ -6,7 +6,22 @@
     "emailPlaceholder": "email@empresa.cl",
     "password": "Senha",
     "submit": "Entrar",
-    "forgot": "Perdeu o acesso? Peça ao administrador da plataforma."
+    "forgotPassword": "Esqueceu sua senha?"
+  },
+  "password": {
+    "title": "Defina sua senha",
+    "subtitle": "Escolha uma senha de pelo menos 8 caracteres para entrar na plataforma.",
+    "newPassword": "Nova senha",
+    "confirmation": "Repita a senha",
+    "submit": "Salvar senha",
+    "expired": "Este link não serve mais",
+    "expiredAction": "Pedir um link novo",
+    "success": "Senha definida",
+    "successAction": "Ir para o login",
+    "forgotTitle": "Recuperar senha",
+    "forgotSubmit": "Enviar link",
+    "forgotSent": "Se o e-mail existir, enviamos um link para alterar a senha. Confira sua caixa de entrada.",
+    "backToLogin": "Voltar ao login"
   },
   "brand": {
     "tagline": "Plataforma de capacitação profissional",
@@ -638,8 +653,15 @@
       "emptyHint": "As turmas são criadas a partir de uma cotação aprovada.",
       "noRedator": "— Sem designar"
     },
-    "modality": { "presencial": "Presencial", "online": "Online" },
-    "status": { "em_andamento": "Em curso", "habilitada": "Habilitada", "concluida": "Concluída" },
+    "modality": {
+      "presencial": "Presencial",
+      "online": "Online"
+    },
+    "status": {
+      "em_andamento": "Em curso",
+      "habilitada": "Habilitada",
+      "concluida": "Concluída"
+    },
     "detail": {
       "back": "Voltar para Operação",
       "notFound": "Turma não encontrada",

@@ -6,7 +6,22 @@
     "emailPlaceholder": "email@company.cl",
     "password": "Password",
     "submit": "Sign in",
-    "forgot": "Lost your access? Ask the platform administrator."
+    "forgotPassword": "Forgot your password?"
+  },
+  "password": {
+    "title": "Set your password",
+    "subtitle": "Choose a password with at least 8 characters to sign in.",
+    "newPassword": "New password",
+    "confirmation": "Repeat the password",
+    "submit": "Save password",
+    "expired": "This link no longer works",
+    "expiredAction": "Request a new link",
+    "success": "Password set",
+    "successAction": "Go to sign in",
+    "forgotTitle": "Recover password",
+    "forgotSubmit": "Send link",
+    "forgotSent": "If the email exists, we sent a link to change the password. Check your inbox.",
+    "backToLogin": "Back to sign in"
   },
   "brand": {
     "tagline": "Professional training platform",
@@ -638,8 +653,15 @@
       "emptyHint": "Classes are created from an approved quote.",
       "noRedator": "— Unassigned"
     },
-    "modality": { "presencial": "In person", "online": "Online" },
-    "status": { "em_andamento": "In progress", "habilitada": "Enabled", "concluida": "Concluded" },
+    "modality": {
+      "presencial": "In person",
+      "online": "Online"
+    },
+    "status": {
+      "em_andamento": "In progress",
+      "habilitada": "Enabled",
+      "concluida": "Concluded"
+    },
     "detail": {
       "back": "Back to Operations",
       "notFound": "Class not found",

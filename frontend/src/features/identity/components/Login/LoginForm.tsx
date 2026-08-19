@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { AppInputText, AppPassword, AppButton, FormErrorBanner } from "@shared/ui";
 import { dangerText } from "@shared/styles/tokens";
 import { useLoginForm } from "../../hooks/useLoginForm";
@@ -86,11 +87,17 @@ export function LoginForm() {
 
       <AppButton type="submit" label={t("login.submit")} loading={isSubmitting} />
 
-      {/* Texto de ajuda, não link: não existe endpoint de recuperação de senha,
-          e uma <a> sem href fica fora da ordem de tabulação (UI-07). */}
-      <p className="text-center text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-        {t("login.forgot")}
-      </p>
+      {/* Virou link de verdade: a recuperação existe desde este bloco, então o
+          texto de ajuda ("peça ao administrador") passaria a mentir. Link com
+          `to` entra na ordem de tabulação — a razão de o antigo ser <p> era
+          justamente não haver destino (UI-07). */}
+      <Link
+        to="/recuperar-clave"
+        className="text-center text-sm"
+        style={{ color: 'var(--text-color-secondary)' }}
+      >
+        {t("login.forgotPassword")}
+      </Link>
     </form>
   );
 }
