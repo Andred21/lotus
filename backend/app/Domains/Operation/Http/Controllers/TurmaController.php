@@ -10,13 +10,16 @@ use App\Domains\Operation\Actions\CreateTurmaAction;
 use App\Domains\Operation\Actions\DeleteTurmaAction;
 use App\Domains\Operation\Actions\DesignateRedatorAction;
 use App\Domains\Operation\Actions\RemoveRedatorAction;
+use App\Domains\Operation\Actions\RestoreTurmaAction;
 use App\Domains\Operation\Actions\UpdateTurmaAction;
+use App\Domains\Operation\Data\ArchivedTurmaData;
 use App\Domains\Operation\Data\PendingQuoteData;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
+use App\Shared\Audit\ArchiveTrailQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -27,10 +30,11 @@ class TurmaController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual', 'manualDocx']),
+            new Middleware('permission:operation.turma.view', only: ['index', 'show', 'manual', 'manualDocx', 'archived']),
             new Middleware('permission:operation.turma.create', only: ['store', 'pending']),
             new Middleware('permission:operation.turma.update', only: ['update']),
             new Middleware('permission:operation.turma.delete', only: ['destroy']),
+            new Middleware('permission:operation.turma.restore', only: ['restore']),
             new Middleware('permission:operation.turma.assign_redator', only: ['designateRedator', 'removeRedator']),
             new Middleware('permission:operation.turma.complete', only: ['conclude']),
         ];
@@ -77,6 +81,35 @@ class TurmaController extends Controller implements HasMiddleware
         $action->execute($turma);
 
         return response()->noContent();
+    }
+
+    /** @return array<ArchivedTurmaData> */
+    public function archived(TurmaHabilitacaoService $habilitacao): array
+    {
+        $turmas = Turma::onlyTrashed()->withArchivedListingData()->latest()->get();
+
+        $autores = ArchiveTrailQuery::archivedBy(Turma::class, $turmas->pluck('id')->all());
+
+        return $turmas
+            ->map(fn (Turma $t) => new ArchivedTurmaData(
+                turma: TurmaData::fromModel($t, $habilitacao),
+                archived_at: $t->deleted_at->toIso8601String(),
+                archived_by: $autores[$t->id] ?? null,
+            ))
+            ->all();
+    }
+
+    public function restore(int $turma, RestoreTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
+    {
+        // Resolvido à mão, não por binding: o binding padrão aplica o global
+        // scope de SoftDeletes e nunca acharia uma arquivada. `onlyTrashed()`
+        // também dá o 404 de graça sobre registro ATIVO (molde D5).
+        $model = Turma::onlyTrashed()->whereKey($turma)->firstOrFail();
+
+        // 200, não 201: restaurar devolve um registro que já existia.
+        return $this->present($action->execute($model), $habilitacao)
+            ->toResponse(request())
+            ->setStatusCode(Response::HTTP_OK);
     }
 
     public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse

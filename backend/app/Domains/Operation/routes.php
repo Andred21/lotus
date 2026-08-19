@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('turmas', [TurmaController::class, 'index']);
     Route::get('turmas/pendientes-configuracion', [TurmaController::class, 'pending']);
+    // ANTES do apiResource/`{turma}`, senão `turmas/archived` casa como
+    // `turmas/{turma}`.
+    Route::get('turmas/archived', [TurmaController::class, 'archived']);
+    // `whereNumber`: sem ele um id não numérico estoura `TypeError` (500) na
+    // assinatura `int $turma` antes de qualquer consulta, em vez do 404.
+    Route::post('turmas/{turma}/restore', [TurmaController::class, 'restore'])
+        ->whereNumber('turma');
     Route::get('turmas/{turma}', [TurmaController::class, 'show']);
     Route::put('turmas/{turma}', [TurmaController::class, 'update']);
     Route::delete('turmas/{turma}', [TurmaController::class, 'destroy']);
