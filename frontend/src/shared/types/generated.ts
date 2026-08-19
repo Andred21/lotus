@@ -227,6 +227,9 @@ size: number,
 download_url: string,
 created_at: string | null,
 };
+export type ForgotPasswordData = {
+email: string,
+};
 export type ImportResultData = {
 created: number,
 relinked: number,
@@ -387,6 +390,7 @@ name: string,
 rut: string,
 email: string,
 phone: undefined | string | null,
+is_active: undefined | boolean,
 course_ids: number[],
 documents: RedatorDocumentData[],
 photo_url: string | null,
@@ -441,6 +445,12 @@ turma_id: number,
 course_name: string,
 end_date: string,
 missing_types: string[],
+};
+export type ResetPasswordData = {
+token: string,
+email: string,
+password: string,
+password_confirmation: string,
 };
 export type RevokeCertificateData = {
 reason: string,
