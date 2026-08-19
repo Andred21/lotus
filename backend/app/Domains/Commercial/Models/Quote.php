@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\QueryBuilders\QuoteQueryBuilder;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Quote extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'budget_id',
@@ -53,6 +54,28 @@ class Quote extends Model implements Auditable
         // Marca da cascata (spec D8). FORA do `$fillable`: quem escreve é hook.
         'archived_with_parent' => 'boolean',
     ];
+
+    /**
+     * Hook NOVO (spec D9): a cotação não tinha cascata nenhuma, então arquivá-la
+     * deixava os anexos ATIVOS sob um pai que ninguém mais alcança — o mesmo
+     * modo de falha que a `DeleteClientAction` existe para impedir.
+     *
+     * Roda nas duas entradas: `DeleteQuoteAction` (arquivar a cotação sozinha) e
+     * a cascata do orçamento, que chama `$quote->delete()`.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Quote $quote) {
+            if (! $quote->isForceDeleting()) {
+                $quote->files()->get()->each(fn (File $f) => self::markAndDelete($f));
+            }
+        });
+
+        static::restored(function (Quote $quote) {
+            $quote->files()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (File $f) => self::restoreAndUnmark($f));
+        });
+    }
 
     public function budget(): BelongsTo
     {
