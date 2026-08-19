@@ -19,6 +19,7 @@
     "success": "Password set",
     "successAction": "Go to sign in",
     "forgotTitle": "Recover password",
+    "forgotSubtitle": "Enter your email and we will send a link to change the password.",
     "forgotSubmit": "Send link",
     "forgotSent": "If the email exists, we sent a link to change the password. Check your inbox.",
     "backToLogin": "Back to sign in"

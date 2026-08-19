@@ -19,6 +19,7 @@
     "success": "Clave definida",
     "successAction": "Ir a iniciar sesión",
     "forgotTitle": "Recuperar clave",
+    "forgotSubtitle": "Ingresa tu correo y te enviamos un enlace para cambiar la clave.",
     "forgotSubmit": "Enviar enlace",
     "forgotSent": "Si el correo existe, enviamos un enlace para cambiar la clave. Revisa tu bandeja.",
     "backToLogin": "Volver a iniciar sesión"
