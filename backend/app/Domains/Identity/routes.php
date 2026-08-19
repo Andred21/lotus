@@ -46,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['redatores' => 'redator'])
         ->only(['index', 'store', 'show', 'update', 'destroy']);
 
+    // ANTES do apiResource, pelo mesmo motivo de `redatores/archived`.
+    Route::get('users/archived', [UserController::class, 'archived']);
+    Route::post('users/{user}/restore', [UserController::class, 'restore'])
+        ->whereNumber('user');
+
     Route::apiResource('users', UserController::class)
         ->only(['index', 'store', 'show', 'update', 'destroy']);
 
