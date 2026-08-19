@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: arquivados-roots-restantes
 active_work_item: arquivados-roots-restantes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-roots-restantes-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md
 context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restauracao.md
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
 state_basis_commit: 6fd0ad8
-updated_at: 2026-08-18T20:45:00-03:00
+updated_at: 2026-08-18T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -225,6 +225,63 @@ peso legal — agora com um item a mais que a promoção não previa: o bloco **
 de certificado**.
 
 **Estado: `planning`.** Próxima ação: escrever o plano.
+
+### Plano — 2026-08-18: 15 tasks, executor Claude, e a escrita achou oito coisas que a spec não podia saber
+
+**`docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md`**, 15 tasks em três fases
+(Commercial 1–6, Identity 7–10, Operation 11–14, fechamento 15). Cada task tem paths exatos, o código
+inteiro de cada passo, o comando de verificação com a saída esperada e o commit — nada de "similar à
+Task N".
+
+**Escrever o plano contra o código exigiu oito decisões derivadas (P1–P8), todas declaradas no
+próprio plano.** As três que mudam trabalho:
+
+- **P7 — três telas expõem a rota de arquivar sem ter botão nenhum.** `DELETE /api/redatores/{redator}`,
+  `DELETE /api/users/{user}` e `DELETE /api/turmas/{turma}` existem no backend, mas `RedatoresTable`,
+  `Admin/UsersTable` e `TurmasTable` **não têm** ação de arquivar, e `api/useTurmas.ts` não tem
+  mutação de DELETE. Uma visão de Arquivados sozinha nasceria impossível de exercitar pela interface —
+  o DoD da lei §8 não teria como ser cumprido. As Tasks 10 e 14 trazem **as duas metades**, no molde
+  exato do `ClientRowActions`. **É escopo que a spec não pediu**; se o João preferir o escopo estrito,
+  as duas tasks perdem o botão de arquivar e aquelas fases passam a ser provadas por `curl`.
+- **P4 — nascem dois QueryBuilders.** `Budget` monta `with([...])` solto no controller e
+  `Identity/QueryBuilders/` está **vazio**. A lição Q-8 (a lista de Arquivados mostra o registro como
+  ele estava no instante do arquivamento) exige `asOfArchiving`, que é método de trait e mora em
+  builder. `BudgetQueryBuilder` e `RedatorQueryBuilder` nascem; `QuoteQueryBuilder` e
+  `TurmaQueryBuilder` ganham `withArchivedListingData()`; `EnrollmentQueryBuilder` não ganha nada
+  (matrícula é folha).
+- **P6 — a turma arquivada mostraria `0 alumnos`.** `TurmaData::fromModel` lê
+  `enrolled_count: $turma->enrollments_count` **sem fallback**, e `withCount('enrollments')` conta só
+  as ativas — depois da cascata D2, toda turma arquivada apareceria vazia. O `withArchivedListingData`
+  reescreve a contagem com o mesmo predicado do trait. É o Q-8 aplicado a um `withCount`.
+
+As outras cinco: **P1** (o path `useBudgetQuotes.ts` da spec §4 não existe — o arquivo é
+`useQuotes.ts`), **P2** (as duas mensagens novas saem em **es-CL**, por precedente de
+`Turma::assertAcademicallyWritable()`, e são duas linhas se o João decidir a D-07 no outro sentido),
+**P3** (`RestoreEnrollmentAction` aplica a RN-15, simétrica com `RemoveEnrollmentAction:12`), **P5**
+(`Redator::turmas()` nasce, inversa de `Turma::redatores()`, para o gate D3) e **P8** (`lockRow` entra
+em `Redator` e `Turma`, onde a cascata nasce inteira neste bloco, e **não** entra em `Budget`/`Quote`,
+onde o caminho de arquivar já existia com transação e sem lock — acrescentar mutex só no restore
+criaria assimetria pior que a que resolve).
+
+**Nenhuma chave de locale nova.** O bloco `archive.*` dos três arquivos cobre confirmar, toasts,
+colunas e ações. A única mudança de copy é a **D11**: os dois `confirmDeleteBody` de `budget` e
+`quote`, que diziam *"Esta acción no se puede deshacer."* e deixam de ser verdade na Task 3.
+
+**`generated.ts` tem commit próprio, no fim.** As Tasks 5, 10 e 14 rodam `typescript:transform` para o
+`tsc` enxergar os DTOs novos, mas não o commitam: três commits deixariam o arquivo em três estados
+intermediários e o manifesto do transformer fora de sincronia em dois deles. Task 15, um commit, seis
+tipos.
+
+**Handoff: `executor: claude`, risco projetado ALTO.** O bloco toca quatro leis do §5 (tipos gerados,
+RBAC, fronteira de features, DoD provado) e tem três pontos que exigem julgamento fora do plano: a
+Task 7 muda `Turma::redatores()`, lida por Operation e Certification, e manda **ler a asserção** de
+qualquer teste que vire vermelho; a P7 é escopo declarado que o João pode cortar; e a P2 reabre a
+D-07.
+
+**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-roots-restantes`, por
+instrução posterior do João. Ordem obrigatória: a Task 1 (colunas + permissões) precede tudo, e dentro
+de cada fase o backend precede o frontend.
+
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
 
