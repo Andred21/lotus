@@ -28,6 +28,7 @@ class CreateRedatorAction
         private UserProvisioner $users,
         private StoreRedatorDocumentAction $documents,
         private UploadFileAction $uploads,
+        private SendRedatorAccessInvitationAction $invitations,
     ) {}
 
     public function execute(RedatorData $data, array $documents = []): Redator
@@ -48,7 +49,7 @@ class CreateRedatorAction
                 ];
             }
 
-            return DB::transaction(function () use ($data, $uploaded) {
+            $redator = DB::transaction(function () use ($data, $uploaded) {
                 $user = $this->users->provision(
                     type: 'redator',
                     name: $data->name,
@@ -81,5 +82,17 @@ class CreateRedatorAction
 
             throw $e;
         }
+
+        // Disparo FORA da transação e fora do try/catch dos uploads: e-mail
+        // que falha não desfaz cadastro nem descarta binário já subido. Se
+        // cair, o admin reenvia o convite pela tela — é justamente por isso
+        // que o reenvio existe.
+        try {
+            $this->invitations->execute($redator->user);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        return $redator;
     }
 }
