@@ -39,10 +39,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
     Route::get('turmas/{turma}/alunos/preview', [EnrollmentController::class, 'preview']);
+    // ANTES de qualquer rota GET com segundo parâmetro, senão
+    // `alunos/archived` casaria como `alunos/{enrollment}` (hoje não existe
+    // essa rota, mas a ordem evita criar a colisão amanhã).
+    Route::get('turmas/{turma}/alunos/archived', [EnrollmentController::class, 'archived']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
     Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import']);
     Route::put('turmas/{turma}/alunos/{enrollment}/resultado', [EnrollmentController::class, 'result'])
         ->scopeBindings();
     Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])
         ->scopeBindings();
+    // `withoutScopedBindings` porque `{enrollment}` NÃO é binding de model aqui:
+    // é `int`, resolvido no controller por `$turma->enrollments()->onlyTrashed()`.
+    // O escopo por posse continua declarado — só que na consulta, não no
+    // container (spec D5). O guardrail NestedRouteOwnershipTest exige a
+    // declaração explícita, e é esta.
+    Route::post('turmas/{turma}/alunos/{enrollment}/restore', [EnrollmentController::class, 'restore'])
+        ->whereNumber('enrollment')
+        ->withoutScopedBindings();
 });
