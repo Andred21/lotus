@@ -509,7 +509,7 @@
     "fileTypeInvoice": "Factura",
     "fileTypeReceipt": "Comprobante",
     "confirmDeleteTitle": "¿Eliminar presupuesto?",
-    "confirmDeleteBody": "Se eliminarán también sus cotizaciones. Esta acción no se puede deshacer."
+    "confirmDeleteBody": "Sus cotizaciones se archivarán junto con él. Podrás restaurarlo desde Archivados."
   },
   "quote": {
     "new": "Nueva cotización",
@@ -535,7 +535,7 @@
     "confirmRejectTitle": "¿Rechazar cotización?",
     "confirmRejectBody": "Rechazar deshace la aprobación y libera la edición de la cotización.",
     "confirmDeleteTitle": "¿Eliminar cotización?",
-    "confirmDeleteBody": "Esta acción no se puede deshacer.",
+    "confirmDeleteBody": "Podrás restaurarla desde Archivados.",
     "documents": "Documentos",
     "studentsShort": "{{count}} alumnos"
   },

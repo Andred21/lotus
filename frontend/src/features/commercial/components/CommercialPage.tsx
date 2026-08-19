@@ -7,6 +7,7 @@ import type { ClientData } from '@shared/types/generated'
 import { useClientsPage } from '../hooks/useClientsPage'
 import { useClientsArchived } from '../hooks/useClientsArchived'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
+import { useBudgetsArchived } from '../hooks/useBudgetsArchived'
 import { ClientsTable } from './Client/ClientsTable'
 import { ClientDialog } from './Client/ClientDialog'
 import { BudgetsTable } from './Budget/BudgetsTable'
@@ -19,9 +20,11 @@ export function CommercialPage() {
   const clients = useClientsPage()
   const clientsArchived = useClientsArchived()
   const budgets = useBudgetsPage()
+  const budgetsArchived = useBudgetsArchived()
   const [tab, setTab] = useState(0)
   const [toArchive, setToArchive] = useState<ClientData | null>(null)
   const archived = clientsArchived.mode === 'archived'
+  const budgetArchived = budgetsArchived.mode === 'archived'
 
   return (
     <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
@@ -48,10 +51,14 @@ export function CommercialPage() {
           </ModuleTab>
           <ModuleTab header={t('budget.tab')}>
             <BudgetsTable
-              budgets={budgets.items}
-              loading={budgets.loading}
-              error={budgets.error}
-              onRetry={budgets.refetch}
+              budgets={budgetArchived ? budgetsArchived.items : budgets.items}
+              loading={budgetArchived ? budgetsArchived.loading : budgets.loading}
+              error={budgetArchived ? budgetsArchived.error : budgets.error}
+              onRetry={budgetArchived ? budgetsArchived.refetch : budgets.refetch}
+              mode={budgetsArchived.mode}
+              onModeChange={budgetsArchived.setMode}
+              onRestore={(b) => b.id != null && budgetsArchived.restore(b.id)}
+              busy={budgetsArchived.restoring}
               actions={
                 can('commercial.budget.create')
                   ? <AppButton variant="brandIcon" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />

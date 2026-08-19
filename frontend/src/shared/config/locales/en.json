@@ -509,7 +509,7 @@
     "fileTypeInvoice": "Invoice",
     "fileTypeReceipt": "Receipt",
     "confirmDeleteTitle": "Delete budget?",
-    "confirmDeleteBody": "Its quotes will be deleted as well. This action cannot be undone."
+    "confirmDeleteBody": "Its quotes are archived along with it. You can restore it from Archived."
   },
   "quote": {
     "new": "New quote",
@@ -535,7 +535,7 @@
     "confirmRejectTitle": "Reject quote?",
     "confirmRejectBody": "Rejecting undoes the approval and unlocks editing.",
     "confirmDeleteTitle": "Delete quote?",
-    "confirmDeleteBody": "This action cannot be undone.",
+    "confirmDeleteBody": "You can restore it from Archived.",
     "documents": "Documents",
     "studentsShort": "{{count}} students"
   },

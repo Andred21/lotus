@@ -509,7 +509,7 @@
     "fileTypeInvoice": "Fatura",
     "fileTypeReceipt": "Comprovante",
     "confirmDeleteTitle": "Excluir orçamento?",
-    "confirmDeleteBody": "As cotações dele também serão excluídas. Esta ação não pode ser desfeita."
+    "confirmDeleteBody": "As cotações dele são arquivadas junto. Você poderá restaurá-lo em Arquivados."
   },
   "quote": {
     "new": "Nova cotação",
@@ -535,7 +535,7 @@
     "confirmRejectTitle": "Recusar cotação?",
     "confirmRejectBody": "Recusar desfaz a aprovação e libera a edição da cotação.",
     "confirmDeleteTitle": "Excluir cotação?",
-    "confirmDeleteBody": "Esta ação não pode ser desfeita.",
+    "confirmDeleteBody": "Você poderá restaurá-la em Arquivados.",
     "documents": "Documentos",
     "studentsShort": "{{count}} alunos"
   },

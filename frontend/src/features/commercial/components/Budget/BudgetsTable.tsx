@@ -2,22 +2,37 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppButton, AppTag, IdentityCell,
-  AppEmptyState, SearchableTableFrame,
+  AppColumn, AppTag, IdentityCell,
+  AppEmptyState, ArchiveSwitch, SearchableTableFrame,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
+import type { ArchiveMode } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
+import { BudgetRowActions } from './BudgetRowActions'
+import { BudgetStatusFilter } from './BudgetStatusFilter'
 
-const STATUSES: QuoteStatus[] = ['pending', 'approved', 'rejected']
+/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
+ * vêm preenchidas pelo achatamento do `useArchivedPage`; em `active` elas nem são
+ * renderizadas. Molde: `ClientRow`. */
+export type BudgetRow = BudgetData & {
+  archived_at?: string
+  archived_by?: string | null
+}
 
 export function BudgetsTable({
   budgets, loading, actions, error, onRetry,
+  mode, onModeChange, onRestore, busy,
 }: {
-  budgets: BudgetData[]
+  budgets: BudgetRow[]
   loading: boolean
+  mode: ArchiveMode
+  onModeChange: (mode: ArchiveMode) => void
+  onRestore: (b: BudgetData) => void
+  /** Restore em voo — trava os botões da linha (Q-2). */
+  busy: boolean
   actions?: ReactNode
   error?: { detail?: string | null } | null
   /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
@@ -29,6 +44,7 @@ export function BudgetsTable({
   const navigate = useNavigate()
   const [status, setStatus] = useState<QuoteStatus | null>(null)
   const clients = useCommercialClients()
+  const archived = mode === 'archived'
 
   // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
   // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
@@ -41,7 +57,7 @@ export function BudgetsTable({
   const retry = () => Promise.all([onRetry?.(), clients.refetch()])
   /** Carregando é qualquer uma das duas queries: a tabela só está "vazia"
    * depois que as duas responderam. */
-  const busy = loading || clients.isLoading
+  const carregando = loading || clients.isLoading
 
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
@@ -52,32 +68,29 @@ export function BudgetsTable({
     status === null ? undefined : (b) => b.status === status,
   )
 
-  const statusOptions = [
-    { label: t('budget.filterAll'), value: null },
-    ...STATUSES.map((s) => ({ label: t(`quoteStatus.${s}`), value: s })),
-  ]
-
   return (
     <SearchableTableFrame
       table={table}
       searchPlaceholder={t('budget.searchPlaceholder')}
       onClearFilter={() => setStatus(null)}
       filterSlot={
-        <div className="w-48">
-          <AppDropdown
-            value={status}
-            options={statusOptions}
-            optionValue="value"
-            onChange={(e) => { setStatus(e.value as QuoteStatus | null); table.resetPage() }}
-          />
-        </div>
+        <BudgetStatusFilter
+          value={status}
+          onChange={(v) => { setStatus(v); table.resetPage() }}
+        />
       }
       emptyState={
-        <AppEmptyState icon="pi pi-file" title={t('budget.empty')} description={t('budget.emptyHint')} action={actions} />
+        <AppEmptyState
+          icon={archived ? 'pi pi-inbox' : 'pi pi-file'}
+          title={archived ? t('archive.empty') : t('budget.empty')}
+          description={archived ? t('archive.emptyHint') : t('budget.emptyHint')}
+          action={archived ? undefined : actions}
+        />
       }
       footerCount={t('budget.count', { count: table.rows.length })}
-      actions={actions}
-      loading={busy}
+      actions={archived ? undefined : actions}
+      viewSwitch={<ArchiveSwitch value={mode} onChange={onModeChange} />}
+      loading={carregando}
       error={loadError}
       onRetry={retry}
     >
@@ -105,11 +118,31 @@ export function BudgetsTable({
           b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
         }
       />
+      {archived && (
+        <AppColumn
+          field="archived_at"
+          header={t('archive.archivedAt')}
+          body={(b: BudgetRow) => (b.archived_at ? new Date(b.archived_at).toLocaleDateString() : '—')}
+        />
+      )}
+      {archived && (
+        <AppColumn
+          field="archived_by"
+          header={t('archive.archivedBy')}
+          body={(b: BudgetRow) => b.archived_by ?? t('archive.unknownAuthor')}
+        />
+      )}
       <AppColumn
-        body={(b: BudgetData) => (
-          <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => navigate(`/comercial/presupuestos/${b.id}`)} />
+        body={(b: BudgetRow) => (
+          <BudgetRowActions
+            budget={b}
+            archived={archived}
+            busy={busy}
+            onView={(x) => navigate(`/comercial/presupuestos/${x.id}`)}
+            onRestore={onRestore}
+          />
         )}
-        style={{ width: '4rem' }}
+        style={{ width: '8rem' }}
       />
     </SearchableTableFrame>
   )
