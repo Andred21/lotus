@@ -10,6 +10,7 @@ use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +31,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Turma extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'quote_id', 'course_id', 'modalidade', 'local_aplicacao',
@@ -62,6 +63,37 @@ class Turma extends Model implements Auditable
         'end_date' => 'date',
         'concluded_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Turma $turma) {
+            if (! $turma->isForceDeleting()) {
+                // Instância a instância: soft-delete pelo builder não audita.
+                //
+                // ENUMERA-E-APAGA, logo check-then-act: quem fecha a janela é a
+                // `DeleteTurmaAction`, que abre a transação e toma
+                // `Turma::lockRow()` antes de chamar `delete()`. Não arquive
+                // turma por fora dela.
+                //
+                // O pivot `turma_redator` fica FORA: não tem `deleted_at`, e
+                // designação não é registro com ciclo de vida próprio — desfazê-la
+                // faria o `auditSync` registrar uma remoção que ninguém pediu
+                // (spec D2).
+                $turma->enrollments()->get()->each(fn (Enrollment $e) => self::markAndDelete($e));
+                $turma->files()->get()->each(fn (File $f) => self::markAndDelete($f));
+            }
+        });
+
+        static::restored(function (Turma $turma) {
+            // `restored`, não `restoring`: os filhos saem ANTES do pai e voltam
+            // DEPOIS dele. `onlyTrashed()` + a marca fazem voltar só quem ESTA
+            // cascata arquivou (spec D2).
+            $turma->enrollments()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (Enrollment $e) => self::restoreAndUnmark($e));
+            $turma->files()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (File $f) => self::restoreAndUnmark($f));
+        });
+    }
 
     public function quote(): BelongsTo
     {
@@ -177,6 +209,22 @@ class Turma extends Model implements Auditable
     public function loadListingData(): static
     {
         return $this->load(TurmaQueryBuilder::LISTING)->loadCount('enrollments');
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre turma arquivada — é o estado de quem vai ser
+     * restaurado, e pular a linha faria a operação seguir SEM mutex nenhum.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Molde: `Client::lockRow()`.
+     */
+    public static function lockRow(int $turmaId): static
+    {
+        /** @var static $turma */
+        $turma = static::withTrashed()->whereKey($turmaId)->lockForUpdate()->firstOrFail();
+
+        return $turma;
     }
 
     /** @param  QueryBuilder  $query */

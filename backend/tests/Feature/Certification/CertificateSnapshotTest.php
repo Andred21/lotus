@@ -237,7 +237,12 @@ class CertificateSnapshotTest extends TestCase
         $this->assertSoftDeleted('clients', ['id' => $this->client->id]);
         $this->assertSoftDeleted('users', ['id' => $clientUserId]);
 
-        $freshEnrollment = Enrollment::query()->findOrFail($this->enrollment->id);
+        // `withTrashed()`: a cascata da Turma (spec D2, bloco
+        // `arquivados-roots-restantes`) agora arquiva a matrícula junto com o
+        // pai — a busca simples 404aria aqui, e o que este teste prova é a
+        // resolução do nome do cliente através da cadeia comercial arquivada,
+        // não a vivacidade da matrícula.
+        $freshEnrollment = Enrollment::withTrashed()->findOrFail($this->enrollment->id);
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $freshEnrollment,
             $this->redator->fresh(),
