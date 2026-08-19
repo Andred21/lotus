@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Identity\Actions\ArchiveRedatorAction;
 use App\Domains\Identity\Actions\CreateRedatorAction;
 use App\Domains\Identity\Actions\UpdateRedatorAction;
 use App\Domains\Identity\Data\RedatorData;
@@ -50,9 +51,9 @@ class RedatorController extends Controller implements HasMiddleware
         return RedatorData::fromModel($action->execute($redator, $data, $this->documentsFromRequest($request)));
     }
 
-    public function destroy(Redator $redator): Response
+    public function destroy(Redator $redator, ArchiveRedatorAction $action): Response
     {
-        $redator->delete();
+        $action->execute($redator);
 
         return response()->noContent();
     }

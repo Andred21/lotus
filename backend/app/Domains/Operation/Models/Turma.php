@@ -77,9 +77,25 @@ class Turma extends Model implements Auditable
         return $this->belongsTo(Course::class)->withTrashed();
     }
 
+    /**
+     * Arquivamento não apaga, e AQUI isso tem peso legal. O pivot `turma_redator`
+     * não tem `deleted_at`: sem o `withTrashed()`, arquivar um redator deixa a
+     * linha do pivot viva e o redator DESAPARECE da turma — a listagem passa a
+     * exibir turma sem redator (`TurmaQueryBuilder::LISTING`), o painel a trata
+     * como sem redator (`EmissionPanelQuery`) e `CertificateEligibility` RECUSA a
+     * emissão do certificado de uma turma já concluída (spec D3).
+     *
+     * O gate da `ArchiveRedatorAction` cobre turma em andamento; este
+     * `withTrashed` cobre a concluída, que é onde a emissão acontece. Os dois são
+     * necessários — nenhum resolve o caso do outro.
+     *
+     * `withTrashed()` não é método de `BelongsToMany`: é a macro que o
+     * `SoftDeletingScope` instala no Builder, e `Relation::__call` a encaminha e
+     * devolve a própria relação. Por isso encadeia.
+     */
     public function redatores(): BelongsToMany
     {
-        return $this->belongsToMany(Redator::class, 'turma_redator')->withTimestamps();
+        return $this->belongsToMany(Redator::class, 'turma_redator')->withTimestamps()->withTrashed();
     }
 
     public function files(): MorphMany

@@ -105,11 +105,21 @@ class DomainDependencyTest extends TestCase
             'Identity\Services\UserProvisioner',
             'Operation\Models\Turma',
         ],
+        // Task 7 do bloco `arquivados-roots-restantes` (D3) abre `Turma` e
+        // `TurmaStatus`: `Redator::turmas()` é a inversa de `Turma::redatores()`, e
+        // `ArchiveRedatorAction` lê `TurmaStatus` para recusar o arquivamento
+        // de quem ainda tem turma em andamento. Mesma natureza das duas que já
+        // estavam aqui por `Student::enrollments()` — Identity é dono da
+        // pessoa e a pergunta "este redator tem trabalho pendente?" é do
+        // arquivamento do redator; um service em Operation só empurraria a
+        // mesma travessia para outro lugar.
         'Identity' => [
             'Catalog\Models\Course',
             'Commercial\Models\Client',
             'Operation\Enums\EnrollmentApprovalStatus',
+            'Operation\Enums\TurmaStatus',
             'Operation\Models\Enrollment',
+            'Operation\Models\Turma',
         ],
         'Operation' => [
             'Catalog\Models\Course',
