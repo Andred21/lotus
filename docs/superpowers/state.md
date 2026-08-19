@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md
 active_plan: docs/superpowers/plans/2026-08-19-login-recuperacao-inline.md
@@ -13,7 +13,7 @@ blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-19T11:35:00-03:00
+updated_at: 2026-08-19T12:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -301,6 +301,24 @@ e fechamento do estado.
 
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco identity-ativacao-acesso-redator`.
 O `/revisar-sprint` permanece na fila, para depois da emenda executada.
+
+### Execução da emenda — 2026-08-19: início, técnica `subagent-driven-development`
+
+Abertura da execução do `plans/2026-08-19-login-recuperacao-inline.md` (6 tasks, executor
+**claude** — o plano não declara `## Handoff de execução`, então o ciclo é o Superpowers normal).
+**Técnica: `subagent-driven-development`, por instrução do João** — implementer por task, review de
+task (spec + qualidade) depois de cada uma, review amplo no fim. O ledger local
+(`.superpowers/sdd/progress.md`) ganha a seção da emenda; o do bloco de 2026-08-18 segue no mesmo
+arquivo, acima.
+
+**Área de trabalho: a mesma worktree `fix-frontend`**, branch `feat/identity-ativacao-acesso-redator`
+a partir de `7c4704e`. O gate main tree/worktree não dispara: a emenda é **frontend puro** (spec §2),
+nenhum arquivo de `backend/` é tocado, então não há Pint, migration nem `typescript:transform`.
+
+Este commit abre a execução junto com a **Task 1** (`useAuthPanel`), que é a primeira fronteira
+durável.
+
+**Estado: `executing`.** Próxima ação: seguir o plano task a task.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
