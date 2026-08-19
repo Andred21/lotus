@@ -9,6 +9,7 @@ use App\Domains\Identity\Http\Controllers\ProfilePasswordController;
 use App\Domains\Identity\Http\Controllers\ProfilePhotoController;
 use App\Domains\Identity\Http\Controllers\RedatorController;
 use App\Domains\Identity\Http\Controllers\RedatorDocumentController;
+use App\Domains\Identity\Http\Controllers\RedatorInvitationController;
 use App\Domains\Identity\Http\Controllers\RedatorPhotoController;
 use App\Domains\Identity\Http\Controllers\RoleController;
 use App\Domains\Identity\Http\Controllers\StudentController;
@@ -60,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('permissions', [PermissionController::class, 'index']);
 
     Route::middleware('permission:identity.user.update')->group(function () {
+        Route::post('redatores/{redator}/invitation', [RedatorInvitationController::class, 'store']);
+
         Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store']);
         Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy'])
             ->scopeBindings();   // {document} resolve por $redator->documents() — cross-redator = 404
