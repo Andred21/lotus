@@ -17,7 +17,8 @@ use Throwable;
  * Cria o redator (usuário-redator + redator + habilitação de cursos + documentos)
  * numa transação. O provisionamento do User é delegado ao UserProvisioner, e o
  * upload de documento ao StoreRedatorDocumentAction — mesma regra de replace do
- * update e da rota aninhada. is_active=false até o fluxo de ativação.
+ * update e da rota aninhada. O redator nasce ativo (RN-01) e com a role
+ * `redator` (RF-ROL-05); a credencial dele chega pelo convite.
  *
  * @param  array<string,UploadedFile>  $documents
  */
@@ -55,6 +56,11 @@ class CreateRedatorAction
                     email: $data->email,
                     phone: $data->phone instanceof Optional ? null : $data->phone,
                 );
+
+                // RF-ROL-05: a role corresponde ao tipo e é associada no
+                // cadastro. Sem isto o redator autentica e não enxerga nada —
+                // o gate de todo módulo é permissão, não `type`.
+                $user->syncRoles(['redator']);
 
                 $redator = $user->redator()->create([]);
 
