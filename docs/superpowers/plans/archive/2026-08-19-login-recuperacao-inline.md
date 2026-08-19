@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Spec: `docs/superpowers/specs/2026-08-19-login-recuperacao-inline-design.md`. É emenda do bloco `identity-ativacao-acesso-redator`, não bloco novo.
+- Spec: `docs/superpowers/specs/archive/2026-08-19-login-recuperacao-inline-design.md`. É emenda do bloco `identity-ativacao-acesso-redator`, não bloco novo.
 - **Frontend puro.** Nenhum arquivo em `backend/` é tocado. Sem Pint, sem migration, sem `php artisan typescript:transform`, sem editar `generated.ts`.
 - Todos os comandos `pnpm` rodam de `frontend/`. Todos os `git add` usam caminho a partir da raiz do repositório (`frontend/src/...`).
 - Teto do ESLint em `src/features/*/components/**`: `max-lines` 150, sem pular linha em branco nem comentário. Nenhum arquivo criado ou editado aqui pode passar disso.

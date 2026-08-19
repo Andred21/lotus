@@ -79,6 +79,16 @@ encontra a suíte vermelha por este motivo, e o segundo bloco de frontend puro a
 provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
 commit que fecha o multi-origin — decisão do João.
 
+**Medido de novo no `/fechar-sprint` de 2026-08-19 (`identity-ativacao-acesso-redator`), e desta vez
+a suíte saiu VERDE:** `710 passed / 5 skipped, 0 failed`. A diferença não é conserto — é o `.env`:
+`FRONTEND_URL=http://localhost:5173` voltou a ser **valor único** (o gate da emenda o apontou para a
+5174 e o restaurou), e a lista de origens vive hoje só em `SANCTUM_STATEFUL_DOMAINS`
+(`localhost:5173,localhost:5174,localhost:8081`). Os três sítios seguem como estavam:
+`tests/TestCase.php:18` lê a variável crua e `config/cors.php:22` continua
+`[env('FRONTEND_URL', …)]` — o `explode` do WIP do João **nunca foi commitado**. **O gatilho não
+venceu aqui** (nenhum fechamento encontrou a suíte vermelha por isso desta vez), e a pendência segue
+aberta pelo mesmo motivo: ela reaparece no dia em que a variável voltar a ser lista.
+
 ## P-40 — o ramo "catálogo genuinamente vazio" não foi remedido contra HEAD
 
 **Bloco:** BD-12 · **Gatilho:** fecha quando um bloco puder esvaziar o catálogo de dev sem tinker
@@ -311,6 +321,33 @@ usuário, criados e removidos dentro do gate de fechamento) **não engrossaram a
 **Não se deleta agora:** linha alheia de bloco fechado se menciona, não se apaga — a decisão de
 reseedar o dev é do João.
 
+**Rastro do `identity-ativacao-acesso-redator` (2026-08-19):** o gate da Task 14 daquele bloco criou
+`gate.task14@lotus.cl` (user 58 / redator 8) e o deixou vivo; o `/fechar-sprint` o **removeu**, com
+`users` de 58 para 57 e `redatores` de 8 para 7, porque era sonda criada por ESTE bloco. Foram
+removidos junto os dois `password_reset_tokens` deixados pelos gates dele (`admin@lotus.cl`,
+`gate.task14@lotus.cl`). As onze linhas de gates anteriores continuam intactas — são de blocos
+fechados.
+
+## P-47 — os redatores do seed não têm a role `redator`, e o bloco que a criou só a atribui adiante
+
+**Bloco:** BD-15 · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
+[P-44](#p-44)), ou o primeiro gate `permission:` aplicado sobre rota de redator — é quando a falta
+deixa de ser cosmética. Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-19: dos 7 redatores do `OperationDemoSeeder`, **nenhum** carrega
+a role `redator` que o `RolePermissionSeeder.php:38` define. O bloco `identity-ativacao-acesso-redator`
+fechou as duas portas por onde a role passa a ser atribuída — `CreateRedatorAction` (cadastro novo) e
+`SendRedatorAccessInvitationAction` (reenvio de convite, o achado **Q-1** do review) —, mas nenhuma
+delas alcança linha que já existe no banco sem convite reenviado. Provado na própria prova e2e deste
+fechamento: `juan.morales@lotus.cl` (user 2) saiu de `roles=[]` para `roles=[redator]` **só** depois do
+`POST /api/redatores/1/invitation`; o estado foi restaurado ao fim do gate, e os 7 seguem sem role.
+
+**Não é defeito do código entregue, e não é o mesmo caso da P-44.** A P-44 é sonda de gate que
+sobreviveu; esta é **dado de seed que nasceu antes do mecanismo existir**. Hoje não impede nada — o
+gate do Dashboard é por `user.type` (`DashboardController.php:37`), não por role —, e em produção o
+caminho de remediação existe e está provado (reenviar convite atribui a role). O que falta é decidir se
+o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseedar.
+
 ---
 
 # Travadas em decisão do João
@@ -364,6 +401,17 @@ em paralelo): o e2e do S3 rodou inteiro contra o main tree, porque `git diff mai
 naquele tree estava **vazio no momento da prova** — o custo da P-03 não é constante, é contingente ao
 que a branch alheia toca, e a prova só é válida com essa conferência feita na hora. O que mudou é que
 a falta já cobra de quem a P-03 dizia não afetar.
+
+**Primeiro bloco de BACKEND rodado em worktree linkada — 2026-08-19, `identity-ativacao-acesso-redator`,
+por decisão explícita do João declarada na abertura.** O arranjo que segurou a execução, os dois gates
+de prova e este fechamento foi **override efêmero de portas fora do repositório** (nginx 8081, MySQL
+3308, MinIO 9002/9003, Mailpit 8025, Vite 5174 no gate da emenda), com o compose do worktree subindo
+projeto próprio (`fix-frontend`) e, portanto, **volume de banco próprio** — a disputa que a ficha
+previa (um MySQL só para as duas árvores) não chegou a acontecer. No `/fechar-sprint` a stack do main
+tree estava **desligada**, então a prova e2e correu nas portas padrão (8080/3307/8025) sem override
+nenhum. **Não fecha:** compose por worktree continua não existindo, e o que existe é receita manual
+que depende de quem executa lembrar — a decisão de construí-lo é do João. O gatilho formal
+(dois blocos de **backend** em paralelo) segue sem vencer: houve um só.
 
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
