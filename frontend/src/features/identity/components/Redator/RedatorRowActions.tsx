@@ -1,19 +1,10 @@
-import { useTranslation } from 'react-i18next'
 import { usePermissions } from '@shared/hooks'
-import { AppButton } from '@shared/ui'
+import { ArchiveRowActions } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 
-/**
- * Ações por linha da tabela de redatores. Molde exato do `ClientRowActions`:
- * extraído da tabela porque a célula ramifica por modo, e a régua de 150 linhas
- * de `features/<x>/components/` vale sem exceção.
- *
- * Em `archived` o olho SAI: `GET /api/redatores/{redator}` usa o binding padrão e
- * não enxerga soft-deletado — o botão levaria a um diálogo vazio.
- *
- * Esconder o botão é conveniência de interface — a autorização real é da API
- * (ADR-07).
- */
+/** Adaptador de redator para o `ArchiveRowActions` de `shared/ui` (Q-3 do review
+ * de 2026-08-19). O 422 do gate de turma em andamento (spec D3) continua vindo do
+ * servidor e aparecendo no toast: `identity.user.delete` não é a mesma pergunta. */
 export function RedatorRowActions({
   redator,
   archived,
@@ -24,47 +15,22 @@ export function RedatorRowActions({
 }: {
   redator: RedatorData
   archived: boolean
-  /** Arquivar/restaurar em voo — trava os botões da linha (Q-2). */
   busy: boolean
   onView: (r: RedatorData) => void
   onArchive: (r: RedatorData) => void
   onRestore: (r: RedatorData) => void
 }) {
-  const { t } = useTranslation()
   const { can } = usePermissions()
 
-  if (archived) {
-    return can('identity.user.restore') ? (
-      <AppButton
-        label={t('archive.restoreAction')}
-        icon="pi pi-undo"
-        text
-        size="small"
-        disabled={busy}
-        onClick={() => onRestore(redator)}
-      />
-    ) : null
-  }
-
   return (
-    <div className="flex justify-end gap-1">
-      {can('identity.user.delete') && (
-        <AppButton
-          icon="pi pi-inbox"
-          text
-          rounded
-          aria-label={t('archive.archiveAction')}
-          disabled={busy}
-          onClick={() => onArchive(redator)}
-        />
-      )}
-      <AppButton
-        icon="pi pi-eye"
-        text
-        rounded
-        aria-label={t('common.view')}
-        onClick={() => onView(redator)}
-      />
-    </div>
+    <ArchiveRowActions
+      archived={archived}
+      busy={busy}
+      canRestore={can('identity.user.restore')}
+      canArchive={can('identity.user.delete')}
+      onRestore={() => onRestore(redator)}
+      onArchive={() => onArchive(redator)}
+      onView={() => onView(redator)}
+    />
   )
 }

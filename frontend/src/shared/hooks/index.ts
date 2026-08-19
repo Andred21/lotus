@@ -6,6 +6,8 @@ export { useCrudPage } from './useCrudPage'
 // (Q-2 do review de 2026-08-05). Barrel é fronteira pública.
 export { useCrudForm } from './useCrudForm'
 export { useArchivedPage } from './useArchivedPage'
+export { useArchiveAction } from './useArchiveAction'
+export { useArchiveToasts } from './useArchiveToasts'
 export type { ArchiveMode, RestoreOptions } from './useArchivedPage'
 export { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 export type { CrudFormPhotoOptions } from './useCrudFormWithPhoto'

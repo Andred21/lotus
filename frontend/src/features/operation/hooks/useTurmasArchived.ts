@@ -1,7 +1,4 @@
-import { useTranslation } from 'react-i18next'
-import { useArchivedPage } from '@shared/hooks'
-import { useToast } from '@shared/ui'
-import { problemMessage } from '@shared/api/problemMessage'
+import { useArchiveAction, useArchivedPage } from '@shared/hooks'
 import type { ArchivedTurmaData, TurmaData } from '@shared/types/generated'
 import { useArchiveTurma, useRestoreTurma, useTurmasArchivedList } from '../api/useTurmas'
 
@@ -23,38 +20,11 @@ const recursoDeTurmas = {
   },
 }
 
-/** Molde: `useClientsArchived`. O `onError` do arquivar NÃO é conveniência aqui:
- * turma concluída é recusada com 422 pela RN-15, e sem o toast o clique fica
- * mudo (Q-2 do review de 2026-08-18). O do restaurar cobre o gate D1 —
- * "ya existe una clase activa para esta cotización". */
+/** Molde: `useClientsArchived`. Os toasts vivem em `shared/` (Q-3 do review de
+ * 2026-08-19), e aqui o de erro cobre dois 422 próprios: turma concluída na
+ * RN-15 ao arquivar, e os gates da spec D1 e do redator arquivado ao restaurar. */
 export function useTurmasArchived() {
-  const { t } = useTranslation()
-  const toast = useToast()
   const page = useArchivedPage<TurmaData, ArchivedTurmaData>(recursoDeTurmas, (row) => row.turma)
-  const archiveMutation = useArchiveTurma()
 
-  const falhou = (problem: Parameters<typeof problemMessage>[0]) => {
-    const message = problemMessage(problem)
-    if (message) toast.error(message)
-  }
-
-  return {
-    ...page,
-    restore: (id: number) =>
-      page.restore(id, {
-        onSuccess: () => toast.success(t('archive.restoredToast')),
-        onError: falhou,
-      }),
-    /** `onSuccess` do chamador fecha o ConfirmDialog — ele só fecha no sucesso,
-     * para o 422 da RN-15 ter onde pousar. */
-    archive: (id: number, options?: { onSuccess?: () => void }) =>
-      archiveMutation.mutate(id, {
-        onSuccess: () => {
-          toast.success(t('archive.archivedToast'))
-          options?.onSuccess?.()
-        },
-        onError: falhou,
-      }),
-    archiving: archiveMutation.isPending,
-  }
+  return { ...page, ...useArchiveAction(useArchiveTurma()) }
 }

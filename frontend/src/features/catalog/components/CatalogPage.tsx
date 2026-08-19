@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
+import { ModulePage, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { CourseData } from '@shared/types/generated'
 import { useCoursesPage } from '../hooks/useCoursesPage'
@@ -38,22 +38,13 @@ export function CatalogPage() {
         />
       </AppCard>
 
-      {/* Restaurar NÃO pede confirmação: não é destrutivo (spec D9). */}
-      {toArchive && (
-        <ConfirmDialog
-          visible
-          title={t('archive.confirmArchiveTitle')}
-          message={t('archive.confirmArchiveBody')}
-          confirmLabel={t('archive.archiveAction')}
-          severity="danger"
-          pending={archivedPage.archiving}
-          onConfirm={() =>
-            toArchive.id != null &&
-            archivedPage.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
-          }
-          onCancel={() => setToArchive(null)}
-        />
-      )}
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={archivedPage.archiving}
+        onArchive={archivedPage.archive}
+        onCancel={() => setToArchive(null)}
+      />
 
       {page.dialog && (
         <CourseDialog

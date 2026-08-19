@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ProblemDetails } from "@shared/api/axios";
+import { useArchiveToasts } from "./useArchiveToasts";
 
 export type ArchiveMode = "active" | "archived";
 
@@ -12,8 +13,9 @@ interface ArchivedRow {
   archived_by: string | null;
 }
 
-/** Callbacks da mutation de restore. Sem eles um 403 ou 500 não teria onde
- * pousar e a falha ficaria muda na tela (Q-2 do review de 2026-08-18). */
+/** Callbacks EXTRA da mutation de restore, para quem chama. O toast dos dois
+ * lados já é do hook (Q-3 do review de 2026-08-19); estes existem para o
+ * chamador que precisa fechar um diálogo ou navegar depois. */
 export interface RestoreOptions {
   onSuccess?: () => void;
   onError?: (problem: ProblemDetails) => void;
@@ -56,6 +58,7 @@ export function useArchivedPage<T, TArchived extends ArchivedRow>(
   const [mode, setMode] = useState<ArchiveMode>("active");
   const query = resource.useArchivedList(mode === "archived");
   const restore = resource.useRestore();
+  const toasts = useArchiveToasts();
 
   const items = useMemo(() => {
     return (query.data ?? []).map((row) => ({
@@ -78,8 +81,22 @@ export function useArchivedPage<T, TArchived extends ArchivedRow>(
     /** Devolve a promise: o `AppErrorState` a aguarda para manter o Reintentar
      * em `loading` enquanto o GET está em voo (Q-14). */
     refetch: () => query.refetch(),
+    /** O toast MORA aqui, nos dois sentidos: sem o de erro, um 403 de quem não
+     * tem `*.restore` e os 422 dos gates não mudam nada na tela — a linha
+     * continua lá e o operador não sabe se o clique valeu (Q-2 do review de
+     * 2026-08-18). Estava copiado nos seis hooks de página (Q-3 do de
+     * 2026-08-19). */
     restore: (id: number, options?: RestoreOptions) =>
-      restore.mutate(id, options),
+      restore.mutate(id, {
+        onSuccess: () => {
+          toasts.restored();
+          options?.onSuccess?.();
+        },
+        onError: (problem) => {
+          toasts.failed(problem);
+          options?.onError?.(problem);
+        },
+      }),
     restoring: restore.isPending,
   };
 }

@@ -1,42 +1,13 @@
-import { useTranslation } from "react-i18next";
-import { useArchivedPage } from "@shared/hooks";
-import { useToast } from "@shared/ui";
-import { coursesApi } from "@shared/api/coursesApi";
-import { problemMessage } from "@shared/api/problemMessage";
-import type { ArchivedCourseData, CourseData } from "@shared/types/generated";
+import { useArchiveAction, useArchivedPage } from '@shared/hooks'
+import { coursesApi } from '@shared/api/coursesApi'
+import type { ArchivedCourseData, CourseData } from '@shared/types/generated'
 
-/** Mesma razão do `useCoursesPage`: mantém a query fora do componente. O
- * `useRemove` do arquivar entra aqui pelo mesmo motivo. Gêmeo do
- * `useClientsArchived`, toast incluído (Q-2 do review de 2026-08-18). */
+/** Mesma razão do `useCoursesPage`: mantém a query fora do componente, e o
+ * `useRemove` do arquivar com ela (lint `no-restricted-syntax`). Toasts e
+ * `problemMessage` moram nos dois hooks de `shared/` desde o Q-3 do review de
+ * 2026-08-19 — este arquivo só diz QUAL recurso e QUAL agregado. */
 export function useCoursesArchived() {
-  const { t } = useTranslation();
-  const toast = useToast();
-  const page = useArchivedPage<CourseData, ArchivedCourseData>(
-    coursesApi,
-    (row) => row.course,
-  );
-  const archiveMutation = coursesApi.useRemove();
+  const page = useArchivedPage<CourseData, ArchivedCourseData>(coursesApi, (row) => row.course)
 
-  const falhou = (problem: Parameters<typeof problemMessage>[0]) => {
-    const message = problemMessage(problem);
-    if (message) toast.error(message);
-  };
-
-  return {
-    ...page,
-    restore: (id: number) =>
-      page.restore(id, {
-        onSuccess: () => toast.success(t("archive.restoredToast")),
-        onError: falhou,
-      }),
-    archive: (id: number, options?: { onSuccess?: () => void }) =>
-      archiveMutation.mutate(id, {
-        onSuccess: () => {
-          toast.success(t("archive.archivedToast"));
-          options?.onSuccess?.();
-        },
-        onError: falhou,
-      }),
-    archiving: archiveMutation.isPending,
-  };
+  return { ...page, ...useArchiveAction(coursesApi.useRemove()) }
 }

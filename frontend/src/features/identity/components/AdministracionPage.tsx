@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { UserData } from '@shared/types/generated'
 import { useUsersPage } from '../hooks/useUsersPage'
@@ -83,21 +83,12 @@ export function AdministracionPage() {
       )}
 
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
-      {toArchive && (
-        <ConfirmDialog
-          visible
-          title={t('archive.confirmArchiveTitle')}
-          message={t('archive.confirmArchiveBody')}
-          confirmLabel={t('archive.archiveAction')}
-          severity="danger"
-          pending={usersArchived.archiving}
-          onConfirm={() =>
-            toArchive.id != null &&
-            usersArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
-          }
-          onCancel={() => setToArchive(null)}
-        />
-      )}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={usersArchived.archiving}
+        onArchive={usersArchived.archive}
+        onCancel={() => setToArchive(null)}
+      />
     </ModulePage>
   )
 }

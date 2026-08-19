@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import { useRedatoresPage } from '../hooks/useRedatoresPage'
@@ -107,21 +107,12 @@ export function PeoplePage() {
       )}
 
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
-      {toArchive && (
-        <ConfirmDialog
-          visible
-          title={t('archive.confirmArchiveTitle')}
-          message={t('archive.confirmArchiveBody')}
-          confirmLabel={t('archive.archiveAction')}
-          severity="danger"
-          pending={redatoresArchived.archiving}
-          onConfirm={() =>
-            toArchive.id != null &&
-            redatoresArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
-          }
-          onCancel={() => setToArchive(null)}
-        />
-      )}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={redatoresArchived.archiving}
+        onArchive={redatoresArchived.archive}
+        onCancel={() => setToArchive(null)}
+      />
     </ModulePage>
   )
 }

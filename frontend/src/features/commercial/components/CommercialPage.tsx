@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ConfirmDialog } from '@shared/ui'
+import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { ClientData } from '@shared/types/generated'
 import { useClientsPage } from '../hooks/useClientsPage'
@@ -79,22 +79,13 @@ export function CommercialPage() {
         />
       )}
 
-      {/* Restaurar NÃO pede confirmação: não é destrutivo (spec D9). */}
-      {toArchive && (
-        <ConfirmDialog
-          visible
-          title={t('archive.confirmArchiveTitle')}
-          message={t('archive.confirmArchiveBody')}
-          confirmLabel={t('archive.archiveAction')}
-          severity="danger"
-          pending={clientsArchived.archiving}
-          onConfirm={() =>
-            toArchive.id != null &&
-            clientsArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
-          }
-          onCancel={() => setToArchive(null)}
-        />
-      )}
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={clientsArchived.archiving}
+        onArchive={clientsArchived.archive}
+        onCancel={() => setToArchive(null)}
+      />
 
       {budgets.dialog && (
         <BudgetDialog

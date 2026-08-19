@@ -1,16 +1,10 @@
-import { useTranslation } from 'react-i18next'
 import { usePermissions } from '@shared/hooks'
-import { AppButton } from '@shared/ui'
+import { ArchiveRowActions } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 
-/**
- * Ações por linha da tabela de cursos. Gêmeo do `ClientRowActions`, e extraído
- * pela mesma razão: a célula ramifica por modo e a régua de 150 linhas de
- * `features/<x>/components/` vale sem exceção.
- *
- * Esconder o botão é conveniência de interface — a autorização real é da API
- * (ADR-07).
- */
+/** Adaptador de curso para o `ArchiveRowActions` de `shared/ui`: traduz entidade
+ * em permissões e cliques. A marcação e o `busy` vivem no componente
+ * compartilhado desde o Q-3 do review de 2026-08-19. */
 export function CourseRowActions({
   course,
   archived,
@@ -21,47 +15,22 @@ export function CourseRowActions({
 }: {
   course: CourseData
   archived: boolean
-  /** Mutation em voo: sem isto o clique duplo dispara dois POSTs (Q-2). */
   busy: boolean
   onView: (c: CourseData) => void
   onArchive: (c: CourseData) => void
   onRestore: (c: CourseData) => void
 }) {
-  const { t } = useTranslation()
   const { can } = usePermissions()
 
-  if (archived) {
-    return can('catalog.course.restore') ? (
-      <AppButton
-        label={t('archive.restoreAction')}
-        icon="pi pi-undo"
-        text
-        size="small"
-        disabled={busy}
-        onClick={() => onRestore(course)}
-      />
-    ) : null
-  }
-
   return (
-    <div className="flex justify-end gap-1">
-      {can('catalog.course.delete') && (
-        <AppButton
-          icon="pi pi-inbox"
-          text
-          rounded
-          aria-label={t('archive.archiveAction')}
-          disabled={busy}
-          onClick={() => onArchive(course)}
-        />
-      )}
-      <AppButton
-        icon="pi pi-eye"
-        text
-        rounded
-        aria-label={t('common.view')}
-        onClick={() => onView(course)}
-      />
-    </div>
+    <ArchiveRowActions
+      archived={archived}
+      busy={busy}
+      canRestore={can('catalog.course.restore')}
+      canArchive={can('catalog.course.delete')}
+      onRestore={() => onRestore(course)}
+      onArchive={() => onArchive(course)}
+      onView={() => onView(course)}
+    />
   )
 }

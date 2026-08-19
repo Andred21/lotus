@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, AppCard, ConfirmDialog } from '@shared/ui'
+import { ModulePage, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
 import { useTurmas, usePendingQuotes } from '../api/useTurmas'
@@ -48,21 +48,12 @@ export function OperationPage() {
       </div>
 
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
-      {toArchive && (
-        <ConfirmDialog
-          visible
-          title={t('archive.confirmArchiveTitle')}
-          message={t('archive.confirmArchiveBody')}
-          confirmLabel={t('archive.archiveAction')}
-          severity="danger"
-          pending={turmasArchived.archiving}
-          onConfirm={() =>
-            toArchive.id != null &&
-            turmasArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
-          }
-          onCancel={() => setToArchive(null)}
-        />
-      )}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={turmasArchived.archiving}
+        onArchive={turmasArchived.archive}
+        onCancel={() => setToArchive(null)}
+      />
     </ModulePage>
   )
 }

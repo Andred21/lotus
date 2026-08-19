@@ -111,6 +111,23 @@ exceção. Na dúvida, siga o vizinho da mesma
   (`abstracao-componentes-operation` 2026-08-02, `zerar-catraca-e-componentes-commercial` e
   `abstracao-componentes-catalog` 2026-08-03) — e de uma lição mais cara: a régua era **citada** pelas
   specs e pelo `state.md` como se estivesse escrita aqui, e não estava em lugar nenhum (lição 13).
+- **Kit de arquivados: um só, em `shared/`, parametrizado — root novo não copia o trio.** Um
+  agregado que ganha arquivar/restaurar entra pelas três peças que já existem: `useArchivedPage`
+  (modo, lista, restore **com os dois toasts** dentro) e `useArchiveAction` (arquivar com os
+  toasts e o `onSuccess` que fecha o diálogo) em `shared/hooks/`; `ArchiveRowActions` e
+  `ArchiveConfirmDialog` em `shared/ui/`. O hook da feature só diz QUAL recurso e QUAL agregado
+  (`useCoursesArchived` são 13 linhas); o `*RowActions` da feature é adaptador — chama `can()` e
+  passa **booleanos**, porque `shared/ui` não importa `shared/hooks`. Copiar um `*RowActions` de
+  outro root para trocar duas strings de permissão é o sinal de que faltou prop, não de que o root
+  é diferente. Diferença legítima é de COMPORTAMENTO e mora na prop: `Budget`, `Quote` e
+  `Enrollment` não têm botão de arquivar na lista (o deles vive no detalhe do pai), e o staff usa a
+  MESMA permissão nas duas ações (`identity.access.manage`, SEGREGADA — spec D7 do bloco
+  `arquivados-roots-restantes`). **Reincidência medida:** o molde nasceu em `arquivados-e-restauracao`
+  com 2 roots e o bloco seguinte o replicou à mão para 6 — 397 linhas de `*RowActions` quase
+  idênticas, 6 invólucros de toast e 5 blocos de `ConfirmDialog` (Q-3 do review de 2026-08-19). O
+  custo não é o volume: é que o `busy` do clique duplo, o `onError` que dá corpo ao 403 e aos 422
+  dos gates, e o "só fecha no sucesso" do diálogo precisariam ser corrigidos em seis sítios, sem
+  nada que reprovasse o esquecimento no sétimo.
 - **Catraca nova mede a própria população com o seletor dela, nunca com o grep que originou o
   débito.** Grep acha a **grafia**; o seletor acha o **defeito**. Antes de declarar a lista de
   sítios de uma regra nova, rode o seletor dela e conte — se o número não bater com o do grep, o

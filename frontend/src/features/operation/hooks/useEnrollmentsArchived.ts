@@ -1,7 +1,4 @@
-import { useTranslation } from 'react-i18next'
 import { useArchivedPage } from '@shared/hooks'
-import { useToast } from '@shared/ui'
-import { problemMessage } from '@shared/api/problemMessage'
 import type { ArchivedEnrollmentData, EnrollmentData } from '@shared/types/generated'
 import { useEnrollmentsArchivedList, useRestoreEnrollment } from '../api/useEnrollments'
 
@@ -19,24 +16,12 @@ function recursoDeMatriculas(turmaId: number) {
 }
 
 /** Não há `archive` aqui: arquivar matrícula continua sendo o `remove` do
- * `useEnrollmentSection`, que já tem ConfirmDialog e banner de erro próprios. */
+ * `useEnrollmentSection`, que já tem ConfirmDialog e banner de erro próprios. O
+ * par de toasts do restore vive em `useArchivedPage` (Q-3 do review de
+ * 2026-08-19). */
 export function useEnrollmentsArchived(turmaId: number) {
-  const { t } = useTranslation()
-  const toast = useToast()
-  const page = useArchivedPage<EnrollmentData, ArchivedEnrollmentData>(
+  return useArchivedPage<EnrollmentData, ArchivedEnrollmentData>(
     recursoDeMatriculas(turmaId),
     (row) => row.enrollment,
   )
-
-  return {
-    ...page,
-    restore: (id: number) =>
-      page.restore(id, {
-        onSuccess: () => toast.success(t('archive.restoredToast')),
-        onError: (problem) => {
-          const message = problemMessage(problem)
-          if (message) toast.error(message)
-        },
-      }),
-  }
 }
