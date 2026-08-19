@@ -36,6 +36,8 @@ class Enrollment extends Model implements AuditableContract
         'grades' => 'array',
         'attendance_pct' => 'decimal:2',
         'approval_status' => EnrollmentApprovalStatus::class,
+        // Marca da cascata (spec D8). FORA do `$fillable`.
+        'archived_with_parent' => 'boolean',
     ];
 
     public function turma(): BelongsTo

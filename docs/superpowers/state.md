@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: arquivados-roots-restantes
 active_work_item: arquivados-roots-restantes
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-arquivados-roots-restantes-design.md
 active_plan: docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-18-arquivados-e-restaur
 blocker: null
 last_completed_work_item: arquivados-e-restauracao
 state_basis_commit: 6fd0ad8
-updated_at: 2026-08-18T23:40:00-03:00
+updated_at: 2026-08-19T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -281,6 +281,18 @@ D-07.
 **Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-roots-restantes`, por
 instrução posterior do João. Ordem obrigatória: a Task 1 (colunas + permissões) precede tudo, e dentro
 de cada fase o backend precede o frontend.
+
+### Execução — 2026-08-19
+
+Técnica `executing-plans` (a sessão está sob restrição de AgentTool, como no bloco anterior), main
+tree pela P-03. Ledger task a task em `.superpowers/sdd/progress.md`.
+
+**A Task 1 achou um gap do plano, e ele é de guardrail.** `PermissionI18nParityTest` exige paridade
+exata entre `PermissionCatalog::descriptions()` e as chaves `perm.*` das três locales — permissão
+nova sem tradução reprova a suíte. O plano registrou "nenhuma chave de locale nova" pensando no bloco
+`archive.*`; `perm.*` é outro namespace e as cinco permissões novas o obrigam. As cinco chaves
+entraram no mesmo commit da Task 1, ao lado de cada `*_delete` correspondente. Sem isso a Task 15
+descobriria o vermelho no fim, com cinco fases de distância da causa.
 
 
 ## Último item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)

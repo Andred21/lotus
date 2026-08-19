@@ -50,6 +50,8 @@ class Quote extends Model implements Auditable
         'planned_start_date' => 'date',
         'planned_end_date' => 'date',
         'value_uf' => 'decimal:4',
+        // Marca da cascata (spec D8). FORA do `$fillable`: quem escreve é hook.
+        'archived_with_parent' => 'boolean',
     ];
 
     public function budget(): BelongsTo

@@ -34,7 +34,10 @@ class File extends Model implements Auditable
 
     protected $casts = [
         'valid_until' => 'date',
-        'size'        => 'integer',
+        'size' => 'integer',
+        // Marca da cascata (spec D8). Polimórfica: serve budget, quote,
+        // redator e turma. FORA do `$fillable`.
+        'archived_with_parent' => 'boolean',
     ];
 
     public function fileable(): MorphTo
