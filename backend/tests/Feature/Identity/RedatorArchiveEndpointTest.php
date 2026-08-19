@@ -142,6 +142,15 @@ class RedatorArchiveEndpointTest extends TestCase
         $this->postJson("/api/redatores/{$redator->id}/restore")->assertNotFound();
     }
 
+    public function test_id_nao_numerico_da_404_e_nao_500(): void
+    {
+        // Sem o `whereNumber` da rota, `int $redator` estoura `TypeError` antes
+        // de qualquer consulta e o handler devolve 500 (Q-6 do review).
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/redatores/abc/restore')->assertNotFound();
+    }
+
     public function test_sem_a_permissao_de_restore_da_403(): void
     {
         $this->seed(RolePermissionSeeder::class);
