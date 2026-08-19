@@ -47,7 +47,7 @@ payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.m
    (`plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`). Levou a outra metade:
    as 5 séries mensais, os 2 rankings, `compliance_turmas`, a carga de redatores e a view do
    Redator inteira. **A P-44 continua aberta** — a carga mostra dois usuários de sonda, declarados
-   pela D10 em vez de apagados —, e o item 4 de "Próximos blocos" (ativação de acesso do redator)
+   pela D10 em vez de apagados —, e o item 3 de "Próximos blocos" (ativação de acesso do redator)
    segue bloqueando o VALOR da view do Redator: nenhum redator autentica hoje.
 
 **Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
@@ -98,24 +98,13 @@ operação"*.
 
 # Próximos blocos
 
-1. **Arquivados e restauração — replicar o padrão nos seis roots que faltam** — Notion H.5.1–H.5.4.
-   `Client` e `Course` fecharam ponta a ponta em 2026-08-18 (bloco `arquivados-e-restauracao`), e a
-   fatia vertical era isso: provado o padrão nos dois, **`Budget`, `Quote`, `User`, `Redator`,
-   `Turma` e `Enrollment` viram replicação.** O molde está em
-   `specs/archive/2026-08-18-arquivados-e-restauracao-design.md` (D2 é a cascata por
-   `archived_with_parent`) e a mecânica já mora em `App\Shared\Concerns\ArchivesChildren` +
-   `LoadsCascadedChildren` — replicar é ligar os hooks, a Action, o endpoint e a tela, não reescrever
-   a semântica. Cada root traz o seu gate próprio (`DeleteTurmaAction` recusa turma concluída,
-   `DeleteBudgetAction` recusa orçamento com cotação aprovada).
-   **Fora de escopo:** `forceDelete`, exclusão permanente e `Student` (não tem `destroy` hoje).
-   **Ver também a D-34**, que é a dívida de backfill nascida com a migration da coluna.
-2. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
+1. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
    (lista de roles à esquerda; detalhe + matriz de permissões à direita, com marcação de permissão
    essencial); o real tem tabela + diálogo. **Não é refinamento visual, é redesenho de tela** — exige
    brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
    (permissões essenciais não editáveis).
-3. **Hardening** — ownership em rotas nested e política de retenção documental.
-4. **Identity · ativação de acesso do redator.** `CreateRedatorAction` cria o `User` com
+2. **Hardening** — ownership em rotas nested e política de retenção documental.
+3. **Identity · ativação de acesso do redator.** `CreateRedatorAction` cria o `User` com
    `is_active=false` "até o fluxo de ativação", e **o fluxo não existe** — o `UserProvisioner` gera
    senha aleatória (`bin2hex(random_bytes(16))`) que ninguém recebe, e nenhuma tela ativa a conta.
    Consequência medida no fechamento do `dashboard-backend-agregacoes` (2026-08-15): **nenhum redator

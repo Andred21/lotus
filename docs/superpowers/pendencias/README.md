@@ -19,7 +19,7 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (29)
+## Abertas (30)
 
 ### Agrupadas em bloco de execução
 
@@ -59,14 +59,10 @@ ou de escrita fora do repositório.
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | João (escrita externa) | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
+| P-48 | O `title` do envelope RFC 7807 é português nos seis ramos, e os `detail` novos saem em es-CL | João | decisão de idioma da D-07, ou bloco que tocar `ProblemDetails`; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-| ID | Pendência | Encerrada em | Como | Sai em |
-|---|---|---|---|---|
-| P-45 | `TestCase.php:18` lê `FRONTEND_URL` cru e o `.env` já é lista — 12 testes de sessão dão 500 | 2026-08-18 (`arquivados-e-restauracao`) | gatilho literal, ramo "próximo `/fechar-sprint` com a suíte vermelha": o `/revisar-sprint` reencontrou os mesmos 12 `Session store not set on request`, e desta vez o bloco é de backend — `explode(',')` + `[0]` no `Referer`, suíte em 717 passed | próximo `/fechar-sprint` |
-
-Saíram por sprint de rastro cumprida, pelo precedente da **P-26**: a **P-36** e a **P-37**, no
-fechamento do `arquivados-e-restauracao` (2026-08-18). Foram encerradas dentro do
-`bd16-perfil-e-kit-compartilhado`, então a sprint de rastro delas era esta. A **P-45** fica: foi
-encerrada **dentro** deste bloco, e sai no fechamento seguinte.
+Nenhuma em rastro. A **P-45** cumpriu a sprint dela e saiu no fechamento do
+`arquivados-roots-restantes` (2026-08-19); o rastro durável vive no git e na linha da entrega do
+`arquivados-e-restauracao` em [`../historico/progress.md`](../historico/progress.md).

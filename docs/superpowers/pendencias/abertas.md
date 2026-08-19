@@ -190,6 +190,14 @@ Não é bug vivo: nenhum payload de cotação envia `seq_in_budget` hoje e o `un
 par repetido — o que fica é a assimetria, que faz o próximo leitor do ADR-17 copiar a forma mais
 fraca.
 
+**O gatilho venceu pela metade no `arquivados-roots-restantes` (2026-08-19) e a simetria NÃO foi
+absorvida.** O bloco tocou `Quote` (o `lockRow` que nasceu para o Q-5 do review), `DeleteQuoteAction`
+e `RestoreQuoteAction` — mas **não** `CreateQuoteAction`, que é o sítio do mass assignment, e o
+`$fillable` do model não foi reaberto. Absorver custaria tirar `seq_in_budget` do `$fillable` e
+passar a escrevê-lo explicitamente na Action, o que muda o caminho de criação de cotação num bloco
+cujo escopo era arquivar e restaurar. Fica registrado que o gatilho já foi visto vencer: o próximo
+bloco que abrir `CreateQuoteAction` não tem mais desculpa de contexto.
+
 ---
 
 # Documentação e mecanismo
@@ -342,6 +350,13 @@ usuário, criados e removidos dentro do gate de fechamento) **não engrossaram a
 **Não se deleta agora:** linha alheia de bloco fechado se menciona, não se apaga — a decisão de
 reseedar o dev é do João.
 
+**As telas de Arquivados deste bloco deram um segundo palco às sondas (medido no `/fechar-sprint` de
+2026-08-19).** `/personas` → Arquivados lista `E2E Gate Redator 1` e `E2E Gate Redator 2` (arquivados
+em 2026-08-13), `/cursos` → Arquivados lista `GATE T7 — curso de afericao`, e a lista ativa de
+clientes mostra `E2E Gate Client D` e `Gate BD9 RENOMEADA`. O bloco não criou nenhum deles e não
+apagou nenhum: o efeito é que a residência, que antes só vazava na carga de redatores do dashboard,
+agora aparece em três listas de produto. O gatilho segue o mesmo — reseedar é decisão do João.
+
 ---
 
 # Travadas em decisão do João
@@ -489,6 +504,32 @@ O `gap-2` × N linhas muda a altura de toda tabela que usa a célula, então nã
 invisível.
 
 **Nasceu como `P-39` e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-41](#p-41).**
+
+## P-48 — o `title` do RFC 7807 é português nos seis ramos, e os `detail` novos são es-CL
+
+**Bloco:** — · **Gatilho:** fecha com a decisão de idioma canônico que a **D-07** espera, ou com o
+bloco que tocar `ProblemDetails` por outro motivo (a **P-29** tem o mesmo gatilho de arquivo e sai
+barata junto). Revisar em **2026-10-31**.
+
+`backend/app/Shared/Exceptions/ProblemDetails.php:22-37` crava os seis títulos em português —
+`Erro de validação`, `Não autenticado`, `Acesso negado`, `Recurso não encontrado`,
+`Erro na requisição`, `Erro interno` — enquanto o `detail` de cada 422 vem da Action, e as duas
+mensagens novas do `arquivados-roots-restantes` saíram em es-CL por decisão da spec (P2 do plano).
+O envelope de um mesmo 422 carrega, hoje, os dois idiomas.
+
+**Medido no `/fechar-sprint` de 2026-08-19, contra a API real:** `POST /api/quotes/11/restore` com o
+orçamento arquivado devolveu
+`{"title":"Erro de validação", "detail":"El presupuesto de esta cotización está archivado: restáuralo primero."}`.
+
+**Não é bug vivo, e a medição diz por quê:** nenhuma tela lê o campo. `problemMessage`
+(`frontend/src/shared/api/problemMessage.ts:13`) devolve o primeiro erro de campo ou o `detail`, e
+`title` não é renderizado em lugar nenhum do frontend. O que fica é a mistura no contrato — quem
+consumir a API por fora (log, integração ou uma futura tela genérica de erro) recebe português numa
+interface es-CL.
+
+**Por que não se conserta de carona:** traduzir os seis títulos é escolher o idioma canônico do
+backend, que é exatamente a decisão que a **D-07** e a **D-18** esperam do João. Fazer só este
+arquivo criaria um quarto padrão de idioma no repo.
 
 ---
 
