@@ -104,12 +104,11 @@ erro por coluna, decisão de contrato de erro que a spec preferiu não tomar den
 concorrência. Proporcional a ~10 usuários internos: a colisão exige dois cadastros do mesmo RUT no
 mesmo segundo.
 
-## P-47 — o `lockRow` do redator é meio mutex: só quem arquiva toma o lock
+## P-47 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `StoreRedatorDocumentAction`,
-`UpdateRedatorAction` ou `DesignateRedatorAction` por outro motivo e puder absorver o lock, ou
-quando um documento ativo sob redator arquivado for observado em uso real. Revisar em
-**2026-10-31**.
+**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
+listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
+arquivado for observado em uso real. Revisar em **2026-10-31**.
 
 `ArchiveRedatorAction:31` abre transação e toma `Redator::lockRow()` antes da cascata. Um lock de
 linha só fecha janela se **os dois lados** o tomarem — e do lado do redator só existe um tomador.
@@ -141,6 +140,21 @@ lock**. A prova seria o molde, não o teste. Em vez de fechar mal no fim de um b
 dois comentários passaram a dizer o que o lock faz de fato e o resto virou esta ficha. Proporcional
 a ~10 usuários internos: exige upload de documento e arquivamento do mesmo redator no mesmo
 instante.
+
+**A turma repete a forma (Task 11 do mesmo bloco, 2026-08-19).** `DeleteTurmaAction` nasceu com
+`DB::transaction` + `Turma::lockRow()`, e do lado de lá também há um tomador só:
+
+| Sítio | O que escreve | Toma o lock? |
+|---|---|---|
+| `EnrollStudentAction:24` | `enrollments` da turma (abre transação, sem lock da turma) | não |
+| `ImportStudentsAction` | `enrollments` em lote | não |
+| `StoreTurmaDocumentAction` | `files` da turma | não |
+
+O texto do plano para a `DeleteTurmaAction` voltou à redação anterior à correção da Task 7 —
+afirmava que o `lockRow` fechava "a outra ponta" logo depois de descrever a corrida da matrícula
+concorrente. O review da Task 11 mediu que não fecha; o comentário foi reescrito no molde honesto da
+`ArchiveRedatorAction` e a ficha passou a cobrir os dois roots. É o segundo bloco a copiar a
+afirmação do plano sem medir: **o plano não é fonte sobre o que o código faz.**
 
 ## P-35 — o ADR-17 é defendido em duas profundidades
 

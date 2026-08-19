@@ -70,10 +70,12 @@ class Turma extends Model implements Auditable
             if (! $turma->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
                 //
-                // ENUMERA-E-APAGA, logo check-then-act: quem fecha a janela é a
-                // `DeleteTurmaAction`, que abre a transação e toma
-                // `Turma::lockRow()` antes de chamar `delete()`. Não arquive
-                // turma por fora dela.
+                // ENUMERA-E-APAGA, logo check-then-act: a transação da
+                // `DeleteTurmaAction` é que dá atomicidade a esta cascata.
+                // Não arquive turma por fora dela. O `lockRow` que ela toma
+                // serializa arquivar contra arquivar, mas os escritores de
+                // filho ainda não tomam o mesmo lock — a janela contra eles
+                // segue aberta (pendência P-47).
                 //
                 // O pivot `turma_redator` fica FORA: não tem `deleted_at`, e
                 // designação não é registro com ciclo de vida próprio — desfazê-la

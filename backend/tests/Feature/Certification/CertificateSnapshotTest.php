@@ -241,7 +241,10 @@ class CertificateSnapshotTest extends TestCase
         // `arquivados-roots-restantes`) agora arquiva a matrícula junto com o
         // pai — a busca simples 404aria aqui, e o que este teste prova é a
         // resolução do nome do cliente através da cadeia comercial arquivada,
-        // não a vivacidade da matrícula.
+        // não a vivacidade da matrícula. A asserção abaixo deixa esse
+        // acoplamento explícito em vez de depender só deste comentário.
+        $this->assertSoftDeleted('enrollments', ['id' => $this->enrollment->id]);
+
         $freshEnrollment = Enrollment::withTrashed()->findOrFail($this->enrollment->id);
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $freshEnrollment,

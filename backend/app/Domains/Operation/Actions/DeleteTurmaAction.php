@@ -15,8 +15,14 @@ use Illuminate\Support\Facades\DB;
  *
  * A TRANSAÇÃO é nova, e é consequência da cascata (spec D9): o enumera-e-apaga
  * sem transação é check-then-act — uma matrícula criada entre o `get()` e o
- * commit sobreviveria ATIVA sob uma turma arquivada. O `lockRow` fecha a outra
- * ponta, entre duas requisições concorrentes.
+ * commit sobreviveria ATIVA sob uma turma arquivada.
+ *
+ * O `lockRow` serializa ARQUIVAR contra ARQUIVAR (e contra restaurar) — é ele
+ * que sustenta o no-op idempotente abaixo. Ele NÃO fecha a janela contra quem
+ * escreve filho: no molde `Client` os escritores de filho tomam o mesmo lock, e
+ * aqui `EnrollStudentAction`, `ImportStudentsAction` e `StoreTurmaDocumentAction`
+ * ainda não tomam. Enquanto for assim, uma matrícula ou um documento criado em
+ * concorrência pode sobreviver ativo sob turma arquivada (pendência P-47).
  *
  * A guarda roda DENTRO da transação, depois do lock, pelo mesmo motivo da
  * `DeleteStaffUserAction`: leitura de guarda solta no autocommit não protege

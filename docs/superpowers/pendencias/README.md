@@ -28,7 +28,7 @@ ou de escrita fora do repositório.
 | P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | BD-12 | bloco que puder esvaziar o catálogo de dev; revisar 2026-10-31 |
 | P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | BD-14 | 500 observado em uso real, ou bloco que tocar `ProblemDetails`; revisar 2026-10-31 |
 | P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | BD-14 | bloco que tocar `CreateQuoteAction`/`Quote`; revisar 2026-10-31 |
-| P-47 | `lockRow` do redator é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction` toma | BD-14 | bloco que tocar `StoreRedatorDocumentAction`/`UpdateRedatorAction`/`DesignateRedatorAction`; revisar 2026-10-31 |
+| P-47 | `lockRow` de redator e turma é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction`/`DeleteTurmaAction` tomam | BD-14 | bloco que tocar um dos seis escritores de filho da ficha; revisar 2026-10-31 |
 | P-20 | `openspout/openspout` em produção sem ADR hospedeiro | BD-15 | João apontar o ADR hospedeiro (ou autorizar ADR-20); revisar 2026-09-30 |
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | BD-15 | primeiro bloco de Certification que tocar `docs/adrs.md`; revisar 2026-09-30 |
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
