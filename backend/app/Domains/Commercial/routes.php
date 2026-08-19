@@ -19,6 +19,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('clients/{client}/restore', [ClientController::class, 'restore'])->whereNumber('client');
 
     Route::apiResource('clients', ClientController::class);
+
+    // ANTES do apiResource, senão `budgets/archived` casa como `budgets/{budget}`.
+    Route::get('budgets/archived', [BudgetController::class, 'archived']);
+    // `whereNumber`: sem ele um id não numérico estoura `TypeError` (500) na
+    // assinatura `int $budget` antes de qualquer consulta, em vez do 404.
+    Route::post('budgets/{budget}/restore', [BudgetController::class, 'restore'])->whereNumber('budget');
+
     Route::apiResource('budgets', BudgetController::class);
 
     Route::get('budgets/{budget}/quotes', [QuoteController::class, 'index']);

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Models;
 
+use App\Domains\Commercial\QueryBuilders\BudgetQueryBuilder;
 use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -80,5 +82,21 @@ class Budget extends Model implements Auditable
     public function files(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /**
+     * Contraparte de instância do `withListingData()` — o mesmo molde de
+     * `Client`, `Quote`, `Course`, `Turma` e `Enrollment`. É daqui que o
+     * controller e as Actions carregam a projeção.
+     */
+    public function loadListingData(): static
+    {
+        return $this->load(BudgetQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): BudgetQueryBuilder
+    {
+        return new BudgetQueryBuilder($query);
     }
 }
