@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import { problemFromBlob } from '@shared/api/problemFromBlob'
-import type { PendingQuoteData, TurmaData, TurmaModalidade } from '@shared/types/generated'
+import type { ArchivedTurmaData, PendingQuoteData, TurmaData, TurmaModalidade } from '@shared/types/generated'
 
 export const turmaKeys = {
   all: ['turmas'] as const,
   list: () => ['turmas', 'list'] as const,
+  archived: () => ['turmas', 'archived'] as const,
   detail: (id: number) => ['turmas', 'detail', id] as const,
   pending: () => ['turmas', 'pending'] as const,
 }
@@ -117,5 +118,40 @@ export function useTurmaManualDocx() {
         .catch(async (error: unknown) => {
           throw await problemFromBlob(error)
         }),
+  })
+}
+
+/**
+ * Turmas arquivadas. `enabled` é PARÂMETRO, não default, pela mesma lição da
+ * fábrica `createCrudResource`: a visão de arquivados não pode buscar na
+ * montagem — carregar as duas visões de uma vez dobra a rede sem ganho.
+ *
+ * A chave começa em `['turmas']`, o mesmo prefixo que `useInvalidate()` invalida:
+ * arquivar ou restaurar repinta as duas listas sem código novo.
+ */
+export function useTurmasArchivedList(enabled: boolean) {
+  return useQuery<ArchivedTurmaData[], ProblemDetails>({
+    queryKey: turmaKeys.archived(),
+    queryFn: () => api.get<ArchivedTurmaData[]>('/api/turmas/archived').then((r) => r.data),
+    enabled,
+  })
+}
+
+/** O arquivar da turma, que não existia no frontend até aqui (P7). O backend
+ * recusa turma concluída com 422 (RN-15) — o toast do hook de página é o que
+ * torna essa recusa visível. */
+export function useArchiveTurma() {
+  const invalidate = useInvalidate()
+  return useMutation<void, ProblemDetails, number>({
+    mutationFn: (turmaId) => api.delete(`/api/turmas/${turmaId}`).then(() => undefined),
+    onSuccess: invalidate,
+  })
+}
+
+export function useRestoreTurma() {
+  const invalidate = useInvalidate()
+  return useMutation<TurmaData, ProblemDetails, number>({
+    mutationFn: (turmaId) => api.post<TurmaData>(`/api/turmas/${turmaId}/restore`).then((r) => r.data),
+    onSuccess: invalidate,
   })
 }

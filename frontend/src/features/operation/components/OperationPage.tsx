@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ModulePage, AppCard } from '@shared/ui'
+import { ModulePage, AppCard, ConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
+import type { TurmaData } from '@shared/types/generated'
 import { useTurmas, usePendingQuotes } from '../api/useTurmas'
+import { useTurmasArchived } from '../hooks/useTurmasArchived'
 import { PendingQuotesPanel } from './Turma/PendingQuotesPanel'
 import { TurmasTable } from './Turma/TurmasTable'
 
@@ -14,7 +17,10 @@ export function OperationPage() {
   const { can } = usePermissions()
   const turmas = useTurmas()
   const pending = usePendingQuotes()
+  const turmasArchived = useTurmasArchived()
+  const [toArchive, setToArchive] = useState<TurmaData | null>(null)
   const canCreate = can('operation.turma.create')
+  const archived = turmasArchived.mode === 'archived'
 
   return (
     <ModulePage title={t('module.operacion.title')} description={t('module.operacion.description')}>
@@ -28,13 +34,35 @@ export function OperationPage() {
         )}
         <AppCard>
           <TurmasTable
-            turmas={turmas.data ?? []}
-            loading={turmas.isLoading}
-            error={turmas.isError ? (turmas.error ?? {}) : null}
-            onRetry={turmas.refetch}
+            turmas={archived ? turmasArchived.items : (turmas.data ?? [])}
+            loading={archived ? turmasArchived.loading : turmas.isLoading}
+            error={archived ? turmasArchived.error : turmas.isError ? (turmas.error ?? {}) : null}
+            onRetry={archived ? turmasArchived.refetch : turmas.refetch}
+            mode={turmasArchived.mode}
+            onModeChange={turmasArchived.setMode}
+            onArchive={setToArchive}
+            onRestore={(turma) => turma.id != null && turmasArchived.restore(turma.id)}
+            busy={turmasArchived.restoring || turmasArchived.archiving}
           />
         </AppCard>
       </div>
+
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      {toArchive && (
+        <ConfirmDialog
+          visible
+          title={t('archive.confirmArchiveTitle')}
+          message={t('archive.confirmArchiveBody')}
+          confirmLabel={t('archive.archiveAction')}
+          severity="danger"
+          pending={turmasArchived.archiving}
+          onConfirm={() =>
+            toArchive.id != null &&
+            turmasArchived.archive(toArchive.id, { onSuccess: () => setToArchive(null) })
+          }
+          onCancel={() => setToArchive(null)}
+        />
+      )}
     </ModulePage>
   )
 }

@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import type { EnrollmentData, EnrollmentResultData } from '@shared/types/generated'
+import type { ArchivedEnrollmentData, EnrollmentData, EnrollmentResultData } from '@shared/types/generated'
 import { turmaKeys } from './useTurmas'
 
 export const enrollmentKeys = {
   all: ['enrollments'] as const,
   list: (turmaId: number) => ['enrollments', 'list', turmaId] as const,
+  archived: (turmaId: number) => ['enrollments', 'archived', turmaId] as const,
 }
 
 /** Campos que a UI envia na matrícula individual. Aluno novo (preview.exists=false)
@@ -60,6 +61,35 @@ export function useRemoveEnrollment() {
       api.delete(`/api/turmas/${turmaId}/alunos/${enrollmentId}`).then(() => undefined),
     onSuccess: (_data, { turmaId }) => {
       qc.invalidateQueries({ queryKey: enrollmentKeys.list(turmaId) })
+      qc.invalidateQueries({ queryKey: enrollmentKeys.archived(turmaId) })
+      qc.invalidateQueries({ queryKey: turmaKeys.all })
+    },
+  })
+}
+
+/** Matrículas arquivadas DA turma. Escopada pelo pai porque a matrícula não tem
+ * lista de topo — ela vive dentro do detalhe da turma (spec D5). */
+export function useEnrollmentsArchivedList(turmaId: number, enabled: boolean) {
+  return useQuery<ArchivedEnrollmentData[], ProblemDetails>({
+    queryKey: enrollmentKeys.archived(turmaId),
+    queryFn: () =>
+      api.get<ArchivedEnrollmentData[]>(`/api/turmas/${turmaId}/alunos/archived`).then((r) => r.data),
+    enabled: enabled && Number.isFinite(turmaId),
+  })
+}
+
+/** O id da turma fica FECHADO no hook, e é o que faz o `mutate(id)` do contrato
+ * de `useArchivedPage` bastar (spec D12). */
+export function useRestoreEnrollment(turmaId: number) {
+  const qc = useQueryClient()
+  return useMutation<EnrollmentData, ProblemDetails, number>({
+    mutationFn: (enrollmentId) =>
+      api
+        .post<EnrollmentData>(`/api/turmas/${turmaId}/alunos/${enrollmentId}/restore`)
+        .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: enrollmentKeys.list(turmaId) })
+      qc.invalidateQueries({ queryKey: enrollmentKeys.archived(turmaId) })
       qc.invalidateQueries({ queryKey: turmaKeys.all })
     },
   })
