@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Identity\QueryBuilders\RedatorQueryBuilder;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Files\Models\File;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -114,5 +116,21 @@ class Redator extends Model implements Auditable
         $redator = static::withTrashed()->whereKey($redatorId)->lockForUpdate()->firstOrFail();
 
         return $redator;
+    }
+
+    /**
+     * Contraparte de instância do `withListingData()` — mesmo molde de `Client`,
+     * `Course` e `Turma`. É daqui que o controller e a `RestoreRedatorAction`
+     * carregam, e por isso a carga da projeção tem um dono só.
+     */
+    public function loadListingData(): static
+    {
+        return $this->load(RedatorQueryBuilder::LISTING);
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): RedatorQueryBuilder
+    {
+        return new RedatorQueryBuilder($query);
     }
 }
