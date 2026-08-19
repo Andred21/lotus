@@ -120,13 +120,12 @@ class QuoteArchiveEndpointTest extends TestCase
         $this->postJson("/api/quotes/{$primeira->id}/restore")->assertOk();
     }
 
-    public function test_restaurar_cotacao_sozinha_limpa_a_marca_da_cascata(): void
+    public function test_restaurar_cotacao_sob_orcamento_arquivado_da_422(): void
     {
-        // Cotação é ao mesmo tempo filho da cascata (do orçamento) e raiz com
-        // endpoint próprio de restore — a primeira neste código a ser as duas
-        // coisas. Restaurá-la sozinha tem de apagar a marca que a cascata
-        // deixou, senão ela mente sobre como voltou: uma futura cascata do
-        // orçamento a devolveria por engano (spec D2).
+        // A rota do restore é PLANA e não passa pelo orçamento, então sem gate
+        // dava para devolver a cotação sozinha e deixá-la ATIVA sob pai
+        // arquivado: sumida da tela (o detalhe do pai é 404) e ainda aprovável
+        // por API. É a mesma pergunta da spec D10, do lado da Action.
         $this->actingAsAdmin();
         $budget = $this->makeBudget();
         $quote = $this->makeQuote($budget);
@@ -134,7 +133,25 @@ class QuoteArchiveEndpointTest extends TestCase
         app(DeleteBudgetAction::class)->execute($budget);
         $this->assertDatabaseHas('quotes', ['id' => $quote->id, 'archived_with_parent' => true]);
 
-        $this->postJson("/api/quotes/{$quote->id}/restore")->assertOk();
+        $this->postJson("/api/quotes/{$quote->id}/restore")
+            ->assertStatus(422)
+            ->assertJsonPath('errors.quote.0', 'El presupuesto de esta cotización está archivado: restáuralo primero.');
+
+        $this->assertNotNull($quote->fresh()->deleted_at);
+    }
+
+    public function test_restaurar_o_orcamento_devolve_a_cotacao_sem_a_marca(): void
+    {
+        // O caminho que o gate acima obriga a usar, e o que ele preserva: a
+        // cascata devolve a cotação com a marca limpa, senão uma futura cascata
+        // do orçamento a traria de volta por engano (spec D2).
+        $this->actingAsAdmin();
+        $budget = $this->makeBudget();
+        $quote = $this->makeQuote($budget);
+
+        app(DeleteBudgetAction::class)->execute($budget);
+
+        $this->postJson("/api/budgets/{$budget->id}/restore")->assertOk();
 
         $this->assertDatabaseHas('quotes', [
             'id' => $quote->id, 'deleted_at' => null, 'archived_with_parent' => false,
