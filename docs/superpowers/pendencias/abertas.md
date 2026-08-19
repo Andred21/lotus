@@ -104,6 +104,44 @@ erro por coluna, decisão de contrato de erro que a spec preferiu não tomar den
 concorrência. Proporcional a ~10 usuários internos: a colisão exige dois cadastros do mesmo RUT no
 mesmo segundo.
 
+## P-47 — o `lockRow` do redator é meio mutex: só quem arquiva toma o lock
+
+**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `StoreRedatorDocumentAction`,
+`UpdateRedatorAction` ou `DesignateRedatorAction` por outro motivo e puder absorver o lock, ou
+quando um documento ativo sob redator arquivado for observado em uso real. Revisar em
+**2026-10-31**.
+
+`ArchiveRedatorAction:31` abre transação e toma `Redator::lockRow()` antes da cascata. Um lock de
+linha só fecha janela se **os dois lados** o tomarem — e do lado do redator só existe um tomador.
+Os escritores de filho não tomam:
+
+| Sítio | O que escreve | Toma o lock? |
+|---|---|---|
+| `StoreRedatorDocumentAction:29-33` | `files` do redator | não |
+| `UpdateRedatorAction` | `users`/`redatores` | não |
+| `Operation\Actions\DesignateRedatorAction:18-25` | pivot `turma_redator` | não |
+
+O molde `Client` faz certo: seis escritores de filho tomam `Client::lockRow()`
+(`CreateClientContactAction:22`, `CreateClientAddressAction:22`, `UpdateClientAction:32`,
+`UpdateClientContactAction:23`, `UpdateClientAddressAction:23`, `DeleteClientContactAction:38`).
+
+**Consequência medida por leitura, não por corrida observada:** `StoreRedatorDocumentAction` faz o
+`uploads->put()` **antes** de abrir a transação, então a janela entre "o binding resolveu um redator
+vivo" e "INSERT em `files`" tem a largura de um upload no S3. Um documento criado nessa janela
+sobrevive **ativo** sob redator arquivado — exatamente o modo de falha que a cascata existe para
+impedir. Pelo mesmo caminho, uma designação concorrente pode pousar um redator arquivado numa turma
+viva, furando o gate de turma em andamento.
+
+**Por que ficou aberta:** o texto dos comentários veio verbatim do plano do
+`arquivados-roots-restantes` e afirmava que a janela estava fechada; o review da Task 7 mediu que
+não estava. Fechar de verdade custa três Actions fora da lista do plano — uma delas em **outro
+domínio** (`Operation`), o que criaria aresta de lock cruzando domínio — e a suíte roda em sqlite,
+onde `SQLiteGrammar::compileLock()` devolve string vazia: **nenhum teste deste repositório prova
+lock**. A prova seria o molde, não o teste. Em vez de fechar mal no fim de um bloco de 15 tasks, os
+dois comentários passaram a dizer o que o lock faz de fato e o resto virou esta ficha. Proporcional
+a ~10 usuários internos: exige upload de documento e arquivamento do mesmo redator no mesmo
+instante.
+
 ## P-35 — o ADR-17 é defendido em duas profundidades
 
 **Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `CreateQuoteAction`/`Quote` por outro

@@ -13,12 +13,22 @@ use Illuminate\Validation\ValidationException;
  *
  * Nasce com transação porque a cascata ENUMERA-E-APAGA (spec D9): sem ela, um
  * documento criado entre o `get()` e o commit sobrevive ATIVO sob um redator
- * arquivado. O `lockRow` fecha a outra ponta, entre duas requisições concorrentes.
+ * arquivado.
+ *
+ * O `lockRow` serializa ARQUIVAR contra ARQUIVAR — é ele que sustenta o no-op
+ * idempotente abaixo. Ele NÃO fecha a janela contra quem escreve filho: no molde
+ * `Client` os escritores de filho tomam o mesmo lock, e aqui
+ * `StoreRedatorDocumentAction`, `UpdateRedatorAction` e `DesignateRedatorAction`
+ * ainda não tomam. Enquanto for assim, um documento criado em concorrência pode
+ * sobreviver ativo sob redator arquivado (pendência P-47).
  *
  * O GATE recusa redator com turma em andamento: trabalho pendente não some da
  * operação sem aviso (spec D3). Turma CONCLUÍDA não bloqueia — arquivar quem já
- * terminou é o caso normal, e é o `withTrashed()` de `Turma::redatores()` que
- * garante que o certificado dela continua emitindo.
+ * terminou é o caso normal, e o certificado dela continua emitindo por DOIS
+ * mecanismos: o `withTrashed()` de `Turma::redatores()` (a porta 6 do
+ * `CertificateEligibility` enxerga a designação) e o `Redator::withTrashed()`
+ * dos dois lookups de Certification, sem o qual o `findOrFail` recusa com 404
+ * antes de qualquer porta rodar.
  *
  * A mensagem é es-CL pelo mesmo precedente de `Turma::assertAcademicallyWritable()`:
  * a UI do cliente é es-CL e mensagem de validação chega à tela.

@@ -108,6 +108,16 @@ sítios:
 O gate cobre turma em andamento; o `withTrashed` cobre turma **concluída**, que é exatamente onde a
 emissão acontece. Os dois são necessários — nenhum resolve o caso do outro.
 
+**Correção medida na execução (2026-08-19): são TRÊS peças, não duas.** O `withTrashed` da relação
+sozinho não salva a emissão. `CertificateController::store` e `BatchIssueCertificatesAction`
+resolvem o redator com `Redator::query()->findOrFail($data->redator_id)`, escopado por
+`SoftDeletes`: o **404** sai antes de `CertificateEligibility` chegar a rodar, e a tabela acima nem
+é alcançada. Os dois sítios passam a `Redator::withTrashed()->findOrFail(...)` — nada é afrouxado,
+porque quem autoriza continua sendo a porta 6 (designação na turma) e `turma_redator` não tem
+`deleted_at`. No lote o estrago era maior: o redator é resolvido **fora** do `try` por item, então a
+`ModelNotFoundException` derrubava o request inteiro e escondia os itens já commitados. Decisão do
+João no dia 19, sobre report de bloqueio da Task 7 — nenhuma task do plano tocava Certification.
+
 ### D4 — os dois restores automáticos ficam automáticos
 
 `StudentResolver:71-79` restaura `User` e `Student` ao reencontrar o RUT na importação;

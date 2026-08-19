@@ -34,10 +34,12 @@ class Redator extends Model implements Auditable
             if (! $redator->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
                 //
-                // ENUMERA-E-APAGA, logo check-then-act: quem fecha a janela é a
-                // `ArchiveRedatorAction`, que abre a transação e toma
-                // `Redator::lockRow()` antes de chamar `delete()`. Não arquive
-                // redator por fora dela.
+                // ENUMERA-E-APAGA, logo check-then-act: a transação da
+                // `ArchiveRedatorAction` é que dá atomicidade a esta cascata.
+                // Não arquive redator por fora dela. O `lockRow` que ela toma
+                // serializa arquivar contra arquivar, mas os escritores de
+                // filho ainda não tomam o mesmo lock — a janela contra eles
+                // segue aberta (pendência P-47).
                 //
                 // `markAndDelete` ignora filho já arquivado — `user()` é
                 // `withTrashed()` e traria um User arquivado ANTES do redator
