@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: ativacao-acesso-redator
 active_work_item: identity-ativacao-acesso-redator
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-18-identity-ativacao-acesso-redator-design.md
 active_plan: docs/superpowers/plans/2026-08-18-identity-ativacao-acesso-redator.md
@@ -13,7 +13,7 @@ blocker: null
 
 last_completed_work_item: bd13-listagens-e-abas
 state_basis_commit: 2c7b249
-updated_at: 2026-08-18T21:10:00-03:00
+updated_at: 2026-08-19T11:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -234,6 +234,39 @@ João fica intacta; muda a mecânica que a sustenta.
 já existente do staff (`StaffUserDialog.tsx:118-130`): `FormField` + `AppDropdown` Activo/Inactivo.
 
 Plano em `plans/2026-08-18-identity-ativacao-acesso-redator.md`.
+
+### Execução — 2026-08-19: 14 tasks, e o DoD do gate provado no navegador
+
+As 14 tasks do plano estão implementadas e commitadas, uma por commit, de `50e76cd` a `112b145`
+(mais `644e372` e `18adad6`, os dois artefatos do transformer). Ledger com a prova task a task em
+`.superpowers/sdd/progress.md`.
+
+**Catracas (Task 14, Step 1):** suíte backend `5 skipped, 704 passed (2586 assertions)`; `pint --test`
+verde nos arquivos do bloco; `pnpm lint` limpo, `pnpm build` ok, `pnpm test` `67 files / 401 tests`;
+`typescript:transform` seguido de `git diff --exit-code` em `generated.ts` sem saída.
+
+**A P-03 não travou o gate, e a stack do João não foi derrubada.** Override efêmero de portas fora do
+repositório subiu a stack deste worktree em nginx **8081**, MySQL **3308** e Mailpit **8025**, com o
+Vite do worktree em **5174** — a 5173 é o dev server da main tree. Depois do gate, só
+`fix-frontend-app-1` ficou de pé, como a sessão encontrou o ambiente.
+
+**Steps 2–6, no navegador contra a API real:** primeiro acesso ponta a ponta (cadastro → e-mail no
+Mailpit com `?flow=invite` e "vence en 7 días" → senha definida → login → Dashboard na view do
+redator); revogação (`is_active=0`, `sessions=0`, a aba logada cai para o login no reload e a nova
+tentativa é recusada com "This account is not active."); recuperação com resposta idêntica para
+e-mail que existe e que não existe, com entrega só no primeiro; reenvio de convite para redator
+pré-bloco, com o toast e o primeiro acesso completo. RN-01 medida no fim: `cliente`/`aluno` ativos
+= `0`.
+
+**Dois achados do gate, ambos registrados no ledger e nenhum deles defeito do código entregue:**
+reenviar convite **não** ativa — para redator pré-bloco o admin precisa marcar Access state = Activo
+*e* reenviar (o desenho está certo: conceder acesso é o controle explícito, não efeito colateral do
+reenvio); e os 7 redatores do seed seguem **sem a role `redator`**, que só é atribuída no cadastro
+novo — não impede login nem Dashboard (a view sai de `user.type`), mas qualquer gate `permission:`
+os barraria. É dado de seed, não código do bloco.
+
+**Estado: `ready_for_review`.** Próxima ação: `/revisar-sprint` para `identity-ativacao-acesso-redator`.
+O review **não** foi iniciado por este comando.
 
 ## Último item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
