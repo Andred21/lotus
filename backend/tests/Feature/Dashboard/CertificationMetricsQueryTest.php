@@ -242,7 +242,7 @@ class CertificationMetricsQueryTest extends TestCase
 
     private function createConcludedTurma(): Turma
     {
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budget->id,
             'course_id' => $this->course->id,
             'seq_in_budget' => ++$this->quoteSequence,

@@ -68,7 +68,7 @@ class StudentHistoryDataTest extends TestCase
         $client = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.']);
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 9']);
         $course = $this->makeCourse(['name' => 'Trabajos en líneas energizadas 220kV', 'workload_hours' => 40]);
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
@@ -99,7 +99,7 @@ class StudentHistoryDataTest extends TestCase
         $client = $this->makeClientWithUser();
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 10']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

@@ -40,7 +40,7 @@ class UploadSizeLimitTest extends TestCase
 
     private function quote(): Quote
     {
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $this->budget()->id,
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,

@@ -481,7 +481,7 @@ class CertificateListingTest extends TestCase
         string $endDate = '2026-07-24',
     ): Turma {
         $course ??= $this->course;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => $seq,

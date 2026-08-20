@@ -162,7 +162,7 @@ class ComputedKeyInBodyTest extends TestCase
         $clientId = $this->makeClientWithUser([], ['rut' => '44.555.666-1', 'email' => 'turma-client-ckb@lotus.cl'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap-CKB']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
