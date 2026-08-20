@@ -263,7 +263,13 @@ class ComputedKeyInBodyTest extends TestCase
      */
     public function test_todo_campo_de_foto_de_dto_e_computed(): void
     {
-        $arquivos = glob(app_path('Domains/*/Data/*.php'));
+        // `Shared/*/Data` entra na varredura: DTO de infra transversal
+        // (`Files/Data/FileData`) mora lá, e um campo de foto que nascesse
+        // fora de `Domains` escapava da varredura E da contagem abaixo.
+        $arquivos = [
+            ...glob(app_path('Domains/*/Data/*.php')),
+            ...glob(app_path('Shared/*/Data/*.php')),
+        ];
         $faltando = [];
         $encontrados = 0;
 
