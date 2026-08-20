@@ -115,7 +115,8 @@ operação"*.
 > débitos que cobria (o BD-17 levou D-51, D-52 e D-53), e o histórico está na linha da entrega em
 > `historico/progress.md`. O BD-16 levou junto o **BD-10**, que ele havia absorvido em 2026-08-17 e
 > que nunca chegou a ser promovido. Os BD-11..BD-15 abaixo são o que sobrou do reagrupamento de
-> 2026-08-14 — nenhum foi promovido.
+> 2026-08-14; o **BD-18** é posterior — nasceu em 2026-08-20, do que o review e o fechamento do BD-17
+> mediram. **Nenhum foi promovido.**
 
 ## BD-11 · Frontend · shell: navegação no toque
 
@@ -133,12 +134,15 @@ que juntava os dois, ele deixou de sair barato em conjunto.
 **DoD:** o nome do item de navegação alcançável no toque a 390px, medido no dispositivo emulado — não
 o atributo novo no DOM.
 
-## BD-12 · Frontend · load-state: os dois sítios que sobraram do BD-6
+## BD-12 · Frontend · o ramo "catálogo vazio" que sobrou do BD-6
 
-**Cobre:** D-14, P-40 · **Frente:** frontend
-**Afinidade:** os dois orbitam `useLoadState` e o catálogo de cursos.
+**Cobre:** P-40 · **Frente:** frontend
 
-- **D-14** — `RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru.
+**A D-14 saiu deste bloco em 2026-08-20, para o BD-18, e não foi descartada.** Ela orbita
+`useLoadState`, e o BD-18 é o bloco que abre esse arquivo — deixá-la aqui obrigaria a reabri-lo duas
+vezes. O DoD dela ("o teste do ramo COM cache em cada sítio") foi junto. **O bloco fica só com a
+P-40**, que não é código: é remedição, e o que a trava é ambiente.
+
 - **P-40** — remedição do ramo "catálogo genuinamente vazio" contra HEAD. Depende de conseguir
   esvaziar o catálogo de dev (seeder de cenário, endpoint de teste, ou o João rodando o comando).
 
@@ -146,8 +150,8 @@ o atributo novo no DOM.
 > `meu-perfil-frontend` tocou `frontend-fsliced.md` por outro motivo e trocou a frase pelo corte
 > medido com o runner (`pendencias/encerradas.md`).
 
-**DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
-falha deixa a regressão passar verde.
+**DoD:** o ramo vazio medido contra HEAD com o catálogo de dev **de fato** vazio — não a mesma
+sonda de `d20bebc` recitada.
 
 ## BD-14 · Backend · o que a entrada pode escrever
 
@@ -205,6 +209,44 @@ que dá à decisão do João **um** lugar para ser tomada.
 
 **Nota de método:** P-20 e P-21 vivem no mesmo arquivo, então a decisão de numeração sai numa
 sentada só — é o que torna o agrupamento barato.
+
+
+## BD-18 · Frontend · `useLoadState`: a promise, a forma e os dois ramos crus
+
+**Cobre:** D-54, D-56, D-14 · **Frente:** frontend
+**Afinidade:** os três pousam no **mesmo arquivo**. D-54 é o `refetch` dele, D-56 é a forma que ele
+deveria ser o único a montar, e D-14 são os dois últimos consumidores que ainda ramificam sem ele.
+Separados, cada um reabre `shared/hooks/useLoadState.ts` por conta própria.
+
+- **D-54** — o `refetch` engole a promise que o `AppErrorState` aguarda (contrato Q-14).
+- **D-56** — a forma normalizada de lista é montada à mão, não espalhada de um lugar só.
+- **D-14** — `RedatorCourseSelector:38` e `CourseRedatoresSection:28` ainda ramificam por `isError`
+  cru, apagando cache utilizável.
+
+**Escopo medido em 2026-08-20 contra `6edf1224`, e ele é MAIOR do que as duas fichas registravam.**
+`shared/hooks/useResourceState.ts` — irmão do `useLoadState` para payload de objeto, consumido pelo
+`useProfilePage` — carrega **as duas** grafias: o mesmo
+`loadError: query.isError ? (query.error ?? ({} as ProblemDetails)) : null` (`:35`) e o mesmo
+`refetch: () => { void query.refetch() }` (`:40-42`). Logo são **2** hooks compartilhados engolindo a
+promise, não 1, e **6** sítios montando a forma à mão, não 5. As fichas dos dois débitos foram
+remediadas com isso.
+
+**Ordem interna: D-56 antes de D-54.** Extrair o normalizador primeiro faz a promise nascer certa nos
+seis sítios de uma vez; corrigir a promise antes é consertar duas cópias que o passo seguinte
+apagaria. D-14 vem por último — os dois consumidores só adotam `failedWithoutData` depois que a
+política tem dono único.
+
+**Uma fronteira medida, para o desenho não escorregar:** `useDashboard.ts:124-129` declara por que
+**não** usa `useLoadState` — a assinatura é `UseQueryResult<T[]>`, de LISTA, e ali o dado é objeto
+único com seções anuláveis. O normalizador de lista continua de lista; quem serve objeto é o
+`useResourceState`. Unificar os dois numa peça só é decisão de desenho, não consequência do bloco.
+
+**DoD:** (1) o "Reintentar" de um `AppErrorState` vivo permanecendo em `loading` enquanto o GET está
+em voo — provado com catraca de teste **e** no navegador, num dos sítios reais
+(`QuotesList.tsx:60`/`:74`, `BudgetDialog.tsx:85`, `CourseRedatoresSection.tsx:33`); (2) o teste do
+ramo **COM cache** em cada sítio do D-14 — o BD-6 mostrou que forçar `list: []` no teste de falha
+deixa a regressão passar verde; (3) a linha de rule do D-56 escrita em
+`.claude/rules/frontend-fsliced.md` **no mesmo commit** que zera o último sítio, nunca antes.
 
 ---
 
@@ -274,12 +316,59 @@ sentada só — é o que torna o agrupamento barato.
   coleções nested — omissão virando apagamento —, num campo escalar. **Pré-existente e fora do escopo
   daquele bloco**, que só atravessou o arquivo para trocar a checagem de unicidade pela porta única.
 - **D-14 · `RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru** →
-  **BD-12**. É o terceiro e o quarto sítio do padrão que o review do BD-6 (2026-08-14) transformou em
+  **BD-18** (saiu do BD-12 em 2026-08-20). É o terceiro e o quarto sítio do padrão que o review do BD-6 (2026-08-14) transformou em
   regra — falha que apaga cache utilizável — e os dois ficaram **fora do escopo** daquele bloco, que
   só cobria os três sítios da spec (wizard, card de cotações, dropdown de cliente). Depois do
   `useLoadState` o fix é de uma linha em cada um: trocar `courses.isError` / `redatores.isError`
   (`RedatorCourseSelector.tsx:38`, `CourseRedatoresSection.tsx:28`) por `failedWithoutData` no ramo
   que substitui a tela, e mandar a falha com cache para um `InlineLoadState` ao lado da lista.
+- **D-54 · Dois hooks de `shared/hooks` engolem a promise do `refetch`, e 7 consumidores espalham
+  isso** → **BD-18**.
+  Medido em 2026-08-20 durante o BD-17 (revisão final do branch), contra `1d61b28`.
+  `useLoadState.ts:51-53` devolve `refetch: () => { void query.refetch() }` — descarta a promise que
+  o `AppErrorState` aguarda (`AppErrorState.tsx:33-40`) para manter o "Reintentar" em `loading`
+  enquanto o GET está em voo. O botão pisca e volta no mesmo tick. É exatamente o contrato Q-14, que
+  o BD-17 mediu, **contornou** (por isso o `useTurmasPage` nasceu com `refetch: () => query.refetch()`
+  em vez de usar o `useLoadState`) e não corrigiu na origem, porque corrigir ali é outro bloco.
+  Alcance medido: os 6 chamadores reais **do `useLoadState`** são `useQuotesListCourses.ts:10`, `useQuoteCourseSearch.ts:12`,
+  `useCommercialClients.ts:11`, `useCourseRedatores.ts:19`, `useStudentClients.ts:14` e
+  `useRedatorCourses.ts:13`; o `refetch` deles chega a um "Reintentar" vivo em pelo menos
+  `QuotesList.tsx:60` e `:74`, `BudgetDialog.tsx:85` e `CourseRedatoresSection.tsx:33`.
+  **Custo se ficar:** o contrato Q-14 vale só onde alguém o reescreveu à mão, e a próxima tela que
+  usar `useLoadState` herda a regressão sem quebrar tipo nem teste. **Correção:** uma linha
+  (`refetch: () => query.refetch()`) mais varredura dos sítios e um teste de catraca no
+  `useLoadState`. **Não é regressão do BD-17** — é anterior a ele; o BD-17 só o mediu.
+  **Alcance remedido em 2026-08-20** contra `6edf1224`, na medição que montou o BD-18:
+  `useResourceState.ts:40-42` — o irmão do `useLoadState` para payload de objeto, consumido
+  pelo `useProfilePage` — carrega o MESMO `refetch: () => { void query.refetch() }`. São
+  **dois** hooks compartilhados engolindo a promise, não um, e **sete** consumidores no total.
+
+- **D-56 · A forma normalizada de lista é montada à mão em 6 sítios, e a política já divergiu uma
+  vez** → **BD-18**.
+  Medido em 2026-08-20 no review do BD-17 (Q-2), contra `ae102f11`. O par
+  `error: isError ? (error ?? ({} as ProblemDetails)) : null` + `refetch: () => query.refetch()` —
+  a política "falhou" vs. "veio vazia", mais o contrato Q-14 — está escrito por extenso em
+  `shared/hooks/useCrudPage.ts:56`, `shared/hooks/useArchivedPage.ts:78`,
+  `shared/hooks/useLoadState.ts:39` e nos dois aliases que o BD-17 criou
+  (`features/operation/hooks/useTurmasPage.ts` e `usePendingQuotesPage.ts`). O BD-17 fez o certo
+  tirando a derivação de dentro do JSX (D-52) e **escolheu copiar em vez de centralizar**, porque a
+  peça que faltava é a que o `useLoadState` deveria ser e não é — ver **D-54**, que é a raiz e o
+  vizinho desta linha. **A reincidência é medida, não temida:** a mesma política já morava em seis
+  hooks e já tinha divergido (Q-1/Q-1b/Q-2 do review de 2026-08-14), que é o motivo do bullet do
+  `useLoadState` na rule. **Correção:** um `listSource(query)` em `shared/hooks/` devolvendo o
+  contrato `ListSource<T>` que o BD-17 acabou de escrever em `shared/lib/archivable.ts` — os seis
+  sítios passam a espalhá-lo, não a derivá-lo. Sai junto do D-54 e pelo mesmo motivo: corrigir a
+  promise em seis cópias é o custo que a centralização apaga.
+  **Linha proposta para `.claude/rules/frontend-fsliced.md`, a escrever quando o débito for pago**
+  (escrevê-la antes tornaria a rule falsa nos seis sítios): *"A forma normalizada de lista é
+  `ListSource<T>` e nasce num lugar só (`shared/hooks`). Hook que monta
+  `isError ? (error ?? {}) : null` à mão está recriando a política — o alias espalha, não deriva."*
+  **Não é regressão do BD-17** — é o alcance que ele mediu e não cobriu.
+  **Alcance remedido em 2026-08-20** contra `6edf1224`: o sexto sítio é `useResourceState.ts:35`,
+  que repete a mesma linha para payload de objeto. O normalizador de lista não o serve — a
+  fronteira está declarada em `useDashboard.ts:124-129` —, então ele entra no bloco como decisão
+  de desenho, não como sexta cópia a apagar sem pensar.
+
 - **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
   Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
   escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
@@ -295,43 +384,6 @@ sentada só — é o que torna o agrupamento barato.
   varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Sem bloco atribuído
-
-- **D-54 · O `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso.**
-  Medido em 2026-08-20 durante o BD-17 (revisão final do branch), contra `1d61b28`.
-  `useLoadState.ts:51-53` devolve `refetch: () => { void query.refetch() }` — descarta a promise que
-  o `AppErrorState` aguarda (`AppErrorState.tsx:33-40`) para manter o "Reintentar" em `loading`
-  enquanto o GET está em voo. O botão pisca e volta no mesmo tick. É exatamente o contrato Q-14, que
-  o BD-17 mediu, **contornou** (por isso o `useTurmasPage` nasceu com `refetch: () => query.refetch()`
-  em vez de usar o `useLoadState`) e não corrigiu na origem, porque corrigir ali é outro bloco.
-  Alcance medido: os 6 chamadores reais são `useQuotesListCourses.ts:10`, `useQuoteCourseSearch.ts:12`,
-  `useCommercialClients.ts:11`, `useCourseRedatores.ts:19`, `useStudentClients.ts:14` e
-  `useRedatorCourses.ts:13`; o `refetch` deles chega a um "Reintentar" vivo em pelo menos
-  `QuotesList.tsx:60` e `:74`, `BudgetDialog.tsx:85` e `CourseRedatoresSection.tsx:33`.
-  **Custo se ficar:** o contrato Q-14 vale só onde alguém o reescreveu à mão, e a próxima tela que
-  usar `useLoadState` herda a regressão sem quebrar tipo nem teste. **Correção:** uma linha
-  (`refetch: () => query.refetch()`) mais varredura dos sítios e um teste de catraca no
-  `useLoadState`. **Não é regressão do BD-17** — é anterior a ele; o BD-17 só o mediu.
-
-- **D-56 · A forma normalizada de lista é montada à mão em 5 sítios, e a política já divergiu uma vez.**
-  Medido em 2026-08-20 no review do BD-17 (Q-2), contra `ae102f11`. O par
-  `error: isError ? (error ?? ({} as ProblemDetails)) : null` + `refetch: () => query.refetch()` —
-  a política "falhou" vs. "veio vazia", mais o contrato Q-14 — está escrito por extenso em
-  `shared/hooks/useCrudPage.ts:56`, `shared/hooks/useArchivedPage.ts:78`,
-  `shared/hooks/useLoadState.ts:39` e nos dois aliases que o BD-17 criou
-  (`features/operation/hooks/useTurmasPage.ts` e `usePendingQuotesPage.ts`). O BD-17 fez o certo
-  tirando a derivação de dentro do JSX (D-52) e **escolheu copiar em vez de centralizar**, porque a
-  peça que faltava é a que o `useLoadState` deveria ser e não é — ver **D-54**, que é a raiz e o
-  vizinho desta linha. **A reincidência é medida, não temida:** a mesma política já morava em seis
-  hooks e já tinha divergido (Q-1/Q-1b/Q-2 do review de 2026-08-14), que é o motivo do bullet do
-  `useLoadState` na rule. **Correção:** um `listSource(query)` em `shared/hooks/` devolvendo o
-  contrato `ListSource<T>` que o BD-17 acabou de escrever em `shared/lib/archivable.ts` — os cinco
-  sítios passam a espalhá-lo, não a derivá-lo. Sai junto do D-54 e pelo mesmo motivo: corrigir a
-  promise em cinco cópias é o custo que a centralização apaga.
-  **Linha proposta para `.claude/rules/frontend-fsliced.md`, a escrever quando o débito for pago**
-  (escrevê-la antes tornaria a rule falsa nos cinco sítios): *"A forma normalizada de lista é
-  `ListSource<T>` e nasce num lugar só (`shared/hooks`). Hook que monta
-  `isError ? (error ?? {}) : null` à mão está recriando a política — o alias espalha, não deriva."*
-  **Não é regressão do BD-17** — é o alcance que ele mediu e não cobriu.
 
 - **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.**
   Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
