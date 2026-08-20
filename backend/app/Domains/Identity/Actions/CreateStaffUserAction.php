@@ -32,7 +32,7 @@ class CreateStaffUserAction
                 $data->email,
             );
 
-            $user = User::create([
+            $user = $this->users->writing(fn () => User::create([
                 'name' => $data->name,
                 'email' => $data->email,
                 'rut' => $rut,
@@ -40,7 +40,7 @@ class CreateStaffUserAction
                 'password' => $data->password,
                 'type' => 'admin',
                 'is_active' => $data->is_active,
-            ]);
+            ]));
 
             $user->syncRoles([$data->role]);
 

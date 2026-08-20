@@ -14,7 +14,7 @@ use Tests\TestCase;
  * inexistente — dois cadastros simultâneos do mesmo RUT passam os dois pelo
  * check e o perdedor estoura no índice único. O handler devolvia 500 mascarado.
  */
-class ColisaoDeIndiceVira422Test extends TestCase
+class UniqueIndexCollisionTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -91,6 +91,33 @@ class ColisaoDeIndiceVira422Test extends TestCase
         $this->putJson("/api/users/{$alvo->id}", [
             'name' => 'Alvo',
             'email' => 'corrida@lotus.cl',
+            'role' => 'admin',
+            'is_active' => true,
+        ])->assertStatus(422)->assertJsonPath('errors.email.0', fn ($m) => $m !== null);
+    }
+
+    /**
+     * Mesma prova do teste acima, mas no CREATE: a linha colidente nasce
+     * DEPOIS do check de `CreateStaffUserAction`, dentro da mesma transação,
+     * então o INSERT do próprio staff é que estoura no índice.
+     */
+    public function test_colisao_real_no_create_devolve_422_com_o_campo(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $jaInseriu = false;
+        User::creating(function () use (&$jaInseriu) {
+            if ($jaInseriu) {
+                return;
+            }
+            $jaInseriu = true;
+            User::factory()->create(['type' => 'admin', 'email' => 'corrida-create@lotus.cl']);
+        });
+
+        $this->postJson('/api/users', [
+            'name' => 'Novo Admin',
+            'email' => 'corrida-create@lotus.cl',
+            'password' => 'senha1234',
             'role' => 'admin',
             'is_active' => true,
         ])->assertStatus(422)->assertJsonPath('errors.email.0', fn ($m) => $m !== null);
