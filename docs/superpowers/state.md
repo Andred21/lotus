@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: useloadstate-promise-e-forma
+active_work_item: bd18-useloadstate-promise-e-forma
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd17-superficie-de-arquivados
-state_basis_commit: 1a92a82f
-updated_at: 2026-08-20T14:30:00-03:00
+state_basis_commit: 93acf6a7
+updated_at: 2026-08-20T16:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,47 @@ updated_at: 2026-08-20T14:30:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Trabalho ativo — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
+
+### Seleção — 2026-08-20
+
+**Promoção explícita do João**, com esta árvore em `idle`. O gate do `/planejar-bloco` reprovou o
+argumento pelo motivo de sempre: veio o título de seção do backlog (`BD-18 · Frontend · useLoadState:
+…`, com separadores e travessão pendurado), não o slug — e `active_work_item` era `null`, então
+"corresponder exatamente" também falhava. Nenhum arquivo tocado antes da decisão dele.
+
+**Quatro decisões dele fecharam o gate:** o slug `bd18-useloadstate-promise-e-forma`; **rota direta a
+`ready_for_planning`, sem Context Packet** (os três débitos nasceram de medição local — D-54 e D-56 no
+review e no fechamento do BD-17, D-14 no review do BD-6 —, e não há fonte externa a recuperar); a
+worktree `fix-frontend` seguindo na branch atual `docs/bd18-agrupamento-useloadstate`, que já carrega
+o commit de agrupamento do backlog; e o **alcance completo do D-54**, contra o que a ficha registrava.
+
+**Segunda árvore viva, medida e não deduzida:** `/home/jvbat/projetos/lotus` está em
+`bd14-contrato-de-entrada`, `workflow_state: ready_for_review`. É bloco de **backend**, então a P-03
+não dispara (o gatilho dela são dois blocos de backend) e a única colisão possível é
+`docs/superpowers/**`, que sempre colide e é merge mecânico. Sexta exceção declarada à invariante de
+um `active_work_item`, por decisão do João.
+
+### Planejamento — 2026-08-20
+
+**O escopo do bloco é maior do que as duas fichas registravam, e isso foi medido antes de desenhar.**
+A ficha do D-54 dizia "2 hooks compartilhados e 7 consumidores"; a varredura por forma
+(`void <query>.refetch()`) contra `93acf6a7` achou **14 produtores em 12 arquivos**, dos quais
+**seis** alimentam um `AppErrorState` de tela cheia — o único componente que de fato aguarda a
+promise. **Três travam a promise por TIPO** (`useValidationPage.ts:9`, `useDashboard.ts:48`,
+`StudentClientField.tsx:40` declaram `() => void`), onde trocar o corpo sem trocar a assinatura não
+mudaria nada. E a ficha errava os sítios de prova: `QuotesList:60`/`:74` e `BudgetDialog:85` são
+`InlineLoadState`, cujo botão **não tem estado de carga** — hoje a promise ali não muda nada.
+
+Spec em `specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md`, oito decisões. As que mudam o
+desenho em relação ao que o backlog previa: `listSource` mora em **`shared/hooks`**, não em
+`shared/lib` ao lado do irmão `archivableSource`, porque precisa de `@tanstack` e de `ProblemDetails`
+e a fronteira `shared/lib` × `shared/api` está registrada em três arquivos (D1); a extração são
+**duas** exportações, não uma — `listSource` para os quatro sítios de forma de página e `loadFailure`
+para os dois hooks de carga, que falam outra grafia e não caberiam na primeira (D2/§3); e o
+`InlineLoadState` entra no bloco com a espera compartilhada, senão a promise recém-corrigida seguiria
+descartada em 12 usos (D5).
 
 ## Último item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 
