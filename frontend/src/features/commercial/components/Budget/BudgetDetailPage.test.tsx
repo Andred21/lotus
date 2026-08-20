@@ -62,7 +62,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
-  detail.current = { goBack: () => {}, reload: () => {} }
+  detail.current = { goBack: () => {}, reload: () => Promise.resolve() }
 })
 
 afterEach(() => {

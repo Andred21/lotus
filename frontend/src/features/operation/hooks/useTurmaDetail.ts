@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import type { ProblemDetails } from '@shared/api/axios'
+import { loadFailure } from '@shared/hooks'
 import { useTurma } from '../api/useTurmas'
 
 /** Orquestração da página de detalhe da turma. O componente só consome. */
@@ -13,9 +13,9 @@ export function useTurmaDetail() {
     turmaId,
     loading: query.isLoading,
     /** Falha do GET da turma — a tela precisa distinguir "não carregou" de
-     * "não existe" (spec D16). O cast é obrigatório: a página lê `.detail`. */
-    loadError: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    reload: () => { void query.refetch() },
+     * "não existe" (spec D16). */
+    loadError: loadFailure(query),
+    reload: (): Promise<unknown> => query.refetch(),
     turma: query.data,
     goBack: () => navigate('/operacion'),
     goToBudget: (budgetId: number) => navigate(`/comercial/presupuestos/${budgetId}`),
