@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: bd17-superficie-de-arquivados
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd17-superficie-de-arquivados-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd17-superficie-de-arquivados.md
 context_packet: null
 blocker: null
 last_completed_work_item: arquivados-roots-restantes
-state_basis_commit: 82c1d0c4
-updated_at: 2026-08-20T10:40:00-03:00
+state_basis_commit: ae102f11
+updated_at: 2026-08-20T13:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2

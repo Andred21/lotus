@@ -367,6 +367,38 @@ para este defeito exato.
 
 ## Sem bloco atribuído
 
+- **D-54 · O `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso.**
+  Medido em 2026-08-20 durante o BD-17 (revisão final do branch), contra `1d61b28`.
+  `useLoadState.ts:51-53` devolve `refetch: () => { void query.refetch() }` — descarta a promise que
+  o `AppErrorState` aguarda (`AppErrorState.tsx:33-40`) para manter o "Reintentar" em `loading`
+  enquanto o GET está em voo. O botão pisca e volta no mesmo tick. É exatamente o contrato Q-14, que
+  o BD-17 mediu, **contornou** (por isso o `useTurmasPage` nasceu com `refetch: () => query.refetch()`
+  em vez de usar o `useLoadState`) e não corrigiu na origem, porque corrigir ali é outro bloco.
+  Alcance medido: os 6 chamadores reais são `useQuotesListCourses.ts:10`, `useQuoteCourseSearch.ts:12`,
+  `useCommercialClients.ts:11`, `useCourseRedatores.ts:19`, `useStudentClients.ts:14` e
+  `useRedatorCourses.ts:13`; o `refetch` deles chega a um "Reintentar" vivo em pelo menos
+  `QuotesList.tsx:60` e `:74`, `BudgetDialog.tsx:85` e `CourseRedatoresSection.tsx:33`.
+  **Custo se ficar:** o contrato Q-14 vale só onde alguém o reescreveu à mão, e a próxima tela que
+  usar `useLoadState` herda a regressão sem quebrar tipo nem teste. **Correção:** uma linha
+  (`refetch: () => query.refetch()`) mais varredura dos sítios e um teste de catraca no
+  `useLoadState`. **Não é regressão do BD-17** — é anterior a ele; o BD-17 só o mediu.
+
+- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.**
+  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
+  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
+  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
+  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
+  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
+  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
+  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
+  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
+  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
+  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
+  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
+  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
+  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
+  o D-51 está pago; isto é limitação de plataforma, não regressão.
+
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
   Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce
   em `AdminDashboardAssembler.php:56-62` como quatro booleanos, é passada posicionalmente para
