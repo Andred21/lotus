@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Models\Client;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
@@ -69,6 +70,7 @@ class ClientData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('photo_url'),
             'rut' => ['required', 'string', new ValidRut],
             // `sometimes`, não `required`: a coleção é `Optional`, e omitir a
             // chave num PUT significa "não mexi nos contatos" — antes apagava

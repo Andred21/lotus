@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Illuminate\Validation\Rule;
@@ -54,6 +55,7 @@ class UserData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('photo_url'),
             'rut' => ['nullable', 'string', new ValidRut],
             'password' => ['sometimes', 'string', 'min:8'],
             'role' => ['required', 'string', 'exists:roles,name', Rule::notIn(['redator'])],

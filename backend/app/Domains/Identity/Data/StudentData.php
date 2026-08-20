@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Student;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
@@ -51,6 +52,7 @@ class StudentData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('photo_url'),
             'rut' => ['required', 'string', new ValidRut],
             // Só a FORMA aqui. A existência do cliente é regra do cadastro e
             // vive na CreateStudentAction: `exists` neste DTO fazia o PUT
