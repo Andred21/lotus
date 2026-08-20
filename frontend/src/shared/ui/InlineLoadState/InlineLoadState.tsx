@@ -1,5 +1,6 @@
 import { AppButton } from '../AppButton'
 import { dangerText } from '../../styles/tokens'
+import { useRetryPending } from '../AppErrorState/useRetryPending'
 
 export interface InlineLoadStateProps {
   /** Motivo da falha do GET (o `detail` do RFC 7807, ou a dica genérica).
@@ -13,8 +14,11 @@ export interface InlineLoadStateProps {
   /** Ausente => a linha explica e não oferece botão. Existe porque repetir NEM
    * SEMPRE é recuperação: numa recusa de validação (422) o "Reintentar" reemite
    * a mesma requisição e recebe a mesma recusa, e a correção está no controle ao
-   * lado, que a própria mensagem já indica (UI-05 da revisão de 2026-08-17). */
-  onRetry?: () => void
+   * lado, que a própria mensagem já indica (UI-05 da revisão de 2026-08-17).
+   *
+   * Aceita promise: com ela o botão espera o GET em voo, como o do
+   * `AppErrorState` (Q-14). */
+  onRetry?: () => void | Promise<unknown>
 }
 
 /**
@@ -34,6 +38,8 @@ export interface InlineLoadStateProps {
  * (UI-05 da revisão de 2026-08-17).
  */
 export function InlineLoadState({ error, emptyHint, retryLabel, onRetry }: InlineLoadStateProps) {
+  const retry = useRetryPending(onRetry)
+
   if (!error && !emptyHint) return null
 
   return (
@@ -41,7 +47,9 @@ export function InlineLoadState({ error, emptyHint, retryLabel, onRetry }: Inlin
       {error && (
         <p role="alert" className="mt-1 flex flex-wrap items-center gap-2 text-xs" style={{ color: dangerText }}>
           <span>{error}</span>
-          {onRetry && <AppButton label={retryLabel} text onClick={onRetry} />}
+          {onRetry && (
+            <AppButton label={retryLabel} text loading={retry.pending} disabled={retry.pending} onClick={retry.run} />
+          )}
         </p>
       )}
       {emptyHint && (
@@ -50,7 +58,9 @@ export function InlineLoadState({ error, emptyHint, retryLabel, onRetry }: Inlin
           style={{ color: 'var(--text-color-secondary)' }}
         >
           <span>{emptyHint}</span>
-          {onRetry && <AppButton label={retryLabel} text onClick={onRetry} />}
+          {onRetry && (
+            <AppButton label={retryLabel} text loading={retry.pending} disabled={retry.pending} onClick={retry.run} />
+          )}
         </p>
       )}
     </>
