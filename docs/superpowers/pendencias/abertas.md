@@ -226,6 +226,12 @@ aloca mais no fim da corrida.
 **O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
 diretiva da linha de comando — por isso a medição usa o binário direto.
 
+**Reproduzida no fechamento do BD-17 (2026-08-20), na árvore `fix-frontend`:** mesmos dois `Fatal
+error` pelo comando documentado, e `php -d memory_limit=512M vendor/bin/phpunit` devolve os mesmos
+**828 passed / 5 skipped, 3006 asserções** — desta vez com **pico de 127,00 MB**. O pico oscila
+abaixo do teto e o comando documentado morre assim mesmo, que é o argumento de que a margem não
+existe: quem estoura é o overhead do runner do `artisan`, somado a uma suíte que já ocupa o limite.
+
 **Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
 imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
 processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
