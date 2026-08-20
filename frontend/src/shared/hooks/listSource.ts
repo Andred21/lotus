@@ -1,4 +1,3 @@
-import type { UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { ListSource } from '@shared/lib'
 
@@ -31,11 +30,23 @@ export function loadFailure(query: {
  * descartar retorno e não veria o `void` voltar.
  *
  * Função pura, não hook — o mesmo critério do `archivableSource`. Mora em
- * `shared/hooks` mesmo assim, e não ao lado dele: precisa de `UseQueryResult` e
- * de `ProblemDetails`, e `shared/lib` não importa `@tanstack` nem `@shared/api`
- * (`archivable.ts:18-22`, `screenDetail.ts:23-27`, `AppDataTable.tsx:16-18`).
+ * `shared/hooks` mesmo assim, e não ao lado dele: precisa de `ProblemDetails`, e
+ * `shared/lib` não importa `@shared/api` nem `@tanstack` (`archivable.ts:18-22`,
+ * `screenDetail.ts:23-27`, `AppDataTable.tsx:16-18`).
+ *
+ * O parâmetro é estrutural, e não `UseQueryResult`, pelo mesmo motivo do
+ * `loadFailure` acima: a função lê cinco campos, e exigir a forma inteira do
+ * TanStack impediria os hooks que seguram um contrato estreito de recurso
+ * (`ListableResource` em `useCrudPage`, `ArchivableResource` em
+ * `useArchivedPage`) de passar a query direto, sem cast.
  */
-export function listSource<T>(query: UseQueryResult<T[], ProblemDetails>): ListSource<T> {
+export function listSource<T>(query: {
+  data?: T[]
+  isLoading: boolean
+  isError: boolean
+  error: ProblemDetails | null
+  refetch: () => Promise<unknown>
+}): ListSource<T> {
   return {
     items: query.data ?? [],
     loading: query.isLoading,

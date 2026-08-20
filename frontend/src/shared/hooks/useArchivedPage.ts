@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ProblemDetails } from "@shared/api/axios";
 import { useArchiveToasts } from "./useArchiveToasts";
+import { listSource } from "./listSource";
 
 export type ArchiveMode = "active" | "archived";
 
@@ -74,13 +75,11 @@ export function useArchivedPage<T, TArchived extends ArchivedRow>(
   return {
     mode,
     setMode,
+    ...listSource(query),
+    // O `items` do `listSource` é `query.data ?? []`; o desta tela carrega o
+    // rastro de arquivamento e vem memoizado acima. O override vem DEPOIS do
+    // spread de propósito — invertê-los devolveria a linha sem `archived_at`.
     items,
-    loading: query.isLoading,
-    /** `null` em sucesso, inclusive com lista vazia — vazio não é erro (D16). */
-    error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    /** Devolve a promise: o `AppErrorState` a aguarda para manter o Reintentar
-     * em `loading` enquanto o GET está em voo (Q-14). */
-    refetch: () => query.refetch(),
     /** O toast MORA aqui, nos dois sentidos: sem o de erro, um 403 de quem não
      * tem `*.restore` e os 422 dos gates não mudam nada na tela — a linha
      * continua lá e o operador não sabe se o clique valeu (Q-2 do review de
