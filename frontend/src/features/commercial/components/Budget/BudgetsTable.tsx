@@ -3,24 +3,20 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppColumn, AppTag, IdentityCell,
-  AppEmptyState, ArchiveSwitch, SearchableTableFrame,
+  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
-import { formatUf } from '@shared/lib'
+import { formatUf, type ArchivableRow } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
 import { BudgetRowActions } from './BudgetRowActions'
 import { BudgetStatusFilter } from './BudgetStatusFilter'
 
-/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
- * vêm preenchidas pelo achatamento do `useArchivedPage`; em `active` elas nem são
- * renderizadas. Molde: `ClientRow`. */
-export type BudgetRow = BudgetData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type BudgetRow = ArchivableRow<BudgetData>
 
 export function BudgetsTable({
   budgets, loading, actions, error, onRetry,
@@ -118,20 +114,7 @@ export function BudgetsTable({
           b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
         }
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t('archive.archivedAt')}
-          body={(b: BudgetRow) => (b.archived_at ? new Date(b.archived_at).toLocaleDateString() : '—')}
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t('archive.archivedBy')}
-          body={(b: BudgetRow) => b.archived_by ?? t('archive.unknownAuthor')}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(b: BudgetRow) => (
           <BudgetRowActions
