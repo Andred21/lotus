@@ -12,6 +12,12 @@ import { useState } from 'react'
  *
  * Handler que devolve `void` continua funcionando — só fica sem feedback, e isso
  * está declarado como limitação, não como bug.
+ *
+ * O `setPending(false)` do `finally` pode cair depois do unmount, e isso NÃO é
+ * vazamento: no React 19 `setState` em fiber morto é no-op silencioso (o aviso
+ * saiu no 18). No caminho comum nem há unmount — o retry que dá certo apaga o
+ * `error` e o `InlineLoadState` devolve `null` de um componente ainda montado.
+ * Guardar com `useRef` + cleanup custaria mais que o não-evento que evita.
  */
 export function useRetryPending(onRetry?: () => void | Promise<unknown>) {
   const [pending, setPending] = useState(false)
@@ -22,6 +28,10 @@ export function useRetryPending(onRetry?: () => void | Promise<unknown>) {
     void (async () => {
       try {
         await onRetry?.()
+      } catch {
+        // O estado da falha já está na query — quem imprime é o `error` que
+        // desceu por prop. Sem este ramo, um `onRetry` que rejeita virava
+        // unhandled rejection, e a prop é pública nos dois componentes.
       } finally {
         setPending(false)
       }

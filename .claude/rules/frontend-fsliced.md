@@ -151,7 +151,9 @@ exceção. Na dúvida, siga o vizinho da mesma
   já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
   A forma normalizada de lista é `ListSource<T>` e nasce num lugar só
   (`shared/hooks/listSource.ts`). Hook que monta `isError ? (error ?? {}) : null` à mão está
-  recriando a política — o alias espalha, não deriva. E **retry devolve a promise**: é ela que
+  recriando a política — o alias espalha, não deriva. **Duas exceções deliberadas:**
+  `useHistorial` e `useEmissionPanelState` devolvem `null` onde esta devolve `{}` — é outra
+  política, e normalizá-las muda o que a tela mostra; não as unifique sem DoD que cubra a mudança. E **retry devolve a promise**: é ela que
   mantém o "Reintentar" em `loading` enquanto o GET está em voo (Q-14), e `void query.refetch()`
   a engole **sem quebrar tipo nem teste** — TypeScript aceita descartar retorno, então quem
   guarda são as catracas de `listSource.test.ts`, `useLoadState.test.ts` e `useResourceState.test.ts`.
