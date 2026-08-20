@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: useloadstate-promise-e-forma
 active_work_item: bd18-useloadstate-promise-e-forma
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-20-bd18-useloadstate-promise-e-forma.md
 context_packet: null
 blocker: null
 last_completed_work_item: bd17-superficie-de-arquivados
 state_basis_commit: 93acf6a7
-updated_at: 2026-08-20T16:10:00-03:00
+updated_at: 2026-08-20T16:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -88,6 +88,23 @@ e a fronteira `shared/lib` × `shared/api` está registrada em três arquivos (D
 para os dois hooks de carga, que falam outra grafia e não caberiam na primeira (D2/§3); e o
 `InlineLoadState` entra no bloco com a espera compartilhada, senão a promise recém-corrigida seguiria
 descartada em 12 usos (D5).
+
+
+**Plano em `plans/2026-08-20-bd18-useloadstate-promise-e-forma.md`: 10 tasks, uma por commit.** A
+ordem interna que o backlog fixou (D-56 antes de D-54, D-14 por último) é respeitada, e a peça nova
+entra antes de todo o resto: extrair o normalizador primeiro faz a promise nascer certa nos sítios de
+uma vez, enquanto corrigir a promise antes seria consertar cópias que o passo seguinte apagaria.
+
+**Uma segunda medição durante o `writing-plans` emendou a spec, e a decisão de escopo foi do João:**
+a política `loadFailure` está escrita à mão em **12** sítios, não nos 6 que a §3 tabela — os seis
+extras (`useEnrollmentSection`, `useTurmaDetail`, `useRedatorPicker`, `useTurmaDocsSection` e os dois
+de `useBudgetDetail`) são exatamente os arquivos que a D4 já abre para devolver a promise. **Dois
+ficam de fora com motivo declarado:** `useHistorial` e `useEmissionPanelState` escrevem
+`isError ? (error ?? null) : null`, que é outra política — devolve `null` onde a nossa devolve `{}` —
+e trocá-la mudaria tela sem DoD que o cubra.
+
+**Baseline medida antes da Task 1, não herdada:** `pnpm test` 81 arquivos / 453 testes verdes, lint
+exit 0, build verde. O gate da Task 10 cobra 85 / 467.
 
 ## Último item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 

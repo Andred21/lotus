@@ -97,7 +97,7 @@ tipo de retorno, e é `shared/lib` que os 6 componentes de tabela já consomem.
 ### D2 · Duas exportações, não uma: `loadFailure` e `listSource`
 
 ```ts
-export function loadFailure(query: Pick<UseQueryResult<unknown, ProblemDetails>, 'isError' | 'error'>) {
+export function loadFailure(query: { isError: boolean; error: ProblemDetails | null }) {
   return query.isError ? (query.error ?? ({} as ProblemDetails)) : null
 }
 
@@ -116,9 +116,24 @@ export function listSource<T>(query: UseQueryResult<T[], ProblemDetails>): ListS
 4 dos 6 sítios e a linha da rule nasceria com exceção viva — que é exatamente o defeito que ela
 descreve.
 
-O parâmetro de `loadFailure` é `Pick<…, 'isError' | 'error'>` de propósito: o `useResourceState` é
-`UseQueryResult<T, …>` e o `useLoadState` é `UseQueryResult<T[], …>`; a política lê dois campos e não
-deve exigir a forma do dado para funcionar.
+O parâmetro de `loadFailure` é **estrutural**, e não `UseQueryResult`, de propósito: o
+`useResourceState` é `UseQueryResult<T, …>` e o `useLoadState` é `UseQueryResult<T[], …>`; a política
+lê dois campos e não deve exigir a forma do dado para funcionar.
+
+### Emenda de 2026-08-20 (durante o `writing-plans`) — o D-56 alcança 12 sítios, não 6
+
+A §3 desta spec tabela **6** sítios porque conta os que montam a *forma de página* inteira. Medido por
+forma (`grep "?? ({} as"`), a **política** `loadFailure` está escrita à mão em **12**: os 6 da tabela
+mais `useEnrollmentSection.ts:26`, `useTurmaDetail.ts:17`, `useRedatorPicker.ts:33`,
+`useTurmaDocsSection.ts:55` e `useBudgetDetail.ts:90-91` (dois num ternário encadeado). **Decisão do
+João: os 12**, pelo mesmo critério que ele aplicou ao D-54 — os seis extras são exatamente os
+arquivos que a D4 já abre, custam uma linha cada, e sem eles a linha da rule da D7 nasceria falsa
+dentro de arquivos que este bloco tocou.
+
+**Dois sítios ficam de fora, e não por esquecimento:** `useHistorial.ts:89,103,107` e
+`useEmissionPanelState.ts:82,85` escrevem `isError ? (error ?? null) : null` — outra política, que
+devolve `null` onde a nossa devolve `{}`. Trocá-la mudaria comportamento de tela sem DoD que o
+cubra; eles entram no bloco só pela promise.
 
 ### D3 · `useArchivedPage` espalha e sobrescreve `items`
 
