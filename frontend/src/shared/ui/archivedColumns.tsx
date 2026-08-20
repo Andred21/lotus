@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { formatDate, type ArchiveTrail } from '@shared/lib'
 import { AppColumn } from './AppDataTable'
 
@@ -29,7 +30,7 @@ import { AppColumn } from './AppDataTable'
  * Sem `sortable`: nenhuma das 6 tabelas o tinha, e acrescentá-lo aqui mudaria o
  * comportamento das 6 de uma vez.
  */
-export function archivedColumns(t: (key: string) => string) {
+export function archivedColumns(t: (key: string) => string): ReactElement[] {
   return [
     <AppColumn
       key="archived_at"

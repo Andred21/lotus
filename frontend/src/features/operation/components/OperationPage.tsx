@@ -10,7 +10,7 @@ import { PendingQuotesPanel } from './Turma/PendingQuotesPanel'
 import { TurmasTable } from './Turma/TurmasTable'
 
 export function OperationPage() {
-  // `usePendingQuotes` dispara sempre; sem `operation.turma.create` o backend
+  // `usePendingQuotesPage` dispara sempre; sem `operation.turma.create` o backend
   // responde 403 e o painel simplesmente não é renderizado (o `can()` é RBAC de
   // UI — a API é a fronteira). Query condicional por permissão quebraria a regra
   // de hooks; guarda-se no render.
