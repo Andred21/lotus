@@ -11,13 +11,23 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-function wrapper({ children }: { children: ReactNode }) {
+/** Cliente estável por teste: uma fábrica que monta o QueryClient fora da função de render.
+ * Se o cliente morasse no corpo da wrapper, cada render remontaria um novo e orfanaria a
+ * rejeição da query — vitest reprova com `Unknown Error: undefined` e a test torna timeout.
+ * Padrão: comCliente() em useDashboard.test.tsx. */
+function comCliente() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  )
+
+  return { qc, Wrapper }
 }
 
 describe('useTurmasPage', () => {
-  beforeEach(() => get.mockReset())
+  beforeEach(() => {
+    get.mockReset()
+  })
 
   it('normaliza a query crua na MESMA forma que useCrudPage devolve', async () => {
     // A assimetria era o pior caso do D-52: `useTurmas()` devolve `UseQueryResult`
@@ -25,7 +35,8 @@ describe('useTurmasPage', () => {
     // aninhado dentro da prop.
     get.mockResolvedValue({ data: [{ id: 7, code: 'T-7' }] })
 
-    const { result } = renderHook(() => useTurmasPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.items).toEqual([{ id: 7, code: 'T-7' }])
@@ -37,7 +48,8 @@ describe('useTurmasPage', () => {
     // proprio `?? []`, que era metade do quarteto de ternarios.
     get.mockReturnValue(new Promise(() => {}))
 
-    const { result } = renderHook(() => useTurmasPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
 
     expect(result.current.items).toEqual([])
     expect(result.current.loading).toBe(true)
@@ -46,7 +58,8 @@ describe('useTurmasPage', () => {
   it('devolve o envelope da falha, e `{}` quando o interceptor nao populou o corpo', async () => {
     get.mockRejectedValue(undefined)
 
-    const { result } = renderHook(() => useTurmasPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())
     expect(result.current.error).toEqual({})
@@ -58,7 +71,8 @@ describe('useTurmasPage', () => {
     // trocar por `() => void` aqui compilaria sem quebrar nenhum teste acima.
     get.mockResolvedValue({ data: [] })
 
-    const { result } = renderHook(() => useTurmasPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(result.current.refetch()).resolves.toBeDefined()
@@ -71,7 +85,8 @@ describe('usePendingQuotesPage', () => {
   it('normaliza a fila de pendentes na mesma forma', async () => {
     get.mockResolvedValue({ data: [{ quote_id: 3 }] })
 
-    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.items).toEqual([{ quote_id: 3 }])
@@ -81,7 +96,8 @@ describe('usePendingQuotesPage', () => {
   it('DEVOLVE a promise do refetch', async () => {
     get.mockResolvedValue({ data: [] })
 
-    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(result.current.refetch()).resolves.toBeDefined()
