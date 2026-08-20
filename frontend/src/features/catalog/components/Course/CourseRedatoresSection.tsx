@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppErrorState, AppSkeleton } from '@shared/ui'
+import { AppErrorState, AppSkeleton, InlineLoadState } from '@shared/ui'
 import { RedatorCard } from './RedatorCard'
 import type { useCourseRedatores } from '../../hooks/useCourseRedatores'
 
@@ -20,12 +20,24 @@ export function CourseRedatoresSection({
 }) {
   const { t } = useTranslation()
 
+  // A falha só substitui a seção sem cache; com lista em mão ela vira aviso ao
+  // lado, e a seção segue utilizável (rule `frontend-fsliced.md`, precedente
+  // `CourseStep.tsx:76`). Declarado uma vez: os dois ramos finais o imprimem, e
+  // cobrir só um deixaria metade do defeito de pé.
+  const aviso = (
+    <InlineLoadState
+      error={redatores.isError ? (redatores.errorDetail ?? t(redatores.errorHint)) : null}
+      retryLabel={t('common.retry')}
+      onRetry={redatores.refetch}
+    />
+  )
+
   return redatores.isLoading ? (
     <div className="grid gap-2 sm:grid-cols-2" aria-busy="true">
       <AppSkeleton height="4.5rem" />
       <AppSkeleton height="4.5rem" />
     </div>
-  ) : redatores.isError ? (
+  ) : redatores.failedWithoutData ? (
     <AppErrorState
       title={t('common.loadError')}
       detail={redatores.errorDetail ?? t(redatores.errorHint)}
@@ -35,6 +47,7 @@ export function CourseRedatoresSection({
   ) : isCreate ? (
     // Exceção do produto: habilitar redatores pelo lado do curso só no cadastro.
     <div className="space-y-2">
+      {aviso}
       <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
         {t('course.redatoresSelectNote')}
       </p>
@@ -52,6 +65,7 @@ export function CourseRedatoresSection({
   ) : (
     // View/edit: leitura. A edição da habilitação mora em Pessoas.
     <div className="space-y-2">
+      {aviso}
       <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
         {t('course.redatoresReadonlyNote')}
       </p>
