@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { UserData } from '@shared/types/generated'
+import { archivableSource } from '@shared/lib'
 import { useUsersPage } from '../hooks/useUsersPage'
 import { useUsersArchived } from '../hooks/useUsersArchived'
 import { useRolesPage } from '../hooks/useRolesPage'
@@ -19,7 +20,8 @@ export function AdministracionPage() {
   const rolesPage = useRolesPage()
   const usersArchived = useUsersArchived()
   const [toArchive, setToArchive] = useState<UserData | null>(null)
-  const archived = usersArchived.mode === 'archived'
+  // A fonte da tela é uma escolha só, não quatro (D-52).
+  const fonte = archivableSource(page, usersArchived)
   const [tab, setTab] = useState(0)
 
   return (
@@ -28,10 +30,10 @@ export function AdministracionPage() {
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('admin.tabUsers')}>
             <UsersTable
-              users={archived ? usersArchived.items : page.items}
-              loading={archived ? usersArchived.loading : page.loading}
-              error={archived ? usersArchived.error : page.error}
-              onRetry={archived ? usersArchived.refetch : page.refetch}
+              users={fonte.items}
+              loading={fonte.loading}
+              error={fonte.error}
+              onRetry={fonte.refetch}
               mode={usersArchived.mode}
               onModeChange={usersArchived.setMode}
               onArchive={setToArchive}

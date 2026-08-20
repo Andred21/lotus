@@ -2,16 +2,14 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
-import { formatDateTime } from '@shared/lib'
+import { formatDateTime, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
 
-/** A mesma tabela serve as duas fontes. Molde: `ClientRow`. */
-export type UserRow = UserData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type UserRow = ArchivableRow<UserData>
 
 export function UsersTable({
   users, loading, onView, actions, error, onRetry,
@@ -80,20 +78,7 @@ export function UsersTable({
         sortable
         body={(u: UserData) => (u.last_login ? formatDateTime(new Date(u.last_login)) : '—')}
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t('archive.archivedAt')}
-          body={(u: UserRow) => (u.archived_at ? new Date(u.archived_at).toLocaleDateString() : '—')}
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t('archive.archivedBy')}
-          body={(u: UserRow) => u.archived_by ?? t('archive.unknownAuthor')}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(u: UserRow) => (
           <UserRowActions
