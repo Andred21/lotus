@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: bd12-load-state-e-listas
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd14-contrato-de-entrada
-state_basis_commit: c61e2f4
-updated_at: 2026-08-20T16:20:00-03:00
+state_basis_commit: fc852ce3
+updated_at: 2026-08-20T16:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2

@@ -134,21 +134,39 @@ que juntava os dois, ele deixou de sair barato em conjunto.
 **DoD:** o nome do item de navegação alcançável no toque a 390px, medido no dispositivo emulado — não
 o atributo novo no DOM.
 
-## BD-12 · Frontend · load-state: os dois sítios que sobraram do BD-6
+## BD-12 · Frontend · load-state: o contrato de lista, o `refetch` e os sítios do BD-6
 
-**Cobre:** D-14, P-40 · **Frente:** frontend
-**Afinidade:** os dois orbitam `useLoadState` e o catálogo de cursos.
+**Cobre:** D-14, D-54, D-55, D-56, P-40 · **Frente:** frontend
+**Afinidade:** os cinco orbitam `useLoadState` e o que sai dele — o ramo de falha, a promise do
+`refetch`, a forma normalizada de lista e o catálogo de cursos que alimenta os dois sítios do D-14.
 
 - **D-14** — `RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru.
+- **D-54** — o `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso. É a
+  raiz: enquanto ela existir, o contrato Q-14 vale só onde alguém o reescreveu à mão.
+- **D-56** — a forma normalizada de lista é montada à mão em 5 sítios. Um `listSource(query)` em
+  `shared/hooks/` devolvendo o `ListSource<T>` que o BD-17 escreveu em `shared/lib/archivable.ts`
+  apaga a cópia; sai junto do D-54, porque corrigir a promise em cinco cópias é o custo que a
+  centralização apaga.
+- **D-55** — o DataTable não reexecuta as funções `body` quando só o idioma muda. A linha do débito
+  pedia bloco próprio por tocar `AppDataTable`, compartilhado por todas as telas; entra aqui como
+  fatia com prova visual própria, não diluída nas outras.
 - **P-40** — remedição do ramo "catálogo genuinamente vazio" contra HEAD. Depende de conseguir
   esvaziar o catálogo de dev (seeder de cenário, endpoint de teste, ou o João rodando o comando).
+
+> **Reagrupado em 2026-08-20, por decisão explícita do João, no mesmo passo da promoção.** O bloco
+> nascera em 2026-08-14 com D-14 e P-40 apenas; o BD-17 mediu D-54, D-55 e D-56 em 2026-08-20 e os
+> deixou sem hospedeiro. Agrupar não promoveu nada: a promoção é a linha do `state.md`, e cada
+> débito continua com a ficha canônica em `## Débitos técnicos`.
 
 > A **P-38** saía deste bloco e foi **encerrada antes**, em 2026-08-16, pelo gatilho literal dela: o
 > `meu-perfil-frontend` tocou `frontend-fsliced.md` por outro motivo e trocou a frase pelo corte
 > medido com o runner (`pendencias/encerradas.md`).
 
-**DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
-falha deixa a regressão passar verde.
+**DoD, uma prova por débito:** o teste do ramo COM cache em cada sítio do D-14 — o BD-6 mostrou que
+forçar `list: []` no teste de falha deixa a regressão passar verde; o "Reintentar" permanecendo em
+`loading` enquanto o GET está em voo (D-54), com catraca no `useLoadState`; os cinco sítios
+espalhando `ListSource<T>` em vez de derivá-lo (D-56); e a troca de idioma repintando a célula
+formatada, medida no navegador e não no DOM (D-55).
 
 ## BD-15 · Docs e guardas de documentação
 
@@ -214,23 +232,7 @@ sentada só — é o que torna o agrupamento barato.
   `useLoadState` o fix é de uma linha em cada um: trocar `courses.isError` / `redatores.isError`
   (`RedatorCourseSelector.tsx:38`, `CourseRedatoresSection.tsx:28`) por `failedWithoutData` no ramo
   que substitui a tela, e mandar a falha com cache para um `InlineLoadState` ao lado da lista.
-- **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
-  Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
-  escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
-  emitido': não há o que emitir"), e a classificação exclusiva exige que ela caia em algum lugar. O
-  que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
-  Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
-  contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
-- **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
-  em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do
-  `dashboard-backend-agregacoes` cobre a direção contrária **só para `Dashboard`**; generalizar é
-  varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
-  varredura de órfãos que os fechamentos já fazem à mão.
-
-## Sem bloco atribuído
-
-- **D-54 · O `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso.**
+- **D-54 · O `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso.** → **BD-12**.
   Medido em 2026-08-20 durante o BD-17 (revisão final do branch), contra `1d61b28`.
   `useLoadState.ts:51-53` devolve `refetch: () => { void query.refetch() }` — descarta a promise que
   o `AppErrorState` aguarda (`AppErrorState.tsx:33-40`) para manter o "Reintentar" em `loading`
@@ -246,7 +248,23 @@ sentada só — é o que torna o agrupamento barato.
   (`refetch: () => query.refetch()`) mais varredura dos sítios e um teste de catraca no
   `useLoadState`. **Não é regressão do BD-17** — é anterior a ele; o BD-17 só o mediu.
 
-- **D-56 · A forma normalizada de lista é montada à mão em 5 sítios, e a política já divergiu uma vez.**
+- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.** → **BD-12**.
+  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
+  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
+  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
+  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
+  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
+  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
+  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
+  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
+  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
+  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
+  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
+  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
+  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
+  o D-51 está pago; isto é limitação de plataforma, não regressão.
+
+- **D-56 · A forma normalizada de lista é montada à mão em 5 sítios, e a política já divergiu uma vez.** → **BD-12**.
   Medido em 2026-08-20 no review do BD-17 (Q-2), contra `ae102f11`. O par
   `error: isError ? (error ?? ({} as ProblemDetails)) : null` + `refetch: () => query.refetch()` —
   a política "falhou" vs. "veio vazia", mais o contrato Q-14 — está escrito por extenso em
@@ -267,21 +285,21 @@ sentada só — é o que torna o agrupamento barato.
   `isError ? (error ?? {}) : null` à mão está recriando a política — o alias espalha, não deriva."*
   **Não é regressão do BD-17** — é o alcance que ele mediu e não cobriu.
 
-- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.**
-  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
-  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
-  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
-  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
-  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
-  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
-  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
-  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
-  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
-  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
-  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
-  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
-  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
-  o D-51 está pago; isto é limitação de plataforma, não regressão.
+- **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
+  Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
+  escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
+  emitido': não há o que emitir"), e a classificação exclusiva exige que ela caia em algum lugar. O
+  que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
+  Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
+  contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
+- **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
+  **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
+  em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do
+  `dashboard-backend-agregacoes` cobre a direção contrária **só para `Dashboard`**; generalizar é
+  varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
+  varredura de órfãos que os fechamentos já fazem à mão.
+
+## Sem bloco atribuído
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
   Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce
