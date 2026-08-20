@@ -7,6 +7,7 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Audit\PivotAudit;
+use App\Shared\Data\WritableAttributes;
 use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -64,13 +65,13 @@ class UpdateRedatorAction
                     && $data->is_active === false
                     && $redator->user->is_active === true;
 
-                $redator->user->update([
+                $redator->user->update(WritableAttributes::from([
                     'name' => $data->name,
                     'rut' => $rut,
                     'email' => $data->email,
-                    'phone' => $data->phone instanceof Optional ? null : $data->phone,
-                    ...($data->is_active instanceof Optional ? [] : ['is_active' => $data->is_active]),
-                ]);
+                    'phone' => $data->phone,
+                    'is_active' => $data->is_active,
+                ]));
 
                 if ($revogando) {
                     $this->sessions->all($redator->user);
