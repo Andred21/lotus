@@ -54,7 +54,7 @@ class ClientData extends Data
         public string $legal_name,
         #[In('client', 'provider', 'other')]
         public string $type = 'client',
-        public string|Optional|null $business_activity = null,
+        public string|Optional|null $business_activity = new Optional,
         /** @var array<ClientAddressData>|Optional */
         #[DataCollectionOf(ClientAddressData::class)]
         public array|Optional $addresses = new Optional,
