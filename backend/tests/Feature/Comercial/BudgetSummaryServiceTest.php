@@ -33,7 +33,7 @@ class BudgetSummaryServiceTest extends TestCase
         $courseId = $this->makeCourse()->id;
 
         foreach ($valuesUf as $i => $value) {
-            Quote::create([
+            Quote::forceCreate([
                 'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => $i + 1,
                 'student_count' => 1, 'value_uf' => $value, 'status' => 'pending',
             ]);
@@ -50,7 +50,7 @@ class BudgetSummaryServiceTest extends TestCase
         $courseId = $this->makeCourse()->id;
 
         foreach ($statuses as $i => $status) {
-            Quote::create([
+            Quote::forceCreate([
                 'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => $i + 1,
                 'student_count' => 10, 'value_uf' => 100, 'status' => $status,
             ]);

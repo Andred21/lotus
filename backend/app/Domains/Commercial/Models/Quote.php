@@ -26,10 +26,14 @@ class Quote extends Model implements Auditable
 {
     use ArchivesChildren, AuditableTrait, SoftDeletes;
 
+    // FORA do `$fillable`: `seq_in_budget` é derivado sob lock na
+    // CreateQuoteAction (ADR-17). Payload que chega com o número não pode
+    // vencer a derivação — mesmo arranjo do `version` do template de
+    // certificado. `$auditInclude` mantém o campo: sair do fillable não tira
+    // da auditoria.
     protected $fillable = [
         'budget_id',
         'course_id',
-        'seq_in_budget',
         'student_count',
         'planned_start_date',
         'planned_end_date',

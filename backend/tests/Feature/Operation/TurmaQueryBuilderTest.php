@@ -27,7 +27,7 @@ class TurmaQueryBuilderTest extends TestCase
         $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $courseId = $this->makeCourse(['name' => 'AT 220kV', 'workload_hours' => 8])->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
@@ -68,7 +68,7 @@ class TurmaQueryBuilderTest extends TestCase
         );
         $budget = Budget::create(['client_id' => $client->id, 'code' => "Scap {$n}"]);
         $course = $this->makeCourse(['name' => "Curso {$n}"]);
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

@@ -74,7 +74,7 @@ class BudgetCrudTest extends TestCase
     {
         $this->actingAsAdmin();
         $budget = Budget::create(['client_id' => $this->makeClientWithUser()->id, 'code' => 'Scap 1']);
-        Quote::create([
+        Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1, 'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',

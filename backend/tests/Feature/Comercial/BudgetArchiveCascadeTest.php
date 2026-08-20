@@ -33,7 +33,7 @@ class BudgetArchiveCascadeTest extends TestCase
 
     private function makeQuote(Budget $budget, int $seq = 1): Quote
     {
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $this->makeCourse(['name' => "C{$seq}"])->id,
             'seq_in_budget' => $seq,

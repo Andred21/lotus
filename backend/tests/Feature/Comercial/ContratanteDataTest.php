@@ -44,7 +44,7 @@ class ContratanteDataTest extends TestCase
             ['rut' => '87654321-J']
         );
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'TEST-001']);
-        $quote = $budget->quotes()->create([
+        $quote = $budget->quotes()->forceCreate([
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,
             'student_count' => 5,
@@ -77,7 +77,7 @@ class ContratanteDataTest extends TestCase
             ['rut' => '11111111-1']
         );
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'TEST-002']);
-        $quote = $budget->quotes()->create([
+        $quote = $budget->quotes()->forceCreate([
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,
             'student_count' => 5,
@@ -108,7 +108,7 @@ class ContratanteDataTest extends TestCase
             ['rut' => '22222222-2']
         );
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'TEST-003']);
-        $quote = $budget->quotes()->create([
+        $quote = $budget->quotes()->forceCreate([
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,
             'student_count' => 5,

@@ -18,7 +18,7 @@ class BudgetModelTest extends TestCase
     {
         $courseId = $this->makeCourse()->id;
 
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => $seq,
             'student_count' => 10, 'value_uf' => 50.5, 'status' => $status,
         ]);

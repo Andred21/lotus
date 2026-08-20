@@ -34,7 +34,7 @@ class ImportStudentsActionTest extends TestCase
         $this->otherClient = $this->makeClientWithUser(['legal_name' => 'OTRA']);
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 2, 'value_uf' => 10, 'status' => 'approved',
         ]);

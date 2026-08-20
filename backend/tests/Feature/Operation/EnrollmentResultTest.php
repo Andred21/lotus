@@ -37,7 +37,7 @@ class EnrollmentResultTest extends TestCase
         $client = $this->makeClientWithUser();
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => 1,
@@ -180,7 +180,7 @@ class EnrollmentResultTest extends TestCase
     {
         $this->actingAsAdmin();
 
-        $otherQuote = Quote::create([
+        $otherQuote = Quote::forceCreate([
             'budget_id' => $this->turma->quote->budget_id,
             'course_id' => $this->turma->course_id,
             'seq_in_budget' => 2,

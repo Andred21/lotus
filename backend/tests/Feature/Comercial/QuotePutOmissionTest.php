@@ -18,7 +18,7 @@ class QuotePutOmissionTest extends TestCase
         $client = $this->makeClientWithUser();
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap 1']);
 
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $this->makeCourse()->id,
             'seq_in_budget' => 1,

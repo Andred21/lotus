@@ -24,17 +24,19 @@ class CreateQuoteAction
                 ->lockForUpdate()
                 ->max('seq_in_budget') + 1;
 
-            return Quote::create([
-                'budget_id' => $budget->id,
-                'course_id' => $data->course_id,
-                'seq_in_budget' => $seq,
-                'student_count' => $data->student_count,
-                'value_uf' => $data->value_uf,
-                'purchase_order' => $data->purchase_order instanceof Optional ? null : $data->purchase_order,
-                'planned_start_date' => $data->planned_start_date instanceof Optional ? null : $data->planned_start_date,
-                'planned_end_date' => $data->planned_end_date instanceof Optional ? null : $data->planned_end_date,
-                'status' => QuoteStatus::Pending,
-            ]);
+            $quote = new Quote;
+            $quote->budget_id = $budget->id;
+            $quote->course_id = $data->course_id;
+            $quote->seq_in_budget = $seq;
+            $quote->student_count = $data->student_count;
+            $quote->value_uf = $data->value_uf;
+            $quote->purchase_order = $data->purchase_order instanceof Optional ? null : $data->purchase_order;
+            $quote->planned_start_date = $data->planned_start_date instanceof Optional ? null : $data->planned_start_date;
+            $quote->planned_end_date = $data->planned_end_date instanceof Optional ? null : $data->planned_end_date;
+            $quote->status = QuoteStatus::Pending;
+            $quote->save();
+
+            return $quote;
         });
     }
 }

@@ -23,7 +23,7 @@ class TurmaDataEnrichmentTest extends TestCase
         $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'], ['rut' => '55.666.777-2'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 7']);
         $courseId = $this->makeCourse(['name' => 'Trabajos en líneas 220kV', 'workload_hours' => 24])->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 12, 'value_uf' => 30, 'status' => 'approved',
         ]);
