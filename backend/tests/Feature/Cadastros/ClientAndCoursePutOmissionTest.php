@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
-class OmissaoPreservaClienteECursoTest extends TestCase
+class ClientAndCoursePutOmissionTest extends TestCase
 {
     use CreatesDomainRecords;
     use RefreshDatabase;

@@ -8,7 +8,7 @@ use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class OmissaoPreservaRedatorEAlunoTest extends TestCase
+class RedatorAndStudentPutOmissionTest extends TestCase
 {
     use RefreshDatabase;
 

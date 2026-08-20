@@ -10,7 +10,7 @@ use Tests\TestCase;
  * D-13: a omissão preserva; só `null` explícito apaga. O par é o teste — só o
  * ramo do `null` deixaria a regressão passar verde.
  */
-class OmissaoPreservaStaffTest extends TestCase
+class StaffPutOmissionTest extends TestCase
 {
     use RefreshDatabase;
 

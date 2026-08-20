@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
-class OmissaoPreservaCotacaoTest extends TestCase
+class QuotePutOmissionTest extends TestCase
 {
     use CreatesDomainRecords;
     use RefreshDatabase;
