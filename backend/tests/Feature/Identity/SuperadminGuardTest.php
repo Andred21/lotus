@@ -99,8 +99,10 @@ class SuperadminGuardTest extends TestCase
         });
 
         // Demove o alvo para admin: é o que aciona o guard.
+        // Nome forçado a mudar: a omissão de rut/phone não suja mais (BD-14),
+        // então o update só emite se algum atributo muda de verdade.
         app(UpdateStaffUserAction::class)->execute($alvo, UserData::from([
-            'name' => $alvo->name,
+            'name' => 'Alvo Demovido',
             'email' => $alvo->email,
             'role' => 'admin',
             'is_active' => true,
