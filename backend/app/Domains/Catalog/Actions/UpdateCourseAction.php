@@ -6,6 +6,7 @@ use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
+use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
@@ -25,12 +26,12 @@ class UpdateCourseAction
     {
         return DB::transaction(function () use ($course, $data) {
 
-            $course->update([
+            $course->update(WritableAttributes::from([
                 'name' => $data->name,
-                'technical_name' => $data->technical_name instanceof Optional ? null : $data->technical_name,
-                'description' => $data->description instanceof Optional ? null : $data->description,
+                'technical_name' => $data->technical_name,
+                'description' => $data->description,
                 'workload_hours' => $data->workload_hours,
-            ]);
+            ]));
 
             // Replace dos nested. Soft-delete por instância para a auditoria
             // registrar o que saiu (o builder emitiria UPDATE sem eventos).

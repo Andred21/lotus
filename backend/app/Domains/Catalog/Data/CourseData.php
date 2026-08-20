@@ -28,8 +28,8 @@ class CourseData extends Data
         public int|Optional $id,
         #[Required]
         public string $name,
-        public string|Optional|null $technical_name = null,
-        public string|Optional|null $description = null,
+        public string|Optional|null $technical_name = new Optional,
+        public string|Optional|null $description = new Optional,
         #[Required]
         public int $workload_hours = 0,
         /** @var array<CertificateTemplateData>|Optional */

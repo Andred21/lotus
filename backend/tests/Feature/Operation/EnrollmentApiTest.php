@@ -30,7 +30,7 @@ class EnrollmentApiTest extends TestCase
         $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
@@ -111,7 +111,7 @@ class EnrollmentApiTest extends TestCase
         $this->assertSoftDeleted('enrollments', ['id' => $enrollment->id]);
 
         // outra turma não alcança a matrícula (scoped binding → 404)
-        $otherQuote = Quote::create([
+        $otherQuote = Quote::forceCreate([
             'budget_id' => $this->turma->quote->budget_id, 'course_id' => $this->turma->course_id,
             'seq_in_budget' => 2, 'student_count' => 1, 'value_uf' => 5, 'status' => 'approved',
         ]);

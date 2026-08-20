@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Redator;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
@@ -56,6 +57,11 @@ class RedatorData extends Data
     public static function rules(): array
     {
         return [
+            // `documents` é `#[Computed]` e FICA de fora: ali a chave é
+            // escrita real (multipart de arquivo, descartado por
+            // `prepareForPipeline` antes dos pipes). `missing` reprovaria o
+            // upload legítimo — ver `RedatorCrudTest`/`RedatorDocumentTest`.
+            ...ComputedFields::rejected('photo_url', 'last_login'),
             'rut' => ['required', 'string', new ValidRut],
             'course_ids' => ['sometimes', 'array'],
             'course_ids.*' => ['integer', 'exists:courses,id'],

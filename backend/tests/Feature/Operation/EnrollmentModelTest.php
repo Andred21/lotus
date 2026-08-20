@@ -31,7 +31,7 @@ class EnrollmentModelTest extends TestCase
         $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Data;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Http\Request;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -25,6 +26,13 @@ class SessionUserData extends Data
         public bool $is_active,
         public array $roles = [],
         public array $permissions = [],
+        /**
+         * Só SAÍDA: `SessionUserData` nasce sempre de `fromUser()` (login/me),
+         * nunca de request body. `#[Computed]` aqui não muda comportamento de
+         * runtime — fecha o arch test de D-12, que exige o atributo em todo
+         * campo de foto para não deixar essa garantia depender de quem lembrou.
+         */
+        #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
     ) {}

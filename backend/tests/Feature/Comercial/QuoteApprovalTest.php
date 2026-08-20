@@ -19,7 +19,7 @@ class QuoteApprovalTest extends TestCase
         $budgetId = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1'])->id;
         $courseId = $this->makeCourse()->id;
 
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budgetId, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => $status,
         ]);

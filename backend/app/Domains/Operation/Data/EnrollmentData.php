@@ -4,6 +4,7 @@ namespace App\Domains\Operation\Data;
 
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
 use Spatie\LaravelData\Attributes\Computed;
@@ -39,6 +40,7 @@ class EnrollmentData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('photo_url'),
             'rut' => ['required', 'string', new ValidRut],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

@@ -76,34 +76,6 @@ aceita no lugar de prova.
 
 # Backend
 
-## P-29 — corrida de unicidade entre transações ainda sobe 500
-
-**Bloco:** BD-14 · **Gatilho:** fecha quando um 500 de cadastro por RUT/e-mail duplicado for
-observado em uso real (aí a frequência justifica o contrato de erro), ou quando um bloco tocar
-`ProblemDetails`/`ValidationMessages` por outro motivo e puder absorver a conversão. Revisar em
-**2026-10-31**.
-
-Duas escritas concorrentes com o mesmo RUT ou e-mail colidem no índice único de `users` e sobem
-**500**, não 422.
-
-O BD-2 (`integridade-e-concorrencia-backend`, 2026-08-11) moveu o check de unicidade para **dentro**
-da `DB::transaction` nos três sítios medidos (`UpdateStaffUserAction`, `UpdateClientAction`,
-`UpdateRedatorAction`), o que fecha a janela entre o check e a escrita da **mesma** transação.
-
-**Atualização de 2026-08-13 (BD-9):** os dois métodos que o texto original nomeava —
-`ensureRutAvailable`/`ensureEmailAvailable` — não existem mais; a porta única é
-`UserProvisioner::ensureIdentityAvailable`, e os nove caminhos de escrita passam por ela. Isso
-**não** move o gatilho: o BD-9 unificou e agregou o 422, não fechou a corrida entre transações
-distintas.
-
-O que segue aberto, por recusa explícita registrada na spec (D3): o `SELECT` de unicidade não trava
-linha inexistente, então dois cadastros simultâneos do mesmo RUT passam os dois pelo check e o
-perdedor estoura no índice único como `QueryException`, que o handler RFC 7807 devolve como 500
-mascarado. Converter violação de índice em 422 exigiria capturar `SQLSTATE 23000` e reescrever o
-erro por coluna, decisão de contrato de erro que a spec preferiu não tomar dentro de um bloco de
-concorrência. Proporcional a ~10 usuários internos: a colisão exige dois cadastros do mesmo RUT no
-mesmo segundo.
-
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
 **Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
@@ -174,41 +146,13 @@ arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo 
 foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
 plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
 
-## P-35 — o ADR-17 é defendido em duas profundidades
-
-**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `CreateQuoteAction`/`Quote` por outro
-motivo e puder absorver a simetria, ou quando um payload de cotação com `seq_in_budget` for
-observado. Revisar em **2026-10-31**.
-
-`course_certificate_templates.version` saiu do `$fillable` e só a Action a escreve, enquanto
-`CreateQuoteAction` segue gravando `seq_in_budget` por **mass assignment**.
-
-Nasceu no bloco `rastro-unicidade-e-gates` (2026-08-12; entrou como P-34 no fechamento e virou
-**P-35** ao mesclar a `main`, que já tinha publicado a P-34 da catraca de cor): a D10 tirou `version`
-do `$fillable` justamente porque payload que chega com o número não pode vencer a derivação sob
-lock — e o `seq_in_budget`, mesmo padrão do mesmo ADR, continua aceitável por mass assignment.
-Estava no ledger de execução como achado aberto e **não** entrou nos seis achados do
-`/revisar-sprint`, então nunca foi triado.
-
-Não é bug vivo: nenhum payload de cotação envia `seq_in_budget` hoje e o `unique` do banco recusa o
-par repetido — o que fica é a assimetria, que faz o próximo leitor do ADR-17 copiar a forma mais
-fraca.
-
-**O gatilho venceu pela metade no `arquivados-roots-restantes` (2026-08-19) e a simetria NÃO foi
-absorvida.** O bloco tocou `Quote` (o `lockRow` que nasceu para o Q-5 do review), `DeleteQuoteAction`
-e `RestoreQuoteAction` — mas **não** `CreateQuoteAction`, que é o sítio do mass assignment, e o
-`$fillable` do model não foi reaberto. Absorver custaria tirar `seq_in_budget` do `$fillable` e
-passar a escrevê-lo explicitamente na Action, o que muda o caminho de criação de cotação num bloco
-cujo escopo era arquivar e restaurar. Fica registrado que o gatilho já foi visto vencer: o próximo
-bloco que abrir `CreateQuoteAction` não tem mais desculpa de contexto.
-
 ## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
 
 **Bloco:** — · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
 ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
 
 Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
-juntas — **828 testes** —, o comando que o `CLAUDE.md` §6 documenta,
+juntas — **866 testes** (medição de 2026-08-20; eram 828 em 2026-08-19) —, o comando que o `CLAUDE.md` §6 documenta,
 `docker compose exec -T app php artisan test`, morre em
 
 ```
@@ -219,7 +163,7 @@ Fatal error: Premature end of PHP process when running Tests\Feature\Operation\M
 **Não é defeito do teste nem do merge:** `--filter=ManualTurmaTest` passa em 2,35s (13 testes), e a
 suíte inteira fecha **verde** quando o limite sobe —
 `docker compose exec -T app php -d memory_limit=1G vendor/bin/phpunit` devolve
-**828 passed / 5 skipped, 3006 asserções**, com **pico de 129 MB**. São 129 contra 128: a suíte
+**828 passed / 5 skipped, 3006 asserções** (medição de 2026-08-19), com **pico de 129 MB**. São 129 contra 128: a suíte
 cresceu 1 MB além do default do PHP, e quem estoura é o render de Blade do manual porque ele é o que
 aloca mais no fim da corrida.
 
@@ -236,6 +180,11 @@ existe: quem estoura é o overhead do runner do `artisan`, somado a uma suíte q
 imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
 processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
 **Enquanto não fecha, o gate de backend roda pelo binário direto com `-d memory_limit=1G`.**
+
+**Gatilho visto vencer de novo em 2026-08-20** (fechamento do `bd14-contrato-de-entrada`): o mesmo
+fatal, agora em `ManualTurmaTest::test_manual_devolve_pdf_convertido_do_docx`, e o gate rodou por
+diretório — **866 passed / 5 skipped**. Medido também que `php -d memory_limit=512M artisan test`
+**não** contorna: a diretiva não desce para o subprocesso do PHPUnit, exatamente como a ficha diz.
 
 ---
 
@@ -712,3 +661,82 @@ notou que são duas linhas. A duplicata é o mesmo risco de proveniência que ge
 positivos, um nível abaixo: dentro da base certa. Qual cópia é a canônica é decisão do João (a Sprint
 da task mudou de 3 para 4), não do agente — enquanto as duas existirem, um packet futuro pode ler a
 vazia.
+
+---
+
+## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
+
+**Bloco:** — · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
+dos outros cinco); os demais, o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
+`BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
+
+Achado pela review final do **BD-14** (2026-08-20, `0fe30b13..dd0cda1`). **Nada aqui é regressão do
+BD-14** — todos os seis campos já se comportavam assim antes do bloco. O que o bloco fez foi criar
+o vocabulário que torna o defeito nomeável, e a própria review mediu que a lei que ele declara não
+vale em todo lugar que devia valer.
+
+### A mecânica
+
+O `DefaultValuesDataPipe` do Spatie entrega o default declarado quando a chave está **ausente do
+corpo**, e faz isso **antes** do ramo que preencheria `Optional`. Então:
+
+| Declaração | Chave ausente vira | Correto? |
+|---|---|---|
+| `public string\|Optional\|null $phone` (sem default) | `Optional::create()` | sim |
+| `public bool\|Optional $is_active = new Optional` | `Optional` | sim |
+| `public bool $is_active = true` | **`true`** | **não** |
+| `public string $type = 'client'` | **`'client'`** | **não** |
+
+O `WritableAttributes::from()` que o BD-14 construiu **funciona**: ele tira do array toda chave que
+chega como `Optional`. O que o derrota é a DTO entregar um valor real onde devia entregar `Optional`
+— o helper não tem como distinguir "o cliente mandou `true`" de "o Spatie preencheu `true`".
+
+### Os seis campos
+
+**1 — `UserData::$is_active = true` ([`UserData.php:40`](../../../backend/app/Domains/Identity/Data/UserData.php#L40)) — controle de acesso.**
+`UpdateStaffUserAction:57` escreve `'is_active' => $data->is_active` dentro do próprio
+`WritableAttributes::from()`. Um `PUT /api/users/{id}` que omita a chave **reativa** um staff
+desativado — e `is_active` é exatamente o portão que `AuthController:52` usa para barrar o login.
+Quem só renomeia um admin desligado devolve o acesso dele sem pedir.
+
+O contraste está na mesma pasta: `RedatorData::$is_active` é `public bool|Optional $is_active`
+**sem default**, e `UpdateRedatorAction:68-73` usa o mesmo helper na mesma forma — e acerta. Um DTO
+está certo, o irmão errado, pela diferença de um default.
+
+**Custo medido dos dois remédios:**
+
+- **(a) `public bool|Optional $is_active = new Optional`** — espelha o redator, coerente com a D1 da
+  spec do BD-14. Muda `generated.ts` de `is_active: boolean` para `is_active: undefined | boolean`,
+  **grafia que a linha 433 do arquivo já carrega hoje para `RedatorData`**. Do lado do SPA são ~5
+  sítios (`useStaffUserForm.ts:34,53`, `StaffUserDialog.tsx:121-128`, `UsersTable.tsx:72-73`) e o
+  idioma de narrowing (`?? true`) já existe no repositório, copiado do redator
+  (`useRedatorForm.ts:28,90`, `RedatorIdentityFields.tsx:73-76`). O SPA sempre manda a chave — o
+  ganho é para chamador parcial, não para a tela.
+- **(b) `'is_active' => ['present', 'boolean']` em `UserData::rules()`** — omissão vira 422 em vez de
+  reativação silenciosa, e `generated.ts` não muda. **Mas contradiz a D1**, que escolheu
+  "omissão preserva" justamente contra "PUT exige a chave".
+
+**2 e 3 — `ClientData::$type = 'client'` ([`ClientData.php:57`](../../../backend/app/Domains/Commercial/Data/ClientData.php#L57)) e `CourseData::$workload_hours = 0` ([`CourseData.php:34`](../../../backend/app/Domains/Catalog/Data/CourseData.php#L34)).**
+Nas duas Actions que o BD-14 **editou**: um PUT que omita `type` rebaixa qualquer `provider`/`other`
+para `client`; um que omita `workload_hours` zera a carga horária contratada — e o docblock do
+próprio `CourseData:17` diz que ela é contratada, não derivada.
+
+**4 a 6 — os que nem chegam ao helper.**
+`BudgetController.php:86-88` escreve
+`'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms` — o
+ternário `Optional → null` que o BD-14 removeu de cinco Actions, ainda vivo aqui; e é inalcançável
+de todo jeito, porque `BudgetData.php:44` declara `= null` e a propriedade nunca chega como
+`Optional`. `CourseTemplateController.php:33` faz `$template->update($data->except('id','version')->toArray())`
+sobre `CertificateTemplateData.php:22-23`, onde `$layout_config = []` e `$validity_months = null`:
+omitir `layout_config` **apaga o layout inteiro** do template de certificado.
+
+### Por que não se conserta dentro do BD-14
+
+O `active_work_item` do bloco é o contrato de entrada dos **10 campos** que a D-13 mediu e dos **11**
+campos de foto da D-12. Nenhum destes seis está na lista, e o `/executar-bloco` fecha em
+"implemente somente `active_work_item`". O remédio do `is_active` ainda escolhe entre duas leituras
+da D1 e move `generated.ts` — decisão do João, não do agente.
+
+**A varredura que falta:** a medição da D-13 procurou o idioma `instanceof Optional ? null`. Ela era
+cega a este defeito, porque aqui o valor nunca chega como `Optional`. Um bloco que feche esta ficha
+deve varrer por **default literal em propriedade de DTO de entrada**, não pelo ternário.

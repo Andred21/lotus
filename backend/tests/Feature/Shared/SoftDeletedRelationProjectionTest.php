@@ -68,13 +68,12 @@ class SoftDeletedRelationProjectionTest extends TestCase
     {
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'PRE-1']);
 
-        $quote = $budget->quotes()->create([
+        $quote = $budget->quotes()->forceCreate([
             'seq_in_budget' => 1,
             'course_id' => $course->id,
             'student_count' => 5,
             'value_uf' => 10,
             'status' => 'approved',
-            'code' => 'COT-1',
         ]);
 
         return Turma::create([
@@ -258,13 +257,12 @@ class SoftDeletedRelationProjectionTest extends TestCase
         $client = $this->makeClientWithUser(['legal_name' => 'Frontel'], ['rut' => $this->nextRut()]);
         $course = $this->course('Rescate');
         $budget = Budget::create(['client_id' => $client->id, 'code' => 'PRE-7']);
-        $quote = $budget->quotes()->create([
+        $quote = $budget->quotes()->forceCreate([
             'seq_in_budget' => 1,
             'course_id' => $course->id,
             'student_count' => 3,
             'value_uf' => 5,
             'status' => 'approved',
-            'code' => 'COT-7',
         ]);
 
         $client->delete();

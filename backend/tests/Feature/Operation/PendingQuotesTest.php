@@ -30,7 +30,7 @@ class PendingQuotesTest extends TestCase
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap '.fake()->unique()->numberBetween(1, 9999)]);
         $courseId = $this->makeCourse(['name' => $course, 'workload_hours' => 8])->id;
 
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => $students, 'value_uf' => 10, 'status' => 'approved',
         ]);

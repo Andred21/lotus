@@ -744,7 +744,7 @@ class DashboardEndpointTest extends TestCase
     ): Quote {
         $budget = Budget::firstOrCreate(['client_id' => $client->id, 'code' => "Scap {$client->id}"]);
 
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => ++$this->seq,
