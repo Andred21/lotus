@@ -1,4 +1,4 @@
-import type { ProblemDetails } from '@shared/api/axios'
+import { listSource } from '@shared/hooks'
 import { usePendingQuotes } from '../api/useTurmas'
 
 /**
@@ -8,19 +8,8 @@ import { usePendingQuotes } from '../api/useTurmas'
  *
  * Não é superfície de arquivados — alimenta o `PendingQuotesPanel` —, mas
  * carregava o MESMO `isError ? (error ?? {}) : null` cru dentro da prop
- * (`OperationPage:31` antes do bloco), e a ficha do D-52 o nomeia.
- *
- * O motivo de não usar `useLoadState` está no docblock do `useTurmasPage`: o
- * `refetch` dele engole a promise que o `AppErrorState` aguarda (Q-14 · D-54).
+ * (`OperationPage:31` antes do BD-17), e a ficha do D-52 o nomeia.
  */
 export function usePendingQuotesPage() {
-  const query = usePendingQuotes()
-
-  return {
-    items: query.data ?? [],
-    loading: query.isLoading,
-    error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    /** Devolve a promise (Q-14). */
-    refetch: () => query.refetch(),
-  }
+  return listSource(usePendingQuotes())
 }
