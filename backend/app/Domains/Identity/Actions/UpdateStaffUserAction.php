@@ -6,6 +6,7 @@ use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\SuperadminGuard;
 use App\Domains\Identity\Services\UserProvisioner;
+use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
@@ -46,14 +47,18 @@ class UpdateStaffUserAction
                 $user->id,
             );
 
-            $attrs = [
+            $attrs = WritableAttributes::from([
                 'name' => $data->name,
                 'email' => $data->email,
-                'rut' => $rut,
-                'phone' => $data->phone instanceof Optional ? null : $data->phone,
+                // `rut` omitido não vira null: o `Optional` segue adiante e a
+                // chave sai do array. Só o `null` explícito apaga (D1).
+                'rut' => $data->rut instanceof Optional ? $data->rut : $rut,
+                'phone' => $data->phone,
                 'is_active' => $data->is_active,
-            ];
+            ]);
 
+            // `password` NÃO entra no helper: aqui `''` também significa
+            // "mantém a atual", e isso é regra de senha, não de omissão.
             if (! ($data->password instanceof Optional) && $data->password !== '') {
                 $attrs['password'] = $data->password;
             }
