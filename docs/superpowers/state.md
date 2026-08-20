@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: bd17-superficie-de-arquivados
-workflow_state: ready_for_planning
+active_feature: contrato-de-entrada
+active_work_item: bd14-contrato-de-entrada
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-20-bd14-contrato-de-entrada-design.md
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: arquivados-roots-restantes
-state_basis_commit: 82c1d0c4
-updated_at: 2026-08-19T22:30:00-03:00
+state_basis_commit: 0c8db94
+updated_at: 2026-08-20T10:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
