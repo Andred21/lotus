@@ -279,3 +279,50 @@ O `formatDate` resolve pelo `i18n.language` ativo. Se a interface estiver num id
 sido arquivado sob outro, a coluna mostra a grafia do idioma **atual** — que é o comportamento
 correto e o mesmo do resto da aplicação, mas vale registrar que a data exibida não é um carimbo
 imutável: o carimbo é o `archived_at` ISO no payload, e é ele que tem peso de auditoria.
+
+## 11. Correções medidas no planejamento (2026-08-20)
+
+Duas linhas da §6.3 foram escritas antes de passarem pelo `tsc`, e **não compilam como estão**. As
+correções abaixo preservam a intenção da §6.3 — a função devolve o lado escolhido, o `mode` é lido de
+dentro do lado arquivado (D5), e `shared/lib` segue sem importar `shared/hooks` (D6).
+
+**1. O tipo do erro é `ScreenDetailSource`, não `ProblemDetails`.** `ProblemDetails` mora em
+`shared/api`, e `src/shared/lib/` tem hoje **zero** import de lá — medido. É a mesma fronteira que
+fez `screenDetail` nascer em `lib` em vez de `api`, e que `AppDataTable.tsx:16-20` registra.
+`ProblemDetails` satisfaz a interface, e as 6 tabelas já tipam o `error` delas estruturalmente
+(`error?: { detail?: string | null } | null`).
+
+**2. A assinatura não devolve `ListSource<ArchivableRow<T>>`.** `tsc -b` sobre a forma da §6.3:
+
+```
+error TS2322: Type 'ListSource<T>' is not assignable to type 'ListSource<ArchivableRow<T>>'.
+  Type 'T' is not assignable to type 'ArchivableRow<T>'.
+```
+
+Um `T` genérico sem restrição não é atribuível a `T & ArchiveTrail`, ainda que os dois campos do
+trail sejam opcionais. A forma que compila:
+
+```ts
+export function archivableSource<T>(
+  active: ListSource<T>,
+  archived: ArchivedListSource<T>,
+): ListSource<T> {
+  return archived.mode === 'archived' ? archived : active
+}
+```
+
+Medido no call site real (`CatalogPage` + `CoursesTable`): o `items` devolvido é aceito por
+`courses: CourseRow[]`, porque `CourseData` e `ArchivableRow<CourseData>` são mutuamente atribuíveis
+— os dois campos extras são opcionais e há sobreposição de propriedades.
+
+`ArchivableRow<T>` continua existindo e continua fazendo o que a §6.1 pede: é ele que substitui as 8
+declarações de `XRow` à mão.
+
+**3. `OperationPage:31` ganhou peça própria.** O `pending` é normalizado por
+`usePendingQuotesPage()`, irmão do `useTurmasPage()` no mesmo arquivo — não por um parâmetro do
+primeiro. São duas queries diferentes com duas keys diferentes.
+
+**4. O que a sonda de planejamento confirmou**, com Tasks 1, 2 e 4 aplicadas e depois revertidas:
+`tsc` limpo, lint limpo, suíte `79 passed` / `446 passed` sobre a baseline de 77 / 435. Os 8 sítios
+do D-51 e as 8 declarações de tipo do D-53 foram recontados por grep e batem com as tabelas das §4 e
+§6.1.
