@@ -69,7 +69,7 @@ class ComputedKeyInBodyTest extends TestCase
             'legal_name' => 'ACME S.A.',
             'type' => 'client',
             'photo_url' => 'http://evil/x.png',
-        ])->assertStatus(422);
+        ])->assertStatus(422)->assertJsonPath('errors.photo_url.0', fn ($m) => $m !== null);
     }
 
     /**

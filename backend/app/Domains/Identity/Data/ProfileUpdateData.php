@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Data;
 
+use App\Shared\Data\ComputedFields;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -40,6 +41,7 @@ class ProfileUpdateData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('photo_url'),
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'email' => ['missing'],
@@ -48,7 +50,6 @@ class ProfileUpdateData extends Data
             'is_active' => ['missing'],
             'roles' => ['missing'],
             'permissions' => ['missing'],
-            'photo_url' => ['missing'],
         ];
     }
 }

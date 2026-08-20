@@ -99,4 +99,28 @@ class RedatorAndStudentPutOmissionTest extends TestCase
 
         $this->assertSame('+56 9 4444 4444', $user->refresh()->phone);
     }
+
+    public function test_put_de_aluno_com_phone_null_apaga(): void
+    {
+        $this->actingAsAdmin();
+
+        $user = User::factory()->create([
+            'type' => 'aluno',
+            'is_active' => false,
+            'rut' => '13.456.789-9',
+            'email' => 'aluno@lotus.cl',
+            'phone' => '+56 9 4444 4444',
+        ]);
+        /** @var Student $student */
+        $student = $user->student()->create([]);
+
+        $this->putJson("/api/students/{$student->id}", [
+            'name' => 'Aluno Editado',
+            'rut' => '13.456.789-9',
+            'email' => 'aluno@lotus.cl',
+            'phone' => null,
+        ])->assertOk();
+
+        $this->assertNull($user->refresh()->phone);
+    }
 }
