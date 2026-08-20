@@ -138,6 +138,11 @@ class UserProvisioner
         $mensagem = $e->getMessage();
 
         foreach (array_keys(self::DUPLICADO) as $coluna) {
+            // Casamento por substring, sem qualificador de tabela: uma tabela
+            // futura terminada em "_users" (ex.: `corporate_users`) com coluna
+            // `rut`/`email` única faria "corporate_users.rut" casar aqui como
+            // falso positivo. Se isso nascer, qualifique com `users.{$coluna}`
+            // como prefixo (ou ancore em início de palavra) em vez de `str_contains`.
             if (str_contains($mensagem, "users_{$coluna}_unique") || str_contains($mensagem, "users.{$coluna}")) {
                 return $coluna;
             }

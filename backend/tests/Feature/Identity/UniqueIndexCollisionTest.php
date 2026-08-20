@@ -7,6 +7,7 @@ use App\Domains\Identity\Services\UserProvisioner;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -18,22 +19,61 @@ class UniqueIndexCollisionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** MySQL é o banco de produção; a suíte roda sqlite. As duas grafias contam. */
-    public function test_traduz_a_mensagem_do_mysql(): void
+    /**
+     * As quatro formas vieram de reproduzir a violação de verdade, não de
+     * memória. Contra o `mysql` deste compose (`mysql:8.0`, 8.0.45):
+     *
+     *   CREATE TABLE users (..., UNIQUE KEY users_rut_unique (rut), UNIQUE KEY users_email_unique (email));
+     *   INSERT INTO users (rut, email) VALUES ('11.111.111-1', 'ana@lotus.cl');
+     *   INSERT INTO users (rut, email) VALUES ('22.222.222-2', 'ana@lotus.cl');
+     *     -> ERROR 1062 (23000): Duplicate entry 'ana@lotus.cl' for key 'users.users_email_unique'
+     *   INSERT INTO users (rut, email) VALUES ('11.111.111-1', 'outro@lotus.cl');
+     *     -> ERROR 1062 (23000): Duplicate entry '11.111.111-1' for key 'users.users_rut_unique'
+     *
+     * A forma QUALIFICADA (`users.users_x_unique`) é a que o MySQL 8.0.32+
+     * emite — é a real, reproduzida acima. A forma SEM qualificador
+     * (`users_x_unique`) é a de antes da 8.0.32; como a versão do MySQL do
+     * RDS em produção não é conhecida, as duas seguem cobertas em vez de só
+     * a que a review conseguiu reproduzir localmente.
+     */
+    #[DataProvider('mensagensDoMysql')]
+    public function test_traduz_a_mensagem_do_mysql(string $mensagem, string $colunaEsperada): void
     {
         $e = new QueryException(
             'mysql',
-            'update `users` set `email` = ?',
+            'update `users` set `'.$colunaEsperada.'` = ?',
             [],
-            new \RuntimeException("Duplicate entry 'ana@lotus.cl' for key 'users_email_unique'"),
+            new \RuntimeException($mensagem),
         );
 
         try {
             app(UserProvisioner::class)->writing(fn () => throw $e);
             $this->fail('esperava ValidationException');
         } catch (ValidationException $validacao) {
-            $this->assertArrayHasKey('email', $validacao->errors());
+            $this->assertArrayHasKey($colunaEsperada, $validacao->errors());
         }
+    }
+
+    public static function mensagensDoMysql(): array
+    {
+        return [
+            'email, forma qualificada (MySQL 8.0.32+)' => [
+                "Duplicate entry 'ana@lotus.cl' for key 'users.users_email_unique'",
+                'email',
+            ],
+            'email, forma sem qualificador (MySQL anterior a 8.0.32)' => [
+                "Duplicate entry 'ana@lotus.cl' for key 'users_email_unique'",
+                'email',
+            ],
+            'rut, forma qualificada (MySQL 8.0.32+)' => [
+                "Duplicate entry '11.111.111-1' for key 'users.users_rut_unique'",
+                'rut',
+            ],
+            'rut, forma sem qualificador (MySQL anterior a 8.0.32)' => [
+                "Duplicate entry '11.111.111-1' for key 'users_rut_unique'",
+                'rut',
+            ],
+        ];
     }
 
     public function test_traduz_a_mensagem_do_sqlite(): void
