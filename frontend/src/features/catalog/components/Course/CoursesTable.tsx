@@ -2,15 +2,14 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns } from '@shared/ui'
+import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
 
-/** A mesma tabela serve as duas fontes — gêmeo do `ClientRow`. */
-export type CourseRow = CourseData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type CourseRow = ArchivableRow<CourseData>
 
 export function CoursesTable({
   courses, loading, onView, actions, error, onRetry, mode, onModeChange, onArchive, onRestore, busy,
@@ -84,20 +83,7 @@ export function CoursesTable({
           <span className="font-semibold">{c.redator_ids.length}</span>
         )}
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t('archive.archivedAt')}
-          body={(c: CourseRow) => (c.archived_at ? new Date(c.archived_at).toLocaleDateString() : '—')}
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t('archive.archivedBy')}
-          body={(c: CourseRow) => c.archived_by ?? t('archive.unknownAuthor')}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(c: CourseRow) => (
           <CourseRowActions

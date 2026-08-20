@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame,
+  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
+import type { ArchivableRow } from '@shared/lib'
 import { turmaDisplayStatus, type TurmaDisplayStatus } from '../../lib/turmaStatus'
 import {
   TurmaClientCell, TurmaCodeCell, TurmaModalidadeCell, TurmaRedatoresCell, TurmaStatusCell,
@@ -15,12 +16,9 @@ import { TurmaRowActions } from './TurmaRowActions'
 
 const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
 
-/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
- * vêm preenchidas pelo achatamento do `useArchivedPage`. Molde: `ClientRow`. */
-export type TurmaRow = TurmaData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type TurmaRow = ArchivableRow<TurmaData>
 
 export function TurmasTable({
   turmas, loading, error, onRetry,
@@ -109,22 +107,7 @@ export function TurmasTable({
         header={t('operation.table.status')}
         body={(turma: TurmaData) => <TurmaStatusCell turma={turma} />}
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t('archive.archivedAt')}
-          body={(turma: TurmaRow) =>
-            turma.archived_at ? new Date(turma.archived_at).toLocaleDateString() : '—'
-          }
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t('archive.archivedBy')}
-          body={(turma: TurmaRow) => turma.archived_by ?? t('archive.unknownAuthor')}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(turma: TurmaRow) => (
           <TurmaRowActions

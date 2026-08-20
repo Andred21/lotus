@@ -9,17 +9,15 @@ import {
   AppTag,
   AppEmptyState,
   SearchableTableFrame,
+  archivedColumns,
 } from "@shared/ui";
+import type { ArchivableRow } from "@shared/lib";
 import type { ClientData } from "@shared/types/generated";
 import { ClientRowActions } from "./ClientRowActions";
 
-/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do
- * rastreio vêm preenchidas pelo achatamento do `useArchivedPage`; em `active`
- * elas nem são renderizadas. */
-export type ClientRow = ClientData & {
-  archived_at?: string;
-  archived_by?: string | null;
-};
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type ClientRow = ArchivableRow<ClientData>;
 
 export function ClientsTable({
   clients,
@@ -104,22 +102,7 @@ export function ClientsTable({
           <span className="font-semibold">{c.contacts?.length ?? 0}</span>
         )}
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t("archive.archivedAt")}
-          body={(c: ClientRow) =>
-            c.archived_at ? new Date(c.archived_at).toLocaleDateString() : "—"
-          }
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t("archive.archivedBy")}
-          body={(c: ClientRow) => c.archived_by ?? t("archive.unknownAuthor")}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(c: ClientRow) => (
           <ClientRowActions

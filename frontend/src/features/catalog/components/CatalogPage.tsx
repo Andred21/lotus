@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ModulePage, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { CourseData } from '@shared/types/generated'
+import { archivableSource } from '@shared/lib'
 import { useCoursesPage } from '../hooks/useCoursesPage'
 import { useCoursesArchived } from '../hooks/useCoursesArchived'
 import { CoursesTable } from './Course/CoursesTable'
@@ -14,16 +15,19 @@ export function CatalogPage() {
   const page = useCoursesPage()
   const archivedPage = useCoursesArchived()
   const [toArchive, setToArchive] = useState<CourseData | null>(null)
-  const archived = archivedPage.mode === 'archived'
+  // A fonte da tela é uma escolha só, não quatro (D-52): `items`, `loading`,
+  // `error` e `refetch` vinham de quatro ternários independentes sobre a MESMA
+  // condição, dentro das props.
+  const fonte = archivableSource(page, archivedPage)
 
   return (
     <ModulePage title={t('module.cursos.title')} description={t('module.cursos.description')}>
       <AppCard>
         <CoursesTable
-          courses={archived ? archivedPage.items : page.items}
-          loading={archived ? archivedPage.loading : page.loading}
-          error={archived ? archivedPage.error : page.error}
-          onRetry={archived ? archivedPage.refetch : page.refetch}
+          courses={fonte.items}
+          loading={fonte.loading}
+          error={fonte.error}
+          onRetry={fonte.refetch}
           mode={archivedPage.mode}
           onModeChange={archivedPage.setMode}
           onArchive={setToArchive}

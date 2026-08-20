@@ -111,10 +111,12 @@ operação"*.
 # Blocos de execução de dívida
 
 > **Fila vazia até promoção explícita do João.** BD-1..BD-9 foram entregues entre 2026-08-11 e
-> 2026-08-14, e o **BD-16** em 2026-08-18 — cada um saiu desta lista com os débitos que cobria, e o
-> histórico está na linha da entrega em `historico/progress.md`. O BD-16 levou junto o **BD-10**, que
-> ele havia absorvido em 2026-08-17 e que nunca chegou a ser promovido. Os BD-11..BD-15 abaixo são o
-> que sobrou do reagrupamento de 2026-08-14 — nenhum foi promovido.
+> 2026-08-14, o **BD-16** em 2026-08-18 e o **BD-17** e o **BD-14** em 2026-08-20 — cada um saiu desta
+> lista com os débitos que cobria (o BD-17 levou D-51, D-52 e D-53; o BD-14 levou D-12 e D-13), e o
+> histórico está na linha da entrega em
+> `historico/progress.md`. O BD-16 levou junto o **BD-10**, que ele havia absorvido em 2026-08-17 e
+> que nunca chegou a ser promovido. Os BD-11..BD-15 abaixo são o que sobrou do reagrupamento de
+> 2026-08-14 — nenhum foi promovido.
 
 ## BD-11 · Frontend · shell: navegação no toque
 
@@ -168,32 +170,6 @@ falha deixa a regressão passar verde.
 **Nota de método:** P-20 e P-21 vivem no mesmo arquivo, então a decisão de numeração sai numa
 sentada só — é o que torna o agrupamento barato.
 
-## BD-17 · Frontend · a superfície de arquivados, medida depois de pronta
-
-**Cobre:** D-51, D-52, D-53 · **Frente:** frontend
-**Afinidade:** os três vivem nos **mesmos 8 arquivos** — as 6 tabelas com visão de arquivados mais
-as 2 listas próprias (`ArchivedQuotesList`, `ArchivedEnrollmentsList`). D-51 e D-53 são o mesmo
-movimento visto de dois lados: a coluna duplicada é o que dá 8 pousos ao defeito de data.
-
-Medidos em 2026-08-19 contra `0c8db94`, no `/revisar-frontend` da superfície inteira (catalog,
-commercial, identity, operation). **O kit de `shared/` não está em questão** — `useArchivedPage`,
-`useArchiveAction`, `useArchiveToasts`, `ArchiveRowActions`, `ArchiveConfirmDialog` e `ArchiveSwitch`
-saíram aderentes, e os 8 hooks de feature são as 12–15 linhas que a rule pede. O que sobrou de
-duplicado é o que ficou **do lado de fora** do kit: a coluna, o tipo da linha e a escolha da fonte.
-
-- **D-51** — a data de arquivamento cai no idioma do NAVEGADOR, em 8 sítios.
-- **D-52** — a escolha entre fonte ativa e arquivada é derivada dentro do JSX, em 6 páginas; num
-  deles ainda deriva o `loadError` à mão.
-- **D-53** — as duas colunas de rastreio e o tipo `XRow` copiados verbatim em 6 tabelas.
-
-**Ordem interna:** D-53 antes de D-51. Corrigir a data primeiro obriga a tocar 8 sítios e deixa o
-nono root livre para reintroduzi-la; com a coluna compartilhada, o `formatDate` tem um pouso só.
-
-**DoD:** a coluna "Archivado el" exibindo a data no idioma da INTERFACE com o navegador em outro
-locale — provado na tela, não no diff. Teste de regressão no molde do `AppFileRow.test.tsx`
-(`formata a data no idioma da INTERFACE, nao no do navegador`), que é o precedente que já existe
-para este defeito exato.
-
 ---
 
 # Débitos técnicos
@@ -209,52 +185,6 @@ para este defeito exato.
 > ("antes de subir para produção"), e um débito com dois donos diverge dos dois.
 
 ## Agrupados em bloco
-
-- **D-51 · A data de arquivamento cai no idioma do NAVEGADOR, em 8 sítios** → **BD-17**. Medido em
-  2026-08-19 contra `0c8db94`. Os oito formatam `new Date(x.archived_at).toLocaleDateString()`, sem
-  argumento: a chamada crua resolve pelo locale do **navegador**, não pelo idioma ativo da interface,
-  então com a UI em `es-CL` e o browser em `en-US` a coluna "Archivado el" imprime `8/19/2026`
-  enquanto o resto da tela imprime `19-08-2026`. **Não é achado teórico — é o defeito que o projeto
-  já achou, corrigiu e blindou:** `shared/lib/datetime.ts:3-10` existe por causa dele
-  (*"fixar um locale fazia a tela em pt-BR ou en exibir mês em espanhol"*), `AppFileRow.tsx:42-46`
-  carrega o comentário do **D-18** do review de 2026-08-17, e `AppFileRow.test.tsx:26` já tem teste
-  de regressão. A superfície de arquivados é hoje **o único lugar do frontend** que reintroduziu a
-  grafia crua. **Sem a complicação de fuso:** os 8 controllers preenchem `archived_at` com
-  `->toIso8601String()` (data-hora completa, igual ao `created_at` do `AppFileRow`), então a âncora
-  de meio-dia do `formatIsoDate` não entra — a correção é a do precedente, `formatDate(new Date(x))`.
-  Sítios: `CoursesTable.tsx:91`, `ClientsTable.tsx:112`, `BudgetsTable.tsx:125`, `UsersTable.tsx:87`,
-  `RedatoresTable.tsx:105`, `TurmasTable.tsx:117`, `ArchivedEnrollmentsList.tsx:67`,
-  `ArchivedQuotesList.tsx:81`. Ironia útil: `UsersTable` e `RedatoresTable` **já importam**
-  `formatDateTime` de `@shared/lib` na linha do "último acesso", logo acima da que erra.
-  **Decisão do João dentro do bloco:** `formatDate` (mínimo, idêntico ao precedente, corrige só o
-  idioma) ou `formatDateTime` (acrescenta a hora — defensável num campo de auditoria, mas muda o que
-  a coluna exibe hoje).
-
-- **D-52 · A escolha entre fonte ativa e arquivada é derivada dentro do JSX, em 6 páginas** →
-  **BD-17**. Medido em 2026-08-19 contra `0c8db94`. Toda página repete o mesmo quarteto de ternários
-  sobre a mesma condição, dentro das props (`items`/`loading`/`error`/`onRetry`), que é a rule §1 —
-  derivação computada dentro do `return` mora acima dele. Sítios: `CatalogPage.tsx:23-26`,
-  `CommercialPage.tsx:35-38` e `:54-57`, `AdministracionPage.tsx:31-34`, `RedatoresTab.tsx:56-59`.
-  **`OperationPage.tsx:39` é o pior dos seis** — ternário aninhado que ainda deriva o erro de carga à
-  mão (`archived ? turmasArchived.error : turmas.isError ? (turmas.error ?? {}) : null`): esse
-  `isError ? (error ?? {}) : null` é literalmente o `loadError` de `useLoadState.ts:39`, e a rule é
-  explícita em que estado de carga de lista **não se deriva à mão na feature** (Q-1/Q-2 do review de
-  2026-08-14). A mesma grafia crua está em `OperationPage.tsx:31` para o `pending`. **O molde certo
-  já existe neste repo:** `QuotesList.tsx:40` resolve a fonte acima do `return`
-  (`const visiveis = mode === 'archived' ? archived.items : quotes`) e recebe o lado arquivado como
-  um objeto só (`archived={{ items, loading, error, refetch, restoring }}`) — as 6 tabelas é que são
-  a exceção, não o padrão.
-
-- **D-53 · As duas colunas de rastreio e o tipo `XRow`, copiados verbatim em 6 tabelas** →
-  **BD-17**. Medido em 2026-08-19 contra `0c8db94`. As colunas `archived_at`/`archived_by` repetem
-  mesmo `field`, mesma chave de header, mesmo corpo e mesmo `?? t('archive.unknownAuthor')` nas 6
-  tabelas (~84 linhas); o tipo `XRow = XData & { archived_at?: string; archived_by?: string | null }`
-  é declarado **8 vezes**, nas 6 tabelas mais as 2 listas. **O argumento não é volume:** é que a
-  correção do D-51 tem 8 pousos enquanto isto ficar assim, e nada reprova o sétimo root que
-  reintroduzir a grafia crua — que é exatamente o que a rule quer dizer com *"kit de arquivados: um
-  só, em `shared/`, parametrizado — root novo não copia o trio"*. Fix: o par de colunas vira peça
-  compartilhada (o `formatDate` do D-51 passa a ter um pouso só) e o tipo vira um `ArchivedRow<T>`
-  genérico em `shared/lib`.
 
 - **D-03 · Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** → **BD-11**. No toque não
   há hover, então o nome do item de navegação fica inalcançável
@@ -299,6 +229,59 @@ para este defeito exato.
   varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Sem bloco atribuído
+
+- **D-54 · O `refetch` do `useLoadState` engole a promise, e 6 hooks de feature espalham isso.**
+  Medido em 2026-08-20 durante o BD-17 (revisão final do branch), contra `1d61b28`.
+  `useLoadState.ts:51-53` devolve `refetch: () => { void query.refetch() }` — descarta a promise que
+  o `AppErrorState` aguarda (`AppErrorState.tsx:33-40`) para manter o "Reintentar" em `loading`
+  enquanto o GET está em voo. O botão pisca e volta no mesmo tick. É exatamente o contrato Q-14, que
+  o BD-17 mediu, **contornou** (por isso o `useTurmasPage` nasceu com `refetch: () => query.refetch()`
+  em vez de usar o `useLoadState`) e não corrigiu na origem, porque corrigir ali é outro bloco.
+  Alcance medido: os 6 chamadores reais são `useQuotesListCourses.ts:10`, `useQuoteCourseSearch.ts:12`,
+  `useCommercialClients.ts:11`, `useCourseRedatores.ts:19`, `useStudentClients.ts:14` e
+  `useRedatorCourses.ts:13`; o `refetch` deles chega a um "Reintentar" vivo em pelo menos
+  `QuotesList.tsx:60` e `:74`, `BudgetDialog.tsx:85` e `CourseRedatoresSection.tsx:33`.
+  **Custo se ficar:** o contrato Q-14 vale só onde alguém o reescreveu à mão, e a próxima tela que
+  usar `useLoadState` herda a regressão sem quebrar tipo nem teste. **Correção:** uma linha
+  (`refetch: () => query.refetch()`) mais varredura dos sítios e um teste de catraca no
+  `useLoadState`. **Não é regressão do BD-17** — é anterior a ele; o BD-17 só o mediu.
+
+- **D-56 · A forma normalizada de lista é montada à mão em 5 sítios, e a política já divergiu uma vez.**
+  Medido em 2026-08-20 no review do BD-17 (Q-2), contra `ae102f11`. O par
+  `error: isError ? (error ?? ({} as ProblemDetails)) : null` + `refetch: () => query.refetch()` —
+  a política "falhou" vs. "veio vazia", mais o contrato Q-14 — está escrito por extenso em
+  `shared/hooks/useCrudPage.ts:56`, `shared/hooks/useArchivedPage.ts:78`,
+  `shared/hooks/useLoadState.ts:39` e nos dois aliases que o BD-17 criou
+  (`features/operation/hooks/useTurmasPage.ts` e `usePendingQuotesPage.ts`). O BD-17 fez o certo
+  tirando a derivação de dentro do JSX (D-52) e **escolheu copiar em vez de centralizar**, porque a
+  peça que faltava é a que o `useLoadState` deveria ser e não é — ver **D-54**, que é a raiz e o
+  vizinho desta linha. **A reincidência é medida, não temida:** a mesma política já morava em seis
+  hooks e já tinha divergido (Q-1/Q-1b/Q-2 do review de 2026-08-14), que é o motivo do bullet do
+  `useLoadState` na rule. **Correção:** um `listSource(query)` em `shared/hooks/` devolvendo o
+  contrato `ListSource<T>` que o BD-17 acabou de escrever em `shared/lib/archivable.ts` — os cinco
+  sítios passam a espalhá-lo, não a derivá-lo. Sai junto do D-54 e pelo mesmo motivo: corrigir a
+  promise em cinco cópias é o custo que a centralização apaga.
+  **Linha proposta para `.claude/rules/frontend-fsliced.md`, a escrever quando o débito for pago**
+  (escrevê-la antes tornaria a rule falsa nos cinco sítios): *"A forma normalizada de lista é
+  `ListSource<T>` e nasce num lugar só (`shared/hooks`). Hook que monta
+  `isError ? (error ?? {}) : null` à mão está recriando a política — o alias espalha, não deriva."*
+  **Não é regressão do BD-17** — é o alcance que ele mediu e não cobriu.
+
+- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.**
+  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
+  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
+  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
+  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
+  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
+  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
+  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
+  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
+  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
+  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
+  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
+  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
+  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
+  o D-51 está pago; isto é limitação de plataforma, não regressão.
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
   Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce

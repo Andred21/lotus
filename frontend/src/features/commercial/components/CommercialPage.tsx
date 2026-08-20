@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { ClientData } from '@shared/types/generated'
+import { archivableSource } from '@shared/lib'
 import { useClientsPage } from '../hooks/useClientsPage'
 import { useClientsArchived } from '../hooks/useClientsArchived'
 import { useBudgetsPage } from '../hooks/useBudgetsPage'
@@ -23,8 +24,10 @@ export function CommercialPage() {
   const budgetsArchived = useBudgetsArchived()
   const [tab, setTab] = useState(0)
   const [toArchive, setToArchive] = useState<ClientData | null>(null)
-  const archived = clientsArchived.mode === 'archived'
-  const budgetArchived = budgetsArchived.mode === 'archived'
+  // Duas abas, duas fontes: as condições são DIFERENTES (clientes e orçamentos têm
+  // interruptores próprios), então são duas chamadas, não uma (D-52).
+  const fonteClientes = archivableSource(clients, clientsArchived)
+  const fonteOrcamentos = archivableSource(budgets, budgetsArchived)
 
   return (
     <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
@@ -32,10 +35,10 @@ export function CommercialPage() {
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('client.tabClients')}>
             <ClientsTable
-              clients={archived ? clientsArchived.items : clients.items}
-              loading={archived ? clientsArchived.loading : clients.loading}
-              error={archived ? clientsArchived.error : clients.error}
-              onRetry={archived ? clientsArchived.refetch : clients.refetch}
+              clients={fonteClientes.items}
+              loading={fonteClientes.loading}
+              error={fonteClientes.error}
+              onRetry={fonteClientes.refetch}
               mode={clientsArchived.mode}
               onModeChange={clientsArchived.setMode}
               onArchive={setToArchive}
@@ -51,10 +54,10 @@ export function CommercialPage() {
           </ModuleTab>
           <ModuleTab header={t('budget.tab')}>
             <BudgetsTable
-              budgets={budgetArchived ? budgetsArchived.items : budgets.items}
-              loading={budgetArchived ? budgetsArchived.loading : budgets.loading}
-              error={budgetArchived ? budgetsArchived.error : budgets.error}
-              onRetry={budgetArchived ? budgetsArchived.refetch : budgets.refetch}
+              budgets={fonteOrcamentos.items}
+              loading={fonteOrcamentos.loading}
+              error={fonteOrcamentos.error}
+              onRetry={fonteOrcamentos.refetch}
               mode={budgetsArchived.mode}
               onModeChange={budgetsArchived.setMode}
               onRestore={(b) => b.id != null && budgetsArchived.restore(b.id)}

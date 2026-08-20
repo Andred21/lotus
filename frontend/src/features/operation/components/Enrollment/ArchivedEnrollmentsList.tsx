@@ -1,13 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
-import { AppButton, AppColumn, AppDataTable, AppEmptyState, IdentityCell } from '@shared/ui'
+import {
+  AppButton, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns,
+} from '@shared/ui'
+import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
 
-/** Molde `ClientRow`: a forma achatada pelo `useArchivedPage`. */
-export type ArchivedEnrollmentRow = EnrollmentData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A forma achatada pelo `useArchivedPage`. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type ArchivedEnrollmentRow = ArchivableRow<EnrollmentData>
 
 /**
  * Matrículas arquivadas da turma. Componente próprio, e não um modo da
@@ -60,18 +61,9 @@ export function ArchivedEnrollmentsList({
         )}
       />
       <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />
-      <AppColumn
-        field="archived_at"
-        header={t('archive.archivedAt')}
-        body={(e: ArchivedEnrollmentRow) =>
-          e.archived_at ? new Date(e.archived_at).toLocaleDateString() : '—'
-        }
-      />
-      <AppColumn
-        field="archived_by"
-        header={t('archive.archivedBy')}
-        body={(e: ArchivedEnrollmentRow) => e.archived_by ?? t('archive.unknownAuthor')}
-      />
+      {/* Sem guarda de modo: esta lista SÓ existe no modo arquivado, então as duas
+          colunas são fixas. */}
+      {archivedColumns(t)}
       <AppColumn
         body={(e: ArchivedEnrollmentRow) =>
           can('operation.enrollment.restore') ? (
