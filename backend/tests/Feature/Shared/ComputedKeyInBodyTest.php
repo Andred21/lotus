@@ -187,12 +187,20 @@ class ComputedKeyInBodyTest extends TestCase
         foreach ($arquivos as $arquivo) {
             $fonte = file_get_contents($arquivo);
 
-            // `PREG_OFFSET_CAPTURE`: a posição vem do PRÓPRIO match, não de um
-            // segundo `strpos` — um `strpos("\$$campo")` reencontraria a
-            // primeira ocorrência literal de "$campo" no arquivo, e uma
-            // referência em docblock (ex.: "`SessionUserData::$photo_url`")
-            // ANTES da propriedade real cortaria o trecho cedo demais e
-            // acusaria `#[Computed]` como ausente mesmo estando presente.
+            // `PREG_OFFSET_CAPTURE` mantém `$m[0]`/`$m[2]` no formato
+            // [valor, offset], mas o que importa aqui é o VALOR do grupo 0 —
+            // o match INTEIRO, do primeiro atributo até a declaração da
+            // propriedade, capturado pelo `(#\[[^\]]+\]\s*)*` do próprio
+            // regex. Checar `#[Computed]` dentro desse texto, e não numa
+            // janela de tamanho fixo antes do offset, evita dois
+            // falsos-negativos que uma janela cega comete: (1) o atributo de
+            // uma propriedade IRMÃ (ex.: `RedatorData::$documents`,
+            // `StudentData::$current_client_id`) cai dentro da janela e é
+            // confundido com o da foto; (2) um docblock que CITA
+            // "`#[Computed]`" em prosa (ex.: `SessionUserData::$photo_url`)
+            // satisfaz `str_contains` sem o atributo real existir — o match
+            // do regex nunca inclui o docblock, só a cadeia de atributos que
+            // precede a propriedade sem interrupção.
             if (! preg_match_all(
                 '/^\s*(#\[[^\]]+\]\s*)*public \?string \$(\w*photo_url)\s*[,=]/m',
                 $fonte,
@@ -202,10 +210,10 @@ class ComputedKeyInBodyTest extends TestCase
                 continue;
             }
 
-            foreach ($m[2] as [$campo, $offset]) {
-                $trecho = substr($fonte, 0, $offset);
+            foreach ($m[0] as $indice => [$blocoAtributos]) {
+                [$campo] = $m[2][$indice];
 
-                if (! str_contains(substr($trecho, -400), '#[Computed]')) {
+                if (! str_contains($blocoAtributos, '#[Computed]')) {
                     $faltando[] = basename($arquivo).'::'.$campo;
                 }
             }
