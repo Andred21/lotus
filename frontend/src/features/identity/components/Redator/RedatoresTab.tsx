@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { AppButton, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
+import { archivableSource } from '@shared/lib'
 import { useRedatoresPage } from '../../hooks/useRedatoresPage'
 import { useRedatoresArchived } from '../../hooks/useRedatoresArchived'
 import { RedatoresTable } from './RedatoresTable'
@@ -27,7 +28,8 @@ export function RedatoresTab() {
   const page = useRedatoresPage()
   const redatoresArchived = useRedatoresArchived()
   const [toArchive, setToArchive] = useState<RedatorData | null>(null)
-  const archived = redatoresArchived.mode === 'archived'
+  // A fonte da tela é uma escolha só, não quatro (D-52).
+  const fonte = archivableSource(page, redatoresArchived)
 
   const [params, setParams] = useSearchParams()
   const deepLinkId = params.get('redator')
@@ -53,10 +55,10 @@ export function RedatoresTab() {
   return (
     <>
       <RedatoresTable
-        redatores={archived ? redatoresArchived.items : page.items}
-        loading={archived ? redatoresArchived.loading : page.loading}
-        error={archived ? redatoresArchived.error : page.error}
-        onRetry={archived ? redatoresArchived.refetch : page.refetch}
+        redatores={fonte.items}
+        loading={fonte.loading}
+        error={fonte.error}
+        onRetry={fonte.refetch}
         mode={redatoresArchived.mode}
         onModeChange={redatoresArchived.setMode}
         onArchive={setToArchive}

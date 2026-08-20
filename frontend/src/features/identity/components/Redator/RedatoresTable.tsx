@@ -2,19 +2,15 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
+import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
 import { RedatorRowActions } from './RedatorRowActions'
 
-/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
- * vêm preenchidas pelo achatamento do `useArchivedPage`; em `active` elas nem são
- * renderizadas. Molde: `ClientRow`. */
-export type RedatorRow = RedatorData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
+ * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type RedatorRow = ArchivableRow<RedatorData>
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
@@ -98,20 +94,7 @@ export function RedatoresTable({
         sortable
         body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
       />
-      {archived && (
-        <AppColumn
-          field="archived_at"
-          header={t('archive.archivedAt')}
-          body={(r: RedatorRow) => (r.archived_at ? new Date(r.archived_at).toLocaleDateString() : '—')}
-        />
-      )}
-      {archived && (
-        <AppColumn
-          field="archived_by"
-          header={t('archive.archivedBy')}
-          body={(r: RedatorRow) => r.archived_by ?? t('archive.unknownAuthor')}
-        />
-      )}
+      {archived && archivedColumns(t)}
       <AppColumn
         body={(r: RedatorRow) => (
           <div className="flex justify-end">
