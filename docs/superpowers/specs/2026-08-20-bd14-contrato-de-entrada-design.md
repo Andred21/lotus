@@ -37,11 +37,17 @@ prova é rodar `typescript:transform` e conferir a árvore limpa, não presumir.
 5. **D-12 — o silêncio é do construtor promovido.** `UserData:43-45` declara
    `#[Computed] public ?string $photo_url = null`: a promoção desvia do `CannotSetComputedValue`, a
    chave é engolida e a resposta é 200. São 11 DTOs com campo de foto.
-6. **A guarda do front é só de desenvolvimento.** O `throw` de `useCrudForm:117-124` está dentro de
+6. **A resposta da D-12 já existe escrita uma vez, e não é `prohibited`.**
+   `ProfileUpdateData:28-51` veta sete chaves com `missing` e documenta o porquê no docblock:
+   `validateProhibited` é `! validateRequired` no vendor, então o campo **presente mas vazio**
+   (`null`, `''`, `[]`) passava com 200 silencioso — exatamente o defeito que a D-12 descreve.
+   `missing` reprova a mera presença da chave. O mesmo docblock registra que chave sem propriedade
+   correspondente funciona (`DataValidationRulesResolver::applyOverwrittenRules` não checa).
+7. **A guarda do front é só de desenvolvimento.** O `throw` de `useCrudForm:117-124` está dentro de
    `if (import.meta.env.DEV)` (`:106`). Em produção a chave passaria sem aviso nenhum.
-7. **P-29 — o 500 nasce do `default`.** `ProblemDetails:34-36` cai em `[500, 'Erro interno', …]` para
+8. **P-29 — o 500 nasce do `default`.** `ProblemDetails:34-36` cai em `[500, 'Erro interno', …]` para
    `QueryException`; violação de índice único vira 500 mascarado.
-8. **P-35 — o precedente da simetria já existe escrito.** `CreateCertificateTemplateAction:34-41`
+9. **P-35 — o precedente da simetria já existe escrito.** `CreateCertificateTemplateAction:34-41`
    grava `version` por atribuição explícita com o campo fora do `$fillable`, e o docblock dele
    (`:19-27`) cita `seq_in_budget` como a forma que copiou. `Quote:32` mantém `seq_in_budget` no
    `$fillable` e `CreateQuoteAction:30` o grava por mass assignment.
@@ -52,7 +58,7 @@ prova é rodar `typescript:transform` e conferir a árvore limpa, não presumir.
 |---|---|---|---|
 | D1 | Contrato da omissão (D-13) | **omissão preserva** o valor guardado; `null` explícito é o único jeito de apagar | `PUT` exigir a chave (`present`, 422 na omissão); política mista campo a campo |
 | D2 | Onde a tradução `Optional` → atributo mora | helper em `App\Shared\Data`, chamado explicitamente pelas Actions | `toWritable()` num `Data` base (o DTO passaria a saber de coluna: `role`, `course_ids`, `templates`, `files` não são); inline nos 10 sítios, sem dono |
-| D3 | Chave `#[Computed]` no corpo (D-12) | **422** por `prohibited` no `rules()` dos DTOs de entrada, a partir de lista única; arch test cobre os de saída | seguir ignorada com teste de guarda; adiar a D-12 para outro bloco |
+| D3 | Chave `#[Computed]` no corpo (D-12) | **422** por `missing` no `rules()` dos DTOs de entrada, a partir de lista única; arch test cobre os de saída | `prohibited` (medido no repo como `! required`: presente-mas-vazio passaria com 200); seguir ignorada com teste de guarda; adiar a D-12 para outro bloco |
 | D4 | Colisão de índice único (P-29) | traduzir SQLSTATE 23000 de `users` em `ValidationException` do campo, na porta única (`UserProvisioner`) | mapear todo 23000 no `ProblemDetails` global (mensagem genérica e 422 onde FK/check é erro de programação); deixar a ficha aberta |
 | D5 | Simetria do ADR-17 (P-35) | `seq_in_budget` sai do `$fillable`; `CreateQuoteAction` escreve por atribuição explícita | deixar a assimetria e a ficha aberta pela terceira vez |
 
@@ -72,8 +78,10 @@ prova é rodar `typescript:transform` e conferir a árvore limpa, não presumir.
 **`App\Shared\Data\WritableAttributes`** — `from(array $attrs): array` descarta as chaves cujo valor
 é instância de `Optional` e deixa passar o resto, `null` incluído. Um docblock, uma lei, um lugar.
 
-**`App\Shared\Data\ComputedFields`** — devolve as regras `prohibited` das chaves computadas a partir
-de uma lista única, para o `rules()` dos DTOs de entrada com foto não divergir por cópia.
+**`App\Shared\Data\ComputedFields`** — devolve as regras `missing` das chaves computadas a partir de
+uma lista única, para o `rules()` dos DTOs de entrada com foto não divergir por cópia. Os seis DTOs
+de entrada com campo de foto: `UserData`, `StudentData`, `RedatorData`, `ClientData`, `TurmaData`
+(`client_photo_url`) e `EnrollmentData`.
 
 **`UserProvisioner`** — além da porta única de checagem que já existe (`ensureIdentityAvailable`),
 passa a ser a porta única da **tradução** de violação de índice de `users` em erro de validação por
@@ -91,8 +99,10 @@ campo. As Actions envolvem a própria escrita por ela.
    continua apagando. O par (omite × manda `null`) é o teste — só o segundo ramo deixaria a
    regressão passar verde.
 2. `PUT /api/users/{id}` que omite `rut` mantém o RUT do usuário. É a medição original da D-13.
-3. `PUT` com `photo_url` no corpo devolve **422** nos DTOs de entrada com foto — hoje devolve 200 e
-   engole. Arch test prova `#[Computed]` nos 11 campos e a regra nos de entrada.
+3. `PUT` com `photo_url` no corpo devolve **422** nos seis DTOs de entrada com foto — hoje devolve
+   200 e engole. O ramo `"photo_url": null` (presente e vazio) também é 422: é o que separa `missing`
+   de `prohibited`, e sem ele a regressão passa verde. Arch test prova `#[Computed]` nos 11 campos e
+   a regra nos de entrada.
 4. Violação de índice único de `users` devolve **422 com o campo nomeado** (`rut` ou `email`),
    provada nas duas grafias de driver.
 5. `seq_in_budget` enviado no payload de criação de cotação **não** vence a derivação sob lock, e a

@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: contrato-de-entrada
 active_work_item: bd14-contrato-de-entrada
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd14-contrato-de-entrada-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-20-bd14-contrato-de-entrada.md
 context_packet: null
 blocker: null
 last_completed_work_item: arquivados-roots-restantes
 state_basis_commit: 0c8db94
-updated_at: 2026-08-20T10:00:00-03:00
+updated_at: 2026-08-20T11:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
