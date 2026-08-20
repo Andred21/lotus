@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { usePermissions } from '@shared/hooks'
 import { AppButton, InlineLoadState } from '@shared/ui'
-import { formatUf } from '@shared/lib'
+import { formatDate, formatUf, type ArchivableRow } from '@shared/lib'
 import type { QuoteData } from '@shared/types/generated'
 
-/** Molde `ClientRow`: a mesma forma achatada pelo `useArchivedPage`. */
-export type QuoteRow = QuoteData & {
-  archived_at?: string
-  archived_by?: string | null
-}
+/** A mesma forma achatada pelo `useArchivedPage`. O par de campos do rastreio vive
+ * em `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
+export type QuoteRow = ArchivableRow<QuoteData>
 
 /**
  * Cotações arquivadas do orçamento. Componente próprio, e não um modo do
@@ -78,7 +76,10 @@ export function ArchivedQuotesList({
           </div>
           <span className="font-semibold">{formatUf(q.value_uf ?? '0')} UF</span>
           <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('archive.archivedAt')}: {q.archived_at ? new Date(q.archived_at).toLocaleDateString() : '—'}
+            {/* `toLocaleDateString()` sem locale cai no idioma do NAVEGADOR, não no
+                da interface (D-51/D-18). Layout flex, não tabela: é o único dos 8
+                sítios que não some dentro do `archivedColumns`. */}
+            {t('archive.archivedAt')}: {q.archived_at ? formatDate(new Date(q.archived_at)) : '—'}
           </span>
           <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('archive.archivedBy')}: {q.archived_by ?? t('archive.unknownAuthor')}
