@@ -6,6 +6,10 @@ import { useResourceState } from './useResourceState'
 
 type Perfil = { id: number }
 
+/** Sentinela de identidade: `Promise.resolve()` passaria num `toBeDefined()`
+ * frouxo, e o `void` que o D-54 removeu voltaria verde. */
+const RESULTADO = { data: { id: 1 } }
+
 /** O hook não chama hook nenhum: é derivação pura sobre o resultado da query,
  * como o `useLoadState`. O literal basta — `renderHook` está aqui só para não
  * violar `react-hooks/rules-of-hooks` no arquivo de teste.
@@ -26,7 +30,7 @@ function query(
     isError: false,
     isSuccess: false,
     error: null,
-    refetch: () => Promise.resolve(),
+    refetch: () => Promise.resolve(RESULTADO),
     ...over,
   } as unknown as UseQueryResult<Perfil, ProblemDetails>
 }
@@ -102,5 +106,15 @@ describe('useResourceState', () => {
     expect(result.current.loadError).toBeNull()
     expect(result.current.failedWithoutData).toBe(false)
     expect(result.current.errorDetail).toBeUndefined()
+  })
+})
+
+describe('useResourceState — o contrato Q-14', () => {
+  it('DEVOLVE a promise do refetch, com o resultado da query', async () => {
+    const { result } = renderHook(() =>
+      useResourceState(query({ isSuccess: true, data: { id: 1 } })),
+    )
+
+    await expect(result.current.refetch()).resolves.toBe(RESULTADO)
   })
 })

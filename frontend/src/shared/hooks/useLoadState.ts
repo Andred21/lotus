@@ -1,6 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import { loadErrorHint, screenDetail } from '@shared/lib'
+import { loadFailure } from './listSource'
 
 /**
  * Os estados de carga de uma query de LISTA, derivados num lugar só.
@@ -36,7 +37,7 @@ export function useLoadState<T>(query: UseQueryResult<T[], ProblemDetails>) {
     /** Falha no formato que `AppDataTable`/`AppErrorState` leem. `{}` quando o
      * interceptor não populou o corpo: `isError` sem `error` ainda é falha, e
      * devolver `null` a esconderia. */
-    loadError: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
+    loadError: loadFailure(query),
     /** Lista que carregou e veio vazia DE VERDADE — nem falha, nem carregando.
      * Tem mensagem própria, distinta da de falha: é o débito B-7 inteiro. */
     isEmpty: !query.isError && query.isSuccess && data.length === 0,
@@ -48,8 +49,15 @@ export function useLoadState<T>(query: UseQueryResult<T[], ProblemDetails>) {
      * lado dela (D3, precedente `03280c6`) — um refetch falho mantém `data`
      * populado enquanto `status` vira `error`. */
     failedWithoutData: query.isError && data.length === 0,
-    refetch: () => {
-      void query.refetch()
-    },
+    /** DEVOLVE a promise: é ela que o `AppErrorState` aguarda para manter o
+     * "Reintentar" em `loading` enquanto o GET está em voo (Q-14 · D-54).
+     * Engoli-la com `void` não quebra tipo nem teste — por isso a catraca.
+     *
+     * Anotado `Promise<unknown>`, e não deixado inferir: o inferido é
+     * `Promise<QueryObserverResult<…>>`, que vaza o TanStack para cima por
+     * `ReturnType<>` e obriga todo stub de teste a montar o resultado inteiro.
+     * Quem chama aguarda a promise, não lê o valor — é a mesma assinatura que
+     * `ListSource<T>` já declara. */
+    refetch: (): Promise<unknown> => query.refetch(),
   }
 }

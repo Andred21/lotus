@@ -1,6 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import { loadErrorHint, screenDetail } from '@shared/lib'
+import { loadFailure } from './listSource'
 
 /**
  * Os estados de carga de uma query de RECURSO ÚNICO, derivados num lugar só.
@@ -32,13 +33,20 @@ export function useResourceState<T>(query: UseQueryResult<T, ProblemDetails>) {
     /** Falha no formato que `AppErrorState`/`InlineLoadState` leem. `{}` quando
      * o interceptor não populou o corpo: `isError` sem `error` ainda é falha, e
      * devolver `null` a esconderia. */
-    loadError: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
+    loadError: loadFailure(query),
     /** Falhou E não há nada em cache. É o único que autoriza SUBSTITUIR a tela;
      * com cache em mão o certo é manter o conteúdo e avisar ao lado, porque um
      * refetch falho mantém `data` populado enquanto `status` vira `error`. */
     failedWithoutData: query.isError && query.data === undefined,
-    refetch: () => {
-      void query.refetch()
-    },
+    /** DEVOLVE a promise: é ela que o `AppErrorState` aguarda para manter o
+     * "Reintentar" em `loading` enquanto o GET está em voo (Q-14 · D-54).
+     * Engoli-la com `void` não quebra tipo nem teste — por isso a catraca.
+     *
+     * Anotado `Promise<unknown>`, e não deixado inferir: o inferido é
+     * `Promise<QueryObserverResult<…>>`, que vaza o TanStack para cima por
+     * `ReturnType<>` e obriga todo stub de teste a montar o resultado inteiro.
+     * Quem chama aguarda a promise, não lê o valor — é a mesma assinatura que
+     * `ListSource<T>` já declara. */
+    refetch: (): Promise<unknown> => query.refetch(),
   }
 }
