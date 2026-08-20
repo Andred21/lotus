@@ -57,7 +57,11 @@ class RedatorData extends Data
     public static function rules(): array
     {
         return [
-            ...ComputedFields::rejected('photo_url'),
+            // `documents` é `#[Computed]` e FICA de fora: ali a chave é
+            // escrita real (multipart de arquivo, descartado por
+            // `prepareForPipeline` antes dos pipes). `missing` reprovaria o
+            // upload legítimo — ver `RedatorCrudTest`/`RedatorDocumentTest`.
+            ...ComputedFields::rejected('photo_url', 'last_login'),
             'rut' => ['required', 'string', new ValidRut],
             'course_ids' => ['sometimes', 'array'],
             'course_ids.*' => ['integer', 'exists:courses,id'],

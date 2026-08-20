@@ -55,7 +55,7 @@ class UserData extends Data
     public static function rules(): array
     {
         return [
-            ...ComputedFields::rejected('photo_url'),
+            ...ComputedFields::rejected('photo_url', 'last_login'),
             'rut' => ['nullable', 'string', new ValidRut],
             'password' => ['sometimes', 'string', 'min:8'],
             'role' => ['required', 'string', 'exists:roles,name', Rule::notIn(['redator'])],

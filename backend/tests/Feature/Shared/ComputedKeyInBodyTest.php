@@ -176,6 +176,88 @@ class ComputedKeyInBodyTest extends TestCase
     }
 
     /**
+     * Q-1 da review do BD-14: a lei da D-12 é sobre chave `#[Computed]`, não
+     * sobre a palavra `photo`. `last_login` é derivado da sessão e nunca foi
+     * escrita de corpo — mandá-lo devolvia 200 e sumia, o mesmo silêncio que a
+     * D-12 mediu na foto.
+     */
+    public function test_last_login_no_corpo_do_staff_e_422(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $alvo = User::factory()->create(['type' => 'admin', 'email' => 'alvo-ll@lotus.cl']);
+        $alvo->assignRole('admin');
+
+        $this->putJson("/api/users/{$alvo->id}", [
+            'name' => 'Alvo',
+            'email' => 'alvo-ll@lotus.cl',
+            'role' => 'admin',
+            'is_active' => true,
+            'last_login' => '2026-01-01 00:00:00',
+        ])->assertStatus(422)->assertJsonPath('errors.last_login.0', fn ($m) => $m !== null);
+    }
+
+    /**
+     * `documents` NÃO entra na lista do redator, e a exceção é medida: é chave
+     * multipart de escrita real (`RedatorData::prepareForPipeline` descarta o
+     * valor bruto antes dos pipes), coberta por `RedatorCrudTest` e
+     * `RedatorDocumentTest`. `missing` ali reprovaria o upload legítimo.
+     */
+    public function test_last_login_no_corpo_do_redator_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $user = User::factory()->redator()->create([
+            'rut' => '12.345.678-5',
+            'email' => 'redator-ll@lotus.cl',
+        ]);
+        $redator = $user->redator()->create([]);
+
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => 'Redator Editado',
+            'rut' => '12.345.678-5',
+            'email' => 'redator-ll@lotus.cl',
+            'last_login' => '2026-01-01 00:00:00',
+        ])->assertStatus(422)->assertJsonPath('errors.last_login.0', fn ($m) => $m !== null);
+    }
+
+    /**
+     * O caso que dói: `current_client_id` é a PROJEÇÃO do vínculo, e
+     * `UpdateStudentAction` não toca vínculo de propósito (D3 do bloco de
+     * alunos). Quem mandava vínculo no PUT recebia 200 e nada acontecia. A
+     * chave de escrita do vínculo é `client_id`, que segue aceita.
+     */
+    #[DataProvider('chavesComputadasDoAluno')]
+    public function test_chave_computada_no_corpo_do_aluno_e_422(string $chave, mixed $valor): void
+    {
+        $this->actingAsAdmin();
+
+        $user = User::factory()->create([
+            'type' => 'aluno',
+            'is_active' => false,
+            'rut' => '13.456.789-9',
+            'email' => 'aluno-comp@lotus.cl',
+        ]);
+        $student = $user->student()->create([]);
+
+        $this->putJson("/api/students/{$student->id}", [
+            'name' => 'Aluno Editado',
+            'rut' => '13.456.789-9',
+            'email' => 'aluno-comp@lotus.cl',
+            $chave => $valor,
+        ])->assertStatus(422)->assertJsonPath("errors.{$chave}.0", fn ($m) => $m !== null);
+    }
+
+    public static function chavesComputadasDoAluno(): array
+    {
+        return [
+            'current_client_id' => ['current_client_id', 7],
+            'current_client_name' => ['current_client_name', 'ACME S.A.'],
+            'enrollments_count' => ['enrollments_count', 99],
+        ];
+    }
+
+    /**
      * Arch test: todo campo de foto dos DTOs é `#[Computed]`. Cobre também os
      * DTOs que só SAEM, onde `rules()` nunca roda.
      */

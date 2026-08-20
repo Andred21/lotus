@@ -52,7 +52,15 @@ class StudentData extends Data
     public static function rules(): array
     {
         return [
-            ...ComputedFields::rejected('photo_url'),
+            // `client_id` (a chave de escrita do vínculo) segue aceita
+            // abaixo; `current_client_id` é a PROJEÇÃO dele e mandá-la no
+            // corpo era 200 silencioso.
+            ...ComputedFields::rejected(
+                'photo_url',
+                'current_client_id',
+                'current_client_name',
+                'enrollments_count',
+            ),
             'rut' => ['required', 'string', new ValidRut],
             // Só a FORMA aqui. A existência do cliente é regra do cadastro e
             // vive na CreateStudentAction: `exists` neste DTO fazia o PUT
