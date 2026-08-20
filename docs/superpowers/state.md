@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: useloadstate-promise-e-forma
 active_work_item: bd18-useloadstate-promise-e-forma
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd18-useloadstate-promise-e-forma.md
 context_packet: null
 blocker: null
 last_completed_work_item: bd17-superficie-de-arquivados
-state_basis_commit: add3511f
-updated_at: 2026-08-20T17:05:00-03:00
+state_basis_commit: ee650ffb
+updated_at: 2026-08-20T18:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -105,6 +105,60 @@ e trocá-la mudaria tela sem DoD que o cubra.
 
 **Baseline medida antes da Task 1, não herdada:** `pnpm test` 81 arquivos / 453 testes verdes, lint
 exit 0, build verde. O gate da Task 10 cobra 85 / 467.
+
+### Execução — 2026-08-20
+
+**As 10 tasks executadas em `subagent-driven-development`, uma por commit**, de `add3511f` a
+`ee650ffb`, na worktree `fix-frontend`. Ledger em `.superpowers/sdd/progress.md`. Gate final:
+`pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **84 arquivos / 468 testes**.
+
+**As duas varreduras que fecham os débitos, rodadas antes de a rule ser escrita e reconferidas no
+review final:** `grep "isError ? (.*?? ({} as"` e `grep "void .*\.refetch()"` devolvem **zero
+linha** fora de teste. `git diff main...HEAD -- backend/ generated.ts` = vazio, então Pint,
+`php artisan test` e `typescript:transform` seguem N/A por escopo medido.
+
+**Quatro desvios do plano, todos registrados no ledger com o motivo:** (1) o parâmetro de
+`listSource` virou **estrutural** — o `...listSource(query)` do plano não compilava, porque
+`useCrudPage`/`useArchivedPage` seguram contrato estreito, e a alternativa era um `as UseQueryResult`
+que mentiria sobre os fakes de teste; (2) o `refetch` é **anotado** `(): Promise<unknown>` e não
+deixado inferir — o inferido vaza `QueryObserverResult` para cima por `ReturnType<>` e obrigaria
+todo stub a montar o resultado inteiro; (3) `InlineLoadState.test.tsx` **já existia** (o mapa do
+plano errava), então os testes foram acrescentados e o alvo caiu de 85 para 84 arquivos; (4) um
+teste a mais que o previsto, cobrindo o ramo `readOnly` do `RedatorCourseSelector`, por achado de
+review de task.
+
+**As contagens intermediárias do plano não fechavam em cadeia** (esqueciam os 5 testes da Task 1).
+O alvo final dele — 467 testes — estava certo; ficaram 468 pelo desvio (4).
+
+**DoD end-to-end provado no navegador**, contra a API real em `:8080`, com falha **isolada** por
+rota (interceptação no browser, sem derrubar o nginx — o `GET /api/me` sobreviveu e o shell não
+redirecionou): (1) o "Reintentar" de tela cheia em `/operacion/turmas/6` fica `disabled` com o GET
+**segurado em voo** e volta quando ele responde; (2) o `InlineLoadState` do diálogo de orçamento
+fica `disabled` **com spinner** durante todo o voo do `GET /api/clients` e volta depois — é o
+comportamento que ele não tinha; (3) com o `GET /api/redatores` falhando e cache em mão, a seção
+WRITERS do diálogo de curso **mantém os três redatores** e o aviso vai ao lado, sem o erro de seção
+inteira; (4) as cinco telas de arquivados (`/comercial`, `/cursos`, `/personas`, `/operacion`,
+`/administracion`) seguem alternando ativo/arquivado com as colunas `Archived on`/`Archived by` e
+voltam ao ativo.
+
+**O item não-binário da spec §7 foi conferido e aprovado:** o botão do `InlineLoadState` não tem
+`icon`, então o PrimeReact **acrescenta** o spinner à frente do label (`p-button-loading-label-only`)
+e ele cresce 24px (83 → 107) durante o voo. Como é o último item da linha, não empurra nada e
+continua legível.
+
+**Observação medida, não regressão do bloco:** em `TurmaDetailPage` o "Reintentar" fica `disabled`
+por ~300ms e então a tela inteira troca pelo esqueleto, porque o ramo `loading` vem antes do
+`loadError` na página. Comportamento pré-existente, fora do escopo do BD-18.
+
+**Review final da branch (`requesting-code-review`, opus): "ready to merge with fixes", sem
+Critical.** Os três Important foram fechados no commit `ee650ffb`: a rule ganhou as duas exceções
+deliberadas (`useHistorial`/`useEmissionPanelState` devolvem `null` onde a política devolve `{}`), o
+`onRetry` de `AdminView`/`PeriodFilter` parou de mentir com `() => void`, e o `useRetryPending`
+ganhou `catch` e o registro de por que o `setPending` pós-unmount não é vazamento no React 19. O
+terceiro Important era a própria transição de estado, feita aqui. Os Minors e os dois débitos novos
+que o review mediu (`StudentDetailSections` como terceiro sítio do D-14; a expressão de mensagem do
+aviso repetida em 5 componentes) ficam para a triagem do João no review do bloco.
+
 
 ## Último item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 
