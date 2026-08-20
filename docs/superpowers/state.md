@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: contrato-de-entrada
 active_work_item: bd14-contrato-de-entrada
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd14-contrato-de-entrada-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd14-contrato-de-entrada.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: arquivados-roots-restantes
 state_basis_commit: 0c8db94
-updated_at: 2026-08-20T14:05:00-03:00
+updated_at: 2026-08-20T14:46:32-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,77 @@ updated_at: 2026-08-20T14:05:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `bd14-contrato-de-entrada` (execução encerrada, aguardando review)
+
+### Execução — 2026-08-20: 9 tasks, técnica `subagent-driven-development`, main tree
+
+Bloco de backend, então **main tree** e não worktree (P-03: o compose monta o main tree, e testar
+backend em worktree produziria verde contra código diferente). Base da branch `feat/bd14-contrato-de-entrada`:
+`0fe30b13`. Ledger task a task em `.superpowers/sdd/progress.md` — aqui fica só o que decide.
+
+As três leis que o bloco construiu:
+
+- **"Ausente não é nulo"** (D1) — `App\Shared\Data\WritableAttributes::from()` tira do array toda
+  chave que chega como `Optional`; só `null` explícito apaga. Aplicada a 10 campos em 5 `Update*Action`.
+- **Chave `#[Computed]` no corpo de escrita vira 422** (D3) — `App\Shared\Data\ComputedFields::rejected()`
+  com a regra `missing`, e **não** `prohibited`: o vendor implementa `validateProhibited` como
+  `! validateRequired`, então presente-porém-vazio (`null`, `''`, `[]`) passaria com 200 silencioso.
+- **Colisão de índice único de `users` vira 422 com o campo nomeado** (D4) — `UserProvisioner::writing()`
+  sobre os 9 sítios que escrevem `User`, cobrindo as duas grafias de driver.
+
+Mais `seq_in_budget` fora do `$fillable` (D5), escrito pela Action sob o lock que já existia.
+
+### Três decisões tomadas durante a execução
+
+1. **Convenção vence o plano nos nomes de teste** (decisão do João): classe em inglês, método em
+   português. As quatro classes de omissão foram renomeadas; o plano cita os nomes antigos no DoD da
+   Task 9 e a equivalência está no ledger.
+2. **A varredura da Task 8 passou dos `paths_autorizados` do plano.** O `## Handoff` autorizava
+   `Quote::create` → `forceCreate` só em `Comercial/**` e `Operation/**`; sobravam 15 arquivos e a
+   branch ficava com 22 falhas. Estendida depois de confirmar que **não existe `Quote::create(` em
+   `backend/app/`** — a varredura é 100% código de teste. 45 arquivos, 50 ocorrências.
+3. **`ProfileData` e `SessionUserData` ganharam `#[Computed]`** fora da lista de seis do plano, porque
+   a DoD exige os 11 campos de foto. São DTOs só-de-saída, nascem de `fromUser()`, nunca de request.
+
+### DoD — 2026-08-20, remedido em `5a8bcdc`
+
+**861 testes verdes / 5 skipped**, por diretório porque a suíte unida estoura o `memory_limit` de
+128M do container (P-50 confirmado de novo): Cadastros 155 · Certification 97 · Comercial 86 ·
+Dashboard 37 · Identity 256 · Operation 144 · Shared 69 · Unit 17. Zero falhas. Pint verde nos
+**76** arquivos PHP do bloco. `typescript:transform` com **zero diff** em `generated.ts`. Cada item
+da DoD da spec mapeia para um teste nomeado e existente.
+
+### Review final da branch — o achado que os gates por task não podiam ver
+
+Veredito: **o que o bloco construiu está correto e provado, nada regrediu.** Mas a lei que ele declara
+não vale em todo lugar que devia valer, e três contraexemplos estão dentro das Actions que o próprio
+bloco editou.
+
+A raiz: o `DefaultValuesDataPipe` do Spatie entrega o **default literal** quando a chave está ausente,
+**antes** do ramo que preencheria `Optional`. `WritableAttributes` recebe então um valor real e não
+tem como saber que ele foi inventado. A medição da D-13 era cega a isso — ela procurou o idioma
+`instanceof Optional ? null`, e aqui o valor nunca chega como `Optional`.
+
+Seis campos, nenhum deles regressão do bloco. **`UserData::$is_active = true` é controle de acesso:**
+um `PUT /api/users/{id}` que omita a chave reativa staff desligado, e `is_active` é o portão que
+`AuthController:52` usa para barrar login. Fora do `active_work_item` (a D-13 mediu 10 campos, a D-12
+mediu 11 de foto; nenhum destes seis está nas listas) e o remédio ainda escolhe entre duas leituras
+da D1 — foi para **[P-51](./pendencias/abertas.md)** com o custo dos dois caminhos medido.
+
+Os Minor de código do próprio bloco foram corrigidos antes do handoff: `bfcbbc7` (o tradutor de
+coluna duplicada sequestrava `NOT NULL constraint failed`), `dd0cda1` (o arch test dos 11 campos
+passava vazio se o `glob` não achasse nada) e `5a8bcdc` (três dialetos fora de compasso).
+
+### Um ponto de estado a refazer no fechamento
+
+O base da branch, `0fe30b13`, é literalmente o commit que promoveu `bd17-superficie-de-arquivados` a
+`ready_for_planning` — e o BD-14 sobrescreveu esse `active_work_item`. Nada se perdeu (o BD-17 e seus
+três débitos vivem no `backlog.md:208`), mas **a promoção precisa ser refeita quando o BD-14 fechar.**
+O `state_basis_commit: 0c8db94` não é o base da branch e não deveria ser: é o commit contra o qual as
+medições do `backlog.md` foram tomadas, que é o que o campo quer dizer.
+
+---
 
 ## Último item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
 

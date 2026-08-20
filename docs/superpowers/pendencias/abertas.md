@@ -706,3 +706,82 @@ notou que são duas linhas. A duplicata é o mesmo risco de proveniência que ge
 positivos, um nível abaixo: dentro da base certa. Qual cópia é a canônica é decisão do João (a Sprint
 da task mudou de 3 para 4), não do agente — enquanto as duas existirem, um packet futuro pode ler a
 vazia.
+
+---
+
+## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
+
+**Bloco:** — · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
+dos outros cinco); os demais, o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
+`BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
+
+Achado pela review final do **BD-14** (2026-08-20, `0fe30b13..dd0cda1`). **Nada aqui é regressão do
+BD-14** — todos os seis campos já se comportavam assim antes do bloco. O que o bloco fez foi criar
+o vocabulário que torna o defeito nomeável, e a própria review mediu que a lei que ele declara não
+vale em todo lugar que devia valer.
+
+### A mecânica
+
+O `DefaultValuesDataPipe` do Spatie entrega o default declarado quando a chave está **ausente do
+corpo**, e faz isso **antes** do ramo que preencheria `Optional`. Então:
+
+| Declaração | Chave ausente vira | Correto? |
+|---|---|---|
+| `public string\|Optional\|null $phone` (sem default) | `Optional::create()` | sim |
+| `public bool\|Optional $is_active = new Optional` | `Optional` | sim |
+| `public bool $is_active = true` | **`true`** | **não** |
+| `public string $type = 'client'` | **`'client'`** | **não** |
+
+O `WritableAttributes::from()` que o BD-14 construiu **funciona**: ele tira do array toda chave que
+chega como `Optional`. O que o derrota é a DTO entregar um valor real onde devia entregar `Optional`
+— o helper não tem como distinguir "o cliente mandou `true`" de "o Spatie preencheu `true`".
+
+### Os seis campos
+
+**1 — `UserData::$is_active = true` ([`UserData.php:40`](../../../backend/app/Domains/Identity/Data/UserData.php#L40)) — controle de acesso.**
+`UpdateStaffUserAction:57` escreve `'is_active' => $data->is_active` dentro do próprio
+`WritableAttributes::from()`. Um `PUT /api/users/{id}` que omita a chave **reativa** um staff
+desativado — e `is_active` é exatamente o portão que `AuthController:52` usa para barrar o login.
+Quem só renomeia um admin desligado devolve o acesso dele sem pedir.
+
+O contraste está na mesma pasta: `RedatorData::$is_active` é `public bool|Optional $is_active`
+**sem default**, e `UpdateRedatorAction:68-73` usa o mesmo helper na mesma forma — e acerta. Um DTO
+está certo, o irmão errado, pela diferença de um default.
+
+**Custo medido dos dois remédios:**
+
+- **(a) `public bool|Optional $is_active = new Optional`** — espelha o redator, coerente com a D1 da
+  spec do BD-14. Muda `generated.ts` de `is_active: boolean` para `is_active: undefined | boolean`,
+  **grafia que a linha 433 do arquivo já carrega hoje para `RedatorData`**. Do lado do SPA são ~5
+  sítios (`useStaffUserForm.ts:34,53`, `StaffUserDialog.tsx:121-128`, `UsersTable.tsx:72-73`) e o
+  idioma de narrowing (`?? true`) já existe no repositório, copiado do redator
+  (`useRedatorForm.ts:28,90`, `RedatorIdentityFields.tsx:73-76`). O SPA sempre manda a chave — o
+  ganho é para chamador parcial, não para a tela.
+- **(b) `'is_active' => ['present', 'boolean']` em `UserData::rules()`** — omissão vira 422 em vez de
+  reativação silenciosa, e `generated.ts` não muda. **Mas contradiz a D1**, que escolheu
+  "omissão preserva" justamente contra "PUT exige a chave".
+
+**2 e 3 — `ClientData::$type = 'client'` ([`ClientData.php:57`](../../../backend/app/Domains/Commercial/Data/ClientData.php#L57)) e `CourseData::$workload_hours = 0` ([`CourseData.php:34`](../../../backend/app/Domains/Catalog/Data/CourseData.php#L34)).**
+Nas duas Actions que o BD-14 **editou**: um PUT que omita `type` rebaixa qualquer `provider`/`other`
+para `client`; um que omita `workload_hours` zera a carga horária contratada — e o docblock do
+próprio `CourseData:17` diz que ela é contratada, não derivada.
+
+**4 a 6 — os que nem chegam ao helper.**
+`BudgetController.php:86-88` escreve
+`'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms` — o
+ternário `Optional → null` que o BD-14 removeu de cinco Actions, ainda vivo aqui; e é inalcançável
+de todo jeito, porque `BudgetData.php:44` declara `= null` e a propriedade nunca chega como
+`Optional`. `CourseTemplateController.php:33` faz `$template->update($data->except('id','version')->toArray())`
+sobre `CertificateTemplateData.php:22-23`, onde `$layout_config = []` e `$validity_months = null`:
+omitir `layout_config` **apaga o layout inteiro** do template de certificado.
+
+### Por que não se conserta dentro do BD-14
+
+O `active_work_item` do bloco é o contrato de entrada dos **10 campos** que a D-13 mediu e dos **11**
+campos de foto da D-12. Nenhum destes seis está na lista, e o `/executar-bloco` fecha em
+"implemente somente `active_work_item`". O remédio do `is_active` ainda escolhe entre duas leituras
+da D1 e move `generated.ts` — decisão do João, não do agente.
+
+**A varredura que falta:** a medição da D-13 procurou o idioma `instanceof Optional ? null`. Ela era
+cega a este defeito, porque aqui o valor nunca chega como `Optional`. Um bloco que feche esta ficha
+deve varrer por **default literal em propriedade de DTO de entrada**, não pelo ternário.
