@@ -19,15 +19,13 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (32)
+## Abertas (30)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
 | P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | BD-12 | bloco que puder esvaziar o catálogo de dev; revisar 2026-10-31 |
-| P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | BD-14 | 500 observado em uso real, ou bloco que tocar `ProblemDetails`; revisar 2026-10-31 |
-| P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | BD-14 | bloco que tocar `CreateQuoteAction`/`Quote`; revisar 2026-10-31 |
 | P-49 | `lockRow` de redator e turma é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction`/`DeleteTurmaAction` tomam | BD-14 | bloco que tocar um dos seis escritores de filho da ficha; revisar 2026-10-31 |
 | P-20 | `openspout/openspout` em produção sem ADR hospedeiro | BD-15 | João apontar o ADR hospedeiro (ou autorizar ADR-20); revisar 2026-09-30 |
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | BD-15 | primeiro bloco de Certification que tocar `docs/adrs.md`; revisar 2026-09-30 |
@@ -43,7 +41,7 @@ ou de escrita fora do repositório.
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
 | P-51 | A lei "ausente não é nulo" não alcança propriedade com default literal — 6 campos, 1 deles é acesso (`is_active` omitido reativa staff) | João | João decidir o remédio do `is_active`; revisar 2026-10-31 |
-| P-50 | A suíte unida (828 testes) passa do `memory_limit` de 128M do container e o `artisan test` documentado morre no meio | João | decidir o `memory_limit` da imagem (vale para o PHP-FPM de produção), ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
+| P-50 | A suíte unida (866 testes) passa do `memory_limit` de 128M do container e o `artisan test` documentado morre no meio | João | decidir o `memory_limit` da imagem (vale para o PHP-FPM de produção), ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | João | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | João | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | João | fecha junto da P-02, ou antes de produção |

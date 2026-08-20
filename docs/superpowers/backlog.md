@@ -148,43 +148,6 @@ o atributo novo no DOM.
 **DoD:** o teste do ramo COM cache em cada sítio — o BD-6 mostrou que forçar `list: []` no teste de
 falha deixa a regressão passar verde.
 
-## BD-14 · Backend · o que a entrada pode escrever
-
-**Cobre:** D-13, D-12, P-29, P-35 · **Frente:** backend
-**Afinidade:** os quatro são contrato de entrada — o que o corpo da requisição pode e não pode
-escrever, e o que acontece quando ele omite ou quando dois corpos chegam juntos. Três deles tocam o
-caminho de escrita de identidade (`UpdateStaffUserAction`, `UserProvisioner`, DTOs com foto).
-
-- **D-13** — `UpdateStaffUserAction` apaga o `rut` num `PUT` que só o **omite**.
-- **D-12** — o backend aceita chave `#[Computed]` (`photo_url`) no corpo e devolve 200 em silêncio,
-  nos quatro DTOs com foto.
-- **P-29** — corrida de unicidade **entre transações** ainda sobe 500 em vez de 422.
-- **P-35** — `seq_in_budget` por mass assignment enquanto `version` saiu do `$fillable`; dois
-  consumidores do ADR-17 com defesas diferentes.
-
-**Decisão do João dentro do bloco, não antes:** D-13 muda contrato de entrada (preservar o valor
-atual quando a chave falta × exigir a chave no `PUT`) e D-12 decide se chave computada no corpo vira
-422 ou segue ignorada. **DoD é o teste que mostra o RUT sobrevivendo à omissão, não o `if` novo.**
-
-**Escopo remedido em 2026-08-18 contra `b758068` (revisão de arquitetura, sem promoção).** Os dois
-débitos deste bloco estavam registrados menores do que são, e a diferença muda o desenho, não só a
-contagem: a D-13 não é um `if` num campo, é **uma decisão de contrato copiada em 5 Actions**, e a
-D-12 vale para **11** campos de foto, não 4. O detalhe de cada uma está na linha delas em
-`## Agrupados em bloco`.
-
-**Consequência para a P-35, medida e não suposta:** o alcance real da D-13 inclui
-`UpdateQuoteAction:30-32`, então quem executar este bloco **toca `Quote` por outro motivo** — que é
-o gatilho literal da ficha da P-35. Ela deixa de depender de payload observado e passa a fechar
-dentro do bloco.
-
-**Um achado de desenho para o brainstorming, não uma task:** a resposta "preservar na omissão" já
-existe escrita **uma vez**, em `UpdateStudentAction.php:31`
-(`$data->phone instanceof Optional ? $user->phone : $data->phone`), e nunca foi propagada. O mesmo
-campo `phone` tem hoje três comportamentos — apaga em `UpdateStaffUserAction:53`,
-`UpdateClientAction:42` e `UpdateRedatorAction:63`; preserva em `UpdateStudentAction:31`; e é pulado
-por `if` em `UpdateProfileAction:23`. Concentrar a tradução `Optional` → atributo num módulo só é o
-que dá à decisão do João **um** lugar para ser tomada.
-
 ## BD-15 · Docs e guardas de documentação
 
 **Cobre:** P-20, P-21, P-23, P-32, P-39, D-08 · **Frente:** documentação e mecanismo
@@ -314,36 +277,6 @@ para este defeito exato.
   `typescript:transform` e compara com o commitado é a candidata óbvia — ela reprova sozinha se
   alguém editar à mão. **DoD é a sonda:** editar `generated.ts` e ver o mecanismo reprovar nomeando o
   arquivo.
-- **D-12 · O backend aceita `photo_url` no corpo da escrita e devolve 200, em silêncio** →
-  **BD-14**. **Alcance remedido em 2026-08-18** contra `b758068`: são **11** campos de foto em 11
-  DTOs — `StudentData:48`, `RedatorData:45`, `UserData:45`, `ClientData:66`, `ProfileData:32`,
-  `SessionUserData:29`, `EnrollmentData:36`, `TurmaData:54` (`client_photo_url`),
-  `TurmaRedatorData:28`, `CertificateData:41` (`aluno_photo_url`) e `EmissionPanelEnrollmentData:34`
-  (`student_photo_url`) —, não os 4 que o registro herdou do Q-4. Os 7 que faltavam nasceram na
-  `celula-de-identidade` (2026-08-14) e no Meu Perfil, depois da linha ter sido escrita. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
-  frontend**: `FORBIDDEN_PAYLOAD_KEYS` no `useCrudForm` faz a chave lançar em DEV, então o `...form`
-  ingênuo não a reintroduz mais. O defeito do outro lado foi **remedido no `/fechar-sprint` de
-  2026-08-13**, não herdado: `PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo
-  devolve **200**, e o campo volta `null` na resposta — a promoção no construtor do DTO desvia do
-  `CannotSetComputedValue`, então o campo `#[Computed]` é ignorado sem 422. Vale para os quatro DTOs
-  com foto, não só o `ClientData` que o texto original do Q-4 nomeava. **Uma afirmação do Q-4
-  original não sobreviveu à medição:** `photo_url` **não** carrega path interno de storage — o
-  `SignedUrlTransformer` roda na serialização e o front recebe URL pré-assinada.
-- **D-13 · A omissão apaga o valor guardado, em 10 campos de 5 `Update*Action`** → **BD-14**.
-  **Título e escopo remedidos em 2026-08-18** contra `b758068`: o registro original nomeava um campo
-  (`rut`) numa Action, e a medição achou o mesmo idiom — `instanceof Optional ? null : $x` — em
-  `UpdateStaffUserAction:44,53` (`rut`, `phone`), `UpdateClientAction:42,48` (`phone`,
-  `business_activity`), `UpdateCourseAction:30,31` (`technical_name`, `description`),
-  `UpdateQuoteAction:30,31,32` (`purchase_order`, `planned_start_date`, `planned_end_date`) e
-  `UpdateRedatorAction:63` (`phone`). As `Create*Action` usam a mesma forma e **não** são defeito —
-  não há valor anterior a apagar. O texto original segue abaixo, porque a medição do `rut` continua
-  correta; o que mudou é o alcance.
-  `UserData::$rut` é `Optional`, e a Action traduz `Optional` para `null` antes de gravar
-  (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`,
-  `UpdateStaffUserAction.php:44`): quem manda o formulário sem a chave zera o RUT de um usuário que
-  tinha. É a mesma classe do defeito que o bloco `contrato-de-entrada-identidade-e-nested` fechou nas
-  coleções nested — omissão virando apagamento —, num campo escalar. **Pré-existente e fora do escopo
-  daquele bloco**, que só atravessou o arquivo para trocar a checagem de unicidade pela porta única.
 - **D-14 · `RedatorCourseSelector` e `CourseRedatoresSection` ainda ramificam por `isError` cru** →
   **BD-12**. É o terceiro e o quarto sítio do padrão que o review do BD-6 (2026-08-14) transformou em
   regra — falha que apaga cache utilizável — e os dois ficaram **fora do escopo** daquele bloco, que

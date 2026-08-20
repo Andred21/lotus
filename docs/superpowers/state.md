@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: contrato-de-entrada
-active_work_item: bd14-contrato-de-entrada
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-20-bd14-contrato-de-entrada-design.md
-active_plan: docs/superpowers/plans/2026-08-20-bd14-contrato-de-entrada.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: arquivados-roots-restantes
-state_basis_commit: 0c8db94
-updated_at: 2026-08-20T14:46:32-03:00
+last_completed_work_item: bd14-contrato-de-entrada
+state_basis_commit: c61e2f4
+updated_at: 2026-08-20T20:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-20T14:46:32-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — `bd14-contrato-de-entrada` (execução encerrada, aguardando review)
+## Último item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
 
 ### Execução — 2026-08-20: 9 tasks, técnica `subagent-driven-development`, main tree
 
@@ -117,9 +117,99 @@ três débitos vivem no `backlog.md:208`), mas **a promoção precisa ser refeit
 O `state_basis_commit: 0c8db94` não é o base da branch e não deveria ser: é o commit contra o qual as
 medições do `backlog.md` foram tomadas, que é o que o campo quer dizer.
 
+### Review do bloco — 2026-08-20: risco ALTO, duas lentes, zero violação de lei
+
+Classificação **alto risco** (DTO de entrada, contrato HTTP, identidade/acesso, `generated.ts` no
+raio). Duas lentes: gabarito do projeto (CLAUDE.md §5 · `docs/README.md` · ADRs · rules) e revisão
+independente do Codex (read-only) sobre `0fe30b13..HEAD` — **o Codex não confirmou nenhum achado**.
+
+Reprovas rodadas nesta review, não herdadas: **861 verdes / 5 skipped** por diretório (P-50 de novo:
+a suíte unida morre no `memory_limit`, e `php -d memory_limit=512M` não sobe o limite do processo
+filho do `artisan test`); `typescript:transform` com árvore limpa; nenhum órfão (os dois helpers
+novos têm 7 e 6 chamadores); `Quote::create` sem sobra fora da Action.
+
+Dois achados, ambos sobre o **alcance** da lei nova, nenhum regressão do bloco:
+
+- **Q-1 🟡** — a D-12 aplicou `ComputedFields::rejected()` só à chave de foto. Seis chaves
+  `#[Computed]` não-foto seguem engolidas com 200 em DTO de entrada: `UserData::$last_login`,
+  `RedatorData::$last_login` e `$documents`, `StudentData::$current_client_id`,
+  `$current_client_name` e `$enrollments_count`. `current_client_id` é o caso que dói: quem mandar
+  vínculo no `PUT /api/students/{id}` recebe 200 e nada acontece. `documents` NÃO entra sem olhar o
+  multipart do redator.
+- **Q-2 🟢** — o arch test dos 11 campos varre só `app/Domains/*/Data/*.php`; campo de foto que
+  nascer em `app/Shared/*/Data/` escapa da varredura e da contagem.
+
+### Correções do review — 2026-08-20: os dois achados aprovados
+
+O João aprovou Q-1 e Q-2; os dois entraram, com o teste reprovando antes (5 vermelhos contra o
+código antigo).
+
+- **Q-1** — `ComputedFields::rejected()` passou a listar as chaves `#[Computed]` não-foto dos três
+  DTOs de entrada que as tinham: `last_login` em `UserData` e `RedatorData`;
+  `current_client_id`, `current_client_name` e `enrollments_count` em `StudentData`.
+  `RedatorData::$documents` ficou **de fora por medição**, com o porquê no sítio: ali a chave é
+  escrita real (multipart de arquivo, descartado por `prepareForPipeline` antes dos pipes) e
+  `missing` reprovaria o upload legítimo. O SPA não manda nenhuma das cinco chaves fechadas —
+  `useStudentForm:22` já traduz `current_client_id` para `client_id`, que segue aceita.
+- **Q-2** — o arch test dos 11 campos passou a varrer também `app/Shared/*/Data/*.php`. A contagem
+  segue 11: hoje não há campo de foto fora de `Domains`, e é exatamente esse futuro que o glob
+  cobre.
+
+Reprovas depois das correções: **866 verdes / 5 skipped** por diretório (Shared foi de 69 para 74),
+Pint verde nos 4 arquivos tocados, `typescript:transform` sem diff em `generated.ts`.
+
+**Review encerrada sem achado pendente.**
+
 ---
 
-## Último item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
+### Fechamento — 2026-08-20: a DoD provada contra a API real, e o banco de dev devolvido como estava
+
+**Critério de aceite provado end-to-end** (nginx `:8080`, sessão Sanctum de admin, MySQL de dev),
+não só por suíte:
+
+- **DoD 1 e 2** — `PUT /api/users/108` **omitindo** `rut` e `phone` → **200**, e o `GET` seguinte
+  devolveu `rut="16.982.435-5"` e `phone="+56 9 8888 0001"` intactos. O mesmo `PUT` com
+  `"rut": null, "phone": null` → **200** e os dois campos `null`. O par é a prova: só o segundo ramo
+  deixaria a regressão passar verde.
+- **DoD 3** — `photo_url` no corpo → **422** nas duas formas (`"http://evil/x.png"` e `null`), com
+  `El campo photo url no debe estar presente.`; `last_login` → **422**; no aluno,
+  `current_client_id` e `enrollments_count` → **422** (as chaves que o review acrescentou).
+- **DoD 4** — `POST /api/users` com RUT já cadastrado → **422** com
+  `rut: "Este RUT já está cadastrado."`. A corrida **em si** não é alcançável por uma request só —
+  as duas portas (check e índice) devolvem a MESMA resposta por desenho, e a tradução do índice está
+  provada em `UniqueIndexCollisionTest` com as cinco mensagens reais de driver.
+- **DoD 5** — dois `POST /api/budgets/14/quotes` com `"seq_in_budget": 99` no corpo gravaram **1** e
+  **2**. O payload não vence a derivação sob lock.
+
+**Resto do gate.** Backend **866 passed / 5 skipped** por diretório (Cadastros 155 · Certification 97
+· Comercial 86 · Dashboard 37 · Identity 256 · Operation 144 · Shared 74 · Unit 17); a suíte unida
+morreu no mesmo `memory_limit` de sempre (P-50, gatilho visto vencer de novo e registrado na ficha).
+Frontend `pnpm lint` 0, `pnpm build` verde, **435 testes**. Pint `--test` **passed** nos **76**
+arquivos PHP do bloco (nunca sem argumento). `typescript:transform` rodado de novo com **zero diff**
+em `generated.ts`. Código morto: os dois helpers criados têm 7 e 6 chamadores, nenhum `.gitkeep`
+nasceu no bloco. Leis §5: nenhuma contrariada.
+
+**Zero resíduo no banco de dev** (a P-44 existe justamente por gates que esqueceram o próprio
+rastro): o staff de sonda (`gate-bd14@lotus.cl`, id 108), o orçamento `GATE-BD14` (id 14), as duas
+cotações (13, 14) e as **6** linhas de auditoria que eles geraram foram removidos com `forceDelete`.
+Conferido depois: `user=0 budget=0 quotes=0`.
+
+**Pendências.** **P-29** e **P-35** encerradas por este bloco e movidas para `encerradas.md` com o
+rastro do que as fechou. **P-51** nasceu na review final e segue aberta (decisão do João). **P-50**
+teve o gatilho visto vencer de novo. **P-49 ficou órfã de bloco:** a ficha ainda diz `Bloco: BD-14`,
+que acabou de fechar sem absorvê-la — reagrupar é decisão do João, não heurística do agente.
+
+**`state_basis_commit` passa de `0c8db94` a `c61e2f4`, e isso não é divergência.** `0c8db94` era o
+commit contra o qual as medições do `backlog.md` foram tomadas para ESTE bloco; fechado o bloco, o
+campo volta a apontar para o último commit que comprova a entrega — o segundo dos dois que
+corrigiram os achados do review.
+
+**Um ponto de estado que este fechamento NÃO resolveu:** a `feat/bd14-contrato-de-entrada` nasceu
+sobre `0fe30b13`, o commit que promovia `bd17-superficie-de-arquivados` a `ready_for_planning`, e o
+BD-14 sobrescreveu esse `active_work_item`. O estado fecha em `idle` porque o gate proíbe promover
+por ordem óbvia; **a promoção do BD-17 é do João** (`backlog.md`, BD-17).
+
+## Penúltimo item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
 
 ### Seleção — 2026-08-18
 
@@ -695,7 +785,7 @@ e vale para o PHP-FPM de produção também.
 
 **Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
 
-## Penúltimo item fechado — 2026-08-19 (`identity-ativacao-acesso-redator`, item 4 de "Próximos blocos")
+## Antepenúltimo item fechado — 2026-08-19 (`identity-ativacao-acesso-redator`, item 4 de "Próximos blocos")
 
 ### Seleção — 2026-08-18
 
@@ -1113,7 +1203,7 @@ pendência fechou; as encerradas seguem vazias. Total: **30 abertas**.
 **Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
 João.
 
-## Antepenúltimo item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
+## Quarto item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
 
 ### Seleção — 2026-08-18
 
@@ -1561,7 +1651,7 @@ cumpriram a sprint de rastro e saíram das encerradas.
 recuperá-lo — qualquer agregado arquivado antes de 2026-08-18 restaura o pai sem os filhos. O item 1
 de "Próximos blocos" foi reescrito para o que sobra: replicar o padrão nos seis roots restantes,
 com o molde apontando para a spec arquivada.
-## Quarto item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
+## Quinto item fechado — 2026-08-18 (`bd13-listagens-e-abas`, BD-13 do backlog)
 
 **Promoção explícita do João**, com o estado em `idle` e `active_work_item` `null`. O gate do
 `/planejar-bloco` não chegou a rodar: a seleção veio de uma revisão de arquitetura
@@ -1790,465 +1880,3 @@ A entrega entrou no `historico/progress.md`, e o Login de 2026-08-13 foi para o
 `progress-archive.md` para manter as dez.
 
 **Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
-
-## Quinto item fechado — 2026-08-18 (`bd16-perfil-e-kit-compartilhado`, BD-16 dos blocos de dívida)
-
-**Promoção explícita do João**, a partir da auditoria
-`audits/2026-08-17-perfil-ui-review-e-design.md`. O estado saiu de `idle` para `ready_for_planning`
-no mesmo commit que grava a auditoria e o BD-16 — a fronteira durável é essa, e não a leitura do
-relatório.
-
-**Como o item nasceu.** Duas lentes sobre `/perfil`, na mesma sessão: o `/lotus-ui-review` (1 achado
-**C**, 8 **B**, 18 capturas em `.artifacts/ui-review/2026-08-17-1241-perfil/`) e o `frontend-design`
-(7 achados estéticos). Nenhum código foi tocado por nenhuma das duas — o passo 16 da skill proíbe, e
-a auditoria é registro, não correção.
-
-**Escopo escolhido: A + B + C, com a D-28 dentro.** As três frentes estão no BD-16 do
-`backlog.md`; a D-28 (dar marca visual ao corte de mutabilidade da spec D1) entrou por decisão
-explícita do João na mesma seleção, e **precede a D-27** — reordenar sem marca visual só troca qual
-metade fica por último.
-
-**Por que `ready_for_planning` e não `context_required`.** As Sprints 5 e 6 exigiam Context Packet
-porque o escopo delas era canônico do Drive. Este bloco não tem fonte externa: cada item é medição
-local, feita no navegador ou por `grep` no repositório, e a auditoria já é o pacote de contexto.
-Nenhuma consulta a Drive, Notion ou Figma é necessária para planejá-lo.
-
-**O bloco absorve o BD-10 e reabre duas pendências travadas.** P-36 e P-37 estavam adiadas desde
-2026-08-13 pelo mesmo motivo — `FormSection` e `FormField` sob reescrita ativa do BD-5 —, e o
-impedimento venceu. O gatilho literal da P-36 (*"bloco que tocar `FormSection` ou `CoursesTable` por
-outro motivo"*) foi disparado pelo DS-01 da auditoria.
-
-**Três coisas que o planejamento precisa tratar e que não são detalhe:**
-
-1. **O alcance sai de `/perfil`.** `FormSection` tem 11 consumidores, `AppPassword` 5 sítios,
-   `AppFileRow` serve comercial/turma/redator, `AppTag` aparece fora da tela. O plano declara os
-   sítios e o DoD prova que nenhum regrediu — a lei 6 manda a correção para `shared/ui`, então o
-   alcance é consequência, não escolha.
-2. **A P-36 traz uma decisão junto, não só um fix.** O seletor da catraca `COR_HARDCODED` precisa
-   distinguir cor crua de `var(--…)` em `style={{ }}`, e é isso que sempre adiou a guarda.
-3. **Dois achados ficaram FORA por decisão pendente:** DS-05 (`scale-200` no avatar — a previsão de
-   recorte é aritmética e precisa de medição no navegador antes de virar task) e DS-07 (mural de
-   credenciais como assinatura da tela — inverte a ordem da spec D1, é bloco próprio).
-
-**Colisão de ID encontrada e não corrigida.** Existem dois `D-18` no `backlog.md`: a data do
-`AppFileRow` (que este bloco cobre) e o `description` em espanhol fixo do Dashboard, em "Travados em
-decisão". Renumerar é decisão do João — está anotado nas duas linhas.
-
-### Planejamento — fechado em 2026-08-17
-
-**Spec:** `specs/archive/2026-08-17-bd16-perfil-e-kit-compartilhado-design.md`. Oito decisões escolhidas pelo
-João (D1–D8) e sete derivadas (D9–D15).
-**Plano:** `plans/archive/2026-08-17-bd16-perfil-e-kit-compartilhado.md` — 16 tasks. As 8 primeiras entregam
-o kit compartilhado (`shared/ui`), as 7 seguintes aplicam em `/perfil`, a 16ª é o gate do bloco.
-Executor `claude`, worktree `fix-frontend`, branch `feat/bd16-perfil-e-kit-compartilhado` a partir de
-`main@135e468`. P-03 não dispara: o bloco é frontend puro.
-
-**Duas tasks abrem ponto de decisão por medição, não por escolha do executor:**
-
-- **Task 8** ramifica: `onToggleMaskKeyDown` do Prime (`password.cjs.js:588-593`) **já trata**
-  `event.code === 'Space'`. Se o teste da Task 8 passar sem código novo, o defeito não reproduz em
-  jsdom e a task vira registro medido, não correção. Um handler no wrapper chamaria `toggleMask()`
-  duas vezes e devolveria o campo ao estado inicial — o defeito pioraria ficando invisível.
-- **Task 15** para e pergunta se a faixa recortar o avatar (ver o risco abaixo).
-
-**Duas divergências medidas contra o que estava escrito, e o que venceu:**
-
-1. **`FormSection` tem 16 consumidores, não 11.** A ficha da P-36 mediu 11 em 2026-08-13; os cinco
-   arquivos de `Profile/` nasceram depois, e o DoD do BD-16 no `backlog.md` herdou o número velho.
-   **Vence a medição de hoje.** A correção do registro sai no fechamento, junto do encerramento das
-   duas pendências — auditoria reporta, não corrige no meio do bloco.
-2. **O `aria-pressed` que a D-24 pede foi RECUSADO com motivo.** `AppPassword.tsx:50-57` registra a
-   decisão de 2026-08-13 (UI-04): o olho é botão, não `switch`, porque o **nome** dele alterna a cada
-   clique — e o `aria-checked` do Prime foi removido justamente por mentir sobre o estado. Pendurar
-   `aria-pressed` num botão cujo nome já carrega o estado o anuncia duas vezes. A D-24 fecha pela
-   metade do teclado (Espaço); a metade do `aria-pressed` não entra. Está na D6 da spec.
-
-**Um risco que pode reabrir a DS-05 durante a execução.** A faixa horizontal da D8 esbarra no
-`transform scale-200` do `AppPhotoField`, e a DS-05 está fora do bloco. Se a faixa recortar no
-navegador, a decisão volta ao João: ou a DS-05 entra, ou a faixa fica só na parte de baixo do
-cartão. Medir antes de escrever o layout.
-
-### Execução — 2026-08-17: início, técnica `executing-plans`
-
-`/executar-bloco bd16-perfil-e-kit-compartilhado` validou as âncoras (spec e plano no disco,
-`context_packet: null` legítimo porque o bloco não tem fonte externa, handoff `executor: claude`,
-`active_plan` cobrindo o work item) e transicionou `ready_for_execution` → `executing` no commit da
-Task 1. Técnica: `executing-plans` — o ambiente restringe o Agent tool a pedido explícito, e as 16
-tasks têm dependência sequencial declarada (a Task 2 só apaga `BRAND_COLOR` depois que a Task 1 o
-zera; a Task 7 consome o contexto da Task 6; as Tasks 14 e 15 consomem a variante da Task 5).
-
-**A branch nasce de `254d691`, não de `135e468` como o plano escreveu.** Não é divergência de estado:
-os dois commits a mais na `main` são a própria spec (`94b533d`) e o próprio plano (`254d691`), que
-não existiam quando o plano fixou a base. Nascer de `135e468` produziria uma branch que não carrega o
-plano que executa. `state_basis_commit` acompanha, pelo mesmo critério das promoções anteriores.
-
-**Worktree `fix-frontend` já era linked worktree** (`GIT_DIR` ≠ `GIT_COMMON`, sem submódulo), então
-`using-git-worktrees` parou no passo 0 — nenhuma worktree nova foi criada, só a branch
-`feat/bd16-perfil-e-kit-compartilhado`. Baseline medida antes de tocar arquivo: **45 arquivos /
-250 testes**, verde.
-
-### Tasks 1–15 — 2026-08-17: 15 commits, um por task, na ordem do plano
-
-`8ffdefa` (tinta de marca sai do título de seção e do ícone de curso) · `efd5bfe` (régua de valor
-para cor em `style`, `BRAND_COLOR` morre) · `e51e1cc` (tag de tom sai do preenchido saturado) ·
-`7a1705a` (linha de arquivo quebra por contêiner e fala o idioma da interface) · `cfe0e19`
-(`AppCard` ganha `sunken`) · `0672019` (a label do `FormField` vira **irmã** do controle) ·
-`2ad35d7` (os cinco wrappers se associam ao rótulo sozinhos) · `d460528` (**Task 8 virou registro
-medido, não correção** — o olho da senha já responde às duas teclas; a D-24 não reproduz, exatamente
-o ramo que o planejamento previu) · `ebc6596` (disparador de upload vira botão nomeado) · `c1f7a79`
-(o preview foca o próprio contêiner) · `836197f` (ação destrutiva da foto sai da tinta de marca) ·
-`d038e67` (slot documental: validade sobe, ações alinham, upload se nomeia) · `09a22e2` (o subtítulo
-ramifica pelo mesmo predicado do corpo) · `e6c1f4b` (coluna de leitura recua, o corte ganha marca
-visual) · `b77ce75` (abaixo de `xl`, self-service primeiro).
-
-**A Task 15 não precisou reabrir a DS-05.** O risco escrito no planejamento (a faixa horizontal
-recortar o `scale-200` do `AppPhotoField`) foi medido no navegador e não se materializou.
-
-### Task 16 — 2026-08-17: o gate achou 10 defeitos que o build não vê
-
-**Step 1 — gate executável:** `pnpm build` verde, `pnpm lint` 0, suíte **53 arquivos / 312 testes**
-contra a baseline de 45/250.
-
-**Step 2 — a P-36 medida nos dois temas, e a catraca provada nos dois sentidos.** Título de seção
-(régua 4,5:1, era 2,77:1): **11,4:1** no escuro sobre card e **10,35:1** no claro; o `h1`/`Identidad`
-sobre o fundo mede 14,17:1 e 9,45:1. Ícone de curso em `/cursos` (régua 3:1, era 2,53:1): **6,21:1**
-no escuro, **7,58:1** no claro. A medição **compõe o alfa da tinta sobre o fundo opaco mais próximo**
-— ignorá-lo inflava as razões (`rgba(255,255,255,.6)` sobre ardósia mede 6,2:1, não 14,6:1). Catraca:
-`style={{ color: '#25A5E4' }}` reintroduzido em `FormSection.tsx` faz o `pnpm lint` reprovar
-**nomeando arquivo, linha e regra**; sonda revertida com a árvore limpa.
-
-**Step 3 — a P-37 medida no navegador, não conferida no DOM.** Nos cinco wrappers, o nome acessível
-é **só o rótulo**; sob um 422 real o `aria-invalid="true"` e o `aria-describedby` pousam no **input**
-(não na casca), inclusive no `AppDatePicker`, onde prop desconhecida cai no `<span>` raiz e o
-caminho é o `pt.input.root`; clicar no texto do rótulo põe o foco no controle. Onde o rótulo
-**deliberadamente** não tem `htmlFor` é o modo leitura, para "Carga horaria (del curso, solo
-lectura)" não apontar para o vazio.
-
-**Step 4 — alcance fora de `/perfil`, visto e não deduzido**, nos seis grupos da tabela do plano.
-`FormSection` mede **16 consumidores** com o seletor, não 11 (a correção do registro é do Step 7).
-
-**Step 5 — as medições da auditoria refeitas**, nos dois papéis, nos **três locales**, nos dois temas
-e em 390/1024/1440:
-
-| Item | Auditoria | Medido agora |
-|---|---|---|
-| D-19 | `clientWidth` 227 vs `scrollWidth` 311 | 242 = 242 nos três slots em 390px, nome inteiro em 178px, zero truncamento |
-| D-20 | 2,28:1 e 2,77:1 | ver Step 2 — nenhum sítio abaixo da régua |
-| D-21 | validade como última linha `text-xs` | validade na linha do status, tinta de corpo (`d038e67`) |
-| D-22 | `Ver` em x=1132 e x=1275 | mesma coordenada nos slots: 1290 / 874 / 248 por viewport |
-| D-24 | Espaço não alterna | não reproduz — registro medido da Task 8 (`d460528`) |
-| D-25 | Escape inerte com foco no iframe | Escape fecha antes do primeiro clique no visor (`a38aec5`) |
-| D-27 | y=829 de 1476px (Admin) | `Datos personales` em **y=265** (1440) e **y=277** (390), nos dois papéis e nos três locales |
-
-**Os três locales não mudam layout nenhum**, e isso é medição, não suposição: mesma contagem de
-slots, zero vazamento, zero truncamento e as mesmas coordenadas de ação em es-CL, pt-BR e en. A maior
-chave `profile.*` cresce 11% do es-CL para o pt-BR/en (89 → 99 caracteres) e é parágrafo de ajuda,
-não rótulo.
-
-**O gate rendeu 10 correções, uma por commit** (`6a5df00`…`a38aec5`) — cada uma um defeito que o
-build, o lint e a suíte não veem: o grupo de ações vazando 9px do slot em 390px; o erro do campo
-pousando na casca do `AppDatePicker`; a tag de modalidade fora do mapa de tom; valor imutável em
-`disabled` em vez de `readOnly`; o disparador só-ícone anunciando "Choose"; o botão de fechar diálogo
-falando inglês; a lista vazia de dropdown em inglês; o nome de arquivo sem base para quebrar; a
-coluna de ação deixando de ser coluna depois da quebra; e a D-25, que **sobreviveu à primeira
-correção** — `focusOnShow` do Prime foca o primeiro FOCÁVEL, que no PDF é o próprio `<iframe>`, e o
-visor nativo ainda toma o foco ~200ms depois de abrir, sem clique (sonda de 100 em 100ms). A
-devolução é única por abertura; depois do primeiro clique dentro do visor a tecla é do navegador e o
-`X` é a saída garantida — limite declarado no docblock, não maquiado.
-
-**Step 6 é do João:** `/lotus-ui-review` tem `disable-model-invocation: true`. **Step 7 (registro,
-encerramento da P-36/P-37, contagem do `FormSection`, débito das chaves i18n órfãs e transição de
-estado) fica retido até depois dele** — a ordem é do plano, e escrever a linha de entrega antes da
-revisão registraria um resultado que ela ainda pode mudar.
-
-**O que o gate achou e NÃO virou correção, para decisão do João:** o paginador do `DataTable` ainda
-se anuncia em inglês (a raiz é o `locale('es')` global do Prime, que o projeto nunca chamou — hoje
-cada wrapper pina o rótulo traduzido, e trocar isso é decisão de arquitetura); o `AppDatePicker` fixa
-`locale="es"` no código; o `<a>` que embrulha o `<button aria-label="Descargar">` aninha dois
-interativos; o olho do `AppPassword` **perde o foco para o `<body>`** quando alternado por teclado
-(o Prime troca o nó do ícone; um handler no `pt` provavelmente substituiria o handler dele, e a Task
-8 registrou por que não duplicá-lo); o dropdown de filtro do Historial de certificados não tem nome
-acessível (`textbox: Todos`); e o backend devolve mensagem em espanhol com **nome de atributo em
-inglês** ("El campo end date debe ser una fecha posterior o igual a start date."), além de "debe ser
-una cadena de caracteres" para campo obrigatório vazio.
-
-### Task 16 Step 6 — 2026-08-18: a revisão de UI achou 0 defeitos e 7 melhorias
-
-`/lotus-ui-review perfil`, invocado pelo João. Papel **Redator** (`juan.morales@lotus.cl`, o único
-redator ativo do seed), locale **es-CL**, tema claro e escuro em 1440x900 e tema claro em 1024x768 e
-390x844. Jornada read-only: nenhuma mutação, nenhuma mudança de código como consequência da revisão —
-o passo 16 da skill proíbe, e o passo 17 fecha só a sessão que ela abriu. Relatório e 14 capturas em
-`.artifacts/ui-review/2026-08-17-2108-perfil/` (a pasta está no `.gitignore`, por desenho).
-
-**Resultado: 0 achados C, 7 B e 1 bloco A agrupado** (8 observações de conformidade). Os B, com a
-medição de cada um: ordem de foco divergindo da visual abaixo de `xl`; `Eliminar foto` a 3,44:1 no
-tema claro; nome acessível do upload sem o rótulo visível; olho da senha com alvo de 16x16; download
-consumindo duas paradas de Tab, a primeira sem nome; ação do slot vazio em x=297 contra 348 dos
-outros três em 390px; e o vão de 548px entre `Cursos habilitados` e o valor em 1024px.
-
-**O que a revisão confirmou funcionando**, e é o que fecha o gate: a jornada conclui nas três
-viewports; a D-25 se sustenta (Escape fecha a prévia e devolve o foco ao `Ver` que a abriu); não há
-overflow horizontal em 390px; o texto está em es-CL na superfície inteira; console com **0 erros e 0
-warnings**; rede com `/api/me` 200 e `/api/profile` 200, sem repetição inesperada.
-
-**Um falso defeito foi descartado com prova, não com suposição.** A prévia de CV e Título falha, mas
-o arquivo-semente dos dois slots é uma fixture **truncada de 69 bytes** — só o header `%PDF-1.4`, sem
-xref. O REUF, com PDF válido de 596 B, renderiza. É dado de seed, não comportamento da tela, e
-entrou no relatório como limitação, não como achado.
-
-### Task 16 Step 7 — 2026-08-18: as 7 melhorias viradas em código, uma por commit
-
-Autorizado pelo João (*"vamos aplicar as correções para seguir para o state ready_for_review"*). Cada
-uma medida no navegador antes e depois, um commit por achado:
-
-| Achado | Antes | Depois | Commit |
-|---|---|---|---|
-| UI-02 · tinta `danger` de texto no claro | 3,44:1 | **5,83:1** (e 6,37:1 no escuro) | `4006ead` |
-| UI-03 · nome acessível do upload | `Subir documento` vs `Enviar Post-Grado` | `Subir documento` vs `Subir Post-Grado` | `ef46d37` |
-| UI-04 · alvo do olho da senha | 16x16 | **28x28**, glifo no mesmo pixel | `557565e` |
-| UI-05 · baixar arquivo | 6 paradas de Tab para 3 ações, 3 mudas | **3 paradas**, todas nomeadas | `c15dfbf` |
-| UI-01 · ordem de foco | `scrollTop` 0 → 1862 → 2230 → 0 em 390px | ~~monotônica em 390 e 1024~~ — **revertido**, ver abaixo | `da26b89`, desfeito |
-| UI-06 · ação do slot vazio em 390px | x=297 contra 348 | **348 nos quatro** | `c9289fb` |
-| UI-07 · vão rótulo/valor em 1024px | 548px | **214px** | `058b80f` |
-
-**A UI-01 foi decisão do João, não escolha do executor, porque não tinha correção neutra.** A D1
-punha o imutável à esquerda em `xl` e a D-27 punha o self-service em cima abaixo de `xl`: duas ordens
-visuais para um DOM só, conciliadas com `order-*` — que reordena a pintura e não a árvore de
-acessibilidade. Inverter só o DOM mudaria a viewport em que a violação acontece, não a eliminaria, e
-1440 é a viewport de trabalho. O João escolheu virar as colunas em `xl`, e **depois, vendo a tela
-pronta, reverteu** (*"deixe o meu perfil como estava"*): o desktop volta com a identidade à esquerda
-e o `order-*` de volta abaixo de `xl`. **A revisão continua certa e o layout venceu** — não é o
-achado que caiu, é o preço dele que foi aceito, e aceito com o número na mão.
-
-O que sobrou está escrito onde se tropeça nele: o docblock do `ProfilePage` carrega a medição e diz
-por que `tabIndex` positivo não é saída, e o débito é o **D-32** do `backlog.md`, sem bloco, porque a
-saída restante é desenho — ou a D1 abre mão do lado, ou a D-27 abre mão da precedência abaixo de
-`xl`, ou o cartão de identidade encolhe o bastante para dispensar a inversão. As outras seis
-correções não dependiam desta e ficaram todas de pé.
-
-**Duas correções não couberam na feature e subiram para `shared/ui`,** porque o defeito não era de
-`/perfil`: o alvo do olho vale para os 4 campos de senha da aplicação, e o par `<a>`+`<button>` do
-download vivia em **dois** sítios (`AppFileActions` e `AppFilePreviewDialog`) — corrigir um deixaria
-o débito vivo no irmão. Nasceu daí o `AppDownloadButton`. A tinta `danger` foi ainda mais fundo: é
-regra de tema, não de componente, e vale para todo botão `text`/`outlined` de severidade.
-
-**A porta do dev server virou armadilha e fica registrado.** A revisão rodou em `:5173`, que era o
-Vite deste worktree naquele momento. No passe de correção, `:5173` já era o Vite do **main tree
-`lotus`** e este worktree servia em `:5174` — a primeira leva de medições saiu do app errado e foi
-descartada (o sintoma foi `Eliminar foto` medindo `#186b94` em peso 400, que é outro componente).
-`backend/.env:38` já lista as duas origens, então as duas autenticam com o mesmo cookie e nada
-denuncia a troca. **Confira o `cwd` do processo, não a porta.**
-
-**Fechamento documental do Step 7:** a linha da entrega entrou em `historico/progress.md`; **P-36 e
-P-37** foram para `pendencias/encerradas.md` com os commits que as pagam (`8ffdefa`/`efd5bfe` e
-`0672019`/`2ad35d7`) e saíram do índice, que passa a 29 abertas e 4 encerradas; a contagem de
-consumidores do `FormSection` no `backlog.md` foi corrigida de 11 para **16**; e as duas chaves i18n
-órfãs viraram o débito **D-31** (`profile.documents.noValidity` e `profile.identity.role` existem nos
-três locales e nenhum `.tsx` as consome).
-
-**A colisão de ID dos dois `D-18` não se resolve aqui** — renumerar é decisão do João, e mexer no ID
-sem ele quebra as referências cruzadas já escritas dos dois lados.
-
-**Estado: `ready_for_review`.** Working tree limpo, branch `feat/bd16-perfil-e-kit-compartilhado` com
-15 commits de task, 10 do gate visual, 7 do passe de revisão (um deles desfeito por decisão) e os de
-doc. Gate final: `pnpm build`
-verde, `pnpm lint` 0, **54 arquivos / 321 testes** contra a baseline de 45/250 — o passe de revisão
-somou 1 arquivo e 9 testes (a catraca da tinta `danger`, o alvo do olho e o controle único de
-download). `state_basis_commit` segue em `254d691`: ele marca a base do item ativo, e a entrega ainda
-não foi para a `main`. A próxima instrução do João aciona `/revisar-sprint`; este passo não inicia
-review.
-
-### Revisão de sprint — 2026-08-18: risco BAIXO, uma lente, 3 achados, zero violação de lei
-
-`/revisar-sprint` sobre `254d691..dc46eb3` — 36 commits, 57 arquivos, +2260/−273.
-
-**Risco BAIXO, e a classificação é o que decide o número de lentes.** O bloco não tocou nenhum
-domínio das leis §5 (nenhuma migration, `generated.ts` intocado, nada de Sanctum, auditoria ou
-RBAC), não tocou dinheiro nem emissão de certificado, e o executor foi o Claude. Uma lente,
-sem segunda opinião do Codex.
-
-**O gate foi reconferido, não citado.** O `state.md` afirmava 54 arquivos / 321 testes; a suíte
-rodou de novo no review e devolveu o mesmo número, com `pnpm build` verde e `pnpm lint` 0. O
-wrapper composto do gate devolveu `exit 1` com `BUILD=0 LINT=0 TEST=0` nos logs — o código de saída
-era do encadeamento, não de checagem nenhuma.
-
-**Passo 1 — órfãos: nenhum.** `AppDownloadButton` (2 consumidores + barrel), `ProfileDocumentSlotHeader`
-(1) e `fieldContext` (5 wrappers + o `FormField`) estão todos consumidos; `BRAND_COLOR` foi apagada
-e não deixou referência. Os 3 locales medem **636 chaves idênticas**, zero faltando e zero extra. As
-duas chaves i18n sem consumidor já são o débito **D-31** — decisão registrada não é achado. A
-contagem de consumidores do `FormSection` no `backlog.md` bate: 17 arquivos casam `<FormSection`,
-menos o próprio teste, **16**.
-
-**Leis e convenções, medidas:** zero import direto de `primereact` sob `src/features` ou `src/app`,
-zero import cruzado entre features, nenhum `Field`/`UnmappedErrors` local, nenhum `useEffect` de
-reset, nenhum `setForm` solto, e nenhum `any`/`@ts-ignore`/catch vazio/`console.*` no diff inteiro.
-
-| Achado | Onde | Severidade | Esforço |
-|---|---|---|---|
-| **Q-1** · `role="button"` cravado sem o resto do contrato: Espaço não ativa e `disabled` não se anuncia | `shared/ui/AppFileUpload/AppFileUpload.tsx` | 🟡 | P |
-| **Q-2** · `pt` que não pode vencer — o wrapper crava o mesmo `aria-label` pelo `pins` | `features/commercial/.../QuoteRow.tsx:90` | 🟢 | P |
-| **Q-3** · `mergePt` compunha função num sentido só; no outro a folha do chamador sumia | `shared/ui/mergePt.ts:32-36` | 🟢 | P |
-
-**Dois candidatos morreram na verificação, e é por isso que se verifica.** O `AppDownloadButton`
-parecia abrir popup sem barra (`window.open(href, '_blank', 'noopener,noreferrer')`): a
-especificação **remove** `noopener`/`noreferrer` do `tokenizedFeatures` antes do teste de popup, que
-sai vazio — é aba, como o docblock diz. E um parser próprio acusou dois controles dentro de um
-`FormField` no `StaffUserDialog:93`: ele engasgou com `<FormField ... />` autofechado, e a leitura
-das linhas 84–135 mostrou três campos, um controle cada.
-
-**Nada de decisão registrada virou achado:** D-32 (ordem de foco), DS-05 (avatar), D-31 (chaves
-órfãs), a colisão dos dois `D-18` e o `--text-color-secondary` separado do interno compilado do
-Prime estão todos escritos com número medido. **Nenhum padrão reincidente** apareceu — nada a
-promover para rule ou ADR.
-
-### Correções — 2026-08-18: os 3 achados aprovados pelo João, todos aplicados
-
-Autorizado pelo João (*"Vamos aplicar de Q-1 á Q-3"*). Um commit por achado:
-
-| Achado | Antes | Depois | Commit |
-|---|---|---|---|
-| Q-1 · contrato do disparador de upload | Espaço inerte; `disabled` focável e mudo | Espaço ativa; `aria-disabled` anunciado | `e9f53f3` |
-| Q-2 · `pt` morto na cotação | 3 linhas que não valiam | removidas; nome vem do piso do wrapper | `a4eac5c` |
-| Q-3 · assimetria do `mergePt` | função no `pins` descartava a folha do chamador | compõe nos dois sentidos | `fb2d38b` |
-
-**A Q-1 é a metade que faltava da D-24.** O `mergeProps` do PrimeReact COMPÕE função de mesmo nome —
-chama a existente e depois a do `pt` (`utils.cjs.js:2694-2700`) —, então o `onKeyDown` novo soma ao
-`Enter` do Prime em vez de trocá-lo, e há teste travando as duas teclas. O `aria-disabled` entra
-sem tirar o alvo do Tab: botão desabilitado que some da navegação é botão que o leitor de tela nunca
-encontra para descobrir por que não responde.
-
-**Os testes viram o defeito antes de virarem verde** (lição 10): as duas correções de comportamento
-foram rodadas contra o código anterior e **5 dos 6 testes novos ficaram vermelhos** — o sexto é a
-guarda do caso negativo (`aria-disabled` ausente quando habilitado), que passa dos dois lados por
-construção. A Q-2 não ganha teste: é remoção de linha morta, e o nome acessível que ela repetia já
-está travado por teste desde o BD-16.
-
-**Gate após as correções:** `pnpm build` verde, `pnpm lint` 0, **54 arquivos / 327 testes** — os 321
-anteriores mais 6. Nenhuma chave i18n virou órfã: `common.upload`, que saiu do `QuoteRow`, continua
-consumida pelo próprio wrapper.
-
-**Estado: `ready_for_closure`.** Nenhum achado aguardando decisão ou correção. `/fechar-sprint` é o
-próximo passo e **não** foi executado aqui.
-
-### Fechamento — 2026-08-18: o contrato do disparador provado no navegador, e a suíte de backend vermelha pelo mesmo `.env` de sempre
-
-**O passo 0 não foi herdado do DoD da Task 16, e não podia ser.** Aquele DoD mediu o bloco antes das
-três correções do review, e duas delas mudam comportamento de teclado e de estado no controle que
-substitui documento de peso legal. A prova foi refeita em **Chromium real** (o `playwright-cli`
-default não abre: ele procura o canal `chrome` em `/opt/google/chrome`, que não existe nesta máquina
-— `--browser chromium` usa o binário do `ms-playwright` e abre), com o frontend **desta** worktree e
-a API em `:8080`.
-
-**A armadilha da porta foi conferida pelo `cwd`, não pela porta**, como o Step 7 mandou: `:5173` é o
-Vite do main tree (`/home/jvbat/projetos/lotus/frontend`, pid 8995) e `:5174` é o desta worktree
-(pid 12027). Toda medição saiu de `:5174` — e o `:5173` só apareceu de propósito, como grupo de
-controle.
-
-| O que | Como foi provado | Resultado |
-|---|---|---|
-| Q-1 · tecla | listener de contagem no `<input type=file>`, foco no disparador, `Space` | **1 ativação** (era 0) |
-| Q-1 · Enter | mesma sonda, `Enter` | **1 ativação** — o handler do Prime sobreviveu à fusão, e não dispara duas vezes |
-| Q-1 · estado | POST `/api/profile/documents` **segurado em voo** por rota do Playwright | `aria-disabled` de `null` para `"true"`, `tabIndex` **0** nos dois (focável de propósito), `p-disabled` e `<input disabled>` |
-| Q-2 | nomes acessíveis de `/comercial/presupuestos/1` em es-CL | `Subir documento` ×3 pelo piso do wrapper, mais o 4º que se nomeia pelo rótulo visível |
-| Q-3 | `maximizableButton` do `AppDialog` — a função que o ramo novo compõe | `Maximizar diálogo` → `Restaurar diálogo`, e `Cerrar` traduzido |
-| D-23 | árvore de acessibilidade de `/perfil` como Redator | `Replace Résumé (CV)`, `Replace University degree`, `Upload Postgraduate degree` — nome por documento |
-| P-37 | mesma árvore | `textbox "Name"`, `textbox "Current password"` — o nome é **só** o rótulo |
-| UI-05 | mesma árvore | `button "Download"`, zero `<a>` no par de ações |
-| UI-04 | olho da senha | `28x28` e Espaço alterna (`password` → `text`) |
-
-**Zero resíduo no banco de dev.** A rota abortou a escrita depois de medir, e o slot de Post-Grado
-seguia `Not uploaded` na releitura. Nada foi gravado — ao contrário do fechamento anterior, que
-declarou dois documentos.
-
-**Um defeito novo apareceu na prova e NÃO é deste bloco — foi medido nos dois lados.** Com o foco no
-olho da senha, Espaço alterna e o `document.activeElement` vira `BODY`: o Prime troca o ícone e o nó
-focado sai do DOM. O mesmo teste no main tree (`:5173`, sem os commits do BD-16) devolve `BODY`
-igual, mudando só o alvo — 16x16 lá, 28x28 aqui. Entrou como débito **D-33**, sem bloco. É a terceira
-ponta do mesmo `AppPassword`, depois da tecla (D-24, não reproduzida) e do alvo (UI-04, pago).
-
-**Suíte de backend: 12 falhas no primeiro run, e a causa é a P-45, não o bloco.** Todas são
-`RuntimeException: Session store not set on request`, do `tests/TestCase.php:18` lendo
-`FRONTEND_URL` cru enquanto o `.env` do main tree é lista com vírgula
-(`http://localhost:5173,http://localhost:5174`). **Provado por medição, não deduzido:** com
-`FRONTEND_URL` valendo uma URL só, a suíte fecha em **684 passed / 5 skipped / 0 failed**. O bloco
-tem **zero** arquivo em `backend/`, e o container que mede monta o main tree, que está em `main` —
-o vermelho é o da `main`, e a ficha da P-45 já o registra desde 2026-08-17.
-
-**Higiene medida:** 0 arquivo PHP no diff (Pint não se aplica, e ele nunca roda sem argumento),
-`generated.ts` intocado e nenhum DTO alterado (`typescript:transform` não se aplica), 0 `.gitkeep`
-novo, e nenhum órfão entre os arquivos que o bloco criou. Front: `pnpm lint` 0, `pnpm build` verde,
-**54 arquivos / 327 testes**.
-
-**Gatilhos de pendência conferidos um a um; nenhum venceu.** A **P-46** foi a única que chegou perto
-e **não** disparou: o diff tem um `marginTop: 0`, mas ele neutraliza a margem do **próprio Prime**
-num `<span>` de ícone (`AppPassword.tsx:111`), não a margem de agente do usuário num `h1`–`h6`/`p`/
-`ul`/`ol`, que é o que a ficha conta. A **P-45** teve o sintoma medido de novo e segue aberta — o
-gatilho dela é o commit que fechar o multi-origin, e ele não é deste bloco. A **P-03** não dispara em
-bloco frontend puro; a **P-44** pede bloco que possa reseedar o dev; a **P-32** pede lição 13
-reincidindo por **classe**.
-
-**Duas encerradas saíram por rastro cumprido** — **P-38** e **P-34**, pelo precedente da P-26. A
-**P-36** e a **P-37** ficam mais uma sprint: foram encerradas **dentro** deste bloco.
-
-**Arquivamento e backlog.** Plano e spec foram para `plans/archive/` e `specs/archive/`. Do
-`backlog.md` saíram o **BD-16** e o **BD-10** que ele havia absorvido, junto dos 14 débitos que
-pagaram (D-01, D-18 do `AppFileRow` e D-19…D-30). Duas coisas foram **resgatadas antes** de a seção
-sumir, porque a única cópia delas morava lá: **DS-05** e **DS-07**, que o João deixou fora do bloco
-por decisão, agora vivem em "Travados em decisão". **A colisão dos dois `D-18` terminou por
-entrega, não por renumeração** — o gêmeo do `AppFileRow` foi pago e saiu, então o número voltou a ser
-único sem ninguém mexer em ID alheio.
-
-**O que fica aberto, e é a única coisa:** a **`main` avançou 21 commits** desde a base deste bloco
-(entrou o `dashboard-frontend-analitico-e-redator`) e **14 arquivos são tocados pelos dois lados** —
-`state.md`, `backlog.md`, `progress.md`, o índice e as fichas de pendências, `eslint.config.js`,
-`DashboardPage.tsx`, os 3 locales, `brand-theme.css`, `tokens.ts`, `AppCard.tsx` e o barrel de
-`shared/ui`. O merge é trabalho a fazer, não defeito — e os arquivos de doc vão conflitar por
-construção, porque os dois lados fecharam bloco no mesmo período.
-### Integração — 2026-08-18: merge da `main` (fechamento do `dashboard-frontend-analitico-e-redator`)
-
-**A `main` andou 21 commits desde o `254d691` de onde este bloco partiu** — o PR #57 fechou o
-`dashboard-frontend-analitico-e-redator` (B2 da Sprint 5) em 2026-08-17. As duas frentes correram em
-paralelo por exceção declarada, então este merge é a costura prevista.
-
-**Merge, não rebase, e a razão é a mesma de 2026-08-17: documental.** O fechamento deste bloco
-**cita SHAs** — `state_basis_commit: 0a1918b` e o intervalo `86ec2dd..0a1918b` na linha do
-`progress.md`. Rebase reescreveria todos eles e a prova da entrega passaria a apontar para commits
-que não existem.
-
-**Cinco conflitos: dois de documento e três de código.** Documento: `state.md` e `progress.md`.
-Código: `DashboardPage.tsx`, `brand-theme.css` e `tokens.ts`. Auto-mergearam `backlog.md`,
-`pendencias/README.md`, `pendencias/abertas.md`, `progress-archive.md`, `eslint.config.js`, os três
-locales, `AppCard.tsx` e o barrel de `shared/ui`.
-
-**Os dois conflitos de CSS e token eram adição pura dos dois lados** — o `accentText` daqui e o
-`chartInks` da `main`; a tinta `danger` de botão `text`/`outlined` daqui e a linha transparente da
-tabela lá. Ficaram os quatro; nenhum decidia sobre o outro.
-
-**O conflito de `DashboardPage` era estrutural, e a resolução foi rastrear o código, não o arquivo.**
-A `main` transformou a página no roteador de `kind` (admin × redator) e **extraiu o `SectionLabel`
-para arquivo próprio**; este bloco tinha mudado, no mesmo trecho, **só o docblock** — a D-28 matou a
-razão original da tinta de corpo (a secundária do claro desceu ao slate-600 e hoje mede 6,92:1 no
-humo), e a tinta fica por hierarquia. Ficou o arquivo da `main` inteiro, e a medição foi portada para
-`SectionLabel.tsx`. Resolver por arquivo teria apagado a estrutura nova ou perdido a medição.
-
-> Herdado da extração da `main` e **não corrigido aqui**: o docblock do `SectionLabel` ainda diz que
-> os dois registros "estavam escritos no docblock abaixo", e abaixo não há mais docblock nenhum — ele
-> ficou no `DashboardPage`. Comentário alheio se menciona, não se reescreve no meio de um merge.
-
-**O frontmatter foi lido antes do push, que é exatamente o que a lição da `main` pede** (ela nasceu
-de um frontmatter auto-mesclado que ninguém escreveu e que ficava **verde**). Os dois lados estavam
-`idle`; venceu a entrega mais recente — `last_completed_work_item: bd16-perfil-e-kit-compartilhado`,
-`state_basis_commit: 0a1918b`, `updated_at` de 2026-08-18.
-
-**A escada de itens fechados ficou com os dois fechamentos** — BD-16 como último, o B2 do Dashboard
-como penúltimo — e desceu um degrau: o `dashboard-backend-agregacoes` (2026-08-15) saiu do arquivo,
-como o `celula-de-identidade` saiu no fechamento anterior. No `progress.md` as duas linhas de entrega
-ficaram e o **BD-5** desceu **verbatim** para o `progress-archive.md`, mantendo as dez.
-
-**Os números foram contados, não herdados** — é a classe de deriva que o merge de 2026-08-17 pegou.
-Pendências: **29 abertas e 2 encerradas**, com o índice batendo ficha a ficha (zero ID de diferença
-nos dois sentidos). Locales: **698 chaves idênticas** nos três. Desta vez não havia deriva a
-corrigir.
-
-**Gate depois do merge:** `pnpm build` verde, `pnpm lint` 0, **59 arquivos / 368 testes** — os 54/327
-deste bloco mais os 5 arquivos e 41 testes que a `main` trouxe.
