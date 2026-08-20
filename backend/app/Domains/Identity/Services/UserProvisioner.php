@@ -137,12 +137,24 @@ class UserProvisioner
     {
         $mensagem = $e->getMessage();
 
+        // Exige o marcador de violação de UNICIDADE antes de resolver a
+        // coluna: sem isso, QUALQUER violação de `users` que mencione a
+        // coluna na mensagem casava pelo `str_contains` abaixo — reproduzido
+        // com `NOT NULL constraint failed: users.email` do sqlite, que virava
+        // 422 de "já cadastrado" e mascarava um erro de programação como
+        // colisão de unicidade.
+        if (! str_contains($mensagem, 'UNIQUE constraint failed') && ! str_contains($mensagem, 'Duplicate entry')) {
+            return null;
+        }
+
         foreach (array_keys(self::DUPLICADO) as $coluna) {
-            // Casamento por substring, sem qualificador de tabela: uma tabela
-            // futura terminada em "_users" (ex.: `corporate_users`) com coluna
-            // `rut`/`email` única faria "corporate_users.rut" casar aqui como
-            // falso positivo. Se isso nascer, qualifique com `users.{$coluna}`
-            // como prefixo (ou ancore em início de palavra) em vez de `str_contains`.
+            // Ainda sem qualificador de tabela: uma tabela futura terminada
+            // em "_users" (ex.: `corporate_users`) com violação de
+            // UNICIDADE na coluna `rut`/`email` faria "corporate_users.rut"
+            // casar aqui como falso positivo — o marcador acima filtra o
+            // TIPO de violação, não a tabela. Se isso nascer, qualifique com
+            // `users.{$coluna}` como prefixo (ou ancore em início de
+            // palavra) em vez de `str_contains`.
             if (str_contains($mensagem, "users_{$coluna}_unique") || str_contains($mensagem, "users.{$coluna}")) {
                 return $coluna;
             }

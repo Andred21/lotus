@@ -109,6 +109,28 @@ class UniqueIndexCollisionTest extends TestCase
     }
 
     /**
+     * Violação de NOT NULL na PRÓPRIA tabela `users` também não pode virar
+     * 422 de unicidade: a mensagem do sqlite pra NOT NULL é
+     * `NOT NULL constraint failed: users.email`, que contém "users.email" e
+     * casaria pelo `str_contains` de `duplicateColumn` se a checagem não
+     * exigisse primeiro o marcador de violação de UNICIDADE. Reproduzido,
+     * não hipotético.
+     */
+    public function test_nao_sequestra_violacao_de_not_null_da_mesma_tabela(): void
+    {
+        $e = new QueryException(
+            'sqlite',
+            'insert into "users"',
+            [],
+            new \RuntimeException('NOT NULL constraint failed: users.email'),
+        );
+
+        $this->expectException(QueryException::class);
+
+        app(UserProvisioner::class)->writing(fn () => throw $e);
+    }
+
+    /**
      * Prova pelo caminho HTTP: a linha colidente nasce DEPOIS do check, dentro
      * da mesma transação, então o UPDATE é que estoura no índice.
      */
