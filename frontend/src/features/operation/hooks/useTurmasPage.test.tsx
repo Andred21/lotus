@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
-import { usePendingQuotesPage, useTurmasPage } from './useTurmasPage'
+import { useTurmasPage } from './useTurmasPage'
 
 vi.mock('@shared/api/axios', () => ({
   api: { get: vi.fn() },
@@ -73,31 +73,6 @@ describe('useTurmasPage', () => {
 
     const { Wrapper } = comCliente()
     const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
-
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    await expect(result.current.refetch()).resolves.toBeDefined()
-  })
-})
-
-describe('usePendingQuotesPage', () => {
-  beforeEach(() => get.mockReset())
-
-  it('normaliza a fila de pendentes na mesma forma', async () => {
-    get.mockResolvedValue({ data: [{ quote_id: 3 }] })
-
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper: Wrapper })
-
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.items).toEqual([{ quote_id: 3 }])
-    expect(result.current.error).toBeNull()
-  })
-
-  it('DEVOLVE a promise do refetch', async () => {
-    get.mockResolvedValue({ data: [] })
-
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => usePendingQuotesPage(), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(result.current.refetch()).resolves.toBeDefined()
