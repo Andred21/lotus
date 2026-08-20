@@ -86,7 +86,7 @@ export function useHistorial() {
     statusSummary,
     loading: certificates.isLoading,
     loadError: certificates.isError ? (certificates.error ?? null) : null,
-    reload: () => { void certificates.refetch() },
+    reload: (): Promise<unknown> => certificates.refetch(),
     // `can()` é conveniência de interface; a API é que autoriza (ADR-07).
     canRevoke: can('certification.certificate.revoke'),
     canReissue: can('certification.certificate.issue'),
@@ -100,10 +100,10 @@ export function useHistorial() {
     viewingCertificate: viewingCertificate.data ?? null,
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
-    reloadViewingCertificate: () => { void viewingCertificate.refetch() },
+    reloadViewingCertificate: (): Promise<unknown> => viewingCertificate.refetch(),
     findReissueTarget,
     reissuePanelLoading: panel.isLoading,
     reissuePanelError: panel.isError ? (panel.error ?? null) : null,
-    reissuePanelReload: () => { void panel.refetch() },
+    reissuePanelReload: (): Promise<unknown> => panel.refetch(),
   }
 }

@@ -45,7 +45,7 @@ type DashboardPayload = AdminDashboardData | RedatorDashboardData
  */
 export type DashboardState =
   | { kind: 'loading' }
-  | { kind: 'error'; error: ProblemDetails; retry: () => void }
+  | { kind: 'error'; error: ProblemDetails; retry: () => Promise<unknown> }
   | { kind: 'unauthorized' }
   | {
       kind: 'ready-admin'
@@ -62,7 +62,7 @@ export type DashboardState =
        * o 422 de janela invertida não é problema de conexão. */
       staleHint: LoadErrorHintKey
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
-      staleRetry?: () => void
+      staleRetry?: () => Promise<unknown>
     }
   | {
       kind: 'ready-redator'
@@ -70,7 +70,7 @@ export type DashboardState =
       staleErrored: boolean
       staleError: string | null
       staleHint: LoadErrorHintKey
-      staleRetry?: () => void
+      staleRetry?: () => Promise<unknown>
     }
 
 /**
@@ -168,9 +168,7 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   const [ultimoPayload, setUltimoPayload] = useState<DashboardPayload | undefined>(undefined)
   if (query.data !== undefined && query.data !== ultimoPayload) setUltimoPayload(query.data)
 
-  const retry = () => {
-    void query.refetch()
-  }
+  const retry = () => query.refetch()
 
   const data = query.data ?? ultimoPayload
 
