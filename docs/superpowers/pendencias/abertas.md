@@ -44,51 +44,6 @@ que crava a margem justamente para a correção semântica ficar invisível. Um 
 aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
 provável, e é decisão do João.
 
-## P-45 — o `TestCase` lê `FRONTEND_URL` cru, e o ambiente já é lista de origens
-
-**Bloco:** — · **Gatilho:** o commit que ligar multi-origin de verdade (o `config/cors.php` com
-`explode` já está no working tree do João), ou o próximo `/fechar-sprint` que encontrar a suíte
-vermelha por este motivo. Revisar em **2026-10-31**.
-
-`backend/tests/TestCase.php:18` faz `$this->withHeader('Referer', env('FRONTEND_URL',
-'http://localhost:5173'))`. A variável passou a ser **lista separada por vírgula**
-(`backend/.env:38`: `http://localhost:5173,http://localhost:5174`), então o `Referer` sai com a
-string inteira, o host não bate com `sanctum.stateful` (`.env:37`) e o
-`EnsureFrontendRequestsAreStateful` não injeta o `StartSession`. `$request->session()` explode em
-`AuthController.php:47` e a rota devolve **500**.
-
-**Medido no `/fechar-sprint` de 2026-08-16, nos dois sentidos:** com o `.env` como está,
-`php artisan test` dá **12 failed / 672 passed / 5 skipped** — os 12 são `AuthTest` (6), troca de
-senha (3) e `StaffUserCrudTest` (3), todos com `RuntimeException: Session store not set on request.`
-Com `FRONTEND_URL=http://localhost:5173 php artisan test`, **684 passed / 5 skipped, zero falha**. A
-diferença é a variável, não o código.
-
-**Não é regressão do bloco que a encontrou:** o `dashboard-frontend-central-controle` é frontend
-puro (`git diff main...HEAD -- backend/` = 0 linhas). O `.env` é gitignored, então a mudança não
-aparece em `git status`; o que aparece é a outra metade do mesmo WIP, o `config/cors.php` trocando
-`[env('FRONTEND_URL', …)]` por `explode(',', env('FRONTEND_URL', …))`. **`TestCase.php` é o terceiro
-sítio que lê a variável e o único que ainda a trata como valor único.**
-
-**Medido de novo no `/fechar-sprint` de 2026-08-17 (B2), com os mesmos números:** `12 failed / 672
-passed / 5 skipped` com o `.env` como está, `684 passed / 5 skipped / zero falha` com
-`FRONTEND_URL=http://localhost:5173`. **O gatilho venceu** — este é o segundo fechamento que
-encontra a suíte vermelha por este motivo, e o segundo bloco de frontend puro a encontrá-la
-(`git diff main...HEAD -- backend/` = 0 linhas nos dois).
-
-**Não se conserta aqui:** o fechamento de um bloco de frontend não abre arquivo de backend. O fix
-provável é um `explode` + `[0]` (ou o `Referer` vindo de `sanctum.stateful`), e ele pertence ao
-commit que fecha o multi-origin — decisão do João.
-
-**Medido de novo no `/fechar-sprint` de 2026-08-19 (`identity-ativacao-acesso-redator`), e desta vez
-a suíte saiu VERDE:** `710 passed / 5 skipped, 0 failed`. A diferença não é conserto — é o `.env`:
-`FRONTEND_URL=http://localhost:5173` voltou a ser **valor único** (o gate da emenda o apontou para a
-5174 e o restaurou), e a lista de origens vive hoje só em `SANCTUM_STATEFUL_DOMAINS`
-(`localhost:5173,localhost:5174,localhost:8081`). Os três sítios seguem como estavam:
-`tests/TestCase.php:18` lê a variável crua e `config/cors.php:22` continua
-`[env('FRONTEND_URL', …)]` — o `explode` do WIP do João **nunca foi commitado**. **O gatilho não
-venceu aqui** (nenhum fechamento encontrou a suíte vermelha por isso desta vez), e a pendência segue
-aberta pelo mesmo motivo: ela reaparece no dia em que a variável voltar a ser lista.
-
 ## P-40 — o ramo "catálogo genuinamente vazio" não foi remedido contra HEAD
 
 **Bloco:** BD-12 · **Gatilho:** fecha quando um bloco puder esvaziar o catálogo de dev sem tinker
@@ -149,6 +104,76 @@ erro por coluna, decisão de contrato de erro que a spec preferiu não tomar den
 concorrência. Proporcional a ~10 usuários internos: a colisão exige dois cadastros do mesmo RUT no
 mesmo segundo.
 
+## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
+
+**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
+listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
+arquivado for observado em uso real. Revisar em **2026-10-31**.
+
+**Nasceu como `P-47` e foi renumerada no merge da `main` (2026-08-19), que já havia publicado uma
+P-47 — a das roles do seed. Mesmo precedente da [P-35](#p-35).** Texto e blocos que a citam como
+`P-47` são anteriores a esse merge.
+
+`ArchiveRedatorAction:31` abre transação e toma `Redator::lockRow()` antes da cascata. Um lock de
+linha só fecha janela se **os dois lados** o tomarem — e do lado do redator só existe um tomador.
+Os escritores de filho não tomam:
+
+| Sítio | O que escreve | Toma o lock? |
+|---|---|---|
+| `StoreRedatorDocumentAction:29-33` | `files` do redator | não |
+| `UpdateRedatorAction` | `users`/`redatores` | não |
+| `Operation\Actions\DesignateRedatorAction:18-25` | pivot `turma_redator` | não |
+
+O molde `Client` faz certo: seis escritores de filho tomam `Client::lockRow()`
+(`CreateClientContactAction:22`, `CreateClientAddressAction:22`, `UpdateClientAction:32`,
+`UpdateClientContactAction:23`, `UpdateClientAddressAction:23`, `DeleteClientContactAction:38`).
+
+**Consequência medida por leitura, não por corrida observada:** `StoreRedatorDocumentAction` faz o
+`uploads->put()` **antes** de abrir a transação, então a janela entre "o binding resolveu um redator
+vivo" e "INSERT em `files`" tem a largura de um upload no S3. Um documento criado nessa janela
+sobrevive **ativo** sob redator arquivado — exatamente o modo de falha que a cascata existe para
+impedir. Pelo mesmo caminho, uma designação concorrente pode pousar um redator arquivado numa turma
+viva, furando o gate de turma em andamento.
+
+**Por que ficou aberta:** o texto dos comentários veio verbatim do plano do
+`arquivados-roots-restantes` e afirmava que a janela estava fechada; o review da Task 7 mediu que
+não estava. Fechar de verdade custa três Actions fora da lista do plano — uma delas em **outro
+domínio** (`Operation`), o que criaria aresta de lock cruzando domínio — e a suíte roda em sqlite,
+onde `SQLiteGrammar::compileLock()` devolve string vazia: **nenhum teste deste repositório prova
+lock**. A prova seria o molde, não o teste. Em vez de fechar mal no fim de um bloco de 15 tasks, os
+dois comentários passaram a dizer o que o lock faz de fato e o resto virou esta ficha. Proporcional
+a ~10 usuários internos: exige upload de documento e arquivamento do mesmo redator no mesmo
+instante.
+
+**A turma repete a forma (Task 11 do mesmo bloco, 2026-08-19).** `DeleteTurmaAction` nasceu com
+`DB::transaction` + `Turma::lockRow()`, e do lado de lá também há um tomador só:
+
+| Sítio | O que escreve | Toma o lock? |
+|---|---|---|
+| `EnrollStudentAction:24` | `enrollments` da turma (abre transação, sem lock da turma) | não |
+| `ImportStudentsAction` | `enrollments` em lote | não |
+| `StoreTurmaDocumentAction` | `files` da turma | não |
+
+O texto do plano para a `DeleteTurmaAction` voltou à redação anterior à correção da Task 7 —
+afirmava que o `lockRow` fechava "a outra ponta" logo depois de descrever a corrida da matrícula
+concorrente. O review da Task 11 mediu que não fecha; o comentário foi reescrito no molde honesto da
+`ArchiveRedatorAction` e a ficha passou a cobrir os dois roots. É o segundo bloco a copiar a
+afirmação do plano sem medir: **o plano não é fonte sobre o que o código faz.**
+
+**O eixo da COTAÇÃO foi fechado no review de 2026-08-19 (Q-5), e o resto da ficha segue aberto.**
+O gate da `RestoreTurmaAction` perguntava sobre a turma irmã travando a turma que volta — a linha
+disputada é a **cotação**, que o `UNIQUE` de `turmas.active_quote_id` protege. `Quote::lockRow()`
+nasceu e os DOIS caminhos que decidem sobre ela a travam: `CreateTurmaAction` (que também moveu as
+duas checagens para dentro da transação) e `RestoreTurmaAction`. É o primeiro eixo desta ficha com
+tomador dos dois lados. Os três escritores de filho da tabela acima **continuam sem tomar o lock da
+turma**, e o eixo do redator continua inteiro.
+
+**Uma janela nova, da mesma classe, entrou com o gate do Q-1.** `RestoreQuoteAction` recusa
+restaurar cotação sob orçamento arquivado lendo `$quote->budget->trashed()` sem travar o orçamento —
+arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo sob pai arquivado. Não
+foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
+plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
+
 ## P-35 — o ADR-17 é defendido em duas profundidades
 
 **Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar `CreateQuoteAction`/`Quote` por outro
@@ -168,6 +193,43 @@ Estava no ledger de execução como achado aberto e **não** entrou nos seis ach
 Não é bug vivo: nenhum payload de cotação envia `seq_in_budget` hoje e o `unique` do banco recusa o
 par repetido — o que fica é a assimetria, que faz o próximo leitor do ADR-17 copiar a forma mais
 fraca.
+
+**O gatilho venceu pela metade no `arquivados-roots-restantes` (2026-08-19) e a simetria NÃO foi
+absorvida.** O bloco tocou `Quote` (o `lockRow` que nasceu para o Q-5 do review), `DeleteQuoteAction`
+e `RestoreQuoteAction` — mas **não** `CreateQuoteAction`, que é o sítio do mass assignment, e o
+`$fillable` do model não foi reaberto. Absorver custaria tirar `seq_in_budget` do `$fillable` e
+passar a escrevê-lo explicitamente na Action, o que muda o caminho de criação de cotação num bloco
+cujo escopo era arquivar e restaurar. Fica registrado que o gatilho já foi visto vencer: o próximo
+bloco que abrir `CreateQuoteAction` não tem mais desculpa de contexto.
+
+## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
+
+**Bloco:** — · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
+ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
+
+Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
+juntas — **828 testes** —, o comando que o `CLAUDE.md` §6 documenta,
+`docker compose exec -T app php artisan test`, morre em
+
+```
+Fatal error: Allowed memory size of 134217728 bytes exhausted … PhpEngine.php on line 62
+Fatal error: Premature end of PHP process when running Tests\Feature\Operation\ManualTurmaTest::test_turma_maior_que_o_formulario_estende_as_grades.
+```
+
+**Não é defeito do teste nem do merge:** `--filter=ManualTurmaTest` passa em 2,35s (13 testes), e a
+suíte inteira fecha **verde** quando o limite sobe —
+`docker compose exec -T app php -d memory_limit=1G vendor/bin/phpunit` devolve
+**828 passed / 5 skipped, 3006 asserções**, com **pico de 129 MB**. São 129 contra 128: a suíte
+cresceu 1 MB além do default do PHP, e quem estoura é o render de Blade do manual porque ele é o que
+aloca mais no fim da corrida.
+
+**O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
+diretiva da linha de comando — por isso a medição usa o binário direto.
+
+**Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
+imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
+processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
+**Enquanto não fecha, o gate de backend roda pelo binário direto com `-d memory_limit=1G`.**
 
 ---
 
@@ -320,6 +382,13 @@ usuário, criados e removidos dentro do gate de fechamento) **não engrossaram a
 
 **Não se deleta agora:** linha alheia de bloco fechado se menciona, não se apaga — a decisão de
 reseedar o dev é do João.
+
+**As telas de Arquivados deste bloco deram um segundo palco às sondas (medido no `/fechar-sprint` de
+2026-08-19).** `/personas` → Arquivados lista `E2E Gate Redator 1` e `E2E Gate Redator 2` (arquivados
+em 2026-08-13), `/cursos` → Arquivados lista `GATE T7 — curso de afericao`, e a lista ativa de
+clientes mostra `E2E Gate Client D` e `Gate BD9 RENOMEADA`. O bloco não criou nenhum deles e não
+apagou nenhum: o efeito é que a residência, que antes só vazava na carga de redatores do dashboard,
+agora aparece em três listas de produto. O gatilho segue o mesmo — reseedar é decisão do João.
 
 **Rastro do `identity-ativacao-acesso-redator` (2026-08-19):** o gate da Task 14 daquele bloco criou
 `gate.task14@lotus.cl` (user 58 / redator 8) e o deixou vivo; o `/fechar-sprint` o **removeu**, com

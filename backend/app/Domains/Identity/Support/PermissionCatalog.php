@@ -34,6 +34,12 @@ class PermissionCatalog
             'identity.user.create' => 'Criar usuários, redatores e alunos',
             'identity.user.update' => 'Editar usuários, redatores e alunos',
             'identity.user.delete' => 'Remover (soft delete) usuários',
+            // Cobre o REDATOR, não o staff (D7): o `destroy` do RedatorController
+            // é guardado por `identity.user.delete`, e o restore espelha o guard
+            // do arquivar. O staff continua sob `identity.access.manage`, que é
+            // SEGREGADA — dar-lhe uma permissão normal deixaria restaurar mais
+            // frouxo que arquivar.
+            'identity.user.restore' => 'Restaurar redatores arquivados',
             'identity.access.manage' => 'Gerir roles e permissões de outros usuários (sensível)',
 
             // ---- Commercial ----
@@ -41,14 +47,17 @@ class PermissionCatalog
             'commercial.client.create' => 'Criar clientes',
             'commercial.client.update' => 'Editar clientes, endereços e contatos',
             'commercial.client.delete' => 'Remover clientes',
+            'commercial.client.restore' => 'Restaurar clientes arquivados',
             'commercial.budget.view' => 'Ver orçamentos',
             'commercial.budget.create' => 'Criar orçamentos',
             'commercial.budget.update' => 'Editar orçamentos',
             'commercial.budget.delete' => 'Remover orçamentos',
+            'commercial.budget.restore' => 'Restaurar orçamentos arquivados',
             'commercial.quote.view' => 'Ver cotações',
             'commercial.quote.create' => 'Criar cotações',
             'commercial.quote.update' => 'Editar cotações',
             'commercial.quote.delete' => 'Remover cotações',
+            'commercial.quote.restore' => 'Restaurar cotações arquivadas',
             'commercial.quote.approve' => 'Aprovar cotação com aceite do cliente (Fluxo 2 — só superadmin)',
 
             // ---- Catalog ----
@@ -56,13 +65,16 @@ class PermissionCatalog
             'catalog.course.create' => 'Criar cursos',
             'catalog.course.update' => 'Editar cursos, templates e habilitação de redatores',
             'catalog.course.delete' => 'Remover cursos',
+            'catalog.course.restore' => 'Restaurar cursos arquivados',
 
             // ---- Operation ----
             'operation.turma.view' => 'Ver turmas',
             'operation.turma.create' => 'Criar turmas',
             'operation.turma.update' => 'Editar turmas',
             'operation.turma.delete' => 'Remover turmas',
+            'operation.turma.restore' => 'Restaurar turmas arquivadas',
             'operation.enrollment.manage' => 'Matricular alunos / importar planilha (Fluxo 3)',
+            'operation.enrollment.restore' => 'Restaurar matrículas arquivadas',
             'operation.turma.assign_redator' => 'Designar redator idôneo à turma (Fluxo 3)',
             'operation.turma.complete' => 'Confirmar conclusão da turma (Fluxo 4 — admin confirma)',
             'operation.turma.submit_docs' => 'Subir documentação da turma (Fluxo 1/4 — ação do redator)',

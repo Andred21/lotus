@@ -2,12 +2,17 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Identity\Actions\ArchiveRedatorAction;
 use App\Domains\Identity\Actions\CreateRedatorAction;
+use App\Domains\Identity\Actions\RestoreRedatorAction;
 use App\Domains\Identity\Actions\UpdateRedatorAction;
+use App\Domains\Identity\Data\ArchivedRedatorData;
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
+use App\Shared\Audit\ArchiveTrailQuery;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
@@ -20,17 +25,18 @@ class RedatorController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:identity.user.view', only: ['index', 'show']),
+            new Middleware('permission:identity.user.view', only: ['index', 'show', 'archived']),
             new Middleware('permission:identity.user.create', only: ['store']),
             new Middleware('permission:identity.user.update', only: ['update']),
             new Middleware('permission:identity.user.delete', only: ['destroy']),
+            new Middleware('permission:identity.user.restore', only: ['restore']),
         ];
     }
 
     /** @return array<RedatorData> */
     public function index(): array
     {
-        return Redator::with(['user.latestLogin', 'courses', 'documents'])->get()
+        return Redator::query()->withListingData()->get()
             ->map(fn (Redator $r) => RedatorData::fromModel($r))
             ->all();
     }
@@ -42,7 +48,7 @@ class RedatorController extends Controller implements HasMiddleware
 
     public function show(Redator $redator): RedatorData
     {
-        return RedatorData::fromModel($redator->load(['user.latestLogin', 'courses', 'documents']));
+        return RedatorData::fromModel($redator->loadListingData());
     }
 
     public function update(RedatorData $data, Redator $redator, Request $request, UpdateRedatorAction $action): RedatorData
@@ -50,11 +56,40 @@ class RedatorController extends Controller implements HasMiddleware
         return RedatorData::fromModel($action->execute($redator, $data, $this->documentsFromRequest($request)));
     }
 
-    public function destroy(Redator $redator): Response
+    public function destroy(Redator $redator, ArchiveRedatorAction $action): Response
     {
-        $redator->delete();
+        $action->execute($redator);
 
         return response()->noContent();
+    }
+
+    /** @return array<ArchivedRedatorData> */
+    public function archived(): array
+    {
+        $redatores = Redator::onlyTrashed()->withArchivedListingData()->get();
+
+        $autores = ArchiveTrailQuery::archivedBy(Redator::class, $redatores->pluck('id')->all());
+
+        return $redatores
+            ->map(fn (Redator $r) => new ArchivedRedatorData(
+                redator: RedatorData::fromModel($r),
+                archived_at: $r->deleted_at->toIso8601String(),
+                archived_by: $autores[$r->id] ?? null,
+            ))
+            ->all();
+    }
+
+    public function restore(int $redator, RestoreRedatorAction $action): JsonResponse
+    {
+        // Resolvido à mão, não por binding: o binding padrão aplica o global
+        // scope de SoftDeletes e nunca acharia um arquivado. `onlyTrashed()`
+        // também dá o 404 de graça sobre registro ATIVO (molde D5).
+        $model = Redator::onlyTrashed()->whereKey($redator)->firstOrFail();
+
+        // 200, não 201: restaurar devolve um registro que já existia.
+        return RedatorData::fromModel($action->execute($model))
+            ->toResponse(request())
+            ->setStatusCode(Response::HTTP_OK);
     }
 
     /**

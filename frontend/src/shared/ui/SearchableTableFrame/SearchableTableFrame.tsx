@@ -55,6 +55,10 @@ interface SearchableTableFrameBaseProps<T> {
   emptyState: ReactNode
   footerCount: ReactNode
   actions?: ReactNode
+  /** Alternância de FONTE de dados (ativos × arquivados). Prop própria, FORA da
+   * união `filterSlot`/`onClearFilter`: não é filtro, e tratá-la como um
+   * quebraria o `clear()` composto (spec D11). */
+  viewSwitch?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
   /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
@@ -84,6 +88,7 @@ export function SearchableTableFrame<T>({
   filterSlot,
   onClearFilter,
   actions,
+  viewSwitch,
   loading,
   error,
   onRetry,
@@ -145,7 +150,12 @@ export function SearchableTableFrame<T>({
         // e o `AppDataTable` mostra o corpo de carregamento, não o empty state —
         // sem esta guarda o botão de cadastro não existia em lugar nenhum da
         // tela até o GET voltar (review do BD-3, Q-3).
-        end={error || (!loading && !table.filtering && table.rows.length === 0) ? undefined : actions}
+        end={
+          <>
+            {viewSwitch}
+            {error || (!loading && !table.filtering && table.rows.length === 0) ? undefined : actions}
+          </>
+        }
       />
       <AppDataTable
         value={table.rows as unknown as DataTableValueArray}

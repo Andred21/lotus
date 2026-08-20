@@ -335,6 +335,32 @@ class BatchIssueTest extends TestCase
             );
     }
 
+    /**
+     * Spec §5.2 no caminho do LOTE, e aqui o estrago era maior que no
+     * individual: o redator é resolvido UMA vez, FORA do `try` por item. Com o
+     * redator arquivado, o `findOrFail` estourava `ModelNotFoundException` sem
+     * `catch` e derrubava o request inteiro com 404 — exatamente o modo de
+     * falha que o docblock da `BatchIssueCertificatesAction` declara evitar,
+     * escondendo os itens já commitados.
+     */
+    public function test_lote_com_redator_arquivado_emite_os_dois_itens(): void
+    {
+        $this->actingAsAdmin();
+        $enrollmentB = $this->segundaMatricula();
+
+        $this->redator->delete();
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => [$this->enrollmentA->id, $enrollmentB->id],
+            'redator_id' => $this->redator->id,
+        ])
+            ->assertOk()
+            ->assertJsonPath('0.ok', true)
+            ->assertJsonPath('1.ok', true);
+
+        $this->assertDatabaseCount('certificates', 2);
+    }
+
     private function emitirIndividualmente(Enrollment $enrollment): void
     {
         $this->postJson($this->issueUrl($enrollment), [

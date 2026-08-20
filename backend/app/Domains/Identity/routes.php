@@ -44,12 +44,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('profile/password', [ProfilePasswordController::class, 'update']);
     Route::post('profile/documents', [ProfileDocumentController::class, 'store']);
 
+    // ANTES do apiResource: `redatores/{redator}` casaria com `archived` e o
+    // binding daria 404 tentando resolver a palavra como id.
+    Route::get('redatores/archived', [RedatorController::class, 'archived']);
+    Route::post('redatores/{redator}/restore', [RedatorController::class, 'restore'])
+        ->whereNumber('redator');
+
     // ->parameters: Str::singular('redatores') dá "redatore" (inflector em
     // inglês não reconhece o plural em português) — força o nome do parâmetro
     // de rota para casar com a assinatura `show(Redator $redator)`.
     Route::apiResource('redatores', RedatorController::class)
         ->parameters(['redatores' => 'redator'])
         ->only(['index', 'store', 'show', 'update', 'destroy']);
+
+    // ANTES do apiResource, pelo mesmo motivo de `redatores/archived`.
+    Route::get('users/archived', [UserController::class, 'archived']);
+    Route::post('users/{user}/restore', [UserController::class, 'restore'])
+        ->whereNumber('user');
 
     Route::apiResource('users', UserController::class)
         ->only(['index', 'store', 'show', 'update', 'destroy']);

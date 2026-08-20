@@ -4,6 +4,7 @@ namespace App\Domains\Catalog\Models;
 
 use App\Domains\Catalog\QueryBuilders\CourseQueryBuilder;
 use App\Domains\Identity\Models\Redator;
+use App\Shared\Concerns\ArchivesChildren;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +20,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Course extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -40,9 +41,20 @@ class Course extends Model implements Auditable
         static::deleting(function (Course $course) {
             if (! $course->isForceDeleting()) {
                 // Instância a instância: soft-delete pelo builder não audita.
-                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
-                $course->modules()->get()->each(fn (CourseModule $m) => $m->delete());
+                // `markAndDelete` vem do trait `ArchivesChildren` (Shared) —
+                // ver a nota lá, inclusive a guarda do filho já arquivado.
+                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => self::markAndDelete($t));
+                $course->modules()->get()->each(fn (CourseModule $m) => self::markAndDelete($m));
             }
+        });
+
+        static::restored(function (Course $course) {
+            // Ver a nota gêmea em `Client::booted()`: `restored` e não
+            // `restoring`, e só o filho que ESTA cascata arquivou.
+            $course->certificateTemplates()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (CourseCertificateTemplate $t) => self::restoreAndUnmark($t));
+            $course->modules()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (CourseModule $m) => self::restoreAndUnmark($m));
         });
     }
 

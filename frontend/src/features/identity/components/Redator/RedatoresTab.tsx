@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppButton } from '@shared/ui'
+import { AppButton, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
+import type { RedatorData } from '@shared/types/generated'
 import { useRedatoresPage } from '../../hooks/useRedatoresPage'
+import { useRedatoresArchived } from '../../hooks/useRedatoresArchived'
 import { RedatoresTable } from './RedatoresTable'
 import { RedatorDialog } from './RedatorDialog'
 
@@ -23,6 +25,9 @@ export function RedatoresTab() {
   const { t } = useTranslation()
   const { can } = usePermissions()
   const page = useRedatoresPage()
+  const redatoresArchived = useRedatoresArchived()
+  const [toArchive, setToArchive] = useState<RedatorData | null>(null)
+  const archived = redatoresArchived.mode === 'archived'
 
   const [params, setParams] = useSearchParams()
   const deepLinkId = params.get('redator')
@@ -48,10 +53,15 @@ export function RedatoresTab() {
   return (
     <>
       <RedatoresTable
-        redatores={page.items}
-        loading={page.loading}
-        error={page.error}
-        onRetry={page.refetch}
+        redatores={archived ? redatoresArchived.items : page.items}
+        loading={archived ? redatoresArchived.loading : page.loading}
+        error={archived ? redatoresArchived.error : page.error}
+        onRetry={archived ? redatoresArchived.refetch : page.refetch}
+        mode={redatoresArchived.mode}
+        onModeChange={redatoresArchived.setMode}
+        onArchive={setToArchive}
+        onRestore={(r) => r.id != null && redatoresArchived.restore(r.id)}
+        busy={redatoresArchived.restoring || redatoresArchived.archiving}
         onView={page.openView}
         actions={
           can('identity.user.create')
@@ -72,6 +82,14 @@ export function RedatoresTab() {
           onEdit={page.startEdit}
         />
       )}
+
+      {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
+      <ArchiveConfirmDialog
+        target={toArchive}
+        pending={redatoresArchived.archiving}
+        onArchive={redatoresArchived.archive}
+        onCancel={() => setToArchive(null)}
+      />
     </>
   )
 }

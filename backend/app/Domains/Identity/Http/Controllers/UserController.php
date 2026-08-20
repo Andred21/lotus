@@ -4,10 +4,14 @@ namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\CreateStaffUserAction;
 use App\Domains\Identity\Actions\DeleteStaffUserAction;
+use App\Domains\Identity\Actions\RestoreStaffUserAction;
 use App\Domains\Identity\Actions\UpdateStaffUserAction;
+use App\Domains\Identity\Data\ArchivedUserData;
 use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use App\Http\Controllers\Controller;
+use App\Shared\Audit\ArchiveTrailQuery;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -23,8 +27,13 @@ class UserController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:identity.user.view', only: ['index', 'show']),
-            new Middleware('permission:identity.access.manage', only: ['store', 'update', 'destroy']),
+            new Middleware('permission:identity.user.view', only: ['index', 'show', 'archived']),
+            // `restore` entra na MESMA linha do `destroy`, e não numa permissão
+            // própria: `identity.access.manage` é SEGREGADA (ADR-07), e um
+            // `identity.user.restore` normal deixaria restaurar mais frouxo que
+            // arquivar — alguém devolveria um staff que nunca teria podido
+            // arquivar (spec D7).
+            new Middleware('permission:identity.access.manage', only: ['store', 'update', 'destroy', 'restore']),
         ];
     }
 
@@ -62,5 +71,46 @@ class UserController extends Controller implements HasMiddleware
         $action->execute($user);
 
         return response()->noContent();
+    }
+
+    /** @return array<ArchivedUserData> */
+    public function archived(): array
+    {
+        // `type === 'admin'` espelha o `abort_unless` de show/update/destroy: a
+        // rota de staff só lida com admin. Sem o filtro, os users de CLIENTE,
+        // REDATOR e ALUNO arquivados pelas cascatas de `Client`, `Redator` e
+        // `Student` vazariam nesta lista (spec D10).
+        $users = User::onlyTrashed()
+            ->where('type', 'admin')
+            ->with(['roles', 'latestLogin'])
+            ->orderBy('name')
+            ->get();
+
+        $autores = ArchiveTrailQuery::archivedBy(User::class, $users->pluck('id')->all());
+
+        return $users
+            ->map(fn (User $u) => new ArchivedUserData(
+                user: UserData::fromModel($u),
+                archived_at: $u->deleted_at->toIso8601String(),
+                archived_by: $autores[$u->id] ?? null,
+            ))
+            ->all();
+    }
+
+    public function restore(int $user, RestoreStaffUserAction $action): JsonResponse
+    {
+        // Resolvido à mão, não por binding: o binding padrão aplica o global
+        // scope de SoftDeletes e nunca acharia um arquivado. `onlyTrashed()`
+        // também dá o 404 de graça sobre registro ATIVO (molde D5).
+        $model = User::onlyTrashed()->whereKey($user)->firstOrFail();
+
+        // O mesmo `abort_unless` de show/update/destroy: user de cliente/redator/
+        // aluno arquivado por cascata não é restaurável por esta rota.
+        abort_unless($model->type === 'admin', 404);
+
+        // 200, não 201: restaurar devolve um registro que já existia.
+        return UserData::fromModel($action->execute($model))
+            ->toResponse(request())
+            ->setStatusCode(Response::HTTP_OK);
     }
 }

@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\QueryBuilders\QuoteQueryBuilder;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Quote extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'budget_id',
@@ -50,7 +51,31 @@ class Quote extends Model implements Auditable
         'planned_start_date' => 'date',
         'planned_end_date' => 'date',
         'value_uf' => 'decimal:4',
+        // Marca da cascata (spec D8). FORA do `$fillable`: quem escreve é hook.
+        'archived_with_parent' => 'boolean',
     ];
+
+    /**
+     * Hook NOVO (spec D9): a cotação não tinha cascata nenhuma, então arquivá-la
+     * deixava os anexos ATIVOS sob um pai que ninguém mais alcança — o mesmo
+     * modo de falha que a `DeleteClientAction` existe para impedir.
+     *
+     * Roda nas duas entradas: `DeleteQuoteAction` (arquivar a cotação sozinha) e
+     * a cascata do orçamento, que chama `$quote->delete()`.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Quote $quote) {
+            if (! $quote->isForceDeleting()) {
+                $quote->files()->get()->each(fn (File $f) => self::markAndDelete($f));
+            }
+        });
+
+        static::restored(function (Quote $quote) {
+            $quote->files()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (File $f) => self::restoreAndUnmark($f));
+        });
+    }
 
     public function budget(): BelongsTo
     {
@@ -91,6 +116,28 @@ class Quote extends Model implements Auditable
     public function loadListingData(): static
     {
         return $this->load(QuoteQueryBuilder::LISTING);
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre cotação arquivada — o restore da turma pergunta sobre
+     * uma cotação que pode estar em qualquer estado, e pular a linha faria a
+     * operação seguir SEM mutex nenhum.
+     *
+     * A COTAÇÃO é o recurso disputado do gate da spec D1, não a turma:
+     * `turmas.active_quote_id` é UNIQUE sobre `quote_id`, e os dois lados que
+     * decidem sobre ela — `CreateTurmaAction` e `RestoreTurmaAction` — travam
+     * ESTA linha. Lock de um lado só não fecha janela nenhuma (P-47).
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Molde: `Client::lockRow()`.
+     */
+    public static function lockRow(int $quoteId): static
+    {
+        /** @var static $quote */
+        $quote = static::withTrashed()->whereKey($quoteId)->lockForUpdate()->firstOrFail();
+
+        return $quote;
     }
 
     /** @param  QueryBuilder  $query */

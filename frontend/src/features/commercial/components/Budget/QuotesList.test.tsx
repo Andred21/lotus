@@ -37,6 +37,22 @@ const COTACAO = {
   id: 1, course_id: 7, status: 'pending', value_uf: '10', student_count: 2, files: [],
 } as unknown as QuoteData
 
+/** Props do switch/arquivados exigidos pela assinatura desde a Task 6 (spec D5).
+ * Todas as montagens deste arquivo testam o modo `active`, então entram fixos. */
+const arquivadoVazio = {
+  items: [],
+  loading: false,
+  error: null,
+  refetch: () => undefined,
+  restoring: false,
+}
+const PROPS_ARQUIVADOS = {
+  mode: 'active' as const,
+  onModeChange: () => {},
+  archived: arquivadoVazio,
+  onRestore: () => {},
+}
+
 afterEach(() => {
   cleanup()
   cursos.current = { isError: false, errorDetail: undefined, resolved: true }
@@ -46,7 +62,7 @@ describe('QuotesList sob falha do GET de cursos', () => {
   it('falha que custou o nome: avisa SEM esconder as cotações', () => {
     cursos.current = { isError: true, errorDetail: 'Sin conexión', resolved: false }
 
-    render(<QuotesList quotes={[COTACAO]} />)
+    render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
 
     expect(screen.getByRole('alert').textContent).toContain('Sin conexión')
     // O ponto da D2: valor UF, status e arquivos vieram do GET do orçamento, que
@@ -57,7 +73,7 @@ describe('QuotesList sob falha do GET de cursos', () => {
   it('falha que o cache absorveu: nome na tela, nenhum aviso', () => {
     cursos.current = { isError: true, errorDetail: 'Sin conexión', resolved: true }
 
-    render(<QuotesList quotes={[COTACAO]} />)
+    render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
 
     // Anunciar falha que não custou nada é a tese do bloco invertida (Q-1b).
     expect(screen.queryByRole('alert')).toBeNull()
@@ -65,9 +81,26 @@ describe('QuotesList sob falha do GET de cursos', () => {
   })
 
   it('sem falha não há aviso nenhum', () => {
-    render(<QuotesList quotes={[COTACAO]} />)
+    render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
 
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.getByText('Alta tensión')).toBeTruthy()
   })
+})
+
+it('mostra o switch de arquivados mesmo sem cotação ativa', () => {
+  render(
+    <QuotesList
+      quotes={[]}
+      mode="active"
+      onModeChange={() => {}}
+      archived={arquivadoVazio}
+      onRestore={() => {}}
+    />,
+  )
+
+  // `t` devolve a própria chave neste arquivo (mock do topo) — mesma convenção
+  // do resto do repo (ver `BudgetDetailPage.test.tsx`): o que se prova é QUE
+  // chave titula o botão, não o texto em espanhol que só existe em runtime real.
+  expect(screen.getByRole('button', { name: /archive\.archived/i })).toBeTruthy()
 })

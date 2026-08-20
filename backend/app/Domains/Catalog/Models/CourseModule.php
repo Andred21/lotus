@@ -40,6 +40,7 @@ class CourseModule extends Model implements Auditable
     {
         return [
             'sort_order' => 'integer',
+            'archived_with_parent' => 'boolean',
             'theory_hours' => 'integer',
             'practice_hours' => 'integer',
         ];

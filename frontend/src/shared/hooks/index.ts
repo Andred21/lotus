@@ -6,6 +6,12 @@ export type { CrudPageQueryOptions } from './useCrudPage'
 // classificação, e o único consumidor é o teste ao lado, por caminho relativo
 // (Q-2 do review de 2026-08-05). Barrel é fronteira pública.
 export { useCrudForm } from './useCrudForm'
+export { useArchivedPage } from './useArchivedPage'
+export { useArchiveAction } from './useArchiveAction'
+// `useArchiveToasts` NÃO sai daqui: é o mecanismo interno das duas linhas acima,
+// consumido por caminho relativo. Barrel é fronteira pública (mesma nota da
+// guarda de classificação do `useCrudForm`).
+export type { ArchiveMode, RestoreOptions } from './useArchivedPage'
 export { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 export type { CrudFormPhotoOptions } from './useCrudFormWithPhoto'
 export { useEntityForm, useMutationErrors } from './useEntityForm'

@@ -4,6 +4,7 @@ namespace App\Domains\Commercial\Models;
 
 use App\Domains\Commercial\QueryBuilders\ClientQueryBuilder;
 use App\Domains\Identity\Models\User;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Client extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -47,9 +48,37 @@ class Client extends Model implements Auditable
                 // cliente arquivado. Quem fecha a janela é a `DeleteClientAction`,
                 // que abre a transação e toma `Client::lockForWrite()` antes de
                 // chamar `$client->delete()`. Não arquive cliente por fora dela.
-                $client->addresses()->get()->each(fn (ClientAddress $a) => $a->delete());
-                $client->contacts()->get()->each(fn (ClientContact $c) => $c->delete());
-                $client->user?->delete();
+                //
+                // `markAndDelete` mora no trait `ArchivesChildren` (Shared): ele
+                // grava a marca antes do delete e IGNORA filho já arquivado —
+                // `user()` é `withTrashed()` e traria um User arquivado antes do
+                // pai para dentro desta cascata (Q-1 do review de 2026-08-18).
+                $client->addresses()->get()->each(fn (ClientAddress $a) => self::markAndDelete($a));
+                $client->contacts()->get()->each(fn (ClientContact $c) => self::markAndDelete($c));
+
+                if ($client->user !== null) {
+                    self::markAndDelete($client->user);
+                }
+            }
+        });
+
+        static::restored(function (Client $client) {
+            // `restored`, não `restoring`: com `restoring` os filhos voltariam a
+            // ativos enquanto o PAI ainda está arquivado. O par correto é
+            // `deleting` (antes) / `restored` (depois) — os filhos saem antes do
+            // pai e voltam depois dele.
+            //
+            // `onlyTrashed()` + a marca: só volta quem ESTA cascata arquivou.
+            // Filho arquivado por vontade própria antes do pai não tem a marca e
+            // fica onde está (spec D2).
+            $client->addresses()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (ClientAddress $a) => self::restoreAndUnmark($a));
+            $client->contacts()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (ClientContact $c) => self::restoreAndUnmark($c));
+
+            $user = $client->user()->first();
+            if ($user !== null && $user->trashed() && $user->archived_with_parent) {
+                self::restoreAndUnmark($user);
             }
         });
     }
@@ -109,14 +138,29 @@ class Client extends Model implements Auditable
      */
     public static function lockForWrite(int $clientId): static
     {
-        /** @var static $client */
-        $client = static::withTrashed()->whereKey($clientId)->lockForUpdate()->firstOrFail();
+        $client = static::lockRow($clientId);
 
         if ($client->trashed()) {
             throw ValidationException::withMessages([
                 'client' => 'Este cliente foi arquivado e não aceita mais alterações.',
             ]);
         }
+
+        return $client;
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre cliente arquivado — é o estado de quem vai ser
+     * restaurado, e pular a linha faria a operação seguir SEM mutex nenhum.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Quem prova que ele funciona é `PrimaryConcurrencyTest`, em MySQL.
+     */
+    public static function lockRow(int $clientId): static
+    {
+        /** @var static $client */
+        $client = static::withTrashed()->whereKey($clientId)->lockForUpdate()->firstOrFail();
 
         return $client;
     }

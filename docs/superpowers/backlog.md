@@ -100,16 +100,12 @@ operação"*.
 
 # Próximos blocos
 
-1. **Arquivados e restauração de soft-delete** — Notion H.5.1–H.5.4.
-   Objetivo: tornar o lifecycle de archive/restore explícito e seguro por agregado.
-   Ordem: semântica → Actions → endpoints → UI.
-   **Fora de escopo:** `forceDelete` e exclusão permanente.
-2. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
+1. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
    (lista de roles à esquerda; detalhe + matriz de permissões à direita, com marcação de permissão
    essencial); o real tem tabela + diálogo. **Não é refinamento visual, é redesenho de tela** — exige
    brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
    (permissões essenciais não editáveis).
-3. **Hardening** — ownership em rotas nested e política de retenção documental.
+2. **Hardening** — ownership em rotas nested e política de retenção documental.
 ---
 
 # Blocos de execução de dívida
@@ -330,6 +326,17 @@ sentada só — é o que torna o agrupamento barato.
   bloco `no-restricted-imports` **só** na fronteira PrimeReact, deixando *feature→feature* liberada.
   **Sem bloco até o João agrupá-lo**; entra barato em qualquer bloco que toque `eslint.config.js`.
 
+- **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo.**
+  A coluna marcadora da cascata de arquivamento (migration `2026_08_18_000001`) entra com `false`
+  em todas as linhas: qualquer agregado arquivado **antes** de 2026-08-18 restaura o pai sem os
+  filhos, em silêncio. Não há backfill correto possível — casar por `deleted_at` é o que a spec D2
+  do bloco recusou (`timestamp` de precisão 0: segundo inteiro não é identidade) e marcar todo
+  filho arquivado ressuscitaria o que alguém arquivou de propósito. Medido no review de 2026-08-18
+  (Q-7) e documentado no docblock da própria migration. **Sem produção, o alcance é só banco de
+  desenvolvimento já semeado.** O gatilho é o primeiro deploy: antes dele, conferir se existe
+  agregado arquivado de antes dessa data e, se existir, decidir caso a caso — corrigir à mão ou
+  aceitar o restore incompleto.
+
 - **D-33 · O foco cai no `<body>` quando o olho da senha alterna.**
   Medido no fechamento do BD-16 (2026-08-18) em Chromium real, `/perfil` como Redator: com o foco no
   olho, Espaço alterna o campo (`password` → `text`) e o `document.activeElement` vira `BODY`. O
@@ -378,6 +385,13 @@ sentada só — é o que torna o agrupamento barato.
   com chaves nas 4 `lang/`**; entra em bloco de backend, onde o custo da P-03 já esteja pago.
   Frente: backend. (O ID `D-32` do plano do BD-13 já estava tomado pela ordem de foco de `/perfil`;
   este débito ficou com o próximo livre.)
+  **Medido de novo no fechamento do `arquivados-roots-restantes` (2026-08-19), agora com os dois
+  idiomas no MESMO envelope:** `POST /api/quotes/11/restore` sob orçamento arquivado devolveu
+  `title` `"Erro de validação"` com `detail` `"El presupuesto de esta cotización está archivado:
+  restáuralo primero."` — as mensagens novas daquele bloco saíram em es-CL por decisão de spec,
+  então o 422 carrega português no envelope e espanhol no conteúdo. Segue sem custo de tela
+  (`problemMessage` lê `errors`/`detail`, nunca `title`), e segue esperando a mesma decisão da
+  **D-07**.
 
 ## Travados em decisão — não entram em bloco
 

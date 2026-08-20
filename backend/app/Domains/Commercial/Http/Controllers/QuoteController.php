@@ -6,11 +6,14 @@ use App\Domains\Commercial\Actions\ApproveQuoteAction;
 use App\Domains\Commercial\Actions\CreateQuoteAction;
 use App\Domains\Commercial\Actions\DeleteQuoteAction;
 use App\Domains\Commercial\Actions\RejectQuoteAction;
+use App\Domains\Commercial\Actions\RestoreQuoteAction;
 use App\Domains\Commercial\Actions\UpdateQuoteAction;
+use App\Domains\Commercial\Data\ArchivedQuoteData;
 use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
+use App\Shared\Audit\ArchiveTrailQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -21,10 +24,11 @@ class QuoteController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:commercial.quote.view', only: ['index', 'show']),
+            new Middleware('permission:commercial.quote.view', only: ['index', 'show', 'archived']),
             new Middleware('permission:commercial.quote.create', only: ['store']),
             new Middleware('permission:commercial.quote.update', only: ['update']),
             new Middleware('permission:commercial.quote.delete', only: ['destroy']),
+            new Middleware('permission:commercial.quote.restore', only: ['restore']),
             new Middleware('permission:commercial.quote.approve', only: ['approve', 'reject']),
         ];
     }
@@ -35,6 +39,39 @@ class QuoteController extends Controller implements HasMiddleware
         return $budget->quotes()->withListingData()->get()
             ->map(fn (Quote $q) => QuoteData::fromModel($q))
             ->all();
+    }
+
+    /**
+     * Escopada pelo orçamento (spec D5): a cotação não tem lista de topo, e a
+     * superfície de arquivados nasce onde a de ativas já vive.
+     *
+     * @return array<ArchivedQuoteData>
+     */
+    public function archived(Budget $budget): array
+    {
+        $quotes = $budget->quotes()->onlyTrashed()->withArchivedListingData()->get();
+
+        $autores = ArchiveTrailQuery::archivedBy(Quote::class, $quotes->pluck('id')->all());
+
+        return $quotes
+            ->map(fn (Quote $q) => new ArchivedQuoteData(
+                quote: QuoteData::fromModel($q),
+                archived_at: $q->deleted_at->toIso8601String(),
+                archived_by: $autores[$q->id] ?? null,
+            ))
+            ->all();
+    }
+
+    // 200 e não 201, pelo mesmo motivo de `approve`.
+    public function restore(int $quote, RestoreQuoteAction $action): JsonResponse
+    {
+        // Resolvido à mão: o binding padrão aplica o global scope de
+        // `SoftDeletes` e nunca acharia uma arquivada.
+        $model = Quote::onlyTrashed()->whereKey($quote)->firstOrFail();
+
+        return QuoteData::fromModel($action->execute($model))
+            ->toResponse(request())
+            ->setStatusCode(Response::HTTP_OK);
     }
 
     public function store(QuoteData $data, Budget $budget, CreateQuoteAction $action): QuoteData

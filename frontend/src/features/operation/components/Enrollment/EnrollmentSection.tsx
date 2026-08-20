@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppCardToolbar, FormErrorBanner } from '@shared/ui'
+import { AppButton, AppCardToolbar, ArchiveSwitch, FormErrorBanner } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useEnrollmentSection } from '../../hooks/useEnrollmentSection'
+import { useEnrollmentsArchived } from '../../hooks/useEnrollmentsArchived'
+import { ArchivedEnrollmentsList } from './ArchivedEnrollmentsList'
 import { EnrollmentTable } from './EnrollmentTable'
 import { EnrollStudentForm } from './EnrollStudentForm'
 import { ImportDialog } from './ImportDialog'
@@ -10,6 +12,8 @@ import { ImportDialog } from './ImportDialog'
 export function EnrollmentSection({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useEnrollmentSection(turma)
+  const arquivadas = useEnrollmentsArchived(turma.id!)
+  const emArquivados = arquivadas.mode === 'archived'
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
 
@@ -19,7 +23,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         // Grupo de botões à ESQUERDA, sem busca — é o que o protótipo mostra na
         // aba Alumnos (packet, "Aba sem busca").
         start={
-          s.loadError ? undefined : (
+          s.loadError || emArquivados ? undefined : (
             <>
               <AppButton
                 variant="brandIcon"
@@ -36,23 +40,42 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
             </>
           )
         }
+        end={<ArchiveSwitch value={arquivadas.mode} onChange={arquivadas.setMode} />}
       />
 
-      <div className="mx-4 empty:m-0">
-        <FormErrorBanner message={s.error} />
-      </div>
+      {/* O `s.error` é do REMOVER, que só existe na visão ativa. Sem a guarda o
+        * banner de uma remoção que falhou sobrevive à troca de visão e fica
+        * pendurado sobre a lista de arquivadas, e o único jeito de limpá-lo
+        * (`s.resetRemove`) mora no diálogo do `EnrollmentTable`, que ali nem
+        * está montado. */}
+      {!emArquivados && (
+        <div className="mx-4 empty:m-0">
+          <FormErrorBanner message={s.error} />
+        </div>
+      )}
 
-      <EnrollmentTable
-        turmaId={turma.id!}
-        enrollments={s.enrollments}
-        loading={s.loading}
-        onRemove={s.remove}
-        removing={s.removing}
-        removeError={s.error}
-        onResetRemove={s.resetRemove}
-        error={s.loadError}
-        onRetry={s.reload}
-      />
+      {emArquivados ? (
+        <ArchivedEnrollmentsList
+          enrollments={arquivadas.items}
+          loading={arquivadas.loading}
+          error={arquivadas.error}
+          onRetry={arquivadas.refetch}
+          onRestore={arquivadas.restore}
+          restoring={arquivadas.restoring}
+        />
+      ) : (
+        <EnrollmentTable
+          turmaId={turma.id!}
+          enrollments={s.enrollments}
+          loading={s.loading}
+          onRemove={s.remove}
+          removing={s.removing}
+          removeError={s.error}
+          onResetRemove={s.resetRemove}
+          error={s.loadError}
+          onRetry={s.reload}
+        />
+      )}
 
       <EnrollStudentForm
         turmaId={turma.id!}

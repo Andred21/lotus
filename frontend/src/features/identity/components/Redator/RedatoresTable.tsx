@@ -1,17 +1,34 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, SearchableTableFrame, useToast } from '@shared/ui'
+import type { ArchiveMode } from '@shared/hooks'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
+import { RedatorRowActions } from './RedatorRowActions'
+
+/** A mesma tabela serve as duas fontes. Em `archived` as duas colunas do rastreio
+ * vêm preenchidas pelo achatamento do `useArchivedPage`; em `active` elas nem são
+ * renderizadas. Molde: `ClientRow`. */
+export type RedatorRow = RedatorData & {
+  archived_at?: string
+  archived_by?: string | null
+}
 
 export function RedatoresTable({
   redatores, loading, onView, actions, error, onRetry,
+  mode, onModeChange, onArchive, onRestore, busy,
 }: {
-  redatores: RedatorData[]
+  redatores: RedatorRow[]
   loading: boolean
   onView: (r: RedatorData) => void
+  mode: ArchiveMode
+  onModeChange: (mode: ArchiveMode) => void
+  onArchive: (r: RedatorData) => void
+  onRestore: (r: RedatorData) => void
+  /** Arquivar/restaurar em voo — trava os botões da linha (Q-2). */
+  busy: boolean
   actions?: ReactNode
   error?: { detail?: string | null } | null
   /** Repassa o refetch da página: é a promise que mantém o Reintentar do
@@ -20,6 +37,7 @@ export function RedatoresTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const archived = mode === 'archived'
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
   const toast = useToast()
   const invitation = useRedatorInvitation()
@@ -37,10 +55,16 @@ export function RedatoresTable({
       table={table}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
-        <AppEmptyState icon="pi pi-users" title={t('redator.empty')} description={t('redator.emptyHint')} action={actions} />
+        <AppEmptyState
+          icon={archived ? 'pi pi-inbox' : 'pi pi-users'}
+          title={archived ? t('archive.empty') : t('redator.empty')}
+          description={archived ? t('archive.emptyHint') : t('redator.emptyHint')}
+          action={archived ? undefined : actions}
+        />
       }
       footerCount={t('redator.count', { count: table.rows.length })}
-      actions={actions}
+      actions={archived ? undefined : actions}
+      viewSwitch={<ArchiveSwitch value={mode} onChange={onModeChange} />}
       loading={loading}
       error={error}
       onRetry={onRetry}
@@ -74,22 +98,48 @@ export function RedatoresTable({
         sortable
         body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
       />
+      {archived && (
+        <AppColumn
+          field="archived_at"
+          header={t('archive.archivedAt')}
+          body={(r: RedatorRow) => (r.archived_at ? new Date(r.archived_at).toLocaleDateString() : '—')}
+        />
+      )}
+      {archived && (
+        <AppColumn
+          field="archived_by"
+          header={t('archive.archivedBy')}
+          body={(r: RedatorRow) => r.archived_by ?? t('archive.unknownAuthor')}
+        />
+      )}
       <AppColumn
-        body={(r: RedatorData) => (
+        body={(r: RedatorRow) => (
           <div className="flex justify-end">
-            <AppButton
-              icon="pi pi-envelope"
-              text
-              rounded
-              aria-label={t('redator.resendInvitation')}
-              tooltip={t('redator.resendInvitation')}
-              disabled={invitation.isPending}
-              onClick={() => reenviar(r.id!)}
+            {/* Reenviar convite é ação de acesso, e acesso arquivado não existe:
+              * o `User` do redator desce com a cascata, então o botão só aparece
+              * na lista ativa. */}
+            {!archived && (
+              <AppButton
+                icon="pi pi-envelope"
+                text
+                rounded
+                aria-label={t('redator.resendInvitation')}
+                tooltip={t('redator.resendInvitation')}
+                disabled={invitation.isPending}
+                onClick={() => reenviar(r.id!)}
+              />
+            )}
+            <RedatorRowActions
+              redator={r}
+              archived={archived}
+              busy={busy}
+              onView={onView}
+              onArchive={onArchive}
+              onRestore={onRestore}
             />
-            <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />
           </div>
         )}
-        style={{ width: '7rem' }}
+        style={{ width: '10rem' }}
       />
     </SearchableTableFrame>
   )

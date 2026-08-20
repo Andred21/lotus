@@ -15,7 +15,16 @@ abstract class TestCase extends BaseTestCase
         // Sanctum só considera a request "stateful" (sessão via cookie) se
         // Origin/Referer bater com sanctum.stateful. Sem isso, StartSession
         // nunca roda e $request->session() explode em qualquer rota autenticada.
-        $this->withHeader('Referer', env('FRONTEND_URL', 'http://localhost:5173'));
+        //
+        // A PRIMEIRA da lista: `config/cors.php` passou a aceitar `FRONTEND_URL`
+        // com várias origens separadas por vírgula (dois dev servers na mesma
+        // máquina), e mandar a lista inteira como Referer produz um host
+        // inválido — a request deixa de ser stateful e 12 testes de sessão caem
+        // com "Session store not set on request", sem que nada de errado tenha
+        // acontecido no código.
+        $origens = explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'));
+
+        $this->withHeader('Referer', trim($origens[0]));
     }
 
     /**

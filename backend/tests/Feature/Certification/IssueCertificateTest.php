@@ -170,6 +170,29 @@ class IssueCertificateTest extends TestCase
             );
     }
 
+    /**
+     * Spec §5.2: arquivar o redator não pode derrubar a emissão de uma turma
+     * que ele JÁ ministrou. Quem autoriza a emissão é a porta 6 — designação na
+     * turma —, e a designação sobrevive ao arquivamento: `turma_redator` não
+     * tem `deleted_at`. O `findOrFail` do controller, escopado por
+     * `SoftDeletes`, recusava com 404 ANTES de o `CertificateEligibility`
+     * chegar a rodar.
+     */
+    public function test_redator_arquivado_ainda_emite_certificado_da_turma_que_ministrou(): void
+    {
+        $this->actingAsAdmin();
+        $this->createTemplate();
+
+        $this->redator->delete();
+
+        $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
+
+        $this->assertDatabaseHas('certificates', [
+            'enrollment_id' => $this->enrollment->id,
+            'redator_id' => $this->redator->id,
+        ]);
+    }
+
     public function test_usuario_sem_permissao_retorna_403(): void
     {
         $this->seed(RolePermissionSeeder::class);

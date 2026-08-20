@@ -10,6 +10,7 @@ use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
+use App\Shared\Concerns\ArchivesChildren;
 use App\Shared\Data\ContratanteData;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +31,7 @@ use OwenIt\Auditing\Contracts\Auditable;
  */
 class Turma extends Model implements Auditable
 {
-    use AuditableTrait, SoftDeletes;
+    use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
         'quote_id', 'course_id', 'modalidade', 'local_aplicacao',
@@ -63,6 +64,39 @@ class Turma extends Model implements Auditable
         'concluded_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Turma $turma) {
+            if (! $turma->isForceDeleting()) {
+                // Instância a instância: soft-delete pelo builder não audita.
+                //
+                // ENUMERA-E-APAGA, logo check-then-act: a transação da
+                // `DeleteTurmaAction` é que dá atomicidade a esta cascata.
+                // Não arquive turma por fora dela. O `lockRow` que ela toma
+                // serializa arquivar contra arquivar, mas os escritores de
+                // filho ainda não tomam o mesmo lock — a janela contra eles
+                // segue aberta (pendência P-47).
+                //
+                // O pivot `turma_redator` fica FORA: não tem `deleted_at`, e
+                // designação não é registro com ciclo de vida próprio — desfazê-la
+                // faria o `auditSync` registrar uma remoção que ninguém pediu
+                // (spec D2).
+                $turma->enrollments()->get()->each(fn (Enrollment $e) => self::markAndDelete($e));
+                $turma->files()->get()->each(fn (File $f) => self::markAndDelete($f));
+            }
+        });
+
+        static::restored(function (Turma $turma) {
+            // `restored`, não `restoring`: os filhos saem ANTES do pai e voltam
+            // DEPOIS dele. `onlyTrashed()` + a marca fazem voltar só quem ESTA
+            // cascata arquivou (spec D2).
+            $turma->enrollments()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (Enrollment $e) => self::restoreAndUnmark($e));
+            $turma->files()->onlyTrashed()->where('archived_with_parent', true)->get()
+                ->each(fn (File $f) => self::restoreAndUnmark($f));
+        });
+    }
+
     public function quote(): BelongsTo
     {
         // Arquivamento não apaga: a projeção de leitura precisa do registro
@@ -77,9 +111,30 @@ class Turma extends Model implements Auditable
         return $this->belongsTo(Course::class)->withTrashed();
     }
 
+    /**
+     * Arquivamento não apaga, e AQUI isso tem peso legal. O pivot `turma_redator`
+     * não tem `deleted_at`: sem o `withTrashed()`, arquivar um redator deixa a
+     * linha do pivot viva e o redator DESAPARECE da turma — a listagem passa a
+     * exibir turma sem redator (`TurmaQueryBuilder::LISTING`), o painel a trata
+     * como sem redator (`EmissionPanelQuery`) e `CertificateEligibility` RECUSA a
+     * emissão do certificado de uma turma já concluída (spec D3).
+     *
+     * O gate da `ArchiveRedatorAction` cobre turma em andamento; este
+     * `withTrashed` cobre a concluída, que é onde a emissão acontece. Os dois são
+     * necessários — nenhum resolve o caso do outro.
+     *
+     * E este `withTrashed` sozinho NÃO salva a emissão: `CertificateController::store`
+     * e `BatchIssueCertificatesAction` resolvem o redator por `findOrFail`, e sem o
+     * `Redator::withTrashed()` de lá o 404 vem ANTES de a porta 6 rodar. São três
+     * peças, não duas — não reverta nenhuma achando que a outra cobre.
+     *
+     * `withTrashed()` não é método de `BelongsToMany`: é a macro que o
+     * `SoftDeletingScope` instala no Builder, e `Relation::__call` a encaminha e
+     * devolve a própria relação. Por isso encadeia.
+     */
     public function redatores(): BelongsToMany
     {
-        return $this->belongsToMany(Redator::class, 'turma_redator')->withTimestamps();
+        return $this->belongsToMany(Redator::class, 'turma_redator')->withTimestamps()->withTrashed();
     }
 
     public function files(): MorphMany
@@ -156,6 +211,22 @@ class Turma extends Model implements Auditable
     public function loadListingData(): static
     {
         return $this->load(TurmaQueryBuilder::LISTING)->loadCount('enrollments');
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. `withTrashed()` porque o lock tem de ser
+     * tomado mesmo sobre turma arquivada — é o estado de quem vai ser
+     * restaurado, e pular a linha faria a operação seguir SEM mutex nenhum.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     * Molde: `Client::lockRow()`.
+     */
+    public static function lockRow(int $turmaId): static
+    {
+        /** @var static $turma */
+        $turma = static::withTrashed()->whereKey($turmaId)->lockForUpdate()->firstOrFail();
+
+        return $turma;
     }
 
     /** @param  QueryBuilder  $query */
