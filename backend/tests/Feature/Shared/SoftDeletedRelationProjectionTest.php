@@ -74,7 +74,6 @@ class SoftDeletedRelationProjectionTest extends TestCase
             'student_count' => 5,
             'value_uf' => 10,
             'status' => 'approved',
-            'code' => 'COT-1',
         ]);
 
         return Turma::create([
@@ -264,7 +263,6 @@ class SoftDeletedRelationProjectionTest extends TestCase
             'student_count' => 3,
             'value_uf' => 5,
             'status' => 'approved',
-            'code' => 'COT-7',
         ]);
 
         $client->delete();
