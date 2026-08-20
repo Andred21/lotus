@@ -65,13 +65,13 @@ class UpdateRedatorAction
                     && $data->is_active === false
                     && $redator->user->is_active === true;
 
-                $redator->user->update(WritableAttributes::from([
+                $this->users->writing(fn () => $redator->user->update(WritableAttributes::from([
                     'name' => $data->name,
                     'rut' => $rut,
                     'email' => $data->email,
                     'phone' => $data->phone,
                     'is_active' => $data->is_active,
-                ]));
+                ])));
 
                 if ($revogando) {
                     $this->sessions->all($redator->user);

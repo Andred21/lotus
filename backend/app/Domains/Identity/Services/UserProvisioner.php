@@ -4,6 +4,8 @@ namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
 use App\Shared\Support\Rut;
+use Closure;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -21,6 +23,11 @@ use Illuminate\Validation\ValidationException;
  */
 class UserProvisioner
 {
+    private const DUPLICADO = [
+        'rut' => 'Este RUT já está cadastrado.',
+        'email' => 'Este e-mail já está cadastrado.',
+    ];
+
     public function provision(
         string $type,
         string $name,
@@ -30,7 +37,7 @@ class UserProvisioner
     ): User {
         $rut = $this->ensureIdentityAvailable($rut, $email);
 
-        return User::create([
+        return $this->writing(fn () => User::create([
             'name' => $name,
             'rut' => $rut,
             'email' => $email,
@@ -38,7 +45,7 @@ class UserProvisioner
             'password' => bin2hex(random_bytes(16)),
             'type' => $type,
             'is_active' => $this->accessDefaultFor($type),
-        ]);
+        ]));
     }
 
     /**
@@ -78,14 +85,14 @@ class UserProvisioner
             if ($estado = $this->duplicateStatus('rut', $formatado, $exceptUserId)) {
                 $erros['rut'] = $estado === 'arquivado'
                     ? 'Este RUT pertence a um cadastro arquivado. Restaure-o em vez de criar outro.'
-                    : 'Este RUT já está cadastrado.';
+                    : self::DUPLICADO['rut'];
             }
         }
 
         if ($estado = $this->duplicateStatus('email', $email, $exceptUserId)) {
             $erros['email'] = $estado === 'arquivado'
                 ? 'Este e-mail pertence a um cadastro arquivado. Restaure-o em vez de criar outro.'
-                : 'Este e-mail já está cadastrado.';
+                : self::DUPLICADO['email'];
         }
 
         if ($erros !== []) {
@@ -93,6 +100,50 @@ class UserProvisioner
         }
 
         return $formatado;
+    }
+
+    /**
+     * Executa a escrita traduzindo colisão de índice único de `users` em 422 do
+     * campo — a MESMA resposta que `ensureIdentityAvailable` dá quando ganha a
+     * corrida (P-29). O check não trava linha inexistente, então duas escritas
+     * concorrentes passam as duas por ele e o perdedor estoura no índice.
+     *
+     * A detecção é pela mensagem, e não pelo SQLSTATE: `QueryException::getCode`
+     * carrega o código da PDOException por baixo, cuja forma varia por driver.
+     * Cobrimos as duas grafias — sqlite (`users.rut`) porque é onde a suíte
+     * roda, MySQL (`users_rut_unique`) porque é onde o cliente está.
+     *
+     * @template T
+     *
+     * @param  Closure():T  $write
+     * @return T
+     */
+    public function writing(Closure $write): mixed
+    {
+        try {
+            return $write();
+        } catch (QueryException $e) {
+            $coluna = $this->duplicateColumn($e);
+
+            if ($coluna === null) {
+                throw $e;
+            }
+
+            throw ValidationException::withMessages([$coluna => self::DUPLICADO[$coluna]]);
+        }
+    }
+
+    private function duplicateColumn(QueryException $e): ?string
+    {
+        $mensagem = $e->getMessage();
+
+        foreach (array_keys(self::DUPLICADO) as $coluna) {
+            if (str_contains($mensagem, "users_{$coluna}_unique") || str_contains($mensagem, "users.{$coluna}")) {
+                return $coluna;
+            }
+        }
+
+        return null;
     }
 
     /**

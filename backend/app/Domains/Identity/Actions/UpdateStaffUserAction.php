@@ -63,7 +63,7 @@ class UpdateStaffUserAction
                 $attrs['password'] = $data->password;
             }
 
-            $user->update($attrs);
+            $this->users->writing(fn () => $user->update($attrs));
             $user->syncRoles([$data->role]);
 
             return $user->fresh()->load('roles');

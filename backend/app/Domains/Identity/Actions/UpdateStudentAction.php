@@ -24,12 +24,12 @@ class UpdateStudentAction
 
             $rut = $this->provisioner->ensureIdentityAvailable($data->rut, $data->email, $user->id);
 
-            $user->update(WritableAttributes::from([
+            $this->provisioner->writing(fn () => $user->update(WritableAttributes::from([
                 'name' => $data->name,
                 'rut' => $rut,
                 'email' => $data->email,
                 'phone' => $data->phone,
-            ]));
+            ])));
 
             return $student->refresh();
         });
