@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: useloadstate-promise-e-forma
 active_work_item: bd18-useloadstate-promise-e-forma
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd18-useloadstate-promise-e-forma.md
 context_packet: null
 blocker: null
 last_completed_work_item: bd17-superficie-de-arquivados
-state_basis_commit: 93acf6a7
-updated_at: 2026-08-20T16:35:00-03:00
+state_basis_commit: add3511f
+updated_at: 2026-08-20T17:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
