@@ -2,7 +2,12 @@
 
 namespace Tests\Feature\Shared;
 
+use App\Domains\Commercial\Models\Budget;
+use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesDomainRecords;
@@ -68,6 +73,109 @@ class ComputedKeyInBodyTest extends TestCase
     }
 
     /**
+     * O ramo `null` (presente e vazio) já está coberto para o staff acima —
+     * `valoresForjados()` é reaproveitado aqui para não duplicar o raciocínio
+     * do docblock da classe num quarto DTO.
+     */
+    #[DataProvider('valoresForjados')]
+    public function test_photo_url_no_corpo_do_aluno_e_422(mixed $valor): void
+    {
+        $this->actingAsAdmin();
+
+        $user = User::factory()->create([
+            'type' => 'aluno',
+            'is_active' => false,
+            'rut' => '13.456.789-9',
+            'email' => 'aluno-ckb@lotus.cl',
+        ]);
+        $student = $user->student()->create([]);
+
+        $this->putJson("/api/students/{$student->id}", [
+            'name' => 'Aluno Editado',
+            'rut' => '13.456.789-9',
+            'email' => 'aluno-ckb@lotus.cl',
+            'photo_url' => $valor,
+        ])->assertStatus(422)->assertJsonPath('errors.photo_url.0', fn ($m) => $m !== null);
+    }
+
+    public function test_photo_url_no_corpo_do_redator_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $user = User::factory()->redator()->create([
+            'rut' => '12.345.678-5',
+            'email' => 'redator-ckb@lotus.cl',
+        ]);
+        $redator = $user->redator()->create([]);
+
+        $this->putJson("/api/redatores/{$redator->id}", [
+            'name' => 'Redator Editado',
+            'rut' => '12.345.678-5',
+            'email' => 'redator-ckb@lotus.cl',
+            'photo_url' => 'http://evil/x.png',
+        ])->assertStatus(422)->assertJsonPath('errors.photo_url.0', fn ($m) => $m !== null);
+    }
+
+    public function test_client_photo_url_no_corpo_da_turma_e_422(): void
+    {
+        $this->actingAsAdmin();
+        $turma = $this->makeTurma();
+
+        $this->putJson("/api/turmas/{$turma->id}", [
+            'modalidade' => 'online',
+            'local_aplicacao' => null,
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-10',
+            'client_photo_url' => 'http://evil/x.png',
+        ])->assertStatus(422)->assertJsonPath('errors.client_photo_url.0', fn ($m) => $m !== null);
+    }
+
+    /**
+     * `EnrollmentData` não tem rota PUT própria — `turmas/{turma}/alunos/
+     * {enrollment}/resultado` usa `EnrollmentResultData`, um DTO diferente sem
+     * `photo_url`. A ÚNICA porta HTTP que hidrata `EnrollmentData` do corpo é
+     * o `store` (matrícula individual), por isso o teste é POST, não PUT — a
+     * regra é a mesma (`ComputedFields::rejected('photo_url')` no `rules()`),
+     * só a rota real é diferente das outras três.
+     */
+    public function test_photo_url_no_corpo_da_matricula_e_422(): void
+    {
+        $this->actingAsAdmin();
+        $turma = $this->makeTurma();
+
+        $this->postJson("/api/turmas/{$turma->id}/alunos", [
+            'rut' => '11.111.111-1',
+            'name' => 'Juan Soto',
+            'email' => 'juan@acme.cl',
+            'photo_url' => 'http://evil/x.png',
+        ])->assertStatus(422)->assertJsonPath('errors.photo_url.0', fn ($m) => $m !== null);
+    }
+
+    /**
+     * Turma mínima (D-12 só precisa de uma turma válida em `em_andamento` para
+     * expor `update`/`alunos`) — mesmo arranjo de `TurmaCrudTest`/
+     * `EnrollmentApiTest`, sem herdar o helper porque `CreatesDomainRecords`
+     * deixa Budget/Quote/Turma de fora de propósito (spec D8).
+     */
+    private function makeTurma(): Turma
+    {
+        $clientId = $this->makeClientWithUser([], ['rut' => '44.555.666-1', 'email' => 'turma-client-ckb@lotus.cl'])->id;
+        $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap-CKB']);
+        $course = $this->makeCourse();
+        $quote = Quote::create([
+            'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
+        ]);
+
+        return Turma::create([
+            'quote_id' => $quote->id, 'course_id' => $course->id,
+            'modalidade' => TurmaModalidade::Online, 'local_aplicacao' => null,
+            'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
+            'status' => TurmaStatus::EmAndamento,
+        ]);
+    }
+
+    /**
      * Arch test: todo campo de foto dos DTOs é `#[Computed]`. Cobre também os
      * DTOs que só SAEM, onde `rules()` nunca roda.
      */
@@ -79,12 +187,23 @@ class ComputedKeyInBodyTest extends TestCase
         foreach ($arquivos as $arquivo) {
             $fonte = file_get_contents($arquivo);
 
-            if (! preg_match_all('/^\s*(#\[[^\]]+\]\s*)*public \?string \$(\w*photo_url) =/m', $fonte, $m)) {
+            // `PREG_OFFSET_CAPTURE`: a posição vem do PRÓPRIO match, não de um
+            // segundo `strpos` — um `strpos("\$$campo")` reencontraria a
+            // primeira ocorrência literal de "$campo" no arquivo, e uma
+            // referência em docblock (ex.: "`SessionUserData::$photo_url`")
+            // ANTES da propriedade real cortaria o trecho cedo demais e
+            // acusaria `#[Computed]` como ausente mesmo estando presente.
+            if (! preg_match_all(
+                '/^\s*(#\[[^\]]+\]\s*)*public \?string \$(\w*photo_url)\s*[,=]/m',
+                $fonte,
+                $m,
+                PREG_OFFSET_CAPTURE,
+            )) {
                 continue;
             }
 
-            foreach ($m[2] as $campo) {
-                $trecho = substr($fonte, 0, strpos($fonte, "\$$campo ="));
+            foreach ($m[2] as [$campo, $offset]) {
+                $trecho = substr($fonte, 0, $offset);
 
                 if (! str_contains(substr($trecho, -400), '#[Computed]')) {
                     $faltando[] = basename($arquivo).'::'.$campo;
