@@ -183,6 +183,7 @@ class ComputedKeyInBodyTest extends TestCase
     {
         $arquivos = glob(app_path('Domains/*/Data/*.php'));
         $faltando = [];
+        $encontrados = 0;
 
         foreach ($arquivos as $arquivo) {
             $fonte = file_get_contents($arquivo);
@@ -212,12 +213,26 @@ class ComputedKeyInBodyTest extends TestCase
 
             foreach ($m[0] as $indice => [$blocoAtributos]) {
                 [$campo] = $m[2][$indice];
+                $encontrados++;
 
                 if (! str_contains($blocoAtributos, '#[Computed]')) {
                     $faltando[] = basename($arquivo).'::'.$campo;
                 }
             }
         }
+
+        // Sem isso, um regex que parasse de casar (atributo com "]" no
+        // argumento, `public readonly ?string`, `Data` numa subpasta fora do
+        // glob, um campo `string` não-nullable) passaria com `$faltando`
+        // vazio e o teste ficaria verde sem ter olhado nada. 11 é a
+        // contagem viva hoje — um número diferente aqui NÃO se ajusta no
+        // escuro: ou o regex parou de enxergar um campo que existe, ou
+        // nasceu campo de foto novo. Nos dois casos, olhe antes de mudar.
+        $this->assertSame(
+            11,
+            $encontrados,
+            "A varredura achou {$encontrados} campo(s) de foto, esperava 11.",
+        );
 
         $this->assertSame([], $faltando, 'Campo de foto sem #[Computed]: '.implode(', ', $faltando));
     }
