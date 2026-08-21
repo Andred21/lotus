@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
+import { loadFailure } from '@shared/hooks'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 import type { LoadErrorHintKey } from '@shared/lib'
 
@@ -175,12 +176,13 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   // Nada em mão, nem desta janela nem de nenhuma anterior. É AQUI que a falha
   // pode substituir a tela.
   if (data === undefined) {
-    if (query.isError) {
-      // `{}` quando o interceptor não populou o corpo: `isError` sem `error`
-      // ainda é falha, e devolver `loading` a esconderia. Mesmo tratamento do
-      // `useLoadState`.
-      return { kind: 'error', error: query.error ?? ({} as ProblemDetails), retry }
-    }
+    // `loadFailure` e não a ternária à mão: é a MESMA política — `{}` quando o
+    // interceptor não populou o corpo, porque `isError` sem `error` ainda é
+    // falha e devolver `loading` a esconderia —, e ela nasce num lugar só
+    // (rule `frontend-fsliced.md`). O `if` sobre o retorno substitui o `if
+    // (query.isError)`: a política já responde as duas perguntas numa.
+    const falha = loadFailure(query)
+    if (falha) return { kind: 'error', error: falha, retry }
     return { kind: 'loading' }
   }
 
