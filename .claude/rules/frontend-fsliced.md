@@ -157,6 +157,12 @@ exceção. Na dúvida, siga o vizinho da mesma
   mantém o "Reintentar" em `loading` enquanto o GET está em voo (Q-14), e `void query.refetch()`
   a engole **sem quebrar tipo nem teste** — TypeScript aceita descartar retorno, então quem
   guarda são as catracas de `listSource.test.ts`, `useLoadState.test.ts` e `useResourceState.test.ts`.
+  A **mensagem** que a falha imprime é `loadMessage(estado, t)`
+  (`shared/lib/screenDetail.ts`), não o par `errorDetail ?? t(errorHint)` escrito à mão — ele estava
+  em 13 sítios de 8 componentes (Q-3 do review do BD-18), e é ali que a política some quando alguém
+  troca a ordem ou esquece o `??`: a tela mostra erro sem texto, proibido por peso legal. **QUANDO**
+  imprimir segue sendo de quem imprime — o gate é `isError`, `loadError`, `failedWithoutData` ou
+  `nameLost`, conforme o que a falha custou NAQUELA tela.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.

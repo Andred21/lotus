@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: useloadstate-promise-e-forma
 active_work_item: bd18-useloadstate-promise-e-forma
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd18-useloadstate-promise-e-forma-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd18-useloadstate-promise-e-forma.md
 context_packet: null
 blocker: null
 last_completed_work_item: bd17-superficie-de-arquivados
-state_basis_commit: ee650ffb
-updated_at: 2026-08-20T18:20:00-03:00
+state_basis_commit: ce402a95
+updated_at: 2026-08-20T22:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -158,6 +158,74 @@ ganhou `catch` e o registro de por que o `setPending` pós-unmount não é vazam
 terceiro Important era a própria transição de estado, feita aqui. Os Minors e os dois débitos novos
 que o review mediu (`StudentDetailSections` como terceiro sítio do D-14; a expressão de mensagem do
 aviso repetida em 5 componentes) ficam para a triagem do João no review do bloco.
+
+
+### Revisão de sprint — 2026-08-20: risco BAIXO, uma lente, 4 achados, zero violação de lei
+
+**Classificação: BAIXO risco** — frontend puro, `executor: claude`, sem schema, `generated.ts`,
+Sanctum, auditoria, RBAC, dinheiro ou emissão de certificado. Os três hooks de `certification` entram
+só pelo tipo de retorno do `refetch`. **Uma lente, sem revisão independente do Codex.**
+
+**Fronteira do bloco reconferida:** `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+devolve **zero arquivo**. **Gate re-rodado nesta revisão:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **84 arquivos / 468 testes**. **Órfãos: nenhum** — `listSource`, `loadFailure` e
+`useRetryPending` têm consumidor, e as duas varreduras do bloco (`void .*\.refetch()` e
+`isError ? (… ?? ({} as`) seguem devolvendo zero linha fora de teste e fora dos dois sítios declarados.
+
+**Zero violação das leis §5** e zero contra o gabarito da `frontend-fsliced.md`: nenhuma feature
+importa `primereact` direto nem outra feature, nenhum `useEffect` de reset entrou, e a política de
+carga passou a nascer num lugar só, que é o que a rule nova cobra.
+
+**Quatro achados, nenhum 🔴. O João aprovou os quatro, e os quatro foram corrigidos:**
+
+- **Q-1 🟡 P — `StudentDetailSections.tsx:33` é o terceiro sítio do D-14.** Gateia por `detail.isError`
+  cru e substitui as DUAS seções; com cache em mão um refetch falho apaga vínculos e turmas já
+  carregados. Some com o `useStudentDetail` sendo consumido cru (`useQuery` direto, sem
+  `useResourceState`), então a derivação da mensagem também está à mão na feature. Fora do escopo
+  declarado do BD-18 — destino natural é o `backlog.md`.
+- **Q-2 🟢 P — `useDashboard.ts:182` guarda o último `({} as ProblemDetails)` escrito à mão**, num
+  arquivo que ESTE bloco abriu. Não é a ternária que a rule nomeia (o ramo já está dentro de
+  `if (query.isError)`), mas é a mesma política; `const falha = loadFailure(query); if (falha) …`
+  fecha sem mudar comportamento e deixa a linha da D7 com as duas exceções que ela declara.
+- **Q-3 🟢 M — `errorDetail ?? t(errorHint)` está composto à mão em 11 sítios / 7 componentes**, dois
+  deles escritos por este bloco. É o D-56 um andar acima, na mensagem em vez da fonte. Contrapeso
+  registrado: o docblock do `useLoadState` diz que "a política é de quem IMPRIME". Decisão de
+  desenho, não correção — destino natural é o `backlog.md`.
+- **Q-4 🟢 P — `AppErrorState` não tem arquivo de teste.** A D5 moveu a espera dele para o
+  `useRetryPending`, e a única catraca do comportamento vive no `InlineLoadState.test.tsx`: apagar
+  `loading={retry.pending}` do `AppErrorState` não deixa nada vermelho, e são os 6 sítios de tela
+  cheia que consomem a promise que o D-54 pagou.
+
+### Correções da revisão — 2026-08-20, quatro commits
+
+`c9245218` (Q-2) · `11df3a72` (Q-4) · `ca096650` (Q-3) · `ce402a95` (Q-1), nessa ordem — o Q-3 vem
+antes do Q-1 porque o sítio novo do detalhe do aluno já nasce usando o `loadMessage`.
+
+- **Q-2** — `useDashboard` passa a chamar `loadFailure`; o `if` sobre o retorno substitui o
+  `if (query.isError)`, porque a política responde as duas perguntas numa. Comportamento idêntico.
+- **Q-4** — `AppErrorState.test.tsx` nasce com a promise controlada do molde do `InlineLoadState`:
+  `disabled` durante o voo, livre depois de resolver, clique repetido ignorado, handler `void`
+  seguindo, mais os dois ramos básicos.
+- **Q-3** — `loadMessage(estado, t)` em `shared/lib/screenDetail.ts`, ao lado das duas metades que
+  ele junta, recebendo `t` por parâmetro (`shared/lib` não conhece i18next, mesmo motivo de
+  `loadErrorHint` devolver chave). Os **13 sítios de 8 componentes** adotaram; `grep "errorDetail ?? t("`
+  fora de teste devolve **uma** linha, que é a do próprio helper. A linha da rule entrou junto,
+  no commit que zerou o último sítio — mesma disciplina da D7.
+- **Q-1** — `StudentDetailSections` adota `useResourceState`, gateia por `failedWithoutData` e mostra
+  um `InlineLoadState` só, acima das duas seções. Catraca nova no molde dos outros dois sítios do
+  D-14 (o caso obrigatório é o do ramo COM cache). **`StudentLinkRow` saiu junto**: com o aviso o
+  componente passou de 150 linhas e o `max-lines` reprovou — extração literal, nenhuma condicional
+  mudou de forma.
+
+**Gate depois das quatro:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **86 arquivos / 479
+testes** (eram 84 / 468). As duas varreduras do bloco seguem em zero, e a terceira nasceu com o Q-3.
+**Fronteira intacta:** `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+= zero arquivo. **Nada ficou para o `backlog.md`** — os dois achados que a execução tinha deferido
+(`StudentDetailSections` e a mensagem repetida) foram exatamente Q-1 e Q-3, e estão pagos.
+
+**Não provado na tela:** as quatro correções têm catraca de teste; o DoD de navegador do bloco foi
+provado antes delas, e o Q-1 mudou ramo de tela (`StudentDialog` em modo view, com o
+`GET /api/students/{id}` falhando com cache em mão). Conferir no fechamento.
 
 
 ## Último item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
