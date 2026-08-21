@@ -232,6 +232,14 @@ error` pelo comando documentado, e `php -d memory_limit=512M vendor/bin/phpunit`
 abaixo do teto e o comando documentado morre assim mesmo, que é o argumento de que a margem não
 existe: quem estoura é o overhead do runner do `artisan`, somado a uma suíte que já ocupa o limite.
 
+**Reproduzida de novo no fechamento do BD-18 (2026-08-20), na mesma árvore `fix-frontend`:** o
+comando documentado morreu com `Allowed memory size of 134217728 bytes exhausted` dentro de
+`Tests\Feature\Operation\ManualTurmaTest`, e `php -d memory_limit=512M vendor/bin/phpunit`
+devolveu **872 passed / 5 skipped, 3095 asserções** com **pico de 129,00 MB**. A suíte cresceu 44
+testes desde o fechamento anterior e o pico subiu junto — de 127,00 para 129,00 MB, agora **acima**
+dos 128M do teto. O que era margem inexistente virou déficit medido: o gatilho não mudou, mas o custo
+de adiar sim.
+
 **Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
 imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
 processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
