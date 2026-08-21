@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: null
 active_work_item: bd12-load-state-e-listas
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-20-bd12-load-state-e-listas-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd12-load-state-e-listas.md
 context_packet: null
-blocker: null
+blocker: 'review do BD-12 (risco BAIXO) sem violacao de lei e sem orfao; 2 achados 🟢/P aguardando decisao — Q-1 linha de rule sobre cellMemo em frontend-fsliced.md, Q-2 acentos no comentario novo de AppDataTable.tsx:118-134. Fora de escopo, registrado sem inflar: beforeAll+mutacao de idioma em archivedColumns.test.tsx, raio zero hoje.'
 last_completed_work_item: bd14-contrato-de-entrada
 state_basis_commit: fc852ce3
-updated_at: 2026-08-21T02:35:00-03:00
+updated_at: 2026-08-21T02:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
