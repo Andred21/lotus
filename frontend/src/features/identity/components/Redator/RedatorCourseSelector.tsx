@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppErrorState, AppSkeleton } from '@shared/ui'
+import { AppErrorState, AppSkeleton, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import { useRedatorCourses } from '../../hooks/useRedatorCourses'
 import { CourseCard } from './CourseCard'
 
@@ -35,11 +36,15 @@ export function RedatorCourseSelector({
     )
   }
 
-  if (courses.isError) {
+  // A falha SUBSTITUI a seção só quando não há catálogo em cache. Com cache em
+  // mão, um refetch falho mantém `data` populado enquanto `status` vira `error`:
+  // gatear por `isError` cru apagava uma lista utilizável e a seleção já feita
+  // (rule `frontend-fsliced.md`, precedente `CourseStep.tsx:46`).
+  if (courses.failedWithoutData) {
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={courses.errorDetail ?? t(courses.errorHint)}
+        detail={loadMessage(courses, t)}
         retryLabel={t('common.retry')}
         onRetry={courses.refetch}
       />
@@ -54,6 +59,16 @@ export function RedatorCourseSelector({
     )
   }
 
+  // Declarado uma vez: os dois ramos finais o imprimem, e a lista é a MESMA nos
+  // dois — cobrir só um deixaria metade do defeito de pé.
+  const aviso = (
+    <InlineLoadState
+      error={courses.isError ? loadMessage(courses, t) : null}
+      retryLabel={t('common.retry')}
+      onRetry={courses.refetch}
+    />
+  )
+
   if (readOnly) {
     if (courses.enabledCourses.length === 0) {
       return (
@@ -63,24 +78,30 @@ export function RedatorCourseSelector({
       )
     }
     return (
-      <div className="grid gap-2 sm:grid-cols-2">
-        {courses.enabledCourses.map((c) => (
-          <CourseCard key={c.id} course={c} />
-        ))}
+      <div className="space-y-2">
+        {aviso}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {courses.enabledCourses.map((c) => (
+            <CourseCard key={c.id} course={c} />
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {courses.orderedCourses.map((c) => (
-        <CourseCard
-          key={c.id}
-          course={c}
-          selected={courseIds.includes(c.id as number)}
-          onToggle={() => onToggle(c.id as number)}
-        />
-      ))}
+    <div className="space-y-2">
+      {aviso}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {courses.orderedCourses.map((c) => (
+          <CourseCard
+            key={c.id}
+            course={c}
+            selected={courseIds.includes(c.id as number)}
+            onToggle={() => onToggle(c.id as number)}
+          />
+        ))}
+      </div>
     </div>
   )
 }

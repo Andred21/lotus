@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { FileUploadHandlerEvent } from '@shared/ui'
-import { usePermissions, useMutationErrors } from '@shared/hooks'
+import { usePermissions, useMutationErrors, loadFailure } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
-import type { ProblemDetails } from '@shared/api/axios'
 import type { QuoteData } from '@shared/types/generated'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../api/useQuotes'
 import { useUploadBudgetFile, useRemoveBudgetFile, type BudgetFileType } from '../api/useCommercialFiles'
@@ -84,13 +83,12 @@ export function useBudgetDetail(budgetId: number) {
     // vira nome sozinho) e o Reintentar não recuperava a query que falhou.
     loading: query.isLoading || clients.isLoading,
     /** Falha do GET do orçamento ou do de clientes. Distinto de
-     * `confirmError`/`fileError`, que são erros de mutação. O cast é obrigatório:
-     * a página lê `.detail`, e a união com `{}` não compila. */
-    loadError:
-      query.isError ? (query.error ?? ({} as ProblemDetails))
-      : clients.isError ? (clients.error ?? ({} as ProblemDetails))
-      : null,
-    reload: () => { void query.refetch(); void clients.refetch() },
+     * `confirmError`/`fileError`, que são erros de mutação. */
+    loadError: loadFailure(query) ?? loadFailure(clients),
+    /** `Promise.all` e não duas chamadas soltas: o botão do `AppErrorState`
+     * espera a promise devolvida, e devolver só a primeira o liberaria com a
+     * segunda ainda em voo (Q-14). */
+    reload: (): Promise<unknown> => Promise.all([query.refetch(), clients.refetch()]),
     budget,
     client,
     canApprove,

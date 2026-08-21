@@ -6,6 +6,10 @@ import { useLoadState } from './useLoadState'
 
 type Item = { id: number }
 
+/** Sentinela de identidade: `Promise.resolve()` passaria num `toBeDefined()`
+ * frouxo, e o `void` que o D-54 removeu voltaria verde. */
+const RESULTADO = { data: [{ id: 1 }] }
+
 /** O hook não chama hook nenhum: é derivação pura sobre o resultado da query.
  * `renderHook` está aqui só para não violar `react-hooks/rules-of-hooks` — o
  * mesmo arranjo do `useResourceState.test.ts`. */
@@ -20,7 +24,7 @@ function query(
     isError: false,
     isSuccess: false,
     error: null,
-    refetch: () => Promise.resolve(),
+    refetch: () => Promise.resolve(RESULTADO),
     ...over,
   } as unknown as UseQueryResult<Item[], ProblemDetails>
 }
@@ -57,5 +61,13 @@ describe('useLoadState — o detail que pode ir à tela', () => {
     const { result } = renderHook(() => useLoadState(query({ isSuccess: true, data: [] })))
 
     expect(result.current.errorDetail).toBeUndefined()
+  })
+})
+
+describe('useLoadState — o contrato Q-14', () => {
+  it('DEVOLVE a promise do refetch, com o resultado da query', async () => {
+    const { result } = renderHook(() => useLoadState(query({ isSuccess: true, data: [] })))
+
+    await expect(result.current.refetch()).resolves.toBe(RESULTADO)
   })
 })

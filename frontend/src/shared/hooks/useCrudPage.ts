@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
+import { listSource } from './listSource'
 
 /** Opções de query que a PÁGINA pode pedir. Estreito de propósito: quem precisa
  * de `enabled`, `select` ou `queryKey` está usando o recurso direto, não a
@@ -49,16 +50,7 @@ export function useCrudPage<T extends { id?: number }>(
   const entity = dialog?.id != null ? (items.find((i) => i.id === dialog.id) ?? null) : null
 
   return {
-    items,
-    loading: query.isLoading,
-    /** Truthy só quando a listagem falhou. `null` em sucesso, inclusive com
-     * lista vazia — vazio não é erro. O cast cobre o erro de rede que não passa
-     * pelo interceptor: `isError` sem `ProblemDetails`. Sem ele o tipo vira
-     * `ProblemDetails | {}` e qualquer `.detail` no consumidor não compila. */
-    error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    /** Devolve a promise: o `AppErrorState` a aguarda para manter o Reintentar
-     * em `loading` enquanto o GET está em voo (Q-14). */
-    refetch: () => query.refetch(),
+    ...listSource(query),
     dialog: dialog ? { mode: dialog.mode, entity } : null,
     openCreate: () => setDialog({ mode: 'create', id: null }),
     openView: (item: T) => setDialog({ mode: 'view', id: item.id ?? null }),

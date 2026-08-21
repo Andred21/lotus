@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
+import { loadFailure } from '@shared/hooks'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 import type { LoadErrorHintKey } from '@shared/lib'
 
@@ -45,7 +46,7 @@ type DashboardPayload = AdminDashboardData | RedatorDashboardData
  */
 export type DashboardState =
   | { kind: 'loading' }
-  | { kind: 'error'; error: ProblemDetails; retry: () => void }
+  | { kind: 'error'; error: ProblemDetails; retry: () => Promise<unknown> }
   | { kind: 'unauthorized' }
   | {
       kind: 'ready-admin'
@@ -62,7 +63,7 @@ export type DashboardState =
        * o 422 de janela invertida não é problema de conexão. */
       staleHint: LoadErrorHintKey
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
-      staleRetry?: () => void
+      staleRetry?: () => Promise<unknown>
     }
   | {
       kind: 'ready-redator'
@@ -70,7 +71,7 @@ export type DashboardState =
       staleErrored: boolean
       staleError: string | null
       staleHint: LoadErrorHintKey
-      staleRetry?: () => void
+      staleRetry?: () => Promise<unknown>
     }
 
 /**
@@ -168,21 +169,20 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   const [ultimoPayload, setUltimoPayload] = useState<DashboardPayload | undefined>(undefined)
   if (query.data !== undefined && query.data !== ultimoPayload) setUltimoPayload(query.data)
 
-  const retry = () => {
-    void query.refetch()
-  }
+  const retry = () => query.refetch()
 
   const data = query.data ?? ultimoPayload
 
   // Nada em mão, nem desta janela nem de nenhuma anterior. É AQUI que a falha
   // pode substituir a tela.
   if (data === undefined) {
-    if (query.isError) {
-      // `{}` quando o interceptor não populou o corpo: `isError` sem `error`
-      // ainda é falha, e devolver `loading` a esconderia. Mesmo tratamento do
-      // `useLoadState`.
-      return { kind: 'error', error: query.error ?? ({} as ProblemDetails), retry }
-    }
+    // `loadFailure` e não a ternária à mão: é a MESMA política — `{}` quando o
+    // interceptor não populou o corpo, porque `isError` sem `error` ainda é
+    // falha e devolver `loading` a esconderia —, e ela nasce num lugar só
+    // (rule `frontend-fsliced.md`). O `if` sobre o retorno substitui o `if
+    // (query.isError)`: a política já responde as duas perguntas numa.
+    const falha = loadFailure(query)
+    if (falha) return { kind: 'error', error: falha, retry }
     return { kind: 'loading' }
   }
 

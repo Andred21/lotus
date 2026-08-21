@@ -10,9 +10,9 @@ active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: bd14-contrato-de-entrada
+last_completed_work_item: bd18-useloadstate-promise-e-forma
 state_basis_commit: fc852ce3
-updated_at: 2026-08-20T16:35:00-03:00
+updated_at: 2026-08-21T00:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,264 @@ updated_at: 2026-08-20T16:35:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
+## Último item fechado — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
+
+### Seleção — 2026-08-20
+
+**Promoção explícita do João**, com esta árvore em `idle`. O gate do `/planejar-bloco` reprovou o
+argumento pelo motivo de sempre: veio o título de seção do backlog (`BD-18 · Frontend · useLoadState:
+…`, com separadores e travessão pendurado), não o slug — e `active_work_item` era `null`, então
+"corresponder exatamente" também falhava. Nenhum arquivo tocado antes da decisão dele.
+
+**Quatro decisões dele fecharam o gate:** o slug `bd18-useloadstate-promise-e-forma`; **rota direta a
+`ready_for_planning`, sem Context Packet** (os três débitos nasceram de medição local — D-54 e D-56 no
+review e no fechamento do BD-17, D-14 no review do BD-6 —, e não há fonte externa a recuperar); a
+worktree `fix-frontend` seguindo na branch atual `docs/bd18-agrupamento-useloadstate`, que já carrega
+o commit de agrupamento do backlog; e o **alcance completo do D-54**, contra o que a ficha registrava.
+
+**Segunda árvore viva, medida e não deduzida:** `/home/jvbat/projetos/lotus` está em
+`bd14-contrato-de-entrada`, `workflow_state: ready_for_review`. É bloco de **backend**, então a P-03
+não dispara (o gatilho dela são dois blocos de backend) e a única colisão possível é
+`docs/superpowers/**`, que sempre colide e é merge mecânico. Sexta exceção declarada à invariante de
+um `active_work_item`, por decisão do João.
+
+### Planejamento — 2026-08-20
+
+**O escopo do bloco é maior do que as duas fichas registravam, e isso foi medido antes de desenhar.**
+A ficha do D-54 dizia "2 hooks compartilhados e 7 consumidores"; a varredura por forma
+(`void <query>.refetch()`) contra `93acf6a7` achou **14 produtores em 12 arquivos**, dos quais
+**seis** alimentam um `AppErrorState` de tela cheia — o único componente que de fato aguarda a
+promise. **Três travam a promise por TIPO** (`useValidationPage.ts:9`, `useDashboard.ts:48`,
+`StudentClientField.tsx:40` declaram `() => void`), onde trocar o corpo sem trocar a assinatura não
+mudaria nada. E a ficha errava os sítios de prova: `QuotesList:60`/`:74` e `BudgetDialog:85` são
+`InlineLoadState`, cujo botão **não tem estado de carga** — hoje a promise ali não muda nada.
+
+Spec em `specs/archive/2026-08-20-bd18-useloadstate-promise-e-forma-design.md`, oito decisões. As que mudam o
+desenho em relação ao que o backlog previa: `listSource` mora em **`shared/hooks`**, não em
+`shared/lib` ao lado do irmão `archivableSource`, porque precisa de `@tanstack` e de `ProblemDetails`
+e a fronteira `shared/lib` × `shared/api` está registrada em três arquivos (D1); a extração são
+**duas** exportações, não uma — `listSource` para os quatro sítios de forma de página e `loadFailure`
+para os dois hooks de carga, que falam outra grafia e não caberiam na primeira (D2/§3); e o
+`InlineLoadState` entra no bloco com a espera compartilhada, senão a promise recém-corrigida seguiria
+descartada em 12 usos (D5).
+
+
+**Plano em `plans/archive/2026-08-20-bd18-useloadstate-promise-e-forma.md`: 10 tasks, uma por commit.** A
+ordem interna que o backlog fixou (D-56 antes de D-54, D-14 por último) é respeitada, e a peça nova
+entra antes de todo o resto: extrair o normalizador primeiro faz a promise nascer certa nos sítios de
+uma vez, enquanto corrigir a promise antes seria consertar cópias que o passo seguinte apagaria.
+
+**Uma segunda medição durante o `writing-plans` emendou a spec, e a decisão de escopo foi do João:**
+a política `loadFailure` está escrita à mão em **12** sítios, não nos 6 que a §3 tabela — os seis
+extras (`useEnrollmentSection`, `useTurmaDetail`, `useRedatorPicker`, `useTurmaDocsSection` e os dois
+de `useBudgetDetail`) são exatamente os arquivos que a D4 já abre para devolver a promise. **Dois
+ficam de fora com motivo declarado:** `useHistorial` e `useEmissionPanelState` escrevem
+`isError ? (error ?? null) : null`, que é outra política — devolve `null` onde a nossa devolve `{}` —
+e trocá-la mudaria tela sem DoD que o cubra.
+
+**Baseline medida antes da Task 1, não herdada:** `pnpm test` 81 arquivos / 453 testes verdes, lint
+exit 0, build verde. O gate da Task 10 cobra 85 / 467.
+
+### Execução — 2026-08-20
+
+**As 10 tasks executadas em `subagent-driven-development`, uma por commit**, de `add3511f` a
+`ee650ffb`, na worktree `fix-frontend`. Ledger em `.superpowers/sdd/progress.md`. Gate final:
+`pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **84 arquivos / 468 testes**.
+
+**As duas varreduras que fecham os débitos, rodadas antes de a rule ser escrita e reconferidas no
+review final:** `grep "isError ? (.*?? ({} as"` e `grep "void .*\.refetch()"` devolvem **zero
+linha** fora de teste. `git diff main...HEAD -- backend/ generated.ts` = vazio, então Pint,
+`php artisan test` e `typescript:transform` seguem N/A por escopo medido.
+
+**Quatro desvios do plano, todos registrados no ledger com o motivo:** (1) o parâmetro de
+`listSource` virou **estrutural** — o `...listSource(query)` do plano não compilava, porque
+`useCrudPage`/`useArchivedPage` seguram contrato estreito, e a alternativa era um `as UseQueryResult`
+que mentiria sobre os fakes de teste; (2) o `refetch` é **anotado** `(): Promise<unknown>` e não
+deixado inferir — o inferido vaza `QueryObserverResult` para cima por `ReturnType<>` e obrigaria
+todo stub a montar o resultado inteiro; (3) `InlineLoadState.test.tsx` **já existia** (o mapa do
+plano errava), então os testes foram acrescentados e o alvo caiu de 85 para 84 arquivos; (4) um
+teste a mais que o previsto, cobrindo o ramo `readOnly` do `RedatorCourseSelector`, por achado de
+review de task.
+
+**As contagens intermediárias do plano não fechavam em cadeia** (esqueciam os 5 testes da Task 1).
+O alvo final dele — 467 testes — estava certo; ficaram 468 pelo desvio (4).
+
+**DoD end-to-end provado no navegador**, contra a API real em `:8080`, com falha **isolada** por
+rota (interceptação no browser, sem derrubar o nginx — o `GET /api/me` sobreviveu e o shell não
+redirecionou): (1) o "Reintentar" de tela cheia em `/operacion/turmas/6` fica `disabled` com o GET
+**segurado em voo** e volta quando ele responde; (2) o `InlineLoadState` do diálogo de orçamento
+fica `disabled` **com spinner** durante todo o voo do `GET /api/clients` e volta depois — é o
+comportamento que ele não tinha; (3) com o `GET /api/redatores` falhando e cache em mão, a seção
+WRITERS do diálogo de curso **mantém os três redatores** e o aviso vai ao lado, sem o erro de seção
+inteira; (4) as cinco telas de arquivados (`/comercial`, `/cursos`, `/personas`, `/operacion`,
+`/administracion`) seguem alternando ativo/arquivado com as colunas `Archived on`/`Archived by` e
+voltam ao ativo.
+
+**O item não-binário da spec §7 foi conferido e aprovado:** o botão do `InlineLoadState` não tem
+`icon`, então o PrimeReact **acrescenta** o spinner à frente do label (`p-button-loading-label-only`)
+e ele cresce 24px (83 → 107) durante o voo. Como é o último item da linha, não empurra nada e
+continua legível.
+
+**Observação medida, não regressão do bloco:** em `TurmaDetailPage` o "Reintentar" fica `disabled`
+por ~300ms e então a tela inteira troca pelo esqueleto, porque o ramo `loading` vem antes do
+`loadError` na página. Comportamento pré-existente, fora do escopo do BD-18.
+
+**Review final da branch (`requesting-code-review`, opus): "ready to merge with fixes", sem
+Critical.** Os três Important foram fechados no commit `ee650ffb`: a rule ganhou as duas exceções
+deliberadas (`useHistorial`/`useEmissionPanelState` devolvem `null` onde a política devolve `{}`), o
+`onRetry` de `AdminView`/`PeriodFilter` parou de mentir com `() => void`, e o `useRetryPending`
+ganhou `catch` e o registro de por que o `setPending` pós-unmount não é vazamento no React 19. O
+terceiro Important era a própria transição de estado, feita aqui. Os Minors e os dois débitos novos
+que o review mediu (`StudentDetailSections` como terceiro sítio do D-14; a expressão de mensagem do
+aviso repetida em 5 componentes) ficam para a triagem do João no review do bloco.
+
+
+### Revisão de sprint — 2026-08-20: risco BAIXO, uma lente, 4 achados, zero violação de lei
+
+**Classificação: BAIXO risco** — frontend puro, `executor: claude`, sem schema, `generated.ts`,
+Sanctum, auditoria, RBAC, dinheiro ou emissão de certificado. Os três hooks de `certification` entram
+só pelo tipo de retorno do `refetch`. **Uma lente, sem revisão independente do Codex.**
+
+**Fronteira do bloco reconferida:** `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+devolve **zero arquivo**. **Gate re-rodado nesta revisão:** `pnpm lint` exit 0, `pnpm build` verde,
+`pnpm test` **84 arquivos / 468 testes**. **Órfãos: nenhum** — `listSource`, `loadFailure` e
+`useRetryPending` têm consumidor, e as duas varreduras do bloco (`void .*\.refetch()` e
+`isError ? (… ?? ({} as`) seguem devolvendo zero linha fora de teste e fora dos dois sítios declarados.
+
+**Zero violação das leis §5** e zero contra o gabarito da `frontend-fsliced.md`: nenhuma feature
+importa `primereact` direto nem outra feature, nenhum `useEffect` de reset entrou, e a política de
+carga passou a nascer num lugar só, que é o que a rule nova cobra.
+
+**Quatro achados, nenhum 🔴. O João aprovou os quatro, e os quatro foram corrigidos:**
+
+- **Q-1 🟡 P — `StudentDetailSections.tsx:33` é o terceiro sítio do D-14.** Gateia por `detail.isError`
+  cru e substitui as DUAS seções; com cache em mão um refetch falho apaga vínculos e turmas já
+  carregados. Some com o `useStudentDetail` sendo consumido cru (`useQuery` direto, sem
+  `useResourceState`), então a derivação da mensagem também está à mão na feature. Fora do escopo
+  declarado do BD-18 — destino natural é o `backlog.md`.
+- **Q-2 🟢 P — `useDashboard.ts:182` guarda o último `({} as ProblemDetails)` escrito à mão**, num
+  arquivo que ESTE bloco abriu. Não é a ternária que a rule nomeia (o ramo já está dentro de
+  `if (query.isError)`), mas é a mesma política; `const falha = loadFailure(query); if (falha) …`
+  fecha sem mudar comportamento e deixa a linha da D7 com as duas exceções que ela declara.
+- **Q-3 🟢 M — `errorDetail ?? t(errorHint)` está composto à mão em 11 sítios / 7 componentes**, dois
+  deles escritos por este bloco. É o D-56 um andar acima, na mensagem em vez da fonte. Contrapeso
+  registrado: o docblock do `useLoadState` diz que "a política é de quem IMPRIME". Decisão de
+  desenho, não correção — destino natural é o `backlog.md`.
+- **Q-4 🟢 P — `AppErrorState` não tem arquivo de teste.** A D5 moveu a espera dele para o
+  `useRetryPending`, e a única catraca do comportamento vive no `InlineLoadState.test.tsx`: apagar
+  `loading={retry.pending}` do `AppErrorState` não deixa nada vermelho, e são os 6 sítios de tela
+  cheia que consomem a promise que o D-54 pagou.
+
+### Correções da revisão — 2026-08-20, quatro commits
+
+`c9245218` (Q-2) · `11df3a72` (Q-4) · `ca096650` (Q-3) · `ce402a95` (Q-1), nessa ordem — o Q-3 vem
+antes do Q-1 porque o sítio novo do detalhe do aluno já nasce usando o `loadMessage`.
+
+- **Q-2** — `useDashboard` passa a chamar `loadFailure`; o `if` sobre o retorno substitui o
+  `if (query.isError)`, porque a política responde as duas perguntas numa. Comportamento idêntico.
+- **Q-4** — `AppErrorState.test.tsx` nasce com a promise controlada do molde do `InlineLoadState`:
+  `disabled` durante o voo, livre depois de resolver, clique repetido ignorado, handler `void`
+  seguindo, mais os dois ramos básicos.
+- **Q-3** — `loadMessage(estado, t)` em `shared/lib/screenDetail.ts`, ao lado das duas metades que
+  ele junta, recebendo `t` por parâmetro (`shared/lib` não conhece i18next, mesmo motivo de
+  `loadErrorHint` devolver chave). Os **13 sítios de 8 componentes** adotaram; `grep "errorDetail ?? t("`
+  fora de teste devolve **uma** linha, que é a do próprio helper. A linha da rule entrou junto,
+  no commit que zerou o último sítio — mesma disciplina da D7.
+- **Q-1** — `StudentDetailSections` adota `useResourceState`, gateia por `failedWithoutData` e mostra
+  um `InlineLoadState` só, acima das duas seções. Catraca nova no molde dos outros dois sítios do
+  D-14 (o caso obrigatório é o do ramo COM cache). **`StudentLinkRow` saiu junto**: com o aviso o
+  componente passou de 150 linhas e o `max-lines` reprovou — extração literal, nenhuma condicional
+  mudou de forma.
+
+**Gate depois das quatro:** `pnpm lint` exit 0, `pnpm build` verde, `pnpm test` **86 arquivos / 479
+testes** (eram 84 / 468). As duas varreduras do bloco seguem em zero, e a terceira nasceu com o Q-3.
+**Fronteira intacta:** `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+= zero arquivo. **Nada ficou para o `backlog.md`** — os dois achados que a execução tinha deferido
+(`StudentDetailSections` e a mensagem repetida) foram exatamente Q-1 e Q-3, e estão pagos.
+
+**Não provado na tela:** as quatro correções têm catraca de teste; o DoD de navegador do bloco foi
+provado antes delas, e o Q-1 mudou ramo de tela (`StudentDialog` em modo view, com o
+`GET /api/students/{id}` falhando com cache em mão). Conferir no fechamento.
+
+### Fechamento — 2026-08-20
+
+**O que ficou pendente do review foi provado, e é o item 0 do gate:** o ramo do Q-1 na tela, na
+árvore `fix-frontend` servida na **5174** (a 5173 é o `pnpm dev` do main tree, hoje em
+`feat/bd12-datatable-idioma-e-catalogo-vazio` — provar nela teria provado o código de outro branch;
+as duas portas já estão em `SANCTUM_STATEFUL_DOMAINS` e `FRONTEND_URL` desde o `6fd0ad8`). Chromium
+contra a API real em `:8080`, com falha isolada por rota (`**/api/students/35` → 500
+`application/problem+json`), sem derrubar nada em volta.
+
+**Os três ramos, com a rede confirmando a sequência** (`200` → `500` → `500` → `200` no
+`GET /api/students/35`), sobre a aluna Javiera Lagos (1 vínculo, 1 turma):
+
+1. **Falha COM cache — o defeito que o Q-1 pagou.** Reabrir o diálogo com o GET em 500 mantém
+   "Company links" (`Enel Distribución · Current · since Aug 2026`) e "Turma history"
+   (`Scap 5 - Cot 1 · Seguridad en alta tensión · Jun 2026 · Failed`), e põe **um** aviso `role=alert`
+   ACIMA das duas, com "Retry". Antes da correção, o `detail.isError` cru apagava as duas seções.
+2. **Retry com a falha persistente** mantém tudo — aviso, vínculos e turmas —, e some quando a rota
+   volta: `unroute` + clique devolve `200` e zera o `alert`. É o `refetch` do D-54 devolvendo a
+   promise no caminho real.
+3. **Falha SEM cache** (recarga com a rota ainda mockada) substitui as DUAS seções pelo
+   `AppErrorState` — "Could not load the data" / "Check your connection and try again." / "Retry" —,
+   sem cabeçalho órfão. É o `failedWithoutData` e a D16 (vazio silencioso proibido) na tela.
+
+**A mensagem impressa é o hint por status, não o `detail` do servidor** — o `detail` injetado
+("Falha injetada no DoD") não aparece, porque o `screenDetail` só o repassa com `localDetail: true`.
+Comportamento por desenho, conferido de passagem.
+
+**Gate:** `pnpm lint` exit 0 · `pnpm build` verde · `pnpm test` **86 arquivos / 479 testes**.
+Backend **872 passed / 5 skipped, 3095 asserções**, intocado — pelo binário direto com
+`memory_limit` elevado, porque o comando do `CLAUDE.md` §6 morreu de novo: é a **P-50**, que ganhou a
+reprodução desta árvore com o pico agora **acima** do teto (129,00 MB contra 128M). **Pint e
+`typescript:transform` não se aplicam** — `git diff --name-only main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+devolve zero arquivo. **Órfãos: nenhum** — `listSource`, `loadFailure`, `useRetryPending`,
+`loadMessage` e `StudentLinkRow` têm consumidor. **As três varreduras do bloco seguem em zero fora de
+teste**, cada política com uma única linha viva: `listSource.ts:19`, `screenDetail.ts:98`, e nenhum
+`void …refetch()`.
+
+**Um aviso de console apareceu e NÃO é deste bloco:** `Each child in a list should have a unique
+"key" prop` no `TableBody` da **listagem** de alunos, medido pelo timestamp do log antes da primeira
+falha injetada. `StudentsTable.tsx` não está entre os 51 arquivos do bloco. É o mesmo achado
+registrado em 2026-08-19 no painel de emissão — mesma classe, segundo sítio.
+
+**Um gatilho de pendência ficou ambíguo e vai para o João, não para o fechamento:** a **P-39** fecha
+"quando um bloco tocar RBAC de catálogo **ou reusar a receita de injeção de falha do BD-6**". A
+técnica foi reusada aqui (e já tinha sido no DoD da execução e no do BD-17), mas a fonte — o plano
+arquivado do BD-6 — **não** foi lida nem reusada, e o próprio corpo da ficha proíbe retro-editá-la
+(regra da P-27). O gatilho como está nunca vence por leitura própria; quem decide o que ele quer
+dizer é o João. **Nenhuma pendência nasceu nesta sprint** e nenhuma das encerradas venceu a sprint de
+rastro (a lista está vazia desde o fechamento anterior).
+
+**Estado ao fechar: `idle`.** O merge com a `main` mudou isso na mesma hora — ver abaixo.
+
+### Merge com a `main` — 2026-08-21: o mesmo trabalho estava agrupado duas vezes
+
+**Duas árvores editaram o mesmo backlog sem se ver, e a colisão é de escopo, não de texto.** Às
+**14:57** de 2026-08-20, nesta worktree, o João promoveu o **BD-18** cobrindo D-54, D-56 e D-14 — e
+esse commit tirou a D-14 do BD-12. Às **16:33**, no main tree, ele reagrupou o **BD-12** para
+*"load-state: o contrato de lista, o `refetch` e os sítios do BD-6"*, cobrindo **D-14, D-54, D-55,
+D-56 e P-40**, e o promoveu a `ready_for_planning`. O segundo commit foi escrito sobre um backlog que
+não tinha o primeiro: por isso a D-14 reaparece lá e o D-54/D-56 aparecem como órfãos a hospedar.
+
+**Decisão do João no merge: o BD-12 segue promovido, com o escopo reduzido ao que sobrou.** D-14,
+D-54 e D-56 estão pagos e provados por este bloco, então saem da cobertura do BD-12, que fica com
+**D-55** (o `DataTable` não repinta as células `body` na troca de idioma ao vivo) e **P-40**
+(remedição do ramo "catálogo genuinamente vazio" contra HEAD) — dois itens, não cinco. Nenhum dos
+dois foi tocado aqui.
+
+**Uma correção de índice entrou junto, e não é achado deste bloco:** o `pendencias/README.md` dizia
+"Encerradas (0)" enquanto `encerradas.md` já carregava **P-29** e **P-35**, fechadas no BD-14 — o
+fechamento de lá atualizou a ficha e não a linha do índice. As duas **não saem** no fechamento do
+BD-18: ele correu em paralelo ao BD-14, não depois dele, e contar este fechamento como a sprint de
+rastro apagaria a ficha antes de qualquer bloco posterior a ler.
+
+**`state_basis_commit` continua em `fc852ce3`, que é o que o João escreveu ao promover o BD-12, e
+isso é uma ressalva a carregar para o planejamento:** a árvore que o bloco vai medir já inclui o
+BD-18, então o alcance de D-55 e P-40 se remede contra o merge, não contra o basis. Trocar o campo
+aqui seria escolher por heurística um SHA que ninguém decidiu.
+
+## Penúltimo item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
 
 ### Execução — 2026-08-20: 9 tasks, técnica `subagent-driven-development`, main tree
 
@@ -261,7 +518,7 @@ medido de novo, e não precisa ser**: os 17 commits da `main` não tocam um arqu
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 
-## Penúltimo item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
+## Antepenúltimo item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 
 ### Seleção — 2026-08-19
 
@@ -354,7 +611,7 @@ de navegador, que depende da API com dado real. Ela está feita e datada acima, 
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 
-## Antepenúltimo item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
+## Quarto item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
 
 ### Seleção — 2026-08-18
 
@@ -930,7 +1187,7 @@ e vale para o PHP-FPM de produção também.
 
 **Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
 
-## Quarto item fechado — 2026-08-19 (`identity-ativacao-acesso-redator`, item 4 de "Próximos blocos")
+## Quinto item fechado — 2026-08-19 (`identity-ativacao-acesso-redator`, item 4 de "Próximos blocos")
 
 ### Seleção — 2026-08-18
 
@@ -1347,452 +1604,3 @@ pendência fechou; as encerradas seguem vazias. Total: **30 abertas**.
 
 **Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
 João.
-
-## Quinto item fechado — 2026-08-18 (`arquivados-e-restauracao`, Próximos blocos item 1)
-
-### Seleção — 2026-08-18
-
-**Primeiro item de "Próximos blocos" (`backlog.md:101`), promovido explicitamente pelo João** com o
-estado em `idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de
-sempre — **décima segunda** vez (BD-1, BD-2, BD-7, BD-8, BD-9, BD-5, `login-fora-do-adr16`,
-`celula-de-identidade`, `dashboard-backend-agregacoes`, `meu-perfil-backend-self-service`,
-`dashboard-frontend-central-controle`, `dashboard-frontend-analitico-e-redator`): o argumento era
-**linha do backlog** ("**Arquivados e restauração de soft-delete** adicionando o rastreio dos dados e
-objetos soft-deletados e 'restaurados'"), não slug promovido.
-
-**Três decisões dele fecharam o gate:** o slug `arquivados-e-restauracao`; a rota
-**`context_required`**, porque o detalhe canônico é Notion H.5.1–H.5.4 e não vive no repositório; e
-**main tree** como área de trabalho.
-
-**A área de trabalho mudou durante a própria seleção, e o motivo fica registrado.** A escolha inicial
-foi a worktree `fix-frontend`, onde a sessão rodava. A **P-03 proíbe worktree para bloco de backend**
-em texto literal — *"o stack monta o main tree e o teste rodaria contra o código errado"* — e este
-bloco toca backend. A medição da hora: stack `lotus` up montando `/projetos/lotus/backend`, portas
-`8080`, `3307` e `9000-9001` ocupadas por ela; `docker compose` a partir de `fix-frontend` seria
-projeto separado e colidiria nas mesmas portas, então provar backend de lá exigiria derrubar o stack
-do main tree. Apresentado o conflito, **o João trocou para main tree**. O gatilho formal da P-03
-(mais de um `active_work_item` de backend) **não venceu** — não há outro item ativo.
-
-**A branch nasceu ANTES deste commit**, seguindo o precedente: `feat/arquivados-e-restauracao`,
-criada de `main@b758068`. Este arquivo já é escrito na branch, não na `main`.
-
-**`state_basis_commit` passa de `0a1918b` a `b758068`, e isso não é divergência.** Com
-`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse derivar. `b758068` é o merge
-do fechamento do BD-16 na `main`, e `main == origin/main` na hora da promoção, árvore limpa exceto
-`backend/config/cors.php`.
-
-**Fonte externa declarada:** o backlog aponta Notion **H.5.1–H.5.4** como detalhe do bloco, com o
-objetivo *"tornar o lifecycle de archive/restore explícito e seguro por agregado"*, a ordem
-*semântica → Actions → endpoints → UI* e **`forceDelete` e exclusão permanente fora de escopo**. Não
-há arquivo de escopo funcional no Drive citado para este bloco; se o packet não achar um, a fonte é
-o Notion e a lacuna vira limitação declarada, não suposição.
-
-**Seis medições da abertura, feitas sobre `b758068` e não herdadas:**
-
-1. **15 models usam `SoftDeletes` hoje.** `Shared/Files/File`; `Commercial/{Budget, Client, Quote,
-   ClientAddress, ClientContact}`; `Operation/{Enrollment, Turma}`; `Catalog/{Course, CourseModule,
-   CourseCertificateTemplate}`; `Identity/{User, Student, Redator, StudentClientLog}`. **A superfície
-   candidata do bloco é essa lista**, e decidir *quais* agregados ganham archive/restore é decisão de
-   escopo — não se supõe que sejam os 15.
-2. **A maioria dos agregados nem tem rota `DELETE`.** As 15 rotas `DELETE` existentes cobrem
-   `turmas/{turma}`, `templates/{template}` e sub-recursos (addresses, contacts, photos, files,
-   `turmas/{turma}/alunos/{enrollment}`, `turmas/{turma}/redatores/{redator}`,
-   `redatores/{redator}/documents/{document}`). **`Client`, `Course`, `Budget`, `Quote`, `User`,
-   `Redator` e `Student` não têm `destroy` exposto** — então "arquivar" nesses casos é **superfície
-   nova**, não renomeação de rota existente.
-3. **`restore()` já existe, mas implícito e sem intenção do usuário.** Só dois sítios:
-   `Identity/Services/StudentResolver.php:72,78` (revive `User` e `Student` ao reencontrar o RUT) e
-   `Operation/Actions/EnrollStudentAction.php:38` (revive matrícula soft-deletada ao re-matricular).
-   **Tornar o restore explícito precisa decidir o que acontece com esses dois caminhos** — se
-   continuam automáticos, se passam a exigir ação, ou se ficam como estão.
-4. **`withTrashed()` é onipresente na leitura, e por desenho.** 20+ sítios, com comentário de motivo
-   nos principais: relações de histórico (`Enrollment::turma()`, `Quote::budget()`), unicidade
-   (`UserProvisioner`, `CreateQuoteAction`) e projeção do Dashboard (`AnalyticsQuery`, 6 sítios).
-   **Isso é a favor do bloco:** o dado arquivado já é legível; o que falta é o lifecycle explícito.
-5. **A auditoria já cobre o evento — `config/audit.php:59-63` audita `deleted` e `restored`.** Então
-   o rastreio pedido no argumento do João **não parte do zero**: a trilha existe em `audits`; o que
-   não existe é *superfície de consulta* dela. Se "rastreio" significa expor a trilha na UI, isso é
-   decisão de escopo para o brainstorming, não implementação nova de auditoria — e a **lei 2** segue
-   valendo (auditoria só na aplicação, nunca em trigger de banco).
-6. **Zero UI de arquivado ou restauração no frontend.** `grep -riE "arquivad|restaur"` em
-   `frontend/src` retorna **nenhuma ocorrência**; os únicos hits de `inativ` são
-   `shared/api/axios.ts`, `useLoginForm.ts` e um teste de filtro. **Toda a camada de UI do bloco é
-   superfície nova.**
-
-**Autorização é lacuna medida, não detalhe de implementação.** Os cinco diretórios
-`app/Domains/*/Policies/` **estão vazios** — não há Policy nenhuma no projeto, e nenhuma permissão
-`*.delete` / `*.restore` no `RolePermissionSeeder`. "Seguro por agregado", que é o objetivo do bloco
-no backlog, **exige decidir o mecanismo de autorização** — permissão do spatie por agregado, Policy
-nova, ou ambos. Isso toca ADR-07 e é assunto do brainstorming, não do packet.
-
-**Interseção anotada no próprio backlog (`backlog.md:430`):** o manual em PDF/DOCX pré-preenchido é
-apontado como interseção com "Arquivados e restauração". Verificar no planejamento se ela vence
-agora ou segue no bloco de origem.
-
-**Risco de review projetado: MÉDIO-ALTO pelo gate binário** — o bloco **toca schema em potencial**
-(se algum agregado precisar de coluna própria de arquivamento além de `deleted_at`), **toca
-autorização** (superfície inexistente hoje) e **toca dado com peso legal** (certificados, documentos
-de redator e matrículas estão entre os agregados soft-deletáveis). A classificação final é do
-`/revisar-sprint`, não desta promoção; toca schema → o planejamento lê `docs/adrs.md` e
-`docs/der-fisico.md`.
-
-**`backend/config/cors.php` está modificado no working tree e não é deste bloco** (WIP do João, o
-outro lado da P-45). Fica fora de todo `git add`; os commits usam paths exatos.
-
-**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
-`feat/arquivados-e-restauracao` a partir de `main@b758068`.
-
-### Context Packet — 2026-08-18: gerado, contrato válido, veredito `blocked`
-
-**O Codex rodou read-only e o packet passou na validação de contrato:** markers exatos, frontmatter
-completo, 8 key facts (teto é 8), fontes endereçadas por ID e `RECOMMENDED_TRANSITION` presente.
-Nenhuma re-invocação foi necessária. Packet salvo em
-`context-packets/2026-08-18-arquivados-e-restauracao.md`.
-
-**Seis artefatos externos, um a mais que o teto de cinco, e a exceção está justificada no packet:**
-as quatro páginas Notion do bloco (H.5.1–H.5.4), a pasta canônica do Drive
-(`1ulKEELHIUIyAnpmqzsthzxeFwBZIVUu3`) e a **H.3.1**, consultada porque a H.5.3 a declara dependência
-e autorização é fato bloqueante. A H.3.1 cobre ownership e 403/404 — **não define papéis.**
-
-**O que as fontes DECIDEM, e isso é ganho real do packet:**
-
-1. **A superfície é de 8 aggregate roots em 6 grupos, não os 15 models soft-deletáveis:** `Client`,
-   `Redator`, `Student`, `Course`, `Budget`/`Quote` e `Turma`/`Enrollment`. Os demais models
-   soft-deletáveis são filhos ou infra até a matriz decidir o contrário. **Isso corrige a medição 1
-   da seleção**, que tratava os 15 como candidatos.
-2. **"Arquivado" NÃO é estado novo.** É o nome de usuário do soft-delete restaurável que já existe —
-   `deleted_at` não ganha companhia. **Consequência de schema: o bloco pode não tocar migration
-   nenhuma**, o que derruba metade do risco projetado na seleção.
-3. **Endpoints por domínio, com `onlyTrashed`/restore por root e módulo.** Proibido endpoint global
-   genérico que apague a diferença entre agregados.
-4. **A UI mínima é uma visão de Arquivados** com alternância, restauração, feedback e invalidação da
-   lista ativa. **Badge na listagem ativa não é exigido pela fonte** — se entrar, entra por decisão,
-   não por requisito.
-5. **Linguagem de exclusão irreversível sai da UI.** Confirmação de soft-delete não pode afirmar que
-   é permanente, e exclusão permanente não aparece em tela.
-
-**O que as fontes EXIGEM mas NÃO registram — e é por isso que o veredito é `blocked`.** A H.5.1 pede
-uma matriz por agregado e não a contém; a H.5.3 diz "autorização equivalente ao módulo" e a
-dependência que deveria detalhar isso só fala de ownership. **Cinco fatos de negócio faltam, e a
-regra do skill é explícita: falta de decisão sobre regra de negócio bloqueia; falta de fonte não.**
-Estão enumerados no `blocker` do frontmatter e nas Open questions do packet.
-
-**A pasta do Drive estava disponível e foi consultada — não há documento funcional deste bloco
-lá.** Isso não é fonte indisponível, é ausência medida: as buscas direcionadas só acharam material
-genérico de arquitetura e entidades. Por isso o packet é `blocked` e não `partial`.
-
-**A interseção da `backlog.md:430` (manual PDF/DOCX pré-preenchido) segue sem decisão externa** —
-nenhuma das quatro páginas nem o Drive a mencionam. Vira pergunta ao João, não suposição.
-
-**Estado: `blocked`, `resume_state: ready_for_planning`.** A recuperação externa está feita e não se
-repete; o que falta são cinco decisões do João. Respondidas, o bloco volta a `ready_for_planning` e
-o brainstorming começa com elas como entrada.
-
-### Brainstorming e spec — 2026-08-18: o bloqueio caiu, e a medição derrubou duas afirmações minhas
-
-**O João destravou mandando o brainstorming absorver as cinco perguntas**, em vez de respondê-las
-soltas. Estado vai de `blocked` direto a `planning` — a fronteira durável é esta spec, e ela entra
-no mesmo commit.
-
-**Duas correções à medição da própria seleção, ambas minhas e ambas medidas:**
-
-1. **"A maioria dos agregados nem tem rota `DELETE`" estava errado.** O grep de `Route::delete` não
-   enxerga `apiResource`. `route:list --method=DELETE` devolve 21 rotas, e **sete dos oito roots já
-   têm `destroy`** — só `Student` não tem. A superfície nova do bloco é menor do que a promoção
-   projetou.
-2. **A cascata de arquivamento já existe, e é boa.** Hooks `deleting` instância a instância em
-   `Client`, `Budget`, `Course`, `Redator`, `Student` e `Role`; `DeleteClientAction` com transação e
-   `lockForWrite`; gates de negócio escritos (`DeleteTurmaAction` recusa turma concluída, RN-15;
-   `DeleteBudgetAction` recusa orçamento com cotação aprovada). O código **já chama a operação de
-   "Arquiva"**. O bloco não é archive/restore: é **o lado do restore**, que não existe.
-
-**As cinco decisões do João, todas tomadas:**
-
-1. **Escopo: `Client` + `Course`**, fatia vertical. Cobrem toda a dificuldade — `Client` com três
-   relações heterogêneas e filhos com rota própria, `Course` com cascata simples e zero gate.
-2. **Cascata de restore por coluna marcadora** (`archived_with_parent` em 5 tabelas). Casar pai e
-   filho por `deleted_at` foi **medido e descartado**: a coluna é `timestamp` de precisão 0 nas sete
-   tabelas, e segundo inteiro não é identidade.
-3. **Permissão `*.restore` nova por agregado**, admin e superadmin, fora de `SEGREGATED`; a lista de
-   arquivados abre com a `*.view` do módulo.
-4. **Rastreio = data + autor na lista**, lido da última audit `deleted`. É o **primeiro caminho de
-   leitura de `audits` do projeto** — a tabela era write-only, com 16 models `Auditable`.
-5. **Alternância na própria tabela**, não aba: `CommercialPage` tem abas e `CatalogPage` não.
-
-**A quinta pergunta do packet caiu sem decisão nova.** A interseção do manual PDF/DOCX é com a
-**FUT-1** e trata de documento de **turma**; com o escopo em `Client` + `Course` ela sai por
-construção.
-
-**Um achado do brainstorming ampliou o bloco, e o motivo é DoD, não escopo criativo:** `useRemove`
-de `createCrudResource.ts:46` tem **zero consumidores** e nem `ClientsTable` nem `CoursesTable` têm
-botão de excluir. Os endpoints `DELETE /clients/{client}` e `/courses/{course}` existem e são
-**inalcançáveis pela UI**. Sem o botão de arquivar, a visão de Arquivados listaria registros que
-ninguém produz pelo app e o DoD só seria demonstrável semeando o banco. **Arquivar entrou** (D9).
-
-**Um débito NÃO foi corrigido, de propósito:** `budget.confirmDeleteBody` e
-`quote.confirmDeleteBody` seguem dizendo *"Esta acción no se puede deshacer."* Para orçamento e
-cotação isso é **verdade hoje** — o restore deles não existe. Trocar a frase antes do restore
-substituiria um texto certo por um errado. Gatilho no bloco que trouxer `Budget`/`Quote`.
-
-**O bloco não escreve `ValidationException` nova** — registro ativo no restore dá 404, não 422. Isso
-o mantém fora da **D-07**, o débito de idioma canônico travado em decisão.
-
-**Risco reavaliado: de MÉDIO-ALTO para MÉDIO.** A D1 derruba a metade de schema que a promoção
-temia — `arquivado` é o `deleted_at` existente, sem estado novo. Sobra que o bloco **toca `users`**
-(coluna marcadora), abre o primeiro caminho de leitura de `audits` e tira `useRemove` de zero
-consumidores. Classificação final é do `/revisar-sprint`.
-
-### Plano — 2026-08-18: 11 tasks, executor Claude, e o plano corrigiu um mecanismo da própria spec
-
-**11 tasks, executor `claude`.** Seis de backend, quatro de frontend e uma de DoD. Cada uma fecha com
-teste próprio; nenhuma depende de julgamento fora do plano, mas o conjunto toca lei demais para ir
-ao Codex — ver o Handoff no fim do plano.
-
-**O plano derrubou um mecanismo que a spec tinha escrito errado.** A spec (D2/D3) manda hook
-**`restoring`**; o plano usa **`restored`**. Com `restoring`, os filhos voltariam a ativos enquanto o
-**pai ainda está arquivado**. O par correto é `deleting` (antes) / `restored` (depois): os filhos
-saem antes do pai e voltam depois dele. Nada mais da spec mudou.
-
-**Uma medição obrigou um passo que a spec não previa: `Client::lockForWrite()` RECUSA cliente
-arquivado.** Ele lança `ValidationException` quando `trashed()` — comportamento certo para escrita,
-e exatamente o estado de quem vai ser restaurado. A Task 2 extrai `Client::lockRow()` (trava sem
-julgar) e reescreve `lockForWrite` sobre ela, preservando a guarda. **É mutex com história de review
-(Q-2, Q-5) e não quebra teste em sqlite** — `SQLiteGrammar::compileLock()` devolve string vazia —,
-então errar ali só apareceria em produção. Está declarado no Handoff.
-
-**Como a marca é gravada, e por que não polui a trilha.** `SoftDeletes::runSoftDelete()` só persiste
-`deleted_at`/`updated_at`, então um atributo sujo **não chega ao banco pelo `delete()`**. O plano usa
-`saveQuietly()` antes do `delete()`: grava a marca sem emitir evento, e por isso não cria um
-`updated` por filho na trilha. O evento que importa — `deleted` — continua auditado normalmente
-(ADR-08).
-
-**`MAX(id)` e não `MAX(created_at)` no `ArchiveTrailQuery`:** `audits.created_at` é `timestamp` de
-segundo inteiro, e dois `deleted` no mesmo segundo empatariam. O id é monotônico. É a mesma classe de
-erro que a D2 evita na cascata.
-
-**Três correções da auto-revisão do plano contra a spec, aplicadas inline:** um `actions={...}`
-placeholder na Task 9 (substituído pelo bloco real da `CommercialPage`), a assinatura do
-`ArchiveSwitch` escrita com três props na linha `Produces` quando são duas, e uma condicional
-inútil na Task 6 — `Course::query()->withListingData()` existe e é o que o `index` já usa. Uma
-quarta: `RestoreCourseAction` devolvia o curso sem `loadListingData()`, o que faria `CourseData`
-montar sem a carga da projeção.
-
-**Um item da spec estava sem task e ganhou uma.** O §5 pede que o restore invalide as **duas**
-listas; o teste do `useArchivedPage` usa fake estrutural e não exercita isso. Entrou
-`createCrudResource.test.ts`, que prova pelo **prefixo das chaves** que
-`invalidateQueries({ queryKey: keys.all })` alcança tanto `[resource, 'list']` quanto
-`[resource, 'archived']` — sem TanStack no teste, mantendo o padrão do repositório.
-
-**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-e-restauracao`.
-
-### Execução — 2026-08-18: início, técnica `executing-plans`
-
-**Main tree**, conforme a decisão do João na seleção e a P-03. Técnica `executing-plans` e não
-`subagent-driven-development`: a sessão está sob restrição de AgentTool, e o precedente dos dois
-últimos blocos é o mesmo.
-
-**O fixture da Task 1 do plano não batia com o schema e foi corrigido na escrita do teste.** O plano
-escreve `modules()->create(['name' => …, 'order' => 1])` — a coluna é `sort_order` — e
-`certificateTemplates()->create(['version' => 2, 'body' => …])`, mas `version` está **fora do
-`$fillable`** por decisão registrada (D10 do bloco de templates) e `body` não é coluna. O teste usa
-`sort_order` e o helper `Tests\Support\CreatesCertificateTemplates::makeTemplate()`, que existe
-exatamente para esse caso. Nenhum comportamento sob teste mudou.
-
-**Task 1 verde e a suíte inteira medida nos dois sentidos.** `ArchiveCascadeMarkTest` passa com 3
-testes / 8 asserções. `php artisan test` dá **12 failed / 675 passed / 5 skipped**; com
-`FRONTEND_URL=http://localhost:5173`, **687 passed / 5 skipped / zero falha**. As 12 são a **P-45**
-pelo terceiro fechamento seguido — `Session store not set on request.` no `.env` multi-origin —, não
-regressão desta task.
-
-### DoD end-to-end — 2026-08-18 (Task 11): provado no navegador, com dois defeitos de ambiente achados no caminho
-
-**Ferramentas antes do navegador.** Backend `710 passed / 5 skipped` (2616 asserções) com
-`FRONTEND_URL=http://localhost:5173`; sem a variável a P-45 continua devolvendo as mesmas 12 falhas
-de sessão, que não são deste bloco. Frontend `376 passed` em 62 arquivos, `pnpm lint` e `pnpm build`
-exit 0. O `typescript-transformer-manifest.json` estava sujo desde a Task 6 (o hash do `generated.ts`
-mudou e o manifesto não entrou naquele commit) — corrigido em commit próprio antes da prova.
-
-**O que só o navegador achou: o banco de dev não tinha nem a migration nem as permissões.** A suíte
-roda em sqlite `:memory:` e migra do zero a cada execução, então verde na suíte não diz nada sobre o
-MySQL de desenvolvimento. Ao arquivar o cliente pela tela, o `DELETE /api/clients/13` voltou **500**
-com `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'archived_with_parent' in 'field list'`;
-depois de `php artisan migrate`, o arquivamento passou, mas a lista de Arquivados abriu **sem botão
-Restaurar para o superadmin** — `commercial.client.restore` e `catalog.course.restore` existiam no
-`PermissionCatalog` e não no banco, porque o `RolePermissionSeeder` nunca foi re-executado.
-`db:seed --class=RolePermissionSeeder` resolveu. Nenhum dos dois é defeito de código do bloco; ambos
-são exatamente a classe de falha que a lei §8 existe para pegar — build verde não é DoD.
-
-**Roteiro do cliente (Steps 3 e 7), provado ponta a ponta em `E2E Gate Client D` (id 13).** Arquivar
-um contato "pela ficha" tem uma mecânica que o plano não previa: o `UpdateClientAction` faz *replace*
-dos nested, então remover o contato no dialog e salvar soft-deleta a coleção inteira e recria os
-sobreviventes (contatos 33 e 34 arquivados, contato 39 recriado vivo). O efeito exigido pelo roteiro
-— filho arquivado ANTES da cascata, portanto com `archived_with_parent = false` — foi obtido do mesmo
-jeito, e é justamente o que a spec D2 distingue. Sequência medida: `DELETE /api/clients/13` **204**;
-o cliente sai da lista ativa ("No results"); em **Arquivados** ele aparece com `ARCHIVED ON 8/18/2026`
-e `ARCHIVED BY Andreoli` — primeira leitura de `audits` chegando à tela; `POST /api/clients/13/restore`
-**200**; e o estado do banco volta idêntico ao de antes: endereço 25 e contato 39 vivos, contatos
-31–34 e endereços 19–21 (pré-arquivados) **continuam arquivados**, marca `archived_with_parent` de
-volta em `false` em todos. A ficha reaberta mostra o endereço e só o contato vivo — "Joao Andreoli",
-arquivado antes da cascata, **não voltou**.
-
-**Step 4 (403), provado nas duas camadas.** Usuário temporário `dod.viewonly@lotus.cl` sem role e com
-`commercial.client.view` avulsa: `/comercial` abre, o switch alterna, `GET /api/clients/archived`
-volta **200** com as quatro linhas e **nenhum botão Restaurar renderiza**. O mesmo usuário em
-`POST /api/clients/1/restore` recebe **403** RFC 7807 (`"detail": "User does not have the right
-permissions."`). O usuário foi apagado com `forceDelete()` ao fim da prova; o banco de dev não ficou
-com resíduo.
-
-**Gêmeo do Catálogo, provado com verificação imediata no banco.** `DELETE /api/courses/3` **204**
-marca `archived_with_parent = 1` e arquiva os módulos 6–8; `POST /api/courses/3/restore` **200**
-devolve os três e zera a marca. A primeira tentativa (curso 1) foi descartada porque a auditoria
-mostrou um `restored` do curso 1 e um `deleted` do curso 8 **entre os meus comandos** — outra sessão
-mexendo no mesmo banco de dev. Nada a corrigir no código; o curso 8 (`GATE T7`) permanece arquivado
-por mão alheia e foi deixado como está.
-
-**Observação registrada, não corrigida:** na lista de Arquivados as colunas COMMUNE e CONTACTS
-aparecem como `—` e `0`, porque o listing lê endereço e contatos ativos e a cascata acabou de
-arquivá-los. É consequência coerente do desenho (a listagem não olha `onlyTrashed`), mas empobrece a
-linha justamente onde ela precisa identificar o registro. Fica como achado para o review decidir.
-
-**Ambiente durante a prova:** o Docker Desktop caiu no meio da sessão (daemon fora, stack inteira
-parada) e o Vite junto; ambos foram religados e a prova refeita do início. Nenhum dado do bloco
-dependeu do que rodou antes da queda.
-
-### Review — 2026-08-18: `/revisar-sprint`, risco ALTO, duas lentes, 7 achados (2 🔴)
-
-Risco ALTO pelo gabarito: o bloco tocou migration, `users`, `generated.ts` e RBAC. Então além da
-revisão Claude rodou a segunda lente do **Codex** (`read-only`, mesmo intervalo `main...HEAD`).
-
-**Achados aprovados pelo João — todos os sete — e corrigidos:**
-
-**Q-1 🔴 — a cascata levava embora o `User` que já estava arquivado.** `addresses()` e `contacts()`
-escondem o filho arquivado pelo escopo global, mas `Client::user()` é `belongsTo(...)->withTrashed()`
-— então o `User` arquivado de propósito ANTES do pai entrava na cascata, ganhava
-`archived_with_parent = true`, tinha o `deleted_at` reescrito pelo `delete()` e **voltava junto no
-restore**. É exatamente o modo de falha que a spec D2 existe para impedir, na única relação que
-escapava dela. Convergiu com a segunda lente do Codex. Provado por teste antes de corrigir
-(`user arquivado antes do cliente nao volta na cascata`) e por mutação depois.
-
-**Q-4 🟡 — os helpers da cascata estavam duplicados**, idênticos, em `Client` e `Course`, com mais
-seis roots previstos para replicá-los. As duas correções viraram uma só: nasceu
-`App\Shared\Concerns\ArchivesChildren`, e a guarda do Q-1 (`if ($child->trashed()) return;`) mora
-lá dentro, num lugar só — com os helpers copiados, o defeito teria de ser corrigido em oito arquivos.
-
-**Q-2 🔴 — arquivar e restaurar não davam retorno nenhum.** Nem sucesso nem erro: as chaves
-`archive.archivedToast` e `archive.restoredToast` estavam nos três locales com zero consumidor
-(i18n órfão), e um 403 de quem não tem `*.restore` não mudava nada na tela. `useArchivedPage` passou
-a aceitar `RestoreOptions`, os hooks de feature ganharam `useToast` nos dois sentidos, e o `busy`
-desce até os botões da linha (clique duplo disparava dois POSTs). `problemMessage` subiu de
-`useTurmaDocsSection` para `shared/api/` — o segundo consumidor nasceria como cópia, e feature não
-importa de feature (lei §6). Convergiu com o Codex.
-
-**Q-3 🟡 — o achatamento adivinhava o agregado** com `Object.values(resto)[0]`, contrato refém da
-contagem e da ordem das chaves do DTO, com o cast calando o `tsc`. Agora o seletor é explícito
-(`(row) => row.client`). O teste novo prova o caso que quebrava em silêncio: DTO com um campo a mais.
-
-**Q-5 🟡 — `CourseController::destroy` cascateava sem transação**, assimétrico ao `Client` e à
-própria `RestoreCourseAction`. Código pré-existente, mas foi este bloco que lhe deu o primeiro
-consumidor de UI (D9) e tornou a janela alcançável. Nasceu `ArchiveCourseAction`; o teste prova o
-ROLLBACK — falha no meio da cascata não pode deixar template arquivado sob curso ativo.
-
-**Q-6 🟢 — `POST /api/clients/abc/restore` dava 500**, não 404: `int $client` estoura `TypeError`
-antes de qualquer consulta. `->whereNumber()` nas duas rotas de restore.
-
-**Q-7 🟢 — a migration não tem backfill e não há como ter.** Documentado no docblock e registrado
-como **D-37** no `backlog.md`, com gatilho no primeiro deploy. Casar por `deleted_at` é o que a spec
-D2 recusou; marcar todo filho arquivado ressuscitaria o que alguém arquivou de propósito.
-
-**Prova por mutação, nos dois lados:** desfeitas a guarda do trait, a transação da Action e o
-`whereNumber`, os três testes novos de backend reprovam (`3 failed`); desfeitos o seletor explícito
-e o repasse de `RestoreOptions`, os dois testes novos de frontend reprovam, um de cada vez.
-
-**Divergência entre as lentes, mostrada e não resolvida em silêncio:** o Codex apontou
-`RestoreCourseAction` sem lock e `useArchivedPage` apagando a lista em cima de cache quando o refetch
-falha. Os dois foram **rejeitados** — o primeiro é decisão registrada na spec D3 e no docblock da
-Action; o segundo é literalmente o código de `useCrudPage.ts:48`, padrão vigente do projeto. O João
-não contestou a rejeição.
-
-**Um defeito de ambiente achado no gate, e ele não é do bloco:** a suíte completa devolveu
-**12 failed** em `AuthTest`/`LoginLogTest`/`ProfilePasswordTest`, todas com
-`RuntimeException: Session store not set on request`. Medido em árvore limpa (`git stash -u`, sem
-uma linha do review): **falha igual em HEAD**. A causa é o `.env` local — `FRONTEND_URL` virou
-`http://localhost:5173,http://localhost:5174` (dois dev servers), e `TestCase::setUp` mandava a
-string inteira como `Referer`, produzindo host inválido e request não-stateful. Provado nos dois
-sentidos: com uma URL só, `12 passed`. Corrigido no `TestCase`, que agora usa a **primeira** origem
-da lista — a mesma leitura que `config/cors.php` passou a fazer com `explode(',')`.
-
-**Q-8 — herdado da nota do DoD, aprovado pelo João e corrigido.** Na lista de Arquivados as colunas
-COMMUNE e CONTACTS mostravam `—` e `0`: `withListingData()` lê endereço e contato ATIVOS e a cascata
-acabou de arquivá-los, então o eager load vinha vazio pelo global scope de `SoftDeletes`. A linha
-negava o registro justamente onde o operador precisa reconhecê-lo antes de restaurar.
-
-A correção tem home própria — `App\Shared\Concerns\LoadsCascadedChildren`, o gêmeo de LEITURA do
-`ArchivesChildren`, pela mesma razão do Q-4: os outros seis aggregate roots replicam o padrão, e o
-filtro copiado teria de ser corrigido em oito arquivos. `asOfArchiving()` carrega a coleção como ela
-estava no instante do arquivamento — filho ATIVO **ou** com `archived_with_parent = true` —, e
-`ClientQueryBuilder`/`CourseQueryBuilder` ganharam `withArchivedListingData()`, que os dois
-controllers usam só na rota `archived`. O `LISTING` da tela ativa não mudou.
-
-O filho arquivado de propósito ANTES do pai continua fora, e isso é regra, não detalhe: ele não volta
-no restore (spec D2), então mostrá-lo aqui prometeria uma restauração que não acontece. O curso
-entrou junto porque o payload do arquivado tinha o mesmo defeito em `templates`/`modules`, ainda que
-a tabela dele não exiba as colunas — deixar só o cliente corrigido é o assimétrico que o Q-4 pune.
-
-Quatro testes novos, dois por entidade (mostra o que a cascata levou / não mostra o que veio antes),
-provados por **duas** mutações: trocar `withArchivedListingData()` de volta por `withListingData()`
-reprova os 4; tirar o filtro da marca e deixar só `withTrashed()` reprova exatamente os 2 do
-contorno (`2 failed, 14 passed`).
-
-**Gate após as correções:** backend **717 passed / 5 skipped** (2636 asserções) · `pnpm test`
-**378 passed** · `pnpm lint` 0 · `pnpm build` exit 0 · `typescript:transform` re-rodado **sem drift**
-· Pint `passed` em todos os `.php` do bloco. A única reprovação de Pint é `config/cors.php`, que é
-alteração local do João ainda não commitada. O Q-8 não mexeu em DTO nem em frontend: o contrato da
-resposta é o mesmo `ClientData`/`CourseData`, só deixou de vir vazio.
-
-**Review encerrada sem achado pendente.** Falta a prova no navegador do toast e do `busy` do Q-2 e
-da comuna/contatos do Q-8 — isso é do `/fechar-sprint`, não do review.
-
-### Fechamento — 2026-08-18: o critério de aceite provado contra a API real e em Chromium, e a P-45 encerrada
-
-**O item 0 do gate não aceita suíte verde no lugar da prova**, então o bloco foi exercido duas
-vezes fora do teste: contra a API em `:8080` (MySQL real, não o sqlite `:memory:` da suíte) e no
-navegador.
-
-**Contra a API real, o roteiro inteiro da spec D2 num cliente novo:** dois contatos e um endereço,
-`DELETE /api/contacts/{id}` num deles, `DELETE /api/clients/{id}`, e a lista de arquivados devolveu
-`COMMUNE: Providencia` e `CONTACTS: 1 ['Vivo']` — o contato arquivado antes do pai **fora da
-lista**, que é a metade que a Q-8 existe para não estragar. Depois do restore, `['Vivo']` e um
-endereço de volta, e o contato de antes ainda arquivado. `POST /api/clients/abc/restore` deu **404**
-(Q-6). O gêmeo do curso passou pelo mesmo caminho, com a coleção replace-total no lugar do delete
-nested: `MODULES: ['Modulo Vivo']` na lista e no pós-restore.
-
-**No navegador, o que só a tela responde.** Arquivar a Transelec pela lista ativa e alternar para
-Arquivados mostrou `Providencia` e `3` — as duas colunas que o review encontrou vazias —, com data e
-`Andreoli` em "Arquivado por". A Enel repetiu com `Santiago` e `1`. O toast apareceu nos dois
-sentidos, com o texto do i18n: **`Record archived.`** e **`Record restored.`**; e os botões de
-Restaurar foram lidos `disabled` com a mutação em voo, que é o `busy` da Q-2 — medido por polling
-dentro da página, não por inspeção depois do fato. O ramo de ERRO do toast (403 de quem não tem
-`commercial.client.restore`) segue provado só pelo teste de unidade do `useArchivedPage`; montar o
-papel reduzido no banco de dev sairia mais caro que o risco que cobre.
-
-**Zero resíduo no banco de dev.** Os registros de sonda (3 clientes `E2E Q8 Ltda`, 2 cursos
-`E2E Q8 Curso`, filhos e usuários) foram removidos com `forceDelete` no mesmo gate, conferidos em 0.
-As duas linhas antigas `E2E Gate Client A/B` — sondas de gates anteriores, da **P-44** — foram
-restauradas sem querer durante a condução do navegador e **rearquivadas** no mesmo passo, de volta
-ao estado em que estavam.
-
-**Gate:** backend **717 passed / 5 skipped** (2636 asserções) · `pnpm test` **62 arquivos / 378
-testes** · `pnpm lint` 0 · `pnpm build` exit 0 · Pint `passed` em todos os `.php` do bloco ·
-`typescript:transform` sem drift em `generated.ts`. A única reprovação de Pint da árvore continua
-sendo `backend/config/cors.php`, alteração local do João.
-
-**A P-45 fecha aqui, pelo gatilho literal.** A ficha previa "o commit que ligar multi-origin **ou** o
-próximo `/fechar-sprint` que encontrar a suíte vermelha por este motivo" — o segundo ramo venceu
-pela terceira vez, e desta vez o bloco é de backend, então não havia por que não abrir o arquivo.
-`TestCase.php` passou a tratar `FRONTEND_URL` como a lista que ela é. A **P-36** e a **P-37**
-cumpriram a sprint de rastro e saíram das encerradas.
-
-**Fica registrada a D-37** no `backlog.md` (nasceu como `D-34` e foi renumerada no merge da `main`, que já publicara um D-34): `archived_with_parent` nasceu sem backfill e não há como
-recuperá-lo — qualquer agregado arquivado antes de 2026-08-18 restaura o pai sem os filhos. O item 1
-de "Próximos blocos" foi reescrito para o que sobra: replicar o padrão nos seis roots restantes,
-com o molde apontando para a spec arquivada.

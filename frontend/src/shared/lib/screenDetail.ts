@@ -74,3 +74,26 @@ export function loadErrorHint(problem: ScreenDetailSource | null | undefined): L
       return 'common.loadErrorHint'
   }
 }
+
+/**
+ * A mensagem que a tela imprime numa falha de carga: o detalhe que sobreviveu ao
+ * `screenDetail`, ou a dica traduzida quando ele calou.
+ *
+ * As duas metades já nasciam num lugar só; a JUNÇÃO delas estava escrita à mão
+ * em 13 sítios de 8 componentes, e o par `?? t(...)` é justamente onde a
+ * política some se alguém trocar a ordem ou esquecer o `??` — a tela mostra
+ * erro sem texto, que é proibido (peso legal).
+ *
+ * Recebe `t` por parâmetro, e não importa o i18n: `shared/lib` não conhece
+ * i18next, pelo mesmo motivo que `loadErrorHint` devolve CHAVE e não texto.
+ *
+ * QUANDO imprimir continua sendo de quem imprime — o gate é `isError`,
+ * `loadError`, `failedWithoutData` ou `nameLost`, conforme o que a falha custou
+ * NAQUELA tela, e essa escolha não cabe aqui.
+ */
+export function loadMessage(
+  state: { errorDetail?: string | null; errorHint: string },
+  t: (key: string) => string,
+): string {
+  return state.errorDetail ?? t(state.errorHint)
+}

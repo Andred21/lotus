@@ -79,9 +79,9 @@ export function useEmissionPanelState() {
     viewingCertificate: viewingCertificate.data ?? null,
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
-    reloadViewingCertificate: () => { void viewingCertificate.refetch() },
+    reloadViewingCertificate: (): Promise<unknown> => viewingCertificate.refetch(),
     loading: panel.isLoading,
     loadError: panel.isError ? (panel.error ?? null) : null,
-    reload: () => { void panel.refetch() },
+    reload: (): Promise<unknown> => panel.refetch(),
   }
 }

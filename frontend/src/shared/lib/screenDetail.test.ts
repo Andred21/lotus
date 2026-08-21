@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadErrorHint, screenDetail } from './screenDetail'
+import { loadErrorHint, loadMessage, screenDetail } from './screenDetail'
 
 describe('screenDetail', () => {
   it('envelope do SERVIDOR: não vai à tela', () => {
@@ -44,5 +44,28 @@ describe('loadErrorHint', () => {
     expect(loadErrorHint({ detail: 'sem status' })).toBe('common.loadErrorHint')
     expect(loadErrorHint(null)).toBe('common.loadErrorHint')
     expect(loadErrorHint(undefined)).toBe('common.loadErrorHint')
+  })
+})
+
+describe('loadMessage — a mensagem que a tela imprime', () => {
+  it('prefere o detalhe que sobreviveu ao screenDetail', () => {
+    const t = (key: string) => `traduzido:${key}`
+
+    expect(loadMessage({ errorDetail: 'Cotización sin cliente', errorHint: 'common.forbiddenHint' }, t))
+      .toBe('Cotización sin cliente')
+  })
+
+  it('cai na dica traduzida quando o detalhe do servidor foi calado', () => {
+    const t = (key: string) => `traduzido:${key}`
+
+    expect(loadMessage({ errorDetail: undefined, errorHint: 'common.notFoundHint' }, t))
+      .toBe('traduzido:common.notFoundHint')
+  })
+
+  it('a dica também assume no `null` — a tela nunca fica com erro sem texto', () => {
+    // `screenDetail` devolve `undefined`, mas a prop de quem repassa é
+    // `string | null` (`StudentClientField:33`), e `??` cobre os dois.
+    expect(loadMessage({ errorDetail: null, errorHint: 'common.loadErrorHint' }, (k) => k))
+      .toBe('common.loadErrorHint')
   })
 })

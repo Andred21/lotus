@@ -30,7 +30,7 @@ vi.mock('../../hooks/useTurmaDetail', () => ({
 const vezesNaTela = (texto: string, trecho: string) => texto.split(trecho).length - 1
 
 beforeEach(() => {
-  detail.current = { goBack: () => {}, reload: () => {} }
+  detail.current = { goBack: () => {}, reload: () => Promise.resolve() }
 })
 
 afterEach(() => {

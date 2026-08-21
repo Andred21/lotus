@@ -1,7 +1,6 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
-import type { ProblemDetails } from '@shared/api/axios'
 import { problemMessage } from '@shared/api/problemMessage'
-import { useMutationErrors, usePermissions } from '@shared/hooks'
+import { loadFailure, useMutationErrors, usePermissions } from '@shared/hooks'
 import { useToast } from '@shared/ui'
 import { useTranslation } from 'react-i18next'
 import {
@@ -52,8 +51,8 @@ export function useTurmaDocsSection(turma: TurmaData) {
   return {
     turmaId,
     loading: list.isLoading,
-    loadError: list.isError ? (list.error ?? ({} as ProblemDetails)) : null,
-    reload: () => { void list.refetch() },
+    loadError: loadFailure(list),
+    reload: (): Promise<unknown> => list.refetch(),
     error,
     byType,
     deliveredCount: TURMA_DOCUMENT_TYPES.filter((type) => byType[type].length > 0).length,

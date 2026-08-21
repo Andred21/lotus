@@ -1,4 +1,4 @@
-import type { ProblemDetails } from '@shared/api/axios'
+import { listSource } from '@shared/hooks'
 import { useTurmas } from '../api/useTurmas'
 
 /**
@@ -13,27 +13,10 @@ import { useTurmas } from '../api/useTurmas'
  *
  *     error={archived ? turmasArchived.error : turmas.isError ? (turmas.error ?? {}) : null}
  *
- * Esse `isError ? (error ?? {}) : null` é literalmente o `loadError` do
- * `useLoadState`, e a rule é explícita em que estado de carga de lista não se
- * deriva à mão na feature (Q-1/Q-2 do review de 2026-08-14).
- *
- * **`useLoadState` não serve aqui, e isso foi medido:** o `refetch` dele faz
- * `void query.refetch()` (`useLoadState.ts:51-53`) e descarta a promise que o
- * `AppErrorState` aguarda para manter o Reintentar em `loading` (Q-14). Usá-lo
- * regrediria esse contrato **sem quebrar tipo nem teste** — TS aceita descartar
- * retorno (D4 da spec).
+ * Nasceram derivando à mão porque o `useLoadState` de então engolia a promise do
+ * `refetch` (Q-14 · D-54). Pago o débito, a derivação some: o `listSource` é a
+ * home única da forma, e o contrato da promise vem do tipo dele.
  */
 export function useTurmasPage() {
-  const query = useTurmas()
-
-  return {
-    items: query.data ?? [],
-    loading: query.isLoading,
-    /** `null` em sucesso, inclusive com lista vazia — vazio não é erro (D16). O
-     * `{}` cobre o erro de rede que não passa pelo interceptor: `isError` sem
-     * `ProblemDetails` ainda é falha, e devolver `null` a esconderia. */
-    error: query.isError ? (query.error ?? ({} as ProblemDetails)) : null,
-    /** Devolve a promise (Q-14). */
-    refetch: () => query.refetch(),
-  }
+  return listSource(useTurmas())
 }

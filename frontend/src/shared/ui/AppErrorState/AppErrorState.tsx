@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { AppButton } from '../AppButton'
 import { dangerText } from '../../styles/tokens'
+import { useRetryPending } from './useRetryPending'
 
 export interface AppErrorStateProps {
   title: string
@@ -27,17 +27,7 @@ export interface AppErrorStateProps {
  * é o que mantém contraste nos dois temas — os palette vars do Lara não invertem.
  */
 export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorStateProps) {
-  const [retrying, setRetrying] = useState(false)
-
-  const handleRetry = async () => {
-    if (retrying) return
-    setRetrying(true)
-    try {
-      await onRetry?.()
-    } finally {
-      setRetrying(false)
-    }
-  }
+  const retry = useRetryPending(onRetry)
 
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-4 py-10 text-center">
@@ -52,9 +42,9 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
             label={retryLabel}
             icon="pi pi-refresh"
             outlined
-            loading={retrying}
-            disabled={retrying}
-            onClick={() => { void handleRetry() }}
+            loading={retry.pending}
+            disabled={retry.pending}
+            onClick={retry.run}
           />
         </div>
       )}

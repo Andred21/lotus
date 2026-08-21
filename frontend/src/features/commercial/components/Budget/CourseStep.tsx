@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppErrorState, AppInputText, AppRadioButton, AppSkeleton, FormSection, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 
 /**
@@ -49,7 +50,7 @@ export function CourseStep({
         <FormSection title={t('quote.stepCourse')} />
         <AppErrorState
           title={t('common.loadError')}
-          detail={courses.errorDetail ?? t(courses.errorHint)}
+          detail={loadMessage(courses, t)}
           retryLabel={t('common.retry')}
           onRetry={courses.refetch}
         />
@@ -76,7 +77,7 @@ export function CourseStep({
         onChange={(e) => courses.setSearch(e.target.value)}
       />
       <InlineLoadState
-        error={courses.isError ? (courses.errorDetail ?? t(courses.errorHint)) : null}
+        error={courses.isError ? loadMessage(courses, t) : null}
         retryLabel={t('common.retry')}
         onRetry={courses.refetch}
       />

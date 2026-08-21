@@ -51,7 +51,7 @@ function montar() {
 beforeEach(() => {
   section.current = {
     enrollments: [], loading: false, remove: () => {}, removing: false,
-    resetRemove: () => {}, reload: () => {}, error: undefined, loadError: null,
+    resetRemove: () => {}, reload: () => Promise.resolve(), error: undefined, loadError: null,
   }
   archived.current = {
     mode: 'active', setMode: () => {}, items: [], loading: false,
