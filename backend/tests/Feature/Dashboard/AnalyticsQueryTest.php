@@ -311,7 +311,7 @@ class AnalyticsQueryTest extends TestCase
         string $endDate,
         string $concludedAt,
     ): Turma {
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budget->id,
             'course_id' => $this->course->id,
             'seq_in_budget' => ++$this->quoteSequence,

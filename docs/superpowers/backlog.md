@@ -111,11 +111,12 @@ operação"*.
 # Blocos de execução de dívida
 
 > **Fila vazia até promoção explícita do João.** BD-1..BD-9 foram entregues entre 2026-08-11 e
-> 2026-08-14, o **BD-16** em 2026-08-18, e o **BD-17** e o **BD-18** em 2026-08-20 — cada um saiu
-> desta lista com os débitos que cobria (o BD-17 levou D-51, D-52 e D-53; o BD-18 levou D-54, D-56 e
-> D-14), e o histórico está na linha da entrega em `historico/progress.md`. O BD-16 levou junto o
-> **BD-10**, que ele havia absorvido em 2026-08-17 e que nunca chegou a ser promovido. Os BD-11..BD-15
-> abaixo são o que sobrou do reagrupamento de 2026-08-14 — **nenhum foi promovido.**
+> 2026-08-14, o **BD-16** em 2026-08-18, e o **BD-17**, o **BD-14** e o **BD-18** em 2026-08-20 —
+> cada um saiu desta lista com os débitos que cobria (o BD-17 levou D-51, D-52 e D-53; o BD-14 levou
+> D-12 e D-13; o BD-18 levou D-54, D-56 e D-14), e o histórico está na linha da entrega em
+> `historico/progress.md`. O BD-16 levou junto o **BD-10**, que ele havia absorvido em 2026-08-17 e
+> que nunca chegou a ser promovido. Os BD-11, BD-12, BD-13 e BD-15 abaixo são o que sobrou do
+> reagrupamento de 2026-08-14 — **só o BD-12 foi promovido.**
 
 ## BD-11 · Frontend · shell: navegação no toque
 
@@ -133,62 +134,39 @@ que juntava os dois, ele deixou de sair barato em conjunto.
 **DoD:** o nome do item de navegação alcançável no toque a 390px, medido no dispositivo emulado — não
 o atributo novo no DOM.
 
-## BD-12 · Frontend · o ramo "catálogo vazio" que sobrou do BD-6
+## BD-12 · Frontend · load-state: o que sobrou depois do BD-18
 
-**Cobre:** P-40 · **Frente:** frontend
+**Cobre:** D-55, P-40 · **Frente:** frontend
+**Afinidade:** os dois são o que restou do agrupamento de 2026-08-20 — a célula formatada que não
+repinta e o ramo vazio que nunca foi remedido. Nenhum dos dois é código de `useLoadState`.
 
-**A D-14 saiu deste bloco em 2026-08-20, para o BD-18, e foi entregue lá** (fechado em 2026-08-20,
-linha da entrega em `historico/progress.md`). Ela orbitava `useLoadState`, e o BD-18 é que abria esse
-arquivo — deixá-la aqui obrigaria a reabri-lo duas vezes. O DoD dela ("o teste do ramo COM cache em
-cada sítio") foi junto e está pago. **O bloco fica só com a P-40**, que não é código: é remedição, e
-o que a trava é ambiente.
+> **Escopo reduzido em 2026-08-21, no merge do BD-18, e a redução é medida.** O bloco foi promovido
+> às 16:33 de 2026-08-20 cobrindo **D-14, D-54, D-55, D-56 e P-40**, sobre um backlog que ainda não
+> tinha o commit das 14:57 do mesmo dia — o que promoveu o **BD-18** e tirou a D-14 daqui. As duas
+> árvores editaram este arquivo sem se ver. **D-14, D-54 e D-56 foram entregues e provados pelo
+> BD-18** (fechado em 2026-08-20; linha da entrega em `historico/progress.md`), então saem da
+> cobertura. A promoção continua de pé — o que mudou é o que ela cobre. O `state_basis_commit` do
+> `state.md` segue em `fc852ce3`, anterior ao merge: **o alcance de D-55 e P-40 se remede contra a
+> árvore com o BD-18 dentro**, não contra o basis.
 
+- **D-55** — o DataTable não reexecuta as funções `body` quando só o idioma muda. A linha do débito
+  pedia bloco próprio por tocar `AppDataTable`, compartilhado por todas as telas; entra aqui como
+  fatia com prova visual própria, não diluída na outra.
 - **P-40** — remedição do ramo "catálogo genuinamente vazio" contra HEAD. Depende de conseguir
   esvaziar o catálogo de dev (seeder de cenário, endpoint de teste, ou o João rodando o comando).
+
+> **Reagrupado em 2026-08-20, por decisão explícita do João, no mesmo passo da promoção.** O bloco
+> nascera em 2026-08-14 com D-14 e P-40 apenas; o BD-17 mediu D-54, D-55 e D-56 em 2026-08-20 e os
+> deixou sem hospedeiro. Agrupar não promoveu nada: a promoção é a linha do `state.md`, e cada
+> débito continua com a ficha canônica em `## Débitos técnicos`.
 
 > A **P-38** saía deste bloco e foi **encerrada antes**, em 2026-08-16, pelo gatilho literal dela: o
 > `meu-perfil-frontend` tocou `frontend-fsliced.md` por outro motivo e trocou a frase pelo corte
 > medido com o runner (`pendencias/encerradas.md`).
 
-**DoD:** o ramo vazio medido contra HEAD com o catálogo de dev **de fato** vazio — não a mesma
-sonda de `d20bebc` recitada.
-
-## BD-14 · Backend · o que a entrada pode escrever
-
-**Cobre:** D-13, D-12, P-29, P-35 · **Frente:** backend
-**Afinidade:** os quatro são contrato de entrada — o que o corpo da requisição pode e não pode
-escrever, e o que acontece quando ele omite ou quando dois corpos chegam juntos. Três deles tocam o
-caminho de escrita de identidade (`UpdateStaffUserAction`, `UserProvisioner`, DTOs com foto).
-
-- **D-13** — `UpdateStaffUserAction` apaga o `rut` num `PUT` que só o **omite**.
-- **D-12** — o backend aceita chave `#[Computed]` (`photo_url`) no corpo e devolve 200 em silêncio,
-  nos quatro DTOs com foto.
-- **P-29** — corrida de unicidade **entre transações** ainda sobe 500 em vez de 422.
-- **P-35** — `seq_in_budget` por mass assignment enquanto `version` saiu do `$fillable`; dois
-  consumidores do ADR-17 com defesas diferentes.
-
-**Decisão do João dentro do bloco, não antes:** D-13 muda contrato de entrada (preservar o valor
-atual quando a chave falta × exigir a chave no `PUT`) e D-12 decide se chave computada no corpo vira
-422 ou segue ignorada. **DoD é o teste que mostra o RUT sobrevivendo à omissão, não o `if` novo.**
-
-**Escopo remedido em 2026-08-18 contra `b758068` (revisão de arquitetura, sem promoção).** Os dois
-débitos deste bloco estavam registrados menores do que são, e a diferença muda o desenho, não só a
-contagem: a D-13 não é um `if` num campo, é **uma decisão de contrato copiada em 5 Actions**, e a
-D-12 vale para **11** campos de foto, não 4. O detalhe de cada uma está na linha delas em
-`## Agrupados em bloco`.
-
-**Consequência para a P-35, medida e não suposta:** o alcance real da D-13 inclui
-`UpdateQuoteAction:30-32`, então quem executar este bloco **toca `Quote` por outro motivo** — que é
-o gatilho literal da ficha da P-35. Ela deixa de depender de payload observado e passa a fechar
-dentro do bloco.
-
-**Um achado de desenho para o brainstorming, não uma task:** a resposta "preservar na omissão" já
-existe escrita **uma vez**, em `UpdateStudentAction.php:31`
-(`$data->phone instanceof Optional ? $user->phone : $data->phone`), e nunca foi propagada. O mesmo
-campo `phone` tem hoje três comportamentos — apaga em `UpdateStaffUserAction:53`,
-`UpdateClientAction:42` e `UpdateRedatorAction:63`; preserva em `UpdateStudentAction:31`; e é pulado
-por `if` em `UpdateProfileAction:23`. Concentrar a tradução `Optional` → atributo num módulo só é o
-que dá à decisão do João **um** lugar para ser tomada.
+**DoD, uma prova por débito:** a troca de idioma repintando a célula formatada, medida no navegador
+e não no DOM (D-55); e o ramo vazio medido contra HEAD com o catálogo de dev **de fato** vazio — não
+a mesma sonda de `d20bebc` recitada (P-40).
 
 ## BD-15 · Docs e guardas de documentação
 
@@ -248,36 +226,21 @@ sentada só — é o que torna o agrupamento barato.
   `typescript:transform` e compara com o commitado é a candidata óbvia — ela reprova sozinha se
   alguém editar à mão. **DoD é a sonda:** editar `generated.ts` e ver o mecanismo reprovar nomeando o
   arquivo.
-- **D-12 · O backend aceita `photo_url` no corpo da escrita e devolve 200, em silêncio** →
-  **BD-14**. **Alcance remedido em 2026-08-18** contra `b758068`: são **11** campos de foto em 11
-  DTOs — `StudentData:48`, `RedatorData:45`, `UserData:45`, `ClientData:66`, `ProfileData:32`,
-  `SessionUserData:29`, `EnrollmentData:36`, `TurmaData:54` (`client_photo_url`),
-  `TurmaRedatorData:28`, `CertificateData:41` (`aluno_photo_url`) e `EmissionPanelEnrollmentData:34`
-  (`student_photo_url`) —, não os 4 que o registro herdou do Q-4. Os 7 que faltavam nasceram na
-  `celula-de-identidade` (2026-08-14) e no Meu Perfil, depois da linha ter sido escrita. Resíduo medido do Q-4 (review de 2026-08-05), que o BD-5 fechou **só do lado do
-  frontend**: `FORBIDDEN_PAYLOAD_KEYS` no `useCrudForm` faz a chave lançar em DEV, então o `...form`
-  ingênuo não a reintroduz mais. O defeito do outro lado foi **remedido no `/fechar-sprint` de
-  2026-08-13**, não herdado: `PUT /api/students/37` com `"photo_url":"http://evil/x.png"` no corpo
-  devolve **200**, e o campo volta `null` na resposta — a promoção no construtor do DTO desvia do
-  `CannotSetComputedValue`, então o campo `#[Computed]` é ignorado sem 422. Vale para os quatro DTOs
-  com foto, não só o `ClientData` que o texto original do Q-4 nomeava. **Uma afirmação do Q-4
-  original não sobreviveu à medição:** `photo_url` **não** carrega path interno de storage — o
-  `SignedUrlTransformer` roda na serialização e o front recebe URL pré-assinada.
-- **D-13 · A omissão apaga o valor guardado, em 10 campos de 5 `Update*Action`** → **BD-14**.
-  **Título e escopo remedidos em 2026-08-18** contra `b758068`: o registro original nomeava um campo
-  (`rut`) numa Action, e a medição achou o mesmo idiom — `instanceof Optional ? null : $x` — em
-  `UpdateStaffUserAction:44,53` (`rut`, `phone`), `UpdateClientAction:42,48` (`phone`,
-  `business_activity`), `UpdateCourseAction:30,31` (`technical_name`, `description`),
-  `UpdateQuoteAction:30,31,32` (`purchase_order`, `planned_start_date`, `planned_end_date`) e
-  `UpdateRedatorAction:63` (`phone`). As `Create*Action` usam a mesma forma e **não** são defeito —
-  não há valor anterior a apagar. O texto original segue abaixo, porque a medição do `rut` continua
-  correta; o que mudou é o alcance.
-  `UserData::$rut` é `Optional`, e a Action traduz `Optional` para `null` antes de gravar
-  (`($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut`,
-  `UpdateStaffUserAction.php:44`): quem manda o formulário sem a chave zera o RUT de um usuário que
-  tinha. É a mesma classe do defeito que o bloco `contrato-de-entrada-identidade-e-nested` fechou nas
-  coleções nested — omissão virando apagamento —, num campo escalar. **Pré-existente e fora do escopo
-  daquele bloco**, que só atravessou o arquivo para trocar a checagem de unicidade pela porta única.
+- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.** → **BD-12**.
+  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
+  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
+  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
+  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
+  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
+  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
+  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
+  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
+  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
+  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
+  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
+  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
+  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
+  o D-51 está pago; isto é limitação de plataforma, não regressão.
 - **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
   Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
   escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
@@ -293,22 +256,6 @@ sentada só — é o que torna o agrupamento barato.
   varredura de órfãos que os fechamentos já fazem à mão.
 
 ## Sem bloco atribuído
-
-- **D-55 · O DataTable não reexecuta as funções `body` quando só o idioma muda.**
-  Medido em 2026-08-20 na prova de navegador do BD-17 (browser em `en-US`, interface alternada ao
-  vivo), contra `1d61b28`. Trocar o idioma no menu repinta os **cabeçalhos** (`ARCHIVADO EL` →
-  `ARQUIVADO EM` → `ARCHIVED ON`) mas **não** o conteúdo das células renderizadas por `body`: a data
-  continua na grafia do idioma anterior até um F5. **Não é do BD-17 e foi isolado assim:** a coluna
-  `ÚLTIMO ACCESO` de `UsersTable` (`formatDateTime`, que este bloco não toca) congela igual — em
-  inglês o cabeçalho vira `LAST LOGIN` e o valor segue `20-08-2026 10:59 a. m.` — e o `AppTag` de
-  estado idem (`Activo` em tela inglesa). A prova complementar é `ArchivedQuotesList`, mesma
-  `formatDate` **fora** de DataTable (layout flex): ali a troca é ao vivo, `19-08-2026` → `8/19/2026`
-  → `19/08/2026`. Logo o memo do `BodyCell` do PrimeReact é keyed no dado da linha, e `archivedColumns`
-  já constrói closure nova a cada render — a causa está acima de qualquer coisa que o bloco escreveu.
-  **Alcance:** toda célula traduzida ou formatada de toda tabela da aplicação. **Correção provável:**
-  rekey do `AppDataTable` em `i18n.language`; mexe em componente compartilhado por todas as telas,
-  então quer bloco próprio e prova visual. **Com recarga, a grafia está correta nos três idiomas** —
-  o D-51 está pago; isto é limitação de plataforma, não regressão.
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
   Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce

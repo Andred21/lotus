@@ -33,7 +33,7 @@ class TurmaShowTest extends TestCase
         $clientId = $this->makeClientWithUser(['legal_name' => 'Subestación Norte S.A.'], ['rut' => '77.888.999-4'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 9']);
         $courseId = $this->makeCourse(['name' => 'Trabajos en líneas 220kV', 'workload_hours' => 24])->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 12, 'value_uf' => 30, 'status' => 'approved',
         ]);
@@ -72,7 +72,7 @@ class TurmaShowTest extends TestCase
         $clientId = $this->makeClientWithUser([], ['rut' => '11.222.333-4'])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 3']);
         $courseId = $this->makeCourse()->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

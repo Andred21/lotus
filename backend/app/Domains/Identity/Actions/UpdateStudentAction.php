@@ -5,8 +5,8 @@ namespace App\Domains\Identity\Actions;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Services\UserProvisioner;
+use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
-use Spatie\LaravelData\Optional;
 
 /**
  * Edita os dados pessoais do aluno. NÃO toca vínculo (D3 da spec): trocar aluno
@@ -24,12 +24,12 @@ class UpdateStudentAction
 
             $rut = $this->provisioner->ensureIdentityAvailable($data->rut, $data->email, $user->id);
 
-            $user->update([
+            $this->provisioner->writing(fn () => $user->update(WritableAttributes::from([
                 'name' => $data->name,
                 'rut' => $rut,
                 'email' => $data->email,
-                'phone' => $data->phone instanceof Optional ? $user->phone : $data->phone,
-            ]);
+                'phone' => $data->phone,
+            ])));
 
             return $student->refresh();
         });

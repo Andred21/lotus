@@ -35,7 +35,7 @@ class EnrollPreviewApiTest extends TestCase
     {
         $clientId = $this->makeClientWithUser(['legal_name' => $clientName])->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => "Scap {$seq}"]);
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $this->course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

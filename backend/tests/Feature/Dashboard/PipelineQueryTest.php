@@ -194,7 +194,7 @@ class PipelineQueryTest extends TestCase
 
     private function createQuote(string $status): Quote
     {
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $this->budget->id,
             'course_id' => $this->course->id,
             'seq_in_budget' => ++$this->quoteSequence,

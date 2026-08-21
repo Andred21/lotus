@@ -151,7 +151,7 @@ class OperationMetricsQueryTest extends TestCase
 
     private function createApprovedQuote(Budget $budget, Course $course, int $sequence): Quote
     {
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => $sequence,

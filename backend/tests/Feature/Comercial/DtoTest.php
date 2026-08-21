@@ -22,7 +22,7 @@ class DtoTest extends TestCase
         $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 7']);
         $courseId = $this->makeCourse()->id;
-        Quote::create([
+        Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 2,
             'student_count' => 15, 'value_uf' => 120.0, 'status' => 'approved',
         ]);

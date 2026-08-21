@@ -28,7 +28,7 @@ class TurmaDocumentApiTest extends TestCase
         $clientId = $this->makeClientWithUser()->id;
         $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1']);
         $course = $this->makeCourse();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
@@ -122,7 +122,7 @@ class TurmaDocumentApiTest extends TestCase
         ])->json('id');
 
         // outra turma (outra quote do mesmo budget) — scoped binding deve dar 404
-        $quote2 = Quote::create([
+        $quote2 = Quote::forceCreate([
             'budget_id' => $this->turma->quote->budget_id, 'course_id' => $this->turma->course_id,
             'seq_in_budget' => 2, 'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

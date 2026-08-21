@@ -4,6 +4,7 @@ namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -28,6 +29,14 @@ class ProfileData extends Data
         public ?string $phone,
         public string $type,
         public ?string $role,
+        /**
+         * Só SAÍDA: `ProfileData` nasce sempre de `fromUser()` (`show`/`update`
+         * de `/api/profile`), nunca de request body — a entrada de escrita é
+         * `ProfileUpdateData`, que já recusa `photo_url` em `rules()`.
+         * `#[Computed]` aqui não muda comportamento de runtime, só fecha o arch
+         * test de D-12 (mesmo raciocínio do precedente `SessionUserData::$photo_url`).
+         */
+        #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url,
         public ?RedatorProfileData $redator,

@@ -35,7 +35,7 @@ class ManualTurmaTest extends TestCase
             'sort_order' => 0, 'name' => 'Módulo Seguridad', 'learnings' => 'L',
             'contents' => 'C', 'theory_hours' => 4, 'practice_hours' => 4,
         ]);
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);

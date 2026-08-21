@@ -196,7 +196,7 @@ final class IssuableEnrollmentBuilder
             ...$this->courseOverrides,
         ]);
 
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $this->course->id,
             'seq_in_budget' => 1,

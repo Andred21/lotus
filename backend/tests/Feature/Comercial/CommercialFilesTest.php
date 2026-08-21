@@ -47,7 +47,7 @@ class CommercialFilesTest extends TestCase
         $this->actingAsAdmin();
         $budget = $this->budget();
         $courseId = $this->makeCourse()->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
         ]);
@@ -98,7 +98,7 @@ class CommercialFilesTest extends TestCase
         $this->actingAsAdmin();
         $budget = $this->budget();
         $courseId = $this->makeCourse()->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
         ]);
@@ -138,7 +138,7 @@ class CommercialFilesTest extends TestCase
         $this->actingAsAdmin();
         $budget = $this->budget();
         $courseId = $this->makeCourse()->id;
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
         ]);

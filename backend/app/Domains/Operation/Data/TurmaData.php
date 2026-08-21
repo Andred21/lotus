@@ -7,6 +7,7 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\Computed;
@@ -57,6 +58,7 @@ class TurmaData extends Data
     public static function rules(): array
     {
         return [
+            ...ComputedFields::rejected('client_photo_url'),
             'modalidade' => ['required', Rule::enum(TurmaModalidade::class)],
             'local_aplicacao' => ['nullable', 'string', 'max:255', 'required_if:modalidade,presencial'],
             'start_date' => ['required', 'date'],

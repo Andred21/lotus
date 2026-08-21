@@ -9,6 +9,7 @@ use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Commercial\Services\PrimaryAddressService;
 use App\Domains\Commercial\Services\PrimaryContactService;
 use App\Domains\Identity\Services\UserProvisioner;
+use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
@@ -35,18 +36,18 @@ class UpdateClientAction
             // e-mail faltava aqui e a colisão virava 500 (achado 4).
             $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $client->user_id);
 
-            $client->user->update([
+            $this->users->writing(fn () => $client->user->update(WritableAttributes::from([
                 'name' => $data->name,
                 'rut' => $rut,
                 'email' => $data->email,
-                'phone' => $data->phone instanceof Optional ? null : $data->phone,
-            ]);
+                'phone' => $data->phone,
+            ])));
 
-            $client->update([
+            $client->update(WritableAttributes::from([
                 'legal_name' => $data->legal_name,
                 'type' => $data->type,
-                'business_activity' => $data->business_activity instanceof Optional ? null : $data->business_activity,
-            ]);
+                'business_activity' => $data->business_activity,
+            ]));
 
             // Replace dos nested. Soft-delete por instância para a auditoria
             // registrar o que saiu (o builder emitiria UPDATE sem eventos).

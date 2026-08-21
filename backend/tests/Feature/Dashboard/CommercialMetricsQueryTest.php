@@ -41,7 +41,7 @@ class CommercialMetricsQueryTest extends TestCase
             'workload_hours' => 8,
         ]);
 
-        $pendingOne = Quote::create([
+        $pendingOne = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => 1,
@@ -49,7 +49,7 @@ class CommercialMetricsQueryTest extends TestCase
             'value_uf' => '100.5000',
             'status' => 'pending',
         ]);
-        $pendingTwo = Quote::create([
+        $pendingTwo = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => 2,
@@ -57,7 +57,7 @@ class CommercialMetricsQueryTest extends TestCase
             'value_uf' => '200.2500',
             'status' => 'pending',
         ]);
-        $approvedWithoutTurma = Quote::create([
+        $approvedWithoutTurma = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => 3,
@@ -66,7 +66,7 @@ class CommercialMetricsQueryTest extends TestCase
             'status' => 'approved',
             'approved_at' => '2026-08-14 12:00:00',
         ]);
-        $approvedWithTurma = Quote::create([
+        $approvedWithTurma = Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $course->id,
             'seq_in_budget' => 4,

@@ -31,7 +31,7 @@ class QuoteArchiveEndpointTest extends TestCase
 
     private function makeQuote(Budget $budget, int $seq = 1, string $status = 'pending'): Quote
     {
-        return Quote::create([
+        return Quote::forceCreate([
             'budget_id' => $budget->id,
             'course_id' => $this->makeCourse(['name' => "C{$budget->id}-{$seq}"])->id,
             'seq_in_budget' => $seq,

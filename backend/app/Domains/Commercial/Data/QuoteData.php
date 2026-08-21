@@ -31,9 +31,9 @@ class QuoteData extends Data
         public QuoteStatus|Optional $status,
         public string|Optional|null $approved_at,
         public string|Optional $code,
-        public string|Optional|null $purchase_order = null,
-        public string|Optional|null $planned_start_date = null,
-        public string|Optional|null $planned_end_date = null,
+        public string|Optional|null $purchase_order = new Optional,
+        public string|Optional|null $planned_start_date = new Optional,
+        public string|Optional|null $planned_end_date = new Optional,
         /**
          * Projeção de SAÍDA, igual à do `BudgetData`: arquivo se anexa por
          * `POST /quotes/{quote}/files`, nenhuma Action lê este campo da

@@ -84,7 +84,7 @@ class ContratanteEagerLoadTest extends TestCase
         );
         $budget = Budget::create(['client_id' => $client->id, 'code' => "Scap {$n}"]);
         $course = $this->makeCourse(['name' => "Curso {$n}"]);
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $budget->id, 'course_id' => $course->id, 'seq_in_budget' => 1,
             'student_count' => 1, 'value_uf' => 10, 'status' => 'approved',
         ]);

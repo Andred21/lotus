@@ -60,7 +60,7 @@ class QuoteCrudTest extends TestCase
     {
         $this->actingAsAdmin();
         $this->setUpBudget();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budgetId, 'course_id' => $this->courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'rejected',
         ]);
@@ -73,7 +73,7 @@ class QuoteCrudTest extends TestCase
     {
         $this->actingAsAdmin();
         $this->setUpBudget();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budgetId, 'course_id' => $this->courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
@@ -86,7 +86,7 @@ class QuoteCrudTest extends TestCase
     {
         $this->actingAsAdmin();
         $this->setUpBudget();
-        $quote = Quote::create([
+        $quote = Quote::forceCreate([
             'budget_id' => $this->budgetId, 'course_id' => $this->courseId, 'seq_in_budget' => 1,
             'student_count' => 5, 'value_uf' => 10, 'status' => 'approved',
         ]);
