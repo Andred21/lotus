@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ArchiveSwitch, FormErrorBanner, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import type { ArchiveMode } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useQuoteFiles } from '../../hooks/useQuoteFiles'
@@ -55,7 +56,7 @@ export function QuotesList({
    * consegue ver na tela — a tese do bloco, invertida (review do BD-6, Q-1b). */
   const avisoDeNome = (
     <InlineLoadState
-      error={nameLost ? (courses.errorDetail ?? t(courses.errorHint)) : null}
+      error={nameLost ? loadMessage(courses, t) : null}
       retryLabel={t('common.retry')}
       onRetry={courses.refetch}
     />

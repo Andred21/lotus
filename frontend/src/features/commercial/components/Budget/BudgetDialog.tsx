@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import type { BudgetData } from '@shared/types/generated'
 import { useBudgetForm, type BudgetDialogMode } from '../../hooks/useBudgetForm'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
@@ -79,7 +80,7 @@ export function BudgetDialog({
            * consegue listar clientes precisa LER o motivo e poder reintentar,
            * em vez de concluir que não há cliente cadastrado. */}
           <InlineLoadState
-            error={clients.isError ? (clients.errorDetail ?? t(clients.errorHint)) : null}
+            error={clients.isError ? loadMessage(clients, t) : null}
             emptyHint={clients.isEmpty ? t('budget.noClientsAvailable') : null}
             retryLabel={t('common.retry')}
             onRetry={clients.refetch}

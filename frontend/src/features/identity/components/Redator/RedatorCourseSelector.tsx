@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppErrorState, AppSkeleton, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import { useRedatorCourses } from '../../hooks/useRedatorCourses'
 import { CourseCard } from './CourseCard'
 
@@ -43,7 +44,7 @@ export function RedatorCourseSelector({
     return (
       <AppErrorState
         title={t('common.loadError')}
-        detail={courses.errorDetail ?? t(courses.errorHint)}
+        detail={loadMessage(courses, t)}
         retryLabel={t('common.retry')}
         onRetry={courses.refetch}
       />
@@ -62,7 +63,7 @@ export function RedatorCourseSelector({
   // dois — cobrir só um deixaria metade do defeito de pé.
   const aviso = (
     <InlineLoadState
-      error={courses.isError ? (courses.errorDetail ?? t(courses.errorHint)) : null}
+      error={courses.isError ? loadMessage(courses, t) : null}
       retryLabel={t('common.retry')}
       onRetry={courses.refetch}
     />

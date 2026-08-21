@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { AppDropdown, FormField, InlineLoadState } from "@shared/ui";
+import { loadMessage } from "@shared/lib";
 import type { DialogMode } from "@shared/lib";
 
 /** Cliente é imutável depois do cadastro: fora do `create` o campo é texto, não
@@ -65,7 +66,7 @@ export function StudentClientField({
           className="w-full"
         />
         <InlineLoadState
-          error={isError ? (errorDetail ?? t(errorHint)) : null}
+          error={isError ? loadMessage({ errorDetail, errorHint }, t) : null}
           emptyHint={isEmpty ? t("student.noClientsAvailable") : null}
           retryLabel={t("common.retry")}
           onRetry={refetch}

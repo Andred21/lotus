@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppErrorState, AppSkeleton, InlineLoadState } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import { RedatorCard } from './RedatorCard'
 import type { useCourseRedatores } from '../../hooks/useCourseRedatores'
 
@@ -26,7 +27,7 @@ export function CourseRedatoresSection({
   // cobrir só um deixaria metade do defeito de pé.
   const aviso = (
     <InlineLoadState
-      error={redatores.isError ? (redatores.errorDetail ?? t(redatores.errorHint)) : null}
+      error={redatores.isError ? loadMessage(redatores, t) : null}
       retryLabel={t('common.retry')}
       onRetry={redatores.refetch}
     />
@@ -40,7 +41,7 @@ export function CourseRedatoresSection({
   ) : redatores.failedWithoutData ? (
     <AppErrorState
       title={t('common.loadError')}
-      detail={redatores.errorDetail ?? t(redatores.errorHint)}
+      detail={loadMessage(redatores, t)}
       retryLabel={t('common.retry')}
       onRetry={redatores.refetch}
     />
