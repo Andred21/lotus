@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: null
 active_work_item: bd12-load-state-e-listas
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-20-bd12-load-state-e-listas-design.md
 active_plan: docs/superpowers/plans/2026-08-20-bd12-load-state-e-listas.md
@@ -12,7 +12,7 @@ context_packet: null
 blocker: null
 last_completed_work_item: bd14-contrato-de-entrada
 state_basis_commit: fc852ce3
-updated_at: 2026-08-21T01:55:00-03:00
+updated_at: 2026-08-21T02:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
