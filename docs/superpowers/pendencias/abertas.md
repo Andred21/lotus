@@ -244,6 +244,24 @@ escopo), tomada **antes** de a lacuna ser medida contra o caso motivador.
 Conferir todo identificador PHP/TS entre crases contra o repositório é a forma óbvia e tem
 falso-positivo caro: a doc cita classe de vendor, classe planejada e nome de conceito.
 
+**A forma óbvia foi medida e reprovada — 2026-08-22 (BD-15).** Varredura de identificador
+PascalCase entre crases em `docs/`, `.claude/rules/` e `CLAUDE.md`: **167** candidatos, **28** sem
+declaração nem arquivo homônimo no repositório, **0** achado real da lição 13. Os 28 são falso-positivo
+legítimo, em três famílias:
+
+- **vendor** — `DataTable`, `BodyCell`, `SoftDeletes`, `RefreshDatabase`, `HasMiddleware`,
+  `ValidationException`, `DefaultValuesDataPipe`, `QueryObserverResult`, `UseQueryResult`,
+  `RouteServiceProvider`, `QueryClientProvider`, `RadioButton`, `TypeError`, `FormData`,
+  `ButtonProps`, `TableBody`;
+- **placeholder de molde** — `CreateX`, `UpdateX`, `AppXProps`;
+- **palavra de SQL, enum ou prosa, e nome de conceito** — `DELETE`, `EXPLAIN`, `UNIQUE`, `IDENTICO`,
+  `MANUAL`, `PRUEBAS`, `EmAndamento`, `QueryBuilders`, `UnmappedErrors`.
+
+Decisão do João no brainstorming do BD-15: **não desenhar a guarda**; a ficha guarda o número para
+que quem reabrir a P-32 não regaste o desenho já reprovado. Allowlist das 28 foi considerada e
+recusada — nasceria com 28 isenções, zero achado, e cada classe de vendor nova citada num doc viraria
+manutenção. O gatilho continua sendo reincidência real da lição 13 **por classe**.
+
 ## P-39 — o plano do BD-6 afirma que `GET /api/courses` não tem RBAC, e tem
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando um bloco tocar RBAC de catálogo ou reusar a receita de
@@ -617,6 +635,18 @@ criação — não há update do arquivo canônico, e criar um segundo arquivo f
 de sincronizá-lo. Decisão do João no `/fechar-sprint` de 2026-08-12: fechar o bloco e registrar aqui,
 em vez de segurar o fechamento ou deixar a promessa morrer sem rastro (lição 13). O texto a espelhar
 é o ponto 5 do ADR-16 em `docs/adrs.md`, que é a fonte — copiar de lá, não reescrever.
+
+**Medido em 2026-08-22 (BD-15): a impossibilidade agora é de schema, não de suposição.** A
+ferramenta de escrita do Drive disponível é `update_file`, e o schema dela diz textualmente
+*"currently only title and parent_id are supported"* — ela renomeia e move arquivo, não altera
+conteúdo. `create_file` produziria um segundo documento, que fragmenta o espelho em vez de
+sincronizá-lo. **Nada a fazer do lado do agente.**
+
+**Para o João fechar em um passo** — arquivo `decisao-stack.md`, file ID
+`14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw` (cadeia `Viagem Chile/Projetos/Lotus.cl/V2/Planejamento/3-avancado`,
+`modifiedTime` 2026-07-31T16:15:51Z na medição). O texto a colar é o ponto 5 do ADR-16 em
+`docs/adrs.md`, **copiado de lá e não reescrito**, mais a frase que revoga a exceção de shell — hoje
+o ADR-16 do Drive segue com os cinco bullets originais.
 
 ## P-18 — página de fechamento do Notion com `Sprint` divergente
 
