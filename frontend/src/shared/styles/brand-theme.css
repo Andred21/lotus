@@ -281,3 +281,39 @@ html:not(.dark) {
 .p-datatable .p-datatable-tbody > tr {
   background: transparent;
 }
+
+/* UI-05 do review de 2026-08-22 (dashboard do redator): o `Menu` do
+ * PrimeReact não tem estado "selecionado" nativo — diferente do
+ * `SelectButton`/`Dropdown`, que resolvem contra um `value`. Sem marca
+ * própria, o único destaque visível no popup do `LanguageMenu` era o
+ * `p-focus`, que o Prime crava sempre no PRIMEIRO item ao abrir (anel de
+ * FOCO do teclado, não idioma corrente): o achado media a tela em `en` e via
+ * o item `ES` destacado.
+ *
+ * `LanguageMenu.tsx` crava esta classe só no `<li>` cujo código bate com
+ * `i18n.language`, ao lado de um `aria-current` via passthrough — dois
+ * canais porque servem públicos diferentes: `aria-current` é o que o leitor
+ * de tela anuncia e não pinta nada nesta folha; esta classe é o que os olhos
+ * veem e não chega à árvore de acessibilidade. Fundo E peso, não só cor de
+ * texto: os rótulos são 2 letras (ES/PT/EN), e cor sozinha ao lado de duas
+ * outras opções não é a diferença que salta o olho.
+ *
+ * Fundo por `var(--highlight-bg)`, o token de SELEÇÃO do tema, e não
+ * `--surface-hover`: medido no navegador, `--surface-hover` (#f6f9fc) sai mais
+ * claro que o cinza do próprio `p-focus` (#e2e8f0), então o item focado
+ * parecia mais marcado que o ativo — a leitura errada que o achado descreve.
+ * `--highlight-bg` é tinta, não cinza: distingue por MATIZ do foco neutro, e
+ * já existe nos dois temas gerados (`lara-light-lotus.css` #ecf7fd,
+ * `lara-dark-lotus.css` rgba(37,165,228,.16)), trocando de valor sozinho no
+ * swap de tema — a mesma mecânica do `--divider-stroke` no topo deste arquivo.
+ *
+ * Especificidade de 4 classes
+ * (`.p-menu .p-menuitem.lotus-language-active > .p-menuitem-content`) vence a
+ * regra BASE do Lara para `.p-menuitem-content` (3 classes); medido: com a
+ * tela em `es-CL`, o item `ES` chega a acumular `lotus-language-active` E
+ * `p-focus`, e quem pinta é esta regra. */
+.p-menu .p-menuitem.lotus-language-active > .p-menuitem-content {
+  background: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  font-weight: 600;
+}
