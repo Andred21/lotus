@@ -66,7 +66,7 @@ Uso real medido: consumidor único em
 | P-21 | `docs/adrs.md` | nota no ADR-12; consumidor único `CertificatePdfService.php:8,28` (`QrCode::format('svg')`) |
 | P-43 | `docs/der-fisico.md` | **4 sítios de status**: linhas 87, 91, 99, 110. A linha 74 descreve colunas, já está correta e **não se toca** |
 | P-23 | `docs/superpowers/historico/progress.md` | cabeçalho; espelha o que `progress-archive.md:6-10` já declara |
-| P-39 | `progress.md` (linha do BD-6) + `docs/README.md` | lição **18** (há 17) |
+| P-39 | `progress-archive.md:74` + `docs/README.md` | lição **18** (há 17) |
 | P-32 | `pendencias/abertas.md` | ficha ganha a medição |
 
 ## 5. D-17 — a Regra C
@@ -186,6 +186,14 @@ Prova, por natureza:
 | Catraca nascer verde e não provar nada | sonda obrigatória no DoD (§5, §9) |
 | P-43 corrigir demais e tocar a linha 74 | a linha 74 está nomeada como intocável (§4) e é conferida no DoD |
 | Toque em backend disputar stack | um arquivo, arch test sem MySQL/HTTP; `git diff main...HEAD -- backend/` conferido no gate (§1) |
+
+## 11-bis. Emenda medida durante a escrita do plano — 2026-08-22
+
+A ficha da P-39 e a §4 diziam "nota no `progress.md` da entrega". Medido ao escrever o plano: a linha
+do BD-6 **não está** no `progress.md` — ela migrou para `docs/superpowers/historico/progress-archive.md:74`
+no fechamento que arquivou as entregas antigas. A nota vai para o archive, no mesmo lugar onde a
+entrega vive. O remédio é o mesmo que a P-27 fixou (nota na linha da entrega, nunca emenda no plano
+aprovado); só o arquivo é outro.
 
 ## 12. Fora de escopo
 

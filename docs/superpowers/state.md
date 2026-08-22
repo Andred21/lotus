@@ -39,19 +39,19 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
     active_spec: docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
     context_packet: docs/superpowers/context-packets/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
     blocker: null
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T11:20:00-03:00
+updated_at: 2026-08-22T11:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -186,6 +186,37 @@ da P-32** ao seletor por classe sem reincidência medida ou decisão explícita 
 que não autoriza retroeditar o plano histórico do BD-6. As quatro perguntas abertas (P-20, P-23, e
 o remédio de P-18 e P-22) são **decisões do João**, e o próprio packet declara que nenhuma delas
 bloqueia o planejamento.
+
+### Planejamento — 2026-08-22: sete decisões, e o que a medição de ferramenta separou
+
+O brainstorming não aceitou de chegada nem o backlog nem as fichas — mediu cada premissa antes de
+oferecer opção, e **três medições mudaram o desenho**:
+
+- **A ferramenta separou Drive de Notion, e as fichas estavam metade certas.** O
+  `update_file` do Drive aceita só `title` e `parentId` (*"currently only title and parent_id are
+  supported"*), então a **P-31 segue não-fechável** e a ficha estava literalmente correta; já o
+  `notion-update-page` escreve propriedade e conteúdo, o que **reabriu** a P-18 e o sync obrigatório,
+  congelados desde que foram escritos como "fecha quando o João corrigir manualmente".
+- **A forma óbvia da P-32 foi medida e reprovada:** 167 identificadores PascalCase entre crases,
+  **28** sem declaração no repositório, **0** achado real — e os 28 se dividem exatamente nas três
+  famílias que a ficha previa (vendor, placeholder de molde, palavra de prosa). A previsão virou
+  número, e o João decidiu **não desenhar a guarda** e guardar a medição na ficha.
+- **A catraca do D-17 liga verde:** 47 arestas declaradas, **0 órfãs**. Isso não é motivo para pular
+  a prova — é o motivo de a sonda ser obrigatória, porque catraca que nasce verde não provou nada.
+
+Sete decisões (D1–D7 da spec), duas delas exceções declaradas **na abertura**: escrita externa
+autorizada no Notion, restrita ao não-destrutivo, e um arquivo de `backend/` nesta worktree — com o
+gatilho literal da P-03 (dois blocos de backend em paralelo) medido como não vencido, nenhum
+container de pé e o teste sendo arch test em sqlite `:memory:`.
+
+Uma emenda nasceu durante a escrita do plano e está na §11-bis da spec: a linha do BD-6 que a P-39
+manda anotar **não está** no `progress.md` — migrou para `progress-archive.md:74`. O remédio da P-27
+é o mesmo; só o arquivo é outro.
+
+Plano: **13 tasks**, executor `claude` no bloco inteiro — a Task 1 exige julgamento sobre a varredura
+(uma Regra C escrita sobre linhas `use` passaria em todos os passos e ainda assim estaria errada), as
+Tasks 8–11 escrevem fora do repositório, onde não existe `git revert`, e as Tasks 2, 3 e 6 são
+redação de decisão.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
