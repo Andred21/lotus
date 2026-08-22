@@ -698,6 +698,11 @@ positivos, um nível abaixo: dentro da base certa. Qual cópia é a canônica é
 da task mudou de 3 para 4), não do agente — enquanto as duas existirem, um packet futuro pode ler a
 vazia.
 
+**Remedida em 2026-08-22 (BD-15), sem write.** As duas cópias foram relidas por ID e a diferença
+entre elas está tabelada em `docs/superpowers/audits/2026-08-22-bd15-notion-sync.md`. O bloco tinha
+autorização para escrita **não-destrutiva** apenas (D1), e apagar página não cabe nela. O gatilho
+segue de pé: fecha quando o João apagar ou mesclar uma das duas.
+
 ---
 
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso

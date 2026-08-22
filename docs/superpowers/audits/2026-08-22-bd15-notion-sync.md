@@ -64,3 +64,58 @@ Sprint 2 e a descrição é que era resíduo de cópia. A propriedade ficou.
 **Medido e deliberadamente NÃO escrito:** as duas páginas compartilham o EAP `H.1.3.2`. Corrigir o
 EAP de uma delas escolheria qual das duas sprints perde o código — decisão do João, fora do que
 este bloco autorizou.
+
+## Não escrito — decisões do João
+
+Escrita não-destrutiva (D1): o que segue foi **medido e não alterado**.
+
+### P-22 — H.1.3.1 existe duas vezes na base canônica
+
+| Página | Page ID | Sprint | Critério de aceite | Status |
+|---|---|---|---|---|
+| H.1.3.1 sync | `3a2bc9603dfa8021b69ee399cd8fd915` | Sprint 3 · Acadêmico | **vazio** | Backlog |
+| H.1.3.1 sync | `3a2bc9603dfa803b94bbf27c075b27d6` | Sprint 4 · Certificação | preenchido | Backlog |
+
+Qual cópia é a canônica é decisão do João — a Sprint da task mudou de 3 para 4. Enquanto as duas
+existirem, **todo consumo de H.1.3.1 cita o ID `3a2bc9603dfa803b94bbf27c075b27d6`**, que é o que a
+ficha já fixa. Apagar é destrutivo e ficou fora da autorização deste bloco.
+
+### `8.4.0` × `8.4.7` — os conteúdos trocados
+
+Medido nos dois IDs, e **confirma** o que o packet afirmava:
+
+- `8.4.0` (`3bcbc9603dfa81c89df1de7d7805816b`) tem o **título** da fronteira arquitetural
+  ("Estruturar domínio read-only Dashboard e dependências cross-domain", `Tipo: Config`,
+  `Camada: Backend`), mas a Descrição e o Critério de aceite falam de validar a tela com
+  `harness/lotus-ui-review`, tema claro/escuro e responsividade — corpo de UI review.
+- `8.4.7` (`3bcbc9603dfa811c8223e910c453f3bc`) tem o **título** da validação
+  ("Validação UI/UX e estados do Dashboard", `Tipo: Teste`, `Camada: Frontend`), mas a Descrição e o
+  Critério falam de criar `Domains/Dashboard` sem Model/migration e declarar as arestas no
+  `DomainDependencyTest` — corpo de fronteira arquitetural.
+
+O **status** foi corrigido nas duas (Task 8); o **corpo** não. Trocar o corpo é reescrever conteúdo
+de duas páginas, e propagaria o erro se a leitura estivesse errada — fica para decisão do João.
+
+### Duplicações genéricas do workflow
+
+| Página | Page ID | EAP | Sprint | Status |
+|---|---|---|---|---|
+| Sincronização de documentação e fontes canônicas | `3a2bc9603dfa80fc90ebf19526b587c9` | H.1.3.1 | Sprint 2 · Comercial | Concluída |
+| Sincronização de documentação e fontes canônicas | `3a2bc9603dfa8021b69ee399cd8fd915` | H.1.3.1 | Sprint 3 · Acadêmico | Backlog |
+| Sincronização de documentação e fontes canônicas | `3a2bc9603dfa803b94bbf27c075b27d6` | H.1.3.1 | Sprint 4 · Certificação | Backlog |
+| Sincronização de documentação e fontes canônicas | `3a2bc9603dfa804dbb55eb5b20b8040e` | H.1.3.1 | Sprint 7 · Deploy | Backlog |
+| Fechamento técnico de sprint (gate de qualidade) | `3a2bc9603dfa8028a1fbf8a3863690ed` | H.1.3.2 | Sprint 3 · Acadêmico | Concluída |
+| Fechamento técnico de sprint (gate de qualidade) | `3a2bc9603dfa8045abbdec64eb780e2c` | H.1.3.2 | Sprint 4 · Certificação | Backlog |
+| Fechamento técnico de sprint (gate de qualidade) | `3a2bc9603dfa8025ae21c5bdfe74d6db` | H.1.3.2 | Sprint 7 · Deploy | Backlog |
+| Refinamento de UI/UX por módulo | `3a2bc9603dfa8083bacffcd467cb7127` | H.1.3 | Sprint 4 · Certificação | Backlog |
+| Refinamento de UI/UX por módulo | `3a2bc9603dfa803cb84efebc07021a00` | H.1.3 | Sprint 7 · Deploy | Backlog |
+| [Template] Fechamento técnico de sprint | `39dbc9603dfa8190b088da6160d84056` | H.1.1 | — (sem Sprint) | Backlog |
+| [Template] Sincronização de documentação | `39dbc9603dfa81c8b75ad5207a8b4a2c` | H.1.2 | — (sem Sprint) | Backlog |
+| [Template] Refinamento de UI/UX por módulo | `39dbc9603dfa8180937cd9a86a8c6f0c` | H.2.1 | — (sem Sprint) | Backlog |
+
+São operações que o workflow já executa por bloco (sync, fechamento, UI review). Não representam
+trabalho de produto pendente. Mesclar ou arquivar é decisão do João.
+
+As três páginas `[Template]` são a origem declarada da duplicação: o próprio corpo delas manda
+duplicar e renomear por sprint ou por módulo. Elas não têm `Sprint` preenchida, e é assim que se
+distinguem das cópias.
