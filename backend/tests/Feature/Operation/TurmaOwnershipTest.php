@@ -109,4 +109,48 @@ class TurmaOwnershipTest extends TestCase
 
         $this->assertSame([$minha->id], $ids);
     }
+
+    public function test_turma_alheia_da_404_no_show(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $minha = $this->turma();
+        $alheia = $this->turma();
+        $user = $this->redatorCom($minha);
+
+        $this->actingAs($user, 'web')->getJson("/api/turmas/{$alheia->id}")->assertNotFound();
+        $this->actingAs($user, 'web')->getJson("/api/turmas/{$minha->id}")->assertOk();
+    }
+
+    public function test_turma_alheia_da_404_e_nao_403(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $alheia = $this->turma();
+        $user = $this->redatorCom();
+
+        // 403 confirmaria que a turma existe. O redator nao deve distinguir
+        // "turma alheia" de "turma inexistente" (spec D3).
+        $this->actingAs($user, 'web')
+            ->getJson("/api/turmas/{$alheia->id}")
+            ->assertNotFound();
+    }
+
+    public function test_turma_alheia_da_404_nas_rotas_derivadas_que_o_redator_alcanca(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $alheia = $this->turma();
+        $user = $this->redatorCom();
+
+        $this->actingAs($user, 'web')->getJson("/api/turmas/{$alheia->id}/alunos")->assertNotFound();
+        $this->actingAs($user, 'web')->getJson("/api/turmas/{$alheia->id}/documents")->assertNotFound();
+        $this->actingAs($user, 'web')->postJson("/api/turmas/{$alheia->id}/documents", [])->assertNotFound();
+    }
+
+    public function test_admin_nao_e_afetado_pelo_binding(): void
+    {
+        $this->actingAsAdmin();
+        $turma = $this->turma();
+
+        $this->getJson("/api/turmas/{$turma->id}")->assertOk();
+        $this->getJson("/api/turmas/{$turma->id}/alunos")->assertOk();
+    }
 }
