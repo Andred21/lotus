@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
 blocker: null
@@ -16,12 +16,12 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
     blocker: null
@@ -158,7 +158,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_planning` |
+| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `planning` |
 | `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
 
