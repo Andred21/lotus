@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: infra
 active_work_item: infra-producao-runtime-e-aws
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T03:20:00-03:00
+updated_at: 2026-08-22T03:50:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -85,6 +85,42 @@ do bloco já fechado e mesclado na `main` pelo PR #64, não trabalho vivo.
 
 **`state_basis_commit: c8480eee`** — o commit contra o qual o backlog foi consolidado em 2026-08-22
 (`ba59dbd9`) mais o `style(backend)` que o segue, e a árvore que este bloco vai medir.
+
+### Context Packet — 2026-08-22: `status: partial`, cinco fontes, nenhuma indisponível
+
+Gerado pelo Codex (sandbox read-only, skill `lotus-context-packet`) e salvo em
+`context-packets/2026-08-22-infra-producao-runtime-e-aws.md`. **Contrato validado antes de gravar:**
+markers exatos, frontmatter completo com `plan_path`/`spec_path` em `null` (os dois ponteiros do
+estado são nulos e não foram inventados), **8 key facts** — o teto —, e `RECOMMENDED_TRANSITION:
+ready_for_planning`. **A provenance foi remedida aqui, não aceita de chegada:** `base_commit`
+`5bcd4b7c…`, `state_blob_sha` `25c06347…` e `progress_blob_sha` `0457320a…` conferem com
+`git hash-object` nesta árvore.
+
+**Nenhuma fonte saiu `unavailable`** — as cinco foram consultadas e endereçadas por ID: os três
+documentos do Drive (`requisitos-negocio.md`, `arquitetura-aws-lotus.md`, `decisao-stack.md`) e as
+oito páginas Notion pela base canônica `e64b7d57-…`, não pela homônima obsoleta que a skill veta. O
+`partial` vem do conteúdo, não da falta: **as sete tasks do Notion estão "A fazer" com `Descrição`
+vazia**, então elas dão critério de aceite e não desenho.
+
+**Três fatos externos mudam o planejamento e não estavam no repositório:**
+
+1. **O texto canônico do `RNF-DIS-02` é "servidor redundante pronto para assumir em caso de queda"** —
+   e o próprio `arquitetura-aws-lotus.md` do Drive o **rebaixa** para "recuperação rápida sem
+   failover", enquanto a task Notion `11.1.3` associa restore de snapshot ao mesmo requisito. Nem o
+   rebaixamento nem a associação foram aceitos: a divergência foi para a tabela como **`unresolved`**,
+   reservada ao gate do item 13. O bloco planeja EC2 única **sem declarar** que ela atende ao RNF.
+2. **O sizing tem um número decidido e outro não.** `db.t4g.micro` está explicitado na task 10.1.2;
+   a EC2 `t4g.small` ARM é **sugestão** do Drive, com `t4g.medium` como saída se o Gotenberg
+   pressionar memória. Escolher a EC2 é decisão do brainstorming, com a P-50 medida junto — o mesmo
+   `conf.d` hoje serve CLI e PHP-FPM, e o pico de 129 MB contra o teto de 128M é do CLI.
+3. **A borda TLS tem duas saídas no Drive** (EC2 direta + Certbot, ou ALB + ACM). A task 10.1.6 e o
+   ADR-14 decidem a primeira para o MVP; o ALB fica ligado à decisão de HA, que é do item 13.
+
+**Quatro questões abertas, nenhuma bloqueante para escrever o plano, todas bloqueantes para
+provisionar o recurso correspondente:** região (`sa-east-1` × `us-east-1`, nenhuma aprovada), tamanho
+final da EC2, controle do DNS de `lotus.cl`/`api.lotus.cl` mais a saída do sandbox do SES e o canal
+do alerta CloudWatch, e o teto de custo (estimativa externa de US$ 35–55/mês sem ALB). São decisões
+do João e entram no brainstorming como tais — não se supõem.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
