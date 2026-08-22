@@ -39,9 +39,9 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
     active_spec: docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md
@@ -51,7 +51,7 @@ lanes:
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T12:30:00-03:00
+updated_at: 2026-08-22T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -217,6 +217,62 @@ Plano: **13 tasks**, executor `claude` no bloco inteiro — a Task 1 exige julga
 (uma Regra C escrita sobre linhas `use` passaria em todos os passos e ainda assim estaria errada), as
 Tasks 8–11 escrevem fora do repositório, onde não existe `git revert`, e as Tasks 2, 3 e 6 são
 redação de decisão.
+
+### Execução — 2026-08-22: as 13 tasks, e as duas premissas do plano que a medição reprovou
+
+**13 de 13 executadas**, `subagent-driven-development`, executor `claude` do início ao fim. O fence
+de escopo fechou onde a spec dizia: `git diff main...HEAD --stat` devolve **um** arquivo em
+`backend/` (`tests/Feature/Shared/DomainDependencyTest.php`) e **zero** em `frontend/` — o que torna
+`pnpm test`/`build`/`lint` e `typescript:transform` **N/A por escopo medido**, não por suposição.
+
+**A Regra C foi provada pela sonda, duas vezes.** Uma catraca que nasce verde não provou nada: com
+`'Certification\Models\Certificate'` inserida em `ALLOWED['Catalog']`, a suíte reprova com a linha
+`Catalog -> Certification\Models\Certificate`; removida, volta a verde. A sonda rodou na Task 1 e
+de novo no HEAD final, no gate. Suíte inteira **873 testes / 3096 asserções / 5 skipped**, pelo
+binário direto do `phpunit` com `-d memory_limit=512M` — o `artisan test` documentado morre no meio
+por P-50, que é pendência aberta e não falha deste bloco. Pint `passed`.
+
+**Duas premissas escritas do plano caíram na medição, e as duas foram escaladas em vez de seguidas:**
+
+- **`der-fisico.md:74` não estava correta.** A spec a declarava intocável "porque já está certa"; a
+  leitura de `backend/database/migrations/2026_08_05_100000_certificates.php` mostrou que ela omitia
+  `redator_id`, `snapshot`, `revoked_at`, `revocation_reason`, `timestamps` e a coluna gerada
+  `active_enrollment_id`, inventava um `qr_code_hash` inexistente — e, pior, vivia sob
+  `## Tabelas PLANEJADAS`. **O João autorizou ampliar a Task 4**: `certificates` e
+  `certificate_sequences` foram para uma subseção `### Certification` de `## Tabelas IMPLEMENTADAS`,
+  reescritas a partir da migration, e o total foi corrigido para **28 tabelas — 21 de domínio
+  (20 implementadas, `feedbacks` no papel) + 7 RBAC/transversal**, com `login_logs` e
+  `invitation_tokens` entrando na enumeração. A ausência de ficha de colunas de `invitation_tokens`
+  virou a **P-52**.
+- **As coordenadas que a lição 18 ia ensinar estavam velhas.** O plano citava
+  `CourseController.php:19` e `Catalog/routes.php:11`; medido contra HEAD, a declaração está na
+  **linha 24** (hoje cobrindo `['index','show','archived']`) e o `apiResource` na **linha 18**. Uma
+  lição que manda ler o controller não pode citar a linha errada do controller — corrigidas em
+  commit próprio.
+
+**Notion: 18 páginas escritas, 3 divergências medidas e deliberadamente não escritas.** Todo acesso
+por **ID**, zero busca por título, `update_properties` apenas, e releitura por ID depois de cada
+write — as 18 confirmam `Concluída` no gate. A **P-18** fechou pelo lado que a evidência apontou: o
+ID da ficha era da base obsoleta e está `deleted`; na canônica
+`3a2bc9603dfa8067902cf3c62bffdb0d` quem cedeu foi a **descrição**, porque a página irmã
+`3a2bc9603dfa8028a1fbf8a3863690ed` já é a da Sprint 3. Ficaram registradas sem write, em
+`audits/2026-08-22-bd15-notion-sync.md`: a duplicata da **P-22**, a troca de corpo entre `8.4.0` e
+`8.4.7` (medida e **confirmada** — título de um com Descrição/Critério do outro, nos dois sentidos),
+o EAP `H.1.3.2` duplicado e as 12 duplicações genéricas do workflow. Apagar e reescrever corpo são
+destrutivos; a autorização deste bloco era só o não-destrutivo.
+
+**O classificador de auto mode recusou o write da descrição da P-18** — mesma família de recusa que
+já congelou a P-40 e o `tinker` em fechamentos anteriores. Contornada pela porta certa: o João
+autorizou explicitamente antes da segunda tentativa, e nada foi escrito enquanto a decisão não veio.
+
+**Pendências: 30 abertas viram 24.** Encerram com o remédio e o path dele na ficha: `P-18`, `P-20`,
+`P-21`, `P-23`, `P-39`, `P-43`. Permanecem abertas com a medição que as mantém: `P-22`, `P-31`,
+`P-32`. Nasceu **uma**, a `P-52`. A contagem final é 24 e não os 23 que o plano previa — a P-52
+nasceu dentro deste bloco, depois de o plano ter sido escrito; o próprio plano mandava conferir em
+vez de confiar na aritmética.
+
+**Estado: `ready_for_review`.** A revisão não foi iniciada — é a próxima instrução, não um passo
+deste comando.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
