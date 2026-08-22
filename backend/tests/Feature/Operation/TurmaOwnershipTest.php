@@ -5,6 +5,8 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Actions\EnrollStudentAction;
+use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -152,5 +154,78 @@ class TurmaOwnershipTest extends TestCase
 
         $this->getJson("/api/turmas/{$turma->id}")->assertOk();
         $this->getJson("/api/turmas/{$turma->id}/alunos")->assertOk();
+    }
+
+    public function test_redator_lanca_resultado_na_turma_dele(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $minha = $this->turma();
+        $user = $this->redatorCom($minha);
+        $enrollment = $this->matricula($minha);
+
+        $this->actingAs($user, 'web')
+            ->putJson("/api/turmas/{$minha->id}/alunos/{$enrollment->id}/resultado", [
+                'grades' => ['final' => 6.0],
+                'attendance_pct' => '100',
+                'approval_status' => 'aprobado',
+            ])
+            ->assertOk();
+    }
+
+    public function test_redator_nao_lanca_resultado_em_turma_alheia(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $alheia = $this->turma();
+        $user = $this->redatorCom();
+        $enrollment = $this->matricula($alheia);
+
+        $this->actingAs($user, 'web')
+            ->putJson("/api/turmas/{$alheia->id}/alunos/{$enrollment->id}/resultado", [
+                'grade' => 6.0,
+                'attendance_pct' => 100,
+            ])
+            ->assertNotFound();
+    }
+
+    public function test_redator_continua_sem_o_fluxo_3(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $minha = $this->turma();
+        $user = $this->redatorCom($minha);
+
+        // A permissao nova cobre SO o resultado. Matricular, importar planilha
+        // e remover matricula seguem no `enrollment.manage`, que e do admin.
+        $this->actingAs($user, 'web')
+            ->postJson("/api/turmas/{$minha->id}/alunos", [
+                'rut' => '11.111.111-1', 'name' => 'Aluno', 'email' => null, 'phone' => null,
+            ])
+            ->assertForbidden();
+    }
+
+    private function matricula(Turma $turma): Enrollment
+    {
+        static $rutCounter = 11;
+        // Create sequential RUTs with valid check digits: use actual format 12.345.678-9
+        // Calculate a valid check digit using the module 11 algorithm
+        $base = 10000000 + ($rutCounter * 123);  // Sequential base numbers
+        $number = (string) $base;
+        $sum = 0;
+        $factor = 2;
+        for ($i = strlen($number) - 1; $i >= 0; $i--) {
+            $sum += (int) $number[$i] * $factor;
+            $factor = $factor === 7 ? 2 : $factor + 1;
+        }
+        $dv = (11 - ($sum % 11)) % 11;
+        $dv = $dv === 10 ? 'K' : (string) $dv;
+        $rut = number_format((int) $number, 0, '', '.').'-'.$dv;
+        $email = 'aluno'.($rutCounter++).'@test.local';
+
+        return app(EnrollStudentAction::class)->execute(
+            $turma,
+            $rut,
+            'Aluno Teste',
+            $email,
+            null,
+        )->enrollment;
     }
 }
