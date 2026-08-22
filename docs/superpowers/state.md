@@ -4,27 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: feedbacks-resolver-escopo
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
 context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
-blocker: null
+blocker: "Review de `feedbacks-resolver-escopo` (alto risco: RBAC + migration) devolveu 4 achados aguardando decisão do João — 3 amarelos e 1 verde, nenhum de lei §5, nenhum órfão. Q-1: `.claude/rules/backend-ddd.md` e `docs/estrutura-monolito.md` ainda declaram `Feedback` como domínio futuro, contra a D1. Q-2: `docs/README.md` mantém 26/19 tabelas contra as 25/18 que o bloco escreveu no DER. Q-3: o `active_plan` ainda promete 43->41 permissões, contra as 42->40 medidas. Q-4: os testes da migration não cobrem o filtro de `guard_name` nem o `forgetCachedPermissions()`."
+
 lanes:
   lane-a:
     active_work_item: feedbacks-resolver-escopo
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: main-tree
     branch: feat/feedbacks-resolver-escopo
     active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
     active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
     context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
-    blocker: null
-    resume_state: null
+    blocker: "4 achados de review aguardando decisão do João (ver blocker do topo)."
+    resume_state: reviewing
   lane-b:
     active_work_item: infra-producao-runtime-e-aws
     workflow_state: context_required
@@ -50,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: 6b4585ea
-updated_at: 2026-08-22T12:40:00-03:00
+state_basis_commit: 3320e2f9
+updated_at: 2026-08-22T13:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
