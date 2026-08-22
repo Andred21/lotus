@@ -3,6 +3,13 @@
 > Histórico curto do que foi entregue e da feature em andamento. Este arquivo **não define a etapa
 > operacional**. Para saber o que fazer agora, leia `docs/superpowers/state.md`.
 > Fila futura: `docs/superpowers/backlog.md`. Histórico antigo: `progress-archive.md`.
+>
+> **Cinco colunas, de propósito (P-23, decidido em 2026-08-22).** O formato antigo tinha sete, com
+> `Contexto`/`Plano`/`Spec` separadas; aqui plano, spec, context packet e commits vivem juntos na
+> coluna `Referências`. A coluna `Contexto` **não volta**: só uma parte das entregas nasce de packet,
+> e a coluna separada era célula vazia na maioria das linhas. O `progress-archive.md` registra do
+> lado dele a mesma convivência de duas arities — as linhas migram **verbatim**, porque o fechamento
+> move histórico e não o reescreve.
 
 | Data | Entrega | Status | Resultado | Referências |
 |---|---|---|---|---|
