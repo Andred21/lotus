@@ -39,12 +39,12 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
     blocker: null
