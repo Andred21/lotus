@@ -254,8 +254,7 @@
         "empty": "Sin documentación pendiente",
         "emptyHint": "Todas tus clases tienen la documentación al día.",
         "missing": "Falta: {{types}}",
-        "until": "Hasta {{date}}",
-        "goToProfile": "Ir a Mi Perfil"
+        "until": "Hasta {{date}}"
       },
       "alerts": {
         "emptyHint": "Ninguno de tus documentos está vencido ni por vencer."

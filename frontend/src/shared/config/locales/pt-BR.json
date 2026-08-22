@@ -254,8 +254,7 @@
         "empty": "Sem documentação pendente",
         "emptyHint": "Todas as suas turmas estão com a documentação em dia.",
         "missing": "Falta: {{types}}",
-        "until": "Até {{date}}",
-        "goToProfile": "Ir ao Meu Perfil"
+        "until": "Até {{date}}"
       },
       "alerts": {
         "emptyHint": "Nenhum documento seu vencido nem a vencer."

@@ -254,8 +254,7 @@
         "empty": "No pending documents",
         "emptyHint": "All your classes have their documents up to date.",
         "missing": "Missing: {{types}}",
-        "until": "Until {{date}}",
-        "goToProfile": "Go to My Profile"
+        "until": "Until {{date}}"
       },
       "alerts": {
         "emptyHint": "None of your documents are expired or expiring."

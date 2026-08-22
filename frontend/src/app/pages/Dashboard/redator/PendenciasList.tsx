@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppEmptyState, AppButton } from '@shared/ui'
+import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
 import { formatIsoDate } from '@shared/lib'
 import { warningText } from '@shared/styles/tokens'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
@@ -10,38 +10,22 @@ import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
  * turma alheia — o payload `view=redator` já chega filtrado da API, e esta tela
  * não tem como pedir mais do que ele traz.
  *
- * A ação leva ao Meu Perfil e não a um formulário local: o Redator anexa
- * documento POR LÁ, e este bloco é read-only. Botão fora do `<li>` para o
- * ponteiro não competir com nada dentro da linha.
+ * A pendência se resolve em `/operacion/turmas/:id`, aba "Documentación" — não
+ * em `/perfil`, que gerencia documento PESSOAL (CV, REUF, título), conjunto
+ * disjunto do documento de TURMA que falta aqui. Por isso a linha inteira é o
+ * link, e não há botão único no cabeçalho: com N turmas pendentes um controle
+ * do cabeçalho não tem destino único (para qual turma ele levaria?), e um
+ * controle por linha mantém uma parada de Tab por item — a mesma razão do
+ * UI-08 da revisão de 2026-08-17, que evitava `<Link>` embrulhando `<AppButton>`
+ * (aninhamento inválido de `<a>` sobre `<button>`). Aqui a linha É o `<a>`;
+ * não há botão de dentro para aninhar (UI-01 da revisão de 2026-08-22).
  */
 export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }) {
   const { t } = useTranslation()
-  const navegar = useNavigate()
 
   return (
     <AppCard>
-      <AppCardHeader
-        title={t('dashboard.redator.pendencias.title')}
-        count={items.length}
-        actions={
-          items.length > 0 ? (
-            // UM controle, e não `<Link>` embrulhando `<AppButton>`. Conteúdo
-            // interativo dentro de `<a>` é aninhamento inválido, e a árvore de
-            // acessibilidade mostrava o resultado: dois pontos de parada para uma
-            // ação, o primeiro deles um link SEM nome, porque o nome estava no
-            // botão de dentro (UI-08 da revisão de 2026-08-17). O `AppButton`
-            // embrulha um `Button` do Prime, que renderiza `<button>` e não
-            // aceita virar âncora — então quem navega é o router, por `navigate`.
-            //
-            // `/perfil` — o path que o `AppRouter` registra. Não é `/mi-perfil`.
-            <AppButton
-              label={t('dashboard.redator.pendencias.goToProfile')}
-              text
-              onClick={() => void navegar('/perfil')}
-            />
-          ) : undefined
-        }
-      />
+      <AppCardHeader title={t('dashboard.redator.pendencias.title')} count={items.length} />
       {items.length === 0 ? (
         <AppEmptyState
           icon="pi pi-check-circle"
@@ -56,7 +40,11 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
               className="border-b px-4 py-2 last:border-b-0"
               style={{ borderColor: 'var(--surface-border)' }}
             >
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+              <Link
+                to={`/operacion/turmas/${item.turma_id}`}
+                className="flex flex-wrap items-center gap-x-3 gap-y-0.5 no-underline sm:flex-nowrap"
+                style={{ color: 'var(--text-color)' }}
+              >
                 <span className="min-w-0 basis-full sm:flex-1 sm:basis-0">
                   <span className="block truncate text-sm font-medium" title={item.course_name}>
                     {item.course_name}
@@ -68,7 +56,7 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                 <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
                   {t('dashboard.redator.pendencias.until', { date: formatIsoDate(item.end_date) })}
                 </span>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>
