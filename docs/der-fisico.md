@@ -74,8 +74,17 @@
 - **certificates** — `id PK`, `uuid UK`, `enrollment_id FK,UK`, `course_id FK`, `codigo UK`, `valido_ate` (date), `qr_code_hash UK`, `status` (enum). Gerado sob demanda; metadata armazenada, PDF não.
 - **certificate_sequences** — `id PK`, `year UK` (smallint), `last_seq` (int). Numeração por ano.
 
-### Feedback
-- **feedbacks** — `id PK`, `turma_id FK`, `origem` (enum).
+### Feedback — sem tabela própria (decisão de 2026-08-22)
+
+Não existe tabela `feedbacks` e não haverá na v2. RF-FBK-01/02/04 são atendidos pela documentação de
+turma: `files` polimórfica sobre `turmas`, com `type` restrito por
+`Operation\Enums\TurmaDocumentType` — `PRUEBAS` (avaliações dos alunos) e `EVALUACION_REDATOR`
+(avaliação do próprio redator), ao lado de `MANUAL`. A exigência de completude antes de finalizar a
+turma (RF-FBK-04) é a RN-16, em `ConcludeTurmaAction` sobre `TurmaHabilitacaoService`.
+
+RF-FBK-03 — avaliação do cliente, cadastrada pelo admin ao final da ordem de serviço — segue
+**futuro**, junto do resto de RF-TUR-07 (fatura final, comprovante de pagamento). Quando entrar,
+entra pelo encerramento da OS, não pela turma.
 
 ---
 
@@ -86,7 +95,7 @@
 - `students` N:1 → `clients` (vínculo atual em `students.current_client_id`); histórico em `student_client_logs`.
 - `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`; e (planejada) `certificates`.
 - `redatores` 1:N → `course_redator` (idoneidade); N:N com `turmas` via `turma_redator` (ministra).
-- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`; e (planejada) `feedbacks`.
+- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`.
 - `budgets` / `quotes` 1:N → `files` (anexos polimórficos).
 - `enrollments` 1:1 → `certificates` (planejada).
 - `users` 1:N → `model_has_roles`, `audits`.
@@ -107,8 +116,8 @@
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:
   `tests/Feature/Shared/PersistenceLawsTest.php` reprova coleção nested sem `Optional`, e projeção
   de saída se declara com `#[ReadOnlyCollection]` em vez de entrar numa allowlist.
-- **Contexto total (alvo):** 26 tabelas — 19 de domínio (16 implementadas + `certificates`,
-  `certificate_sequences`, `feedbacks` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
+- **Contexto total (alvo):** 25 tabelas — 18 de domínio (16 implementadas + `certificates`,
+  `certificate_sequences` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
   `audits`, que esta lista classifica como Transversal). Implementadas até
   2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
   **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
