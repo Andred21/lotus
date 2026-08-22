@@ -112,8 +112,13 @@ describe('docker-compose.prod.yml', () => {
     }
   })
 
-  it('lê os segredos de um env_file', () => {
-    expect(PROD).toMatch(/^ {4}env_file:/m)
+  it('lê os segredos de um env_file TROCÁVEL por variável — um caminho fixo aqui sobe produção com o env da sonda', () => {
+    // Existir a chave não basta, e essa era a folga: `env_file: docker/probe.env`
+    // hardcoded passava por esta catraca e subiria produção apontada para o
+    // MinIO/Mailpit da sonda, com as credenciais públicas que o arquivo carrega.
+    // A propriedade é a mesma já exigida de `image:` — o valor vem de fora.
+    const [envFileDoApp] = regioesDaChave(blocoDoServico('app'), 'env_file')
+    expect(envFileDoApp ?? '').toMatch(/\$\{LOTUS_ENV_FILE\b/)
   })
 
   it('não expõe valor literal de segredo em lugar nenhum do arquivo — nem em `environment:` YAML, nem em `command:` shell', () => {
@@ -198,6 +203,16 @@ describe('docker-compose.prod-probe.yml', () => {
       expect(regiaoVolumes).not.toMatch(origemBindMount)
       expect(regiaoVolumes).not.toMatch(tipoBindMountLongo)
     }
+  })
+
+  it('espera o mysql por service_healthy, e não pela forma curta — a corrida do migrate contra o listener TCP foi medida', () => {
+    // A forma curta (`depends_on: [mysql]`) normaliza para service_started, e o
+    // healthcheck existiria sem ninguém consumindo: `up -d` seguido de
+    // `migrate --force` sem sleep dava SQLSTATE[HY000] [2002] Connection
+    // refused. A forma longa foi escrita por causa dessa medição; sem esta
+    // asserção, voltar para a curta não reprova nada.
+    const [dependsOnDoApp] = regioesDaChave(blocoDoServico('app', PROBE), 'depends_on')
+    expect(dependsOnDoApp ?? '').toMatch(/mysql:\s*\{?\s*condition:\s*service_healthy\b/)
   })
 
   it('não redefine image: no app do overlay', () => {
