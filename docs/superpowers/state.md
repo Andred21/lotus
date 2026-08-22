@@ -4,26 +4,26 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
 blocker: null
 
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
     blocker: null
     resume_state: null
     last_completed_work_item: feedbacks-resolver-escopo
@@ -55,7 +55,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: f6649297
-updated_at: 2026-08-23T00:20:00-03:00
+updated_at: 2026-08-22T16:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -154,23 +154,24 @@ disjuntas, colisão mínima de arquivos:
 > e 14 fecharam e mesclaram no mesmo dia (PR #65 e PR #66, merge `61acc0c3`), e as duas lanes foram
 > reatribuídas. O que está vivo agora está na seção abaixo.
 
-## Ocupação corrente — 2026-08-23
+## Ocupação corrente — 2026-08-22
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `context_required` |
+| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_planning` |
 | `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
 
-**A `lane-a` recebeu o item 3 em 2026-08-23, por promoção explícita do João.** É backend, então roda
+**A `lane-a` recebeu o item 3 em 2026-08-22, por promoção explícita do João.** É backend, então roda
 no main tree e satisfaz o gate sem reabrir a P-03: a `lane-b` é infra e a `lane-c` é frontend — não
-há backend ∥ backend. O bloco é `Contexto: sim`, logo nasce em `context_required` e o packet vem do
-Codex antes do brainstorming. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
+há backend ∥ backend. O bloco é `Contexto: sim`, logo nasceu em `context_required`; o packet
+`2026-08-22-hardening-acesso-ownership-e-integridade.md` veio do Codex em 2026-08-22 com
+`status: ready` e cinco fontes recuperadas — Drive e Notion inclusive, endereçados por ID. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
 e aí regenera `generated.ts` (lei §5.3).
 
 **A `lane-b` está em `ready_for_review`, não em `context_required`.** O estado da main dizia o
 segundo e o `state.md` da própria `../lotus-infra` dizia o primeiro — divergência corrigida em
-2026-08-23 a favor da árvore da lane, que é quem tem o trabalho. A árvore dela ainda carrega
+2026-08-22 a favor da árvore da lane, que é quem tem o trabalho. A árvore dela ainda carrega
 `schema_version: 1` (nasceu antes do modo multi-lane); ela converge no fechamento, não antes.
 
 **A `lane-c` é a worktree `../fix-frontend`, e o registro dela nasceu atrasado.** A lane executava o
@@ -178,7 +179,7 @@ item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido aqui. Duas irregu
 **declaradas, não descobertas depois**:
 
 - **`active_plan` é `null` com a lane em `executing`**, contra a invariante que o exige a partir de
-  `ready_for_execution`. Exceção decidida pelo João em 2026-08-23: o item 16 é revisão iterativa
+  `ready_for_execution`. Exceção decidida pelo João em 2026-08-22: o item 16 é revisão iterativa
   dirigida pelas runs de `/lotus-ui-review`, uma superfície por vez, e o artefato durável de cada
   passada é o relatório datado em `audits/` — não um plano escrito na frente. `ac4eef8a` já entregou
   os 6 wrappers de `shared/ui` da primeira passada.
