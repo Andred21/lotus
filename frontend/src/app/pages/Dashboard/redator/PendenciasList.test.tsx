@@ -4,11 +4,17 @@ import { MemoryRouter } from 'react-router-dom'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
 import { PendenciasList } from './PendenciasList'
 
+// O `t` devolve a chave, mas ECOA a interpolação de `types` (mesma convenção do
+// UI-01 em `ProfileDocumentSlot.test.tsx`): sem isso a UI-02 não teria como
+// provar que `types` chegou como RÓTULOS resolvidos por item, e não como o
+// array cru costurado por `join()`.
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
-    useTranslation: mockUseTranslation(),
+    useTranslation: mockUseTranslation({
+      t: (key, opts) => (opts?.types === undefined ? key : `${key}:${String(opts.types)}`),
+    }),
   }
 })
 
@@ -46,5 +52,28 @@ describe('PendenciasList — a pendência leva à turma, não ao perfil', () => 
 
     const hrefs = screen.getAllByRole('link').map((link) => link.getAttribute('href'))
     expect(hrefs).not.toContain('/perfil')
+  })
+})
+
+describe('PendenciasList — a lista "Falta:" traduz o tipo de documento, não o código do enum (UI-02)', () => {
+  it('cada tipo passa por t(), e dois tipos provam também o separador ", "', () => {
+    montar()
+
+    const linhas = screen.getAllByText(/^dashboard\.redator\.pendencias\.missing:/)
+    expect(linhas).toHaveLength(2)
+
+    // Turma 4 tem um tipo só (`MANUAL`); turma 7 tem dois (`PRUEBAS`,
+    // `EVALUACION_REDATOR`) — o par prova o separador ", " entre RÓTULOS
+    // resolvidos, não entre códigos crus.
+    expect(linhas[0].textContent).toBe('dashboard.redator.pendencias.missing:operation.documents.type.MANUAL')
+    expect(linhas[1].textContent).toBe(
+      'dashboard.redator.pendencias.missing:operation.documents.type.PRUEBAS, operation.documents.type.EVALUACION_REDATOR',
+    )
+
+    // O bug (UI-02) era `item.missing_types.join(', ')` direto: com o `t` mockado
+    // acima, isso apareceria como "...missing:MANUAL" e "...missing:PRUEBAS,
+    // EVALUACION_REDATOR" — o código cru do enum, sem passar por t() por item.
+    expect(screen.queryByText('dashboard.redator.pendencias.missing:MANUAL')).toBeNull()
+    expect(screen.queryByText('dashboard.redator.pendencias.missing:PRUEBAS, EVALUACION_REDATOR')).toBeNull()
   })
 })

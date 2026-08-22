@@ -50,7 +50,13 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                     {item.course_name}
                   </span>
                   <span className="block truncate text-xs" style={{ color: warningText }}>
-                    {t('dashboard.redator.pendencias.missing', { types: item.missing_types.join(', ') })}
+                    {/* O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
+                    de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
+                    pelas mesmas chaves (UI-07 da revisão de 2026-08-22, molde no
+                    `CompliancePanel`). */}
+                    {t('dashboard.redator.pendencias.missing', {
+                      types: item.missing_types.map((tipo) => t(`operation.documents.type.${tipo}`)).join(', '),
+                    })}
                   </span>
                 </span>
                 <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
