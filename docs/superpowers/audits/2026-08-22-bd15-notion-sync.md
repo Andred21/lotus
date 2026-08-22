@@ -21,3 +21,27 @@
 | 8.4.5 | `3aabc9603dfa8136a4c6db9b4219b026` | Backlog | Concluída |
 | 8.4.6 | `3aabc9603dfa81c3ba69f8fdc5b4c925` | Backlog | Concluída |
 | 8.4.7 | `3bcbc9603dfa811c8223e910c453f3bc` | Backlog | Concluída |
+
+## Meu Perfil — 8.5.1 a 8.5.9 (feature entregue em 2026-08-18)
+
+| EAP | Page ID | Antes | Depois |
+|---|---|---|---|
+| 8.5.1 | `3b1bc9603dfa8148b646d019ff354623` | Backlog | Concluída |
+| 8.5.2 | `3b1bc9603dfa81968ff1f2802994cc13` | Backlog | Concluída |
+| 8.5.3 | `3b1bc9603dfa8181a39df34752c1b98f` | Backlog | Concluída |
+| 8.5.4 | `3b1bc9603dfa8181a71bf96b85fbc709` | Backlog | Concluída |
+| 8.5.5 | `3b1bc9603dfa81e6914fed4f228b1632` | Backlog | Concluída |
+| 8.5.6 | `3bcbc9603dfa8137a7f3df9ab8df33e5` | Backlog | Concluída |
+| 8.5.7 | `3bcbc9603dfa8123bb33f91532f6b38b` | Backlog | Concluída |
+| 8.5.8 | `3bcbc9603dfa81c79018d783e2fe73c7` | Backlog | Concluída |
+| 8.5.9 | `3bcbc9603dfa81958397d1581ce0d854` | Backlog | Concluída |
+
+## 9.1.4 — cobertura de teste que a `main` já tem
+
+| EAP | Page ID | Antes | Depois |
+|---|---|---|---|
+| 9.1.4 | `388bc9603dfa8119a5ecc157b2cc18d3` | A fazer | Concluída |
+
+A `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e emissão de
+certificado. **Nenhum bloco de código foi aberto para repetir essa cobertura** — o backlog proíbe
+explicitamente, e o que estava errado era o status da página.
