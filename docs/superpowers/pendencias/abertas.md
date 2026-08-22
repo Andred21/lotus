@@ -118,54 +118,6 @@ arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo 
 foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
 plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
 
-## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
-
-**Bloco:** infra-producao-runtime-e-aws · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
-ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
-
-Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
-juntas — **866 testes** (medição de 2026-08-20; eram 828 em 2026-08-19) —, o comando que o `CLAUDE.md` §6 documenta,
-`docker compose exec -T app php artisan test`, morre em
-
-```
-Fatal error: Allowed memory size of 134217728 bytes exhausted … PhpEngine.php on line 62
-Fatal error: Premature end of PHP process when running Tests\Feature\Operation\ManualTurmaTest::test_turma_maior_que_o_formulario_estende_as_grades.
-```
-
-**Não é defeito do teste nem do merge:** `--filter=ManualTurmaTest` passa em 2,35s (13 testes), e a
-suíte inteira fecha **verde** quando o limite sobe —
-`docker compose exec -T app php -d memory_limit=1G vendor/bin/phpunit` devolve
-**828 passed / 5 skipped, 3006 asserções** (medição de 2026-08-19), com **pico de 129 MB**. São 129 contra 128: a suíte
-cresceu 1 MB além do default do PHP, e quem estoura é o render de Blade do manual porque ele é o que
-aloca mais no fim da corrida.
-
-**O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
-diretiva da linha de comando — por isso a medição usa o binário direto.
-
-**Reproduzida no fechamento do BD-17 (2026-08-20), na árvore `fix-frontend`:** mesmos dois `Fatal
-error` pelo comando documentado, e `php -d memory_limit=512M vendor/bin/phpunit` devolve os mesmos
-**828 passed / 5 skipped, 3006 asserções** — desta vez com **pico de 127,00 MB**. O pico oscila
-abaixo do teto e o comando documentado morre assim mesmo, que é o argumento de que a margem não
-existe: quem estoura é o overhead do runner do `artisan`, somado a uma suíte que já ocupa o limite.
-
-**Reproduzida de novo no fechamento do BD-18 (2026-08-20), na mesma árvore `fix-frontend`:** o
-comando documentado morreu com `Allowed memory size of 134217728 bytes exhausted` dentro de
-`Tests\Feature\Operation\ManualTurmaTest`, e `php -d memory_limit=512M vendor/bin/phpunit`
-devolveu **872 passed / 5 skipped, 3095 asserções** com **pico de 129,00 MB**. A suíte cresceu 44
-testes desde o fechamento anterior e o pico subiu junto — de 127,00 para 129,00 MB, agora **acima**
-dos 128M do teto. O que era margem inexistente virou déficit medido: o gatilho não mudou, mas o custo
-de adiar sim.
-
-**Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
-imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
-processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
-**Enquanto não fecha, o gate de backend roda pelo binário direto com `-d memory_limit=1G`.**
-
-**Gatilho visto vencer de novo em 2026-08-20** (fechamento do `bd14-contrato-de-entrada`): o mesmo
-fatal, agora em `ManualTurmaTest::test_manual_devolve_pdf_convertido_do_docx`, e o gate rodou por
-diretório — **866 passed / 5 skipped**. Medido também que `php -d memory_limit=512M artisan test`
-**não** contorna: a diretiva não desce para o subprocesso do PHPUnit, exatamente como a ficha diz.
-
 ---
 
 # Documentação e mecanismo

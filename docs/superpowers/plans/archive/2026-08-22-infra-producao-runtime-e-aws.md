@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Spec:** `docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md`. Toda decisão D1–D9 vale como requisito.
+- **Spec:** `docs/superpowers/specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`. Toda decisão D1–D9 vale como requisito.
 - **Escopo:** só runtime versionado. **Nenhuma** task provisiona EC2, RDS, S3, SES, DNS, TLS ou CloudWatch (D1).
 - **Sem secret no repo e sem secret na imagem** (D6). `.env.production.example` tem toda chave presente e **todo valor vazio**.
 - **Sem volume de código** no `docker-compose.prod.yml` (DoD do item 10).

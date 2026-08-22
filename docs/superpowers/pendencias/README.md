@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (29)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -32,7 +32,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | `hardening-acesso-ownership-e-integridade` | bloco que puder reseedar o dev, ou primeiro gate `permission:` sobre rota de redator; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
-| P-50 | A suíte unida (866 testes) passa do `memory_limit` de 128M do container e o `artisan test` documentado morre no meio | `infra-producao-runtime-e-aws` | decidir o `memory_limit` da imagem (vale para o PHP-FPM de produção), ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | `frontend-hardening-final` | João decidir que a coluna deve cortar; revisar 2026-10-31 |
 | P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
@@ -68,11 +67,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | 2026-08-22, no `bd12-load-state-e-listas` | primeiro fechamento **posterior** ao do BD-12 |
+| P-50 | Suíte unida acima do `memory_limit` de 128M; o `artisan test` do §6 morria no meio | 2026-08-22, no `infra-producao-runtime-e-aws` | primeiro fechamento **posterior** ao deste bloco |
 
-**A P-29 e a P-35 saíram neste fechamento**, que é o primeiro posterior ao do BD-14 — a condição que
-a linha delas pedia. O rastro fica nos commits e na linha da entrega do BD-14 em
-[`../historico/progress.md`](../historico/progress.md).
+**A P-40 saiu neste fechamento**, que é o primeiro posterior ao do BD-12 — a condição que a linha
+dela pedia. O rastro fica nos commits e na linha da entrega do BD-12 em
+[`../historico/progress.md`](../historico/progress.md). **A P-29 e a P-35** tinham saído pelo mesmo
+mecanismo no fechamento anterior.
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
 `bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo

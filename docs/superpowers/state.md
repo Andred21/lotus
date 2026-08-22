@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: infra
-active_work_item: infra-producao-runtime-e-aws
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
-active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
-context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
-last_completed_work_item: bd12-load-state-e-listas
+last_completed_work_item: infra-producao-runtime-e-aws
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T18:20:00-03:00
+updated_at: 2026-08-22T20:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,7 @@ updated_at: 2026-08-22T18:20:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Item ativo — `infra-producao-runtime-e-aws` (item 10 da fila priorizada)
+## Último item fechado — 2026-08-22 (`infra-producao-runtime-e-aws`, item 10 da fila priorizada)
 
 ### Seleção — 2026-08-22
 
@@ -152,14 +152,14 @@ sob `api/` (`routes/api.php` agrega os domínios por glob), sobrando apenas `/sa
 devolve **uma linha, que é comentário** — logo, produção não leva volume de sessão nem worker de
 fila.
 
-Spec em `specs/2026-08-22-infra-producao-runtime-e-aws-design.md`: 9 decisões, 8 provas de DoD, 3
+Spec em `specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`: 9 decisões, 8 provas de DoD, 3
 divergências (uma delas a `RNF-DIS-02` × ADR-14, que segue **`unresolved`** e reservada ao gate do
 item 13) e 4 limitações declaradas — a primeira delas sendo que **nada de AWS é provado por este
 bloco**.
 
 ### Planejamento — 2026-08-22: 7 tasks, `executor: claude`, uma emenda à spec
 
-Plano em `plans/2026-08-22-infra-producao-runtime-e-aws.md`. **Sete tasks, uma por commit**, na ordem
+Plano em `plans/archive/2026-08-22-infra-producao-runtime-e-aws.md`. **Sete tasks, uma por commit**, na ordem
 que a dependência impõe: os dois números da P-50 primeiro (Tasks 1 e 2), porque a imagem de produção
 copia as duas confs; depois a conf do Nginx (Task 3), a imagem (Task 4), o Compose com a catraca
 (Task 5), o overlay mais o molde de env (Task 6) e a DoD end-to-end (Task 7).
@@ -291,7 +291,68 @@ volumes, zero redes); os 12 volumes de dev intactos; árvore limpa.
 **Nada a diferir:** os nove foram corrigidos, então nenhum item novo vai ao
 `backlog.md` nem às pendências por conta desta revisão.
 
-## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
+### Fechamento — 2026-08-22: o login real contra a stack de produção reconstruída
+
+**Item 0 do gate, medido agora e não citado da execução.** As nove correções da revisão entraram
+DEPOIS da DoD end-to-end do bloco, e três delas mexem exatamente na cadeia que o login atravessa — o
+gate de env do entrypoint (Q-2), o `.dockerignore` do `bootstrap/cache` (Q-3) e o
+`SESSION_SECURE_COOKIE` do molde (Q-4). Provar por citação teria provado uma imagem que não existe
+mais. As duas imagens foram reconstruídas do `HEAD` e a stack subiu com o overlay de sonda
+(`LOTUS_ENV_FILE=./docker/probe.env`, porta 8081, projeto `lotus-probe`):
+
+- **A cadeia inteira, com os cabeçalhos que o `/fechar-sprint` exige** (`Origin` e `Accept`, senão os
+  dois 500 são do curl): `nginx` entrou em `(healthy)`, `GET /up` → **200**, `GET /` → **200**,
+  `GET /sanctum/csrf-cookie` → **204**, `POST /api/login` → **200** com o cookie `lotus-session`
+  gravado no jar, e `GET /api/me` → **200** devolvendo `roles: ["superadmin"]` e a lista de
+  permissões. É a lei §5.4 (cookie de sessão Sanctum + CSRF) funcionando **na imagem de produção**,
+  não no compose de dev.
+- **O Q-1 reprovado ao vivo, que é o achado 🔴 mais caro do bloco:** `php artisan db:seed --force`
+  com `APP_ENV=production` imprimiu *"Admin de desenvolvimento ignorado: só é criado em local/demo.
+  Roles e permissões foram instaladas."* e parou ali. O `RolePermissionSeeder` rodou; o
+  `admin@lotus.cl`/`senha123` com role `superadmin` **não nasceu**. O usuário do login acima teve de
+  ser criado à mão na sonda — que é exatamente a propriedade que se queria.
+- **`migrate` fora do entrypoint, como a D7 desenhou:** o container subiu com o banco vazio e as 24
+  migrations só rodaram quando chamadas. O deploy é `pull → migrate → up`, e o arranque não migra
+  sozinho.
+
+**Ambiente devolvido:** `down -v` no projeto `lotus-probe` — zero containers, zero volumes, zero
+redes. Os volumes de dev seguem intactos.
+
+**Resto do gate.** `docker compose exec -T app php artisan test` → **867 passed / 5 skipped, 3095
+assertions**, 58,49s — **pelo comando documentado do `CLAUDE.md` §6, sem contorno**, o que é a prova
+da P-50 e não uma nota de rodapé: desde 2026-08-19 esse comando morria. `pnpm lint` exit 0 ·
+`pnpm build` exit 0 · `pnpm test` **88 arquivos / 500 testes**. Pint `passed` no único arquivo PHP do
+bloco (`DatabaseSeeder.php`). **`typescript:transform` é N/A por medição** — nenhum DTO no diff e
+`generated.ts` fora dos 18 arquivos do bloco. **Código morto: nenhum** — os artefatos que o bloco
+criou (`docker/php/memory-cli.ini`, `docker/probe.env`, o overlay, a catraca de composição) têm
+consumidor declarado, e a sonda de memória da Task 2 já tinha sido revertida com `git diff` vazio.
+
+**Leis §5: nenhuma contrariada.** Sem Repository, sem auditoria em trigger, sem `generated.ts`
+tocado, sem `abort(422)`, sem import cruzado de feature. A §5.4 foi **provada**, não só respeitada.
+A §5.8 (DoD = critério provado) é o próprio item 0 acima.
+
+**Pendências.** A **P-50** foi **encerrada por este bloco** — o gatilho venceu pelas duas metades ao
+mesmo tempo (o bloco tocou `docker/php/` e o João decidiu o número), e o impasse dos dois SAPIs se
+resolveu separando CLI (320M, no `conf.d`) de FPM (256M, no `php_admin_value` do pool). A ficha está
+em `pendencias/encerradas.md` com a medição que fecha. A **P-40 saiu de vez**: este é o primeiro
+fechamento posterior ao do BD-12, que é a condição literal que ela registrava. **A P-03 foi conferida
+e não venceu** — medido agora, o main tree está em `hardening-acesso-ownership-e-integridade` /
+`planning` e a `fix-frontend` em `frontend-revisao-ui-por-modulo` / `executing`; o gatilho pede dois
+blocos de **backend** em paralelo, e o de lá ainda não escreve código. **Nenhuma pendência nasceu
+nesta sprint** — os nove achados da revisão foram corrigidos, não diferidos.
+
+**Backlog: o item 10 não saiu inteiro, porque não foi entregue inteiro.** A metade do runtime saiu e
+está registrada como entregue; o item passou a se chamar **`infra-producao-provisionamento-aws`** e
+guarda o que a D1 recortou — EC2, RDS, S3/IAM, SES/DKIM, TLS e CloudWatch —, mais as quatro decisões
+do João que continuam abertas e a herança do `--entrypoint php` no `key:generate`. Apagar o item
+inteiro teria apagado da fila trabalho que ninguém fez. **Nada foi promovido.**
+
+**Arquivados:** plano em `plans/archive/2026-08-22-infra-producao-runtime-e-aws.md` e spec em
+`specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`; o link da spec dentro do plano foi
+reapontado. **`state_basis_commit` continua em `c8480eee`** — o commit contra o qual o João promoveu
+o bloco; o SHA deste fechamento não entra no arquivo que ele fecha.
+
+## Penúltimo item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
 ### Merge da `main` — 2026-08-22: a árvore que a prova exigia
 
@@ -366,7 +427,7 @@ escolha explícita do João.
 **Estado: `idle`.** `state_basis_commit` continua em `fc852ce3`, o commit contra o qual o João
 promoveu o BD-12; o SHA deste fechamento não entra no arquivo que ele fecha.
 
-## Penúltimo item fechado — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
+## Antepenúltimo item fechado — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
 
 ### Seleção — 2026-08-20
 
@@ -623,7 +684,7 @@ isso é uma ressalva a carregar para o planejamento:** a árvore que o bloco vai
 BD-18, então o alcance de D-55 e P-40 se remede contra o merge, não contra o basis. Trocar o campo
 aqui seria escolher por heurística um SHA que ninguém decidiu.
 
-## Antepenúltimo item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
+## Quarto item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
 
 ### Execução — 2026-08-20: 9 tasks, técnica `subagent-driven-development`, main tree
 
@@ -836,7 +897,7 @@ medido de novo, e não precisa ser**: os 17 commits da `main` não tocam um arqu
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 
-## Quarto item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
+## Quinto item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 
 ### Seleção — 2026-08-19
 
@@ -928,579 +989,3 @@ de navegador, que depende da API com dado real. Ela está feita e datada acima, 
 único arquivo de renderização que mudou desde então foi o tipo de retorno de `archivedColumns`.
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
-
-## Quinto item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
-
-### Seleção — 2026-08-18
-
-**Primeiro item de "Próximos blocos" (`backlog.md:101`), promovido explicitamente pelo João** com o
-estado em `idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de
-sempre — **décima terceira** vez: o argumento `arquivados-roots-restantes` era **slug inventado por
-mim no turno anterior**, não slug promovido, e `active_work_item` estava `null`.
-
-**Três decisões dele fecharam o gate:** o slug `arquivados-roots-restantes`; a rota **direta a
-`ready_for_planning`, sem Context Packet novo**; e **main tree**, partindo de
-`feat/arquivados-e-restauracao@6fd0ad8` e não da `main`.
-
-**O gate pegou um erro meu de escopo, e ele é o registro mais importante desta seleção.** Ao oferecer
-as opções eu descrevi o escopo como `Budget`/`Quote`, `Redator`, **`Student`** e `Turma`/`Enrollment`
-— montado sobre os 8 roots do Context Packet de 2026-08-18. A linha 101 do backlog diz outra coisa:
-**`Budget`, `Quote`, `User`, `Redator`, `Turma` e `Enrollment`**, com `Student` em **"Fora de
-escopo"** por não ter `destroy` hoje. Eu **incluí `Student`** e **omiti `User`**. O João escolheu
-seguir o backlog, e o escopo do bloco são os **seis roots** da linha 101. A medição do próprio turno
-confirmou o motivo do backlog: `students` é `apiResource` com `index/store/show/update` apenas
-(`Identity/routes.php:46`), então arquivar aluno seria superfície nova com regra a inventar — não
-replicação.
-
-**Por que a branch não nasce da `main`.** `App\Shared\Concerns\ArchivesChildren`,
-`LoadsCascadedChildren`, `useArchivedPage`, `ArchiveSwitch` e o `archived` do `createCrudResource`
-existem **só** na `feat/arquivados-e-restauracao`, que segue sem merge por decisão do João. Nascer da
-`main` significaria reimplementar ou conflitar. A branch `feat/arquivados-roots-restantes` foi criada
-de `6fd0ad8` ANTES deste commit, seguindo o precedente do bloco anterior.
-
-**`state_basis_commit` passa de `3d02a46` a `6fd0ad8`, e isso não é divergência.** `3d02a46` era o
-baseline escrito quando o bloco anterior entrou em `ready_for_review`; os dois commits seguintes
-(`1e07786` correções do review, `3d7e95c` fechamento) e o `6fd0ad8` desta sessão vieram depois. Com
-`active_work_item` `null` não havia trabalho ativo cujo baseline pudesse derivar.
-
-**Por que não há Context Packet novo.** O packet
-`context-packets/2026-08-18-arquivados-e-restauracao.md` já foi gerado **sobre os 8 aggregate roots**,
-não sobre os dois executados, e as fontes externas (Notion H.5.1–H.5.4 + Drive) foram esgotadas nele
-— inclusive a ausência medida de documento funcional no Drive. O molde de decisão vive em
-`specs/archive/2026-08-18-arquivados-e-restauracao-design.md` e a mecânica em código. Recuperação
-externa não se repete sem fonte nova.
-
-**`context_packet` aponta para o packet do bloco anterior, e isso é obedecer o invariante, não
-reciclar por preguiça.** O invariante diz que, quando o trabalho depende de contexto externo, o
-campo **não pode ser `null` em `ready_for_planning`**. O packet cobre os 8 roots, então é fonte
-válida para estes seis; herdá-lo declarado é mais honesto que apagar a dependência escrevendo
-`null`.
-
-**Um commit fora de bloco entrou antes desta promoção.** `6fd0ad8` (`fix(cors)`) fecha o lado de
-aplicação da **P-45**: `allowed_origins` tratava `FRONTEND_URL` como valor único e o `.env` de dev já
-é lista (`5173,5174`). Não é deste bloco nem do anterior — era o WIP do João que atravessou os dois,
-declarado na seleção anterior. Com ele, `php artisan test` dá **717 passed / 5 skipped** sem precisar
-de `FRONTEND_URL` no comando. Pint também limpou a formatação pré-existente da linha `paths`.
-
-### Medição da abertura — 2026-08-18, sobre `6fd0ad8`, não herdada
-
-Sete medições, feitas antes do brainstorming e registradas para ele.
-
-1. **Gates de arquivamento que já existem, por root.** `Budget` recusa se houver cotação **aprovada**
-   (`DeleteBudgetAction:20`, 422 "Recuse-a antes"); `Quote` recusa `status === Approved`
-   (`DeleteQuoteAction:19`); `Turma` recusa `status !== EmAndamento`
-   (`Turma::assertAcademicallyWritable():143`, RN-15); `Enrollment` recusa pela turma
-   (`RemoveEnrollmentAction:11`); `User` recusa o último superadmin ativo (`DeleteStaffUserAction` +
-   `SuperadminGuard`) e o controller ainda faz `abort_unless($user->type === 'admin', 404)`
-   (`UserController:60`). **`Redator` não tem gate nenhum** — `RedatorController:53-58` chama
-   `$redator->delete()` cru, sem Action.
-2. **Só dois dos seis roots cascateiam com a marca.** `Client` e `Course` usam `markAndDelete`
-   (feitos). `Budget → quotes`, `Redator → documents + user` e `Student → user` cascateiam com
-   `delete()` cru, **sem `archived_with_parent`**. `Turma` e `Enrollment` **não têm hook `deleting`
-   nenhum**: arquivar turma hoje deixa matrículas, documentos e o pivot ativos.
-3. **A coluna existe em 5 tabelas** — `client_addresses`, `client_contacts`, `users`,
-   `course_modules`, `course_certificate_templates`. Faltariam ao menos `quotes` e `files`; `users`
-   já tem e é reaproveitada por `Redator` e `Student`. **O bloco toca schema**, então o planejamento
-   lê `docs/adrs.md` e `docs/der-fisico.md`.
-4. **O gate de Operação torna a lista de Arquivados estruturalmente pequena.** `Concluida` é estado
-   **terminal** (enum, D5) e `assertAcademicallyWritable` exige `EmAndamento`, então turma concluída
-   e suas matrículas **nunca** chegam a Arquivados. Coerente com o peso legal; confirmar no
-   brainstorming se é o comportamento desejado antes de construir a tela.
-5. **`Certificate` é o piso legal e NÃO é soft-deletable.** `Certificate extends Model` sem
-   `SoftDeletes`, com `enrollment()`, `course()` e `redator()` os três `belongsTo(...)->withTrashed()`.
-   O certificado sobrevive ao arquivamento de tudo que o originou e lê os pais arquivados. Isso
-   **valida** o modelo e impõe que arquivar `Redator` ou `Course` não quebre essa leitura.
-6. **Redator arquivado some da turma em silêncio.** `turma_redator` é pivot cru (`id`, `turma_id`,
-   `redator_id`, `timestamps`) — sem `deleted_at`. A FK é `restrictOnDelete` ("redator com turma não é
-   apagado", lição #15), o que barra **hard** delete, não soft. `Turma::redatores()` é
-   `belongsToMany` **sem `withTrashed`** (`Turma.php:82`), então a linha do pivot fica viva e a turma
-   simplesmente para de listá-lo. Três saídas possíveis: gate, cascata do pivot, ou `withTrashed` na
-   relação.
-7. **Os dois restores automáticos seguem sem decisão.** `StudentResolver:71-79` restaura `User` e
-   `Student` ao reencontrar o RUT na importação; `EnrollStudentAction:38` restaura a matrícula ao
-   re-matricular. Com `*.restore` virando permissão por agregado, existem dois caminhos que
-   restauram **sem permissão e sem intenção do usuário**. Pendência aberta desde o Context Packet.
-
-**Débito com gatilho vencido, entra por construção:** `budget.confirmDeleteBody` e
-`quote.confirmDeleteBody` dizem *"Esta acción no se puede deshacer."* — deixa de ser verdade no
-instante em que `Budget`/`Quote` ganharem restore. Ficou registrado como gatilho no bloco anterior.
-
-**Débito ligado, não vencido:** a **D-37** (backfill de `archived_with_parent`, publicada como `D-34` antes do merge da `main`) tem gatilho no
-primeiro deploy, não neste bloco. Cada tabela nova da medição 3 amplia o alcance dela — registrar,
-não resolver.
-
-**Risco de review projetado: ALTO.** O bloco **toca schema** (colunas novas), **toca RBAC**
-(permissões `*.restore` por agregado), **toca `generated.ts`** e **toca dado com peso legal**
-(`Turma`, `Enrollment` e os documentos do `Redator`). A classificação final é do `/revisar-sprint`,
-não desta promoção.
-
-**Estado: `ready_for_planning`.** Próxima ação: brainstorming das decisões abertas, depois plano.
-
-### Brainstorming e spec — 2026-08-18: sete decisões, e a medição achou um 500 alcançável
-
-**O bloco não era o que o backlog previa, e a medição é que mostrou.** A linha 101 diz *"replicar é
-ligar os hooks, a Action, o endpoint e a tela, não reescrever a semântica"*. Isso descreve `Budget`,
-`User` e `Redator` — e é falso para os outros três. Os seis roots se separam em **três classes**:
-replicação limpa (lista de topo + `createCrudResource`: `Budget`, `User`, `Redator`), lista de topo
-fora da fábrica (`Turma`, com `useTurmas` artesanal) e **sem lista de topo** (`Quote` e `Enrollment`,
-que vivem dentro do detalhe do pai).
-
-**O achado que justifica o bloco inteiro: restaurar uma turma pode dar 500.** `turmas.active_quote_id`
-é coluna gerada STORED `CASE WHEN deleted_at IS NULL THEN quote_id END` com `UNIQUE`, e
-`Quote::turma()` é `hasOne` **sem `withTrashed`**, então `CreateTurmaAction:25` deixa criar turma
-nova sobre a cotação de uma arquivada — por desenho, dito em texto no comentário da migration.
-Restaurar a primeira estoura `SQLSTATE[23000]`. É o **primeiro conflito de unicidade alcançável** do
-tema: a D4 do molde ("conflito não é alcançável") vale para `Client`, `Course` e também `Quote` —
-`CreateQuoteAction:22` deriva `seq_in_budget` com `withTrashed()`, medido —, e é falsa só para
-`Turma`.
-
-**O segundo achado tem peso legal e é silencioso.** `turma_redator` não tem `deleted_at` e
-`Turma::redatores()` é `belongsToMany` sem `withTrashed` (`Turma.php:82`). Arquivar um redator deixa
-a linha do pivot viva e o faz **desaparecer** de três sítios — a listagem
-(`TurmaQueryBuilder::LISTING:26`), o painel de emissão (`EmissionPanelQuery:94`) e
-`CertificateEligibility:118`, que passa a **recusar a emissão de certificado** de turma concluída que
-ele ministrou. Nada no código avisa.
-
-**As sete decisões do João:**
-
-1. **D1 — gate de conflito na `RestoreTurmaAction` → 422.** Aceita escrever a primeira
-   `ValidationException` nova desde a **D-07** e reabri-la, porque a alternativa é 500 em operação de
-   usuário sobre dado com peso legal.
-2. **D2 — `Turma` ganha a cascata que nunca teve** (`enrollments` + `files`). Pivot fora.
-3. **D3 — `Redator` ganha gate** (turma em andamento → 422) **e `redatores()` passa a `withTrashed`**.
-   Os dois são necessários: o gate cobre turma em andamento, o `withTrashed` cobre a concluída, que é
-   onde a emissão acontece.
-4. **D4 — os dois restores automáticos ficam automáticos**, como exceção declarada com teste. A
-   permissão guarda a ação Restaurar da tela, não todo caminho que revive uma linha.
-5. **D5 — `Quote` e `Enrollment` têm Arquivados dentro do detalhe do pai**, com endpoints escopados.
-   Os dois têm `DELETE` próprio hoje, então sem superfície de restauração o registro ficaria
-   inalcançável para sempre.
-6. **D6 — um bloco, três fases por módulo** (Commercial → Identity → Operation), um DoD no fim.
-7. **D7 — o RBAC espelha o guard do arquivar: cinco permissões novas, não seis.** `User` staff **não
-   ganha permissão nova** — seu `destroy` é guardado por `identity.access.manage`, que é
-   `SEGREGATED`, e um `identity.user.restore` normal deixaria restaurar mais frouxo que arquivar.
-   `identity.user.restore` cobre `Redator`, porque o módulo já usa `identity.user.*` para os três
-   tipos de ator.
-
-**Quatro decisões derivadas, tomadas por mim e declaradas na spec:** três colunas novas (`quotes`,
-`files`, `enrollments`; `users` reaproveitada); as cascatas passam a marcar e **três Actions ganham
-transação que não tinham** (`DeleteQuoteAction`, `DeleteTurmaAction`, e a `ArchiveRedatorAction` que
-nasce) porque enumera-e-apaga sem transação é check-then-act; a lista de arquivados de `User` filtra
-`type === 'admin'` espelhando o `abort_unless` do `destroy`, senão os usuários de cliente, redator e
-aluno arquivados pelas cascatas vazam na tela de staff; e a **dívida de copy do molde é paga** —
-`budget.confirmDeleteBody` e `quote.confirmDeleteBody` param de dizer "no se puede deshacer", cujo
-gatilho era exatamente este bloco.
-
-**A auto-revisão da spec achou três defeitos e os corrigiu inline.** Um glob (`useBudgetQuotes*`) no
-lugar de path exato; a sigla `D10` colidindo entre esta spec e o molde; e uma **lacuna real** — o
-binding do restore aninhado. `->scopeBindings()` resolve `{enrollment}` por `$turma->enrollments()`,
-que é escopada por `deleted_at IS NULL`, então matrícula arquivada daria **404 antes de chegar à
-Action**. A spec passou a exigir `onlyTrashed()` explícito no binding.
-
-**O frontend não migra nada, e isso foi medido:** `useArchivedPage` aceita `ArchivableResource`
-**estrutural** (`useArchivedList` + `useRestore`), não a fábrica. `Turma` satisfaz o contrato à mão
-no `useTurmas.ts` artesanal, e os aninhados fecham o id do pai no próprio hook.
-
-**Risco reavaliado: segue ALTO.** Schema (3 colunas), RBAC (5 permissões), `generated.ts` e dado com
-peso legal — agora com um item a mais que a promoção não previa: o bloco **toca o caminho de emissão
-de certificado**.
-
-**Estado: `planning`.** Próxima ação: escrever o plano.
-
-### Plano — 2026-08-18: 15 tasks, executor Claude, e a escrita achou oito coisas que a spec não podia saber
-
-**`docs/superpowers/plans/2026-08-18-arquivados-roots-restantes.md`**, 15 tasks em três fases
-(Commercial 1–6, Identity 7–10, Operation 11–14, fechamento 15). Cada task tem paths exatos, o código
-inteiro de cada passo, o comando de verificação com a saída esperada e o commit — nada de "similar à
-Task N".
-
-**Escrever o plano contra o código exigiu oito decisões derivadas (P1–P8), todas declaradas no
-próprio plano.** As três que mudam trabalho:
-
-- **P7 — três telas expõem a rota de arquivar sem ter botão nenhum.** `DELETE /api/redatores/{redator}`,
-  `DELETE /api/users/{user}` e `DELETE /api/turmas/{turma}` existem no backend, mas `RedatoresTable`,
-  `Admin/UsersTable` e `TurmasTable` **não têm** ação de arquivar, e `api/useTurmas.ts` não tem
-  mutação de DELETE. Uma visão de Arquivados sozinha nasceria impossível de exercitar pela interface —
-  o DoD da lei §8 não teria como ser cumprido. As Tasks 10 e 14 trazem **as duas metades**, no molde
-  exato do `ClientRowActions`. **É escopo que a spec não pediu**; se o João preferir o escopo estrito,
-  as duas tasks perdem o botão de arquivar e aquelas fases passam a ser provadas por `curl`.
-- **P4 — nascem dois QueryBuilders.** `Budget` monta `with([...])` solto no controller e
-  `Identity/QueryBuilders/` está **vazio**. A lição Q-8 (a lista de Arquivados mostra o registro como
-  ele estava no instante do arquivamento) exige `asOfArchiving`, que é método de trait e mora em
-  builder. `BudgetQueryBuilder` e `RedatorQueryBuilder` nascem; `QuoteQueryBuilder` e
-  `TurmaQueryBuilder` ganham `withArchivedListingData()`; `EnrollmentQueryBuilder` não ganha nada
-  (matrícula é folha).
-- **P6 — a turma arquivada mostraria `0 alumnos`.** `TurmaData::fromModel` lê
-  `enrolled_count: $turma->enrollments_count` **sem fallback**, e `withCount('enrollments')` conta só
-  as ativas — depois da cascata D2, toda turma arquivada apareceria vazia. O `withArchivedListingData`
-  reescreve a contagem com o mesmo predicado do trait. É o Q-8 aplicado a um `withCount`.
-
-As outras cinco: **P1** (o path `useBudgetQuotes.ts` da spec §4 não existe — o arquivo é
-`useQuotes.ts`), **P2** (as duas mensagens novas saem em **es-CL**, por precedente de
-`Turma::assertAcademicallyWritable()`, e são duas linhas se o João decidir a D-07 no outro sentido),
-**P3** (`RestoreEnrollmentAction` aplica a RN-15, simétrica com `RemoveEnrollmentAction:12`), **P5**
-(`Redator::turmas()` nasce, inversa de `Turma::redatores()`, para o gate D3) e **P8** (`lockRow` entra
-em `Redator` e `Turma`, onde a cascata nasce inteira neste bloco, e **não** entra em `Budget`/`Quote`,
-onde o caminho de arquivar já existia com transação e sem lock — acrescentar mutex só no restore
-criaria assimetria pior que a que resolve).
-
-**Nenhuma chave de locale nova.** O bloco `archive.*` dos três arquivos cobre confirmar, toasts,
-colunas e ações. A única mudança de copy é a **D11**: os dois `confirmDeleteBody` de `budget` e
-`quote`, que diziam *"Esta acción no se puede deshacer."* e deixam de ser verdade na Task 3.
-
-**`generated.ts` tem commit próprio, no fim.** As Tasks 5, 10 e 14 rodam `typescript:transform` para o
-`tsc` enxergar os DTOs novos, mas não o commitam: três commits deixariam o arquivo em três estados
-intermediários e o manifesto do transformer fora de sincronia em dois deles. Task 15, um commit, seis
-tipos.
-
-**Handoff: `executor: claude`, risco projetado ALTO.** O bloco toca quatro leis do §5 (tipos gerados,
-RBAC, fronteira de features, DoD provado) e tem três pontos que exigem julgamento fora do plano: a
-Task 7 muda `Turma::redatores()`, lida por Operation e Certification, e manda **ler a asserção** de
-qualquer teste que vire vermelho; a P7 é escopo declarado que o João pode cortar; e a P2 reabre a
-D-07.
-
-**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco arquivados-roots-restantes`, por
-instrução posterior do João. Ordem obrigatória: a Task 1 (colunas + permissões) precede tudo, e dentro
-de cada fase o backend precede o frontend.
-
-### Execução — 2026-08-19
-
-Técnica `subagent-driven-development` a partir da Task 2 — a restrição de AgentTool caiu no meio do
-bloco e o João pediu a troca; a Task 1 saiu inline, sob `executing-plans`. Main tree pela P-03.
-Ledger task a task em `.superpowers/sdd/progress.md`, com implementador e revisor próprios por task.
-
-**A Task 1 achou um gap do plano, e ele é de guardrail.** `PermissionI18nParityTest` exige paridade
-exata entre `PermissionCatalog::descriptions()` e as chaves `perm.*` das três locales — permissão
-nova sem tradução reprova a suíte. O plano registrou "nenhuma chave de locale nova" pensando no bloco
-`archive.*`; `perm.*` é outro namespace e as cinco permissões novas o obrigam. As cinco chaves
-entraram no mesmo commit da Task 1, ao lado de cada `*_delete` correspondente. Sem isso a Task 15
-descobriria o vermelho no fim, com cinco fases de distância da causa.
-
-
-### DoD end-to-end — 2026-08-19 (Task 15): as três fases encadeadas, provadas no navegador
-
-Chromium contra a API real e a MySQL de desenvolvimento. O frontend do main tree subiu na **5174** —
-a 5173 é o `pnpm dev` do worktree `fix-frontend` do João, e provar a tela nela teria provado o
-código de outro branch. O `.env` já previa a porta.
-
-**Fase 1 — Comercial.** O primeiro alvo (`Scap 1`) recusou com **422** e uma frase em PORTUGUÊS:
-*"Orçamento com cotação aprovada não pode ser excluído. Recuse-a antes."* É gate pré-existente e
-correto (`DeleteBudgetAction:21`), mas a frase está hard-coded na Action e fora do idioma da tela —
-achado registrado abaixo. Refeito em `Scap 8`, com cotação e anexo criados pelo próprio app:
-arquivar levou cotação e anexo com `archived_with_parent = true`; Arquivados mostrou **`Quotes = 1`**
-com a cotação já soft-deletada (a contagem as-of-archiving); restaurar devolveu os três totais
-(**42 / 0 / 0 UF**), a cotação e o `anexo-dod.pdf`, com a marca limpa.
-
-**Fase 2 — Identity, e o caso com peso legal (D3).** Nenhum redator do banco tinha só turma
-concluída, então Ana Reyes saiu da turma 6 (em andamento, que ficou com Juan Morales) — ação do
-próprio app, desfeita no fim. Com só a turma 3 (concluída), arquivá-la passou o gate; a cascata
-levou `user#4` e o REUF. **Em `/certificados`, o diálogo de emissão listou `Redator: Ana Reyes` —
-arquivada — e a emissão respondeu `201`**, gerando `LOT-2026-1005` (`redator_id = 3`, status
-`emitido`, com UUID de validação). É o `Turma::redatores()->withTrashed()` da Task 7 provado onde
-importa: sem ele o certificado não sairia. Restaurar devolveu redator, usuário e REUF com a marca
-limpa, e Ana voltou à turma 6.
-
-**Fase 3 — Operação.** Turma 2 (`Scap 4 - Cot 1`, 8 alunos, 3 documentos) arquivada pelo botão da
-linha (P7): cascata de 8 matrículas e 3 documentos, todas com marca. Arquivados mostrou
-**`Students = 8`** com as oito já soft-deletadas. Restore devolveu **200 — não 201** — e trouxe as
-onze peças com marca zerada; o detalhe mostrou os 8 alunos e o switch local da D5. Arquivar e
-restaurar UMA matrícula fechou o ciclo: a lista de arquivadas veio escopada pela turma, com data e
-autor, e o restore (`POST /api/turmas/2/alunos/13/restore` → **200**) invalidou as duas listas.
-
-**D10 na tela.** Com `user#5` (`type = redator`) arquivado, `/administracion` → Arquivados mostrou
-**"No archived records"**. Usuário de redator não vaza para a lista de staff.
-
-**O gate D1 na MySQL real.** A suíte roda em sqlite, então a premissa de banco foi conferida no
-motor de verdade: `turmas.active_quote_id` existe como coluna gerada
-`(case when (deleted_at is null) then quote_id end)` com o índice `turmas_active_quote_id_unique`
-(`Non_unique = 0`). É o que torna o gate da `RestoreTurmaAction` um 422 em vez de um 500.
-
-**O que ficou no banco de desenvolvimento.** Uma cotação (`Scap 8 - Cot 1`, 42 UF, pendente) e um
-anexo em `Scap 8`, e o certificado `LOT-2026-1005` — artefatos que o próprio roteiro do DoD manda
-criar. O anexo de teste que subiu em `Scap 1` foi removido. Todo o resto voltou ao estado anterior:
-Ana Reyes na turma 6, Carlos Fuentes ativo, turma 2 e suas onze peças vivas.
-
-### Achados fora do escopo do bloco, para a triagem do review
-
-- **`DeleteBudgetAction:21` responde em português numa interface es-CL**, com a frase hard-coded na
-  Action em vez de locale. Pré-existente; é a mesma D-07 que a spec deste bloco reabriu para as duas
-  frases novas (que saíram em es-CL).
-- **Requisição não autenticada sem `Accept: application/json` responde 500** (`Route [login] not
-  defined`) em vez de 401. No `laravel.log` desde 2026-08-16, não é regressão deste branch.
-- **Aviso do React `Each child in a list should have a unique "key" prop` no `TableBody`** do painel
-  de emissão de certificados. Fora dos arquivos deste bloco.
-
-### Encerramento da execução — 2026-08-19
-
-Quinze tasks provadas, em **28 commits** sobre `6fd0ad8`. Backend **795 passed / 5 skipped**;
-frontend `lint`, `build` e **391 testes** limpos. `backend/config/cors.php` não foi tocado por
-nenhum commit do bloco — o único commit que o altera é `6fd0ad8`, do João, que é a base.
-
-Os tipos gerados entraram num commit só, no fim (`fdc043e`): 30 inserções, zero remoções, com o
-manifesto junto.
-
-Dois desvios do plano, ambos registrados no ledger com a evidência:
-
-1. **O Step 6 da Task 14, ao pé da letra, reprova o `pnpm lint`.** As colunas do rastreio mais a de
-   ações levaram `TurmasTable.tsx` a 185 linhas contra a régua de 150 (catraca do D8 do B2). O
-   implementador parou em vez de partir o arquivo sozinho; parti eu, em `c2e6c37` — cinco corpos de
-   célula para `TurmaCells.tsx`, tabela em 143 linhas, comportamento intacto.
-2. **O plano afirmou duas vezes que o `lockRow` fecha a janela contra quem escreve filho, e o código
-   não faz isso** — no redator (Task 7) e na turma (Task 11). Os comentários dizem o que o código
-   faz, e a P-47 passou a cobrir os dois roots. **O plano não é fonte sobre o comportamento do
-   código.**
-
-
-### Review — 2026-08-19: risco ALTO, duas lentes, seis achados e zero violação de lei
-
-**Classificação ALTO e a segunda lente foi acionada.** Schema (3 colunas), RBAC (5 permissões),
-`generated.ts` e o caminho de emissão de certificado — quatro dos gatilhos da skill num bloco só.
-Codex rodou read-only sobre `6fd0ad8..HEAD` contra plano, spec e leis §5; os seis achados dele foram
-verificados por mim no código antes de qualquer um entrar no relatório.
-
-**Órfãos: zero**, nos dois lados. **Leis §5: nenhuma violação** — sem Repository, sem regra em
-controller, cascata instância a instância, `generated.ts` regenerado com manifesto no mesmo commit,
-`ValidationException` nas duas frases novas, zero `primereact` direto e zero import cruzado em
-`features/`, financeiro não gateia nada. Suítes conferidas na hora: backend **795 passed / 5
-skipped**, frontend **391 testes**.
-
-**Seis achados, nenhum 🔴:**
-
-1. **Q-1 🟡 P — `RestoreQuoteAction:34-47` restaura cotação sem exigir orçamento ativo.** A rota é
-   plana e a Action não olha o pai, então cotação de orçamento arquivado volta sozinha: some da tela
-   (o binding do pai dá 404) mas segue aprovável por API, e cotação aprovada origina turma. É o
-   raciocínio da própria **D10** — aplicado a `User` e não a `Quote`.
-2. **Q-2 🟡 P — `QuotesList.tsx:44-59`.** `nameLost` e o `InlineLoadState` com Reintentar existem só
-   no ramo ativo; o ramo `archived` volta a pintar `—` em silêncio quando o GET de cursos falha,
-   justamente na tela que existe para reconhecer a cotação antes de restaurar. É o defeito do BD-6
-   reentrando pela porta nova.
-3. **Q-3 🟡 M — o kit de arquivados está copiado por root em três camadas:** 6 `*RowActions.tsx` (397
-   linhas), 6 hooks `use*Archived`, e o par `toArchive` + `ConfirmDialog` em cinco Pages.
-   **Reincidente (2ª sprint)** — proposta de regra para `.claude/rules/frontend-fsliced.md`
-   apresentada ao João junto do relatório.
-4. **Q-4 🟢 P — o teste 9 da spec §5 não foi escrito, e o código faz o contrário do que ele
-   prometia:** `useQuotes.ts:21` invalida `budgetsApi.keys.all`, não a chave do pai.
-5. **Q-5 🟢 P — `RestoreTurmaAction:40-55` é check-then-act:** trava a turma que volta e pergunta
-   sobre a cotação, que ninguém trava. Mesma classe da **P-47**, ator diferente (criador de irmã, não
-   escritor de filho) — a ficha atual não alcança.
-6. **Q-6 🟢 — o gate D3 não vale na volta.** Arquivar turma, arquivar redator, restaurar turma
-   devolve turma em andamento com redator arquivado. Fecha com gate no restore ou com declaração na
-   spec, como a exceção da D4.
-
-**Três achados do Codex foram descartados, com razão registrada:** a audit `restored` duplicada sob
-concorrência é simetria deliberada e comentada (decisão consciente não é achado); o `—` do cliente em
-`ArchivedBudgetData` é pré-existente e aparece igual na visão ativa, com o erro já escalando; e o
-redator no restore de turma entrou rebaixado a 🟢 porque a emissão segue íntegra pelas três peças da
-D3. **Zero divergência de julgamento entre as duas lentes.**
-
-**Estado: `blocked`, `resume_state: reviewing`.** Próxima ação: o João aprova o que entra. Somente
-achado aprovado vira código.
-
-
-### Correções do review — 2026-08-19: os seis achados aprovados, em seis commits
-
-O João aprovou **Q-1 a Q-6**. Nenhum foi deferido para o backlog.
-
-**Q-1 — o restore da cotação passou a exigir orçamento ativo.** `RestoreQuoteAction` lê
-`$quote->budget->trashed()` e recusa com **422** em es-CL. O teste que provava a limpeza da marca
-virou dois: o 422 do gate e o caminho que ele obriga a usar (restaurar o pai devolve a cotação com
-`archived_with_parent` em `false`) — sob o gate, cotação marcada implica orçamento arquivado, então
-o antigo cenário deixou de ser alcançável.
-
-**Q-5 e Q-6 saíram no mesmo commit, porque tocam a mesma Action.** `Quote::lockRow()` nasceu e os
-DOIS caminhos que decidem sobre a cotação a travam: `CreateTurmaAction` — que também moveu as duas
-checagens para dentro da transação — e `RestoreTurmaAction`. É o **primeiro eixo com tomador dos dois
-lados** desde que a P-47 foi aberta. O segundo gate da turma recusa restaurar turma **em andamento**
-com redator arquivado; turma concluída fica de fora, porque é nela que o certificado é emitido e a
-emissão já lê redator arquivado pelo `withTrashed` da D3.
-
-**Q-2 — o aviso de nome perdido passou a valer nos dois modos** do `QuotesList`, com o cálculo sobre
-a lista VISÍVEL e o `InlineLoadState` extraído para um nó reaproveitado — para não haver um terceiro
-sítio onde esquecer.
-
-**Q-4 — o critério 9 da spec §5 existe e o código passou a cumpri-lo.** `useRestoreQuote` recebe o
-`budgetId` e invalida o detalhe do pai (que alcança a lista de arquivadas por prefixo) mais a lista
-de orçamentos, cujos totais mudam. As outras mutações seguem em `keys.all`: nascem dentro do detalhe
-do pai, onde não há outro orçamento montado. O teste vive em `quoteKeys.invalidatedByRestore` e
-reprova contra o código antigo.
-
-**Q-3 — o kit de arquivados virou um só, e a regra foi escrita.** Nascem `useArchiveToasts` (interno,
-fora do barrel), `useArchiveAction`, `ArchiveRowActions` e `ArchiveConfirmDialog`; `useArchivedPage`
-absorveu os toasts do restore e continua propagando os callbacks de quem chama. Os oito hooks de
-página caíram de **370 para 162 linhas**, os seis `*RowActions` viraram adaptadores que só chamam
-`can()` e passam **booleanos** — `shared/ui` não importa `shared/hooks` —, e os cinco blocos de
-`ConfirmDialog` viraram cinco chamadas de cinco linhas. Saldo do commit: **603 linhas a menos, 403 a
-mais**. O padrão reincidente virou o item **"Kit de arquivados"** em `.claude/rules/frontend-fsliced.md`.
-
-**Verificação depois das correções:** backend **797 passed / 5 skipped** (era 795: +3 testes novos,
-−1 que deixou de ser alcançável); frontend **394 testes em 67 arquivos**, `lint` e `build` limpos.
-Zero `primereact` direto e zero import cruzado em `features/`. Nenhuma peça nova órfã. `generated.ts`
-não foi tocado — nenhum DTO mudou.
-
-**O que NÃO foi feito, e é do fechamento:** a prova no navegador dos dois 422 novos (cotação sob
-orçamento arquivado; turma com redator arquivado) e das três telas que o Q-2/Q-3 tocaram. As suítes
-provam os endpoints e o `pnpm build` prova os tipos; o DoD da lei §8 pede a tela, e esta sessão não
-teve navegador. **Entra no `/fechar-sprint` como item obrigatório, não como opcional.**
-
-
-
-### Fechamento — 2026-08-19: os dois 422 novos provados no navegador, e a `main` andou por baixo
-
-**O item obrigatório que o review deixou para cá foi cumprido, no Chromium contra a API real e a
-MySQL de desenvolvimento.** O frontend do main tree subiu na **5174** de novo — a 5173 é o `pnpm dev`
-do worktree do João —, sessão de admin, interface em **es-CL**.
-
-**O 422 do Q-6 é alcançável pela interface, e o roteiro é o da própria ficha.** Turma 2
-(`Scap 4 - Cot 1`, em andamento, 8 alunos, redator Pedro Soto) arquivada pelo botão da linha — a
-cascata marcou as **8 matrículas** (`archived_with_parent = 1`, medido no banco). Com a turma dele
-arquivada, `/personas` deixou arquivar **Pedro Soto** (o gate da D3 só enxerga turma viva, por
-desenho). Em `/operacion` → Arquivados, a linha veio como estava no instante do arquivamento —
-**8 alunos** (P6) e o redator **arquivado ainda visível** (`withTrashed` da D3) — e **Restaurar
-devolveu `POST /api/turmas/2/restore` → 422** com a frase da Action em es-CL: *"Un redactor de esta
-clase está archivado: restáuralo antes de restaurar la clase."* Restaurado o redator (200), a mesma
-turma voltou (200) com as 8 matrículas e a marca zerada.
-
-**O 422 do Q-1 NÃO é alcançável pela interface, e isso é a razão de o gate existir — foi provado nos
-dois passos.** Arquivado o orçamento `Scap 8`, a cascata marcou a cotação (`archived_with_parent =
-1`); abrir `/comercial/presupuestos/8` devolveu **`GET /api/budgets/8` → 404** (*"No query results
-for model … Budget 8"*), porque o binding do pai é padrão — a lista de arquivadas da cotação vive
-dentro do detalhe e some junto. A rota que sobra é a **plana**, e ela foi exercida do contexto da
-própria página (mesma sessão, mesmo `Origin`, mesmo CSRF): `POST /api/quotes/11/restore` → **422**,
-envelope RFC 7807 com
-*"El presupuesto de esta cotización está archivado: restáuralo primero."* Restaurar o orçamento pela
-tela (200) devolveu a cotação com a marca limpa.
-
-**Q-2 e Q-4 também foram provados na tela, e não por leitura.** Com `http://localhost:8080/api/courses*`
-roteado para 500, a aba **Arquivados** do detalhe passou a mostrar *"No se pudo procesar la respuesta
-del servidor."* + **Reintentar** ao lado da cotação com `—` no lugar do nome — o ramo que antes
-pintava o traço em silêncio. Removida a rota, **Reintentar** trouxe *"Trabajos en líneas energizadas
-220kV"* de volta. E o restore da cotação atualizou o **detalhe do pai sem reload**: `0 UF / 0
-cotizaciones` viraram `42 UF / 1` no mesmo instante — a invalidação da chave do pai que o critério 9
-da spec pedia.
-
-**Q-3 exercitado nas telas, não só nos testes:** os diálogos de arquivar de turma, redator, cotação e
-orçamento saíram todos do `ArchiveConfirmDialog` único, com o toast *"Registro archivado."* do
-`useArchiveAction`; as listas de Arquivados de `/operacion`, `/personas`, `/administracion`,
-`/cursos` e `/comercial` renderizaram pelo `useArchivedPage`. **Zero erro de console** em toda a
-sessão. A **D11** apareceu onde devia: o diálogo da cotação diz *"Podrás restaurarla desde
-Archivados."*, e o do orçamento avisa que *"Sus cotizaciones se archivarán junto con él."*
-
-**Zero resíduo.** Tudo que o roteiro arquivou foi restaurado: turma 2 e suas 8 matrículas, Pedro
-Soto (`redatores.id = 2`), o orçamento 8 e a cotação 11 com `archived_with_parent = 0`. O banco de
-dev terminou o gate como começou.
-
-**Resto do gate.** Backend **797 passed / 5 skipped** (2942 asserções); frontend `pnpm lint` exit 0,
-`pnpm build` verde e **67 arquivos / 394 testes**; `pint --test` **`passed`** nos **54 arquivos PHP**
-do bloco (nunca sem argumento); `typescript:transform` rodado de novo **sem drift** — `git diff` em
-`shared/types/` vazio, então o `generated.ts` do commit `fdc043e` está em sincronia e não foi editado
-à mão. Código morto: varredura nos **41 arquivos criados pelo bloco** (fora testes) não achou nenhum
-sem consumidor; os `.gitkeep` de `features/*/stores|api|hooks` seguem alheios e não foram tocados.
-Leis do §5: zero `primereact` em `features/`, zero import cruzado entre features, zero
-`abort(4xx)` novo (o único do repositório é o `abort(404)` público pré-existente), nenhum Repository,
-nenhum trigger de banco.
-
-**Pendências.** A **P-45** cumpriu a sprint de rastro e saiu de `encerradas.md`. A **P-47** já tinha
-sido reescrita pelas correções do review e cobre os dois eixos. Três fichas mexidas por medição
-deste gate: a **P-35** (o gatilho venceu **pela metade** — o bloco tocou `Quote`, `DeleteQuoteAction`
-e `RestoreQuoteAction`, mas **não** `CreateQuoteAction`, então a simetria do `$fillable` não foi
-absorvida), a **P-44** (as telas de Arquivados deram um **segundo palco** às sondas: `E2E Gate
-Redator 1/2` em `/personas`, `GATE T7` em `/cursos`, dois clientes de sonda em `/comercial` — nada
-disso é deste bloco e nada foi apagado) e a **P-48**, que nasce aqui: o `title` do envelope RFC 7807
-é português nos seis ramos enquanto os `detail` novos são es-CL. **Não é bug vivo** — `problemMessage`
-não lê `title` — e traduzir é a decisão de idioma que a D-07 espera.
-
-### A divergência que o fechamento encontrou e NÃO resolve: a `main` fechou outro bloco em paralelo
-
-`origin/main` está **56 commits à frente** da base deste branch (`6fd0ad8`) e contém o
-`feat/identity-ativacao-acesso-redator` inteiro, fechado pelo João em **2026-08-19 16:05**
-(`967cc618`, merge `f2d74da7`). O `state.md` da `main` diz `workflow_state: idle` com
-`last_completed_work_item: identity-ativacao-acesso-redator`; o deste branch dizia
-`ready_for_closure` para `arquivados-roots-restantes`. **Dois `active_work_item` viveram ao mesmo
-tempo, em linhas diferentes** — o invariante de um só valeu dentro de cada branch, não entre elas.
-
-**O fechamento não escolheu por heurística e não importou nada da `main`:** o estado deste branch,
-o plano, a spec, os 36 commits e o `progress.md` concordam entre si sobre a etapa do bloco, então o
-gate rodou sobre o que existe aqui. O que fica para a decisão do João, no merge:
-
-1. **`backlog.md` conflita nos dois sentidos.** A `main` ainda traz o item 1 na redação **anterior**
-   aos dois blocos de arquivamento ("tornar o lifecycle de archive/restore explícito") — ela nunca
-   recebeu nem o `arquivados-e-restauracao` nem este —, e já removeu o item de **ativação de acesso
-   do redator**, que neste branch continua listado (renumerado para 3 por este fechamento, porque a
-   regra manda remover **somente** o item concluído).
-2. **`pendencias/` conflita.** Na `main` a **P-45** segue **aberta**; aqui ela foi encerrada dentro do
-   `arquivados-e-restauracao` e o rastro saiu agora. A **P-48** não colide: o maior ID da `main`
-   também é o P-47.
-3. **`progress.md` tem dez linhas dos dois lados, com conjuntos diferentes** — a `main` tem a linha
-   do bloco de identidade e não tem as dos dois blocos de arquivamento.
-4. **`state.md` vai conflitar inteiro**, e a janela de cinco fechamentos difere.
-
-Nada disso é regressão deste bloco: nasce de a `feat/arquivados-e-restauracao` seguir sem merge por
-decisão do João, com este branch nascendo dela. **Reconciliar é decisão dele, não do fechamento.**
-
-### Merge da `main` — 2026-08-19: a divergência acima foi resolvida por instrução do João
-
-O João mandou trazer a `main` para este branch antes do PR. `git merge origin/main` (base
-`b758068b`) trouxe os 56 commits do `identity-ativacao-acesso-redator` e abriu **10 conflitos** —
-6 de doc, 3 de componente e 1 de manifesto. Suítes depois do merge: **828 passed / 5 skipped**
-(3006 asserções) no backend, **77 arquivos / 435 testes**, `lint` 0 e `build` verde no frontend.
-
-**Código — três conflitos, três composições, nenhum "escolhe um lado":**
-
-1. **`QuotesList.tsx`** — a `main` tinha o `InlineLoadState` inline com `t(courses.errorHint)`; este
-   branch tinha o mesmo nó **extraído** em `avisoDeNome`, porque o Q-2 o reusa nos dois modos. Ficou a
-   extração daqui **com o `errorHint` de lá**: o `useLoadState` da `main` escolhe a dica por status
-   (403/404/genérico), e o nosso literal `'common.loadErrorHint'` era mais burro.
-2. **`RedatoresTable.tsx`** — a `main` pôs o botão de **reenviar convite** na célula de ações; este
-   branch trocou a célula inteira pelo `RedatorRowActions` do kit. A célula agora tem os dois, e o
-   convite **só aparece na lista ativa**: o `User` do redator desce com a cascata, então reenviar
-   acesso a um redator arquivado não é ação que exista. Coluna de `8rem` para `10rem`.
-3. **`PeoplePage.tsx`** — a `main` desceu o dado para `RedatoresTab`/`StudentsTab` (D-04: com o hook
-   acima das abas, o `renderActiveOnly` não alcançava e a tela buscava as duas listas). Ficou a
-   estrutura de lá, e **a fiação de arquivados deste branch desceu junto** para a `RedatoresTab` —
-   `useRedatoresArchived`, o `toArchive`, as props de modo e o `ArchiveConfirmDialog`. A casca voltou
-   a não ter hook de dado nenhum.
-
-**`generated.ts` e o manifesto foram regenerados, não resolvidos à mão** — `typescript:transform`
-sobre o backend já mesclado, que é a única fonte válida (lei §5.3). O `RedatorData` da `main` ganhou
-`is_active`, e o fixture do `RedatorRowActions.test.tsx` passou a trazê-lo: o `tsc -b` reprovou
-primeiro, o teste foi corrigido depois.
-
-**Três colisões de ID, resolvidas pelo precedente da P-35 (quem renumera é quem ainda não publicou
-na `main`):**
-
-- **`D-34` → `D-37`** — a `main` publicou um `D-34` (gate RBAC do Dashboard atravessando o seam como
-  `null`) e um `D-35`; o backfill de `archived_with_parent` deste branch ficou com o próximo livre, e
-  as três citações em `state.md`/`progress.md` acompanharam.
-- **`P-47` → `P-49`** — a `main` publicou uma `P-47` (os 7 redatores do seed sem a role `redator`); a
-  ficha do `lockRow` meio mutex é a renumerada.
-- **`P-48` foi retirada** — era duplicata da **D-36** da `main`, que já registrava o envelope RFC 7807
-  não localizado desde o BD-13. A medição do nosso fechamento (o 422 com `title` em PT e `detail` em
-  es-CL no MESMO envelope) foi **enxertada na D-36**, que é a ficha dona do assunto.
-
-**Doc — o que ficou de cada lado:**
-
-- **`backlog.md`:** o item de arquivamento sumiu (entregue nos dois blocos desta linha) e o de
-  **ativação de acesso do redator** também (entregue na `main`) — sobraram Roles/permissões e
-  Hardening. O texto do B2 passou a ser o da `main`: o bloqueio do valor da view do Redator **caiu**.
-- **`pendencias/`:** a **P-45** continua **encerrada**, e agora com prova de código em vez de
-  histórico — depois do merge o `explode` existe nos dois sítios que leem `FRONTEND_URL`
-  (`tests/TestCase.php:25` e `config/cors.php:22`). As duas fichas da `P-44` (sondas nas telas de
-  Arquivados, daqui; rastro do gate do identity, de lá) ficaram as duas.
-- **`progress.md`:** as quatro entregas novas entraram em ordem de data e as duas mais antigas
-  desceram para o `progress-archive.md`, que também perdeu **3 linhas duplicadas** — os dois lados
-  tinham arquivado as mesmas entregas por conta própria.
-- **`state.md`:** a janela voltou a cinco fechamentos, intercalando os dois lados
-  (`arquivados-roots-restantes` → `identity-ativacao-acesso-redator` → `arquivados-e-restauracao` →
-  `bd13-listagens-e-abas` → `bd16-perfil-e-kit-compartilhado`). Saíram da janela, para o git e para o
-  `progress-archive.md`: `dashboard-frontend-analitico-e-redator`, o trabalho fora de bloco de
-  2026-08-17 e `meu-perfil-frontend`.
-
-**O merge achou uma coisa que nenhum dos dois lados tinha:** juntas, as duas suítes passam de
-**828 testes** e estouram o `memory_limit` de **128M** do container — o `docker compose exec -T app
-php artisan test` do `CLAUDE.md` §6 morre com `Allowed memory size … exhausted` no
-`ManualTurmaTest`. Não é defeito de teste (o `--filter` passa em 2,35s) nem do merge: o pico é
-**129 MB**, um megabyte além do default. Pelo binário direto com `-d memory_limit=1G` a suíte fecha
-verde. Virou a **P-50**, travada em decisão do João, porque `docker/php/uploads.ini` cai em `conf.d`
-e vale para o PHP-FPM de produção também.
-
-**Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
