@@ -208,6 +208,51 @@ class DomainDependencyTest extends TestCase
         $this->assertSame($declarados, $emDisco, 'Domínio em app/Domains/ sem entrada em DomainDependencyTest::ALLOWED (ou vice-versa) — declare a matriz dele, nem que seja com zero arestas, como Certification.');
     }
 
+    /**
+     * Regra C — a direção contrária da Regra B (D-17).
+     *
+     * A Regra B pega aresta USADA e não declarada; sem esta, a matriz envelhece
+     * com sobra em silêncio: o import sai no refactor e a linha fica, dando
+     * permissão a um vínculo que ninguém mais tem.
+     *
+     * A varredura é a MESMA da Regra B — `referenciasCrossDomain` sobre o código
+     * sem comentários. Escrita sobre linhas `use`, esta regra acusaria de órfã
+     * toda aresta consumida só por FQN inline (`\App\Domains\X\Models\Y::find(1)`),
+     * que é justamente o escape que o docblock desta classe fecha de propósito.
+     *
+     * Referência ao namespace (camada ou classe vazias) não conta como consumo:
+     * é violação de forma e a Regra B já a reprova pelo nome certo.
+     */
+    public function test_toda_aresta_declarada_tem_consumidor(): void
+    {
+        $orfas = [];
+
+        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
+            $usadas = [];
+
+            foreach ($arquivos as $arquivo) {
+                foreach ($this->referenciasCrossDomain($arquivo, $origem) as [$alvo, $camada, $classe]) {
+                    if ($camada === '' || $classe === '') {
+                        continue;
+                    }
+
+                    $usadas[] = "{$alvo}\\{$camada}\\{$classe}";
+                }
+            }
+
+            foreach (self::ALLOWED[$origem] as $declarada) {
+                if (! in_array($declarada, $usadas, true)) {
+                    $orfas[] = "{$origem} -> {$declarada}";
+                }
+            }
+        }
+
+        $this->assertSame([], $orfas, implode("\n", array_merge(
+            ['Regra C — aresta declarada em DomainDependencyTest::ALLOWED sem nenhum consumidor no domínio de origem. A matriz só encolhe por refactor consciente: se o import saiu, a linha sai junto.'],
+            $orfas,
+        )));
+    }
+
     public function test_group_use_de_dominio_nao_e_suportado(): void
     {
         $encontrados = [];
