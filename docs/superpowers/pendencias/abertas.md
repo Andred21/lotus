@@ -321,16 +321,19 @@ bloco** — ele fechou P-20, P-21, P-23, P-39, P-43 e P-18, e nenhuma destas est
 13ª divergência da mesma varredura era da própria sprint (a âncora `[P-43](#p-43)` de
 `abertas.md`, quebrada quando a ficha desceu para `encerradas.md`) e foi corrigida no fechamento.
 Registradas aqui sem correção, porque `auditar-docs` reporta e não corrige, e porque reconciliar
-`estrutura-monolito.md` contra a árvore é trabalho de bloco, não de gate.
+`estrutura-monolito.md` contra a árvore é trabalho de bloco, não de gate. **Reconferidas contra o
+merge da `main` de 2026-08-22** (que trouxe o `feedbacks-resolver-escopo` e tocou os dois arquivos):
+as 12 seguem válidas, nenhuma foi corrigida de lado nenhum — só as coordenadas de linha
+deslocaram, e estão atualizadas abaixo.
 
 | Doc | Divergência | Evidência |
 |---|---|---|
-| `estrutura-monolito.md:49,145,181-186` · `.claude/rules/backend-ddd.md:21-22` | Afirmam que `Certification` é scaffold vazio dos dois lados; o domínio está entregue | `backend/app/Domains/Certification/` com 38 classes; `frontend/src/features/certification/` com 26 arquivos |
-| `estrutura-monolito.md:32-50` · `backend-ddd.md:13-19` | O domínio `Dashboard` não aparece em nenhuma das duas listas, e é o 2º maior consumidor cross-domain | `backend/app/Domains/Dashboard/routes.php`; `tests/Feature/Shared/DomainDependencyTest.php:68-84` declara 15 arestas |
+| `estrutura-monolito.md:49,145,181-186` · `.claude/rules/backend-ddd.md:24-26` | Afirmam que `Certification` é scaffold vazio dos dois lados; o domínio está entregue | `backend/app/Domains/Certification/` com 38 classes; `frontend/src/features/certification/` com 26 arquivos |
+| `estrutura-monolito.md:32-50` · `backend-ddd.md:12-17` | O domínio `Dashboard` não aparece em nenhuma das duas listas, e é o 2º maior consumidor cross-domain | `backend/app/Domains/Dashboard/routes.php`; `tests/Feature/Shared/DomainDependencyTest.php:68-84` declara 15 arestas |
 | `estrutura-monolito.md:20` | Afirma que `Certification` tem zero arestas; a matriz declara 9 | `tests/Feature/Shared/DomainDependencyTest.php:88-100` |
-| `estrutura-monolito.md:53-58` | A árvore de `app/Shared/` lista 5 subpastas; o repo tem 11 | faltam `Audit/`, `Concerns/`, `Data/`, `Office/`, `Pdf/`, `Validation/` — três delas são home de lei (`PivotAudit`, `ArchivesChildren`, `WritableAttributes`) |
+| `estrutura-monolito.md:53-58` | A árvore de `Shared/` lista 5 subpastas; o repo tem 11 | faltam `Audit/`, `Concerns/`, `Data/`, `Office/`, `Pdf/`, `Validation/` — três delas são home de lei (`PivotAudit`, `ArchivesChildren`, `WritableAttributes`) |
 | `der-fisico.md` | A coluna `archived_with_parent` existe em 8 tabelas e não aparece em ficha nenhuma | `2026_08_18_000001_add_archived_with_parent_columns.php:26-38` e `..._000002_...:27-33` |
-| `backend-ddd.md:34` | Diz que os `routes.php` de domínio são carregadas no `bootstrap/app.php`; quem carrega é o `glob()` | `backend/routes/api.php:12-14`; `docs/estrutura-monolito.md:82` já descreve certo |
+| `backend-ddd.md:38` | Diz que os `routes.php` de domínio são carregadas no `bootstrap/app.php`; quem carrega é o `glob()` | `backend/routes/api.php:12-14`; `docs/estrutura-monolito.md:82` já descreve certo |
 | `CLAUDE.md:159-161` | A lista de serviços do Compose omite `mailpit`, transporte real do convite/recuperação | `docker-compose.yml:33-35` (porta 8025) |
 | `CLAUDE.md:146` | Descreve `pnpm test` como "hooks de `shared/`"; o corte cobre hooks de feature, componentes e `frontend/tests/` | `frontend/tests/repo-docs-refs.test.ts`; `features/identity/components/PeoplePage.test.tsx`. A `frontend-fsliced.md:268-271` registra que a frase já foi lição 13 três vezes |
 | `.claude/rules/frontend-fsliced.md:261-266` | População de testes de componente congelada em 2026-08-16 ("13 arquivos, 9 montam wrapper"), com lista nominal | só `shared/ui/**` tem 21 `*.test.tsx` que montam componente |
