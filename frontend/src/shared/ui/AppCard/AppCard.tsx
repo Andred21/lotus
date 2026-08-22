@@ -110,6 +110,14 @@ export interface AppCardHeaderProps {
   title: ReactNode
   /** Badge de contagem à direita do título. */
   count?: number
+  /** Qualificador do título, em tinta secundária, ao lado dele — e na linha de
+   * baixo quando não couber. É a grandeza que o card mostra quando ela é
+   * escolhida FORA dele. Sem isso os dois cards
+   * de ranking mantinham o mesmo título enquanto o eixo saltava de 0–4 para
+   * 0–340, e o seletor que explicava a mudança ficava fora do campo de visão
+   * assim que a página rolava (UI-05 da revisão de 2026-08-22). Não é lugar de
+   * descrição: qualificador, não legenda. */
+  subtitle?: ReactNode
   /** Ação secundária, alinhada à direita. */
   actions?: ReactNode
 }
@@ -130,7 +138,7 @@ export interface AppCardHeaderProps {
  * não tinha rolagem horizontal que alcançasse o pedaço cortado (UI-02 da revisão
  * de 2026-08-17). Quebrar preserva o rótulo inteiro; truncar o título, não —
  * título de card é o que identifica o bloco. */
-export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
+export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeaderProps) {
   return (
     <div
       className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-3"
@@ -138,8 +146,11 @@ export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
     >
       {/* `min-w-0` para o grupo do título poder encolher até o min-content e
         * deixar a ação decidir se cabe: sem ele o grupo trava na largura do
-        * texto inteiro e não há quebra que aconteça. */}
-      <div className="flex min-w-0 items-center gap-2">
+        * texto inteiro e não há quebra que aconteça. `flex-wrap` para o
+        * qualificador descer uma linha quando a faixa aperta, em vez de virar
+        * reticências: num card de 300px o título de duas linhas já come a
+        * largura toda, e "Cla…" no lugar de "Clases" não qualifica nada. */}
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
         <h3
           className="m-0 text-base font-semibold"
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
@@ -152,6 +163,11 @@ export function AppCardHeader({ title, count, actions }: AppCardHeaderProps) {
             style={{ background: 'var(--surface-section)', color: 'var(--text-color-secondary)' }}
           >
             {count}
+          </span>
+        )}
+        {subtitle !== undefined && (
+          <span className="text-xs font-medium" style={{ color: 'var(--text-color-secondary)' }}>
+            {subtitle}
           </span>
         )}
       </div>

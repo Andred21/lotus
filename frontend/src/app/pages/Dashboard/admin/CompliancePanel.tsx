@@ -67,7 +67,16 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         <AppColumn header={t('dashboard.compliance.present')} body={(r: TurmaComplianceData) => r.present_types.length} />
         <AppColumn
           header={t('dashboard.compliance.missing')}
-          body={(r: TurmaComplianceData) => (r.missing_types.length === 0 ? '—' : r.missing_types.join(', '))}
+          // O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
+          // de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
+          // pelas mesmas chaves (UI-07 da revisão de 2026-08-22). A frase da
+          // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
+          // coluna, que é montada aqui.
+          body={(r: TurmaComplianceData) =>
+            r.missing_types.length === 0
+              ? '—'
+              : r.missing_types.map((tipo) => t(`operation.documents.type.${tipo}`)).join(', ')
+          }
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}

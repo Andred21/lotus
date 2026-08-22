@@ -57,17 +57,25 @@ function Ranking({
 }) {
   const { t } = useTranslation()
   const dados = barras(linhas, metrica)
+  // O MESMO rótulo do seletor, e é o ponto: o card diz qual grandeza está
+  // desenhando com as palavras que o usuário escolheu no controle acima, que é o
+  // que sobrevive ao scroll, ao print e à volta para a tela.
+  const rotuloMetrica = t(`dashboard.rankings.metric.${metrica}`)
 
   return (
     <AppCard>
-      <AppCardHeader title={titulo} count={dados.length} />
+      <AppCardHeader title={titulo} count={dados.length} subtitle={rotuloMetrica} />
       {dados.length === 0 ? (
         <AppEmptyState icon="pi pi-chart-bar" title={t('dashboard.rankings.empty')} />
       ) : (
         <div className="px-2 pb-2">
           <AppBarChart
             data={dados}
-            ariaLabel={titulo}
+            // O nome acessível do gráfico carrega as DUAS coisas — que ranking é
+            // e sobre qual grandeza —, porque para quem ouve não há eixo nem
+            // cabeçalho ao lado.
+            ariaLabel={`${titulo} — ${rotuloMetrica}`}
+            valueLabel={rotuloMetrica}
             inkIndex={inkIndex}
             formatValue={metrica === 'uf_aprovada' ? (v) => formatUf(v.toFixed(4)) : undefined}
           />
