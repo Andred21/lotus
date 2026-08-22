@@ -49,7 +49,16 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                   <span className="block truncate text-sm font-medium" title={item.course_name}>
                     {item.course_name}
                   </span>
-                  <span className="block truncate text-xs" style={{ color: warningText }}>
+                  {/* Esta linha QUEBRA, e o nome do curso acima trunca: são dados de
+                    natureza diferente. O nome do curso é uma frase única, longa e
+                    recuperável por `title`; a lista de documentos que faltam é o dado
+                    ACIONÁVEL do card — cortada, o redator não sabe o que subir. Em
+                    390x844 ela vazava 111px além da caixa (355 contra 244 em es-CL,
+                    já com os rótulos traduzidos de UI-02) e não havia `title` nem
+                    scroll que recuperasse (UI-03 da revisão de 2026-08-22). `title`
+                    não serviria de saída aqui: hover não existe em toque, que é
+                    justamente o viewport do defeito. */}
+                  <span className="block text-xs" style={{ color: warningText }}>
                     {/* O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
                     de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
                     pelas mesmas chaves (UI-07 da revisão de 2026-08-22, molde no
