@@ -213,7 +213,7 @@ manutenção. O gatilho continua sendo reincidência real da lição 13 **por cl
 
 ## P-44 — os gates de e2e criam usuário de sonda no banco de dev e nem sempre o removem
 
-**Nasceu como P-42 e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-43](#p-43).**
+**Nasceu como P-42 e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-43](./encerradas.md#p-43).**
 
 **Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** fecha quando um bloco puder reseedar o banco de dev, ou quando a
 residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o primeiro candidato: a tela
@@ -294,6 +294,42 @@ migration.
 **A lacuna é da mesma família que a P-43 provou existir**, e por isso nasce com o número dela ao
 lado: `der-fisico.md` envelheceu em silêncio porque nada mede o documento contra o conjunto real de
 migrations. Enquanto essa medição não existir, a próxima tabela nova repete o caso.
+
+---
+
+## P-53 — a auditoria do fechamento do BD-15 mediu 12 divergências que nenhum bloco tinha no escopo
+
+**Bloco:** — · **Gatilho:** fecha no primeiro bloco que tocar `docs/estrutura-monolito.md` ou
+`.claude/rules/backend-ddd.md` por outro motivo e puder reconciliá-los contra a árvore, ou quando
+uma delas custar uma decisão errada de verdade (o candidato mais provável é o `Dashboard` ausente:
+é o doc que responde "onde vai o arquivo novo"). Revisar em **2026-10-31**.
+
+Medidas pela `auditar-docs` no `/fechar-sprint` do BD-15 (2026-08-22), **fora do escopo daquele
+bloco** — ele fechou P-20, P-21, P-23, P-39, P-43 e P-18, e nenhuma destas estava entre elas. A
+13ª divergência da mesma varredura era da própria sprint (a âncora `[P-43](#p-43)` de
+`abertas.md`, quebrada quando a ficha desceu para `encerradas.md`) e foi corrigida no fechamento.
+Registradas aqui sem correção, porque `auditar-docs` reporta e não corrige, e porque reconciliar
+`estrutura-monolito.md` contra a árvore é trabalho de bloco, não de gate.
+
+| Doc | Divergência | Evidência |
+|---|---|---|
+| `estrutura-monolito.md:49,145,181-186` · `.claude/rules/backend-ddd.md:21-22` | Afirmam que `Certification` é scaffold vazio dos dois lados; o domínio está entregue | `backend/app/Domains/Certification/` com 38 classes; `frontend/src/features/certification/` com 26 arquivos |
+| `estrutura-monolito.md:32-50` · `backend-ddd.md:13-19` | O domínio `Dashboard` não aparece em nenhuma das duas listas, e é o 2º maior consumidor cross-domain | `backend/app/Domains/Dashboard/routes.php`; `tests/Feature/Shared/DomainDependencyTest.php:68-84` declara 15 arestas |
+| `estrutura-monolito.md:20` | Afirma que `Certification` tem zero arestas; a matriz declara 9 | `tests/Feature/Shared/DomainDependencyTest.php:88-100` |
+| `estrutura-monolito.md:53-58` | A árvore de `app/Shared/` lista 5 subpastas; o repo tem 11 | faltam `Audit/`, `Concerns/`, `Data/`, `Office/`, `Pdf/`, `Validation/` — três delas são home de lei (`PivotAudit`, `ArchivesChildren`, `WritableAttributes`) |
+| `der-fisico.md` | A coluna `archived_with_parent` existe em 8 tabelas e não aparece em ficha nenhuma | `2026_08_18_000001_add_archived_with_parent_columns.php:26-38` e `..._000002_...:27-33` |
+| `backend-ddd.md:34` | Diz que os `routes.php` de domínio são carregadas no `bootstrap/app.php`; quem carrega é o `glob()` | `backend/routes/api.php:12-14`; `docs/estrutura-monolito.md:82` já descreve certo |
+| `CLAUDE.md:159-161` | A lista de serviços do Compose omite `mailpit`, transporte real do convite/recuperação | `docker-compose.yml:33-35` (porta 8025) |
+| `CLAUDE.md:146` | Descreve `pnpm test` como "hooks de `shared/`"; o corte cobre hooks de feature, componentes e `frontend/tests/` | `frontend/tests/repo-docs-refs.test.ts`; `features/identity/components/PeoplePage.test.tsx`. A `frontend-fsliced.md:268-271` registra que a frase já foi lição 13 três vezes |
+| `.claude/rules/frontend-fsliced.md:261-266` | População de testes de componente congelada em 2026-08-16 ("13 arquivos, 9 montam wrapper"), com lista nominal | só `shared/ui/**` tem 21 `*.test.tsx` que montam componente |
+| `docs/adrs.md` | Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha | nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado |
+| `docs/adrs.md` | O arquivamento em cascata (`archived_with_parent` + `ArchivesChildren`/`LoadsCascadedChildren`, hooks `deleting`/`restored`) alcança 8 roots sem ADR | a única regra escrita é `frontend-fsliced.md:114-130`, que descreve o **kit de UI**, não o mecanismo de backend |
+| `abertas.md:57` | A âncora `[P-35](#p-35)` aponta para ficha que saiu de `abertas.md` no BD-14 e de `encerradas.md` no BD-12 | anterior a esta sprint; não corrigida por não ser dela |
+
+**O padrão é o mesmo que a P-52 nomeia:** doc de estrutura envelhece em silêncio porque nada mede o
+documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de
+travar. Enquanto não houver catraca executável para `estrutura-monolito.md` (a `D-17` fez isso para
+as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 
 ---
 

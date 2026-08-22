@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (24)
+## Abertas (25)
 
 ### Agrupadas em bloco de execução
 
@@ -58,12 +58,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
+| P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 
-## Encerradas (7)
+## Encerradas (6)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | 2026-08-22, no `bd12-load-state-e-listas` | primeiro fechamento **posterior** ao do BD-12 |
 | P-18 | Página de fechamento do Notion com `Sprint` divergente | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-20 | `openspout/openspout` em produção sem ADR hospedeiro | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
@@ -71,8 +71,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-43 | `der-fisico.md` chamava `certificates` de "planejada"; existe desde a Sprint 4 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 
-**A P-29 e a P-35 saíram neste fechamento**, que é o primeiro posterior ao do BD-14 — a condição que
-a linha delas pedia. O rastro fica nos commits e na linha da entrega do BD-14 em
+**A P-40 saiu neste fechamento** (`BD-15`), que é o primeiro posterior ao do BD-12 — a condição que
+a linha dela pedia. Antes disso, a P-29 e a P-35 saíram no fechamento do BD-12, primeiro posterior ao
+do BD-14. O rastro fica nos commits e nas linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do

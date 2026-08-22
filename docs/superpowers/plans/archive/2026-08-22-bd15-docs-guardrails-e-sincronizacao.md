@@ -8,7 +8,7 @@
 
 **Tech Stack:** Markdown (`docs/`), PHPUnit arch test (`backend/tests/Feature/Shared/`), MCP Notion (`mcp__claude_ai_Notion__*`).
 
-**Spec:** `docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md`
 **Packet:** `docs/superpowers/context-packets/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`
 
 ## Global Constraints

@@ -322,39 +322,6 @@ está formalmente resolvida.
 
 ---
 
-## 14. `BD-15-docs-guardrails-e-sincronizacao`
-
-**Prioridade:** P1 antes do encerramento definitivo · **Frente:** Docs/Mecanismos · **Contexto:** sim
-**Cobre:** `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-43`, `P-18`, `P-22`, `D-17`.
-
-**Escopo:**
-- ADR do OpenSpout (**P-20** — João aponta o hospedeiro ou autoriza ADR-20);
-- nota do `simple-qrcode` no ADR-12 (**P-21**);
-- formato de `progress.md` (**P-23** — restaurar a coluna `Contexto` ou declarar a mudança);
-- sync ADR-16↔Drive (**P-31**);
-- guardas de docs — **a P-32 só ganha seletor por classe com reincidência medida ou decisão
-  explícita do João; a ficha veta desenhar o seletor sem esse dado** (falso-positivo caro:
-  a doc cita classe de vendor, classe planejada e nome de conceito);
-- encerrar/reformular a **P-39** sem retro-editar o plano histórico;
-- DER: `certificates` deixa de ser "planejada" nos 4 sítios (**P-43**);
-- corrigir Notion **P-18**/**P-22**;
-- **D-17**: detectar aresta arquitetural declarada e não usada (as permissões `feedback.*` órfãs
-  são o caso vivo — ver item 1).
-
-**Sincronização Notion obrigatória:**
-- `8.4.0–8.4.7` Dashboard: ainda aparecem `Backlog`, mas a feature está entregue;
-- `8.5.1–8.5.9` Meu Perfil: ainda aparecem `Backlog`, mas a feature está entregue;
-- `9.1.4`: a `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e
-  emissão de certificado; não criar novo bloco de código apenas para repetir essa cobertura;
-- limpar duplicações genéricas de sync/fechamento/UI review que já pertencem ao workflow.
-
-> Os ponteiros de `pendencias/README.md` para BD executado foram corrigidos na própria
-> substituição de 2026-08-22 e não são mais escopo deste bloco.
-
-**DoD:** código, `/docs`, Drive e Notion concordam sobre entregue × pendente × descopado.
-
----
-
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |
@@ -427,11 +394,12 @@ está formalmente resolvida.
   anterior pode absorvê-la.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  `BD-15-docs-guardrails-e-sincronizacao`. A lista de arestas de um domínio envelhece com sobras
-  em silêncio; o cenário (9) do `dashboard-backend-agregacoes` cobre a direção contrária só para
-  `Dashboard`. Generalizar = varrer os `use` de cada domínio e reprovar declaração sem consumidor.
-  As permissões `feedback.*` órfãs (`PermissionCatalog.php:87-89`) são instância viva da mesma
-  classe — cruzam com `feedbacks-resolver-escopo`.
+  **entregue em 2026-08-22 pelo `BD-15-docs-guardrails-e-sincronizacao`**
+  (`plans/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`). A Regra C reprova declaração
+  sem consumidor, lendo a **mesma** varredura da Regra B, e foi vista reprovar por sonda. **A parte
+  que NÃO veio junto, por decisão (D4 da spec):** a catraca cobre só aresta de domínio; as permissões
+  `feedback.*` órfãs (`PermissionCatalog.php:87-89`) seguem fora e são do item 1,
+  `feedbacks-resolver-escopo`.
 
 - **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
   → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
@@ -521,8 +489,9 @@ Executar sem a decisão é escolher no lugar do João.
 # Fora desta fila
 
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
-BD-1..BD-10, BD-12, BD-13, BD-14, BD-16, BD-17 e BD-18 já foram executados/fechados e **não voltam
-ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se no
-`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 14,
-com o mesmo nome. Task antiga com status incorreto no Notion gera sincronização documental, não
+BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
+voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
+no `frontend-hardening-final` (item 8), levando a D-03. O **BD-15** era o item 14 e saiu da fila no
+fechamento de 2026-08-22; o que ele deixou aberto vive em `pendencias/` (P-22, P-31, P-32, P-52,
+P-53), não aqui. Task antiga com status incorreto no Notion gera sincronização documental, não
 reimplementação.
