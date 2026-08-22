@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { InlineLoadState } from './InlineLoadState'
 
 afterEach(() => {
@@ -46,5 +46,50 @@ describe('InlineLoadState', () => {
     expect(screen.getByText('Falla de red')).toBeTruthy()
     expect(screen.getByText('No hay clientes')).toBeTruthy()
     expect(screen.getAllByText('Reintentar')).toHaveLength(2)
+  })
+})
+
+/** Uma promise que só resolve quando o teste mandar — é o que permite observar o
+ * botão DURANTE o voo do GET, e não depois. */
+function promiseControlada() {
+  let resolve!: (v: unknown) => void
+  const promise = new Promise((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
+
+describe('InlineLoadState — o Reintentar espera a promise (Q-14)', () => {
+  it('fica em carga enquanto a promise está pendente, e volta quando resolve', async () => {
+    const { promise, resolve } = promiseControlada()
+    render(
+      <InlineLoadState error="Sin conexión" retryLabel="Reintentar" onRetry={() => promise} />,
+    )
+
+    const botao = screen.getByRole('button', { name: 'Reintentar' }) as HTMLButtonElement
+    fireEvent.click(botao)
+
+    await waitFor(() => expect(botao.disabled).toBe(true))
+
+    resolve(undefined)
+
+    await waitFor(() => expect(botao.disabled).toBe(false))
+  })
+
+  it('handler que devolve void continua funcionando', async () => {
+    let chamadas = 0
+    render(
+      <InlineLoadState
+        error="Sin conexión"
+        retryLabel="Reintentar"
+        onRetry={() => {
+          chamadas += 1
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    await waitFor(() => expect(chamadas).toBe(1))
   })
 })

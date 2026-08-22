@@ -6,7 +6,7 @@ import type { ProblemDetails } from '@shared/api/axios'
 export type ValidationState =
   | { kind: 'loading' }
   | { kind: 'notFound' }
-  | { kind: 'error'; error: ProblemDetails; retry: () => void }
+  | { kind: 'error'; error: ProblemDetails; retry: () => Promise<unknown> }
   | { kind: 'revoked'; cert: PublicCertificateData }
   | { kind: 'expired'; cert: PublicCertificateData }
   | { kind: 'valid'; cert: PublicCertificateData }
@@ -27,7 +27,7 @@ export function useValidationPage(uuid: string): ValidationState {
 
   if (query.isError) {
     if (query.error.status === 404) return { kind: 'notFound' }
-    return { kind: 'error', error: query.error, retry: () => { void query.refetch() } }
+    return { kind: 'error', error: query.error, retry: () => query.refetch() }
   }
 
   if (!query.data) return { kind: 'loading' }

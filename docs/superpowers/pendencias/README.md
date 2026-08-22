@@ -61,9 +61,21 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (0)
+## Encerradas (2)
 
-Nenhuma em rastro. A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
+| ID | Pendência | Encerrada em | Sai quando |
+|---|---|---|---|
+| P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | 2026-08-20, no `bd14-contrato-de-entrada` | primeiro fechamento **posterior** ao do BD-14 |
+| P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | 2026-08-20, no `bd14-contrato-de-entrada` | primeiro fechamento **posterior** ao do BD-14 |
+
+**As duas não saem no fechamento do BD-18, e o motivo é de calendário, não de rastro.** O BD-18 correu
+na worktree `fix-frontend` **em paralelo** ao BD-14, não depois dele — os dois fecharam em 2026-08-20,
+o BD-14 por volta das 16h e o BD-18 às 23:25 —, e só se encontraram no merge de 2026-08-21. Contar o
+fechamento do BD-18 como a sprint de rastro delas apagaria a ficha antes que qualquer bloco posterior
+a tivesse lido. O índice, aliás, dizia "Encerradas (0)" enquanto `encerradas.md` já carregava as duas:
+o fechamento do BD-14 atualizou a ficha e não a linha daqui, e é isso que este merge corrige.
+
+A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
 `bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo
 mesmo precedente da **P-26**, da **P-38** e da **P-34**. A **P-45** saiu no fechamento do
 `arquivados-roots-restantes` (2026-08-19) e **segue encerrada depois do merge da `main`**: o conserto

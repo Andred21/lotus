@@ -76,7 +76,7 @@ describe('ValidationPage titula todos os seus estados', () => {
         detail: 'boom',
         instance: '/api/publico/certificados/abc',
       },
-      retry: () => {},
+      retry: () => Promise.resolve(),
     }
 
     const { container } = renderPage()
@@ -104,7 +104,7 @@ describe('ValidationPage titula todos os seus estados', () => {
           'El certificado LOT-2026-1001 no puede presentarse: su documento congelado no tiene los campos aluno.name, curso.name.',
         instance: '/api/validate/LOT-2026-1001',
       },
-      retry: () => {},
+      retry: () => Promise.resolve(),
     }
 
     const { container } = renderPage()

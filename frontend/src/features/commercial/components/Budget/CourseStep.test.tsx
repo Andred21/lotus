@@ -26,7 +26,7 @@ const base: Courses = {
   errorDetail: undefined,
   errorHint: 'common.loadErrorHint',
   loadError: null,
-  refetch: () => {},
+  refetch: () => Promise.resolve(),
   isEmpty: false,
   unusable: false,
   failedWithoutData: false,

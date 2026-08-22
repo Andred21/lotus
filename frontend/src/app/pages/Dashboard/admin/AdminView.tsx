@@ -42,8 +42,11 @@ export function AdminView({
   staleError: string | null
   onPresetChange: (p: PeriodPresetKey) => void
   onPeriodChange: (p: DashboardPeriod) => void
-  /** Ausente quando repetir não recupera a falha (`useDashboard.podeRepetir`). */
-  onRetry?: () => void
+  /** Ausente quando repetir não recupera a falha (`useDashboard.podeRepetir`).
+   * Aceita a promise do `staleRetry`: é ela que mantém o botão do `InlineLoadState`
+   * em carga enquanto o GET está em voo (Q-14). `() => void` compila e faz o tipo
+   * mentir, porque TypeScript aceita descartar retorno. */
+  onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
 

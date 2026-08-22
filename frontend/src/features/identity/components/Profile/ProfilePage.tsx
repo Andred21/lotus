@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppDetailSkeleton, AppErrorState, InlineLoadState, ModulePage } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import { useProfilePage } from '../../hooks/useProfilePage'
 import { ProfileIdentityCard } from './ProfileIdentityCard'
 import { ProfilePersonalSection } from './ProfilePersonalSection'
@@ -36,7 +37,7 @@ export function ProfilePage() {
       <ModulePage title={t('userMenu.profile')} description={subtitulo}>
         <AppErrorState
           title={t('profile.loadError')}
-          detail={errorDetail ?? t(errorHint)}
+          detail={loadMessage({ errorDetail, errorHint }, t)}
           retryLabel={t('common.retry')}
           onRetry={refetch}
         />
@@ -47,7 +48,7 @@ export function ProfilePage() {
   return (
     <ModulePage title={t('userMenu.profile')} description={subtitulo}>
       <InlineLoadState
-        error={loadError ? (errorDetail ?? t(errorHint)) : null}
+        error={loadError ? loadMessage({ errorDetail, errorHint }, t) : null}
         retryLabel={t('common.retry')}
         onRetry={refetch}
       />

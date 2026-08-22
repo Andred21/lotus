@@ -149,6 +149,20 @@ exceção. Na dúvida, siga o vizinho da mesma
   cache resolvia todos os nomes. Estado de carga de lista **não se deriva à mão na feature**: vem do
   `useLoadState`, que é onde a política "falhou" vs. "veio vazia" mora — seis hooks a repetiam e ela
   já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
+  A forma normalizada de lista é `ListSource<T>` e nasce num lugar só
+  (`shared/hooks/listSource.ts`). Hook que monta `isError ? (error ?? {}) : null` à mão está
+  recriando a política — o alias espalha, não deriva. **Duas exceções deliberadas:**
+  `useHistorial` e `useEmissionPanelState` devolvem `null` onde esta devolve `{}` — é outra
+  política, e normalizá-las muda o que a tela mostra; não as unifique sem DoD que cubra a mudança. E **retry devolve a promise**: é ela que
+  mantém o "Reintentar" em `loading` enquanto o GET está em voo (Q-14), e `void query.refetch()`
+  a engole **sem quebrar tipo nem teste** — TypeScript aceita descartar retorno, então quem
+  guarda são as catracas de `listSource.test.ts`, `useLoadState.test.ts` e `useResourceState.test.ts`.
+  A **mensagem** que a falha imprime é `loadMessage(estado, t)`
+  (`shared/lib/screenDetail.ts`), não o par `errorDetail ?? t(errorHint)` escrito à mão — ele estava
+  em 13 sítios de 8 componentes (Q-3 do review do BD-18), e é ali que a política some quando alguém
+  troca a ordem ou esquece o `??`: a tela mostra erro sem texto, proibido por peso legal. **QUANDO**
+  imprimir segue sendo de quem imprime — o gate é `isError`, `loadError`, `failedWithoutData` ou
+  `nameLost`, conforme o que a falha custou NAQUELA tela.
 - **Reset de form = "adjust state during render"** (compara `id+mode` em `useState` + `setForm`
   condicional no corpo do render), **não** `useEffect` (lint `react-hooks/set-state-in-effect`).
   Referência: `useClientForm`.

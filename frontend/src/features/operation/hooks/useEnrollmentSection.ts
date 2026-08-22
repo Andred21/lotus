@@ -1,6 +1,5 @@
 import type { TurmaData } from '@shared/types/generated'
-import type { ProblemDetails } from '@shared/api/axios'
-import { useMutationErrors } from '@shared/hooks'
+import { loadFailure, useMutationErrors } from '@shared/hooks'
 import { useEnrollments, useRemoveEnrollment } from '../api/useEnrollments'
 
 /** Orquestra a lista/remoção da aba Alumnos. O componente só consome.
@@ -23,8 +22,8 @@ export function useEnrollmentSection(turma: TurmaData) {
     // Falha do GET da lista, distinta de `error` (erro de remoção): a tabela
     // vira AppErrorState com Reintentar, e a toolbar deixa de oferecer
     // matricular sobre uma lista que não carregou.
-    loadError: list.isError ? (list.error ?? ({} as ProblemDetails)) : null,
-    reload: () => { void list.refetch() },
+    loadError: loadFailure(list),
+    reload: (): Promise<unknown> => list.refetch(),
     remove,
     removing: removeMutation.isPending,
     error,
