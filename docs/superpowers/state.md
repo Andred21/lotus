@@ -39,14 +39,14 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
     blocker: null
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
@@ -152,6 +152,40 @@ entra no packet e no brainstorming como está escrita.
 
 **Próxima ação:** Codex gera o Context Packet pela skill `lotus-context-packet`
 (`.agents/skills/`), em sandbox read-only, sem alterar arquivo nem estado.
+
+### Context Packet — 2026-08-22: `status: ready`, e o que ele mediu em vez de repetir
+
+O Codex gerou o packet pela skill `lotus-context-packet` em sandbox read-only, sem tocar arquivo
+nem estado. Contrato validado item a item: marcadores exatos, frontmatter completo com
+`plan_path`/`spec_path` **`null`** (e não inventados), **7** key facts contra o teto de 8, nenhuma
+fonte marcada `unavailable`, `RECOMMENDED_TRANSITION: ready_for_planning` presente, e nenhum
+gatilho de obsolescência apontando para hash de proveniência ou para a própria transição
+promotora. A proveniência foi **remedida localmente** e bate byte a byte: `HEAD`
+`e93225fc8146a3734ac0627cce36045d682a7970`, `state.md` blob
+`0f32ac293b20cbe98f2ea7fb8bd73564b552169e`, `progress.md` blob
+`0457320abea178668c65112513c37fc45dcbb281`.
+
+O packet **não** aceitou a afirmação do backlog de chegada — mediu cada uma:
+
+- **Drive medido, não suposto:** o ADR-16 de lá (`decisao-stack.md`, file ID
+  `14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw`, `modifiedTime` 2026-07-31) segue **sem o ponto 5** e sem a
+  revogação da exceção de shell. A **P-31** está confirmada externamente, não presumida.
+- **A armadilha das duas bases do Notion foi verificada e usada como prova:** o ID que a ficha da
+  **P-18** cita (`f88bc9603dfa8253b40981686f8ae023`) mora na base **obsoleta**
+  (`collection://6adbc960-…`) e está `deleted`. A página equivalente na base canônica é
+  `3a2bc9603dfa8067902cf3c62bffdb0d`, já `Concluída` — e ainda carrega a divergência interna que a
+  ficha descreve: descrição diz Sprint 3, propriedade diz Sprint 2.
+- **A sincronização obrigatória confere:** `8.4.0`–`8.4.7` (8 páginas) e `8.5.1`–`8.5.9` (9
+  páginas) estão **todas** `Backlog` com as features entregues; `9.1.4`
+  (`388bc9603dfa8119a5ecc157b2cc18d3`) está `A fazer`; a duplicação da **P-22** persiste com as
+  duas H.1.3.1 em `Backlog`. Todos os IDs de página ficaram registrados no packet, então o
+  planejamento endereça por ID e não por título.
+
+Duas restrições entram no planejamento com a redação que já tinham, e não como sugestão: o **veto
+da P-32** ao seletor por classe sem reincidência medida ou decisão explícita do João, e a **P-39**,
+que não autoriza retroeditar o plano histórico do BD-6. As quatro perguntas abertas (P-20, P-23, e
+o remédio de P-18 e P-22) são **decisões do João**, e o próprio packet declara que nenhuma delas
+bloqueia o planejamento.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
