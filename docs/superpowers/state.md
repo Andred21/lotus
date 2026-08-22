@@ -3,25 +3,25 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-revisao-ui-por-modulo
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
 active_plan: null
 context_packet: null
 blocker: null
 
 lanes:
   lane-a:
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: main-tree
-    branch: feat/feedbacks-resolver-escopo
-    active_spec: null
+    active_work_item: frontend-revisao-ui-por-modulo
+    workflow_state: planning
+    next_owner: claude
+    next_action: continue_active_planning
+    tree: ../fix-frontend
+    branch: refactor/frontend-revisao-ui
+    active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 8c6dea02
-updated_at: 2026-08-22T14:05:00-03:00
+state_basis_commit: eaa9e15c
+updated_at: 2026-08-22T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -127,6 +127,28 @@ disjuntas, colisão mínima de arquivos:
 - Interseções conhecidas a vigiar: `lane-c` (BD-15/D-17) e a futura CI (item 11) tocam
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
+
+## Lane-a — 2026-08-22: item 16 promovido, com duas exceções declaradas
+
+Promoção explícita do João (sessão 2026-08-22), com a lane-a em `idle`: item **16**
+(`frontend-revisao-ui-por-modulo`) da fila, rota direta a `planning` — o bloco nasce de medição
+local (`audits/` + fichas `D-38`/`D-39`), sem fonte externa, então `context_packet` fica `null`.
+
+Duas exceções decididas na abertura, não descobertas na execução:
+
+- **Docs de `docs/superpowers/**` escritos na worktree `fix-frontend`**, contra a invariante que os
+  reserva ao main tree. O próprio item 16 nasceu nesta branch (`a259cf80`, `eaa9e15c`) e ainda não
+  chegou à `main`; escrever no main tree criaria dois backlogs divergentes.
+- **A branch `refactor/frontend-revisao-ui` continua**, com merge só no fim. Ela já carrega código
+  do item 16 — `ac4eef8a` (os seis defeitos de `shared/ui` do Dashboard) e `a36be316`.
+
+Registro corrigido: a tabela de seleção multi-lane chama `feat/feedbacks-resolver-escopo` de "não
+mesclada"; ela está na `main` desde `15e6a72e` (PR #65).
+
+Corte da fatia (decisão do João): três superfícies em série — Dashboard view `ready-redator`,
+Operação (`/operacion` + detalhe) e Comercial (`/comercial` + detalhe). O resto do item 16 fica
+para um bloco irmão. **A P-47 não fecha aqui**: o acesso de redator é provisionado pelas portas
+reais da API e devolvido no fechamento.
 
 ## Último item fechado — 2026-08-22 (`feedbacks-resolver-escopo`, item 1 da fila consolidada)
 
