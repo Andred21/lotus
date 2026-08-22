@@ -30,7 +30,16 @@ class StoreRedatorDocumentAction
         $path = $this->uploads->put($redator, $file);
 
         try {
-            return DB::transaction(fn () => $this->registerUploaded($redator, $type, $path, $meta, $validUntil));
+            return DB::transaction(function () use ($redator, $type, $path, $meta, $validUntil) {
+                // Mutex do pai (P-49) guardando o INSERT, não o upload: o
+                // binário fora da transação é decisão registrada (D3 da spec do
+                // redator) e não se reabre. A janela que a ficha mede é entre
+                // "o binding resolveu um redator vivo" e "INSERT em `files`" —
+                // é essa que este lock fecha.
+                Redator::lockForWrite($redator->id);
+
+                return $this->registerUploaded($redator, $type, $path, $meta, $validUntil);
+            });
         } catch (Throwable $e) {
             $this->uploads->discard($path);
 

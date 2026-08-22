@@ -51,6 +51,10 @@ class UpdateRedatorAction
             }
 
             return DB::transaction(function () use ($redator, $data, $uploaded) {
+                // Mutex do pai ANTES de qualquer escrita (P-49): `users` e
+                // `redatores` são varridos pela cascata de `ArchiveRedatorAction`.
+                Redator::lockForWrite($redator->id);
+
                 // Unicidade DENTRO da transação que escreve. Consequência
                 // aceita: os binários já subiram (eles ficam fora da transação
                 // por decisão registrada, D3 da spec do redator), então um RUT

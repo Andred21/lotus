@@ -231,6 +231,33 @@ class Turma extends Model implements Auditable
     }
 
     /**
+     * Trava a linha E RECUSA turma arquivada. É o que o escritor de filho toma;
+     * `lockRow()` cru fica para quem arquiva ou restaura.
+     *
+     * A diferença é a P-49 inteira: `lockRow` sozinho SERIALIZA (o escritor
+     * espera o arquivador commitar) e depois deixa o filho pousar sob a turma
+     * recém-arquivada. Quem recusa é este `trashed()`.
+     *
+     * NÃO substitui `assertAcademicallyWritable()`: aquele pergunta pelo
+     * `status` (RN-15), este pelo `deleted_at`. Turma arquivada mantém
+     * `status = em_andamento`, então nenhum dos dois cobre o outro.
+     *
+     * Molde: `Client::lockForWrite()`.
+     */
+    public static function lockForWrite(int $turmaId): static
+    {
+        $turma = static::lockRow($turmaId);
+
+        if ($turma->trashed()) {
+            throw ValidationException::withMessages([
+                'turma' => 'Esta clase fue archivada y ya no acepta cambios.',
+            ]);
+        }
+
+        return $turma;
+    }
+
+    /**
      * O ownership da spec D1 alcança a superfície inteira por AQUI, e não rota
      * a rota: `{turma}` aparece em 20 rotas de `Operation/routes.php`, nenhuma
      * precisa lembrar de filtrar, e rota nova nasce coberta.

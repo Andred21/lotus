@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -114,6 +115,24 @@ class Redator extends Model implements Auditable
     {
         /** @var static $redator */
         $redator = static::withTrashed()->whereKey($redatorId)->lockForUpdate()->firstOrFail();
+
+        return $redator;
+    }
+
+    /**
+     * Trava a linha E RECUSA redator arquivado. Ver `Turma::lockForWrite()` e
+     * o molde `Client::lockForWrite()` — a diferença para o `lockRow()` cru é a
+     * recusa, e é ela que fecha a P-49.
+     */
+    public static function lockForWrite(int $redatorId): static
+    {
+        $redator = static::lockRow($redatorId);
+
+        if ($redator->trashed()) {
+            throw ValidationException::withMessages([
+                'redator' => 'Este redactor fue archivado y ya no acepta cambios.',
+            ]);
+        }
 
         return $redator;
     }
