@@ -23,12 +23,11 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 8 dos 13 itens restantes são P0; quem ordena é a cadeia de dependência:
-  itens 2–8 fecham o código, 10→11→12 constroem a infra, o 14 fecha docs antes do fim e o 13 é o
-  gate final de go-live.
-- **A numeração não se renumera quando um item fecha.** O `1` saiu em 2026-08-22 e a fila começa no
-  `2` de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
-  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
+- **P0 não ordena** — 7 dos 12 itens restantes são P0; quem ordena é a cadeia de dependência:
+  itens 2–8 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22 e a fila
+  começa no `2` de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e
+  pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 
 ---
 
@@ -212,30 +211,39 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ---
 
-## 10. `infra-producao-runtime-e-aws`
+## 10. `infra-producao-provisionamento-aws`
 
 **Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
-**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; `P-50`; Drive `RNF-DIS-01/03/04`.
+**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; Drive `RNF-DIS-01/03/04`.
 
-**Objetivo:** criar a infraestrutura/runtime real de produção; o compose atual continua sendo de
-dev.
+**O runtime já foi entregue e saiu desta fila.** O `infra-producao-runtime-e-aws` fechou em
+2026-08-22 com o `Dockerfile.prod` multi-stage, o `docker-compose.prod.yml` sem serviço de dev, o
+Nginx de origem única com `/up` como healthcheck, `APP_DEBUG=false`, secrets por `env_file` fora da
+imagem e a **P-50** paga por medição (CLI 320M, FPM 256M). Ver `historico/progress.md` e
+`specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`. **O que sobra aqui é a conta AWS,
+que aquele bloco declarou explicitamente fora de escopo** — MinIO não é S3 e Mailpit não é SES.
+
+**Objetivo:** provisionar os recursos reais da AWS e rodar a imagem já construída sobre eles.
 
 **Escopo:**
-- Dockerfile multi-stage e `docker-compose.prod.yml`;
-- Nginx de produção, `/up` como healthcheck, sem bind mount;
-- sem MySQL/MinIO/Mailpit de dev em produção; Gotenberg permanece serviço requerido;
-- **P-50**: resolver o `memory_limit` por medição (o valor vale para o PHP-FPM de produção), não
-  por número arbitrário;
 - EC2 + Security Groups;
 - RDS MySQL 8 separado da EC2 + snapshot com retenção mínima de 7 dias;
 - S3 privado + IAM least privilege + CORS necessário;
-- e-mail/domínio + DKIM;
-- TLS automático/renovação;
-- CloudWatch/alerta básico;
-- `APP_DEBUG=false`, configuração segura e secrets fora da imagem/repo.
+- e-mail/domínio + DKIM (saída do sandbox do SES);
+- TLS automático/renovação (Certbot na EC2, decidido pela task 10.1.6 e pelo ADR-14);
+- CloudWatch/alerta básico.
 
-**DoD:** stack nasce do zero, usa serviços externos corretos, passa healthcheck e não depende do
-working tree do servidor.
+**Quatro decisões do João que o bloco anterior mediu como abertas e não supôs** — cada uma bloqueia
+o recurso correspondente, nenhuma bloqueia o planejamento: região (`sa-east-1` × `us-east-1`),
+tamanho final da EC2 (`t4g.small` sugerido pelo Drive, `t4g.medium` se o Gotenberg pressionar
+memória), controle do DNS de `lotus.cl` mais o canal do alerta CloudWatch, e o teto de custo
+(estimativa externa de US$ 35–55/mês sem ALB).
+
+**Herança a carregar do runtime:** o `key:generate` precisa de `--entrypoint php` (registrado na §10
+da spec arquivada), e o `RNF-DIS-02` × ADR-14 segue **`unresolved`**, reservado ao gate do item 13.
+
+**DoD:** a imagem promovida por SHA sobe sobre RDS, S3 e SES reais, passa healthcheck em HTTPS e não
+depende do working tree do servidor.
 
 ---
 

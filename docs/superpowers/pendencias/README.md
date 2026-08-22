@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (25)
+## Abertas (24)
 
 ### Agrupadas em bloco de execução
 
@@ -32,7 +32,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | `hardening-acesso-ownership-e-integridade` | bloco que puder reseedar o dev, ou primeiro gate `permission:` sobre rota de redator; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
-| P-50 | A suíte unida (866 testes) passa do `memory_limit` de 128M do container e o `artisan test` documentado morre no meio | `infra-producao-runtime-e-aws` | decidir o `memory_limit` da imagem (vale para o PHP-FPM de produção), ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | `frontend-hardening-final` | João decidir que a coluna deve cortar; revisar 2026-10-31 |
 | P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
@@ -60,10 +59,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 
-## Encerradas (6)
+## Encerradas (7)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
+| P-50 | Suíte unida acima do `memory_limit` de 128M; o `artisan test` do §6 morria no meio | 2026-08-22, no `infra-producao-runtime-e-aws` | primeiro fechamento **posterior** ao deste bloco |
 | P-18 | Página de fechamento do Notion com `Sprint` divergente | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-20 | `openspout/openspout` em produção sem ADR hospedeiro | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
@@ -71,8 +71,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-43 | `der-fisico.md` chamava `certificates` de "planejada"; as duas tabelas de Certification existem desde 2026-08-05 | 2026-08-22, nas duas lanes (`feedbacks-resolver-escopo` e `BD-15`) | primeiro fechamento **posterior** a este |
 
-**A P-40 saiu nestes fechamentos** — os dois são posteriores ao do BD-12, que é a condição que a
-linha dela pedia; as duas lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no
+**A P-40 saiu nestes fechamentos** — os três são posteriores ao do BD-12, que é a condição que a
+linha dela pedia; as três lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no
 fechamento do BD-12, pelo mesmo critério contra o BD-14. O rastro de todas fica nos commits e nas
 linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).

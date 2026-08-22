@@ -27,10 +27,10 @@ lanes:
     blocker: null
     resume_state: null
   lane-b:
-    active_work_item: infra-producao-runtime-e-aws
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
     branch: infra/producao-runtime-e-aws
     active_spec: null
@@ -38,6 +38,7 @@ lanes:
     context_packet: null
     blocker: null
     resume_state: null
+    last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
     active_feature: null
     active_work_item: null
@@ -54,7 +55,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: 8c6dea02
-updated_at: 2026-08-23T00:20:00-03:00
+updated_at: 2026-08-23T01:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -154,9 +155,15 @@ disjuntas, colisão mínima de arquivos:
 > destruídas** depois do merge, por decisão do João, e por isso o `tree` e o `branch` dela são
 > `null`. A `lane-a` rodou no main tree, então ela mantém `tree: main-tree`; o `branch` dela ainda
 > nomeia `feat/feedbacks-resolver-escopo`, que é registro de onde o trabalho saiu e **não** promessa
-> de que a branch exista. Só a `lane-b` (`infra-producao-runtime-e-aws`, `../lotus-infra`) segue
-> viva, em `context_required`. A tabela acima fica como registro da seleção que promoveu as três,
-> não como lista do que está ativo agora.
+> de que a branch exista. A tabela acima fica como registro da seleção que promoveu as três, não
+> como lista do que está ativo agora.
+
+> **A `lane-b` fechou em 2026-08-22** e é a última das três a sair — `infra-producao-runtime-e-aws`,
+> narrativa em `historico/state-archive.md`. A worktree `../lotus-infra` e a branch
+> `infra/producao-runtime-e-aws` **seguem vivas**: a branch tem PR aberto e ainda não foi mesclada,
+> ao contrário da `lane-a` (PR #65) e da `lane-c` (PR #66). **As três lanes estão `idle`**, e com
+> isso o modo multi-lane não tem trabalho ativo nenhum: a próxima promoção é do João, no
+> `backlog.md`, e decide se as lanes continuam ou se o estado volta a uma frente só.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -166,11 +173,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 | 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 | 2026-08-22 | `bd12-load-state-e-listas` | BD-12 dos blocos de dívida |
 | 2026-08-20 | `bd18-useloadstate-promise-e-forma` | BD-18 dos blocos de dívida |
-| 2026-08-20 | `bd14-contrato-de-entrada` | BD-14 do backlog |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando
