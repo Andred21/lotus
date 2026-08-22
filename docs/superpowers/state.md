@@ -39,19 +39,19 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
     active_spec: docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md
     active_plan: docs/superpowers/plans/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
     context_packet: docs/superpowers/context-packets/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md
-    blocker: null
-    resume_state: null
+    blocker: "Review de 2026-08-22 (baixo risco, lente Claude): 4 achados aguardando decisão do João — Q-1 state.md com 104 KB, 81% narrativa de bloco fechado, e é o arquivo lido primeiro em toda sessão; Q-2 a invariante 'docs/superpowers/** só muda pelo main tree' foi quebrada por 21 commits desta lane; Q-3 os gates de /revisar-sprint e /fechar-sprint leem só o espelho de focused_lane e barram lane fora de foco; Q-4 a Regra C reescreve a varredura da Regra B em vez de compartilhá-la. Zero órfão, zero violação das leis §5, gate remedido de forma independente (873/3096/5 skipped, sonda da Regra C reprovando, 3 escritas do Notion relidas por ID)."
+    resume_state: reviewing
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T18:40:00-03:00
+updated_at: 2026-08-22T19:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -271,8 +271,18 @@ autorizou explicitamente antes da segunda tentativa, e nada foi escrito enquanto
 nasceu dentro deste bloco, depois de o plano ter sido escrito; o próprio plano mandava conferir em
 vez de confiar na aritmética.
 
-**Estado: `ready_for_review`.** A revisão não foi iniciada — é a próxima instrução, não um passo
-deste comando.
+### Review — 2026-08-22: baixo risco, gate remedido, 4 achados de mecanismo
+
+Classificação **baixo risco** (nenhuma lei §5 tocada; o único arquivo de código é arch test; executor
+`claude`), então lente Claude apenas. **Nada do gate foi herdado:** suíte remedida em **873 / 3096 / 5
+skipped**, sonda da Regra C reinserida e vista reprovar (`Catalog -> Operation\Models\Turma`) e
+removida, Pint `passed`, `repo-docs-refs` verde, e **3 das 19 escritas do Notion relidas por ID**
+(`8.4.7`, `9.1.4`, e a página da P-18, cuja descrição agora bate com a propriedade `Sprint`). ADR-20,
+nota do ADR-12, ficha de `certificates` e coordenadas da lição 18 conferidas contra o código, não
+contra o plano. **Zero órfão, zero achado de código de produção.**
+
+Os 4 achados são todos de **mecanismo do próprio workflow**, e três deles o bloco herdou em vez de
+criar — resumo em `blocker`. Estado `blocked`: correção só depois de o João aprovar o que entra.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
