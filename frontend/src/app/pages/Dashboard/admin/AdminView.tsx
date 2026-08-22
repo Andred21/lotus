@@ -73,13 +73,7 @@ export function AdminView({
           * expandida (256px) e cada card caía para ~343px, truncando os 7
           * rótulos de pendência; em 1280 a truncagem some (UI-04 da revisão de
           * 2026-08-16). */}
-        {/* `items-start`: as duas listas têm contagens independentes — 8
-          * pendências e 3 alertas é o caso comum — e a grade, esticando, deixava
-          * ~340px de moldura vazia no card menor em 1440, empurrando a seção de
-          * contexto para fora da primeira tela. Cada card passa a valer a própria
-          * altura; abaixo de `xl` eles empilham e a prop não tem efeito (UI-08 da
-          * revisão de 2026-08-22). */}
-        <div className="grid items-start gap-4 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <PendingList items={data.pendencias} />
           <AlertList items={data.alertas} emptyHint={t('dashboard.alerts.emptyHint')} />
         </div>

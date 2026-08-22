@@ -191,7 +191,6 @@ O que a lente entregou de aproveitável, e onde foi parar:
 |---|---|
 | "O rótulo do dado não pode ser o nome do campo" | UI-01 e UI-07 — as duas eram identificador interno vazando para a tela |
 | "Uma grandeza que muda tem de se anunciar onde é lida" | UI-05 — a métrica desceu do seletor para o cabeçalho do card |
-| "Espaço vazio é peso, não respiro, quando não carrega informação" | UI-08 |
 | "Vazio e erro são momentos de direção" | nada a fazer: `useDashboard` já discrimina os estados e o `InlineLoadState` já mora junto do controle que causou a falha |
 
 Recusado, com motivo:
@@ -219,7 +218,11 @@ Recusado, com motivo:
 | UI-05 (B) | `AppCardHeader` ganha `subtitle`; `RankingsPanel` põe ali o rótulo da métrica (e o compõe no `ariaLabel` do gráfico) | cabeçalho lê `Cursos más demandados 4 Clases`; em 390px o qualificador desce de linha em vez de truncar |
 | UI-06 (B) | descrição em `line-clamp-2` abaixo de `sm`, `truncate` de `sm` para cima | em 390px a linha lê `Documentación obligatoria incompleta: EVALUACION_REDATOR.` inteira |
 | UI-07 (B) | `missing_types` passa por `t('operation.documents.type.*')` antes do `join` | coluna lê `Manual, Pruebas / evaluaciones, Evaluación del redactor` |
-| UI-08 (B) | `items-start` na grade de "o que faço agora" | os dois cards medem 538px e 233px (mediam 538 e 538) |
+
+**UI-08 não foi aplicado.** A correção existiu, mediu (os dois cards passavam de 538/538 para
+538/233) e foi **revertida por decisão do João em 2026-08-22**: a moldura vazia ao lado da lista
+menor é reserva visual, não sobra. O achado fica no relatório da §2 como leitura da rubrica e não
+vira débito — não há decisão pendente aqui.
 
 Regressões verificadas junto: `docOverflow` e `mainOverflow` falsos em 1024x768; console com 0 erros
 e 0 warnings; tema escuro repintando os dois rankings e o qualificador novo.
