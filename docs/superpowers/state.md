@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: infra
 active_work_item: infra-producao-runtime-e-aws
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
 active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runti
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T16:30:00-03:00
+updated_at: 2026-08-22T18:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -225,6 +225,71 @@ exit 0.
 
 **Nada de AWS foi provado** — a limitação 1 da spec segue de pé, e o review deve cobrá-la como
 limitação declarada, não como lacuna.
+
+### Revisão de sprint — 2026-08-22: risco ALTO, duas lentes, 9 achados, zero violação de lei na arquitetura
+
+**Classificação: ALTO** — o bloco escreve o molde de `.env` que governa a cadeia Sanctum (lei §5.4)
+e a imagem que vai a produção com dado de peso legal. Duas lentes: revisão Claude contra o gabarito
+do projeto e revisão independente do Codex (`mcp__codex__codex`, read-only) sobre o mesmo intervalo
+`5bcd4b7c..HEAD`.
+
+**Convergência das duas lentes** em três achados: o gate de env do entrypoint sem as variáveis da
+cadeia Sanctum, o `.dockerignore` sem `bootstrap/cache/*.php`, e a prova 5 (`APP_DEBUG`) exercitada
+só em 401/404. O Codex viu sozinho os seeders na imagem e as folgas da catraca; ambos foram
+verificados no código e na imagem antes de entrar no relatório.
+
+**Divergência entre revisores, não aceita:** o Codex reportou vazamento de `backend/auth.json`,
+`storage/*.key` e `storage/app/**` para dentro da imagem. Medido em `lotus-app:local`: `auth.json`
+não existe na árvore, e `storage/app` contém três arquivos, todos `.gitignore`. Rejeitados — a
+lacuna do `.dockerignore` que sobrou é a de `bootstrap/cache`, que é o achado Q-3.
+
+**Nove achados, nenhum contra as leis §5 na arquitetura entregue** (sem Repository, sem auditoria em
+trigger, sem `generated.ts` tocado, sem `abort(422)`, sem import cruzado de feature). Os dois 🔴 são
+brechas operacionais que a imagem carrega, não desenho errado:
+
+| # | Achado | Sev. | Esforço |
+|---|---|---|---|
+| Q-1 | `database/seeders` na imagem: o único caminho que instala o `RolePermissionSeeder` cria `admin@lotus.cl` / `senha123` como superadmin | 🔴 | P |
+| Q-2 | Gate de env do entrypoint não cobre `SANCTUM_STATEFUL_DOMAINS`/`FRONTEND_URL`/`SESSION_DOMAIN`, que o molde entrega vazios | 🔴 | P |
+| Q-3 | `.dockerignore` sem `backend/bootstrap/cache/*.php`: `config.php` cacheado na máquina que builda entra na camada com segredo resolvido | 🟡 | P |
+| Q-4 | `.env.production.example` sem `SESSION_SECURE_COOKIE` | 🟡 | P |
+| Q-5 | Prova 5 exercitou 401/404; o branch que `APP_DEBUG` governa é o 500 de `ProblemDetails.php:67` | 🟡 | P |
+| Q-6 | `prod.conf` sem `Cache-Control` no `index.html` | 🟡 | P |
+| Q-7 | `pm.max_children` não fixado, embora o sizing de 1,25 GB dependa dele | 🟡 | P |
+| Q-8 | Catraca prova existência onde precisava provar propriedade (`env_file` e `condition` do overlay) | 🟡 | P |
+| Q-9 | `docker-compose.prod.yml` sem teto de log do json-file | 🟡 | P |
+
+**O João aprovou os nove em 2026-08-22.** As correções estão na seção seguinte.
+
+### Correções da revisão — 2026-08-22: nove achados, nove commits, tudo provado
+
+`ed4cdc7b..` (nove commits, um por achado). Nenhuma correção foi aceita por leitura
+de diff: cada uma tem uma medição contra a imagem reconstruída ou contra a stack de
+produção com o overlay de sonda.
+
+| # | Commit | Prova |
+|---|---|---|
+| Q-1 | `ed4cdc7b` | `db:seed --force` com `APP_ENV=production` na stack real: `roles=3`, `permissions=42`, **`users=0`**. O `RolePermissionSeeder` continua rodando em qualquer ambiente |
+| Q-2 | `989250d5` | Os dois modos de falha: chave **ausente** e chave **vazia** (o caso do molde) saem com `entrypoint: variável obrigatória ausente: SANCTUM_STATEFUL_DOMAINS`, exit 1 |
+| Q-3 | `155f7dc3` | `config.php` plantado no host com string sentinela: `grep -rl` na imagem reconstruída não acha nada. `storage/framework/cache/data` passou a existir; `storage/framework/testing` sumiu |
+| Q-4 | `e3a25dcf` | Chave no molde com a dependência de HTTPS escrita ao lado. A sonda roda em HTTP e não define a chave, então não regride |
+| Q-5 | `docs(spec)` §10.8 | 500 **real** (MySQL parado, rota pública sem sessão): com `APP_DEBUG=false`, `detail` genérico; com `true`, o `detail` vaza `SQLSTATE`, host, porta, database e o SQL. O par distingue os dois estados — o 401/404 original não distinguia |
+| Q-6 | `b012ae09` | `curl -I` contra a stack: `/` responde `Cache-Control: no-cache`; `/assets/index-*.js` responde `public, max-age=31536000, immutable`, **um header cada** (a primeira tentativa emitiu dois, por causa da diretiva `expires`) |
+| Q-7 | `aaed3592` | `grep` na imagem: `pm.max_children = 5` agora está no `zz-www.conf`, não herdado |
+| Q-8 | `65d03e0b` | Mutação negativa 2/2: `env_file` hardcoded e `condition: service_started` reprovam as asserções novas. 19 testes no arquivo, 500 na suíte |
+| Q-9 | `34c94535` | `docker inspect`: `json-file map[max-file:3 max-size:10m]` nos serviços da stack |
+
+**Regressão medida depois de tudo, não assumida:** stack de produção reconstruída e
+no ar, `nginx` `(healthy)`, `/up` `200`, e o **login real fecha** —
+`/sanctum/csrf-cookie` `204`, `POST /api/login` `200` com cookie `lotus-session`
+gravado, `GET /api/me` `200`. Suíte backend `867 passed / 5 skipped`; frontend
+`88 arquivos / 500 testes`, `lint` e `build` exit 0.
+
+**Ambiente devolvido:** `down -v` no projeto `lotus-probe` (zero containers, zero
+volumes, zero redes); os 12 volumes de dev intactos; árvore limpa.
+
+**Nada a diferir:** os nove foram corrigidos, então nenhum item novo vai ao
+`backlog.md` nem às pendências por conta desta revisão.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
