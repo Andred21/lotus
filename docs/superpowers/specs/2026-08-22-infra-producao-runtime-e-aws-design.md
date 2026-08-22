@@ -272,7 +272,7 @@ por configuração: provado. O certificado no bucket: não existe para ser prova
 | 1 — stack de produção sobe | `nginx` fica `(healthy)`; `curl http://localhost:8081/up` → `200`; 24 migrations `DONE`; `createbuckets` criou `local/lotus` |
 | 2 — SPA na raiz | `curl http://localhost:8081/` → `200` |
 | 4 — imagem imutável | `AUSENTE ANTES` e `AUSENTE DEPOIS`: sonda instalada no host (`grep -c` = 1), ausente no container, revertida, árvore limpa |
-| 5 — erro sem vazamento | Sem sessão: `401` RFC 7807. Autenticado: `404` RFC 7807. Sem `trace`, sem `file`, sem caminho absoluto. O `detail` do `404` nomeia a classe do model (`App\Domains\Operation\Models\Turma`) — mensagem default do Laravel, não stack trace |
+| 5 — erro sem vazamento | **Remedida na revisão de 2026-08-22, ver §10.8** — o 401/404 medido aqui não toca o branch que o `APP_DEBUG` governa |
 | 7 — P-50 | `docker compose exec -T app php artisan test` → `Tests: 5 skipped, 867 passed (3095 assertions)`, `Duration: 59.01s`. Sem estouro de memória |
 | Gate do Step 6 | `pnpm lint` exit 0 · `pnpm build` exit 0 (`✓ built in 1.85s`) · `pnpm test` → `Test Files 88 passed (88)` / `Tests 499 passed (499)` · `git diff --name-only main...HEAD -- backend/app frontend/src/shared/types/generated.ts` vazio, logo Pint e `typescript:transform` não se aplicam **por medição** |
 
@@ -281,3 +281,22 @@ por configuração: provado. O certificado no bucket: não existe para ser prova
 Stack de sonda derrubada com `down -v` (projeto `lotus-probe`: zero containers, zero volumes, zero
 redes). Volumes de dev (`lotus_*`, `lotus-bd15_*`, `lotus-infra_*`) intactos. Árvore de trabalho
 limpa.
+
+### 10.8 Prova 5 remedida na revisão — 2026-08-22
+
+A prova original exercitou `401` e `404`. O único ponto do handler que consulta
+`config('app.debug')` é `ProblemDetails.php:67`, e ele só é alcançado em **500** —
+as duas respostas medidas saem idênticas com `APP_DEBUG` ligado ou desligado. O
+proxy era insensível à propriedade que devia provar; a prova teria fechado verde
+numa imagem com `APP_DEBUG=true`.
+
+Refeita contra a stack de produção, com 500 **real** (MySQL parado, rota pública
+`GET /api/publico/certificados/{uuid}`, que não exige sessão), e com o contraste
+que torna a prova conclusiva:
+
+| `APP_DEBUG` | Resposta |
+|---|---|
+| `false` (a imagem de produção) | `500` · `detail: "Ocorreu um erro inesperado. Tente novamente."` — sem `trace`, sem `file`, sem SQL, sem host de banco |
+| `true` (contraste, só para medir a sensibilidade) | `500` · `detail` traz `SQLSTATE[HY000] [2002] ... (Connection: mysql, Host: mysql, Port: 3306, Database: lotus, SQL: select * from \`certificates\` where ...)` |
+
+O mesmo par de requisições distingue os dois estados: é isso que faltava.
