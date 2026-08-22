@@ -39,9 +39,9 @@ lanes:
     resume_state: null
   lane-c:
     active_work_item: BD-15-docs-guardrails-e-sincronizacao
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: ../lotus-bd15
     branch: docs/bd15-guardrails-e-sincronizacao
     active_spec: docs/superpowers/specs/2026-08-22-bd15-docs-guardrails-e-sincronizacao-design.md
@@ -51,7 +51,7 @@ lanes:
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T11:45:00-03:00
+updated_at: 2026-08-22T12:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2

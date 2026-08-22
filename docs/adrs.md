@@ -260,6 +260,25 @@ com o schema legível; *`brick/math` ou value object `Money`* — abstração de
 atual, o `BudgetSummaryService` é o único lugar que soma dinheiro. Se um segundo agregado precisar
 somar valor, reconsiderar o value object.
 
+## ADR-20 — Importação de planilha: OpenSpout em streaming
+**Regra:** `openspout/openspout ^5.3` lê planilha enviada pelo usuário, em **streaming** — o
+`SpreadsheetRowReader` (`app/Domains/Operation/Services/`) entrega linha a linha por `\Generator`, e
+nada além da linha corrente fica em memória. Extensões aceitas: `xlsx`, `csv`, `txt`; qualquer outra
+é `ValidationException` no próprio reader. Os dois readers são abertos com
+`SHOULD_PRESERVE_EMPTY_ROWS: true`.
+
+**Porquê.** O consumidor é a importação de alunos em massa (`ImportStudentsAction`), onde a planilha
+é do cliente e o tamanho não é nosso: carregar o documento inteiro para ler N linhas é o custo que a
+biblioteca existe para evitar. O `SHOULD_PRESERVE_EMPTY_ROWS` não é preferência — sem ele, XLSX e CSV
+descartam linha em branco **antes** de o consumidor vê-la e recontam do zero, e o número de linha que
+o operador lê no erro deixa de ser o número de linha da planilha dele.
+
+**Eixo próprio, não nota.** O precedente de 2026-08-10 manda registrar biblioteca nova como nota no
+ADR existente **do mesmo eixo**; aqui não há. ADR-11 decide onde o arquivo mora e como é servido,
+ADR-12 é geração de documento — o OpenSpout é ingestão, e ingestão não tinha ADR.
+
+**Descartado:** PhpSpreadsheet — carrega o documento inteiro em memória, o oposto do requisito.
+
 ---
 
 ## Pendências abertas (não decidir sem o João Victor)
