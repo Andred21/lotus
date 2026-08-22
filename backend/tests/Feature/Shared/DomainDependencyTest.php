@@ -142,30 +142,23 @@ class DomainDependencyTest extends TestCase
         $violacoesDeSuperficie = [];
         $violacoesDeAresta = [];
 
-        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
-            foreach ($arquivos as $arquivo) {
-                foreach ($this->referenciasCrossDomain($arquivo, $origem) as $ref) {
-                    [$alvo, $camada, $classe] = $ref;
-                    $local = str_replace(base_path().'/', '', $arquivo);
+        foreach ($this->referenciasPorDominio() as $origem => $referencias) {
+            foreach ($referencias as $ref) {
+                if ($ref['fqcn'] === '') {
+                    $parcial = rtrim("{$ref['alvo']}\\{$ref['camada']}", '\\');
+                    $violacoesDeForma[] = "{$ref['local']}: {$origem} -> {$parcial} (referência ao namespace; importe a classe)";
 
-                    if ($camada === '' || $classe === '') {
-                        $parcial = rtrim("{$alvo}\\{$camada}", '\\');
-                        $violacoesDeForma[] = "{$local}: {$origem} -> {$parcial} (referência ao namespace; importe a classe)";
+                    continue;
+                }
 
-                        continue;
-                    }
+                if (! in_array($ref['camada'], self::PUBLIC_LAYERS, true)) {
+                    $violacoesDeSuperficie[] = "{$ref['local']}: {$origem} -> {$ref['fqcn']} (camada {$ref['camada']} é interna)";
 
-                    $fqcnRelativo = "{$alvo}\\{$camada}\\{$classe}";
+                    continue;
+                }
 
-                    if (! in_array($camada, self::PUBLIC_LAYERS, true)) {
-                        $violacoesDeSuperficie[] = "{$local}: {$origem} -> {$fqcnRelativo} (camada {$camada} é interna)";
-
-                        continue;
-                    }
-
-                    if (! in_array($fqcnRelativo, self::ALLOWED[$origem] ?? [], true)) {
-                        $violacoesDeAresta[] = "{$local}: {$origem} -> {$fqcnRelativo} (aresta não declarada)";
-                    }
+                if (! in_array($ref['fqcn'], self::ALLOWED[$origem] ?? [], true)) {
+                    $violacoesDeAresta[] = "{$ref['local']}: {$origem} -> {$ref['fqcn']} (aresta não declarada)";
                 }
             }
         }
@@ -215,30 +208,22 @@ class DomainDependencyTest extends TestCase
      * com sobra em silêncio: o import sai no refactor e a linha fica, dando
      * permissão a um vínculo que ninguém mais tem.
      *
-     * A varredura é a MESMA da Regra B — `referenciasCrossDomain` sobre o código
-     * sem comentários. Escrita sobre linhas `use`, esta regra acusaria de órfã
-     * toda aresta consumida só por FQN inline (`\App\Domains\X\Models\Y::find(1)`),
-     * que é justamente o escape que o docblock desta classe fecha de propósito.
+     * A varredura é a MESMA da Regra B por ESTRUTURA, não por promessa de
+     * comentário: as duas leem `referenciasPorDominio()`, e é lá que mora a
+     * decisão de o que é aresta conferível (review de 2026-08-22, Q-4). Escrita
+     * sobre linhas `use`, esta regra acusaria de órfã toda aresta consumida só
+     * por FQN inline (`\App\Domains\X\Models\Y::find(1)`), que é justamente o
+     * escape que o docblock desta classe fecha de propósito.
      *
-     * Referência ao namespace (camada ou classe vazias) não conta como consumo:
-     * é violação de forma e a Regra B já a reprova pelo nome certo.
+     * Referência ao namespace (`fqcn` vazio) não conta como consumo: é violação
+     * de forma e a Regra B já a reprova pelo nome certo.
      */
     public function test_toda_aresta_declarada_tem_consumidor(): void
     {
         $orfas = [];
 
-        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
-            $usadas = [];
-
-            foreach ($arquivos as $arquivo) {
-                foreach ($this->referenciasCrossDomain($arquivo, $origem) as [$alvo, $camada, $classe]) {
-                    if ($camada === '' || $classe === '') {
-                        continue;
-                    }
-
-                    $usadas[] = "{$alvo}\\{$camada}\\{$classe}";
-                }
-            }
+        foreach ($this->referenciasPorDominio() as $origem => $referencias) {
+            $usadas = array_column($referencias, 'fqcn');
 
             foreach (self::ALLOWED[$origem] as $declarada) {
                 if (! in_array($declarada, $usadas, true)) {
@@ -295,6 +280,46 @@ class DomainDependencyTest extends TestCase
             foreach ($iterador as $arquivo) {
                 if ($arquivo->isFile() && $arquivo->getExtension() === 'php') {
                     $porDominio[$dominio][] = $arquivo->getPathname();
+                }
+            }
+        }
+
+        return $porDominio;
+    }
+
+    /**
+     * Base ÚNICA das Regras B e C: toda referência cross-domain do código,
+     * agrupada pelo domínio de origem, em uma varredura só.
+     *
+     * Existe porque as duas regras liam a mesma coisa por dois laços próprios, e
+     * a igualdade entre eles era garantida por comentário (review de 2026-08-22,
+     * Q-4). Um filtro que divergisse devolvia a Regra C acusando de órfã a aresta
+     * que a Regra B considera usada — o falso positivo que o desenho da D-17
+     * nomeia como risco principal.
+     *
+     * `fqcn` é a aresta conferível (`Alvo\Camada\Classe`) e vem VAZIO quando a
+     * referência é ao namespace, sem camada ou sem classe. Essa é a decisão que
+     * mora aqui, e não repetida em cada regra: a Regra B reprova o vazio por
+     * forma, a Regra C o ignora.
+     *
+     * @return array<string, list<array{local: string, alvo: string, camada: string, classe: string, fqcn: string}>>
+     */
+    private function referenciasPorDominio(): array
+    {
+        $porDominio = [];
+
+        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
+            $porDominio[$origem] = [];
+
+            foreach ($arquivos as $arquivo) {
+                foreach ($this->referenciasCrossDomain($arquivo, $origem) as [$alvo, $camada, $classe]) {
+                    $porDominio[$origem][] = [
+                        'local' => str_replace(base_path().'/', '', $arquivo),
+                        'alvo' => $alvo,
+                        'camada' => $camada,
+                        'classe' => $classe,
+                        'fqcn' => ($camada === '' || $classe === '') ? '' : "{$alvo}\\{$camada}\\{$classe}",
+                    ];
                 }
             }
         }
