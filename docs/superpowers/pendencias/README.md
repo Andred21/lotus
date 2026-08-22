@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (28)
+## Abertas (24)
 
 ### Agrupadas em bloco de execução
 
@@ -37,14 +37,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
-| P-20 | `openspout/openspout` em produção sem ADR hospedeiro | BD-15 | João apontar o ADR hospedeiro (ou autorizar ADR-20); revisar 2026-09-30 |
-| P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | BD-15 | primeiro bloco de Certification que tocar `docs/adrs.md`; revisar 2026-09-30 |
-| P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
-| P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
-| P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
-| P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | BD-15 | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
@@ -62,17 +56,26 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
+| P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
+| P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (7)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
 | P-50 | Suíte unida acima do `memory_limit` de 128M; o `artisan test` do §6 morria no meio | 2026-08-22, no `infra-producao-runtime-e-aws` | primeiro fechamento **posterior** ao deste bloco |
+| P-18 | Página de fechamento do Notion com `Sprint` divergente | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-20 | `openspout/openspout` em produção sem ADR hospedeiro | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-43 | `der-fisico.md` chamava `certificates` de "planejada"; as duas tabelas de Certification existem desde 2026-08-05 | 2026-08-22, nas duas lanes (`feedbacks-resolver-escopo` e `BD-15`) | primeiro fechamento **posterior** a este |
 
-**A P-40 saiu neste fechamento**, que é o primeiro posterior ao do BD-12 — a condição que a linha
-dela pedia. O rastro fica nos commits e na linha da entrega do BD-12 em
-[`../historico/progress.md`](../historico/progress.md). **A P-29 e a P-35** tinham saído pelo mesmo
-mecanismo no fechamento anterior.
+**A P-40 saiu nestes fechamentos** — os três são posteriores ao do BD-12, que é a condição que a
+linha dela pedia; as três lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no
+fechamento do BD-12, pelo mesmo critério contra o BD-14. O rastro de todas fica nos commits e nas
+linhas de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
 `bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo

@@ -8,7 +8,6 @@
 
 > **⚠️ Divergência de idioma (em aberto).** O schema **implementado** está em **inglês** (decisão do João Victor — spec `2026-07-07-sprint1-cadastros-backend-design.md` §2.1); o canônico do Drive segue em **PT/ES**. Neste doc:
 > - **Tabelas implementadas** = documentadas em inglês, batendo 1:1 com as migrations reais (fato verificável).
-> - **Tabelas planejadas** = mantidas em PT/ES (rascunho do Drive) e marcadas como tais; serão implementadas em inglês.
 > - **Exceção de nome próprio:** `redator`/`redatores`/`redator_id` ficam em PT (nome de domínio, casam com o morph map).
 > - Alinhar o **Drive canônico** ao inglês é follow-up pendente de autorização (write externo). Se o Drive divergir, o Drive vence — sinalize.
 >
@@ -49,6 +48,10 @@
 - **turma_redator** — `id PK`, `turma_id FK` → turmas cascade, `redator_id FK` → redatores `restrictOnDelete`, timestamps, `unique(turma_id, redator_id)`. Pivô N:N de designação (quais redatores ministram a turma), sem soft-delete. Pivot não audita sozinho: a designação usa `auditSync`.
 - **enrollments** (matrículas) — `id PK`, `turma_id FK` → turmas `restrictOnDelete`, `student_id FK` → students `restrictOnDelete`, `grades` (json, nullable), `attendance_pct` (decimal 5,2, nullable), `approval_status` enum(`pendiente`,`aprobado`,`reprobado`, default `pendiente`), `deleted_at`. Índice único nomeado `enrollments_turma_student_unique` (`turma_id`,`student_id`) — encadear `->unique()` no `foreignId()` não emite índice (lição 6b).
 
+### Certification
+- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK` → enrollments `restrictOnDelete`, `course_id FK` → courses `restrictOnDelete`, `redator_id FK` → redatores `restrictOnDelete`, `codigo UK`, `snapshot` (json), `valido_ate` (date, nullable), `status` enum(`emitido`,`revocado`) default `emitido`, `revoked_at` (timestamp, nullable), `revocation_reason` (nullable), timestamps, `active_enrollment_id` (coluna gerada STORED `CASE WHEN status = 'emitido' THEN enrollment_id ELSE NULL END`, `UNIQUE` — índice `certificates_active_enrollment_unique`). **Sem `deleted_at`:** revogação é o próprio "delete" do domínio — `status=revocado` marca e preserva a linha (certificado tem peso legal, não se apaga). A unicidade **não** é um `unique` simples em `enrollment_id`: é sobre `active_enrollment_id`, coluna gerada que vale `enrollment_id` só enquanto `status=emitido` e vira `NULL` quando revogado — mesmo mecanismo de `turmas.active_quote_id` e `student_client_logs.open_link_student_id` (ver acima): um certificado revogado libera a matrícula para reemissão, porque `NULL` não colide em índice único. `snapshot` (json) guarda o retrato dos dados no momento da emissão; não há arquivo por certificado — PDF é gerado sob demanda via Gotenberg (ADR-12), nunca persistido. **Não existe coluna de hash de QR:** a validação pública resolve pelo `uuid`.
+- **certificate_sequences** — `id PK`, `year UK` (unsigned smallint), `last_seq` (unsigned int), timestamps. Contador de numeração de `codigo` por ano — sem FK; suporte para gerar o código do certificado sequencialmente (mesmo padrão do `seq_in_budget`/ADR-17: derivado sob lock, nunca input externo).
+
 ### RBAC (Spatie — vêm do pacote, não criar à mão)
 - **roles** — `id PK`, `name`, `guard_name`.
 - **permissions** — `id PK`, `name`, `guard_name`.
@@ -66,16 +69,23 @@
 
 ---
 
-## Tabelas PLANEJADAS (ainda no papel — nomes PT/ES do Drive; serão implementadas em inglês)
+## Tabelas que NÃO existem (e por quê)
 
-> Não existem como migration ainda. Os nomes de coluna abaixo são o rascunho conceitual do Drive; ao implementar, traduzir para inglês (como foi feito com clients/courses) e atualizar a seção acima.
+> **Nenhuma tabela de domínio segue no papel.** As duas últimas — `certificates` e
+> `certificate_sequences` — entraram em 2026-08-05 e estão documentadas em Certification, na seção
+> IMPLEMENTADAS. O que sobra aqui é registro de decisão: requisito cujo desenho **não** produz tabela.
 
-### Certification
-- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK,UK`, `course_id FK`, `codigo UK`, `valido_ate` (date), `qr_code_hash UK`, `status` (enum). Gerado sob demanda; metadata armazenada, PDF não.
-- **certificate_sequences** — `id PK`, `year UK` (smallint), `last_seq` (int). Numeração por ano.
+### Feedback — sem tabela própria (decisão de 2026-08-22)
 
-### Feedback
-- **feedbacks** — `id PK`, `turma_id FK`, `origem` (enum).
+Não existe tabela `feedbacks` e não haverá na v2. RF-FBK-01/02/04 são atendidos pela documentação de
+turma: `files` polimórfica sobre `turmas`, com `type` restrito por
+`Operation\Enums\TurmaDocumentType` — `PRUEBAS` (avaliações dos alunos) e `EVALUACION_REDATOR`
+(avaliação do próprio redator), ao lado de `MANUAL`. A exigência de completude antes de finalizar a
+turma (RF-FBK-04) é a RN-16, em `ConcludeTurmaAction` sobre `TurmaHabilitacaoService`.
+
+RF-FBK-03 — avaliação do cliente, cadastrada pelo admin ao final da ordem de serviço — segue
+**futuro**, junto do resto de RF-TUR-07 (fatura final, comprovante de pagamento). Quando entrar,
+entra pelo encerramento da OS, não pela turma.
 
 ---
 
@@ -84,11 +94,11 @@
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
 - `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
 - `students` N:1 → `clients` (vínculo atual em `students.current_client_id`); histórico em `student_client_logs`.
-- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`; e (planejada) `certificates`.
+- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`, `certificates`.
 - `redatores` 1:N → `course_redator` (idoneidade); N:N com `turmas` via `turma_redator` (ministra).
-- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`; e (planejada) `feedbacks`.
+- `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`.
 - `budgets` / `quotes` 1:N → `files` (anexos polimórficos).
-- `enrollments` 1:1 → `certificates` (planejada).
+- `enrollments` 1:1 → `certificates`.
 - `users` 1:N → `model_has_roles`, `audits`.
 - **Soft-delete cascateia:** deletar `clients`/`redatores` cascateia até o `users` e os nested (evento `deleting`, guard `isForceDeleting`). Padrão para toda tabela futura com `client_id`/`redator_id`.
 
@@ -96,7 +106,7 @@
 
 ## Notas de implementação (ligação com ADRs)
 - **`files` e `audits` são polimórficas** → `enforceMorphMap` obrigatório (ADR-10). Registrar alias só de classe que existe.
-- **`certificates`** (planejada): sem arquivo por aluno; só metadata. PDF sob demanda via Gotenberg (ADR-12).
+- **`certificates`**: sem arquivo por aluno; só metadata. PDF sob demanda via Gotenberg (ADR-12).
 - **Soft delete** nas entidades de negócio (`deleted_at`).
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
@@ -107,11 +117,14 @@
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:
   `tests/Feature/Shared/PersistenceLawsTest.php` reprova coleção nested sem `Optional`, e projeção
   de saída se declara com `#[ReadOnlyCollection]` em vez de entrar numa allowlist.
-- **Contexto total (alvo):** 26 tabelas — 19 de domínio (16 implementadas + `certificates`,
-  `certificate_sequences`, `feedbacks` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
-  `audits`, que esta lista classifica como Transversal). Implementadas até
-  2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
-  **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
-  budgets, quotes, files, audits, **turmas**, **turma_redator**, **enrollments** + as 5 de RBAC. As
-  de framework (sessions, cache, jobs, password_reset_tokens, personal_access_tokens) ficam fora da
-  contagem de domínio.
+- **Contexto total:** 27 tabelas — 20 de domínio, **todas implementadas** + 7 RBAC/transversal (as
+  5 do Spatie mais `files` e `audits`, que esta lista classifica como Transversal). O número caiu de
+  28 para 27 no merge de 2026-08-22: `feedbacks` era a única "no papel" e deixou de existir como
+  tabela por decisão do `feedbacks-resolver-escopo` (ver `### Feedback` acima). Implementadas:
+  users, clients, client_addresses, client_contacts, redatores, **students**,
+  **student_client_logs**, **login_logs**, **invitation_tokens**, courses,
+  course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits,
+  **turmas**, **turma_redator**, **enrollments**, **certificates**, **certificate_sequences** + as 5
+  de RBAC. `invitation_tokens` (`2026_08_18_200000`) ainda não tem ficha de colunas nesta lista —
+  é a **P-52**. As de framework (sessions, cache, cache_locks, jobs, job_batches, failed_jobs,
+  password_reset_tokens, personal_access_tokens) ficam fora da contagem de domínio.

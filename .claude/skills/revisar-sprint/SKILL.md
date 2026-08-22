@@ -11,14 +11,27 @@ contra o padrão **deste** projeto. Lentes diferentes; uma não dispensa a outra
 
 ## Gate de estado
 
-Leia `docs/superpowers/state.md` primeiro. A skill aceita somente:
+Leia `docs/superpowers/state.md` primeiro.
+
+**Resolva a lane ANTES de ler o estado (modo multi-lane, `schema_version: 2`).** Os campos
+singulares do topo são **espelho de `focused_lane`** — revisar bloco de outra lane pelo topo lê o
+estado errado e barra a revisão que deveria acontecer (Q-3 do review de 2026-08-22, medido nesta
+própria skill). Compare o diretório atual com `lanes.<id>.tree` (`main-tree` = o repositório
+principal; qualquer outro valor é o path do worktree) e opere sobre **essa** lane: `workflow_state`,
+`active_work_item`, `active_plan`, `active_spec` e `context_packet` saem de dentro dela. Nenhuma
+árvore casa com nenhuma lane → PARE e mostre `lanes:`. Trocar `focused_lane` para passar neste gate
+é proibido: o foco é fronteira durável (invariante do `state.md`), não chave de contorno. Arquivo
+sem `lanes:` (schema 1) → os campos do topo SÃO o estado.
+
+O `workflow_state` da lane resolvida deve ser:
 
 - `ready_for_review` → valide o trabalho ativo e transicione para `reviewing`;
 - `reviewing` → retome a revisão ou as correções já aprovadas do mesmo trabalho.
 
-Qualquer outro estado → PARE e informe `workflow_state`, `next_owner` e `next_action`.
+Qualquer outro estado → PARE e informe `workflow_state`, `next_owner` e `next_action` **da lane**.
 
-Ao começar a partir de `ready_for_review`, atualize:
+Ao começar a partir de `ready_for_review`, atualize a lane (e o espelho do topo junto, **somente**
+se ela for a `focused_lane`):
 
 ```yaml
 workflow_state: reviewing
@@ -153,6 +166,9 @@ N+1 sem eager loading; `env()` fora de `config/`; feature que ninguém pediu.
 ## Saída e handoff
 
 Relatório: órfãos + achados por severidade × esforço. **Aguarde o João aprovar** o que entra.
+
+As duas transições abaixo são escritas **na lane resolvida no gate**, dentro de `lanes:`. Lane em
+foco leva o espelho do topo junto, no mesmo commit; lane fora de foco **não toca o topo**.
 
 Quando houver achados aguardando decisão, registre o resumo em `blocker` e transicione:
 

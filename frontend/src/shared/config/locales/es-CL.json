@@ -140,8 +140,7 @@
     "commercial": "Comercial",
     "catalog": "Catálogo",
     "operation": "Operación",
-    "certification": "Certificación",
-    "feedback": "Retroalimentación"
+    "certification": "Certificación"
   },
   "perm": {
     "identity_user_view": "Ver usuarios, redactores y alumnos",
@@ -183,9 +182,7 @@
     "operation_turma_submit_docs": "Subir documentación del grupo (Flujo 1/4 — acción del redactor)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Flujo 5)",
-    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)",
-    "feedback_feedback_view": "Ver retroalimentaciones del grupo",
-    "feedback_feedback_manage": "Gestionar retroalimentaciones del grupo"
+    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)"
   },
   "role": {
     "new": "Nuevo rol",

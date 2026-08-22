@@ -23,33 +23,15 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 9 dos 14 itens são P0; quem ordena é a cadeia de dependência:
-  itens 1–8 fecham o código, 10→11→12 constroem a infra, o 14 fecha docs antes do fim e o 13 é o
-  gate final de go-live.
+- **P0 não ordena** — 7 dos 12 itens restantes são P0; quem ordena é a cadeia de dependência:
+  itens 2–8 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22 e a fila
+  começa no `2` de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e
+  pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 
 ---
 
 # Fila priorizada
-
-## 1. `feedbacks-resolver-escopo`
-
-**Prioridade:** P0 · **Frente:** Produto/Backend · **Contexto:** sim
-**Fonte:** Drive `RF-TUR-06/07`, `RF-FBK-01..04`; Notion `7.4.1`.
-
-**Objetivo:** resolver a lacuna entre o requisito canônico de feedbacks/avaliações e a ausência de
-`Domains/Feedback`.
-
-**Evidência medida (2026-08-22):** o domínio não existe, mas o
-`Identity/Support/PermissionCatalog.php:87-89` já declara `feedback.feedback.view/manage` — aresta
-declarada sem código, a mesma classe que a D-17 (item 14) quer detectar.
-
-**Escopo:** confirmar se Feedback permanece na v2; se entrar, desdobrar implementação mínima; se
-sair, registrar descope no Drive/Notion/DER **e remover as permissões órfãs do catálogo**. Não
-inventar schema ou workflow antes da decisão.
-
-**DoD:** requisito, planejamento e código deixam de divergir sobre a existência de Feedback.
-
----
 
 ## 2. `certificacao-historico-do-aluno`
 
@@ -85,7 +67,12 @@ reconstruída no React.
   tem a tabela dos sítios);
 - **P-47**: corrigir a role dos redatores do seed, se o seed continuar oficial;
 - **D-34**: visibilidade RBAC do Dashboard vira campo explícito no payload, se o contrato for
-  tocado (regenera `generated.ts`, lei §5.3).
+  tocado (regenera `generated.ts`, lei §5.3);
+- **Q-4 do review de `feedbacks-resolver-escopo` (2026-08-22, deferido pelo João):** os testes de
+  `RemoveOrphanFeedbackPermissionsMigrationTest` não cobrem o filtro `guard_name` nem o
+  `forgetCachedPermissions()` do próprio `up()` — apagar qualquer um dos dois deixa a suíte verde
+  (lição 10). Impacto hoje é baixo (o banco só tem o guard `web`, medido, e o projeto não usa
+  teams); vira relevante quando houver segundo guard. Fortalecer junto do resto do RBAC.
 
 **DoD:** Admin global; Redator A não lê/altera turma do Redator B; cliente/aluno e conta revogada
 falham; concorrência coberta não deixa agregado inconsistente.
@@ -331,39 +318,6 @@ está formalmente resolvida.
 
 ---
 
-## 14. `BD-15-docs-guardrails-e-sincronizacao`
-
-**Prioridade:** P1 antes do encerramento definitivo · **Frente:** Docs/Mecanismos · **Contexto:** sim
-**Cobre:** `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-43`, `P-18`, `P-22`, `D-17`.
-
-**Escopo:**
-- ADR do OpenSpout (**P-20** — João aponta o hospedeiro ou autoriza ADR-20);
-- nota do `simple-qrcode` no ADR-12 (**P-21**);
-- formato de `progress.md` (**P-23** — restaurar a coluna `Contexto` ou declarar a mudança);
-- sync ADR-16↔Drive (**P-31**);
-- guardas de docs — **a P-32 só ganha seletor por classe com reincidência medida ou decisão
-  explícita do João; a ficha veta desenhar o seletor sem esse dado** (falso-positivo caro:
-  a doc cita classe de vendor, classe planejada e nome de conceito);
-- encerrar/reformular a **P-39** sem retro-editar o plano histórico;
-- DER: `certificates` deixa de ser "planejada" nos 4 sítios (**P-43**);
-- corrigir Notion **P-18**/**P-22**;
-- **D-17**: detectar aresta arquitetural declarada e não usada (as permissões `feedback.*` órfãs
-  são o caso vivo — ver item 1).
-
-**Sincronização Notion obrigatória:**
-- `8.4.0–8.4.7` Dashboard: ainda aparecem `Backlog`, mas a feature está entregue;
-- `8.5.1–8.5.9` Meu Perfil: ainda aparecem `Backlog`, mas a feature está entregue;
-- `9.1.4`: a `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e
-  emissão de certificado; não criar novo bloco de código apenas para repetir essa cobertura;
-- limpar duplicações genéricas de sync/fechamento/UI review que já pertencem ao workflow.
-
-> Os ponteiros de `pendencias/README.md` para BD executado foram corrigidos na própria
-> substituição de 2026-08-22 e não são mais escopo deste bloco.
-
-**DoD:** código, `/docs`, Drive e Notion concordam sobre entregue × pendente × descopado.
-
----
-
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |
@@ -436,11 +390,16 @@ está formalmente resolvida.
   anterior pode absorvê-la.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  `BD-15-docs-guardrails-e-sincronizacao`. A lista de arestas de um domínio envelhece com sobras
-  em silêncio; o cenário (9) do `dashboard-backend-agregacoes` cobre a direção contrária só para
-  `Dashboard`. Generalizar = varrer os `use` de cada domínio e reprovar declaração sem consumidor.
-  As permissões `feedback.*` órfãs (`PermissionCatalog.php:87-89`) são instância viva da mesma
-  classe — cruzam com `feedbacks-resolver-escopo`.
+  **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
+  **Feito** (`BD-15-docs-guardrails-e-sincronizacao`,
+  `plans/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`): a Regra C do
+  `DomainDependencyTest` reprova aresta declarada sem consumidor, lendo a **mesma** varredura da
+  Regra B, e foi vista reprovar por sonda. **Fora, por decisão (D4 da spec):** a catraca cobre só
+  aresta de **domínio**, nunca permissão. As permissões `feedback.*` órfãs
+  (`PermissionCatalog.php:87-89`) eram a instância viva da mesma classe e o
+  `feedbacks-resolver-escopo` as removeu **à mão** em 2026-08-22 (`f6b04b45`..`629fcfe6`) — o caso
+  vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
+  vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
 - **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
   → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
@@ -530,8 +489,11 @@ Executar sem a decisão é escolher no lugar do João.
 # Fora desta fila
 
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
-BD-1..BD-10, BD-12, BD-13, BD-14, BD-16, BD-17 e BD-18 já foram executados/fechados e **não voltam
-ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se no
-`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 14,
-com o mesmo nome. Task antiga com status incorreto no Notion gera sincronização documental, não
-reimplementação.
+BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
+voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
+no `frontend-hardening-final` (item 8), levando a D-03. **Os itens 1 e 14 saíram da fila em
+2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
+`BD-15-docs-guardrails-e-sincronizacao` (item 14). A numeração restante **não** foi reordenada — a
+fila tem buracos de propósito, porque renumerar quebraria toda referência escrita a "item N". O que
+o BD-15 deixou aberto vive em `pendencias/` (P-22, P-31, P-32, P-52, P-53), não aqui. Task antiga
+com status incorreto no Notion gera sincronização documental, não reimplementação.
