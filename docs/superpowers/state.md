@@ -31,8 +31,8 @@ lanes:
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
-    tree: ../lotus-infra
-    branch: infra/producao-runtime-e-aws
+    tree: null   # ../lotus-infra removida em 2026-08-22, depois do merge
+    branch: null # infra/producao-runtime-e-aws mesclada no PR #67 e apagada (era c27492d7)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -55,7 +55,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: 8c6dea02
-updated_at: 2026-08-23T01:10:00-03:00
+updated_at: 2026-08-23T01:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -158,12 +158,13 @@ disjuntas, colisão mínima de arquivos:
 > de que a branch exista. A tabela acima fica como registro da seleção que promoveu as três, não
 > como lista do que está ativo agora.
 
-> **A `lane-b` fechou em 2026-08-22** e é a última das três a sair — `infra-producao-runtime-e-aws`,
-> narrativa em `historico/state-archive.md`. A worktree `../lotus-infra` e a branch
-> `infra/producao-runtime-e-aws` **seguem vivas**: a branch tem PR aberto e ainda não foi mesclada,
-> ao contrário da `lane-a` (PR #65) e da `lane-c` (PR #66). **As três lanes estão `idle`**, e com
-> isso o modo multi-lane não tem trabalho ativo nenhum: a próxima promoção é do João, no
-> `backlog.md`, e decide se as lanes continuam ou se o estado volta a uma frente só.
+> **A `lane-b` fechou em 2026-08-22** e foi a última das três a sair —
+> `infra-producao-runtime-e-aws`, mesclada no **PR #67** (merge `31f91987`), narrativa em
+> `historico/state-archive.md`. A worktree `../lotus-infra` e a branch
+> `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por decisão do João e pelo
+> mesmo precedente da `lane-c`; por isso `tree` e `branch` dela são `null`. **As três lanes estão
+> `idle` e nenhuma tem trabalho ativo**: a próxima promoção é do João, no `backlog.md`, e decide se
+> as lanes continuam ou se o estado volta a uma frente só.
 
 ## Itens fechados — ponteiro, não narrativa
 
