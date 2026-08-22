@@ -28,7 +28,15 @@ export function LanguageMenu() {
     // `data` carrega o código do item — é o que o `pt.menuitem` abaixo lê para
     // reconhecer o ativo sem depender de índice/ordem (UI-05).
     data: l.code,
-    className: l.code === current.code ? 'lotus-language-active' : undefined,
+    // `p-highlight` é o vocabulário do PRÓPRIO tema para "item selecionado": o
+    // Lara já pinta `.p-menu .p-menuitem.p-highlight` nos dois temas
+    // (`lara-light-lotus.css:5551`, `lara-dark-lotus.css:5551`) — fundo, texto e
+    // ícone — e ainda distingue o caso em que o ativo é TAMBÉM o focado
+    // (`.p-highlight.p-focus`, fundo mais forte). O `Menu` não crava essa classe
+    // sozinho porque não tem estado de seleção; quem sabe qual item é o atual é
+    // esta tela, então é ela que a crava. Marca por classe do tema, e não por
+    // regra de cor própria, para a marca acompanhar o tema sem manutenção.
+    className: l.code === current.code ? 'p-highlight' : undefined,
   }))
 
   return (
@@ -43,7 +51,7 @@ export function LanguageMenu() {
       <AppMenu
         ref={menuRef}
         model={items}
-        className="items-center w-auto mr-10"
+        className="lotus-language-menu items-center w-auto mr-10"
         popupAlignment="right"
         // UI-05 do review de 2026-08-22: o `Menu` do PrimeReact não tem estado
         // "selecionado" — diferente do `SelectButton`/`Dropdown`, que resolvem
@@ -53,9 +61,11 @@ export function LanguageMenu() {
         // apareceu: tela em `en`, menu abrindo com `ES` destacado.
         //
         // Duas marcas, uma por canal: `aria-current` é o que o leitor de tela
-        // anuncia e não pinta nada; a classe `lotus-language-active` (acima,
-        // em `className` do `MenuItem`) é o que os olhos veem e não chega à
-        // árvore de acessibilidade — nenhuma sozinha resolve o achado.
+        // anuncia e não pinta nada; o `p-highlight` (acima, em `className` do
+        // `MenuItem`) é o que os olhos veem e não chega à árvore de
+        // acessibilidade — nenhuma sozinha resolve o achado. O peso do rótulo
+        // vem do `brand-theme.css`, porque só cor não bastaria: #ecf7fd sobre
+        // branco é quase nada em escala de cinza.
         //
         // `MenuItem` não aceita `aria-*` (sem index signature no tipo); só o
         // `pt` aceita, e `pt.menuitem` é a seção que vira o `<li role="menuitem">`

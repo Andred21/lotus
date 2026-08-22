@@ -57,10 +57,12 @@ describe('LanguageMenu', () => {
     expect(es?.getAttribute('aria-current')).toBeNull()
     expect(pt?.getAttribute('aria-current')).toBeNull()
 
-    // 2) marca visual só no item ativo — `p-focus` (que o Prime crava sempre
-    // no PRIMEIRO item ao abrir) não é o que decide isto.
-    expect(en?.className).toContain('lotus-language-active')
-    expect(es?.className).not.toContain('lotus-language-active')
-    expect(pt?.className).not.toContain('lotus-language-active')
+    // 2) marca visual só no item ativo. `p-highlight` é a classe que o tema
+    // gerado já pinta como "selecionado"; quem a crava é a tela, porque o
+    // `Menu` do Prime não tem estado de seleção. `p-focus` — que o Prime crava
+    // sempre no PRIMEIRO item ao abrir — não é o que decide isto.
+    expect(en?.className).toContain('p-highlight')
+    expect(es?.className).not.toContain('p-highlight')
+    expect(pt?.className).not.toContain('p-highlight')
   })
 })
