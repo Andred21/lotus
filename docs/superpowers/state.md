@@ -2,17 +2,17 @@
 schema_version: 1
 active_feature: infra
 active_work_item: infra-producao-runtime-e-aws
-workflow_state: ready_for_planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: plan_active_work_item
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
 context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T04:05:00-03:00
+updated_at: 2026-08-22T04:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -156,6 +156,43 @@ Spec em `specs/2026-08-22-infra-producao-runtime-e-aws-design.md`: 9 decisões, 
 divergências (uma delas a `RNF-DIS-02` × ADR-14, que segue **`unresolved`** e reservada ao gate do
 item 13) e 4 limitações declaradas — a primeira delas sendo que **nada de AWS é provado por este
 bloco**.
+
+### Planejamento — 2026-08-22: 7 tasks, `executor: claude`, uma emenda à spec
+
+Plano em `plans/2026-08-22-infra-producao-runtime-e-aws.md`. **Sete tasks, uma por commit**, na ordem
+que a dependência impõe: os dois números da P-50 primeiro (Tasks 1 e 2), porque a imagem de produção
+copia as duas confs; depois a conf do Nginx (Task 3), a imagem (Task 4), o Compose com a catraca
+(Task 5), o overlay mais o molde de env (Task 6) e a DoD end-to-end (Task 7).
+
+**Uma emenda à spec, decidida ao escrever o plano e registrada na §3 dela:** as duas imagens saem de
+**um único** `docker/Dockerfile.prod` com quatro estágios e dois alvos, em vez de dois Dockerfiles. O
+motivo é o estágio `spa` — a imagem do Nginx precisa do `dist/` que ele produz, e com arquivos
+separados o build de frontend existiria duas vezes, livre para divergir. A D3 continua valendo no que
+decide; muda o número de arquivos.
+
+**A catraca do bloco não é teste de código, é teste de composição.** `frontend/tests/compose-prod.test.ts`
+guarda as duas propriedades do `docker-compose.prod.yml` cuja violação é **silenciosa** — um serviço
+de dev que reaparece e um volume de código que volta —, porque `docker compose up` fica verde dos
+dois jeitos. Ela mora em `frontend/tests/` pelo motivo já registrado na rule: o container `app` monta
+só `./backend` e `./frontend`, então o vitest é o único runner com acesso à raiz. **A conferência é
+textual e o custo está declarado no próprio arquivo:** o projeto não tem parser de YAML, e
+acrescentar dependência ao frontend por causa de arquivo de infra seria acoplamento na direção
+errada.
+
+**Três passos do plano decidem por medição, e podem terminar em qualquer dos dois ramos:** se o
+`poppler-utils` entra na imagem de produção (só entra se houver consumidor em `backend/app`), se o
+Gotenberg pode ganhar healthcheck (a imagem de terceiro pode não trazer `curl` nem `wget` — e um
+teste que não roda é pior que a ausência dele), e quais chaves do `.env.example` de dev entram no
+molde de produção.
+
+**A Task 2 instala e reverte um patch em `backend/public/index.php`** para medir o pico do FPM: a
+medição é o artefato, o código da sonda não fica, e o Step 5 prova a reversão com `git diff` vazio e
+`grep MEMPROBE` sem match. É a razão principal do **`executor: claude`** declarado no `## Handoff` —
+paths fechados errariam a reversão ou não teriam autorização para o arquivo.
+
+**Baseline a medir antes da Task 1, não herdar:** a suíte do frontend fechou em 87 arquivos / 481
+testes no fechamento do BD-12, e a do backend em 872 passed / 5 skipped no do BD-18 — mas esta árvore
+tem a `main` inteira dentro, e o gate da Task 7 cobra os números medidos, não os citados.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 

@@ -52,8 +52,15 @@ este bloco. MinIO não é S3 e Mailpit não é SES.
 é ferramenta de desenvolvimento. **A execução mede se algum código de `backend/app/` o invoca**; sem
 consumidor, ele não entra na imagem de produção, e o resultado da medição vai ao plano.
 
-`docker/nginx/Dockerfile.prod` é a segunda imagem: `nginx:alpine` mais o `dist/` do estágio **spa** e
-a conf de produção. Ela não recebe a árvore PHP.
+A segunda imagem é `nginx:alpine` mais o `dist/` do estágio **spa** e a conf de produção. Ela não
+recebe a árvore PHP.
+
+**Emenda à D3, decidida ao escrever o plano:** as duas imagens saem de **um único arquivo**,
+`docker/Dockerfile.prod`, com quatro estágios (`vendor`, `spa`, `app`, `web`) e dois alvos de build,
+em vez de dois Dockerfiles. O motivo é o estágio `spa`: a imagem do Nginx precisa do `dist/` que ele
+produz, e com arquivos separados esse estágio teria de existir duas vezes — duas cópias do mesmo
+build de frontend, livres para divergir. A D3 continua valendo no que ela decide (duas imagens, o
+Nginx sem a árvore PHP); o que muda é o número de arquivos.
 
 ## 4. Origem única e o roteamento (D2)
 
