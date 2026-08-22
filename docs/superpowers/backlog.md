@@ -85,7 +85,12 @@ reconstruída no React.
   tem a tabela dos sítios);
 - **P-47**: corrigir a role dos redatores do seed, se o seed continuar oficial;
 - **D-34**: visibilidade RBAC do Dashboard vira campo explícito no payload, se o contrato for
-  tocado (regenera `generated.ts`, lei §5.3).
+  tocado (regenera `generated.ts`, lei §5.3);
+- **Q-4 do review de `feedbacks-resolver-escopo` (2026-08-22, deferido pelo João):** os testes de
+  `RemoveOrphanFeedbackPermissionsMigrationTest` não cobrem o filtro `guard_name` nem o
+  `forgetCachedPermissions()` do próprio `up()` — apagar qualquer um dos dois deixa a suíte verde
+  (lição 10). Impacto hoje é baixo (o banco só tem o guard `web`, medido, e o projeto não usa
+  teams); vira relevante quando houver segundo guard. Fortalecer junto do resto do RBAC.
 
 **DoD:** Admin global; Redator A não lê/altera turma do Redator B; cliente/aluno e conta revogada
 falham; concorrência coberta não deixa agregado inconsistente.

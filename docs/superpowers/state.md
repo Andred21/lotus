@@ -4,28 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: feedbacks-resolver-escopo
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
 context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
-blocker: "Review de `feedbacks-resolver-escopo` (alto risco: RBAC + migration) devolveu 4 achados aguardando decisão do João — 3 amarelos e 1 verde, nenhum de lei §5, nenhum órfão. Q-1: `.claude/rules/backend-ddd.md` e `docs/estrutura-monolito.md` ainda declaram `Feedback` como domínio futuro, contra a D1. Q-2: `docs/README.md` mantém 26/19 tabelas contra as 25/18 que o bloco escreveu no DER. Q-3: o `active_plan` ainda promete 43->41 permissões, contra as 42->40 medidas. Q-4: os testes da migration não cobrem o filtro de `guard_name` nem o `forgetCachedPermissions()`."
+blocker: null
 
 lanes:
   lane-a:
     active_work_item: feedbacks-resolver-escopo
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/feedbacks-resolver-escopo
     active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
     active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
     context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
-    blocker: "4 achados de review aguardando decisão do João (ver blocker do topo)."
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
   lane-b:
     active_work_item: infra-producao-runtime-e-aws
     workflow_state: context_required
@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: 3320e2f9
-updated_at: 2026-08-22T13:10:00-03:00
+state_basis_commit: dfb18d8d
+updated_at: 2026-08-22T13:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -147,7 +147,32 @@ tree (gate P-03), commits `f6b04b45`..`6b4585ea` mais o commit documental deste 
   upload deixou `files#43` arquivada e inerte (index devolve `[]`). Hard-delete seria escrita
   destrutiva fora dos paths autorizados pelo plano.
 
-O review **não foi iniciado** — é a próxima instrução, por `next_action: request_code_review`.
+### Review de sprint — 2026-08-22: 4 achados, nenhum de comportamento
+
+Classificação **alto risco** (RBAC + migration), então além do gabarito do projeto rodou a segunda
+lente do Codex em read-only sobre o mesmo intervalo. **Órfãos: limpo. Leis §5: nenhuma ferida** —
+`permissions` é tabela do Spatie, sem `Auditable`, então a §5.2 não é alcançada pela escrita da
+migration.
+
+Os quatro achados eram de registro e de força de teste. **O João aprovou Q-1, Q-2 e Q-3**, aplicados
+em `dfb18d8d`; **Q-4 ficou deferido** e foi para o `backlog.md`, no bloco 3 (`hardening-acesso-
+ownership-e-integridade`), que é onde o resto do RBAC se fortalece.
+
+- **Q-1** — `.claude/rules/backend-ddd.md` e `docs/estrutura-monolito.md` (3 sítios) ainda
+  declaravam `Feedback` como domínio a criar. A rule é **normativa e path-scoped**: entra sozinha em
+  qualquer toque a `backend/app/**`, e dizia "não existe ainda" — promessa de futuro contra a D1.
+- **Q-2** — `docs/README.md` mantinha 26 tabelas-alvo / 19 de domínio contra as 25 / 18 que o bloco
+  escreveu no DER; divergência criada pelo próprio bloco.
+- **Q-3** — o `active_plan` prometia 43→41 permissões em 4 sítios; o medido é 42→40.
+- **Q-4 (deferido)** — os testes da migration não cobrem o filtro `guard_name` nem o
+  `forgetCachedPermissions()` do `up()`: apagar qualquer um dos dois deixa a suíte verde (lição 10).
+  Impacto hoje baixo — o banco só tem o guard `web` (medido) e o projeto não usa teams.
+
+As correções tocaram **somente documentação** — `git diff` do commit não traz nenhum arquivo de
+`backend/` ou `frontend/`, então suíte, build e lint do bloco seguem válidos como provados.
+
+O fechamento **não foi executado** — é a próxima instrução, por `next_action: close_active_work_item`.
+
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
