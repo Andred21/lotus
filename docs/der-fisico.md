@@ -84,11 +84,11 @@
 - `users` 1:1 → `clients` / `redatores` / `students` (um usuário é UM tipo de ator).
 - `clients` 1:N → `client_addresses`, `client_contacts`, `budgets`.
 - `students` N:1 → `clients` (vínculo atual em `students.current_client_id`); histórico em `student_client_logs`.
-- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`; e (planejada) `certificates`.
+- `courses` 1:N → `course_certificate_templates`, `course_modules`, `course_redator`, `quotes`, `turmas`, `certificates`.
 - `redatores` 1:N → `course_redator` (idoneidade); N:N com `turmas` via `turma_redator` (ministra).
 - `budgets` 1:N → `quotes` · `quotes` 1:1 → `turmas` (sobre `active_quote_id`) · `turmas` 1:N → `enrollments`; e (planejada) `feedbacks`.
 - `budgets` / `quotes` 1:N → `files` (anexos polimórficos).
-- `enrollments` 1:1 → `certificates` (planejada).
+- `enrollments` 1:1 → `certificates`.
 - `users` 1:N → `model_has_roles`, `audits`.
 - **Soft-delete cascateia:** deletar `clients`/`redatores` cascateia até o `users` e os nested (evento `deleting`, guard `isForceDeleting`). Padrão para toda tabela futura com `client_id`/`redator_id`.
 
@@ -96,7 +96,7 @@
 
 ## Notas de implementação (ligação com ADRs)
 - **`files` e `audits` são polimórficas** → `enforceMorphMap` obrigatório (ADR-10). Registrar alias só de classe que existe.
-- **`certificates`** (planejada): sem arquivo por aluno; só metadata. PDF sob demanda via Gotenberg (ADR-12).
+- **`certificates`**: sem arquivo por aluno; só metadata. PDF sob demanda via Gotenberg (ADR-12).
 - **Soft delete** nas entidades de negócio (`deleted_at`).
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
@@ -107,7 +107,7 @@
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:
   `tests/Feature/Shared/PersistenceLawsTest.php` reprova coleção nested sem `Optional`, e projeção
   de saída se declara com `#[ReadOnlyCollection]` em vez de entrar numa allowlist.
-- **Contexto total (alvo):** 26 tabelas — 19 de domínio (16 implementadas + `certificates`,
+- **Contexto total (alvo):** 26 tabelas — 19 de domínio (17 implementadas,
   `certificate_sequences`, `feedbacks` no papel) + 7 RBAC/transversal (as 5 do Spatie mais `files` e
   `audits`, que esta lista classifica como Transversal). Implementadas até
   2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
