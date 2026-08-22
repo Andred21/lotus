@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: feedbacks-resolver-escopo
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
@@ -15,11 +15,11 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: feedbacks-resolver-escopo
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
-    branch: null  # feat/feedbacks-resolver-escopo, criada na execução
+    branch: feat/feedbacks-resolver-escopo
     active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
     active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
     context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
@@ -110,7 +110,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco (item da fila) | Frente | Árvore | Branch |
 |---|---|---|---|---|
-| `lane-a` | `feedbacks-resolver-escopo` (1) | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo`, na execução |
+| `lane-a` | `feedbacks-resolver-escopo` (1) | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo` (criada) |
 | `lane-b` | `infra-producao-runtime-e-aws` (10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` |
 | `lane-c` | `BD-15-docs-guardrails-e-sincronizacao` (14) | Docs | `../lotus-bd15` | `docs/bd15-guardrails-e-sincronizacao` |
 
