@@ -6,13 +6,13 @@ workflow_state: ready_for_planning
 next_owner: claude
 next_action: plan_active_work_item
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T03:50:00-03:00
+updated_at: 2026-08-22T04:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -121,6 +121,41 @@ provisionar o recurso correspondente:** região (`sa-east-1` × `us-east-1`, nen
 final da EC2, controle do DNS de `lotus.cl`/`api.lotus.cl` mais a saída do sandbox do SES e o canal
 do alerta CloudWatch, e o teto de custo (estimativa externa de US$ 35–55/mês sem ALB). São decisões
 do João e entram no brainstorming como tais — não se supõem.
+
+### Brainstorming — 2026-08-22: o bloco foi recortado ao meio, por decisão do João
+
+**A primeira pergunta do brainstorming foi de escopo, e mudou o bloco.** O item 10 junta artefato
+versionado (Dockerfile, Compose, Nginx, `memory_limit`, secrets) com provisionamento em conta AWS
+real — e a segunda metade depende das quatro decisões que o packet listou como abertas mais
+credenciais que não estão nesta máquina. **O João escolheu entregar só o runtime**, com o
+provisionamento virando bloco próprio quando as decisões existirem. O slug não muda; o escopo, sim, e
+está declarado na §1 da spec.
+
+**Quatro decisões dele fecham o desenho:**
+
+1. **Origem única**, contra o `lotus.cl` + `api.lotus.cl` do Drive — e a base é medida, não estética:
+   `VITE_API_URL` é lido por `import.meta.env` em `axios.ts:25`, então **entra dentro do bundle no
+   build**. Com dois hosts, a imagem carregaria a URL do ambiente, e o item 11 precisa promover a
+   mesma imagem por SHA. Vai à tabela de divergências da spec como decisão, não como omissão.
+2. **Overlay de sonda separado** para a prova local — o `docker-compose.prod.yml` fica sem banco, sem
+   storage e sem mail, e o que ele não tem fica visível no diff em vez de escondido num `profiles:`.
+3. **P-50 fechada com dois números medidos**, separados por SAPI: CLI no `conf.d` (nas duas imagens,
+   senão a ficha segue aberta onde dói — quem roda a suíte é o container de dev) e FPM no
+   `php_admin_value` do pool.
+4. **Secrets por `env_file` no servidor**, com o caminho para Parameter Store registrado e **não
+   prometido** — prometer cofre sem poder prová-lo neste bloco seria DoD falsa.
+
+**Três medições enxugaram a stack antes de qualquer arquivo nascer:** todas as rotas do backend vivem
+sob `api/` (`routes/api.php` agrega os domínios por glob), sobrando apenas `/sanctum/csrf-cookie` e o
+`/up` de `bootstrap/app.php:14` — o que torna o roteamento de origem única trivial; `SESSION_DRIVER`,
+`CACHE_STORE` e `QUEUE_CONNECTION` são todos `database`; e `grep -rn "ShouldQueue" backend/app`
+devolve **uma linha, que é comentário** — logo, produção não leva volume de sessão nem worker de
+fila.
+
+Spec em `specs/2026-08-22-infra-producao-runtime-e-aws-design.md`: 9 decisões, 8 provas de DoD, 3
+divergências (uma delas a `RNF-DIS-02` × ADR-14, que segue **`unresolved`** e reservada ao gate do
+item 13) e 4 limitações declaradas — a primeira delas sendo que **nada de AWS é provado por este
+bloco**.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
