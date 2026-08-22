@@ -7,12 +7,15 @@ import { HistorialTable } from './HistorialTable'
 
 /** `t` devolve a chave: o que se prova é QUAL texto a célula escolhe, não a
  * tradução (isso é do `parity.test.ts`). */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  // `i18n` junto do `t`: o `AppDropdown` remonta na troca de idioma e lê
-  // `i18n.language`, então um mock só com `t` não é mais a forma da API real.
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'es-CL' } }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    // `i18n` junto do `t`: o `AppDropdown` remonta na troca de idioma e lê
+    // `i18n.language`, então um mock só com `t` não é mais a forma da API real.
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 type Historial = ReturnType<typeof useHistorial>
 

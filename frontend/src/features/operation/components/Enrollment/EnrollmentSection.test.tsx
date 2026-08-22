@@ -11,10 +11,13 @@ import { EnrollmentSection } from './EnrollmentSection'
  * `TurmaDetailPage.test.tsx` mocka o detalhe e nunca chega a montar esta
  * seção. O irmão já mergeado (`QuotesList.test.tsx`) tem o seu.
  */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 // Os dois diálogos abrem query própria e não têm parte nesta prova.
 vi.mock('./EnrollStudentForm', () => ({ EnrollStudentForm: () => null }))

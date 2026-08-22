@@ -6,10 +6,13 @@ import { RedatorCourseSelector } from './RedatorCourseSelector'
 
 /** `t` devolve a chave: o que se prova é QUAL ramo a tela mostra, não o texto
  * traduzido (isso é do `parity.test.ts`). Molde: `CourseStep.test.tsx`. */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 type Courses = ReturnType<typeof useRedatorCourses>
 

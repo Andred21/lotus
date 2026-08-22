@@ -10,10 +10,13 @@ import { TurmaDetailPage } from './TurmaDetailPage'
  * `shared/ui` provaria o componente, não a página que esqueceu de titular.
  * (Teste em `commercial` não pode importar `operation`: lei §5.6.)
  */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 type TurmaDetail = ReturnType<typeof useTurmaDetail>
 

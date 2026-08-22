@@ -5,10 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthPanel } from './AuthPanel'
 
 /** `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`. */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 /**
  * As duas rotas apontam para o MESMO elemento, igual ao router de verdade: é

@@ -7,10 +7,13 @@ import { UserRowActions } from './UserRowActions'
 // `t` devolve a chave: o que estes casos medem é QUAL botão existe, não a
 // tradução dele — pinar o texto traduzido faria o teste quebrar ao mexer no
 // locale, que não é o defeito que ele guarda.
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 afterEach(() => {
   cleanup()
