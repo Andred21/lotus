@@ -2,10 +2,17 @@
 
 > Bloco 1 da fila consolidada (`backlog.md@ba59dbd9`), lane-a, main tree.
 > Packet: `docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md`.
-> Fontes canônicas medidas: Drive `requisitos-negocio.md` (`17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`),
-> `entidade-feedback.md` (`11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`),
+> Fontes canônicas medidas: Drive `requisitos-negocio.md` (lido em `17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`),
+> `entidade-feedback.md` (lido em `11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`),
 > `modulo-pos-curso.md` (`1Nt0O--hHDQhHn-65ZXJf3fj9NrhW2ZwN`);
 > Notion 7.4.1 (`39dbc960-3dfa-81ef-ad6f-d908331d5059`).
+>
+> **IDs vigentes após a escrita de 2026-08-22.** O MCP do Drive não edita conteúdo no lugar
+> (`update_file` só troca título e pasta), então os dois documentos foram recriados com o texto
+> atualizado e os originais foram para a lixeira — o `fileId` mudou:
+> `requisitos-negocio.md` = `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-` (14897 bytes),
+> `entidade-feedback.md` = `16YxxQ52VnEeoah_SCja6TubnvtOtMDql` (2257 bytes).
+> Packets anteriores citam os IDs antigos; são snapshots do que foi lido, não ponteiros vivos.
 
 ## 1. O problema, medido
 

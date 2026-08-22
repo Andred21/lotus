@@ -739,11 +739,13 @@ O DoD do item é "requisito, planejamento e código deixam de divergir". Requisi
 
 Redija, sem escrever ainda:
 
-1. **Drive `requisitos-negocio.md`** (`17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`) — nota de estado sob a
+1. **Drive `requisitos-negocio.md`** (lido em `17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`; recriado como
+   `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`) — nota de estado sob a
    seção RF-FBK: 01/02/04 implementados como documentação de turma (`files` +
    `MANUAL`/`PRUEBAS`/`EVALUACION_REDATOR` + gate RN-16); **03 segue futuro**, junto de RF-TUR-07. O
    requisito não é apagado nem reescrito — ganha estado, datado 2026-08-22.
-2. **Drive `entidade-feedback.md`** (`11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`) — a entidade não vira
+2. **Drive `entidade-feedback.md`** (lido em `11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`; recriado como
+   `16YxxQ52VnEeoah_SCja6TubnvtOtMDql`) — a entidade não vira
    tabela na v2; o `[A CONFIRMAR]` sobre referência ao autor individual se resolve por inexistência:
    o documento pertence à turma, e a origem é o `type` do arquivo.
 3. **Notion 7.4.1** (`39dbc960-3dfa-81ef-ad6f-d908331d5059`) — status **`Done`**, com o mesmo resumo

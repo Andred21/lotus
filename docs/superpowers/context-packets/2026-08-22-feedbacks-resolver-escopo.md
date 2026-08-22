@@ -31,8 +31,8 @@ word_budget: 1200
 
 | Key | Provider | Source | Modified | Status | Used for |
 |---|---|---|---|---|---|
-| DRIVE-RF | Google Drive | file `17l0yDorx7RtjtaaWRjep3_xYINLpBm1J` · `requisitos-negocio.md` | 2026-07-16T07:22:27.224Z | retrieved | RF-TUR-06/07, RF-FBK-01..04, atores e gates |
-| DRIVE-ENTITY | Google Drive | file `11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ` · `entidade-feedback.md` | 2026-06-12T18:15:01.000Z | retrieved | vínculo com turma, PDFs e modelagem ainda não confirmada |
+| DRIVE-RF | Google Drive | file `17l0yDorx7RtjtaaWRjep3_xYINLpBm1J` · `requisitos-negocio.md` (recriado em 2026-08-22 como `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`; original na lixeira) | 2026-07-16T07:22:27.224Z | retrieved | RF-TUR-06/07, RF-FBK-01..04, atores e gates |
+| DRIVE-ENTITY | Google Drive | file `11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ` · `entidade-feedback.md` (recriado em 2026-08-22 como `16YxxQ52VnEeoah_SCja6TubnvtOtMDql`; original na lixeira) | 2026-06-12T18:15:01.000Z | retrieved | vínculo com turma, PDFs e modelagem ainda não confirmada |
 | DRIVE-MODULE | Google Drive | file `1Nt0O--hHDQhHn-65ZXJf3fj9NrhW2ZwN` · `modulo-pos-curso.md` | 2026-06-12T20:57:30.000Z | retrieved | posição F6, fronteira do MVP e escopo funcional |
 | NOTION-741 | Notion | page `39dbc960-3dfa-81ef-ad6f-d908331d5059` · collection `e64b7d57-d000-4433-b652-a410e75193cc` | 2026-07-14T11:21:17.551Z | retrieved | gap e decisão de implementação/descope |
 | NOTION-H123 | Notion | page `39dbc960-3dfa-81cf-9ca5-e20c48624f67` · collection `e64b7d57-d000-4433-b652-a410e75193cc` | 2026-07-14T20:56:27.539Z | retrieved | decisão posterior sobre domínio futuro/scaffold |

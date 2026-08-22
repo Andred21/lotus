@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: feedbacks-resolver-escopo
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
@@ -15,9 +15,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: feedbacks-resolver-escopo
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/feedbacks-resolver-escopo
     active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
@@ -50,8 +50,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: c8480eee
-updated_at: 2026-08-22T11:20:00-03:00
+state_basis_commit: 6b4585ea
+updated_at: 2026-08-22T12:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -126,6 +126,27 @@ disjuntas, colisão mínima de arquivos:
 - Interseções conhecidas a vigiar: `lane-c` (BD-15/D-17) e a futura CI (item 11) tocam
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
+
+## lane-a — 2026-08-22: `feedbacks-resolver-escopo` executado, aguardando review
+
+Sete tasks do `active_plan` executadas e provadas; branch `feat/feedbacks-resolver-escopo`, main
+tree (gate P-03), commits `f6b04b45`..`6b4585ea` mais o commit documental deste handoff.
+
+- **Comportamento provado fora da suíte**, não por ferramenta verde: banco de dev de 42 para 40
+  permissões, órfãs `feedback.*` em 0, role `redator` de 4 para 2; `migrate:rollback` devolveu as
+  duas e `migrate` removeu de novo; `GET /api/permissions` com sessão de admin real devolveu 40
+  itens em 5 grupos, zero `feedback.*`; sessão de redator ativo trouxe 2 permissões e
+  `POST /api/turmas/6/documents` respondeu **201** — a prova de que a remoção não tirou capacidade.
+- **Registro externo (Task 7) escrito com OK do João, documento a documento.** O MCP do Drive não
+  edita conteúdo no lugar, então os dois documentos foram recriados e os originais foram para a
+  lixeira, pela rota que o João escolheu. IDs vigentes: `requisitos-negocio.md` =
+  `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`, `entidade-feedback.md` =
+  `16YxxQ52VnEeoah_SCja6TubnvtOtMDql`; Notion 7.4.1 em `Concluída`.
+- **Resíduo declarado, não escondido:** `DeleteTurmaDocumentAction` é soft delete, então a sonda de
+  upload deixou `files#43` arquivada e inerte (index devolve `[]`). Hard-delete seria escrita
+  destrutiva fora dos paths autorizados pelo plano.
+
+O review **não foi iniciado** — é a próxima instrução, por `next_action: request_code_review`.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
