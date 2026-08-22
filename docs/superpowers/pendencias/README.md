@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (29)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -43,7 +43,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | BD-15 | João decidir o formato; revisar 2026-09-30 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | BD-15 | bloco que tocar RBAC de catálogo ou reusar a receita de injeção de falha; revisar 2026-10-31 |
-| P-43 | `der-fisico.md` chama `certificates` de "planejada" em 4 sítios; existe desde a Sprint 4 | BD-15 | bloco que tocar `docs/der-fisico.md`; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | BD-15 | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -68,10 +67,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | 2026-08-22, no `bd12-load-state-e-listas` | primeiro fechamento **posterior** ao do BD-12 |
+| P-43 | `der-fisico.md` chamava `certificates` de "planejada"; as duas tabelas de Certification existem desde 2026-08-05 | 2026-08-22, no `feedbacks-resolver-escopo` | primeiro fechamento **posterior** a este |
 
-**A P-29 e a P-35 saíram neste fechamento**, que é o primeiro posterior ao do BD-14 — a condição que
-a linha delas pedia. O rastro fica nos commits e na linha da entrega do BD-14 em
+**A P-40 saiu neste fechamento**, que é o primeiro posterior ao do BD-12 — a condição que a linha
+dela pedia. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo critério contra o
+BD-14. O rastro de todas fica nos commits e nas linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do

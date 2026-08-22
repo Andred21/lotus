@@ -140,8 +140,7 @@
     "commercial": "Commercial",
     "catalog": "Catalog",
     "operation": "Operation",
-    "certification": "Certification",
-    "feedback": "Feedback"
+    "certification": "Certification"
   },
   "perm": {
     "identity_user_view": "View users, editors and students",
@@ -183,9 +182,7 @@
     "operation_turma_submit_docs": "Upload class documentation (Flow 1/4 — editor action)",
     "certification_certificate_view": "View certificates",
     "certification_certificate_issue": "Issue certificate (Flow 5)",
-    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)",
-    "feedback_feedback_view": "View class feedback",
-    "feedback_feedback_manage": "Manage class feedback"
+    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)"
   },
   "role": {
     "new": "New role",

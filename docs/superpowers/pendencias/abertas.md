@@ -142,6 +142,17 @@ aloca mais no fim da corrida.
 **O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
 diretiva da linha de comando — por isso a medição usa o binário direto.
 
+**Reproduzida de novo no fechamento do `feedbacks-resolver-escopo` (2026-08-22), com a suíte já em
+877 testes:** o comando documentado morreu no mesmo `Allowed memory size of 134217728 bytes
+exhausted … PhpEngine.php on line 62`, em
+`Tests\Feature\Operation\ManualTurmaTest::test_manual_devolve_pdf_convertido_do_docx` — o mesmo
+teste do vencimento de 2026-08-20, e não o do topo desta ficha. Qual dos testes de manual estoura
+oscila com a ordem da corrida, não é sintoma próprio: este passa isolado em
+0,48s (`--filter`, 6 asserções, pico de 73 MB), e a suíte inteira fecha verde pelo binário direto —
+`php -d memory_limit=1G vendor/bin/phpunit` devolve **877 passed / 5 skipped, 3131 asserções**, com
+**pico de 129 MB**. Terceira medição consecutiva em que o pico encosta ou passa o teto: 129, 127 e
+129 MB.
+
 **Reproduzida no fechamento do BD-17 (2026-08-20), na árvore `fix-frontend`:** mesmos dois `Fatal
 error` pelo comando documentado, e `php -d memory_limit=512M vendor/bin/phpunit` devolve os mesmos
 **828 passed / 5 skipped, 3006 asserções** — desta vez com **pico de 127,00 MB**. O pico oscila
@@ -267,32 +278,10 @@ Plano e spec **não** foram retro-editados, pela regra que a P-27 fixou em 2026-
 ao encerramento dela: história de bloco fechado não se reescreve — a divergência ganha nota no
 `progress.md` da entrega, não emenda no artefato aprovado.
 
-## P-43 — `der-fisico.md` lista `certificates` como "planejada", e a tabela existe desde a Sprint 4
-
-**Nasceu como P-41 no fechamento do `dashboard-backend-agregacoes` e foi renumerada no merge com a
-`main`**, que já usava o ID pelo fechamento da `celula-de-identidade` — quem renumera é a recém-chegada.
-
-**Bloco:** BD-15 · **Gatilho:** fecha no primeiro bloco que tocar `docs/der-fisico.md` por outro
-motivo — a correção é de quatro linhas e não vale um bloco só dela. Revisar em **2026-10-31**.
-
-A spec do `dashboard-backend-agregacoes` já previa esta pendência na sua §10 ("candidata a pendência
-no fechamento se ainda não registrada"); o fechamento de 2026-08-15 conferiu que não estava, e
-mediu os sítios:
-
-- `docs/der-fisico.md:87` — `courses` 1:N → … "e (planejada) `certificates`";
-- `docs/der-fisico.md:91` — "`enrollments` 1:1 → `certificates` (planejada)";
-- `docs/der-fisico.md:99` — "**`certificates`** (planejada): sem arquivo por aluno";
-- `docs/der-fisico.md:110` — a contagem "26 tabelas — 19 de domínio (16 implementadas +
-  `certificates`, …)" põe a tabela do lado do que ainda não existe.
-
-A linha 74, que descreve as colunas, está correta e não fala em "planejada" — a divergência é só
-nos quatro sítios de status. A tabela foi entregue na Sprint 4 (Bloco 7) e este bloco agrega
-diretamente sobre ela (`Certificate`, `CertificateStatus`, `scopeEmitidos`), com o
-`DomainDependencyTest` declarando as duas arestas. Diverge o **status escrito**, nunca o schema.
-
 ## P-44 — os gates de e2e criam usuário de sonda no banco de dev e nem sempre o removem
 
-**Nasceu como P-42 e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-43](#p-43).**
+**Nasceu como P-42 e foi renumerada pelo mesmo motivo e no mesmo precedente da P-43** (encerrada em
+2026-08-22 — a ficha vive em [`encerradas.md`](./encerradas.md)).
 
 **Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** fecha quando um bloco puder reseedar o banco de dev, ou quando a
 residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o primeiro candidato: a tela

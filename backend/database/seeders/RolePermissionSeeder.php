@@ -70,8 +70,6 @@ class RolePermissionSeeder extends Seeder
         return [
             'operation.turma.view',
             'operation.turma.submit_docs',
-            'feedback.feedback.view',
-            'feedback.feedback.manage',
         ];
     }
 
