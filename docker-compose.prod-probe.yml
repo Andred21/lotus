@@ -1,0 +1,46 @@
+# Overlay de SONDA. Existe só para provar o runtime de produção nesta máquina:
+# acrescenta os três serviços que produção NÃO tem, porque lá eles são RDS, S3 e
+# SES. Arquivo separado e não `profiles:` de propósito (spec D4) — assim o
+# arquivo que vai ao servidor nunca carrega a definição de um MySQL de dev, e o
+# que ele não tem fica visível no diff.
+#
+# Uso:
+#   LOTUS_ENV_FILE=./docker/probe.env LOTUS_HTTP_PORT=8081 \
+#     docker compose -f docker-compose.prod.yml -f docker-compose.prod-probe.yml up -d
+services:
+  app:
+    depends_on: [gotenberg, mysql, minio]
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: lotus
+      MYSQL_ROOT_PASSWORD: secret
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-psecret"]
+      interval: 10s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: lotus
+      MINIO_ROOT_PASSWORD: lotus-secret
+    # 9002 no host para não brigar com o MinIO do compose de dev, que já ocupa
+    # 9000/9001 nesta máquina.
+    ports: ["9002:9000"]
+
+  createbuckets:
+    image: minio/mc
+    depends_on: [minio]
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 lotus lotus-secret) do echo waiting for minio; sleep 2; done;
+      /usr/bin/mc mb -p local/lotus;
+      exit 0;
+      "
+
+  mailpit:
+    image: axllent/mailpit
+    ports: ["8026:8025"]

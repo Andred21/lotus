@@ -164,3 +164,15 @@ describe('docker-compose.prod.yml', () => {
     expect(PROD).toMatch(/^\s{2}gotenberg:/m)
   })
 })
+
+describe('docker-compose.prod-probe.yml', () => {
+  const PROBE = readFileSync(join(RAIZ, 'docker-compose.prod-probe.yml'), 'utf8')
+
+  it.each(SERVICOS_DE_DEV)('acrescenta %s, que só existe para a prova local', (servico) => {
+    expect(PROBE).toMatch(new RegExp(`^\\s{2}${servico}:`, 'm'))
+  })
+
+  it('não redefine env_file: a prova troca o arquivo pela variável LOTUS_ENV_FILE', () => {
+    expect(PROBE).not.toMatch(/env_file:/)
+  })
+})
