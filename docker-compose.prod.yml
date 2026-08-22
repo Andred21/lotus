@@ -31,8 +31,11 @@ services:
     # CADEIA inteira — nginx, socket do FPM e boot da aplicação. É por isso que
     # o serviço `app` não ganha healthcheck próprio: um que respondesse sem
     # passar pelo nginx provaria menos.
+    # Não é "localhost": o wget do busybox (imagem lotus-web:local) resolve
+    # localhost para ::1 (IPv6), mas docker/nginx/prod.conf só tem `listen 80`
+    # (IPv4) — o healthcheck falharia sempre com connection refused. Medido.
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/up"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/up"]
       interval: 15s
       timeout: 5s
       retries: 5

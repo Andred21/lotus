@@ -20,22 +20,55 @@ const PROD = readFileSync(join(RAIZ, 'docker-compose.prod.yml'), 'utf8')
 
 const SERVICOS_DE_DEV = ['mysql', 'minio', 'createbuckets', 'mailpit']
 
+/**
+ * Recorta o bloco de um serviço (da linha "  <nome>:" até a próxima linha de
+ * serviço no mesmo nível de indentação, ou o fim do arquivo). Usado só pela
+ * asserção de depends_on, que precisa provar a dependência DENTRO do serviço
+ * `nginx` — e não em qualquer lugar do arquivo.
+ */
+function blocoDoServico(nome: string): string {
+  const inicio = new RegExp(`^ {2}${nome}:$`, 'm').exec(PROD)
+  if (!inicio) return ''
+  const resto = PROD.slice(inicio.index + inicio[0].length)
+  const fimRelativo = resto.slice(1).search(/^ {2}\S/m)
+  return fimRelativo === -1 ? resto : resto.slice(0, fimRelativo + 1)
+}
+
 describe('docker-compose.prod.yml', () => {
   it.each(SERVICOS_DE_DEV)('não declara o serviço de dev %s', (servico) => {
     expect(PROD).not.toMatch(new RegExp(`^\\s{2}${servico}:`, 'm'))
   })
 
-  it('não monta o working tree em serviço nenhum', () => {
-    expect(PROD).not.toMatch(/-\s*\.\/(backend|frontend)/)
+  it('não declara `volumes:` em serviço nenhum — qualquer forma de bind mount do working tree entraria por aí', () => {
+    // Ancorado na CHAVE, não na forma do mount: cobre "- .:/var/www",
+    // "- ../backend", "${PWD}/backend" e a forma longa
+    // "{type: bind, source: ...}" de uma vez só, porque todas elas só podem
+    // existir sob uma chave `volumes:` de serviço (indentação de 4 espaços).
+    expect(PROD).not.toMatch(/^ {4}volumes:/m)
   })
 
   it('lê os segredos de um env_file, nunca de valores inline', () => {
-    expect(PROD).toMatch(/env_file:/)
+    expect(PROD).toMatch(/^ {4}env_file:/m)
+    // Metade que faltava provar: nenhum serviço pode ter `environment:` — é
+    // essa chave que permitiria segredo inline tipo DB_PASSWORD/APP_KEY.
+    expect(PROD).not.toMatch(/^ {4}environment:/m)
   })
 
   it('deixa a imagem trocável por variável, que é o gancho da promoção por SHA', () => {
-    expect(PROD).toMatch(/\$\{LOTUS_IMAGE/)
-    expect(PROD).toMatch(/\$\{LOTUS_WEB_IMAGE/)
+    // Ancorado na CHAVE `image:`, não em qualquer ocorrência da string — uma
+    // imagem hardcoded com `${LOTUS_IMAGE}` sobrando só num comentário não
+    // deve passar.
+    expect(PROD).toMatch(/^ {4}image: \$\{LOTUS_IMAGE\b/m)
+    expect(PROD).toMatch(/^ {4}image: \$\{LOTUS_WEB_IMAGE\b/m)
+  })
+
+  it('liga o nginx ao app via depends_on — fastcgi_pass resolve "app" no arranque do nginx', () => {
+    // docker/nginx/prod.conf faz fastcgi_pass app:9000 num host estático
+    // (não variável), então o nginx resolve esse nome no ARRANQUE. Sem
+    // depends_on garantindo o serviço `app` na rede, o nginx morre com
+    // "host not found in upstream" antes mesmo de escutar a porta 80.
+    const blocoNginx = blocoDoServico('nginx')
+    expect(blocoNginx).toMatch(/^ {4}depends_on:\s*(\[\s*app\s*\]|\r?\n(\s*- \S+\r?\n)*\s*- app\b)/m)
   })
 
   it('mantém o Gotenberg, que o ADR-12 exige', () => {
