@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-revisao-ui-por-modulo
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-frontend-revisao-ui-por-modulo.md
@@ -16,9 +16,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: frontend-revisao-ui-por-modulo
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui
     active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
@@ -52,7 +52,7 @@ lanes:
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: ffa1a35b
-updated_at: 2026-08-22T19:10:00-03:00
+updated_at: 2026-08-22T19:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
