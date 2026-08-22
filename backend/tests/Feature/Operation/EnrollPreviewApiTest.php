@@ -117,6 +117,8 @@ class EnrollPreviewApiTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->redator()->create(['is_active' => true]);
         $user->assignRole('redator');
+        $redator = $user->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
         $this->actingAs($user, 'web');
 
         $this->getJson("/api/turmas/{$this->turma->id}/alunos/preview?rut=11.111.111-1")

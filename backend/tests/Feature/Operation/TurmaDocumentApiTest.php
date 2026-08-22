@@ -45,6 +45,8 @@ class TurmaDocumentApiTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
         $user->assignRole('redator');
+        $redator = $user->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
         $this->actingAs($user, 'web');
 
         return $user;

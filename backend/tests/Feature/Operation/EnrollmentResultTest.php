@@ -209,6 +209,8 @@ class EnrollmentResultTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->redator()->create(['is_active' => true]);
         $user->assignRole('redator');
+        $redator = $user->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
         $this->actingAs($user, 'web');
 
         $this->putJson($this->resultUrl(), $this->validPayload())->assertForbidden();
