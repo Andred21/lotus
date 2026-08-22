@@ -18,7 +18,7 @@ pela API de arquivamento, mede a tela, restaura e confere a contagem.
 Vitest 4 (jsdom) + `@testing-library/react@16` · `playwright-cli` (prova de navegador) · curl com
 sessão Sanctum cookie/CSRF (prova de API).
 
-**Spec:** [`docs/superpowers/specs/2026-08-20-bd12-load-state-e-listas-design.md`](../specs/2026-08-20-bd12-load-state-e-listas-design.md)
+**Spec:** [`docs/superpowers/specs/archive/2026-08-20-bd12-load-state-e-listas-design.md`](../../specs/archive/2026-08-20-bd12-load-state-e-listas-design.md)
 
 ## Global Constraints
 

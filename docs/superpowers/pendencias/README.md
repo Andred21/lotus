@@ -19,13 +19,12 @@ A ficha é a fonte; esta tabela é só o mapa. A coluna **Bloco** diz em que blo
 ela sai barata. `—` significa que ela **não** entra em bloco: depende de decisão do João, da Lotus
 ou de escrita fora do repositório.
 
-## Abertas (30)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | BD-12 | bloco que puder esvaziar o catálogo de dev; revisar 2026-10-31 |
 | P-49 | `lockRow` de redator e turma é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction`/`DeleteTurmaAction` tomam | BD-14 | bloco que tocar um dos seis escritores de filho da ficha; revisar 2026-10-31 |
 | P-20 | `openspout/openspout` em produção sem ADR hospedeiro | BD-15 | João apontar o ADR hospedeiro (ou autorizar ADR-20); revisar 2026-09-30 |
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | BD-15 | primeiro bloco de Certification que tocar `docs/adrs.md`; revisar 2026-09-30 |
@@ -61,24 +60,20 @@ ou de escrita fora do repositório.
 | P-18 | Página de fechamento do Notion com `Sprint` divergente da descrição | João (escrita externa) | João corrigir a propriedade no Notion |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | João (escrita externa) | João apagar ou mesclar uma das cópias |
 
-## Encerradas (2)
+## Encerradas (1)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-29 | Corrida de unicidade RUT/e-mail **entre transações** ainda sobe 500, não 422 | 2026-08-20, no `bd14-contrato-de-entrada` | primeiro fechamento **posterior** ao do BD-14 |
-| P-35 | ADR-17 defendido em duas profundidades: `version` fora do `$fillable`, `seq_in_budget` dentro | 2026-08-20, no `bd14-contrato-de-entrada` | primeiro fechamento **posterior** ao do BD-14 |
+| P-40 | Ramo "catálogo vazio" do BD-6 medido em `d20bebc`, não remedido contra HEAD | 2026-08-22, no `bd12-load-state-e-listas` | primeiro fechamento **posterior** ao do BD-12 |
 
-**As duas não saem no fechamento do BD-18, e o motivo é de calendário, não de rastro.** O BD-18 correu
-na worktree `fix-frontend` **em paralelo** ao BD-14, não depois dele — os dois fecharam em 2026-08-20,
-o BD-14 por volta das 16h e o BD-18 às 23:25 —, e só se encontraram no merge de 2026-08-21. Contar o
-fechamento do BD-18 como a sprint de rastro delas apagaria a ficha antes que qualquer bloco posterior
-a tivesse lido. O índice, aliás, dizia "Encerradas (0)" enquanto `encerradas.md` já carregava as duas:
-o fechamento do BD-14 atualizou a ficha e não a linha daqui, e é isso que este merge corrige.
+**A P-29 e a P-35 saíram neste fechamento**, que é o primeiro posterior ao do BD-14 — a condição que
+a linha delas pedia. O rastro fica nos commits e na linha da entrega do BD-14 em
+[`../historico/progress.md`](../historico/progress.md).
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
 `bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo
 mesmo precedente da **P-26**, da **P-38** e da **P-34**. A **P-45** saiu no fechamento do
-`arquivados-roots-restantes` (2026-08-19) e **segue encerrada depois do merge da `main`**: o conserto
+`arquivados-roots-restantes` (2026-08-19) e segue encerrada depois do merge da `main`: o conserto
 que a fecha está commitado nos dois sítios que liam a variável — `tests/TestCase.php:25`
 (`explode` + primeira origem) e `config/cors.php:22` (`explode`). O rastro durável de todas vive nos
 commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
