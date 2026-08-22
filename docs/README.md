@@ -34,7 +34,7 @@ As 19 decisões de arquitetura fechadas do projeto, cada uma com contexto, decis
 Fonte canônica: `Drive/V2/Planejamento/3-avancado/decisao-stack.md`.
 
 ### `der-fisico.md` — Modelo físico de dados
-DER físico MySQL com 26 tabelas-alvo (19 de domínio + 7 de RBAC/auditoria — as 5 do Spatie mais `files` e `audits`), tipos de coluna, PK/FK, relações. **Consulte antes de criar migration, model ou mexer em schema.** Os nomes de tabela e coluna aqui são a referência — não invente nomes divergentes.
+DER físico MySQL com 25 tabelas-alvo (18 de domínio + 7 de RBAC/auditoria — as 5 do Spatie mais `files` e `audits`), tipos de coluna, PK/FK, relações. **Consulte antes de criar migration, model ou mexer em schema.** Os nomes de tabela e coluna aqui são a referência — não invente nomes divergentes.
 
 > **Divergência de idioma (em aberto):** o schema **implementado** está em inglês (decisão do João Victor, spec `2026-07-07-sprint1-cadastros-backend-design.md` §2.1); o canônico do Drive segue em PT/ES. As tabelas já construídas estão documentadas em inglês; as ainda no papel ficam em PT/ES até serem implementadas (também em inglês). Alinhar o Drive canônico é follow-up pendente de autorização (write externo).
 
