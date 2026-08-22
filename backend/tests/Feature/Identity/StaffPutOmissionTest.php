@@ -75,4 +75,22 @@ class StaffPutOmissionTest extends TestCase
         $this->assertNull($alvo->rut);
         $this->assertNull($alvo->phone);
     }
+
+    public function test_put_sem_is_active_nao_reativa_staff_desligado(): void
+    {
+        $this->actingAsSuperadmin();
+        $alvo = $this->alvo();
+        $alvo->update(['is_active' => false]);
+
+        // P-51: o default literal `= true` da propriedade entrega `true` ANTES
+        // do ramo do `Optional`, e o `WritableAttributes::from()` recebe um
+        // valor de verdade em vez de uma chave ausente — omitir reativava.
+        $this->putJson("/api/users/{$alvo->id}", [
+            'name' => 'Alvo Editado',
+            'email' => 'alvo@lotus.cl',
+            'role' => 'admin',
+        ])->assertOk();
+
+        $this->assertFalse($alvo->refresh()->is_active);
+    }
 }
