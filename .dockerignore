@@ -18,7 +18,6 @@ frontend/dist
 .codex
 docs
 backend/storage/logs
-backend/storage/framework/cache
 
 # Artefatos de dev do backend/host: cache de teste, testes, config de teste e
 # de build do frontend legado dentro de backend/ — nada disso é produção, e
@@ -30,6 +29,16 @@ backend/tests
 backend/phpunit.xml
 backend/storage/framework/views/*.php
 backend/storage/framework/sessions/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/testing
+# bootstrap/cache é o furo mais caro desta lista: numa máquina que já rodou
+# `php artisan config:cache`, o config.php daqui é o .env inteiro RESOLVIDO —
+# APP_KEY, DB_PASSWORD e AWS_SECRET_ACCESS_KEY em texto, dentro da camada. A
+# prova 8 da DoD passou porque esta máquina não tinha o arquivo na hora do
+# build, não porque a imagem estivesse guardada. Só o conteúdo sai: o
+# diretório continua, e o `composer dump-autoload` do estágio `vendor`
+# regenera packages.php e services.php de qualquer forma.
+backend/bootstrap/cache/*.php
 backend/package.json
 backend/vite.config.js
 backend/.npmrc
