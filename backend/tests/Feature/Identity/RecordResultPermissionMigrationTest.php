@@ -88,6 +88,9 @@ class RecordResultPermissionMigrationTest extends TestCase
                 ->where('permission_id', $id)
                 ->count(),
         );
-        $this->assertFalse($roles['redator']->fresh()->hasPermissionTo(self::PERMISSAO));
+        // hasPermissionTo() lança PermissionDoesNotExist para permissão que não
+        // existe mais, em vez de devolver false — confere pela relação
+        // (que só reflete o pivot, já vazio) em vez do helper do registrar.
+        $this->assertFalse($roles['redator']->fresh()->permissions->contains('name', self::PERMISSAO));
     }
 }

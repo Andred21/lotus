@@ -207,13 +207,27 @@ class EnrollmentResultTest extends TestCase
     public function test_usuario_sem_permissao_retorna_403(): void
     {
         $this->seed(RolePermissionSeeder::class);
+        // Designado à turma (passa o binding da Task 2) mas sem role nenhuma
+        // (nenhuma permissão) — senão a checagem de ownership 404 antes da de
+        // permissão rodar, e o teste provaria a porta errada.
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $redator = $user->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
+        $this->actingAs($user, 'web');
+
+        $this->putJson($this->resultUrl(), $this->validPayload())->assertForbidden();
+    }
+
+    public function test_redator_pode_registrar_resultado_na_turma_designada(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
         $user = User::factory()->redator()->create(['is_active' => true]);
         $user->assignRole('redator');
         $redator = $user->redator()->create([]);
         $this->turma->redatores()->attach($redator->id);
         $this->actingAs($user, 'web');
 
-        $this->putJson($this->resultUrl(), $this->validPayload())->assertForbidden();
+        $this->putJson($this->resultUrl(), $this->validPayload())->assertOk();
     }
 
     /**
