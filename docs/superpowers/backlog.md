@@ -23,8 +23,8 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 9 dos 14 itens são P0; quem ordena é a cadeia de dependência:
-  itens 1–8 fecham o código, 10→11→12 constroem a infra, o 14 fecha docs antes do fim e o 13 é o
+- **P0 não ordena** — 9 dos 15 itens são P0; quem ordena é a cadeia de dependência:
+  itens 1–9 fecham o código, 11→12→13 constroem a infra, o 15 fecha docs antes do fim e o 14 é o
   gate final de go-live.
 
 ---
@@ -41,7 +41,7 @@
 
 **Evidência medida (2026-08-22):** o domínio não existe, mas o
 `Identity/Support/PermissionCatalog.php:87-89` já declara `feedback.feedback.view/manage` — aresta
-declarada sem código, a mesma classe que a D-17 (item 14) quer detectar.
+declarada sem código, a mesma classe que a D-17 (item 15) quer detectar.
 
 **Escopo:** confirmar se Feedback permanece na v2; se entrar, desdobrar implementação mínima; se
 sair, registrar descope no Drive/Notion/DER **e remover as permissões órfãs do catálogo**. Não
@@ -109,7 +109,7 @@ S3 privado + URL temporária; verificação antimalware exigida pelo RNF; `429` 
 Números concretos saem de medição/risco no plano.
 
 **Nota de proporção:** a sonda antimalware do `RNF-SEC-06` é candidata à mesma renegociação formal
-do gate de redundância do item 13 — ~10 usuários internos; o brainstorming decide se a **forma**
+do gate de redundância do item 14 — ~10 usuários internos; o brainstorming decide se a **forma**
 exigida é obrigatória ou se o **resultado** basta.
 
 **DoD:** sondas de abuso/arquivo inválido são bloqueadas sem prejudicar o fluxo normal.
@@ -206,7 +206,44 @@ de layout; mora na tabela de decisões e só entra com o desenho escolhido pelo 
 
 ---
 
-## 9. `administracao-roles-permissoes-redesign`
+## 9. `frontend-revisao-ui-por-modulo`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
+**Fonte:** `audits/2026-08-17-lotus-ui-review-dashboard.md`,
+`audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`,
+`audits/2026-08-22-lotus-ui-review-dashboard.md`; `D-38`, `D-39`.
+
+**Objetivo:** estender ao resto da aplicação a revisão de UI que só o Dashboard e o `/perfil`
+receberam, tela a tela, sem abrir redesenho estético.
+
+**Evidência medida (2026-08-22):** a terceira passada no Dashboard admin achou 8 itens, e **6
+moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo `dataKey` (`value : 2` no tooltip),
+`AppDatePicker` fixava `dateFormat` e `locale="es"`, `AppDropdown` congelava o nome acessível no
+idioma anterior, `AppCardHeader` não tinha onde declarar a grandeza do card. Corrigidos em
+`ac4eef8a`, valem para toda tela que use esses wrappers; o que sobra é **descobrir onde mais os
+mesmos padrões aparecem** — e cada revisão anterior encontrou defeito de wrapper que nenhuma
+leitura de código tinha achado.
+
+**Escopo:**
+- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: view
+  `ready-redator` do Dashboard, Operação, Comercial, Certificados, Cursos, Pessoas, Administração;
+- **D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
+  enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
+  rótulos;
+- **D-39**: completar os 15 mocks de `react-i18next` que devolvem só `t`;
+- os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
+  couberem.
+
+**Fora:** acessibilidade, foco e overflow — são do `frontend-hardening-final` (item 8), que paga as
+fichas `D-*`; este bloco descobre e corrige o que a rubrica classifica. Redesenho de tela também
+fica fora: Administração é o item 10, e a lente `frontend-design` é complementar — **quem
+classifica é `references/review-rubric.md`, e a rule de `.claude/rules/` vence a lente**.
+
+**DoD:** cada superfície com relatório datado em `audits/` e nenhum achado `C` aberto.
+
+---
+
+## 10. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
 **Fonte:** referência visual atual + ADR-07.
@@ -224,7 +261,7 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ---
 
-## 10. `infra-producao-runtime-e-aws`
+## 11. `infra-producao-runtime-e-aws`
 
 **Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
 **Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; `P-50`; Drive `RNF-DIS-01/03/04`.
@@ -251,7 +288,7 @@ working tree do servidor.
 
 ---
 
-## 11. `cicd-ci-governanca-e-artefato`
+## 12. `cicd-ci-governanca-e-artefato`
 
 **Prioridade:** P0 para Continuous Delivery · **Frente:** GitHub/Infra · **Contexto:** sim
 **Fonte:** decisão atual de CI/CD; ADR-13/14; `D-08`.
@@ -273,7 +310,7 @@ identificável.
 
 ---
 
-## 12. `cicd-promocao-deploy-e-rollback`
+## 13. `cicd-promocao-deploy-e-rollback`
 
 **Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
 **Fonte:** decisão atual de CI/CD; ADR-14; Notion `10.1.7`.
@@ -298,7 +335,7 @@ normal; TLS é infraestrutura.
 
 ---
 
-## 13. `go-live-confiabilidade-e-recuperacao`
+## 14. `go-live-confiabilidade-e-recuperacao`
 
 **Prioridade:** último gate P0 · **Frente:** Cross-cutting/Infra · **Contexto:** sim
 **Fonte:** Drive `RNF-DIS-*`; Notion `11.1.1–11.1.3`; `P-05`, `P-44`, `D-37`.
@@ -322,7 +359,7 @@ está formalmente resolvida.
 
 ---
 
-## 14. `BD-15-docs-guardrails-e-sincronizacao`
+## 15. `BD-15-docs-guardrails-e-sincronizacao`
 
 **Prioridade:** P1 antes do encerramento definitivo · **Frente:** Docs/Mecanismos · **Contexto:** sim
 **Cobre:** `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-43`, `P-18`, `P-22`, `D-17`.
@@ -478,6 +515,21 @@ está formalmente resolvida.
   alcance é só banco de dev. Gatilho: primeiro deploy — conferir agregados arquivados pré-data e
   decidir caso a caso.
 
+- **D-38 · A descrição da pendência do Dashboard imprime o código do enum** →
+  `frontend-revisao-ui-por-modulo`. A frase chega pronta do backend (D17) como
+  `Documentación obligatoria incompleta: MANUAL, PRUEBAS, EVALUACION_REDATOR.`, e o
+  `CompliancePanel` — que monta a própria coluna — já passou a traduzir pelos mesmos códigos
+  (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
+  cru na outra. Decisão pendente: o backend traduz a frase, ou manda as partes e o cliente compõe.
+
+- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** →
+  `frontend-revisao-ui-por-modulo`. O `AppDropdown` remonta na troca de idioma e lê
+  `i18n.language` (`ac4eef8a`); o mock parcial quebra com
+  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizar um
+  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. Os outros
+  quinze seguem com a forma errada da API. **DoD:** mock com a forma real, ou um helper único que
+  os quinze usem.
+
 ## Travados em decisão — não entram em bloco
 
 Executar sem a decisão é escolher no lugar do João.
@@ -523,6 +575,6 @@ Executar sem a decisão é escolher no lugar do João.
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
 BD-1..BD-10, BD-12, BD-13, BD-14, BD-16, BD-17 e BD-18 já foram executados/fechados e **não voltam
 ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se no
-`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 14,
+`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 15,
 com o mesmo nome. Task antiga com status incorreto no Notion gera sincronização documental, não
 reimplementação.
