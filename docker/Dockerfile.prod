@@ -10,6 +10,12 @@ COPY backend/composer.json backend/composer.lock ./
 # extensão aqui, ignorar o platform-check é seguro: só resolve e baixa pacotes.
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --ignore-platform-reqs
 COPY backend/ ./
+# SEM --no-scripts de propósito: o post-autoload-dump do composer.json roda
+# `php artisan package:discover`, que reescreve bootstrap/cache/packages.php.
+# O COPY acima trouxe esse arquivo do host com providers só-de-dev
+# (laravel/pail, nunomaduro/collision, laravel-lang/*), e o PackageManifest do
+# Laravel não regenera um manifesto que já existe. Sem rodar o discover aqui,
+# a imagem de produção sobe com esses providers e quebra em class-not-found.
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
 # ── spa ───────────────────────────────────────────────────────────────────────
@@ -28,8 +34,18 @@ RUN pnpm build
 
 # ── app ───────────────────────────────────────────────────────────────────────
 FROM php:8.3-fpm-alpine AS app
-RUN apk add --no-cache libzip-dev icu-dev oniguruma-dev libpng-dev \
- && docker-php-ext-install pdo_mysql gd zip intl bcmath opcache
+# Decisão do João (2026-08-22): headers de compilação (-dev) só servem para o
+# docker-php-ext-install rodar — mantê-los na camada final não beneficia o
+# runtime, só infla a imagem e o tempo de `pull` a cada deploy. Por isso
+# entram como pacote virtual e são removidos na mesma instrução RUN; se
+# saíssem numa RUN separada, a camada anterior já teria gravado os arquivos e
+# a remoção depois não economizaria nada. As libs de runtime (sem -dev) ficam
+# fora do pacote virtual porque as extensões compiladas dependem delas em
+# tempo de execução.
+RUN apk add --no-cache --virtual .build-deps libzip-dev icu-dev oniguruma-dev libpng-dev \
+ && apk add --no-cache libzip icu-libs libpng oniguruma \
+ && docker-php-ext-install pdo_mysql gd zip intl bcmath opcache \
+ && apk del .build-deps
 
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 COPY docker/php/memory-cli.ini /usr/local/etc/php/conf.d/zz-memory-cli.ini

@@ -19,3 +19,17 @@ frontend/dist
 docs
 backend/storage/logs
 backend/storage/framework/cache
+
+# Artefatos de dev do backend/host: cache de teste, testes, config de teste e
+# de build do frontend legado dentro de backend/ — nada disso é produção, e
+# deixar entrar reintroduz o mesmo acoplamento à máquina que buildou que a
+# seção acima já existe para evitar. views/ e sessions/ excluem só o
+# conteúdo: os diretórios continuam existindo, como o Laravel exige.
+backend/.phpunit.result.cache
+backend/tests
+backend/phpunit.xml
+backend/storage/framework/views/*.php
+backend/storage/framework/sessions/*
+backend/package.json
+backend/vite.config.js
+backend/.npmrc
