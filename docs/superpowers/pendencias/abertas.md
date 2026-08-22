@@ -44,34 +44,6 @@ que crava a margem justamente para a correção semântica ficar invisível. Um 
 aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
 provável, e é decisão do João.
 
-## P-40 — o ramo "catálogo genuinamente vazio" não foi remedido contra HEAD
-
-**Bloco:** BD-12 · **Gatilho:** fecha quando um bloco puder esvaziar o catálogo de dev sem tinker
-bloqueado — seeder de cenário, endpoint de teste ou o João rodando o comando —, ou quando o
-ambiente nascer com catálogo vazio por outro motivo e a tela puder ser medida de graça. Revisar em
-**2026-10-31**.
-
-O ramo foi medido ao vivo **em `d20bebc`** e não depois dos cinco commits de correção que fecharam o
-review do BD-6.
-
-A Prova B (Task 6, passo 7 do plano) rodou na execução: soft-delete dos 4 cursos, tela dizendo "No
-hay cursos." **e não** a mensagem de falha, restauração conferida (`vivos=4 trashed=0` antes e
-depois). No `/fechar-sprint` (2026-08-14) as outras provas foram **refeitas** contra HEAD, porque
-`501d98c`, `08cb01a`, `baf08e9`, `1ba7dbb` e `4c7b61b` mexeram exatamente no ramo de falha — e esta
-não pôde: o `php artisan tinker --execute` foi recusado pelo classificador de auto mode, e **não há
-substituto pela API** (o índice de cursos não aceita filtro e o wizard filtra client-side,
-`frontend/src/features/commercial/hooks/useQuoteCourseSearch.ts:15`, então 200 vazio legítimo não se
-produz sem fabricar resposta). Decisão do João no fechamento: fechar com a pendência em vez de
-segurar o bloco.
-
-**O que substitui a remedição é leitura de código, não outra medição:** o predicado mudou de casa
-sem mudar de forma (`!isError && isSuccess && data.length === 0`, hoje em
-`frontend/src/shared/hooks/useLoadState.ts:32`) e o ramo `if (courses.isEmpty)` do `CourseStep` está
-byte a byte igual ao que foi medido — o que os commits trocaram foi o gate ANTERIOR (`isError` →
-`failedWithoutData`), que não dispara quando não há erro. Mais os dois testes que afirmam a
-separação (`CourseStep.test.tsx:76` e `:51`). É argumento, e argumento é o que o item 0 do gate não
-aceita no lugar de prova.
-
 ---
 
 # Backend

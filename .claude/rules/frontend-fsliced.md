@@ -208,6 +208,18 @@ exceção. Na dúvida, siga o vizinho da mesma
   `AppDataTable`, não do chamador — **não** reintroduzir `emptyMessage={loading ? undefined : empty}`,
   que cai no default inglês do PrimeReact (`No available options`). Nunca fatiar a página fora do
   `DataTable`: com coluna `sortable`, ordenar a página em vez do conjunto é regressão silenciosa.
+  **A memoização de célula fica DESLIGADA no wrapper (`cellMemo={false}`), e isso é correção, não
+  ajuste de performance.** O comparador do `BodyCell` compara dado e não função — `keysToCompare`
+  lista `rowData` e `field` e **não** lista `body` (`primereact/datatable/datatable.cjs.js:1795-1808`)
+  —, então a closure nova que a troca de idioma produz nunca chega à célula: o cabeçalho repintava e
+  o VALOR congelava até a recarga (D-55, medido no navegador no BD-17, pago no BD-12). O rekey em
+  `i18n.language` foi recusado com o custo medido: remontar zera ordenação, página e filtro, que aqui
+  são client-side. A prop entra **antes** do spread, então é sobrescrevível de propósito — uma tabela
+  que um dia cresça a ponto de sentir o custo religa o memo. Mas religar **reintroduz o D-55 naquela
+  tabela**, e nada reprova o esquecimento: a catraca (`AppDataTable.test.tsx`) monta o wrapper com os
+  defaults e não vê o que o chamador sobrescreve. Hoje ninguém passa `cellMemo` (medido no review de
+  2026-08-21: zero ocorrências fora do wrapper), então isto é linha de rule e não regra de lint —
+  quem passar a prop assume o débito e declara onde.
 - **Hook genérico não importa tipo de `shared/ui`.** `shared/hooks/` é lógica; `shared/ui/` é
   apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que

@@ -1,0 +1,74 @@
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { act, cleanup, render, screen } from '@testing-library/react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@shared/config/i18n'
+import { formatDate } from '@shared/lib'
+import { AppColumn, AppDataTable } from './AppDataTable'
+
+const ISO = '2026-08-19T13:00:00Z'
+const LINHAS = [{ id: 1, archived_at: ISO }]
+
+/**
+ * O consumidor real: quem chama `useTranslation()` e monta as colunas é a TABELA
+ * da feature (`ClientsTable`, `CoursesTable`, ...), nao o wrapper. O `body` aqui
+ * repete o mecanismo de `archivedColumns` (`shared/ui/archivedColumns.tsx:41`) sem
+ * depender do irmao: `formatDate` resolve o locale por `i18n.language` A CADA
+ * CHAMADA, entao o texto so congela se a celula nao for reinvocada.
+ */
+function TabelaDeArquivados() {
+  const { t } = useTranslation()
+
+  return (
+    <AppDataTable value={LINHAS}>
+      <AppColumn field="id" header="id" />
+      <AppColumn
+        field="archived_at"
+        header={t('archive.archivedAt')}
+        body={(linha: { archived_at: string }) => formatDate(new Date(linha.archived_at))}
+      />
+    </AppDataTable>
+  )
+}
+
+// `beforeEach`, nao `beforeAll`: o primeiro caso termina em `en`, e o segundo
+// precisa comecar em es-CL para medir a TROCA. `cleanup` desmonta a arvore, mas
+// a instancia de i18n e modulo compartilhado e nao volta sozinha.
+beforeEach(async () => {
+  await i18n.changeLanguage('es-CL')
+})
+afterEach(cleanup)
+afterAll(async () => {
+  await i18n.changeLanguage('es-CL')
+})
+
+describe('AppDataTable — repinte de celula na troca de idioma (D-55)', () => {
+  it('CATRACA: o VALOR da celula acompanha a troca de idioma, sem recarga', async () => {
+    // O defeito medido no BD-17: com `cellMemo` no default `true`, o comparador do
+    // BodyCell ignora `body` (`primereact/datatable/datatable.cjs.js:1795-1808`) e a
+    // celula devolve o texto do idioma ANTERIOR ate a proxima recarga.
+    render(<TabelaDeArquivados />)
+
+    expect(screen.getByText(new Date(ISO).toLocaleDateString('es-CL'))).toBeTruthy()
+
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+
+    expect(screen.getByText(new Date(ISO).toLocaleDateString('en'))).toBeTruthy()
+    expect(screen.queryByText(new Date(ISO).toLocaleDateString('es-CL'))).toBeNull()
+  })
+
+  it('o CABECALHO ja acompanhava — e o contraste que nomeia o defeito', async () => {
+    // Sem este par, "a tabela nao troca de idioma" e uma frase vaga. O cabecalho
+    // sempre repintou; e a divergencia entre os dois que o D-55 relata.
+    render(<TabelaDeArquivados />)
+
+    expect(screen.getByText('Archivado el')).toBeTruthy()
+
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+
+    expect(screen.getByText('Archived on')).toBeTruthy()
+  })
+})

@@ -115,6 +115,23 @@ export function AppDataTable<T extends DataTableValueArray>({
         ),
         pt as DataTableProps<DataTableValueArray>['pt'],
       )}
+      // O comparador do `BodyCell` compara DADO, não função: `defaultKeysToCompare`
+      // lista `rowData` e `field` e não lista `body`
+      // (`primereact/datatable/datatable.cjs.js:1795-1808`). A closure nova que a
+      // troca de idioma produz nunca chega à célula — o cabeçalho repinta e o
+      // valor congela até a recarga (D-55, medido no BD-17). Com `cellMemo`
+      // `false` o comparador devolve `false` na primeira linha (`:1799`) e a
+      // célula repinta a cada render da tabela.
+      //
+      // O rekey da tabela em `i18n.language` foi recusado com o custo medido:
+      // remontar zera ordenação, página e filtro, que aqui são client-side (ver o
+      // docblock acima). Trocar o idioma perderia estado escolhido pelo usuário.
+      //
+      // ANTES do spread de propósito: a memoização fica desligada em toda tabela
+      // — custo aceito na escala do produto —, e uma tabela que um dia cresça a
+      // ponto de senti-lo religa o memo passando `cellMemo` como qualquer outra
+      // prop do DataTable.
+      cellMemo={false}
       loading={loading && !errored}
       emptyMessage={body}
       {...props}

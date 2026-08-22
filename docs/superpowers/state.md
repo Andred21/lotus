@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 active_feature: null
-active_work_item: bd12-load-state-e-listas
-workflow_state: ready_for_planning
-next_owner: claude
-next_action: plan_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
-last_completed_work_item: bd18-useloadstate-promise-e-forma
+last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: fc852ce3
-updated_at: 2026-08-21T00:05:00-03:00
+updated_at: 2026-08-22T02:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -48,7 +48,82 @@ updated_at: 2026-08-21T00:05:00-03:00
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
 
-## Último item fechado — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
+## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
+
+### Merge da `main` — 2026-08-22: a árvore que a prova exigia
+
+O João mandou trazer a `main` **antes** da prova de fechamento, e o motivo é medido: a `main` fechou
+o **BD-18** em paralelo e o `ca096650` reescreveu a mensagem de falha dentro de `CourseStep.tsx` —
+exatamente o sítio que a P-40 mede. Provar sem o merge teria provado código que não vai para a
+`main`. A nota do próprio `backlog.md` de lá já dizia isso: *"o alcance de D-55 e P-40 se remede
+contra a árvore com o BD-18 dentro, não contra o basis"*.
+
+23 commits, **um único conflito** — o `updated_at` do frontmatter do `state.md` —, resolvido para o
+desta árvore. Todo o resto mesclou limpo, `.claude/rules/frontend-fsliced.md` incluído: os dois lados
+escreveram em regiões diferentes do mesmo arquivo. `backlog.md`, `historico/progress.md` e
+`pendencias/` vieram inteiros da `main`. Árvore mesclada: `pnpm lint` 0, `pnpm build` verde,
+**87 arquivos / 481 testes**, zero falha — o `cellMemo={false}` não regrediu nenhuma das 26 provas
+novas do BD-18.
+
+### Fechamento — 2026-08-22: os dois débitos provados no navegador, contra a árvore mesclada
+
+**Item 0 do gate, na tela e não no diff** (Chromium, Vite desta árvore na **5174**, API real em
+`:8080`, sessão de admin; a 5174 está em `SANCTUM_STATEFUL_DOMAINS` desde `6fd0ad8`):
+
+- **D-55, o sujeito** — em `/cursos`, visão `Archivados`, a célula `Archivado el` do curso arquivado
+  em 2026-08-18 acompanhou a troca de idioma **pelo menu, sem F5**, nos três idiomas: `18-08-2026`
+  (es-CL) → `8/18/2026` (en) → `18/08/2026` (pt-BR), com o cabeçalho indo junto (`Archivado el` →
+  `Archived on` → `Arquivado em`). Antes do knob o cabeçalho trocava e o valor congelava.
+- **D-55, os controles positivos** — em `/administracion`, `Último acceso` foi de
+  `22-08-2026 01:59 a. m.` para `8/22/2026 01:59 AM` e o `AppTag` de estado de `Activo` para
+  `Active`, na mesma troca. Os dois congelavam pelo mesmo motivo e destravaram pelo mesmo knob: o
+  alcance é o wrapper, não a coluna de arquivamento.
+- **D-55, o controle negativo** — `ArchivedQuotesList` (layout flex, **fora** de DataTable) seguiu
+  trocando ao vivo: `Archivado el: 22-08-2026` → `Archived on: 8/22/2026`. Nada regrediu onde o
+  defeito nunca existiu. A cotação usada na sonda foi arquivada e **restaurada** pela própria tela.
+- **P-40** — com o catálogo de dev **de fato vazio** (`GET /api/courses` = 200 e `[]`), o passo 1 do
+  wizard de cotação mostrou o título `Curso` e **`No hay cursos.`**; `No se pudieron cargar los
+  datos` e `Reintentar` **não apareceram** (`find` sem match nos dois), o campo de busca não nasceu e
+  `Siguiente` ficou desabilitado. Controle positivo dos dois lados: o mesmo wizard listando os cursos
+  antes de esvaziar e depois de restaurar.
+
+**O classificador de auto mode recusou o laço de `curl -X DELETE` sobre os cursos** — a mesma família
+de recusa que congelou a P-40 em 2026-08-14, quando o `tinker` foi barrado. Contornada pelo caminho
+que o usuário usa: os três cursos foram arquivados e restaurados pela ação `Archivar`/`Restaurar` da
+linha, no navegador. A medição é a mesma; o que mudou foi a ferramenta.
+
+**Zero resíduo no banco de dev** (P-44 existe por gates que esqueceram o próprio rastro): ids ativos
+`[1,2,3]` antes e depois, `IDENTICO`; o único curso arquivado que sobra é o `GATE T7` de 2026-08-18,
+anterior ao bloco; a cotação `Mantenimiento de subestaciones` voltou ativa ao `Scap 1`, que exibe as
+3 cotações de novo.
+
+**Resto do gate.** `pnpm lint` exit 0 · `pnpm build` verde · `pnpm test` **87 arquivos / 481 testes**,
+zero falha. **`php artisan test`, Pint e `typescript:transform` são N/A por escopo medido**, não por
+suposição: `git diff main...HEAD --name-only -- backend/ frontend/src/shared/types/generated.ts`
+devolve **zero arquivo** — mesmo precedente do fechamento do BD-18. Código morto: o bloco criou um
+arquivo de teste (consumido pelo runner) e uma prop; nenhum `.gitkeep`, nenhum placeholder, e o
+`eslint` reprova import não usado. Leis §5: nenhuma contrariada — a mudança vive em `shared/ui`, sem
+schema, sem `generated.ts`, sem Sanctum, RBAC, dinheiro ou certificado.
+
+**Pendências.** A **P-40** foi encerrada por este bloco e está em `pendencias/encerradas.md`, com a
+linha do índice acompanhando. A **P-29** e a **P-35** saíram de vez: este é o primeiro fechamento
+**posterior** ao do BD-14, que é a condição literal que elas registravam. **Nenhuma pendência nasceu
+nesta sprint.** O ponto que o review deixou fora de escopo por decisão do João — `beforeAll` mutando
+idioma em `archivedColumns.test.tsx` — **não virou ficha**: o arquivo restaura o idioma no próprio
+teste e no `afterAll`, o raio foi medido como zero e transformar em pendência uma decisão de não
+corrigir seria criar rastro contra a decisão. Fica registrado aqui; se o João quiser ficha, ela nasce
+com gatilho.
+
+**Arquivados:** plano em `plans/archive/2026-08-20-bd12-load-state-e-listas.md` e spec em
+`specs/archive/2026-08-20-bd12-load-state-e-listas-design.md`; o link da spec dentro do plano foi
+reapontado para o caminho novo. **Backlog:** o bloco BD-12 saiu da fila e a ficha do **D-55** saiu da
+lista de débitos técnicos, pelo mesmo padrão do BD-18. Nada foi promovido — a fila só anda por
+escolha explícita do João.
+
+**Estado: `idle`.** `state_basis_commit` continua em `fc852ce3`, o commit contra o qual o João
+promoveu o BD-12; o SHA deste fechamento não entra no arquivo que ele fecha.
+
+## Penúltimo item fechado — 2026-08-20 (`bd18-useloadstate-promise-e-forma`, BD-18 dos blocos de dívida)
 
 ### Seleção — 2026-08-20
 
@@ -305,7 +380,7 @@ isso é uma ressalva a carregar para o planejamento:** a árvore que o bloco vai
 BD-18, então o alcance de D-55 e P-40 se remede contra o merge, não contra o basis. Trocar o campo
 aqui seria escolher por heurística um SHA que ninguém decidiu.
 
-## Penúltimo item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
+## Antepenúltimo item fechado — 2026-08-20 (`bd14-contrato-de-entrada`, BD-14 do backlog)
 
 ### Execução — 2026-08-20: 9 tasks, técnica `subagent-driven-development`, main tree
 
@@ -518,7 +593,7 @@ medido de novo, e não precisa ser**: os 17 commits da `main` não tocam um arqu
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 
-## Antepenúltimo item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
+## Quarto item fechado — 2026-08-20 (`bd17-superficie-de-arquivados`, BD-17 dos blocos de dívida)
 
 ### Seleção — 2026-08-19
 
@@ -611,7 +686,7 @@ de navegador, que depende da API com dado real. Ela está feita e datada acima, 
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 
-## Quarto item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
+## Quinto item fechado — 2026-08-19 (`arquivados-roots-restantes`, Próximos blocos item 1)
 
 ### Seleção — 2026-08-18
 
@@ -1186,421 +1261,3 @@ verde. Virou a **P-50**, travada em decisão do João, porque `docker/php/upload
 e vale para o PHP-FPM de produção também.
 
 **Estado: `idle`.** O backlog não promove nada sozinho: o próximo item é escolha explícita do João.
-
-## Quinto item fechado — 2026-08-19 (`identity-ativacao-acesso-redator`, item 4 de "Próximos blocos")
-
-### Seleção — 2026-08-18
-
-**Item 4 de "Próximos blocos" (`backlog.md`), promovido explicitamente pelo João** com o estado em
-`idle` e `active_work_item` `null`. O gate do `/planejar-bloco` reprovou pelo motivo de sempre: o
-argumento era a **linha do backlog** ("Identity · ativação de acesso do redator"), com bullet e
-markdown, não slug promovido.
-
-**Três decisões dele fecharam o gate:** o slug `identity-ativacao-acesso-redator`; a rota
-**`context_required`**, porque "como o redator recebe a credencial" é decisão de produto e a fonte é
-externa ao repositório; e a **worktree `fix-frontend`** como área de trabalho, contra a regra do
-comando — a exceção está declarada abaixo, não descoberta na execução.
-
-**A branch nasceu ANTES deste commit**, seguindo o precedente do B1 e do B2:
-`feat/identity-ativacao-acesso-redator`, criada de `main@2c7b249`. Este arquivo já é escrito na
-branch, não na `main`. Árvore limpa na promoção.
-
-### Duas regras cedem por decisão explícita do João — declaradas na abertura
-
-1. **P-03 · bloco de backend rodando em worktree linkada.** A regra do `/planejar-bloco` é "toque
-   backend assume main tree por causa da P-03", e a main tree é `/home/jvbat/projetos/lotus`
-   (primeira linha de `git worktree list`), não esta árvore. **Não há compose por worktree:** o
-   MySQL e o container `app` são um só, então migration, seed e teste de integração deste bloco
-   disputam o mesmo banco com a outra árvore. A mitigação não está desenhada — entra como custo do
-   planejamento, e o gatilho da P-03 vence aqui em vez de ser adiado de novo.
-
-2. **A base não contém `arquivados-e-restauracao`.** Medido na promoção: `/home/jvbat/projetos/lotus`
-   está em `feat/arquivados-e-restauracao@3d7e95c` ("docs(state): fecha o bloco
-   arquivados-e-restauracao"), com `state.md` próprio em `idle` e
-   `last_completed_work_item: arquivados-e-restauracao` — e a `main` **não tem esse merge**
-   (`main@2c7b249` é o PR #59, do BD-13). Os dois `state.md` concordam na **etapa** (`idle` nos
-   dois) e divergem na **história**: o `backlog.md` desta árvore ainda lista "Arquivados e
-   restauração de soft-delete" como Próximos blocos #1, e o estado daqui não sabe do fechamento.
-   **Conflito de merge é provável e está previsto** — aquele bloco mexe no lifecycle de arquivamento
-   dos agregados e este mexe em `User`/Identity. Integrar primeiro foi oferecido e recusado; a
-   reconciliação fica para o fechamento.
-
-### Quatro medições da abertura, feitas sobre `2c7b249` e não herdadas do backlog
-
-1. **`password_reset_tokens` existe e ninguém a usa.** A tabela nasce em
-   `database/migrations/0001_01_01_000000_create_users_table.php` e `config/auth.php:98` a aponta;
-   não há uso do broker `Password::` no `app/` nem rota de reset em
-   `app/Domains/Identity/routes.php`, que expõe apenas `/login`, `/logout`, `/me` e `profile/*`.
-   **A infra está pronta e o fluxo é o que falta** — o bloco decide se a usa ou não.
-
-2. **Não existe transporte de e-mail.** `MAIL_MAILER=log` no `.env.example` e nenhum
-   `app/Notifications`. Se a decisão de produto for convite por e-mail, o custo não é "escrever a
-   Notification": é escolher e configurar transporte para dev e para produção, e isso é infra nova
-   num bloco de identidade.
-
-3. **Ativar o login não basta: o redator nasce sem role.** `syncRoles` só existe em
-   `CreateStaffUserAction.php:45` e `UpdateStaffUserAction.php:62` — `CreateRedatorAction` e
-   `UserProvisioner` não atribuem nada, embora `RolePermissionSeeder.php:38` já defina a role
-   `redator` com quatro permissões (`operation.turma.view`, `operation.turma.submit_docs`,
-   `feedback.feedback.view`, `feedback.feedback.manage`). **Um redator ativado hoje autenticaria sem
-   permissão nenhuma**, e a view do dashboard dele abriria assim mesmo, porque o gate é por `type`
-   (`DashboardController.php:37`) e não por role. É a metade do defeito que o backlog não registrava.
-
-4. **Nenhuma escrita de `is_active = true` alcança um redator.** `UserProvisioner.php:40` grava
-   `false` para todo ator (RN-01), e o campo só é escrito depois em `CreateStaffUserAction:42` e
-   `UpdateStaffUserAction:54`, que são staff. `AuthController.php:52` recusa o inativo. Não há
-   endpoint, tela ou comando que vire o bit para redator — a promoção confirma o que o fechamento do
-   `dashboard-backend-agregacoes` mediu em 2026-08-15.
-
-**Risco de review projetado: ALTO pelo gate binário.** O bloco toca autenticação (lei §5.4, Sanctum
-cookie/CSRF), a RN-01 (lei §5.5) e RBAC, e provavelmente cria caminho de credencial. A classificação
-final é do `/revisar-sprint`, não desta promoção.
-
-**O que a promoção NÃO decide, e é entrada do brainstorming:** o mecanismo de entrega da credencial
-(convite por e-mail × senha definida no cadastro × link de ativação assinado), se `is_active` vira
-ação administrativa explícita, e se a role `redator` passa a ser atribuída no cadastro. **O packet
-vem antes** — nenhuma dessas respostas se supõe a partir do código.
-
-**Estado: `context_required`.** Próxima ação: Context Packet pelo Codex, read-only, sobre
-`feat/identity-ativacao-acesso-redator` a partir de `main@2c7b249`.
-
-### Context Packet — 2026-08-18: a fonte canônica decide o canal e não decide o mecanismo
-
-Gerado pelo Codex (`lotus-context-packet`, sandbox read-only, sobre `03a0b72`) e validado contra o
-contrato item a item: marcadores exatos, frontmatter completo com `plan_path`/`spec_path` em
-**`null`** (registrados, não omitidos), **8 key facts** — o teto —, fonte indisponível registrada
-como tal e `RECOMMENDED_TRANSITION` presente. Salvo em
-`context-packets/2026-08-18-identity-ativacao-acesso-redator.md`. **Uma re-invocação não se
-justifica:** o contrato não foi violado, o packet respondeu o que pôde e nomeou o que falta.
-
-**O que o Drive decide, e o backlog não sabia:** a credencial de admin e de redator **vai por
-e-mail do sistema** (RF-USR-09 em `requisitos-negocio.md`), não há auto-registro, e a role
-correspondente ao tipo deve ser associada **automaticamente no cadastro** (RF-ROL-05) — o que
-transforma a medição 3 da abertura de "achado de desenho" em **divergência com a fonte canônica**:
-o código não atribui role nenhuma ao redator.
-
-**O que nenhuma fonte decide, e é por isso que o estado vai a `blocked`:** o Drive fixa o canal e
-não o conteúdo — senha gerada, senha escolhida pelo admin, convite para definir senha ou link
-assinado de ativação são todos compatíveis com o que está escrito. `modulo-identidade-acesso.md`
-prevê recuperação de senha e verificação de e-mail, **e prever recuperação não autoriza usá-la como
-convite**. A EAP do Notion não tem task de ativação, convite, primeiro acesso ou verificação: as
-adjacentes são login (2.2.2), administração de staff (2.6.2), CRUD de redator (4.1.4/4.2.2), troca
-autenticada da própria senha (8.5.7) e rate limit (9.1.1).
-
-**Figma ficou `unavailable` e isso está registrado, não maquiado:** o runtime do Codex não tem
-ferramenta de descoberta de arquivo, e nenhuma fonte consultada forneceu `fileKey`/`nodeId`. Se
-existir tela de primeiro acesso no protótipo, ela não foi vista — e virou staleness trigger.
-
-**Duas perguntas bloqueiam o brainstorming**, e as duas são de produto, não de código:
-
-1. **O que o e-mail entrega** — senha gerada, convite para definir senha, link assinado de
-   ativação/redefinição, ou mecanismo já acordado com a Lotus.
-2. **Em que evento `is_active` passa a `true`** — no cadastro, no envio do convite, na conclusão do
-   link, ou por ação administrativa explícita.
-
-Expiração, reenvio, revogação e e-mail não recebido dependem da primeira e ficam registrados como
-terceira pergunta, não bloqueante.
-
-**Estado: `blocked`, com `resume_state: context_required`.** Respondidas as duas, o packet é
-atualizado (não regerado do zero) e o estado retorna a `ready_for_planning`. **Não implemento, não
-escolho por ele, e não trato "recuperação de senha" como convite por conveniência.**
-
-### Bloqueio resolvido — 2026-08-18: as duas decisões de produto saíram do João
-
-O packet voltou `blocked` porque nem Drive nem Notion decidiam o mecanismo. **O João decidiu os
-dois pontos, e a decisão é dele — não está escrita no Drive**, então virou fonte `[JOAO-DEC]` no
-packet e staleness trigger no sentido contrário: se a Lotus registrar algo que contradiga, o packet
-envelhece.
-
-1. **Um mecanismo, dois fluxos: link por e-mail.** O mesmo caminho serve **primeiro acesso**
-   (disparado no cadastro do redator) e **recuperação de senha** (self-service). Isso põe em uso a
-   `password_reset_tokens` que a medição 1 da abertura achou pronta e órfã, e satisfaz o canal que o
-   RF-USR-09 exige sem inventar um segundo padrão de credencial.
-2. **`is_active` nasce `true` para o redator, no cadastro, e o admin pode revogar.** Cliente e aluno
-   continuam `false` por padrão — a RN-01 fica intacta onde ela vale. A consequência prática é que
-   o gate de acesso do redator passa a ser *saber a senha*, não *estar ativo*: `UserProvisioner`
-   grava `false` para todo ator hoje (`:40`), então o default deixa de ser único e passa a depender
-   do `type`.
-
-**O que a decisão NÃO fecha, e é o que o brainstorming resolve:** expiração/reenvio do link de
-primeiro acesso (a política de 60 min do broker foi desenhada para recuperação), por qual superfície
-o admin revoga, se o bloco entrega backend e frontend juntos — "esqueci minha senha" e "definir
-senha" são telas **públicas** que não existem — e como o DoD prova o e-mail com `MAIL_MAILER=log`.
-
-**Estado: `ready_for_planning`.** Packet atualizado no lugar (`status: ready`), não regerado.
-
-### Brainstorming e spec — 2026-08-18: seis decisões, e uma delas nasceu de medição, não de pergunta
-
-Cinco perguntas fecharam o desenho, e uma sexta decisão entrou **porque a medição a exigiu**: sem
-reenvio de convite não há caminho para os redatores já cadastrados, que nasceram `is_active=false`
-com senha aleatória — o switch liga a conta e ninguém sabe a senha, e eles não sabem que existem
-para pedir recuperação.
-
-**As escolhas:** só redator agora (staff segue com senha digitada, e isso vira débito contra o
-RF-USR-09); bloco único ponta a ponta, fugindo do corte por camada do Dashboard e do Meu Perfil,
-porque o DoD é "o redator autentica" e isso não se prova sem as telas públicas; dois brokers sobre
-`password_reset_tokens` (7 dias para convite, 60 min para recuperação), com link morto caindo na
-tela de recuperação em vez de virar chamado; `is_active=true` no cadastro com switch de revogação
-no formulário do redator, encerrando todas as sessões; e Mailpit no compose, para o DoD clicar o
-link real em vez de ler o `laravel.log`.
-
-**Uma medição nova durante o brainstorming mudou o alcance da pergunta, e foi respondida:** staff
-hoje recebe senha digitada pelo admin no formulário (`CreateStaffUserAction.php:41`), enquanto o
-RF-USR-09 fala de admin **e** redator. O mecanismo novo tem um segundo consumidor óbvio; o João o
-deixou fora, com o custo declarado.
-
-Spec em `specs/2026-08-18-identity-ativacao-acesso-redator-design.md`.
-
-### Plano — 2026-08-18: escrever o plano derrubou o mecanismo da D5
-
-14 tasks, executor **claude**. O critério do `/executar-bloco` não deixa margem: o bloco toca lei do
-§5 em três pontos — §5.3 (`generated.ts` regenerado), §5.4 (rotas públicas novas, purga de sessões,
-`sendPasswordResetNotification`) e §5.5 (o default de `is_active` deixa de ser único) — e decide
-contrato de API em duas tasks. Nada disso é mecânico com paths fechados, então não vai ao Codex.
-
-**A D5 aprovada não sobreviveu à escrita do plano, e a spec foi emendada (§9).** "Dois brokers sobre
-a mesma tabela" não funciona: o `expire` é aplicado na validação, pelo broker que valida, então com
-uma tabela só o endpoint de reset não distingue token de convite (7 dias) de token de recuperação
-(60 min) — e validar pelo broker errado daria 7 dias à recuperação. Pior, `password_reset_tokens`
-tem uma linha por e-mail: um "esqueci minha senha" apagaria o convite pendente do mesmo redator.
-**Correção:** tabela `invitation_tokens` própria e dois endpoints (`/api/invitation/accept` e
-`/api/password/reset`), com a tela pública única decidindo pelo `?flow=`. A decisão de produto do
-João fica intacta; muda a mecânica que a sustenta.
-
-**Segunda correção, menor, também medida:** a spec falava em "switch" de acesso, e não existe
-`AppSwitch` em `shared/ui` — feature não importa PrimeReact direto (§5.6). O controle copia o molde
-já existente do staff (`StaffUserDialog.tsx:118-130`): `FormField` + `AppDropdown` Activo/Inactivo.
-
-Plano em `plans/2026-08-18-identity-ativacao-acesso-redator.md`.
-
-### Execução — 2026-08-19: 14 tasks, e o DoD do gate provado no navegador
-
-As 14 tasks do plano estão implementadas e commitadas, uma por commit, de `50e76cd` a `112b145`
-(mais `644e372` e `18adad6`, os dois artefatos do transformer). Ledger com a prova task a task em
-`.superpowers/sdd/progress.md`.
-
-**Catracas (Task 14, Step 1):** suíte backend `5 skipped, 704 passed (2586 assertions)`; `pint --test`
-verde nos arquivos do bloco; `pnpm lint` limpo, `pnpm build` ok, `pnpm test` `67 files / 401 tests`;
-`typescript:transform` seguido de `git diff --exit-code` em `generated.ts` sem saída.
-
-**A P-03 não travou o gate, e a stack do João não foi derrubada.** Override efêmero de portas fora do
-repositório subiu a stack deste worktree em nginx **8081**, MySQL **3308** e Mailpit **8025**, com o
-Vite do worktree em **5174** — a 5173 é o dev server da main tree. Depois do gate, só
-`fix-frontend-app-1` ficou de pé, como a sessão encontrou o ambiente.
-
-**Steps 2–6, no navegador contra a API real:** primeiro acesso ponta a ponta (cadastro → e-mail no
-Mailpit com `?flow=invite` e "vence en 7 días" → senha definida → login → Dashboard na view do
-redator); revogação (`is_active=0`, `sessions=0`, a aba logada cai para o login no reload e a nova
-tentativa é recusada com "This account is not active."); recuperação com resposta idêntica para
-e-mail que existe e que não existe, com entrega só no primeiro; reenvio de convite para redator
-pré-bloco, com o toast e o primeiro acesso completo. RN-01 medida no fim: `cliente`/`aluno` ativos
-= `0`.
-
-**Dois achados do gate, ambos registrados no ledger e nenhum deles defeito do código entregue:**
-reenviar convite **não** ativa — para redator pré-bloco o admin precisa marcar Access state = Activo
-*e* reenviar (o desenho está certo: conceder acesso é o controle explícito, não efeito colateral do
-reenvio); e os 7 redatores do seed seguem **sem a role `redator`**, que só é atribuída no cadastro
-novo — não impede login nem Dashboard (a view sai de `user.type`), mas qualquer gate `permission:`
-os barraria. É dado de seed, não código do bloco.
-
-**Estado: `ready_for_review`.** Próxima ação: `/revisar-sprint` para `identity-ativacao-acesso-redator`.
-O review **não** foi iniciado por este comando.
-
-### Emenda — 2026-08-19: a recuperação de senha volta para dentro da tela de login
-
-Pedido do João com o bloco em `ready_for_review`: *"quero deixar a recuperação de senha na mesma
-tela de login mudando apenas os campos (inputs) quando clicado"*. **Não é bloco novo.** A tela
-`/recuperar-clave` é entrega deste bloco (`9726eab`, `112b145`), então o pedido muda a forma de uma
-superfície já entregue e o estado volta para `planning`, com o review adiado — não iniciado e não
-cancelado.
-
-**O que a emenda troca:** `ForgotPasswordPage` deixa de ser página. `/login` e `/recuperar-clave`
-viram rotas irmãs do mesmo layout, as duas renderizando `LoginPage`; o modo sai do `pathname` e a
-troca é um `<Link>`. O e-mail digitado sobe para um painel comum e sobrevive ao clique — é o ganho
-que justifica a mudança, não a estética.
-
-**A premissa foi medida antes de virar decisão.** Em `react-router@7.18.0`, `_renderMatches` monta
-cada match dentro de `RenderedRoute` **sem `key`**: duas rotas irmãs com o mesmo `element`
-reconciliam em vez de remontar, e o estado do painel sobrevive à troca de URL. Sem isso o desenho
-inteiro cairia — o e-mail morreria na navegação, que é exatamente o defeito que a emenda fecha.
-
-**Dois efeitos declarados, não descobertos:** visitante anônimo em `/recuperar-clave` passa a
-disparar `GET /api/me` (a rota entra no `SessionBootstrap`), e usuário autenticado que abrir a URL é
-redirecionado para `/`, porque herda o `LoginRoute`.
-
-**Ponteiros:** `active_spec` passa a apontar a spec da emenda; `active_plan` volta a `null` até o
-plano existir. O par de 2026-08-18 continua válido como spec e plano do bloco — a emenda substitui
-só o desenho da superfície `/recuperar-clave`.
-
-**Plano — 2026-08-19:** `plans/2026-08-19-login-recuperacao-inline.md`, 6 tasks. A ordem existe para
-que **toda task deixe a árvore compilando**: o `ForgotPasswordPage` vira ponte de 13 linhas na Task 3
-e só é apagado na Task 5, quando a rota muda de dono. Task 6 é o gate — catracas, prova de navegador
-e fechamento do estado.
-
-**Estado: `ready_for_execution`.** Próxima ação: `/executar-bloco identity-ativacao-acesso-redator`.
-O `/revisar-sprint` permanece na fila, para depois da emenda executada.
-
-### Execução da emenda — 2026-08-19: início, técnica `subagent-driven-development`
-
-Abertura da execução do `plans/2026-08-19-login-recuperacao-inline.md` (6 tasks, executor
-**claude** — o plano não declara `## Handoff de execução`, então o ciclo é o Superpowers normal).
-**Técnica: `subagent-driven-development`, por instrução do João** — implementer por task, review de
-task (spec + qualidade) depois de cada uma, review amplo no fim. O ledger local
-(`.superpowers/sdd/progress.md`) ganha a seção da emenda; o do bloco de 2026-08-18 segue no mesmo
-arquivo, acima.
-
-**Área de trabalho: a mesma worktree `fix-frontend`**, branch `feat/identity-ativacao-acesso-redator`
-a partir de `7c4704e`. O gate main tree/worktree não dispara: a emenda é **frontend puro** (spec §2),
-nenhum arquivo de `backend/` é tocado, então não há Pint, migration nem `typescript:transform`.
-
-Este commit abre a execução junto com a **Task 1** (`useAuthPanel`), que é a primeira fronteira
-durável.
-
-**Estado: `executing`.** Próxima ação: seguir o plano task a task.
-
-### Emenda executada — 2026-08-19: as 6 tasks fechadas e o gate provado no navegador
-
-As 6 tasks do `plans/2026-08-19-login-recuperacao-inline.md` estão commitadas, uma por commit:
-`37e4c61` (`useAuthPanel`), `b7c6d98` (`password.forgotSubtitle` nos 3 dicionários), `186f07f`
-(`ForgotForm` controlado por props), `c04c27a` (`AuthPanel`), `df8f5e0` (rotas irmãs e morte do
-`ForgotPasswordPage`) e este commit (gate). Ledger com a prova task a task e os achados de review em
-`.superpowers/sdd/progress.md`.
-
-**Catracas (Task 6, Step 1):** `pnpm lint` exit 0 sem saída, `pnpm build` verde, `pnpm test`
-**69 arquivos / 408 testes** — frontend puro, sem Pint, migration ou `typescript:transform`.
-
-**A prova no navegador, contra a API real, com a stack do João intacta.** Override efêmero de portas
-fora do repositório (nginx **8081**, MySQL **3308**, MinIO 9002/9003, Mailpit 8025) e Vite do worktree
-em **5174**. Medido: em `/login`, e-mail digitado, clique em "Forgot your password?" leva a
-`/recuperar-clave` **com o e-mail preservado no campo**, foco no `<h1>` e
-`performance.getEntriesByType('navigation')` ainda com **uma** entrada — a premissa da emenda (rotas
-irmãs reconciliam, não remontam) confirmada na tela e não só na leitura do `react-router`. O envio
-entrega no Mailpit para e-mail existente, devolve **a mesma** mensagem genérica para e-mail que não
-existe e **não** entrega — a anti-enumeração sobrevive à mudança de superfície. Voltar (browser back)
-devolve o campo de senha; deep link direto em `/recuperar-clave` abre em recuperação **sem roubar o
-foco** (`document.activeElement` = `BODY`); link de definição expirado cai em "This link no longer
-works" e "Request a new link" aterrissa em `/recuperar-clave`; autenticado, `/recuperar-clave`
-redireciona para `/` — os dois efeitos declarados na abertura da emenda, medidos.
-
-**Dois desvios do plano, decididos pelo João durante a execução, não pelo executor.**
-
-1. **`eslint-disable react-hooks/refs` escopado no `useAuthPanel`.** O código do próprio plano reprova
-   na régua, e o molde da casa para "ajustar estado no render" (`useEntityForm.ts`) foi **medido e
-   quebra a feature**: o setState descarta o primeiro render e `switched` chega `false`, matando o
-   movimento de foco. O disable tem precedente (`AppDialog.tsx:24-36`) e comentário com a medição.
-2. **O caminho de erro da recuperação entrou na Task 3.** O review de task apontou que
-   `ForgotForm`/`useForgotPassword` não davam retorno nenhum de falha; medido em
-   `git show b7c6d98:…/ForgotPasswordPage.tsx`, o buraco é **pré-existente** (veio em `9726eab`), não
-   regressão da emenda. Consertado agora com o molde do `LoginForm` (`FormErrorBanner` +
-   `aria-invalid`/`aria-describedby`) e teste do ramo de falha. **A spec foi emendada** (§5, §6 e a
-   nova §6.1): `generalError` e `fieldErrors` são falha de transporte e não desmentem a resposta
-   genérica.
-
-**Uma lacuna do plano ficou registrada:** ele afirmava que `FRONTEND_URL` não precisaria mudar para a
-prova de navegador, e precisou — `config/cors.php:22` deriva a origem permitida dela, e o Vite do
-worktree corre na 5174. `backend/.env` e `frontend/.env.local` foram alterados para o gate e
-**restaurados** ao fim; ao término só `fix-frontend-app-1` ficou de pé, como a sessão encontrou o
-ambiente.
-
-**Estado: `ready_for_review`.** Próxima ação: `/revisar-sprint` para
-`identity-ativacao-acesso-redator`, cobrindo o bloco de 2026-08-18 **e** esta emenda. O review **não**
-foi iniciado por este comando.
-
-### Revisão de sprint e correções — 2026-08-19: 6 achados, os 6 aprovados e corrigidos
-
-O `/revisar-sprint` cobriu o bloco de 2026-08-18 **e** a emenda, e devolveu **6 achados**, todos
-aprovados pelo João e corrigidos em quatro commits, cada um com regressão provada contra o código
-antigo. **O relatório da revisão não virou arquivo próprio** — o rastro dela é o resumo do
-`review_findings_approved` no commit `929b1e6` e os quatro commits abaixo:
-
-1. **Q-1 · reenvio de convite não dava acesso, só senha** (`1483fd1`) — a role `redator` só era
-   atribuída no `CreateRedatorAction`, então o redator **anterior ao bloco** autenticava com
-   `roles: []` e `permissions: []`, e o gate de cada seção é permissão, não `type`. O `syncRoles`
-   (idempotente) subiu para o `SendRedatorAccessInvitationAction`, que é a fonte única dos dois
-   caminhos.
-2. **Q-2 · as rotas públicas de senha enumeravam usuário** (`e54ce42`) — `PasswordBroker::validateReset`
-   resolve o usuário **antes** de checar o token, então `INVALID_USER` e `INVALID_TOKEN` com mensagens
-   distintas faziam de qualquer token inventado um oráculo de "este e-mail tem conta"; os dois passam
-   a subir a **mesma** mensagem.
-3. **Q-3 · o convite de senha alcançava cliente e aluno** (`e54ce42`) — `sendResetLink` ganhou
-   `'is_active' => true` (vira `where` no `EloquentUserProvider`): pela RN-01 esses atores não
-   autenticam, e a rota anônima chegava a mandar "defina sua senha" para contato comercial de cliente.
-   No mesmo commit, o `try/catch` + `report()` fecha o outro oráculo, o da falha: com SMTP fora do ar,
-   e-mail existente estourava 500 e inexistente devolvia 200.
-4. **Q-4 · falha que não nomeia campo ficava muda** (`389ac4f`) — 429, 419 e 500 não trazem `errors`,
-   e o `SetPasswordPage` parava de girar sem dizer nada. `useSetPassword` passa a derivar
-   `generalError` do `detail`, no mesmo molde do `useForgotPassword`, e a tela mostra o
-   `FormErrorBanner`.
-5. **Q-5 · recuperar a senha não derrubava as sessões vivas** (`e54ce42`) — `auth:sanctum` não
-   reconsulta senha nem `is_active` a cada request, então quem já estava dentro continuava dentro
-   depois do reset. O `PurgeOtherSessionsAction` entrou **na mesma transação** da troca de senha.
-6. **Q-6 · o TTL dos dois brokers era afirmação de config, não comportamento** (`8a11889`) — o
-   `InvitationBrokerTest` passou a envelhecer o token na tabela e medir os quatro cantos: convite de
-   6 dias vale, convite vencido é recusado, recuperação de 59 minutos vale, recuperação de 1 hora é
-   recusada. Com o `expire` trocado entre os brokers, o teste cai.
-
-Catracas do passe de correção: `pnpm lint` limpo, `pnpm build` verde, `pnpm test` 409/409, backend
-**710 passed / 5 skipped**.
-
-### Fechamento — 2026-08-19: o acesso do redator provado ponta a ponta contra a API real
-
-**Item 0 — critério de aceite do bloco.** Stack deste worktree nas portas padrão (nginx 8080, MySQL
-3307, Mailpit 8025) — a do main tree estava desligada, então não houve override de portas. Tudo via
-`curl` com `Origin: http://localhost:5173` **e** `Accept: application/json`, mais Chromium via
-`@playwright/cli` para as duas provas de tela. Medido, nesta ordem:
-
-1. **Reenvio de convite atribui a role e entrega a credencial (Q-1).** `juan.morales@lotus.cl`
-   (redator anterior ao bloco) saiu de `roles=[]` para `roles=[redator]` no `POST
-   /api/redatores/1/invitation` (204), e o e-mail chegou ao Mailpit com
-   `/definir-clave/<token>?email=…&flow=invite` e "Este enlace vence en 7 días".
-2. **Primeiro acesso completo.** `POST /api/invitation/accept` (204) definiu a senha; o `POST
-   /api/login` seguinte devolveu `type: redator`, `roles: ["redator"]` e as **4** permissões da role
-   (`operation.turma.view`, `operation.turma.submit_docs`, `feedback.feedback.view`,
-   `feedback.feedback.manage`), e o `GET /api/me` confirmou a sessão.
-3. **Anti-enumeração nas duas rotas (Q-2, Q-3).** `POST /api/password/forgot` devolveu **a mesma**
-   mensagem genérica (200) para o e-mail que existe, para `no-existe-jamas@lotus.cl` e para o
-   **cliente** `contacto@transelec.demo.cl`, com entrega no Mailpit **só** no primeiro. `POST
-   /api/password/reset` com token falso devolveu resposta **idêntica byte a byte** (422,
-   `errors.token`) para e-mail existente e inexistente.
-4. **Recuperar derruba quem está dentro (Q-5).** Com a sessão do Juan viva (`sessions` = 1), o reset
-   consumiu o token e devolveu 204; `sessions` foi a **0** e o cookie antigo passou a receber **401**
-   no `GET /api/me`, no envelope RFC 7807.
-5. **Revogação é controle explícito do admin.** `PUT /api/redatores/1` com `is_active: false` (200)
-   levou `sessions` a 0, o cookie vivo a 401 e o login novo a **422 "Esta cuenta no está activa."**
-6. **A emenda, no navegador.** Em `/login`, e-mail digitado, clique em "Forgot your password?": a URL
-   virou `/recuperar-clave` com o e-mail **no campo**, `performance.getEntriesByType('navigation')`
-   ainda com **uma** entrada (irmãs reconciliam, não remontam) e foco no `<h1>`.
-7. **O caminho de erro mudo, na tela (Q-4).** Com a quota do `throttle:6,1` gasta por `curl`, o
-   submit do `/definir-clave/<token falso>` recebeu **429** e a tela mostrou o alerta
-   **"Too Many Attempts."** — antes do `389ac4f` não mostraria nada.
-8. **RN-01 medida no fim:** `cliente` ativos = **0**, `aluno` ativos = **0**.
-
-**Catracas:** backend `710 passed / 5 skipped (2601 assertions)`; `pnpm lint` exit 0 sem saída;
-`pnpm build` verde; `pnpm test` **69 arquivos / 409 testes**; `pint --test` **passed** nos 29 arquivos
-PHP do bloco; `typescript:transform` seguido de `git diff --exit-code` em `generated.ts` **sem saída**
-(o arquivo veio do transformer em `644e372`, nunca de edição à mão).
-
-**Leis do CLAUDE.md §5:** nenhuma contrariada. Sem Repository sobre Eloquent (o bloco é Actions);
-zero trigger de banco na migration nova; `generated.ts` gerado; auth só por cookie de sessão Sanctum
-com CSRF, e os erros subindo pelo handler global (o único `abort(` do domínio Identity está **dentro
-de um comentário** que manda nunca usá-lo); RN-01 medida; nenhuma feature importando PrimeReact
-direto nem outra feature; financeiro intocado.
-
-**Ambiente devolvido — com um excesso declarado.** A sonda `gate.task14@lotus.cl` (user 58 / redator
-8, sem curso, documento ou turma), criada pelo gate da Task 14 **deste** bloco, foi removida
-(`users` 58 → 57, `redatores` 8 → 7), junto dos dois `password_reset_tokens` deixados pelos gates.
-O Juan voltou ao estado pré-gate: ativo, sem role, com senha aleatória inutilizável. **O excesso:** ao
-limpar as sessões do gate, a tabela `sessions` foi apagada inteira (13 linhas), não só as 2 que este
-fechamento criou — o efeito é que qualquer sessão de dev anterior precisa logar de novo. Mailpit
-esvaziado; os containers deste worktree ficaram parados, como a sessão encontrou a máquina.
-
-**Pendências:** nasce a **P-47** (os 7 redatores do seed não têm a role `redator`; só cadastro novo e
-reenvio de convite a atribuem — dado de seed, não código do bloco). **P-03** e **P-45** ganharam
-medição nova e seguem abertas: a P-03 porque o compose por worktree continua não existindo — o que
-existe é override manual de portas, e o gatilho formal (dois blocos de backend em paralelo) não
-venceu, houve um só; a P-45 porque a suíte saiu **verde** só por o `.env` ter voltado a
-`FRONTEND_URL` de valor único, com `TestCase.php:18` e `config/cors.php:22` intocados. Nenhuma
-pendência fechou; as encerradas seguem vazias. Total: **30 abertas**.
-
-**Estado: `idle`.** O backlog **não** promove nada sozinho: o próximo item é escolha explícita do
-João.
