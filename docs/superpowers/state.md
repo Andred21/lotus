@@ -1,18 +1,18 @@
 ---
 schema_version: 1
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: infra
+active_work_item: infra-producao-runtime-e-aws
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: fc852ce3
-updated_at: 2026-08-22T02:20:00-03:00
+state_basis_commit: c8480eee
+updated_at: 2026-08-22T03:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -47,6 +47,44 @@ updated_at: 2026-08-22T02:20:00-03:00
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
   por heurística.
 - O backlog nunca promove trabalho automaticamente.
+
+## Item ativo — `infra-producao-runtime-e-aws` (item 10 da fila priorizada)
+
+### Seleção — 2026-08-22
+
+**Promoção explícita do João**, com esta árvore em `idle` e `active_work_item: null`. O argumento
+do `/planejar-bloco` veio como **slug exato** — `infra-producao-runtime-e-aws` —, que é o mesmo
+título do item 10 do `backlog.md`; o gate não teve o que reprovar dessa vez.
+
+**Três decisões dele fecharam o gate:**
+
+1. **Rota `context_required`, não a direta.** O item 10 declara `Contexto: sim` e as fontes são
+   externas ao repositório: Drive `RNF-DIS-01/03/04`, Notion `10.1.1–10.1.6` e `10.1.8`,
+   ADR-09/11/13/14. Diferente dos blocos de dívida recentes (BD-12, BD-17, BD-18), aqui não há
+   medição local que substitua a fonte — a topologia de produção é decisão de produto/infra
+   registrada fora do código.
+2. **Segundo `active_work_item` vivo, aceito como exceção declarada.** O main tree
+   (`/home/jvbat/projetos/lotus`) está em `feedbacks-resolver-escopo`, `workflow_state:
+   context_required`, `next_owner: codex` — medido, não deduzido. É a **sétima** exceção à
+   invariante de um `active_work_item`, pelo mesmo padrão já registrado nos fechamentos de
+   `arquivados-roots-restantes` e do BD-18: o invariante vale dentro de cada branch, não entre elas.
+3. **Área de trabalho: esta worktree `lotus-infra`**, branch `infra/producao-runtime-e-aws` a partir
+   de `c8480eee`. A regra do `/planejar-bloco` manda main tree quando o bloco toca backend, por causa
+   da **P-03** — mas o gatilho literal da P-03 é *backend ∥ backend*, e o que o bloco escreve são
+   artefatos de runtime novos (`Dockerfile` multi-stage, `docker-compose.prod.yml`, nginx de
+   produção), não código de domínio que a suíte precise provar contra o compose de dev.
+
+**Ressalva a carregar para o planejamento, medida agora e não descoberta depois:** o
+`feedbacks-resolver-escopo` do main tree é bloco de **backend com código**. Enquanto ele estiver em
+`context_required` o gatilho da P-03 não dispara; **se ele entrar em `executing`, o gatilho precisa
+ser reavaliado antes de qualquer prova deste bloco que dependa do compose.**
+
+**Estado das outras duas árvores no momento da promoção**, para o caso de divergência futura:
+`lotus-bd15` em `idle`; `fix-frontend` em `bd12-load-state-e-listas` / `ready_for_planning` — resíduo
+do bloco já fechado e mesclado na `main` pelo PR #64, não trabalho vivo.
+
+**`state_basis_commit: c8480eee`** — o commit contra o qual o backlog foi consolidado em 2026-08-22
+(`ba59dbd9`) mais o `style(backend)` que o segue, e a árvore que este bloco vai medir.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
