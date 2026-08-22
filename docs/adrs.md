@@ -95,6 +95,15 @@ Descartado: PhpWord (abstrai o OOXML e some com o controle fino de grade/medida 
 exige) e template `.docx` com marcadores substituídos (linha de tabela variável — 31 dias, N alunos
 — não se resolve por substituição de string).
 
+**Nota (2026-08-22) — o QR do certificado é `simple-qrcode`, embutido no próprio HTML.**
+`simplesoftwareio/simple-qrcode ^4.2` gera o código de validação dentro de
+`App\Domains\Certification\Services\CertificatePdfService`: `QrCode::format('svg')->size(180)`,
+codificado em base64 e embutido no HTML que vai para o Gotenberg. **Não é um segundo serviço nem uma
+segunda requisição** — por isso a decisão mora aqui e não em ADR próprio: o QR é conteúdo do
+documento que esta ADR decide como renderizar, e SVG embutido sobrevive ao Chromium sem depender de
+rede nem de arquivo em disco. O QR tem peso legal (é o que valida o certificado), então a
+dependência é registrada com o consumidor nomeado, não só declarada no `composer.json`.
+
 ## ADR-13 — Containerização: Docker Compose artesanal + multi-stage, sem Laradock
 **Regra:** `docker-compose.yml` artesanal (só serviços usados); imagem de produção via multi-stage build (Composer → Node/Vite → final Alpine enxuto). Serviços: PHP-FPM + Nginx; MySQL via RDS em prod (não em container). **Porquê:** Compose enxuto é proporcional ao porte e ensina as peças. Descartados: Laradock (over-engineering), Sail (só dev), FrankenPHP (adiado — dominar o clássico primeiro).
 
@@ -259,6 +268,25 @@ funciona, mas força conversão em toda leitura/escrita e no front, e `decimal` 
 com o schema legível; *`brick/math` ou value object `Money`* — abstração de uso único no estágio
 atual, o `BudgetSummaryService` é o único lugar que soma dinheiro. Se um segundo agregado precisar
 somar valor, reconsiderar o value object.
+
+## ADR-20 — Importação de planilha: OpenSpout em streaming
+**Regra:** `openspout/openspout ^5.3` lê planilha enviada pelo usuário, em **streaming** — o
+`SpreadsheetRowReader` (`app/Domains/Operation/Services/`) entrega linha a linha por `\Generator`, e
+nada além da linha corrente fica em memória. Extensões aceitas: `xlsx`, `csv`, `txt`; qualquer outra
+é `ValidationException` no próprio reader. Os dois readers são abertos com
+`SHOULD_PRESERVE_EMPTY_ROWS: true`.
+
+**Porquê.** O consumidor é a importação de alunos em massa (`ImportStudentsAction`), onde a planilha
+é do cliente e o tamanho não é nosso: carregar o documento inteiro para ler N linhas é o custo que a
+biblioteca existe para evitar. O `SHOULD_PRESERVE_EMPTY_ROWS` não é preferência — sem ele, XLSX e CSV
+descartam linha em branco **antes** de o consumidor vê-la e recontam do zero, e o número de linha que
+o operador lê no erro deixa de ser o número de linha da planilha dele.
+
+**Eixo próprio, não nota.** O precedente de 2026-08-10 manda registrar biblioteca nova como nota no
+ADR existente **do mesmo eixo**; aqui não há. ADR-11 decide onde o arquivo mora e como é servido,
+ADR-12 é geração de documento — o OpenSpout é ingestão, e ingestão não tinha ADR.
+
+**Descartado:** PhpSpreadsheet — carrega o documento inteiro em memória, o oposto do requisito.
 
 ---
 

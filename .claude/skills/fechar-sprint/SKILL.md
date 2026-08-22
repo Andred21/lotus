@@ -6,8 +6,19 @@ disable-model-invocation: true
 
 ## Gate de estado
 
-Leia `docs/superpowers/state.md` primeiro. `workflow_state` deve ser `ready_for_closure`, e o
-argumento, quando fornecido, deve corresponder a `active_work_item`.
+Leia `docs/superpowers/state.md` primeiro.
+
+**Resolva a lane ANTES de ler o estado (modo multi-lane, `schema_version: 2`).** Os campos
+singulares do topo são **espelho de `focused_lane`** — quem fecha bloco de outra lane lê o estado
+errado. Compare o diretório atual com `lanes.<id>.tree` (`main-tree` = o repositório principal;
+qualquer outro valor é o path do worktree) e opere sobre **essa** lane: `workflow_state`,
+`active_work_item`, `active_plan`, `active_spec` e `context_packet` saem de dentro dela.
+Nenhuma árvore casa com nenhuma lane → PARE e mostre `lanes:`. Trocar `focused_lane` para passar
+neste gate é proibido: o foco é fronteira durável (invariante do `state.md`), não chave de contorno.
+Arquivo sem `lanes:` (schema 1) → os campos do topo SÃO o estado.
+
+`workflow_state` da lane deve ser `ready_for_closure`, e o argumento, quando fornecido, deve
+corresponder ao `active_work_item` dela.
 
 Qualquer outro estado → PARE:
 - `ready_for_review` ou `reviewing`: review ainda não terminou;
@@ -75,10 +86,21 @@ Alguma nasceu nesta sprint?
   arquivadas. O arquivo continua sendo histórico, nunca estado operacional.
 - Mantenha no máximo dez entregas recentes. Ao exceder o limite, mova as mais antigas para
   `docs/superpowers/historico/progress-archive.md` preservando integralmente as linhas históricas.
+- **Pode o `state.md` no mesmo commit** (Q-1 do review de 2026-08-22). A narrativa do bloco que
+  acabou de fechar sai da seção `## Trabalho ativo` e desce **inteira e verbatim** para o topo de
+  `docs/superpowers/historico/state-archive.md`, sob um cabeçalho `## Fechado em <data> — <bloco>`;
+  no `state.md` fica **uma linha** na tabela `## Itens fechados`. A tabela guarda cinco: a sexta
+  linha empurra a mais antiga para fora (a narrativa dela já está no arquivo). Este arquivo é o
+  primeiro que toda sessão lê (`CLAUDE.md` §3) — sem esta poda ele cresce sem catraca, que foi
+  exatamente como ele chegou a 1499 linhas com 81% de bloco encerrado.
 - Remova de `docs/superpowers/backlog.md` somente o item concluído.
 - Nunca selecione nem promova automaticamente o item seguinte, mesmo que a ordem pareça óbvia.
 
 ## 10. Estado final
+
+Escreva na **lane resolvida no gate**, dentro de `lanes:`. Se ela for a `focused_lane`, o espelho
+do topo muda junto, no mesmo commit — espelho e lane nunca divergem. Se não for, **o topo não se
+toca**: a lane em foco tem trabalho próprio e sobrescrevê-la com `idle` apagaria o estado dela.
 
 Por padrão, finalize no mesmo commit do fechamento com:
 

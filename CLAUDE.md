@@ -53,7 +53,10 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 > **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
 > (etapa atual) e `backlog.md` (fila). O resto mora em pasta: `pendencias/` (`README.md` é o índice,
 > `abertas.md` a ficha de cada uma, `encerradas.md` o rastro de 1 sprint), `historico/`
-> (`progress.md` e `progress-archive.md`), `plans/`, `specs/`, `context-packets/` e `audits/`.
+> (`progress.md`, `progress-archive.md` e `state-archive.md` — a narrativa dos blocos já fechados,
+> que sai do `state.md` no fechamento), `plans/`, `specs/`, `context-packets/` e `audits/`.
+> **O `state.md` guarda o bloco ativo e ponteiro de uma linha para os cinco últimos fechados.**
+> Ler narrativa de bloco encerrado é escolha explícita, não custo fixo de toda sessão.
 
 > Planejamento canônico: Google Drive (`Viagem Chile/Projetos/Lotus.cl/V2`).
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).

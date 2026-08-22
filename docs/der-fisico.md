@@ -49,8 +49,8 @@
 - **enrollments** (matrículas) — `id PK`, `turma_id FK` → turmas `restrictOnDelete`, `student_id FK` → students `restrictOnDelete`, `grades` (json, nullable), `attendance_pct` (decimal 5,2, nullable), `approval_status` enum(`pendiente`,`aprobado`,`reprobado`, default `pendiente`), `deleted_at`. Índice único nomeado `enrollments_turma_student_unique` (`turma_id`,`student_id`) — encadear `->unique()` no `foreignId()` não emite índice (lição 6b).
 
 ### Certification
-- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK` → enrollments `restrictOnDelete`, `course_id FK` → courses `restrictOnDelete`, `redator_id FK` → redatores `restrictOnDelete`, `codigo UK`, `snapshot` (json), `valido_ate` (date, nullable), `status` enum(`emitido`,`revocado`, default `emitido`), `revoked_at` (timestamp, nullable), `revocation_reason` (nullable), timestamps, `active_enrollment_id` (coluna gerada STORED `CASE WHEN status = 'emitido' THEN enrollment_id END`, índice único nomeado `certificates_active_enrollment_unique`). Um certificado **vigente** por matrícula — revogar produz NULL e libera a reemissão, mesmo precedente do `active_quote_id` de `turmas`. Metadata armazenada, PDF sob demanda via Gotenberg (ADR-12); **não há coluna de hash de QR** — a validação resolve pelo `uuid`.
-- **certificate_sequences** — `id PK`, `year UK` (unsigned smallint), `last_seq` (unsigned int), timestamps. Numeração por ano do `codigo`.
+- **certificates** — `id PK`, `uuid UK`, `enrollment_id FK` → enrollments `restrictOnDelete`, `course_id FK` → courses `restrictOnDelete`, `redator_id FK` → redatores `restrictOnDelete`, `codigo UK`, `snapshot` (json), `valido_ate` (date, nullable), `status` enum(`emitido`,`revocado`) default `emitido`, `revoked_at` (timestamp, nullable), `revocation_reason` (nullable), timestamps, `active_enrollment_id` (coluna gerada STORED `CASE WHEN status = 'emitido' THEN enrollment_id ELSE NULL END`, `UNIQUE` — índice `certificates_active_enrollment_unique`). **Sem `deleted_at`:** revogação é o próprio "delete" do domínio — `status=revocado` marca e preserva a linha (certificado tem peso legal, não se apaga). A unicidade **não** é um `unique` simples em `enrollment_id`: é sobre `active_enrollment_id`, coluna gerada que vale `enrollment_id` só enquanto `status=emitido` e vira `NULL` quando revogado — mesmo mecanismo de `turmas.active_quote_id` e `student_client_logs.open_link_student_id` (ver acima): um certificado revogado libera a matrícula para reemissão, porque `NULL` não colide em índice único. `snapshot` (json) guarda o retrato dos dados no momento da emissão; não há arquivo por certificado — PDF é gerado sob demanda via Gotenberg (ADR-12), nunca persistido. **Não existe coluna de hash de QR:** a validação pública resolve pelo `uuid`.
+- **certificate_sequences** — `id PK`, `year UK` (unsigned smallint), `last_seq` (unsigned int), timestamps. Contador de numeração de `codigo` por ano — sem FK; suporte para gerar o código do certificado sequencialmente (mesmo padrão do `seq_in_budget`/ADR-17: derivado sob lock, nunca input externo).
 
 ### RBAC (Spatie — vêm do pacote, não criar à mão)
 - **roles** — `id PK`, `name`, `guard_name`.
@@ -117,11 +117,14 @@ entra pelo encerramento da OS, não pela turma.
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:
   `tests/Feature/Shared/PersistenceLawsTest.php` reprova coleção nested sem `Optional`, e projeção
   de saída se declara com `#[ReadOnlyCollection]` em vez de entrar numa allowlist.
-- **Contexto total:** 25 tabelas — 18 de domínio, **todas implementadas** + 7 RBAC/transversal (as
-  5 do Spatie mais `files` e `audits`, que esta lista classifica como Transversal). Implementadas
-  até 2026-07-30: users, clients, client_addresses, client_contacts, redatores, **students**,
-  **student_client_logs**, courses, course_certificate_templates, course_modules, course_redator,
-  budgets, quotes, files, audits, **turmas**, **turma_redator**, **enrollments** + as 5 de RBAC. Em
-  2026-08-05 (Sprint 4), `2026_08_05_100000_certificates.php` entregou as duas últimas de domínio:
-  **`certificates`** e **`certificate_sequences`**. As de framework (sessions, cache, jobs,
+- **Contexto total:** 27 tabelas — 20 de domínio, **todas implementadas** + 7 RBAC/transversal (as
+  5 do Spatie mais `files` e `audits`, que esta lista classifica como Transversal). O número caiu de
+  28 para 27 no merge de 2026-08-22: `feedbacks` era a única "no papel" e deixou de existir como
+  tabela por decisão do `feedbacks-resolver-escopo` (ver `### Feedback` acima). Implementadas:
+  users, clients, client_addresses, client_contacts, redatores, **students**,
+  **student_client_logs**, **login_logs**, **invitation_tokens**, courses,
+  course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits,
+  **turmas**, **turma_redator**, **enrollments**, **certificates**, **certificate_sequences** + as 5
+  de RBAC. `invitation_tokens` (`2026_08_18_200000`) ainda não tem ficha de colunas nesta lista —
+  é a **P-52**. As de framework (sessions, cache, cache_locks, jobs, job_batches, failed_jobs,
   password_reset_tokens, personal_access_tokens) ficam fora da contagem de domínio.
