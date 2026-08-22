@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: infra
 active_work_item: infra-producao-runtime-e-aws
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
 active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
