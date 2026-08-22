@@ -41,7 +41,7 @@ Quatro eixos, todos backend, com um diff de `generated.ts` como entregável:
 1. **Ownership** — redator só alcança turma em que está designado.
 2. **Revogação** — conta desligada perde acesso no meio da sessão; omissão de `is_active` não reativa.
 3. **Capacidade** — redator ganha lançar nota e presença, sem ganhar o Fluxo 3.
-4. **Integridade** — os seis escritores de filho da P-49 tomam o lock do pai, com catraca.
+4. **Integridade** — os escritores de filho da P-49 tomam o lock do pai, com catraca.
 
 ### Fora, declarado
 
@@ -165,18 +165,36 @@ O escopo da §4 limita sozinho: `PUT /api/turmas/{turma}/alunos/{enrollment}/res
 
 ## 7. Integridade — P-49
 
-Os seis escritores de filho tomam o lock do pai, simétricos aos seis do molde `Client`
+Os escritores de filho tomam o lock do pai, simétricos aos seis do molde `Client`
 (`CreateClientContactAction:22`, `CreateClientAddressAction:22`, `UpdateClientAction:32`,
 `UpdateClientContactAction:23`, `UpdateClientAddressAction:23`, `DeleteClientContactAction:38`):
 
-| Eixo | Escritor | Lock |
-|---|---|---|
-| Redator | `Identity\Actions\StoreRedatorDocumentAction` | `Redator::lockRow()` |
-| Redator | `Identity\Actions\UpdateRedatorAction` | `Redator::lockRow()` |
-| Redator | `Operation\Actions\DesignateRedatorAction` | `Redator::lockRow()` |
-| Turma | `Operation\Actions\EnrollStudentAction` | `Turma::lockRow()` |
-| Turma | `Operation\Actions\ImportStudentsAction` | `Turma::lockRow()` |
-| Turma | `Operation\Actions\StoreTurmaDocumentAction` | `Turma::lockRow()` |
+| Eixo | Escritor | Lock | Abre transação hoje? |
+|---|---|---|---|
+| Redator | `Identity\Actions\StoreRedatorDocumentAction` | `Redator::lockForWrite()` | sim |
+| Redator | `Identity\Actions\UpdateRedatorAction` | `Redator::lockForWrite()` | sim |
+| Redator | `Operation\Actions\DesignateRedatorAction` | `Redator::lockForWrite()` | **não — passa a abrir** |
+| Turma | `Operation\Actions\EnrollStudentAction` | `Turma::lockForWrite()` | sim |
+| Turma | `Operation\Actions\StoreTurmaDocumentAction` | `Turma::lockForWrite()` | **não — passa a abrir** |
+
+**Duas correções medidas contra `f6649297`, depois de a spec ter sido aprovada.**
+
+**(a) O lock é `lockForWrite()`, não `lockRow()`.** A ficha cita o molde `Client` como
+`Client::lockRow()`, mas o código dos seis escritores de cliente chama `Client::lockForWrite()`
+(`Client.php:139-148`) — que é `lockRow()` **mais** a recusa se o pai já está arquivado. A diferença
+é a ficha inteira: `lockRow` sozinho SERIALIZA (B espera A commitar) e depois deixa B pousar o filho
+sob o pai recém-arquivado. Quem recusa é o `trashed()` de dentro do `lockForWrite`. `Turma` e
+`Redator` não têm esse método; ele nasce neste bloco, no molde do `Client`. Os quatro tomadores
+atuais (`ArchiveRedatorAction`, `RestoreRedatorAction`, `DeleteTurmaAction`, `RestoreTurmaAction`)
+continuam com `lockRow()` cru, e devem: eles operam sobre linha arquivada ou em vias de ser.
+
+**(b) `ImportStudentsAction` sai da lista.** Ela **não abre transação** — por decisão registrada, a
+transação do import é POR LINHA e mora no `EnrollStudentAction`. `lockForUpdate()` fora de transação
+é solto no autocommit da própria consulta: o lock ali seria teatro. A cobertura do import vem da
+linha, que passa a travar. Ela entra na lista de ISENTAS do arch test, com esse motivo escrito — não
+sai em silêncio.
+
+São **cinco** escritores, não seis. O sexto sítio da ficha continua coberto; muda quem o cobre.
 
 `DesignateRedatorAction` cria aresta de lock **cruzando domínio** — Operation trava um agregado de
 Identity. A aresta de código já existe (`TurmaController` importa `Identity\Models\Redator`), então
@@ -193,9 +211,11 @@ manter binários fora da transação é a D3 da spec do redator e não se reabre
 Por isso a evidência se divide.
 
 - **Permanente — `tests/Feature/Shared/ParentLockOnChildWriteTest.php`.** Arch test que lê código,
-  não corrida, e por isso roda em sqlite: reprova Action que escreve filho dentro de
-  `DB::transaction` sem tomar `lockRow()` do pai. Sonda **vista reprovar** antes de passar, e
-  revertida.
+  não corrida, e por isso roda em sqlite. O universo é medido, não escolhido: toda Action sob
+  `app/Domains/*/Actions/` cujo código (sem comentários) recebe `Turma $` ou `Redator $` — **16
+  arquivos** em `f6649297`. Cada uma está numa de duas listas declaradas, e **silêncio reprova**
+  (mesmo idioma do `NestedRouteOwnershipTest`): ou toma `lockForWrite()` do pai, ou está na lista de
+  ISENTAS com o motivo escrito ao lado. Sonda **vista reprovar** antes de passar, e revertida.
 - **Uma vez, no DoD — corrida real no MySQL de dev.** Duas conexões: A abre transação e segura o
   lock do pai; B dispara o escritor de filho e **bloqueia**; A arquiva e commita; B falha em vez de
   pousar filho ativo sob pai arquivado.
@@ -212,12 +232,32 @@ a aproveitou.
 
 ## 8. Seed — P-47
 
-`OperationDemoSeeder` passa a atribuir a role `redator` aos 7 redatores que cria. Hoje nenhum a
-carrega, e o único caminho de remediação é reenviar convite
-(`SendRedatorAccessInvitationAction`), que não alcança linha já existente no banco.
+**Correção medida depois da aprovação: o seeder já está certo; o DADO é que está velho.**
+`OperationDemoSeeder::seedRedatores()` cria por `CreateRedatorAction`, que faz
+`$user->syncRoles(['redator'])` desde `e3490d84` (RF-ROL-05), e `UserProvisioner::accessDefaultFor()`
+já faz o redator nascer `is_active = true`. Reseedar do zero hoje produz 7 redatores ativos e com
+role. Não há nada a mudar no seeder.
 
-Com o escopo desta spec a role decide acesso, então o seed sem role produz 7 contas de dev sem
-permissão nenhuma — e o DoD do bloco depende de uma sessão de redator real.
+O que sobrou é linha criada ANTES desse commit. Medido no MySQL de dev em 2026-08-22:
+
+| user | nome | `is_active` | roles |
+|---|---|---|---|
+| 2 | Juan Morales | 1 | `redator` |
+| 3–8 | Pedro Soto, Ana Reyes, Carlos Fuentes, Marcela Rojas, Rodrigo Vargas, Ignacio Pérez | **0** | **nenhuma** |
+
+Juan Morales é o único com role, e só porque a prova e2e do fechamento de 2026-08-19 reenviou o
+convite dele — é o caminho de remediação que a própria ficha descreve, exercido uma vez.
+
+**O remédio é migration, não seeder.** É o mecanismo que a `2026_08_22_000001` já usa pelo mesmo
+argumento, escrito no docblock dela: *"a migration é o único mecanismo que alcança banco já
+provisionado: o seeder só corrige quem o roda"*. Backfill idempotente: todo `users.type = 'redator'`
+sem a role `redator` recebe a role. **`is_active` NÃO entra no backfill** — redator desativado de
+propósito existe, e reativá-lo em massa seria a P-51 ao contrário. Os dois redatores que o DoD exige
+ativos são ativados pelo caminho real da API (`PUT /api/redatores/{id}` com `is_active: true`), que é
+comportamento do app e não escrita de migration.
+
+Com o escopo desta spec a role decide acesso, então redator sem role é conta sem permissão nenhuma —
+e o DoD do bloco depende de duas sessões de redator reais, em turmas diferentes.
 
 ## 9. DoD — comportamento, não diff
 
@@ -249,5 +289,5 @@ entregável, não drift.
 |---|---|
 | `resolveRouteBinding` alcança rota que não devia escopar | O escopo é inerte para não-redator (o `if` sai antes). Toda rota de admin passa igual, e a prova 7 do DoD é o controle positivo. |
 | Middleware por request custa uma consulta a `users` | O Sanctum já carrega o `User` para popular `$request->user()`; o middleware lê o objeto em mão, sem query nova. |
-| A catraca de lock produz falso positivo em Action que escreve filho legitimamente sem pai | O arch test declara a lista de pares (pai, filho) que cobre, em vez de inferir. Par novo entra por escrita explícita. |
+| A catraca de lock produz falso positivo em Action que não escreve filho | Não há inferência: o teste tem duas listas declaradas e exige que toda Action do universo esteja numa delas. Action que não escreve filho entra em ISENTAS com o motivo — e o motivo fica onde alguém o lê ao editar a Action. |
 | `generated.ts` opcional quebra tela de staff | Os ~5 sítios do SPA são nomeados na §5 e o idioma de narrowing já existe copiado do redator. `pnpm build` roda `tsc -b` antes de bundlar. |

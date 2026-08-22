@@ -4,25 +4,25 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
 context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
 blocker: null
 
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
     context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
     blocker: null
     resume_state: null
@@ -55,7 +55,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: f6649297
-updated_at: 2026-08-22T16:45:00-03:00
+updated_at: 2026-08-22T17:31:54-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -158,7 +158,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `planning` |
+| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_execution` |
 | `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
 
@@ -167,7 +167,15 @@ no main tree e satisfaz o gate sem reabrir a P-03: a `lane-b` é infra e a `lane
 há backend ∥ backend. O bloco é `Contexto: sim`, logo nasceu em `context_required`; o packet
 `2026-08-22-hardening-acesso-ownership-e-integridade.md` veio do Codex em 2026-08-22 com
 `status: ready` e cinco fontes recuperadas — Drive e Notion inclusive, endereçados por ID. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
-e aí regenera `generated.ts` (lei §5.3).
+e aí regenera `generated.ts` (lei §5.3) — a spec a declarou **fora**, e o `generated.ts` muda neste
+bloco por outro motivo (o `is_active` da P-51).
+
+**Planejamento fechado em 2026-08-22T17:31.** Spec e plano escritos, e o plano corrige **três**
+medições que a spec e as fichas traziam erradas: o lock dos escritores de filho é `lockForWrite()` e
+não `lockRow()` cru (a diferença é a recusa, que é a P-49 inteira); `ImportStudentsAction` sai da
+lista dos seis porque não abre transação (a cobertura vem da linha, no `EnrollStudentAction`); e a
+P-47 não se conserta no seeder — ele já atribui a role desde `e3490d84` —, mas por migration de
+backfill sobre o dado velho. Handoff declara `executor: claude`.
 
 **A `lane-b` está em `ready_for_review`, não em `context_required`.** O estado da main dizia o
 segundo e o `state.md` da própria `../lotus-infra` dizia o primeiro — divergência corrigida em
