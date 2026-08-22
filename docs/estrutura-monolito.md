@@ -46,8 +46,8 @@ backend/app/
 │   ├── Commercial/             # cliente/endereço/contato, orçamento, cotação, aprovação, anexos
 │   ├── Catalog/                # cursos, templates de certificado, habilitação redator-curso
 │   ├── Operation/              # turma, matrícula, designação redator, conclusão  [código real]
-│   ├── Certification/          # emissão on-demand, validação QR pública          [scaffold vazio]
-│   └── Feedback/               # avaliações, pré-condição de conclusão            [não existe ainda]
+│   └── Certification/          # emissão on-demand, validação QR pública          [scaffold vazio]
+│   (Feedback NÃO entra: decisão de 2026-08-22 — é documentação de turma, ver der-fisico.md)
 │   (cada domínio: mesma estrutura interna, conforme necessidade)
 │
 ├── Shared/                     # transversal. NÃO é domínio. Usado por todos.
@@ -143,7 +143,7 @@ frontend/src/
 │   ├── operation/              # turmas, matrícula, documentos, conclusão — código real
 │   │   ├── api/ components/{Document,Enrollment,Turma}/ hooks/ lib/ stores/
 │   ├── certification/          # scaffold vazio (.gitkeep) — entra na Sprint 4
-│   │   (feedback/ ainda não existe)
+│   │   (feedback/ NÃO entra — decisão de 2026-08-22)
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui
 
@@ -180,7 +180,8 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
    estão em desenvolvimento (código real — 38 arquivos PHP em `Domains/Operation/`, 32 em
    `features/operation/`). `certification` segue como **scaffold vazio** dos dois lados — no
    backend, pastas sob `Domains/Certification/` sem nenhuma classe; no front, pasta com
-   `.gitkeep`/stores vazios. **`feedback` não existe** em nenhum dos dois (só na árvore-alvo acima).
+   `.gitkeep`/stores vazios. **`feedback` não existe e não vai existir** em nenhum dos dois: a decisão
+   de 2026-08-22 absorveu RF-FBK na documentação de turma (`files` + `TurmaDocumentType` + RN-16).
    O scaffold vazio de `certification` contraria a regra "não criar pastas vazias especulativas"
    (dívida consciente, herdada do bootstrap do repo): quando a Sprint 4 abrir `certification`, ou se
    preenche, ou se enxuga. Não é bloqueante.

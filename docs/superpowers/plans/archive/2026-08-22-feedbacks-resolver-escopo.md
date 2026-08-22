@@ -28,7 +28,9 @@ React 19 + TS, i18next, MySQL 8. Backend roda no container `app`; Pint roda no h
 - **Nada de `Domains/Feedback`, nada de tabela `feedbacks`.**
 - Comandos de backend rodam no container: `docker compose exec -T app php artisan ...`.
 - Pint roda no host, sempre com argumento: `cd backend && ./vendor/bin/pint <arquivos>`.
-- Catálogo tem **43** permissões no HEAD (`666d9d2a`); ao fim do bloco tem **41**.
+- Catálogo tem **42** permissões no HEAD (`666d9d2a`); ao fim do bloco tem **40**. (Corrigido na
+  execução: o plano dizia 43→41 por contagem de papel; a medição contra o base deu 42→40. O delta
+  `-2` sempre esteve certo — é ele que as provas cobram.)
 - Role `redator` tem **4** permissões no HEAD; ao fim do bloco tem **2**
   (`operation.turma.view`, `operation.turma.submit_docs`).
 - Um commit por task, mensagem em português, tipo convencional.
@@ -154,7 +156,7 @@ Um reviewer não aprovaria uma metade sem a outra.
 
 **Interfaces:**
 - Consumes: a catraca de duas metades da Task 1.
-- Produces: `PermissionCatalog::descriptions()` com **41** entradas e sem o grupo `feedback`;
+- Produces: `PermissionCatalog::descriptions()` com **40** entradas e sem o grupo `feedback`;
   `RolePermissionSeeder::redatorPermissions()` devolvendo exatamente
   `['operation.turma.view', 'operation.turma.submit_docs']`.
 
@@ -245,7 +247,7 @@ Esperado: tudo verde. `PermissionCatalogTest` compara a contagem do endpoint con
 docker compose exec -T app php -r "require 'vendor/autoload.php'; \$a=require 'bootstrap/app.php'; \$a->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo count(App\Domains\Identity\Support\PermissionCatalog::descriptions()), PHP_EOL;"
 ```
 
-Esperado: `41`.
+Esperado: `40`.
 
 - [ ] **Step 8: Pint e commit**
 
@@ -636,7 +638,7 @@ GET http://localhost:8080/api/permissions
 ```
 
 Esperado: nenhum item cujo `name` comece por `feedback.`; a contagem de itens bate com a do Step 3
-(`total` do banco) e com as **41** do catálogo.
+(`total` do banco) e com as **40** do catálogo.
 
 - [ ] **Step 6: A capacidade real do redator continua de pé**
 
@@ -739,11 +741,13 @@ O DoD do item é "requisito, planejamento e código deixam de divergir". Requisi
 
 Redija, sem escrever ainda:
 
-1. **Drive `requisitos-negocio.md`** (`17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`) — nota de estado sob a
+1. **Drive `requisitos-negocio.md`** (lido em `17l0yDorx7RtjtaaWRjep3_xYINLpBm1J`; recriado como
+   `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`) — nota de estado sob a
    seção RF-FBK: 01/02/04 implementados como documentação de turma (`files` +
    `MANUAL`/`PRUEBAS`/`EVALUACION_REDATOR` + gate RN-16); **03 segue futuro**, junto de RF-TUR-07. O
    requisito não é apagado nem reescrito — ganha estado, datado 2026-08-22.
-2. **Drive `entidade-feedback.md`** (`11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`) — a entidade não vira
+2. **Drive `entidade-feedback.md`** (lido em `11wSCY7J7yUEptJgjtSdRkiUuX6UttuGZ`; recriado como
+   `16YxxQ52VnEeoah_SCja6TubnvtOtMDql`) — a entidade não vira
    tabela na v2; o `[A CONFIRMAR]` sobre referência ao autor individual se resolve por inexistência:
    o documento pertence à turma, e a origem é o `type` do arquivo.
 3. **Notion 7.4.1** (`39dbc960-3dfa-81ef-ad6f-d908331d5059`) — status **`Done`**, com o mesmo resumo

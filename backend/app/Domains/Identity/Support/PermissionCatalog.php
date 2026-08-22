@@ -83,10 +83,6 @@ class PermissionCatalog
             'certification.certificate.view' => 'Ver certificados',
             'certification.certificate.issue' => 'Emitir certificado (Fluxo 5)',
             'certification.certificate.revoke' => 'Revogar certificado (Fluxo 6 — sensível, peso legal)',
-
-            // ---- Feedback ----
-            'feedback.feedback.view' => 'Ver feedbacks de turma',
-            'feedback.feedback.manage' => 'Gerir feedbacks de turma',
         ];
     }
 

@@ -57,4 +57,44 @@ class PermissionI18nParityTest extends TestCase
             }
         }
     }
+
+    /**
+     * O picker rotula cada GRUPO por `permGroup.<grupo>`, e o grupo é derivado
+     * do nome da permissão (`explode('.', $name)[0]`, como em
+     * `PermissionCatalog::toData()`). Sem esta catraca, apagar a última
+     * permissão de um grupo deixa o rótulo dele órfão nas 3 locales sem que
+     * nada reprove — foi exatamente o caso de `permGroup.feedback`.
+     */
+    public function test_todas_as_locales_cobrem_os_grupos_do_catalogo(): void
+    {
+        $esperados = array_values(array_unique(array_map(
+            fn (string $perm) => explode('.', $perm)[0],
+            array_keys(PermissionCatalog::descriptions()),
+        )));
+        sort($esperados);
+
+        foreach (self::LOCALES as $locale) {
+            $path = "/frontend/src/shared/config/locales/{$locale}.json";
+            $this->assertFileExists($path, "Locale {$locale} não encontrado em {$path}");
+
+            $json = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertArrayHasKey('permGroup', $json, "Locale {$locale} não tem o namespace `permGroup`");
+
+            $chaves = array_keys($json['permGroup']);
+            sort($chaves);
+
+            $this->assertSame(
+                $esperados,
+                $chaves,
+                "Locale {$locale}: chaves `permGroup.*` divergem dos grupos de PermissionCatalog::descriptions(). ".
+                'Faltando: '.implode(', ', array_diff($esperados, $chaves)).'. '.
+                'Sobrando: '.implode(', ', array_diff($chaves, $esperados)).'.',
+            );
+
+            foreach ($json['permGroup'] as $chave => $texto) {
+                $this->assertIsString($texto, "Locale {$locale}: `permGroup.{$chave}` não é string");
+                $this->assertNotSame('', trim($texto), "Locale {$locale}: `permGroup.{$chave}` está vazio");
+            }
+        }
+    }
 }
