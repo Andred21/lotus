@@ -154,5 +154,87 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-> A preencher depois da triagem com o João (Task 5 do plano). Até lá, os cinco achados
-> permanecem propostos: 3 `C` (UI-01, UI-02, UI-03) e 2 `B` (UI-04, UI-05).
+Triagem com o João em 2026-08-22 (Task 5 do plano): **os cinco achados entram na Task 6.** Quatro
+viraram correção neste bloco; o quinto esbarrou no fence de escopo e virou ficha. Cada correção foi
+medida na tela, no mesmo viewport do achado, antes e depois.
+
+| Achado | Classe | Destino | Commit |
+|---|---|---|---|
+| UI-01 | `C` | Corrigido | `d573c568` |
+| UI-02 | `C` | Corrigido | `3e6a9c47` |
+| UI-03 | `C` | Corrigido | `8ee6dd9e` |
+| UI-04 | `B` | Adiado — ficha `D-*` na Task 12 | — |
+| UI-05 | `B` | Corrigido | `582805df` + `e1c1a65e` |
+
+**UI-01 — `d573c568`.** O João escolheu, entre as duas formas propostas, a que faz a LINHA inteira
+virar link para `/operacion/turmas/:id`, no molde do `AgendaPanel`; o botão do cabeçalho sai, porque
+com N turmas pendentes ele não tem destino único e um controle por linha mantém uma parada de Tab
+por item (a mesma razão do UI-08 de 2026-08-17). A chave `dashboard.redator.pendencias.goToProfile`
+ficou órfã e saiu das três locales. Medido em 1440x900: antes 1 botão e 0 links; depois 0 botões e 3
+links — `/operacion/turmas/4`, `/1` e `/6` — e o clique na primeira linha abre a turma 4 com a aba
+"Documentación". Catraca em `PendenciasList.test.tsx`, vista reprovar por
+`Unable to find an accessible element with the role "link"`.
+
+**UI-02 — `3e6a9c47`.** Uma linha: cada tipo passa por `t('operation.documents.type.' + tipo)` antes
+do `join`, no molde do `CompliancePanel` (UI-07). Medido na linha de três tipos, em 1440x900:
+`"Falta: MANUAL, PRUEBAS, EVALUACION_REDATOR"` passa a
+`"Falta: Manual, Pruebas / evaluaciones, Evaluación del redactor"` (es-CL),
+`"Falta: Manual, Provas / avaliações, Avaliação do redator"` (pt-BR) e
+`"Missing: Manual, Tests / assessments, Editor assessment"` (en). Catraca vista reprovar com
+`Received: "…missing:MANUAL"` contra `Expected: "…missing:operation.documents.type.MANUAL"`.
+
+**UI-03 — `8ee6dd9e`.** O `truncate` sai da linha "Falta:", que passa a quebrar; o nome do curso
+acima segue truncando com `title`, e isso é deliberado — é frase única e recuperável, enquanto a
+lista de documentos é o dado acionável do card. `title` não seria saída aqui: hover não existe em
+toque, que é justamente o viewport do defeito. Medido em 390x844, na linha de três tipos, com
+`clientWidth` 244: antes `scrollWidth` 355 (es-CL), 316 (pt-BR) e 325 (en), todas cortadas — a
+correção UI-02 tinha piorado o caso, porque os rótulos traduzidos são mais longos que os códigos;
+depois as três em 244, sem corte, em 2 linhas, com `documentElement.scrollWidth` = 390, sem overflow
+horizontal. Em 1024x768 e 1440x900 seguem em 1 linha. **Sem catraca de teste, por decisão declarada
+no commit:** jsdom não faz layout, então `scrollWidth` e `clientWidth` saem sempre iguais e um teste
+aqui passaria com o defeito de pé. A prova é a medição.
+
+**UI-04 — adiado, com motivo.** A correção mora no backend e o bloco tem fence de frontend puro
+(`git diff main...HEAD -- backend/ generated.ts` vazio, decisão D1 da spec). Medido no código:
+`RedatorScopeQuery::resumo()` conta em `proximas_turmas` toda turma com `start_date > hoje`, sem
+horizonte, enquanto `agenda()` recorta `starting_soon` por `DashboardWindows::turmaHorizon()`, que é
+hoje + 7 dias (`TURMA_WINDOW_DAYS = 7`) — a turma 6 começa em 01-09-2026 e cai no vão. A divergência
+é de contrato entre KPI e agenda, não de tela. Foram consideradas e recusadas duas alternativas: abrir
+o fence (mudaria o escopo do bloco, exigiria Pint e teste de backend no main tree pela P-03, e revisão
+da D1) e explicitar a janela no rótulo do cliente ("Comienzan en 7 días"), que gravaria no frontend um
+`TURMA_WINDOW_DAYS` que não vem no payload — se o backend mudar para 14, o rótulo mente. Vira ficha
+`D-*` na Task 12, apontando para o bloco que tocar o Dashboard do backend.
+
+**UI-05 — `582805df`, refinado em `e1c1a65e`.** Correção de wrapper, no wrapper: `shared/ui` é o dono
+da customização de componente Prime (§5.6) e nenhum call-site sabe disso. Duas marcas, uma por canal:
+`aria-current="true"` no `<li role="menuitem">` via `pt.menuitem` — o `MenuItem` não aceita `aria-*` —
+comparando por `item.data` e não por índice; e a classe `p-highlight`, que é o vocabulário do próprio
+tema para "selecionado" e já vem pintada nos dois temas gerados, inclusive no par `p-highlight.p-focus`
+para quando o ativo é também o focado. No `brand-theme.css` fica só o canal não-cromático (peso 600,
+escopado em `.lotus-language-menu`), porque #ecf7fd sobre branco quase não existe em escala de cinza.
+Medido com o menu aberto: antes, os três itens com `bg rgba(0,0,0,0)`, peso 400 e `aria-current` nulo,
+e o único destaque era o `p-focus` no primeiro item — com a tela em EN, o menu marcava ES. Depois,
+claro/en: EN em #ecf7fd com texto #166287 (6,16:1) e peso 600, ES só com o foco neutro #e2e8f0 e peso
+400; claro/es-CL, onde o ativo É o focado: rgba(37,165,228,0.24) e 5,29:1; escuro/en: EN em
+rgba(37,165,228,0.16) e 600, ES focado em #334155. Catraca vista reprovar com
+`expected null to be 'true'`.
+
+O `e1c1a65e` é a resposta a dois Minor da revisão da Task 6, ambos no CSS do `582805df`: um
+`color: var(--highlight-text-color)` que nunca pousava (o Lara declara `color` no descendente
+`.p-menuitem-text`, e herança não vence declaração própria) e um comentário que creditava a vitória da
+regra à especificidade quando quem a faz vencer é o `@layer` — a folha é importada fora de layer e o
+tema inteiro vive em `@layer primereact`. Trocar a regra própria pelo `p-highlight` do tema dissolveu
+os dois e ainda recuperou o par ativo+focado, que antes saía com o mesmo fundo do ativo simples.
+
+### Falsos positivos: seguem descartados
+
+Os cinco descartes da §1 não foram reabertos na triagem e não viraram achado. Ficam registrados lá
+com o motivo, para não voltarem numa próxima passada.
+
+### Revisão da Task 6
+
+Revisão independente do intervalo `4c2ee085..582805df`: **conformidade com a spec ✅** (os quatro
+achados atendidos, nada extra construído) e **qualidade Approved**, com os dois Minor acima — pagos
+em `e1c1a65e`. O revisor reverteu os componentes para `4c2ee085` e reproduziu as quatro mensagens de
+falha das catracas, confirmando que nenhuma passa com o defeito de pé. Fence vazio; suíte em 90
+arquivos / 487 testes verdes; lint 0; build verde.
