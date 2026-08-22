@@ -9,7 +9,15 @@
 #     docker compose -f docker-compose.prod.yml -f docker-compose.prod-probe.yml up -d
 services:
   app:
-    depends_on: [gotenberg, mysql, minio]
+    # Só o mysql ganha service_healthy: o app abre conexão com ele já no
+    # arranque (SESSION_DRIVER/CACHE_STORE/QUEUE_CONNECTION=database, e o
+    # migrate roda logo em seguida). gotenberg e minio são consumidos sob
+    # demanda, em request, então service_started (o default da forma curta)
+    # já basta para eles.
+    depends_on:
+      gotenberg: {condition: service_started}
+      minio:     {condition: service_started}
+      mysql:     {condition: service_healthy}
 
   mysql:
     image: mysql:8.0

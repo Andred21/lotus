@@ -29,20 +29,35 @@ const SERVICOS_DE_DEV = ['mysql', 'minio', 'createbuckets', 'mailpit']
 const CHAVES_SENSIVEIS = ['APP_KEY', 'DB_PASSWORD', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'MAIL_PASSWORD']
 
 /**
- * Recorta o bloco de um serviço (da linha "  <nome>:" até a próxima linha de
- * serviço no mesmo nível de indentação, ou o fim do arquivo). A âncora
- * aceita qualquer coisa depois dos dois-pontos na mesma linha (ex.: um
- * comentário de fim de linha, "  nginx: # entrega SPA + API") — só o nome do
- * serviço e a indentação de 2 espaços importam. Usado pelas asserções que
- * precisam provar uma propriedade DENTRO de um serviço específico, e não em
- * qualquer lugar do arquivo.
+ * Bind mount se reconhece pela origem começando com "." ou ".." (sozinho ou
+ * seguido de "/", cobrindo "- .:/x" e "- ./x:/y"), "/" absoluto, "~" (home)
+ * ou "$" (variável de ambiente) — na forma curta de lista. Na forma longa,
+ * pelo marcador "type: bind" (em bloco ou inline num mapeamento de fluxo
+ * "{type: bind, ...}"). Volume nomeado ("- nome:/caminho", origem é um
+ * identificador simples) não bate em nenhum dos dois. Compartilhado pelos
+ * dois describes deste arquivo — compose de produção e overlay de sonda —
+ * para provar a mesma propriedade nos dois arquivos que a prova de DoD nº4
+ * mergeia.
  */
-function blocoDoServico(nome: string): string {
-  const inicio = new RegExp(`^ {2}${nome}:.*$`, 'm').exec(PROD)
+const origemBindMount = /^\s*-\s*["']?(\.{1,2}(?=[:/])|\/|~|\$)/m
+const tipoBindMountLongo = /\btype:\s*bind\b/
+
+/**
+ * Recorta o bloco de um serviço (da linha "  <nome>:" até a próxima linha de
+ * serviço no mesmo nível de indentação, ou o fim do texto). A âncora aceita
+ * qualquer coisa depois dos dois-pontos na mesma linha (ex.: um comentário
+ * de fim de linha, "  nginx: # entrega SPA + API") — só o nome do serviço e
+ * a indentação de 2 espaços importam. Usado pelas asserções que precisam
+ * provar uma propriedade DENTRO de um serviço específico, e não em qualquer
+ * lugar do arquivo. Recebe o texto a recortar (default PROD) para servir
+ * também o describe do overlay, contra PROBE.
+ */
+function blocoDoServico(nome: string, texto: string = PROD): string {
+  const inicio = new RegExp(`^ {2}${nome}:.*$`, 'm').exec(texto)
   if (!inicio) {
-    throw new Error(`serviço "${nome}" não encontrado em docker-compose.prod.yml`)
+    throw new Error(`serviço "${nome}" não encontrado no texto informado`)
   }
-  const resto = PROD.slice(inicio.index + inicio[0].length)
+  const resto = texto.slice(inicio.index + inicio[0].length)
   const fimRelativo = resto.slice(1).search(/^ {2}\S/m)
   return fimRelativo === -1 ? resto : resto.slice(0, fimRelativo + 1)
 }
@@ -90,15 +105,7 @@ describe('docker-compose.prod.yml', () => {
   it('não declara bind mount em serviço nenhum — volume nomeado para dado persistente é permitido, bind mount do working tree do host não', () => {
     // A propriedade é sobre a ORIGEM do mount, não sobre a chave `volumes:`
     // em si — essa chave também abriga volume nomeado, legítimo (ex.:
-    // storage). Bind mount se reconhece pela origem começando com "." ou
-    // ".." (sozinho ou seguido de "/", cobrindo "- .:/x" e "- ./x:/y"),
-    // "/" absoluto, "~" (home) ou "$" (variável de ambiente) — na forma
-    // curta de lista. Na forma longa, pelo marcador "type: bind" (em bloco
-    // ou inline num mapeamento de fluxo "{type: bind, ...}"). Volume
-    // nomeado ("- nome:/caminho", origem é um identificador simples) não
-    // bate em nenhum dos dois.
-    const origemBindMount = /^\s*-\s*["']?(\.{1,2}(?=[:/])|\/|~|\$)/m
-    const tipoBindMountLongo = /\btype:\s*bind\b/
+    // storage). Ver o docblock de origemBindMount/tipoBindMountLongo acima.
     for (const regiaoVolumes of regioesDaChave(PROD, 'volumes')) {
       expect(regiaoVolumes).not.toMatch(origemBindMount)
       expect(regiaoVolumes).not.toMatch(tipoBindMountLongo)
@@ -173,6 +180,31 @@ describe('docker-compose.prod-probe.yml', () => {
   })
 
   it('não redefine env_file: a prova troca o arquivo pela variável LOTUS_ENV_FILE', () => {
-    expect(PROBE).not.toMatch(/env_file:/)
+    // Ancorado em início de linha e sem comentário, como a mesma checagem no
+    // describe do compose de produção — um comentário futuro explicando por
+    // que o overlay não usa env_file: não pode reprovar a catraca à toa.
+    const semLinhasDeComentario = PROBE.split(/\r?\n/)
+      .filter((linha) => !/^\s*#/.test(linha))
+      .join('\n')
+    expect(semLinhasDeComentario).not.toMatch(/^ {4}env_file:/m)
+  })
+
+  it('não declara bind mount de código no app do overlay', () => {
+    // Mesma propriedade do describe do compose de produção, medida sobre o
+    // arquivo que falta guardar: a prova de DoD nº4 (mudar código no host
+    // não muda o container) roda sobre a stack MERGEADA, e o overlay é o
+    // segundo arquivo do merge — um bind mount aqui passaria batido.
+    for (const regiaoVolumes of regioesDaChave(blocoDoServico('app', PROBE), 'volumes')) {
+      expect(regiaoVolumes).not.toMatch(origemBindMount)
+      expect(regiaoVolumes).not.toMatch(tipoBindMountLongo)
+    }
+  })
+
+  it('não redefine image: no app do overlay', () => {
+    // O app do overlay só acrescenta depends_on; a imagem continua vindo do
+    // compose de produção. Uma image: aqui destrancaria a mesma brecha do
+    // teste anterior por outra porta — o container deixaria de rodar a
+    // imagem buildada e testada.
+    expect(blocoDoServico('app', PROBE)).not.toMatch(/^ {4}image:/m)
   })
 })
