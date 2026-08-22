@@ -3,26 +3,27 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: feedbacks-resolver-escopo
-workflow_state: ready_for_execution
-next_owner: claude
-next_action: execute_active_plan
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
-active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
-context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
+
 lanes:
   lane-a:
-    active_work_item: feedbacks-resolver-escopo
-    workflow_state: ready_for_execution
-    next_owner: claude
-    next_action: execute_active_plan
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
-    branch: null  # feat/feedbacks-resolver-escopo, criada na execução
-    active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
-    active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
-    context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
+    branch: feat/feedbacks-resolver-escopo
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
   lane-b:
@@ -51,9 +52,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
-last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: c8480eee
-updated_at: 2026-08-22T23:40:00-03:00
+last_completed_work_item: feedbacks-resolver-escopo
+state_basis_commit: 8c6dea02
+updated_at: 2026-08-22T23:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -131,7 +132,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco (item da fila) | Frente | Árvore | Branch |
 |---|---|---|---|---|
-| `lane-a` | `feedbacks-resolver-escopo` (1) | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo`, na execução |
+| `lane-a` | ~~`feedbacks-resolver-escopo` (1)~~ — **fechado em 2026-08-22** | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo` (não mesclada) |
 | `lane-b` | `infra-producao-runtime-e-aws` (10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` |
 | `lane-c` | `BD-15-docs-guardrails-e-sincronizacao` (14) | Docs | `../lotus-bd15` | `docs/bd15-guardrails-e-sincronizacao` |
 
@@ -148,10 +149,12 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
-> **A `lane-c` fechou em 2026-08-22** e está `idle` em `lanes:`; a árvore `../lotus-bd15` segue
-> existindo com a branch `docs/bd15-guardrails-e-sincronizacao` **não mesclada** — o merge é passo
-> do João, e a integração é serial (uma lane por vez). A tabela acima fica como registro da seleção
-> que promoveu as três, não como lista do que está ativo agora.
+> **A `lane-a` e a `lane-c` fecharam em 2026-08-22** e estão `idle` em `lanes:`; só a `lane-b`
+> (`infra-producao-runtime-e-aws`) segue viva, em `context_required`. A `lane-a` já mesclou na `main`
+> (PR #65); a árvore `../lotus-bd15` da `lane-c` segue existindo, com a branch
+> `docs/bd15-guardrails-e-sincronizacao` **não mesclada** — a integração é serial e o merge é passo
+> do João. A tabela acima fica como registro da seleção que promoveu as três, não como lista do que
+> está ativo agora.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -162,10 +165,10 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
+| 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 | 2026-08-22 | `bd12-load-state-e-listas` | BD-12 dos blocos de dívida |
 | 2026-08-20 | `bd18-useloadstate-promise-e-forma` | BD-18 dos blocos de dívida |
 | 2026-08-20 | `bd14-contrato-de-entrada` | BD-14 do backlog |
-| 2026-08-20 | `bd17-superficie-de-arquivados` | BD-17 dos blocos de dívida |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

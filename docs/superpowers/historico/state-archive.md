@@ -217,6 +217,108 @@ refactor não perdeu teste —, `repo-docs-refs` 14 verde com os paths novos, Pi
 
 ---
 
+## Fechado em 2026-08-22 — `feedbacks-resolver-escopo`, item 1 da fila consolidada
+
+Sete tasks do `active_plan` executadas e provadas; branch `feat/feedbacks-resolver-escopo`, main
+tree (gate P-03), commits `f6b04b45`..`6b4585ea` mais o commit documental deste handoff.
+
+- **Comportamento provado fora da suíte**, não por ferramenta verde: banco de dev de 42 para 40
+  permissões, órfãs `feedback.*` em 0, role `redator` de 4 para 2; `migrate:rollback` devolveu as
+  duas e `migrate` removeu de novo; `GET /api/permissions` com sessão de admin real devolveu 40
+  itens em 5 grupos, zero `feedback.*`; sessão de redator ativo trouxe 2 permissões e
+  `POST /api/turmas/6/documents` respondeu **201** — a prova de que a remoção não tirou capacidade.
+- **Registro externo (Task 7) escrito com OK do João, documento a documento.** O MCP do Drive não
+  edita conteúdo no lugar, então os dois documentos foram recriados e os originais foram para a
+  lixeira, pela rota que o João escolheu. IDs vigentes: `requisitos-negocio.md` =
+  `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`, `entidade-feedback.md` =
+  `16YxxQ52VnEeoah_SCja6TubnvtOtMDql`; Notion 7.4.1 em `Concluída`.
+- **Resíduo declarado, não escondido:** `DeleteTurmaDocumentAction` é soft delete, então a sonda de
+  upload deixou `files#43` arquivada e inerte (index devolve `[]`). Hard-delete seria escrita
+  destrutiva fora dos paths autorizados pelo plano.
+
+### Review de sprint — 2026-08-22: 4 achados, nenhum de comportamento
+
+Classificação **alto risco** (RBAC + migration), então além do gabarito do projeto rodou a segunda
+lente do Codex em read-only sobre o mesmo intervalo. **Órfãos: limpo. Leis §5: nenhuma ferida** —
+`permissions` é tabela do Spatie, sem `Auditable`, então a §5.2 não é alcançada pela escrita da
+migration.
+
+Os quatro achados eram de registro e de força de teste. **O João aprovou Q-1, Q-2 e Q-3**, aplicados
+em `dfb18d8d`; **Q-4 ficou deferido** e foi para o `backlog.md`, no bloco 3 (`hardening-acesso-
+ownership-e-integridade`), que é onde o resto do RBAC se fortalece.
+
+- **Q-1** — `.claude/rules/backend-ddd.md` e `docs/estrutura-monolito.md` (3 sítios) ainda
+  declaravam `Feedback` como domínio a criar. A rule é **normativa e path-scoped**: entra sozinha em
+  qualquer toque a `backend/app/**`, e dizia "não existe ainda" — promessa de futuro contra a D1.
+- **Q-2** — `docs/README.md` mantinha 26 tabelas-alvo / 19 de domínio contra as 25 / 18 que o bloco
+  escreveu no DER; divergência criada pelo próprio bloco.
+- **Q-3** — o `active_plan` prometia 43→41 permissões em 4 sítios; o medido é 42→40.
+- **Q-4 (deferido)** — os testes da migration não cobrem o filtro `guard_name` nem o
+  `forgetCachedPermissions()` do `up()`: apagar qualquer um dos dois deixa a suíte verde (lição 10).
+  Impacto hoje baixo — o banco só tem o guard `web` (medido) e o projeto não usa teams.
+
+As correções tocaram **somente documentação** — `git diff` do commit não traz nenhum arquivo de
+`backend/` ou `frontend/`, então suíte, build e lint do bloco seguem válidos como provados.
+
+### Fechamento — 2026-08-22: o DoD reprovado contra o banco de dev, e uma pendência que o próprio bloco venceu
+
+**Item 0 do gate, refeito e não herdado.** A suíte roda em sqlite `:memory:` com o catálogo já
+limpo, então ela não é prova deste bloco — o que se remediu foi o banco de dev e a API:
+
+- ciclo completo da migration: **40** permissões e **0** órfãs; `migrate:rollback --step=1` devolveu
+  as duas `feedback.*` e o total voltou a **42**; `migrate` removeu de novo, órfãs em **0** e a role
+  `redator` de volta às suas **2** (`operation.turma.view`, `operation.turma.submit_docs`);
+- `GET /api/permissions` com sessão de admin real (cookie Sanctum, `Origin` + `Accept`) devolveu
+  **200 com 40 itens em 5 grupos** — `identity` 6, `commercial` 16, `catalog` 5, `operation` 10,
+  `certification` 3 — e **zero** `feedback.*`;
+- sessão de **redator ativo** (`juan.morales@lotus.cl`) trouxe **exatamente 2** permissões, e
+  `GET /api/turmas/6` e `GET /api/turmas/6/documents` responderam **200/200**: a remoção não tirou
+  capacidade. O `POST` de documento **não** foi repetido — foi provado em **201** na execução, e
+  repetir só criaria uma segunda sonda soft-deleted. O `[]` do index confirma que a `files#43` da
+  execução segue inerte.
+
+**Resto do gate.** Suíte **877 testes / 3131 asserções / 0 falha / 5 skipped**; `pnpm lint` exit 0;
+`pnpm build` verde; `pnpm test` 87 arquivos / 481 testes; Pint `passed` nos 5 arquivos da sprint;
+`typescript:transform` rodado e `generated.ts` **sem diff** — nenhum DTO no intervalo. Nenhuma lei
+do §5 ferida. Nenhum `.gitkeep` órfão, nenhum placeholder, zero `feedback` residual em catálogo,
+seeder e nas três locales.
+
+**O comando de teste documentado morreu de novo, e é a P-50** — `Allowed memory size of 134217728
+bytes exhausted … PhpEngine.php:62`. Terceira medição consecutiva com o pico encostando no teto
+(129, 127, 129 MB). A ficha ganhou a medição de hoje; o gate rodou pelo binário direto, como ela
+manda.
+
+**A P-43 fechou aqui, e o gate parou para isso.** O `608a436c` tocou `docs/der-fisico.md`, que era
+exatamente o gatilho da ficha. Honrá-la mexia no contador que o **Q-2 do review** tinha acabado de
+reescrever (`26/19` → `25/18`), então a decisão foi do João, não minha. **O alcance era maior que os
+quatro sítios registrados:** medido contra o banco, `certificates` tem 6 linhas e
+`certificate_sequences` tem 1, ambas de `2026_08_05_100000_certificates.php`. As duas saíram de
+`Tabelas PLANEJADAS` para uma seção `Certification` em `IMPLEMENTADAS`, **escrita a partir da
+migration e não do rascunho PT/ES** — o rascunho prometia um `qr_code_hash UK` que não existe em
+lugar nenhum do backend e omitia `redator_id`, `snapshot`, `revoked_at`, `revocation_reason` e a
+coluna gerada `active_enrollment_id`. O contador virou "18 de domínio, todas implementadas", a
+seção virou `Tabelas que NÃO existem (e por quê)` e a legenda que explicava a convenção de tabela
+planejada saiu, porque não descrevia mais nada.
+
+**Efeito colateral no backlog, registrado e não silencioso:** a P-43 saiu do escopo do **BD-15**, e a
+ficha do **D-17** parou de chamar as permissões `feedback.*` de "instância viva" — este bloco as
+apagou. O D-17 mudou de natureza: perdeu o caso vivo e ganhou o **caso de regressão**, porque a
+catraca que ele pede tem de reprovar justamente a aresta que este bloco removeu à mão.
+
+**Rastro:** a **P-40** saiu de `encerradas.md` (primeiro fechamento posterior ao do BD-12) e a
+**P-43** entrou. Abertas: **29 → 28**. Plano e spec arquivados; a entrega mais antiga do
+`progress.md` (2026-08-17, Dashboard B2) desceu **verbatim** para o `progress-archive.md`, que
+mantém o limite de dez.
+
+**A branch `feat/feedbacks-resolver-escopo` não foi mesclada** — merge é passo do
+`finishing-a-development-branch`, e a integração é serial entre lanes. Decisão do João.
+
+**Estado: `idle` na lane-a.** As lanes `b` e `c` seguem em `context_required` com o Codex; o foco
+continua em `lane-a` de propósito — mudar de foco é promover trabalho, e o backlog não promove
+sozinho.
+
+---
+
 ## Fechado em 2026-08-22 — `bd12-load-state-e-listas`, BD-12 dos blocos de dívida
 
 ### Merge da `main` — 2026-08-22: a árvore que a prova exigia

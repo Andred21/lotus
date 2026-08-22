@@ -69,11 +69,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
 | P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-43 | `der-fisico.md` chamava `certificates` de "planejada"; existe desde a Sprint 4 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
+| P-43 | `der-fisico.md` chamava `certificates` de "planejada"; as duas tabelas de Certification existem desde 2026-08-05 | 2026-08-22, nas duas lanes (`feedbacks-resolver-escopo` e `BD-15`) | primeiro fechamento **posterior** a este |
 
-**A P-40 saiu neste fechamento** (`BD-15`), que é o primeiro posterior ao do BD-12 — a condição que
-a linha dela pedia. Antes disso, a P-29 e a P-35 saíram no fechamento do BD-12, primeiro posterior ao
-do BD-14. O rastro fica nos commits e nas linhas de entrega em
+**A P-40 saiu nestes fechamentos** — os dois são posteriores ao do BD-12, que é a condição que a
+linha dela pedia; as duas lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no
+fechamento do BD-12, pelo mesmo critério contra o BD-14. O rastro de todas fica nos commits e nas
+linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
 A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do

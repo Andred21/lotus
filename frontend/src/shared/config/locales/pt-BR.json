@@ -140,8 +140,7 @@
     "commercial": "Comercial",
     "catalog": "Catálogo",
     "operation": "Operação",
-    "certification": "Certificação",
-    "feedback": "Feedback"
+    "certification": "Certificação"
   },
   "perm": {
     "identity_user_view": "Ver usuários, redatores e alunos",
@@ -183,9 +182,7 @@
     "operation_turma_submit_docs": "Subir documentação da turma (Fluxo 1/4 — ação do redator)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Fluxo 5)",
-    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)",
-    "feedback_feedback_view": "Ver feedbacks de turma",
-    "feedback_feedback_manage": "Gerir feedbacks de turma"
+    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)"
   },
   "role": {
     "new": "Novo perfil",

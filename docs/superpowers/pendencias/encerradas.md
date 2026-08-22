@@ -112,7 +112,7 @@ ao encerramento dela: história de bloco fechado não se reescreve — a diverg�
 
 ---
 
-## P-43 — `der-fisico.md` lista `certificates` como "planejada", e a tabela existe desde a Sprint 4
+## P-43 — `der-fisico.md` listava `certificates` como "planejada", e as tabelas existem desde a Sprint 4
 
 **Nasceu como P-41 no fechamento do `dashboard-backend-agregacoes` e foi renumerada no merge com a
 `main`**, que já usava o ID pelo fechamento da `celula-de-identidade` — quem renumera é a recém-chegada.
@@ -135,13 +135,45 @@ nos quatro sítios de status. A tabela foi entregue na Sprint 4 (Bloco 7) e este
 diretamente sobre ela (`Certificate`, `CertificateStatus`, `scopeEmitidos`), com o
 `DomainDependencyTest` declarando as duas arestas. Diverge o **status escrito**, nunca o schema.
 
-**Encerrada em 2026-08-22 pelo BD-15 — com escopo ampliado por decisão do João.** Os quatro sítios de status deixaram de chamar `certificates` de planejada, mas a medição contra `backend/database/migrations/2026_08_05_100000_certificates.php` reprovou a premissa desta ficha: a linha 74 **não** estava correta (omitia `redator_id`, `snapshot`, `revoked_at`, `revocation_reason`, `timestamps` e a coluna gerada `active_enrollment_id`, e inventava um `qr_code_hash` que não existe), e as duas tabelas viviam sob `## Tabelas PLANEJADAS`. A reconciliação autorizada moveu `certificates` e `certificate_sequences` para uma subseção `### Certification` de `## Tabelas IMPLEMENTADAS`, reescreveu as duas fichas a partir da migration e corrigiu o total para **28 tabelas — 21 de domínio (20 implementadas, `feedbacks` no papel) + 7 RBAC/transversal**, incluindo `login_logs` e `invitation_tokens`, que faltavam na enumeração. A ausência de ficha de colunas de `invitation_tokens` virou a **P-52**.
+**Encerrada em 2026-08-22 — pelas DUAS lanes, em paralelo, e o merge delas é o registro final.**
+A `lane-a` (`feedbacks-resolver-escopo`) a fechou pelo gatilho literal: o commit `608a436c` tocou
+`docs/der-fisico.md` por outro motivo (mapear RF-FBK à documentação de turma). A `lane-c` (BD-15) a
+fechou pelo escopo próprio, com **ampliação autorizada pelo João**. As duas mediram contra
+`backend/database/migrations/2026_08_05_100000_certificates.php` e chegaram a sítios que se somam:
+
+- **Os quatro sítios de status da ficha** perderam o "(planejada)" — `courses` 1:N, `enrollments`
+  1:1, a linha de descrição e o contador.
+- **Um quinto sítio, que a ficha não contava** (medido pela `lane-a`): a seção `Tabelas PLANEJADAS`
+  ainda abria com "Não existem como migration ainda" e trazia as duas tabelas em rascunho PT/ES.
+  Virou `Tabelas que NÃO existem (e por quê)`, que hoje só guarda o registro da decisão de Feedback.
+  A legenda do topo que explicava "Tabelas planejadas = mantidas em PT/ES" saiu junto: nenhuma
+  tabela de domínio segue no papel.
+- **A premissa da própria ficha caiu** (medido pela `lane-c`): a linha 74 **não** estava correta —
+  omitia `redator_id`, `snapshot`, `revoked_at`, `revocation_reason`, `timestamps` e a coluna gerada
+  `active_enrollment_id`, e inventava um `qr_code_hash` que **não existe em lugar nenhum do backend**
+  (`grep` vazio). As duas lanes reescreveram a ficha a partir da migration, não do rascunho.
+- **Existência provada contra o banco de dev** (`lane-a`): `certificates` com 6 linhas,
+  `certificate_sequences` com 1.
+
+**O contador foi a única coisa que as duas lanes escreveram diferente, e o merge o remediu por
+medição.** A `lane-a` gravou `25 tabelas — 18 de domínio`; a `lane-c`, `28 — 21 (20 implementadas,
+`feedbacks` no papel)`. Nenhum dos dois sobreviveu ao merge: a `lane-a` descopou a tabela `feedbacks`
+e a `lane-c` acrescentou `login_logs` e `invitation_tokens`, que faltavam na enumeração. Contado
+pelos `Schema::create` das migrations em 2026-08-22, o valor é **27 tabelas — 20 de domínio, todas
+implementadas + 7 RBAC/transversal**, e é o que o documento carrega.
+
+A ausência de ficha de colunas de `invitation_tokens` virou a **P-52**.
+
+**Sai quando:** primeiro fechamento **posterior** a este.
 
 ---
 
 ## Rastro anterior, já removido
 
-A **P-29** (corrida de unicidade entre transações subindo 500) e a **P-35** (o ADR-17 defendido em
+A **P-40** (o ramo "catálogo genuinamente vazio" do BD-6 medido em `d20bebc`, não remedido contra
+HEAD) foi encerrada em 2026-08-22, no `bd12-load-state-e-listas`, e saiu aqui, no fechamento do
+`feedbacks-resolver-escopo` (2026-08-22) — o primeiro **posterior** ao do BD-12, que é o que a linha
+do índice pedia. A **P-29** (corrida de unicidade entre transações subindo 500) e a **P-35** (o ADR-17 defendido em
 duas profundidades) foram encerradas em 2026-08-20, no `bd14-contrato-de-entrada`, e saíram aqui, no
 fechamento do `bd12-load-state-e-listas` (2026-08-22) — o primeiro **posterior** ao do BD-14, que é o
 que a linha do índice pedia. A **P-36** (catraca `COR_HARDCODED` cega para `style={{ }}`) e a
