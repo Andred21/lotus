@@ -2,11 +2,11 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: identity
+active_work_item: hardening-acesso-ownership-e-integridade
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -15,45 +15,46 @@ blocker: null
 
 lanes:
   lane-a:
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: main-tree
-    branch: feat/feedbacks-resolver-escopo
-    active_spec: null
-    active_plan: null
-    context_packet: null
-    blocker: null
-    resume_state: null
-  lane-b:
-    active_work_item: infra-producao-runtime-e-aws
+    active_work_item: hardening-acesso-ownership-e-integridade
     workflow_state: context_required
     next_owner: codex
     next_action: generate_context_packet
-    tree: ../lotus-infra
-    branch: infra/producao-runtime-e-aws
+    tree: main-tree
+    branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
+    last_completed_work_item: feedbacks-resolver-escopo
+  lane-b:
+    active_work_item: infra-producao-runtime-e-aws
+    workflow_state: ready_for_review
+    next_owner: claude
+    next_action: request_code_review
+    tree: ../lotus-infra
+    branch: infra/producao-runtime-e-aws
+    active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
+    active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
+    context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
+    blocker: null
+    resume_state: null
   lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: null   # ../lotus-bd15 removida em 2026-08-22, depois do merge
-    branch: null # docs/bd15-guardrails-e-sincronizacao mesclada no PR #66 e apagada (era 79fec64f)
+    active_feature: frontend
+    active_work_item: frontend-revisao-ui-por-modulo
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_execution
+    tree: ../fix-frontend
+    branch: refactor/frontend-revisao-ui
     active_spec: null
-    active_plan: null
+    active_plan: null   # exceção declarada — ver "Lane-c" abaixo
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 8c6dea02
+state_basis_commit: f6649297
 updated_at: 2026-08-23T00:20:00-03:00
 ---
 
@@ -149,14 +150,47 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
-> **A `lane-a` e a `lane-c` fecharam e mesclaram em 2026-08-22** — `lane-a` no PR #65, `lane-c` no
-> PR #66 (merge `61acc0c3`); as duas estão `idle` em `lanes:`. A `lane-c` teve **worktree e branch
-> destruídas** depois do merge, por decisão do João, e por isso o `tree` e o `branch` dela são
-> `null`. A `lane-a` rodou no main tree, então ela mantém `tree: main-tree`; o `branch` dela ainda
-> nomeia `feat/feedbacks-resolver-escopo`, que é registro de onde o trabalho saiu e **não** promessa
-> de que a branch exista. Só a `lane-b` (`infra-producao-runtime-e-aws`, `../lotus-infra`) segue
-> viva, em `context_required`. A tabela acima fica como registro da seleção que promoveu as três,
-> não como lista do que está ativo agora.
+> A tabela acima é **registro da seleção de 2026-08-22**, não a lista do que está ativo. Os itens 1
+> e 14 fecharam e mesclaram no mesmo dia (PR #65 e PR #66, merge `61acc0c3`), e as duas lanes foram
+> reatribuídas. O que está vivo agora está na seção abaixo.
+
+## Ocupação corrente — 2026-08-23
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `context_required` |
+| `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
+
+**A `lane-a` recebeu o item 3 em 2026-08-23, por promoção explícita do João.** É backend, então roda
+no main tree e satisfaz o gate sem reabrir a P-03: a `lane-b` é infra e a `lane-c` é frontend — não
+há backend ∥ backend. O bloco é `Contexto: sim`, logo nasce em `context_required` e o packet vem do
+Codex antes do brainstorming. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
+e aí regenera `generated.ts` (lei §5.3).
+
+**A `lane-b` está em `ready_for_review`, não em `context_required`.** O estado da main dizia o
+segundo e o `state.md` da própria `../lotus-infra` dizia o primeiro — divergência corrigida em
+2026-08-23 a favor da árvore da lane, que é quem tem o trabalho. A árvore dela ainda carrega
+`schema_version: 1` (nasceu antes do modo multi-lane); ela converge no fechamento, não antes.
+
+**A `lane-c` é a worktree `../fix-frontend`, e o registro dela nasceu atrasado.** A lane executava o
+item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido aqui. Duas irregularidades ficam
+**declaradas, não descobertas depois**:
+
+- **`active_plan` é `null` com a lane em `executing`**, contra a invariante que o exige a partir de
+  `ready_for_execution`. Exceção decidida pelo João em 2026-08-23: o item 16 é revisão iterativa
+  dirigida pelas runs de `/lotus-ui-review`, uma superfície por vez, e o artefato durável de cada
+  passada é o relatório datado em `audits/` — não um plano escrito na frente. `ac4eef8a` já entregou
+  os 6 wrappers de `shared/ui` da primeira passada.
+- **O item 16 foi acrescentado ao `backlog.md` pela worktree** (`eaa9e15c`), contra a invariante que
+  reserva ao main tree acrescentar item à fila. O texto **não foi duplicado aqui** por decisão do
+  João: duplicá-lo garantiria conflito no merge sem ganho. Ele entra na main pelo merge da lane e
+  sai no `/fechar-sprint` dela. Até lá, **a fila canônica do item 16 mora na branch**, não neste
+  tree.
+
+Interseção a vigiar entre as lanes vivas: a `lane-c` mexe em `shared/ui` e nos mocks de
+`react-i18next`; a `lane-a` é backend e só toca frontend se a D-34 abrir o contrato. Integração
+segue serial — a `lane-b` mescla primeiro, e as outras rebasam.
 
 ## Itens fechados — ponteiro, não narrativa
 
