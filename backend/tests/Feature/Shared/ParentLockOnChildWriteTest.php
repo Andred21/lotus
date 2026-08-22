@@ -25,6 +25,15 @@ use Tests\TestCase;
  * commitar) e depois deixa B pousar o filho sob o pai recém-arquivado. Quem
  * RECUSA é o `trashed()` de dentro do `lockForWrite`. Molde: `Client`, cujos
  * seis escritores de filho chamam `Client::lockForWrite()`.
+ *
+ * `DesignateRedatorAction` é o único TOMAM_LOCK que não fecha ESTE modo de
+ * falha: o pivot `turma_redator` fica fora das duas cascatas de propósito
+ * (`Turma::booted`, `redatores()` com `withTrashed()`) — designação sobrevive
+ * a arquivamento por design, não é filho que escapa de varredura. O lock aqui
+ * fecha outra janela: `Redator::lockForWrite()` recusa uma designação NOVA
+ * contra redator sendo arquivado na mesma transação — nega negócio novo
+ * contra entidade arquivando, não escape de cascata. Revisado e confirmado
+ * em 2026-08-22 (achado do reviewer da Task 6).
  */
 class ParentLockOnChildWriteTest extends TestCase
 {
