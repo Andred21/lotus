@@ -110,7 +110,10 @@ classe; o que muda é que quem reabrir a P-32 não vai regastar o desenho já re
 
 ## 7. Notion — o que escreve, e as duas travas
 
-**Escreve** (18 páginas de status + 1 propriedade), tudo por ID vindo do packet:
+**Escreve** (18 páginas de status + 1 propriedade), tudo por ID vindo do packet. O valor alvo de
+status é **`Concluída`** — a mesma opção que as páginas de fechamento das sprints 1 a 3 já carregam na
+base canônica, medida no packet; nenhum valor novo é inventado, e o conjunto exato de opções da
+propriedade é conferido no `fetch` do schema antes do primeiro write:
 
 - Dashboard `8.4.0`–`8.4.7` — 8 páginas, hoje `Backlog`, feature entregue em 2026-08-17;
 - Meu Perfil `8.5.1`–`8.5.9` — 9 páginas, hoje `Backlog`, feature entregue em 2026-08-18;
