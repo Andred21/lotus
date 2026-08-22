@@ -45,3 +45,22 @@
 A `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e emissão de
 certificado. **Nenhum bloco de código foi aberto para repetir essa cobertura** — o backlog proíbe
 explicitamente, e o que estava errado era o status da página.
+
+## P-18 — página de fechamento com `Sprint` divergente
+
+O ID que a ficha citava (`f88bc9603dfa8253b40981686f8ae023`) pertence à base **obsoleta**
+`collection://6adbc960-3dfa-8269-9d57-8719e44eed2c` e está `deleted`. O alvo canônico é outro.
+
+| Página | Page ID | Campo | Antes | Depois |
+|---|---|---|---|---|
+| H.1.3.2 fechamento | `3a2bc9603dfa8067902cf3c62bffdb0d` | descrição | Fechamento — Sprint 3 | Fechamento — Sprint 2 |
+| H.1.3.2 fechamento | `3a2bc9603dfa8067902cf3c62bffdb0d` | propriedade `Sprint` | Sprint 2 · Comercial | Sprint 2 · Comercial (não tocada) |
+
+**Evidência que decidiu qual lado cede:** a página irmã `3a2bc9603dfa8028a1fbf8a3863690ed` carrega o
+mesmo EAP `H.1.3.2` e a mesma descrição `Fechamento — Sprint 3`, mas com a propriedade
+`Sprint 3 · Acadêmico`. A Sprint 3 já tem a página de fechamento dela; logo a canônica é a da
+Sprint 2 e a descrição é que era resíduo de cópia. A propriedade ficou.
+
+**Medido e deliberadamente NÃO escrito:** as duas páginas compartilham o EAP `H.1.3.2`. Corrigir o
+EAP de uma delas escolheria qual das duas sprints perde o código — decisão do João, fora do que
+este bloco autorizou.
