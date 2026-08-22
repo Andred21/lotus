@@ -2,7 +2,8 @@
 
 > Histórico curto do que foi entregue e da feature em andamento. Este arquivo **não define a etapa
 > operacional**. Para saber o que fazer agora, leia `docs/superpowers/state.md`.
-> Fila futura: `docs/superpowers/backlog.md`. Histórico antigo: `progress-archive.md`.
+> Fila futura: `docs/superpowers/backlog.md`. Histórico antigo: `progress-archive.md`. Narrativa
+> integral de cada bloco fechado (o que era a parte de baixo do `state.md`): `state-archive.md`.
 >
 > **Cinco colunas, de propósito (P-23, decidido em 2026-08-22).** O formato antigo tinha sete, com
 > `Contexto`/`Plano`/`Spec` separadas; aqui plano, spec, context packet e commits vivem juntos na
