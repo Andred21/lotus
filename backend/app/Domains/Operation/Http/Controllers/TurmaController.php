@@ -21,6 +21,7 @@ use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchiveTrailQuery;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -46,9 +47,9 @@ class TurmaController extends Controller implements HasMiddleware
     }
 
     /** @return array<TurmaData> */
-    public function index(TurmaHabilitacaoService $habilitacao): array
+    public function index(Request $request, TurmaHabilitacaoService $habilitacao): array
     {
-        return Turma::query()->withListingData()->latest()->get()
+        return Turma::query()->visibleTo($request->user())->withListingData()->latest()->get()
             ->map(fn (Turma $t) => TurmaData::fromModel($t, $habilitacao))
             ->all();
     }
@@ -84,9 +85,9 @@ class TurmaController extends Controller implements HasMiddleware
     }
 
     /** @return array<ArchivedTurmaData> */
-    public function archived(TurmaHabilitacaoService $habilitacao): array
+    public function archived(Request $request, TurmaHabilitacaoService $habilitacao): array
     {
-        $turmas = Turma::onlyTrashed()->withArchivedListingData()->latest()->get();
+        $turmas = Turma::onlyTrashed()->visibleTo($request->user())->withArchivedListingData()->latest()->get();
 
         $autores = ArchiveTrailQuery::archivedBy(Turma::class, $turmas->pluck('id')->all());
 

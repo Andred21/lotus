@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
@@ -16,9 +16,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
@@ -55,7 +55,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: f6649297
-updated_at: 2026-08-22T17:31:54-03:00
+updated_at: 2026-08-22T17:36:45-03:00
 ---
 
 # Estado operacional — Lotus v2
