@@ -5,6 +5,19 @@
 # (RDS), sem MinIO (S3), sem Mailpit (SES), sem volume de código e sem worker de
 # fila. O último foi medido, não suposto: SESSION_DRIVER, CACHE_STORE e
 # QUEUE_CONNECTION são `database`, e nenhuma classe implementa ShouldQueue.
+
+# LOG_CHANNEL=stderr (spec D9) tirou o log do disco da aplicação e o entregou ao
+# Docker — que, com o driver json-file default, grava em disco do MESMO jeito e
+# SEM TETO. Numa EC2 com EBS pequeno isso é o container morrendo por disco cheio
+# semanas depois do deploy, longe de qualquer mudança que explique. O teto vale
+# até o coletor (CloudWatch) entrar, e continua valendo depois: rotação local é
+# barata e o coletor pode cair.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   app:
     image: ${LOTUS_IMAGE:-lotus-app:local}
@@ -17,6 +30,7 @@ services:
     env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
     restart: unless-stopped
     depends_on: [gotenberg]
+    logging: *logging
 
   nginx:
     image: ${LOTUS_WEB_IMAGE:-lotus-web:local}
@@ -27,6 +41,7 @@ services:
     ports: ["${LOTUS_HTTP_PORT:-80}:80"]
     restart: unless-stopped
     depends_on: [app]
+    logging: *logging
     # O healthcheck atravessa o fastcgi até o /up do Laravel, então prova a
     # CADEIA inteira — nginx, socket do FPM e boot da aplicação. É por isso que
     # o serviço `app` não ganha healthcheck próprio: um que respondesse sem
@@ -46,6 +61,7 @@ services:
   gotenberg:
     image: gotenberg/gotenberg:8
     restart: unless-stopped
+    logging: *logging
     # Medido nesta task: a imagem traz curl (`command -v curl` -> /usr/bin/curl).
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
