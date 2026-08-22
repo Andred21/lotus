@@ -184,3 +184,100 @@ Nenhuma delas é "ferramenta verde": cada uma prova comportamento.
 - **P-03 não dispara hoje, e isso foi medido:** o main tree está com `feedbacks-resolver-escopo` em
   `context_required`, sem código. **Se ele entrar em `executing`, o gatilho é reavaliado antes de
   qualquer prova deste bloco que dependa do compose.**
+
+## 10. Medições da execução
+
+Escrita ao fechar a execução (2026-08-22). Tudo abaixo foi **medido nesta máquina**, não estimado.
+Onde a execução divergiu do texto do plano, o motivo está junto.
+
+### 10.1 Memória: os dois picos e os dois valores derivados
+
+| Alvo | Pico medido | Valor derivado | Onde vive |
+|---|---|---|---|
+| CLI (`artisan test`, suíte inteira) | `Memory: 129.00 MB` | `memory_limit = 320M` | `docker/php/memory-cli.ini:10` |
+| PHP-FPM (pior request medido) | `11,09 MB` | `php_admin_value[memory_limit] = 256M` | `docker/php/www.conf:30` |
+
+Picos por operação no FPM, todos com resposta `200` confirmada:
+
+| Operação | Pico |
+|---|---|
+| manual `.docx`, turma do seed | 6,00 MB |
+| manual `.docx`, mesma turma com +72 alunos | **11,09 MB** — o único que escala com o dado |
+| PDF do certificado (Gotenberg) | 6,00 MB |
+| importação OpenSpout, 800 linhas | 4,00 MB — streaming, não escala |
+| boot do Laravel no CLI, sem opcache | 26,00 MB — referência do argumento |
+| `pm.max_children` default da imagem base | 5 |
+
+**Emenda à regra do plano (decisão do João, 2026-08-22):** a regra crua de derivação dava **64M**
+para o pool FPM — abaixo do default `128M` do próprio PHP — porque o opcache tira o bytecode do heap
+do request e o pico medido é pequeno. Um limite abaixo do default do PHP não é sizing, é armadilha.
+A regra passa a ter **piso de 256M**.
+
+As medições iniciais do FPM vieram em parte de respostas `401`: o Sanctum só trata a requisição como
+stateful com `Referer` da origem configurada. Refeitas com sessão real e `Referer`, todas em `200`.
+
+### 10.2 `poppler-utils` — medição da §3
+
+Nenhum consumidor. `grep -rniE 'pdftoppm|pdfinfo|pdftotext|pdfunite|pdftocairo|poppler'` em
+`backend/app/`, `backend/config/` e `backend/routes/` retorna **zero hits**. O pacote existe só em
+`docker/php/Dockerfile:2`, como ferramenta de desenvolvimento do `CLAUDE.md` §6. **Não entra na
+imagem de produção.**
+
+### 10.3 Healthchecks
+
+| Serviço | Decisão | Motivo medido |
+|---|---|---|
+| `nginx` | `wget --spider -q http://127.0.0.1/up` | `localhost` **nunca passa**: o busybox wget da imagem resolve `localhost` para `::1`, o `prod.conf` só declara `listen 80`, e o comando sai com `Connection refused`. Trocado sem tocar o `prod.conf` da Task 3. Provado em rede isolada com PHP-FPM real: `200`/exit 0 com o `app` vivo, `502`/exit 1 com o `app` morto |
+| `gotenberg` | `curl -f http://localhost:3000/health` | A imagem **tem** `curl` — medido, não assumido |
+| `mysql` (só no overlay de sonda) | `mysqladmin ping -h 127.0.0.1 -psecret` | Sem `-h`, o `mysqladmin` fala pelo **socket Unix**, que a imagem oficial do MySQL 8 abre **antes** do listener TCP. O healthcheck ficava verde com a porta 3306 ainda recusando. Provado com 3 ciclos `up -d` + `migrate --force` sem `sleep`: exit 0 nos três |
+
+### 10.4 Desvios do texto literal do plano
+
+| Desvio | Motivo |
+|---|---|
+| `composer install --ignore-platform-reqs` no estágio `vendor` | A imagem `composer:2` não tem `ext-gd`, exigida por `simplesoftwareio/simple-qrcode`. O `dump-autoload` roda `post-autoload-dump` → `package:discover`, que boota o Laravel inteiro. Esse script é **load-bearing**: ele reescreve `bootstrap/cache/packages.php`, que o `COPY` traz do host com providers dev-only (`laravel/pail`, `collision`, `laravel-lang`). Sem ele a imagem bootaria com class-not-found — por isso **não** se usa `--no-scripts` |
+| Headers `-dev` via `apk add --virtual .build-deps` + `apk del .build-deps` na **mesma** instrução `RUN` | Emenda à Global Constraint, decidida pelo João. A constraint significa "as mesmas extensões", não "os mesmos headers na camada final". Em `RUN` separado a camada anterior guardaria os arquivos. Redução medida: 306MB → 293MB (~3%) |
+| Catraca `frontend/tests/compose-prod.test.ts` reforçada além do plano | As asserções do plano deixavam passar quatro regressões reais: bind mount `- .:/var/www`, segredo inline, remoção do `depends_on` e `image` hardcoded. O reforço prova **propriedade, não sintaxe**: 12/12 mutações negativas pegas, 6/6 formas legítimas aceitas |
+| `key:generate` precisa de `--entrypoint php` | Impasse circular real: o gate do entrypoint exige `APP_KEY` para bootar, e gerar `APP_KEY` exige bootar. **Um servidor novo bate no mesmo impasse — a receita precisa entrar no runbook do bloco de deploy** |
+| `depends_on` do overlay de sonda em forma longa | A forma curta normaliza para `condition: service_started`, então o healthcheck do MySQL existia e ninguém o consumia. `up -d` + `migrate --force` sem `sleep` dava `SQLSTATE[HY000] [2002] Connection refused` |
+| Prova 8 (`docker history` sem segredo) precisa filtrar uma linha | O comando literal do plano devolve `1`, não `0`. O único hit é `--with-password-argon2`, do `./configure` da imagem base `php:8.3-fpm-alpine`. Filtrada essa linha: **`0` — sem segredo no histórico** |
+
+### 10.5 Divergências entre a DoD escrita e o comportamento medido
+
+Duas provas do §7 esperavam um sinal que o sistema real não produz. A **substância** de cada uma foi
+provada; o que estava errado era o proxy escolhido.
+
+**Prova 3 — cabeçalhos CORS.** O plano esperava **ausência** de `Access-Control-Allow-Origin` como
+evidência de origem única. Medido: `POST http://localhost:8081/api/login` responde `200`, mesma
+origem, `referer: http://localhost:8081/login`, cookies `XSRF-TOKEN` e `lotus-session` gravados — e
+**com** `access-control-allow-origin: http://localhost:8081` e `access-control-allow-credentials:
+true`. Causa: `backend/config/cors.php:22` usa `FRONTEND_URL` como `allowed_origins`, e o
+`HandleCors` do Laravel emite o cabeçalho sempre que a requisição carrega `Origin` — o que um XHR
+same-origin também faz. **A origem única está provada** (uma porta, um host, cookie aceito); a
+ausência do cabeçalho era um proxy errado para ela.
+
+**Prova 6 — o PDF no bucket.** O plano esperava o PDF do certificado gravado no S3/MinIO.
+`CertificatePdfService` renderiza **sob demanda** via `HtmlToPdf` (Gotenberg) e **nunca persiste** —
+não é regressão, é o desenho. O mecanismo real foi provado inteiro, através da stack de produção:
+certificado emitido pela UI (`POST /api/enrollments/22/certificate` → `201`), PDF obtido em
+`GET /api/certificates/1/pdf` → `200 | application/pdf | bytes=198279 | magic="%PDF-1.4"`, upload
+gravando objeto no MinIO (`redator/1/YDRoJhjs….txt`, 31B) e convite entregue ao Mailpit
+(`Subject: "Acceso a la plataforma Lotus"`, para `juan.morales@lotus.cl`). Storage e SMTP externos
+por configuração: provado. O certificado no bucket: não existe para ser provado.
+
+### 10.6 Provas restantes, como fecharam
+
+| Prova | Resultado |
+|---|---|
+| 1 — stack de produção sobe | `nginx` fica `(healthy)`; `curl http://localhost:8081/up` → `200`; 24 migrations `DONE`; `createbuckets` criou `local/lotus` |
+| 2 — SPA na raiz | `curl http://localhost:8081/` → `200` |
+| 4 — imagem imutável | `AUSENTE ANTES` e `AUSENTE DEPOIS`: sonda instalada no host (`grep -c` = 1), ausente no container, revertida, árvore limpa |
+| 5 — erro sem vazamento | Sem sessão: `401` RFC 7807. Autenticado: `404` RFC 7807. Sem `trace`, sem `file`, sem caminho absoluto. O `detail` do `404` nomeia a classe do model (`App\Domains\Operation\Models\Turma`) — mensagem default do Laravel, não stack trace |
+| 7 — P-50 | `docker compose exec -T app php artisan test` → `Tests: 5 skipped, 867 passed (3095 assertions)`, `Duration: 59.01s`. Sem estouro de memória |
+| Gate do Step 6 | `pnpm lint` exit 0 · `pnpm build` exit 0 (`✓ built in 1.85s`) · `pnpm test` → `Test Files 88 passed (88)` / `Tests 499 passed (499)` · `git diff --name-only main...HEAD -- backend/app frontend/src/shared/types/generated.ts` vazio, logo Pint e `typescript:transform` não se aplicam **por medição** |
+
+### 10.7 Ambiente devolvido
+
+Stack de sonda derrubada com `down -v` (projeto `lotus-probe`: zero containers, zero volumes, zero
+redes). Volumes de dev (`lotus_*`, `lotus-bd15_*`, `lotus-infra_*`) intactos. Árvore de trabalho
+limpa.

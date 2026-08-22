@@ -2,9 +2,9 @@
 schema_version: 1
 active_feature: infra
 active_work_item: infra-producao-runtime-e-aws
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
 active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
@@ -12,7 +12,7 @@ context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runti
 blocker: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T04:25:00-03:00
+updated_at: 2026-08-22T16:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -193,6 +193,38 @@ paths fechados errariam a reversão ou não teriam autorização para o arquivo.
 **Baseline a medir antes da Task 1, não herdar:** a suíte do frontend fechou em 87 arquivos / 481
 testes no fechamento do BD-12, e a do backend em 872 passed / 5 skipped no do BD-18 — mas esta árvore
 tem a `main` inteira dentro, e o gate da Task 7 cobra os números medidos, não os citados.
+
+### Execução — 2026-08-22: 7 tasks provadas, bloco em `ready_for_review`
+
+Sete tasks, dez commits, `8b1fd6df..e0019bac`. Execução por **subagent-driven-development com TDD**,
+um implementador e um revisor por task, ledger em `.superpowers/sdd/progress.md`.
+
+| Task | Commits | Entrega |
+|---|---|---|
+| 1 | `8b1fd6df` | `memory-cli.ini` — `memory_limit = 320M`, de pico medido de 129,00 MB |
+| 2 | `ee230219` | `www.conf` — `memory_limit = 256M` de pool, com o piso emendado pelo João |
+| 3 | `80029cea` | `docker/nginx/prod.conf`, origem única, `nginx -t` conferido |
+| 4 | `e9f83043`, `31a29d33` | `docker/Dockerfile.prod` quatro estágios — `app` 293MB, `web` 105MB |
+| 5 | `c54d1a35`, `317a6512`, `fef76d08` | `docker-compose.prod.yml` + catraca de composição |
+| 6 | `73f6e219`, `ab5b057d`, `e0019bac` | overlay de sonda, `.env.production.example` sem segredo |
+| 7 | este commit | DoD end-to-end contra a stack de produção real |
+
+**As oito provas da DoD fecharam**, duas delas com divergência entre o sinal escrito e o
+comportamento real do sistema: a **prova 3** esperava ausência de `Access-Control-Allow-Origin`, e o
+`HandleCors` o emite mesmo same-origin porque `cors.php:22` usa `FRONTEND_URL`; a **prova 6**
+esperava o PDF do certificado no bucket, e o `CertificatePdfService` renderiza sob demanda sem
+persistir. Nos dois casos a substância foi provada por outro caminho. **A §10 da spec registra as
+medições, as emendas e todos os desvios do plano** — inclusive o `--entrypoint php` do
+`key:generate`, que **precisa entrar no runbook do bloco de deploy**.
+
+**P-50 paga:** `docker compose exec -T app php artisan test` → 867 passed / 5 skipped, 3095
+assertions, 59,01s, sem estouro de memória. Frontend: 88 arquivos / 499 testes, `lint` e `build`
+exit 0.
+
+**Ambiente devolvido:** stack de sonda derrubada com `down -v`, volumes de dev intactos, árvore limpa.
+
+**Nada de AWS foi provado** — a limitação 1 da spec segue de pé, e o review deve cobrá-la como
+limitação declarada, não como lacuna.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
