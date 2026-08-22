@@ -44,8 +44,8 @@ lanes:
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
-    tree: ../lotus-bd15
-    branch: docs/bd15-guardrails-e-sincronizacao  # fechada; merge para a main é passo do João
+    tree: null   # ../lotus-bd15 removida em 2026-08-22, depois do merge
+    branch: null # docs/bd15-guardrails-e-sincronizacao mesclada no PR #66 e apagada (era 79fec64f)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -54,7 +54,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
 state_basis_commit: 8c6dea02
-updated_at: 2026-08-22T23:55:00-03:00
+updated_at: 2026-08-23T00:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -149,12 +149,14 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
-> **A `lane-a` e a `lane-c` fecharam em 2026-08-22** e estão `idle` em `lanes:`; só a `lane-b`
-> (`infra-producao-runtime-e-aws`) segue viva, em `context_required`. A `lane-a` já mesclou na `main`
-> (PR #65); a árvore `../lotus-bd15` da `lane-c` segue existindo, com a branch
-> `docs/bd15-guardrails-e-sincronizacao` **não mesclada** — a integração é serial e o merge é passo
-> do João. A tabela acima fica como registro da seleção que promoveu as três, não como lista do que
-> está ativo agora.
+> **A `lane-a` e a `lane-c` fecharam e mesclaram em 2026-08-22** — `lane-a` no PR #65, `lane-c` no
+> PR #66 (merge `61acc0c3`); as duas estão `idle` em `lanes:`. A `lane-c` teve **worktree e branch
+> destruídas** depois do merge, por decisão do João, e por isso o `tree` e o `branch` dela são
+> `null`. A `lane-a` rodou no main tree, então ela mantém `tree: main-tree`; o `branch` dela ainda
+> nomeia `feat/feedbacks-resolver-escopo`, que é registro de onde o trabalho saiu e **não** promessa
+> de que a branch exista. Só a `lane-b` (`infra-producao-runtime-e-aws`, `../lotus-infra`) segue
+> viva, em `context_required`. A tabela acima fica como registro da seleção que promoveu as três,
+> não como lista do que está ativo agora.
 
 ## Itens fechados — ponteiro, não narrativa
 
