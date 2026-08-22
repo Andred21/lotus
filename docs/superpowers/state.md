@@ -1,18 +1,57 @@
 ---
-schema_version: 1
+schema_version: 2
+mode: multi-lane
+focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: feedbacks-resolver-escopo
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
 context_packet: null
 blocker: null
+lanes:
+  lane-a:
+    active_work_item: feedbacks-resolver-escopo
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
+    tree: main-tree
+    branch: null  # feat/feedbacks-resolver-escopo, criada na execução
+    active_spec: null
+    active_plan: null
+    context_packet: null
+    blocker: null
+    resume_state: null
+  lane-b:
+    active_work_item: infra-producao-runtime-e-aws
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
+    tree: ../lotus-infra
+    branch: infra/producao-runtime-e-aws
+    active_spec: null
+    active_plan: null
+    context_packet: null
+    blocker: null
+    resume_state: null
+  lane-c:
+    active_work_item: BD-15-docs-guardrails-e-sincronizacao
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
+    tree: ../lotus-bd15
+    branch: docs/bd15-guardrails-e-sincronizacao
+    active_spec: null
+    active_plan: null
+    context_packet: null
+    blocker: null
+    resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
-state_basis_commit: fc852ce3
-updated_at: 2026-08-22T02:20:00-03:00
+state_basis_commit: c8480eee
+updated_at: 2026-08-22T03:35:30-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -37,16 +76,56 @@ updated_at: 2026-08-22T02:20:00-03:00
 
 ## Invariantes
 
-- Existe no máximo um `active_work_item`.
-- `next_action` deve corresponder a `workflow_state`.
-- `active_plan` é obrigatório a partir de `ready_for_execution`.
+- **Modo multi-lane (desde 2026-08-22):** existe no máximo um `active_work_item` **por lane**; as
+  lanes ativas vivem em `lanes:` no frontmatter. Os estados da tabela acima valem por lane.
+- Os campos singulares do topo **espelham** a lane apontada por `focused_lane` — é o que
+  `/planejar-bloco` e `/executar-bloco` leem; eles operam sempre sobre a lane em foco. Trocar o
+  foco é fronteira durável: espelho + `lanes:` mudam no mesmo commit.
+- `next_action` deve corresponder a `workflow_state` (em cada lane).
+- `active_plan` é obrigatório a partir de `ready_for_execution` (em cada lane).
 - Quando o trabalho depender de contexto externo, `context_packet` deve permanecer `null` em
   `context_required` e tornar-se obrigatório antes da transição para `ready_for_planning`.
+- **Gate de árvore por lane:** bloco que toca backend roda no main tree (o compose monta o main
+  tree — P-03). Só há uma lane de backend, então a P-03 não é disparada. Worktree é para lane que
+  não depende do compose; se precisar subir stack no worktree, vale o precedente de override de
+  portas + projeto compose próprio (2026-08-19), decidido no planejamento da lane.
+- `docs/superpowers/**` (estado, specs, planos, packets, fichas, backlog) muda somente pelo main
+  tree; branch de lane em worktree não toca esses arquivos. Exceção: entregável de doc do próprio
+  BD-15, nos paths que o plano da lane-c autorizar.
+- **Planejamento é serial** (brainstorming com o João, um bloco por vez) e **integração é serial**
+  (uma lane faz merge por vez; após cada merge as demais rebasam antes de continuar). Só a
+  execução sobrepõe.
 - Mudanças de estado ocorrem somente em fronteiras duráveis e entram no mesmo commit do artefato
   que prova a transição.
 - Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
-  por heurística.
+  por heurística. Divergência **entre lanes** (mesmo arquivo, mesma decisão) bloqueia as lanes
+  envolvidas.
 - O backlog nunca promove trabalho automaticamente.
+
+## Seleção multi-lane — 2026-08-22: três blocos promovidos em paralelo
+
+Decisão explícita do João (sessão 2026-08-22): desenvolver blocos em paralelo com worktrees.
+Três itens da fila consolidada (`backlog.md@ba59dbd9`) promovidos de uma vez — frentes
+disjuntas, colisão mínima de arquivos:
+
+| Lane | Bloco (item da fila) | Frente | Árvore | Branch |
+|---|---|---|---|---|
+| `lane-a` | `feedbacks-resolver-escopo` (1) | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo`, na execução |
+| `lane-b` | `infra-producao-runtime-e-aws` (10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` |
+| `lane-c` | `BD-15-docs-guardrails-e-sincronizacao` (14) | Docs | `../lotus-bd15` | `docs/bd15-guardrails-e-sincronizacao` |
+
+- As três lanes nascem em `context_required` — os três blocos exigem Context Packet.
+- O gate main-tree/worktree do `/executar-bloco` fica satisfeito sem reabrir a P-03: uma única
+  lane de backend, e ela no main tree. O override de portas de 2026-08-19 não é necessário aqui;
+  se a lane-b precisar subir o stack do worktree para provar imagem/compose, o planejamento dela
+  decide o arranjo (projeto compose próprio + portas próprias, como no precedente).
+- Worktrees criados a partir de `main@c8480ee`; **rebase obrigatório** antes de a execução da
+  lane começar e antes de cada merge.
+- Ordem de planejamento (serial): `lane-a` → `lane-b` → `lane-c`. Execuções sobrepõem depois que
+  cada plano fica pronto.
+- Interseções conhecidas a vigiar: `lane-c` (BD-15/D-17) e a futura CI (item 11) tocam
+  `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
+  lanes ativas.
 
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
