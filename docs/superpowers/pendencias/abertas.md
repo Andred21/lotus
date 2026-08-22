@@ -370,6 +370,28 @@ gate do Dashboard é por `user.type` (`DashboardController.php:37`), não por ro
 caminho de remediação existe e está provado (reenviar convite atribui a role). O que falta é decidir se
 o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseedar.
 
+## P-52 — `invitation_tokens` existe desde 2026-08-18 e não tem ficha no `der-fisico.md`
+
+**Bloco:** — · **Gatilho:** fecha quando um bloco tocar `invitation_tokens` (convite de redator,
+expiração, reenvio) e puder descrever as colunas com o comportamento já provado, ou quando um
+bloco de doc trouxer o `der-fisico.md` para o escopo de novo. Revisar em **2026-10-31**.
+
+Medido em 2026-08-22, ao ampliar a P-43 (BD-15): a migration
+`backend/database/migrations/2026_08_18_200000_create_invitation_tokens_table.php` cria a tabela, e
+`docs/der-fisico.md` **não a mencionava em lugar nenhum** — nem na seção `Tabelas IMPLEMENTADAS`,
+nem na contagem. A tabela entrou na enumeração e na contagem naquele bloco (é o que fazia a soma
+fechar), mas **segue sem ficha de colunas**, que é o formato que as outras 19 tabelas de domínio
+têm e o que torna o documento consultável antes de criar migration (`CLAUDE.md` §3).
+
+Documentar tabela ainda não documentada ficou fora da P-43 de propósito: a P-43 é sobre status
+escrito errado, não sobre lacuna de documentação, e a ficha de colunas precisa nomear semântica
+(uso do token, expiração, unicidade, o que acontece no reenvio) que se lê no domínio e não só na
+migration.
+
+**A lacuna é da mesma família que a P-43 provou existir**, e por isso nasce com o número dela ao
+lado: `der-fisico.md` envelheceu em silêncio porque nada mede o documento contra o conjunto real de
+migrations. Enquanto essa medição não existir, a próxima tabela nova repete o caso.
+
 ---
 
 # Travadas em decisão do João
