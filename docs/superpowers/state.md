@@ -4,24 +4,24 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: feedbacks-resolver-escopo
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
 context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
 blocker: null
 lanes:
   lane-a:
     active_work_item: feedbacks-resolver-escopo
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: null  # feat/feedbacks-resolver-escopo, criada na execução
     active_spec: docs/superpowers/specs/2026-08-22-feedbacks-resolver-escopo-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-22-feedbacks-resolver-escopo.md
     context_packet: docs/superpowers/context-packets/2026-08-22-feedbacks-resolver-escopo.md
     blocker: null
     resume_state: null
@@ -51,7 +51,7 @@ lanes:
     resume_state: null
 last_completed_work_item: bd12-load-state-e-listas
 state_basis_commit: c8480eee
-updated_at: 2026-08-22T10:40:00-03:00
+updated_at: 2026-08-22T11:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2

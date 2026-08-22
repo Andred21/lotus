@@ -71,7 +71,12 @@ O que sobra de divergência real:
 **Frontend**
 
 - `frontend/src/shared/config/locales/{en,es-CL,pt-BR}.json` perdem
-  `perm.feedback_feedback_view` e `perm.feedback_feedback_manage`.
+  `perm.feedback_feedback_view`, `perm.feedback_feedback_manage` e também
+  `permGroup.feedback` — o rótulo do grupo, que o picker lê e que fica órfão quando a última
+  permissão do grupo sai.
+- `PermissionI18nParityTest` passa a cobrir `permGroup.*` além de `perm.*`. Hoje ele compara só as
+  permissões, e o rótulo de grupo órfão não reprovaria nada: mesmo defeito de classe, um nível
+  acima. A catraca entra **antes** da remoção, para que a remoção seja vista reprovando.
 
 **Documentação (repo)**
 
