@@ -25,7 +25,11 @@ services:
       MYSQL_DATABASE: lotus
       MYSQL_ROOT_PASSWORD: secret
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-psecret"]
+      # -h 127.0.0.1 força TCP: sem ele o mysqladmin fala pelo socket Unix, que
+      # a imagem oficial do MySQL 8 abre ANTES do listener TCP. O healthcheck
+      # ficava verde enquanto o `app` ainda tomava Connection refused na porta
+      # 3306 — corrida rara, mas real, medida nesta máquina.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psecret"]
       interval: 10s
       retries: 5
 
