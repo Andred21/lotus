@@ -1,0 +1,21 @@
+# O que NUNCA pode entrar na imagem. A primeira linha é a que sustenta o item 8
+# da DoD (imagem sem segredo): o `.env` não é versionado, mas existe na árvore
+# de quem builda, e um COPY o levaria para dentro da camada.
+**/.env
+**/.env.*
+
+# Dependências e artefatos: os estágios `vendor` e `spa` os produzem de novo,
+# do lockfile. Copiar os do host tornaria a imagem dependente da máquina que
+# buildou — o oposto do artefato reproduzível.
+backend/vendor
+frontend/node_modules
+frontend/dist
+
+# Nada disto roda em produção.
+.git
+.claude
+.agents
+.codex
+docs
+backend/storage/logs
+backend/storage/framework/cache
