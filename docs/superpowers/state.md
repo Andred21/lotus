@@ -127,6 +127,32 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
+## Trabalho ativo — `lane-c` · `BD-15-docs-guardrails-e-sincronizacao`
+
+### Seleção — 2026-08-22
+
+Item 14 do `backlog.md`, **promovido explicitamente pelo João em 2026-08-22** com a árvore em
+`idle`. O `/planejar-bloco` foi invocado duas vezes com o slug correto e **barrou nas duas**: em
+`idle` o comando mostra a fila e pede seleção, nunca promove. A promoção veio de duas decisões
+dele, tomadas com o custo de cada rota na mão:
+
+- **Rota `context_required`**, que é o que a linha do backlog declara (`Contexto: sim`). A metade
+  do bloco que mais pesa — `P-31` (sync ADR-16↔Drive), `P-18`/`P-22` (Notion) e a lista de
+  sincronização obrigatória `8.4.0–8.4.7` / `8.5.1–8.5.9` / `9.1.4` — tem fonte **fora** do
+  repositório. Planejar sem packet transformaria essa metade em limitação declarada.
+- **Esta worktree** (`/home/jvbat/projetos/lotus-bd15`, branch `docs/bd15-guardrails-e-sincronizacao`,
+  zero commit à frente da `main` em `c8480eee`). O bloco é docs/mecanismos; enquanto não tocar
+  `backend/`, o gatilho da **P-03** não vence. Se a `D-17` virar arch test em PHP, a árvore se
+  rediscute **antes** da task, não durante.
+
+Escopo herdado da fila, sem edição: `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-43`,
+`P-18`, `P-22`, `D-17`, mais a sincronização obrigatória do Notion. A ficha da `P-32` **veta**
+desenhar seletor por classe sem reincidência medida ou decisão explícita do João — restrição que
+entra no packet e no brainstorming como está escrita.
+
+**Próxima ação:** Codex gera o Context Packet pela skill `lotus-context-packet`
+(`.agents/skills/`), em sandbox read-only, sem alterar arquivo nem estado.
+
 ## Último item fechado — 2026-08-22 (`bd12-load-state-e-listas`, BD-12 dos blocos de dívida)
 
 ### Merge da `main` — 2026-08-22: a árvore que a prova exigia
