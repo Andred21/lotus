@@ -14,7 +14,7 @@
 
 ## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
 
-**Bloco:** — · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
+**Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
 gastar tempo neutralizando margem de UA à mão. Revisar em **2026-10-31**.
 
 O `frontend/src/index.css:1-9` omite o Preflight do Tailwind **de propósito**, para o reset global
@@ -50,7 +50,7 @@ provável, e é decisão do João.
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** BD-14 · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
+**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
 listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
 arquivado for observado em uso real. Revisar em **2026-10-31**.
 
@@ -120,7 +120,7 @@ plano), e travar só de um lado é a meia proteção que esta ficha existe para 
 
 ## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
 
-**Bloco:** — · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
+**Bloco:** infra-producao-runtime-e-aws · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
 ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
 
 Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
@@ -294,7 +294,7 @@ diretamente sobre ela (`Certificate`, `CertificateStatus`, `scopeEmitidos`), com
 
 **Nasceu como P-42 e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-43](#p-43).**
 
-**Bloco:** BD-15 · **Gatilho:** fecha quando um bloco puder reseedar o banco de dev, ou quando a
+**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** fecha quando um bloco puder reseedar o banco de dev, ou quando a
 residência atrapalhar uma medição de verdade (o bloco B do Dashboard é o primeiro candidato: a tela
 vai mostrar estes nomes). Revisar em **2026-10-31**.
 
@@ -334,7 +334,7 @@ fechados.
 
 ## P-47 — os redatores do seed não têm a role `redator`, e o bloco que a criou só a atribui adiante
 
-**Bloco:** BD-15 · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
+**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
 [P-44](#p-44)), ou o primeiro gate `permission:` aplicado sobre rota de redator — é quando a falta
 deixa de ser cosmética. Revisar em **2026-10-31**.
 
@@ -356,16 +356,20 @@ o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseeda
 
 # Travadas em decisão do João
 
+> Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
+> 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
+> Agrupar segue não promovendo nada.
+
 ## P-02 — retenção da auditoria nunca decidida
 
-**Gatilho:** antes de subir para produção.
+**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** antes de subir para produção.
 
 ADR-08 (pruning/retenção da auditoria) segue **aberto**. Política de retenção nunca decidida;
 `audits` cresce sem poda.
 
 ## P-33 — `login_logs` guarda dado pessoal sem política de retenção
 
-**Gatilho:** fecha junto com a P-02, ou antes de subir para produção.
+**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** fecha junto com a P-02, ou antes de subir para produção.
 
 `login_logs.ip_address` e `login_logs.user_agent` são dado pessoal. Bloco `last-login` (BD-7,
 2026-08-12): o log é append-only por desenho e o volume não é o problema (~10 usuários internos) — a
@@ -379,7 +383,7 @@ desta linha e ficam como estão — história não se reescreve.
 
 ## P-05 — migrations "adicionais" não consolidadas
 
-**Gatilho:** antes de subir para produção.
+**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
 
 Decisão do João no Bloco 2 — evitar inchaço do folder.
 
@@ -467,7 +471,7 @@ seguintes).
 
 ## P-41 — o `IdentityCell` empilhado promete truncar e não trunca
 
-**Gatilho:** fecha quando o João decidir que a coluna deve cortar — aí volta o `min-w-0` **e** o
+**Bloco:** frontend-hardening-final · **Gatilho:** fecha quando o João decidir que a coluna deve cortar — aí volta o `min-w-0` **e** o
 teste vira medição de comportamento (largura fixa no pai, `scrollWidth > clientWidth`) —, ou quando
 uma tabela real mostrar a coluna alargada em uso. Revisar em **2026-10-31**.
 
@@ -564,7 +568,7 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 
 ## P-15 — certificados não aparecem no módulo de alunos
 
-**Gatilho:** fecha quando o João decidir expor (ou não) certificados na listagem e no detalhe do
+**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fecha quando o João decidir expor (ou não) certificados na listagem e no detalhe do
 aluno, ou se a Lotus pedir. Revisar em **2026-09-30**.
 
 O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
@@ -595,7 +599,7 @@ atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
 ## P-31 — o ponto 5 do ADR-16 não está no espelho do Drive
 
-**Gatilho:** fecha quando o ponto 5 estiver no `decisao-stack.md` do Drive — o João cola o texto, ou
+**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o ponto 5 estiver no `decisao-stack.md` do Drive — o João cola o texto, ou
 um bloco futuro ganha ferramenta de escrita no Drive e o aplica. Revisar em **2026-09-30**.
 
 O ponto 5 do ADR-16 (identidade própria sobre o Lara — temas gerados, camada de marca, fim da exceção
@@ -616,7 +620,7 @@ em vez de segurar o fechamento ou deixar a promessa morrer sem rastro (lição 1
 
 ## P-18 — página de fechamento do Notion com `Sprint` divergente
 
-**Gatilho:** fecha quando o João corrigir a propriedade manualmente no Notion.
+**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o João corrigir a propriedade manualmente no Notion.
 
 A página `Fechamento técnico de sprint` (id `f88bc9603dfa8253b40981686f8ae023`) tem
 `Descrição: "Fechamento — Sprint 3"` mas a propriedade `Sprint` real é `Sprint 2 · Comercial`.
@@ -627,7 +631,7 @@ task) — só reportado, não corrigido.
 
 ## P-22 — H.1.3.1 existe duas vezes na base Notion canônica
 
-**Gatilho:** fecha quando o João apagar ou mesclar uma das duas cópias no Notion; até lá, **todo
+**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o João apagar ou mesclar uma das duas cópias no Notion; até lá, **todo
 consumo de H.1.3.1 cita o ID `3a2bc9603dfa803b94bbf27c075b27d6`**.
 
 Dentro de `collection://e64b7d57-d000-4433-b652-a410e75193cc`:
@@ -646,7 +650,7 @@ vazia.
 
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
 
-**Bloco:** — · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
+**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
 dos outros cinco); os demais, o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
 `BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
 

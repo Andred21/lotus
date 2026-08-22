@@ -1,395 +1,528 @@
 # Backlog — Lotus v2
 
-> Fila ordenada de trabalho futuro. **Não representa a etapa atual** e não deve ser usada por
-> `/executar-bloco`. Itens presentes aqui **não estão ativos**: somente uma alteração explícita em
-> `state.md` promove um item, e o backlog nunca promove trabalho sozinho.
+> Fila ordenada de trabalho **futuro**. Não representa a etapa atual e nunca autoriza execução
+> sozinha: um item só fica ativo por promoção explícita em `docs/superpowers/state.md`, e o
+> backlog nunca promove trabalho sozinho.
 >
-> **Planejamento just-in-time (CLAUDE.md §4):** o roadmap adiante vive como título e escopo, não
-> como plano pronto que envelhece. Spec e plano de um bloco se escrevem imediatamente antes de
-> executá-lo.
+> **Consolidado em 2026-08-22 contra `main@bda90ce`, com foco em terminar a aplicação.**
+> Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
+> specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
+> O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
+> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/fechar-sprint` do bloco
+> que a paga.
+>
+> **Planejamento just-in-time (CLAUDE.md §4):** o roadmap vive como título e escopo, não como
+> plano pronto que envelhece. Spec e plano se escrevem imediatamente antes da execução; limites,
+> números e decisões ainda não aprovados se resolvem no brainstorming, não congelados aqui.
 
-## Convenções
+## Fluxo
 
-| Prefixo | O que é | Onde mora o detalhe |
-|---|---|---|
-| `BD-*` | **Bloco de execução de dívida** — agrupa pendências e débitos que saem baratos juntos | aqui |
-| `D-*` | **Débito técnico** — defeito ou lacuna medida no código | aqui, na seção `## Débitos técnicos` |
-| `P-*` | **Pendência** — divergência entre doc/mecanismo e realidade | `pendencias/abertas.md` |
+`seleção explícita → context_required (quando indicado) → /planejar-bloco → /executar-bloco →
+/revisar-sprint → /fechar-sprint`
 
-**Agrupar não promove.** Um `BD` é ponteiro: a pendência continua em `pendencias/` e o débito
-continua em `## Débitos técnicos`, com o mesmo ID, até o bloco ser aplicado e o `/fechar-sprint`
-correspondente removê-los. Afinidade que justifica agrupar: **mesmo arquivo, mesma entidade, mesmo
-módulo, mesmo domínio ou mesma frente** (backend × frontend).
-
----
-
-# Sprints planejadas
-
-## Sprint 5 · Dashboard
-
-Central read-only operacional e analítica, com experiências distintas para Administrativo e Redator.
-
-- **Contexto canônico:** Drive `Planejamento/dashboard-escopo-funcional-analitico.md`
-- **Execução detalhada:** Notion EAP 8.4.0–8.4.7
-- **Exige `context_required`** antes do planejamento — o escopo é canônico do Drive, não do
-  repositório, então o Context Packet vem antes do `/planejar-bloco`.
-
-**Nenhum bloco restante** — o bloco A, `dashboard-backend-agregacoes`, foi entregue em 2026-08-15;
-o B1, `dashboard-frontend-central-controle`, em 2026-08-16; e o B2,
-`dashboard-frontend-analitico-e-redator`, em 2026-08-17 (ver `historico/progress.md`). O contrato do
-payload está em `specs/archive/2026-08-14-dashboard-backend-agregacoes-design.md` e os tipos, em
-`generated.ts`:
-
-1. ~~**`dashboard-frontend-central-controle`** (B1)~~ — entregue em 2026-08-16
-   (`plans/archive/2026-08-15-dashboard-frontend-central-controle.md`). Levou as 5 seções que
-   respondem *"o que tenho para fazer agora"*: KPIs, pendências, alertas, agenda e pipeline.
-2. ~~**`dashboard-frontend-analitico-e-redator`** (B2)~~ — entregue em 2026-08-17
-   (`plans/archive/2026-08-17-dashboard-frontend-analitico-e-redator.md`). Levou a outra metade:
-   as 5 séries mensais, os 2 rankings, `compliance_turmas`, a carga de redatores e a view do
-   Redator inteira. **A P-44 continua aberta** — a carga mostra dois usuários de sonda, declarados
-   pela D10 em vez de apagados. O que bloqueava o VALOR desta view **caiu em 2026-08-19**: o
-   `identity-ativacao-acesso-redator` entregou convite, primeiro acesso, recuperação e revogação
-   (`plans/archive/2026-08-18-identity-ativacao-acesso-redator.md`), então o redator já autentica e
-   alcança a própria view.
-
-**Administrativo:** visão global de Comercial → Operação → Certificação, pendências, riscos,
-compliance e análises.
-
-**Redator:** visão exclusivamente própria — turmas atuais/próximas, agenda, documentação das suas
-turmas, pendências, compliance pessoal e histórico/indicadores profissionais permitidos.
-
-**O Dashboard não executa mutações.** CTAs apenas direcionam ao módulo dono da ação.
-
-**Direção futura registrada no Drive:** as projeções do Dashboard poderão alimentar uma central de
-notificações interna e, depois, canais como e-mail. **Notifications não entra nesta sprint.**
-
-## Sprint 6 · Meu Perfil
-
-Área self-service de identidade, segurança e, para Redator, documentação profissional.
-
-- **Contexto canônico:** Drive `Planejamento/meu-perfil-escopo-funcional.md`
-- **Execução detalhada:** Notion EAP 8.5.1–8.5.9
-- **Exige `context_required`** antes do planejamento, pelo mesmo motivo da Sprint 5.
-
-**Dois blocos sequenciais, os dois entregues:**
-
-1. ~~**`meu-perfil-backend-self-service`**~~ — entregue em 2026-08-15
-   (`plans/archive/2026-08-14-meu-perfil-backend-self-service.md`).
-2. ~~**`meu-perfil-frontend`**~~ — entregue em 2026-08-17
-   (`plans/archive/2026-08-15-meu-perfil-frontend.md`). Levou a página em duas colunas com corte por
-   mutabilidade: identidade e resumo à esquerda, e à direita exatamente o que é self-service —
-   dados pessoais, troca de senha e os quatro slots documentais do Redator.
-
-**Escopo do self-service:** Admin e Redator alteram apenas dados pessoais permitidos e a própria
-senha. **E-mail, RUT, role, permissões, `type` e `is_active` não são self-service.**
-
-**Exclusivo do Redator:** upload/substituição dos próprios documentos regulatórios e resumo de
-idoneidade profissional, cursos habilitados, ~~turmas atuais/próximas e pendências~~.
-
-> **Turmas e pendências NÃO foram entregues, e não é lacuna de execução.** A **D1** da spec do bloco
-> 1 as cortou do contrato por decisão do João, para não abrir aresta de `Identity` para `Operation`
-> antes do bloco do Dashboard — `RedatorProfileData` tem `cursos_habilitados` e `cursos`, e nada de
-> turma. Reabrir isso é decisão de escopo, não conserto: quem responde *"o que tenho para fazer"* é o
-> Dashboard do Redator, que vive no **B2** da Sprint 5.
-
-**O resumo profissional não substitui o Dashboard do Redator.** Meu Perfil responde *"quem sou e
-qual minha situação profissional"*; o Dashboard responde *"o que tenho para fazer e como está minha
-operação"*.
+- A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
+- `Contexto: sim` exige Context Packet atual antes do planejamento.
+- Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
+- **P0 não ordena** — 9 dos 14 itens são P0; quem ordena é a cadeia de dependência:
+  itens 1–8 fecham o código, 10→11→12 constroem a infra, o 14 fecha docs antes do fim e o 13 é o
+  gate final de go-live.
 
 ---
 
-# Próximos blocos
+# Fila priorizada
 
-1. **Administração · Roles e permissões — redesenho de composição.** O protótipo tem layout dividido
-   (lista de roles à esquerda; detalhe + matriz de permissões à direita, com marcação de permissão
-   essencial); o real tem tabela + diálogo. **Não é refinamento visual, é redesenho de tela** — exige
-   brainstorming. Task Notion: "Tela de Administração — Roles e Permissões". Respeitar ADR-07
-   (permissões essenciais não editáveis).
-2. **Hardening** — ownership em rotas nested e política de retenção documental.
----
+## 1. `feedbacks-resolver-escopo`
 
-# Blocos de execução de dívida
+**Prioridade:** P0 · **Frente:** Produto/Backend · **Contexto:** sim
+**Fonte:** Drive `RF-TUR-06/07`, `RF-FBK-01..04`; Notion `7.4.1`.
 
-> **Fila vazia até promoção explícita do João.** BD-1..BD-9 foram entregues entre 2026-08-11 e
-> 2026-08-14, o **BD-16** em 2026-08-18, e o **BD-17**, o **BD-14** e o **BD-18** em 2026-08-20 e o
-> **BD-12** em 2026-08-22 — cada um saiu desta lista com os débitos que cobria (o BD-17 levou D-51,
-> D-52 e D-53; o BD-14 levou D-12 e D-13; o BD-18 levou D-54, D-56 e D-14; o BD-12 levou D-55 e a
-> P-40), e o histórico está na linha da entrega em `historico/progress.md`. O BD-16 levou junto o
-> **BD-10**, que ele havia absorvido em 2026-08-17 e que nunca chegou a ser promovido. Os BD-11,
-> BD-13 e BD-15 abaixo são o que sobrou do reagrupamento de 2026-08-14 — **nenhum deles foi
-> promovido, e a fila só anda por escolha explícita do João.**
+**Objetivo:** resolver a lacuna entre o requisito canônico de feedbacks/avaliações e a ausência de
+`Domains/Feedback`.
 
-## BD-11 · Frontend · shell: navegação no toque
+**Evidência medida (2026-08-22):** o domínio não existe, mas o
+`Identity/Support/PermissionCatalog.php:87-89` já declara `feedback.feedback.view/manage` — aresta
+declarada sem código, a mesma classe que a D-17 (item 14) quer detectar.
 
-**Cobre:** D-03 · **Frente:** frontend
+**Escopo:** confirmar se Feedback permanece na v2; se entrar, desdobrar implementação mínima; se
+sair, registrar descope no Drive/Notion/DER **e remover as permissões órfãs do catálogo**. Não
+inventar schema ou workflow antes da decisão.
 
-**A P-34 saiu deste bloco em 2026-08-16, cumprida e não descartada.** A catraca `COR_HARDCODED`
-entrou em `src/app/**` sem `ignores` pela **D11** do `dashboard-frontend-central-controle`, com os 3
-sítios do shell convertidos para `--shell-ink`/`--shell-ink-muted` e a regra provada nos dois
-sentidos. Ficha em `pendencias/encerradas.md`. **O bloco fica só com a D-03** — e, sem a afinidade
-que juntava os dois, ele deixou de sair barato em conjunto.
-
-- **D-03** — menu recolhido a 390 tira o rótulo do DOM e deixa só `title`: no toque não há hover,
-  então o nome do item de navegação fica inalcançável.
-
-**DoD:** o nome do item de navegação alcançável no toque a 390px, medido no dispositivo emulado — não
-o atributo novo no DOM.
-
-## BD-15 · Docs e guardas de documentação
-
-**Cobre:** P-20, P-21, P-23, P-32, P-39, D-08 · **Frente:** documentação e mecanismo
-**Afinidade:** três tocam `docs/adrs.md`, dois tocam a guarda que confere doc contra código
-(`repo-docs-refs.test.ts`), e todos são a lição 13 na forma dela — doc que afirma o que não é.
-
-- **P-20** — `openspout/openspout` em produção sem ADR hospedeiro. **Decisão do João:** qual ADR
-  hospeda, ou ADR-20 novo.
-- **P-21** — `simple-qrcode` sem a nota no ADR-12; hospedeiro já é óbvio, falta escrever.
-- **P-23** — `progress.md` sem a coluna `Contexto`. **Decisão do João:** restaurar ou declarar a
-  mudança no cabeçalho.
-- **P-32** — a guarda da lição 13 confere path, não classe. Espera reincidência **por classe** para
-  desenhar o seletor sem falso-positivo.
-- **P-39** — a premissa de RBAC do plano do BD-6 está errada; corrigir **na fonte que for reusada**,
-  não retro-editando o plano.
-- **D-08** — a §5.3 (`generated.ts` não se edita à mão) segue sem mecanismo.
-
-**Nota de método:** P-20 e P-21 vivem no mesmo arquivo, então a decisão de numeração sai numa
-sentada só — é o que torna o agrupamento barato.
-
+**DoD:** requisito, planejamento e código deixam de divergir sobre a existência de Feedback.
 
 ---
 
-# Débitos técnicos
+## 2. `certificacao-historico-do-aluno`
 
-> Registro canônico de cada débito. A cobertura por bloco está mapeada acima; **entrar num BD não
+**Prioridade:** P0 se `RF-CER-07` continuar no MVP · **Frente:** Backend/Frontend · **Contexto:** sim
+**Fonte:** Drive `RF-ALU-06`, `RF-CER-07`; Notion `8.1.7`, `8.3.1`; `P-15`.
+
+**Objetivo:** disponibilizar certificados no contexto/histórico do aluno.
+
+**Escopo:** query por aluno sem N+1; contrato tipado; autorização; curso/turma/status/validade;
+exibição no detalhe do aluno; PDF/URL sob demanda. **Absorve a P-15** (ficha em
+`pendencias/abertas.md`).
+
+**DoD:** usuário autorizado parte do aluno e encontra/abre seus certificados sem regra de domínio
+reconstruída no React.
+
+---
+
+## 3. `hardening-acesso-ownership-e-integridade`
+
+**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
+**Fonte:** `RN-01`, `RN-02`, `RN-15`, ADR-07; Notion `7.3.3`; `P-49`, `P-51`, `P-47`, `D-34`.
+
+**Objetivo:** completar autorização por função + ownership de recurso.
+
+**Escopo:**
+- somente `admin`/`redator` ativos autenticam e permanecem autorizados;
+- **P-51**: omissão de `is_active` não pode reativar staff;
+- Redator vê/altera somente turmas às quais está designado e recursos derivados;
+- separar lançamento de nota/presença de `operation.enrollment.manage` se confirmado no
+  planejamento;
+- fechar Notion `7.3.3` com ownership real, não apenas permissão Spatie;
+- **P-49**: completar o mutex de arquivamento × escritores de filho (eixos redator e turma; a ficha
+  tem a tabela dos sítios);
+- **P-47**: corrigir a role dos redatores do seed, se o seed continuar oficial;
+- **D-34**: visibilidade RBAC do Dashboard vira campo explícito no payload, se o contrato for
+  tocado (regenera `generated.ts`, lei §5.3).
+
+**DoD:** Admin global; Redator A não lê/altera turma do Redator B; cliente/aluno e conta revogada
+falham; concorrência coberta não deixa agregado inconsistente.
+
+---
+
+## 4. `hardening-api-arquivos-e-abuso`
+
+**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
+**Fonte:** Drive `RNF-SEC-06`, `RNF-SEC-08`; Notion `9.1.1`; ADR-03/11/12.
+
+**Objetivo:** limitar abuso e consumo excessivo antes da exposição pública.
+
+**Evidência medida (2026-08-22):** `/login` (`Identity/routes.php:23`) e a validação pública de
+certificado (`Certification/routes.php:7`) não têm throttle; hoje só convite/recuperação têm
+(`throttle:6,1`).
+
+**Escopo:** throttle de login, validação pública de certificado e ações sensíveis; revisar o
+throttle já existente de senha/convite; limites de upload/import/batch/PDF; MIME/tamanho/quantidade;
+S3 privado + URL temporária; verificação antimalware exigida pelo RNF; `429` em Problem Details.
+Números concretos saem de medição/risco no plano.
+
+**Nota de proporção:** a sonda antimalware do `RNF-SEC-06` é candidata à mesma renegociação formal
+do gate de redundância do item 13 — ~10 usuários internos; o brainstorming decide se a **forma**
+exigida é obrigatória ou se o **resultado** basta.
+
+**DoD:** sondas de abuso/arquivo inválido são bloqueadas sem prejudicar o fluxo normal.
+
+---
+
+## 5. `hardening-auditoria-privacidade-e-observabilidade`
+
+**Prioridade:** P0 · **Frente:** Backend/Infra · **Contexto:** sim
+**Fonte:** Drive `RNF-SEC-01/03/04/05/07`; ADR-08; `P-02`, `P-33`.
+
+**Objetivo:** fechar retenção, privacidade, logs e alertas de produção.
+
+**Escopo:**
+- pruning de `audits` (**P-02**) e retenção de `login_logs` (**P-33**);
+- **retenção documental:** decidir se os arquivos de turma/redator (peso legal) ganham política
+  própria de retenção — linha herdada de "Próximos blocos" do backlog anterior; o brainstorming
+  confirma se o escopo é este ou se era só atalho para P-02/P-33;
+- minimização de PII; nunca logar password/token/cookie/secret;
+- logs centralizados; alertas de acesso suspeito e falhas operacionais;
+- secrets fora de código/imagem.
+
+**Decisão:** `RNF-SEC-05` fala em "micro-serviço" de logs, mas a arquitetura é monolítica e
+proporcional a ~10 usuários. Não criar microserviço sem confirmar que a **forma**, e não o
+resultado "logs centralizados", é obrigatória.
+
+**DoD:** auditoria/logs têm retenção, rastreabilidade e alertas definidos sem expor segredo/PII
+desnecessária.
+
+---
+
+## 6. `hardening-performance-e-dados`
+
+**Prioridade:** P1 · **Frente:** Backend · **Contexto:** sim
+**Fonte:** Drive `RNF-DES-01/02/03`; Notion `9.1.3`; ADR-02/07/09; `D-15`.
+
+**Objetivo:** otimizar o que for medido antes de introduzir cache/infra extra.
+
+**Escopo:**
+- medir N+1 separadamente de índices; eager-load; `EXPLAIN` nas queries relevantes;
+- revisar FKs/joins/Spatie; paginar collections crescentes; teto de `per_page`; allowlist de
+  filtro/ordenação;
+- medir Dashboard/operações pesadas; cache somente após query+índice+paginação e com invalidação
+  definida — **Redis não é requisito**;
+- **D-15**: unificar `DIAS_AVISO = 30` (Identity) com `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`,
+  decidindo o dono do número (Shared ou um dos domínios). O gatilho venceu em 2026-08-16 — os dois
+  convivem na mesma árvore; entra aqui por ser o bloco backend genérico mais próximo, e qualquer
+  bloco backend anterior pode absorvê-la.
+
+**DoD:** cenários representativos do porte do Lotus não exibem N+1 conhecido ou consulta
+evidentemente degradada.
+
+---
+
+## 7. `hardening-i18n-e-erros-api`
+
+**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
+**Fonte:** ADR-03/15; `D-07`, `D-18`, `D-36`.
+
+**Objetivo:** eliminar mistura de idiomas nas mensagens emitidas pela API.
+
+**Escopo:** mover literais de `ValidationException` para `lang/` (**D-07**); localizar
+`title/detail` do RFC 7807 (**D-36**); localizar descrições dinâmicas do Dashboard (**D-18**);
+respeitar `Accept-Language`; manter ES-CL como fallback.
+
+**Nota:** a D-07 não precisa mais aguardar decisão de idioma — o ADR-15 já define mecanismo e
+fallback (es-CL); falta aplicar.
+
+**DoD:** a mesma falha em ES-CL/PT-BR/EN retorna envelope e mensagem coerentes com o locale.
+
+---
+
+## 8. `frontend-hardening-final`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
+**Fonte:** Notion `9.1.5`; `D-03`, `D-33`, `D-35`, `P-46`, `P-41`.
+
+**Objetivo:** fechar acessibilidade/navegação e guardrails reais, sem abrir redesign estético
+geral. **Absorve o BD-11**, que ficava só com a D-03 e deixou de existir como bloco próprio.
+
+**Escopo:**
+- **D-03**: nome do item de navegação alcançável no toque com a sidebar recolhida a 390px;
+- **D-33**: foco devolvido ao ícone no toggle de senha do `AppPassword`;
+- **D-35**: ban de import PrimeReact também em `src/app/**` (régua nasce verde — zero import,
+  remedido em 2026-08-22);
+- **P-46**: decidir Preflight/margens de UA (mini-reset escopado é o desenho provável);
+- **P-41**: decidir/aplicar truncamento do `IdentityCell`;
+- revisão pelo harness nas viewports/temas relevantes.
+
+**Fora:** a ordem de foco de `/perfil` (**D-32**) — a correção existiu e foi revertida por decisão
+de layout; mora na tabela de decisões e só entra com o desenho escolhido pelo João.
+
+**DoD:** nenhum bloqueio coberto de foco, toque, overflow ou fronteira PrimeReact permanece.
+
+---
+
+## 9. `administracao-roles-permissoes-redesign`
+
+**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
+**Fonte:** referência visual atual + ADR-07.
+
+**Objetivo:** redesenhar a tela apenas se o protótipo atual continuar sendo a referência desejada.
+
+**Importante:** Notion `2.6.3` está **Concluída** e corresponde à implementação original. Este
+redesign é trabalho novo e precisa de nova task/EAP se for mantido. Exige brainstorming — é
+redesenho de tela, não refinamento visual.
+
+**Escopo:** lista de roles + detalhe + matriz de permissões; permissões essenciais protegidas;
+criação/edição de role customizada; nunca criar permissions arbitrárias pela UI.
+
+**DoD:** referência aprovada e produto convergem sem enfraquecer ADR-07.
+
+---
+
+## 10. `infra-producao-runtime-e-aws`
+
+**Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
+**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; `P-50`; Drive `RNF-DIS-01/03/04`.
+
+**Objetivo:** criar a infraestrutura/runtime real de produção; o compose atual continua sendo de
+dev.
+
+**Escopo:**
+- Dockerfile multi-stage e `docker-compose.prod.yml`;
+- Nginx de produção, `/up` como healthcheck, sem bind mount;
+- sem MySQL/MinIO/Mailpit de dev em produção; Gotenberg permanece serviço requerido;
+- **P-50**: resolver o `memory_limit` por medição (o valor vale para o PHP-FPM de produção), não
+  por número arbitrário;
+- EC2 + Security Groups;
+- RDS MySQL 8 separado da EC2 + snapshot com retenção mínima de 7 dias;
+- S3 privado + IAM least privilege + CORS necessário;
+- e-mail/domínio + DKIM;
+- TLS automático/renovação;
+- CloudWatch/alerta básico;
+- `APP_DEBUG=false`, configuração segura e secrets fora da imagem/repo.
+
+**DoD:** stack nasce do zero, usa serviços externos corretos, passa healthcheck e não depende do
+working tree do servidor.
+
+---
+
+## 11. `cicd-ci-governanca-e-artefato`
+
+**Prioridade:** P0 para Continuous Delivery · **Frente:** GitHub/Infra · **Contexto:** sim
+**Fonte:** decisão atual de CI/CD; ADR-13/14; `D-08`.
+
+**Topologia a validar:** `Gatika/lotus` como upstream corporativo; `Andred21/lotus` como
+fork/workbench; `origin` pessoal + `upstream` corporativo; worktrees somente locais; `develop`
+apenas se existir staging real — sem staging, PR da feature vai ao `Gatika/main`.
+
+**Escopo:** CI rápido pessoal; CI corporativo obrigatório; backend test; frontend
+`pnpm install --frozen-lockfile` + lint/test/build; regenerar tipos e reprovar drift de
+`generated.ts` (**D-08** — fecha a lei §5.3); audit de dependências; branch protection/required
+checks; build único da imagem de produção; GHCR com tag por commit SHA.
+
+**Limite:** esta consolidação não confirmou configurações do `Gatika/lotus`; não inventar
+branch/ruleset/Environment/secret existente.
+
+**DoD:** commit reprovado não gera release promovível; aprovado gera artefato imutável
+identificável.
+
+---
+
+## 12. `cicd-promocao-deploy-e-rollback`
+
+**Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
+**Fonte:** decisão atual de CI/CD; ADR-14; Notion `10.1.7`.
+
+**Objetivo:** substituir `git pull → build na VM` por promoção do artefato já testado.
+
+**Fluxo:**
+
+```text
+Gatika/main → CI → GHCR:<sha> → approval production
+            → deploy único → SSH EC2 → compose pull → migrate → up → /up
+```
+
+**Escopo:** GitHub Environment; secrets; aprovação manual; `concurrency=1`; deploy por SHA sem
+rebuild na VM; health pós-deploy; registrar SHA em produção; rollback da aplicação para SHA
+anterior compatível. Migration incompatível exige estratégia própria. DNS não participa do deploy
+normal; TLS é infraestrutura.
+
+**Fora:** Kubernetes, ECS/Fargate, ArgoCD e CodePipeline.
+
+**DoD:** release e rollback de aplicação são reproduzíveis e identificáveis por SHA.
+
+---
+
+## 13. `go-live-confiabilidade-e-recuperacao`
+
+**Prioridade:** último gate P0 · **Frente:** Cross-cutting/Infra · **Contexto:** sim
+**Fonte:** Drive `RNF-DIS-*`; Notion `11.1.1–11.1.3`; `P-05`, `P-44`, `D-37`.
+
+**Escopo:**
+- validar/consolidar migrations (**P-05**);
+- **D-37**: conferir agregados arquivados anteriores a `archived_with_parent` (2026-08-18) e
+  decidir caso a caso — backfill correto não existe;
+- rodar migrations + roles/permissões em produção;
+- **P-44**: limpar/reseedar os dados-sonda usados como evidência;
+- smoke `cotação → turma → matrícula → resultado → conclusão → certificado → validação pública`;
+- backup + restore real; RPO/RTO; alertas/health; secrets/config final.
+
+**Gate de arquitetura:** `RNF-DIS-02` exige servidor redundante, enquanto ADR-14 define EC2 única.
+Não declarar uma EC2 única como atendimento do RNF. Antes do go-live decidir explicitamente entre:
+- manter ADR-14 e revisar formalmente o requisito para RPO/RTO + restore; ou
+- manter HA/redundância e desenhar a infraestrutura correspondente.
+
+**DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
+está formalmente resolvida.
+
+---
+
+## 14. `BD-15-docs-guardrails-e-sincronizacao`
+
+**Prioridade:** P1 antes do encerramento definitivo · **Frente:** Docs/Mecanismos · **Contexto:** sim
+**Cobre:** `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-43`, `P-18`, `P-22`, `D-17`.
+
+**Escopo:**
+- ADR do OpenSpout (**P-20** — João aponta o hospedeiro ou autoriza ADR-20);
+- nota do `simple-qrcode` no ADR-12 (**P-21**);
+- formato de `progress.md` (**P-23** — restaurar a coluna `Contexto` ou declarar a mudança);
+- sync ADR-16↔Drive (**P-31**);
+- guardas de docs — **a P-32 só ganha seletor por classe com reincidência medida ou decisão
+  explícita do João; a ficha veta desenhar o seletor sem esse dado** (falso-positivo caro:
+  a doc cita classe de vendor, classe planejada e nome de conceito);
+- encerrar/reformular a **P-39** sem retro-editar o plano histórico;
+- DER: `certificates` deixa de ser "planejada" nos 4 sítios (**P-43**);
+- corrigir Notion **P-18**/**P-22**;
+- **D-17**: detectar aresta arquitetural declarada e não usada (as permissões `feedback.*` órfãs
+  são o caso vivo — ver item 1).
+
+**Sincronização Notion obrigatória:**
+- `8.4.0–8.4.7` Dashboard: ainda aparecem `Backlog`, mas a feature está entregue;
+- `8.5.1–8.5.9` Meu Perfil: ainda aparecem `Backlog`, mas a feature está entregue;
+- `9.1.4`: a `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e
+  emissão de certificado; não criar novo bloco de código apenas para repetir essa cobertura;
+- limpar duplicações genéricas de sync/fechamento/UI review que já pertencem ao workflow.
+
+> Os ponteiros de `pendencias/README.md` para BD executado foram corrigidos na própria
+> substituição de 2026-08-22 e não são mais escopo deste bloco.
+
+**DoD:** código, `/docs`, Drive e Notion concordam sobre entregue × pendente × descopado.
+
+---
+
+# Decisões não promovíveis isoladamente
+
+| ID | Decisão / gatilho |
+|---|---|
+| `D-09` | UI e backend divergem sobre zero contatos principais — decidir qual camada cede. |
+| `D-10` | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles`. |
+| `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
+| `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
+| `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
+| `P-03` | Compose por worktree — só se backend ∥ backend voltar a ocorrer, ou 2026-10-31. |
+| `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
+| `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
+| `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
+| `P-08` | Lotus decide se Manual varia por curso. |
+| `P-09` | Lotus confirma/descopa o quarto tipo de documento de turma. |
+| `P-10` | Lotus decide se tabela de alunos exibe Cliente. |
+| `P-13` | Lotus decide se Turma terá código próprio. |
+| `P-16` | Lotus decide a aba inicial de Turma. |
+| `DS-05` | Avatar do Perfil só vira task após medição justificar. |
+| `DS-07` | Mural de credenciais é redesign próprio, com brainstorming. |
+
+---
+
+# Futuros
+
+- **FUT-1 · Templates genéricos de documentos de turma** — além do Manual já existente, somente
+  após desenho com a Lotus. O manual PDF/DOCX pré-preenchido já cobre a fatia "baixa, preenche à
+  mão, sobe" do tipo `MANUAL`; futuro é o mecanismo genérico (`PRUEBAS`, `EVALUACION_REDATOR`) e o
+  preenchimento online.
+- **FUT-2 · Ancoragem cross-módulo** — padronizar deep-link/seleção quando houver recorrência
+  real; o caso turma→orçamento já existe.
+- **FUT-3 · Central de notificações** — notificações persistidas na aplicação alimentadas por
+  eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
+  para eventos críticos. Exige levantamento funcional próprio.
+
+---
+
+# Débitos técnicos — registro canônico
+
+> Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
 > move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado e do
-> `/fechar-sprint` correspondente.
->
-> Os IDs `D-*` nasceram no reagrupamento de 2026-08-14: até então **12 dos débitos desta página não
-> tinham número** e eram citados pelo título em negrito, o que tornava impossível mapeá-los a bloco
-> sem repetir o texto. Uma linha saiu no mesmo passo por ser **duplicata, não por estar resolvida**:
-> "consolidar as migrations adicionais nas originais" já vivia como **P-05**, com o mesmo gatilho
-> ("antes de subir para produção"), e um débito com dois donos diverge dos dois.
+> `/fechar-sprint` correspondente. Fichas completas anteriores: histórico do arquivo no Git
+> (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
 
-- **D-03 · Menu recolhido a 390 tira o rótulo do DOM e deixa só `title`** → **BD-11**. No toque não
-  há hover, então o nome do item de navegação fica inalcançável
-  (`src/app/layouts/Sidebar/SidebarItem.tsx`).
+- **D-03 · Menu recolhido a 390px tira o rótulo do DOM e deixa só `title`** →
+  `frontend-hardening-final`. Sem hover no toque, o nome do item de navegação fica inalcançável
+  (`src/app/layouts/Sidebar/SidebarItem.tsx`). Era o BD-11. **DoD:** nome alcançável no toque a
+  390px, medido no dispositivo emulado — não o atributo novo no DOM.
 
-- **D-08 · A lei §5.3 segue sem mecanismo** → **BD-15**. A linha original pedia Arch tests no backend
-  mais `eslint-boundaries` no frontend; **as duas partes nomeadas existem** e foram remedidas em
-  2026-08-14 contra `977586e`, não herdadas de relatório: `PersistenceLawsTest` cobre §5.1 (classe
-  `Repository` sobre Eloquent), §5.2 (`CREATE TRIGGER`/`unprepared()` em `database/` e `app/`), a
-  escrita de pivot sem auditoria e a coleção nested read-write — quatro testes, com o escape da
-  primeira declarado no docblock do próprio arquivo (a exclusão de `QueryBuilders/` é por path, então
-  um `FooRepository.php` dentro dela escaparia; reprovar por semelhança de nome mataria
-  `TurmaQueryBuilder`, que é o padrão do ADR-02); e a §5.6 virou `no-restricted-imports` no
-  `eslint.config.js`, nas **três** fronteiras (feature→PrimeReact, feature→feature em quatro grafias,
-  `shared/`→feature), por mecanismo diferente do `eslint-boundaries` que a linha nomeava e com o
-  mesmo efeito. **O que falta é a §5.3:** `generated.ts` não se edita à mão, e o único mecanismo hoje
-  é `globalIgnores` no lint (`eslint.config.js:158`), que apenas **tira o arquivo do corte** — não
-  impede edição nenhuma. As §5.4 (Sanctum), §5.5 (RN-01), §5.7 (financeiro) e §5.8 (DoD) seguem sem
-  guarda e sem desenho medido, então não entram aqui como promessa. Teste que roda o
-  `typescript:transform` e compara com o commitado é a candidata óbvia — ela reprova sozinha se
-  alguém editar à mão. **DoD é a sonda:** editar `generated.ts` e ver o mecanismo reprovar nomeando o
-  arquivo.
-- **D-16 · Turma concluída com zero matrículas cai em `fully_issued` no funil** → **BD-15**.
-  Declarado no review do `dashboard-backend-agregacoes` (2026-08-14) como não-regressão: a spec §4.3
-  escolheu o balde de propósito ("turma concluída sem matrícula aprovada pendente cai em 'tudo
-  emitido': não há o que emitir"), e a classificação exclusiva exige que ela caia em algum lugar. O
-  que incomoda é a **leitura**: o rótulo afirma emissão completa onde não houve emissão nenhuma.
-  Custo do fix: um sétimo balde, ou um rótulo que distinga "sem matrícula a emitir" — decisão de
-  contrato, e o consumidor (bloco B) ainda não existe para dizer se a distinção paga.
+- **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
+  `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
+  `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
+  chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
+  falta aplicar.
+
+- **D-08 · A lei §5.3 (`generated.ts` não se edita à mão) segue sem mecanismo** →
+  `cicd-ci-governanca-e-artefato`. Único mecanismo hoje é `globalIgnores` no lint
+  (`eslint.config.js:158`), que só tira o arquivo do corte. §5.1/5.2 cobertas por
+  `PersistenceLawsTest`, §5.6 por `no-restricted-imports` nas três fronteiras (remedido 2026-08-14
+  contra `977586e`); §5.4/5.5/5.7/5.8 sem guarda e sem desenho medido — não entram como promessa.
+  Fecho: CI regenera `typescript:transform` e reprova drift do commitado. **DoD-sonda:** editar
+  `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
+
+- **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
+  `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
+  (2026-08-14); o gatilho venceu em 2026-08-16 — os dois números convivem na mesma árvore. A task
+  inclui decidir o dono do número (Shared, ou um dos dois domínios). Qualquer bloco backend
+  anterior pode absorvê-la.
+
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  **BD-15**. Declarado no mesmo review. A lista de arestas de um domínio pode envelhecer com sobras
-  em silêncio — importe removido, entrada permanece —, e nada reprova. O cenário (9) do
-  `dashboard-backend-agregacoes` cobre a direção contrária **só para `Dashboard`**; generalizar é
-  varrer os `use` de cada domínio e reprovar declaração sem consumidor, que é a mesma forma da
-  varredura de órfãos que os fechamentos já fazem à mão.
+  `BD-15-docs-guardrails-e-sincronizacao`. A lista de arestas de um domínio envelhece com sobras
+  em silêncio; o cenário (9) do `dashboard-backend-agregacoes` cobre a direção contrária só para
+  `Dashboard`. Generalizar = varrer os `use` de cada domínio e reprovar declaração sem consumidor.
+  As permissões `feedback.*` órfãs (`PermissionCatalog.php:87-89`) são instância viva da mesma
+  classe — cruzam com `feedbacks-resolver-escopo`.
 
-## Sem bloco atribuído
+- **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
+  → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
+  (`CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
+  `CertificationMetricsQuery.php:38`, `IdentityMetricsQuery.php:46`); o front não pode traduzir —
+  em `turma_docs_incomplete` a string carrega a lista de documentos faltantes. Mitigado pela D17
+  do B1 (rótulo do tipo traduzido vira a linha principal). Fecha junto da D-07, pelo mesmo
+  mecanismo.
 
-- **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta.**
-  Medido em 2026-08-18 contra `b758068` (revisão de arquitetura). A visibilidade por permissão nasce
-  em `AdminDashboardAssembler.php:56-62` como quatro booleanos, é passada posicionalmente para
-  `AnalyticsQuery::series()` (`:27-32`) e `::rankings()` (`:73-76`), e chega ao payload como
-  **ausência de dado** — `AnalyticsQuery.php:319` precisa do sentinela `'0.0000'` justamente porque o
-  contrato não tem onde dizer "proibido". Do outro lado, o navegador **reconstrói a permissão
-  farejando nulo**: `RankingsPanel.tsx:25` decide se o usuário tem `commercial.quote.view`
-  varrendo `[...rankings.courses, ...rankings.clients]` atrás de um `uf_aprovada` não nulo, e
-  `SeriesPanel.tsx:54` faz o mesmo teste na série. **Não é regressão nem achado teórico:** é o
-  desfecho do Q-2 do review do B2, que foi corrigido do lado do cliente — a correção está certa para
-  o defeito que tratava (a métrica de UF deixou de ser oferecida com o gate fechado) e **alargou** o
-  vazamento, porque agora duas telas sabem traduzir `null` em permissão. Custo hoje: um scan O(n) por
-  render e a regra de RBAC morando em dois repositórios. Custo se ficar: toda tela nova aprende a
-  farejar nulo. Fix: a visibilidade vira campo explícito no payload e módulo próprio no backend.
-  **Sem bloco até o João agrupá-lo** — toca contrato de API e regenera `generated.ts` (lei §5.3),
-  então não é emenda de bloco alheio.
+- **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
+  `hardening-acesso-ownership-e-integridade`. A visibilidade nasce como quatro booleanos em
+  `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
+  `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
+  `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
+  farejando nulo. Medido 2026-08-18 contra `b758068`; desfecho do Q-2 do review do B2. Fix: a
+  visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
+  regenera `generated.ts` (lei §5.3). No bloco, condicional: só se o contrato for tocado.
 
-- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact.**
-  Medido em 2026-08-18 contra `b758068`. A lei §5.6 virou mecanismo em `eslint.config.js:362`, e o
-  bloco é escopado **por feature** (`src/features/${feature}/**`), então `src/app/**` não é visitado
-  por ele. O comentário de `:388-390` declara a exceção, mas só para a metade *feature→feature*
-  ("AppRouter importa 5 features, e compor rotas é o trabalho dele") — a metade **PrimeReact** fica
-  de fora sem razão escrita. A camada não é mais o shell de 3 arquivos que motivou a redação: ela
-  concentra hoje **28 arquivos** em `app/pages/Dashboard/`. **A régua nasceria verde:** zero import
-  de `primereact` em `src/app` hoje, medido — a mesma condição que a D11 do
-  `dashboard-frontend-central-controle` usou para ligar `COR_HARDCODED` nesta mesma camada sem
-  `ignores` (P-34, encerrada). É a quarta repetição do padrão "camada inteira sem a régua que as
-  outras têm", depois de P-34 (cor), D8 do B2 (`max-lines`) e P-38. Fix: acrescentar `src/app/**` ao
-  bloco `no-restricted-imports` **só** na fronteira PrimeReact, deixando *feature→feature* liberada.
-  **Sem bloco até o João agrupá-lo**; entra barato em qualquer bloco que toque `eslint.config.js`.
+- **D-33 · O foco cai no `<body>` quando o olho da senha alterna** → `frontend-hardening-final`.
+  Medido no fechamento do BD-16 (2026-08-18) em Chromium real (`/perfil` como Redator): o ícone é
+  trocado pelo Prime, o nó focado sai do DOM e `document.activeElement` vira `BODY`. Não é
+  regressão (main tree igual). Fix no wrapper `AppPassword`: devolver o foco ao novo ícone após a
+  troca. Terceira ponta do mesmo componente, depois de D-24 (não reproduzida) e UI-04 (paga).
 
-- **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo.**
-  A coluna marcadora da cascata de arquivamento (migration `2026_08_18_000001`) entra com `false`
-  em todas as linhas: qualquer agregado arquivado **antes** de 2026-08-18 restaura o pai sem os
-  filhos, em silêncio. Não há backfill correto possível — casar por `deleted_at` é o que a spec D2
-  do bloco recusou (`timestamp` de precisão 0: segundo inteiro não é identidade) e marcar todo
-  filho arquivado ressuscitaria o que alguém arquivou de propósito. Medido no review de 2026-08-18
-  (Q-7) e documentado no docblock da própria migration. **Sem produção, o alcance é só banco de
-  desenvolvimento já semeado.** O gatilho é o primeiro deploy: antes dele, conferir se existe
-  agregado arquivado de antes dessa data e, se existir, decidir caso a caso — corrigir à mão ou
-  aceitar o restore incompleto.
+- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact** →
+  `frontend-hardening-final`. O bloco do lint é escopado por feature (`eslint.config.js:362`) e a
+  exceção comentada (`:388-390`) só justifica a metade feature→feature; a camada concentra 28
+  arquivos em `app/pages/Dashboard/`. A régua nasce verde: zero import de `primereact` em
+  `src/app` (remedido 2026-08-22). Fix: acrescentar `src/app/**` ao `no-restricted-imports` só na
+  fronteira PrimeReact, deixando feature→feature liberada.
 
-- **D-33 · O foco cai no `<body>` quando o olho da senha alterna.**
-  Medido no fechamento do BD-16 (2026-08-18) em Chromium real, `/perfil` como Redator: com o foco no
-  olho, Espaço alterna o campo (`password` → `text`) e o `document.activeElement` vira `BODY`. O
-  ícone é trocado pelo Prime na alternância e o nó focado sai do DOM, então quem navega por teclado
-  volta ao topo do documento e perde o lugar a cada toggle. **Não é regressão deste bloco:** o mesmo
-  teste no main tree (`:5173`, sem os commits do BD-16) devolve `BODY` igual — muda só o alvo, que lá
-  mede 16x16 e aqui 28x28 (UI-04). É a terceira ponta do mesmo `AppPassword`, depois da tecla (D-24,
-  não reproduzida) e do alvo (UI-04, pago). O fix mora no wrapper — devolver o foco ao novo ícone
-  depois da troca —, e entra em qualquer bloco que toque `AppPassword` por outro motivo.
+- **D-36 · O envelope RFC 7807 não é localizado** → `hardening-i18n-e-erros-api`.
+  `ProblemDetails.php:22-36,68,71` devolve `title`/`detail` literais em português, apesar de
+  `SetLocale` já traduzir por `Accept-Language` e de existirem `lang/{en,es,es_CL,pt_BR}`. Medido
+  2026-08-18 (BD-13) e remedido 2026-08-19 com os dois idiomas no MESMO envelope (`title` PT +
+  `detail` es-CL num 422 de restore). Custo de tela hoje: só o `CertificateViewDialog` imprime
+  `detail` cru. Correção: `__()` com chaves nas 4 `lang/`.
 
-- **D-32 · A ordem de foco de `/perfil` diverge da visual abaixo de `xl`.**
-  `ProfilePage.tsx` usa `order-*` para inverter as duas colunas abaixo de 1280px, e `order` reordena
-  a PINTURA, não a árvore de acessibilidade. Medido no review de 2026-08-18 (UI-01): em 390px o foco
-  salta `main.scrollTop` 0 → 1862 → 2230 → 0 ao longo do Tab; em 1024px o `y` do elemento focado vai
-  1875 → 2383 e volta para 323. WCAG 1.3.2 (Meaningful Sequence) e 2.4.3 (Focus Order). Nenhum
-  controle fica inalcançável ou sem nome — o custo é desorientação e scroll evitável em teclado e
-  leitor de tela, nas duas viewports em que a página é mais longa.
-  **A correção existiu e foi revertida por decisão do João (2026-08-18):** virar as colunas em `xl`
-  (leitura à direita, self-service à esquerda) alinha DOM e pintura nas três larguras e dispensa o
-  `order-*`, mas tira a identidade da esquerda no desktop — e o layout venceu. Inverter só o DOM
-  **não** serve: mudaria a viewport em que a violação acontece, já que a ordem de leitura de duas
-  colunas em LTR é a esquerda inteira e depois a direita. `tabIndex` positivo também não: troca um
-  defeito de ordem por outro. O que resta é desenho — ou a D1 abre mão do lado, ou a D-27 abre mão
-  da precedência abaixo de `xl`, ou o cartão de identidade encolhe o bastante para não precisar da
-  inversão. **Decisão do João**, e é por isso que entra sem bloco.
-
-- **D-15 · `DIAS_AVISO = 30` em Identity duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`.**
-  Duplicação **declarada e datada na spec do Meu Perfil** (2026-08-14): unificar antes do merge
-  significaria importar de um domínio que na árvore `fix-frontend` ainda não existia. **O gatilho
-  venceu** — medido no `/fechar-sprint` de 2026-08-16,
-  `git ls-tree -r main -- backend/app/Domains/Dashboard/Services/DashboardWindows.php` acha o
-  arquivo, então os dois números convivem na **mesma** árvore e a unificação deixou de depender de
-  merge. Decidir o dono do número (Shared, ou um dos dois domínios) é parte da task. **Fica sem bloco
-  até o João agrupá-la** — o fechamento constata que a trava caiu, não escolhe onde ela entra.
-
-- **D-36 · O envelope RFC 7807 não é localizado, e o front teve de calar o `detail` por causa disso.**
-  `backend/app/Shared/Exceptions/ProblemDetails.php:22-36,68,71` devolve `title` e `detail` genéricos
-  LITERAIS em português ("Erro interno", "Ocorreu um erro inesperado. Tente novamente.", "Erro ao
-  processar a requisição."), apesar de `App\Shared\Http\Middleware\SetLocale` já traduzir por
-  `Accept-Language` e de existirem `backend/lang/{en,es,es_CL,pt_BR}`. Num 500 o cliente chileno lia
-  português. `CorruptedSnapshotException::missingFields()` é es-CL fixo pelo mesmo motivo — ali é
-  deliberado (D8), mas continuaria fixo se a sessão fosse pt-BR ou en. **Medido em 2026-08-18, no
-  BD-13.** O `title` nunca chegou à tela (o front usa `t('common.loadError')`), e a D-05 do BD-13
-  acabou de calar o `detail` nos estados de carga — então o custo hoje é o `CertificateViewDialog`,
-  que imprime o `detail` cru por desenho, e qualquer consumidor futuro da API. **A correção é `__()`
-  com chaves nas 4 `lang/`**; entra em bloco de backend, onde o custo da P-03 já esteja pago.
-  Frente: backend. (O ID `D-32` do plano do BD-13 já estava tomado pela ordem de foco de `/perfil`;
-  este débito ficou com o próximo livre.)
-  **Medido de novo no fechamento do `arquivados-roots-restantes` (2026-08-19), agora com os dois
-  idiomas no MESMO envelope:** `POST /api/quotes/11/restore` sob orçamento arquivado devolveu
-  `title` `"Erro de validação"` com `detail` `"El presupuesto de esta cotización está archivado:
-  restáuralo primero."` — as mensagens novas daquele bloco saíram em es-CL por decisão de spec,
-  então o 422 carrega português no envelope e espanhol no conteúdo. Segue sem custo de tela
-  (`problemMessage` lê `errors`/`detail`, nunca `title`), e segue esperando a mesma decisão da
-  **D-07**.
+- **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo** →
+  `go-live-confiabilidade-e-recuperacao`. A migration `2026_08_18_000001` entra com `false` em
+  todas as linhas: agregado arquivado antes de 2026-08-18 restaura o pai sem os filhos, em
+  silêncio. Backfill correto não existe — casar por `deleted_at` (precisão 0) foi recusado pela
+  spec, e marcar todo filho arquivado ressuscitaria arquivamento intencional. Sem produção, o
+  alcance é só banco de dev. Gatilho: primeiro deploy — conferir agregados arquivados pré-data e
+  decidir caso a caso.
 
 ## Travados em decisão — não entram em bloco
 
 Executar sem a decisão é escolher no lugar do João.
 
-- **D-18 · O `description` das pendências e alertas do Dashboard é string fixa em espanhol no
-  backend, e a tela do B1 já mostra as outras duas locales em volta dela.** Nasceu da **D17** da spec
-  do `dashboard-frontend-central-controle` (2026-08-15), e a medição que a produziu está nos quatro
-  produtores: `CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
-  `CertificationMetricsQuery.php:38` e `IdentityMetricsQuery.php:46` — todos montam frase pronta
-  (`"Cotización pendiente de aprobación."`). O front **não** pode traduzir: em
-  `turma_docs_incomplete` a string carrega a lista de documentos faltantes, dado que o React não
-  deriva. A D17 mitigou pelo que estava ao alcance do frontend — o **rótulo do tipo** é traduzido nas
-  3 locales e vira a linha principal, com o `description` como detalhe —, então o defeito hoje é
-  cosmético e localizado, não uma tela em espanhol. **Fecha junto da D-07, e pelo mesmo motivo:**
-  traduzir texto de servidor exige primeiro o idioma canônico e o mecanismo de i18n do backend, que
-  é a decisão que a D-07 espera. Fazer só este sítio criaria um terceiro padrão de idioma no repo.
-- **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo.** Commercial
-  escreve em PT (`DeleteQuoteAction`, `DeleteClientContactAction`), Operation em ES (`Turma`,
-  `ConcludeTurmaAction`) — o usuário chileno lê um ou outro conforme o endpoint. Pré-existente;
-  levantado no segundo review (2026-08-01) porque o 422 novo de contatos tem uma única mensagem e ela
-  é a que o cliente vê. **Exige decisão do João sobre o idioma canônico** antes de valer a pena
-  unificar. (Era o `Q-6`.)
-- **D-09 · Assimetria entre camadas:** a UI não consegue voltar a zero principais, mas o backend
-  aceita zero.
-- **D-10 · Bloco 5.2b:** `GET /api/roles` permite a admin comum enumerar permissões do superadmin
-  enquanto `/api/permissions` é superadmin-only. A parte de teste desta linha e a linha inteira do
-  **Bloco 5.2a** saíram em 2026-08-11 com o BD-2.
-- **D-11 · Alunos · o dropdown de empresa depende de uma permissão de outro módulo.** O módulo de
-  alunos inteiro é gated por `identity.user.*` (D8 da spec, e é o que o `StudentController` exige),
-  mas o dropdown de empresa do create lista via `clientsApi`, que exige `commercial.client.view`.
-  Quem tem `identity.user.create` sem `commercial.client.view` cria aluno pela API e não pela tela.
-  **Duas tentativas de contornar na UI foram revertidas por serem piores que o problema:** gate duplo
-  no botão escondia a ação de quem tinha autorização real (`3e0bc36`); travar o submit por `isError`
-  bloqueava com lista utilizável em cache (`03280c6`). O estado atual é o menos ruim — a falha fica
-  **visível** (dropdown desabilitado + motivo + "Reintentar"), não escondida. **Alinhar de verdade
-  exige decisão do João sobre RBAC/spec:** endpoint de clientes sob `identity.user.view`, permissão
-  nova, ou aceitar o acoplamento.
+- **D-09** · A UI não consegue voltar a zero contatos principais; o backend aceita zero. Decidir
+  qual camada cede.
 
-- **DS-05 · O avatar de `/perfil` é `scale-200` sobre imagem pequena, não tamanho real.**
-  Achado estético da auditoria de 2026-08-17 (`audits/2026-08-17-perfil-ui-review-e-design.md`),
-  **deixado fora do BD-16 por decisão explícita do João**: a previsão de recorte é aritmética e pede
-  medição no navegador antes de virar task. O risco chegou a reabrir durante a execução — a faixa da
-  D8 esbarra no `transform` —, e a Task 15 mediu que não recortava. Segue de pé como estética, não
-  como defeito.
-- **DS-07 · O mural de credenciais como assinatura da tela.** Mesma auditoria, mesma decisão: inverte
-  a ordem da spec D1 (imutável à esquerda, self-service à direita) e é bloco próprio, com
-  brainstorming — não emenda de bloco alheio.
+- **D-10** · `GET /api/roles` permite a admin comum enumerar permissões do superadmin enquanto
+  `/api/permissions` é superadmin-only. (O Bloco 5.2a e a parte de teste saíram em 2026-08-11 com
+  o BD-2.)
 
-**Pendências no mesmo estado** (detalhe em `pendencias/abertas.md`): P-02 e P-33 (retenção de
-`audits` e `login_logs`), P-05 (consolidar migrations), P-03 (compose por worktree), P-30 (âmbar de
-marca), P-28 (fundo do certificado), P-31/P-18/P-22 (escrita fora do repositório) e as de decisão da
-Lotus (P-08, P-09, P-10, P-13, P-15, P-16).
+- **D-11** · O dropdown de empresa do create de aluno lista via `clientsApi`
+  (`commercial.client.view`) num módulo gated por `identity.user.*`: quem tem
+  `identity.user.create` sem a permissão de cliente cria aluno pela API e não pela tela. Duas
+  mitigações de UI foram revertidas por piorarem (`3e0bc36`, `03280c6`); o estado atual deixa a
+  falha visível (dropdown desabilitado + motivo + "Reintentar"). Decisão: endpoint sob
+  `identity.user.view`, permissão nova, ou aceitar o acoplamento.
+
+- **D-16** · Turma concluída com zero matrículas cai em `fully_issued` no funil — a spec §4.3
+  escolheu o balde de propósito, mas o rótulo afirma emissão completa onde não houve emissão.
+  **O gatilho venceu:** o consumidor que faltava (funil do B2) existe desde 2026-08-17. Decidir:
+  sétimo balde, ou rótulo que distinga "sem matrícula a emitir".
+
+- **D-32** · A ordem de foco de `/perfil` diverge da visual abaixo de `xl` — `order-*` reordena a
+  pintura, não a árvore de acessibilidade (WCAG 1.3.2/2.4.3; medições: 390px `scrollTop`
+  0→1862→2230→0; 1024px `y` 1875→2383→323). **A correção existiu e foi revertida por decisão do
+  João (2026-08-18)** — virar as colunas em `xl` tirava a identidade da esquerda no desktop.
+  Inverter só o DOM não serve (muda a viewport da violação); `tabIndex` positivo também não. O que
+  resta é desenho: a D1 abre mão do lado, a D-27 abre mão da precedência abaixo de `xl`, ou o
+  cartão de identidade encolhe o bastante para dispensar a inversão.
+
+- **DS-05** · O avatar de `/perfil` é `scale-200` sobre imagem pequena. Deixado fora do BD-16 por
+  decisão explícita; a Task 15 mediu que não recorta. Estética — só vira task após medição
+  justificar.
+
+- **DS-07** · O mural de credenciais como assinatura da tela inverte a ordem da spec D1 e é bloco
+  próprio, com brainstorming.
 
 ---
 
-# Módulos ainda não implementados
+# Fora desta fila
 
-Hoje são `ModulePlaceholder` ou equivalente. A auditoria visual de 2026-07-24 os listou como
-divergência crítica de UI; **não são** — são módulo a construir.
-
-- **Dashboard** — coberto pela **Sprint 5** acima, e **não é mais placeholder**: o bloco A entregou o
-  contrato (2026-08-15) e o B1, a tela operacional (2026-08-16), que substituiu a saudação de 17
-  linhas por KPIs, pendências, alertas, agenda e pipeline. O que falta do protótipo é justamente o
-  **B2**: os gráficos de turmas e de certificados (as 5 séries mensais), os rankings, o compliance,
-  a carga de redatores e a view do Redator.
-- **Perfil do Usuário** — coberto pela **Sprint 6** acima. Página dedicada para usuário
-  (administrativo e redator), visualizando seu perfil e dados.
-- ~~**Pessoas · Alunos**~~ — entregue em 2026-07-27
-  (`plans/archive/2026-07-27-bloco-alunos-modulo.md`).
-- ~~**Certificados**~~ — entregue: backend no Bloco 7 (2026-08-07,
-  `plans/archive/2026-08-05-certificacao-sprint-4.md`) e frontend em 2026-08-08
-  (`plans/archive/2026-08-08-certificacao-frontend.md`).
-
----
-
-# Futuros dependentes de decisão
-
-- **FUT-1 · Templates de documento de turma gerados via código** — o redator baixa o template
-  pré-preenchido com dados da turma/alunos, preenche online ou à mão e sobe. Depende de desenho com a
-  Lotus; abrir task no Notion e avaliar documentação Drive/local quando definido.
-  **Interseção com "Arquivados e restauração":** o manual em PDF/DOCX pré-preenchido é exatamente a
-  fatia "baixa, preenche à mão, sobe" para o tipo `MANUAL`. O que continua futuro é o mecanismo
-  genérico para os outros tipos (`PRUEBAS`, `EVALUACION_REDATOR`) e o preenchimento online.
-- **FUT-2 · Refino de ancoragem cross-módulo** — link de dado compartilhado leva à página do módulo
-  dono com a entidade selecionada, ou a exibe inline. O caso turma→orçamento já existe; o mecanismo
-  genérico depende de decisão e task no Notion.
+Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
+BD-1..BD-10, BD-12, BD-13, BD-14, BD-16, BD-17 e BD-18 já foram executados/fechados e **não voltam
+ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se no
+`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 14,
+com o mesmo nome. Task antiga com status incorreto no Notion gera sincronização documental, não
+reimplementação.
