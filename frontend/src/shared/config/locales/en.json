@@ -775,7 +775,7 @@
       "type": {
         "MANUAL": "Manual",
         "PRUEBAS": "Tests / assessments",
-        "EVALUACION_REDATOR": "Editor assessment"
+        "EVALUACION_REDATOR": "Redator assessment"
       },
       "delivered": "Delivered",
       "pending": "Pending",

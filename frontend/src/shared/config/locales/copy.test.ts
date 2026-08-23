@@ -46,3 +46,30 @@ describe('sem código de regra de negócio na tela', () => {
     },
   )
 })
+
+/** Sinônimo em inglês do papel `Redator` — "editor", "writer" ou "instructor", com ou sem
+ * plural, sem diferenciar maiúsculas. Achado UI-05 da run 2 do `/lotus-ui-review`: a aba
+ * "Redator" e o cartão "Editor assessment" nomeiam o MESMO papel com palavras diferentes,
+ * e o operador em inglês não tem como saber que são a mesma coisa. */
+const SINONIMO_REDATOR_EN = /\b(editors?|writers?|instructors?)\b/i
+
+/** Varredura restrita à sub-árvore `operation.*` do locale `en` — é o módulo que a run 2
+ * mediu em tela. As outras 33 grafias do mesmo sinônimo (`roleName.redator`,
+ * `course.sectionRedatores`, `dashboard.redatorLoad.*`, `redator.*`, `perm.*`, ...) vivem
+ * fora da superfície revisada e são trabalho de outro bloco; alargar a varredura agora
+ * reprovaria código que ninguém mediu. A árvore guarda é o MÓDULO inteiro, não a chave de
+ * hoje — qualquer folha nova de `operation.*` que reintroduzir "editor"/"writer"/"instructor"
+ * cai aqui. */
+describe('vocabulário de domínio: papel "Redator" não vira sinônimo em inglês (operation.*)', () => {
+  it('en: nenhuma chave de operation.* chama o redator de editor/writer/instructor', () => {
+    const operationEn = flattenEntries(en.operation as LocaleTree, 'operation.')
+    const comSinonimo = operationEn
+      .filter(([, valor]) => typeof valor === 'string' && SINONIMO_REDATOR_EN.test(valor))
+      .map(([chave]) => chave)
+
+    expect(
+      comSinonimo,
+      `Locale en tem sinônimo de "redator" (editor/writer/instructor) vazando pra tela nas chaves: ${comSinonimo.join(', ') || '—'}.`,
+    ).toEqual([])
+  })
+})
