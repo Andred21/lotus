@@ -32,7 +32,13 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('operation.documents.progress', { done: s.deliveredCount, total: s.totalTypes })}
           </p>
-          <div className="mt-2 h-2 w-64 rounded" style={{ background: 'var(--surface-section)' }}>
+          {/* Trilho em `--surface-300`, não em `--surface-section`: este último
+            * resolve para o MESMO branco de `--surface-card` no tema claro, e a
+            * barra deixava de ser proporção para virar faixa verde de comprimento
+            * arbitrário (UI-03 do relatório de 2026-08-23: 1,00:1 contra o cartão).
+            * Token escolhido pela FUNÇÃO — superfície que precisa contrastar com o
+            * cartão —, não pelo nome, e medido nos dois temas. */}
+          <div className="mt-2 h-2 w-64 rounded" style={{ background: 'var(--surface-300)' }}>
             <div
               className="h-2 rounded transition-[width]"
               style={{ width: `${(s.deliveredCount / s.totalTypes) * 100}%`, background: 'var(--green-500)' }}
