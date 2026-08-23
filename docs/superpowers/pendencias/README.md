@@ -21,18 +21,15 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (26)
+## Abertas (25)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-49 | `lockRow` de redator e turma é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction`/`DeleteTurmaAction` tomam | `hardening-acesso-ownership-e-integridade` | bloco que tocar um dos seis escritores de filho da ficha; revisar 2026-10-31 |
-| P-51 | A lei "ausente não é nulo" não alcança propriedade com default literal — 6 campos, 1 deles é acesso (`is_active` omitido reativa staff) | `hardening-acesso-ownership-e-integridade` | João decidir o remédio do `is_active`; revisar 2026-10-31 |
-| P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | `hardening-acesso-ownership-e-integridade` | bloco que puder reseedar o dev, ou primeiro gate `permission:` sobre rota de redator; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
-| P-50 | A suíte unida (866 testes) passa do `memory_limit` de 128M do container e o `artisan test` documentado morre no meio | `infra-producao-runtime-e-aws` | decidir o `memory_limit` da imagem (vale para o PHP-FPM de produção), ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
+| P-50 | O `memory_limit` de 128M da imagem vale para os dois SAPIs e nunca foi decidido — **o sintoma da suíte fechou em 2026-08-23** (`phpunit.xml` declara 512M), resta o PHP-FPM de produção | `infra-producao-runtime-e-aws` | decidir o `memory_limit` da imagem, ou bloco que tocar `docker/php/`; revisar 2026-10-31 |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | `frontend-hardening-final` | João decidir que a coluna deve cortar; revisar 2026-10-31 |
 | P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
@@ -57,11 +54,13 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
+| P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
+| P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 
-## Encerradas (6)
+## Encerradas (1)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|

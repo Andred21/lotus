@@ -8,8 +8,8 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3, spatie/laravel-permission, spatie/laravel-data + typescript-transformer, Sanctum SPA cookie/CSRF, MySQL 8 (dev) + sqlite `:memory:` (suíte), React 19 + TS.
 
-**Spec:** [`docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md`](../specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md)
-**Packet:** [`docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md`](../context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md)
+**Spec:** [`docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md`](../../specs/archive/2026-08-22-hardening-acesso-ownership-e-integridade-design.md)
+**Packet:** [`docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md`](../../context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md)
 **Lane:** `lane-a`, main tree, branch `feat/hardening-acesso-ownership-e-integridade`, base `f6649297`.
 
 ## Global Constraints

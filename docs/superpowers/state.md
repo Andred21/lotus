@@ -2,31 +2,32 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
-active_feature: identity
-active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
-active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
-context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 
 lanes:
   lane-a:
-    active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
-    active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
-    active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
-    context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: feedbacks-resolver-escopo
+    last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: infra-producao-runtime-e-aws
     workflow_state: ready_for_review
@@ -53,9 +54,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
-last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 0b9ffecd
-updated_at: 2026-08-23T17:31:56-03:00
+last_completed_work_item: hardening-acesso-ownership-e-integridade
+state_basis_commit: f815c507
+updated_at: 2026-08-23T18:12:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -158,24 +159,9 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_closure` |
+| `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
-
-**A `lane-a` recebeu o item 3 em 2026-08-22, por promoção explícita do João.** É backend, então roda
-no main tree e satisfaz o gate sem reabrir a P-03: a `lane-b` é infra e a `lane-c` é frontend — não
-há backend ∥ backend. O bloco é `Contexto: sim`, logo nasceu em `context_required`; o packet
-`2026-08-22-hardening-acesso-ownership-e-integridade.md` veio do Codex em 2026-08-22 com
-`status: ready` e cinco fontes recuperadas — Drive e Notion inclusive, endereçados por ID. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
-e aí regenera `generated.ts` (lei §5.3) — a spec a declarou **fora**, e o `generated.ts` muda neste
-bloco por outro motivo (o `is_active` da P-51).
-
-**Planejamento fechado em 2026-08-22T17:31.** Spec e plano escritos, e o plano corrige **três**
-medições que a spec e as fichas traziam erradas: o lock dos escritores de filho é `lockForWrite()` e
-não `lockRow()` cru (a diferença é a recusa, que é a P-49 inteira); `ImportStudentsAction` sai da
-lista dos seis porque não abre transação (a cobertura vem da linha, no `EnrollStudentAction`); e a
-P-47 não se conserta no seeder — ele já atribui a role desde `e3490d84` —, mas por migration de
-backfill sobre o dado velho. Handoff declara `executor: claude`.
 
 **A `lane-b` está em `ready_for_review`, não em `context_required`.** O estado da main dizia o
 segundo e o `state.md` da própria `../lotus-infra` dizia o primeiro — divergência corrigida em
@@ -197,9 +183,14 @@ item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido aqui. Duas irregu
   sai no `/fechar-sprint` dela. Até lá, **a fila canônica do item 16 mora na branch**, não neste
   tree.
 
+**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
+`feat/hardening-acesso-ownership-e-integridade` **não foi mesclada** — a integração é serial e a
+`lane-b` está na frente. A lane não recebe item novo sozinha: promoção é do João, contra o
+`backlog.md`.
+
 Interseção a vigiar entre as lanes vivas: a `lane-c` mexe em `shared/ui` e nos mocks de
-`react-i18next`; a `lane-a` é backend e só toca frontend se a D-34 abrir o contrato. Integração
-segue serial — a `lane-b` mescla primeiro, e as outras rebasam.
+`react-i18next`, e a `lane-b` é infra — não colidem. Integração segue serial: a `lane-b` mescla
+primeiro, e as outras rebasam antes de continuar.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -209,11 +200,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 | 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 | 2026-08-22 | `bd12-load-state-e-listas` | BD-12 dos blocos de dívida |
 | 2026-08-20 | `bd18-useloadstate-promise-e-forma` | BD-18 dos blocos de dívida |
-| 2026-08-20 | `bd14-contrato-de-entrada` | BD-14 do backlog |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando
