@@ -132,4 +132,36 @@ describe('useTableFilter', () => {
     expect(corta.result.current.rows).toEqual([])
     expect(corta.result.current.filtering).toBe(true)
   })
+
+  it('filteredByScope isola o EFEITO do where — e não conta a busca', () => {
+    // O `filtering` sozinho não distingue "quem está estreitando a lista": com
+    // termo digitado ele é `true` de qualquer jeito. Quem precisa da distinção é
+    // a moldura, para o botão do vazio prometer só o que o clique vai limpar
+    // (UI-09). Mesma medida de sempre: EFEITO do `where`, não presença dele.
+    const semWhere = renderHook(() => useTableFilter(rows, searchable))
+    expect(semWhere.result.current.filteredByScope).toBe(false)
+
+    act(() => semWhere.result.current.onFilterChange('alta'))
+    expect(semWhere.result.current.filtering).toBe(true)
+    // A busca não é filtro próprio da tela: limpar "filtros" não a devolveria.
+    expect(semWhere.result.current.filteredByScope).toBe(false)
+
+    const corta = renderHook(() =>
+      useTableFilter(rows, searchable, (row) => row.status === 'ativo'),
+    )
+    expect(corta.result.current.filteredByScope).toBe(true)
+
+    // Where que existe mas não corta linha: escopo permanente não nasce
+    // "filtrando para sempre", e o botão não pode prometer limpar nada.
+    const naoCorta = renderHook(() => useTableFilter(rows, searchable, () => true))
+    expect(naoCorta.result.current.filteredByScope).toBe(false)
+
+    // E os dois juntos, que é o caso que o UI-09 relatou.
+    const ambos = renderHook(() =>
+      useTableFilter(rows, searchable, (row) => row.status === 'ativo'),
+    )
+    act(() => ambos.result.current.onFilterChange('zzzz'))
+    expect(ambos.result.current.rows).toEqual([])
+    expect(ambos.result.current.filteredByScope).toBe(true)
+  })
 })

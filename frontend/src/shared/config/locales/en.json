@@ -65,6 +65,8 @@
     "clearFilters": "Clear filters",
     "noResultsHint": "Check the term or clear the search.",
     "clearSearch": "Clear search",
+    "noResultsSearchAndFiltersHint": "Check the term or clear the search and filters.",
+    "clearSearchAndFilters": "Clear search and filters",
     "loadError": "Could not load the data",
     "loadErrorHint": "Check your connection and try again.",
     "forbiddenHint": "You do not have permission to view this information.",

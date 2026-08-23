@@ -11,6 +11,13 @@ export interface TableFilter<T> {
    * EFEITO do `where`, não a presença dele: uma tabela com escopo permanente
    * (`where` sempre passado) não fica "filtrando" para sempre. */
   filtering: boolean
+  /** `true` só quando o `where` da tela está de fato cortando linha — a busca
+   * não conta. Existe porque `filtering` não distingue QUEM estreitou a lista:
+   * com termo digitado ele é `true` de qualquer jeito, e a moldura precisava
+   * saber se o clique do vazio também vai devolver o filtro próprio para poder
+   * nomeá-lo no botão (UI-09). Mede o EFEITO do `where`, pelo mesmo motivo que
+   * `filtering`: escopo permanente que não corta nada não é filtro a limpar. */
+  filteredByScope: boolean
   /** Linhas depois do `where` e da busca. */
   rows: T[]
   /** Índice da primeira linha da página (controlado — volta a 0 ao filtrar).
@@ -71,6 +78,7 @@ export function useTableFilter<T>(
 
   const term = filter.trim().toLowerCase()
   const scoped = where ? items.filter(where) : items
+  const filteredByScope = scoped.length !== items.length
   const rows =
     term === '' || !searchable
       ? scoped
@@ -95,7 +103,8 @@ export function useTableFilter<T>(
   return {
     filter,
     term,
-    filtering: term !== '' || scoped.length !== items.length,
+    filtering: term !== '' || filteredByScope,
+    filteredByScope,
     rows,
     first: first >= rows.length ? 0 : first,
     onFilterChange,

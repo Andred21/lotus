@@ -22,6 +22,13 @@ export interface SearchableTableState<T> {
    * e omitir o campo daqui deixava a moldura errada por construção para elas
    * (review de 2026-08-04, Q-1). */
   filtering: boolean
+  /** O filtro PRÓPRIO da tela (o `filterSlot`) está de fato cortando linha.
+   * `filtering` não responde isso: com termo digitado ele é `true` mesmo sem
+   * filtro nenhum, e era por isso que o botão do vazio dizia "limpar busca"
+   * enquanto o clique também zerava o dropdown, devolvendo uma lista MAIOR do
+   * que a que o usuário tinha estreitado (UI-09). Como `filtering`, vem do hook
+   * e mede o EFEITO — a moldura não recalcula nem esta pergunta. */
+  filteredByScope: boolean
   rows: T[]
   first: number
   onFilterChange: (value: string) => void
@@ -96,9 +103,13 @@ export function SearchableTableFrame<T>({
 }: SearchableTableFrameProps<T>) {
   const { t } = useTranslation()
 
-  // Filtrando sem termo de busca = só o `filterSlot` está estreitando a lista;
-  // oferecer "limpar busca" ali mandaria o usuário apagar um campo já vazio.
+  // Os três casos do vazio, nomeados pelo que o clique VAI limpar — não pelo
+  // que está ativo. `clearAll` sempre limpou os dois; o rótulo é que bifurcava
+  // só por `term` e, com busca e filtro juntos, prometia um e fazia dois
+  // (UI-09). Filtrando sem termo continua sem oferecer "limpar busca": mandaria
+  // o usuário apagar um campo já vazio.
   const filteredBySearch = table.term !== ''
+  const ambos = filteredBySearch && table.filteredByScope
   // A composição é da moldura, não do chamador: `table.clear()` do
   // `useTableFilter` limpa só a busca, e este botão promete os dois.
   const clearAll = () => {
@@ -109,10 +120,22 @@ export function SearchableTableFrame<T>({
     <AppEmptyState
       icon="pi pi-search"
       title={filteredBySearch ? t('common.noResults', { term: table.filter.trim() }) : t('common.noResultsFiltered')}
-      description={filteredBySearch ? t('common.noResultsHint') : t('common.noResultsFilteredHint')}
+      description={
+        ambos
+          ? t('common.noResultsSearchAndFiltersHint')
+          : filteredBySearch
+            ? t('common.noResultsHint')
+            : t('common.noResultsFilteredHint')
+      }
       action={
         <AppButton
-          label={filteredBySearch ? t('common.clearSearch') : t('common.clearFilters')}
+          label={
+            ambos
+              ? t('common.clearSearchAndFilters')
+              : filteredBySearch
+                ? t('common.clearSearch')
+                : t('common.clearFilters')
+          }
           icon="pi pi-times"
           text
           onClick={clearAll}

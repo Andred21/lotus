@@ -65,6 +65,8 @@
     "clearFilters": "Limpar filtros",
     "noResultsHint": "Revise o termo ou limpe a busca.",
     "clearSearch": "Limpar busca",
+    "noResultsSearchAndFiltersHint": "Revise o termo ou limpe a busca e os filtros.",
+    "clearSearchAndFilters": "Limpar busca e filtros",
     "loadError": "Não foi possível carregar os dados",
     "loadErrorHint": "Verifique sua conexão e tente de novo.",
     "forbiddenHint": "Você não tem permissão para ver esta informação.",
