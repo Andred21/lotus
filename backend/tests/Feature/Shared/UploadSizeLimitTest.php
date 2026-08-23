@@ -117,9 +117,11 @@ class UploadSizeLimitTest extends TestCase
     public function test_documento_de_turma_acima_de_10mb_e_422(): void
     {
         Storage::fake('s3');
-        $this->actingAsRedatorRole();
+        $user = $this->actingAsRedatorRole();
 
         $turma = $this->turma();
+        $redator = $user->redator()->create([]);
+        $turma->redatores()->attach($redator->id);
 
         $this->postJson("/api/turmas/{$turma->id}/documents", [
             'type' => 'MANUAL',
