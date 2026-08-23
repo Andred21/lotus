@@ -10,7 +10,7 @@ use App\Domains\Commercial\Http\Controllers\QuoteController;
 use App\Domains\Commercial\Http\Controllers\QuoteFileController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.active')->group(function () {
     // ANTES do apiResource, senão `clients/archived` casa como `clients/{client}`.
     Route::get('clients/archived', [ClientController::class, 'archived']);
     // `whereNumber`: sem ele um id não numérico estoura `TypeError` (500) na

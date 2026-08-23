@@ -121,6 +121,11 @@ class DomainDependencyTest extends TestCase
             'Operation\Models\Enrollment',
             'Operation\Models\Turma',
         ],
+        // Task 1 do bloco `hardening-acesso-ownership-e-integridade` abre `User`:
+        // `TurmaQueryBuilder::visibleTo(User $user)` escopa a listagem por
+        // `redatores.user_id` (spec D1) — quem autentica é o User, o Redator é
+        // o perfil pendurado nele. Aresta existia em código desde `9882fabe`;
+        // faltou nesta matriz até o Step 9 da Task 7 rodar a catraca.
         'Operation' => [
             'Catalog\Models\Course',
             'Commercial\Enums\QuoteStatus',
@@ -130,6 +135,7 @@ class DomainDependencyTest extends TestCase
             'Identity\Enums\StudentResolutionOutcome',
             'Identity\Models\Redator',
             'Identity\Models\Student',
+            'Identity\Models\User',
             'Identity\Services\StudentLookup',
             'Identity\Services\StudentResolution',
             'Identity\Services\StudentResolver',

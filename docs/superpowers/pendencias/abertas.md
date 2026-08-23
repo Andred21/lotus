@@ -50,9 +50,10 @@ provável, e é decisão do João.
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
-listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
-arquivado for observado em uso real. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** os eixos **redator** e **turma** fecharam em 2026-08-23 (ver o bloco
+final desta ficha). O que resta é o eixo **cotação × orçamento**: fecha quando um bloco tocar
+`RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os DOIS lados, ou quando um filho ativo
+sob pai arquivado for observado em uso real. Revisar em **2026-10-31**.
 
 **Nasceu como `P-47` e foi renumerada no merge da `main` (2026-08-19), que já havia publicado uma
 P-47 — a das roles do seed. Mesmo precedente da [P-35](#p-35).** Texto e blocos que a citam como
@@ -117,6 +118,44 @@ restaurar cotação sob orçamento arquivado lendo `$quote->budget->trashed()` s
 arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo sob pai arquivado. Não
 foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
 plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
+
+### Os eixos REDATOR e TURMA fecharam em 2026-08-23
+
+Fechados pelo `hardening-acesso-ownership-e-integridade` (`7b6123c7`, `2772d8cb`, `cc6d411e`,
+`3282f4ac`, `48ed1840`). **A ficha errava em dois pontos, e o plano os corrigiu por medição:**
+
+- **O lock é `lockForWrite()`, não `lockRow()` cru.** O molde `Client` que esta ficha cita chama
+  `Client::lockForWrite()` (`Client.php:139-148`) — `lockRow()` **mais** a recusa se o pai já está
+  arquivado. A diferença é a ficha inteira: `lockRow` sozinho SERIALIZA e depois deixa B pousar o
+  filho sob o pai recém-arquivado. `Turma::lockForWrite()` e `Redator::lockForWrite()` nasceram
+  neste bloco, no molde do `Client`.
+- **`ImportStudentsAction` sai da lista dos seis escritores.** Ela não abre transação — a transação
+  do import é POR LINHA e mora no `EnrollStudentAction`. `lockForUpdate()` fora de transação é
+  solto no autocommit da própria consulta: o lock ali seria teatro. São **cinco** tomadores, e a
+  cobertura do import vem da linha.
+
+Os cinco tomadores: `StoreRedatorDocumentAction`, `UpdateRedatorAction` (eixo redator),
+`DesignateRedatorAction` (aresta de lock cruzando domínio, declarada no `DomainDependencyTest`),
+`EnrollStudentAction` e `StoreTurmaDocumentAction` (eixo turma).
+
+**A catraca é `tests/Feature/Shared/ParentLockOnChildWriteTest.php`.** Arch test de lista dupla —
+toda Action sob `app/Domains/*/Actions/` que recebe `Turma $` ou `Redator $` está em `TOMAM_LOCK`
+ou em `ISENTAS` com o motivo escrito ao lado, e **silêncio reprova**. Roda em sqlite porque lê
+código, não corrida: `SQLiteGrammar::compileLock()` devolve string vazia e nenhum teste deste
+repositório prova lock.
+
+**Provado no gate de fechamento (2026-08-23), em duas camadas:**
+
+- **Sonda vista reprovar, nos dois braços da catraca.** Tirar o `Turma::lockForWrite()` do
+  `EnrollStudentAction` reprova o braço do lock; criar uma Action nova recebendo `Turma $` e não
+  declarada em nenhuma das duas listas reprova o braço do silêncio. As duas sondas foram
+  revertidas e o teste voltou a **4 passed**.
+- **Corrida real no MySQL de dev.** Conexão A abre transação e toma `SELECT … FOR UPDATE` sobre
+  `turmas.id=7`; B dispara `EnrollStudentAction` sobre a mesma turma e **bloqueia por 6,2 s**; A
+  arquiva e commita; B destrava e **recusa** com `Esta clase fue archivada y ya no acepta cambios.`
+  As duas metades de uma vez — o lock bloqueou (senão a matrícula entraria imediatamente) e a
+  recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
+  desta ficha). Turma 7 restaurada ao fim do gate.
 
 ---
 
@@ -206,26 +245,6 @@ removidos junto os dois `password_reset_tokens` deixados pelos gates dele (`admi
 `gate.task14@lotus.cl`). As onze linhas de gates anteriores continuam intactas — são de blocos
 fechados.
 
-## P-47 — os redatores do seed não têm a role `redator`, e o bloco que a criou só a atribui adiante
-
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
-[P-44](#p-44)), ou o primeiro gate `permission:` aplicado sobre rota de redator — é quando a falta
-deixa de ser cosmética. Revisar em **2026-10-31**.
-
-Medido no `/fechar-sprint` de 2026-08-19: dos 7 redatores do `OperationDemoSeeder`, **nenhum** carrega
-a role `redator` que o `RolePermissionSeeder.php:38` define. O bloco `identity-ativacao-acesso-redator`
-fechou as duas portas por onde a role passa a ser atribuída — `CreateRedatorAction` (cadastro novo) e
-`SendRedatorAccessInvitationAction` (reenvio de convite, o achado **Q-1** do review) —, mas nenhuma
-delas alcança linha que já existe no banco sem convite reenviado. Provado na própria prova e2e deste
-fechamento: `juan.morales@lotus.cl` (user 2) saiu de `roles=[]` para `roles=[redator]` **só** depois do
-`POST /api/redatores/1/invitation`; o estado foi restaurado ao fim do gate, e os 7 seguem sem role.
-
-**Não é defeito do código entregue, e não é o mesmo caso da P-44.** A P-44 é sonda de gate que
-sobreviveu; esta é **dado de seed que nasceu antes do mecanismo existir**. Hoje não impede nada — o
-gate do Dashboard é por `user.type` (`DashboardController.php:37`), não por role —, e em produção o
-caminho de remediação existe e está provado (reenviar convite atribui a role). O que falta é decidir se
-o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseedar.
-
 ## P-52 — `invitation_tokens` existe desde 2026-08-18 e não tem ficha no `der-fisico.md`
 
 **Bloco:** — · **Gatilho:** fecha quando um bloco tocar `invitation_tokens` (convite de redator,
@@ -286,6 +305,28 @@ deslocaram, e estão atualizadas abaixo.
 documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de
 travar. Enquanto não houver catraca executável para `estrutura-monolito.md` (a `D-17` fez isso para
 as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
+
+---
+
+## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
+
+**Bloco:** — · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
+duas assertivas. Revisar em **2026-10-31**.
+
+Medido no review de `feedbacks-resolver-escopo` (2026-08-22, achado Q-4): o
+`RemoveOrphanFeedbackPermissionsMigrationTest` tem quatro testes e nenhum deles morde se você apagar
+o `->where('guard_name', 'web')` ou o `app(PermissionRegistrar::class)->forgetCachedPermissions()` do
+`up()` da `2026_08_22_000001_remove_orphan_feedback_permissions.php`. A suíte fica verde nos dois
+casos — é a lição 10 outra vez: teste que passa por não conseguir observar a diferença.
+
+Deferido para o `hardening-acesso-ownership-e-integridade` e depois tirado do escopo dele por decisão
+do João em 2026-08-22. **O bloco escreveu duas migrations de permissão** (`..._000002` e
+`..._000003`) e não aproveitou a oportunidade — o que é exatamente a informação que faz esta ficha
+valer alguma coisa para o próximo bloco.
+
+O conserto tem forma conhecida: semear uma permissão homônima em outro `guard_name` e provar que ela
+sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do `up()`, para que um
+`up()` sem `forgetCachedPermissions()` devolva o estado obsoleto.
 
 ---
 
@@ -591,8 +632,8 @@ segue de pé: fecha quando o João apagar ou mesclar uma das duas.
 
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
 
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
-dos outros cinco); os demais, o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
+**Bloco:** — · **Gatilho:** o campo **1** (`is_active`) fechou em 2026-08-23 (ver o bloco final
+desta ficha). Restam **cinco**: o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
 `BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
 
 Achado pela review final do **BD-14** (2026-08-20, `0fe30b13..dd0cda1`). **Nada aqui é regressão do
@@ -665,3 +706,24 @@ da D1 e move `generated.ts` — decisão do João, não do agente.
 **A varredura que falta:** a medição da D-13 procurou o idioma `instanceof Optional ? null`. Ela era
 cega a este defeito, porque aqui o valor nunca chega como `Optional`. Um bloco que feche esta ficha
 deve varrer por **default literal em propriedade de DTO de entrada**, não pelo ternário.
+
+### O campo 1 fechou em 2026-08-23; os cinco restantes seguem abertos
+
+O João escolheu o remédio **(a)** — `public bool|Optional $is_active` sem default, espelhando o
+`RedatorData`. O **(b)** (`['present','boolean']`) foi recusado por contradizer a D1 da spec do
+BD-14 ("omissão preserva"): reabrir decisão de dois dias antes para economizar um diff de
+`generated.ts` não paga. Entregue pelo `hardening-acesso-ownership-e-integridade` em `d11169c9`, com
+`d4a8553d` fechando o blast radius no `create` de staff (o `Optional` sem default também alcança o
+cadastro novo, que precisava do `?? true` explícito).
+
+`generated.ts` foi **regenerado**, nunca editado (lei §5.3): `is_active` passou a
+`undefined | boolean`, a mesma grafia que a linha 433 já carregava para `RedatorData`.
+
+**Provado contra a API real no gate de fechamento (2026-08-23):** `PUT /api/users/87` com
+`is_active: false` desliga; o `PUT` seguinte, **omitindo a chave** e só renomeando, devolve 200 com
+o nome novo e `is_active` **ainda `false`** — confirmado no banco. Antes do bloco, esse segundo PUT
+devolvia o acesso ao staff desligado sem ninguém pedir.
+
+Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
+`CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
+nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.

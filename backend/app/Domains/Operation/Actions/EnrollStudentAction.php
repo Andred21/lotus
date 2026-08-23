@@ -22,6 +22,13 @@ class EnrollStudentAction
         $turma->assertAcademicallyWritable();
 
         return DB::transaction(function () use ($turma, $rut, $name, $email, $phone) {
+            // Mutex do pai ANTES de qualquer escrita (P-49): a cascata de
+            // `DeleteTurmaAction` enumera e apaga `enrollments`, e sem este lock
+            // uma matrícula criada na janela sobrevive ATIVA sob turma
+            // arquivada. `lockForWrite` também RECUSA turma já arquivada — o
+            // `lockRow` cru só serializaria.
+            Turma::lockForWrite($turma->id);
+
             $client = $turma->contratanteClient(); // RF-TUR-03: cliente da cotação
             $resolution = $this->resolver->resolveByRut($rut, $name, $email, $phone, $client);
 

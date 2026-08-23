@@ -22,6 +22,7 @@ class UpdateStaffUserAction
     public function __construct(
         private UserProvisioner $users,
         private SuperadminGuard $guard,
+        private PurgeOtherSessionsAction $sessions,
     ) {}
 
     public function execute(User $user, UserData $data): User
@@ -47,6 +48,14 @@ class UpdateStaffUserAction
                 $user->id,
             );
 
+            // Revogação é transição, não estado: só purga quem estava ativo e
+            // passou a inativo. Reenviar `false` para conta já desligada não
+            // derruba sessão nenhuma. Forma copiada do `UpdateRedatorAction`,
+            // que já acertava — o staff é que não tinha a metade dele.
+            $revogando = ! $data->is_active instanceof Optional
+                && $data->is_active === false
+                && $user->is_active === true;
+
             $attrs = WritableAttributes::from([
                 'name' => $data->name,
                 'email' => $data->email,
@@ -64,6 +73,11 @@ class UpdateStaffUserAction
             }
 
             $this->users->writing(fn () => $user->update($attrs));
+
+            if ($revogando) {
+                $this->sessions->all($user);
+            }
+
             $user->syncRoles([$data->role]);
 
             return $user->fresh()->load('roles');

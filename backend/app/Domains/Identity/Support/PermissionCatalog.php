@@ -74,6 +74,7 @@ class PermissionCatalog
             'operation.turma.delete' => 'Remover turmas',
             'operation.turma.restore' => 'Restaurar turmas arquivadas',
             'operation.enrollment.manage' => 'Matricular alunos / importar planilha (Fluxo 3)',
+            'operation.enrollment.record_result' => 'Lançar nota e presença da matrícula (RN-02 — ação do redator)',
             'operation.enrollment.restore' => 'Restaurar matrículas arquivadas',
             'operation.turma.assign_redator' => 'Designar redator idôneo à turma (Fluxo 3)',
             'operation.turma.complete' => 'Confirmar conclusão da turma (Fluxo 4 — admin confirma)',

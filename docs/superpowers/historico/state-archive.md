@@ -23,6 +23,75 @@
 
 ---
 
+## Fechado em 2026-08-23 — `hardening-acesso-ownership-e-integridade`, item 3 da fila consolidada
+
+### Seleção e planejamento — 2026-08-22 (verbatim do `state.md`)
+
+**A `lane-a` recebeu o item 3 em 2026-08-22, por promoção explícita do João.** É backend, então roda
+no main tree e satisfaz o gate sem reabrir a P-03: a `lane-b` é infra e a `lane-c` é frontend — não
+há backend ∥ backend. O bloco é `Contexto: sim`, logo nasceu em `context_required`; o packet
+`2026-08-22-hardening-acesso-ownership-e-integridade.md` veio do Codex em 2026-08-22 com
+`status: ready` e cinco fontes recuperadas — Drive e Notion inclusive, endereçados por ID. A **D-34** do escopo é condicional: só entra se o contrato for tocado,
+e aí regenera `generated.ts` (lei §5.3) — a spec a declarou **fora**, e o `generated.ts` muda neste
+bloco por outro motivo (o `is_active` da P-51).
+
+**Planejamento fechado em 2026-08-22T17:31.** Spec e plano escritos, e o plano corrige **três**
+medições que a spec e as fichas traziam erradas: o lock dos escritores de filho é `lockForWrite()` e
+não `lockRow()` cru (a diferença é a recusa, que é a P-49 inteira); `ImportStudentsAction` sai da
+lista dos seis porque não abre transação (a cobertura vem da linha, no `EnrollStudentAction`); e a
+P-47 não se conserta no seeder — ele já atribui a role desde `e3490d84` —, mas por migration de
+backfill sobre o dado velho. Handoff declara `executor: claude`.
+
+### Execução — 2026-08-22 a 2026-08-23
+
+Nove tasks, 25 commits (`79c246c6`..`f815c507`). Os quatro eixos entraram inteiros: `visibleTo()` no
+`TurmaQueryBuilder` e `resolveRouteBinding()` no `Turma` (ownership, 20 rotas de uma vez); purge de
+sessão na transição mais `EnsureAccountIsActive` por request (revogação), com `UserData::$is_active`
+perdendo o default literal (P-51) e `d4a8553d` fechando o blast radius no `create` de staff;
+`operation.enrollment.record_result` por migration (capacidade, RN-02); e `lockForWrite()` em `Turma`
+e `Redator` tomado por cinco escritores de filho, com o `ParentLockOnChildWriteTest` de lista dupla
+como catraca (integridade, P-49). A P-47 saiu por migration de backfill (`fa1abdf1`), não por seeder.
+
+### Review — 2026-08-23 (Claude + Codex), dois achados aprovados
+
+- **Q-1 — `EnsureAccountIsActive` vazou para o grupo `api` inteiro.** O middleware nasceu em
+  `api(append:)` buscando a propriedade "rota autenticada nova nasce coberta". O preço era invisível:
+  as rotas propositalmente anônimas rodam no MESMO grupo `api`, e `$request->user()` resolve nelas
+  pelo guard `web` sem `auth:sanctum` nenhum. Um cookie de conta recém-desativada devolvia 401 em
+  `login`, `password/forgot`, `password/reset`, `invitation/accept` e `publico/certificados/{uuid}` —
+  a validação pública do QR, que tem peso legal, e a própria porta por onde a pessoa sairia do
+  buraco. Corrigido em `0ac7358d`: a checagem passou a andar casada com `auth:sanctum` no grupo
+  `auth.active`, e a cobertura que se ganhava de graça passou a ser **verificada** pelo
+  `AuthenticatedRouteMiddlewareTest`, que exige que a superfície anônima esteja declarada — anônima
+  nova reprova em silêncio. O mesmo commit declarou `memory_limit=512M` em `phpunit.xml`, porque os
+  cinco testes novos levaram a suíte a estourar os 128M do container — **remendo desfeito no merge
+  de 2026-08-23**, porque a `lane-b` já tinha pago a P-50 por SAPI (`docker/php/memory-cli.ini` a
+  320M no CLI, `www.conf` a 256M no FPM) e o número maior do `phpunit.xml` mascararia o teto da
+  imagem. Com 320M a suíte fecha igual.
+- **Q-2 — `.claude/rules/backend-ddd.md` desatualizada sobre o data-scoping da Turma.** Corrigido em
+  `0b9ffecd`.
+
+Os cinco testes novos foram provados contra o código antigo (`git stash` do fix): reprovam lá,
+passam aqui.
+
+### Fechamento — 2026-08-23
+
+DoD provado contra a API real e o MySQL de dev (12 provas, registradas na linha de entrega do
+`progress.md`), incluindo a corrida de duas conexões, as duas sondas do arch test vistas reprovar e
+revertidas, e as cinco rotas públicas reabertas pelo Q-1. Gate: backend **906 passed / 5 skipped**
+pelo comando canônico do `CLAUDE.md` §6 — que voltou a terminar —, frontend **87 arquivos / 481
+testes**, lint 0, build verde, Pint `passed` nos 42 arquivos da sprint e `typescript:transform` sem
+diff novo.
+
+Pendências: **P-47 encerrada**; **P-49** e **P-51** fecharam parte e seguem abertas no resto, cada
+uma com o gatilho reescrito para o que sobrou; **P-50** foi encerrada pela `lane-b` no mesmo dia
+(por SAPI, `memory-cli.ini` a 320M e `www.conf` a 256M) e o remendo desta branch saiu no merge de
+2026-08-23; **P-54** nasceu, com o Q-4
+herdado do bloco 1. **A D-34 perdeu o bloco hospedeiro** ao fechar o item 3 sem ser paga (ficou fora
+por escrita explícita na §2 da spec) e espera novo dono, escolha do João.
+
+---
+
 ## Fechado em 2026-08-22 — `infra-producao-runtime-e-aws`, item 10 da fila
 
 ### Seleção — 2026-08-22
@@ -326,7 +395,6 @@ inteiro teria apagado da fila trabalho que ninguém fez. **Nada foi promovido.**
 `specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`; o link da spec dentro do plano foi
 reapontado. **`state_basis_commit` continua em `c8480eee`** — o commit contra o qual o João promoveu
 o bloco; o SHA deste fechamento não entra no arquivo que ele fecha.
-
 ---
 
 ## Fechado em 2026-08-22 — `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila

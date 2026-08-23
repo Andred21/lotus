@@ -176,6 +176,7 @@
     "operation_turma_delete": "Eliminar grupos",
     "operation_turma_restore": "Restaurar grupos archivados",
     "operation_enrollment_manage": "Matricular alumnos / importar planilla (Flujo 3)",
+    "operation_enrollment_record_result": "Registrar nota y asistencia de la matrícula (RN-02 — acción del redactor)",
     "operation_enrollment_restore": "Restaurar matrículas archivadas",
     "operation_turma_assign_redator": "Asignar redactor idóneo al grupo (Flujo 3)",
     "operation_turma_complete": "Confirmar finalización del grupo (Flujo 4 — admin confirma)",

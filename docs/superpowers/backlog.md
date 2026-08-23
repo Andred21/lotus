@@ -23,11 +23,17 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 7 dos 12 itens restantes são P0; quem ordena é a cadeia de dependência:
-  itens 2–8 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
-- **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22 e a fila
-  começa no `2` de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e
-  pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
+- **P0 não ordena** — 7 dos 11 itens restantes são P0; quem ordena é a cadeia de dependência:
+  itens 2–9 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
+  em 2026-08-23, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
+  provisionamento). A fila começa no `2` e salta o `3` de propósito: o número é identidade estável,
+  citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e
+  pareceria promoção.
+- **O item 16 (`frontend-revisao-ui-por-modulo`) não aparece aqui.** Ele foi acrescentado pela
+  worktree da `lane-c` (`eaa9e15c`) e, por decisão do João em 2026-08-22, não foi duplicado neste
+  tree — duplicá-lo garantiria conflito no merge sem ganho. Até o merge da lane, **a fila canônica
+  do item 16 mora na branch `refactor/frontend-revisao-ui`.**
 
 ---
 
@@ -46,36 +52,6 @@ exibição no detalhe do aluno; PDF/URL sob demanda. **Absorve a P-15** (ficha e
 
 **DoD:** usuário autorizado parte do aluno e encontra/abre seus certificados sem regra de domínio
 reconstruída no React.
-
----
-
-## 3. `hardening-acesso-ownership-e-integridade`
-
-**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** `RN-01`, `RN-02`, `RN-15`, ADR-07; Notion `7.3.3`; `P-49`, `P-51`, `P-47`, `D-34`.
-
-**Objetivo:** completar autorização por função + ownership de recurso.
-
-**Escopo:**
-- somente `admin`/`redator` ativos autenticam e permanecem autorizados;
-- **P-51**: omissão de `is_active` não pode reativar staff;
-- Redator vê/altera somente turmas às quais está designado e recursos derivados;
-- separar lançamento de nota/presença de `operation.enrollment.manage` se confirmado no
-  planejamento;
-- fechar Notion `7.3.3` com ownership real, não apenas permissão Spatie;
-- **P-49**: completar o mutex de arquivamento × escritores de filho (eixos redator e turma; a ficha
-  tem a tabela dos sítios);
-- **P-47**: corrigir a role dos redatores do seed, se o seed continuar oficial;
-- **D-34**: visibilidade RBAC do Dashboard vira campo explícito no payload, se o contrato for
-  tocado (regenera `generated.ts`, lei §5.3);
-- **Q-4 do review de `feedbacks-resolver-escopo` (2026-08-22, deferido pelo João):** os testes de
-  `RemoveOrphanFeedbackPermissionsMigrationTest` não cobrem o filtro `guard_name` nem o
-  `forgetCachedPermissions()` do próprio `up()` — apagar qualquer um dos dois deixa a suíte verde
-  (lição 10). Impacto hoje é baixo (o banco só tem o guard `web`, medido, e o projeto não usa
-  teams); vira relevante quando houver segundo guard. Fortalecer junto do resto do RBAC.
-
-**DoD:** Admin global; Redator A não lê/altera turma do Redator B; cliente/aluno e conta revogada
-falham; concorrência coberta não deixa agregado inconsistente.
 
 ---
 
@@ -410,13 +386,19 @@ está formalmente resolvida.
   mecanismo.
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
-  `hardening-acesso-ownership-e-integridade`. A visibilidade nasce como quatro booleanos em
+  **sem bloco hospedeiro desde 2026-08-23.** Estava no item 3 como **condicional** ("só se o
+  contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
+  **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
+  Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
+  diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
+  novo hospedeiro, e escolhê-lo é do João** (candidatos naturais: `administracao-roles-permissoes-redesign`
+  ou `frontend-hardening-final`). A visibilidade nasce como quatro booleanos em
   `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
   `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
   `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
   farejando nulo. Medido 2026-08-18 contra `b758068`; desfecho do Q-2 do review do B2. Fix: a
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
-  regenera `generated.ts` (lei §5.3). No bloco, condicional: só se o contrato for tocado.
+  regenera `generated.ts` (lei §5.3).
 
 - **D-33 · O foco cai no `<body>` quando o olho da senha alterna** → `frontend-hardening-final`.
   Medido no fechamento do BD-16 (2026-08-18) em Chromium real (`/perfil` como Redator): o ícone é

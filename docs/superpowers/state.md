@@ -15,17 +15,19 @@ blocker: null
 
 lanes:
   lane-a:
+    active_feature: null
     active_work_item: null
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/feedbacks-resolver-escopo
+    branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
+    last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: null
     workflow_state: idle
@@ -40,22 +42,22 @@ lanes:
     resume_state: null
     last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: null   # ../lotus-bd15 removida em 2026-08-22, depois do merge
-    branch: null # docs/bd15-guardrails-e-sincronizacao mesclada no PR #66 e apagada (era 79fec64f)
+    active_feature: frontend
+    active_work_item: frontend-revisao-ui-por-modulo
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_execution
+    tree: ../fix-frontend
+    branch: refactor/frontend-revisao-ui
     active_spec: null
-    active_plan: null
+    active_plan: null   # exceção declarada — ver "Lane-c" abaixo
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
-last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 8c6dea02
-updated_at: 2026-08-23T01:35:00-03:00
+last_completed_work_item: hardening-acesso-ownership-e-integridade
+state_basis_commit: f815c507
+updated_at: 2026-08-23T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -150,21 +152,57 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
-> **A `lane-a` e a `lane-c` fecharam e mesclaram em 2026-08-22** — `lane-a` no PR #65, `lane-c` no
-> PR #66 (merge `61acc0c3`); as duas estão `idle` em `lanes:`. A `lane-c` teve **worktree e branch
-> destruídas** depois do merge, por decisão do João, e por isso o `tree` e o `branch` dela são
-> `null`. A `lane-a` rodou no main tree, então ela mantém `tree: main-tree`; o `branch` dela ainda
-> nomeia `feat/feedbacks-resolver-escopo`, que é registro de onde o trabalho saiu e **não** promessa
-> de que a branch exista. A tabela acima fica como registro da seleção que promoveu as três, não
-> como lista do que está ativo agora.
+> A tabela acima é **registro da seleção de 2026-08-22**, não a lista do que está ativo. Os três
+> itens que ela promoveu fecharam: o 1 e o 14 em 2026-08-22 (PR #65 e PR #66, merge `61acc0c3`) e o
+> 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
+> está na seção abaixo.
 
-> **A `lane-b` fechou em 2026-08-22** e foi a última das três a sair —
-> `infra-producao-runtime-e-aws`, mesclada no **PR #67** (merge `31f91987`), narrativa em
-> `historico/state-archive.md`. A worktree `../lotus-infra` e a branch
-> `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por decisão do João e pelo
-> mesmo precedente da `lane-c`; por isso `tree` e `branch` dela são `null`. **As três lanes estão
-> `idle` e nenhuma tem trabalho ativo**: a próxima promoção é do João, no `backlog.md`, e decide se
-> as lanes continuam ou se o estado volta a uma frente só.
+## Ocupação corrente — 2026-08-23
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
+| `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
+
+**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
+`feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
+estado e **ainda não foi mesclada** — é o PR aberto. A lane não recebe item novo sozinha: promoção é
+do João, contra o `backlog.md`.
+
+**A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
+**PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
+`../lotus-infra` e a branch `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por
+decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
+são `null`.
+
+**A `lane-c` é a worktree `../fix-frontend`, e o registro dela nasceu atrasado.** A lane executava o
+item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido na reconciliação de 2026-08-22
+(`79c246c6`). Duas irregularidades ficam **declaradas, não descobertas depois**:
+
+- **`active_plan` é `null` com a lane em `executing`**, contra a invariante que o exige a partir de
+  `ready_for_execution`. Exceção decidida pelo João em 2026-08-22: o item 16 é revisão iterativa
+  dirigida pelas runs de `/lotus-ui-review`, uma superfície por vez, e o artefato durável de cada
+  passada é o relatório datado em `audits/` — não um plano escrito na frente. `ac4eef8a` já entregou
+  os 6 wrappers de `shared/ui` da primeira passada.
+- **O item 16 foi acrescentado ao `backlog.md` pela worktree** (`eaa9e15c`), contra a invariante que
+  reserva ao main tree acrescentar item à fila. O texto **não foi duplicado aqui** por decisão do
+  João: duplicá-lo garantiria conflito no merge sem ganho. Ele entra na main pelo merge da lane e
+  sai no `/fechar-sprint` dela. Até lá, **a fila canônica do item 16 mora na branch**, não neste
+  tree.
+
+> **Divergência de lane resolvida no merge de 2026-08-23 (main → `lane-a`), por medição.** A `main`
+> trazia a `lane-c` em `idle`, com `tree` e `branch` `null` e
+> `last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao` — o registro **anterior** à
+> reatribuição dela ao item 16, que o `state.md` da própria `../fix-frontend` também ainda carrega.
+> A branch da `lane-b` saiu da `main` antes da reconciliação de `79c246c6` e por isso não a viu.
+> Quem decidiu não foi a heurística de "mais recente vence": `git worktree list` mostra
+> `/home/jvbat/projetos/fix-frontend` viva em `refactor/frontend-revisao-ui`, com commits até
+> `1b9f82ad`. O registro que casa com a realidade é o desta branch, e é o que fica.
+
+Interseção a vigiar entre as lanes vivas: só a `lane-c` está executando, em `shared/ui` e nos mocks
+de `react-i18next`. Integração segue serial — esta branch mescla, e a `lane-c` rebasa antes de
+continuar.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -174,11 +212,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 | 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 | 2026-08-22 | `bd12-load-state-e-listas` | BD-12 dos blocos de dívida |
-| 2026-08-20 | `bd18-useloadstate-promise-e-forma` | BD-18 dos blocos de dívida |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

@@ -27,9 +27,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-49 | `lockRow` de redator e turma é meio mutex: os escritores de filho não tomam o lock que `ArchiveRedatorAction`/`DeleteTurmaAction` tomam | `hardening-acesso-ownership-e-integridade` | bloco que tocar um dos seis escritores de filho da ficha; revisar 2026-10-31 |
-| P-51 | A lei "ausente não é nulo" não alcança propriedade com default literal — 6 campos, 1 deles é acesso (`is_active` omitido reativa staff) | `hardening-acesso-ownership-e-integridade` | João decidir o remédio do `is_active`; revisar 2026-10-31 |
-| P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | `hardening-acesso-ownership-e-integridade` | bloco que puder reseedar o dev, ou primeiro gate `permission:` sobre rota de redator; revisar 2026-10-31 |
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
@@ -56,20 +53,18 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
+| P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
+| P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
+| P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 
-## Encerradas (7)
+## Encerradas (2)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
+| P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | 2026-08-23, no `hardening-acesso-ownership-e-integridade` | primeiro fechamento **posterior** a este |
 | P-50 | Suíte unida acima do `memory_limit` de 128M; o `artisan test` do §6 morria no meio | 2026-08-22, no `infra-producao-runtime-e-aws` | primeiro fechamento **posterior** ao deste bloco |
-| P-18 | Página de fechamento do Notion com `Sprint` divergente | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-20 | `openspout/openspout` em produção sem ADR hospedeiro | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-21 | `simple-qrcode` gera o QR do certificado sem nota no ADR-12 | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-23 | `progress.md` perdeu a coluna `Contexto` que o `progress-archive.md` mantém | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-39 | O plano do BD-6 afirma que `GET /api/courses` não tem RBAC — e tem | 2026-08-22, no `BD-15` | primeiro fechamento **posterior** ao do BD-15 |
-| P-43 | `der-fisico.md` chamava `certificates` de "planejada"; as duas tabelas de Certification existem desde 2026-08-05 | 2026-08-22, nas duas lanes (`feedbacks-resolver-escopo` e `BD-15`) | primeiro fechamento **posterior** a este |
 
 **A P-40 saiu nestes fechamentos** — os três são posteriores ao do BD-12, que é a condição que a
 linha dela pedia; as três lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no

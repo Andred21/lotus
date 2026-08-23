@@ -37,7 +37,17 @@ class UserData extends Data
         public string|Optional|null $rut,
         public string|Optional|null $phone,
         public string $role,
-        public bool $is_active = true,
+        /**
+         * `Optional` sem default, espelhando `RedatorData::$is_active` — que
+         * acerta pela mesma forma. Com `= true` o `DefaultValuesDataPipe`
+         * entrega o literal ANTES de o ramo do `Optional` existir, e um PUT que
+         * não fala de acesso reativava conta desligada (P-51). A lei "ausente
+         * não é nulo" não alcança propriedade com default literal.
+         *
+         * NÃO é `['present','boolean']`: omissão viraria 422, contra a D1 da
+         * spec do BD-14 (omissão preserva).
+         */
+        public bool|Optional $is_active,
         public string|Optional $password = new Optional,
         public string|Optional $type = new Optional,
         public array|Optional $roles = new Optional,

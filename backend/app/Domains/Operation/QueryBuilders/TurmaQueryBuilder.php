@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\QueryBuilders;
 
+use App\Domains\Identity\Models\User;
 use App\Shared\Concerns\LoadsCascadedChildren;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -66,5 +67,26 @@ class TurmaQueryBuilder extends Builder
                     ->orWhere('enrollments.archived_with_parent', true)
                 ),
             ]);
+    }
+
+    /**
+     * Ownership por DADO (spec D1). Admin e superadmin atravessam sem consulta
+     * extra — o `if` sai antes do `whereHas`, e o custo do escopo é zero para
+     * quem vê tudo.
+     *
+     * O filtro casa por `redatores.user_id` e não por `redatores.id` porque
+     * quem autentica é o `User`; o `Redator` é o perfil pendurado nele.
+     *
+     * Não é Policy: Policy não filtra lista, então `index` precisaria de escopo
+     * de query de qualquer jeito e o bloco nasceria com duas fontes de verdade
+     * que podem divergir.
+     */
+    public function visibleTo(User $user): static
+    {
+        if ($user->type !== 'redator') {
+            return $this;
+        }
+
+        return $this->whereHas('redatores', fn ($q) => $q->where('redatores.user_id', $user->id));
     }
 }

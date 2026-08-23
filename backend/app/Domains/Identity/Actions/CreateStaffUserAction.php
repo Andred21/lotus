@@ -39,7 +39,9 @@ class CreateStaffUserAction
                 'phone' => $data->phone instanceof Optional ? null : $data->phone,
                 'password' => $data->password,
                 'type' => 'admin',
-                'is_active' => $data->is_active,
+                // Staff nasce ativo (ver docblock da classe); Optional aqui não
+                // pode cair no default `false` da coluna.
+                'is_active' => $data->is_active instanceof Optional ? true : $data->is_active,
             ]));
 
             $user->syncRoles([$data->role]);

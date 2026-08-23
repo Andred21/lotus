@@ -176,6 +176,7 @@
     "operation_turma_delete": "Remove classes",
     "operation_turma_restore": "Restore archived classes",
     "operation_enrollment_manage": "Enroll students / import spreadsheet (Flow 3)",
+    "operation_enrollment_record_result": "Record enrollment grade and attendance (RN-02 — editor action)",
     "operation_enrollment_restore": "Restore archived enrollments",
     "operation_turma_assign_redator": "Assign a qualified editor to the class (Flow 3)",
     "operation_turma_complete": "Confirm class completion (Flow 4 — admin confirms)",

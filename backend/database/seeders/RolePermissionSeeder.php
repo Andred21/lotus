@@ -61,15 +61,24 @@ class RolePermissionSeeder extends Seeder
 
     /**
      * redator = mínimo do Fluxo 7 (interface própria).
-     * NOTA DE ESCOPO: turma.view concede o DIREITO de ver turmas. A restrição
-     * "só as turmas que ele ministra" é escopo de dados (where redator_id = user),
-     * implementada na TurmaPolicy/Query — NÃO aqui no seeder. (Task de Policies.)
+     *
+     * A restrição "só as turmas que ele ministra" NÃO mora aqui: é escopo de
+     * DADO, e vive em `TurmaQueryBuilder::visibleTo()` mais o
+     * `Turma::resolveRouteBinding()` (spec D1). O comentário anterior prometia
+     * uma `TurmaPolicy` numa "Task de Policies" que nunca existiu — o
+     * repositório tem zero classes `Policy`, e a promessa ficou de pé por
+     * quatro meses.
+     *
+     * `record_result` é permissão própria e não `enrollment.manage`: o Fluxo 3
+     * (matricular, importar, remover) é do admin, e a RN-02 separa
+     * responsabilidades (spec D6).
      */
     private function redatorPermissions(array $permissions): array
     {
         return [
             'operation.turma.view',
             'operation.turma.submit_docs',
+            'operation.enrollment.record_result',
         ];
     }
 
