@@ -348,6 +348,28 @@ as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 
 ---
 
+## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
+
+**Bloco:** — · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
+duas assertivas. Revisar em **2026-10-31**.
+
+Medido no review de `feedbacks-resolver-escopo` (2026-08-22, achado Q-4): o
+`RemoveOrphanFeedbackPermissionsMigrationTest` tem quatro testes e nenhum deles morde se você apagar
+o `->where('guard_name', 'web')` ou o `app(PermissionRegistrar::class)->forgetCachedPermissions()` do
+`up()` da `2026_08_22_000001_remove_orphan_feedback_permissions.php`. A suíte fica verde nos dois
+casos — é a lição 10 outra vez: teste que passa por não conseguir observar a diferença.
+
+Deferido para o `hardening-acesso-ownership-e-integridade` e depois tirado do escopo dele por decisão
+do João em 2026-08-22. **O bloco escreveu duas migrations de permissão** (`..._000002` e
+`..._000003`) e não aproveitou a oportunidade — o que é exatamente a informação que faz esta ficha
+valer alguma coisa para o próximo bloco.
+
+O conserto tem forma conhecida: semear uma permissão homônima em outro `guard_name` e provar que ela
+sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do `up()`, para que um
+`up()` sem `forgetCachedPermissions()` devolva o estado obsoleto.
+
+---
+
 # Travadas em decisão do João
 
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
