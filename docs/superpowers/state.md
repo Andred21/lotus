@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: ready_for_review
+workflow_state: reviewing
 next_owner: claude
-next_action: request_code_review
+next_action: review_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
@@ -16,9 +16,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: ready_for_review
+    workflow_state: reviewing
     next_owner: claude
-    next_action: request_code_review
+    next_action: review_active_work_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
