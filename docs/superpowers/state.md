@@ -29,17 +29,18 @@ lanes:
     resume_state: null
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
-    active_work_item: infra-producao-runtime-e-aws
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
-    tree: ../lotus-infra
-    branch: infra/producao-runtime-e-aws
-    active_spec: docs/superpowers/specs/2026-08-22-infra-producao-runtime-e-aws-design.md
-    active_plan: docs/superpowers/plans/2026-08-22-infra-producao-runtime-e-aws.md
-    context_packet: docs/superpowers/context-packets/2026-08-22-infra-producao-runtime-e-aws.md
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
+    tree: null   # ../lotus-infra removida em 2026-08-22, depois do merge
+    branch: null # infra/producao-runtime-e-aws mesclada no PR #67 e apagada (era c27492d7)
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
+    last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
     active_feature: frontend
     active_work_item: frontend-revisao-ui-por-modulo
@@ -56,7 +57,7 @@ lanes:
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: hardening-acesso-ownership-e-integridade
 state_basis_commit: f815c507
-updated_at: 2026-08-23T18:12:00-03:00
+updated_at: 2026-08-23T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -151,26 +152,33 @@ disjuntas, colisão mínima de arquivos:
   `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
   lanes ativas.
 
-> A tabela acima é **registro da seleção de 2026-08-22**, não a lista do que está ativo. Os itens 1
-> e 14 fecharam e mesclaram no mesmo dia (PR #65 e PR #66, merge `61acc0c3`), e as duas lanes foram
-> reatribuídas. O que está vivo agora está na seção abaixo.
+> A tabela acima é **registro da seleção de 2026-08-22**, não a lista do que está ativo. Os três
+> itens que ela promoveu fecharam: o 1 e o 14 em 2026-08-22 (PR #65 e PR #66, merge `61acc0c3`) e o
+> 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
+> está na seção abaixo.
 
-## Ocupação corrente — 2026-08-22
+## Ocupação corrente — 2026-08-23
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
+| `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
 
-**A `lane-b` está em `ready_for_review`, não em `context_required`.** O estado da main dizia o
-segundo e o `state.md` da própria `../lotus-infra` dizia o primeiro — divergência corrigida em
-2026-08-22 a favor da árvore da lane, que é quem tem o trabalho. A árvore dela ainda carrega
-`schema_version: 1` (nasceu antes do modo multi-lane); ela converge no fechamento, não antes.
+**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
+`feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
+estado e **ainda não foi mesclada** — é o PR aberto. A lane não recebe item novo sozinha: promoção é
+do João, contra o `backlog.md`.
+
+**A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
+**PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
+`../lotus-infra` e a branch `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por
+decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
+são `null`.
 
 **A `lane-c` é a worktree `../fix-frontend`, e o registro dela nasceu atrasado.** A lane executava o
-item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido aqui. Duas irregularidades ficam
-**declaradas, não descobertas depois**:
+item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido na reconciliação de 2026-08-22
+(`79c246c6`). Duas irregularidades ficam **declaradas, não descobertas depois**:
 
 - **`active_plan` é `null` com a lane em `executing`**, contra a invariante que o exige a partir de
   `ready_for_execution`. Exceção decidida pelo João em 2026-08-22: o item 16 é revisão iterativa
@@ -183,14 +191,18 @@ item 16 desde 2026-08-22 sem existir em `lanes:` — corrigido aqui. Duas irregu
   sai no `/fechar-sprint` dela. Até lá, **a fila canônica do item 16 mora na branch**, não neste
   tree.
 
-**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
-`feat/hardening-acesso-ownership-e-integridade` **não foi mesclada** — a integração é serial e a
-`lane-b` está na frente. A lane não recebe item novo sozinha: promoção é do João, contra o
-`backlog.md`.
+> **Divergência de lane resolvida no merge de 2026-08-23 (main → `lane-a`), por medição.** A `main`
+> trazia a `lane-c` em `idle`, com `tree` e `branch` `null` e
+> `last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao` — o registro **anterior** à
+> reatribuição dela ao item 16, que o `state.md` da própria `../fix-frontend` também ainda carrega.
+> A branch da `lane-b` saiu da `main` antes da reconciliação de `79c246c6` e por isso não a viu.
+> Quem decidiu não foi a heurística de "mais recente vence": `git worktree list` mostra
+> `/home/jvbat/projetos/fix-frontend` viva em `refactor/frontend-revisao-ui`, com commits até
+> `1b9f82ad`. O registro que casa com a realidade é o desta branch, e é o que fica.
 
-Interseção a vigiar entre as lanes vivas: a `lane-c` mexe em `shared/ui` e nos mocks de
-`react-i18next`, e a `lane-b` é infra — não colidem. Integração segue serial: a `lane-b` mescla
-primeiro, e as outras rebasam antes de continuar.
+Interseção a vigiar entre as lanes vivas: só a `lane-c` está executando, em `shared/ui` e nos mocks
+de `react-i18next`. Integração segue serial — esta branch mescla, e a `lane-c` rebasa antes de
+continuar.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -201,10 +213,10 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
+| 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 | 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 | 2026-08-22 | `bd12-load-state-e-listas` | BD-12 dos blocos de dívida |
-| 2026-08-20 | `bd18-useloadstate-promise-e-forma` | BD-18 dos blocos de dívida |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

@@ -64,7 +64,10 @@ como catraca (integridade, P-49). A P-47 saiu por migration de backfill (`fa1abd
   `auth.active`, e a cobertura que se ganhava de graça passou a ser **verificada** pelo
   `AuthenticatedRouteMiddlewareTest`, que exige que a superfície anônima esteja declarada — anônima
   nova reprova em silêncio. O mesmo commit declarou `memory_limit=512M` em `phpunit.xml`, porque os
-  cinco testes novos levaram a suíte a estourar os 128M do container.
+  cinco testes novos levaram a suíte a estourar os 128M do container — **remendo desfeito no merge
+  de 2026-08-23**, porque a `lane-b` já tinha pago a P-50 por SAPI (`docker/php/memory-cli.ini` a
+  320M no CLI, `www.conf` a 256M no FPM) e o número maior do `phpunit.xml` mascararia o teto da
+  imagem. Com 320M a suíte fecha igual.
 - **Q-2 — `.claude/rules/backend-ddd.md` desatualizada sobre o data-scoping da Turma.** Corrigido em
   `0b9ffecd`.
 
@@ -81,11 +84,317 @@ testes**, lint 0, build verde, Pint `passed` nos 42 arquivos da sprint e `typesc
 diff novo.
 
 Pendências: **P-47 encerrada**; **P-49** e **P-51** fecharam parte e seguem abertas no resto, cada
-uma com o gatilho reescrito para o que sobrou; **P-50** teve o sintoma da suíte fechado e segue
-aberta na decisão do `memory_limit` da imagem, que é da `lane-b`; **P-54** nasceu, com o Q-4
+uma com o gatilho reescrito para o que sobrou; **P-50** foi encerrada pela `lane-b` no mesmo dia
+(por SAPI, `memory-cli.ini` a 320M e `www.conf` a 256M) e o remendo desta branch saiu no merge de
+2026-08-23; **P-54** nasceu, com o Q-4
 herdado do bloco 1. **A D-34 perdeu o bloco hospedeiro** ao fechar o item 3 sem ser paga (ficou fora
 por escrita explícita na §2 da spec) e espera novo dono, escolha do João.
 
+---
+
+## Fechado em 2026-08-22 — `infra-producao-runtime-e-aws`, item 10 da fila
+
+### Seleção — 2026-08-22
+
+**Promoção explícita do João**, com esta árvore em `idle` e `active_work_item: null`. O argumento
+do `/planejar-bloco` veio como **slug exato** — `infra-producao-runtime-e-aws` —, que é o mesmo
+título do item 10 do `backlog.md`; o gate não teve o que reprovar dessa vez.
+
+**Três decisões dele fecharam o gate:**
+
+1. **Rota `context_required`, não a direta.** O item 10 declara `Contexto: sim` e as fontes são
+   externas ao repositório: Drive `RNF-DIS-01/03/04`, Notion `10.1.1–10.1.6` e `10.1.8`,
+   ADR-09/11/13/14. Diferente dos blocos de dívida recentes (BD-12, BD-17, BD-18), aqui não há
+   medição local que substitua a fonte — a topologia de produção é decisão de produto/infra
+   registrada fora do código.
+2. **Segundo `active_work_item` vivo, aceito como exceção declarada.** O main tree
+   (`/home/jvbat/projetos/lotus`) está em `feedbacks-resolver-escopo`, `workflow_state:
+   context_required`, `next_owner: codex` — medido, não deduzido. É a **sétima** exceção à
+   invariante de um `active_work_item`, pelo mesmo padrão já registrado nos fechamentos de
+   `arquivados-roots-restantes` e do BD-18: o invariante vale dentro de cada branch, não entre elas.
+3. **Área de trabalho: esta worktree `lotus-infra`**, branch `infra/producao-runtime-e-aws` a partir
+   de `c8480eee`. A regra do `/planejar-bloco` manda main tree quando o bloco toca backend, por causa
+   da **P-03** — mas o gatilho literal da P-03 é *backend ∥ backend*, e o que o bloco escreve são
+   artefatos de runtime novos (`Dockerfile` multi-stage, `docker-compose.prod.yml`, nginx de
+   produção), não código de domínio que a suíte precise provar contra o compose de dev.
+
+**Ressalva a carregar para o planejamento, medida agora e não descoberta depois:** o
+`feedbacks-resolver-escopo` do main tree é bloco de **backend com código**. Enquanto ele estiver em
+`context_required` o gatilho da P-03 não dispara; **se ele entrar em `executing`, o gatilho precisa
+ser reavaliado antes de qualquer prova deste bloco que dependa do compose.**
+
+**Estado das outras duas árvores no momento da promoção**, para o caso de divergência futura:
+`lotus-bd15` em `idle`; `fix-frontend` em `bd12-load-state-e-listas` / `ready_for_planning` — resíduo
+do bloco já fechado e mesclado na `main` pelo PR #64, não trabalho vivo.
+
+**`state_basis_commit: c8480eee`** — o commit contra o qual o backlog foi consolidado em 2026-08-22
+(`ba59dbd9`) mais o `style(backend)` que o segue, e a árvore que este bloco vai medir.
+
+### Context Packet — 2026-08-22: `status: partial`, cinco fontes, nenhuma indisponível
+
+Gerado pelo Codex (sandbox read-only, skill `lotus-context-packet`) e salvo em
+`context-packets/2026-08-22-infra-producao-runtime-e-aws.md`. **Contrato validado antes de gravar:**
+markers exatos, frontmatter completo com `plan_path`/`spec_path` em `null` (os dois ponteiros do
+estado são nulos e não foram inventados), **8 key facts** — o teto —, e `RECOMMENDED_TRANSITION:
+ready_for_planning`. **A provenance foi remedida aqui, não aceita de chegada:** `base_commit`
+`5bcd4b7c…`, `state_blob_sha` `25c06347…` e `progress_blob_sha` `0457320a…` conferem com
+`git hash-object` nesta árvore.
+
+**Nenhuma fonte saiu `unavailable`** — as cinco foram consultadas e endereçadas por ID: os três
+documentos do Drive (`requisitos-negocio.md`, `arquitetura-aws-lotus.md`, `decisao-stack.md`) e as
+oito páginas Notion pela base canônica `e64b7d57-…`, não pela homônima obsoleta que a skill veta. O
+`partial` vem do conteúdo, não da falta: **as sete tasks do Notion estão "A fazer" com `Descrição`
+vazia**, então elas dão critério de aceite e não desenho.
+
+**Três fatos externos mudam o planejamento e não estavam no repositório:**
+
+1. **O texto canônico do `RNF-DIS-02` é "servidor redundante pronto para assumir em caso de queda"** —
+   e o próprio `arquitetura-aws-lotus.md` do Drive o **rebaixa** para "recuperação rápida sem
+   failover", enquanto a task Notion `11.1.3` associa restore de snapshot ao mesmo requisito. Nem o
+   rebaixamento nem a associação foram aceitos: a divergência foi para a tabela como **`unresolved`**,
+   reservada ao gate do item 13. O bloco planeja EC2 única **sem declarar** que ela atende ao RNF.
+2. **O sizing tem um número decidido e outro não.** `db.t4g.micro` está explicitado na task 10.1.2;
+   a EC2 `t4g.small` ARM é **sugestão** do Drive, com `t4g.medium` como saída se o Gotenberg
+   pressionar memória. Escolher a EC2 é decisão do brainstorming, com a P-50 medida junto — o mesmo
+   `conf.d` hoje serve CLI e PHP-FPM, e o pico de 129 MB contra o teto de 128M é do CLI.
+3. **A borda TLS tem duas saídas no Drive** (EC2 direta + Certbot, ou ALB + ACM). A task 10.1.6 e o
+   ADR-14 decidem a primeira para o MVP; o ALB fica ligado à decisão de HA, que é do item 13.
+
+**Quatro questões abertas, nenhuma bloqueante para escrever o plano, todas bloqueantes para
+provisionar o recurso correspondente:** região (`sa-east-1` × `us-east-1`, nenhuma aprovada), tamanho
+final da EC2, controle do DNS de `lotus.cl`/`api.lotus.cl` mais a saída do sandbox do SES e o canal
+do alerta CloudWatch, e o teto de custo (estimativa externa de US$ 35–55/mês sem ALB). São decisões
+do João e entram no brainstorming como tais — não se supõem.
+
+### Brainstorming — 2026-08-22: o bloco foi recortado ao meio, por decisão do João
+
+**A primeira pergunta do brainstorming foi de escopo, e mudou o bloco.** O item 10 junta artefato
+versionado (Dockerfile, Compose, Nginx, `memory_limit`, secrets) com provisionamento em conta AWS
+real — e a segunda metade depende das quatro decisões que o packet listou como abertas mais
+credenciais que não estão nesta máquina. **O João escolheu entregar só o runtime**, com o
+provisionamento virando bloco próprio quando as decisões existirem. O slug não muda; o escopo, sim, e
+está declarado na §1 da spec.
+
+**Quatro decisões dele fecham o desenho:**
+
+1. **Origem única**, contra o `lotus.cl` + `api.lotus.cl` do Drive — e a base é medida, não estética:
+   `VITE_API_URL` é lido por `import.meta.env` em `axios.ts:25`, então **entra dentro do bundle no
+   build**. Com dois hosts, a imagem carregaria a URL do ambiente, e o item 11 precisa promover a
+   mesma imagem por SHA. Vai à tabela de divergências da spec como decisão, não como omissão.
+2. **Overlay de sonda separado** para a prova local — o `docker-compose.prod.yml` fica sem banco, sem
+   storage e sem mail, e o que ele não tem fica visível no diff em vez de escondido num `profiles:`.
+3. **P-50 fechada com dois números medidos**, separados por SAPI: CLI no `conf.d` (nas duas imagens,
+   senão a ficha segue aberta onde dói — quem roda a suíte é o container de dev) e FPM no
+   `php_admin_value` do pool.
+4. **Secrets por `env_file` no servidor**, com o caminho para Parameter Store registrado e **não
+   prometido** — prometer cofre sem poder prová-lo neste bloco seria DoD falsa.
+
+**Três medições enxugaram a stack antes de qualquer arquivo nascer:** todas as rotas do backend vivem
+sob `api/` (`routes/api.php` agrega os domínios por glob), sobrando apenas `/sanctum/csrf-cookie` e o
+`/up` de `bootstrap/app.php:14` — o que torna o roteamento de origem única trivial; `SESSION_DRIVER`,
+`CACHE_STORE` e `QUEUE_CONNECTION` são todos `database`; e `grep -rn "ShouldQueue" backend/app`
+devolve **uma linha, que é comentário** — logo, produção não leva volume de sessão nem worker de
+fila.
+
+Spec em `specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`: 9 decisões, 8 provas de DoD, 3
+divergências (uma delas a `RNF-DIS-02` × ADR-14, que segue **`unresolved`** e reservada ao gate do
+item 13) e 4 limitações declaradas — a primeira delas sendo que **nada de AWS é provado por este
+bloco**.
+
+### Planejamento — 2026-08-22: 7 tasks, `executor: claude`, uma emenda à spec
+
+Plano em `plans/archive/2026-08-22-infra-producao-runtime-e-aws.md`. **Sete tasks, uma por commit**, na ordem
+que a dependência impõe: os dois números da P-50 primeiro (Tasks 1 e 2), porque a imagem de produção
+copia as duas confs; depois a conf do Nginx (Task 3), a imagem (Task 4), o Compose com a catraca
+(Task 5), o overlay mais o molde de env (Task 6) e a DoD end-to-end (Task 7).
+
+**Uma emenda à spec, decidida ao escrever o plano e registrada na §3 dela:** as duas imagens saem de
+**um único** `docker/Dockerfile.prod` com quatro estágios e dois alvos, em vez de dois Dockerfiles. O
+motivo é o estágio `spa` — a imagem do Nginx precisa do `dist/` que ele produz, e com arquivos
+separados o build de frontend existiria duas vezes, livre para divergir. A D3 continua valendo no que
+decide; muda o número de arquivos.
+
+**A catraca do bloco não é teste de código, é teste de composição.** `frontend/tests/compose-prod.test.ts`
+guarda as duas propriedades do `docker-compose.prod.yml` cuja violação é **silenciosa** — um serviço
+de dev que reaparece e um volume de código que volta —, porque `docker compose up` fica verde dos
+dois jeitos. Ela mora em `frontend/tests/` pelo motivo já registrado na rule: o container `app` monta
+só `./backend` e `./frontend`, então o vitest é o único runner com acesso à raiz. **A conferência é
+textual e o custo está declarado no próprio arquivo:** o projeto não tem parser de YAML, e
+acrescentar dependência ao frontend por causa de arquivo de infra seria acoplamento na direção
+errada.
+
+**Três passos do plano decidem por medição, e podem terminar em qualquer dos dois ramos:** se o
+`poppler-utils` entra na imagem de produção (só entra se houver consumidor em `backend/app`), se o
+Gotenberg pode ganhar healthcheck (a imagem de terceiro pode não trazer `curl` nem `wget` — e um
+teste que não roda é pior que a ausência dele), e quais chaves do `.env.example` de dev entram no
+molde de produção.
+
+**A Task 2 instala e reverte um patch em `backend/public/index.php`** para medir o pico do FPM: a
+medição é o artefato, o código da sonda não fica, e o Step 5 prova a reversão com `git diff` vazio e
+`grep MEMPROBE` sem match. É a razão principal do **`executor: claude`** declarado no `## Handoff` —
+paths fechados errariam a reversão ou não teriam autorização para o arquivo.
+
+**Baseline a medir antes da Task 1, não herdar:** a suíte do frontend fechou em 87 arquivos / 481
+testes no fechamento do BD-12, e a do backend em 872 passed / 5 skipped no do BD-18 — mas esta árvore
+tem a `main` inteira dentro, e o gate da Task 7 cobra os números medidos, não os citados.
+
+### Execução — 2026-08-22: 7 tasks provadas, bloco em `ready_for_review`
+
+Sete tasks, dez commits, `8b1fd6df..e0019bac`. Execução por **subagent-driven-development com TDD**,
+um implementador e um revisor por task, ledger em `.superpowers/sdd/progress.md`.
+
+| Task | Commits | Entrega |
+|---|---|---|
+| 1 | `8b1fd6df` | `memory-cli.ini` — `memory_limit = 320M`, de pico medido de 129,00 MB |
+| 2 | `ee230219` | `www.conf` — `memory_limit = 256M` de pool, com o piso emendado pelo João |
+| 3 | `80029cea` | `docker/nginx/prod.conf`, origem única, `nginx -t` conferido |
+| 4 | `e9f83043`, `31a29d33` | `docker/Dockerfile.prod` quatro estágios — `app` 293MB, `web` 105MB |
+| 5 | `c54d1a35`, `317a6512`, `fef76d08` | `docker-compose.prod.yml` + catraca de composição |
+| 6 | `73f6e219`, `ab5b057d`, `e0019bac` | overlay de sonda, `.env.production.example` sem segredo |
+| 7 | este commit | DoD end-to-end contra a stack de produção real |
+
+**As oito provas da DoD fecharam**, duas delas com divergência entre o sinal escrito e o
+comportamento real do sistema: a **prova 3** esperava ausência de `Access-Control-Allow-Origin`, e o
+`HandleCors` o emite mesmo same-origin porque `cors.php:22` usa `FRONTEND_URL`; a **prova 6**
+esperava o PDF do certificado no bucket, e o `CertificatePdfService` renderiza sob demanda sem
+persistir. Nos dois casos a substância foi provada por outro caminho. **A §10 da spec registra as
+medições, as emendas e todos os desvios do plano** — inclusive o `--entrypoint php` do
+`key:generate`, que **precisa entrar no runbook do bloco de deploy**.
+
+**P-50 paga:** `docker compose exec -T app php artisan test` → 867 passed / 5 skipped, 3095
+assertions, 59,01s, sem estouro de memória. Frontend: 88 arquivos / 499 testes, `lint` e `build`
+exit 0.
+
+**Ambiente devolvido:** stack de sonda derrubada com `down -v`, volumes de dev intactos, árvore limpa.
+
+**Nada de AWS foi provado** — a limitação 1 da spec segue de pé, e o review deve cobrá-la como
+limitação declarada, não como lacuna.
+
+### Revisão de sprint — 2026-08-22: risco ALTO, duas lentes, 9 achados, zero violação de lei na arquitetura
+
+**Classificação: ALTO** — o bloco escreve o molde de `.env` que governa a cadeia Sanctum (lei §5.4)
+e a imagem que vai a produção com dado de peso legal. Duas lentes: revisão Claude contra o gabarito
+do projeto e revisão independente do Codex (`mcp__codex__codex`, read-only) sobre o mesmo intervalo
+`5bcd4b7c..HEAD`.
+
+**Convergência das duas lentes** em três achados: o gate de env do entrypoint sem as variáveis da
+cadeia Sanctum, o `.dockerignore` sem `bootstrap/cache/*.php`, e a prova 5 (`APP_DEBUG`) exercitada
+só em 401/404. O Codex viu sozinho os seeders na imagem e as folgas da catraca; ambos foram
+verificados no código e na imagem antes de entrar no relatório.
+
+**Divergência entre revisores, não aceita:** o Codex reportou vazamento de `backend/auth.json`,
+`storage/*.key` e `storage/app/**` para dentro da imagem. Medido em `lotus-app:local`: `auth.json`
+não existe na árvore, e `storage/app` contém três arquivos, todos `.gitignore`. Rejeitados — a
+lacuna do `.dockerignore` que sobrou é a de `bootstrap/cache`, que é o achado Q-3.
+
+**Nove achados, nenhum contra as leis §5 na arquitetura entregue** (sem Repository, sem auditoria em
+trigger, sem `generated.ts` tocado, sem `abort(422)`, sem import cruzado de feature). Os dois 🔴 são
+brechas operacionais que a imagem carrega, não desenho errado:
+
+| # | Achado | Sev. | Esforço |
+|---|---|---|---|
+| Q-1 | `database/seeders` na imagem: o único caminho que instala o `RolePermissionSeeder` cria `admin@lotus.cl` / `senha123` como superadmin | 🔴 | P |
+| Q-2 | Gate de env do entrypoint não cobre `SANCTUM_STATEFUL_DOMAINS`/`FRONTEND_URL`/`SESSION_DOMAIN`, que o molde entrega vazios | 🔴 | P |
+| Q-3 | `.dockerignore` sem `backend/bootstrap/cache/*.php`: `config.php` cacheado na máquina que builda entra na camada com segredo resolvido | 🟡 | P |
+| Q-4 | `.env.production.example` sem `SESSION_SECURE_COOKIE` | 🟡 | P |
+| Q-5 | Prova 5 exercitou 401/404; o branch que `APP_DEBUG` governa é o 500 de `ProblemDetails.php:67` | 🟡 | P |
+| Q-6 | `prod.conf` sem `Cache-Control` no `index.html` | 🟡 | P |
+| Q-7 | `pm.max_children` não fixado, embora o sizing de 1,25 GB dependa dele | 🟡 | P |
+| Q-8 | Catraca prova existência onde precisava provar propriedade (`env_file` e `condition` do overlay) | 🟡 | P |
+| Q-9 | `docker-compose.prod.yml` sem teto de log do json-file | 🟡 | P |
+
+**O João aprovou os nove em 2026-08-22.** As correções estão na seção seguinte.
+
+### Correções da revisão — 2026-08-22: nove achados, nove commits, tudo provado
+
+`ed4cdc7b..` (nove commits, um por achado). Nenhuma correção foi aceita por leitura
+de diff: cada uma tem uma medição contra a imagem reconstruída ou contra a stack de
+produção com o overlay de sonda.
+
+| # | Commit | Prova |
+|---|---|---|
+| Q-1 | `ed4cdc7b` | `db:seed --force` com `APP_ENV=production` na stack real: `roles=3`, `permissions=42`, **`users=0`**. O `RolePermissionSeeder` continua rodando em qualquer ambiente |
+| Q-2 | `989250d5` | Os dois modos de falha: chave **ausente** e chave **vazia** (o caso do molde) saem com `entrypoint: variável obrigatória ausente: SANCTUM_STATEFUL_DOMAINS`, exit 1 |
+| Q-3 | `155f7dc3` | `config.php` plantado no host com string sentinela: `grep -rl` na imagem reconstruída não acha nada. `storage/framework/cache/data` passou a existir; `storage/framework/testing` sumiu |
+| Q-4 | `e3a25dcf` | Chave no molde com a dependência de HTTPS escrita ao lado. A sonda roda em HTTP e não define a chave, então não regride |
+| Q-5 | `docs(spec)` §10.8 | 500 **real** (MySQL parado, rota pública sem sessão): com `APP_DEBUG=false`, `detail` genérico; com `true`, o `detail` vaza `SQLSTATE`, host, porta, database e o SQL. O par distingue os dois estados — o 401/404 original não distinguia |
+| Q-6 | `b012ae09` | `curl -I` contra a stack: `/` responde `Cache-Control: no-cache`; `/assets/index-*.js` responde `public, max-age=31536000, immutable`, **um header cada** (a primeira tentativa emitiu dois, por causa da diretiva `expires`) |
+| Q-7 | `aaed3592` | `grep` na imagem: `pm.max_children = 5` agora está no `zz-www.conf`, não herdado |
+| Q-8 | `65d03e0b` | Mutação negativa 2/2: `env_file` hardcoded e `condition: service_started` reprovam as asserções novas. 19 testes no arquivo, 500 na suíte |
+| Q-9 | `34c94535` | `docker inspect`: `json-file map[max-file:3 max-size:10m]` nos serviços da stack |
+
+**Regressão medida depois de tudo, não assumida:** stack de produção reconstruída e
+no ar, `nginx` `(healthy)`, `/up` `200`, e o **login real fecha** —
+`/sanctum/csrf-cookie` `204`, `POST /api/login` `200` com cookie `lotus-session`
+gravado, `GET /api/me` `200`. Suíte backend `867 passed / 5 skipped`; frontend
+`88 arquivos / 500 testes`, `lint` e `build` exit 0.
+
+**Ambiente devolvido:** `down -v` no projeto `lotus-probe` (zero containers, zero
+volumes, zero redes); os 12 volumes de dev intactos; árvore limpa.
+
+**Nada a diferir:** os nove foram corrigidos, então nenhum item novo vai ao
+`backlog.md` nem às pendências por conta desta revisão.
+
+### Fechamento — 2026-08-22: o login real contra a stack de produção reconstruída
+
+**Item 0 do gate, medido agora e não citado da execução.** As nove correções da revisão entraram
+DEPOIS da DoD end-to-end do bloco, e três delas mexem exatamente na cadeia que o login atravessa — o
+gate de env do entrypoint (Q-2), o `.dockerignore` do `bootstrap/cache` (Q-3) e o
+`SESSION_SECURE_COOKIE` do molde (Q-4). Provar por citação teria provado uma imagem que não existe
+mais. As duas imagens foram reconstruídas do `HEAD` e a stack subiu com o overlay de sonda
+(`LOTUS_ENV_FILE=./docker/probe.env`, porta 8081, projeto `lotus-probe`):
+
+- **A cadeia inteira, com os cabeçalhos que o `/fechar-sprint` exige** (`Origin` e `Accept`, senão os
+  dois 500 são do curl): `nginx` entrou em `(healthy)`, `GET /up` → **200**, `GET /` → **200**,
+  `GET /sanctum/csrf-cookie` → **204**, `POST /api/login` → **200** com o cookie `lotus-session`
+  gravado no jar, e `GET /api/me` → **200** devolvendo `roles: ["superadmin"]` e a lista de
+  permissões. É a lei §5.4 (cookie de sessão Sanctum + CSRF) funcionando **na imagem de produção**,
+  não no compose de dev.
+- **O Q-1 reprovado ao vivo, que é o achado 🔴 mais caro do bloco:** `php artisan db:seed --force`
+  com `APP_ENV=production` imprimiu *"Admin de desenvolvimento ignorado: só é criado em local/demo.
+  Roles e permissões foram instaladas."* e parou ali. O `RolePermissionSeeder` rodou; o
+  `admin@lotus.cl`/`senha123` com role `superadmin` **não nasceu**. O usuário do login acima teve de
+  ser criado à mão na sonda — que é exatamente a propriedade que se queria.
+- **`migrate` fora do entrypoint, como a D7 desenhou:** o container subiu com o banco vazio e as 24
+  migrations só rodaram quando chamadas. O deploy é `pull → migrate → up`, e o arranque não migra
+  sozinho.
+
+**Ambiente devolvido:** `down -v` no projeto `lotus-probe` — zero containers, zero volumes, zero
+redes. Os volumes de dev seguem intactos.
+
+**Resto do gate.** `docker compose exec -T app php artisan test` → **867 passed / 5 skipped, 3095
+assertions**, 58,49s — **pelo comando documentado do `CLAUDE.md` §6, sem contorno**, o que é a prova
+da P-50 e não uma nota de rodapé: desde 2026-08-19 esse comando morria. `pnpm lint` exit 0 ·
+`pnpm build` exit 0 · `pnpm test` **88 arquivos / 500 testes**. Pint `passed` no único arquivo PHP do
+bloco (`DatabaseSeeder.php`). **`typescript:transform` é N/A por medição** — nenhum DTO no diff e
+`generated.ts` fora dos 18 arquivos do bloco. **Código morto: nenhum** — os artefatos que o bloco
+criou (`docker/php/memory-cli.ini`, `docker/probe.env`, o overlay, a catraca de composição) têm
+consumidor declarado, e a sonda de memória da Task 2 já tinha sido revertida com `git diff` vazio.
+
+**Leis §5: nenhuma contrariada.** Sem Repository, sem auditoria em trigger, sem `generated.ts`
+tocado, sem `abort(422)`, sem import cruzado de feature. A §5.4 foi **provada**, não só respeitada.
+A §5.8 (DoD = critério provado) é o próprio item 0 acima.
+
+**Pendências.** A **P-50** foi **encerrada por este bloco** — o gatilho venceu pelas duas metades ao
+mesmo tempo (o bloco tocou `docker/php/` e o João decidiu o número), e o impasse dos dois SAPIs se
+resolveu separando CLI (320M, no `conf.d`) de FPM (256M, no `php_admin_value` do pool). A ficha está
+em `pendencias/encerradas.md` com a medição que fecha. A **P-40 saiu de vez**: este é o primeiro
+fechamento posterior ao do BD-12, que é a condição literal que ela registrava. **A P-03 foi conferida
+e não venceu** — medido agora, o main tree está em `hardening-acesso-ownership-e-integridade` /
+`planning` e a `fix-frontend` em `frontend-revisao-ui-por-modulo` / `executing`; o gatilho pede dois
+blocos de **backend** em paralelo, e o de lá ainda não escreve código. **Nenhuma pendência nasceu
+nesta sprint** — os nove achados da revisão foram corrigidos, não diferidos.
+
+**Backlog: o item 10 não saiu inteiro, porque não foi entregue inteiro.** A metade do runtime saiu e
+está registrada como entregue; o item passou a se chamar **`infra-producao-provisionamento-aws`** e
+guarda o que a D1 recortou — EC2, RDS, S3/IAM, SES/DKIM, TLS e CloudWatch —, mais as quatro decisões
+do João que continuam abertas e a herança do `--entrypoint php` no `key:generate`. Apagar o item
+inteiro teria apagado da fila trabalho que ninguém fez. **Nada foi promovido.**
+
+**Arquivados:** plano em `plans/archive/2026-08-22-infra-producao-runtime-e-aws.md` e spec em
+`specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`; o link da spec dentro do plano foi
+reapontado. **`state_basis_commit` continua em `c8480eee`** — o commit contra o qual o João promoveu
+o bloco; o SHA deste fechamento não entra no arquivo que ele fecha.
 ---
 
 ## Fechado em 2026-08-22 — `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila
