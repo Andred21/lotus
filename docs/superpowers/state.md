@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-revisao-ui-por-modulo
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-frontend-revisao-ui-por-modulo.md
@@ -16,9 +16,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: frontend-revisao-ui-por-modulo
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui
     active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: ffa1a35b
-updated_at: 2026-08-22T19:40:00-03:00
+state_basis_commit: aa7fcba6
+updated_at: 2026-08-23T20:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -149,6 +149,30 @@ Corte da fatia (decisão do João): três superfícies em série — Dashboard v
 Operação (`/operacion` + detalhe) e Comercial (`/comercial` + detalhe). O resto do item 16 fica
 para um bloco irmão. **A P-47 não fecha aqui**: o acesso de redator é provisionado pelas portas
 reais da API e devolvido no fechamento.
+
+## Lane-a — 2026-08-23: fatia 1 vai a review com escopo cortado pelo João
+
+O bloco `frontend-revisao-ui-por-modulo` sai de `executing` com as **Tasks 1 a 9 executadas e
+provadas** (duas runs de `/lotus-ui-review`, 14 achados corrigidos: 5 da run 1 + 9 da run 2) e as
+**Tasks 10 a 13 NÃO executadas**, por decisão explícita do João em 2026-08-23 ("quero seguir logo
+para o review"). Não é conclusão de plano: é corte de escopo declarado.
+
+Fica em aberto, e a triagem do review herda:
+
+- **Run 3 (Comercial)** — Tasks 10 e 11 do plano, nunca rodadas.
+- **Fichas `D-*` da Task 12** — a UI-04 da run 1 (janela da agenda, backend) e a recusa em espanhol
+  fixo de `Turma.php:200` (metade da UI-01 da run 2) seguem sem ficha no backlog; `D-38` e `D-39`
+  seguem sem a atualização que a task previa.
+- **Minor 2, 3 e 5 da revisão da Task 9** — hover coberto pela coluna fixa, sombra de rolagem
+  escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`.
+- **Banco de dev não devolvido** (Task 13 Step 1): o papel `redator` concedido na Task 3 segue no
+  usuário 1. A devolução foi tentada nesta sessão e recusada pelo classificador de permissão.
+- **Stack `lotus-infra` (lane-b) parada** desde a Task 3 para liberar 8080/3307/8025/9000;
+  reversível com `docker compose up -d` em `/home/jvbat/projetos/lotus-infra`.
+
+Gate rodado mesmo com o corte: fence `main...HEAD -- backend/ generated.ts` **vazio**, `pnpm lint` 0,
+`pnpm build` verde, suíte **96 arquivos / 513 testes**, zero achado `C` aberto nas duas runs. O
+destino de cada achado está na §3 dos dois relatórios em `docs/superpowers/audits/`.
 
 ## Último item fechado — 2026-08-22 (`feedbacks-resolver-escopo`, item 1 da fila consolidada)
 

@@ -532,14 +532,23 @@ achado novo.
 
 Aplicar o **protocolo da Task 6**, passo a passo, a cada achado `C` aprovado na Task 8.
 
-- [ ] **Step 1: catraca vista reprovar** (ou registro explícito de que o achado não é alcançável por teste)
-- [ ] **Step 2: corrigir no dono (wrapper > call-site); i18n nas três locales**
-- [ ] **Step 3: medir na tela, antes e depois, com número**
-- [ ] **Step 4: `pnpm test <arquivo>` verde**
-- [ ] **Step 5: um commit por correção, com o número no corpo**
-- [ ] **Step 6: fechar a §3 do relatório da run 2**
+- [x] **Step 1: catraca vista reprovar** (ou registro explícito de que o achado não é alcançável por teste)
+- [x] **Step 2: corrigir no dono (wrapper > call-site); i18n nas três locales**
+- [x] **Step 3: medir na tela, antes e depois, com número**
+- [x] **Step 4: `pnpm test <arquivo>` verde**
+- [x] **Step 5: um commit por correção, com o número no corpo**
+- [x] **Step 6: fechar a §3 do relatório da run 2**
 
-**DoD comportamental:** nenhum achado `C` da run 2 aberto.
+**DoD comportamental:** nenhum achado `C` da run 2 aberto. — **atendido**: UI-01 (o único `C`)
+corrigido em `b91764c3` + `aa7fcba6`, e os oito `B` também; §3 do relatório fechada com o destino de
+cada um.
+
+> **Tasks 10 a 13 não executadas — corte de escopo decidido pelo João em 2026-08-23**
+> ("quero seguir logo para o review"). O bloco vai a `ready_for_review` com a run 3 (Comercial), as
+> fichas `D-*` da Task 12, a devolução do banco de dev e o commit de fechamento **em aberto**. As
+> pendências estão listadas na §3 do relatório da run 2
+> (`docs/superpowers/audits/2026-08-23-lotus-ui-review-operacion.md`) e não se perdem por estarem
+> fora deste plano.
 
 ---
 

@@ -215,5 +215,121 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-Vazia até a triagem da run 2 (Task 8) e o passe de correção (Task 9). Os nove achados acima ainda
-não têm destino decidido — decidir aqui seria promover trabalho sem o gate do João.
+Triagem com o João em 2026-08-23 (Task 8 do plano): **os nove achados entram na Task 9** ("todos
+entram"), sem escolha de forma item a item — a forma de cada um saiu do Step 2 do protocolo
+("corrigir no dono"). Os nove foram corrigidos neste bloco, um commit por correção, cada uma medida
+na tela no viewport do achado, antes e depois, com o número no corpo do commit. A metade da UI-01
+que mora no backend — a recusa em espanhol fixo de `Turma.php:200` — é a única parte fora do fence
+de frontend puro e segue o precedente da UI-04 da run 1: ficha `D-*`, fence intacto (§3.3).
+
+| Achado | Classe | Destino | Commit |
+|---|---|---|---|
+| UI-01 | `C` | Corrigido no frontend; a recusa do backend vira ficha `D-*` | `b91764c3` + `aa7fcba6` |
+| UI-02 | `B` | Corrigido | `1b9f82ad` |
+| UI-03 | `B` | Corrigido | `128bc8e1` |
+| UI-04 | `B` | Corrigido | `feb3c4b6` |
+| UI-05 | `B` | Corrigido | `8f81dac3` |
+| UI-06 | `B` | Corrigido | `68f16401` + `3f413794` |
+| UI-07 | `B` | Corrigido | `7caa8b9e` |
+| UI-08 | `B` | Corrigido | `dd382bd2` |
+| UI-09 | `B` | Corrigido | `3a499483` |
+
+**UI-01 — `b91764c3`, estendido em `aa7fcba6`.** A regra ganhou um dono só:
+`registroAcademicoBloqueado(turma)` em `features/operation/lib/turmaStatus.ts`, no molde do que a aba
+Documentação já fazia (`useTurmaDocsSection.ts`). Os oito controles de escrita **somem** em vez de
+ficarem cinzas — "Editar" da configuração, "Remover"/"Trocar"/"Designar" do redator, "Importar
+planilha"/"Adicionar aluno" da toolbar e "Registrar resultado"/"Remover" de cada linha —, e a
+explicação sobe para um cartão único no nível da PÁGINA (chave nova `operation.detail.lock.concluida`
+nas 3 locales), porque o motivo é da turma e não de uma aba: medido, o texto aparece **1 vez** onde
+antes aparecia só dentro de Documentação. A chave órfã `operation.documents.lock.concluida` saiu das
+três locales. Ler continua inteiro: lista de alunos, redatores, tags e histórico permanecem —
+o que sai é a escrita. `TurmaDetailPage.tsx` passou de 159 para 114 linhas com a extração literal do
+`TurmaDetailHeader.tsx` (a régua `max-lines: 150` do ESLint sobre `src/features/*/components/**`).
+Quatro catracas vistas reprovar antes do fix. O `aa7fcba6` fecha o quinto beco, achado pelo review:
+"Restaurar" da visão **arquivada** da aba Alunos, cujo `RestoreEnrollmentAction` chama o mesmo
+`assertAcademicallyWritable()`.
+
+**UI-02 — `1b9f82ad`.** A largura sozinha era inerte: `TURMA_COLUMN` (`turmaColumns.ts` — `code`
+7rem, `course` 11rem, `identity` 13rem com `maxWidth`) só passou a valer depois que o bloco de texto
+empilhado do `IdentityCell` ganhou `min-w-0`, sem o qual o `truncate` nunca dispara dentro de flex; o
+texto cortado ficou recuperável por `title`. A coluna de ações virou fixa
+(`stickyActionsColumn(width)` em `shared/ui/AppDataTable/style.ts`, 8rem na `TurmasTable` e 6rem na
+`EnrollmentTable`), que é o que torna a ação **alcançável** — medido `acoesVisiveis: true` em 1024 e
+em 390. Pixels escondidos por transbordo caíram de 429 para 399 e de 871 para 841. Paridade de idioma
+recuperada: EN e ES agora medem igual (código em 132px, caixa de 1 linha, mesma altura de linha) — o
+pior caso dependente de idioma sumiu.
+
+**UI-03 — `128bc8e1`, inline.** O trilho da barra de documentação passa de `--surface-section` para
+`--surface-300`. O relatório sugeria `--surface-d`; recusado com o número: melhoraria o claro
+(1,23:1) e **regrediria** o escuro (1,41:1 contra os 1,55:1 de hoje). Medido nos dois temas:
+claro 1,00:1 → **1,48:1**, escuro 1,55:1 → **3,07:1**. Token escolhido pela função (superfície que
+precisa contrastar com o cartão), não pelo nome. Gate inline satisfeito: um arquivo, sem regra de
+negócio, sem reconstrução de contexto, validável no navegador, sem lei do §5.
+
+**UI-04 — `feb3c4b6`.** O código interno da regra saiu da tela: ` (RN-09)` e ` (RN-15)` deixaram as
+três locales; o `// RN-15:` que o leitor de código precisa foi para o comentário do
+`useTurmaDocsSection.ts`, que é onde a regra é implementada. Catraca nova em
+`shared/config/locales/copy.test.ts`, varrendo as três locales por `/\(RN-\d+\)/` — a classe inteira,
+não as duas linhas achadas.
+
+**UI-05 — `8f81dac3`.** `operation.documents.type.EVALUACION_REDATOR` em `en.json` deixa de dizer
+"Editor assessment": **Redator** é vocabulário de domínio do backend e não se traduz (regra escrita na
+`.claude/rules/frontend-fsliced.md`). A catraca do UI-04 ganhou um `describe` que varre a subárvore
+`operation.*` de `en` por `editor|writer|instructor`.
+
+**UI-06 — `68f16401`, completado em `3f413794`.** `scrollable` liga por PADRÃO no `AppTabView`, com
+a prop depois do spread para o chamador ainda conseguir desligar. Medido em 390x844: a aba
+"Documentação" estava em x=437, fora da tela de 390, sem seta nem sombra que dissesse que havia mais;
+depois passa a alcançável em x=209-366. Catraca `AppTabView.test.tsx` pelo efeito observável em jsdom
+(a classe `p-tabview-scrollable`), porque jsdom não faz layout. O `3f413794` paga o Important do
+review: os botões prev/next que a prop trouxe nasciam com `aria-label="Next Page"` — inglês numa tela
+espanhola, e nome errado, porque o controle rola abas e não páginas.
+
+**UI-07 — `7caa8b9e`.** O filtro de estado da lista só expunha o VALOR corrente ("Todos"), sem nome
+nenhum. Par `<label htmlFor>` + `AppDropdown inputId` (o único elemento focável do Dropdown é o
+`<input id={inputId}>` interno), com `useId` em vez de string fixa. Catraca em `TurmasTable.test.tsx`
+por `getByLabelText('operation.table.status')`.
+
+**UI-08 — `dd382bd2`, inline.** `DetailHeader.tsx:65`: `sm:items-start` vira `sm:items-baseline`.
+Medido: as tags de estado pousavam 23px ACIMA da linha de base do título e agora ficam 4px abaixo
+dela — dentro da mesma linha ótica.
+
+**UI-09 — `3a499483`.** O botão do vazio prometia limpar o que não limpava: `table.clear()` só zera a
+busca. O sinal que faltava nasceu no hook que é dono do estado (`useTableFilter` ganhou
+`filteredByScope`, e `filtering` passou a ser `term !== '' || filteredByScope`), não recalculado na
+moldura — a mesma disciplina que a rule já fixa para `filtering`. O `SearchableTableFrame` passou a
+ter rótulo e descrição em três caminhos (só busca, só filtro, os dois), com as chaves novas
+`common.clearSearchAndFilters` e `common.noResultsSearchAndFiltersHint` nas 3 locales. Catraca nova
+em `SearchableTableFrame.test.tsx`.
+
+### Falsos positivos: seguem descartados
+
+Os seis descartes da §1 não foram reabertos na triagem e não viraram achado. Ficam registrados lá
+com o motivo, para não voltarem numa próxima passada.
+
+### Revisão da Task 9
+
+Revisão independente do intervalo `e20800d6..1b9f82ad`: **conformidade com a spec ✅** nos nove
+achados (nada extra construído) e **qualidade Approved with comments** — 1 Important e 4 Minor.
+
+| Achado do review | Destino |
+|---|---|
+| Important 1 — botões prev/next da régua anunciam `aria-label="Next Page"`, em inglês, introduzido pela correção do UI-06 | Pago em `3f413794` |
+| Minor 4 — "Restaurar" da visão arquivada segue oferecido em turma concluída | Pago em `aa7fcba6` |
+| Minor 2 — a coluna fixa de ações cobre o realce de hover da linha | **Aberto** — vai à triagem do review do branch |
+| Minor 3 — a coluna fixa esconde a sombra de rolagem da direita | **Aberto** — vai à triagem do review do branch |
+| Minor 5 — `items-baseline` também reposiciona o slot `actions` do `DetailHeader` | **Aberto** — vai à triagem do review do branch |
+
+Suíte em 96 arquivos / 513 testes verdes, lint 0, build verde, fence de backend vazio.
+
+### Pendências abertas ao fechar a Task 9
+
+1. **Recusa em espanhol fixo do backend** (`Turma.php:200`, a metade da UI-01 fora do fence) — sem
+   ficha ainda: a Task 12, que escreveria as fichas `D-*`, não foi executada.
+2. **Minor 2, 3 e 5 do review** — acima.
+3. **Run 3 (Comercial) não executada** — Tasks 10 e 11 do plano.
+4. **Banco de dev não devolvido** (Task 13 Step 1): o papel `redator` concedido na Task 3 segue no
+   usuário 1. Resíduo declarado, não escondido.
+
+Itens 1 a 4 foram cortados por decisão explícita do João em 2026-08-23 ("quero seguir logo para o
+review"), com o bloco indo a `ready_for_review` antes do fim do plano.
