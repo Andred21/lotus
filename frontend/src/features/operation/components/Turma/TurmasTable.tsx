@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -40,6 +40,11 @@ export function TurmasTable({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
+  // UI-07: o dropdown de estado só expunha o VALOR corrente ("Todos"), sem
+  // nome nenhum — nem visual, nem para leitor de tela. `useId` (e não uma
+  // string fixa) porque a tabela pode ganhar irmã na mesma tela um dia; um id
+  // hardcoded duplicaria silenciosamente.
+  const statusFilterId = useId()
   const archived = mode === 'archived'
   const table = useTableFilter(
     turmas,
@@ -58,13 +63,22 @@ export function TurmasTable({
       searchPlaceholder={t('operation.table.search')}
       onClearFilter={() => setStatus(null)}
       filterSlot={
-        <div className="w-48">
-          <AppDropdown
-            value={status}
-            options={statusOptions}
-            optionValue="value"
-            onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
-          />
+        // Par rótulo+dropdown, não `<div className="w-48">` solto: o rótulo é a
+        // correção do UI-07 (o dropdown só expunha o VALOR corrente). `inputId`,
+        // não `id` — o `AppDropdown` documenta por quê (`dropdown.cjs.js:1577`).
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={statusFilterId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('operation.table.status')}
+          </label>
+          <div className="w-48">
+            <AppDropdown
+              inputId={statusFilterId}
+              value={status}
+              options={statusOptions}
+              optionValue="value"
+              onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
+            />
+          </div>
         </div>
       }
       emptyState={
