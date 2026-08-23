@@ -6,7 +6,7 @@ use App\Domains\Catalog\Http\Controllers\CourseTemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Catalog (agregadas por routes/api.php sob prefixo `api/`).
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.active')->group(function () {
 
     // ANTES do apiResource, senão `courses/archived` casa como `courses/{course}`.
     Route::get('courses/archived', [CourseController::class, 'archived']);

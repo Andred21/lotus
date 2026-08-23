@@ -124,4 +124,50 @@ class AccountDeactivationMidSessionTest extends TestCase
 
         $this->getJson('/api/me')->assertStatus(401);
     }
+
+    /**
+     * O outro lado da mesma moeda (Q-1 do review de 2026-08-23). Enquanto o
+     * middleware esteve apendado ao grupo `api` inteiro, ele também gateava as
+     * rotas anônimas — `$request->user()` resolve nelas pelo guard `web` sem
+     * `auth:sanctum` nenhum. Um cookie de conta desativada derrubava a
+     * validação pública do QR, que é conferência de documento com peso legal
+     * feita por terceiro e não tem nada a ver com quem está logado no
+     * navegador.
+     */
+    public function test_sessao_de_conta_desativada_nao_bloqueia_a_validacao_publica(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole('admin');
+        $this->logar($user);
+
+        DB::table('users')->where('id', $user->id)->update(['is_active' => false]);
+        $this->app['auth']->forgetGuards();
+
+        // 404 (uuid inexistente) e não 401: o que se prova é que a rota
+        // ATENDEU. Com o gate no grupo `api` o request morria antes do
+        // controller.
+        $this->getJson('/api/publico/certificados/uuid-que-nao-existe')
+            ->assertStatus(404);
+    }
+
+    /**
+     * A pior das rotas anônimas para gatear: o login é por onde a pessoa sai do
+     * buraco. Com o gate no grupo `api`, a resposta era 401 sem explicação; o
+     * 422 do `AuthController` é o que diz que a conta está inativa (`auth.inactive`).
+     */
+    public function test_sessao_de_conta_desativada_ainda_alcanca_o_login(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole('admin');
+        $this->logar($user);
+
+        DB::table('users')->where('id', $user->id)->update(['is_active' => false]);
+        $this->app['auth']->forgetGuards();
+
+        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'senha123'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.email.0', __('auth.inactive'));
+    }
 }
