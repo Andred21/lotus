@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
+  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -12,6 +12,7 @@ import { turmaDisplayStatus, type TurmaDisplayStatus } from '../../lib/turmaStat
 import {
   TurmaClientCell, TurmaCodeCell, TurmaModalidadeCell, TurmaRedatoresCell, TurmaStatusCell,
 } from './TurmaCells'
+import { TURMA_COLUMN } from './turmaColumns'
 import { TurmaRowActions } from './TurmaRowActions'
 
 const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
@@ -96,14 +97,19 @@ export function TurmasTable({
       error={error}
       onRetry={onRetry}
     >
+      {/* Largura das colunas: `TURMA_COLUMN` (o porquê e os números medidos estão
+        * lá). `whitespace-nowrap` é só do código — identificador atômico. */}
       <AppColumn
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
+        className="whitespace-nowrap"
+        style={TURMA_COLUMN.code}
       />
-      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
+      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} style={TURMA_COLUMN.course} />
       <AppColumn
         header={t('operation.table.client')}
         body={(turma: TurmaData) => <TurmaClientCell turma={turma} />}
+        style={TURMA_COLUMN.identity}
       />
       <AppColumn
         header={t('operation.table.modality')}
@@ -112,6 +118,7 @@ export function TurmasTable({
       <AppColumn
         header={t('operation.table.redator')}
         body={(turma: TurmaData) => <TurmaRedatoresCell turma={turma} />}
+        style={TURMA_COLUMN.identity}
       />
       <AppColumn
         header={t('operation.table.students')}
@@ -133,7 +140,7 @@ export function TurmasTable({
             onRestore={onRestore}
           />
         )}
-        style={{ width: '8rem' }}
+        style={stickyActionsColumn('8rem')}
       />
     </SearchableTableFrame>
   )

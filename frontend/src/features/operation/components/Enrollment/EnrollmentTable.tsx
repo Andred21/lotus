@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ConfirmDialog } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ConfirmDialog, stickyActionsColumn } from '@shared/ui'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
@@ -89,7 +89,7 @@ export function EnrollmentTable({
         {/* A coluna inteira sai, não só os botões: `RecordEnrollmentResultAction`
           * e `RemoveEnrollmentAction` recusam a escrita com 422 no registro
           * fechado, e uma faixa de 6rem vazia em toda linha só rouba largura das
-          * colunas de dado, que é o que sobra para ler. */}
+          * colunas de dado, que é o que sobra para ler. O `sticky` da UI-02 acompanha a coluna. */}
         {!registroBloqueado && (
           <AppColumn
             body={(e: EnrollmentData) => (
@@ -114,7 +114,7 @@ export function EnrollmentTable({
                 />
               </div>
             )}
-            style={{ width: '6rem' }}
+            style={stickyActionsColumn('6rem')}
           />
         )}
       </AppDataTable>

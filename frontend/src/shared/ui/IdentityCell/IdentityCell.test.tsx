@@ -39,6 +39,29 @@ describe('IdentityCell', () => {
     expect(container.querySelectorAll('span.truncate')).toHaveLength(1)
   })
 
+  /** Molde do `AppFileRow` (UI-01): o que trunca tem de expor o valor inteiro em
+   * `title`, senão o corte é perda silenciosa. Isto NÃO prova a largura — o
+   * jsdom não faz layout —, prova o caminho de recuperação, que é DOM. */
+  it('expõe título e descrição inteiros em title, porque as duas linhas truncam', () => {
+    const { container } = render(
+      <IdentityCell title="Compañía General de Electricidad" description="76.123.456-7" />,
+    )
+
+    const linhas = container.querySelectorAll('span.truncate')
+    expect(linhas[0].getAttribute('title')).toBe('Compañía General de Electricidad')
+    expect(linhas[1].getAttribute('title')).toBe('76.123.456-7')
+  })
+
+  /** O `RedatorCard` passa `<span className="font-mono">{rut}</span>`: sem a
+   * guarda de tipo o tooltip diria `[object Object]`, pior que tooltip nenhum. */
+  it('não inventa title quando a descrição não é texto', () => {
+    const { container } = render(
+      <IdentityCell title="Juan Soto" description={<span className="font-mono">76.123.456-7</span>} />,
+    )
+
+    expect(container.querySelectorAll('span.truncate')[1].getAttribute('title')).toBeNull()
+  })
+
   it('na forma inline não trunca, e mantém título e descrição na mesma linha', () => {
     const { container } = render(
       <IdentityCell title="Enel Chile" description="RUT 76.123.456-7" inline />,
