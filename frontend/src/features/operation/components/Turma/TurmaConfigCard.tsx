@@ -3,6 +3,7 @@ import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErr
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
+import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
 
 type Props = {
@@ -19,6 +20,10 @@ const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
+  // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
+  // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a
+  // trancar, o registro nem existe.
+  const bloqueado = turma != null && registroAcademicoBloqueado(turma)
 
   const modalityOptions = [
     { label: t('operation.modality.presencial'), value: 'presencial' },
@@ -36,7 +41,10 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
     <div className="space-y-5 p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">{t('operation.config.title')}</h3>
-        {mode === 'view' && onEdit && (
+        {/* Escondido, não desabilitado: botão cinza ainda promete "isto seria
+            possível", e `UpdateTurmaAction` recusa a gravação com 422. Os campos
+            continuam à vista — o que sai é a escrita, não a leitura. */}
+        {mode === 'view' && onEdit && !bloqueado && (
           <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={onEdit} />
         )}
       </div>

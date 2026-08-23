@@ -8,6 +8,10 @@ import { RegisterResultDialog } from './RegisterResultDialog'
 
 type Props = {
   turmaId: number
+  /** RN-15: registro acadêmico fechado (turma concluída). Chega como booleano
+   * porque esta tabela recebe `turmaId`, não a turma — derivar aqui exigiria um
+   * dado que ela não tem, e o dono da regra é `lib/turmaStatus`. */
+  registroBloqueado: boolean
   enrollments: EnrollmentData[]
   loading: boolean
   onRemove: (enrollmentId: number, options?: { onSuccess?: () => void }) => void
@@ -25,7 +29,8 @@ type Props = {
 // cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
 // (§3), não uma lacuna.
 export function EnrollmentTable({
-  turmaId, enrollments, loading, onRemove, removing, removeError, onResetRemove, error, onRetry,
+  turmaId, registroBloqueado, enrollments, loading, onRemove, removing, removeError,
+  onResetRemove, error, onRetry,
 }: Props) {
   const { t } = useTranslation()
   const { can } = usePermissions()
@@ -81,31 +86,37 @@ export function EnrollmentTable({
             ) : null
           }
         />
-        <AppColumn
-          body={(e: EnrollmentData) => (
-            <div className="flex items-center justify-end gap-1">
-              {canManage && (
+        {/* A coluna inteira sai, não só os botões: `RecordEnrollmentResultAction`
+          * e `RemoveEnrollmentAction` recusam a escrita com 422 no registro
+          * fechado, e uma faixa de 6rem vazia em toda linha só rouba largura das
+          * colunas de dado, que é o que sobra para ler. */}
+        {!registroBloqueado && (
+          <AppColumn
+            body={(e: EnrollmentData) => (
+              <div className="flex items-center justify-end gap-1">
+                {canManage && (
+                  <AppButton
+                    icon="pi pi-pencil"
+                    text
+                    rounded
+                    aria-label={t('certificate.result.action')}
+                    onClick={() => setResultTarget(e)}
+                  />
+                )}
                 <AppButton
-                  icon="pi pi-pencil"
+                  icon="pi pi-times"
                   text
                   rounded
-                  aria-label={t('certificate.result.action')}
-                  onClick={() => setResultTarget(e)}
+                  severity="danger"
+                  disabled={removing}
+                  aria-label={t('operation.enrollment.remove')}
+                  onClick={() => setPending(e)}
                 />
-              )}
-              <AppButton
-                icon="pi pi-times"
-                text
-                rounded
-                severity="danger"
-                disabled={removing}
-                aria-label={t('operation.enrollment.remove')}
-                onClick={() => setPending(e)}
-              />
-            </div>
-          )}
-          style={{ width: '6rem' }}
-        />
+              </div>
+            )}
+            style={{ width: '6rem' }}
+          />
+        )}
       </AppDataTable>
 
       <ConfirmDialog

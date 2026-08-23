@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
+import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 
@@ -53,6 +54,11 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const picker = useRedatorPicker(turma)
   const [open, setOpen] = useState(false)
+  // RN-15: `DesignateRedatorAction` e `RemoveRedatorAction` recusam a escrita
+  // com 422 numa turma concluída. Os dois controles somem em vez de ficarem
+  // cinzas — a lista de redatores, a tag e a nota continuam, porque ler quem
+  // assinou o registro fechado é justamente o que se faz depois de fechá-lo.
+  const bloqueado = registroAcademicoBloqueado(turma)
 
   return (
     <div className="space-y-4 p-4">
@@ -73,24 +79,28 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
               <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
               <AppTag value={t('operation.redator.idoneo')} severity="success" />
             </div>
-            <AppButton
-              label={t('operation.redator.remove')}
-              icon="pi pi-times"
-              outlined
-              severity="danger"
-              disabled={picker.pending}
-              onClick={() => picker.remove(r.id)}
-            />
+            {!bloqueado && (
+              <AppButton
+                label={t('operation.redator.remove')}
+                icon="pi pi-times"
+                outlined
+                severity="danger"
+                disabled={picker.pending}
+                onClick={() => picker.remove(r.id)}
+              />
+            )}
           </li>
         ))}
       </ul>
 
-      <AppButton
-        label={turma.redatores.length > 0 ? t('operation.redator.change') : t('operation.redator.designate')}
-        icon="pi pi-user-plus"
-        outlined
-        onClick={() => setOpen(true)}
-      />
+      {!bloqueado && (
+        <AppButton
+          label={turma.redatores.length > 0 ? t('operation.redator.change') : t('operation.redator.designate')}
+          icon="pi pi-user-plus"
+          outlined
+          onClick={() => setOpen(true)}
+        />
+      )}
 
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.helpNote')}</p>
       {picker.error && <p className="text-sm" style={{ color: dangerText }}>{picker.error}</p>}

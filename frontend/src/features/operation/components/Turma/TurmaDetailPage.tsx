@@ -3,20 +3,14 @@ import { useTranslation } from "react-i18next";
 import {
   AppTabView,
   AppTabPanel,
-  AppTag,
   DetailHeader,
-  IdentityCell,
   AppCard,
   AppDetailSkeleton,
   AppErrorState,
-  AppButton,
 } from "@shared/ui";
 import { useTurmaDetail } from "../../hooks/useTurmaDetail";
-import {
-  turmaDisplayStatus,
-  turmaStatusSeverity,
-  turmaModalidadeTagProps,
-} from "../../lib/turmaStatus";
+import { registroAcademicoBloqueado } from "../../lib/turmaStatus";
+import { TurmaDetailHeader } from "./TurmaDetailHeader";
 import { TurmaConfigCard } from "./TurmaConfigCard";
 import { RedatorDesignation } from "./RedatorDesignation";
 import { EnrollmentSection } from "../Enrollment/EnrollmentSection";
@@ -72,48 +66,23 @@ export function TurmaDetailPage() {
     );
 
   const turma = d.turma;
-  const status = turmaDisplayStatus(turma);
+  const bloqueado = registroAcademicoBloqueado(turma);
 
   return (
     <div>
-      <DetailHeader
-        back={back}
-        title={turma.course_name ?? "—"}
-        subtitle={
-          <IdentityCell
-            inline
-            title={turma.client_name ?? "—"}
-            image={turma.client_photo_url}
-            size="normal"
-            description={
-              turma.budget_id != null && (
-                <AppButton
-                  text
-                  className="underline hover:no-underline"
-                  onClick={() => d.goToBudget(turma.budget_id!)}
-                >
-                  {t("operation.detail.relatedTo", {
-                    budget: turma.budget_code ?? "—",
-                    quote: turma.quote_code ?? "—",
-                  })}
-                </AppButton>
-              )
-            }
-          />
-        }
-        tags={
-          <>
-            <AppTag
-              value={t(`operation.status.${status}`)}
-              severity={turmaStatusSeverity(status)}
-            />
-            <AppTag
-              value={t(`operation.modality.${turma.modalidade}`)}
-              {...turmaModalidadeTagProps(turma.modalidade)}
-            />
-          </>
-        }
-      />
+      <TurmaDetailHeader back={back} turma={turma} onGoToBudget={d.goToBudget} />
+
+      {/* Um cartão para a PÁGINA, não um por aba: o bloqueio vale para o
+        * registro acadêmico inteiro (configuração, matrícula, resultado,
+        * redator e documentação), e as abas que escondem os controles precisam
+        * dizer por quê num lugar só — repetido em cada aba, o mesmo motivo
+        * apareceria de novo a cada troca de painel. Fica ACIMA das abas porque
+        * é o que explica os controles que sumiram lá dentro. */}
+      {bloqueado && (
+        <AppCard tone="info" className="mb-4 px-3 py-2 text-sm">
+          {t("operation.detail.lock.concluida")}
+        </AppCard>
+      )}
 
       <AppCard>
         <AppTabView activeIndex={tab} onTabChange={(e) => setTab(e.index)}>

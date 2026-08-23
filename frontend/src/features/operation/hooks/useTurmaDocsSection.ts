@@ -9,6 +9,7 @@ import {
   useUploadTurmaDocument,
 } from '../api/useTurmaDocuments'
 import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
+import { registroAcademicoBloqueado } from '../lib/turmaStatus'
 
 /** Orquestra a aba Documentación. O componente só consome.
  * `habilitada` NÃO é recalculada aqui: vem derivada do backend em `TurmaData`. */
@@ -39,15 +40,16 @@ export function useTurmaDocsSection(turma: TurmaData) {
   )
 
   const { can } = usePermissions()
-  // RN-15: turma concluída trava upload/remoção de documentação (imutabilidade).
-  const concluida = turma.status === 'concluida'
+  const concluida = registroAcademicoBloqueado(turma)
   // `can()` é conveniência de interface; a autorização real é da API (ADR-07).
   const hasPermission = can('operation.turma.submit_docs')
-  const lockReason: 'concluida' | 'permission' | null = concluida
-    ? 'concluida'
-    : hasPermission
-      ? null
-      : 'permission'
+  // A conclusão saiu daqui como MOTIVO exibido: ela tranca a página inteira, não
+  // só esta aba, e o cartão que a explica passou a ser da `TurmaDetailPage`
+  // (UI-01) — mantê-lo aqui diria o mesmo motivo duas vezes na mesma tela. Falta
+  // de permissão continua, porque é específico desta aba e não aparece em lugar
+  // nenhum. `canSubmit` NÃO mudou: o que a aba deixa fazer é o mesmo, só o
+  // cartão trocou de dono.
+  const lockReason: 'permission' | null = hasPermission ? null : 'permission'
 
   return {
     turmaId,

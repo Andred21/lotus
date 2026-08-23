@@ -681,6 +681,9 @@
         "docs": "Documentación",
         "conclusion": "Conclusión"
       },
+      "lock": {
+        "concluida": "La turma está concluida: el registro académico quedó bloqueado."
+      },
       "comingSoon": "Disponible en la próxima entrega."
     },
     "config": {
@@ -787,7 +790,6 @@
       "removeTitle": "Quitar documento",
       "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso.",
       "lock": {
-        "concluida": "La turma está concluida: la documentación quedó inmutable.",
         "permission": "No tienes permiso para subir o quitar documentación."
       },
       "uploaded": "Documento subido."

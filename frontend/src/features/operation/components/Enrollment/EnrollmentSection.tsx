@@ -4,6 +4,7 @@ import { AppButton, AppCardToolbar, ArchiveSwitch, FormErrorBanner } from '@shar
 import type { TurmaData } from '@shared/types/generated'
 import { useEnrollmentSection } from '../../hooks/useEnrollmentSection'
 import { useEnrollmentsArchived } from '../../hooks/useEnrollmentsArchived'
+import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { ArchivedEnrollmentsList } from './ArchivedEnrollmentsList'
 import { EnrollmentTable } from './EnrollmentTable'
 import { EnrollStudentForm } from './EnrollStudentForm'
@@ -16,6 +17,10 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
   const emArquivados = arquivadas.mode === 'archived'
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  // RN-15: `EnrollStudentAction` e `ImportStudentsAction` recusam a escrita com
+  // 422 numa turma concluída — os dois botões somem em vez de abrirem diálogo
+  // para uma gravação que a API sempre nega.
+  const bloqueado = registroAcademicoBloqueado(turma)
 
   return (
     <>
@@ -23,7 +28,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         // Grupo de botões à ESQUERDA, sem busca — é o que o protótipo mostra na
         // aba Alumnos (packet, "Aba sem busca").
         start={
-          s.loadError || emArquivados ? undefined : (
+          s.loadError || emArquivados || bloqueado ? undefined : (
             <>
               <AppButton
                 variant="brandIcon"
@@ -66,6 +71,9 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
       ) : (
         <EnrollmentTable
           turmaId={turma.id!}
+          /* A tabela recebe `turmaId`, não a turma — o bloqueio viaja como
+             booleano explícito para ela não precisar derivar o que não tem. */
+          registroBloqueado={bloqueado}
           enrollments={s.enrollments}
           loading={s.loading}
           onRemove={s.remove}

@@ -681,6 +681,9 @@
         "docs": "Documentation",
         "conclusion": "Conclusion"
       },
+      "lock": {
+        "concluida": "The class is concluded: the academic record is locked."
+      },
       "comingSoon": "Available in the next delivery."
     },
     "config": {
@@ -787,7 +790,6 @@
       "removeTitle": "Remove document",
       "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress.",
       "lock": {
-        "concluida": "The class is concluded: documentation is now immutable.",
         "permission": "You do not have permission to upload or remove documentation."
       },
       "uploaded": "Document uploaded."

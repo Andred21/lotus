@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
+import type { TurmaData } from '@shared/types/generated'
 import type { useTurmaDetail } from '../../hooks/useTurmaDetail'
 import { TurmaDetailPage } from './TurmaDetailPage'
 
@@ -17,6 +18,16 @@ vi.mock('react-i18next', async (importOriginal) => {
     useTranslation: mockUseTranslation(),
   }
 })
+
+/** As cinco abas abrem query própria e não têm parte nesta prova: o que se
+ * mede aqui é o cartão de bloqueio da PÁGINA, entre o cabeçalho e o card das
+ * abas. (O `TabView` monta só o painel ativo — `renderActiveOnly` é o default
+ * do PrimeReact —, então as abas nem seriam prováveis por aqui.) */
+vi.mock('./TurmaConfigCard', () => ({ TurmaConfigCard: () => null }))
+vi.mock('./RedatorDesignation', () => ({ RedatorDesignation: () => null }))
+vi.mock('../Enrollment/EnrollmentSection', () => ({ EnrollmentSection: () => null }))
+vi.mock('../Document/TurmaDocuments', () => ({ TurmaDocuments: () => null }))
+vi.mock('../Document/ConcludePanel', () => ({ ConcludePanel: () => null }))
 
 type TurmaDetail = ReturnType<typeof useTurmaDetail>
 
@@ -80,5 +91,33 @@ describe('TurmaDetailPage titula todos os seus estados', () => {
     expect(h1).toHaveLength(1)
     expect(h1[0].textContent).toBe('operation.detail.notFound')
     expect(vezesNaTela(container.textContent ?? '', 'operation.detail.notFound')).toBe(1)
+  })
+})
+
+const TURMA = {
+  id: 3, quote_id: 1, course_id: 9, modalidade: 'presencial', local_aplicacao: 'Santiago',
+  start_date: '2026-01-05', end_date: '2026-02-05', status: 'em_andamento', habilitada: false,
+  missing_document_types: [], concluded_at: null, redatores: [], course_name: 'Alta Tensión',
+  client_name: 'Transelec', enrolled_count: 15, quote_code: 'COT-1', budget_code: 'ORC-1',
+  budget_id: null, client_rut: '11.111.111-1', client_photo_url: null,
+} as TurmaData
+
+describe('TurmaDetailPage anuncia o registro acadêmico trancado (UI-01)', () => {
+  it('turma concluída: o cartão de bloqueio aparece UMA vez', () => {
+    detail.current = { ...detail.current, turma: { ...TURMA, status: 'concluida' } as TurmaData }
+
+    const { container } = render(<TurmaDetailPage />)
+
+    // Uma vez, não duas: o cartão é da PÁGINA agora, e a aba Documentación
+    // deixou de mostrar o dela — dois cartões diriam o mesmo motivo na mesma tela.
+    expect(vezesNaTela(container.textContent ?? '', 'operation.detail.lock.concluida')).toBe(1)
+  })
+
+  it('turma em curso: nenhum cartão de bloqueio', () => {
+    detail.current = { ...detail.current, turma: TURMA }
+
+    const { container } = render(<TurmaDetailPage />)
+
+    expect(vezesNaTela(container.textContent ?? '', 'operation.detail.lock.concluida')).toBe(0)
   })
 })
