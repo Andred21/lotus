@@ -705,7 +705,7 @@
       "designate": "Designar redactor",
       "remove": "Quitar",
       "none": "Ningún redactor asignado.",
-      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente (RN-09).",
+      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente.",
       "pickerTitle": "Redactores idóneos",
       "pickerEmpty": "No hay redactores idóneos para este curso.",
       "pick": "Designar"
@@ -787,7 +787,7 @@
       "removeTitle": "Quitar documento",
       "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso.",
       "lock": {
-        "concluida": "La turma está concluida: la documentación quedó inmutable (RN-15).",
+        "concluida": "La turma está concluida: la documentación quedó inmutable.",
         "permission": "No tienes permiso para subir o quitar documentación."
       },
       "uploaded": "Documento subido."

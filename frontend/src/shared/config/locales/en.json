@@ -705,7 +705,7 @@
       "designate": "Assign redator",
       "remove": "Remove",
       "none": "No redator assigned.",
-      "helpNote": "Only redatores enabled for this course with valid documentation are shown (RN-09).",
+      "helpNote": "Only redatores enabled for this course with valid documentation are shown.",
       "pickerTitle": "Eligible redatores",
       "pickerEmpty": "No eligible redatores for this course.",
       "pick": "Assign"
@@ -787,7 +787,7 @@
       "removeTitle": "Remove document",
       "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress.",
       "lock": {
-        "concluida": "The class is concluded: documentation is now immutable (RN-15).",
+        "concluida": "The class is concluded: documentation is now immutable.",
         "permission": "You do not have permission to upload or remove documentation."
       },
       "uploaded": "Document uploaded."

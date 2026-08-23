@@ -39,6 +39,7 @@ export function useTurmaDocsSection(turma: TurmaData) {
   )
 
   const { can } = usePermissions()
+  // RN-15: turma concluída trava upload/remoção de documentação (imutabilidade).
   const concluida = turma.status === 'concluida'
   // `can()` é conveniência de interface; a autorização real é da API (ADR-07).
   const hasPermission = can('operation.turma.submit_docs')
