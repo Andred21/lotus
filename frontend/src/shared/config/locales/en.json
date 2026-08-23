@@ -78,7 +78,9 @@
     "unexpectedError": "Unexpected error",
     "unexpectedErrorHint": "Could not process the server response.",
     "maximizeDialog": "Maximize dialog",
-    "restoreDialog": "Restore dialog"
+    "restoreDialog": "Restore dialog",
+    "tabsScrollPrev": "Scroll tabs left",
+    "tabsScrollNext": "Scroll tabs right"
   },
   "module": {
     "comercial": {

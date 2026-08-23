@@ -78,7 +78,9 @@
     "unexpectedError": "Error inesperado",
     "unexpectedErrorHint": "No se pudo procesar la respuesta del servidor.",
     "maximizeDialog": "Maximizar diálogo",
-    "restoreDialog": "Restaurar diálogo"
+    "restoreDialog": "Restaurar diálogo",
+    "tabsScrollPrev": "Desplazar pestañas a la izquierda",
+    "tabsScrollNext": "Desplazar pestañas a la derecha"
   },
   "module": {
     "comercial": {
