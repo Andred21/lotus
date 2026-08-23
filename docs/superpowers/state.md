@@ -4,28 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: identity
 active_work_item: hardening-acesso-ownership-e-integridade
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
 active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
 context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
-blocker: "Review de 2026-08-23 (Claude+Codex): Q-1 EnsureAccountIsActive vazou pro grupo api inteiro e bloqueia rotas publicas (login, password reset/forgot, invitation accept, publico/certificados) para sessao de conta desativada; Q-2 .claude/rules/backend-ddd.md ficou desatualizada sobre ownership de Turma. Aguardando decisao do Joao sobre os dois achados."
+blocker: null
 
 lanes:
   lane-a:
     active_work_item: hardening-acesso-ownership-e-integridade
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
     active_spec: docs/superpowers/specs/2026-08-22-hardening-acesso-ownership-e-integridade-design.md
     active_plan: docs/superpowers/plans/2026-08-22-hardening-acesso-ownership-e-integridade.md
     context_packet: docs/superpowers/context-packets/2026-08-22-hardening-acesso-ownership-e-integridade.md
-    blocker: "Review de 2026-08-23 (Claude+Codex): Q-1 EnsureAccountIsActive vazou pro grupo api inteiro e bloqueia rotas publicas (login, password reset/forgot, invitation accept, publico/certificados) para sessao de conta desativada; Q-2 .claude/rules/backend-ddd.md ficou desatualizada sobre ownership de Turma. Aguardando decisao do Joao sobre os dois achados."
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: feedbacks-resolver-escopo
   lane-b:
     active_work_item: infra-producao-runtime-e-aws
@@ -54,8 +54,8 @@ lanes:
     resume_state: null
     last_completed_work_item: BD-15-docs-guardrails-e-sincronizacao
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 56bf5fab
-updated_at: 2026-08-23T16:07:57-03:00
+state_basis_commit: 0b9ffecd
+updated_at: 2026-08-23T17:31:56-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -158,7 +158,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_execution` |
+| `lane-a` | `hardening-acesso-ownership-e-integridade` (item 3) | Backend | main tree (gate P-03) | `feat/hardening-acesso-ownership-e-integridade` | `ready_for_closure` |
 | `lane-b` | `infra-producao-runtime-e-aws` (item 10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui` | `executing` |
 
