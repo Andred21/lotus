@@ -11,3 +11,13 @@ import { COL, tableWidths } from '@shared/ui'
  */
 export const enrollmentWidths = (acao: boolean) =>
   tableWidths({ name: COL.identity, rut: COL.rut, status: COL.tag }, { acao })
+
+/**
+ * A lista de matrículas arquivadas é SEMPRE arquivada — o rastreio não é
+ * condicional aqui —, então o orçamento já nasce descontado dos 24% do par de
+ * `ARCHIVED_COLUMN`.
+ */
+export const LARGURA_MATRICULA_ARQUIVADA = tableWidths(
+  { name: COL.identity, rut: COL.rut },
+  { archived: true },
+)

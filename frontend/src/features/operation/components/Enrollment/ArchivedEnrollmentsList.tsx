@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import {
-  AppButton, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns,
+  AppButton, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, stickyActionsColumn,
 } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
+import { LARGURA_MATRICULA_ARQUIVADA } from './enrollmentColumns'
 
 /** A forma achatada pelo `useArchivedPage`. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -64,8 +65,13 @@ export function ArchivedEnrollmentsList({
         body={(e: ArchivedEnrollmentRow) => (
           <IdentityCell title={e.name} description={e.email} image={e.photo_url} />
         )}
+        style={LARGURA_MATRICULA_ARQUIVADA.name}
       />
-      <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />
+      <AppColumn
+        header={t('operation.enrollment.table.rut')}
+        field="rut"
+        style={LARGURA_MATRICULA_ARQUIVADA.rut}
+      />
       {/* Sem guarda de modo: esta lista SÓ existe no modo arquivado, então as duas
           colunas são fixas. */}
       {archivedColumns(t)}
@@ -87,7 +93,7 @@ export function ArchivedEnrollmentsList({
               />
             ) : null
           }
-          style={{ width: '8rem' }}
+          style={stickyActionsColumn('10rem')}
         />
       )}
     </AppDataTable>
