@@ -375,6 +375,14 @@ leitura de código tinha achado.
   enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
   rótulos;
 - **D-39**: completar os 15 mocks de `react-i18next` que devolvem só `t`;
+- **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
+  a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
+  (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
+  acima liga a sua, se a régua transbordar em 1440x900 ou 390x844 — e não por padrão no wrapper,
+  que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
+  `overflow: hidden`, e o efeito disso em tela não medida é suposição;
+- **D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`
+  (correção de backend — ver ficha);
 - os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
   couberem.
 
@@ -451,6 +459,16 @@ classifica é `references/review-rubric.md`, e a rule de `.claude/rules/` vence 
   contra `977586e`); §5.4/5.5/5.7/5.8 sem guarda e sem desenho medido — não entram como promessa.
   Fecho: CI regenera `typescript:transform` e reprova drift do commitado. **DoD-sonda:** editar
   `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
+
+- **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
+  `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
+  `TurmaComplianceData.missing_types` e `TurmaData.missing_document_types` são `string[]` no
+  `generated.ts`, embora o conjunto de valores seja exatamente `TurmaDocumentType`. O frontend já
+  fechou a metade dele em 2026-08-24 (Q-4): o mapa `TURMA_DOCUMENT_TYPE_KEY` é exaustivo por
+  compilador e a catraca exige a chave nas 3 locales — mas o helper precisa aceitar `string`, e o
+  `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
+  o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
+  `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
 
 - **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
   `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil

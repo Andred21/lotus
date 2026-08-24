@@ -175,6 +175,13 @@ links — `/operacion/turmas/4`, `/1` e `/6` — e o clique na primeira linha ab
 "Documentación". Catraca em `PendenciasList.test.tsx`, vista reprovar por
 `Unable to find an accessible element with the role "link"`.
 
+> **Correção — 2026-08-24 (Q-1 do review de sprint).** A última afirmação do parágrafo acima
+> registra como medido algo que não era verdade: em `d573c568` a página do detalhe abria em
+> `useState(0)`, que é a aba "Configuración", e "Documentación" é o quarto dos cinco painéis. O que
+> estava medido era o destino da **rota** (`/operacion/turmas/4`), não o painel que ela abre. A
+> promessa passou a ser verdade em `6e38a90f`, onde a aba ganhou nome, entrou na URL (`?tab=docs`)
+> e ganhou catraca — inclusive uma que prova que a ordem dos painéis é a do `TURMA_TABS`.
+
 **UI-02 — `3e6a9c47`.** Uma linha: cada tipo passa por `t('operation.documents.type.' + tipo)` antes
 do `join`, no molde do `CompliancePanel` (UI-07). Medido na linha de três tipos, em 1440x900:
 `"Falta: MANUAL, PRUEBAS, EVALUACION_REDATOR"` passa a

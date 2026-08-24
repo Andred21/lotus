@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-revisao-ui-por-modulo
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
 active_plan: docs/superpowers/plans/2026-08-22-frontend-revisao-ui-por-modulo.md
@@ -16,9 +16,9 @@ blocker: null
 lanes:
   lane-a:
     active_work_item: frontend-revisao-ui-por-modulo
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui
     active_spec: docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md
@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: aa7fcba6
-updated_at: 2026-08-23T20:55:00-03:00
+state_basis_commit: 17459d46
+updated_at: 2026-08-24T11:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -173,6 +173,50 @@ Fica em aberto, e a triagem do review herda:
 Gate rodado mesmo com o corte: fence `main...HEAD -- backend/ generated.ts` **vazio**, `pnpm lint` 0,
 `pnpm build` verde, suíte **96 arquivos / 513 testes**, zero achado `C` aberto nas duas runs. O
 destino de cada achado está na §3 dos dois relatórios em `docs/superpowers/audits/`.
+
+## Lane-a — 2026-08-24: review da fatia 1, 4 achados, os quatro corrigidos
+
+**Classificação: BAIXO risco** — uma lente, sem revisão independente do Codex. A fronteira do bloco
+foi provada, não suposta: `git diff main...HEAD -- backend/ frontend/src/shared/types/generated.ts`
+devolve **zero arquivo** em 30 commits. **Órfãos: limpo** — todo símbolo novo tem consumidor, o
+`useIsCompactViewport` segue exportado do `useViewport.ts` que o substituiu, e as duas chaves de
+locale que ficaram órfãs saíram das três. **Leis §5: nenhuma ferida.**
+
+Os quatro achados foram aprovados pelo João e corrigidos, um commit por achado:
+
+- **Q-1 🟡 (`6e38a90f`)** — o link da pendência do redator, corrigido em `d573c568`, levava à turma
+  certa e à **aba errada**: a página abria em `useState(0)` (Configuración) e a documentação é o
+  quarto dos cinco painéis, que em 390x844 nasce fora da régua. O docblock da lista e a §3 do
+  relatório de 2026-08-22 já afirmavam o destino que o código não entregava. A aba passou a ter
+  nome (`TURMA_TABS`) e a viver na URL (`?tab=docs`). Três catracas: nome→índice, URL→aba e a
+  **ordem dos cinco painéis** — sem a terceira, as duas primeiras provariam uma convenção que o
+  JSX não segue.
+- **Q-2 🟡 (`ae6b1079`)** — `TurmaConfigCard` e `RedatorDesignation` escondiam a escrita pela RN-15
+  e **nunca pela permissão**; `operation.turma.update` e `operation.turma.assign_redator` existem
+  no `TurmaController` e nenhuma tela as consultava. Pesava porque este bloco passou a mandar o
+  redator para essa página: com `turma.view` e `submit_docs`, ele recebia três controles que só
+  rendem 403. Predicado único nos dois arquivos, com catraca por componente e sessão real no store.
+- **Q-3 🟡 (`17459d46`)** — `scrollable` tinha nascido ligada **por padrão** no `AppTabView` a
+  partir de uma medição feita numa tela só, e o default alcançava os quatro `ModuleTabs`
+  (Comercial, Administración, Personas, Certificados), **nenhum medido** — ainda por cima com a run
+  de Comercial cortada do escopo. Voltou a ser pedida por sítio; a tela da turma pede, as outras
+  quatro pedem quando forem medidas (bullet no item 16 do backlog).
+- **Q-4 🟢 (`cebed9b2`)** — quatro sítios montavam a chave de tradução por template e nada ligava o
+  union `TurmaDocumentType` às chaves que ele pressupõe: tipo novo imprimiria
+  `operation.documents.type.EVALUACION_XPTO` na tela. Mapa único
+  (`Record<TurmaDocumentType, string>`, exaustivo por compilador) + catraca das 3 locales. A raiz —
+  o DTO tipar `missing_types` como `string[]` — é backend e virou **D-57**.
+
+**Gate re-rodado sobre a árvore corrigida, não herdado:** `pnpm lint` exit 0, `pnpm build` verde,
+suíte **99 arquivos / 534 testes** (entrada do review: 96 / 513 — os 21 testes novos são as
+catracas dos quatro achados).
+
+**O que a triagem NÃO reabriu**, porque é decisão registrada e não achado: run 3 (Comercial),
+fichas `D-38`/`D-39`, Minors 2/3/5 da Task 9, banco de dev com o papel `redator` no usuário 1 e a
+stack `lotus-infra` parada. Tudo isso segue na seção de 2026-08-23 acima, e é herança do
+fechamento — não deste review.
+
+O fechamento **não foi executado** — é a próxima instrução, por `next_action: close_active_work_item`.
 
 ## Último item fechado — 2026-08-22 (`feedbacks-resolver-escopo`, item 1 da fila consolidada)
 
