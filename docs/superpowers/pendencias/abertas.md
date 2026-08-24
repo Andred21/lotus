@@ -423,6 +423,40 @@ merge) e proíbe o mecanismo que a operação exige.
 João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
 apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
 
+## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
+
+**Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta
+— cada árvore com `SESSION_DOMAIN` e URLs próprias (`127.0.0.1`, `lotus1.localhost`), que é o que dá
+jar de cookie separado —, ou (b) aceitar o comportamento com a receita de perfil de navegador por
+árvore, que já está no `.env.example`. Revisar em **2026-10-31**.
+
+O bloco `compose-por-worktree` isolou o cookie de SESSÃO por offset
+(`SESSION_COOKIE: lotus_session_${LOTUS_DEV_HTTP_PORT:-8080}`, achado A do review final). O
+`XSRF-TOKEN` ficou de fora, e não por esquecimento: o nome é **cravado** no framework —
+`PreventRequestForgery::newCookie()` (`Illuminate/Foundation/Http/Middleware`, linha 242) monta
+`new Cookie('XSRF-TOKEN', …)` com `path` e `domain` de `config('session')`. Não há chave de config
+que o renomeie, e o axios lê `XSRF-TOKEN` por default (`withXSRFToken: true`,
+`frontend/src/shared/api/axios.ts`). Cookie não é isolado por porta: `domain=localhost` vale para as
+duas árvores.
+
+**Medido em 2026-08-24** (review do bloco), main tree em :8080 e `../lotus-infra` em :8081, jar único:
+
+```
+csrf8081 204 | login8081(token proprio) 200
+csrf8080(main tree) 204 → XSRF SOBRESCRITO pelo main tree
+write8081 apos clobber 419
+```
+
+A SESSÃO sobrevive — os dois `me` continuam 200, como o apêndice do DoD provou —, porque `GET` não
+passa pelo CSRF (`PreventRequestForgery::isReading()`). Quem quebra é a **escrita**: `POST/PUT/DELETE`
+da aba que não chamou o csrf-cookie por último volta 419, e o front não se recupera sozinho —
+`initCsrf()` só é chamado no login e no fluxo de senha (`frontend/src/shared/api/csrf.ts`).
+
+**Por que fica aberta:** a saída (a) muda o host de `APP_URL`, `SANCTUM_STATEFUL_DOMAINS`,
+`SESSION_DOMAIN` e do dev server — mexe no desenho que o DoD deste bloco provou ponta a ponta e pede
+decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
+`.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
+
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
 **Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,

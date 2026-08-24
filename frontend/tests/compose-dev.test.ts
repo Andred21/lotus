@@ -78,6 +78,17 @@ function regioesDaChave(texto: string, chave: string): string[] {
   return regioes
 }
 
+/**
+ * Remove o comentário YAML (`# …`) de cada linha. A conferência das chaves
+ * injetadas casa `CHAVE: ….${VAR:-default}` em QUALQUER ponto da linha, então
+ * sem esta poda `APP_URL: http://localhost:8080 # ${LOTUS_DEV_HTTP_PORT:-8080}`
+ * — valor literal de volta, variável viva só no comentário — passaria verde
+ * (achado Q-3 do review de 2026-08-24). Nenhum valor do compose contém `#`.
+ */
+function semComentarios(texto: string): string {
+  return texto.replace(/(^|\s)#.*$/gm, '')
+}
+
 describe('docker-compose.yml', () => {
   it('publica toda porta host por variável LOTUS_DEV_*, nunca literal', () => {
     const regioes = regioesDaChave(DEV, 'ports')
@@ -103,11 +114,16 @@ describe('docker-compose.yml', () => {
     },
   )
 
-  it('declara no .env.example da raiz toda variável LOTUS_DEV_* que lê', () => {
+  it('declara no .env.example da raiz toda LOTUS_DEV_* que lê, com a porta histórica', () => {
     const lidas = new Set([...DEV.matchAll(/\$\{(LOTUS_DEV_[A-Z_]+)/g)].map((m) => m[1]))
     expect(lidas.size).toBeGreaterThan(0)
     for (const nome of lidas) {
       expect(EXEMPLO).toMatch(new RegExp(`^\\s*#?\\s*${nome}=`, 'm'))
+      // O VALOR do molde também é pinado (achado Q-3 do review de 2026-08-24):
+      // `cp .env.example .env` é o passo 1 da receita de árvore nova, e um
+      // molde que já viesse com o offset de alguém (`...HTTP_PORT=8081`) faria
+      // a árvore nova nascer na porta de outra — declarar a chave não basta.
+      expect(EXEMPLO).toMatch(new RegExp(`^\\s*#?\\s*${nome}=${DEFAULTS[nome]}\\s*$`, 'm'))
     }
   })
 
@@ -132,7 +148,7 @@ describe('docker-compose.yml', () => {
       // (achado A do review final).
       SESSION_COOKIE: ['LOTUS_DEV_HTTP_PORT'],
     }
-    const [environmentDoApp] = regioesDaChave(blocoDoServico('app'), 'environment')
+    const [environmentDoApp] = regioesDaChave(semComentarios(blocoDoServico('app')), 'environment')
     expect(environmentDoApp).toBeDefined()
     for (const [chave, variaveis] of Object.entries(CHAVES)) {
       for (const variavel of variaveis) {

@@ -254,27 +254,36 @@ A suíte rodou **com o `.env` de offset presente na raiz** — condição que, a
 deixava dois casos da catraca vermelhos.
 
 ```
-$ git diff main...HEAD --stat
- .env.example                                       |  27 +
- .gitignore                                         |   2 +
- CLAUDE.md                                          |   8 +-
- README.md                                          |   4 +-
- docker-compose.yml                                 |  23 +-
- docs/adrs.md                                       |   2 +
- docs/superpowers/pendencias/README.md              |   5 +-
- docs/superpowers/pendencias/abertas.md             |  32 +-
- .../plans/2026-08-24-compose-por-worktree.md       | 781 +++++++++++++++++++++
- .../2026-08-24-compose-por-worktree-design.md      | 174 +++++
- docs/superpowers/state.md                          |  59 +-
- frontend/.env.example                              |   5 +-
- frontend/tests/compose-dev.test.ts                 | 318 +++++++++
- frontend/vite.config.ts                            |  65 +-
- 14 files changed, 1448 insertions(+), 57 deletions(-)
+$ git diff main...HEAD --name-only
+.env.example
+.gitignore
+CLAUDE.md
+README.md
+backend/.env.example
+docker-compose.yml
+docs/adrs.md
+docs/superpowers/audits/2026-08-24-compose-por-worktree-dod.md
+docs/superpowers/pendencias/README.md
+docs/superpowers/pendencias/abertas.md
+docs/superpowers/plans/2026-08-24-compose-por-worktree.md
+docs/superpowers/specs/2026-08-24-compose-por-worktree-design.md
+docs/superpowers/state.md
+frontend/.env.example
+frontend/tests/compose-dev.test.ts
+frontend/vite.config.ts
 ```
 
-Nenhum `backend/`, `frontend/src/`, `docker-compose.prod.yml`, `docker-compose.prod-probe.yml`,
-`docker/Dockerfile.prod`, `docker/probe.env` ou `docker/nginx/prod.conf` no diff. Com `backend/`
-vazio, **`pint` e `typescript:transform` são N/A por escopo medido** — o `--stat` acima é a prova.
+`--name-only`, e não `--stat`: a primeira versão desta seção colou um `--stat` de 14 arquivos que
+**envelheceu em três commits** — o `backend/.env.example`, este próprio documento e as linhas
+acrescentadas ao molde e à catraca ficaram de fora, e a conclusão passou a se apoiar numa contagem
+que não era mais a do diff (achado Q-2 do review de 2026-08-24). A lista de NOMES é estável: o
+número de linhas muda a cada correção, o conjunto de arquivos tocados não.
+
+Nenhum `frontend/src/`, `docker-compose.prod.yml`, `docker-compose.prod-probe.yml`,
+`docker/Dockerfile.prod`, `docker/probe.env` ou `docker/nginx/prod.conf` no diff. O único
+`backend/` da lista é `backend/.env.example`, que são **comentários** apontando para o ADR-13 —
+nenhum `.php`, nenhum DTO, nenhum `generated.ts`. Por isso **`pint` e `typescript:transform`
+seguem N/A por escopo medido**, agora com a lista acima como prova.
 
 Bundle de produção limpo, e construído justamente com o `.env` de offset presente:
 
@@ -352,3 +361,32 @@ ocorrências de "localhost:8080" nas requisições: 0
 
 **Veredicto do apêndice:** as provas 3 e 5 da §8 seguem válidas sob o desenho corrigido, e o furo de
 uso simultâneo que a revisão final encontrou está fechado com evidência própria.
+
+---
+
+## Apêndice 2 — o que o isolamento NÃO cobre: `XSRF-TOKEN` (review de 2026-08-24)
+
+O apêndice acima prova a coexistência das duas sessões com `GET /api/me`. **`GET` não passa pelo
+CSRF** (`PreventRequestForgery::isReading()`), então aquela prova não diz nada sobre ESCRITA — e é
+na escrita que sobra um furo, medido no review deste bloco:
+
+```
+csrf8081 204 | login8081(token proprio) 200
+csrf8080(main tree) 204 → XSRF SOBRESCRITO pelo main tree
+write8081 apos clobber 419
+```
+
+Motivo: o nome `XSRF-TOKEN` é **cravado** no framework
+(`PreventRequestForgery::newCookie()` monta `new Cookie('XSRF-TOKEN', …)` com `path`/`domain` de
+`config('session')`), e cookie não é isolado por porta — não há chave de config que faça por ele o
+que `SESSION_COOKIE` fez pela sessão. A sessão de cada árvore continua íntegra; quem volta 419 é o
+`POST/PUT/DELETE` da aba que não pediu o csrf-cookie por último, sem recuperação automática
+(`initCsrf()` só roda no login e no fluxo de senha).
+
+**Consequência para o veredicto:** os sete critérios da §8 seguem provados — nenhum deles afirma
+escrita simultânea nas duas árvores. O que muda é o alcance da frase "sessão própria": ela vale para
+autenticação e leitura, não para escrita concorrente no MESMO navegador. A limitação está escrita na
+receita do `.env.example` da raiz (um perfil de navegador por árvore) e aberta como **P-56**, cuja
+saída — isolar por host em vez de por porta — muda o desenho que este documento provou e é decisão
+do João.
+

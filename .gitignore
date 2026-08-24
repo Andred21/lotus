@@ -5,10 +5,18 @@
 /frontend/.pnpm-store
 
 # Ambiente / segredos
-/.env
-/backend/.env
-/frontend/.env
-/.env*.backup-do-teste
+# `.env*` e não `.env`: o Vite lê também `.env.local`, `.env.development` e
+# `.env.development.local` — que o Compose NÃO lê —, então um offset esquecido
+# numa dessas variantes muda a porta do dev server sozinho e ainda entraria num
+# `git add -A` (achado Q-4 do review de 2026-08-24). O padrão cobre de quebra o
+# backup que a catraca de `compose-dev.test.ts` cria. Os moldes versionados são
+# a exceção.
+/.env*
+!/.env.example
+/backend/.env*
+!/backend/.env.example
+/frontend/.env*
+!/frontend/.env.example
 
 # Chaves e storage gerado
 /backend/storage/*.key
