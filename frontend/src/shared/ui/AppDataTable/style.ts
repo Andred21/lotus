@@ -39,7 +39,18 @@ export const appDataTablePt: DataTablePassThroughOptions = {
       backgroundAttachment: 'local, local, scroll, scroll',
     },
   },
-  table: { className: 'min-w-[48rem]' },
+  /** `table-fixed` é o que torna a largura declarada uma LEI, e não um palpite
+   * (item 17). Com `table-layout: auto` o navegador trata a porcentagem como
+   * preferência e reparte pelo conteúdo: medido em `/operacion` a 1440x900, com
+   * as sete colunas já declarando largura, CURSO pedia 20,54% e recebia 130px
+   * enquanto CLIENTE recebia 249px — o inverso da importância, que é o defeito
+   * que o bloco existe para remover. Com `table-fixed`, os mesmos `style`
+   * entregam CURSO 226px e CLIENTE 194px, e a tabela passa a caber exata na
+   * moldura (1119x1119, contra 1213 numa moldura de 1119).
+   *
+   * A largura mínima continua: abaixo de 48rem o wrapper rola, e a coluna de
+   * ações fica presa (`stickyActionsColumn`) para continuar alcançável. */
+  table: { className: 'min-w-[48rem] table-fixed' },
   headerRow: { className: 'text-xs uppercase tracking-wide' },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a
   // DataTablePassThroughOptions — cascatam via `column` (tipagem do PrimeReact 10.9.8).
