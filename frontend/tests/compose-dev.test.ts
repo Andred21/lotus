@@ -116,18 +116,32 @@ describe('docker-compose.yml', () => {
     // Sanctum é emitido para o domínio de APP_URL e conferido contra
     // SANCTUM_STATEFUL_DOMAINS, e a URL pública de arquivo aponta para a
     // porta do MinIO da OUTRA árvore. Foi o passo manual de 2026-08-19.
-    const CHAVES: Record<string, string> = {
-      APP_URL: 'LOTUS_DEV_HTTP_PORT',
-      FRONTEND_URL: 'LOTUS_DEV_VITE_PORT',
-      SANCTUM_STATEFUL_DOMAINS: 'LOTUS_DEV_HTTP_PORT',
-      AWS_ENDPOINT_PUBLIC: 'LOTUS_DEV_MINIO_PORT',
-      AWS_URL: 'LOTUS_DEV_MINIO_PORT',
+    // Record<string, string[]>, não Record<string, string>: SANCTUM_STATEFUL_DOMAINS
+    // carrega DUAS variáveis no mesmo valor (Vite e HTTP). Um mapa 1:1 só
+    // conferia a metade HTTP — a metade Vite podia virar literal com a
+    // catraca verde, e é exatamente o que faria a segunda árvore levar 401
+    // silencioso no `/api/me` (achado E do review final).
+    const CHAVES: Record<string, string[]> = {
+      APP_URL: ['LOTUS_DEV_HTTP_PORT'],
+      FRONTEND_URL: ['LOTUS_DEV_VITE_PORT'],
+      SANCTUM_STATEFUL_DOMAINS: ['LOTUS_DEV_VITE_PORT', 'LOTUS_DEV_HTTP_PORT'],
+      AWS_ENDPOINT_PUBLIC: ['LOTUS_DEV_MINIO_PORT'],
+      AWS_URL: ['LOTUS_DEV_MINIO_PORT'],
+      // Cookie de sessão não é isolado por porta pelo navegador: sem este
+      // sufixo, logar numa árvore sobrescreve o `laravel-session` da outra
+      // (achado A do review final).
+      SESSION_COOKIE: ['LOTUS_DEV_HTTP_PORT'],
     }
     const [environmentDoApp] = regioesDaChave(blocoDoServico('app'), 'environment')
     expect(environmentDoApp).toBeDefined()
-    for (const [chave, variavel] of Object.entries(CHAVES)) {
-      const linha = new RegExp(`^\\s*${chave}:.*\\$\\{${variavel}:-\\d+\\}`, 'm')
-      expect(environmentDoApp ?? '').toMatch(linha)
+    for (const [chave, variaveis] of Object.entries(CHAVES)) {
+      for (const variavel of variaveis) {
+        // O número do default é PINADO (não `\d+`): sem isso, um default
+        // trocado por engano (ex.: `LOTUS_DEV_VITE_PORT:-5174`) passaria
+        // verde mesmo divergindo da porta histórica (achado F do review final).
+        const linha = new RegExp(`^\\s*${chave}:.*\\$\\{${variavel}:-${DEFAULTS[variavel]}\\}`, 'm')
+        expect(environmentDoApp ?? '').toMatch(linha)
+      }
     }
   })
 })
@@ -313,6 +327,22 @@ describe('vite.config.ts', () => {
     expect(config.server?.port).toBe(5199)
     expect(config.define?.['import.meta.env.VITE_API_URL']).toBe(
       JSON.stringify('http://localhost:8199'),
+    )
+  })
+
+  it('cai no default quando a variável do `.env` está VAZIA, não só quando está ausente', async () => {
+    // Achado B do review final: o plano original usava `??`, que só cai no
+    // default com a variável UNSET. O Compose lê o MESMO arquivo com
+    // `${VAR:-default}`, que cai no default também com a variável VAZIA —
+    // `??` deixaria `Number("") === 0` (porta aleatória, `strictPort` não
+    // protege) e a baseURL quebrada "http://localhost:". `||` cobre os dois
+    // casos.
+    plantarEnvDaRaiz('LOTUS_DEV_VITE_PORT=\nLOTUS_DEV_HTTP_PORT=\n')
+
+    const config = await carregar('serve')
+    expect(config.server?.port).toBe(Number(DEFAULTS.LOTUS_DEV_VITE_PORT))
+    expect(config.define?.['import.meta.env.VITE_API_URL']).toBe(
+      JSON.stringify(`http://localhost:${DEFAULTS.LOTUS_DEV_HTTP_PORT}`),
     )
   })
 })
