@@ -116,3 +116,44 @@ describe('docker-compose.yml', () => {
     }
   })
 })
+
+describe('vite.config.ts', () => {
+  // NOTA DE ROTA (Step 5 do plano): a versão original desta suíte chamava e
+  // executava a fábrica (`await import('../vite.config')`) e inspecionava o
+  // OBJETO que o Vite recebe — a interface real, não o texto. Essa rota
+  // quebrou por contaminação: o PRÓPRIO Vitest resolve `vite.config.ts` (com
+  // `command: "serve"`) para montar o ambiente de teste ANTES de qualquer
+  // `it` rodar, e o Vite espelha o `define` de `import.meta.env.VITE_API_URL`
+  // em `process.env.VITE_API_URL` no lado Node/SSR. Uma segunda chamada
+  // explícita da fábrica, dentro do teste, então encontra a variável já
+  // presente — `apiJaDefinida` vira `true` e o `define` some do resultado.
+  // Erro medido nessa rota:
+  //   AssertionError: expected undefined to be '"http://localhost:8080"'
+  //   ❯ servir.define?.['import.meta.env.VITE_API_URL']
+  // Leitura textual do arquivo não sofre essa contaminação — é a mesma
+  // técnica de `compose-dev.test.ts` para o `docker-compose.yml`.
+  const CONFIG = readFileSync(join(__dirname, '..', 'vite.config.ts'), 'utf8')
+
+  it('serve a porta do offset da árvore, com strictPort ligado', () => {
+    // strictPort é a decisão: sem ele o Vite escorrega para a porta seguinte
+    // em silêncio, e o SANCTUM_STATEFUL_DOMAINS injetado no container passa a
+    // apontar para uma porta que ninguém está servindo — a sessão morre sem
+    // mensagem que explique.
+    const portVar = 'LOTUS_DEV_VITE_PORT'
+    expect(Object.keys(DEFAULTS)).toContain(portVar)
+    expect(CONFIG).toMatch(new RegExp(`offset\\.${portVar}\\s*\\?\\?\\s*${DEFAULTS[portVar]}`))
+    expect(CONFIG).toMatch(/server:\s*\{\s*port:\s*portaVite,\s*strictPort:\s*true\s*\}/)
+  })
+
+  it('deriva VITE_API_URL no serve e NÃO emite o define no build', () => {
+    // A imagem de produção passa `ENV VITE_API_URL=""` (docker/Dockerfile.prod:32)
+    // para servir SPA e API da mesma origem. Um define incondicional aqui
+    // gravaria "http://localhost:8080" dentro do bundle de produção.
+    const apiVar = 'LOTUS_DEV_HTTP_PORT'
+    expect(Object.keys(DEFAULTS)).toContain(apiVar)
+    expect(CONFIG).toMatch(new RegExp(`offset\\.${apiVar}\\s*\\?\\?\\s*"${DEFAULTS[apiVar]}"`))
+    expect(CONFIG).toMatch(/command === "serve" && !apiJaDefinida/)
+    expect(CONFIG).toMatch(/\?\s*\{\s*define:\s*\{\s*"import\.meta\.env\.VITE_API_URL":/)
+    expect(CONFIG).toMatch(/:\s*\{\}\),/)
+  })
+})
