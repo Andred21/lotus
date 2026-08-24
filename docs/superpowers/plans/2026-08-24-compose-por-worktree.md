@@ -34,7 +34,7 @@ A §5 da spec desenha a injeção em cima de uma premissa **não medida**: vari�
 - Consumes: nada.
 - Produces: a decisão **A** (injeção por `environment:`, como a §5 desenha) ou o **plano B** (as cinco chaves saem de `backend/.env.example` e passam a morar só no compose). A Task 3 lê esta decisão.
 
-- [ ] **Step 1: Instalar as dependências do backend nesta árvore**
+- [x] **Step 1: Instalar as dependências do backend nesta árvore**
 
 `docker compose run` **não** publica portas (diferente de `up`), então isto não colide com a stack do main tree que está no ar.
 
@@ -44,7 +44,7 @@ docker compose run --rm --no-deps app composer install
 
 Esperado: `Generating optimized autoload files`, e `backend/vendor/` passa a existir.
 
-- [ ] **Step 2: Medir a precedência**
+- [x] **Step 2: Medir a precedência**
 
 ```bash
 docker compose run --rm --no-deps -e APP_URL=http://sonda-env:9999 app \
@@ -56,16 +56,43 @@ docker compose run --rm --no-deps -e APP_URL=http://sonda-env:9999 app \
 - Saída `http://sonda-env:9999` → **premissa confirmada**, segue a decisão A.
 - Saída `http://localhost:8080` → **premissa caiu**, segue o plano B.
 
-- [ ] **Step 3: Registrar o resultado no plano**
+- [x] **Step 3: Registrar o resultado no plano**
 
 Acrescente ao fim desta task, no arquivo do plano, uma linha literal com o comando, a saída obtida e a decisão (A ou B). Não escreva "confirmado" sem colar a saída — a lei §5 nº8 vale para premissa também.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/plans/2026-08-24-compose-por-worktree.md
 git commit -m "docs(plan): registra a medicao da precedencia env real sobre .env"
 ```
+
+#### Medição — 2026-08-24, árvore `../lotus-infra`
+
+`backend/vendor` instalado com `docker compose run --rm --no-deps app composer install`
+(`docker compose run` não publica portas, então a stack do main tree seguiu no ar nas portas
+históricas durante a medição).
+
+Comando:
+
+```bash
+docker compose run --rm --no-deps -e APP_URL=http://sonda-env:9999 app \
+  php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo config("app.url"), PHP_EOL;'
+```
+
+Saída literal:
+
+```
+ Container lotus-infra-app-run-22bc240317a2 Creating
+ Container lotus-infra-app-run-22bc240317a2 Created
+http://sonda-env:9999
+```
+
+`backend/.env` desta árvore traz `APP_URL=http://localhost:8080`. A saída é o valor da variável de
+ambiente real, não o do `.env`.
+
+**Decisão: A.** A injeção por `environment:` da §5 da spec vale como desenhada; o plano B não é
+acionado e `backend/.env.example` não é tocado.
 
 ---
 
