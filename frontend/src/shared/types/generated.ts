@@ -121,6 +121,7 @@ snapshot_ok: boolean,
 created_at: string,
 aluno_photo_url: string | null,
 };
+export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
 export type CertificateSnapshotData = {
 schema_version: number,
 aluno: SnapshotPartyData,
@@ -550,6 +551,13 @@ start_date: string | null,
 end_date: string | null,
 modalidade: string | null,
 };
+export type StudentCertificateData = {
+id: number,
+codigo: string,
+display_status: CertificateDisplayStatus,
+valido_ate: string | null,
+snapshot_ok: boolean,
+};
 export type StudentClientLogData = {
 id: number,
 client_id: number,
@@ -587,6 +595,8 @@ quote_code: string | null,
 course_name: string,
 start_date: string,
 approval_status: EnrollmentApprovalStatus,
+certificate: StudentCertificateData | null,
+superseded_count: number,
 };
 export type TurmaComplianceData = {
 turma_id: number,

@@ -2,7 +2,9 @@
 
 namespace App\Domains\Identity\Data;
 
+use App\Domains\Certification\Services\StudentCertificateSummary;
 use App\Domains\Identity\Models\Student;
+use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -11,7 +13,10 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * Separada de StudentData para que a listagem não carregue logs e matrículas de
  * todos os alunos. Mesmo papel de EnrollPreviewData e PendingQuoteData.
  *
- * Certificados não entram: o domínio Certification não existe (Bloco 7).
+ * Os certificados entram por COLUNA da linha de turma (`StudentTurmaData`), a
+ * partir da coleção que o controller resolve: o DTO não toca o container. A
+ * frase que aqui dizia "Certification não existe (Bloco 7)" era falsa desde o
+ * Bloco 7 e sustentou a P-15 por um mês.
  */
 #[TypeScript]
 class StudentDetailData extends Data
@@ -31,7 +36,11 @@ class StudentDetailData extends Data
         public array $turmas,
     ) {}
 
-    public static function fromModel(Student $student): self
+    /**
+     * @param  Collection<int, StudentCertificateSummary>  $certificates
+     *                                                                    indexada por `enrollment_id`, já resolvida pelo controller
+     */
+    public static function fromModel(Student $student, Collection $certificates): self
     {
         return new self(
             id: $student->id,
@@ -55,7 +64,10 @@ class StudentDetailData extends Data
             turmas: $student->enrollments
                 ->sortByDesc(fn ($enrollment) => $enrollment->turma->start_date)
                 ->values()
-                ->map(fn ($enrollment) => StudentTurmaData::fromModel($enrollment))
+                ->map(fn ($enrollment) => StudentTurmaData::fromModel(
+                    $enrollment,
+                    $certificates->get($enrollment->id),
+                ))
                 ->all(),
         );
     }
