@@ -88,7 +88,7 @@ export function HistorialTable() {
           // Documento corrompido não tem estado a afirmar: o servidor deriva
           // "vigente" das datas, que continuam válidas, sobre um snapshot que não
           // sustenta nem o nome do aluno. A tag de defeito ocupa o lugar da de
-          // estado, e NÃO vira um quinto `CertDerivedStatus` — isso contaminaria
+          // estado, e NÃO vira um quinto `CertificateDisplayStatus` — isso contaminaria
           // o filtro, os contadores do rodapé e o `CertificateViewDialog`.
           body={(c: CertificateData) => {
             if (!c.snapshot_ok) return <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
