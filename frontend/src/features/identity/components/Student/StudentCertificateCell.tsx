@@ -13,15 +13,18 @@ import { useStudentCertificatePdfOpener } from '../../hooks/useStudentCertificat
  * A coluna Certificado da tabela de turmas do aluno. Quatro ramos, e a ordem
  * entre eles é a regra:
  *
- * 1. snapshot corrompido — tag de defeito, SEM afirmar estado. Documento que
- *    não sustenta nem o nome do aluno não tem estado a declarar; as datas
- *    continuam válidas e diriam "vigente" sobre um documento quebrado.
- *    Política herdada do Historial, e o defeito NÃO é um quinto valor do enum;
- * 2. certificado presente — código, estado, data (só quando há prazo) e o PDF;
- * 3. aprovado sem certificado — "pendente de emissão";
- * 4. o resto — "não corresponde".
+ * 1. aprovado sem certificado — "pendente de emissão";
+ * 2. o resto sem certificado — "não corresponde";
+ * 3. certificado presente com snapshot corrompido — tag de defeito, SEM
+ *    afirmar estado. Documento que não sustenta nem o nome do aluno não tem
+ *    estado a declarar; as datas continuam válidas e diriam "vigente" sobre
+ *    um documento quebrado. Política herdada do Historial, e o defeito NÃO é
+ *    um quinto valor do enum. Este ramo vem ANTES do estado no código, ainda
+ *    que ambos vivam dentro do `certificate !== null`;
+ * 4. certificado presente com snapshot íntegro — código, estado, data (só
+ *    quando há prazo) e o PDF.
  *
- * Os ramos 3 e 4 têm significados OPOSTOS e por isso não dividem um traço só:
+ * Os ramos 1 e 2 têm significados OPOSTOS e por isso não dividem um traço só:
  * um diz "falta emitir", o outro diz "não vai emitir". A distinção lê apenas
  * `certificate === null` e o `approval_status` que a linha já traz (spec D7).
  */
