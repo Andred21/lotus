@@ -303,3 +303,52 @@ que o `.env.example` documenta e que o `docker compose up` valida sozinho, falha
 `port is already allocated`. Os achados A–C da revisão final (acima) somam sobre isso: cookie de
 sessão isolado por offset, o `vite.config.ts` correto sobre variável vazia, e a receita de árvore
 nova documentada.
+
+---
+
+## Apêndice — re-prova depois do `SESSION_COOKIE` (2026-08-24, pós-review final)
+
+A revisão final achou que o bloco destravava duas árvores servindo a stack, mas deixava as duas
+**disputando o mesmo cookie de sessão**: cookies não são isolados por porta, e as duas emitiam
+`laravel-session` em `domain=localhost`. Logar na segunda derrubava a sessão da primeira. O commit
+`3c9f46c0` injeta `SESSION_COOKIE: lotus_session_${LOTUS_DEV_HTTP_PORT:-8080}` pelo mesmo mecanismo
+da D3. Como isso muda o comportamento de sessão que o DoD havia provado, as provas 3 e 5 foram
+**refeitas** contra o desenho novo.
+
+```
+$ docker compose exec -T app php artisan tinker --execute="echo config('session.cookie'), PHP_EOL;"
+lotus_session_8081
+```
+
+**Coexistência das duas sessões no MESMO jar de cookies** — o equivalente às duas árvores abertas no
+mesmo navegador, que é o cenário que a P-03 destrava e que antes se derrubava sozinho:
+
+```
+login :8081 200
+login :8080 200
+--- apos logar nas DUAS, com o mesmo jar ---
+me    :8081 200
+me    :8080 200
+--- cookies de sessao no jar ---
+laravel-session
+lotus_session_8081
+```
+
+As duas continuam autenticadas depois de a outra logar. Os dois nomes são distintos porque o main
+tree ainda roda o compose da `main`, sem a injeção — quando ele adotar esta branch, passará a
+`lotus_session_8080`, e a distinção se mantém pelo offset.
+
+**Login pela UI, no navegador, sob o cookie novo** (`playwright-cli`, Chromium, `pnpm dev` em 5174):
+
+```
+- Page URL: http://localhost:5174/
+"Skip to content ADMINISTRATOR Dashboard Commercial Operations Courses Certificates Peopl…"
+
+465. [GET]  http://localhost:8081/api/me    => [401] Unauthorized   (sonda de sessão, antes do login)
+474. [POST] http://localhost:8081/api/login => [200] OK
+
+ocorrências de "localhost:8080" nas requisições: 0
+```
+
+**Veredicto do apêndice:** as provas 3 e 5 da §8 seguem válidas sob o desenho corrigido, e o furo de
+uso simultâneo que a revisão final encontrou está fechado com evidência própria.
