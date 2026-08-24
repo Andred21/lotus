@@ -26,10 +26,12 @@ export function useBlobTabOpener<TVariables>(
   const { message } = useMutationErrors([mutation.error])
   const urlRef = useRef<string | null>(null)
   const tabRef = useRef<Window | null>(null)
+  const mountedRef = useRef(true)
   const [popupBlocked, setPopupBlocked] = useState(false)
 
   useEffect(
     () => () => {
+      mountedRef.current = false
       if (urlRef.current) URL.revokeObjectURL(urlRef.current)
       tabRef.current?.close()
     },
@@ -48,15 +50,23 @@ export function useBlobTabOpener<TVariables>(
     tabRef.current = tab
     mutation.mutate(variables, {
       onSuccess: (blob) => {
+        // Só zera `tabRef` se ele ainda apontar para ESTA aba — um `open()`
+        // sobreposto já pode ter posto a próxima aba lá, e essa referência
+        // não é desta chamada para apagar.
+        if (tabRef.current === tab) tabRef.current = null
+        // Callback por chamada pode disparar depois do unmount (não é
+        // garantia do TanStack): desmontado, a aba já foi fechada pelo
+        // cleanup e não há para onde apontar — criar o objectURL aqui só
+        // vazaria, porque o cleanup que o revogaria já rodou.
+        if (!mountedRef.current) return
         // Um objectURL vivo por vez: o anterior morre quando o próximo nasce.
         if (urlRef.current) URL.revokeObjectURL(urlRef.current)
         urlRef.current = URL.createObjectURL(blob)
         tab.location.href = urlRef.current
-        tabRef.current = null
       },
       onError: () => {
         tab.close()
-        tabRef.current = null
+        if (tabRef.current === tab) tabRef.current = null
       },
     })
   }
