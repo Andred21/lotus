@@ -13,8 +13,14 @@ const RAIZ_DO_REPO = path.resolve(__dirname, "..");
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const offset = loadEnv(mode, RAIZ_DO_REPO, "LOTUS_");
-  const portaVite = Number(offset.LOTUS_DEV_VITE_PORT ?? 5173);
-  const portaApi = offset.LOTUS_DEV_HTTP_PORT ?? "8080";
+  // `||`, não `??`: o Compose lê o MESMO arquivo com `${VAR:-default}`, que
+  // cai no default tanto quando a variável está unset quanto quando está
+  // VAZIA. `??` só cobre o primeiro caso — com `LOTUS_DEV_VITE_PORT=` o Vite
+  // faria `Number("") === 0` e subiria em porta aleatória (`strictPort` não
+  // protege: porta 0 é pedido válido de porta aleatória), e `portaApi` vazio
+  // geraria a baseURL quebrada "http://localhost:".
+  const portaVite = Number(offset.LOTUS_DEV_VITE_PORT || 5173);
+  const portaApi = offset.LOTUS_DEV_HTTP_PORT || "8080";
   const apiJaDefinida = loadEnv(mode, __dirname, "VITE_").VITE_API_URL !== undefined;
 
   return {
