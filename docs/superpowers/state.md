@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-c
+focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: certificacao-historico-do-aluno
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -16,12 +16,12 @@ blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: certificacao-historico-do-aluno
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: main-tree
-    branch: feat/hardening-acesso-ownership-e-integridade
+    branch: feat/certificacao-historico-do-aluno
     active_spec: null
     active_plan: null
     context_packet: null
@@ -47,8 +47,8 @@ lanes:
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
-    tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui
+    tree: ../fix-frontend   # detached HEAD em cad0d1fb desde o merge do PR #69
+    branch: null            # refactor/frontend-revisao-ui mesclada no PR #69 (merge cad0d1fb)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: 8a4df32a
-updated_at: 2026-08-24T14:00:00-03:00
+state_basis_commit: cad0d1fb
+updated_at: 2026-08-24T13:16:19-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,14 +161,23 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `context_required` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
-**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
-`feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
-estado e **ainda não foi mesclada** — é o PR aberto. A lane não recebe item novo sozinha: promoção é
-do João, contra o `backlog.md`.
+**Promoção de 2026-08-24, explícita do João.** O item 2 da fila entra na `lane-a`, no main tree por
+causa do gate P-03 (o bloco toca backend), em branch nova nascida de `main@cad0d1fb`. O backlog
+marca `Contexto: sim`, então a lane nasce em `context_required`: o Context Packet é do Codex, pela
+skill `lotus-context-packet` de `.agents/skills/`, e nenhum planejamento começa antes de ele ser
+validado e salvo em `context-packets/`. O bloco **absorve a P-15** — a ficha segue aberta em
+`pendencias/abertas.md` e só sai no fechamento. `focused_lane` passa de `lane-c` para `lane-a` neste
+mesmo commit, que é a fronteira durável exigida pelas invariantes.
+
+**Rastro de merge corrigido neste commit.** O `state.md` anterior (`8a4df32a`) descrevia as branches
+da `lane-a` e da `lane-c` como não mescladas. Em `cad0d1fb` as duas já entraram:
+`refactor/frontend-revisao-ui` pelo **PR #69**, e `feat/hardening-acesso-ownership-e-integridade` não
+consta mais em `git branch -a --no-merged main`. A worktree `../fix-frontend` continua existindo, em
+detached HEAD no mesmo `cad0d1fb`; por isso o `branch` da `lane-c` é `null` e o `tree` não é.
 
 **A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
 **PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
@@ -176,10 +185,9 @@ do João, contra o `backlog.md`.
 decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
 são `null`.
 
-Interseção a vigiar entre as lanes vivas: nenhuma — as três estão em `idle`. A `lane-c` fechou o
-item 16 (fatia 1 de 2) em 2026-08-24, depois de trazer a `main` para dentro pelo merge `8a4df32a`;
-a narrativa dela está em `historico/state-archive.md`. Integração segue serial: é esta branch que
-mescla a seguir.
+**A `lane-c` fechou o item 16 (fatia 1 de 2) em 2026-08-24** e voltou a `idle`; a narrativa está em
+`historico/state-archive.md` e o item 16 segue na fila com a fatia 2. Interseção a vigiar entre as
+lanes: nenhuma — só a `lane-a` está ocupada.
 
 ## Itens fechados — ponteiro, não narrativa
 
