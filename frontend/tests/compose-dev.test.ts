@@ -95,4 +95,24 @@ describe('docker-compose.yml', () => {
       expect(EXEMPLO).toMatch(new RegExp(`^\\s*#?\\s*${nome}=`, 'm'))
     }
   })
+
+  it('injeta no app toda chave de URL que carrega porta, derivada da mesma variável', () => {
+    // Sem isto, trocar o offset sobe a stack e derruba a sessão: o cookie do
+    // Sanctum é emitido para o domínio de APP_URL e conferido contra
+    // SANCTUM_STATEFUL_DOMAINS, e a URL pública de arquivo aponta para a
+    // porta do MinIO da OUTRA árvore. Foi o passo manual de 2026-08-19.
+    const CHAVES: Record<string, string> = {
+      APP_URL: 'LOTUS_DEV_HTTP_PORT',
+      FRONTEND_URL: 'LOTUS_DEV_VITE_PORT',
+      SANCTUM_STATEFUL_DOMAINS: 'LOTUS_DEV_HTTP_PORT',
+      AWS_ENDPOINT_PUBLIC: 'LOTUS_DEV_MINIO_PORT',
+      AWS_URL: 'LOTUS_DEV_MINIO_PORT',
+    }
+    const [environmentDoApp] = regioesDaChave(blocoDoServico('app'), 'environment')
+    expect(environmentDoApp).toBeDefined()
+    for (const [chave, variavel] of Object.entries(CHAVES)) {
+      const linha = new RegExp(`^\\s*${chave}:.*\\$\\{${variavel}:-\\d+\\}`, 'm')
+      expect(environmentDoApp ?? '').toMatch(linha)
+    }
+  })
 })

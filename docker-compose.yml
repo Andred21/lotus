@@ -4,6 +4,21 @@ services:
     volumes:
       - ./backend:/var/www:cached
       - ./frontend:/frontend:cached
+    # A porta host vive no OFFSET da árvore (.env da raiz), e estas cinco
+    # chaves carregam a porta DENTRO do valor — o cookie do Sanctum é emitido
+    # para o domínio de APP_URL e conferido contra SANCTUM_STATEFUL_DOMAINS, e
+    # a URL pública de arquivo aponta para a porta do MinIO. Derivá-las aqui é
+    # o que dispensa editar `backend/.env` a cada árvore nova (P-03): variável
+    # de ambiente real vence o `.env` do Laravel, que é imutável.
+    #
+    # AWS_ENDPOINT, DB_HOST/DB_PORT e GOTENBERG_URL ficam de fora de
+    # propósito: são rede interna do Compose, não porta publicada.
+    environment:
+      APP_URL: http://localhost:${LOTUS_DEV_HTTP_PORT:-8080}
+      FRONTEND_URL: http://localhost:${LOTUS_DEV_VITE_PORT:-5173}
+      SANCTUM_STATEFUL_DOMAINS: localhost:${LOTUS_DEV_VITE_PORT:-5173},localhost:${LOTUS_DEV_HTTP_PORT:-8080}
+      AWS_ENDPOINT_PUBLIC: http://localhost:${LOTUS_DEV_MINIO_PORT:-9000}
+      AWS_URL: http://localhost:${LOTUS_DEV_MINIO_PORT:-9000}/lotus
     depends_on: [mysql, gotenberg, minio]
 
   nginx:
