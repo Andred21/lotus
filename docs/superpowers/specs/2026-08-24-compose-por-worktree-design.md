@@ -58,6 +58,12 @@ Esse arquivo **não existe** — o bloco o cria.
   zero dependência nova.
 - **D6 — DoD é duas stacks no ar com login real na segunda.** Lei §5 nº8: build verde não é DoD, e
   este bloco é infra — se as duas não subiram juntas, a P-03 não foi paga.
+- **D8 — `VITE_API_URL` derivado só no modo `serve`.** O `frontend/.env` (gitignored) traz
+  `VITE_API_URL=http://localhost:8080`, e o Vite não lê o `.env` da raiz. A derivação entra por
+  `define` **condicionada a `command === 'serve'`**: no `build` nada muda, então a origem única de
+  produção (`ENV VITE_API_URL=""` em `docker/Dockerfile.prod:32`, que entra no bundle) fica intocada
+  por construção, e não por cuidado de quem edita. Em `serve`, um `VITE_API_URL` explícito no
+  `frontend/.env` continua vencendo o derivado.
 - **D7 — Não há detecção de colisão de offset.** O `.env` da raiz é gitignored e invisível entre
   árvores; varrer o disco seria caro, e `docker compose up` já falha alto com
   `port is already allocated`.
@@ -111,6 +117,11 @@ server: { port: <derivado>, strictPort: true }
 `strictPort: true` é a decisão: falhar alto na porta ocupada em vez de escorregar para a seguinte
 sem avisar quem configurou o `SANCTUM_STATEFUL_DOMAINS`.
 
+**`VITE_API_URL` (D8).** A aplicação lê `import.meta.env.VITE_API_URL` em
+`frontend/src/shared/api/axios.ts:25`, e o valor entra no bundle no build. Em `serve`, o config
+define `import.meta.env.VITE_API_URL` como `http://localhost:${LOTUS_DEV_HTTP_PORT}` **quando o
+`frontend/.env` não trouxer a chave**; em `build`, o `define` não é emitido.
+
 ## 7. Catraca — `frontend/tests/compose-dev.test.ts`
 
 Molde do `compose-prod.test.ts` (conferência textual; o projeto não tem parser de YAML e acrescentar
@@ -121,6 +132,10 @@ errada). Prova:
 2. O default de cada variável é a porta histórica da tabela da §4.
 3. Toda `LOTUS_DEV_*` lida pelo `docker-compose.yml` tem linha declarada no `.env.example` da raiz.
 4. `vite.config.ts` lê a porta da variável e mantém `strictPort` ligado.
+5. O serviço `app` declara as cinco chaves de URL da §5, cada uma derivada de uma `LOTUS_DEV_*` —
+   remover a injeção em silêncio volta a exigir a receita manual.
+6. O `define` de `VITE_API_URL` é emitido somente em `serve` — a asserção existe para que ninguém
+   o promova a incondicional e leve a URL de dev para dentro da imagem de produção.
 
 Cada asserção precisa ser **vista reprovar** antes de passar, com a sonda revertida.
 
@@ -142,6 +157,7 @@ Stack do projeto `lotus` (main tree) de pé nas portas históricas; esta árvore
 
 - **`docs/adrs.md` — emenda ao ADR-13** (Containerização): registra a parametrização e o fato de o
   projeto/volume já isolarem por diretório.
+- **`README.md:16-17`:** mesmas duas URLs cravadas.
 - **`CLAUDE.md` §6:** hoje crava `http://localhost:8080` e `:5173` como se fossem constantes; passa a
   descrevê-los como default do offset zero.
 - **`.env.example` da raiz:** a receita de árvore nova, com a tabela de offsets.
