@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
 blocker: null
@@ -17,12 +17,12 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
     blocker: null
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T13:21:00-03:00
+updated_at: 2026-08-24T13:34:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_planning` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `planning` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
