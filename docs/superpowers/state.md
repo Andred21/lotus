@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: ecc3ca75
-updated_at: 2026-08-24T11:35:00-03:00
+state_basis_commit: b2075480
+updated_at: 2026-08-24T12:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -216,13 +216,27 @@ fichas `D-38`/`D-39`, Minors 2/3/5 da Task 9, banco de dev com o papel `redator`
 stack `lotus-infra` parada. Tudo isso segue na seção de 2026-08-23 acima, e é herança do
 fechamento — não deste review.
 
-**Depois do review, um reporte do João e nenhum achado novo** (`ecc3ca75`): a `TurmasTable`
-"parecendo comprimida". Causa medida: quatro colunas declaravam largura e três não, e com
-`table-layout: auto` a sobra vai para quem NÃO declarou — as duas tags e o numeral ficaram com
-~230px cada num contêiner de 1447px enquanto o nome do curso quebrava em duas linhas. A regra
-passou a ser *toda coluna declara largura, menos a que absorve a sobra*; o filtro de estado saiu
-para `TurmaStatusFilter` porque as três larguras novas passaram a tabela da régua de 150 linhas.
-Sem prova de navegador — a stack de dev segue parada.
+**Depois do review, reportes do João sobre a `TurmasTable` e nenhum achado novo.** Foram duas
+rodadas na mesma tabela, e a segunda é a lição:
+
+- **`ecc3ca75`** — "parecendo comprimida". Quatro colunas declaravam largura e três não, e com
+  `table-layout: auto` a sobra vai inteira para quem NÃO declarou: as duas tags e o numeral ficaram
+  com ~230px cada num contêiner de 1447px, enquanto o nome do curso quebrava em duas linhas. A
+  regra virou *toda coluna declara largura, menos a que absorve a sobra*; o filtro de estado saiu
+  para `TurmaStatusFilter` porque as três larguras novas passaram a tabela da régua de 150 linhas.
+- **`b2075480`** — a mesma queixa de novo, e o motivo: trocar o sorteio da sobra por um
+  destinatário fixo é o mesmo defeito com outro dono. CURSO foi a **519px** em 1603px, metade
+  vazia, com CLIENTE ainda truncando em 222px. A largura passou a **porcentagem** (91% + a coluna
+  de ações em `rem`, que é a única que não deve escalar): em porcentagem não há sobra a repartir, e
+  o `min-content` segue protegendo a tela estreita. A pergunta certa não era "quanto mede cada
+  coluna" e sim "para onde vai a sobra" — as três medições ficaram no docblock de
+  `turmaColumns.ts`.
+- **`d3779709`** — no mesmo quadro, o avatar do `IdentityCell` virava **elipse**: item de flex
+  encolhe por padrão, e quando o texto ao lado transbordava o avatar cedia largura e mantinha
+  altura. Ovalizavam exatamente as linhas cujo nome truncava. `shrink-0` corrige nos 14 sítios, nas
+  duas formas.
+
+Nenhum dos três tem prova de navegador — a stack de dev segue parada.
 
 O João também aprovou o padrão da coluna de ações da mesma tabela (ícones à direita, presa ao
 invólucro que rola) **para todas as tabelas do sistema**, e pediu que não poluísse esta execução:
