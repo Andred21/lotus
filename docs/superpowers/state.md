@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: tabelas-coluna-de-acoes-e-largura
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -44,12 +44,12 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: tabelas-coluna-de-acoes-e-largura
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T17:30:00-03:00
+updated_at: 2026-08-24T18:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_planning` |
+| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `planning` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
