@@ -29,14 +29,20 @@ export function useBlobTabOpener<TVariables>(
   const mountedRef = useRef(true)
   const [popupBlocked, setPopupBlocked] = useState(false)
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Rearmar na montagem, e não só desarmar na limpeza: sob `React.StrictMode`
+    // (ligado em `src/main.tsx`) o efeito monta, limpa e monta de novo. Um
+    // `mountedRef` que só vira `false` fica travado nesse `false` depois da
+    // remontagem, e aí todo `onSuccess` desiste — a aba do PDF fica em
+    // `about:blank` no desenvolvimento inteiro.
+    mountedRef.current = true
+
+    return () => {
       mountedRef.current = false
       if (urlRef.current) URL.revokeObjectURL(urlRef.current)
       tabRef.current?.close()
-    },
-    [],
-  )
+    }
+  }, [])
 
   const open = (variables: TVariables) => {
     setPopupBlocked(false)

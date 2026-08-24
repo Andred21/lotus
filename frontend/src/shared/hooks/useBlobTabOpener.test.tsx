@@ -25,7 +25,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function montar(fetchBlob: (id: number) => Promise<Blob>) {
+function montar(fetchBlob: (id: number) => Promise<Blob>, strict = false) {
   return renderHook(
     () => {
       // `ProblemDetails`, e não uma forma qualquer: `useBlobTabOpener` exige
@@ -34,7 +34,7 @@ function montar(fetchBlob: (id: number) => Promise<Blob>) {
       const mutation = useMutation<Blob, ProblemDetails, number>({ mutationFn: fetchBlob })
       return useBlobTabOpener(mutation)
     },
-    { wrapper },
+    { wrapper, reactStrictMode: strict },
   )
 }
 
@@ -91,6 +91,20 @@ describe('useBlobTabOpener', () => {
     expect(open).toHaveBeenCalledWith('about:blank', '_blank')
     await waitFor(() => expect(tab.location.href).toBe('blob:fake-url'))
     expect(tab.opener).toBeNull()
+  })
+
+  /** Em desenvolvimento o app roda sob `React.StrictMode` (`src/main.tsx`),
+   * que monta, desmonta e remonta o efeito de propósito. A trava de unmount
+   * não pode ficar armada depois dessa remontagem — se ficar, o `onSuccess`
+   * enxerga o componente como desmontado e a aba fica em `about:blank`. */
+  it('aponta a aba para o objectURL mesmo sob StrictMode (efeito remontado)', async () => {
+    const tab = { location: { href: '' }, close: vi.fn(), opener: {} as unknown }
+    vi.stubGlobal('open', vi.fn(() => tab))
+
+    const { result } = montar(async () => new Blob(['%PDF']), true)
+    act(() => result.current.open(7))
+
+    await waitFor(() => expect(tab.location.href).toBe('blob:fake-url'))
   })
 
   /** Popup bloqueado avisa, em vez de o botão só parar de carregar. */
