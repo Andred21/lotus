@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDataTable, AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ConfirmDialog, stickyActionsColumn } from '@shared/ui'
+import { enrollmentWidths } from './enrollmentColumns'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
@@ -24,7 +25,6 @@ type Props = {
    * faria a camada do meio mentir sobre o contrato. */
   onRetry?: () => void | Promise<unknown>
 }
-
 // Sem coluna CLIENTE: EnrollmentData não expõe cliente (a turma tem um único
 // cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
 // (§3), não uma lacuna.
@@ -45,7 +45,7 @@ export function EnrollmentTable({
   // Aba sem busca (decisão do protótipo): o hook entra pelo estado de página e
   // pelo clamp, que estavam copiados aqui linha a linha.
   const table = useTableFilter(enrollments)
-
+  const largura = enrollmentWidths(!registroBloqueado)
   return (
     <>
       <AppDataTable
@@ -73,8 +73,9 @@ export function EnrollmentTable({
              * i18n nova e mantém a altura da linha estável. */
             <IdentityCell title={e.name} description={e.email} image={e.photo_url} />
           )}
+          style={largura.name}
         />
-        <AppColumn header={t('operation.enrollment.table.rut')} field="rut" />
+        <AppColumn header={t('operation.enrollment.table.rut')} field="rut" style={largura.rut} />
         <AppColumn
           header={t('operation.enrollment.table.status')}
           body={(e: EnrollmentData) =>
@@ -85,6 +86,7 @@ export function EnrollmentTable({
               />
             ) : null
           }
+          style={largura.status}
         />
         {/* A coluna inteira sai, não só os botões: `RecordEnrollmentResultAction`
           * e `RemoveEnrollmentAction` recusam a escrita com 422 no registro
