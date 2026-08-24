@@ -156,6 +156,8 @@ pdftoppm -png -r 144 -f 1 -l 1 <documento.pdf> /tmp/pdf-page # gera /tmp/pdf-pag
 Gere somente as páginas necessárias e sempre em `/tmp`, sem materializar derivados ao lado do
 documento fonte. Claude lê os PNGs gerados com `Read`; Codex os abre com `view_image`.
 
-Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173. Compose: `app`
-(PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF), `minio` (S3 dev) e
-`createbuckets` (job de bootstrap do bucket do MinIO; sobe, cria e sai).
+Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173 — **defaults do offset
+zero**. Cada árvore de trabalho escolhe o seu offset no `.env` da raiz (molde em `.env.example`),
+porque o Compose isola projeto e volume por diretório mas não isola porta host (ADR-13, emenda de
+2026-08-24). Compose: `app` (PHP-FPM Alpine), `nginx`, `mysql` (host :3307), `gotenberg` (PDF),
+`minio` (S3 dev) e `createbuckets` (job de bootstrap do bucket do MinIO; sobe, cria e sai).
