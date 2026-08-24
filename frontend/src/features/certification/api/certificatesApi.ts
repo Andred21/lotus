@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type {
   BatchIssueItemResultData,
   CertificateData,
@@ -106,17 +105,5 @@ export function useRevokeCertificate() {
       qc.invalidateQueries({ queryKey: detailKey(certificate.id) })
       invalidate()
     },
-  })
-}
-
-export function useCertificatePdf() {
-  return useMutation<Blob, ProblemDetails, number>({
-    mutationFn: (id) =>
-      api
-        .get<Blob>(`/api/certificates/${id}/pdf`, { responseType: 'blob' })
-        .then((r) => r.data)
-        .catch(async (error: unknown) => {
-          throw await problemFromBlob(error)
-        }),
   })
 }
