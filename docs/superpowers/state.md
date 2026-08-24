@@ -4,22 +4,21 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: compose-por-worktree
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-compose-por-worktree-design.md
 active_plan: docs/superpowers/plans/2026-08-24-compose-por-worktree.md
 context_packet: null
-blocker: >-
-  Review de 2026-08-24 (alto risco: Sanctum/CSRF + executor humano, duas lentes — Claude + Codex read-only): 5 achados aguardando decisao do Joao. Q-1 (M) XSRF-TOKEN nao e isolado entre arvores — 419 medido no write da arvore A depois de /sanctum/csrf-cookie da arvore B; Q-2 (M) o `--stat` do Step 11 do audit e anterior aos tres ultimos commits; Q-3/Q-4/Q-5 (B) furos da catraca, `.env.local` fora do gitignore e `VITE_API_URL=` vazio contando como override. Nenhum aprovado ainda; nada corrigido.
+blocker: null
 
 lanes:
   lane-a:
     active_feature: null
     active_work_item: null
     workflow_state: idle
-    next_owner: joao
+    next_owner: claude
     next_action: select_backlog_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
@@ -31,23 +30,22 @@ lanes:
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: compose-por-worktree
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: infra/compose-por-worktree
     active_spec: docs/superpowers/specs/2026-08-24-compose-por-worktree-design.md
     active_plan: docs/superpowers/plans/2026-08-24-compose-por-worktree.md
     context_packet: null
-    blocker: >-
-      Review de 2026-08-24 (alto risco: Sanctum/CSRF + executor humano, duas lentes — Claude + Codex read-only): 5 achados aguardando decisao do Joao. Q-1 (M) XSRF-TOKEN nao e isolado entre arvores — 419 medido no write da arvore A depois de /sanctum/csrf-cookie da arvore B; Q-2 (M) o `--stat` do Step 11 do audit e anterior aos tres ultimos commits; Q-3/Q-4/Q-5 (B) furos da catraca, `.env.local` fora do gitignore e `VITE_API_URL=` vazio contando como override. Nenhum aprovado ainda; nada corrigido.
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
     active_feature: null
     active_work_item: null
     workflow_state: idle
-    next_owner: joao
+    next_owner: claude
     next_action: select_backlog_item
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui
@@ -59,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: 8a4df32a
-updated_at: 2026-08-24T19:05:00-03:00
+updated_at: 2026-08-24T19:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `compose-por-worktree` (paga a **P-03**) | Infra | `../lotus-infra` | `infra/compose-por-worktree` | `blocked` (review feito; achados na fila do João) |
+| `lane-b` | `compose-por-worktree` (paga a **P-03**) | Infra | `../lotus-infra` | `infra/compose-por-worktree` | `ready_for_closure` (review de duas lentes; Q-1 a Q-4 corrigidos) |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
