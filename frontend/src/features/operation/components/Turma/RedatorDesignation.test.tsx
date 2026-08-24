@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import type { TurmaData } from '@shared/types/generated'
 import type { useRedatorPicker } from '../../hooks/useRedatorPicker'
 import { RedatorDesignation } from './RedatorDesignation'
@@ -37,7 +38,20 @@ const TURMA = {
 /** Mesma turma, registro acadêmico fechado (RN-15). */
 const TURMA_CONCLUIDA = { ...TURMA, status: 'concluida' } as TurmaData
 
+/** O RBAC real vem da sessão (`usePermissions` lê o store) — mockar o hook
+ * testaria o mock, não a fiação. Molde do `EnrollmentSection.test.tsx`. */
+function comPermissoes(permissions: string[]) {
+  useSessionStore.setState({
+    status: 'authenticated',
+    user: {
+      id: 1, uuid: 'u-1', name: 'Quien Sea', email: 'q@lotus.cl', type: 'admin',
+      is_active: true, roles: [], permissions, photo_url: null,
+    },
+  })
+}
+
 beforeEach(() => {
+  comPermissoes(['operation.turma.assign_redator'])
   picker.current = {
     eligible: [], loadingList: false, loadError: null,
     reloadList: () => Promise.resolve(), designate: () => {}, remove: () => {},
@@ -79,6 +93,34 @@ describe('RedatorDesignation numa turma concluída (UI-01)', () => {
     render(<RedatorDesignation turma={{ ...TURMA_CONCLUIDA, redatores: [] } as TurmaData} />)
 
     expect(screen.queryByRole('button', { name: /operation\.redator\.designate/i })).toBeNull()
+    expect(screen.getByText('operation.redator.none')).toBeTruthy()
+  })
+})
+
+/**
+ * Catraca do Q-2 (review de 2026-08-24): `operation.turma.assign_redator` é a
+ * permissão que o controller exige nos DOIS métodos (`designateRedator`,
+ * `removeRedator`), e a aba escondia só pela RN-15. Quem chega aqui sem ela —
+ * o redator vindo da pendência do dashboard — recebia dois controles que só
+ * rendem 403.
+ */
+describe('RedatorDesignation sem permissão de designação (Q-2)', () => {
+  it('turma em curso, mas sem `operation.turma.assign_redator`: nem Quitar nem Cambiar', () => {
+    comPermissoes(['operation.turma.view'])
+
+    render(<RedatorDesignation turma={TURMA} />)
+
+    expect(screen.queryByRole('button', { name: /operation\.redator\.remove/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /operation\.redator\.change/i })).toBeNull()
+  })
+
+  it('sem a permissão e sem redator designado, também não há Designar', () => {
+    comPermissoes([])
+
+    render(<RedatorDesignation turma={{ ...TURMA, redatores: [] } as TurmaData} />)
+
+    expect(screen.queryByRole('button', { name: /operation\.redator\.designate/i })).toBeNull()
+    // A leitura permanece: quem não designa ainda precisa saber que não há redator.
     expect(screen.getByText('operation.redator.none')).toBeTruthy()
   })
 })
