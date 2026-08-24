@@ -363,39 +363,63 @@ desta linha e ficam como estão — história não se reescreve.
 
 Decisão do João no Bloco 2 — evitar inchaço do folder.
 
-## P-03 — compose por worktree não existe
 
-**Gatilho:** fecha na primeira sprint que precisar de **dois blocos de backend em paralelo**
-(condição verificável em `state.md`: mais de um `active_work_item` de backend), ou em
-**2026-10-31**, o que vier primeiro.
+## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
 
-Bloco de backend não pode usar `using-git-worktrees` — o stack monta o main tree e o teste rodaria
-contra o código errado. **6a (Sprint 3) rodou em main-tree sem atrito — abordagem confirmada.** O
-gatilho anterior ("se a concorrência passar a doer") era não verificável e escapou do grep de prova
-do doc-sync 2026-07-30 por diferença de redação — trocado por condição observável na revisão do
-mesmo dia (Q-6).
+**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
+lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
+exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
+**2026-10-31**.
 
-**Custo medido fora do backend em 2026-08-13** (BD-4, `catraca-max-lines-e-moldura`): a worktree não
-pôde subir stack própria, dependeu do main tree — que naquele momento servia branch alheia com
-`/api/students` em 500 — e o bloco **de frontend** perdeu dois passos de gate (e2e do 422 e checagem
-visual), pagos só em parte no `/fechar-sprint`.
+O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
+são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
+`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
+uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
 
-**Contraprova medida em 2026-08-13** (BD-5, `usecrudform-mais-fundo`, mesmo arranjo de duas execuções
-em paralelo): o e2e do S3 rodou inteiro contra o main tree, porque `git diff main...HEAD -- backend/`
-naquele tree estava **vazio no momento da prova** — o custo da P-03 não é constante, é contingente ao
-que a branch alheia toca, e a prova só é válida com essa conferência feita na hora. O que mudou é que
-a falta já cobra de quem a P-03 dizia não afetar.
+**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
+`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
+`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
+achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
+dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
+merge) e proíbe o mecanismo que a operação exige.
 
-**Primeiro bloco de BACKEND rodado em worktree linkada — 2026-08-19, `identity-ativacao-acesso-redator`,
-por decisão explícita do João declarada na abertura.** O arranjo que segurou a execução, os dois gates
-de prova e este fechamento foi **override efêmero de portas fora do repositório** (nginx 8081, MySQL
-3308, MinIO 9002/9003, Mailpit 8025, Vite 5174 no gate da emenda), com o compose do worktree subindo
-projeto próprio (`fix-frontend`) e, portanto, **volume de banco próprio** — a disputa que a ficha
-previa (um MySQL só para as duas árvores) não chegou a acontecer. No `/fechar-sprint` a stack do main
-tree estava **desligada**, então a prova e2e correu nas portas padrão (8080/3307/8025) sem override
-nenhum. **Não fecha:** compose por worktree continua não existindo, e o que existe é receita manual
-que depende de quem executa lembrar — a decisão de construí-lo é do João. O gatilho formal
-(dois blocos de **backend** em paralelo) segue sem vencer: houve um só.
+**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
+João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
+apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
+
+## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
+
+**Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta
+— cada árvore com `SESSION_DOMAIN` e URLs próprias (`127.0.0.1`, `lotus1.localhost`), que é o que dá
+jar de cookie separado —, ou (b) aceitar o comportamento com a receita de perfil de navegador por
+árvore, que já está no `.env.example`. Revisar em **2026-10-31**.
+
+O bloco `compose-por-worktree` isolou o cookie de SESSÃO por offset
+(`SESSION_COOKIE: lotus_session_${LOTUS_DEV_HTTP_PORT:-8080}`, achado A do review final). O
+`XSRF-TOKEN` ficou de fora, e não por esquecimento: o nome é **cravado** no framework —
+`PreventRequestForgery::newCookie()` (`Illuminate/Foundation/Http/Middleware`, linha 242) monta
+`new Cookie('XSRF-TOKEN', …)` com `path` e `domain` de `config('session')`. Não há chave de config
+que o renomeie, e o axios lê `XSRF-TOKEN` por default (`withXSRFToken: true`,
+`frontend/src/shared/api/axios.ts`). Cookie não é isolado por porta: `domain=localhost` vale para as
+duas árvores.
+
+**Medido em 2026-08-24** (review do bloco), main tree em :8080 e `../lotus-infra` em :8081, jar único:
+
+```
+csrf8081 204 | login8081(token proprio) 200
+csrf8080(main tree) 204 → XSRF SOBRESCRITO pelo main tree
+write8081 apos clobber 419
+```
+
+A SESSÃO sobrevive — os dois `me` continuam 200, como o apêndice do DoD provou —, porque `GET` não
+passa pelo CSRF (`PreventRequestForgery::isReading()`). Quem quebra é a **escrita**: `POST/PUT/DELETE`
+da aba que não chamou o csrf-cookie por último volta 419, e o front não se recupera sozinho —
+`initCsrf()` só é chamado no login e no fluxo de senha (`frontend/src/shared/api/csrf.ts`).
+
+**Por que fica aberta:** a saída (a) muda o host de `APP_URL`, `SANCTUM_STATEFUL_DOMAINS`,
+`SESSION_DOMAIN` e do dev server — mexe no desenho que o DoD deste bloco provou ponta a ponta e pede
+decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
+`.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
 
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
