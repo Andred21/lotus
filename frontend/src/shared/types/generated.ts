@@ -119,6 +119,7 @@ revocation_reason: string | null,
 snapshot: CertificateSnapshotData,
 snapshot_ok: boolean,
 created_at: string,
+display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
 export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
@@ -372,6 +373,7 @@ name: string,
 redator: {
 name: string,
 },
+display_status: CertificateDisplayStatus,
 };
 export type QuoteData = {
 id: undefined | number,
