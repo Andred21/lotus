@@ -2,9 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppSkeleton, AppErrorState, AppTag, FormField } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
-import { formatDate, loadErrorHint } from '@shared/lib'
+import { formatDate, loadErrorHint, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useCertificatePdfOpener } from '../../hooks/useCertificatePdfOpener'
-import { certStatus, STATUS_SEVERITY } from '../../lib/certStatus'
 import { CertificateIdentityFields } from './CertificateIdentityFields'
 import { dangerText } from '@shared/styles/tokens'
 
@@ -31,7 +30,7 @@ type Props = {
 export function CertificateViewDialog({ certificateId, certificate, loading, error, onRetry, onHide }: Props) {
   const { t } = useTranslation()
   const pdf = useCertificatePdfOpener(certificateId)
-  const status = certificate ? certStatus(certificate) : null
+  const status = certificate?.display_status ?? null
 
   const footer = (
     <div className="flex justify-end gap-2">
@@ -91,7 +90,7 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
           <FormField
             label={t('certificate.fieldEstado')}
             readOnly
-            value={<AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />}
+            value={<AppTag severity={CERTIFICATE_STATUS_SEVERITY[status]} value={t(certificateStatusLabelKey(status))} />}
           />
 
           {status === 'revocado' && (

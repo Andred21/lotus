@@ -1,14 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame } from '@shared/ui'
-import type { CertificateData } from '@shared/types/generated'
-import { formatDate } from '@shared/lib'
-import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
+import type { CertificateData, CertificateDisplayStatus } from '@shared/types/generated'
+import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
 import { CertificateViewDialog } from './CertificateViewDialog'
 import { RevokeDialog } from './RevokeDialog'
 import { ReissueDialog } from './ReissueDialog'
 
-const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
+const STATUSES: CertificateDisplayStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
 
 /** Vazio aqui não é `null`: o snapshot corrompido chega com string VAZIA — é o
  * que `CertificateSnapshotData::missingRequiredFields()` mede (`trim === ''`).
@@ -86,20 +85,19 @@ export function HistorialTable() {
         />
         <AppColumn
           header={t('certificate.colStatus')}
-          // Documento corrompido não tem estado a afirmar: `certStatus` derivaria
+          // Documento corrompido não tem estado a afirmar: o servidor deriva
           // "vigente" das datas, que continuam válidas, sobre um snapshot que não
           // sustenta nem o nome do aluno. A tag de defeito ocupa o lugar da de
           // estado, e NÃO vira um quinto `CertDerivedStatus` — isso contaminaria
           // o filtro, os contadores do rodapé e o `CertificateViewDialog`.
           body={(c: CertificateData) => {
             if (!c.snapshot_ok) return <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
-            const status = certStatus(c)
-            return <AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />
+            return <AppTag severity={CERTIFICATE_STATUS_SEVERITY[c.display_status]} value={t(certificateStatusLabelKey(c.display_status))} />
           }}
         />
         <AppColumn
           body={(c: CertificateData) => {
-            const status = certStatus(c)
+            const status = c.display_status
             return (
               <div className="flex gap-2">
                 <AppButton label={t('certificate.view')} text onClick={() => h.setViewingCertificateId(c.id)} />

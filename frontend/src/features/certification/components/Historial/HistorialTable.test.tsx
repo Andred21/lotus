@@ -34,6 +34,7 @@ function certificado(over: Partial<CertificateData['snapshot']['aluno']> = {}): 
     created_at: '2026-08-01T10:00:00Z',
     valido_ate: null,
     snapshot_ok: false,
+    display_status: 'vigente',
     aluno_photo_url: null,
     snapshot: {
       aluno: { name: '', rut: '', ...over },

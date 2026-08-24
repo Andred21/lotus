@@ -18,8 +18,7 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
 }
 
-// Datas bem afastadas de hoje para não cair na janela `por_vencer` (30 dias)
-// do `certStatus` — o que importa aqui é só passado vs. futuro.
+// As datas ficam só como dado do DTO: quem decide o estado agora é o servidor, em `display_status`.
 const FUTURO = '2030-01-01'
 const PASSADO = '2020-01-01'
 
@@ -34,6 +33,7 @@ function certWith(overrides: Partial<PublicCertificateData>): PublicCertificateD
     turma: { end_date: '2026-01-01' },
     cliente: { name: 'Cliente X' },
     redator: { name: 'Redator Uno' },
+    display_status: 'vigente',
     ...overrides,
   }
 }
@@ -58,7 +58,7 @@ describe('useValidationPage', () => {
   })
 
   it('certificado revogado vence mesmo com valido_ate no futuro', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: FUTURO }) })
+    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: FUTURO, display_status: 'revocado' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
@@ -66,7 +66,7 @@ describe('useValidationPage', () => {
   })
 
   it('certificado revogado vence mesmo com valido_ate no passado', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: PASSADO }) })
+    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: PASSADO, display_status: 'revocado' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
@@ -74,7 +74,7 @@ describe('useValidationPage', () => {
   })
 
   it('valido_ate no passado sem revogação vira expired', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: PASSADO }) })
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: PASSADO, display_status: 'vencido' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
@@ -82,7 +82,7 @@ describe('useValidationPage', () => {
   })
 
   it('certificado emitido com valido_ate no futuro é valid', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: FUTURO }) })
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: FUTURO, display_status: 'vigente' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
@@ -90,7 +90,7 @@ describe('useValidationPage', () => {
   })
 
   it('certificado emitido com valido_ate null (vigência indefinida) é valid', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: null }) })
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: null, display_status: 'vigente' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
