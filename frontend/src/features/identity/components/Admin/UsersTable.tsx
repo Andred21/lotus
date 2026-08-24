@@ -95,7 +95,7 @@ export function UsersTable({
             onRestore={onRestore}
           />
         )}
-        style={stickyActionsColumn('9rem')}
+        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
       />
     </SearchableTableFrame>
   )
