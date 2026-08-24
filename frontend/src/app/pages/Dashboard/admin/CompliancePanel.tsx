@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
-import { formatIsoDate } from '@shared/lib'
+import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
 
 /**
@@ -71,11 +71,10 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           // de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
           // pelas mesmas chaves (UI-07 da revisão de 2026-08-22). A frase da
           // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
-          // coluna, que é montada aqui.
+          // coluna, que é montada aqui. O rótulo vem do mapa de `shared/lib`, que
+          // é o que reprova tipo novo sem tradução (Q-4 do review de 2026-08-24).
           body={(r: TurmaComplianceData) =>
-            r.missing_types.length === 0
-              ? '—'
-              : r.missing_types.map((tipo) => t(`operation.documents.type.${tipo}`)).join(', ')
+            r.missing_types.length === 0 ? '—' : turmaDocumentTypeList(r.missing_types, t)
           }
         />
         <AppColumn

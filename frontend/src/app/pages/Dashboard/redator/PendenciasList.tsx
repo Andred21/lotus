@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
-import { formatIsoDate } from '@shared/lib'
+import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import { warningText } from '@shared/styles/tokens'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
 
@@ -61,10 +61,12 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                   <span className="block text-xs" style={{ color: warningText }}>
                     {/* O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
                     de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
-                    pelas mesmas chaves (UI-07 da revisão de 2026-08-22, molde no
-                    `CompliancePanel`). */}
+                    pelas mesmas chaves (UI-07 da revisão de 2026-08-22). O mapa é de
+                    `shared/lib` e não uma chave montada por template aqui: quatro sítios
+                    imprimiam esta mesma lista e nenhum reprovava tipo sem tradução (Q-4 do
+                    review de 2026-08-24). */}
                     {t('dashboard.redator.pendencias.missing', {
-                      types: item.missing_types.map((tipo) => t(`operation.documents.type.${tipo}`)).join(', '),
+                      types: turmaDocumentTypeList(item.missing_types, t),
                     })}
                   </span>
                 </span>
