@@ -116,7 +116,7 @@ export function EnrollmentTable({
                 />
               </div>
             )}
-            style={stickyActionsColumn('6rem')}
+            style={stickyActionsColumn('9rem')}
           />
         )}
       </AppDataTable>

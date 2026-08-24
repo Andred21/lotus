@@ -123,7 +123,7 @@ export function TurmasTable({
             onRestore={onRestore}
           />
         )}
-        style={stickyActionsColumn('8rem')}
+        style={stickyActionsColumn('9rem')}
       />
     </SearchableTableFrame>
   )
