@@ -365,9 +365,12 @@ Decisão do João no Bloco 2 — evitar inchaço do folder.
 
 ## P-03 — compose por worktree não existe
 
-**Gatilho:** fecha na primeira sprint que precisar de **dois blocos de backend em paralelo**
-(condição verificável em `state.md`: mais de um `active_work_item` de backend), ou em
-**2026-10-31**, o que vier primeiro.
+**Gatilho VENCIDO em 2026-08-24 — agrupada no bloco `compose-por-worktree` (`lane-b`).** O João
+decidiu paralelizar a fila e a condição observável se cumpriu: restam quatro blocos de backend
+(itens 4, 5, 6 e 7 do `backlog.md`) e o compose monta o main tree com portas fixas, então só uma
+lane de backend cabe. O gatilho original era *"fecha na primeira sprint que precisar de **dois
+blocos de backend em paralelo**"* (condição verificável em `state.md`: mais de um
+`active_work_item` de backend), ou **2026-10-31**, o que viesse primeiro.
 
 Bloco de backend não pode usar `using-git-worktrees` — o stack monta o main tree e o teste rodaria
 contra o código errado. **6a (Sprint 3) rodou em main-tree sem atrito — abordagem confirmada.** O
@@ -396,6 +399,29 @@ tree estava **desligada**, então a prova e2e correu nas portas padrão (8080/33
 nenhum. **Não fecha:** compose por worktree continua não existindo, e o que existe é receita manual
 que depende de quem executa lembrar — a decisão de construí-lo é do João. O gatilho formal
 (dois blocos de **backend** em paralelo) segue sem vencer: houve um só.
+
+## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
+
+**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
+lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
+exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
+**2026-10-31**.
+
+O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
+são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
+`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
+uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
+
+**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
+`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
+`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
+achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
+dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
+merge) e proíbe o mecanismo que a operação exige.
+
+**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
+João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
+apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
 
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
