@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import type { TurmaData } from '@shared/types/generated'
 import type { useTurmaDetail } from '../../hooks/useTurmaDetail'
+import { TURMA_TABS } from '../../lib/turmaTabs'
 import { TurmaDetailPage } from './TurmaDetailPage'
 
 /**
@@ -44,7 +45,7 @@ vi.mock('../../hooks/useTurmaDetail', () => ({
 const vezesNaTela = (texto: string, trecho: string) => texto.split(trecho).length - 1
 
 beforeEach(() => {
-  detail.current = { goBack: () => {}, reload: () => Promise.resolve() }
+  detail.current = { goBack: () => {}, reload: () => Promise.resolve(), tab: 0, setTab: () => {} }
 })
 
 afterEach(() => {
@@ -119,5 +120,23 @@ describe('TurmaDetailPage anuncia o registro acadêmico trancado (UI-01)', () =>
     const { container } = render(<TurmaDetailPage />)
 
     expect(vezesNaTela(container.textContent ?? '', 'operation.detail.lock.concluida')).toBe(0)
+  })
+})
+
+/**
+ * Catraca do Q-1 (review de 2026-08-24): quem chega de fora pede a aba pelo
+ * NOME (`?tab=docs`) e o `TURMA_TABS` converte em índice. Isso só é verdade
+ * enquanto a ordem do array for a ordem dos `AppTabPanel` — inserir uma aba no
+ * meio e esquecer o array mandaria o redator para o painel errado sem nada
+ * reprovar, que é exatamente o defeito que a correção fechou.
+ */
+describe('TurmaDetailPage — a ordem dos painéis É o TURMA_TABS (Q-1)', () => {
+  it('cada aba da régua, na ordem, é a do nome correspondente', () => {
+    detail.current = { ...detail.current, turma: TURMA }
+
+    const { container } = render(<TurmaDetailPage />)
+
+    const abas = [...container.querySelectorAll('.p-tabview-title')].map((n) => n.textContent)
+    expect(abas).toEqual(TURMA_TABS.map((tab) => `operation.detail.tabs.${tab}`))
   })
 })

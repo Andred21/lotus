@@ -21,7 +21,6 @@ import { loadErrorHint, screenDetail } from '@shared/lib'
 export function TurmaDetailPage() {
   const { t } = useTranslation();
   const d = useTurmaDetail();
-  const [tab, setTab] = useState(0);
   const [editingConfig, setEditingConfig] = useState(false);
 
   // Erro e notFound mantêm o `back`: sem ele um GET que falha e continua falhando
@@ -85,7 +84,12 @@ export function TurmaDetailPage() {
       )}
 
       <AppCard>
-        <AppTabView activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+        {/* A ORDEM destes cinco painéis é o `TURMA_TABS` — quem inserir aba no
+          * meio mexe nos dois lugares, e o link que chega de fora
+          * (`?tab=docs`, a pendência do redator no dashboard) continua caindo no
+          * painel certo por NOME, não por um número escrito à mão (Q-1 do review
+          * de 2026-08-24). */}
+        <AppTabView activeIndex={d.tab} onTabChange={(e) => d.setTab(e.index)}>
           <AppTabPanel header={t("operation.detail.tabs.config")}>
             <TurmaConfigCard
               mode={editingConfig ? "edit" : "view"}

@@ -39,8 +39,13 @@ describe('PendenciasList — a pendência leva à turma, não ao perfil', () => 
   it('cada linha da lista é um link para a turma correspondente', () => {
     montar()
 
+    // Com `?tab=docs`: o link leva à ABA que resolve a pendência, não só à
+    // turma — a página abria em Configuración (Q-1 do review de 2026-08-24).
     const links = screen.getAllByRole('link')
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/operacion/turmas/4', '/operacion/turmas/7'])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/operacion/turmas/4?tab=docs',
+      '/operacion/turmas/7?tab=docs',
+    ])
   })
 
   it('nenhum controle do card aponta para /perfil', () => {

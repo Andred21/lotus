@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
+import { turmaTabPath } from '@features/operation/lib/turmaTabs'
 import { warningText } from '@shared/styles/tokens'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
 
@@ -40,8 +41,13 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
               className="border-b px-4 py-2 last:border-b-0"
               style={{ borderColor: 'var(--surface-border)' }}
             >
+              {/* O destino é a aba, não só a turma: `turmaTabPath` escreve
+                `?tab=docs` e a página abre no painel de documentação. Sem ele o
+                link caía na primeira aba (Configuración) e o redator ainda
+                tinha de achar a quarta — que em 390x844 nasce fora da tela
+                (Q-1 do review de 2026-08-24). */}
               <Link
-                to={`/operacion/turmas/${item.turma_id}`}
+                to={turmaTabPath(item.turma_id, 'docs')}
                 className="flex flex-wrap items-center gap-x-3 gap-y-0.5 no-underline sm:flex-nowrap"
                 style={{ color: 'var(--text-color)' }}
               >
