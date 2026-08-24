@@ -395,6 +395,45 @@ classifica é `references/review-rubric.md`, e a rule de `.claude/rules/` vence 
 
 ---
 
+## 17. `tabelas-coluna-de-acoes-e-largura`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não
+**Fonte:** decisão do João em 2026-08-24 (ao ver a `TurmasTable` corrigida); UI-02 da revisão de
+2026-08-22; `stickyActionsColumn` e `TURMA_COLUMN` como molde já provado.
+
+**Objetivo:** que toda tabela do sistema termine na MESMA coluna de ações — ícones, à direita,
+presa ao invólucro que rola — e que a largura das colunas seja declarada por política, não sorteada
+pelo `table-layout: auto`.
+
+**Evidência medida (2026-08-24):** 15 sítios montam `AppDataTable`/`SearchableTableFrame`; **12 têm
+coluna de ação e só 2 a prendem** — `TurmasTable` (`8rem`) e `EnrollmentTable` (`6rem`). Nos outros
+10 a ação sai da vista com a rolagem lateral, que é o defeito que o UI-02 mediu na tabela de turmas:
+429px fora da vista em 1024x768 e 871px em 390x844, levando junto os botões da linha. Quem não
+descobre a rolagem não abre o registro pela linha.
+
+**Escopo:**
+- adotar `stickyActionsColumn(width)` nas 10 tabelas restantes, com a largura de cada uma medida
+  pelo número de ícones que ela tem (não copiar o `8rem` da turma);
+- **largura de coluna:** a regra que a `TurmasTable` passou a seguir — *toda coluna declara
+  largura, menos UMA, a que absorve a sobra* (o texto livre da tabela). Declarar só algumas é
+  entregar a sobra por sorteio: medido em 1447px, as três colunas sem declaração (tag, tag e
+  numeral) ficaram com ~230px cada, quase metade da tabela, enquanto a coluna de nome de curso
+  quebrava em duas linhas e os dois `IdentityCell` truncavam;
+- decidir se a política vira **mecanismo** (linha de rule + catraca de lint/teste) ou fica em molde
+  citado — hoje é comentário em dois arquivos e nada reprova a tabela nova que nascer sem;
+- **`archivedColumns`** (`shared/ui`, 8 tabelas) entra junto: as duas colunas do rastreio não
+  declaram largura e competem pela mesma sobra na visão de arquivados.
+
+**Fora:** redesenho de célula, ordenação e paginação — o que muda é largura e ancoragem. Colapsar
+coluna em tela estreita segue rejeitado (spec D20): escolher qual dado some é julgamento de domínio,
+e esconder coluna em tela com peso de auditoria é perda silenciosa.
+
+**DoD:** nas 12 tabelas com ação, a coluna de ação permanece alcançável em 1440x900, 1024x768 e
+390x844 sem rolar na horizontal — medido na tela, não no diff; e nenhuma tabela com coluna de
+largura não declarada além da que absorve.
+
+---
+
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |

@@ -51,8 +51,8 @@ lanes:
     blocker: null
     resume_state: null
 last_completed_work_item: feedbacks-resolver-escopo
-state_basis_commit: 17459d46
-updated_at: 2026-08-24T11:20:00-03:00
+state_basis_commit: ecc3ca75
+updated_at: 2026-08-24T11:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -215,6 +215,19 @@ catracas dos quatro achados).
 fichas `D-38`/`D-39`, Minors 2/3/5 da Task 9, banco de dev com o papel `redator` no usuário 1 e a
 stack `lotus-infra` parada. Tudo isso segue na seção de 2026-08-23 acima, e é herança do
 fechamento — não deste review.
+
+**Depois do review, um reporte do João e nenhum achado novo** (`ecc3ca75`): a `TurmasTable`
+"parecendo comprimida". Causa medida: quatro colunas declaravam largura e três não, e com
+`table-layout: auto` a sobra vai para quem NÃO declarou — as duas tags e o numeral ficaram com
+~230px cada num contêiner de 1447px enquanto o nome do curso quebrava em duas linhas. A regra
+passou a ser *toda coluna declara largura, menos a que absorve a sobra*; o filtro de estado saiu
+para `TurmaStatusFilter` porque as três larguras novas passaram a tabela da régua de 150 linhas.
+Sem prova de navegador — a stack de dev segue parada.
+
+O João também aprovou o padrão da coluna de ações da mesma tabela (ícones à direita, presa ao
+invólucro que rola) **para todas as tabelas do sistema**, e pediu que não poluísse esta execução:
+virou o **item 17** do backlog, com a evidência medida (12 tabelas têm coluna de ação, 2 a prendem)
+e com a política de largura junto.
 
 O fechamento **não foi executado** — é a próxima instrução, por `next_action: close_active_work_item`.
 
