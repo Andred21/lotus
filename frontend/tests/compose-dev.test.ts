@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 /**
@@ -15,6 +15,21 @@ import { join, resolve } from 'node:path'
  * `./frontend`, então PHPUnit não enxerga a raiz. O vitest roda nativo no WSL
  * e é o único runner do projeto com acesso a ela.
  */
+/** O recorte do config do Vite que este arquivo inspeciona. */
+type ConfigResolvido = {
+  server?: { port?: number; strictPort?: boolean }
+  define?: Record<string, string>
+}
+
+/** Devolve uma variável de ambiente ao valor que tinha — inclusive ao "não existia". */
+function restaurar(nome: string, valor: string | undefined): void {
+  if (valor === undefined) {
+    delete process.env[nome]
+  } else {
+    process.env[nome] = valor
+  }
+}
+
 const RAIZ = resolve(__dirname, '..', '..')
 const DEV = readFileSync(join(RAIZ, 'docker-compose.yml'), 'utf8')
 const EXEMPLO = readFileSync(join(RAIZ, '.env.example'), 'utf8')
@@ -118,42 +133,120 @@ describe('docker-compose.yml', () => {
 })
 
 describe('vite.config.ts', () => {
-  // NOTA DE ROTA (Step 5 do plano): a versão original desta suíte chamava e
-  // executava a fábrica (`await import('../vite.config')`) e inspecionava o
-  // OBJETO que o Vite recebe — a interface real, não o texto. Essa rota
-  // quebrou por contaminação: o PRÓPRIO Vitest resolve `vite.config.ts` (com
-  // `command: "serve"`) para montar o ambiente de teste ANTES de qualquer
-  // `it` rodar, e o Vite espelha o `define` de `import.meta.env.VITE_API_URL`
-  // em `process.env.VITE_API_URL` no lado Node/SSR. Uma segunda chamada
-  // explícita da fábrica, dentro do teste, então encontra a variável já
-  // presente — `apiJaDefinida` vira `true` e o `define` some do resultado.
-  // Erro medido nessa rota:
-  //   AssertionError: expected undefined to be '"http://localhost:8080"'
-  //   ❯ servir.define?.['import.meta.env.VITE_API_URL']
-  // Leitura textual do arquivo não sofre essa contaminação — é a mesma
-  // técnica de `compose-dev.test.ts` para o `docker-compose.yml`.
-  const CONFIG = readFileSync(join(__dirname, '..', 'vite.config.ts'), 'utf8')
+  /**
+   * O que interessa é o OBJETO que o Vite recebe, não o texto do arquivo: um
+   * `define` acrescentado fora do ternário sobreviveria ao `build` e entraria
+   * no bundle de produção sem que regex nenhuma denunciasse. Então o teste
+   * importa a fábrica e a executa.
+   *
+   * O que quebrou a rota na primeira tentativa NÃO foi o Vite: é o VITEST que
+   * resolve o próprio `vite.config.ts` (com `command: "serve"`) para montar o
+   * ambiente antes dos testes e, em `deleteDefineConfig`
+   * (`node_modules/vitest/dist/chunks/cli-api.*.js`, ~linha 10070), move todo
+   * `define["import.meta.env.X"]` para `process.env[X]` e o apaga do config.
+   * Como `loadEnv` lê `process.env` por prefixo, `apiJaDefinida` já chegava
+   * `true` dentro do teste e o define sumia do resultado. Limpar a variável
+   * antes de cada caso remove a contaminação.
+   */
+  // A extensão `.ts` é obrigatória no import: `tsconfig.node.json` — que é o
+  // projeto que cobre `tests/` — resolve por `nodenext`, e sem ela o `tsc -b`
+  // do `pnpm build` para com TS2307. `allowImportingTsExtensions` já está ligado.
+  const carregar = async (command: 'serve' | 'build') => {
+    const modulo = await import('../vite.config.ts')
+    const fabrica = modulo.default as unknown as (env: {
+      command: 'serve' | 'build'
+      mode: string
+    }) => Promise<ConfigResolvido> | ConfigResolvido
+    expect(typeof fabrica).toBe('function')
+    return await fabrica({ command, mode: command === 'serve' ? 'development' : 'production' })
+  }
 
-  it('serve a porta do offset da árvore, com strictPort ligado', () => {
+  const ENV_DA_RAIZ = join(RAIZ, '.env')
+  const BACKUP_DO_ENV = join(RAIZ, '.env.backup-do-teste')
+  let envPlantado = false
+
+  /** Guarda o valor original na primeira sobrescrita e aplica o novo. */
+  const originais = new Map<string, string | undefined>()
+  function sobrescrever(nome: string, valor: string | undefined): void {
+    if (!originais.has(nome)) originais.set(nome, process.env[nome])
+    restaurar(nome, valor)
+  }
+
+  /**
+   * Escreve o `.env` da RAIZ com o offset do teste. A raiz PODE ter um `.env`
+   * real (o compose o lê), então o original nunca é sobrescrito: sai de cena
+   * por rename e volta no `afterEach`. Um backup pré-existente aborta — é
+   * sinal de execução anterior interrompida, e restaurá-lo é decisão humana.
+   */
+  function plantarEnvDaRaiz(conteudo: string): void {
+    if (existsSync(BACKUP_DO_ENV)) {
+      throw new Error(`${BACKUP_DO_ENV} já existe — restaure-o à mão antes de rodar a suíte`)
+    }
+    if (existsSync(ENV_DA_RAIZ)) renameSync(ENV_DA_RAIZ, BACKUP_DO_ENV)
+    writeFileSync(ENV_DA_RAIZ, conteudo, 'utf8')
+    envPlantado = true
+  }
+
+  beforeEach(() => {
+    // O VITEST espelhou o define em `process.env` antes dos testes (ver acima);
+    // limpar a chave devolve a fábrica ao estado que o Vite lhe daria. As
+    // variáveis do offset também saem, para que o `.env` plantado seja a única
+    // fonte — `loadEnv` deixa `process.env` vencer o arquivo.
+    sobrescrever('VITE_API_URL', undefined)
+    sobrescrever('LOTUS_DEV_VITE_PORT', undefined)
+    sobrescrever('LOTUS_DEV_HTTP_PORT', undefined)
+  })
+
+  afterEach(() => {
+    if (envPlantado) {
+      envPlantado = false
+      rmSync(ENV_DA_RAIZ, { force: true })
+      if (existsSync(BACKUP_DO_ENV)) renameSync(BACKUP_DO_ENV, ENV_DA_RAIZ)
+    }
+    for (const [nome, valor] of originais) restaurar(nome, valor)
+    originais.clear()
+  })
+
+  it('serve a porta do offset da árvore, com strictPort ligado', async () => {
     // strictPort é a decisão: sem ele o Vite escorrega para a porta seguinte
     // em silêncio, e o SANCTUM_STATEFUL_DOMAINS injetado no container passa a
     // apontar para uma porta que ninguém está servindo — a sessão morre sem
     // mensagem que explique.
-    const portVar = 'LOTUS_DEV_VITE_PORT'
-    expect(Object.keys(DEFAULTS)).toContain(portVar)
-    expect(CONFIG).toMatch(new RegExp(`offset\\.${portVar}\\s*\\?\\?\\s*${DEFAULTS[portVar]}`))
-    expect(CONFIG).toMatch(/server:\s*\{\s*port:\s*portaVite,\s*strictPort:\s*true\s*\}/)
+    const config = await carregar('serve')
+    expect(config.server?.strictPort).toBe(true)
+    expect(config.server?.port).toBe(Number(DEFAULTS.LOTUS_DEV_VITE_PORT))
   })
 
-  it('deriva VITE_API_URL no serve e NÃO emite o define no build', () => {
-    // A imagem de produção passa `ENV VITE_API_URL=""` (docker/Dockerfile.prod:32)
+  it('deriva VITE_API_URL no serve e NÃO emite o define no build', async () => {
+    // A imagem de produção passa `ENV VITE_API_URL=""` (docker/Dockerfile.prod)
     // para servir SPA e API da mesma origem. Um define incondicional aqui
-    // gravaria "http://localhost:8080" dentro do bundle de produção.
-    const apiVar = 'LOTUS_DEV_HTTP_PORT'
-    expect(Object.keys(DEFAULTS)).toContain(apiVar)
-    expect(CONFIG).toMatch(new RegExp(`offset\\.${apiVar}\\s*\\?\\?\\s*"${DEFAULTS[apiVar]}"`))
-    expect(CONFIG).toMatch(/command === "serve" && !apiJaDefinida/)
-    expect(CONFIG).toMatch(/\?\s*\{\s*define:\s*\{\s*"import\.meta\.env\.VITE_API_URL":/)
-    expect(CONFIG).toMatch(/:\s*\{\}\),/)
+    // gravaria "http://localhost:8080" dentro do bundle de produção — por isso
+    // o caso de `build` afirma a AUSÊNCIA da chave no define RESOLVIDO, não a
+    // ausência de um texto no arquivo.
+    const servir = await carregar('serve')
+    expect(servir.define?.['import.meta.env.VITE_API_URL']).toBe(
+      JSON.stringify(`http://localhost:${DEFAULTS.LOTUS_DEV_HTTP_PORT}`),
+    )
+
+    const construir = await carregar('build')
+    expect(construir.define?.['import.meta.env.VITE_API_URL']).toBeUndefined()
+  })
+
+  it('deriva porta e API do `.env` da RAIZ do repositório, não de valores fixos', async () => {
+    // Sem este caso nada reprova se `RAIZ_DO_REPO` virar `__dirname` ou se o
+    // prefixo `LOTUS_` mudar: os dois defaults continuariam batendo e o offset
+    // morreria em silêncio — a suíte ficaria verde com a segunda árvore
+    // servindo nas portas da primeira. MEDIDO: a via por `process.env` NÃO
+    // serve aqui, porque `loadEnv` lê `process.env` seja qual for o diretório
+    // — com `RAIZ_DO_REPO = __dirname` os 11 testes continuavam passando.
+    // Por isso o offset entra pelo arquivo, na RAIZ, que é o que amarra o
+    // diretório junto com o prefixo.
+    plantarEnvDaRaiz('LOTUS_DEV_VITE_PORT=5199\nLOTUS_DEV_HTTP_PORT=8199\n')
+
+    const config = await carregar('serve')
+    expect(config.server?.port).toBe(5199)
+    expect(config.define?.['import.meta.env.VITE_API_URL']).toBe(
+      JSON.stringify('http://localhost:8199'),
+    )
   })
 })
