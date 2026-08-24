@@ -1,8 +1,8 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
+  AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -14,8 +14,7 @@ import {
 } from './TurmaCells'
 import { TURMA_COLUMN } from './turmaColumns'
 import { TurmaRowActions } from './TurmaRowActions'
-
-const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
+import { TurmaStatusFilter } from './TurmaStatusFilter'
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -41,11 +40,6 @@ export function TurmasTable({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
-  // UI-07: o dropdown de estado só expunha o VALOR corrente ("Todos"), sem
-  // nome nenhum — nem visual, nem para leitor de tela. `useId` (e não uma
-  // string fixa) porque a tabela pode ganhar irmã na mesma tela um dia; um id
-  // hardcoded duplicaria silenciosamente.
-  const statusFilterId = useId()
   const archived = mode === 'archived'
   const table = useTableFilter(
     turmas,
@@ -53,34 +47,16 @@ export function TurmasTable({
     status === null ? undefined : (turma) => turmaDisplayStatus(turma) === status,
   )
 
-  const statusOptions = [
-    { label: t('operation.table.filterAll'), value: null },
-    ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
-  ]
-
   return (
     <SearchableTableFrame
       table={table}
       searchPlaceholder={t('operation.table.search')}
       onClearFilter={() => setStatus(null)}
       filterSlot={
-        // Par rótulo+dropdown, não `<div className="w-48">` solto: o rótulo é a
-        // correção do UI-07 (o dropdown só expunha o VALOR corrente). `inputId`,
-        // não `id` — o `AppDropdown` documenta por quê (`dropdown.cjs.js:1577`).
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor={statusFilterId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('operation.table.status')}
-          </label>
-          <div className="w-48">
-            <AppDropdown
-              inputId={statusFilterId}
-              value={status}
-              options={statusOptions}
-              optionValue="value"
-              onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
-            />
-          </div>
-        </div>
+        <TurmaStatusFilter
+          value={status}
+          onChange={(novo) => { setStatus(novo); table.resetPage() }}
+        />
       }
       emptyState={
         // Sem ação em nenhuma das duas visões: turma não se cria por botão,
@@ -98,7 +74,10 @@ export function TurmasTable({
       onRetry={onRetry}
     >
       {/* Largura das colunas: `TURMA_COLUMN` (o porquê e os números medidos estão
-        * lá). `whitespace-nowrap` é só do código — identificador atômico. */}
+        * lá). TODA coluna declara a sua, menos CURSO — é ele quem absorve a
+        * sobra, porque é o único texto livre da tabela. Coluna nova aqui nasce
+        * com largura declarada, ou volta a roubar a sobra de quem precisa dela.
+        * `whitespace-nowrap` é só do código — identificador atômico. */}
       <AppColumn
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
@@ -114,6 +93,7 @@ export function TurmasTable({
       <AppColumn
         header={t('operation.table.modality')}
         body={(turma: TurmaData) => <TurmaModalidadeCell turma={turma} />}
+        style={TURMA_COLUMN.modality}
       />
       <AppColumn
         header={t('operation.table.redator')}
@@ -123,10 +103,12 @@ export function TurmasTable({
       <AppColumn
         header={t('operation.table.students')}
         body={(turma: TurmaData) => <span className="font-semibold">{turma.enrolled_count ?? 0}</span>}
+        style={TURMA_COLUMN.students}
       />
       <AppColumn
         header={t('operation.table.status')}
         body={(turma: TurmaData) => <TurmaStatusCell turma={turma} />}
+        style={TURMA_COLUMN.status}
       />
       {archived && archivedColumns(t)}
       <AppColumn
