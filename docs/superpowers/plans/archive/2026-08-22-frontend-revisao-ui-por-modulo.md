@@ -13,7 +13,7 @@ ocupar três relatórios.
 **Tech Stack:** React 19 + TS (Vite) · PrimeReact via `shared/ui` · Tailwind v4 · i18next (3 locales)
 · Vitest + Testing Library (jsdom) · Playwright CLI (headed chromium) para as runs.
 
-**Spec:** `docs/superpowers/specs/2026-08-22-frontend-revisao-ui-por-modulo-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-22-frontend-revisao-ui-por-modulo-design.md`
 
 ## Global Constraints
 

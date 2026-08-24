@@ -302,10 +302,17 @@ está formalmente resolvida.
 **Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
 **Fonte:** `audits/2026-08-17-lotus-ui-review-dashboard.md`,
 `audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`,
-`audits/2026-08-22-lotus-ui-review-dashboard.md`; `D-38`, `D-39`.
+`audits/2026-08-22-lotus-ui-review-dashboard.md`; `D-38`.
 
 **Objetivo:** estender ao resto da aplicação a revisão de UI que só o Dashboard e o `/perfil`
 receberam, tela a tela, sem abrir redesenho estético.
+
+**A fatia 1 fechou em 2026-08-24** (`lane-c`, branch `refactor/frontend-revisao-ui`, narrativa em
+`historico/state-archive.md`): duas superfícies medidas — Dashboard view `ready-redator` e Operação
+(`/operacion` + detalhe da turma) —, com relatório datado em `audits/`, **14 achados corrigidos** e
+zero `C` aberto. A **`D-39` foi paga** pela fábrica `shared/testing/i18n.ts`. A run de **Comercial
+não foi executada**: o João cortou o escopo em 2026-08-23 para seguir ao review. O item continua
+aqui com o que sobrou, e a fatia 2 escreve spec e plano próprios.
 
 **Evidência medida (2026-08-22):** a terceira passada no Dashboard admin achou 8 itens, e **6
 moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo `dataKey` (`value : 2` no tooltip),
@@ -316,12 +323,12 @@ mesmos padrões aparecem** — e cada revisão anterior encontrou defeito de wra
 leitura de código tinha achado.
 
 **Escopo:**
-- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: view
-  `ready-redator` do Dashboard, Operação, Comercial, Certificados, Cursos, Pessoas, Administração;
+- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: **Comercial**
+  (`/comercial` + detalhe), Certificados, Cursos, Pessoas, Administração. O Dashboard
+  `ready-redator` e a Operação saíram na fatia 1;
 - **D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
   enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
   rótulos;
-- **D-39**: completar os 15 mocks de `react-i18next` que devolvem só `t`;
 - **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
   a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
   (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
@@ -337,6 +344,11 @@ leitura de código tinha achado.
 fichas `D-*`; este bloco descobre e corrige o que a rubrica classifica. Redesenho de tela também
 fica fora: Administração é o item 9, e a lente `frontend-design` é complementar — **quem
 classifica é `references/review-rubric.md`, e a rule de `.claude/rules/` vence a lente**.
+
+**Herança da fatia 1, que a fatia 2 pega de volta:** as fichas `D-*` que a Task 12 nunca escreveu —
+a UI-04 da run 1 (janela da agenda, backend) e a recusa em espanhol fixo de `Turma.php:200` —, mais
+os Minors 2, 3 e 5 da revisão da Task 9 (hover coberto pela coluna fixa, sombra de rolagem
+escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`).
 
 **DoD:** cada superfície com relatório datado em `audits/` e nenhum achado `C` aberto.
 
@@ -532,13 +544,14 @@ largura não declarada além da que absorve.
   (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
   cru na outra. Decisão pendente: o backend traduz a frase, ou manda as partes e o cliente compõe.
 
-- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** →
-  `frontend-revisao-ui-por-modulo`. O `AppDropdown` remonta na troca de idioma e lê
-  `i18n.language` (`ac4eef8a`); o mock parcial quebra com
-  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizar um
-  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. Os outros
-  quinze seguem com a forma errada da API. **DoD:** mock com a forma real, ou um helper único que
-  os quinze usem.
+- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
+  fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
+  troca de idioma e lê `i18n.language` (`ac4eef8a`); o mock parcial quebrava com
+  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizasse um
+  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. O remédio foi o
+  helper único: `frontend/src/shared/testing/i18n.ts` (`mockUseTranslation`), com catraca própria,
+  consumido pelos **17** testes que mockavam a biblioteca. Fica aqui como registro; sai da lista no
+  próximo saneamento dos débitos.
 
 ## Travados em decisão — não entram em bloco
 

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (24)
+## Abertas (23)
 
 ### Agrupadas em bloco de execução
 
@@ -30,7 +30,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
-| P-41 | `IdentityCell` empilhado promete truncar e não trunca — falta `min-w-0` nos 13 sítios | `frontend-hardening-final` | João decidir que a coluna deve cortar; revisar 2026-10-31 |
 | P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
@@ -59,16 +58,17 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (1)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-47 | Os 7 redatores do seed não têm a role `redator`; só cadastro novo e reenvio de convite a atribuem | 2026-08-23, no `hardening-acesso-ownership-e-integridade` | primeiro fechamento **posterior** a este |
-| P-50 | Suíte unida acima do `memory_limit` de 128M; o `artisan test` do §6 morria no meio | 2026-08-22, no `infra-producao-runtime-e-aws` | primeiro fechamento **posterior** ao deste bloco |
+| P-41 | `IdentityCell` empilhado prometia truncar e não truncava — faltava `min-w-0`; voltou em `1b9f82ad` | 2026-08-24, no `frontend-revisao-ui-por-modulo` | primeiro fechamento **posterior** a este |
 
-**A P-40 saiu nestes fechamentos** — os três são posteriores ao do BD-12, que é a condição que a
-linha dela pedia; as três lanes a removeram em paralelo. **A P-29 e a P-35** já haviam saído no
-fechamento do BD-12, pelo mesmo critério contra o BD-14. O rastro de todas fica nos commits e nas
+**A P-47 e a P-50 saíram neste fechamento**, o primeiro posterior aos dos blocos que as encerraram
+— e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a
+role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
+posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo
+critério contra o BD-14. O rastro de todas fica nos commits e nas
 linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
