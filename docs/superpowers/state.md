@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
@@ -17,9 +17,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T16:05:00-03:00
+updated_at: 2026-08-24T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_execution` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `executing` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
