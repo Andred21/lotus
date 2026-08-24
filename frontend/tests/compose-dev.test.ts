@@ -161,9 +161,19 @@ describe('vite.config.ts', () => {
     return await fabrica({ command, mode: command === 'serve' ? 'development' : 'production' })
   }
 
+  // `loadEnv(mode, RAIZ, prefixo)` lê os quatro arquivos abaixo para
+  // `mode === 'development'` (o `command: 'serve'` desta suíte) — qualquer um
+  // deles presente na raiz de quem roda o teste (ou plantado pela Task 6
+  // seguinte, que cria justamente `.env`) venceria os defaults sem que os
+  // casos que os afirmam percebessem. Por isso TODOS saem de cena no
+  // `beforeEach`, não só `.env`.
+  const NOMES_ENV_DA_RAIZ = ['.env', '.env.local', '.env.development', '.env.development.local'] as const
   const ENV_DA_RAIZ = join(RAIZ, '.env')
-  const BACKUP_DO_ENV = join(RAIZ, '.env.backup-do-teste')
-  let envPlantado = false
+  const CAMINHOS_ENV = NOMES_ENV_DA_RAIZ.map((nome) => ({
+    nome,
+    real: join(RAIZ, nome),
+    backup: join(RAIZ, `${nome}.backup-do-teste`),
+  }))
 
   /** Guarda o valor original na primeira sobrescrita e aplica o novo. */
   const originais = new Map<string, string | undefined>()
@@ -173,18 +183,61 @@ describe('vite.config.ts', () => {
   }
 
   /**
-   * Escreve o `.env` da RAIZ com o offset do teste. A raiz PODE ter um `.env`
-   * real (o compose o lê), então o original nunca é sobrescrito: sai de cena
-   * por rename e volta no `afterEach`. Um backup pré-existente aborta — é
-   * sinal de execução anterior interrompida, e restaurá-lo é decisão humana.
+   * Nomes (relativos a `CAMINHOS_ENV`) com backup pendente de devolução —
+   * marcado IMEDIATAMENTE após o `renameSync`, antes de qualquer escrita.
+   * Separado de `plantados` de propósito: se a escrita adiante falhar (disco,
+   * permissão), o backup já harmonizado neste Set ainda é restaurado — o real
+   * não fica órfão à espera de um `writeFileSync` que nunca marcou uma flag.
+   */
+  const backupsPendentes = new Set<string>()
+  /** Nomes com arquivo PLANTADO pelo teste atual (precisa ser removido). */
+  const plantados = new Set<string>()
+
+  /** Afasta um `.env*` real da raiz por rename, se existir. Idempotente. */
+  function afastarEnvReal(caminho: (typeof CAMINHOS_ENV)[number]): void {
+    if (existsSync(caminho.backup)) {
+      throw new Error(`${caminho.backup} já existe — restaure-o à mão antes de rodar a suíte`)
+    }
+    if (existsSync(caminho.real)) {
+      renameSync(caminho.real, caminho.backup)
+      backupsPendentes.add(caminho.nome)
+    }
+  }
+
+  /** Remove o plantado (se houver) e devolve o backup (se houver) de um `.env*`. */
+  function restaurarEnvReal(caminho: (typeof CAMINHOS_ENV)[number]): void {
+    if (plantados.has(caminho.nome)) {
+      rmSync(caminho.real, { force: true })
+      plantados.delete(caminho.nome)
+    }
+    if (backupsPendentes.has(caminho.nome)) {
+      renameSync(caminho.backup, caminho.real)
+      backupsPendentes.delete(caminho.nome)
+    }
+  }
+
+  function restaurarTodosOsEnvsDaRaiz(): void {
+    for (const caminho of CAMINHOS_ENV) restaurarEnvReal(caminho)
+  }
+
+  // Rede de segurança para Ctrl-C, timeout de CI ou crash entre o rename e o
+  // `afterEach`: sem isto, a árvore volta em silêncio às portas históricas e
+  // um `.env` real do usuário fica sequestrado sob o nome de backup — que por
+  // isso também está no `.gitignore`, para nunca entrar num `git add -A`.
+  process.on('exit', restaurarTodosOsEnvsDaRaiz)
+  process.on('SIGINT', () => {
+    restaurarTodosOsEnvsDaRaiz()
+    process.exit(130)
+  })
+
+  /**
+   * Escreve o `.env` da RAIZ com o offset do teste. O real já foi afastado
+   * pelo `beforeEach` (`afastarEnvReal`) — aqui só resta escrever e marcar
+   * como plantado, para o `afterEach`/`restaurarTodosOsEnvsDaRaiz` remover.
    */
   function plantarEnvDaRaiz(conteudo: string): void {
-    if (existsSync(BACKUP_DO_ENV)) {
-      throw new Error(`${BACKUP_DO_ENV} já existe — restaure-o à mão antes de rodar a suíte`)
-    }
-    if (existsSync(ENV_DA_RAIZ)) renameSync(ENV_DA_RAIZ, BACKUP_DO_ENV)
     writeFileSync(ENV_DA_RAIZ, conteudo, 'utf8')
-    envPlantado = true
+    plantados.add('.env')
   }
 
   beforeEach(() => {
@@ -195,14 +248,16 @@ describe('vite.config.ts', () => {
     sobrescrever('VITE_API_URL', undefined)
     sobrescrever('LOTUS_DEV_VITE_PORT', undefined)
     sobrescrever('LOTUS_DEV_HTTP_PORT', undefined)
+
+    // Os casos de default (`toBe(DEFAULTS...)`) só provam algo se NENHUM
+    // `.env*` real da raiz estiver no disco durante a chamada à fábrica —
+    // senão `loadEnv` o lê do disco e vence o default, como o revisor mediu
+    // com o `.env` que a Task 6 cria (`LOTUS_DEV_VITE_PORT=5174`).
+    for (const caminho of CAMINHOS_ENV) afastarEnvReal(caminho)
   })
 
   afterEach(() => {
-    if (envPlantado) {
-      envPlantado = false
-      rmSync(ENV_DA_RAIZ, { force: true })
-      if (existsSync(BACKUP_DO_ENV)) renameSync(BACKUP_DO_ENV, ENV_DA_RAIZ)
-    }
+    restaurarTodosOsEnvsDaRaiz()
     for (const [nome, valor] of originais) restaurar(nome, valor)
     originais.clear()
   })
@@ -233,14 +288,25 @@ describe('vite.config.ts', () => {
   })
 
   it('deriva porta e API do `.env` da RAIZ do repositório, não de valores fixos', async () => {
-    // Sem este caso nada reprova se `RAIZ_DO_REPO` virar `__dirname` ou se o
-    // prefixo `LOTUS_` mudar: os dois defaults continuariam batendo e o offset
-    // morreria em silêncio — a suíte ficaria verde com a segunda árvore
-    // servindo nas portas da primeira. MEDIDO: a via por `process.env` NÃO
-    // serve aqui, porque `loadEnv` lê `process.env` seja qual for o diretório
-    // — com `RAIZ_DO_REPO = __dirname` os 11 testes continuavam passando.
-    // Por isso o offset entra pelo arquivo, na RAIZ, que é o que amarra o
-    // diretório junto com o prefixo.
+    // Sem este caso nada reprova se `RAIZ_DO_REPO` virar `__dirname`: os dois
+    // defaults continuariam batendo e o offset morreria em silêncio — a
+    // suíte ficaria verde com a segunda árvore servindo nas portas da
+    // primeira. MEDIDO: a via por `process.env` NÃO serve aqui, porque
+    // `loadEnv` lê `process.env` seja qual for o diretório — com
+    // `RAIZ_DO_REPO = __dirname` os 11 testes continuavam passando. Por isso
+    // o offset entra pelo arquivo, na RAIZ, que é o que amarra o DIRETÓRIO.
+    //
+    // Isto NÃO pina o prefixo `LOTUS_`: `vite.config.ts` só lê
+    // `offset.LOTUS_DEV_VITE_PORT` e `offset.LOTUS_DEV_HTTP_PORT` por nome
+    // fixo — trocar `loadEnv(mode, RAIZ_DO_REPO, "LOTUS_")` por
+    // `loadEnv(mode, RAIZ_DO_REPO, "")` amplia o conjunto que `loadEnv`
+    // devolve, mas como o código só acessa essas duas chaves (já prefixadas
+    // de qualquer forma), nenhuma chave extra no objeto muda o resultado
+    // observável — MEDIDO plantando `VITE_API_URL` (sem prefixo `LOTUS_`) no
+    // `.env` da raiz: o alargamento do prefixo não derruba nenhum assert
+    // aqui. Pinar o prefixo por este teste exigiria tocar `vite.config.ts`
+    // (fora do escopo desta correção); o que este caso prova é só o
+    // diretório.
     plantarEnvDaRaiz('LOTUS_DEV_VITE_PORT=5199\nLOTUS_DEV_HTTP_PORT=8199\n')
 
     const config = await carregar('serve')

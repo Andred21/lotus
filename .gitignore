@@ -8,6 +8,7 @@
 /.env
 /backend/.env
 /frontend/.env
+/.env*.backup-do-teste
 
 # Chaves e storage gerado
 /backend/storage/*.key
