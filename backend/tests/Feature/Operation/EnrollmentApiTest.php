@@ -162,6 +162,8 @@ class EnrollmentApiTest extends TestCase
     {
         $user = User::factory()->redator()->create(['is_active' => true]);
         $user->assignRole('redator');
+        $redator = $user->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
         $this->actingAs($user, 'web');
     }
 }

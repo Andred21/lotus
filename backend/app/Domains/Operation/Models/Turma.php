@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -227,6 +228,64 @@ class Turma extends Model implements Auditable
         $turma = static::withTrashed()->whereKey($turmaId)->lockForUpdate()->firstOrFail();
 
         return $turma;
+    }
+
+    /**
+     * Trava a linha E RECUSA turma arquivada. É o que o escritor de filho toma;
+     * `lockRow()` cru fica para quem arquiva ou restaura.
+     *
+     * A diferença é a P-49 inteira: `lockRow` sozinho SERIALIZA (o escritor
+     * espera o arquivador commitar) e depois deixa o filho pousar sob a turma
+     * recém-arquivada. Quem recusa é este `trashed()`.
+     *
+     * NÃO substitui `assertAcademicallyWritable()`: aquele pergunta pelo
+     * `status` (RN-15), este pelo `deleted_at`. Turma arquivada mantém
+     * `status = em_andamento`, então nenhum dos dois cobre o outro.
+     *
+     * Molde: `Client::lockForWrite()`.
+     */
+    public static function lockForWrite(int $turmaId): static
+    {
+        $turma = static::lockRow($turmaId);
+
+        if ($turma->trashed()) {
+            throw ValidationException::withMessages([
+                'turma' => 'Esta clase fue archivada y ya no acepta cambios.',
+            ]);
+        }
+
+        return $turma;
+    }
+
+    /**
+     * O ownership da spec D1 alcança a superfície inteira por AQUI, e não rota
+     * a rota: `{turma}` aparece em 20 rotas de `Operation/routes.php`, nenhuma
+     * precisa lembrar de filtrar, e rota nova nasce coberta.
+     *
+     * Devolve `null` (e não `firstOrFail`) porque é o contrato do
+     * `SubstituteBindings`: com `null` ele lança `NotFoundHttpException`, que o
+     * `ProblemDetails` traduz em 404 RFC 7807. Turma alheia é indistinguível de
+     * turma inexistente de propósito — 403 confirmaria que ela existe (D3).
+     *
+     * `Auth::user()` já está populado: `Authenticate` implementa
+     * `AuthenticatesRequests` e o `$middlewarePriority` do framework o coloca
+     * ANTES do `SubstituteBindings`. Rota sem auth cai no `null` e o escopo não
+     * se aplica — não existe nenhuma hoje com `{turma}`, e se nascer uma, ela
+     * nasce pública por escrita explícita e não por acidente deste método.
+     *
+     * As rotas aninhadas seguem intactas: `scopeBindings()` resolve o FILHO
+     * dentro do `{turma}` já escopado, e as duas com `withoutScopedBindings()`
+     * (`designateRedator`, `removeRedator`) isentam o `{redator}`, não o
+     * `{turma}`.
+     */
+    public function resolveRouteBinding($value, $field = null): ?static
+    {
+        $user = Auth::user();
+
+        return $this->newQuery()
+            ->when($user !== null, fn (TurmaQueryBuilder $q) => $q->visibleTo($user))
+            ->where($field ?? $this->getRouteKeyName(), $value)
+            ->first();
     }
 
     /** @param  QueryBuilder  $query */

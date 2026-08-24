@@ -20,7 +20,7 @@ export interface AppAvatarProps extends Omit<AvatarProps, 'label' | 'image'> {
  * `key={image}` no <Avatar> reinicia o estado de falha quando a URL muda: sem
  * isso, trocar a foto depois de um erro manteria as iniciais para sempre.
  */
-export function AppAvatar({ name, image, ...props }: AppAvatarProps) {
+export function AppAvatar({ name, image, style, ...props }: AppAvatarProps) {
   const [failed, setFailed] = useState<string | null>(null)
 
   if (image && failed !== image) {
@@ -30,6 +30,7 @@ export function AppAvatar({ name, image, ...props }: AppAvatarProps) {
         image={image}
         shape="circle"
         imageAlt={name}
+        style={style}
         {...props}
         onImageError={() => setFailed(image)}
       />
@@ -40,7 +41,10 @@ export function AppAvatar({ name, image, ...props }: AppAvatarProps) {
     <Avatar
       label={initialsFromName(name)}
       shape="circle"
-      style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)' }}
+      // `style` do chamador entra DEPOIS e por spread: quem precisa de um
+      // diâmetro próprio (o `AppPhotoField`) sobrescreve só o que passar, sem
+      // apagar a tinta de marca das iniciais.
+      style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)', ...style }}
       {...props}
     />
   )

@@ -31,7 +31,7 @@ Route::middleware('throttle:6,1')->group(function () {
     Route::post('/invitation/accept', [PasswordResetController::class, 'accept']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.active')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 

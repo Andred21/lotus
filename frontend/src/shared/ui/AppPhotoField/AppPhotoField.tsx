@@ -60,13 +60,28 @@ export function AppPhotoField({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="transform scale-200">
-        <AppAvatar name={name} image={url} size="xlarge" />
-      </div>
+      {/* Diâmetro REAL de 8rem, não `size="xlarge"` + `transform scale-200`.
+          A escala pintava 8rem ocupando caixa de 4rem: o halo saía 32px acima e
+          32px abaixo do próprio box, e como o `AppCard` é `overflow-hidden`, o
+          topo do círculo era CORTADO pela borda do cartão em `/perfil` — margem
+          nenhuma resolvia, porque o que vazava era a pintura, não o fluxo. Com
+          a caixa real, o avatar mede o que aparenta e volta a caber onde é
+          posto (era a DS-05; autorizada pelo João em 2026-08-24). `fontSize`
+          acompanha o dobro do `p-avatar-xl` (2rem) para as iniciais não
+          encolherem junto. */}
+      <AppAvatar
+        name={name}
+        image={url}
+        size="xlarge"
+        // `object-cover` no <img>: o Prime só estica a imagem para 100%/100% do
+        // círculo, então foto não quadrada saía deformada.
+        className="[&_img]:object-cover"
+        style={{ width: '8rem', height: '8rem', fontSize: '4rem' }}
+      />
 
       <div className="flex flex-col gap-2 items-center">
         {!readOnly && (
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-10">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
             <AppFileUpload
               accept="image/jpeg,image/png,image/webp"
               maxBytes={MAX_PHOTO_BYTES}

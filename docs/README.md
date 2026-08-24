@@ -122,6 +122,8 @@ Estas são regras de processo aprendidas na prática. Valem tanto quanto os ADRs
     de dev exige `DB::beginTransaction()`/`rollBack()` ou um teste com `RefreshDatabase` — nunca
     `delete()` + `restore()` no tinker, que foi como esse estrago nasceu.
 
+18. **RBAC de uma rota não se lê no arquivo de rotas.** O `routes.php` de um domínio pode declarar só `auth:sanctum` e a rota ainda estar gateada: o controller implementa `HasMiddleware` e devolve `new Middleware('permission:x.y.z', only: [...])`. Foi o que o plano do BD-6 errou (P-39) — leu `Catalog/routes.php:18`, concluiu "sem RBAC" e escreveu isso como premissa, enquanto `CourseController.php:24` gateava `index` e `show`. Nenhuma prova daquele bloco caiu, porque 403 e rota inexistente caem no mesmo ramo do front; o que ficou errado foi a frase que o próximo leitor acreditaria. **Para saber se uma rota tem permissão, leia o controller também** — e prefira medir por comportamento (chamar sem a permissão e ver o 403) a inferir de um arquivo só.
+
 > **Índice vivo do desenvolvimento:** `docs/superpowers/historico/progress.md` (versionado) é o índice do que
 > foi construído e provado — **uma linha por feature**, e é assim que ele fica: detalhe de decisão
 > mora no ADR, de schema no `der-fisico`, de padrão de código no `INSTRUÇÕES`, e o passo-a-passo nos

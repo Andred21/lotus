@@ -29,7 +29,11 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index', 'archived']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview', 'result']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview']),
+            // Separada de `manage` de propósito: o redator lança nota e presença
+            // sem ganhar matricular/importar/remover (RN-02, spec D6). O escopo
+            // por turma vem do binding, não daqui.
+            new Middleware('permission:operation.enrollment.record_result', only: ['result']),
             new Middleware('permission:operation.enrollment.restore', only: ['restore']),
         ];
     }

@@ -1,0 +1,44 @@
+# O que NUNCA pode entrar na imagem. A primeira linha é a que sustenta o item 8
+# da DoD (imagem sem segredo): o `.env` não é versionado, mas existe na árvore
+# de quem builda, e um COPY o levaria para dentro da camada.
+**/.env
+**/.env.*
+
+# Dependências e artefatos: os estágios `vendor` e `spa` os produzem de novo,
+# do lockfile. Copiar os do host tornaria a imagem dependente da máquina que
+# buildou — o oposto do artefato reproduzível.
+backend/vendor
+frontend/node_modules
+frontend/dist
+
+# Nada disto roda em produção.
+.git
+.claude
+.agents
+.codex
+docs
+backend/storage/logs
+
+# Artefatos de dev do backend/host: cache de teste, testes, config de teste e
+# de build do frontend legado dentro de backend/ — nada disso é produção, e
+# deixar entrar reintroduz o mesmo acoplamento à máquina que buildou que a
+# seção acima já existe para evitar. views/ e sessions/ excluem só o
+# conteúdo: os diretórios continuam existindo, como o Laravel exige.
+backend/.phpunit.result.cache
+backend/tests
+backend/phpunit.xml
+backend/storage/framework/views/*.php
+backend/storage/framework/sessions/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/testing
+# bootstrap/cache é o furo mais caro desta lista: numa máquina que já rodou
+# `php artisan config:cache`, o config.php daqui é o .env inteiro RESOLVIDO —
+# APP_KEY, DB_PASSWORD e AWS_SECRET_ACCESS_KEY em texto, dentro da camada. A
+# prova 8 da DoD passou porque esta máquina não tinha o arquivo na hora do
+# build, não porque a imagem estivesse guardada. Só o conteúdo sai: o
+# diretório continua, e o `composer dump-autoload` do estágio `vendor`
+# regenera packages.php e services.php de qualquer forma.
+backend/bootstrap/cache/*.php
+backend/package.json
+backend/vite.config.js
+backend/.npmrc

@@ -11,4 +11,5 @@ RUN addgroup -g ${GID} appuser \
 
 WORKDIR /var/www
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
+COPY docker/php/memory-cli.ini /usr/local/etc/php/conf.d/zz-memory-cli.ini
 USER appuser

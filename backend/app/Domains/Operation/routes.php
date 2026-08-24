@@ -6,7 +6,7 @@ use App\Domains\Operation\Http\Controllers\TurmaDocumentController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Operation (agregadas por routes/api.php sob prefixo `api/`).
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.active')->group(function () {
     Route::get('turmas', [TurmaController::class, 'index']);
     Route::get('turmas/pendientes-configuracion', [TurmaController::class, 'pending']);
     // ANTES do apiResource/`{turma}`, senão `turmas/archived` casa como

@@ -121,6 +121,11 @@ class DomainDependencyTest extends TestCase
             'Operation\Models\Enrollment',
             'Operation\Models\Turma',
         ],
+        // Task 1 do bloco `hardening-acesso-ownership-e-integridade` abre `User`:
+        // `TurmaQueryBuilder::visibleTo(User $user)` escopa a listagem por
+        // `redatores.user_id` (spec D1) — quem autentica é o User, o Redator é
+        // o perfil pendurado nele. Aresta existia em código desde `9882fabe`;
+        // faltou nesta matriz até o Step 9 da Task 7 rodar a catraca.
         'Operation' => [
             'Catalog\Models\Course',
             'Commercial\Enums\QuoteStatus',
@@ -130,6 +135,7 @@ class DomainDependencyTest extends TestCase
             'Identity\Enums\StudentResolutionOutcome',
             'Identity\Models\Redator',
             'Identity\Models\Student',
+            'Identity\Models\User',
             'Identity\Services\StudentLookup',
             'Identity\Services\StudentResolution',
             'Identity\Services\StudentResolver',
@@ -142,30 +148,23 @@ class DomainDependencyTest extends TestCase
         $violacoesDeSuperficie = [];
         $violacoesDeAresta = [];
 
-        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
-            foreach ($arquivos as $arquivo) {
-                foreach ($this->referenciasCrossDomain($arquivo, $origem) as $ref) {
-                    [$alvo, $camada, $classe] = $ref;
-                    $local = str_replace(base_path().'/', '', $arquivo);
+        foreach ($this->referenciasPorDominio() as $origem => $referencias) {
+            foreach ($referencias as $ref) {
+                if ($ref['fqcn'] === '') {
+                    $parcial = rtrim("{$ref['alvo']}\\{$ref['camada']}", '\\');
+                    $violacoesDeForma[] = "{$ref['local']}: {$origem} -> {$parcial} (referência ao namespace; importe a classe)";
 
-                    if ($camada === '' || $classe === '') {
-                        $parcial = rtrim("{$alvo}\\{$camada}", '\\');
-                        $violacoesDeForma[] = "{$local}: {$origem} -> {$parcial} (referência ao namespace; importe a classe)";
+                    continue;
+                }
 
-                        continue;
-                    }
+                if (! in_array($ref['camada'], self::PUBLIC_LAYERS, true)) {
+                    $violacoesDeSuperficie[] = "{$ref['local']}: {$origem} -> {$ref['fqcn']} (camada {$ref['camada']} é interna)";
 
-                    $fqcnRelativo = "{$alvo}\\{$camada}\\{$classe}";
+                    continue;
+                }
 
-                    if (! in_array($camada, self::PUBLIC_LAYERS, true)) {
-                        $violacoesDeSuperficie[] = "{$local}: {$origem} -> {$fqcnRelativo} (camada {$camada} é interna)";
-
-                        continue;
-                    }
-
-                    if (! in_array($fqcnRelativo, self::ALLOWED[$origem] ?? [], true)) {
-                        $violacoesDeAresta[] = "{$local}: {$origem} -> {$fqcnRelativo} (aresta não declarada)";
-                    }
+                if (! in_array($ref['fqcn'], self::ALLOWED[$origem] ?? [], true)) {
+                    $violacoesDeAresta[] = "{$ref['local']}: {$origem} -> {$ref['fqcn']} (aresta não declarada)";
                 }
             }
         }
@@ -206,6 +205,43 @@ class DomainDependencyTest extends TestCase
         // Achado do review de 2026-08-04 (Q-5), provado com um Feedback/ de sonda
         // importando camada interna de Identity sem reprovar nada.
         $this->assertSame($declarados, $emDisco, 'Domínio em app/Domains/ sem entrada em DomainDependencyTest::ALLOWED (ou vice-versa) — declare a matriz dele, nem que seja com zero arestas, como Certification.');
+    }
+
+    /**
+     * Regra C — a direção contrária da Regra B (D-17).
+     *
+     * A Regra B pega aresta USADA e não declarada; sem esta, a matriz envelhece
+     * com sobra em silêncio: o import sai no refactor e a linha fica, dando
+     * permissão a um vínculo que ninguém mais tem.
+     *
+     * A varredura é a MESMA da Regra B por ESTRUTURA, não por promessa de
+     * comentário: as duas leem `referenciasPorDominio()`, e é lá que mora a
+     * decisão de o que é aresta conferível (review de 2026-08-22, Q-4). Escrita
+     * sobre linhas `use`, esta regra acusaria de órfã toda aresta consumida só
+     * por FQN inline (`\App\Domains\X\Models\Y::find(1)`), que é justamente o
+     * escape que o docblock desta classe fecha de propósito.
+     *
+     * Referência ao namespace (`fqcn` vazio) não conta como consumo: é violação
+     * de forma e a Regra B já a reprova pelo nome certo.
+     */
+    public function test_toda_aresta_declarada_tem_consumidor(): void
+    {
+        $orfas = [];
+
+        foreach ($this->referenciasPorDominio() as $origem => $referencias) {
+            $usadas = array_column($referencias, 'fqcn');
+
+            foreach (self::ALLOWED[$origem] as $declarada) {
+                if (! in_array($declarada, $usadas, true)) {
+                    $orfas[] = "{$origem} -> {$declarada}";
+                }
+            }
+        }
+
+        $this->assertSame([], $orfas, implode("\n", array_merge(
+            ['Regra C — aresta declarada em DomainDependencyTest::ALLOWED sem nenhum consumidor no domínio de origem. A matriz só encolhe por refactor consciente: se o import saiu, a linha sai junto.'],
+            $orfas,
+        )));
     }
 
     public function test_group_use_de_dominio_nao_e_suportado(): void
@@ -250,6 +286,46 @@ class DomainDependencyTest extends TestCase
             foreach ($iterador as $arquivo) {
                 if ($arquivo->isFile() && $arquivo->getExtension() === 'php') {
                     $porDominio[$dominio][] = $arquivo->getPathname();
+                }
+            }
+        }
+
+        return $porDominio;
+    }
+
+    /**
+     * Base ÚNICA das Regras B e C: toda referência cross-domain do código,
+     * agrupada pelo domínio de origem, em uma varredura só.
+     *
+     * Existe porque as duas regras liam a mesma coisa por dois laços próprios, e
+     * a igualdade entre eles era garantida por comentário (review de 2026-08-22,
+     * Q-4). Um filtro que divergisse devolvia a Regra C acusando de órfã a aresta
+     * que a Regra B considera usada — o falso positivo que o desenho da D-17
+     * nomeia como risco principal.
+     *
+     * `fqcn` é a aresta conferível (`Alvo\Camada\Classe`) e vem VAZIO quando a
+     * referência é ao namespace, sem camada ou sem classe. Essa é a decisão que
+     * mora aqui, e não repetida em cada regra: a Regra B reprova o vazio por
+     * forma, a Regra C o ignora.
+     *
+     * @return array<string, list<array{local: string, alvo: string, camada: string, classe: string, fqcn: string}>>
+     */
+    private function referenciasPorDominio(): array
+    {
+        $porDominio = [];
+
+        foreach ($this->arquivosDeDominio() as $origem => $arquivos) {
+            $porDominio[$origem] = [];
+
+            foreach ($arquivos as $arquivo) {
+                foreach ($this->referenciasCrossDomain($arquivo, $origem) as [$alvo, $camada, $classe]) {
+                    $porDominio[$origem][] = [
+                        'local' => str_replace(base_path().'/', '', $arquivo),
+                        'alvo' => $alvo,
+                        'camada' => $camada,
+                        'classe' => $classe,
+                        'fqcn' => ($camada === '' || $classe === '') ? '' : "{$alvo}\\{$camada}\\{$classe}",
+                    ];
                 }
             }
         }

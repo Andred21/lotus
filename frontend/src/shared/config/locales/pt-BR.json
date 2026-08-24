@@ -180,6 +180,7 @@
     "operation_turma_delete": "Remover turmas",
     "operation_turma_restore": "Restaurar turmas arquivadas",
     "operation_enrollment_manage": "Matricular alunos / importar planilha (Fluxo 3)",
+    "operation_enrollment_record_result": "Lançar nota e presença da matrícula (RN-02 — ação do redator)",
     "operation_enrollment_restore": "Restaurar matrículas arquivadas",
     "operation_turma_assign_redator": "Designar redator idôneo à turma (Fluxo 3)",
     "operation_turma_complete": "Confirmar conclusão da turma (Fluxo 4 — admin confirma)",
@@ -370,6 +371,7 @@
     "module": "Módulo em construção."
   },
   "profile": {
+    "title": "Meu perfil",
     "subtitleRedator": "Seus dados pessoais, sua segurança e sua documentação profissional.",
     "subtitleAdmin": "Revise seus dados e administre sua senha.",
     "loadError": "Não foi possível carregar seu perfil",

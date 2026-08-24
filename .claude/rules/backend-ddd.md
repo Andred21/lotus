@@ -8,7 +8,8 @@ paths:
 
 Domain-driven, **não** o MVC padrão. Código de domínio em `backend/app/Domains/<Dominio>/`, com
 `Http/Controllers`, `Models`, `Actions`, `Data`, `Services`, `QueryBuilders`, `Policies`,
-`routes.php`. PSR-4: `App\Domains\` → `app/Domains/` e `App\Shared\` → `app/Shared/`.
+`routes.php` — `Policies/` é scaffold previsto em `estrutura-monolito.md` e **nenhuma classe Policy
+existe**; o data-scoping segue outro molde (ver "RBAC" abaixo). PSR-4: `App\Domains\` → `app/Domains/` e `App\Shared\` → `app/Shared/`.
 
 Domínios (espelhados 1:1 pelas `features/` do front):
 - **Identity** — usuários, auth, redator, documentos do redator (`App\Domains\Identity`)
@@ -35,8 +36,12 @@ montam erro à mão; validação carrega `errors` por campo), `Support/Rut` + `R
 liga aliases a classes. Registre alias só de classe que existe na sprint; todo model
 Auditable/polimórfico precisa do seu alias.
 
-**Rotas** por domínio em `Domains/*/routes.php`, carregadas no `bootstrap/app.php`, sob
-`auth:sanctum`. Seeders: `DatabaseSeeder` (orquestrador), `RolePermissionSeeder` (ADR-07) e
+**Rotas** por domínio em `Domains/*/routes.php`, carregadas no `bootstrap/app.php`, sob o grupo
+`auth.active` (= `auth:sanctum` + `EnsureAccountIsActive`) — **não** `auth:sanctum` cru: quem
+autentica precisa levar junto o gate de conta ativa da RN-01. As anônimas (`login`,
+`password/forgot`, `password/reset`, `invitation/accept`, `publico/certificados/{uuid}`) ficam fora
+do grupo e são **declaradas** em `AuthenticatedRouteMiddlewareTest::ANONIMAS`; superfície anônima
+nova sem declaração reprova. Seeders: `DatabaseSeeder` (orquestrador), `RolePermissionSeeder` (ADR-07) e
 `OperationDemoSeeder` (cenário de demo montado pelas Actions reais; gate local/demo, aborta se já
 existe cliente — nunca roda em produção). Migrations: ver a rule
 `migrations.md`.
@@ -115,11 +120,26 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 (`admin`/`redator`/`aluno`/`cliente`), `is_active` libera login. **Só admin e redator autenticam** (RN-01).
 
 **RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Toda
-permissão nova entra no seeder. **Data-scoping por Policy (ex.: Turma — "redator só vê as suas") é
-intenção, não mecanismo vigente:** nenhuma classe `Policy` existe no repo hoje, e `TurmaController`
-não filtra por redator — só o `permission:` middleware gateia o endpoint inteiro. Quando o
-data-scoping entrar em desenvolvimento, cria-se a Policy no domínio; até lá, tratar como débito de
-backlog, não como regra já aplicada.
+permissão nova entra no seeder.
+
+**Data-scoping NÃO é Policy — é QueryBuilder + `resolveRouteBinding`.** Nenhuma classe `Policy`
+existe no repo, e não é omissão: Policy não filtra LISTA, então `index` precisaria de escopo de
+query de qualquer jeito e a entidade nasceria com duas fontes de verdade que podem divergir. O
+molde vigente é a Turma ("redator só vê as suas", spec D1 de 2026-08-22), em duas peças:
+
+- **`TurmaQueryBuilder::visibleTo(User $user)`** — o escopo em si. Quem não é `type === 'redator'`
+  atravessa sem consulta extra (o `if` sai antes do `whereHas`); o filtro casa por
+  `redatores.user_id`, não `redatores.id`, porque quem autentica é o `User`. `TurmaController`
+  chama nas listagens (`index`, `archived`).
+- **`Turma::resolveRouteBinding()`** — o mesmo escopo aplicado ao route-model-binding, e é o que
+  alcança as 20 rotas com `{turma}` sem nenhuma delas lembrar de filtrar: **rota nova nasce
+  coberta.** Devolve `null` (não `firstOrFail`), que é o contrato do `SubstituteBindings` — vira
+  `NotFoundHttpException` e sai 404 pelo `ProblemDetails`. **Turma alheia é indistinguível de turma
+  inexistente de propósito**: 403 confirmaria que ela existe (D3).
+
+Entidade nova com ownership por dado copia essa forma — não crie Policy para isso. Restauração de
+arquivado resolve por `onlyTrashed()` à mão (o binding não enxerga trashed) e é gateada pelo
+`permission:` do endpoint, não pelo escopo.
 
 ## Testes
 

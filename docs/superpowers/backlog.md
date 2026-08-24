@@ -23,15 +23,20 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 8 dos 14 itens restantes são P0; quem ordena é a cadeia de dependência:
-  itens 2–8 mais o 16 fecham o código, 10→11→12 constroem a infra, o 14 fecha docs antes do fim e o
-  13 é o gate final de go-live.
-- **A numeração não se renumera quando um item fecha.** O `1` saiu em 2026-08-22 e a fila começa no
-  `2` de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
-  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
-- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22; o `15` fica
-  queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi desfeita, e reusá-lo
-  apontaria duas coisas diferentes com o mesmo número.
+- **P0 não ordena** — 7 dos 13 itens restantes são P0; quem ordena é a cadeia de dependência:
+  itens 2–9 mais o 16 e o 17 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de
+  go-live.
+- **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
+  em 2026-08-23, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
+  provisionamento). A fila começa no `2` e salta o `3` de propósito: o número é identidade estável,
+  citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e
+  pareceria promoção.
+- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
+  2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
+  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
+- **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
+  dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
+  em 2026-08-22 — duplicá-los no main tree garantiria conflito no merge sem ganho.
 
 ---
 
@@ -50,36 +55,6 @@ exibição no detalhe do aluno; PDF/URL sob demanda. **Absorve a P-15** (ficha e
 
 **DoD:** usuário autorizado parte do aluno e encontra/abre seus certificados sem regra de domínio
 reconstruída no React.
-
----
-
-## 3. `hardening-acesso-ownership-e-integridade`
-
-**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** `RN-01`, `RN-02`, `RN-15`, ADR-07; Notion `7.3.3`; `P-49`, `P-51`, `P-47`, `D-34`.
-
-**Objetivo:** completar autorização por função + ownership de recurso.
-
-**Escopo:**
-- somente `admin`/`redator` ativos autenticam e permanecem autorizados;
-- **P-51**: omissão de `is_active` não pode reativar staff;
-- Redator vê/altera somente turmas às quais está designado e recursos derivados;
-- separar lançamento de nota/presença de `operation.enrollment.manage` se confirmado no
-  planejamento;
-- fechar Notion `7.3.3` com ownership real, não apenas permissão Spatie;
-- **P-49**: completar o mutex de arquivamento × escritores de filho (eixos redator e turma; a ficha
-  tem a tabela dos sítios);
-- **P-47**: corrigir a role dos redatores do seed, se o seed continuar oficial;
-- **D-34**: visibilidade RBAC do Dashboard vira campo explícito no payload, se o contrato for
-  tocado (regenera `generated.ts`, lei §5.3);
-- **Q-4 do review de `feedbacks-resolver-escopo` (2026-08-22, deferido pelo João):** os testes de
-  `RemoveOrphanFeedbackPermissionsMigrationTest` não cobrem o filtro `guard_name` nem o
-  `forgetCachedPermissions()` do próprio `up()` — apagar qualquer um dos dois deixa a suíte verde
-  (lição 10). Impacto hoje é baixo (o banco só tem o guard `web`, medido, e o projeto não usa
-  teams); vira relevante quando houver segundo guard. Fortalecer junto do resto do RBAC.
-
-**DoD:** Admin global; Redator A não lê/altera turma do Redator B; cliente/aluno e conta revogada
-falham; concorrência coberta não deixa agregado inconsistente.
 
 ---
 
@@ -215,30 +190,39 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ---
 
-## 10. `infra-producao-runtime-e-aws`
+## 10. `infra-producao-provisionamento-aws`
 
 **Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
-**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; `P-50`; Drive `RNF-DIS-01/03/04`.
+**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; Drive `RNF-DIS-01/03/04`.
 
-**Objetivo:** criar a infraestrutura/runtime real de produção; o compose atual continua sendo de
-dev.
+**O runtime já foi entregue e saiu desta fila.** O `infra-producao-runtime-e-aws` fechou em
+2026-08-22 com o `Dockerfile.prod` multi-stage, o `docker-compose.prod.yml` sem serviço de dev, o
+Nginx de origem única com `/up` como healthcheck, `APP_DEBUG=false`, secrets por `env_file` fora da
+imagem e a **P-50** paga por medição (CLI 320M, FPM 256M). Ver `historico/progress.md` e
+`specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`. **O que sobra aqui é a conta AWS,
+que aquele bloco declarou explicitamente fora de escopo** — MinIO não é S3 e Mailpit não é SES.
+
+**Objetivo:** provisionar os recursos reais da AWS e rodar a imagem já construída sobre eles.
 
 **Escopo:**
-- Dockerfile multi-stage e `docker-compose.prod.yml`;
-- Nginx de produção, `/up` como healthcheck, sem bind mount;
-- sem MySQL/MinIO/Mailpit de dev em produção; Gotenberg permanece serviço requerido;
-- **P-50**: resolver o `memory_limit` por medição (o valor vale para o PHP-FPM de produção), não
-  por número arbitrário;
 - EC2 + Security Groups;
 - RDS MySQL 8 separado da EC2 + snapshot com retenção mínima de 7 dias;
 - S3 privado + IAM least privilege + CORS necessário;
-- e-mail/domínio + DKIM;
-- TLS automático/renovação;
-- CloudWatch/alerta básico;
-- `APP_DEBUG=false`, configuração segura e secrets fora da imagem/repo.
+- e-mail/domínio + DKIM (saída do sandbox do SES);
+- TLS automático/renovação (Certbot na EC2, decidido pela task 10.1.6 e pelo ADR-14);
+- CloudWatch/alerta básico.
 
-**DoD:** stack nasce do zero, usa serviços externos corretos, passa healthcheck e não depende do
-working tree do servidor.
+**Quatro decisões do João que o bloco anterior mediu como abertas e não supôs** — cada uma bloqueia
+o recurso correspondente, nenhuma bloqueia o planejamento: região (`sa-east-1` × `us-east-1`),
+tamanho final da EC2 (`t4g.small` sugerido pelo Drive, `t4g.medium` se o Gotenberg pressionar
+memória), controle do DNS de `lotus.cl` mais o canal do alerta CloudWatch, e o teto de custo
+(estimativa externa de US$ 35–55/mês sem ALB).
+
+**Herança a carregar do runtime:** o `key:generate` precisa de `--entrypoint php` (registrado na §10
+da spec arquivada), e o `RNF-DIS-02` × ADR-14 segue **`unresolved`**, reservado ao gate do item 13.
+
+**DoD:** a imagem promovida por SHA sobe sobre RDS, S3 e SES reais, passa healthcheck em HTTPS e não
+depende do working tree do servidor.
 
 ---
 
@@ -310,43 +294,6 @@ Não declarar uma EC2 única como atendimento do RNF. Antes do go-live decidir e
 
 **DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
 está formalmente resolvida.
-
----
-
-## 14. `BD-15-docs-guardrails-e-sincronizacao`
-
-**Prioridade:** P1 antes do encerramento definitivo · **Frente:** Docs/Mecanismos · **Contexto:** sim
-**Cobre:** `P-20`, `P-21`, `P-23`, `P-31`, `P-32`, `P-39`, `P-18`, `P-22`, `D-17`.
-
-**Escopo:**
-- ADR do OpenSpout (**P-20** — João aponta o hospedeiro ou autoriza ADR-20);
-- nota do `simple-qrcode` no ADR-12 (**P-21**);
-- formato de `progress.md` (**P-23** — restaurar a coluna `Contexto` ou declarar a mudança);
-- sync ADR-16↔Drive (**P-31**);
-- guardas de docs — **a P-32 só ganha seletor por classe com reincidência medida ou decisão
-  explícita do João; a ficha veta desenhar o seletor sem esse dado** (falso-positivo caro:
-  a doc cita classe de vendor, classe planejada e nome de conceito);
-- encerrar/reformular a **P-39** sem retro-editar o plano histórico;
-- corrigir Notion **P-18**/**P-22**;
-- **D-17**: detectar aresta arquitetural declarada e não usada (as permissões `feedback.*` órfãs
-  eram o caso vivo — o item 1 as removeu em 2026-08-22, então o caso hoje se lê no histórico e nos
-  commits `f6b04b45`..`629fcfe6`, não no código).
-
-**Sincronização Notion obrigatória:**
-- `8.4.0–8.4.7` Dashboard: ainda aparecem `Backlog`, mas a feature está entregue;
-- `8.5.1–8.5.9` Meu Perfil: ainda aparecem `Backlog`, mas a feature está entregue;
-- `9.1.4`: a `main` já possui testes dedicados de conclusão de turma, aprovação de cotação e
-  emissão de certificado; não criar novo bloco de código apenas para repetir essa cobertura;
-- limpar duplicações genéricas de sync/fechamento/UI review que já pertencem ao workflow.
-
-> Os ponteiros de `pendencias/README.md` para BD executado foram corrigidos na própria
-> substituição de 2026-08-22 e não são mais escopo deste bloco.
->
-> **A P-43 também saiu do escopo:** ela fechou no `/fechar-sprint` do item 1 (2026-08-22), porque
-> aquele bloco tocou `docs/der-fisico.md` e venceu o gatilho da ficha. O DER não tem mais tabela de
-> domínio marcada como planejada.
-
-**DoD:** código, `/docs`, Drive e Notion concordam sobre entregue × pendente × descopado.
 
 ---
 
@@ -516,13 +463,16 @@ largura não declarada além da que absorve.
   anterior pode absorvê-la.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  `BD-15-docs-guardrails-e-sincronizacao`. A lista de arestas de um domínio envelhece com sobras
-  em silêncio; o cenário (9) do `dashboard-backend-agregacoes` cobre a direção contrária só para
-  `Dashboard`. Generalizar = varrer os `use` de cada domínio e reprovar declaração sem consumidor.
-  As permissões `feedback.*` órfãs eram a instância viva da mesma classe, em
-  `PermissionCatalog.php:87-89`; o `feedbacks-resolver-escopo` as removeu em 2026-08-22, então **a
-  D-17 perdeu o caso vivo e ganhou o caso de regressão** — a catraca tem de reprovar a aresta que
-  aquele bloco apagou à mão, senão a próxima nasce igual e ninguém vê.
+  **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
+  **Feito** (`BD-15-docs-guardrails-e-sincronizacao`,
+  `plans/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`): a Regra C do
+  `DomainDependencyTest` reprova aresta declarada sem consumidor, lendo a **mesma** varredura da
+  Regra B, e foi vista reprovar por sonda. **Fora, por decisão (D4 da spec):** a catraca cobre só
+  aresta de **domínio**, nunca permissão. As permissões `feedback.*` órfãs
+  (`PermissionCatalog.php:87-89`) eram a instância viva da mesma classe e o
+  `feedbacks-resolver-escopo` as removeu **à mão** em 2026-08-22 (`f6b04b45`..`629fcfe6`) — o caso
+  vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
+  vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
 - **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
   → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
@@ -533,13 +483,19 @@ largura não declarada além da que absorve.
   mecanismo.
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
-  `hardening-acesso-ownership-e-integridade`. A visibilidade nasce como quatro booleanos em
+  **sem bloco hospedeiro desde 2026-08-23.** Estava no item 3 como **condicional** ("só se o
+  contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
+  **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
+  Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
+  diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
+  novo hospedeiro, e escolhê-lo é do João** (candidatos naturais: `administracao-roles-permissoes-redesign`
+  ou `frontend-hardening-final`). A visibilidade nasce como quatro booleanos em
   `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
   `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
   `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
   farejando nulo. Medido 2026-08-18 contra `b758068`; desfecho do Q-2 do review do B2. Fix: a
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
-  regenera `generated.ts` (lei §5.3). No bloco, condicional: só se o contrato for tocado.
+  regenera `generated.ts` (lei §5.3).
 
 - **D-33 · O foco cai no `<body>` quando o olho da senha alterna** → `frontend-hardening-final`.
   Medido no fechamento do BD-16 (2026-08-18) em Chromium real (`/perfil` como Redator): o ícone é
@@ -627,8 +583,11 @@ Executar sem a decisão é escolher no lugar do João.
 # Fora desta fila
 
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
-BD-1..BD-10, BD-12, BD-13, BD-14, BD-16, BD-17 e BD-18 já foram executados/fechados e **não voltam
-ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se no
-`frontend-hardening-final` (item 8), levando a D-03. O **BD-15** continua na fila como item 14,
-com o mesmo nome. Task antiga com status incorreto no Notion gera sincronização documental, não
-reimplementação.
+BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
+voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
+no `frontend-hardening-final` (item 8), levando a D-03. **Os itens 1 e 14 saíram da fila em
+2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
+`BD-15-docs-guardrails-e-sincronizacao` (item 14). A numeração restante **não** foi reordenada — a
+fila tem buracos de propósito, porque renumerar quebraria toda referência escrita a "item N". O que
+o BD-15 deixou aberto vive em `pendencias/` (P-22, P-31, P-32, P-52, P-53), não aqui. Task antiga
+com status incorreto no Notion gera sincronização documental, não reimplementação.

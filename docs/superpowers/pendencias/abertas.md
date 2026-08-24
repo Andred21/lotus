@@ -50,9 +50,10 @@ provável, e é decisão do João.
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** fecha quando um bloco tocar um dos seis escritores de filho
-listados abaixo por outro motivo e puder absorver o lock, ou quando um filho ativo sob pai
-arquivado for observado em uso real. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** os eixos **redator** e **turma** fecharam em 2026-08-23 (ver o bloco
+final desta ficha). O que resta é o eixo **cotação × orçamento**: fecha quando um bloco tocar
+`RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os DOIS lados, ou quando um filho ativo
+sob pai arquivado for observado em uso real. Revisar em **2026-10-31**.
 
 **Nasceu como `P-47` e foi renumerada no merge da `main` (2026-08-19), que já havia publicado uma
 P-47 — a das roles do seed. Mesmo precedente da [P-35](#p-35).** Texto e blocos que a citam como
@@ -118,119 +119,47 @@ arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo 
 foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
 plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
 
-## P-50 — a suíte unida passou do `memory_limit` de 128M do container e o comando documentado morre no meio
+### Os eixos REDATOR e TURMA fecharam em 2026-08-23
 
-**Bloco:** infra-producao-runtime-e-aws · **Gatilho:** o João decidir o `memory_limit` da imagem (a mesma que roda em produção),
-ou o primeiro bloco que tocar `docker/php/`. Revisar em **2026-10-31**.
+Fechados pelo `hardening-acesso-ownership-e-integridade` (`7b6123c7`, `2772d8cb`, `cc6d411e`,
+`3282f4ac`, `48ed1840`). **A ficha errava em dois pontos, e o plano os corrigiu por medição:**
 
-Medido no merge da `main` para a `feat/arquivados-roots-restantes` (2026-08-19). Com as duas suítes
-juntas — **866 testes** (medição de 2026-08-20; eram 828 em 2026-08-19) —, o comando que o `CLAUDE.md` §6 documenta,
-`docker compose exec -T app php artisan test`, morre em
+- **O lock é `lockForWrite()`, não `lockRow()` cru.** O molde `Client` que esta ficha cita chama
+  `Client::lockForWrite()` (`Client.php:139-148`) — `lockRow()` **mais** a recusa se o pai já está
+  arquivado. A diferença é a ficha inteira: `lockRow` sozinho SERIALIZA e depois deixa B pousar o
+  filho sob o pai recém-arquivado. `Turma::lockForWrite()` e `Redator::lockForWrite()` nasceram
+  neste bloco, no molde do `Client`.
+- **`ImportStudentsAction` sai da lista dos seis escritores.** Ela não abre transação — a transação
+  do import é POR LINHA e mora no `EnrollStudentAction`. `lockForUpdate()` fora de transação é
+  solto no autocommit da própria consulta: o lock ali seria teatro. São **cinco** tomadores, e a
+  cobertura do import vem da linha.
 
-```
-Fatal error: Allowed memory size of 134217728 bytes exhausted … PhpEngine.php on line 62
-Fatal error: Premature end of PHP process when running Tests\Feature\Operation\ManualTurmaTest::test_turma_maior_que_o_formulario_estende_as_grades.
-```
+Os cinco tomadores: `StoreRedatorDocumentAction`, `UpdateRedatorAction` (eixo redator),
+`DesignateRedatorAction` (aresta de lock cruzando domínio, declarada no `DomainDependencyTest`),
+`EnrollStudentAction` e `StoreTurmaDocumentAction` (eixo turma).
 
-**Não é defeito do teste nem do merge:** `--filter=ManualTurmaTest` passa em 2,35s (13 testes), e a
-suíte inteira fecha **verde** quando o limite sobe —
-`docker compose exec -T app php -d memory_limit=1G vendor/bin/phpunit` devolve
-**828 passed / 5 skipped, 3006 asserções** (medição de 2026-08-19), com **pico de 129 MB**. São 129 contra 128: a suíte
-cresceu 1 MB além do default do PHP, e quem estoura é o render de Blade do manual porque ele é o que
-aloca mais no fim da corrida.
+**A catraca é `tests/Feature/Shared/ParentLockOnChildWriteTest.php`.** Arch test de lista dupla —
+toda Action sob `app/Domains/*/Actions/` que recebe `Turma $` ou `Redator $` está em `TOMAM_LOCK`
+ou em `ISENTAS` com o motivo escrito ao lado, e **silêncio reprova**. Roda em sqlite porque lê
+código, não corrida: `SQLiteGrammar::compileLock()` devolve string vazia e nenhum teste deste
+repositório prova lock.
 
-**O `-d` não resolve pelo `artisan test`:** ele reexecuta o PHPUnit em subprocesso, que não herda a
-diretiva da linha de comando — por isso a medição usa o binário direto.
+**Provado no gate de fechamento (2026-08-23), em duas camadas:**
 
-**Reproduzida de novo no fechamento do `feedbacks-resolver-escopo` (2026-08-22), com a suíte já em
-877 testes:** o comando documentado morreu no mesmo `Allowed memory size of 134217728 bytes
-exhausted … PhpEngine.php on line 62`, em
-`Tests\Feature\Operation\ManualTurmaTest::test_manual_devolve_pdf_convertido_do_docx` — o mesmo
-teste do vencimento de 2026-08-20, e não o do topo desta ficha. Qual dos testes de manual estoura
-oscila com a ordem da corrida, não é sintoma próprio: este passa isolado em
-0,48s (`--filter`, 6 asserções, pico de 73 MB), e a suíte inteira fecha verde pelo binário direto —
-`php -d memory_limit=1G vendor/bin/phpunit` devolve **877 passed / 5 skipped, 3131 asserções**, com
-**pico de 129 MB**. Terceira medição consecutiva em que o pico encosta ou passa o teto: 129, 127 e
-129 MB.
-
-**Reproduzida no fechamento do BD-17 (2026-08-20), na árvore `fix-frontend`:** mesmos dois `Fatal
-error` pelo comando documentado, e `php -d memory_limit=512M vendor/bin/phpunit` devolve os mesmos
-**828 passed / 5 skipped, 3006 asserções** — desta vez com **pico de 127,00 MB**. O pico oscila
-abaixo do teto e o comando documentado morre assim mesmo, que é o argumento de que a margem não
-existe: quem estoura é o overhead do runner do `artisan`, somado a uma suíte que já ocupa o limite.
-
-**Reproduzida de novo no fechamento do BD-18 (2026-08-20), na mesma árvore `fix-frontend`:** o
-comando documentado morreu com `Allowed memory size of 134217728 bytes exhausted` dentro de
-`Tests\Feature\Operation\ManualTurmaTest`, e `php -d memory_limit=512M vendor/bin/phpunit`
-devolveu **872 passed / 5 skipped, 3095 asserções** com **pico de 129,00 MB**. A suíte cresceu 44
-testes desde o fechamento anterior e o pico subiu junto — de 127,00 para 129,00 MB, agora **acima**
-dos 128M do teto. O que era margem inexistente virou déficit medido: o gatilho não mudou, mas o custo
-de adiar sim.
-
-**Por que não se conserta aqui:** `docker/php/uploads.ini` vira `/usr/local/etc/php/conf.d/` na
-imagem, e `conf.d` vale para os DOIS SAPIs — subir `memory_limit` para o CLI sobe também o teto por
-processo do PHP-FPM que roda em produção (EC2). É decisão de infra do João, não emenda de merge.
-**Enquanto não fecha, o gate de backend roda pelo binário direto com `-d memory_limit=1G`.**
-
-**Gatilho visto vencer de novo em 2026-08-20** (fechamento do `bd14-contrato-de-entrada`): o mesmo
-fatal, agora em `ManualTurmaTest::test_manual_devolve_pdf_convertido_do_docx`, e o gate rodou por
-diretório — **866 passed / 5 skipped**. Medido também que `php -d memory_limit=512M artisan test`
-**não** contorna: a diretiva não desce para o subprocesso do PHPUnit, exatamente como a ficha diz.
+- **Sonda vista reprovar, nos dois braços da catraca.** Tirar o `Turma::lockForWrite()` do
+  `EnrollStudentAction` reprova o braço do lock; criar uma Action nova recebendo `Turma $` e não
+  declarada em nenhuma das duas listas reprova o braço do silêncio. As duas sondas foram
+  revertidas e o teste voltou a **4 passed**.
+- **Corrida real no MySQL de dev.** Conexão A abre transação e toma `SELECT … FOR UPDATE` sobre
+  `turmas.id=7`; B dispara `EnrollStudentAction` sobre a mesma turma e **bloqueia por 6,2 s**; A
+  arquiva e commita; B destrava e **recusa** com `Esta clase fue archivada y ya no acepta cambios.`
+  As duas metades de uma vez — o lock bloqueou (senão a matrícula entraria imediatamente) e a
+  recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
+  desta ficha). Turma 7 restaurada ao fim do gate.
 
 ---
 
 # Documentação e mecanismo
-
-## P-20 — `openspout/openspout` em produção sem ADR hospedeiro
-
-**Bloco:** BD-15 · **Gatilho:** fecha quando o João apontar o ADR hospedeiro (ou autorizar ADR-20).
-Revisar em **2026-09-30**.
-
-Achado na re-auditoria do doc-sync 2026-07-30 (Task 14): `backend/composer.json` declara
-`openspout/openspout ^5.3`, usado em `SpreadsheetRowReader.php` (Bloco 6c, import xlsx/csv). Decisão
-real de biblioteca em produção, sem registro em `docs/adrs.md` — é decisão de arquitetura, não fato
-a corrigir sozinho.
-
-**Gatilho anterior venceu em 2026-08-10:** o bloco `documentos-oficiais-template-e-docx` tocou
-`docs/adrs.md` e o João decidiu o formato **para o caso dele** — nota no ADR-12 existente, não ADR
-novo, porque a rota LibreOffice é a segunda porta do mesmo Gotenberg. Isso resolve a forma, não o
-conteúdo: `openspout` não tem ADR hospedeiro óbvio (não é decisão de PDF nem de transporte), e
-escolher onde encaixá-lo é a mesma decisão de numeração que o agente não toma.
-
-## P-21 — `simple-qrcode` gera o QR do certificado sem nota no ADR-12
-
-**Bloco:** BD-15 · **Gatilho:** fecha no primeiro bloco de Certification que tocar `docs/adrs.md`.
-Revisar em **2026-09-30**.
-
-Achado na re-auditoria do doc-sync 2026-07-30 (Task 14, 3a rodada): `backend/composer.json` declarava
-`simplesoftwareio/simple-qrcode ^4.2` sem nenhum uso no código e sem ADR — dependência de peso legal
-instalada antecipadamente, mesmo padrão de gap do P-20.
-
-**Gatilho venceu em 2026-08-07:** a lib passou a ser usada de verdade — `CertificatePdfService::html()`
-gera o QR (`QrCode::format('svg')->size(180)`) embutido em base64 no certificado, provado no PDF real
-do gate de fechamento. A dependência deixou de ser antecipada e virou decisão em produção **sem
-registro**.
-
-**Parcialmente resolvida em 2026-08-10:** o João decidiu no bloco `documentos-oficiais-template-e-docx`
-que registro de biblioteca nova entra como **nota no ADR existente do mesmo eixo**, não ADR novo.
-`simple-qrcode` tem hospedeiro óbvio — o QR nasce dentro do `CertificatePdfService`, ADR-12. Falta só
-escrever a nota; não se escreveu naquele bloco porque o QR não estava no escopo dele, e nota de ADR
-em bloco alheio é exatamente o alargamento de escopo que o gate recusa.
-
-## P-23 — `progress.md` perdeu a coluna `Contexto`
-
-**Bloco:** BD-15 · **Gatilho:** fecha na próxima vez que o João decidir o formato do `progress.md`
-(restaurar a coluna ou declarar a mudança no cabeçalho). Revisar em **2026-09-30**.
-
-`docs/superpowers/historico/progress.md` perdeu a coluna `Contexto` que o `progress-archive.md`
-mantém — a linha do bloco não aponta para o packet na própria coluna, só dentro do texto de
-"Referências".
-
-Achado da re-auditoria de fechamento de 2026-07-30 (`progress.md:7`
-`Data | Entrega | Status | Resultado | Referências` vs `progress-archive.md:6`
-`... | Contexto | Plano | Spec`). É mudança de formato, não erro de fato: ou a coluna volta, ou o
-cabeçalho do doc declara que o formato mudou de propósito — decisão do João, não do agente. Ficou de
-fora do doc-sync 2026-07-30 por escolha explícita dele no gate de fechamento.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -255,28 +184,23 @@ escopo), tomada **antes** de a lacuna ser medida contra o caso motivador.
 Conferir todo identificador PHP/TS entre crases contra o repositório é a forma óbvia e tem
 falso-positivo caro: a doc cita classe de vendor, classe planejada e nome de conceito.
 
-## P-39 — o plano do BD-6 afirma que `GET /api/courses` não tem RBAC, e tem
+**A forma óbvia foi medida e reprovada — 2026-08-22 (BD-15).** Varredura de identificador
+PascalCase entre crases em `docs/`, `.claude/rules/` e `CLAUDE.md`: **167** candidatos, **28** sem
+declaração nem arquivo homônimo no repositório, **0** achado real da lição 13. Os 28 são falso-positivo
+legítimo, em três famílias:
 
-**Bloco:** BD-15 · **Gatilho:** fecha quando um bloco tocar RBAC de catálogo ou reusar a receita de
-injeção de falha do BD-6 — aí a premissa é relida e corrigida na fonte que for reusada. Revisar em
-**2026-10-31**.
+- **vendor** — `DataTable`, `BodyCell`, `SoftDeletes`, `RefreshDatabase`, `HasMiddleware`,
+  `ValidationException`, `DefaultValuesDataPipe`, `QueryObserverResult`, `UseQueryResult`,
+  `RouteServiceProvider`, `QueryClientProvider`, `RadioButton`, `TypeError`, `FormData`,
+  `ButtonProps`, `TableBody`;
+- **placeholder de molde** — `CreateX`, `UpdateX`, `AppXProps`;
+- **palavra de SQL, enum ou prosa, e nome de conceito** — `DELETE`, `EXPLAIN`, `UNIQUE`, `IDENTICO`,
+  `MANUAL`, `PRUEBAS`, `EmAndamento`, `QueryBuilders`, `UnmappedErrors`.
 
-O plano escreve que a rota "não tem middleware de permissão (`app/Domains/Catalog/routes.php:11` — só
-`auth:sanctum`), então não há 403 a provocar por RBAC". Medido no `/fechar-sprint` do BD-6
-(2026-08-14), lendo `backend/app/Domains/Catalog/Http/Controllers/CourseController.php:19` —
-`new Middleware('permission:catalog.course.view', only: ['index', 'show'])`. A frase do plano
-(`docs/superpowers/plans/archive/2026-08-14-falha-vs-lista-vazia.md:51-52`) olhou só a linha do
-`apiResource` e concluiu do arquivo errado: as rotas do domínio realmente não carregam permissão,
-mas o `HasMiddleware` do controller carrega.
-
-**Não invalida nenhuma prova do bloco:** para o frontend, 403 e rota inexistente entram no mesmo
-ramo (`isError` com `data` vazio ou em cache), e o gate injetou a falha por redirecionamento de XHR,
-que é mais barato de reverter que revogar permissão de um usuário real. O que fica errado é a
-premissa escrita — quem a reler vai acreditar que o catálogo é legível por qualquer autenticado.
-
-Plano e spec **não** foram retro-editados, pela regra que a P-27 fixou em 2026-08-10 e que sobreviveu
-ao encerramento dela: história de bloco fechado não se reescreve — a divergência ganha nota no
-`progress.md` da entrega, não emenda no artefato aprovado.
+Decisão do João no brainstorming do BD-15: **não desenhar a guarda**; a ficha guarda o número para
+que quem reabrir a P-32 não regaste o desenho já reprovado. Allowlist das 28 foi considerada e
+recusada — nasceria com 28 isenções, zero achado, e cada classe de vendor nova citada num doc viraria
+manutenção. O gatilho continua sendo reincidência real da lição 13 **por classe**.
 
 ## P-44 — os gates de e2e criam usuário de sonda no banco de dev e nem sempre o removem
 
@@ -321,25 +245,88 @@ removidos junto os dois `password_reset_tokens` deixados pelos gates dele (`admi
 `gate.task14@lotus.cl`). As onze linhas de gates anteriores continuam intactas — são de blocos
 fechados.
 
-## P-47 — os redatores do seed não têm a role `redator`, e o bloco que a criou só a atribui adiante
+## P-52 — `invitation_tokens` existe desde 2026-08-18 e não tem ficha no `der-fisico.md`
 
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o bloco que puder reseedar o banco de dev (mesmo gatilho da
-[P-44](#p-44)), ou o primeiro gate `permission:` aplicado sobre rota de redator — é quando a falta
-deixa de ser cosmética. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** fecha quando um bloco tocar `invitation_tokens` (convite de redator,
+expiração, reenvio) e puder descrever as colunas com o comportamento já provado, ou quando um
+bloco de doc trouxer o `der-fisico.md` para o escopo de novo. Revisar em **2026-10-31**.
 
-Medido no `/fechar-sprint` de 2026-08-19: dos 7 redatores do `OperationDemoSeeder`, **nenhum** carrega
-a role `redator` que o `RolePermissionSeeder.php:38` define. O bloco `identity-ativacao-acesso-redator`
-fechou as duas portas por onde a role passa a ser atribuída — `CreateRedatorAction` (cadastro novo) e
-`SendRedatorAccessInvitationAction` (reenvio de convite, o achado **Q-1** do review) —, mas nenhuma
-delas alcança linha que já existe no banco sem convite reenviado. Provado na própria prova e2e deste
-fechamento: `juan.morales@lotus.cl` (user 2) saiu de `roles=[]` para `roles=[redator]` **só** depois do
-`POST /api/redatores/1/invitation`; o estado foi restaurado ao fim do gate, e os 7 seguem sem role.
+Medido em 2026-08-22, ao ampliar a P-43 (BD-15): a migration
+`backend/database/migrations/2026_08_18_200000_create_invitation_tokens_table.php` cria a tabela, e
+`docs/der-fisico.md` **não a mencionava em lugar nenhum** — nem na seção `Tabelas IMPLEMENTADAS`,
+nem na contagem. A tabela entrou na enumeração e na contagem naquele bloco (é o que fazia a soma
+fechar), mas **segue sem ficha de colunas**, que é o formato que as outras 19 tabelas de domínio
+têm e o que torna o documento consultável antes de criar migration (`CLAUDE.md` §3).
 
-**Não é defeito do código entregue, e não é o mesmo caso da P-44.** A P-44 é sonda de gate que
-sobreviveu; esta é **dado de seed que nasceu antes do mecanismo existir**. Hoje não impede nada — o
-gate do Dashboard é por `user.type` (`DashboardController.php:37`), não por role —, e em produção o
-caminho de remediação existe e está provado (reenviar convite atribui a role). O que falta é decidir se
-o seed de dev passa a nascer com a role, e isso vem junto da decisão de reseedar.
+Documentar tabela ainda não documentada ficou fora da P-43 de propósito: a P-43 é sobre status
+escrito errado, não sobre lacuna de documentação, e a ficha de colunas precisa nomear semântica
+(uso do token, expiração, unicidade, o que acontece no reenvio) que se lê no domínio e não só na
+migration.
+
+**A lacuna é da mesma família que a P-43 provou existir**, e por isso nasce com o número dela ao
+lado: `der-fisico.md` envelheceu em silêncio porque nada mede o documento contra o conjunto real de
+migrations. Enquanto essa medição não existir, a próxima tabela nova repete o caso.
+
+---
+
+## P-53 — a auditoria do fechamento do BD-15 mediu 12 divergências que nenhum bloco tinha no escopo
+
+**Bloco:** — · **Gatilho:** fecha no primeiro bloco que tocar `docs/estrutura-monolito.md` ou
+`.claude/rules/backend-ddd.md` por outro motivo e puder reconciliá-los contra a árvore, ou quando
+uma delas custar uma decisão errada de verdade (o candidato mais provável é o `Dashboard` ausente:
+é o doc que responde "onde vai o arquivo novo"). Revisar em **2026-10-31**.
+
+Medidas pela `auditar-docs` no `/fechar-sprint` do BD-15 (2026-08-22), **fora do escopo daquele
+bloco** — ele fechou P-20, P-21, P-23, P-39, P-43 e P-18, e nenhuma destas estava entre elas. A
+13ª divergência da mesma varredura era da própria sprint (a âncora `[P-43](#p-43)` de
+`abertas.md`, quebrada quando a ficha desceu para `encerradas.md`) e foi corrigida no fechamento.
+Registradas aqui sem correção, porque `auditar-docs` reporta e não corrige, e porque reconciliar
+`estrutura-monolito.md` contra a árvore é trabalho de bloco, não de gate. **Reconferidas contra o
+merge da `main` de 2026-08-22** (que trouxe o `feedbacks-resolver-escopo` e tocou os dois arquivos):
+as 12 seguem válidas, nenhuma foi corrigida de lado nenhum — só as coordenadas de linha
+deslocaram, e estão atualizadas abaixo.
+
+| Doc | Divergência | Evidência |
+|---|---|---|
+| `estrutura-monolito.md:49,145,181-186` · `.claude/rules/backend-ddd.md:24-26` | Afirmam que `Certification` é scaffold vazio dos dois lados; o domínio está entregue | `backend/app/Domains/Certification/` com 38 classes; `frontend/src/features/certification/` com 26 arquivos |
+| `estrutura-monolito.md:32-50` · `backend-ddd.md:12-17` | O domínio `Dashboard` não aparece em nenhuma das duas listas, e é o 2º maior consumidor cross-domain | `backend/app/Domains/Dashboard/routes.php`; `tests/Feature/Shared/DomainDependencyTest.php:68-84` declara 15 arestas |
+| `estrutura-monolito.md:20` | Afirma que `Certification` tem zero arestas; a matriz declara 9 | `tests/Feature/Shared/DomainDependencyTest.php:88-100` |
+| `estrutura-monolito.md:53-58` | A árvore de `Shared/` lista 5 subpastas; o repo tem 11 | faltam `Audit/`, `Concerns/`, `Data/`, `Office/`, `Pdf/`, `Validation/` — três delas são home de lei (`PivotAudit`, `ArchivesChildren`, `WritableAttributes`) |
+| `der-fisico.md` | A coluna `archived_with_parent` existe em 8 tabelas e não aparece em ficha nenhuma | `2026_08_18_000001_add_archived_with_parent_columns.php:26-38` e `..._000002_...:27-33` |
+| `backend-ddd.md:38` | Diz que os `routes.php` de domínio são carregadas no `bootstrap/app.php`; quem carrega é o `glob()` | `backend/routes/api.php:12-14`; `docs/estrutura-monolito.md:82` já descreve certo |
+| `CLAUDE.md:159-161` | A lista de serviços do Compose omite `mailpit`, transporte real do convite/recuperação | `docker-compose.yml:33-35` (porta 8025) |
+| `CLAUDE.md:146` | Descreve `pnpm test` como "hooks de `shared/`"; o corte cobre hooks de feature, componentes e `frontend/tests/` | `frontend/tests/repo-docs-refs.test.ts`; `features/identity/components/PeoplePage.test.tsx`. A `frontend-fsliced.md:268-271` registra que a frase já foi lição 13 três vezes |
+| `.claude/rules/frontend-fsliced.md:261-266` | População de testes de componente congelada em 2026-08-16 ("13 arquivos, 9 montam wrapper"), com lista nominal | só `shared/ui/**` tem 21 `*.test.tsx` que montam componente |
+| `docs/adrs.md` | Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha | nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado |
+| `docs/adrs.md` | O arquivamento em cascata (`archived_with_parent` + `ArchivesChildren`/`LoadsCascadedChildren`, hooks `deleting`/`restored`) alcança 8 roots sem ADR | a única regra escrita é `frontend-fsliced.md:114-130`, que descreve o **kit de UI**, não o mecanismo de backend |
+| `abertas.md:57` | A âncora `[P-35](#p-35)` aponta para ficha que saiu de `abertas.md` no BD-14 e de `encerradas.md` no BD-12 | anterior a esta sprint; não corrigida por não ser dela |
+
+**O padrão é o mesmo que a P-52 nomeia:** doc de estrutura envelhece em silêncio porque nada mede o
+documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de
+travar. Enquanto não houver catraca executável para `estrutura-monolito.md` (a `D-17` fez isso para
+as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
+
+---
+
+## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
+
+**Bloco:** — · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
+duas assertivas. Revisar em **2026-10-31**.
+
+Medido no review de `feedbacks-resolver-escopo` (2026-08-22, achado Q-4): o
+`RemoveOrphanFeedbackPermissionsMigrationTest` tem quatro testes e nenhum deles morde se você apagar
+o `->where('guard_name', 'web')` ou o `app(PermissionRegistrar::class)->forgetCachedPermissions()` do
+`up()` da `2026_08_22_000001_remove_orphan_feedback_permissions.php`. A suíte fica verde nos dois
+casos — é a lição 10 outra vez: teste que passa por não conseguir observar a diferença.
+
+Deferido para o `hardening-acesso-ownership-e-integridade` e depois tirado do escopo dele por decisão
+do João em 2026-08-22. **O bloco escreveu duas migrations de permissão** (`..._000002` e
+`..._000003`) e não aproveitou a oportunidade — o que é exatamente a informação que faz esta ficha
+valer alguma coisa para o próximo bloco.
+
+O conserto tem forma conhecida: semear uma permissão homônima em outro `guard_name` e provar que ela
+sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do `up()`, para que um
+`up()` sem `forgetCachedPermissions()` devolva o estado obsoleto.
 
 ---
 
@@ -607,16 +594,17 @@ de sincronizá-lo. Decisão do João no `/fechar-sprint` de 2026-08-12: fechar o
 em vez de segurar o fechamento ou deixar a promessa morrer sem rastro (lição 13). O texto a espelhar
 é o ponto 5 do ADR-16 em `docs/adrs.md`, que é a fonte — copiar de lá, não reescrever.
 
-## P-18 — página de fechamento do Notion com `Sprint` divergente
+**Medido em 2026-08-22 (BD-15): a impossibilidade agora é de schema, não de suposição.** A
+ferramenta de escrita do Drive disponível é `update_file`, e o schema dela diz textualmente
+*"currently only title and parent_id are supported"* — ela renomeia e move arquivo, não altera
+conteúdo. `create_file` produziria um segundo documento, que fragmenta o espelho em vez de
+sincronizá-lo. **Nada a fazer do lado do agente.**
 
-**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o João corrigir a propriedade manualmente no Notion.
-
-A página `Fechamento técnico de sprint` (id `f88bc9603dfa8253b40981686f8ae023`) tem
-`Descrição: "Fechamento — Sprint 3"` mas a propriedade `Sprint` real é `Sprint 2 · Comercial`.
-
-Doc-sync 2026-07-30 (achado E3-05): mislabel dentro do próprio Notion, fora do escopo de escrita
-autorizado pelo D11 da spec daquele bloco (que só cobre critério de aceite de H.1.3.1 e status de
-task) — só reportado, não corrigido.
+**Para o João fechar em um passo** — arquivo `decisao-stack.md`, file ID
+`14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw` (cadeia `Viagem Chile/Projetos/Lotus.cl/V2/Planejamento/3-avancado`,
+`modifiedTime` 2026-07-31T16:15:51Z na medição). O texto a colar é o ponto 5 do ADR-16 em
+`docs/adrs.md`, **copiado de lá e não reescrito**, mais a frase que revoga a exceção de shell — hoje
+o ADR-16 do Drive segue com os cinco bullets originais.
 
 ## P-22 — H.1.3.1 existe duas vezes na base Notion canônica
 
@@ -635,12 +623,17 @@ positivos, um nível abaixo: dentro da base certa. Qual cópia é a canônica é
 da task mudou de 3 para 4), não do agente — enquanto as duas existirem, um packet futuro pode ler a
 vazia.
 
+**Remedida em 2026-08-22 (BD-15), sem write.** As duas cópias foram relidas por ID e a diferença
+entre elas está tabelada em `docs/superpowers/audits/2026-08-22-bd15-notion-sync.md`. O bloco tinha
+autorização para escrita **não-destrutiva** apenas (D1), e apagar página não cabe nela. O gatilho
+segue de pé: fecha quando o João apagar ou mesclar uma das duas.
+
 ---
 
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
 
-**Bloco:** hardening-acesso-ownership-e-integridade · **Gatilho:** o João decidir o remédio do `is_active` (é controle de acesso, sai antes
-dos outros cinco); os demais, o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
+**Bloco:** — · **Gatilho:** o campo **1** (`is_active`) fechou em 2026-08-23 (ver o bloco final
+desta ficha). Restam **cinco**: o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
 `BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
 
 Achado pela review final do **BD-14** (2026-08-20, `0fe30b13..dd0cda1`). **Nada aqui é regressão do
@@ -713,3 +706,24 @@ da D1 e move `generated.ts` — decisão do João, não do agente.
 **A varredura que falta:** a medição da D-13 procurou o idioma `instanceof Optional ? null`. Ela era
 cega a este defeito, porque aqui o valor nunca chega como `Optional`. Um bloco que feche esta ficha
 deve varrer por **default literal em propriedade de DTO de entrada**, não pelo ternário.
+
+### O campo 1 fechou em 2026-08-23; os cinco restantes seguem abertos
+
+O João escolheu o remédio **(a)** — `public bool|Optional $is_active` sem default, espelhando o
+`RedatorData`. O **(b)** (`['present','boolean']`) foi recusado por contradizer a D1 da spec do
+BD-14 ("omissão preserva"): reabrir decisão de dois dias antes para economizar um diff de
+`generated.ts` não paga. Entregue pelo `hardening-acesso-ownership-e-integridade` em `d11169c9`, com
+`d4a8553d` fechando o blast radius no `create` de staff (o `Optional` sem default também alcança o
+cadastro novo, que precisava do `?? true` explícito).
+
+`generated.ts` foi **regenerado**, nunca editado (lei §5.3): `is_active` passou a
+`undefined | boolean`, a mesma grafia que a linha 433 já carregava para `RedatorData`.
+
+**Provado contra a API real no gate de fechamento (2026-08-23):** `PUT /api/users/87` com
+`is_active: false` desliga; o `PUT` seguinte, **omitindo a chave** e só renomeando, devolve 200 com
+o nome novo e `is_active` **ainda `false`** — confirmado no banco. Antes do bloco, esse segundo PUT
+devolvia o acesso ao staff desligado sem ninguém pedir.
+
+Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
+`CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
+nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.

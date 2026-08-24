@@ -20,9 +20,9 @@ class UploadFileAction
 {
     /**
      * Sobe e registra numa chamada. Continua servindo os chamadores que NÃO
-     * estão dentro de transação (`StoreTurmaDocumentAction`, `QuoteFileController`,
-     * `BudgetFileController`). Quem abre transação usa `put`/`register`/`discard`
-     * separados — ver `StoreRedatorDocumentAction`.
+     * estão dentro de transação (`QuoteFileController`, `BudgetFileController`).
+     * Quem abre transação usa `put`/`register`/`discard` separados — ver
+     * `StoreRedatorDocumentAction` e `StoreTurmaDocumentAction` (P-49).
      */
     public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
     {

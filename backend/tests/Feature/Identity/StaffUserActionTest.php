@@ -54,6 +54,30 @@ class StaffUserActionTest extends TestCase
         $this->assertTrue(Hash::check('secret123', $user->password));
     }
 
+    /**
+     * P-51 deixou `is_active` `Optional` sem default para o PUT preservar o
+     * valor na omissão — mas isso também alcança o `store()`, que resolve o
+     * mesmo `UserData` automaticamente. `CreateStaffUserAction` escreve
+     * `$data->is_active` direto no `User::create()`: sem guarda, omitir no
+     * create passaria o objeto `Optional` pro insert. Staff nasce ativo por
+     * padrão (docblock da Action) — a guarda tem que cair pra `true`, nunca
+     * pro `false` do default de coluna.
+     */
+    public function test_cria_staff_sem_is_active_nasce_ativo(): void
+    {
+        $data = UserData::from([
+            'name' => 'Bea Admin',
+            'email' => 'bea@lotus.cl',
+            'rut' => '11.222.333-9',
+            'password' => 'secret123',
+            'role' => 'admin',
+        ]);
+
+        $user = app(CreateStaffUserAction::class)->execute($data);
+
+        $this->assertTrue($user->is_active);
+    }
+
     public function test_senha_ausente_no_create_e_422(): void
     {
         $data = UserData::from([
