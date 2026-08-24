@@ -368,6 +368,7 @@
     "module": "Módulo en construcción."
   },
   "profile": {
+    "title": "Mi perfil",
     "subtitleRedator": "Tus datos personales, tu seguridad y tu documentación profesional.",
     "subtitleAdmin": "Revisa tus datos y administra tu contraseña.",
     "loadError": "No se pudo cargar tu perfil",

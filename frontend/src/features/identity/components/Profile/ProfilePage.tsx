@@ -30,11 +30,25 @@ export function ProfilePage() {
   // seção não existe — e a frase já enganou uma medição de fechamento (D-26).
   const subtitulo = profile?.redator ? t('profile.subtitleRedator') : t('profile.subtitleAdmin')
 
-  if (isLoading) return <AppDetailSkeleton />
+  // `ModulePage` nos TRÊS ramos, e o esqueleto DENTRO dele (decisão do João,
+  // 2026-08-24). Antes o ramo de carga devolvia `<AppDetailSkeleton />` cru: o
+  // cabeçalho — e com ele o `h1` da página — só aparecia depois do GET, então a
+  // tela abria sem nível 1 (Q-5 de 2026-08-12) e o título saltava para dentro
+  // quando o perfil chegava. Com a moldura fixa, só o corpo troca.
+  //
+  // O título é `profile.title` (`Mi perfil` / `Meu perfil` / `My profile`), não
+  // `userMenu.profile`: o mesmo texto, mas a chave da PÁGINA é dela — o item de
+  // menu pode ser reescrito sem arrastar o `h1` junto.
+  if (isLoading)
+    return (
+      <ModulePage title={t('profile.title')} description={subtitulo}>
+        <AppDetailSkeleton />
+      </ModulePage>
+    )
 
   if (failedWithoutData || !profile) {
     return (
-      <ModulePage title={t('userMenu.profile')} description={subtitulo}>
+      <ModulePage title={t('profile.title')} description={subtitulo}>
         <AppErrorState
           title={t('profile.loadError')}
           detail={loadMessage({ errorDetail, errorHint }, t)}
@@ -46,7 +60,7 @@ export function ProfilePage() {
   }
 
   return (
-    <ModulePage title={t('userMenu.profile')} description={subtitulo}>
+    <ModulePage title={t('profile.title')} description={subtitulo}>
       <InlineLoadState
         error={loadError ? loadMessage({ errorDetail, errorHint }, t) : null}
         retryLabel={t('common.retry')}

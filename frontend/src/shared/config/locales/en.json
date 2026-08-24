@@ -368,6 +368,7 @@
     "module": "Module under construction."
   },
   "profile": {
+    "title": "My profile",
     "subtitleRedator": "Your personal data, your security and your professional documents.",
     "subtitleAdmin": "Review your details and manage your password.",
     "loadError": "Could not load your profile",

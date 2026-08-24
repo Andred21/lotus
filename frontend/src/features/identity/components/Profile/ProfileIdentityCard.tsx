@@ -12,41 +12,39 @@ import { useProfilePhoto } from '../../hooks/useProfilePhoto'
  * A foto é a exceção deliberada nesta coluna: ela É self-service, mas mora ao
  * lado do nome porque é assim que o usuário a reconhece como sua.
  *
- * **A superfície recuada é a marca do corte (D-28).** A regra da spec D1 —
- * leitura de um lado, self-service do outro — era expressa só por posição
- * horizontal, que existe a partir de 1280px; abaixo disso virava ordem vertical,
- * e ordem sem marca não lê como regra. Recuado, este cartão se dissolve no fundo
- * da aplicação e sobra cartão elevado só onde há o que fazer.
+ * **A superfície recuada saiu (decisão do João, 2026-08-24).** Ela era a marca
+ * do corte da D-28: `variant="sunken"` dissolvia este cartão no fundo da
+ * aplicação para que sobrasse cartão elevado só onde há o que fazer. Na tela,
+ * porém, o bloco lia como buraco ao lado dos cartões de formulário, e a foto —
+ * que É self-service e mora aqui — ficava sem moldura. Agora ele usa a MESMA
+ * superfície dos cartões de dados (`variant` default: `--surface-card` com
+ * borda), e quem carrega a regra da spec D1 volta a ser a posição horizontal em
+ * `xl` mais a ordem vertical abaixo dela.
  *
- * **Custo declarado e aceito:** a foto É self-service e mora aqui. A superfície
- * marca a natureza DOMINANTE do bloco; o botão de foto carrega a própria
- * afordância por ser botão com rótulo. Mover a foto para a coluna de
- * self-service contradiria a decisão da spec D1, que a pôs ao lado do nome
- * porque é assim que o usuário a reconhece como sua.
+ * **Custo declarado:** abaixo de 1280px a única marca do corte é a ordem, e
+ * ordem sem marca visual não lê como regra — é o débito que a D-28 pagava. O
+ * `AppCard variant="sunken"` continua existindo para quem precisar dele.
  */
 export function ProfileIdentityCard({ profile }: { profile: ProfileData }) {
   const { t } = useTranslation()
   const photo = useProfilePhoto(profile.photo_url)
 
   return (
-    // `pt-9` abaixo de `xl` (medido no navegador, decisão do João em
-    // 2026-08-17): o halo do `scale-200` do `AppPhotoField` sobe 34px acima do
-    // topo natural do avatar, e com os 16px do `p-4` ele saía 17px PARA FORA do
-    // cartão. Enquanto a identidade era o primeiro bloco da coluna, isso caía na
-    // folga da página; com a inversão da D-27 ela passou a cair na calha de 16px
-    // que a separa do cartão de cima, e o topo do círculo ENCOSTAVA nele — folga
-    // medida de −1px, onde toda calha da tela é 16px. 36px põem o halo de volta
-    // para dentro. A partir de `xl` o cartão volta a ser o primeiro da coluna e
-    // o `p-4` basta. Correção de ESPAÇO, não de geometria: mexer no `scale-200`
-    // é a DS-05, fora deste bloco por decisão do João.
-    <AppCard variant="sunken" className="p-4 pt-9 xl:pt-4">
+    // `p-4` simétrico, sem o antigo `pt-9 xl:pt-4`. Aquele padding compensava o
+    // `transform scale-200` do `AppPhotoField`, cujo halo subia 32px acima da
+    // própria caixa e era cortado pelo `overflow-hidden` do `AppCard`. O avatar
+    // agora tem diâmetro REAL (`AppPhotoField`), então não há o que compensar —
+    // e é isso que faz o topo deste cartão coincidir com o do `Datos personales`
+    // ao lado, que também é `p-4`.
+    <AppCard className="p-4">
       {/* Avatar e nome seguem EMPILHADOS nas duas faixas — `flex-col` abaixo de
           `xl`, fluxo de bloco a partir dele. Quem encurtou o cartão foi o grid de
           campos abaixo, em duas colunas (D-27): medido em 1024x768 com o Admin,
           `Datos personales` saiu de y=829 para y=265 — primeira dobra — e o total
           caiu de 1476px para 1394px. A faixa HORIZONTAL, com o avatar ao lado do
-          nome, não entrou porque exigiria a DS-05: o halo do `scale-200` vazaria
-          contra a borda lateral do cartão do mesmo jeito que vazava para cima. */}
+          nome, não entrou porque o halo do `scale-200` vazaria contra a borda
+          lateral do cartão do mesmo jeito que vazava para cima — impedimento que
+          o diâmetro real removeu, mas o arranjo empilhado segue por desenho. */}
       <div className="flex flex-col items-center gap-4 xl:block">
         <AppPhotoField name={profile.name} {...photo} />
 
