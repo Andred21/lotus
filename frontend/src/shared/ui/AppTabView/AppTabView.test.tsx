@@ -25,7 +25,10 @@ function root(container: HTMLElement) {
 }
 
 describe('AppTabView', () => {
-  it('liga scrollable por padrão, sem o chamador pedir', () => {
+  // O default ficou de fora de propósito: a régua rolável foi medida numa tela
+  // (a da turma) e ligá-la por padrão a estendia a quatro `ModuleTabs` que
+  // ninguém mediu (Q-3 do review de 2026-08-24).
+  it('não liga scrollable sozinho: quem mediu a tela é que pede', () => {
     const { container } = render(
       <AppTabView>
         <AppTabPanel header="Um">a</AppTabPanel>
@@ -33,17 +36,17 @@ describe('AppTabView', () => {
       </AppTabView>,
     )
 
-    expect(root(container).className).toContain('p-tabview-scrollable')
+    expect(root(container).className).not.toContain('p-tabview-scrollable')
   })
 
-  it('chamador ainda consegue desligar', () => {
+  it('o sítio que pede recebe', () => {
     const { container } = render(
-      <AppTabView scrollable={false}>
+      <AppTabView scrollable>
         <AppTabPanel header="Um">a</AppTabPanel>
         <AppTabPanel header="Dois">b</AppTabPanel>
       </AppTabView>,
     )
 
-    expect(root(container).className).not.toContain('p-tabview-scrollable')
+    expect(root(container).className).toContain('p-tabview-scrollable')
   })
 })

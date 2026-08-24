@@ -8,14 +8,20 @@ const appTabViewPt = {
   panelContainer: { className: 'p-0' },
 }
 
-export function AppTabView({ pt, scrollable, ...props }: TabViewProps) {
+export function AppTabView({ pt, ...props }: TabViewProps) {
   const { t } = useTranslation()
-  // `scrollable` liga por PADRÃO: sem ela a régua de abas transborda sem seta,
-  // sombra ou qualquer sinal de que há mais aba fora da tela, e em 390x844 três
-  // das cinco abas da turma nasciam invisíveis (UI-06 da revisão de 2026-08-23).
-  // Os botões prev/next só existem com a prop ligada, e somem sozinhos quando o
-  // conteúdo cabe — ligar por padrão não muda nada nas telas que já cabiam.
-  // Vem DEPOIS do spread para o chamador ainda conseguir desligar.
+  // `scrollable` é do CHAMADOR, não default daqui. Sem ela a régua de abas
+  // transborda sem seta, sombra ou qualquer sinal de que há mais aba fora da
+  // tela, e em 390x844 três das cinco abas da turma nasciam invisíveis (UI-06 da
+  // revisão de 2026-08-23) — é por isso que `TurmaDetailPage` a liga.
+  //
+  // Ligada por PADRÃO, como nasceu, a prop passava a valer também para os quatro
+  // `ModuleTabs` (CommercialPage, AdministracionPage, PeoplePage,
+  // CertificatesPage), e nenhum deles foi medido: `p-tabview-scrollable` troca a
+  // nav por um contêiner com `overflow: hidden` (`tabview.cjs.js:156`), e dizer
+  // que isso não muda nada nessas telas era suposição — a run de Comercial foi
+  // justamente a que o bloco cortou (Q-3 do review de 2026-08-24). Liga-se por
+  // sítio, conforme cada tela for medida.
   //
   // O NOME desses dois botões é piso daqui, pelo `pt`. O PrimeReact os rotula
   // com `api.ariaLabel('prevPageLabel')`/`'nextPageLabel'`
@@ -37,7 +43,6 @@ export function AppTabView({ pt, scrollable, ...props }: TabViewProps) {
         nextButton: { 'aria-label': t('common.tabsScrollNext') },
       }}
       {...props}
-      scrollable={scrollable ?? true}
     />
   )
 }

@@ -88,8 +88,13 @@ export function TurmaDetailPage() {
           * meio mexe nos dois lugares, e o link que chega de fora
           * (`?tab=docs`, a pendência do redator no dashboard) continua caindo no
           * painel certo por NOME, não por um número escrito à mão (Q-1 do review
-          * de 2026-08-24). */}
-        <AppTabView activeIndex={d.tab} onTabChange={(e) => d.setTab(e.index)}>
+          * de 2026-08-24).
+          *
+          * `scrollable` é pedido AQUI, e não default do wrapper: esta é a tela
+          * medida em 390x844, onde três das cinco abas nasciam invisíveis
+          * (UI-06). As outras quatro telas de aba do sistema não foram medidas
+          * e por isso não pedem (Q-3 do mesmo review). */}
+        <AppTabView scrollable activeIndex={d.tab} onTabChange={(e) => d.setTab(e.index)}>
           <AppTabPanel header={t("operation.detail.tabs.config")}>
             <TurmaConfigCard
               mode={editingConfig ? "edit" : "view"}
