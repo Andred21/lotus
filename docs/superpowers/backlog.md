@@ -402,7 +402,6 @@ largura não declarada além da que absorve.
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
 | `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
-| `P-03` | Compose por worktree — só se backend ∥ backend voltar a ocorrer, ou 2026-10-31. |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
 | `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (25)
+## Abertas (24)
 
 ### Agrupadas em bloco de execução
 
@@ -36,7 +36,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
-| P-03 | Compose por worktree não existe — portas fixas no `docker-compose.yml`, sem `COMPOSE_PROJECT_NAME` | `compose-por-worktree` | **gatilho vencido em 2026-08-24**: João decidiu paralelizar e a fila tem 4 blocos de backend |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 
@@ -60,10 +59,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
+| P-03 | Compose por worktree não existe — portas fixas no `docker-compose.yml`, sem `COMPOSE_PROJECT_NAME` | 2026-08-24, no `compose-por-worktree`: `LOTUS_DEV_*` + `.env` da raiz, duas stacks provadas no ar | primeiro fechamento **posterior** a este |
 | P-41 | `IdentityCell` empilhado prometia truncar e não truncava — faltava `min-w-0`; voltou em `1b9f82ad` | 2026-08-24, no `frontend-revisao-ui-por-modulo` | primeiro fechamento **posterior** a este |
 
 **A P-47 e a P-50 saíram neste fechamento**, o primeiro posterior aos dos blocos que as encerraram

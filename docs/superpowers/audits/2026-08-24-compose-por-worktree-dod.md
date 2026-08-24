@@ -390,3 +390,101 @@ receita do `.env.example` da raiz (um perfil de navegador por árvore) e aberta 
 saída — isolar por host em vez de por porta — muda o desenho que este documento provou e é decisão
 do João.
 
+
+---
+
+## Apêndice — re-prova no `/fechar-sprint` (2026-08-24)
+
+O gate de fechamento §0 exige provar o critério de aceite **deste** bloco contra a API real, não
+higiene genérica. A stack desta árvore tinha sido derrubada no Step 12; foi religada e as cinco
+provas correram de novo, com o main tree no ar o tempo todo.
+
+```
+$ docker compose up -d && docker compose ps --format '{{.Name}}\t{{.Ports}}'
+lotus-infra-mailpit-1	0.0.0.0:8026->8025/tcp
+lotus-infra-minio-1	0.0.0.0:9002->9000/tcp, 0.0.0.0:9003->9001/tcp
+lotus-infra-mysql-1	0.0.0.0:3308->3306/tcp
+lotus-infra-nginx-1	0.0.0.0:8081->80/tcp
+
+$ curl -s -o /dev/null -w 'main  %{http_code}\n' http://localhost:8080/up
+main  200
+$ curl -s -o /dev/null -w 'infra %{http_code}\n' http://localhost:8081/up
+infra 200
+
+$ docker volume ls | grep lotus
+local     lotus-infra_lotus-db
+local     lotus-infra_lotus-minio
+local     lotus_lotus-db
+local     lotus_lotus-minio
+
+$ docker compose exec -T app php artisan tinker --execute="echo config('app.url'), ' | ', implode(',', config('sanctum.stateful')), ' | ', config('filesystems.disks.s3.url');"
+http://localhost:8081 | localhost:5174,localhost:8081 | http://localhost:9002/lotus
+
+$ curl ... http://localhost:8081/sanctum/csrf-cookie
+csrf   204
+$ curl ... -d 'email=admin@lotus.cl&password=senha123' http://localhost:8081/api/login
+login  200
+--- cookie de sessao gravado no jar ---
+lotus_session_8081
+$ curl -b jar -H 'Accept: application/json' -H 'Origin: http://localhost:5174' http://localhost:8081/api/me
+me     200   {"id":1,"name":"Admin Lotus","email":"admin@lotus.cl","type":"admin","roles":["superadmin"], ...}
+
+$ docker compose exec -T app php artisan tinker --execute="Storage::disk('s3')->put('sonda-p03.txt','ok-arvore-infra'); ..."
+infra exists=true url=http://localhost:9002/lotus/sonda-p03.txt
+$ docker exec -i lotus-app-1 php artisan tinker --execute="..."
+main  exists=false url=http://localhost:9000/lotus/sonda-p03.txt
+$ docker compose exec -T app php artisan tinker --execute="... delete ..."
+apagada=true
+
+--- coexistencia das duas sessoes no MESMO jar ---
+login :8081 200
+login :8080 200
+me    :8081 200
+me    :8080 200
+cookies de sessao no jar: laravel-session, lotus_session_8081
+```
+
+**Nota medida sobre o `Origin` no `/api/me`.** Sem `-H 'Origin:'` a chamada volta **401** RFC 7807
+(`https://lotus.cl/errors/unauthenticated`), não 200: sem `Origin` o Sanctum não trata a request como
+stateful e o cookie de sessão do jar não é consumido. É o que o próprio `/fechar-sprint` avisa sobre
+prova e2e por `curl`, e não é falha da parametrização — o Step 7 do plano omitia o cabeçalho nesta
+terceira chamada. Com `Origin` presente, **200** com o admin do seed.
+
+**Prova 5 — Vite.** A porta 5174 desta árvore estava **ocupada por um dev server de outra árvore**
+(`/home/jvbat/projetos/lotus`, o main tree, que subiu ali por não ter `strictPort` na `main`), e a
+5173 pelo `../fix-frontend`. O `pnpm dev` desta árvore **recusou-se a subir**, que é o comportamento
+desenhado:
+
+```
+$ pnpm dev
+error when starting dev server:
+Error: Port 5174 is already in use
+```
+
+Processos de outras lanes não são derrubados por este fechamento, então a derivação de
+`VITE_API_URL` foi provada em porta livre, **sem tocar no offset de HTTP**:
+
+```
+$ LOTUS_DEV_VITE_PORT=5179 pnpm dev
+  ➜  Local:   http://localhost:5179/
+$ curl -s http://localhost:5179/src/shared/api/axios.ts | grep -o 'VITE_API_URL": "[^"]*"'
+VITE_API_URL": "http://localhost:8081"
+```
+
+O dev server derivou a API da **própria** árvore (`:8081`) mesmo servindo em porta emprestada — a
+derivação vem de `LOTUS_DEV_HTTP_PORT`, independente da porta do Vite, como o desenho previa.
+
+**Gate de higiene do fechamento:**
+
+```
+$ docker compose exec -T app php artisan test
+Tests:    5 skipped, 906 passed (3227 assertions)   Duration: 98.81s
+$ pnpm lint     # eslint ., exit 0, sem saída
+$ pnpm build    # tsc -b && vite build → ✓ built in 1.13s
+$ pnpm test
+ Test Files  101 passed (101)
+      Tests  567 passed (567)
+```
+
+`pint` e `typescript:transform` seguem **N/A por escopo medido**: `git diff main...HEAD --name-only`
+sobre `backend/` devolve só `backend/.env.example`, e `generated.ts` não aparece no diff.
