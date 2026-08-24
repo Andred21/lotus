@@ -12,7 +12,7 @@ import { turmaDisplayStatus, type TurmaDisplayStatus } from '../../lib/turmaStat
 import {
   TurmaClientCell, TurmaCodeCell, TurmaModalidadeCell, TurmaRedatoresCell, TurmaStatusCell,
 } from './TurmaCells'
-import { TURMA_COLUMN } from './turmaColumns'
+import { turmaWidths } from './turmaColumns'
 import { TurmaRowActions } from './TurmaRowActions'
 import { TurmaStatusFilter } from './TurmaStatusFilter'
 
@@ -41,6 +41,7 @@ export function TurmasTable({
   const navigate = useNavigate()
   const [status, setStatus] = useState<TurmaDisplayStatus | null>(null)
   const archived = mode === 'archived'
+  const largura = turmaWidths(archived)
   const table = useTableFilter(
     turmas,
     (turma) => [turma.course_name, turma.client_name, turma.quote_code, turma.budget_code],
@@ -82,33 +83,33 @@ export function TurmasTable({
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
         className="whitespace-nowrap"
-        style={TURMA_COLUMN.code}
+        style={largura.code}
       />
-      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} style={TURMA_COLUMN.course} />
+      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} style={largura.course} />
       <AppColumn
         header={t('operation.table.client')}
         body={(turma: TurmaData) => <TurmaClientCell turma={turma} />}
-        style={TURMA_COLUMN.identity}
+        style={largura.client}
       />
       <AppColumn
         header={t('operation.table.modality')}
         body={(turma: TurmaData) => <TurmaModalidadeCell turma={turma} />}
-        style={TURMA_COLUMN.modality}
+        style={largura.modality}
       />
       <AppColumn
         header={t('operation.table.redator')}
         body={(turma: TurmaData) => <TurmaRedatoresCell turma={turma} />}
-        style={TURMA_COLUMN.identity}
+        style={largura.redator}
       />
       <AppColumn
         header={t('operation.table.students')}
         body={(turma: TurmaData) => <span className="font-semibold">{turma.enrolled_count ?? 0}</span>}
-        style={TURMA_COLUMN.students}
+        style={largura.students}
       />
       <AppColumn
         header={t('operation.table.status')}
         body={(turma: TurmaData) => <TurmaStatusCell turma={turma} />}
-        style={TURMA_COLUMN.status}
+        style={largura.status}
       />
       {archived && archivedColumns(t)}
       <AppColumn
