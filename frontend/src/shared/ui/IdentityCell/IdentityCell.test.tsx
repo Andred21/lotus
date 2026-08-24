@@ -117,3 +117,24 @@ describe('IdentityCell', () => {
     expect(rut.className).toContain('font-mono')
   })
 })
+
+/**
+ * jsdom não faz layout: `getBoundingClientRect` devolve zero e não há como
+ * medir a elipse aqui. O que se prova é a TRAVA — a classe que impede o avatar
+ * de ceder largura —, que é o que alguém apagaria por engano ao mexer no
+ * flex da célula.
+ */
+describe('IdentityCell — o avatar não cede largura para o texto', () => {
+  it('na forma empilhada, o avatar não encolhe', () => {
+    const { container } = render(<IdentityCell title="Subestación Norte" description="76.123.456-0" />)
+
+    expect(container.querySelector('.p-avatar')?.className).toContain('shrink-0')
+  })
+
+  it('na forma inline também', () => {
+    const { container } = render(<IdentityCell inline title="Subestación Norte" description="76.123.456-0" />)
+
+    expect(container.querySelector('.p-avatar')?.className).toContain('shrink-0')
+  })
+})
+

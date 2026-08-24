@@ -33,8 +33,17 @@ export function IdentityCell({
 }: IdentityCellProps) {
   /* `aria-hidden` porque o avatar é ILUSTRAÇÃO do título que vem ao lado: sem
    * isto o leitor de tela anuncia o nome duas vezes por linha (uma pelo
-   * `imageAlt`/iniciais, outra pelo texto). Mesma decisão do UserMenu. */
-  const avatar = <AppAvatar name={title} image={image} size={size} aria-hidden />
+   * `imageAlt`/iniciais, outra pelo texto). Mesma decisão do UserMenu.
+   *
+   * `shrink-0` porque item de flex encolhe por padrão, e o avatar é o único
+   * elemento aqui com proporção a preservar: quando o texto ao lado transborda
+   * a célula, o `flex-shrink: 1` implícito reparte o encolhimento entre os dois
+   * itens, e o círculo vira ELIPSE — a altura é do `p-avatar`, a largura cede.
+   * Medido na `TurmasTable` em 2026-08-24: ovalizavam exatamente as linhas cujo
+   * nome truncava ("Subestación Norte"), e as de nome curto (CGE, Transelec)
+   * ficavam redondas. O `min-w-0` do bloco de texto é o que faz o texto ceder
+   * primeiro; sem esta trava, ele não cede sozinho. */
+  const avatar = <AppAvatar name={title} image={image} size={size} className="shrink-0" aria-hidden />
 
   if (inline)
     return (
