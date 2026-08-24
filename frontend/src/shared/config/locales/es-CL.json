@@ -624,6 +624,11 @@
     "turmaCourse": "Curso",
     "turmaDate": "Fecha",
     "turmaStatus": "Estado",
+    "turmaCertificate": "Certificado",
+    "certificatePending": "Pendiente de emisión",
+    "certificateNotApplicable": "No corresponde",
+    "certificateSuperseded_one": "+{{count}} ant.",
+    "certificateSuperseded_other": "+{{count}} ant.",
     "clientLocked": "El cambio de empresa se hace en la matrícula.",
     "noClientsAvailable": "No hay clientes registrados. Registra un cliente primero."
   },
