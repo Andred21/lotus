@@ -4,27 +4,27 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
 blocker: null
 
 lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
     blocker: null
     resume_state: null
     last_completed_work_item: hardening-acesso-ownership-e-integridade
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T13:16:19-03:00
+updated_at: 2026-08-24T13:21:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,15 +161,19 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `context_required` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_planning` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
 **Promoção de 2026-08-24, explícita do João.** O item 2 da fila entra na `lane-a`, no main tree por
 causa do gate P-03 (o bloco toca backend), em branch nova nascida de `main@cad0d1fb`. O backlog
-marca `Contexto: sim`, então a lane nasce em `context_required`: o Context Packet é do Codex, pela
-skill `lotus-context-packet` de `.agents/skills/`, e nenhum planejamento começa antes de ele ser
-validado e salvo em `context-packets/`. O bloco **absorve a P-15** — a ficha segue aberta em
+marca `Contexto: sim`, então a lane nasceu em `context_required` e o Context Packet veio do Codex,
+pela skill `lotus-context-packet` de `.agents/skills/`, em sandbox read-only — validado contra o
+contrato (marcadores exatos, frontmatter completo com `plan_path`/`spec_path` em `null`, 7 key facts,
+Figma registrado `unavailable` com a linha de erro decisiva) e salvo em
+`context-packets/2026-08-24-certificacao-historico-do-aluno.md` com `status: partial`, que prossegue.
+A única fonte indisponível é o Figma, e a limitação é declarada: **nenhuma afirmação de fidelidade ao
+protótipo** entra no planejamento. O bloco **absorve a P-15** — a ficha segue aberta em
 `pendencias/abertas.md` e só sai no fechamento. `focused_lane` passa de `lane-c` para `lane-a` neste
 mesmo commit, que é a fronteira durável exigida pelas invariantes.
 
