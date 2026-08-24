@@ -175,6 +175,71 @@ ADMINISTRATOR … AL Admin Lotus SuperAdmin Welcome, Admin Lotus
 
 Vite em 5174 e main tree em 5173 no ar ao mesmo tempo (`curl` 200 nos dois).
 
+## Step 10 — Prova 6 (correção pós-revisão final): as sondas de reprovação vistas, por task
+
+O §8.7 da spec pede "catraca verde, com as quatro asserções vistas reprovando" — este documento,
+na primeira versão, mostrava só o lado verde (Step 11) e concluía "provado" sem a prova junto, o
+que a revisão final marcou como o único passo auto-confirmatório do DoD (CLAUDE.md §5 nº8 proíbe
+"provado" sem prova ao lado). As reprovações aconteceram de fato, task a task, durante a execução —
+registradas em `.superpowers/sdd/progress.md` e nos relatórios `.superpowers/sdd/task-*-report.md`.
+Colado abaixo, por asserção:
+
+**1 — porta literal em `nginx.ports`** (task 2, sonda 1 — trocado `${LOTUS_DEV_HTTP_PORT:-8080}:80`
+por `8080:80`):
+
+```
+FAIL  tests/compose-dev.test.ts > docker-compose.yml > publica toda porta host por variável LOTUS_DEV_*, nunca literal
+AssertionError: expected '8080:80' to match /^\$\{LOTUS_DEV_[A-Z_]+:-\d+\}:\d+$/
+```
+
+**2 — default histórico trocado** (task 2, sonda 2 — mesma edição, contra o caso de default):
+
+```
+FAIL  tests/compose-dev.test.ts > docker-compose.yml > usa a porta histórica como default de LOTUS_DEV_HTTP_PORT
+AssertionError: expected 'services:\n  app:\n    build: { conte…' to match /\$\{LOTUS_DEV_HTTP_PORT:-8080\}/
+```
+
+**3 — chave de URL injetada removida** (task 3 — linha `AWS_URL` apagada do `environment:`):
+
+```
+FAIL  tests/compose-dev.test.ts > docker-compose.yml > injeta no app toda chave de URL que carrega porta, derivada da mesma variável
+AssertionError: expected '    environment:\n      APP_URL: http…' to match /^\s*AWS_URL:.*\$\{LOTUS_DEV_MINIO_PO…/m
+```
+
+**4 — `vite.config.ts` sem o comportamento derivado** (task 4, duas sondas sobre o mesmo caso):
+
+```
+FAIL  tests/compose-dev.test.ts > vite.config.ts > serve a porta do offset da árvore, com strictPort ligado
+AssertionError: expected false to be true // Object.is equality
+
+FAIL  tests/compose-dev.test.ts > vite.config.ts > deriva VITE_API_URL no serve e NÃO emite o define no build
+```
+
+Todas as quatro foram revertidas antes de seguir, com a suíte de volta a verde — a mecânica está em
+`.superpowers/sdd/task-2-report.md` (Step 7), `task-3-report.md` (Step 5) e `task-4-report.md`
+(Step 6 e Addendum 2).
+
+## Achados A–C — melhorias trazidas pela revisão final (pós-medição deste documento)
+
+A revisão final de 2026-08-24 mediu, além do que este documento cobre, três lacunas que a medição
+original não via porque a stack no ar não as exercitava:
+
+- **A — `SESSION_COOKIE` derivado do offset.** O cookie de sessão não é isolado por porta pelo
+  navegador: as duas árvores emitiam `laravel-session` em `domain=localhost`, então logar na
+  árvore B sobrescrevia o cookie da A — 401 silencioso na aba da A. Corrigido injetando
+  `SESSION_COOKIE: lotus_session_${LOTUS_DEV_HTTP_PORT:-8080}` no `environment:` do `app`.
+- **B — `??` → `||` em `frontend/vite.config.ts`.** `??` só cai no default com a variável UNSET; o
+  Compose lê o MESMO `.env` com `${VAR:-default}`, que cai no default também com a variável VAZIA.
+  Desvio de texto do plano, aprovado explicitamente pelo João.
+- **C — receita de árvore nova no `.env.example` da raiz.** `frontend/.env` copiado de outra árvore
+  traz `VITE_API_URL` literal; sem comentá-lo, o dev server da árvore nova conversa com a API da
+  árvore de origem, banco errado, sem erro visível.
+
+Nenhum dos três estava coberto pelos Steps 1–9 acima — a stack do main tree ficou no ar durante
+toda a medição original, então o conflito de cookie (A) e a receita de árvore nova (C) não tinham
+como se manifestar num único login, e a lacuna do `??` (B) só aparece com a variável explicitamente
+vazia, cenário que a medição original não plantou.
+
 ## Step 11 — Gate do bloco
 
 ```
@@ -222,8 +287,19 @@ $ grep -rc "localhost:808" frontend/dist/assets/*.js
 
 ## Veredicto
 
-Os sete critérios da §8 da spec estão provados. A P-03 pode fechar no `/fechar-sprint` deste bloco:
-duas árvores servem a stack de desenvolvimento ao mesmo tempo, com banco, bucket, sessão e dev
-server próprios, e o único passo manual que sobrou é escolher um número de offset no `.env` — que
-o `.env.example` documenta e que o `docker compose up` valida sozinho, falhando alto com
-`port is already allocated`.
+Seis dos sete critérios da §8 da spec (1 a 6) estão provados diretamente pelos Steps 1–9 acima,
+com a stack do main tree no ar durante toda a medição. O sétimo (§8.7, "catraca verde, com as
+quatro asserções vistas reprovando") não estava provado NESTE documento na primeira versão — só o
+lado verde (Step 11) aparecia, sem as reprovações ao lado, que é o único passo auto-confirmatório
+do DoD. As quatro reprovações aconteceram de fato durante a execução, task a task; o Step 10 acima
+cola as linhas de falha das sondas, com o ponteiro para `.superpowers/sdd/progress.md` e os
+`task-*-report.md` onde a mecânica completa (sonda aplicada → falha vista → revertida → suíte
+verde de novo) está registrada por task.
+
+Com o Step 10, os sete critérios da §8 estão provados. A P-03 pode fechar no `/fechar-sprint` deste
+bloco: duas árvores servem a stack de desenvolvimento ao mesmo tempo, com banco, bucket, sessão e
+dev server próprios, e o único passo manual que sobrou é escolher um número de offset no `.env` —
+que o `.env.example` documenta e que o `docker compose up` valida sozinho, falhando alto com
+`port is already allocated`. Os achados A–C da revisão final (acima) somam sobre isso: cookie de
+sessão isolado por offset, o `vite.config.ts` correto sobre variável vazia, e a receita de árvore
+nova documentada.
