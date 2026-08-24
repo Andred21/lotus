@@ -4,6 +4,7 @@ namespace Tests\Unit\Certification;
 
 use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 
@@ -71,6 +72,26 @@ class CertificateDisplayStatusTest extends TestCase
         $this->assertSame(CertificateDisplayStatus::Vigente, $status);
     }
 
+    /**
+     * D10 regressão: o cast Eloquent (`Certificate::$casts['valido_ate'] =
+     * 'date'`) grava `valido_ate` como Carbon em meia-noite UTC, porque
+     * `config/app.php` fixa o timezone da aplicação em UTC. `hoje()` devolve
+     * meia-noite em Santiago — mesma data de calendário, instante diferente
+     * (a meia-noite chilena é ~4h depois da meia-noite UTC do mesmo dia).
+     * Comparar por INSTANTE em vez de por data pura faz um certificado
+     * vencendo HOJE ser reportado `Vencido` um dia adiantado.
+     */
+    public function test_valido_ate_em_meia_noite_utc_no_mesmo_dia_de_hoje_e_vigente(): void
+    {
+        $status = CertificateDisplayStatus::for(
+            CertificateStatus::Emitido,
+            Carbon::parse('2026-08-24 00:00:00', 'UTC'),
+            $this->hoje('2026-08-24'),
+        );
+
+        $this->assertSame(CertificateDisplayStatus::Vigente, $status);
+    }
+
     public function test_dia_anterior_a_hoje_e_vencido(): void
     {
         $status = CertificateDisplayStatus::for(
@@ -110,11 +131,35 @@ class CertificateDisplayStatusTest extends TestCase
      * fixando UTC. Às 02:00 UTC ainda é o dia ANTERIOR no Chile — sem o fuso
      * explícito, um certificado que vence "amanhã" apareceria como vencendo
      * hoje durante três horas todo dia.
+     *
+     * A data certa não basta: também precisa ser meia-noite (não meio-dia, que
+     * imprimiria a mesma data mas quebraria a comparação por dia inteiro de
+     * `for()`) E precisa carregar o fuso Santiago de fato (não um instante UTC
+     * que só por acaso imprime a data certa nesta chamada).
      */
     public function test_hoje_resolve_no_fuso_do_chile_e_nao_em_utc(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-03-10 02:00:00', 'UTC'));
 
-        $this->assertSame('2026-03-09', CertificateDisplayStatus::hoje()->toDateString());
+        $hoje = CertificateDisplayStatus::hoje();
+
+        $this->assertInstanceOf(CarbonImmutable::class, $hoje);
+        $this->assertSame(CertificateDisplayStatus::TIMEZONE, $hoje->getTimezone()->getName());
+        $this->assertSame('2026-03-09', $hoje->toDateString());
+        $this->assertSame('00:00:00', $hoje->toTimeString());
+    }
+
+    /**
+     * Os quatro valores persistidos são um contrato externo, não um detalhe
+     * interno: alimentam as chaves i18n `certificate.status.<valor>` e a union
+     * TypeScript gerada que o frontend consome. Renomear um caso sem tocar
+     * este teste passaria em silêncio — este teste existe para não deixar.
+     */
+    public function test_valores_persistidos_sao_o_contrato_externo(): void
+    {
+        $this->assertSame('vigente', CertificateDisplayStatus::Vigente->value);
+        $this->assertSame('por_vencer', CertificateDisplayStatus::PorVencer->value);
+        $this->assertSame('vencido', CertificateDisplayStatus::Vencido->value);
+        $this->assertSame('revocado', CertificateDisplayStatus::Revocado->value);
     }
 }

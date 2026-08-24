@@ -50,7 +50,8 @@ enum CertificateDisplayStatus: string
      * 1. revogado, ANTES de olhar data alguma;
      * 2. sem `valido_ate` é vigente — o caso comum;
      * 3. anterior a hoje é vencido (vencer HOJE ainda é vigente);
-     * 4. faltando 30 dias ou menos avisa; 31 ou mais é vigente.
+     * 4. faltando de 1 a 30 dias avisa; vencendo hoje (0) ou faltando 31 dias
+     *    ou mais é vigente.
      */
     public static function for(
         CertificateStatus $status,
@@ -65,8 +66,15 @@ enum CertificateDisplayStatus: string
             return self::Vigente;
         }
 
-        $limite = $validoAte->copy()->startOfDay();
-        $inicio = $hoje->copy()->startOfDay();
+        // D10: comparação é por DATA pura, não por instante. O cast Eloquent
+        // grava `valido_ate` em meia-noite UTC (`config/app.php` fixa UTC) e
+        // `hoje()` devolve meia-noite em Santiago — mesma data de calendário,
+        // instantes diferentes. `startOfDay()` não resolve isso: ele zera a
+        // hora no fuso que o Carbon JÁ carrega, então compararia instantes,
+        // não dias. Reconstruir os dois a partir dos componentes de data, no
+        // MESMO fuso, é o que torna a subtração de dias um inteiro de verdade.
+        $limite = CarbonImmutable::create($validoAte->year, $validoAte->month, $validoAte->day, 0, 0, 0, self::TIMEZONE);
+        $inicio = CarbonImmutable::create($hoje->year, $hoje->month, $hoje->day, 0, 0, 0, self::TIMEZONE);
 
         if ($limite->lessThan($inicio)) {
             return self::Vencido;
