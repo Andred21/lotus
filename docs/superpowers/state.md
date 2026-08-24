@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: compose-por-worktree
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-compose-por-worktree-design.md
 active_plan: docs/superpowers/plans/2026-08-24-compose-por-worktree.md
@@ -30,9 +30,9 @@ lanes:
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: compose-por-worktree
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../lotus-infra
     branch: infra/compose-por-worktree
     active_spec: docs/superpowers/specs/2026-08-24-compose-por-worktree-design.md
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: 8a4df32a
-updated_at: 2026-08-24T18:20:00-03:00
+updated_at: 2026-08-24T18:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `compose-por-worktree` (paga a **P-03**) | Infra | `../lotus-infra` | `infra/compose-por-worktree` | `executing` |
+| `lane-b` | `compose-por-worktree` (paga a **P-03**) | Infra | `../lotus-infra` | `infra/compose-por-worktree` | `ready_for_review` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
