@@ -73,11 +73,11 @@ export function TurmasTable({
       error={error}
       onRetry={onRetry}
     >
-      {/* Largura das colunas: `TURMA_COLUMN` (o porquê e os números medidos estão
-        * lá). TODA coluna declara a sua, menos CURSO — é ele quem absorve a
-        * sobra, porque é o único texto livre da tabela. Coluna nova aqui nasce
-        * com largura declarada, ou volta a roubar a sobra de quem precisa dela.
-        * `whitespace-nowrap` é só do código — identificador atômico. */}
+      {/* Largura das colunas: `TURMA_COLUMN` (o porquê e as três medições estão
+        * lá). Em PORCENTAGEM, somando 91% mais a coluna de ações — coluna nova
+        * aqui entra tirando pontos das irmãs, não somando por cima, senão a
+        * tabela passa a transbordar em toda tela. `whitespace-nowrap` é só do
+        * código — identificador atômico. */}
       <AppColumn
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
