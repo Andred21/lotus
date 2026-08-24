@@ -3,10 +3,10 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: tabelas-coluna-de-acoes-e-largura
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -43,12 +43,12 @@ lanes:
     last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: tabelas-coluna-de-acoes-e-largura
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui
+    branch: refactor/tabelas-coluna-de-acoes
     active_spec: null
     active_plan: null
     context_packet: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: 8a4df32a
-updated_at: 2026-08-24T14:00:00-03:00
+state_basis_commit: cad0d1fb
+updated_at: 2026-08-24T17:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
+| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_planning` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
@@ -176,10 +176,20 @@ do João, contra o `backlog.md`.
 decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
 são `null`.
 
-Interseção a vigiar entre as lanes vivas: nenhuma — as três estão em `idle`. A `lane-c` fechou o
-item 16 (fatia 1 de 2) em 2026-08-24, depois de trazer a `main` para dentro pelo merge `8a4df32a`;
-a narrativa dela está em `historico/state-archive.md`. Integração segue serial: é esta branch que
-mescla a seguir.
+**A `lane-c` recebeu o item 17 em 2026-08-24, por promoção explícita do João** contra o
+`backlog.md`, com a árvore em `idle`. O item declara `Contexto: não`, então a rota é direta a
+`ready_for_planning` e `context_packet` permanece `null` — não há fonte externa a recuperar; a
+evidência do bloco é medição local de 2026-08-24 (15 sítios de `AppDataTable`/`SearchableTableFrame`,
+12 com coluna de ação, 2 presas).
+
+A branch anterior da lane, `refactor/frontend-revisao-ui`, **foi mesclada** no **PR #69** (merge
+`cad0d1fb`) — o registro acima, que a dava como não mesclada, ficou velho no fechamento da fatia 1 e
+é corrigido aqui. A worktree `../fix-frontend` estava em detached HEAD sobre esse merge; a branch
+`refactor/tabelas-coluna-de-acoes` nasce dele. Não há rebase pendente: `cad0d1fb` **é** a `main`.
+
+Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
+é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
+da P-03. Integração segue serial.
 
 ## Itens fechados — ponteiro, não narrativa
 
