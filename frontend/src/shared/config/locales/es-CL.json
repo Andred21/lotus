@@ -65,6 +65,8 @@
     "clearFilters": "Limpiar filtros",
     "noResultsHint": "Revisa el término o limpia la búsqueda.",
     "clearSearch": "Limpiar búsqueda",
+    "noResultsSearchAndFiltersHint": "Revisa el término o limpia la búsqueda y los filtros.",
+    "clearSearchAndFilters": "Limpiar búsqueda y filtros",
     "loadError": "No se pudieron cargar los datos",
     "loadErrorHint": "Revisa tu conexión e inténtalo de nuevo.",
     "forbiddenHint": "No tienes permiso para ver esta información.",
@@ -76,7 +78,9 @@
     "unexpectedError": "Error inesperado",
     "unexpectedErrorHint": "No se pudo procesar la respuesta del servidor.",
     "maximizeDialog": "Maximizar diálogo",
-    "restoreDialog": "Restaurar diálogo"
+    "restoreDialog": "Restaurar diálogo",
+    "tabsScrollPrev": "Desplazar pestañas a la izquierda",
+    "tabsScrollNext": "Desplazar pestañas a la derecha"
   },
   "module": {
     "comercial": {
@@ -255,8 +259,7 @@
         "empty": "Sin documentación pendiente",
         "emptyHint": "Todas tus clases tienen la documentación al día.",
         "missing": "Falta: {{types}}",
-        "until": "Hasta {{date}}",
-        "goToProfile": "Ir a Mi Perfil"
+        "until": "Hasta {{date}}"
       },
       "alerts": {
         "emptyHint": "Ninguno de tus documentos está vencido ni por vencer."
@@ -684,6 +687,9 @@
         "docs": "Documentación",
         "conclusion": "Conclusión"
       },
+      "lock": {
+        "concluida": "La turma está concluida: el registro académico quedó bloqueado."
+      },
       "comingSoon": "Disponible en la próxima entrega."
     },
     "config": {
@@ -708,7 +714,7 @@
       "designate": "Designar redactor",
       "remove": "Quitar",
       "none": "Ningún redactor asignado.",
-      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente (RN-09).",
+      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente.",
       "pickerTitle": "Redactores idóneos",
       "pickerEmpty": "No hay redactores idóneos para este curso.",
       "pick": "Designar"
@@ -790,7 +796,6 @@
       "removeTitle": "Quitar documento",
       "removeBody": "¿Quitar «{{name}}»? Si el tipo queda sin archivos, la turma vuelve a En curso.",
       "lock": {
-        "concluida": "La turma está concluida: la documentación quedó inmutable (RN-15).",
         "permission": "No tienes permiso para subir o quitar documentación."
       },
       "uploaded": "Documento subido."

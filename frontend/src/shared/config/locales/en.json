@@ -65,6 +65,8 @@
     "clearFilters": "Clear filters",
     "noResultsHint": "Check the term or clear the search.",
     "clearSearch": "Clear search",
+    "noResultsSearchAndFiltersHint": "Check the term or clear the search and filters.",
+    "clearSearchAndFilters": "Clear search and filters",
     "loadError": "Could not load the data",
     "loadErrorHint": "Check your connection and try again.",
     "forbiddenHint": "You do not have permission to view this information.",
@@ -76,7 +78,9 @@
     "unexpectedError": "Unexpected error",
     "unexpectedErrorHint": "Could not process the server response.",
     "maximizeDialog": "Maximize dialog",
-    "restoreDialog": "Restore dialog"
+    "restoreDialog": "Restore dialog",
+    "tabsScrollPrev": "Scroll tabs left",
+    "tabsScrollNext": "Scroll tabs right"
   },
   "module": {
     "comercial": {
@@ -255,8 +259,7 @@
         "empty": "No pending documents",
         "emptyHint": "All your classes have their documents up to date.",
         "missing": "Missing: {{types}}",
-        "until": "Until {{date}}",
-        "goToProfile": "Go to My Profile"
+        "until": "Until {{date}}"
       },
       "alerts": {
         "emptyHint": "None of your documents are expired or expiring."
@@ -684,6 +687,9 @@
         "docs": "Documentation",
         "conclusion": "Conclusion"
       },
+      "lock": {
+        "concluida": "The class is concluded: the academic record is locked."
+      },
       "comingSoon": "Available in the next delivery."
     },
     "config": {
@@ -708,7 +714,7 @@
       "designate": "Assign redator",
       "remove": "Remove",
       "none": "No redator assigned.",
-      "helpNote": "Only redatores enabled for this course with valid documentation are shown (RN-09).",
+      "helpNote": "Only redatores enabled for this course with valid documentation are shown.",
       "pickerTitle": "Eligible redatores",
       "pickerEmpty": "No eligible redatores for this course.",
       "pick": "Assign"
@@ -778,7 +784,7 @@
       "type": {
         "MANUAL": "Manual",
         "PRUEBAS": "Tests / assessments",
-        "EVALUACION_REDATOR": "Editor assessment"
+        "EVALUACION_REDATOR": "Redator assessment"
       },
       "delivered": "Delivered",
       "pending": "Pending",
@@ -790,7 +796,6 @@
       "removeTitle": "Remove document",
       "removeBody": "Remove “{{name}}”? If the type is left with no files, the class returns to In progress.",
       "lock": {
-        "concluida": "The class is concluded: documentation is now immutable (RN-15).",
         "permission": "You do not have permission to upload or remove documentation."
       },
       "uploaded": "Document uploaded."

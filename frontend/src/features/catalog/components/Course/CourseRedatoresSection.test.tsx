@@ -4,10 +4,13 @@ import type { RedatorData } from '@shared/types/generated'
 import type { useCourseRedatores } from '../../hooks/useCourseRedatores'
 import { CourseRedatoresSection } from './CourseRedatoresSection'
 
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 type Redatores = ReturnType<typeof useCourseRedatores>
 

@@ -13,10 +13,13 @@ import { CertificateViewDialog } from './CertificateViewDialog'
  *
  * `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`.
  */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 const CORROMPIDO: ProblemDetails = {
   type: 'https://lotus.cl/errors/server',

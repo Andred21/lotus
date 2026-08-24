@@ -62,7 +62,15 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
         * quando tem o que mostrar. */}
       {titleHidden && <h1 className="sr-only">{title}</h1>}
       {(!titleHidden || subtitle || tags || actions) && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
+          {/* `items-baseline`, e não `items-start`: o `h1` logo abaixo carrega
+            * `my-[0.83em]` (19,92px medidos), então alinhar pelo TOPO do bloco
+            * punha as tags 23px acima do centro do título que elas qualificam —
+            * mais perto do botão "Voltar" (16px) do que do próprio título
+            * (36px), e o estado da turma lia como enfeite solto no canto (UI-08
+            * da revisão de 2026-08-23). Pela linha de base a tag pousa sobre a
+            * linha do título sem que a margem do `h1` — que é o espaçamento do
+            * cabeçalho inteiro — precise mudar. */}
           <div className="min-w-0">
             {/* Margem cravada no valor que o user-agent dava ao h2, porque o
               * projeto não carrega Preflight. */}

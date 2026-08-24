@@ -16,10 +16,13 @@ import { BudgetDetailPage } from './BudgetDetailPage'
  * `t` devolve a própria chave: o que importa aqui é QUE chave titula cada
  * estado, não o texto traduzido (isso é do `parity.test.ts`).
  */
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 type BudgetDetail = ReturnType<typeof useBudgetDetail>
 

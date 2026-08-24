@@ -281,3 +281,33 @@ html:not(.dark) {
 .p-datatable .p-datatable-tbody > tr {
   background: transparent;
 }
+
+/* UI-05 do review de 2026-08-22 (dashboard do redator): o `Menu` do
+ * PrimeReact não tem estado "selecionado" nativo — diferente do
+ * `SelectButton`/`Dropdown`, que resolvem contra um `value`. Sem marca
+ * própria, o único destaque visível no popup do `LanguageMenu` era o
+ * `p-focus`, que o Prime crava sempre no PRIMEIRO item ao abrir (anel de
+ * FOCO do teclado, não idioma corrente): o achado media a tela em `en` e via
+ * o item `ES` destacado.
+ *
+ * A COR do item ativo não mora aqui: o `LanguageMenu` crava `p-highlight` no
+ * item corrente e o tema gerado pinta o resto sozinho, nos dois temas. Esta
+ * regra acrescenta só o que o tema não dá — o canal NÃO-cromático. O fundo do
+ * `p-highlight` claro é #ecf7fd sobre branco: em escala de cinza a diferença
+ * quase some, e "qual é o meu idioma" ficaria dito só por matiz. Peso resolve
+ * sem depender de cor.
+ *
+ * Escopada no menu de idioma (`lotus-language-menu`, cravada no root do
+ * `AppMenu` pelo `LanguageMenu`) e não em todo `.p-menu`: nenhum outro menu do
+ * produto tem item "atual", e engrossar item destacado em qualquer popup seria
+ * efeito colateral não pedido.
+ *
+ * Nota de mecanismo, porque é contraintuitivo: esta folha é importada FORA de
+ * layer (`index.css:28`) e o tema inteiro vive em `@layer primereact`
+ * (`lara-light-lotus.css:278`) — declaração de autor sem layer vence qualquer
+ * layer, independente de especificidade. É por isso que 3 classes aqui passam
+ * na frente das 6 do Lara. Se um dia esta folha entrar num layer, o peso cai e
+ * a marca degrada para a cor do `p-highlight`, que continua de pé. */
+.lotus-language-menu .p-menuitem.p-highlight .p-menuitem-text {
+  font-weight: 600;
+}

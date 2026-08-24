@@ -54,7 +54,16 @@ export function DashboardItemRow({
         <span className="block truncate text-sm font-medium" title={label}>
           {label}
         </span>
-        <span className="block truncate text-xs" title={detail} style={{ color: 'var(--text-color-secondary)' }}>
+        {/* Duas linhas abaixo de `sm`, uma de `sm` para cima. O `title` recupera
+          * o texto inteiro no hover, e hover não existe em toque: no telefone,
+          * truncar em uma linha apagava exatamente a parte que diz QUAL documento
+          * falta, e a triagem que a lista promete passava a exigir abrir cada
+          * item (UI-06 da revisão de 2026-08-22). */}
+        <span
+          className="block line-clamp-2 text-xs sm:truncate"
+          title={detail}
+          style={{ color: 'var(--text-color-secondary)' }}
+        >
           {detail}
         </span>
       </span>

@@ -23,17 +23,20 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 7 dos 11 itens restantes são P0; quem ordena é a cadeia de dependência:
-  itens 2–9 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **P0 não ordena** — 7 dos 13 itens restantes são P0; quem ordena é a cadeia de dependência:
+  itens 2–9 mais o 16 e o 17 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de
+  go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
   provisionamento). A fila começa no `2` e salta o `3` de propósito: o número é identidade estável,
   citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e
   pareceria promoção.
-- **O item 16 (`frontend-revisao-ui-por-modulo`) não aparece aqui.** Ele foi acrescentado pela
-  worktree da `lane-c` (`eaa9e15c`) e, por decisão do João em 2026-08-22, não foi duplicado neste
-  tree — duplicá-lo garantiria conflito no merge sem ganho. Até o merge da lane, **a fila canônica
-  do item 16 mora na branch `refactor/frontend-revisao-ui`.**
+- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
+  2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
+  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
+- **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
+  dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
+  em 2026-08-22 — duplicá-los no main tree garantiria conflito no merge sem ganho.
 
 ---
 
@@ -294,6 +297,102 @@ está formalmente resolvida.
 
 ---
 
+## 16. `frontend-revisao-ui-por-modulo`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
+**Fonte:** `audits/2026-08-17-lotus-ui-review-dashboard.md`,
+`audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`,
+`audits/2026-08-22-lotus-ui-review-dashboard.md`; `D-38`.
+
+**Objetivo:** estender ao resto da aplicação a revisão de UI que só o Dashboard e o `/perfil`
+receberam, tela a tela, sem abrir redesenho estético.
+
+**A fatia 1 fechou em 2026-08-24** (`lane-c`, branch `refactor/frontend-revisao-ui`, narrativa em
+`historico/state-archive.md`): duas superfícies medidas — Dashboard view `ready-redator` e Operação
+(`/operacion` + detalhe da turma) —, com relatório datado em `audits/`, **14 achados corrigidos** e
+zero `C` aberto. A **`D-39` foi paga** pela fábrica `shared/testing/i18n.ts`. A run de **Comercial
+não foi executada**: o João cortou o escopo em 2026-08-23 para seguir ao review. O item continua
+aqui com o que sobrou, e a fatia 2 escreve spec e plano próprios.
+
+**Evidência medida (2026-08-22):** a terceira passada no Dashboard admin achou 8 itens, e **6
+moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo `dataKey` (`value : 2` no tooltip),
+`AppDatePicker` fixava `dateFormat` e `locale="es"`, `AppDropdown` congelava o nome acessível no
+idioma anterior, `AppCardHeader` não tinha onde declarar a grandeza do card. Corrigidos em
+`ac4eef8a`, valem para toda tela que use esses wrappers; o que sobra é **descobrir onde mais os
+mesmos padrões aparecem** — e cada revisão anterior encontrou defeito de wrapper que nenhuma
+leitura de código tinha achado.
+
+**Escopo:**
+- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: **Comercial**
+  (`/comercial` + detalhe), Certificados, Cursos, Pessoas, Administração. O Dashboard
+  `ready-redator` e a Operação saíram na fatia 1;
+- **D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
+  enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
+  rótulos;
+- **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
+  a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
+  (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
+  acima liga a sua, se a régua transbordar em 1440x900 ou 390x844 — e não por padrão no wrapper,
+  que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
+  `overflow: hidden`, e o efeito disso em tela não medida é suposição;
+- **D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`
+  (correção de backend — ver ficha);
+- os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
+  couberem.
+
+**Fora:** acessibilidade, foco e overflow — são do `frontend-hardening-final` (item 8), que paga as
+fichas `D-*`; este bloco descobre e corrige o que a rubrica classifica. Redesenho de tela também
+fica fora: Administração é o item 9, e a lente `frontend-design` é complementar — **quem
+classifica é `references/review-rubric.md`, e a rule de `.claude/rules/` vence a lente**.
+
+**Herança da fatia 1, que a fatia 2 pega de volta:** as fichas `D-*` que a Task 12 nunca escreveu —
+a UI-04 da run 1 (janela da agenda, backend) e a recusa em espanhol fixo de `Turma.php:200` —, mais
+os Minors 2, 3 e 5 da revisão da Task 9 (hover coberto pela coluna fixa, sombra de rolagem
+escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`).
+
+**DoD:** cada superfície com relatório datado em `audits/` e nenhum achado `C` aberto.
+
+---
+
+## 17. `tabelas-coluna-de-acoes-e-largura`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não
+**Fonte:** decisão do João em 2026-08-24 (ao ver a `TurmasTable` corrigida); UI-02 da revisão de
+2026-08-22; `stickyActionsColumn` e `TURMA_COLUMN` como molde já provado.
+
+**Objetivo:** que toda tabela do sistema termine na MESMA coluna de ações — ícones, à direita,
+presa ao invólucro que rola — e que a largura das colunas seja declarada por política, não sorteada
+pelo `table-layout: auto`.
+
+**Evidência medida (2026-08-24):** 15 sítios montam `AppDataTable`/`SearchableTableFrame`; **12 têm
+coluna de ação e só 2 a prendem** — `TurmasTable` (`8rem`) e `EnrollmentTable` (`6rem`). Nos outros
+10 a ação sai da vista com a rolagem lateral, que é o defeito que o UI-02 mediu na tabela de turmas:
+429px fora da vista em 1024x768 e 871px em 390x844, levando junto os botões da linha. Quem não
+descobre a rolagem não abre o registro pela linha.
+
+**Escopo:**
+- adotar `stickyActionsColumn(width)` nas 10 tabelas restantes, com a largura de cada uma medida
+  pelo número de ícones que ela tem (não copiar o `8rem` da turma);
+- **largura de coluna:** a regra que a `TurmasTable` passou a seguir — *toda coluna declara
+  largura, menos UMA, a que absorve a sobra* (o texto livre da tabela). Declarar só algumas é
+  entregar a sobra por sorteio: medido em 1447px, as três colunas sem declaração (tag, tag e
+  numeral) ficaram com ~230px cada, quase metade da tabela, enquanto a coluna de nome de curso
+  quebrava em duas linhas e os dois `IdentityCell` truncavam;
+- decidir se a política vira **mecanismo** (linha de rule + catraca de lint/teste) ou fica em molde
+  citado — hoje é comentário em dois arquivos e nada reprova a tabela nova que nascer sem;
+- **`archivedColumns`** (`shared/ui`, 8 tabelas) entra junto: as duas colunas do rastreio não
+  declaram largura e competem pela mesma sobra na visão de arquivados.
+
+**Fora:** redesenho de célula, ordenação e paginação — o que muda é largura e ancoragem. Colapsar
+coluna em tela estreita segue rejeitado (spec D20): escolher qual dado some é julgamento de domínio,
+e esconder coluna em tela com peso de auditoria é perda silenciosa.
+
+**DoD:** nas 12 tabelas com ação, a coluna de ação permanece alcançável em 1440x900, 1024x768 e
+390x844 sem rolar na horizontal — medido na tela, não no diff; e nenhuma tabela com coluna de
+largura não declarada além da que absorve.
+
+---
+
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |
@@ -358,6 +457,16 @@ está formalmente resolvida.
   contra `977586e`); §5.4/5.5/5.7/5.8 sem guarda e sem desenho medido — não entram como promessa.
   Fecho: CI regenera `typescript:transform` e reprova drift do commitado. **DoD-sonda:** editar
   `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
+
+- **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
+  `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
+  `TurmaComplianceData.missing_types` e `TurmaData.missing_document_types` são `string[]` no
+  `generated.ts`, embora o conjunto de valores seja exatamente `TurmaDocumentType`. O frontend já
+  fechou a metade dele em 2026-08-24 (Q-4): o mapa `TURMA_DOCUMENT_TYPE_KEY` é exaustivo por
+  compilador e a catraca exige a chave nas 3 locales — mas o helper precisa aceitar `string`, e o
+  `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
+  o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
+  `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
 
 - **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
   `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
@@ -427,6 +536,22 @@ está formalmente resolvida.
   spec, e marcar todo filho arquivado ressuscitaria arquivamento intencional. Sem produção, o
   alcance é só banco de dev. Gatilho: primeiro deploy — conferir agregados arquivados pré-data e
   decidir caso a caso.
+
+- **D-38 · A descrição da pendência do Dashboard imprime o código do enum** →
+  `frontend-revisao-ui-por-modulo`. A frase chega pronta do backend (D17) como
+  `Documentación obligatoria incompleta: MANUAL, PRUEBAS, EVALUACION_REDATOR.`, e o
+  `CompliancePanel` — que monta a própria coluna — já passou a traduzir pelos mesmos códigos
+  (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
+  cru na outra. Decisão pendente: o backend traduz a frase, ou manda as partes e o cliente compõe.
+
+- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
+  fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
+  troca de idioma e lê `i18n.language` (`ac4eef8a`); o mock parcial quebrava com
+  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizasse um
+  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. O remédio foi o
+  helper único: `frontend/src/shared/testing/i18n.ts` (`mockUseTranslation`), com catraca própria,
+  consumido pelos **17** testes que mockavam a biblioteca. Fica aqui como registro; sai da lista no
+  próximo saneamento dos débitos.
 
 ## Travados em decisão — não entram em bloco
 

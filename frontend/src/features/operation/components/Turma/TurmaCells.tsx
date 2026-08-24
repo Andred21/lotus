@@ -7,6 +7,10 @@ import { turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps } from
 // porque a tabela ganhou as duas colunas do rastreio e a coluna de ações
 // (arquivar/restaurar) e passou da régua de 150 linhas que o ESLint impõe a
 // `src/features` + `/components`. Molde: `Redator/SlotBody.tsx`.
+//
+// A política de LARGURA das mesmas colunas mora em `turmaColumns.ts`, e não
+// aqui: `react-refresh/only-export-components` reprova constante exportada de
+// arquivo que também exporta componente.
 
 export function TurmaCodeCell({ turma }: { turma: TurmaData }) {
   return (

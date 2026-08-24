@@ -21,11 +21,20 @@ export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
  *
  * `emptyFilterMessage` fica de fora de propósito — nenhum dos 14 sítios liga
  * `filter`, e piso para caminho que não existe é peso morto. Quem ligar o
- * filtro reabre o mesmo buraco e precisa passar a mensagem. */
+ * filtro reabre o mesmo buraco e precisa passar a mensagem.
+ *
+ * **`key` no idioma ativo.** O Dropdown mantém um `<input>` oculto para leitor
+ * de tela e escreve nele o rótulo da opção só quando o VALOR muda, não quando as
+ * opções mudam. Com a tela repintada em português, o controle continuava
+ * anunciando "Certificates" (UI-03 da revisão de 2026-08-22): o texto visível
+ * dizia uma coisa e o nome acessível, outra. Remontar é o remédio barato aqui —
+ * a troca de idioma é evento raro e o Dropdown não guarda estado que a tela
+ * precise preservar (ordenação e página vivem na tabela, que por isso RECUSOU o
+ * mesmo rekey no BD-17). */
 export function AppDropdown(props: DropdownProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const fieldProps = useFieldProps('inputId')
   return (
-    <Dropdown className="w-full" emptyMessage={t('common.noOptions')} {...fieldProps} {...props} />
+    <Dropdown key={i18n.language} className="w-full" emptyMessage={t('common.noOptions')} {...fieldProps} {...props} />
   )
 }

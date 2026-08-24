@@ -3,7 +3,7 @@ import type { TurmaData } from '@shared/types/generated'
 import { useMutationErrors, usePermissions } from '@shared/hooks'
 import { useToast } from '@shared/ui'
 import { useConcludeTurma } from '../api/useTurmas'
-import { turmaDisplayStatus } from '../lib/turmaStatus'
+import { registroAcademicoBloqueado, turmaDisplayStatus } from '../lib/turmaStatus'
 
 /** Orquestra a aba Conclusión. Nenhuma regra de habilitação é recalculada aqui:
  * `habilitada` e `missing_document_types` vêm derivados do backend. */
@@ -14,7 +14,7 @@ export function useConclusionSection(turma: TurmaData) {
   const mutation = useConcludeTurma()
   const { message: error } = useMutationErrors([mutation.error])
 
-  const concluida = turma.status === 'concluida'
+  const concluida = registroAcademicoBloqueado(turma)
   const habilitada = turma.habilitada === true
 
   return {

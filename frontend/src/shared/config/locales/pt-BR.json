@@ -65,6 +65,8 @@
     "clearFilters": "Limpar filtros",
     "noResultsHint": "Revise o termo ou limpe a busca.",
     "clearSearch": "Limpar busca",
+    "noResultsSearchAndFiltersHint": "Revise o termo ou limpe a busca e os filtros.",
+    "clearSearchAndFilters": "Limpar busca e filtros",
     "loadError": "Não foi possível carregar os dados",
     "loadErrorHint": "Verifique sua conexão e tente de novo.",
     "forbiddenHint": "Você não tem permissão para ver esta informação.",
@@ -76,7 +78,9 @@
     "unexpectedError": "Erro inesperado",
     "unexpectedErrorHint": "Não foi possível processar a resposta do servidor.",
     "maximizeDialog": "Maximizar diálogo",
-    "restoreDialog": "Restaurar diálogo"
+    "restoreDialog": "Restaurar diálogo",
+    "tabsScrollPrev": "Rolar abas para a esquerda",
+    "tabsScrollNext": "Rolar abas para a direita"
   },
   "module": {
     "comercial": {
@@ -255,8 +259,7 @@
         "empty": "Sem documentação pendente",
         "emptyHint": "Todas as suas turmas estão com a documentação em dia.",
         "missing": "Falta: {{types}}",
-        "until": "Até {{date}}",
-        "goToProfile": "Ir ao Meu Perfil"
+        "until": "Até {{date}}"
       },
       "alerts": {
         "emptyHint": "Nenhum documento seu vencido nem a vencer."
@@ -684,6 +687,9 @@
         "docs": "Documentação",
         "conclusion": "Conclusão"
       },
+      "lock": {
+        "concluida": "A turma está concluída: o registro acadêmico ficou bloqueado."
+      },
       "comingSoon": "Disponível na próxima entrega."
     },
     "config": {
@@ -708,7 +714,7 @@
       "designate": "Designar redator",
       "remove": "Remover",
       "none": "Nenhum redator designado.",
-      "helpNote": "Só aparecem redatores habilitados a este curso e com documentação vigente (RN-09).",
+      "helpNote": "Só aparecem redatores habilitados a este curso e com documentação vigente.",
       "pickerTitle": "Redatores idôneos",
       "pickerEmpty": "Nenhum redator idôneo para este curso.",
       "pick": "Designar"
@@ -790,7 +796,6 @@
       "removeTitle": "Remover documento",
       "removeBody": "Remover «{{name}}»? Se o tipo ficar sem arquivos, a turma volta para Em curso.",
       "lock": {
-        "concluida": "A turma está concluída: a documentação ficou imutável (RN-15).",
         "permission": "Você não tem permissão para subir ou remover documentação."
       },
       "uploaded": "Documento enviado."

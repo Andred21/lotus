@@ -17,7 +17,7 @@ paths:
   `uiStore` tema/idioma, `sessionStore` usuário), `types/` (GERADO), `ui/` (wrappers PrimeReact +
   moldes `ModulePage`/`CrudDialog` + barrel), `hooks/` (`useCrudPage`, `useEntityForm`,
   `usePermissions`, `useClock`), `lib/` (`CHILE_REGIONS`, datetime, roles, `DialogMode`), `config/`
-  (tema em runtime — ADR-16, i18n — ADR-15).
+  (tema em runtime — ADR-16, i18n — ADR-15), `testing/` (kit de teste — mocks de biblioteca externa).
 
 Aliases (`@`, `@app`, `@features`, `@shared`) em `vite.config.ts` **e** `tsconfig.app.json` —
 sincronizados. 
@@ -70,6 +70,12 @@ a Zustand o que não cruza fronteira — é over-engineering.
   (`AppButton`, `AppTag`, `AppDivider`). Hoje: 4 dos 34 wrappers — a minoria é o normal, não a
 exceção. Na dúvida, siga o vizinho da mesma
   categoria (`AppRadioButton` segue o `AppDropdown`, não o `AppInputText`).
+- **`shared/testing/` é o kit de teste, e só ele mocka biblioteca externa.** `mockUseTranslation`
+  (`shared/testing/i18n.ts`) é a forma real de `useTranslation` — `{ t, i18n, ready }`. Mock parcial
+  escrito à mão no arquivo de teste está proibido: foi assim que 17 arquivos ficaram com a forma
+  errada e o primeiro `AppDropdown` renderizado estourou com
+  `Cannot read properties of undefined (reading 'language')` (D-39). Campo novo que a API do hook
+  exigir entra na fábrica, não nos consumidores.
 - **Tailwind = layout** (grid/espaçamento); cor via variável CSS do tema (ADR-16). Utility não vence
   a especificidade do tema — ao depurar estilo, cheque o **seletor completo do markup**, não a classe
   isolada.

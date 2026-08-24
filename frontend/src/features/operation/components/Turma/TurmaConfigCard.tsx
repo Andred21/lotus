@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next'
 import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
+import { usePermissions } from '@shared/hooks'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
+import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
 
 type Props = {
@@ -19,6 +21,21 @@ const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
+  const { can } = usePermissions()
+  // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
+  // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a
+  // trancar, o registro nem existe.
+  const bloqueado = turma != null && registroAcademicoBloqueado(turma)
+  // Duas perguntas, uma resposta: o botão só existe quando a Action ACEITARIA a
+  // gravação. A RN-15 tranca o registro concluído (422 do
+  // `assertAcademicallyWritable`) e `operation.turma.update` é o que o
+  // `TurmaController` exige no `update` — sem qualquer uma delas o clique só
+  // renderia erro. Esconder as duas metades pelo mesmo predicado é o que
+  // impede a assimetria: a versão anterior escondia por RN-15 e ignorava a
+  // permissão, e o redator — que chega a esta página pela pendência do
+  // dashboard e tem só `turma.view` e `submit_docs` — via "Editar"
+  // (Q-2 do review de 2026-08-24).
+  const podeEditar = !bloqueado && can('operation.turma.update')
 
   const modalityOptions = [
     { label: t('operation.modality.presencial'), value: 'presencial' },
@@ -36,7 +53,10 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
     <div className="space-y-5 p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">{t('operation.config.title')}</h3>
-        {mode === 'view' && onEdit && (
+        {/* Escondido, não desabilitado: botão cinza ainda promete "isto seria
+            possível", e `UpdateTurmaAction` recusa a gravação com 422. Os campos
+            continuam à vista — o que sai é a escrita, não a leitura. */}
+        {mode === 'view' && onEdit && podeEditar && (
           <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={onEdit} />
         )}
       </div>

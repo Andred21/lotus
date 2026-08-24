@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { DataTablePassThroughOptions } from 'primereact/datatable'
 
 /** Passthrough do DataTable (ADR-16). Cores por CSS var do tema Lara.
@@ -78,4 +79,50 @@ export const appPaginatorPt: NonNullable<DataTablePassThroughOptions['paginator'
   /** Empurra os controles para a direita sem depender do `justify-content`:
    * com uma página só, a contagem fica sozinha e continua à esquerda. */
   left: { style: { marginRight: 'auto' } },
+}
+
+/** `style` da ÚLTIMA coluna (a das ações) para ela ficar presa à direita do
+ * invólucro que rola.
+ *
+ * UI-02 da revisão de 2026-08-22: a rolagem lateral da tabela existe, funciona e
+ * já se anuncia pela sombra do `wrapper` acima — mas o que sai da vista é a AÇÃO
+ * da linha. Medido na tabela de turmas: 429px fora em 1024x768 (1147px de tabela
+ * em 718px de contêiner, levando ALUNOS, ESTADO e os dois botões) e 871px fora em
+ * 390x844; na aba de matrículas, 492px fora em 390x844, levando RUT, estado e os
+ * dois botões. Quem não descobre a rolagem não abre o registro pela linha.
+ * Presa à direita, a coluna continua clicável em qualquer viewport E vira o
+ * sinal de que a tabela segue por baixo dela.
+ *
+ * Vai em `style` e NÃO em classe do Tailwind por causa do PrimeReact 10.9.8: o
+ * `className` genérico da coluna chega só ao `<td>`
+ * (`datatable.cjs.js:1742`), enquanto o `style` entra no `<td>` (`:1258`) E no
+ * `<th>` (`:5163`). Sem o cabeçalho preso junto, o `<th>` rolaria para fora
+ * enquanto as células ficam.
+ *
+ * O fundo é obrigatório: a linha do corpo é TRANSPARENTE de propósito — é a
+ * contraparte da sombra de rolagem, em `brand-theme.css` —, então sem ele o
+ * conteúdo rolaria visível por baixo da coluna. No `<th>` o fundo do `pt`
+ * (`--surface-section`, opaco) sobrescreve este, que é o que se quer: o
+ * cabeçalho mantém a cor de cabeçalho.
+ *
+ * `borderLeft` (e não sombra) porque a tabela do DataTable NÃO colapsa borda —
+ * nenhuma regra do tema põe `border-collapse` nela —, e em `separate` a célula
+ * presa pinta a própria borda normalmente.
+ *
+ * `zIndex: 1` é o bastante: cobre as células irmãs e fica muito abaixo dos
+ * overlays do Prime (diálogo e toast vivem em 1100+).
+ *
+ * Não está DENTRO do `AppDataTable`: nem toda tabela termina em coluna de ação,
+ * e prender a última coluna de todas seria decisão da moldura sobre dado que ela
+ * não conhece. A tabela opta, passando isto no `style` da coluna e mantendo a
+ * largura que já tinha. */
+export function stickyActionsColumn(width: string): CSSProperties {
+  return {
+    width,
+    position: 'sticky',
+    right: 0,
+    background: 'var(--surface-card)',
+    borderLeft: '1px solid var(--surface-border)',
+    zIndex: 1,
+  }
 }

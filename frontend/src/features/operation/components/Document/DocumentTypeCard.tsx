@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppFileUpload, AppTag, AppFileRow, AppFilePreviewDialog, AppFileActions } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import { useFilePreview } from '@shared/hooks'
+import { turmaDocumentTypeLabel } from '@shared/lib'
 import { dangerText } from '@shared/styles/tokens'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 
@@ -48,7 +49,7 @@ export function DocumentTypeCard({
   return (
     <section className="rounded border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
-        <h4 className="font-medium">{t(`operation.documents.type.${type}`)}</h4>
+        <h4 className="font-medium">{turmaDocumentTypeLabel(type, t)}</h4>
         <AppTag
           value={t(delivered ? 'operation.documents.delivered' : 'operation.documents.pending')}
           severity={delivered ? 'success' : 'warning'}

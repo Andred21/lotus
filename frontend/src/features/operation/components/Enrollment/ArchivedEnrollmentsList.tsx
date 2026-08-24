@@ -22,6 +22,7 @@ export type ArchivedEnrollmentRow = ArchivableRow<EnrollmentData>
  * serve só à paginação (a aba é sem busca, decisão do protótipo).
  */
 export function ArchivedEnrollmentsList({
+  registroBloqueado,
   enrollments,
   loading,
   error,
@@ -29,6 +30,10 @@ export function ArchivedEnrollmentsList({
   onRestore,
   restoring,
 }: {
+  /** RN-15: registro acadêmico fechado (turma concluída). Chega como booleano
+   * pelo mesmo motivo da `EnrollmentTable` — esta lista não recebe a turma, e o
+   * dono da regra é `lib/turmaStatus`. */
+  registroBloqueado: boolean
   enrollments: ArchivedEnrollmentRow[]
   loading: boolean
   error?: { detail?: string | null } | null
@@ -64,21 +69,27 @@ export function ArchivedEnrollmentsList({
       {/* Sem guarda de modo: esta lista SÓ existe no modo arquivado, então as duas
           colunas são fixas. */}
       {archivedColumns(t)}
-      <AppColumn
-        body={(e: ArchivedEnrollmentRow) =>
-          can('operation.enrollment.restore') ? (
-            <AppButton
-              label={t('archive.restoreAction')}
-              icon="pi pi-undo"
-              text
-              size="small"
-              disabled={restoring}
-              onClick={() => e.id != null && onRestore(e.id)}
-            />
-          ) : null
-        }
-        style={{ width: '8rem' }}
-      />
+      {/* A coluna inteira sai, não só o botão: `RestoreEnrollmentAction` chama o
+          mesmo `assertAcademicallyWritable()` das ações da linha ativa e recusa
+          com 422 no registro fechado. As colunas de rastreio ficam — ler o
+          histórico é justamente o que se faz depois de fechar o registro. */}
+      {!registroBloqueado && (
+        <AppColumn
+          body={(e: ArchivedEnrollmentRow) =>
+            can('operation.enrollment.restore') ? (
+              <AppButton
+                label={t('archive.restoreAction')}
+                icon="pi pi-undo"
+                text
+                size="small"
+                disabled={restoring}
+                onClick={() => e.id != null && onRestore(e.id)}
+              />
+            ) : null
+          }
+          style={{ width: '8rem' }}
+        />
+      )}
     </AppDataTable>
   )
 }

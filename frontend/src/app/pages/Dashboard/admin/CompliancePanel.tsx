@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
-import { formatIsoDate } from '@shared/lib'
+import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
 
 /**
@@ -67,7 +67,15 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         <AppColumn header={t('dashboard.compliance.present')} body={(r: TurmaComplianceData) => r.present_types.length} />
         <AppColumn
           header={t('dashboard.compliance.missing')}
-          body={(r: TurmaComplianceData) => (r.missing_types.length === 0 ? '—' : r.missing_types.join(', '))}
+          // O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
+          // de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
+          // pelas mesmas chaves (UI-07 da revisão de 2026-08-22). A frase da
+          // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
+          // coluna, que é montada aqui. O rótulo vem do mapa de `shared/lib`, que
+          // é o que reprova tipo novo sem tradução (Q-4 do review de 2026-08-24).
+          body={(r: TurmaComplianceData) =>
+            r.missing_types.length === 0 ? '—' : turmaDocumentTypeList(r.missing_types, t)
+          }
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}

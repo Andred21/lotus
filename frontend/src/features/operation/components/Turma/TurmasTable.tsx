@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppDropdown, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
+  AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -12,9 +12,9 @@ import { turmaDisplayStatus, type TurmaDisplayStatus } from '../../lib/turmaStat
 import {
   TurmaClientCell, TurmaCodeCell, TurmaModalidadeCell, TurmaRedatoresCell, TurmaStatusCell,
 } from './TurmaCells'
+import { TURMA_COLUMN } from './turmaColumns'
 import { TurmaRowActions } from './TurmaRowActions'
-
-const STATUSES: TurmaDisplayStatus[] = ['em_andamento', 'habilitada', 'concluida']
+import { TurmaStatusFilter } from './TurmaStatusFilter'
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -47,25 +47,16 @@ export function TurmasTable({
     status === null ? undefined : (turma) => turmaDisplayStatus(turma) === status,
   )
 
-  const statusOptions = [
-    { label: t('operation.table.filterAll'), value: null },
-    ...STATUSES.map((s) => ({ label: t(`operation.status.${s}`), value: s })),
-  ]
-
   return (
     <SearchableTableFrame
       table={table}
       searchPlaceholder={t('operation.table.search')}
       onClearFilter={() => setStatus(null)}
       filterSlot={
-        <div className="w-48">
-          <AppDropdown
-            value={status}
-            options={statusOptions}
-            optionValue="value"
-            onChange={(e) => { setStatus(e.value as TurmaDisplayStatus | null); table.resetPage() }}
-          />
-        </div>
+        <TurmaStatusFilter
+          value={status}
+          onChange={(novo) => { setStatus(novo); table.resetPage() }}
+        />
       }
       emptyState={
         // Sem ação em nenhuma das duas visões: turma não se cria por botão,
@@ -82,30 +73,42 @@ export function TurmasTable({
       error={error}
       onRetry={onRetry}
     >
+      {/* Largura das colunas: `TURMA_COLUMN` (o porquê e as três medições estão
+        * lá). Em PORCENTAGEM, somando 91% mais a coluna de ações — coluna nova
+        * aqui entra tirando pontos das irmãs, não somando por cima, senão a
+        * tabela passa a transbordar em toda tela. `whitespace-nowrap` é só do
+        * código — identificador atômico. */}
       <AppColumn
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
+        className="whitespace-nowrap"
+        style={TURMA_COLUMN.code}
       />
-      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} />
+      <AppColumn header={t('operation.table.course')} body={(turma: TurmaData) => turma.course_name ?? '—'} style={TURMA_COLUMN.course} />
       <AppColumn
         header={t('operation.table.client')}
         body={(turma: TurmaData) => <TurmaClientCell turma={turma} />}
+        style={TURMA_COLUMN.identity}
       />
       <AppColumn
         header={t('operation.table.modality')}
         body={(turma: TurmaData) => <TurmaModalidadeCell turma={turma} />}
+        style={TURMA_COLUMN.modality}
       />
       <AppColumn
         header={t('operation.table.redator')}
         body={(turma: TurmaData) => <TurmaRedatoresCell turma={turma} />}
+        style={TURMA_COLUMN.identity}
       />
       <AppColumn
         header={t('operation.table.students')}
         body={(turma: TurmaData) => <span className="font-semibold">{turma.enrolled_count ?? 0}</span>}
+        style={TURMA_COLUMN.students}
       />
       <AppColumn
         header={t('operation.table.status')}
         body={(turma: TurmaData) => <TurmaStatusCell turma={turma} />}
+        style={TURMA_COLUMN.status}
       />
       {archived && archivedColumns(t)}
       <AppColumn
@@ -119,7 +122,7 @@ export function TurmasTable({
             onRestore={onRestore}
           />
         )}
-        style={{ width: '8rem' }}
+        style={stickyActionsColumn('8rem')}
       />
     </SearchableTableFrame>
   )

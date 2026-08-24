@@ -1,5 +1,6 @@
 import { Calendar } from 'primereact/calendar'
 import type { CalendarProps } from 'primereact/calendar'
+import { useTranslation } from 'react-i18next'
 import { mergePt } from '../mergePt'
 import { useSplitFieldProps } from '../FormField/fieldContext'
 
@@ -27,10 +28,40 @@ function dateToIso(date: Date | null | undefined): string | null {
   return `${y}-${m}-${d}`
 }
 
+/**
+ * Gramática de data por idioma: a MESMA que o `Intl` já produz no resto da tela
+ * (`shared/lib/datetime.ts`), escrita no vocabulário do Prime — `yy` é ano de
+ * quatro dígitos e `m`/`d` são o número sem zero à esquerda.
+ *
+ * Fixar `dd/mm/yy` punha duas gramáticas de data na mesma tela: o filtro do
+ * Dashboard escrevia `22/08/2025` ao lado de pendências em `7/6/2026`, e
+ * `22/08` pode ser lido como 8 de fevereiro por quem acabou de ler a linha de
+ * cima. Em módulo com peso legal, data ambígua é o pior tipo de ambiguidade
+ * (UI-02 da revisão de 2026-08-22).
+ *
+ * `locale` é a chave registrada em `registerPrimeLocales` — `en` é o embutido do
+ * Prime. Idioma fora do mapa cai no default do produto, como o `fallbackLng` do
+ * i18n.
+ */
+const GRAMATICA: Record<string, { locale: string; dateFormat: string }> = {
+  'es-CL': { locale: 'es', dateFormat: 'dd-mm-yy' },
+  'pt-BR': { locale: 'pt', dateFormat: 'dd/mm/yy' },
+  en: { locale: 'en', dateFormat: 'm/d/yy' },
+}
+
+const PADRAO = GRAMATICA['es-CL']
+
 /** Wrapper do Calendar. String ISO in/out para não passar dinheiro-de-tempo por
  * conversão de fuso perigosa. Cores vêm do tema (ADR-16). Sem forwardRef: o
  * Calendar do Prime é class component (categoria AppDropdown). */
 export function AppDatePicker({ value, onChange, pt, ...rest }: AppDatePickerProps) {
+  // `useTranslation` só pelo `i18n`: o wrapper não tem texto próprio, mas
+  // precisa RE-RENDERIZAR na troca de idioma — ler `i18n.language` de um import
+  // solto deixaria o calendário no idioma anterior até a próxima mudança de
+  // estado do dono da tela.
+  const { i18n } = useTranslation()
+  const gramatica = GRAMATICA[i18n.language] ?? PADRAO
+
   // `inputId`: no Calendar o `id` cai no nó raiz e só `inputId` alcança o input
   // focável (`calendar.cjs.js:3900`).
   //
@@ -52,8 +83,8 @@ export function AppDatePicker({ value, onChange, pt, ...rest }: AppDatePickerPro
     <Calendar
       value={isoToDate(value)}
       onChange={(e) => onChange(dateToIso(e.value as Date | null))}
-      dateFormat="dd/mm/yy"
-      locale="es"
+      dateFormat={gramatica.dateFormat}
+      locale={gramatica.locale}
       showIcon
       className="w-full"
       {...field.control}

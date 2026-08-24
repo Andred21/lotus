@@ -7,21 +7,21 @@ import { ProfileDocumentSlot } from './ProfileDocumentSlot'
 
 // O `t` devolve a chave, mas ECOA a interpolação: sem isso a data formatada —
 // que é o que o UI-01 mede — não chegaria ao DOM em teste nenhum.
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({
-    t: (key: string, opts?: Record<string, unknown>) =>
-      opts?.date === undefined ? key : `${key}:${String(opts.date)}`,
-  }),
-}))
-
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation({
+      t: (key, opts) => (opts?.date === undefined ? key : `${key}:${String(opts.date)}`),
+    }),
+  }
+})
 // O idioma da INTERFACE, não o do runtime: em jsdom o detector resolve pelo
 // `navigator.language` (en-US), e é justamente a divergência entre os dois que
 // o UI-01 relatou. Pinado aqui, a guarda vale com qualquer TZ da máquina.
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-
 afterEach(cleanup)
 
 function doc(over: Partial<RedatorProfileDocumentData> = {}): RedatorProfileDocumentData {

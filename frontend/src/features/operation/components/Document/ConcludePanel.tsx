@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppCard, AppTag, ConfirmDialog } from '@shared/ui'
-import { formatDate } from '@shared/lib'
+import { formatDate, turmaDocumentTypeLabel } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
 import { turmaStatusSeverity } from '../../lib/turmaStatus'
@@ -36,7 +36,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
               <p>{t('operation.conclusion.missingTitle')}</p>
               <ul className="mt-1 list-inside list-disc">
                 {s.missingTypes.map((type) => (
-                  <li key={type}>{t(`operation.documents.type.${type}`)}</li>
+                  <li key={type}>{turmaDocumentTypeLabel(type, t)}</li>
                 ))}
               </ul>
             </AppCard>

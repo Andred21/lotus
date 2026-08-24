@@ -3,10 +3,13 @@ import { cleanup, render, screen } from '@testing-library/react'
 import type { QuoteData } from '@shared/types/generated'
 import { QuotesList } from './QuotesList'
 
-vi.mock('react-i18next', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-i18next')>()),
-  useTranslation: () => ({ t: (key: string) => key }),
-}))
+vi.mock('react-i18next', async (importOriginal) => {
+  const { mockUseTranslation } = await import('@shared/testing/i18n')
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation(),
+  }
+})
 
 const cursos = vi.hoisted(() => ({
   current: { isError: false, errorDetail: undefined as string | undefined, resolved: true },
