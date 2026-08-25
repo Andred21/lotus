@@ -53,6 +53,19 @@ por release**, com o trailer `Source-Commit: <sha>` apontando de volta. O
 corporativo recebe o que constrói, testa e roda o app — não o andaime de
 desenvolvimento.
 
+O `procedencia` do lado corporativo **confere esse trailer** contra a origem: o
+SHA precisa estar no histórico de `main` em `Andred21/lotus`, senão o commit
+não passa por espelho. Quem responde qual é a origem é a variável de
+repositório `ESPELHO_FONTE`, configurada só em `Gatika-CL/lotus`:
+
+```bash
+gh variable set ESPELHO_FONTE -R Gatika-CL/lotus -b Andred21/lotus
+```
+
+Sem ela o caminho de espelho não abre e nenhuma imagem é publicada — é por isso
+que ela não existe em `Andred21/lotus`: lá o único caminho continua sendo PR
+mesclado.
+
 ## A saída de emergência
 
 ```bash
