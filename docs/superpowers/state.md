@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-revisao-ui-por-modulo-f2
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -45,12 +45,12 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-revisao-ui-por-modulo-f2
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f2
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-25T00:40:00-03:00
+updated_at: 2026-08-25T01:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_planning` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `planning` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
