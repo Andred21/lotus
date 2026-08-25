@@ -155,6 +155,19 @@ export const appPaginatorPt: NonNullable<DataTablePassThroughOptions['paginator'
  * nenhuma regra do tema põe `border-collapse` nela —, e em `separate` a célula
  * presa pinta a própria borda normalmente.
  *
+ * A sombra é PRÓPRIA, e não a do invólucro: aquela é pintada pelo fundo do
+ * `wrapper` com `background-attachment: scroll`, e esta célula flutua por cima
+ * dela em `zIndex: 1` — do lado direito o anúncio de rolagem simplesmente
+ * sumia (Minor 3 do review da fatia 1). Mesma tinta e mesma medida das duas
+ * camadas de sombra do wrapper, para os dois lados continuarem lendo iguais.
+ *
+ * Permanente, e não só durante a rolagem: a coluna presa é permanentemente
+ * flutuante — ela cobre conteúdo sempre que a tabela rola, e a única
+ * alternativa seria um listener de rolagem que o `pt` do wrapper hoje não tem
+ * e que a decisão do UI-10 evitou de propósito. O `-1rem` de spread mantém a
+ * sombra ancorada na borda: sem rolagem ela lê como continuação da
+ * `borderLeft`, não como sujeira.
+ *
  * `zIndex: 1` é o bastante: cobre as células irmãs e fica muito abaixo dos
  * overlays do Prime (diálogo e toast vivem em 1100+).
  *
@@ -171,6 +184,7 @@ export function stickyActionsColumn(width: string): CSSProperties {
     backgroundImage:
       'linear-gradient(var(--sticky-cell-tint, transparent), var(--sticky-cell-tint, transparent))',
     borderLeft: '1px solid var(--surface-border)',
+    boxShadow: '-1rem 0 1rem -1rem color-mix(in srgb, var(--text-color) 22%, transparent)',
     zIndex: 1,
   }
 }

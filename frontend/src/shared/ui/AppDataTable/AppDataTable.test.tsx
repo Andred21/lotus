@@ -87,4 +87,12 @@ describe('stickyActionsColumn', () => {
       'linear-gradient(var(--sticky-cell-tint, transparent), var(--sticky-cell-tint, transparent))',
     )
   })
+
+  it('a coluna presa desenha a propria sombra, porque cobre a do involucro', () => {
+    const style = stickyActionsColumn('8rem')
+
+    expect(style.boxShadow).toBe(
+      '-1rem 0 1rem -1rem color-mix(in srgb, var(--text-color) 22%, transparent)',
+    )
+  })
 })
