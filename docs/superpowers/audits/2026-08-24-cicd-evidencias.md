@@ -52,3 +52,49 @@ silencioso.
 |---|---|
 | `backend` | 1m14s |
 | `frontend` | 1m45s |
+
+## DoD 2 — commit reprovado não publica
+
+Provado no gatilho real, em `main`, com a CI já mesclada (PR #71, merge `7fa1cb0a`).
+
+| SHA em `main` | `types-drift` | `image` | Imagem no GHCR |
+|---|---|---|---|
+| [`7fa1cb0a`](https://github.com/Andred21/lotus/actions/runs/32801617073) (merge do PR #71) | pass | success | par publicado |
+| [`1d97f59f`](https://github.com/Andred21/lotus/actions/runs/32802067520) (sonda vermelha) | **failure** | **skipped** | `manifest unknown` |
+| [`11c8914f`](https://github.com/Andred21/lotus/actions/runs/32802264365) (revert da sonda) | pass | success | par novo publicado |
+
+A sonda foi uma linha acrescentada à mão em `generated.ts` — a mesma violação da lei §5.3 — e o
+`image` declara `needs: [backend, frontend, types-drift, audit-prod]`. O gate é mecânico: nenhuma
+decisão humana separa o commit reprovado do registry. Saída literal do registry para o SHA vermelho:
+
+```
+$ docker manifest inspect ghcr.io/andred21/lotus-app:1d97f59f28152e93796c0883837b735d5d043b4b
+manifest unknown
+$ docker manifest inspect ghcr.io/andred21/lotus-web:1d97f59f28152e93796c0883837b735d5d043b4b
+manifest unknown
+```
+
+Nota: `audit-dev` reprovou nos três runs e nenhum deles mudou de conclusão por causa disso — é o
+`continue-on-error` no nível do job funcionando como a spec §6 desenhou. Ele reporta, nunca decide.
+
+## DoD 3 — o par, no mesmo SHA
+
+```
+ghcr.io/andred21/lotus-app:7fa1cb0a24beb17b993aa5c7c046cc7eb6acab82
+  sha256:b55c1b32b2dfc2d4c26f22de0128c273faad59ebc0d95528f1162c362028f051
+ghcr.io/andred21/lotus-web:7fa1cb0a24beb17b993aa5c7c046cc7eb6acab82
+  sha256:bd652d55158a3d24e2af2d05630f29d8377d4459fc0eff02be822272801e7a74
+```
+
+`latest` não existe em nenhuma das duas imagens — `docker manifest inspect ...:latest` responde
+`manifest unknown`. A tag é sempre o `github.sha` completo, então o artefato é imutável e a
+promoção por SHA do item 12 não fica ambígua.
+
+Release é o **par**, não uma imagem: `docker-compose.prod.yml:23,36` consome `LOTUS_IMAGE` e
+`LOTUS_WEB_IMAGE` como variáveis independentes, e as duas precisam apontar para o mesmo SHA.
+
+## DoD 4 — `--frozen-lockfile` sobrevive
+
+O job `frontend` instala com `pnpm install --frozen-lockfile` e passa em todos os runs acima: o
+`pnpm-lock.yaml` commitado é resolvível pela versão declarada em `packageManager`
+(`pnpm@11.23.0`), sem reescrita do lock durante a instalação.
