@@ -8,8 +8,8 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3, spatie/laravel-data + typescript-transformer, PHPUnit; React 19 + TS, TanStack Query, PrimeReact via `shared/ui`, Tailwind v4, i18next, Vitest + Testing Library.
 
-**Spec:** [`docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md`](../specs/2026-08-24-certificacao-historico-do-aluno-design.md)
-**Context Packet:** [`docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md`](../context-packets/2026-08-24-certificacao-historico-do-aluno.md)
+**Spec:** [`docs/superpowers/specs/archive/2026-08-24-certificacao-historico-do-aluno-design.md`](../../specs/archive/2026-08-24-certificacao-historico-do-aluno-design.md)
+**Context Packet:** [`docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md`](../../context-packets/2026-08-24-certificacao-historico-do-aluno.md)
 **Branch:** `feat/certificacao-historico-do-aluno` (lane-a, main tree — P-03).
 
 ---

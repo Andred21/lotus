@@ -3,31 +3,31 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: certificacao-historico-do-aluno
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
-active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
-context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: certificacao-historico-do-aluno
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
-    branch: feat/certificacao-historico-do-aluno
-    active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
-    active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
-    context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
+    branch: null   # feat/certificacao-historico-do-aluno fechada em 2026-08-24, ainda NÃO mesclada
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-acesso-ownership-e-integridade
+    last_completed_work_item: certificacao-historico-do-aluno
   lane-b:
     active_work_item: null
     workflow_state: idle
@@ -55,9 +55,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
-last_completed_work_item: frontend-revisao-ui-por-modulo
+last_completed_work_item: certificacao-historico-do-aluno
 state_basis_commit: 7b64cfd8
-updated_at: 2026-08-24T22:20:00-03:00
+updated_at: 2026-08-24T22:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -157,81 +157,22 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-24
+## Ocupação corrente — 2026-08-24 (pós-fechamento)
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_closure` |
+| `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (fechada, não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
-**Promoção de 2026-08-24, explícita do João.** O item 2 da fila entra na `lane-a`, no main tree por
-causa do gate P-03 (o bloco toca backend), em branch nova nascida de `main@cad0d1fb`. O backlog
-marca `Contexto: sim`, então a lane nasceu em `context_required` e o Context Packet veio do Codex,
-pela skill `lotus-context-packet` de `.agents/skills/`, em sandbox read-only — validado contra o
-contrato (marcadores exatos, frontmatter completo com `plan_path`/`spec_path` em `null`, 7 key facts,
-Figma registrado `unavailable` com a linha de erro decisiva) e salvo em
-`context-packets/2026-08-24-certificacao-historico-do-aluno.md` com `status: partial`, que prossegue.
-A única fonte indisponível é o Figma, e a limitação é declarada: **nenhuma afirmação de fidelidade ao
-protótipo** entra no planejamento. O bloco **absorve a P-15** — a ficha segue aberta em
-`pendencias/abertas.md` e só sai no fechamento. `focused_lane` passa de `lane-c` para `lane-a` neste
-mesmo commit, que é a fronteira durável exigida pelas invariantes.
+**As três lanes estão ociosas.** O `certificacao-historico-do-aluno` fechou em 2026-08-24 — a
+narrativa integral está em `historico/state-archive.md` e a entrega em `historico/progress.md`. A
+branch `feat/certificacao-historico-do-aluno` **ainda não foi mesclada**: a integração é serial e a
+decisão de merge/PR é do João (`finishing-a-development-branch`). `focused_lane` continua em
+`lane-a` porque trocar foco é fronteira durável e não há trabalho novo promovido.
 
-**Rastro de merge corrigido neste commit.** O `state.md` anterior (`8a4df32a`) descrevia as branches
-da `lane-a` e da `lane-c` como não mescladas. Em `cad0d1fb` as duas já entraram:
-`refactor/frontend-revisao-ui` pelo **PR #69**, e `feat/hardening-acesso-ownership-e-integridade` não
-consta mais em `git branch -a --no-merged main`. A worktree `../fix-frontend` continua existindo, em
-detached HEAD no mesmo `cad0d1fb`; por isso o `branch` da `lane-c` é `null` e o `tree` não é.
+Nenhum item foi promovido neste fechamento — o backlog não promove sozinho.
 
-**A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
-**PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
-`../lotus-infra` e a branch `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por
-decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
-são `null`.
-
-**A `lane-c` fechou o item 16 (fatia 1 de 2) em 2026-08-24** e voltou a `idle`; a narrativa está em
-`historico/state-archive.md` e o item 16 segue na fila com a fatia 2. Interseção a vigiar entre as
-lanes: nenhuma — só a `lane-a` está ocupada.
-
-**Execução concluída em 2026-08-24; a lane-a passa a `ready_for_review`.** As oito tasks do
-`active_plan` foram executadas por `subagent-driven-development` no main tree, cada uma com review de
-task própria (o ledger fino está em `.superpowers/sdd/progress.md`). A Task 8 é o gate de navegador
-do DoD e **pagou o próprio custo**: achou um defeito que a suíte, o build e o lint não viam — sob
-`React.StrictMode` o `useBlobTabOpener` deixava a trava de unmount armada depois da remontagem, e o
-PDF abria em `about:blank` tanto na coluna nova quanto no `/certificados` que já estava pronto.
-Consertado com teste provado vermelho em `bec9c2e8`.
-
-Os oito itens do DoD passaram contra a API real, incluindo revogação e reemissão de verdade, o PDF
-conferido com `pdfinfo` e a coluna percorrida nos três idiomas pelo seletor, sem F5. Suítes finais:
-backend **937 passed / 5 skipped**, frontend **102 arquivos / 572 testes**, lint limpo, build verde.
-A **P-15 foi encerrada** (a decisão que ela esperava saiu: certificados no detalhe do aluno; a coluna
-da listagem fica fora por escrito, spec §9) e a **P-55 foi aberta** (`config/app.php:75` fixa
-`'timezone' => 'UTC'` como literal e ignora o `APP_TIMEZONE` do `.env`).
-
-**Review feita em 2026-08-24, e as três correções aprovadas entraram.** Classificação de risco:
-ALTO (toca `generated.ts`, DTO de documento legal, fronteira de domínio e RBAC), então além do
-gabarito do projeto rodou a revisão independente do Codex, em sandbox read-only. Sem órfãos e sem
-violação das leis §5. Os três achados 🟢 foram aprovados pelo João e corrigidos:
-
-- **Q-1** (`5b91bc48`) — o `display_status` congelava no fetch e o `AppProviders` desliga
-  `refetchOnWindowFocus`: aba aberta na virada da meia-noite afirmava `vigente` sobre certificado
-  vencido. As quatro queries que carregam o campo passam a revalidar no foco, com catraca que monta
-  o QueryClient com o MESMO default do app. Limite declarado: aba que nunca perde o foco só corrige
-  no remonte.
-- **Q-2** (`80506ed9`) — `StudentTurmaData::fromModel` perdeu o `= null` do summary: ausência de
-  certificado é significado na coluna, e default silencioso deixava projetá-la sem querer.
-- **Q-3** (`7b64cfd8`) — o ramo do aviso do PDF (popup bloqueado e mensagem de erro) ganhou catraca,
-  em arquivo irmão porque a régua de 150 linhas de `components/**` vale para o teste.
-
-**Divergência de revisores, registrada e NÃO alterada:** o Codex reportou que a coluna expõe id,
-código e estado do certificado sob `identity.user.view`, enquanto o PDF exige
-`certification.certificate.view` — role com um e sem o outro lista e dá 403 no clique. É decisão
-registrada (spec D11 e §7, "consequência aceita"), então não é achado. Fica a correção factual: a
-spec diz "role **futura**", e o `PermissionCatalog` compõe role customizada hoje — a combinação já é
-alcançável. Não virou pendência nem item de backlog; o João decidiu aplicar só Q-1 a Q-3.
-
-Gate depois das correções: backend **937 passed / 5 skipped**, frontend **105 arquivos / 577
-testes**, lint limpo, build verde.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -241,11 +182,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
-| 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

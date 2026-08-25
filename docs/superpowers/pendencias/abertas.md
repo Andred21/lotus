@@ -361,6 +361,35 @@ coluna de certificado.
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
 
+## P-56 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
+
+**Bloco:** — · **Gatilho:** fecha quando um bloco puder reseedar ou corrigir o banco de dev (o mesmo
+candidato da [P-44](#p-44)), ou quando alguém decidir se o gate de snapshot apresentável deve
+degradar em vez de estourar. Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-24, contra a API real:
+`GET /api/publico/certificados/b47938cf-80fd-46de-8a76-f9cf611fec20` (`LOT-2026-1001`) devolve **500**
+em Problem Details, com `detail` = *"El certificado LOT-2026-1001 no puede presentarse: su documento
+congelado no tiene los campos aluno.name."*. O outro revogado do banco (`LOT-2026-1002`, mesmo
+fluxo) devolve **200** com `status: revocado` e `display_status: revocado`.
+
+**Não é regressão deste bloco.** O `LOT-2026-1001` foi criado em **2026-08-10 17:31**, antes do gate
+de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num gate unico"), e é o
+único dos oito certificados do dev cujo snapshot cru não tem `aluno.name` — os outros sete têm. O
+`certificacao-historico-do-aluno` não escreve snapshot: ele lê `snapshot_ok` e o projeta na coluna.
+
+**As duas metades que o gatilho separa:**
+
+- **Dado de dev**: uma linha de snapshot velho sobreviveu à mudança de forma. Linha alheia de bloco
+  fechado se menciona, não se apaga — a decisão de reseedar o dev é do João, exatamente como na
+  P-44.
+- **Comportamento**: o gate hoje converte snapshot incompleto em **500** numa rota **pública**, a que
+  o QR do certificado impresso aponta. Se um documento antigo com a forma antiga existir em
+  produção, quem escaneia vê erro de servidor em vez de uma página que diz o que dá para dizer.
+  Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
+  cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
+  `PublicCertificateData`.
+
 ## P-02 — retenção da auditoria nunca decidida
 
 **Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** antes de subir para produção.

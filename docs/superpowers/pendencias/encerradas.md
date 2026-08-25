@@ -38,50 +38,6 @@ com registro.
 
 ---
 
-## P-41 — o `IdentityCell` empilhado promete truncar e não trunca
-
-**Bloco:** frontend-hardening-final · **Gatilho:** fecha quando o João decidir que a coluna deve cortar — aí volta o `min-w-0` **e** o
-teste vira medição de comportamento (largura fixa no pai, `scrollWidth > clientWidth`) —, ou quando
-uma tabela real mostrar a coluna alargada em uso. Revisar em **2026-10-31**.
-
-O bloco de texto de `frontend/src/shared/ui/IdentityCell/IdentityCell.tsx` é
-`<div className="flex flex-col gap-2">`, sem o `min-w-0` que o plano do bloco escrevia. Item de flex
-tem `min-width: auto`, então o `overflow-hidden`/ellipsis do `truncate` nunca dispara — nos 13 sítios
-da célula.
-
-Achado **Q-2** do `/revisar-sprint` de 2026-08-14 (`celula-de-identidade`), **rejeitado pelo João no
-mesmo dia**: a edição é dele, à mão, depois do plano ("deixe como está, eu que fiz as alterações").
-Consequência medida e aceita: nome ou e-mail longo alarga a coluna em vez de cortar.
-
-O docblock do componente ainda diz "a forma empilhada trunca" e o `IdentityCell.test.tsx` conta
-`span.truncate` — prova a **classe**, não o comportamento (lição 10, cobertura fantasma), então a
-regressão inversa também passaria verde.
-
-**Nasceu como `P-38` em `docs/pendencias.md` na branch `feat/celula-de-identidade` e foi renumerada
-no `/fechar-sprint` de 2026-08-14**, no precedente exato que renumerou a segunda `P-30` para `P-33` e
-a segunda `P-28` para `P-32`: a reorganização da pasta (PR #51) chegou à `main` primeiro e já usava
-`P-38` para outra pendência, então quem renumera é a recém-chegada. As menções a "P-38" na narrativa
-do `celula-de-identidade` em `docs/superpowers/state.md` são desta ficha e ficam como estão —
-história não se reescreve.
-
-**Encerrada em 2026-08-24, no `frontend-revisao-ui-por-modulo` (item 16, fatia 1), por decisão do
-João.** O gatilho tinha dois ramos e **o segundo venceu**: "uma tabela real mostrar a coluna
-alargada em uso". Foi a UI-02 da run de Operação (2026-08-23), que mediu na `TurmasTable` as duas
-colunas de identidade ocupando 45% da tabela — CLIENT 249px + REDATOR 263px — enquanto o código da
-cotação quebrava em quatro linhas. O `min-w-0` voltou ao bloco de texto empilhado em `1b9f82ad`, e
-sem ele a política de largura `TURMA_COLUMN` seria inerte: item de flex tem `min-width: auto`, então
-o `truncate` nunca dispararia. O texto cortado ficou recuperável por `title`. O `d3779709` completou
-o mesmo eixo pelo outro lado, com `shrink-0` no avatar dos 14 sítios.
-
-**Metade do gatilho não foi paga, e sai declarada:** `IdentityCell.test.tsx` continua contando
-`span.truncate` — prova a **classe**, não o comportamento, então a regressão inversa passaria verde
-(lição 10). Medir `scrollWidth > clientWidth` com largura fixa no pai é trabalho do
-`frontend-hardening-final`, onde a ficha já estava agrupada.
-
-**Sai quando:** primeiro fechamento **posterior** a este.
-
----
-
 **Saíram neste fechamento (`frontend-revisao-ui-por-modulo`, 2026-08-24), o primeiro posterior aos
 dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em
 2026-08-23 pela migration de backfill `2026_08_22_000003_backfill_redator_role` e **remedida aqui**
@@ -90,6 +46,14 @@ suíte unida acima do `memory_limit` de 128M, fechada em 2026-08-22 e também re
 `docker compose exec -T app php artisan test` do `CLAUDE.md` §6 terminou, 906 passed / 5 skipped).
 
 ## Rastro anterior, já removido
+
+**A P-41 saiu neste fechamento (`certificacao-historico-do-aluno`, 2026-08-24), o primeiro
+posterior ao do bloco que a encerrou** — e foi **remedida antes de sair**, não removida na fé: o
+`min-w-0` está de pé no bloco de texto empilhado de
+`frontend/src/shared/ui/IdentityCell/IdentityCell.tsx:74` e o `shrink-0` no avatar (`:46`). A metade
+não paga do gatilho continua declarada e agrupada no `frontend-hardening-final`: o
+`IdentityCell.test.tsx` ainda conta `span.truncate` em vez de medir
+`scrollWidth > clientWidth` (lição 10).
 
 **Saíram no fechamento do `hardening-acesso-ownership-e-integridade` (2026-08-23), o primeiro
 posterior ao do BD-15, que é a condição que as seis linhas pediam:** a **P-18** (página de

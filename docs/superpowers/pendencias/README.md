@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (23)
+## Abertas (24)
 
 ### Agrupadas em bloco de execução
 
@@ -57,17 +57,19 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-55 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
+| P-56 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (1)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
-| P-41 | `IdentityCell` empilhado prometia truncar e não truncava — faltava `min-w-0`; voltou em `1b9f82ad` | 2026-08-24, no `frontend-revisao-ui-por-modulo` | primeiro fechamento **posterior** a este |
 | P-15 | Certificados não apareciam no módulo de alunos; a decisão saiu — expostos no **detalhe**, e a coluna da **listagem** fica fora por escrito (spec §9) | 2026-08-24, no `certificacao-historico-do-aluno` | primeiro fechamento **posterior** a este |
 
-**A P-47 e a P-50 saíram neste fechamento**, o primeiro posterior aos dos blocos que as encerraram
-— e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a
-role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
+**A P-41 saiu neste fechamento** (`certificacao-historico-do-aluno`, 2026-08-24), o primeiro
+posterior ao do bloco que a encerrou, e **remedida antes de sair**: o `min-w-0` está de pé em
+`IdentityCell.tsx:74` e o `shrink-0` no avatar. **A P-47 e a P-50 saíram no fechamento anterior**, o
+primeiro posterior aos dos blocos que as encerraram — e as duas foram **remedidas antes de sair**,
+não removidas na fé: os 9 redatores do dev carregam a role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
 posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo
 critério contra o BD-14. O rastro de todas fica nos commits e nas
 linhas de entrega em
