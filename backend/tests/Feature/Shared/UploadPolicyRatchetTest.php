@@ -59,6 +59,7 @@ class UploadPolicyRatchetTest extends TestCase
         'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelos controllers de documento de redator e de perfil.',
         'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado no controller, não aqui.',
         'app/Providers/AppServiceProvider.php' => 'A chave `file` que casa aqui é a entrada do morph map do ADR-10, e não tem nada com upload.',
+        'app/Shared/Files/Rules/ScannedForMalware.php' => 'É a regra de antivírus que a própria peça de política publica: roda dentro dela, nunca antes dela.',
     ];
 
     /** @return list<string> paths relativos que mexem com upload, ignorando comentários */

@@ -16,6 +16,8 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Files\ClamAvScanner;
+use App\Shared\Files\MalwareScanner;
 use App\Shared\Files\Models\File;
 use App\Shared\Office\DocxToPdf;
 use App\Shared\Office\GotenbergDocxToPdf;
@@ -40,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
         // Conversor DOCX→PDF (rota LibreOffice do mesmo Gotenberg). Nos testes
         // o binding troca pelo `FakeDocxToPdf`, que guarda o pacote.
         $this->app->bind(DocxToPdf::class, GotenbergDocxToPdf::class);
+
+        // Antivírus (RNF-SEC-08): serviço `clamav` do compose, INSTREAM na
+        // 3310. Nos testes o binding troca pelo `FakeMalwareScanner`.
+        $this->app->bind(MalwareScanner::class, ClamAvScanner::class);
     }
 
     /**

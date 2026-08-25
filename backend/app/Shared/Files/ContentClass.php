@@ -2,6 +2,8 @@
 
 namespace App\Shared\Files;
 
+use App\Shared\Files\Rules\ScannedForMalware;
+
 /**
  * Política de tipo e tamanho de upload — fonte única (spec D4). Os treze sítios
  * que recebem `UploadedFile` pedem a CLASSE de conteúdo; nenhum reescreve a
@@ -78,7 +80,7 @@ enum ContentClass: string
         };
     }
 
-    /** @return list<string> */
+    /** @return list<string|object> */
     public function regras(bool $obrigatorio = true): array
     {
         return [
@@ -88,6 +90,9 @@ enum ContentClass: string
             'mimes:'.implode(',', $this->extensoes()),
             'mimetypes:'.implode(',', $this->mimes()),
             'max:'.$this->tetoEmKb(),
+            // Por último de propósito: só vale mandar bytes ao daemon depois de
+            // o tipo e o tamanho já terem passado.
+            new ScannedForMalware,
         ];
     }
 }
