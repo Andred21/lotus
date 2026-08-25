@@ -21,6 +21,7 @@ use App\Shared\Office\DocxToPdf;
 use App\Shared\Office\GotenbergDocxToPdf;
 use App\Shared\Pdf\GotenbergHtmlToPdf;
 use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\RateLimiting\RateLimits;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -46,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Política de taxa da API (RNF-SEC-06). Não existe RouteServiceProvider
+        // neste repositório — o `routes/api.php` agrega por glob() —, então o
+        // registro dos limitadores nomeados mora aqui.
+        RateLimits::register();
+
         Relation::enforceMorphMap([
             'user' => User::class,
             'client' => Client::class,
