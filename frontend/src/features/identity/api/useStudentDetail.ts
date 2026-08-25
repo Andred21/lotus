@@ -15,5 +15,10 @@ export function useStudentDetail(id: number | null | undefined) {
     queryKey: studentsApi.keys.detail(id ?? 'none'),
     queryFn: async () => (await api.get<StudentDetailData>(`/api/students/${id}`)).data,
     enabled: id != null,
+    /** Vence o default `false` do `AppProviders`: a coluna Certificado mostra
+     * o `display_status` derivado no servidor, que congela no fetch — a tela
+     * do aluno fica aberta durante o atendimento inteiro (Q-1 do review de
+     * 2026-08-24). Catraca em `useStudentDetail.test.tsx`. */
+    refetchOnWindowFocus: true,
   })
 }
