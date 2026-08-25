@@ -244,3 +244,27 @@ escopo medido**, não por suposição.
 - **ClamAV pressionando a EC2.** Declarado como insumo do item 10 (§4.4), não resolvido aqui.
 - **Backfill sobre dado de peso legal.** A migration lê e corrige metadado, nunca o binário; a
   contagem antes/depois é evidência do DoD.
+
+## 9. Emenda de 2026-08-25 — medição do plano
+
+Três afirmações desta spec não sobreviveram à medição feita ao escrever o plano
+(`plans/2026-08-25-hardening-api-arquivos-e-abuso.md`, seção "Correções de medição sobre a spec",
+onde as tabelas estão). D1–D8 seguem valendo; o que muda é mecanismo.
+
+- **§1 e §4.1, `trustProxies`: REVERTIDO.** O PHP recebe `REMOTE_ADDR` como o nginx viu o peer, e
+  em produção o nginx é a borda — `$request->ip()` já é o cliente. Medido: com `trustProxies`
+  ligado, um `X-Forwarded-For` forjado pelo cliente VIRA o `ip()`, e todo limitador por IP passa a
+  ser contornável com um header. O bloco faz o oposto: o nginx apaga o `X-Forwarded-*` de entrada e
+  a aplicação segue sem proxy confiável. Se um balanceador L7 entrar na frente (item 10), a decisão
+  reabre — com o `real_ip_module` do nginx, não com `trustProxies` cru.
+- **§4.3, "validação de duas camadas": IMPRECISO.** `mimes:` no Laravel compara
+  `guessExtension()`, que deriva do conteúdo. As duas regras deram veredicto idêntico em todos os
+  casos medidos. `mimetypes:` fica por prender a string exata do MIME contra alargamento futuro do
+  mapa do Symfony, não por ser uma segunda camada.
+- **§1 e §7.6, "cada id vira um PDF pelo Gotenberg": FALSO.** `IssueCertificateAction` não toca o
+  conversor; `CertificatePdfService` tem um único consumidor, a rota
+  `GET certificates/{certificate}/pdf`. O custo do lote é `N` transações de emissão. O teto
+  permanece; o DoD 6 passa a medir o que existe.
+
+Achado que a spec não tinha: `POST /api/redatores` e `PUT /api/redatores/{redator}` aceitam
+`documents[<TIPO>]` **sem regra `file` nenhuma**. A superfície de upload são 13 rotas, não 10.

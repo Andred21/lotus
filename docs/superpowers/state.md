@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
 active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
@@ -17,9 +17,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-25T00:05:00-03:00
+updated_at: 2026-08-25T09:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
