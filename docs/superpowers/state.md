@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd
 active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
 context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
 blocker: null
 
@@ -31,13 +31,13 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
     context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
     blocker: null
     resume_state: null
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `planning` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
