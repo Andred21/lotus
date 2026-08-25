@@ -84,7 +84,7 @@ class StudentHistoryDataTest extends TestCase
             'approval_status' => 'aprobado',
         ]);
 
-        $data = StudentTurmaData::fromModel($enrollment->fresh(['turma.quote', 'turma.course']));
+        $data = StudentTurmaData::fromModel($enrollment->fresh(['turma.quote', 'turma.course']), null);
 
         $this->assertSame($turma->id, $data->turma_id);
         $this->assertSame($quote->fresh()->code, $data->quote_code);
