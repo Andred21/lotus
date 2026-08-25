@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#
+# A regua que o GitHub cobraria se a organizacao tivesse plano pago.
+#
+# `Gatika-CL` esta no plano free, e branch protection em repositorio privado
+# exige plano pago (403 no PUT /branches/main/protection, medido em
+# 2026-08-25). Sem regua no servidor, a unica prevencao real esta aqui, na
+# maquina de onde os pushes saem.
+#
+# Duas regras:
+#   1. `main` no repositorio pessoal nao recebe push. Entrada em main e
+#      `gh pr merge`, que roda no servidor e nao passa por hook nenhum -- o
+#      caminho certo continua livre, so o atalho fecha.
+#   2. `main` no corporativo so recebe o que `scripts/espelhar-corporativo.sh`
+#      publica, porque so ele filtra a arvore e assina o `Source-Commit:`.
+#
+# Instalacao (uma vez por clone; vale para todas as worktrees):
+#   git config core.hooksPath .githooks
+#
+# Saida deliberada: LOTUS_FORCA_MAIN=1 git push ...
+# Hook sem saida vira hook desinstalado no primeiro aperto. A diferenca entre
+# digitar `git push` e digitar a variavel e a fronteira entre acidente e
+# decisao -- e a decisao fica no seu historico de shell.
+set -euo pipefail
+
+REMOTE_NOME="${1:-}"
+REMOTE_URL="${2:-}"
+VAZIO=0000000000000000000000000000000000000000
+
+case "$REMOTE_URL" in
+  *Gatika-CL*|*gatika-cl*) DESTINO=corporativo ;;
+  *)                       DESTINO=pessoal ;;
+esac
+
+recusa() {
+  echo "" >&2
+  echo "pre-push RECUSOU: $1" >&2
+  echo "" >&2
+  echo "$2" >&2
+  echo "" >&2
+  echo "Se for deliberado:  LOTUS_FORCA_MAIN=1 git push $REMOTE_NOME ..." >&2
+  echo "" >&2
+  exit 1
+}
+
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  [ "${LOTUS_FORCA_MAIN:-}" = "1" ] && continue
+
+  if [ "$local_sha" = "$VAZIO" ]; then
+    recusa "apagar main em '$REMOTE_NOME' ($DESTINO)" \
+      "Nenhum fluxo deste projeto apaga main."
+  fi
+
+  if [ "$DESTINO" = "corporativo" ]; then
+    [ "${LOTUS_ESPELHO:-}" = "1" ] && continue
+    recusa "push manual para main em Gatika-CL" \
+      "O corporativo so recebe arvore filtrada, pelo caminho unico:
+    scripts/espelhar-corporativo.sh
+Push manual levaria .claude/, .agents/ e docs/ internos junto."
+  fi
+
+  recusa "push direto para main em '$REMOTE_NOME'" \
+    "Main entra por Pull Request:
+    git push $REMOTE_NOME HEAD:refs/heads/\$(git branch --show-current)
+    gh pr create --fill
+    gh pr merge --merge
+O merge roda no servidor, com os quatro gates verdes antes."
+done
+
+exit 0
