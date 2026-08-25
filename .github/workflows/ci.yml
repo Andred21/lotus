@@ -1,0 +1,87 @@
+name: CI
+
+# Branch nao dispara: as worktrees sao locais e o par PR+push duplicaria
+# execucao sem informacao nova. O que dispara e o que decide -- a proposta
+# de entrar em main, e a entrada em main.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, gd, zip, intl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache do composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Instala dependencias
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepara o ambiente de teste
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # phpunit.xml ja fixa DB_CONNECTION=sqlite e DB_DATABASE=:memory:
+      # (linhas 26-27), entao nenhum servico de banco sobe aqui.
+      - name: Suite backend
+        working-directory: backend
+        run: php artisan test
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Le a versao do campo packageManager de frontend/package.json --
+      # a mesma fonte que o estagio spa da imagem de producao usa.
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Instala com o lockfile congelado
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: frontend
+        run: pnpm lint
+
+      - name: Testes
+        working-directory: frontend
+        run: pnpm test
+
+      - name: Build
+        working-directory: frontend
+        run: pnpm build
