@@ -155,3 +155,88 @@ As duas saídas são decisão do João, não do agente:
 Enquanto a decisão não vem, a `main` de `Gatika-CL` está **sem régua no servidor**: a CI roda e
 reporta, mas nada impede um push direto ou um force-push. O gate de publicação (DoD 2) continua
 valendo, porque ele é `needs:` dentro do próprio workflow e não depende de protection.
+
+## DoD 5 — COMPENSADO, não provado
+
+A prova pedida pela spec §7 é o readback de `GET /branches/main/protection`. Ela não existe e não
+vai existir enquanto `Gatika-CL` estiver no plano free. O que existe no lugar, medido em
+2026-08-25:
+
+### Camada 1 — `.githooks/pre-push`, na máquina
+
+Recusa real, não simulada. `git push origin HEAD:refs/heads/main` do worktree `lotus-infra`:
+
+```
+pre-push RECUSOU: push direto para main em 'origin'
+
+Main entra por Pull Request:
+    git push origin HEAD:refs/heads/$(git branch --show-current)
+    gh pr create --fill
+    gh pr merge --merge
+error: failed to push some refs to 'github.com:Andred21/lotus.git'
+```
+
+Exit 1. Push de branch (`HEAD:refs/heads/sonda-hook-nao-main`) passou no mesmo teste — o hook
+fecha o atalho e deixa o caminho certo livre. As outras duas ramificações foram exercidas
+alimentando o hook direto: push manual em `main` no corporativo recusado, `LOTUS_ESPELHO=1` passa,
+e apagar `main` recusado nos dois destinos.
+
+Instalação: `git config core.hooksPath .githooks`, gravado em
+`/home/jvbat/projetos/lotus/.git/config` — o config comum, então vale para as quatro worktrees de
+uma vez.
+
+### Camada 2 — job `procedencia`, no `needs` do `image`
+
+É a camada que substitui a protection onde ela realmente doía. A protection impediria a **escrita
+na ref**; esta impede que a escrita vire **artefato**. Duas procedências são aceitas e nenhuma
+outra: PR mesclado, ou commit de espelho com trailer `Source-Commit` **e** árvore limpa de todo
+path de `.espelho-exclusoes`.
+
+O segundo caminho não vira atalho no repositório pessoal porque lá `docs/` e `.claude/` existem: a
+checagem de árvore limpa reprova e a exigência de PR volta a valer. A regra se auto-restringe, sem
+nome de repositório escrito no meio dela.
+
+Predicado medido contra commits reais, antes de subir:
+
+| Commit | O que é | PRs mesclados associados |
+|---|---|---|
+| `7fa1cb0a` | merge do PR #71 | 1 |
+| `1d97f59f` | sonda empurrada direto em `main` | 0 |
+| `11c8914f` | revert empurrado direto em `main` | 0 |
+
+### Camada 3 — espelho filtrado
+
+`scripts/espelhar-corporativo.sh` publica em `Gatika-CL/lotus` a árvore de `origin/main` menos
+`.espelho-exclusoes`, um commit por release, com `Source-Commit: <sha>` no trailer. Medido em
+`--simular`: **1177 arquivos contra 1417 da origem**. O que atravessa, na raiz:
+
+```
+.dockerignore  .editorconfig  .env.example  .github  .gitignore  README.md
+backend  docker  docker-compose.prod-probe.yml  docker-compose.prod.yml
+docker-compose.yml  frontend
+```
+
+O commit é montado com `commit-tree` sobre um índice temporário (`GIT_INDEX_FILE`): a árvore de
+trabalho e o índice de quem roda o script não são tocados.
+
+### O que continua descoberto — e é para continuar escrito
+
+- **Ninguém é impedido pelo servidor.** Push direto em `main` continua sendo aceito pelo GitHub.
+  O que muda é que ele não vira imagem e fica vermelho no histórico.
+- `git push --no-verify` desliga a camada 1. Contra distração, funciona; contra decisão, não.
+- Quem clona e não roda `git config core.hooksPath .githooks` fica sem a camada 1.
+- Force-push em `main` é **detectado** (`github.event.forced`), não impedido. O histórico
+  reescrito já aconteceu quando o job reprova.
+- O espelho remove os arquivos da **árvore**, não do **histórico** que já foi empurrado para
+  `Gatika-CL` antes desta decisão. Nada ali é segredo — é planejamento interno — mas o fato fica
+  registrado em vez de subentendido.
+
+Quando houver orçamento para GitHub Team, o Step 6 da Task 9 entra sem nenhuma outra mudança e
+vira a camada 0.
+
+### O buraco não era teórico
+
+Enquanto este trabalho era escrito, em 2026-08-25, a lane-c empurrou `94463eb2`, `9e059720`,
+`d0d29c68` e um merge direto em `main`, sem PR. Nenhum deles passou por gate de PR porque nenhum
+gate de PR existia para eles. É o caso exato que a camada 2 passa a marcar em vermelho e a manter
+fora do registry.
