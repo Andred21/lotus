@@ -180,6 +180,14 @@ atualizada com o que a fatia 2 entregou e com o que sobra para uma fatia 3.
 integração é serial. A worktree `../fix-frontend` segue viva, e com ela a branch
 `refactor/tabelas-coluna-de-acoes` do item 17, também sem merge.
 
+**Merge da `main` para dentro, depois do fechamento (2026-08-25).** A `main` andou com o PR #74 da
+`lane-b` (CI, hook `pre-push`, `CONTRIBUINDO.md` e espelho corporativo) mais a sonda de procedência
+`26d0e3e9`. **Um conflito só, no `state.md`**, e no frontmatter: a `main` carregava o snapshot da
+`lane-c` em `ready_for_execution` (o espelho da P-55, escrito antes desta fatia executar) contra o
+`idle` do fechamento. Resolvido pelo lado do fechamento — é o estado que a entrega prova —, sem tocar
+`lanes.lane-a` nem `lanes.lane-b`. **Gate refeito sobre o merge:** `pnpm lint` 0, `pnpm build` verde,
+**109 arquivos / 606 testes**, backend **940 passed / 5 skipped**.
+
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
 `state_basis_commit` da lane continua em `8d588511`, o commit que prova a entrega fechada; o SHA do
 próprio fechamento não entra no arquivo que ele fecha.
