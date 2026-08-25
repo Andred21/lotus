@@ -62,17 +62,17 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (0)
 
-| ID | Pendência | Encerrada em | Sai quando |
-|---|---|---|---|
-| P-03 | Compose por worktree não existe — portas fixas no `docker-compose.yml`, sem `COMPOSE_PROJECT_NAME` | 2026-08-24, no `compose-por-worktree`: `LOTUS_DEV_*` + `.env` da raiz, duas stacks provadas no ar | primeiro fechamento **posterior** a este |
-| P-15 | Certificados não apareciam no módulo de alunos; a decisão saiu — expostos no **detalhe**, e a coluna da **listagem** fica fora por escrito (spec §9) | 2026-08-24, no `certificacao-historico-do-aluno` | primeiro fechamento **posterior** a este |
+Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram no fechamento da fatia 2 do
+`frontend-revisao-ui-por-modulo` (2026-08-25), o primeiro posterior aos dos blocos que as
+encerraram — e a **P-03** foi **remedida antes de sair**: o compose injeta no container `app` da
+worktree `../fix-frontend` o `APP_URL`, o `FRONTEND_URL`, o `SANCTUM_STATEFUL_DOMAINS` e o
+`SESSION_COOKIE` do offset +2, medidos com `printenv`, mesmo com o `backend/.env` da árvore no
+offset antigo.
 
 **A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
 posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
-A **P-03** e a **P-15** entraram no rastro no mesmo dia, pelo `compose-por-worktree` e pelo
-`certificacao-historico-do-aluno`, e saem no próximo fechamento.
 
 **A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
 — e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a

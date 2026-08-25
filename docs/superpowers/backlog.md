@@ -297,6 +297,19 @@ zero `C` aberto. A **`D-39` foi paga** pela fábrica `shared/testing/i18n.ts`. A
 não foi executada**: o João cortou o escopo em 2026-08-23 para seguir ao review. O item continua
 aqui com o que sobrou, e a fatia 2 escreve spec e plano próprios.
 
+**A fatia 2 fechou em 2026-08-25** (`lane-c`, branch `refactor/frontend-revisao-ui-f2`, narrativa em
+`historico/state-archive.md`): **Comercial** e **Certificados** medidos, relatório datado em
+`audits/` para os dois, 7 achados no total, **4 corrigidos** (um deles `C`, no wrapper
+`AppCardToolbar`) e **nenhum `C` aberto**; 3 viraram ficha `D-*`. A **`D-57` foi paga** — os quatro
+campos do contrato tipam `TurmaDocumentType` no `generated.ts` — e a **`D-38` foi decidida** e está
+registrada abaixo. Os Minors 2, 3 e 5 herdados da fatia 1 entraram junto. As réguas de aba de
+Comercial e Certificados foram **medidas e não transbordam** (`[1134, 1134, false]` em 1440x900 e
+`[276, 276, false]` em 390x844), então `scrollable` não foi ligado em nenhuma das duas.
+
+**O que sobra para uma fatia 3:** as runs de **Cursos**, **Pessoas** e **Administração**, com as
+réguas de aba dessas telas ainda sem medição, e os `B` que virarem ficha. O escopo abaixo continua
+valendo para o que não foi coberto.
+
 **Evidência medida (2026-08-22):** a terceira passada no Dashboard admin achou 8 itens, e **6
 moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo `dataKey` (`value : 2` no tooltip),
 `AppDatePicker` fixava `dateFormat` e `locale="es"`, `AppDropdown` congelava o nome acessível no
@@ -306,20 +319,19 @@ mesmos padrões aparecem** — e cada revisão anterior encontrou defeito de wra
 leitura de código tinha achado.
 
 **Escopo:**
-- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: **Comercial**
-  (`/comercial` + detalhe), Certificados, Cursos, Pessoas, Administração. O Dashboard
-  `ready-redator` e a Operação saíram na fatia 1;
-- **D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
-  enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
-  rótulos;
+- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: ~~**Comercial**
+  (`/comercial` + detalhe)~~ e ~~Certificados~~ (fatia 2), **Cursos**, **Pessoas**,
+  **Administração**. O Dashboard `ready-redator` e a Operação saíram na fatia 1;
+- ~~**D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
+  enum (`EVALUACION_REDATOR`)~~ — **decidido e registrado na fatia 2**;
 - **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
   a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
   (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
   acima liga a sua, se a régua transbordar em 1440x900 ou 390x844 — e não por padrão no wrapper,
   que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
   `overflow: hidden`, e o efeito disso em tela não medida é suposição;
-- **D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`
-  (correção de backend — ver ficha);
+- ~~**D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`~~
+  — **paga na fatia 2** (2026-08-25);
 - os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
   couberem.
 

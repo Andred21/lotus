@@ -23,6 +23,167 @@
 
 ---
 
+## Fechado em 2026-08-25 — `frontend-revisao-ui-por-modulo` (fatia 2 de 2), item 16 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_closure` (3 achados do review pagos) |
+
+**A fatia 2 do item 16 terminou a execução em 2026-08-25 e vai a review.** As 13 tasks do plano
+foram executadas e provadas; o bloco vai a `/revisar-sprint`, **não a merge**. O que ele entrega:
+
+- **A `D-57` paga inteira** — a cadeia da RN-16 carrega `TurmaDocumentType` do
+  `TurmaHabilitacaoService` até os DTOs, e os **quatro** campos (`missing_types` ×2,
+  `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum no
+  `generated.ts`. O helper `turmaDocumentTypeLabel` perdeu o fallback de código cru: agora é o `tsc`
+  que barra string fora do enum, e não uma compensação em runtime.
+- **Os Minors 2, 3 e 5 herdados do review da fatia 1** — hover alcançando a coluna presa, sombra de
+  rolagem que a coluna cobria, e o slot `actions` do `DetailHeader` fora da linha de base.
+- **Duas runs da `lotus-ui-review`, com relatório datado em `audits/`** — Comercial (3 achados: 1
+  `C`, 2 `B`) e Certificados (4 achados, todos `B`, nenhum `C`). **Nenhum `C` fica aberto.** Quatro
+  achados corrigidos com commit próprio e medida na tela antes e depois; três viraram ficha.
+- **As réguas de aba medidas, e nenhuma tocada** — `[1134, 1134, false]` em 1440x900 e
+  `[276, 276, false]` em 390x844 nas duas telas. `scrollable` não foi ligado: quem mede, liga.
+- **Seis fichas escritas no `backlog.md`** — a decisão da `D-38` (de 2026-08-22, que a task cortada
+  da fatia 1 nunca escreveu), a `D-57` baixada, e `D-58` a `D-62` abertas.
+
+**O achado que a fatia expõe e não paga: `D-62`.** O mesmo defeito — `AppDropdown` de filtro sem
+nome acessível, sempre na forma `<div className="w-48">` com o dropdown solto dentro — foi
+encontrado por **três runs independentes em três dias** (UI-07 de Operação, UI-02 de Comercial,
+UI-01 de Certificados), mais o seletor de turma da Emisión, que só tinha nome por acidente do
+placeholder. Quatro correções idênticas e **nenhuma catraca**: a quinta ocorrência nasce verde.
+
+**Gate completo (o bloco tocou `backend/`, então não é o gate de frontend puro):** frontend lint
+`0`, build `0`, **109 arquivos / 602 testes** contra a baseline de 107/595 da Task 1; backend **938
+passed / 5 skipped** contra 937/5; Pint `passed` nos 10 arquivos PHP tocados; `typescript:transform`
+sem drift. **Desvio declarado:** o Step 6 da Task 13 previa um commit de gate com `git add -A`, e a
+árvore já estava limpa — o gate não produziu arquivo, e os números vivem aqui e no commit deste
+handoff, em vez de num commit vazio.
+
+**Review da fatia 2 — 2026-08-25, três achados devolvidos, aprovados e pagos.** O bloco foi classificado
+**alto risco** pela `/revisar-sprint` (toca DTO de backend e regenera `generated.ts`, lei §5.3), então
+além da revisão Claude foi acionada a segunda lente do Codex em sandbox `read-only`. O Codex devolveu
+dois achados; **um foi confirmado no código e virou a Q-1**, o outro foi confirmado parcialmente e
+virou a Q-2. Nenhuma divergência entre as duas lentes ficou sem resolução.
+
+- **Q-1 · 🟡 · P — `DetailHeader.tsx:96-101`.** O `sm:self-center` da Task 6 está no contêiner que
+  carrega **`tags` e `actions` juntos**, e `align-self` sobrescreve o `items-baseline` do pai para o
+  bloco inteiro: a tag sai da linha de base junto com o botão. O único consumidor com os dois slots é
+  o `BudgetDetailPage`, que ainda tem `subtitle` alto (`IdentityCell` com avatar) — é o **UI-08 de
+  2026-08-23 voltando espelhado**, na tela que a run 1 desta mesma fatia revisou. O Step 5 da Task 6
+  pedia confirmar que "a tag continua na linha do título", e com esta forma isso não é satisfazível;
+  o teste novo assere só a existência da classe. Alvo: `tags` e `actions` como itens flex irmãos, com
+  `sm:self-center` só no invólucro de `actions`.
+- **Q-2 · 🟡 · P — `OperationMetricsQueryTest.php:129-132`.** Três dos quatro campos da D-57
+  (`present_types`, `TurmaComplianceData.missing_types`, `RedatorTurmaPendenciaData.missing_types`)
+  mudaram de forma sem nenhuma assertiva na **borda HTTP** — só teste de `toArray()`, que agora afirma
+  instâncias de enum. O comentário ao lado afirma que "o JSON da borda continua `["MANUAL"]`" e nada
+  mede isso (lição 13). O comportamento hoje está certo — `json_encode` serializa `BackedEnum` pelo
+  `value`, e `ConcludeTurmaTest.php:62` prova o mecanismo idêntico para o quarto campo —, mas a
+  lacuna ficou **mais cara neste mesmo bloco**: com o fallback de `turmaDocumentTypeLabel` morto,
+  mudança de forma não imprime mais o código cru, imprime nada. Alvo: três `assertJsonPath` no
+  `DashboardEndpointTest`.
+- **Q-3 · 🟢 · P — `brand-theme.css:347-357`.** As cores do hover do Lara (`#f1f5f9`,
+  `rgba(255,255,255,.03)`) estão cravadas como literal sem catraca que reprove a divergência se as
+  folhas do tema forem regeradas. Mesma classe da `D-62` que esta fatia abriu. O mecanismo do tema
+  escuro foi conferido no review e **está correto** (`html.dark` por `useApplyTheme.ts:14`); o achado
+  é só a ausência de catraca.
+
+**Nenhuma violação das leis §5**, nenhum órfão (`TurmaDocumentType::values()` segue consumido por
+`Turma.php:157`), nenhuma dependência nova. **Gate do frontend reconferido dentro do review**: lint
+`0`, build `0`, **109 arquivos / 602 testes** — idêntico ao medido no handoff de execução. Backend e
+Pint não foram reconferidos no review (exigem o container).
+
+**Os três achados foram aprovados pelo João e pagos em `7e563910`, no mesmo dia.** Cada um entrou
+com a sua guarda, e **as três guardas foram vistas reprovar por mutação temporária antes de entrar**
+(lição 10 — guarda que nunca viu o defeito é cobertura fantasma):
+
+- **Q-1** — `tags` e `actions` viraram itens flex IRMÃOS da linha do título, com `sm:self-center` só
+  no invólucro de `actions`. O `justify-between` saiu, trocado pelo `sm:flex-1` do bloco do título, e
+  o embrulho de mobile some a partir do `sm` por `sm:contents` — sem ele o `align-self` resolveria
+  contra o embrulho, não contra a linha. O teste deixou de asserir "existe um `.sm:self-center` na
+  árvore" (o que passava com o defeito presente) e passou a asserir a estrutura: wrappers separados,
+  `self-center` só no de ações, e os dois dentro do `sm:contents`.
+- **Q-2** — dois testes novos no `DashboardEndpointTest` medem a borda de `compliance_turmas`
+  (`present_types` **e** `missing_types`, que saem de caminhos diferentes do `TurmaHabilitacaoService`)
+  e de `pendencias_documentais`, que projeta por outro serviço. O comentário do
+  `OperationMetricsQueryTest` deixou de afirmar a borda e passou a apontar para quem a mede.
+- **Q-3** — a catraca entrou no `tests/brand-theme.test.ts`, ao lado das outras guardas de tema: ela
+  compara o `--sticky-cell-tint` do `brand-theme.css` com o `background` do hover do DataTable no
+  tema **commitado**, nos dois temas. Lê o commitado, e não a geração fresca, porque é o commitado que
+  o navegador carrega — a igualdade "commitado == geração fresca" logo acima fecha a outra metade.
+  Zero blocos casados também reprova: seletor que sumiu num upgrade é guarda cega.
+
+**Gate completo depois das correções:** `pnpm lint` 0, `pnpm build` verde, **109 arquivos /
+606 testes**, suíte do backend **940 passed / 5 skipped**, `pint` nos dois arquivos PHP tocados
+`passed`, `typescript:transform` sem drift. A suíte do backend exigiu o `docker compose build app` +
+`up -d --no-deps app` da **P-57** — a imagem desta árvore era anterior ao `memory-cli.ini` e o
+comando do §6 morria por memória; é conserto de ambiente, não de código, e a ficha segue aberta.
+
+**O que NÃO foi medido:** a confirmação visual do Q-1 no `/comercial/presupuestos/:id` em 1440x900.
+Esta sessão não tem ferramenta de navegador, e a prova que existe é estrutural (jsdom não mede
+layout). A régua da tela fica para quem rodar a `/lotus-ui-review` — vale a pena olhar antes do
+fechamento, já que o Q-1 nasceu de um defeito que só a tela mostrou nas duas vezes.
+
+**Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
+`idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
+local (`audits/` + fichas `D-*`), então a lane entra **direto em `ready_for_planning`**, sem Context
+Packet. A branch é nova — `refactor/frontend-revisao-ui-f2`, criada a partir de
+`origin/main@7fa1cb0a`, que já traz os PRs #70, #72, #73 e #71 mesclados; a árvore estava em `HEAD`
+solto sobre `2e3f5e42` e não em branch.
+
+**A `D-57` entra no escopo por decisão do João**, e com ela o bloco deixa de ser frontend puro: a
+correção é no DTO do backend, regenera `generated.ts` (lei §5.3) e exige o container `app`. **O gate
+P-03 não é disparado** — a ficha foi paga pelo `compose-por-worktree` em 2026-08-24, e esta árvore
+sobe stack própria pelo offset do `.env` da raiz. Esta árvore **ainda não tem `.env`**, então hoje
+ela reclamaria a porta 8080 do main tree; escolher o offset é passo do plano, não suposição.
+
+**Reincidência declarada da `P-55`.** A invariante do espelho manda que trocar `focused_lane` seja
+fronteira durável do main tree, mas a `lane-b` está `executing` (item 11) e o espelho só aponta uma
+lane por vez. Esta promoção aponta o espelho para a `lane-c` **na árvore da `lane-c`**, que é
+exatamente o que a ficha registra como já feito por três lanes; `lanes.lane-a` e `lanes.lane-b`
+ficam intocados. A ficha continua aberta e esperando a decisão do João.
+
+**Fechamento — 2026-08-25.** O gate completo foi refeito nesta árvore, com o stack do offset +2 no
+ar: frontend `pnpm lint` 0, `pnpm build` verde, **109 arquivos / 606 testes**; backend **940 passed /
+5 skipped**; `pint --test` `passed` nos **11** arquivos PHP da branch; `typescript:transform` sem
+drift (`git status` limpo depois de rodar). O critério de aceite foi provado **contra a API real**
+(`http://localhost:8082`, login Sanctum com `Origin` + `Accept`), e não só pela suíte:
+`GET /api/dashboard/metricas` devolve `present_types: ["MANUAL","PRUEBAS"]` e
+`missing_types: ["EVALUACION_REDATOR"]`, e `GET /api/turmas/{id}` devolve
+`missing_document_types: ["PRUEBAS","EVALUACION_REDATOR"]` — os quatro campos da `D-57` atravessam a
+borda HTTP como string do enum, com o `generated.ts` tipando `TurmaDocumentType[]` nos quatro e o
+`turmaDocumentTypeLabel` sem fallback.
+
+**A medida que faltava foi feita: o Q-1 na tela.** `/comercial/presupuestos/1` em 1440x900, no
+navegador, com a linha do `DetailHeader` medida: título `top 188 / bottom 220`, tag
+`top 195 / bottom 221` — na linha de base do título —, e o invólucro de ações `top 196 / bottom 244`,
+centrado por conta própria. O embrulho de mobile some no desktop (`display: contents`) e a linha
+mantém `align-items: baseline`. É o que a narrativa da execução registrava como **não medido**, e o
+defeito que voltou duas vezes só a tela mostrava.
+
+**Pendências no fechamento.** A `P-03` e a `P-15` saem do rastro de `encerradas.md` — é o primeiro
+fechamento posterior ao delas — e a `P-03` foi **remedida antes de sair**: o container `app` desta
+árvore recebe `APP_URL=http://localhost:8082`, `FRONTEND_URL=http://localhost:5175`,
+`SANCTUM_STATEFUL_DOMAINS=localhost:5175,localhost:8082` e `SESSION_COOKIE=lotus_session_8082`
+injetados pelo compose, com o `backend/.env` da árvore ainda no offset antigo — a injeção vence, que
+é exatamente o mecanismo que a ficha declarou pago. Nenhuma pendência nova nasceu: a única
+suspeita levantada no gate (o `backend/.env` desta árvore em offset +1) foi **medida e descartada**,
+porque o `printenv` do container mostra o offset +2 e o login pelo navegador funciona com o arquivo
+restaurado.
+
+**O item 16 NÃO sai do `backlog.md`.** A fatia 2 fechou Comercial e Certificados; **Cursos, Pessoas e
+Administração seguem sem run**, e a régua de aba dessas telas segue sem medição. A ficha do item foi
+atualizada com o que a fatia 2 entregou e com o que sobra para uma fatia 3.
+
+**A branch `refactor/frontend-revisao-ui-f2` não foi mesclada** — o PR é o próximo passo, e a
+integração é serial. A worktree `../fix-frontend` segue viva, e com ela a branch
+`refactor/tabelas-coluna-de-acoes` do item 17, também sem merge.
+
+**Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
+`state_basis_commit` da lane continua em `8d588511`, o commit que prova a entrega fechada; o SHA do
+próprio fechamento não entra no arquivo que ele fecha.
+
 ## Fechado em 2026-08-24 — `certificacao-historico-do-aluno`, item 2 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
