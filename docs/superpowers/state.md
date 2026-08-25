@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd
 active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
 active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
 context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
-blocker: null
+blocker: "Gatika-CL esta no plano free: branch protection e rulesets em repositorio privado exigem plano pago (HTTP 403 no PUT /branches/main/protection). DoD 5 do plano nao pode ser provado. Joao decide: subir Gatika-CL para GitHub Team, ou abrir mao da regua no servidor. Tudo o mais do bloco esta provado."
 
 lanes:
   lane-a:
@@ -31,15 +31,16 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: executing
-    next_owner: claude
-    next_action: continue_active_plan
+    workflow_state: blocked
+    next_owner: joao
+    next_action: resolve_blocker
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
     active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
     context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
-    blocker: null
+    blocker: "Gatika-CL no plano free: branch protection e ruleset em repositorio privado exigem plano pago (403 no PUT /branches/main/protection). DoD 5 pendente de decisao do Joao."
+
     resume_state: null
     last_completed_work_item: compose-por-worktree
   lane-c:
@@ -57,8 +58,8 @@ lanes:
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: b9ebc7f0
-updated_at: 2026-08-25T00:10:00-03:00
+state_basis_commit: 8b735828
+updated_at: 2026-08-25T00:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
