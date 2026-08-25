@@ -2,17 +2,16 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
-active_feature: frontend
-active_work_item: frontend-revisao-ui-por-modulo-f2
-workflow_state: ready_for_execution
-next_owner: claude
-next_action: execute_active_plan
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
-active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
-
 lanes:
   lane-a:
     active_feature: null
@@ -43,22 +42,22 @@ lanes:
     resume_state: null
     last_completed_work_item: compose-por-worktree
   lane-c:
-    active_feature: frontend
-    active_work_item: frontend-revisao-ui-por-modulo-f2
-    workflow_state: ready_for_execution
-    next_owner: claude
-    next_action: execute_active_plan
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui-f2
-    active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
-    active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
+    branch: refactor/frontend-revisao-ui-f2   # fechada em 2026-08-25; ainda não mesclada
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: tabelas-coluna-de-acoes-e-largura
-last_completed_work_item: compose-por-worktree
-state_basis_commit: 171ec946
-updated_at: 2026-08-25T18:55:00-03:00
+    last_completed_work_item: frontend-revisao-ui-por-modulo-f2
+last_completed_work_item: frontend-revisao-ui-por-modulo-f2
+state_basis_commit: 8d588511
+updated_at: 2026-08-25T19:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_execution` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -189,25 +188,6 @@ escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão,
 Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
 vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
 o que preservar, e não há colisão a vigiar com a lane-c.
-
-**Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
-`idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
-local (`audits/` + fichas `D-*`), então a lane entra **direto em `ready_for_planning`**, sem Context
-Packet. A branch é nova — `refactor/frontend-revisao-ui-f2`, criada a partir de
-`origin/main@7fa1cb0a`, que já traz os PRs #70, #72, #73 e #71 mesclados; a árvore estava em `HEAD`
-solto sobre `2e3f5e42` e não em branch.
-
-**A `D-57` entra no escopo por decisão do João**, e com ela o bloco deixa de ser frontend puro: a
-correção é no DTO do backend, regenera `generated.ts` (lei §5.3) e exige o container `app`. **O gate
-P-03 não é disparado** — a ficha foi paga pelo `compose-por-worktree` em 2026-08-24, e esta árvore
-sobe stack própria pelo offset do `.env` da raiz. Esta árvore **ainda não tem `.env`**, então hoje
-ela reclamaria a porta 8080 do main tree; escolher o offset é passo do plano, não suposição.
-
-**Reincidência declarada da `P-55`.** A invariante do espelho manda que trocar `focused_lane` seja
-fronteira durável do main tree, mas a `lane-b` está `executing` (item 11) e o espelho só aponta uma
-lane por vez. Esta promoção aponta o espelho para a `lane-c` **na árvore da `lane-c`**, que é
-exatamente o que a ficha registra como já feito por três lanes; `lanes.lane-a` e `lanes.lane-b`
-ficam intocados. A ficha continua aberta e esperando a decisão do João.
 
 **A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
 integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
@@ -300,11 +280,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
 | 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
 | 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
-| 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

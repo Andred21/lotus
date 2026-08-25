@@ -117,3 +117,15 @@ describe('HistorialTable — a linha do snapshot corrompido', () => {
     expect(screen.queryByText('certificate.snapshotMissingField')).toBeNull()
   })
 })
+
+describe('HistorialTable — o filtro de estado', () => {
+  it('tem rótulo visível associado ao dropdown', () => {
+    // Terceira ocorrência do mesmo achado (UI-07 de Operação, UI-02 de
+    // Comercial, UI-01 desta run): o dropdown expunha só o VALOR corrente
+    // ("Todos"), sem `<label>`, sem `aria-label` e sem texto adjacente. O par
+    // rótulo+`inputId` é o que faz o leitor de tela dizer o que se filtra.
+    montar(certificado({ name: 'Ana Torres', rut: '11.111.111-1' }))
+
+    expect(screen.getByLabelText('certificate.colStatus')).toBeTruthy()
+  })
+})

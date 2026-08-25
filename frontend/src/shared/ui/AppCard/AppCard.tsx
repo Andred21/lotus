@@ -183,13 +183,24 @@ export interface AppCardToolbarProps {
   end?: ReactNode
 }
 
-/** Linha de controles do card. Empilha em telas estreitas (H.2.1). */
+/** Linha de controles do card. Empilha em telas estreitas (H.2.1).
+ *
+ * O slot `end` quebra linha (`flex-wrap`) e NÃO é `shrink-0`, diferente do slot
+ * de ações do `AppCardHeader` acima: aqui ele carrega o alternador
+ * arquivados + a ação primária do módulo, e em 390x844 os dois lado a lado não
+ * cabiam. Com `shrink-0` no invólucro, quem cedia era o botão — o "Nuevo
+ * presupuesto" media 44px, vazava 36px do próprio slot e 3px da viewport, com o
+ * rótulo ilegível (UI-01 da run de Comercial, 2026-08-25). Deixando o slot
+ * quebrar, a ação desce uma linha inteira e continua legível.
+ *
+ * `justify-end` para a ação primária continuar à direita quando ela é a única
+ * da linha, que é como ela lê em telas largas. */
 export function AppCardToolbar({ start, end }: AppCardToolbarProps) {
   if (!start && !end) return null
   return (
     <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 flex-wrap items-center gap-3">{start}</div>
-      {end && <div className="flex shrink-0 items-center gap-2">{end}</div>}
+      {end && <div className="flex flex-wrap items-center justify-end gap-2">{end}</div>}
     </div>
   )
 }

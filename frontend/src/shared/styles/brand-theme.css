@@ -282,6 +282,40 @@ html:not(.dark) {
   background: transparent;
 }
 
+/* Minor 2 do review da fatia 1 do item 16: a coluna de ações presa
+ * (`stickyActionsColumn`) pinta fundo próprio por `style` inline, e inline vence
+ * qualquer regra — o hover tingia a linha e morria na coluna presa, que é
+ * justamente onde o olho vai clicar.
+ *
+ * O seletor é o MESMO do Lara, repetido aqui de propósito: esta folha é
+ * importada fora de layer (`index.css`) e o tema inteiro vive em
+ * `@layer primereact`, então declaração sem layer vence a layer independente de
+ * especificidade. Redefinimos a custom property, que HERDA e chega ao `td` sem
+ * disputar com o inline, e repintamos a linha com a mesma cor para não depender
+ * de qual regra ganhou.
+ *
+ * A variável carrega o TINTE, não o fundo final: a célula presa pinta o card
+ * opaco embaixo e este por cima (`stickyActionsColumn`), porque o hover do tema
+ * escuro é translúcido e como fundo único deixaria a coluna presa transparente.
+ *
+ * São dois blocos porque o tema alterna trocando o `<link>` da folha
+ * (`primeTheme.ts`) E a classe `dark` no `<html>` (`useApplyTheme.ts`): a folha
+ * gerada crava a cor do hover como literal, não como variável, então não há
+ * token do tema a apontar daqui. As cores são as literais das duas folhas
+ * (`#f1f5f9` claro, `rgba(255,255,255,.03)` escuro) e não um token aproximado:
+ * célula presa com cor diferente da linha seria o mesmo defeito com outro tom. */
+.p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):not(.p-datatable-emptymessage):hover {
+  --sticky-cell-tint: #f1f5f9;
+  background: var(--sticky-cell-tint);
+}
+
+html.dark
+  .p-datatable.p-datatable-hoverable-rows
+  .p-datatable-tbody
+  > tr:not(.p-highlight):not(.p-datatable-emptymessage):hover {
+  --sticky-cell-tint: rgba(255, 255, 255, 0.03);
+}
+
 /* UI-05 do review de 2026-08-22 (dashboard do redator): o `Menu` do
  * PrimeReact não tem estado "selecionado" nativo — diferente do
  * `SelectButton`/`Dropdown`, que resolvem contra um `value`. Sem marca
