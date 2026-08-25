@@ -1,27 +1,27 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
-active_feature: cicd
-active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+focused_lane: lane-a
+active_feature: hardening
+active_work_item: hardening-api-arquivos-e-abuso
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
-active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
-context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 
 lanes:
   lane-a:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: hardening
+    active_work_item: hardening-api-arquivos-e-abuso
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: main-tree
-    branch: feat/certificacao-historico-do-aluno   # fechada em 2026-08-24; PR aberto, ainda não mesclada
+    branch: feat/hardening-api-arquivos-e-abuso
     active_spec: null
     active_plan: null
     context_packet: null
@@ -57,8 +57,8 @@ lanes:
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: b9ebc7f0
-updated_at: 2026-08-25T00:10:00-03:00
+state_basis_commit: 7fa1cb0a
+updated_at: 2026-08-24T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,9 +162,30 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `context_required` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
+
+**Promoção do item 4 — 2026-08-24, `lane-a`.** Promoção explícita do João com a lane em `idle`, contra
+o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o Context
+Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`), em sandbox
+read-only. A branch `feat/hardening-api-arquivos-e-abuso` sai de `main@7fa1cb0a`, que já traz o merge
+do item 11 (PR #71) — as lanes anteriores mesclaram. **Árvore:** main tree, seguindo o precedente de
+todo bloco de backend; a **P-03 foi paga** pelo `compose-por-worktree`, então isso é escolha e não
+mais imposição do compose.
+
+**O espelho virou para a `lane-a` neste commit, com a `lane-b` em execução — e isso é o precedente da
+P-55, não uma quebra.** `focused_lane` no main tree passa a apontar a lane que trabalha AQUI; a
+`lane-b` mantém o espelho dela apontando para si em `../lotus-infra`, que é a árvore onde o
+`/executar-bloco` dela roda. O bloco da `lane-b` em `lanes:` **não foi tocado por este commit** — ele
+é dela, e a invariante de dono manda. A P-55 segue aberta e é do João.
+
+**Evidência que já está medida e o packet não precisa redescobrir** (contra `main@7fa1cb0a`):
+`Route::post('/login', ...)` em `Identity/routes.php:23` está **fora** do grupo `throttle:6,1`, que
+começa só na linha 28 e cobre convite/recuperação; `Route::get('publico/certificados/{uuid}', ...)` em
+`Certification/routes.php:7` está fora de qualquer middleware. `grep -rn throttle` sobre os
+`routes.php` dos domínios e `backend/routes/` devolve **apenas** essas duas ocorrências do grupo de
+Identity — nenhum outro throttle existe no repositório.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
