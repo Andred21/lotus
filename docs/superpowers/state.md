@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: ready_for_review
+workflow_state: reviewing
 next_owner: claude
-next_action: request_code_review
+next_action: review_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
@@ -17,9 +17,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: ready_for_review
+    workflow_state: reviewing
     next_owner: claude
-    next_action: request_code_review
+    next_action: review_active_work_item
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_review` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `reviewing` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
