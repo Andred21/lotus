@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
 context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
 blocker: null
 
@@ -17,13 +17,13 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
     context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
     blocker: null
     resume_state: null
@@ -211,11 +211,32 @@ contido por limitador e teto, e persistir no S3 fica **fora** com ficha (D6); os
 abertos passam a aceitar **PDF + imagem** (D7); e scanner fora do ar **recusa** o upload, com a
 consequência declarada (D8).
 
-**Dois pré-requisitos que a medição achou e o backlog não previa.** `trustProxies` não existe no
-repositório (`grep` vazio), então em produção `$request->ip()` devolve o container do Nginx e todo
-limitador por IP viraria balde único — entra no bloco. E o `ProblemDetails` **não lê `getHeaders()`**:
-o `429` já sai em `application/problem+json` pelo braço de `HttpExceptionInterface`, mas sem
-`Retry-After` nem `X-RateLimit-*`.
+**Um pré-requisito que a medição achou, e um que ela desmentiu.** O `ProblemDetails` **não lê
+`getHeaders()`**: o `429` já sai em `application/problem+json` pelo braço de
+`HttpExceptionInterface`, mas sem `Retry-After` nem `X-RateLimit-*` — entra no bloco, é a Task 1 do
+plano. Já o `trustProxies` **saiu**: o brainstorming o tratou como pré-requisito supondo que
+`$request->ip()` devolvesse o container do Nginx, e a medição do plano mostrou o contrário — o PHP
+recebe `REMOTE_ADDR` como o Nginx viu o peer, que em produção é o próprio cliente. Ligar
+`trustProxies` faria o `X-Forwarded-For` **forjado pelo cliente** virar o `ip()`, e todo limitador
+por IP passaria a contar um valor que o atacante escolhe. O bloco faz o oposto: o Nginx apaga o
+`X-Forwarded-*` de entrada. A spec recebeu emenda datada (§9) e o plano abre com as três correções
+de medição.
+
+**Plano escrito — `plans/2026-08-25-hardening-api-arquivos-e-abuso.md`, 12 tasks.** Ordem por
+dependência: envelope do `429` → IP do cliente → limitadores → catraca de rota → política de
+arquivo → catraca de upload → `files.mime` e backfill → ClamAV → tetos de lote e import →
+confirmação do ADR-11 → DoD contra a API real. `executor: claude` — o bloco toca a §5.4 do
+`CLAUDE.md`, reverte um item aprovado da spec e deixa três tetos com gatilho de revisão durante a
+execução.
+
+**Medições que o plano fixou, e que o item 10 herda:** ClamAV 1.4 ocupa **1,014 GiB** residentes e
+fica pronto em ~10 s (imagem de 146 MiB, base de assinaturas embutida — não há download no primeiro
+`up`, ao contrário do que a spec §4.4 previa). O scan INSTREAM custa **17 ms** para 100 KB, **72 ms**
+para 1 MB e **551 ms** para o teto de 10 MB, o que sustenta o scan síncrono sem worker (D1). A
+emissão em lote **não** chama o Gotenberg — `IssueCertificateAction` não toca o conversor —, então o
+teto de lote existe por duração de requisição e volume de escrita, não por renderização. E a
+superfície de upload são **13 rotas, não 10**: `POST /api/redatores` e `PUT /api/redatores/{redator}`
+aceitam `documents[<TIPO>]` **sem regra `file` nenhuma**.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
