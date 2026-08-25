@@ -2,15 +2,15 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-b
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: cicd
+active_work_item: cicd-ci-governanca-e-artefato
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
-context_packet: null
+active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
+active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
+context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
 blocker: null
 
 lanes:
@@ -29,16 +29,16 @@ lanes:
     resume_state: null
     last_completed_work_item: certificacao-historico-do-aluno
   lane-b:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: cicd
+    active_work_item: cicd-ci-governanca-e-artefato
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_plan
     tree: ../lotus-infra
-    branch: infra/compose-por-worktree
-    active_spec: null
-    active_plan: null
-    context_packet: null
+    branch: cicd/ci-governanca-e-artefato
+    active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
+    active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
+    context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
     blocker: null
     resume_state: null
     last_completed_work_item: compose-por-worktree
@@ -57,8 +57,8 @@ lanes:
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: f514f596
-updated_at: 2026-08-24T23:55:00-03:00
+state_basis_commit: b9ebc7f0
+updated_at: 2026-08-25T00:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,13 +162,33 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (fechada, PR aberto, não mesclada) | `idle` |
-| `lane-b` | — | — | `../lotus-infra` | `infra/compose-por-worktree` (mesclada, PR #70) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (não mesclada) | `idle` |
+| `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
-**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24 e voltou a `idle`.** A narrativa do bloco
-está em `historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item
-novo sozinha: promoção é do João, contra o `backlog.md`.
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
+mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
+`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
+nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
+(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
+é `origin/main` — as três lanes anteriores mesclaram.
+
+**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
+sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
+quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
+governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
+(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
+runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
+SHA.
+
+**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
+escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
+Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
+vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
+o que preservar, e não há colisão a vigiar com a lane-c.
 
 **A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
 integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch

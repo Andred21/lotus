@@ -1,0 +1,269 @@
+name: CI
+
+# Branch nao dispara: as worktrees sao locais e o par PR+push duplicaria
+# execucao sem informacao nova. O que dispara e o que decide -- a proposta
+# de entrar em main, e a entrada em main.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, gd, zip, intl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache do composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Instala dependencias
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepara o ambiente de teste
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # phpunit.xml ja fixa DB_CONNECTION=sqlite e DB_DATABASE=:memory:
+      # (linhas 26-27), entao nenhum servico de banco sobe aqui.
+      - name: Suite backend
+        working-directory: backend
+        run: php artisan test
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Le a versao do campo packageManager de frontend/package.json --
+      # a mesma fonte que o estagio spa da imagem de producao usa.
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Instala com o lockfile congelado
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: frontend
+        run: pnpm lint
+
+      - name: Testes
+        working-directory: frontend
+        run: pnpm test
+
+      - name: Build
+        working-directory: frontend
+        run: pnpm build
+
+  types-drift:
+    name: types-drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, gd, zip, intl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache do composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Instala dependencias
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepara o ambiente
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # O transformer e INCREMENTAL: ele guarda o hash do arquivo de saida em
+      # typescript-transformer-manifest.json e nao reescreve nada quando as
+      # classes PHP nao mudaram. Medido em 2026-08-24 (run 32797276027): uma
+      # linha acrescentada a mao ao generated.ts sobreviveu ao comando e o gate
+      # passou verde. Apagar o par forca a regeneracao do zero, que e a unica
+      # forma de o diff enxergar edicao manual -- que e o que a lei 5.3 proibe.
+      - name: Apaga o alvo para forcar regeneracao do zero
+        run: |
+          rm -f frontend/src/shared/types/generated.ts \
+                frontend/src/shared/types/typescript-transformer-manifest.json
+
+      # Medido 2026-08-24: o comando boota o Laravel mas nao toca o banco --
+      # sqlite :memory: basta e nenhum servico MySQL sobe. O diretorio de
+      # saida sai de FrontendPath, que aqui resolve o irmao <workspace>/frontend
+      # (no container do compose resolveria /frontend).
+      - name: Regenera os tipos a partir dos DTOs
+        working-directory: backend
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan typescript:transform
+
+      # O comando acima imprime avisos sobre Spatie\LaravelData\Optional e
+      # AINDA ASSIM sai 0 -- medido. Por isso quem julga e o diff, nunca o
+      # texto da saida. O ::error com `file=` faz o GitHub nomear o arquivo
+      # na interface, que e literalmente o que a ficha da D-08 exige.
+      - name: Lei 5.3 - generated.ts nao se edita a mao
+        run: |
+          if ! git diff --exit-code -- frontend/src/shared/types/; then
+            echo "::error file=frontend/src/shared/types/generated.ts::generated.ts diverge do que typescript:transform produz. Corrija o DTO no backend e regenere; nao edite o arquivo."
+            exit 1
+          fi
+
+  # Reprova SO o que a imagem de producao carrega. --locked le o composer.lock
+  # sem instalar vendor, e `pnpm audit` le o pnpm-lock.yaml sem node_modules --
+  # entao este job nao precisa de nenhuma instalacao.
+  audit-prod:
+    name: audit-prod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Advisories nas dependencias PHP de producao
+        working-directory: backend
+        run: composer audit --no-dev --locked
+
+      - name: Advisories nas dependencias JS de producao
+        working-directory: frontend
+        run: pnpm audit --prod
+
+  # REPORTA e nao reprova, por decisao explicita: um advisory moderate numa
+  # dependencia transitiva de ferramenta de desenvolvimento travaria toda a
+  # fila sem uma linha de codigo ter mudado, e a saida pratica disso e
+  # desligar o check -- pior que nao te-lo.
+  audit-dev:
+    name: audit-dev
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Advisories em toda a arvore PHP
+        working-directory: backend
+        run: composer audit --locked
+
+      - name: Advisories em toda a arvore JS
+        working-directory: frontend
+        run: pnpm audit
+
+  image:
+    name: image
+    # Nenhum gate vermelho passa daqui: e isto que faz o DoD
+    # "commit reprovado nao gera release promovivel" ser mecanico e nao
+    # combinado. audit-dev NAO entra -- ele reporta, nao decide.
+    needs: [backend, frontend, types-drift, audit-prod]
+    # Sem nome de dono na condicao. Branch e PR rodam so os gates; o custo
+    # do bloco esta neste job, e e daqui que vem o "CI rapido".
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # github.repository vem com maiuscula. GHCR recusa nome com maiuscula
+      # ("repository name must be lowercase"), entao usar a variavel crua no
+      # `tags:` falha o push.
+      - name: Nome do repositorio em minusculas
+        id: repo
+        run: echo "lc=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # SHA completo e sem `latest`, de proposito: tag movel convida
+      # `docker pull latest` no servidor, que e o habito que o item 12
+      # existe para substituir.
+      - name: Constroi e publica o alvo app
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: app
+          push: true
+          tags: ghcr.io/${{ steps.repo.outputs.lc }}-app:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Constroi e publica o alvo web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: web
+          push: true
+          tags: ghcr.io/${{ steps.repo.outputs.lc }}-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
