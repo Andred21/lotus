@@ -247,13 +247,13 @@ class RedatorScopeQueryTest extends TestCase
                 'turma_id' => $this->aEmCurso->id,
                 'course_name' => 'Trabajos en Altura de Alta Tensión',
                 'end_date' => '2026-08-17',
-                'missing_types' => ['PRUEBAS', 'EVALUACION_REDATOR'],
+                'missing_types' => [TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
             ],
             [
                 'turma_id' => $this->aFutura->id,
                 'course_name' => 'Trabajos en Altura de Alta Tensión',
                 'end_date' => '2026-08-19',
-                'missing_types' => ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'],
+                'missing_types' => [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
             ],
         ], array_map(fn ($item): array => $item->toArray(), $pendencias));
 
