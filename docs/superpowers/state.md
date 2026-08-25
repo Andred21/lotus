@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: tabelas-coluna-de-acoes-e-largura
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
 active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
@@ -44,9 +44,9 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: tabelas-coluna-de-acoes-e-largura
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
     active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `executing` |
+| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_review` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
@@ -186,6 +186,15 @@ A branch anterior da lane, `refactor/frontend-revisao-ui`, **foi mesclada** no *
 `cad0d1fb`) — o registro acima, que a dava como não mesclada, ficou velho no fechamento da fatia 1 e
 é corrigido aqui. A worktree `../fix-frontend` estava em detached HEAD sobre esse merge; a branch
 `refactor/tabelas-coluna-de-acoes` nasce dele. Não há rebase pendente: `cad0d1fb` **é** a `main`.
+
+**As 17 tasks do plano foram executadas e provadas em 2026-08-24**, da peça de vocabulário
+(`ec5aaef3`) ao registro de medição (`a31a23a4`), mais o corretivo `ea280fe1` e a varredura de
+arquivados `722d5e35`, ambos decididos pelo João. A prova end-to-end está em
+`docs/superpowers/audits/2026-08-24-tabelas-coluna-de-acoes-e-largura-medicoes.md`: 12 tabelas × 3
+viewports com a coluna de ação presa dentro da moldura, 7 visões arquivadas com o par do rastreio
+em 10%/14%, 3 tabelas sem ação sobre o orçamento cheio, e a catraca de ESLint vista reprovando as
+duas sondas antes de ser ligada. Gate final: lint 0, build verde, 101 arquivos / 561 testes. A
+review ainda NÃO foi pedida — é a próxima instrução.
 
 Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
 é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
