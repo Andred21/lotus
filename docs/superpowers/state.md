@@ -271,10 +271,13 @@ divergência entre os revisores está registrada abaixo, não resolvida em silê
 **Divergência entre os revisores, registrada.** O Codex levantou oito candidatos; três viraram os
 achados acima depois de verificação própria no código, e os demais não passaram: um lia o escopo do
 desenho ao contrário (a auto-restrição do caminho de espelho no repositório pessoal é intencional, não
-um furo) e os dois sobre o `espelhar-corporativo.sh` — a lista de exclusões lida do disco local em vez
-do blob de `origin/main`, e a ausência de checagem de que o commit espelhado já passou no CI — são
-reais mas **fora do que foi aprovado corrigir**; foram deixados como observação para o João decidir,
-não silenciados.
+um furo). Os dois sobre o `espelhar-corporativo.sh` eram reais e **o João mandou corrigir na mesma
+rodada**: a lista de exclusões passou a sair do blob do commit espelhado, não do disco da árvore —
+os dois leitores da lista voltam a ler a mesma versão, e o vazamento deixa de acontecer antes de o
+destino reprovar —, e o script passou a recusar commit cujo CI não esteja verde, com a saída
+`LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
+`26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
+sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
 
 **O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
 2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco

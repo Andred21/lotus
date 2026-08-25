@@ -66,10 +66,19 @@ Sem ela o caminho de espelho não abre e nenhuma imagem é publicada — é por 
 que ela não existe em `Andred21/lotus`: lá o único caminho continua sendo PR
 mesclado.
 
+Duas coisas o script garante antes de deixar qualquer coisa atravessar. A lista
+de exclusões que ele aplica sai do **commit espelhado**, não do disco desta
+árvore — é a mesma cópia que o `procedencia` lê no destino, e dois leitores em
+versões diferentes é exatamente como o espelho vazaria sem ninguém perceber. E
+ele **recusa commit que não passou no CI**: espelhar é promover, e o
+`procedencia` do destino confere procedência, não qualidade — sozinho, deixaria
+um commit vermelho parado em `origin/main` virar imagem publicada.
+
 ## A saída de emergência
 
 ```bash
 LOTUS_FORCA_MAIN=1 git push ...
+LOTUS_ESPELHO_SEM_CI=1 scripts/espelhar-corporativo.sh
 ```
 
 Existe de propósito: hook sem saída vira hook desinstalado no primeiro aperto.
