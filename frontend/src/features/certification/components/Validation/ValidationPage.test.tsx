@@ -39,6 +39,7 @@ const CERT: Extract<ValidationState, { kind: 'valid' }>['cert'] = {
   // spec D14) — estão aqui só porque o tipo os exige.
   cliente: { name: 'Enel' },
   redator: { name: 'Redator' },
+  display_status: 'vigente',
 }
 
 function renderPage() {

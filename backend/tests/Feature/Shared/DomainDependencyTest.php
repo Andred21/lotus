@@ -105,6 +105,15 @@ class DomainDependencyTest extends TestCase
             'Identity\Services\UserProvisioner',
             'Operation\Models\Turma',
         ],
+        // O bloco `certificacao-historico-do-aluno` abre TRÊS arestas para
+        // Certification: `StudentCertificateHistory` (o histórico por
+        // matrícula), `StudentCertificateSummary` (o VO que atravessa — vive
+        // em Services porque `Data` é camada interna pela Regra A, mesmo lugar
+        // e mesmo motivo de `Operation\Services\AcademicResult`) e
+        // `CertificateDisplayStatus`, o enum que a união fechada do front
+        // exige. `Certificate`, `CertificateStatus` e o snapshot continuam sem
+        // cruzar. O ciclo `Identity <-> Certification` que isso cria não é
+        // inédito: `Identity <-> Operation` já está aqui com a mesma natureza.
         // Task 7 do bloco `arquivados-roots-restantes` (D3) abre `Turma` e
         // `TurmaStatus`: `Redator::turmas()` é a inversa de `Turma::redatores()`, e
         // `ArchiveRedatorAction` lê `TurmaStatus` para recusar o arquivamento
@@ -115,6 +124,9 @@ class DomainDependencyTest extends TestCase
         // mesma travessia para outro lugar.
         'Identity' => [
             'Catalog\Models\Course',
+            'Certification\Enums\CertificateDisplayStatus',
+            'Certification\Services\StudentCertificateHistory',
+            'Certification\Services\StudentCertificateSummary',
             'Commercial\Models\Client',
             'Operation\Enums\EnrollmentApprovalStatus',
             'Operation\Enums\TurmaStatus',

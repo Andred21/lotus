@@ -1,4 +1,5 @@
 export * from './archivable'
+export * from './certificateStatus'
 export * from './datetime'
 export * from './enrollmentStatus'
 export * from './redatorStatus'

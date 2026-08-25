@@ -34,6 +34,7 @@ function certificado(over: Partial<CertificateData['snapshot']['aluno']> = {}): 
     created_at: '2026-08-01T10:00:00Z',
     valido_ate: null,
     snapshot_ok: false,
+    display_status: 'vigente',
     aluno_photo_url: null,
     snapshot: {
       aluno: { name: '', rut: '', ...over },
@@ -87,6 +88,11 @@ describe('HistorialTable — a linha do snapshot corrompido', () => {
     // A lista é o único lugar onde o registro aparece antes do clique: uma
     // célula em branco não distingue "sem nome" de "campo faltando".
     expect(screen.getByText('certificate.snapshotMissingField')).toBeTruthy()
+
+    // A tag de defeito ocupa o lugar da de estado — `display_status: 'vigente'`
+    // está na fixture e NÃO pode aparecer: snapshot corrompido não tem estado
+    // a afirmar, mesmo com data válida por trás.
+    expect(screen.queryByText('certificate.status.vigente')).toBeNull()
   })
 
   it('RUT vazio: travessão, NÃO o texto de campo ausente', () => {

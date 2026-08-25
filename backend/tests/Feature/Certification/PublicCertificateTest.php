@@ -110,6 +110,7 @@ class PublicCertificateTest extends TestCase
                 'codigo' => 'LOT-2026-1000',
                 'status' => 'emitido',
                 'valido_ate' => '2027-08-05',
+                'display_status' => 'vigente',
                 'revoked_at' => null,
                 'aluno' => ['name' => 'Juan Pérez'],
                 'curso' => [
@@ -183,6 +184,28 @@ class PublicCertificateTest extends TestCase
 
         $response->assertStatus(500);
         $this->assertNotSame('emitido', $response->json('status'));
+    }
+
+    /** O cartão do QR lê o estado do SERVIDOR: a rota que o fiscalizador abre
+     * no celular não pode depender de o navegador derivar nada. */
+    public function test_a_rota_publica_traz_o_estado_derivado(): void
+    {
+        $this->getJson($this->publicUrl())
+            ->assertOk()
+            ->assertJsonPath('display_status', 'vigente');
+    }
+
+    public function test_o_estado_derivado_da_rota_publica_respeita_a_revogacao(): void
+    {
+        $this->certificate->update([
+            'status' => CertificateStatus::Revocado,
+            'revoked_at' => now(),
+            'revocation_reason' => 'Documento emitido con datos incorrectos.',
+        ]);
+
+        $this->getJson($this->publicUrl())
+            ->assertOk()
+            ->assertJsonPath('display_status', 'revocado');
     }
 
     private function publicUrl(): string

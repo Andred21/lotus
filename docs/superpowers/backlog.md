@@ -23,14 +23,13 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — 7 dos 13 itens restantes são P0; quem ordena é a cadeia de dependência:
-  itens 2–9 mais o 16 e o 17 fecham o código, 10→11→12 constroem a infra e o 13 é o gate final de
-  go-live.
+- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 4–9 mais o 16 e o 17 fecham o
+  código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
-  provisionamento). A fila começa no `2` e salta o `3` de propósito: o número é identidade estável,
-  citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e
-  pareceria promoção.
+  em 2026-08-23, o `2` em 2026-08-24, e o `10` **encolheu** em vez de sair (o runtime foi entregue;
+  sobrou o provisionamento). A fila começa no `4` e salta os que já fecharam de propósito: o número
+  é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar
+  quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -41,22 +40,6 @@
 ---
 
 # Fila priorizada
-
-## 2. `certificacao-historico-do-aluno`
-
-**Prioridade:** P0 se `RF-CER-07` continuar no MVP · **Frente:** Backend/Frontend · **Contexto:** sim
-**Fonte:** Drive `RF-ALU-06`, `RF-CER-07`; Notion `8.1.7`, `8.3.1`; `P-15`.
-
-**Objetivo:** disponibilizar certificados no contexto/histórico do aluno.
-
-**Escopo:** query por aluno sem N+1; contrato tipado; autorização; curso/turma/status/validade;
-exibição no detalhe do aluno; PDF/URL sob demanda. **Absorve a P-15** (ficha em
-`pendencias/abertas.md`).
-
-**DoD:** usuário autorizado parte do aluno e encontra/abre seus certificados sem regra de domínio
-reconstruída no React.
-
----
 
 ## 4. `hardening-api-arquivos-e-abuso`
 

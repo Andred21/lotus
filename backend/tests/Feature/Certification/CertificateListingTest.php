@@ -3,6 +3,8 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Certification\Data\CertificateData;
+use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
@@ -545,5 +547,26 @@ class CertificateListingTest extends TestCase
             'revoked_at' => $status === CertificateStatus::Revocado ? now() : null,
             'revocation_reason' => $status === CertificateStatus::Revocado ? 'Documento reemplazado.' : null,
         ]);
+    }
+
+    /** O estado derivado é do BACKEND (spec D4): o React não o reconstrói. */
+    public function test_a_listagem_traz_o_estado_derivado(): void
+    {
+        $certificate = $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-7001');
+
+        $payload = CertificateData::fromModel($certificate->loadListingData());
+
+        $this->assertSame(CertificateDisplayStatus::Vigente, $payload->display_status);
+    }
+
+    /** Peso legal: revogado NUNCA volta a parecer vigente por conta da data. */
+    public function test_o_estado_derivado_respeita_a_precedencia_da_revogacao(): void
+    {
+        $certificate = $this->createCertificate(CertificateStatus::Revocado, 'LOT-2026-7002');
+        $certificate->update(['valido_ate' => '2099-01-01']);
+
+        $payload = CertificateData::fromModel($certificate->fresh()->loadListingData());
+
+        $this->assertSame(CertificateDisplayStatus::Revocado, $payload->display_status);
     }
 }

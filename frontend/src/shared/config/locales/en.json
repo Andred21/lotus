@@ -624,6 +624,11 @@
     "turmaCourse": "Course",
     "turmaDate": "Date",
     "turmaStatus": "Status",
+    "turmaCertificate": "Certificate",
+    "certificatePending": "Pending issuance",
+    "certificateNotApplicable": "Not applicable",
+    "certificateSuperseded_one": "+{{count}} prev.",
+    "certificateSuperseded_other": "+{{count}} prev.",
     "clientLocked": "Company changes happen at enrollment.",
     "noClientsAvailable": "No clients registered yet. Register a client first."
   },

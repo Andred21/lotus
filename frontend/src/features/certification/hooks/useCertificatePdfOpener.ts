@@ -1,56 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
-import { useMutationErrors } from '@shared/hooks'
-import { useCertificatePdf } from '../api/certificatesApi'
+import { useBlobTabOpener } from '@shared/hooks'
+import { useCertificatePdf } from '@shared/api/certificatesApi'
 
 /**
- * Abre o PDF do certificado numa aba nova. Clone de
- * `features/operation/hooks/useTurmaManualOpener.ts` sobre `useCertificatePdf`
- * em vez de `useTurmaManual` — mesmo mecanismo (blob autenticado, aba aberta
- * ANTES da requisição por causa do bloqueio de popup fora do gesto do
- * usuário), copiado em vez de importado porque uma feature nunca importa
- * outra (nem para tipo).
+ * Abre o PDF do certificado numa aba nova.
  *
- * O `useEffect` aqui é liberação de recurso no unmount, não sincronização de
- * estado — não cai na proibição de `useEffect` + `setState` da rule.
+ * O mecanismo (blob autenticado, aba aberta ANTES da requisição, objectURL
+ * revogado no unmount) mora em `shared/hooks/useBlobTabOpener`. Este hook é só
+ * a composição com a mutation do certificado, e mantém a assinatura antiga —
+ * `open()` sem argumento, com o id capturado — para os chamadores não mudarem.
+ *
+ * Antes daqui havia um clone de `useTurmaManualOpener` copiado inteiro, com o
+ * docblock declarando que era clone. `useTurmaManualOpener` NÃO foi migrado
+ * neste bloco: a metade dele que baixa o DOCX divide o mesmo controle de
+ * objectURL com a que abre o PDF, e desmontar isso é mudança própria, com
+ * risco próprio.
  */
 export function useCertificatePdfOpener(certificateId: number) {
-  const pdf = useCertificatePdf()
-  const { message } = useMutationErrors([pdf.error])
-  const urlRef = useRef<string | null>(null)
-  const tabRef = useRef<Window | null>(null)
-  const [popupBlocked, setPopupBlocked] = useState(false)
+  const opener = useBlobTabOpener(useCertificatePdf())
 
-  useEffect(
-    () => () => {
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current)
-      tabRef.current?.close()
-    },
-    [],
-  )
-
-  const open = () => {
-    setPopupBlocked(false)
-    const tab = window.open('about:blank', '_blank')
-    if (!tab) {
-      setPopupBlocked(true)
-      return
-    }
-
-    tab.opener = null
-    tabRef.current = tab
-    pdf.mutate(certificateId, {
-      onSuccess: (blob) => {
-        if (urlRef.current) URL.revokeObjectURL(urlRef.current)
-        urlRef.current = URL.createObjectURL(blob)
-        tab.location.href = urlRef.current
-        tabRef.current = null
-      },
-      onError: () => {
-        tab.close()
-        tabRef.current = null
-      },
-    })
+  return {
+    open: () => opener.open(certificateId),
+    pending: opener.pending,
+    popupBlocked: opener.popupBlocked,
+    message: opener.message,
   }
-
-  return { open, pending: pdf.isPending, popupBlocked, message }
 }

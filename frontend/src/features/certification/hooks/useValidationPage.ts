@@ -1,5 +1,4 @@
 import { usePublicCertificate } from '../api/usePublicCertificate'
-import { certStatus } from '../lib/certStatus'
 import type { PublicCertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
 
@@ -33,8 +32,7 @@ export function useValidationPage(uuid: string): ValidationState {
   if (!query.data) return { kind: 'loading' }
 
   const cert = query.data
-  const status = certStatus(cert)
-  if (status === 'revocado') return { kind: 'revoked', cert }
-  if (status === 'vencido') return { kind: 'expired', cert }
+  if (cert.display_status === 'revocado') return { kind: 'revoked', cert }
+  if (cert.display_status === 'vencido') return { kind: 'expired', cert }
   return { kind: 'valid', cert }
 }

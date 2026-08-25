@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (26)
+## Abertas (27)
 
 ### Agrupadas em bloco de execução
 
@@ -30,7 +30,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
-| P-15 | Certificados não aparecem na listagem nem no detalhe do aluno | `certificacao-historico-do-aluno` | João decidir expor (ou não); revisar 2026-09-30 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -60,16 +59,20 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
+| P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
+| P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
 
 | ID | Pendência | Encerrada em | Sai quando |
 |---|---|---|---|
 | P-03 | Compose por worktree não existe — portas fixas no `docker-compose.yml`, sem `COMPOSE_PROJECT_NAME` | 2026-08-24, no `compose-por-worktree`: `LOTUS_DEV_*` + `.env` da raiz, duas stacks provadas no ar | primeiro fechamento **posterior** a este |
+| P-15 | Certificados não apareciam no módulo de alunos; a decisão saiu — expostos no **detalhe**, e a coluna da **listagem** fica fora por escrito (spec §9) | 2026-08-24, no `certificacao-historico-do-aluno` | primeiro fechamento **posterior** a este |
 
 **A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
 posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
-A **P-03** entrou no rastro no mesmo dia, pelo `compose-por-worktree`, e sai no próximo fechamento.
+A **P-03** e a **P-15** entraram no rastro no mesmo dia, pelo `compose-por-worktree` e pelo
+`certificacao-historico-do-aluno`, e saem no próximo fechamento.
 
 **A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
 — e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a

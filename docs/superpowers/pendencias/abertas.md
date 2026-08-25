@@ -376,11 +376,73 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 
 ---
 
+## P-59 — `config/app.php` fixa `'timezone' => 'UTC'` como literal, e o `APP_TIMEZONE` do `.env` é ignorado
+
+**Nasceu como `P-55` na branch `feat/certificacao-historico-do-aluno` e foi renumerada no merge da
+`main` (2026-08-24)**, no precedente exato da P-41 e da P-44: a `main` chegou primeiro e já usava
+`P-55` para a invariante do espelho, então quem renumera é a recém-chegada. As menções a "P-55"
+escritas por este bloco no `historico/` foram acertadas junto; a `P-55` da `main` fica onde está.
+
+**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
+servidor e puder trocar o literal por `env('APP_TIMEZONE', 'UTC')` com prova. Revisar em **2026-10-31**.
+
+Medido no gate de navegador do `certificacao-historico-do-aluno` (2026-08-24):
+`backend/config/app.php:75` escreve `'timezone' => 'UTC'` **sem `env()`**, então o
+`APP_TIMEZONE=America/Santiago` do `backend/.env.example:8` nunca chega ao framework. Toda data
+derivada no servidor — `now()`, `Carbon::now()`, `addMonths()` — roda em UTC, e quem lê o
+`.env.example` acredita no contrário.
+
+O alcance **conhecido hoje é pequeno**: só certificado com prazo é afetado, e prazo é exceção (a
+spec §2.5 registra vigência indeterminada como padrão); além disso o `CertificateDisplayStatus`
+declara o fuso explicitamente em vez de herdar o do config, justamente para não herdar o errado.
+O defeito, porém, é **global** — alcança qualquer derivação de data futura que confie no default,
+e o Chile ainda tem horário de verão, então a diferença não é constante.
+
+O conserto tem forma conhecida: `env('APP_TIMEZONE', 'UTC')` no config e um teste que prove
+`config('app.timezone')` seguindo o `.env`. Não entra neste bloco porque mudar o fuso do servidor
+reinterpreta **toda** data já gravada — decisão de escopo próprio, não efeito colateral de uma
+coluna de certificado.
+
+---
+
+
 # Travadas em decisão do João
 
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
+
+## P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
+
+**Nasceu como `P-56` na mesma branch e foi renumerada pelo mesmo motivo** — a `main` já usava
+`P-56` para o `XSRF-TOKEN` entre árvores.
+
+**Bloco:** — · **Gatilho:** fecha quando um bloco puder reseedar ou corrigir o banco de dev (o mesmo
+candidato da [P-44](#p-44)), ou quando alguém decidir se o gate de snapshot apresentável deve
+degradar em vez de estourar. Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-24, contra a API real:
+`GET /api/publico/certificados/b47938cf-80fd-46de-8a76-f9cf611fec20` (`LOT-2026-1001`) devolve **500**
+em Problem Details, com `detail` = *"El certificado LOT-2026-1001 no puede presentarse: su documento
+congelado no tiene los campos aluno.name."*. O outro revogado do banco (`LOT-2026-1002`, mesmo
+fluxo) devolve **200** com `status: revocado` e `display_status: revocado`.
+
+**Não é regressão deste bloco.** O `LOT-2026-1001` foi criado em **2026-08-10 17:31**, antes do gate
+de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num gate unico"), e é o
+único dos oito certificados do dev cujo snapshot cru não tem `aluno.name` — os outros sete têm. O
+`certificacao-historico-do-aluno` não escreve snapshot: ele lê `snapshot_ok` e o projeta na coluna.
+
+**As duas metades que o gatilho separa:**
+
+- **Dado de dev**: uma linha de snapshot velho sobreviveu à mudança de forma. Linha alheia de bloco
+  fechado se menciona, não se apaga — a decisão de reseedar o dev é do João, exatamente como na
+  P-44.
+- **Comportamento**: o gate hoje converte snapshot incompleto em **500** numa rota **pública**, a que
+  o QR do certificado impresso aponta. Se um documento antigo com a forma antiga existir em
+  produção, quem escaneia vê erro de servidor em vez de uma página que diz o que dá para dizer.
+  Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
+  cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
+  `PublicCertificateData`.
 
 ## P-02 — retenção da auditoria nunca decidida
 
@@ -585,26 +647,6 @@ Bloco 6b (spec D7): turma se identifica por relacionamento. **Gatilho anterior v
 busca filtra por `quote_code`/`budget_code`), remover seria perda funcional, e criar código próprio
 exige coluna + sequência ADR-17 + DTO + regeneração de tipos — backend com peso legal dentro de um
 bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variável do tema.
-
-## P-15 — certificados não aparecem no módulo de alunos
-
-**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fecha quando o João decidir expor (ou não) certificados na listagem e no detalhe do
-aluno, ou se a Lotus pedir. Revisar em **2026-09-30**.
-
-O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
-implementado não tem nenhum dos dois.
-
-Bloco alunos (2026-07-27, spec D10): `app/Domains/Certification/` era pasta vazia e não existia
-migration de `certificates`. Card vazio foi rejeitado explicitamente: afirmar "sem certificados"
-quando a verdade é "o módulo não existe" é falha silenciosa, e aqui o dado tem peso legal.
-**Proveniência de D10 ratificada pelo João no doc-sync 2026-07-30.**
-
-**Gatilho venceu em 2026-08-07:** o Bloco 7 entregou `certificates` e a vertical até a API pública.
-**Venceu de novo em 2026-08-08:** o bloco `certificacao-frontend` entregou o módulo próprio
-`/certificados` (Emisión + Historial) e **não tocou o módulo de alunos** — o escopo aprovado no
-brainstorming (4 frentes) nunca incluiu a listagem/detalhe do aluno, então a decisão que esta
-pendência espera segue não tomada. Os dados agora existem de ponta a ponta; expor coluna/card no
-módulo de alunos é composição de frontend sobre API pronta.
 
 ## P-16 — Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores`
 

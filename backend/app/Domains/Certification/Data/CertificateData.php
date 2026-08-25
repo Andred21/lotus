@@ -3,6 +3,7 @@
 namespace App\Domains\Certification\Data;
 
 use App\Domains\Certification\Data\Snapshot\CertificateSnapshotData;
+use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
@@ -34,6 +35,11 @@ class CertificateData extends Data
         public CertificateSnapshotData $snapshot,
         public bool $snapshot_ok,
         public string $created_at,
+        /** O estado de EXIBIÇÃO, derivado no servidor (spec D4). O React
+         * consumia `status` + `valido_ate` e refazia esta conta — regra de
+         * domínio reconstruída no cliente, num documento de peso legal. */
+        #[Computed]
+        public CertificateDisplayStatus $display_status,
         /** Foto VIVA do aluno, deliberadamente fora do snapshot: é identidade
          * visual da listagem, não dado do documento congelado. */
         #[Computed]
@@ -64,6 +70,11 @@ class CertificateData extends Data
             snapshot: $snapshot,
             snapshot_ok: $snapshot->isPresentable(),
             created_at: $certificate->created_at->toISOString(),
+            display_status: CertificateDisplayStatus::for(
+                $certificate->status,
+                $certificate->valido_ate,
+                CertificateDisplayStatus::hoje(),
+            ),
             aluno_photo_url: $certificate->enrollment->student->user->photo_path,
         );
     }

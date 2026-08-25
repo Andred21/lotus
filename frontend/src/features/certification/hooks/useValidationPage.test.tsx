@@ -18,8 +18,7 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
 }
 
-// Datas bem afastadas de hoje para não cair na janela `por_vencer` (30 dias)
-// do `certStatus` — o que importa aqui é só passado vs. futuro.
+// As datas ficam só como dado do DTO: quem decide o estado agora é o servidor, em `display_status`.
 const FUTURO = '2030-01-01'
 const PASSADO = '2020-01-01'
 
@@ -34,6 +33,7 @@ function certWith(overrides: Partial<PublicCertificateData>): PublicCertificateD
     turma: { end_date: '2026-01-01' },
     cliente: { name: 'Cliente X' },
     redator: { name: 'Redator Uno' },
+    display_status: 'vigente',
     ...overrides,
   }
 }
@@ -57,40 +57,37 @@ describe('useValidationPage', () => {
     expect(result.current.kind).toBe('loading')
   })
 
-  it('certificado revogado vence mesmo com valido_ate no futuro', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: FUTURO }) })
+  // O mapeamento abaixo é exaustivo nos 4 valores de `display_status`
+  // (`CertificateDisplayStatus`). A precedência "revogado ganha da data" e a
+  // janela de `por_vencer` são regra de BACKEND, provada lá
+  // (`CertificateDisplayStatusTest`, `CertificateListingTest`,
+  // `PublicCertificateTest`) — aqui só se prova o `display_status` → `kind`.
+  it('display_status revocado vira kind revoked', async () => {
+    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: FUTURO, display_status: 'revocado' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
     await waitFor(() => expect(result.current.kind).toBe('revoked'))
   })
 
-  it('certificado revogado vence mesmo com valido_ate no passado', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'revocado', valido_ate: PASSADO }) })
-
-    const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
-
-    await waitFor(() => expect(result.current.kind).toBe('revoked'))
-  })
-
-  it('valido_ate no passado sem revogação vira expired', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: PASSADO }) })
+  it('display_status vencido vira kind expired', async () => {
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: PASSADO, display_status: 'vencido' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
     await waitFor(() => expect(result.current.kind).toBe('expired'))
   })
 
-  it('certificado emitido com valido_ate no futuro é valid', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: FUTURO }) })
+  it('display_status vigente vira kind valid', async () => {
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: FUTURO, display_status: 'vigente' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 
     await waitFor(() => expect(result.current.kind).toBe('valid'))
   })
 
-  it('certificado emitido com valido_ate null (vigência indefinida) é valid', async () => {
-    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: null }) })
+  it('display_status por_vencer também vira kind valid — não confundir com expired', async () => {
+    get.mockResolvedValue({ data: certWith({ status: 'emitido', valido_ate: FUTURO, display_status: 'por_vencer' }) })
 
     const { result } = renderHook(() => useValidationPage('uuid-1'), { wrapper })
 

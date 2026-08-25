@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Certification\Services\StudentCertificateHistory;
 use App\Domains\Identity\Actions\CreateStudentAction;
 use App\Domains\Identity\Actions\UpdateStudentAction;
 use App\Domains\Identity\Data\StudentData;
@@ -47,15 +48,26 @@ class StudentController extends Controller implements HasMiddleware
         return StudentData::fromModel($action->execute($data));
     }
 
-    public function show(Student $student): StudentDetailData
+    /**
+     * O detalhe traz os certificados junto (spec D2): endpoint separado
+     * obrigaria o React a casar duas listas por `enrollment_id`, que é
+     * composição no cliente. O gate é o mesmo `identity.user.view` — nenhuma
+     * role atual vê aluno sem ver certificado (spec D11).
+     */
+    public function show(Student $student, StudentCertificateHistory $history): StudentDetailData
     {
-        return StudentDetailData::fromModel($student->load([
+        $student->load([
             'user',
             'currentClient',
             'logs.client',
             'enrollments.turma.quote',
             'enrollments.turma.course',
-        ]));
+        ]);
+
+        return StudentDetailData::fromModel(
+            $student,
+            $history->forEnrollments($student->enrollments->pluck('id')->all()),
+        );
     }
 
     public function update(StudentData $data, Student $student, UpdateStudentAction $action): StudentData

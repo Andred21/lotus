@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { useTableFilter, usePermissions } from '@shared/hooks'
-import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
+import type {
+  CertificateData,
+  CertificateDisplayStatus,
+  EmissionPanelEnrollmentData,
+  EmissionPanelTurmaData,
+} from '@shared/types/generated'
 import { useCertificate, useCertificates, useEmissionPanel } from '../api/certificatesApi'
-import { certStatus, type CertDerivedStatus } from '../lib/certStatus'
 
 export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: EmissionPanelTurmaData }
 
 /**
  * Estado da aba Historial: lista completa (`useCertificates`) + busca + filtro
- * de estado (`useTableFilter`, `where` derivado de `certStatus`) + contagens
+ * de estado (`useTableFilter`, `where` sobre o `display_status` do servidor) + contagens
  * por estado do rodapé + a query pontual do `Ver` (`useCertificate`, mesmo
  * padrão do `useEmissionPanelState`) + a localização da matrícula/turma no
  * painel de emissão (`useEmissionPanel`, já em cache pela aba Emisión) para o
@@ -22,7 +26,7 @@ export function useHistorial() {
   // `view`, a query desligada evita um 403 garantido no mount da aba.
   const panel = useEmissionPanel(can('certification.certificate.issue'))
 
-  const [statusFilter, setStatusFilterState] = useState<CertDerivedStatus | null>(null)
+  const [statusFilter, setStatusFilterState] = useState<CertificateDisplayStatus | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<CertificateData | null>(null)
   const [reissuing, setReissuing] = useState<CertificateData | null>(null)
@@ -40,14 +44,14 @@ export function useHistorial() {
   const table = useTableFilter(
     rows,
     (c) => [c.codigo, c.snapshot.aluno.name, c.snapshot.aluno.rut],
-    statusFilter ? (c) => certStatus(c) === statusFilter : undefined,
+    statusFilter ? (c) => c.display_status === statusFilter : undefined,
   )
 
   // O dropdown de estado não passa por `onFilterChange` (isso é só a busca) —
   // sem resetar a página aqui, trocar de estado no meio da página 2 mantém o
   // `first` obsoleto até o clamp do hook agir, o mesmo cuidado que
   // `TurmasTable`/`BudgetsTable` tomam à mão.
-  const setStatusFilter = (value: CertDerivedStatus | null) => {
+  const setStatusFilter = (value: CertificateDisplayStatus | null) => {
     setStatusFilterState(value)
     table.resetPage()
   }
@@ -59,10 +63,10 @@ export function useHistorial() {
   const clearStatusFilter = () => setStatusFilterState(null)
 
   const statusSummary = {
-    vigentes: table.rows.filter((c) => certStatus(c) === 'vigente').length,
-    porVencer: table.rows.filter((c) => certStatus(c) === 'por_vencer').length,
-    vencidos: table.rows.filter((c) => certStatus(c) === 'vencido').length,
-    revocados: table.rows.filter((c) => certStatus(c) === 'revocado').length,
+    vigentes: table.rows.filter((c) => c.display_status === 'vigente').length,
+    porVencer: table.rows.filter((c) => c.display_status === 'por_vencer').length,
+    vencidos: table.rows.filter((c) => c.display_status === 'vencido').length,
+    revocados: table.rows.filter((c) => c.display_status === 'revocado').length,
   }
 
   /** Acha a matrícula/turma do painel de emissão pelo `enrollment_id` do

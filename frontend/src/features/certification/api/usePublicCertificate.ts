@@ -13,5 +13,10 @@ export function usePublicCertificate(uuid: string) {
     queryFn: () => api.get<PublicCertificateData>(`/api/publico/certificados/${uuid}`).then((r) => r.data),
     enabled: Boolean(uuid),
     retry: false,
+    /** Vence o default `false` do `AppProviders`: o cartão do QR imprime o
+     * `display_status` derivado no servidor, e o fiscalizador deixa a aba
+     * aberta no celular. Mesma razão do `useCertificates` (Q-1 do review de
+     * 2026-08-24). */
+    refetchOnWindowFocus: true,
   })
 }

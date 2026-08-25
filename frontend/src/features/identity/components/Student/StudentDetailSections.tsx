@@ -19,6 +19,7 @@ import {
 import { useResourceState } from "@shared/hooks";
 import type { useStudentDetail } from "../../api/useStudentDetail";
 import { StudentLinkRow } from "./StudentLinkRow";
+import { StudentCertificateCell } from "./StudentCertificateCell";
 
 /** As duas seções do modo view: histórico de vínculos e turmas do aluno. O
  * hook fica no diálogo — descê-lo cancelaria a requisição que hoje sai em modo
@@ -129,6 +130,13 @@ export function StudentDetailSections({
                 )}
               />
             )}
+          />
+          <AppColumn
+            header={t("student.turmaCertificate")}
+            body={(turma: StudentTurmaData) => (
+              <StudentCertificateCell turma={turma} />
+            )}
+            style={largura.certificate}
           />
         </AppDataTable>
       )}
