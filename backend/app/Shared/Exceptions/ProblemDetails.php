@@ -2,15 +2,16 @@
 
 namespace App\Shared\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Throwable;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 class ProblemDetails
 {
@@ -20,26 +21,21 @@ class ProblemDetails
     public static function fromException(Throwable $e, Request $request): JsonResponse
     {
         [$status, $title, $type] = match (true) {
-            $e instanceof ValidationException =>
-                [422, 'Erro de validação', 'https://lotus.cl/errors/validation'],
-            $e instanceof AuthenticationException =>
-                [401, 'Não autenticado', 'https://lotus.cl/errors/unauthenticated'],
-            $e instanceof AuthorizationException =>
-                [403, 'Acesso negado', 'https://lotus.cl/errors/forbidden'],
+            $e instanceof ValidationException => [422, 'Erro de validação', 'https://lotus.cl/errors/validation'],
+            $e instanceof AuthenticationException => [401, 'Não autenticado', 'https://lotus.cl/errors/unauthenticated'],
+            $e instanceof AuthorizationException => [403, 'Acesso negado', 'https://lotus.cl/errors/forbidden'],
             $e instanceof ModelNotFoundException,
-            $e instanceof NotFoundHttpException =>
-                [404, 'Recurso não encontrado', 'https://lotus.cl/errors/not-found'],
-            $e instanceof HttpExceptionInterface =>
-                [$e->getStatusCode(), 'Erro na requisição', 'https://lotus.cl/errors/http'],
-            default =>
-                [500, 'Erro interno', 'https://lotus.cl/errors/server'],
+            $e instanceof NotFoundHttpException => [404, 'Recurso não encontrado', 'https://lotus.cl/errors/not-found'],
+            $e instanceof ThrottleRequestsException => [429, 'Demasiadas solicitudes', 'https://lotus.cl/errors/too-many-requests'],
+            $e instanceof HttpExceptionInterface => [$e->getStatusCode(), 'Erro na requisição', 'https://lotus.cl/errors/http'],
+            default => [500, 'Erro interno', 'https://lotus.cl/errors/server'],
         };
 
         $payload = [
-            'type'     => $type,
-            'title'    => $title,
-            'status'   => $status,
-            'detail'   => self::detailFor($e, $status),
+            'type' => $type,
+            'title' => $title,
+            'status' => $status,
+            'detail' => self::detailFor($e, $status),
             'instance' => $request->getRequestUri(),
         ];
 
@@ -48,9 +44,15 @@ class ProblemDetails
             $payload['errors'] = $e->errors();
         }
 
-        return response()->json($payload, $status, [
+        // Os headers da exceção vêm PRIMEIRO e o Content-Type do envelope
+        // depois, porque o segundo array vence o merge: `Retry-After` e
+        // `X-RateLimit-*` do throttle chegam ao cliente, mas nenhuma exceção
+        // consegue tirar a resposta do `application/problem+json` do ADR-03.
+        $headers = $e instanceof HttpExceptionInterface ? $e->getHeaders() : [];
+
+        return response()->json($payload, $status, array_merge($headers, [
             'Content-Type' => 'application/problem+json',
-        ]);
+        ]));
     }
 
     /**
