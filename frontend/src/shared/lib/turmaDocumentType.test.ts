@@ -46,10 +46,13 @@ describe('turmaDocumentTypeLabel', () => {
     expect(turmaDocumentTypeLabel('MANUAL', eco)).toBe('t:operation.documents.type.MANUAL')
   })
 
-  it('tipo fora do contrato imprime o CÓDIGO, nunca o caminho da chave', () => {
-    // Com o template literal que existia antes, isto imprimia
-    // "operation.documents.type.EVALUACION_XPTO" na tela do operador.
-    expect(turmaDocumentTypeLabel('EVALUACION_XPTO', eco)).toBe('EVALUACION_XPTO')
+  it('nao aceita codigo fora do enum — o compilador barra antes da tela', () => {
+    // Desde a D-57 o contrato entrega `TurmaDocumentType`, e o parâmetro é
+    // estreito: string crua não entra mais, e é o `tsc` que recusa. O teste
+    // anterior media o fallback, que existia só porque o compilador não
+    // alcançava o call site.
+    // @ts-expect-error o contrato entrega TurmaDocumentType; string crua nao entra mais.
+    turmaDocumentTypeLabel('TIPO_INVENTADO', eco)
   })
 
   it('a lista junta os rótulos traduzidos com ", "', () => {
