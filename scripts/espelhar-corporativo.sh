@@ -12,9 +12,18 @@
 # O commit e criado com `commit-tree` sobre um indice temporario: a arvore de
 # trabalho e o indice de quem roda o script NAO sao tocados em nenhum momento.
 #
+# Espelhar e PROMOVER: o que atravessa vira release no corporativo. Por isso o
+# script se recusa a espelhar um commit cujo CI nao esteja verde -- o
+# `procedencia` do destino confere procedencia, nao qualidade, e sozinho
+# deixaria um commit vermelho virar imagem publicada.
+#
 # Uso:
 #   scripts/espelhar-corporativo.sh            # espelha de verdade
 #   scripts/espelhar-corporativo.sh --simular  # so mostra o que entraria
+#
+# Saida de emergencia (mesma logica do pre-push: gate sem saida vira gate
+# desinstalado no primeiro aperto):
+#   LOTUS_ESPELHO_SEM_CI=1 scripts/espelhar-corporativo.sh
 set -euo pipefail
 
 SIMULAR=0
@@ -22,9 +31,6 @@ SIMULAR=0
 
 RAIZ=$(git rev-parse --show-toplevel)
 cd "$RAIZ"
-
-EXCLUSOES="$RAIZ/.espelho-exclusoes"
-[ -f "$EXCLUSOES" ] || { echo "erro: $EXCLUSOES nao existe" >&2; exit 1; }
 
 echo "==> buscando refs"
 git fetch --quiet origin main
@@ -34,9 +40,57 @@ FONTE=$(git rev-parse origin/main)
 FONTE_CURTO=$(git rev-parse --short origin/main)
 ASSUNTO=$(git log -1 --pretty=%s "$FONTE")
 
-# Indice temporario: nada do que vem abaixo encosta no indice real.
+EXCLUSOES=$(mktemp)
 INDICE=$(mktemp)
-trap 'rm -f "$INDICE"' EXIT
+trap 'rm -f "$EXCLUSOES" "$INDICE"' EXIT
+
+# A lista sai do COMMIT QUE ESTA SENDO ESPELHADO, nunca do disco desta arvore.
+# `.espelho-exclusoes` tem dois leitores e eles precisam ler a MESMA versao: o
+# filtro aqui e o job `procedencia` no destino, que le a copia que atravessou --
+# ou seja, a de $FONTE. Filtrar por uma copia local defasada publicaria o
+# diretorio de desenvolvimento que a versao nova exclui, e o destino so
+# reprovaria DEPOIS do push, com o vazamento ja em main.
+git show "$FONTE:.espelho-exclusoes" > "$EXCLUSOES" 2>/dev/null || {
+  echo "erro: $FONTE_CURTO nao carrega .espelho-exclusoes; nao ha como filtrar." >&2
+  exit 1
+}
+
+# ── o que atravessa ja passou no CI? ──────────────────────────────────────────
+ORIGEM_REPO=$(git remote get-url origin | sed -E 's#^git@github\.com:##; s#^https://github\.com/##; s#\.git$##')
+
+if [ "${LOTUS_ESPELHO_SEM_CI:-0}" = "1" ]; then
+  echo "==> AVISO: LOTUS_ESPELHO_SEM_CI=1 -- espelhando SEM conferir o CI de $FONTE_CURTO"
+elif ! command -v gh >/dev/null 2>&1; then
+  echo "erro: gh nao encontrado, e sem ele nao da para saber se $FONTE_CURTO passou no CI." >&2
+  echo "      instale o gh, ou force com LOTUS_ESPELHO_SEM_CI=1 assumindo o risco." >&2
+  [ "$SIMULAR" = "1" ] || exit 1
+else
+  echo "==> conferindo o CI de $FONTE_CURTO em $ORIGEM_REPO"
+  CI=$(gh api "repos/$ORIGEM_REPO/actions/runs?head_sha=$FONTE&per_page=100" \
+        --jq '[.workflow_runs[] | select(.name == "CI")]
+              | sort_by(.run_number)
+              | if length == 0 then "" else (.[-1] | "\(.status) \(.conclusion)") end' \
+        2>/dev/null) || CI=""
+
+  case "$CI" in
+    "completed success")
+      echo "    CI verde."
+      ;;
+    "")
+      echo "erro: nenhum run de CI para $FONTE_CURTO em $ORIGEM_REPO." >&2
+      echo "      espere o CI rodar, ou force com LOTUS_ESPELHO_SEM_CI=1." >&2
+      [ "$SIMULAR" = "1" ] || exit 1
+      ;;
+    *)
+      echo "erro: o CI de $FONTE_CURTO nao esta verde (estado: $CI)." >&2
+      echo "      commit vermelho nao vira release no corporativo." >&2
+      echo "      force com LOTUS_ESPELHO_SEM_CI=1 se souber o que esta fazendo." >&2
+      [ "$SIMULAR" = "1" ] || exit 1
+      ;;
+  esac
+fi
+
+# Indice temporario: nada do que vem abaixo encosta no indice real.
 export GIT_INDEX_FILE="$INDICE"
 
 git read-tree "$FONTE"
