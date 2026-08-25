@@ -2,11 +2,12 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
 import { RedatorRowActions } from './RedatorRowActions'
+import { redatorWidths } from './redatorColumns'
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -34,6 +35,7 @@ export function RedatoresTable({
 }) {
   const { t } = useTranslation()
   const archived = mode === 'archived'
+  const largura = redatorWidths(archived)
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
   const toast = useToast()
   const invitation = useRedatorInvitation()
@@ -72,14 +74,17 @@ export function RedatoresTable({
         body={(r: RedatorData) => (
           <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
         )}
+        style={largura.name}
       />
       <AppColumn
         header={t('common.rut')}
         body={(r: RedatorData) => <span className="font-mono text-sm">{r.rut}</span>}
+        style={largura.rut}
       />
       <AppColumn
         header={t('redator.enabledCourses')}
         body={(r: RedatorData) => <span className="font-semibold">{r.course_ids.length}</span>}
+        style={largura.courses}
       />
       <AppColumn
         header={t('redator.suitability')}
@@ -87,12 +92,14 @@ export function RedatoresTable({
           const k = idoneidade(r)
           return <AppTag value={t(`suitability.${k}`)} severity={IDONEIDADE_SEVERITY[k]} />
         }}
+        style={largura.suitability}
       />
       <AppColumn
         field="last_login"
         header={t('common.lastLogin')}
         sortable
         body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
+        style={largura.lastLogin}
       />
       {archived && archivedColumns(t)}
       <AppColumn
@@ -122,7 +129,7 @@ export function RedatoresTable({
             />
           </div>
         )}
-        style={{ width: '10rem' }}
+        style={stickyActionsColumn(archived ? '10rem' : '12rem')}
       />
     </SearchableTableFrame>
   )

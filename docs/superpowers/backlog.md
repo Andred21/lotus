@@ -337,45 +337,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-## 17. `tabelas-coluna-de-acoes-e-largura`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não
-**Fonte:** decisão do João em 2026-08-24 (ao ver a `TurmasTable` corrigida); UI-02 da revisão de
-2026-08-22; `stickyActionsColumn` e `TURMA_COLUMN` como molde já provado.
-
-**Objetivo:** que toda tabela do sistema termine na MESMA coluna de ações — ícones, à direita,
-presa ao invólucro que rola — e que a largura das colunas seja declarada por política, não sorteada
-pelo `table-layout: auto`.
-
-**Evidência medida (2026-08-24):** 15 sítios montam `AppDataTable`/`SearchableTableFrame`; **12 têm
-coluna de ação e só 2 a prendem** — `TurmasTable` (`8rem`) e `EnrollmentTable` (`6rem`). Nos outros
-10 a ação sai da vista com a rolagem lateral, que é o defeito que o UI-02 mediu na tabela de turmas:
-429px fora da vista em 1024x768 e 871px em 390x844, levando junto os botões da linha. Quem não
-descobre a rolagem não abre o registro pela linha.
-
-**Escopo:**
-- adotar `stickyActionsColumn(width)` nas 10 tabelas restantes, com a largura de cada uma medida
-  pelo número de ícones que ela tem (não copiar o `8rem` da turma);
-- **largura de coluna:** a regra que a `TurmasTable` passou a seguir — *toda coluna declara
-  largura, menos UMA, a que absorve a sobra* (o texto livre da tabela). Declarar só algumas é
-  entregar a sobra por sorteio: medido em 1447px, as três colunas sem declaração (tag, tag e
-  numeral) ficaram com ~230px cada, quase metade da tabela, enquanto a coluna de nome de curso
-  quebrava em duas linhas e os dois `IdentityCell` truncavam;
-- decidir se a política vira **mecanismo** (linha de rule + catraca de lint/teste) ou fica em molde
-  citado — hoje é comentário em dois arquivos e nada reprova a tabela nova que nascer sem;
-- **`archivedColumns`** (`shared/ui`, 8 tabelas) entra junto: as duas colunas do rastreio não
-  declaram largura e competem pela mesma sobra na visão de arquivados.
-
-**Fora:** redesenho de célula, ordenação e paginação — o que muda é largura e ancoragem. Colapsar
-coluna em tela estreita segue rejeitado (spec D20): escolher qual dado some é julgamento de domínio,
-e esconder coluna em tela com peso de auditoria é perda silenciosa.
-
-**DoD:** nas 12 tabelas com ação, a coluna de ação permanece alcançável em 1440x900, 1024x768 e
-390x844 sem rolar na horizontal — medido na tela, não no diff; e nenhuma tabela com coluna de
-largura não declarada além da que absorve.
-
----
-
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |
@@ -385,7 +346,6 @@ largura não declarada além da que absorve.
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
 | `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
-| `P-03` | Compose por worktree — só se backend ∥ backend voltar a ocorrer, ou 2026-10-31. |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
 | `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |

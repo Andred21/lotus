@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
+import { complianceWidths } from './panelColumns'
 
 /**
  * Compliance documental das turmas. Tabela de verdade e não lista compacta
@@ -18,6 +19,7 @@ import type { TurmaComplianceData } from '@shared/types/generated'
  */
 export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
   const { t } = useTranslation()
+  const largura = complianceWidths()
 
   return (
     <AppCard>
@@ -31,6 +33,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         <AppColumn
           field="course_name"
           header={t('dashboard.compliance.course')}
+          style={largura.course}
           sortable
           body={(r: TurmaComplianceData) => (
             <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline" style={{ color: 'var(--text-color)' }}>
@@ -40,6 +43,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         />
         <AppColumn
           header={t('dashboard.compliance.redatores')}
+          style={largura.redatores}
           body={(r: TurmaComplianceData) =>
             r.redatores.length === 0 ? (
               <span style={{ color: 'var(--text-color-secondary)' }}>{t('dashboard.compliance.noRedator')}</span>
@@ -50,6 +54,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         />
         <AppColumn
           header={t('dashboard.compliance.range')}
+          style={largura.range}
           body={(r: TurmaComplianceData) => (
             // O intervalo empurra a rolagem em vez de se despedaçar: comprimida
             // até 1024, a coluna quebrava UMA data em quatro linhas
@@ -64,9 +69,10 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
             </span>
           )}
         />
-        <AppColumn header={t('dashboard.compliance.present')} body={(r: TurmaComplianceData) => r.present_types.length} />
+        <AppColumn header={t('dashboard.compliance.present')} style={largura.present} body={(r: TurmaComplianceData) => r.present_types.length} />
         <AppColumn
           header={t('dashboard.compliance.missing')}
+          style={largura.missing}
           // O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
           // de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
           // pelas mesmas chaves (UI-07 da revisão de 2026-08-22). A frase da
@@ -79,6 +85,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}
+          style={largura.enabled}
           sortable
           field="habilitada"
           body={(r: TurmaComplianceData) => (

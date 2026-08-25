@@ -13,8 +13,8 @@ docker compose up -d
 docker compose run --rm app php artisan key:generate
 docker compose run --rm app php artisan migrate
 \`\`\`
-- Backend: http://localhost:8080
-- Frontend: http://localhost:5173
+- Backend: http://localhost:8080 (default; some o offset da sua árvore — ver `.env.example`)
+- Frontend: http://localhost:5173 (default; idem)
 
 ## Documentação
 Planejamento (ADRs, DER, requisitos) no Google Drive. Tasks no Notion.

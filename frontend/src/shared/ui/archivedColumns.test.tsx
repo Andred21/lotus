@@ -1,8 +1,9 @@
 import { Children, isValidElement } from 'react'
+import type { CSSProperties } from 'react'
 import type { ReactNode } from 'react'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import i18n from '@shared/config/i18n'
-import { AppColumn } from './AppDataTable'
+import { AppColumn, ARCHIVED_COLUMN } from './AppDataTable'
 import { archivedColumns } from './archivedColumns'
 
 // O idioma da INTERFACE, nao o do runtime: em jsdom o `toLocaleDateString()` sem
@@ -23,6 +24,7 @@ function coluna(indice: number) {
   return elemento.props as {
     field?: string
     header?: string
+    style?: CSSProperties
     body?: (linha: { archived_at?: string; archived_by?: string | null }) => unknown
   }
 }
@@ -95,5 +97,18 @@ describe('archivedColumns', () => {
     // `{archived && archivedColumns(t)}` no modo ativo passa `false`, e
     // `Children.toArray` o descarta — nenhuma coluna fantasma no modo ativo.
     expect(campos([<AppColumn key="id" field="id" />, false])).toEqual(['id'])
+  })
+
+  it('declara a largura das duas colunas, somando o que o orcamento desconta', () => {
+    // A catraca de ESLint do item 17 nao alcanca `src/shared/**`: os arquivos de
+    // teste de shared renderizam AppColumn de fixture sem largura, e po-los sob a
+    // regra exigiria um `ignores` que desligaria junto a catraca de cor. O par vive
+    // aqui, entao a prova vive aqui.
+    expect(coluna(0).style).toEqual(ARCHIVED_COLUMN.archived_at)
+    expect(coluna(1).style).toEqual(ARCHIVED_COLUMN.archived_by)
+    expect(
+      parseFloat(String(ARCHIVED_COLUMN.archived_at.width)) +
+        parseFloat(String(ARCHIVED_COLUMN.archived_by.width)),
+    ).toBe(24)
   })
 })

@@ -2,11 +2,12 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppTag, IdentityCell,
+  AppColumn, AppTag, IdentityCell, stickyActionsColumn,
   AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
+import { budgetWidths } from './budgetColumns'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf, type ArchivableRow } from '@shared/lib'
@@ -41,6 +42,7 @@ export function BudgetsTable({
   const [status, setStatus] = useState<QuoteStatus | null>(null)
   const clients = useCommercialClients()
   const archived = mode === 'archived'
+  const largura = budgetWidths(archived)
 
   // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
   // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
@@ -93,6 +95,7 @@ export function BudgetsTable({
       <AppColumn
         header={t('budget.code')}
         body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
+        style={largura.code}
       />
       <AppColumn
         header={t('budget.client')}
@@ -105,14 +108,16 @@ export function BudgetsTable({
             clients.clientName(b.client_id)
           )
         }}
+        style={largura.client}
       />
-      <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} />
-      <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} />
+      <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} style={largura.quoteCount} />
+      <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} style={largura.totalValue} />
       <AppColumn
         header={t('budget.status')}
         body={(b: BudgetData) =>
           b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
         }
+        style={largura.status}
       />
       {archived && archivedColumns(t)}
       <AppColumn
@@ -125,7 +130,7 @@ export function BudgetsTable({
             onRestore={onRestore}
           />
         )}
-        style={{ width: '8rem' }}
+        style={stickyActionsColumn(archived ? '10rem' : '6rem')}
       />
     </SearchableTableFrame>
   )
