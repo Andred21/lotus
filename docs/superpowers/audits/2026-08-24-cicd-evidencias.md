@@ -98,3 +98,60 @@ Release é o **par**, não uma imagem: `docker-compose.prod.yml:23,36` consome `
 O job `frontend` instala com `pnpm install --frozen-lockfile` e passa em todos os runs acima: o
 `pnpm-lock.yaml` commitado é resolvível pela versão declarada em `packageManager`
 (`pnpm@11.23.0`), sem reescrita do lock durante a instalação.
+
+## Fatia 2 — `Gatika-CL/lotus` recebeu a CI; a protection não pôde ser aplicada
+
+`Gatika-CL/lotus` criado privado e vazio pelo João em 2026-08-24; `upstream` configurado e `main`
+empurrada. O workflow rodou uma vez antes de qualquer protection — é o que ensina os nomes dos
+checks ao GitHub, e é por isso que a ordem desta fatia não é preferência.
+
+Run [32802872714](https://github.com/Gatika-CL/lotus/actions/runs/32802872714) (`11c8914f`, push em
+`main`): seis jobs, `image` inclusive. Nomes lidos de
+`GET /repos/Gatika-CL/lotus/commits/11c8914f/check-runs`, exatamente os seis esperados:
+
+```
+audit-dev
+audit-prod
+backend
+frontend
+image
+types-drift
+```
+
+Par publicado no registry corporativo, digests do log do job `image`:
+
+```
+ghcr.io/gatika-cl/lotus-app:11c8914fc35018e6445c551caa1e70147d496e06
+  sha256:f678de8c9637a092232b1ede9cfea04c598d13b262ff0e26a3a146103e477486
+ghcr.io/gatika-cl/lotus-web:11c8914fc35018e6445c551caa1e70147d496e06
+  sha256:4c62375f17a2a055c1e666ea6963bc9bd9952ae1307e10b6720301525f643303
+```
+
+`docker manifest inspect` contra essas tags responde `denied`, não `manifest unknown`: o pacote é
+da organização e o token da sessão não tem `read:packages` nela. É recusa de leitura, não ausência
+de artefato — a existência está provada pelo `pushing manifest ... done` do log.
+
+### DoD 5 — BLOQUEADO por plano de conta, não por configuração
+
+`PUT /repos/Gatika-CL/lotus/branches/main/protection` responde:
+
+```
+HTTP 403
+Upgrade to GitHub Pro or make this repository public to enable this feature.
+```
+
+`GET /orgs/Gatika-CL` confirma a causa: `"plan": {"name": "free"}`. **Branch protection em
+repositório privado exige plano pago.** A rota alternativa tem a mesma trava —
+`POST /repos/Gatika-CL/lotus/rulesets` devolve o mesmo 403.
+
+As duas saídas são decisão do João, não do agente:
+
+1. **Subir `Gatika-CL` para GitHub Team.** Mantém o repositório privado, que é a exigência de um
+   cliente regulado, e a protection do Step 6 do plano entra como escrita, sem nenhuma outra
+   mudança.
+2. **Tornar o repositório público.** Libera a protection de graça e é inaceitável aqui: o
+   repositório carrega o domínio de um cliente do setor elétrico chileno.
+
+Enquanto a decisão não vem, a `main` de `Gatika-CL` está **sem régua no servidor**: a CI roda e
+reporta, mas nada impede um push direto ou um force-push. O gate de publicação (DoD 2) continua
+valendo, porque ele é `needs:` dentro do próprio workflow e não depende de protection.
