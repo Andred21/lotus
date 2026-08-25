@@ -4,7 +4,7 @@
 
 **Goal:** um commit reprovado não gera release promovível; um commit aprovado gera o par de imagens de produção etiquetado pelo SHA completo.
 
-**Architecture:** um único `.github/workflows/ci.yml`, dono-agnóstico (nenhum nome de repositório no YAML), com cinco jobs de correção e um job de publicação condicionado a `push` em `main`. O bloco se prova em duas fatias: a fatia 1 constrói e prova tudo em `Andred21/lotus`; a fatia 2 cria `Gatika/lotus`, empurra, e trava branch protection lida de volta pela API.
+**Architecture:** um único `.github/workflows/ci.yml`, dono-agnóstico (nenhum nome de repositório no YAML), com cinco jobs de correção e um job de publicação condicionado a `push` em `main`. O bloco se prova em duas fatias: a fatia 1 constrói e prova tudo em `Andred21/lotus`; a fatia 2 cria `Gatika-CL/lotus`, empurra, e trava branch protection lida de volta pela API.
 
 **Tech Stack:** GitHub Actions · `shivammathur/setup-php@v2` · `pnpm/action-setup@v4` · `docker/build-push-action@v6` com cache `type=gha` · GHCR autenticado por `GITHUB_TOKEN`.
 
@@ -764,7 +764,7 @@ Ao final de `.github/workflows/ci.yml`:
 
       # github.repository e `Andred21/lotus` -- com maiuscula. GHCR recusa
       # nome com maiuscula ("repository name must be lowercase"), entao usar
-      # a variavel crua no `tags:` falha o push. Vale para Gatika tambem.
+      # a variavel crua no `tags:` falha o push. Vale para Gatika-CL tambem.
       - name: Nome do repositorio em minusculas
         id: repo
         run: echo "lc=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
@@ -986,7 +986,7 @@ git push
 
 ---
 
-### Task 9: Fatia 2 — `Gatika/lotus`, upstream e protection lida de volta
+### Task 9: Fatia 2 — `Gatika-CL/lotus`, upstream e protection lida de volta
 
 A ordem não é preferência: **required checks só podem ser exigidos por nome depois que o GitHub viu os jobs rodarem pelo menos uma vez.** Configurar protection antes do primeiro run significa digitar nomes de check à mão e torcer para baterem.
 
@@ -997,13 +997,13 @@ Esta task tem **passo do João** — criar o repositório na conta empresarial n
 
 **Interfaces:**
 - Consumes: os nomes de job `backend`, `frontend`, `types-drift`, `audit-prod`.
-- Produces: `Gatika/lotus` com `main` protegida, e a seção de DoD 5 do relatório.
+- Produces: `Gatika-CL/lotus` com `main` protegida, e a seção de DoD 5 do relatório.
 
 - [ ] **Step 1: PARAR e pedir ao João**
 
 O agente não cria o repositório. Pedir, literalmente:
 
-> Crie `Gatika/lotus` **privado** na conta empresarial, **vazio** — sem README, sem `.gitignore`, sem licença. Um commit inicial criaria uma história divergente e o push da Task 9 exigiria `--force`. Me avise quando existir.
+> Crie `Gatika-CL/lotus` **privado** na conta empresarial, **vazio** — sem README, sem `.gitignore`, sem licença. Um commit inicial criaria uma história divergente e o push da Task 9 exigiria `--force`. Me avise quando existir.
 
 Não seguir sem confirmação.
 
@@ -1011,7 +1011,7 @@ Não seguir sem confirmação.
 
 ```bash
 cd /home/jvbat/projetos/lotus-infra
-gh repo view Gatika/lotus --json name,visibility,isEmpty
+gh repo view Gatika-CL/lotus --json name,visibility,isEmpty
 ```
 
 Esperado: `"visibility": "PRIVATE"` e `"isEmpty": true`. Se não estiver vazio, PARAR e decidir com o João — não usar `--force`.
@@ -1019,27 +1019,27 @@ Esperado: `"visibility": "PRIVATE"` e `"isEmpty": true`. Se não estiver vazio, 
 - [ ] **Step 3: Configurar o remote e empurrar**
 
 ```bash
-git remote add upstream git@github.com:Gatika/lotus.git
+git remote add upstream git@github.com:Gatika-CL/lotus.git
 git remote -v
 git checkout main && git pull origin main
 git push upstream main
 ```
 
-Esperado: `git remote -v` lista `origin` (Andred21) e `upstream` (Gatika) — a topologia que a ficha do item 11 descrevia como destino passa a existir.
+Esperado: `git remote -v` lista `origin` (Andred21) e `upstream` (Gatika-CL) — a topologia que a ficha do item 11 descrevia como destino passa a existir.
 
 - [ ] **Step 4: Ver o workflow rodar uma vez no corporativo**
 
 ```bash
-gh run list --repo Gatika/lotus --limit 1
-gh run watch --repo Gatika/lotus --exit-status
+gh run list --repo Gatika-CL/lotus --limit 1
+gh run watch --repo Gatika-CL/lotus --exit-status
 ```
 
-Esperado: os seis jobs. `image` **roda** — é push em `main` — e publica em `ghcr.io/gatika/lotus-app` e `-web`. É este run que ensina ao GitHub os nomes dos checks.
+Esperado: os seis jobs. `image` **roda** — é push em `main` — e publica em `ghcr.io/gatika-cl/lotus-app` e `-web`. É este run que ensina ao GitHub os nomes dos checks.
 
 - [ ] **Step 5: Confirmar que o GitHub aprendeu os nomes**
 
 ```bash
-gh api repos/Gatika/lotus/commits/main/check-runs --jq '.check_runs[].name' | sort
+gh api repos/Gatika-CL/lotus/commits/main/check-runs --jq '.check_runs[].name' | sort
 ```
 
 Esperado, exatamente: `audit-dev`, `audit-prod`, `backend`, `frontend`, `image`, `types-drift`. Se algum nome divergir do esperado, **corrigir aqui** — é o último ponto barato; depois da protection, renomear job quebra a régua.
@@ -1047,7 +1047,7 @@ Esperado, exatamente: `audit-dev`, `audit-prod`, `backend`, `frontend`, `image`,
 - [ ] **Step 6: Aplicar a protection**
 
 ```bash
-gh api -X PUT repos/Gatika/lotus/branches/main/protection \
+gh api -X PUT repos/Gatika-CL/lotus/branches/main/protection \
   --input - <<'JSON'
 {
   "required_status_checks": {
@@ -1072,7 +1072,7 @@ JSON
 - [ ] **Step 7: O readback — ler de volta e comparar**
 
 ```bash
-gh api repos/Gatika/lotus/branches/main/protection --jq '{
+gh api repos/Gatika-CL/lotus/branches/main/protection --jq '{
   checks: .required_status_checks.contexts,
   strict: .required_status_checks.strict,
   aprovacoes: .required_pull_request_reviews.required_approving_review_count,
@@ -1110,11 +1110,11 @@ Acrescentar a `docs/superpowers/audits/2026-08-24-cicd-evidencias.md`:
 ```markdown
 ## DoD 5 — governança lida de volta
 
-`Gatika/lotus` criado privado e vazio pelo João em 2026-08-24; `upstream` configurado e `main`
+`Gatika-CL/lotus` criado privado e vazio pelo João em 2026-08-24; `upstream` configurado e `main`
 empurrada. O workflow rodou uma vez antes de qualquer protection — é o que ensina os nomes dos
 checks ao GitHub, e é por isso que a ordem desta fatia não é preferência.
 
-Readback de `GET /repos/Gatika/lotus/branches/main/protection`:
+Readback de `GET /repos/Gatika-CL/lotus/branches/main/protection`:
 
 ```json
 <colar a saída exata do Step 7>
@@ -1133,7 +1133,7 @@ Force-push recusado pelo servidor no Step 8 — a régua morde, não só existe.
 
 ```bash
 git add docs/superpowers/audits/2026-08-24-cicd-evidencias.md
-git commit -m "docs(audit): DoD 5 -- protection de Gatika/main lida de volta pela API"
+git commit -m "docs(audit): DoD 5 -- protection de Gatika-CL/main lida de volta pela API"
 git push origin main
 git push upstream main
 ```
