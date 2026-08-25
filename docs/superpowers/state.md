@@ -4,24 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-revisao-ui-por-modulo-f2
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
 active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
 context_packet: null
-blocker: >-
-  Review de 2026-08-25 (Claude + segunda lente do Codex, bloco de alto risco pela lei 5.3) devolveu
-  3 achados esperando decisao. Q-1 (amarelo, P): o `sm:self-center` do `DetailHeader` esta no
-  conteiner comum de `tags` e `actions`, entao a TAG tambem sai da linha de base — regride o UI-08
-  de 2026-08-23 no `BudgetDetailPage`, unico consumidor com os dois slots, e o teste novo so assere
-  a classe. Q-2 (amarelo, P): 3 dos 4 campos da D-57 nao tem assertiva na borda HTTP, e o comentario
-  do `OperationMetricsQueryTest` afirma a borda sem medi-la — ficou mais caro porque o fallback do
-  helper morreu neste mesmo bloco. Q-3 (verde, P): cores do hover do Lara cravadas no
-  `brand-theme.css` sem catraca. Nenhuma violacao das leis 5. Gate do frontend reconferido no
-  review: lint 0, build 0, 109 arquivos / 602 testes.
-
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -54,19 +44,16 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-revisao-ui-por-modulo-f2
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f2
     active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
     active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
     context_packet: null
-    blocker: >-
-      Review de 2026-08-25 devolveu 3 achados esperando decisao (Q-1 amarelo/P no `DetailHeader`,
-      Q-2 amarelo/P na cobertura HTTP da D-57, Q-3 verde/P nos literais do hover). Detalhe no
-      espelho do topo e na secao "Review da fatia 2" abaixo.
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
@@ -176,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `blocked` (review devolveu 3 achados) |
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_closure` (3 achados do review pagos) |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -233,7 +220,7 @@ sem drift. **Desvio declarado:** o Step 6 da Task 13 previa um commit de gate co
 árvore já estava limpa — o gate não produziu arquivo, e os números vivem aqui e no commit deste
 handoff, em vez de num commit vazio.
 
-**Review da fatia 2 — 2026-08-25, três achados esperando decisão do João.** O bloco foi classificado
+**Review da fatia 2 — 2026-08-25, três achados devolvidos, aprovados e pagos.** O bloco foi classificado
 **alto risco** pela `/revisar-sprint` (toca DTO de backend e regenera `generated.ts`, lei §5.3), então
 além da revisão Claude foi acionada a segunda lente do Codex em sandbox `read-only`. O Codex devolveu
 dois achados; **um foi confirmado no código e virou a Q-1**, o outro foi confirmado parcialmente e
@@ -266,6 +253,37 @@ virou a Q-2. Nenhuma divergência entre as duas lentes ficou sem resolução.
 `Turma.php:157`), nenhuma dependência nova. **Gate do frontend reconferido dentro do review**: lint
 `0`, build `0`, **109 arquivos / 602 testes** — idêntico ao medido no handoff de execução. Backend e
 Pint não foram reconferidos no review (exigem o container).
+
+**Os três achados foram aprovados pelo João e pagos em `7e563910`, no mesmo dia.** Cada um entrou
+com a sua guarda, e **as três guardas foram vistas reprovar por mutação temporária antes de entrar**
+(lição 10 — guarda que nunca viu o defeito é cobertura fantasma):
+
+- **Q-1** — `tags` e `actions` viraram itens flex IRMÃOS da linha do título, com `sm:self-center` só
+  no invólucro de `actions`. O `justify-between` saiu, trocado pelo `sm:flex-1` do bloco do título, e
+  o embrulho de mobile some a partir do `sm` por `sm:contents` — sem ele o `align-self` resolveria
+  contra o embrulho, não contra a linha. O teste deixou de asserir "existe um `.sm:self-center` na
+  árvore" (o que passava com o defeito presente) e passou a asserir a estrutura: wrappers separados,
+  `self-center` só no de ações, e os dois dentro do `sm:contents`.
+- **Q-2** — dois testes novos no `DashboardEndpointTest` medem a borda de `compliance_turmas`
+  (`present_types` **e** `missing_types`, que saem de caminhos diferentes do `TurmaHabilitacaoService`)
+  e de `pendencias_documentais`, que projeta por outro serviço. O comentário do
+  `OperationMetricsQueryTest` deixou de afirmar a borda e passou a apontar para quem a mede.
+- **Q-3** — a catraca entrou no `tests/brand-theme.test.ts`, ao lado das outras guardas de tema: ela
+  compara o `--sticky-cell-tint` do `brand-theme.css` com o `background` do hover do DataTable no
+  tema **commitado**, nos dois temas. Lê o commitado, e não a geração fresca, porque é o commitado que
+  o navegador carrega — a igualdade "commitado == geração fresca" logo acima fecha a outra metade.
+  Zero blocos casados também reprova: seletor que sumiu num upgrade é guarda cega.
+
+**Gate completo depois das correções:** `pnpm lint` 0, `pnpm build` verde, **109 arquivos /
+606 testes**, suíte do backend **940 passed / 5 skipped**, `pint` nos dois arquivos PHP tocados
+`passed`, `typescript:transform` sem drift. A suíte do backend exigiu o `docker compose build app` +
+`up -d --no-deps app` da **P-57** — a imagem desta árvore era anterior ao `memory-cli.ini` e o
+comando do §6 morria por memória; é conserto de ambiente, não de código, e a ficha segue aberta.
+
+**O que NÃO foi medido:** a confirmação visual do Q-1 no `/comercial/presupuestos/:id` em 1440x900.
+Esta sessão não tem ferramenta de navegador, e a prova que existe é estrutural (jsdom não mede
+layout). A régua da tela fica para quem rodar a `/lotus-ui-review` — vale a pena olhar antes do
+fechamento, já que o Q-1 nasceu de um defeito que só a tela mostrou nas duas vezes.
 
 **Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
 `idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
