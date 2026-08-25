@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
 blocker: null
@@ -17,12 +17,12 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
     blocker: null
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-24T23:45:00-03:00
+updated_at: 2026-08-25T00:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_planning` |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `planning` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
@@ -201,6 +201,21 @@ antivírus (redatores operam de redes não auditadas)"). O requisito exige o **r
 prescreve mecanismo. Então a renegociação que a nota do backlog imagina **não é sobre forma**: forma
 nunca foi exigida, e dispensar o resultado seria renegociação formal, do João. A correção da linha do
 `backlog.md` fica para o `/fechar-sprint` deste bloco — planejamento não edita a fila.
+
+**Brainstorming fechado — oito decisões (D1–D8), na spec.** As que mudam desenho: o antivírus é
+ClamAV **síncrono** no compose e o `RNF-SEC-08` **não** é renegociado (D1); o throttle é teto global no
+grupo `api` **mais** nomeados nos alvos, para rota nova nascer coberta (D2); a chave do login é
+`email|ip` (D3); a política de tipo/tamanho vira peça única em `Shared/Files` com catraca (D4); o
+`files.mime` histórico se corrige por **migration de backfill**, precedente da P-47 (D5); o PDF é
+contido por limitador e teto, e persistir no S3 fica **fora** com ficha (D6); os quatro endpoints
+abertos passam a aceitar **PDF + imagem** (D7); e scanner fora do ar **recusa** o upload, com a
+consequência declarada (D8).
+
+**Dois pré-requisitos que a medição achou e o backlog não previa.** `trustProxies` não existe no
+repositório (`grep` vazio), então em produção `$request->ip()` devolve o container do Nginx e todo
+limitador por IP viraria balde único — entra no bloco. E o `ProblemDetails` **não lê `getHeaders()`**:
+o `429` já sai em `application/problem+json` pelo braço de `HttpExceptionInterface`, mas sem
+`Retry-After` nem `X-RateLimit-*`.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
