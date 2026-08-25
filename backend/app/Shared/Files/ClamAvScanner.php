@@ -41,6 +41,31 @@ class ClamAvScanner implements MalwareScanner
         throw new ScannerUnavailableException;
     }
 
+    /**
+     * `fwrite` num socket pode escrever MENOS do que se pediu, e o retorno era
+     * descartado (achado Q-7 do review de 2026-08-25). Escrita curta engelha o
+     * enquadramento do INSTREAM — o daemon passa a ler o tamanho do pedaço
+     * seguinte como se fosse conteúdo — e o veredicto vira ruído. Continuar até
+     * o fim, ou desistir: `false`/`0` viram `ScannerUnavailableException`, que é
+     * recusa, nunca "limpo".
+     *
+     * @param  resource  $socket
+     *
+     * @throws ScannerUnavailableException
+     */
+    private function escreve($socket, string $bytes): void
+    {
+        for ($escrito = 0; $escrito < strlen($bytes);) {
+            $agora = @fwrite($socket, substr($bytes, $escrito));
+
+            if ($agora === false || $agora === 0) {
+                throw new ScannerUnavailableException;
+            }
+
+            $escrito += $agora;
+        }
+    }
+
     private function stream(string $path): string
     {
         $socket = @stream_socket_client(
@@ -57,7 +82,7 @@ class ClamAvScanner implements MalwareScanner
         try {
             stream_set_timeout($socket, (int) config('services.clamav.timeout'));
 
-            fwrite($socket, "zINSTREAM\0");
+            $this->escreve($socket, "zINSTREAM\0");
 
             $arquivo = @fopen($path, 'rb');
 
@@ -73,15 +98,15 @@ class ClamAvScanner implements MalwareScanner
                         continue;
                     }
 
-                    fwrite($socket, pack('N', strlen($pedaco)));
-                    fwrite($socket, $pedaco);
+                    $this->escreve($socket, pack('N', strlen($pedaco)));
+                    $this->escreve($socket, $pedaco);
                 }
             } finally {
                 fclose($arquivo);
             }
 
             // Quatro zeros fecham o stream e disparam o veredicto.
-            fwrite($socket, pack('N', 0));
+            $this->escreve($socket, pack('N', 0));
 
             $resposta = '';
 
