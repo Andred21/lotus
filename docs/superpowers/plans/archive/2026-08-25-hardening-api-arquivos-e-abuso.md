@@ -21,7 +21,7 @@ conteúdo · PHPUnit.
 
 ## Correções de medição sobre a spec
 
-A spec [`2026-08-25-hardening-api-arquivos-e-abuso-design.md`](../specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md)
+A spec [`2026-08-25-hardening-api-arquivos-e-abuso-design.md`](../../specs/archive/2026-08-25-hardening-api-arquivos-e-abuso-design.md)
 foi aprovada com três afirmações que a medição desta fase **desmentiu**. O plano segue a medição, e
 a spec recebe uma emenda datada na Task 0. As decisões D1–D8 continuam valendo — o que muda é o
 mecanismo, não a escolha.

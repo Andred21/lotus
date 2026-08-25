@@ -2,7 +2,7 @@
 
 > Item 4 da fila (`docs/superpowers/backlog.md`), `lane-a`, main tree, branch
 > `feat/hardening-api-arquivos-e-abuso`. Context Packet:
-> [`context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md`](../context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md)
+> [`context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md`](../../context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md)
 > (`status: ready`, quatro fontes recuperadas, nenhuma `unavailable`).
 > Base de medição: `main@7fa1cb0a`.
 

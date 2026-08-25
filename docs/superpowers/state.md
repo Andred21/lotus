@@ -2,32 +2,32 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
-active_feature: hardening
-active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
-active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
-context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 
 lanes:
   lane-a:
-    active_feature: hardening
-    active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
-    active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
-    active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
-    context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: certificacao-historico-do-aluno
+    last_completed_work_item: hardening-api-arquivos-e-abuso
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
@@ -56,9 +56,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
-last_completed_work_item: compose-por-worktree
-state_basis_commit: 528749a2
-updated_at: 2026-08-25T21:05:00-03:00
+last_completed_work_item: hardening-api-arquivos-e-abuso
+state_basis_commit: 4dd5075a
+updated_at: 2026-08-25T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,81 +162,15 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_closure` |
+| `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR a abrir) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
-**Promoção do item 4 — 2026-08-24, `lane-a`.** Promoção explícita do João com a lane em `idle`, contra
-o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o Context
-Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`), em sandbox
-read-only. A branch `feat/hardening-api-arquivos-e-abuso` sai de `main@7fa1cb0a`, que já traz o merge
-do item 11 (PR #71) — as lanes anteriores mesclaram. **Árvore:** main tree, seguindo o precedente de
-todo bloco de backend; a **P-03 foi paga** pelo `compose-por-worktree`, então isso é escolha e não
-mais imposição do compose.
-
-**O espelho virou para a `lane-a` neste commit, com a `lane-b` em execução — e isso é o precedente da
-P-55, não uma quebra.** `focused_lane` no main tree passa a apontar a lane que trabalha AQUI; a
-`lane-b` mantém o espelho dela apontando para si em `../lotus-infra`, que é a árvore onde o
-`/executar-bloco` dela roda. O bloco da `lane-b` em `lanes:` **não foi tocado por este commit** — ele
-é dela, e a invariante de dono manda. A P-55 segue aberta e é do João.
-
-**Evidência que já está medida e o packet não precisa redescobrir** (contra `main@7fa1cb0a`):
-`Route::post('/login', ...)` em `Identity/routes.php:23` está **fora** do grupo `throttle:6,1`, que
-começa só na linha 28 e cobre convite/recuperação; `Route::get('publico/certificados/{uuid}', ...)` em
-`Certification/routes.php:7` está fora de qualquer middleware. `grep -rn throttle` sobre os
-`routes.php` dos domínios e `backend/routes/` devolve **apenas** essas duas ocorrências do grupo de
-Identity — nenhum outro throttle existe no repositório.
-
-**Packet do item 4 recuperado — `status: ready`, quatro fontes, nenhuma `unavailable`.** Está em
-`context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md`. As quatro provenances que ele declara
-(`base_commit` e os blobs de `state.md`, `progress.md`, `adrs.md` e `backlog.md`) foram **conferidas
-contra `git hash-object` antes de gravar** e batem exatas — não são hash chutado.
-
-**O packet corrigiu uma atribuição errada que o `backlog.md` carrega, e ela muda o desenho.** A nota
-de proporção do item 4 fala da "sonda antimalware do `RNF-SEC-06`"; o Drive canônico diz que
-`RNF-SEC-06` é **só rate limit** ("Rate limit para login, troca de senha e ações sensíveis") e que o
-antimalware vem do **`RNF-SEC-08`** ("Upload de arquivos com validação de tipo/tamanho e escaneamento
-antivírus (redatores operam de redes não auditadas)"). O requisito exige o **resultado** — escaneamento
-— e **não nomeia** sonda, serviço, fornecedor, protocolo nem topologia; nenhuma fonte recuperada
-prescreve mecanismo. Então a renegociação que a nota do backlog imagina **não é sobre forma**: forma
-nunca foi exigida, e dispensar o resultado seria renegociação formal, do João. A correção da linha do
-`backlog.md` fica para o `/fechar-sprint` deste bloco — planejamento não edita a fila.
-
-**Brainstorming fechado — oito decisões (D1–D8), na spec.** As que mudam desenho: o antivírus é
-ClamAV **síncrono** no compose e o `RNF-SEC-08` **não** é renegociado (D1); o throttle é teto global no
-grupo `api` **mais** nomeados nos alvos, para rota nova nascer coberta (D2); a chave do login é
-`email|ip` (D3); a política de tipo/tamanho vira peça única em `Shared/Files` com catraca (D4); o
-`files.mime` histórico se corrige por **migration de backfill**, precedente da P-47 (D5); o PDF é
-contido por limitador e teto, e persistir no S3 fica **fora** com ficha (D6); os quatro endpoints
-abertos passam a aceitar **PDF + imagem** (D7); e scanner fora do ar **recusa** o upload, com a
-consequência declarada (D8).
-
-**Um pré-requisito que a medição achou, e um que ela desmentiu.** O `ProblemDetails` **não lê
-`getHeaders()`**: o `429` já sai em `application/problem+json` pelo braço de
-`HttpExceptionInterface`, mas sem `Retry-After` nem `X-RateLimit-*` — entra no bloco, é a Task 1 do
-plano. Já o `trustProxies` **saiu**: o brainstorming o tratou como pré-requisito supondo que
-`$request->ip()` devolvesse o container do Nginx, e a medição do plano mostrou o contrário — o PHP
-recebe `REMOTE_ADDR` como o Nginx viu o peer, que em produção é o próprio cliente. Ligar
-`trustProxies` faria o `X-Forwarded-For` **forjado pelo cliente** virar o `ip()`, e todo limitador
-por IP passaria a contar um valor que o atacante escolhe. O bloco faz o oposto: o Nginx apaga o
-`X-Forwarded-*` de entrada. A spec recebeu emenda datada (§9) e o plano abre com as três correções
-de medição.
-
-**Plano escrito — `plans/2026-08-25-hardening-api-arquivos-e-abuso.md`, 12 tasks.** Ordem por
-dependência: envelope do `429` → IP do cliente → limitadores → catraca de rota → política de
-arquivo → catraca de upload → `files.mime` e backfill → ClamAV → tetos de lote e import →
-confirmação do ADR-11 → DoD contra a API real. `executor: claude` — o bloco toca a §5.4 do
-`CLAUDE.md`, reverte um item aprovado da spec e deixa três tetos com gatilho de revisão durante a
-execução.
-
-**Medições que o plano fixou, e que o item 10 herda:** ClamAV 1.4 ocupa **1,014 GiB** residentes e
-fica pronto em ~10 s (imagem de 146 MiB, base de assinaturas embutida — não há download no primeiro
-`up`, ao contrário do que a spec §4.4 previa). O scan INSTREAM custa **17 ms** para 100 KB, **72 ms**
-para 1 MB e **551 ms** para o teto de 10 MB, o que sustenta o scan síncrono sem worker (D1). A
-emissão em lote **não** chama o Gotenberg — `IssueCertificateAction` não toca o conversor —, então o
-teto de lote existe por duração de requisição e volume de escrita, não por renderização. E a
-superfície de upload são **13 rotas, não 10**: `POST /api/redatores` e `PUT /api/redatores/{redator}`
-aceitam `documents[<TIPO>]` **sem regra `file` nenhuma**.
+**A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
+em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a` e **ainda não foi mesclada** — é o PR
+a abrir; a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
+do João, contra o `backlog.md`.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -273,76 +207,6 @@ da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build ver
 573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
 árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
 
-**A `lane-a` fechou o item 2 em 2026-08-24** — `certificacao-historico-do-aluno`, narrativa integral
-em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/certificacao-historico-do-aluno` nasceu de `main@cad0d1fb`, mescla a `main` de PR #72 para
-dentro neste commit e vai a PR; a árvore é o main tree, que não se destrói. A lane não recebe item
-novo sozinha: promoção é do João, contra o `backlog.md`.
-
-**Gate refeito sobre a `main` de PR #72, dentro do merge:** backend **937 passed / 5 skipped**,
-frontend lint 0, build verde e **107 arquivos / 595 testes**, Pint `passed` nos 18 arquivos PHP do
-bloco. O merge pediu três consertos de conteúdo, não de marcador: a `HistorialTable` ficou com a
-coluna presa e a largura por política da `main` **e** com o `display_status` do servidor deste
-bloco; a tabela de turmas do detalhe do aluno perdeu os `style` literais e passou a declarar
-largura, com a chave `certificate` nova em `studentTurmaWidths` (pesa como `COL.text` — a célula
-empilha código, tag, data, marca de reemissão e o botão do PDF); e as duas pendências abertas por
-este bloco foram renumeradas para **P-59** e **P-60**, porque a `main` já usava `P-55` e `P-56`. Os
-3 casos de `tests/compose-dev.test.ts` que reprovavam aqui eram a **P-58** de novo — o
-`frontend/.env` desta árvore com `VITE_API_URL` legado —, e a árvore adotou o molde do
-`frontend/.env.example` (arquivo gitignored, nada commitado).
-
-**O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
-2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco
-fica como está — era verdade no dia da promoção, e narrativa arquivada não se reescreve.
-
-**Bloco `hardening-api-arquivos-e-abuso` — 12 de 12 tasks completas, 2026-08-25.** A Task 12 (DoD
-`executor: claude`) provou o bloco inteiro contra a API e o stack Docker reais, não só contra a
-suíte: throttle nomeado + separação de chave (DoD 1), `429` e recuperação medida (~65s, DoD 2),
-antivírus síncrono provado nos dois sentidos — EICAR real recusado e scanner fora do ar recusando
-com `503`/`Retry-After` (DoD 3/4) —, mime por conteúdo nos quatro sítios antes destapados (DoD 5),
-backfill de `files.mime` consistente (DoD 7) e o fluxo de ouro completo sem nenhum `429` (DoD 8).
-A medição real (DoD 6) **corrigiu um teto do próprio plano**: `MAX_LINHAS` caiu de 500 para 100
-depois que 500 linhas estourou o `max_execution_time` de 30s do PHP (bcrypt por aluno novo via cast
-`hashed`, ~185ms/linha) — exercendo a autoridade que o plano já dava para essa situação exata, com a
-medição completa no docblock e no commit `47b0c4fc`. O próprio gate achou um achado incidental fora
-do brief: `generated.ts` estava desatualizado desde a Task 6 (`ContentClass` nunca tinha sido
-exposto ao `typescript:transform`); regenerado e commitado (`528749a2`), aditivo puro. Suíte final
-**983 passed / 5 skipped**, Pint limpo, working tree coerente com o plano. Narrativa completa e
-todos os números medidos estão em `.superpowers/sdd/progress.md` (Task 12).
-
-**Review do bloco — 2026-08-25, `/revisar-sprint`.** Alto risco (auth, migration, `generated.ts`,
-certificados), então além da revisão Claude rodou a segunda lente do Codex em sandbox read-only; os
-achados foram deduplicados e **cada achado que só o Codex viu foi verificado no código antes de
-entrar**. Suíte reconferida no container: **983 passed / 5 skipped**, igual ao que o DoD registrou.
-Sem órfãos: toda peça nova do bloco tem consumidor. Sete achados (Q-1 a Q-7) aguardam a decisão do
-João sobre o que entra antes do fechamento — dois medidos ao vivo contra a API (`Q-1` e `Q-2`),
-quatro verificados por leitura e um de higiene.
-
-**Os sete entraram, por decisão do João, e os sete estão corrigidos com teste de regressão.** Cada
-teste novo foi visto REPROVAR contra o código antigo (`git stash` na correção, roda, `git stash
-pop`) antes de valer: 3 casos no `RateLimitTest`, 1 no `RedatorCrudTest`, 3 no
-`SpreadsheetRowReaderTest` e 1 no `BackfillFilesMimeMigrationTest`. O que mudou de desenho:
-`ContentClass` ganhou `TETO_AGREGADO_KB` — a garantia "quem recusa é sempre esta regra" era falsa no
-único sítio que recebe vários arquivos no mesmo corpo, e agora tudo o que a política aceita cabe nos
-12 MB do transporte; o teto do import passou a morder na linha **iterada**, dentro do leitor, porque
-contado do outro lado do `yield` ele nunca via a linha em branco; o leitor de planilha passou a
-despachar pelo MIME de **conteúdo**, e a isenção dele na catraca foi reescrita para dizer a verdade;
-e a migration de backfill passa a **abortar** quando nenhum objeto pôde ser lido, ficando pendente
-para o deploy seguinte em vez de marcar como aplicada com o histórico intacto.
-
-**A catraca de política pegou a própria correção**, e isso é o guardrail funcionando: ao ganhar
-`assertCabeNoTransporte`, o `ContentClass` passou a nomear `UploadedFile` e virou "sítio de upload"
-aos olhos da varredura. A peça onde a política MORA foi isentada num predicado único
-(`eAPropriaPeca`), compartilhado pelos dois casos que já a tratavam de formas diferentes.
-
-**Um achado virou ficha em vez de conserto:** os `title` do `ProblemDetails` em português num produto
-es-CL (**P-61**). O `detail` inglês do 429 — o único status que este bloco estreou — foi traduzido
-aqui; traduzir os outros seis mexe em texto fora do escopo aprovado e é decisão de idioma de
-produto, do João.
-
-Suíte final **996 passed / 5 skipped**, Pint limpo nos 14 arquivos tocados, `pnpm build` verde.
-`generated.ts` voltou a ser idêntico ao da `main`: o `ContentClass` recebeu `#[Hidden]` e saiu da
-superfície de tipos do SPA, onde nunca teve consumidor.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -352,11 +216,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-25 | `hardening-api-arquivos-e-abuso` | Item 4 da fila |
 | 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
 | 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
-| 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando
