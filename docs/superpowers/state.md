@@ -1,17 +1,17 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
-active_feature: cicd
-active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
+focused_lane: lane-c
+active_feature: frontend
+active_work_item: frontend-revisao-ui-por-modulo-f2
+workflow_state: ready_for_execution
+next_owner: claude
+next_action: execute_active_plan
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
-active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
-context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
-blocker: "Gatika-CL esta no plano free: branch protection e rulesets em repositorio privado exigem plano pago (HTTP 403 no PUT /branches/main/protection). DoD 5 do plano nao pode ser provado. Joao decide: subir Gatika-CL para GitHub Team, ou abrir mao da regua no servidor. Tudo o mais do bloco esta provado."
+active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
+active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
+context_packet: null
+blocker: null
 
 lanes:
   lane-a:
@@ -31,35 +31,34 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: blocked
-    next_owner: joao
-    next_action: resolve_blocker
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_plan
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
     active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
     context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
-    blocker: "Gatika-CL no plano free: branch protection e ruleset em repositorio privado exigem plano pago (403 no PUT /branches/main/protection). DoD 5 pendente de decisao do Joao."
-
+    blocker: null
     resume_state: null
     last_completed_work_item: compose-por-worktree
   lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
+    active_feature: frontend
+    active_work_item: frontend-revisao-ui-por-modulo-f2
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: select_backlog_item
+    next_action: execute_active_plan
     tree: ../fix-frontend
-    branch: refactor/tabelas-coluna-de-acoes
-    active_spec: null
-    active_plan: null
+    branch: refactor/frontend-revisao-ui-f2
+    active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
+    active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: 8b735828
-updated_at: 2026-08-25T00:20:00-03:00
+state_basis_commit: 7fa1cb0a
+updated_at: 2026-08-25T02:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_execution` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -190,6 +189,25 @@ escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão,
 Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
 vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
 o que preservar, e não há colisão a vigiar com a lane-c.
+
+**Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
+`idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
+local (`audits/` + fichas `D-*`), então a lane entra **direto em `ready_for_planning`**, sem Context
+Packet. A branch é nova — `refactor/frontend-revisao-ui-f2`, criada a partir de
+`origin/main@7fa1cb0a`, que já traz os PRs #70, #72, #73 e #71 mesclados; a árvore estava em `HEAD`
+solto sobre `2e3f5e42` e não em branch.
+
+**A `D-57` entra no escopo por decisão do João**, e com ela o bloco deixa de ser frontend puro: a
+correção é no DTO do backend, regenera `generated.ts` (lei §5.3) e exige o container `app`. **O gate
+P-03 não é disparado** — a ficha foi paga pelo `compose-por-worktree` em 2026-08-24, e esta árvore
+sobe stack própria pelo offset do `.env` da raiz. Esta árvore **ainda não tem `.env`**, então hoje
+ela reclamaria a porta 8080 do main tree; escolher o offset é passo do plano, não suposição.
+
+**Reincidência declarada da `P-55`.** A invariante do espelho manda que trocar `focused_lane` seja
+fronteira durável do main tree, mas a `lane-b` está `executing` (item 11) e o espelho só aponta uma
+lane por vez. Esta promoção aponta o espelho para a `lane-c` **na árvore da `lane-c`**, que é
+exatamente o que a ficha registra como já feito por três lanes; `lanes.lane-a` e `lanes.lane-b`
+ficam intocados. A ficha continua aberta e esperando a decisão do João.
 
 **A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
 integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
