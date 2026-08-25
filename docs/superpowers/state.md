@@ -31,9 +31,9 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
@@ -57,8 +57,8 @@ lanes:
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-25T02:05:00-03:00
+state_basis_commit: 171ec946
+updated_at: 2026-08-25T16:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `ready_for_review` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_execution` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
