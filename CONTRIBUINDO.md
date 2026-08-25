@@ -53,10 +53,32 @@ por release**, com o trailer `Source-Commit: <sha>` apontando de volta. O
 corporativo recebe o que constrói, testa e roda o app — não o andaime de
 desenvolvimento.
 
+O `procedencia` do lado corporativo **confere esse trailer** contra a origem: o
+SHA precisa estar no histórico de `main` em `Andred21/lotus`, senão o commit
+não passa por espelho. Quem responde qual é a origem é a variável de
+repositório `ESPELHO_FONTE`, configurada só em `Gatika-CL/lotus`:
+
+```bash
+gh variable set ESPELHO_FONTE -R Gatika-CL/lotus -b Andred21/lotus
+```
+
+Sem ela o caminho de espelho não abre e nenhuma imagem é publicada — é por isso
+que ela não existe em `Andred21/lotus`: lá o único caminho continua sendo PR
+mesclado.
+
+Duas coisas o script garante antes de deixar qualquer coisa atravessar. A lista
+de exclusões que ele aplica sai do **commit espelhado**, não do disco desta
+árvore — é a mesma cópia que o `procedencia` lê no destino, e dois leitores em
+versões diferentes é exatamente como o espelho vazaria sem ninguém perceber. E
+ele **recusa commit que não passou no CI**: espelhar é promover, e o
+`procedencia` do destino confere procedência, não qualidade — sozinho, deixaria
+um commit vermelho parado em `origin/main` virar imagem publicada.
+
 ## A saída de emergência
 
 ```bash
 LOTUS_FORCA_MAIN=1 git push ...
+LOTUS_ESPELHO_SEM_CI=1 scripts/espelhar-corporativo.sh
 ```
 
 Existe de propósito: hook sem saída vira hook desinstalado no primeiro aperto.

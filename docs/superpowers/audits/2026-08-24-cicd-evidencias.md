@@ -240,3 +240,75 @@ Enquanto este trabalho era escrito, em 2026-08-25, a lane-c empurrou `94463eb2`,
 `d0d29c68` e um merge direto em `main`, sem PR. Nenhum deles passou por gate de PR porque nenhum
 gate de PR existia para eles. É o caso exato que a camada 2 passa a marcar em vermelho e a manter
 fora do registry.
+
+## As três camadas no gatilho real — 2026-08-25
+
+Tudo abaixo é run no gatilho real, depois do merge do PR #74 (`24c2105d`).
+
+### O caminho certo publica
+
+[Run 32887545241](https://github.com/Andred21/lotus/actions/runs/32887545241), push do merge do PR #74:
+
+```
+procedencia: commit entrou por Pull Request mesclado.
+```
+
+Sete jobs, `image` incluído. Par publicado: `ghcr.io/andred21/lotus-app:24c2105d…` e `-web`,
+verificados com `docker manifest inspect`.
+
+### O espelho atravessa filtrado, e o CI do corporativo confere
+
+`scripts/espelhar-corporativo.sh` publicou `3d158773` em `Gatika-CL/lotus`, com
+`Source-Commit: 24c2105d3bcd646eaecf5ed53160d4a98858154d` no trailer. Raiz do que atravessou:
+
+```
+.dockerignore  .editorconfig  .env.example  .espelho-exclusoes  .github  .gitignore
+README.md  backend  docker  docker-compose.prod-probe.yml  docker-compose.prod.yml
+docker-compose.yml  frontend
+```
+
+`git cat-file -e upstream/main:<path>` responde ausente para `.claude`, `.agents`, `docs`,
+`CLAUDE.md` e `scripts`.
+
+[Run 32888129954](https://github.com/Gatika-CL/lotus/actions/runs/32888129954) no corporativo, os
+sete jobs sobre a árvore filtrada:
+
+```
+procedencia: release de espelho. Fonte: 24c2105d3bcd646eaecf5ed53160d4a98858154d
+frontend:    Test Files 106 passed (106)
+```
+
+**106 arquivos de teste contra 107 no pessoal** — a diferença é exatamente
+`repo-docs-refs.test.ts`, que não atravessa porque o alvo dele (a documentação interna) também
+não atravessa. O job `image` publicou em `ghcr.io/gatika-cl/lotus-app:3d158773…` e `-web`.
+
+### O caminho errado não publica — DoD 5, na forma compensada
+
+Commit `26d0e3e9` empurrado direto em `main`, sem PR. O `pre-push` recusou primeiro; o push só
+saiu com `LOTUS_FORCA_MAIN=1`, que é a saída de emergência documentada — e é justamente o cenário
+em que a camada 2 precisa valer sozinha.
+
+[Run 32889018234](https://github.com/Andred21/lotus/actions/runs/32889018234):
+
+| Job | Conclusão |
+|---|---|
+| `backend`, `frontend`, `types-drift`, `audit-prod` | success |
+| `procedencia` | **failure** |
+| `image` | **skipped** |
+
+Linha exata:
+
+```
+##[error]26d0e3e9c00076888a9ae0aa6d8602abcc48af7c entrou em main sem Pull Request mesclado e sem trailer de espelho. Nenhuma imagem sera publicada para ele.
+```
+
+Registry para esse SHA: `manifest unknown` nas duas imagens.
+
+**O código do commit estava perfeito** — os quatro gates passaram, porque a sonda é um commit
+vazio sobre a árvore aprovada. O que reprovou foi a **procedência**, e só ela. É essa a diferença
+entre este job e os outros quatro: os outros julgam o código, este julga o caminho.
+
+A sonda ficou em `main` de propósito, sem revert: ela é um commit vazio (mesma árvore do pai), e
+desfazê-la exigiria force-push — exatamente o que a camada 2 marca em vermelho. `main` fica com um
+head sem imagem publicada até o próximo merge por PR, que é o comportamento correto e não um
+efeito colateral.
