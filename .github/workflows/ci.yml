@@ -147,3 +147,67 @@ jobs:
             echo "::error file=frontend/src/shared/types/generated.ts::generated.ts diverge do que typescript:transform produz. Corrija o DTO no backend e regenere; nao edite o arquivo."
             exit 1
           fi
+
+  # Reprova SO o que a imagem de producao carrega. --locked le o composer.lock
+  # sem instalar vendor, e `pnpm audit` le o pnpm-lock.yaml sem node_modules --
+  # entao este job nao precisa de nenhuma instalacao.
+  audit-prod:
+    name: audit-prod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Advisories nas dependencias PHP de producao
+        working-directory: backend
+        run: composer audit --no-dev --locked
+
+      - name: Advisories nas dependencias JS de producao
+        working-directory: frontend
+        run: pnpm audit --prod
+
+  # REPORTA e nao reprova, por decisao explicita: um advisory moderate numa
+  # dependencia transitiva de ferramenta de desenvolvimento travaria toda a
+  # fila sem uma linha de codigo ter mudado, e a saida pratica disso e
+  # desligar o check -- pior que nao te-lo.
+  audit-dev:
+    name: audit-dev
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Advisories em toda a arvore PHP
+        working-directory: backend
+        run: composer audit --locked
+
+      - name: Advisories em toda a arvore JS
+        working-directory: frontend
+        run: pnpm audit
