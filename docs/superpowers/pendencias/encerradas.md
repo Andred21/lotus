@@ -7,6 +7,37 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
+## P-15 — certificados não aparecem no módulo de alunos
+
+**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fechava quando o João decidisse expor (ou
+não) certificados na listagem e no detalhe do aluno, ou se a Lotus pedisse.
+
+O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
+implementado não tinha nenhum dos dois.
+
+Bloco alunos (2026-07-27, spec D10): `app/Domains/Certification/` era pasta vazia e não existia
+migration de `certificates`. Card vazio foi rejeitado explicitamente: afirmar "sem certificados"
+quando a verdade é "o módulo não existe" é falha silenciosa, e aqui o dado tem peso legal.
+**Proveniência de D10 ratificada pelo João no doc-sync 2026-07-30.**
+
+O gatilho venceu duas vezes sem produzir decisão: em **2026-08-07** o Bloco 7 entregou `certificates`
+e a vertical até a API pública; em **2026-08-08** o `certificacao-frontend` entregou o módulo próprio
+`/certificados` (Emisión + Historial) e **não tocou o módulo de alunos**.
+
+**Encerrada em 2026-08-24, no `certificacao-historico-do-aluno`: a decisão que ela esperava foi
+tomada.** Certificados passam a aparecer no **detalhe** do aluno, como coluna da tabela de turmas —
+código, estado derivado no servidor, data quando o curso tem prazo, marca de reemissão com a
+contagem de anteriores e o PDF pela própria célula.
+
+**O outro ramo fica fora por escrito, não por omissão:** a coluna `CERTIFICADOS` na **listagem** de
+alunos está declarada fora de escopo na §9 da spec do bloco. Isto é o que impede a pendência de
+reabrir por silêncio — o protótipo pedia os dois sítios, um foi construído e o outro foi recusado
+com registro.
+
+**Sai quando:** primeiro fechamento **posterior** a este.
+
+---
+
 ## P-41 — o `IdentityCell` empilhado promete truncar e não trunca
 
 **Bloco:** frontend-hardening-final · **Gatilho:** fecha quando o João decidir que a coluna deve cortar — aí volta o `min-w-0` **e** o

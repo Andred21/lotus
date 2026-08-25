@@ -330,6 +330,31 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 
 ---
 
+## P-55 — `config/app.php` fixa `'timezone' => 'UTC'` como literal, e o `APP_TIMEZONE` do `.env` é ignorado
+
+**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
+servidor e puder trocar o literal por `env('APP_TIMEZONE', 'UTC')` com prova. Revisar em **2026-10-31**.
+
+Medido no gate de navegador do `certificacao-historico-do-aluno` (2026-08-24):
+`backend/config/app.php:75` escreve `'timezone' => 'UTC'` **sem `env()`**, então o
+`APP_TIMEZONE=America/Santiago` do `backend/.env.example:8` nunca chega ao framework. Toda data
+derivada no servidor — `now()`, `Carbon::now()`, `addMonths()` — roda em UTC, e quem lê o
+`.env.example` acredita no contrário.
+
+O alcance **conhecido hoje é pequeno**: só certificado com prazo é afetado, e prazo é exceção (a
+spec §2.5 registra vigência indeterminada como padrão); além disso o `CertificateDisplayStatus`
+declara o fuso explicitamente em vez de herdar o do config, justamente para não herdar o errado.
+O defeito, porém, é **global** — alcança qualquer derivação de data futura que confie no default,
+e o Chile ainda tem horário de verão, então a diferença não é constante.
+
+O conserto tem forma conhecida: `env('APP_TIMEZONE', 'UTC')` no config e um teste que prove
+`config('app.timezone')` seguindo o `.env`. Não entra neste bloco porque mudar o fuso do servidor
+reinterpreta **toda** data já gravada — decisão de escopo próprio, não efeito colateral de uma
+coluna de certificado.
+
+---
+
+
 # Travadas em decisão do João
 
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
@@ -515,26 +540,6 @@ Bloco 6b (spec D7): turma se identifica por relacionamento. **Gatilho anterior v
 busca filtra por `quote_code`/`budget_code`), remover seria perda funcional, e criar código próprio
 exige coluna + sequência ADR-17 + DTO + regeneração de tipos — backend com peso legal dentro de um
 bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variável do tema.
-
-## P-15 — certificados não aparecem no módulo de alunos
-
-**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fecha quando o João decidir expor (ou não) certificados na listagem e no detalhe do
-aluno, ou se a Lotus pedir. Revisar em **2026-09-30**.
-
-O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
-implementado não tem nenhum dos dois.
-
-Bloco alunos (2026-07-27, spec D10): `app/Domains/Certification/` era pasta vazia e não existia
-migration de `certificates`. Card vazio foi rejeitado explicitamente: afirmar "sem certificados"
-quando a verdade é "o módulo não existe" é falha silenciosa, e aqui o dado tem peso legal.
-**Proveniência de D10 ratificada pelo João no doc-sync 2026-07-30.**
-
-**Gatilho venceu em 2026-08-07:** o Bloco 7 entregou `certificates` e a vertical até a API pública.
-**Venceu de novo em 2026-08-08:** o bloco `certificacao-frontend` entregou o módulo próprio
-`/certificados` (Emisión + Historial) e **não tocou o módulo de alunos** — o escopo aprovado no
-brainstorming (4 frentes) nunca incluiu a listagem/detalhe do aluno, então a decisão que esta
-pendência espera segue não tomada. Os dados agora existem de ponta a ponta; expor coluna/card no
-módulo de alunos é composição de frontend sobre API pronta.
 
 ## P-16 — Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores`
 
