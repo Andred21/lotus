@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-revisao-ui-por-modulo-f2
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
 active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
@@ -45,9 +45,9 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-revisao-ui-por-modulo-f2
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f2
     active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-25T01:45:00-03:00
+updated_at: 2026-08-25T16:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `executing` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_review` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -189,6 +189,37 @@ escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão,
 Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
 vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
 o que preservar, e não há colisão a vigiar com a lane-c.
+
+**A fatia 2 do item 16 terminou a execução em 2026-08-25 e vai a review.** As 13 tasks do plano
+foram executadas e provadas; o bloco vai a `/revisar-sprint`, **não a merge**. O que ele entrega:
+
+- **A `D-57` paga inteira** — a cadeia da RN-16 carrega `TurmaDocumentType` do
+  `TurmaHabilitacaoService` até os DTOs, e os **quatro** campos (`missing_types` ×2,
+  `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum no
+  `generated.ts`. O helper `turmaDocumentTypeLabel` perdeu o fallback de código cru: agora é o `tsc`
+  que barra string fora do enum, e não uma compensação em runtime.
+- **Os Minors 2, 3 e 5 herdados do review da fatia 1** — hover alcançando a coluna presa, sombra de
+  rolagem que a coluna cobria, e o slot `actions` do `DetailHeader` fora da linha de base.
+- **Duas runs da `lotus-ui-review`, com relatório datado em `audits/`** — Comercial (3 achados: 1
+  `C`, 2 `B`) e Certificados (4 achados, todos `B`, nenhum `C`). **Nenhum `C` fica aberto.** Quatro
+  achados corrigidos com commit próprio e medida na tela antes e depois; três viraram ficha.
+- **As réguas de aba medidas, e nenhuma tocada** — `[1134, 1134, false]` em 1440x900 e
+  `[276, 276, false]` em 390x844 nas duas telas. `scrollable` não foi ligado: quem mede, liga.
+- **Seis fichas escritas no `backlog.md`** — a decisão da `D-38` (de 2026-08-22, que a task cortada
+  da fatia 1 nunca escreveu), a `D-57` baixada, e `D-58` a `D-62` abertas.
+
+**O achado que a fatia expõe e não paga: `D-62`.** O mesmo defeito — `AppDropdown` de filtro sem
+nome acessível, sempre na forma `<div className="w-48">` com o dropdown solto dentro — foi
+encontrado por **três runs independentes em três dias** (UI-07 de Operação, UI-02 de Comercial,
+UI-01 de Certificados), mais o seletor de turma da Emisión, que só tinha nome por acidente do
+placeholder. Quatro correções idênticas e **nenhuma catraca**: a quinta ocorrência nasce verde.
+
+**Gate completo (o bloco tocou `backend/`, então não é o gate de frontend puro):** frontend lint
+`0`, build `0`, **109 arquivos / 602 testes** contra a baseline de 107/595 da Task 1; backend **938
+passed / 5 skipped** contra 937/5; Pint `passed` nos 10 arquivos PHP tocados; `typescript:transform`
+sem drift. **Desvio declarado:** o Step 6 da Task 13 previa um commit de gate com `git add -A`, e a
+árvore já estava limpa — o gate não produziu arquivo, e os números vivem aqui e no commit deste
+handoff, em vez de num commit vazio.
 
 **Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
 `idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
