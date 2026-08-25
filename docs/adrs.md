@@ -107,6 +107,8 @@ dependência é registrada com o consumidor nomeado, não só declarada no `comp
 ## ADR-13 — Containerização: Docker Compose artesanal + multi-stage, sem Laradock
 **Regra:** `docker-compose.yml` artesanal (só serviços usados); imagem de produção via multi-stage build (Composer → Node/Vite → final Alpine enxuto). Serviços: PHP-FPM + Nginx; MySQL via RDS em prod (não em container). **Porquê:** Compose enxuto é proporcional ao porte e ensina as peças. Descartados: Laradock (over-engineering), Sail (só dev), FrankenPHP (adiado — dominar o clássico primeiro).
 
+**Emenda 2026-08-24 (bloco `compose-por-worktree`, paga a P-03):** o Compose já isola projeto, rede e volume por diretório — uma worktree sobe `lotus-infra_lotus-db`, o main tree sobe `lotus_lotus-db` —, mas **não** isola porta host. As portas publicadas de `docker-compose.yml` vêm de variáveis `LOTUS_DEV_*` com default igual à porta histórica, e o `.env` da raiz (gitignored, molde em `.env.example`) escolhe o offset da árvore. O serviço `app` deriva das mesmas variáveis as cinco chaves que carregam porta dentro do valor (`APP_URL`, `FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS`, `AWS_ENDPOINT_PUBLIC`, `AWS_URL`), e o Vite deriva a sua porta e o `VITE_API_URL`. O prefixo é `LOTUS_DEV_` e não `LOTUS_` porque `docker-compose.prod.yml` lê o mesmo `.env`. Catraca: `frontend/tests/compose-dev.test.ts`.
+
 ## ADR-14 — Compute/Deploy: EC2 única com Docker Compose
 **Regra:** EC2 única rodando os containers via Docker Compose. Sem ECS/Fargate, sem Copilot/CodePipeline (MVP). **Porquê:** menor custo, controle total, aprende a base de infra. Trade-off aceito conscientemente: responsabilidade operacional é do dev (patching SO, TLS, monitorar/reiniciar, backup) — a senioridade está em automatizar esse trabalho.
 

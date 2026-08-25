@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-c
+focused_lane: lane-b
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -18,7 +18,7 @@ lanes:
     active_feature: null
     active_work_item: null
     workflow_state: idle
-    next_owner: joao
+    next_owner: claude
     next_action: select_backlog_item
     tree: main-tree
     branch: feat/hardening-acesso-ownership-e-integridade
@@ -29,23 +29,24 @@ lanes:
     resume_state: null
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
+    active_feature: null
     active_work_item: null
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
-    tree: null   # ../lotus-infra removida em 2026-08-22, depois do merge
-    branch: null # infra/producao-runtime-e-aws mesclada no PR #67 e apagada (era c27492d7)
+    tree: ../lotus-infra
+    branch: infra/compose-por-worktree
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: infra-producao-runtime-e-aws
+    last_completed_work_item: compose-por-worktree
   lane-c:
     active_feature: null
     active_work_item: null
     workflow_state: idle
-    next_owner: joao
+    next_owner: claude
     next_action: select_backlog_item
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
@@ -55,9 +56,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
-last_completed_work_item: tabelas-coluna-de-acoes-e-largura
-state_basis_commit: e25db109
-updated_at: 2026-08-24T23:10:00-03:00
+last_completed_work_item: compose-por-worktree
+state_basis_commit: f514f596
+updated_at: 2026-08-24T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,19 +163,12 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
+| `lane-b` | — | — | `../lotus-infra` | `infra/compose-por-worktree` (mesclada, PR #70) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (não mesclada) | `idle` |
 
-**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
-`feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
-estado e **ainda não foi mesclada** — é o PR aberto. A lane não recebe item novo sozinha: promoção é
-do João, contra o `backlog.md`.
-
-**A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
-**PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
-`../lotus-infra` e a branch `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por
-decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
-são `null`.
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24 e voltou a `idle`.** A narrativa do bloco
+está em `historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item
+novo sozinha: promoção é do João, contra o `backlog.md`.
 
 **A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
 integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
@@ -182,7 +176,15 @@ integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branc
 abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
 fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
 `app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
-memória nela. Está registrado como **P-55**, e é ambiente, não código: o bloco não toca `backend/`.
+memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
+da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
+573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
+árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
+
+**A linha de `lane-a` acima é o retrato do commit em que esta branch nasceu, não o estado vivo
+dela** — ela foi promovida em 2026-08-24 e executa o item 2 no main tree, registrando isso no
+`state.md` da própria branch, como manda a divisão por dono. A `lane-c` reconcilia aqui: este
+fechamento traz a `main` de PR #70 para dentro e é esta branch que mescla a seguir.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -193,10 +195,10 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
 | 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
+| 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
-| 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

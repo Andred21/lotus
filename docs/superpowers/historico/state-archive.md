@@ -80,6 +80,49 @@ Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` segu
 é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
 da P-03. Integração segue serial.
 
+---
+
+## Fechado em 2026-08-24 — `compose-por-worktree`, fora da fila (ficha `P-03`)
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
+| `lane-b` | `compose-por-worktree` (paga a **P-03**) | Infra | `../lotus-infra` | `infra/compose-por-worktree` | `ready_for_closure` (review de duas lentes; Q-1 a Q-4 corrigidos) |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
+
+**A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
+`feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
+estado e **ainda não foi mesclada** — é o PR aberto. A lane não recebe item novo sozinha: promoção é
+do João, contra o `backlog.md`.
+
+**Promoção de 2026-08-24, explícita do João: a `lane-b` reabre para pagar a P-03.** A decisão foi
+paralelizar a fila e o gatilho formal da ficha venceu — a fila pendente tem quatro blocos de backend
+(itens 4, 5, 6 e 7) e o compose monta o main tree com portas fixas, então só uma lane de backend
+cabe. O bloco `compose-por-worktree` transforma em mecanismo o override efêmero de 2026-08-19
+(portas parametrizadas, `COMPOSE_PROJECT_NAME` por árvore, binds da árvore corrente) e é o que
+destrava a segunda lane de backend. Ele **não é item do `backlog.md`**: nasce da ficha `P-03`, que
+sai de "travadas em decisão" para "agrupadas em bloco" no mesmo commit e só fecha no
+`/fechar-sprint` deste bloco. `Contexto` não se aplica — a fonte é interna, a própria ficha. Depois
+dele a lane segue para os itens 10 → 11 → 12 da fila, que é a frente de infra/CI e não colide com
+código de aplicação. A worktree `../lotus-infra` foi **recriada** a partir de `main@cad0d1fb`; ela e
+a branch `infra/producao-runtime-e-aws` tinham sido destruídas depois do PR #67, que fechou o item
+10 anterior (`infra-producao-runtime-e-aws`, merge `31f91987`, narrativa em
+`historico/state-archive.md`).
+
+**As linhas de `lane-a` e `lane-c` acima são o retrato de `cad0d1fb`, não o estado vivo delas.** As
+duas foram promovidas em 2026-08-24 e executam agora — a `lane-a` o item 2 no main tree e a `lane-c`
+o item 17 em `../fix-frontend` —, cada uma registrando isso no `state.md` da própria branch, como
+manda a divisão por dono. Esta cópia só reconcilia com elas na integração serial. **Interseção a
+vigiar:** este bloco toca `docker-compose.yml`, `docker/` e `.env.example` na raiz; nenhuma das
+outras duas lanes tem esses arquivos no escopo declarado.
+
+Interseção a vigiar entre as lanes vivas: nenhuma — as três estão em `idle`. A `lane-c` fechou o
+item 16 (fatia 1 de 2) em 2026-08-24, depois de trazer a `main` para dentro pelo merge `8a4df32a`;
+a narrativa dela está em `historico/state-archive.md`. Integração segue serial: é esta branch que
+mescla a seguir.
+
+---
+
 ## Fechado em 2026-08-24 — `frontend-revisao-ui-por-modulo`, item 16 da fila (fatia 1 de 2)
 
 ### Registro da lane — verbatim do `state.md`
