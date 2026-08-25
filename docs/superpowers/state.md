@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: tabelas-coluna-de-acoes-e-largura
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
 active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
 context_packet: null
-blocker: "Review do item 17: 4 achados aguardando decisão do João — Q-1 (LARGURA_MATRICULA_ARQUIVADA sem parâmetro de ação, 🟡), Q-2 (léxico dividido nos 13 arquivos de largura, 🟡), Q-3 (docblock do table-fixed contradiz a §4 da medição, 🟢), Q-4 (catraca COLUNA_SEM_LARGURA exige style e não largura, 🟢). Todos de esforço P; nenhum bloqueia merge por si."
+blocker: null
 
 lanes:
   lane-a:
@@ -44,20 +44,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: tabelas-coluna-de-acoes-e-largura
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
     active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
     active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
     context_packet: null
-    blocker: "Review do item 17: 4 achados aguardando decisão do João — Q-1 (LARGURA_MATRICULA_ARQUIVADA sem parâmetro de ação, 🟡), Q-2 (léxico dividido nos 13 arquivos de largura, 🟡), Q-3 (docblock do table-fixed contradiz a §4 da medição, 🟢), Q-4 (catraca COLUNA_SEM_LARGURA exige style e não largura, 🟢). Todos de esforço P; nenhum bloqueia merge por si."
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T22:05:00-03:00
+updated_at: 2026-08-24T22:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `blocked` (review feito) |
+| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_closure` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
@@ -212,7 +212,20 @@ achados, todos de esforço P e nenhum bloqueante de merge por si:
   própria medição registra desvio de até 3,5 pontos quando o `rem` da ação não vale os 10%.
 - **Q-4 🟢** a catraca `COLUNA_SEM_LARGURA` exige a presença de `style`, não de largura.
 
-O bloco aguarda o João aprovar o que entra; só achado aprovado vira correção.
+**O João aprovou os quatro em 2026-08-24 e os quatro foram aplicados.** Q-1 passou
+`!registroBloqueado` a `archivedEnrollmentWidths`; Q-2 unificou o léxico — todo consumidor exporta
+`<entidade>Widths` e é FUNÇÃO, inclusive onde não há variação, e a peça de `shared` passou a
+`{ weight, cap }` / `TableWidthOptions { actions, archived }` / `ACTIONS_RESERVE`; Q-3 trocou a
+promessa de LEI por RAZÃO nos docblocks de `columnWidth.ts` e `style.ts`, com o caso medido da
+`HistorialTable`; Q-4 partiu a catraca em dois seletores de um nível — coluna sem `style` e coluna
+com `style` que não é `MemberExpression` nem `CallExpression`.
+
+A grafia encadeada do `:has` reprovou de novo, agora medida nas duas direções: a sonda de quatro
+colunas acusou as QUATRO, legítimas inclusive. A forma que passou desce pelo caminho do nó
+(`[value.expression.type=…]`), e a sonda final acusou 2 de 4, as certas. Gate reconferido: lint 0,
+build verde, 101 arquivos / 561 testes — mesma contagem, nenhum teste novo (a ramificação `actions`
+já tem prova em `columnWidth.test.ts`, e o corte de teste do projeto é hooks, não módulos de
+coluna). O registro está na §8 do audit. Nenhum achado pendente.
 
 Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
 é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho

@@ -3,9 +3,12 @@
 Fechamento da Task 17 (Definition of done). Todas as leituras vêm do Procedimento M rodado no
 Chromium, contra o Vite local e a API real — nenhuma linha desta página é inferida de código.
 
-Vocabulário: `COL` (pesos), `tableWidths(pesos, { acao, archived })` sobre os orçamentos 90% (com
+Vocabulário: `COL` (pesos), `tableWidths(pesos, { actions, archived })` sobre os orçamentos 90% (com
 coluna de ação), 66% (arquivada) e 100% (sem ação), `stickyActionsColumn(rem)` e o par fixo
 `ARCHIVED_COLUMN` (10% / 14%). `table-layout: fixed` ligado no `AppDataTable` na Task 2.
+
+> **As leituras desta página são de antes do review** (2026-08-24, tarde). A §8 registra o que as
+> correções do review mudaram e por que nenhum número acima se move.
 
 ## 1. As 12 tabelas com coluna de ação (1440x900, visão ativa)
 
@@ -62,7 +65,8 @@ navegador reescalar.
 ## 4. Divergências acima de 2 pontos, e o que as causa
 
 **Nenhuma delas é defeito; todas têm a mesma raiz aritmética.** Sob `table-layout: fixed`, quando o
-`rem` da coluna de ação não vale exatamente os 10% de `RESERVA_ACAO`, o navegador reescala as
+`rem` da coluna de ação não vale exatamente os 10% de `ACTIONS_RESERVE` (`RESERVA_ACAO` à época da
+medição; ver §8), o navegador reescala as
 porcentagens declaradas sobre os pixels que sobram — **preservando as razões entre as colunas de
 dado com exatidão**.
 
@@ -112,3 +116,31 @@ Gate final: `pnpm lint` 0 problemas · `pnpm build` verde · `pnpm test` **101 a
 3. Mantém o commit corretivo `ea280fe1`, que reabriu as Tasks 2 e 3 fora de task.
 4. `RolesTable` mantém `COL.text` no NOMBRE, mesmo com 564px de célula para 40px de texto — a faixa
    larga vem de só existirem três colunas de dado, não do peso.
+
+## 8. Depois do review — o que mudou e o que não se moveu
+
+O `/revisar-sprint` de 2026-08-24 devolveu quatro achados, todos de esforço P, todos aprovados pelo
+João e aplicados na mesma branch.
+
+**Nenhuma leitura das §§1-3 se move.** Q-2, Q-3 e Q-4 não tocam pixel: são renome de identificador,
+texto de docblock e seletor de ESLint. Q-1 muda um estado que esta página **não mediu** — a lista de
+matrículas arquivadas com `registroBloqueado`, onde a coluna de ação some. Nos estados medidos o
+parâmetro novo vale `true`, que era o valor congelado antes.
+
+| Achado | O que entrou |
+|---|---|
+| Q-1 🟡 | `archivedEnrollmentWidths(actions)` passou a receber `!registroBloqueado`, como o irmão `enrollmentWidths` já fazia. Sem ele, no registro fechado os 10 pontos da ação ficavam sem dono e o navegador os redistribuía sobre o resto — inclusive sobre `ARCHIVED_COLUMN`, cujo par existe para render 10%/14% IGUAIS nas sete arquivadas. |
+| Q-2 🟡 | Léxico único. Todo consumidor exporta `<entidade>Widths` e **é função**, inclusive onde não há variação (`emissionWidths()`, `historialWidths()`, `roleWidths()`, `studentWidths()`, `studentTurmaWidths()`, `complianceWidths()`, `redatorLoadWidths()`, `archivedEnrollmentWidths()`) — o sítio não adivinha mais nome nem forma. Na peça de `shared`, `ColClass` virou `{ weight, cap }`, `OrcamentoOpcoes` virou `TableWidthOptions` com `actions`, e as reservas viraram `ACTIONS_RESERVE`/`ARCHIVED_RESERVE`: a infraestrutura fala inglês, como o resto de `shared/ui`; português fica para o domínio. |
+| Q-3 🟢 | Os docblocks de `columnWidth.ts` e `style.ts` deixaram de prometer que a largura declarada é LEI. Passam a dizer que é RAZÃO, com o caso medido da `HistorialTable` (18,0% entregues para 21,04% declarados) e ponteiro para a §4 desta página. |
+| Q-4 🟢 | A catraca `COLUNA_SEM_LARGURA` virou **dois** seletores: coluna sem `style`, e coluna com `style` que não é `MemberExpression` nem `CallExpression`. Antes `style={{ color: '…' }}` a satisfazia. |
+
+**A grafia encadeada do `:has` falhou de novo, e agora está medida nas duas direções.** A tentativa
+`:has(> JSXAttribute[name.name='style'] > JSXExpressionContainer > :matches(MemberExpression,
+CallExpression))` reprovou as QUATRO colunas da sonda — as duas inválidas e as duas legítimas: o
+esquery não desce a cadeia dentro do `:has`. A forma que passou desce pelo CAMINHO do nó
+(`[value.expression.type=…]`), num `:has` de um nível só. Sonda de quatro colunas
+(`style` de objeto literal · sem `style` · `largura.name` · `stickyActionsColumn('9rem')`):
+**2 erros, nas duas primeiras**, antes de ser removida.
+
+Gate reconferido depois das correções: `pnpm lint` 0 · `pnpm build` verde · `pnpm test` 101 arquivos
+/ 561 testes.
