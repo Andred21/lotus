@@ -3,6 +3,7 @@
 namespace Tests\Feature\Identity;
 
 use App\Domains\Identity\Support\PermissionCatalog;
+use App\Shared\Support\FrontendPath;
 use Tests\TestCase;
 
 /**
@@ -14,12 +15,12 @@ use Tests\TestCase;
  * ler o arquivo é a lição 10 de novo — se o caminho não resolver, o teste
  * REPROVA.
  *
- * Path absoluto `/frontend/...`: o compose monta `./frontend` diretamente em
- * `/frontend` no container, independente de `/var/www` (mount irmão, não
- * aninhado) — `base_path('../frontend/...')` resolveria para `/var/frontend`,
- * que não existe. Mesma convenção já usada em
- * `TypeScriptTransformerServiceProvider::outputDirectory('/frontend/...')`.
- * Suíte só roda em container (host sem mbstring — ver CLAUDE.md §6).
+ * O caminho do frontend sai de `FrontendPath`, não de literal: no container do
+ * compose `./frontend` é montado em `/frontend` (mount irmão de `/var/www`, não
+ * aninhado), e na CI não há container — o backend roda de `<workspace>/backend` e
+ * o frontend é o diretório irmão. Com o literal fixo, o job `backend` da CI
+ * reprovava com "file /frontend/src/shared/config/locales/en.json does not exist".
+ * Mesma fonte usada por `TypeScriptTransformerServiceProvider::outputDirectory()`.
  */
 class PermissionI18nParityTest extends TestCase
 {
@@ -34,7 +35,7 @@ class PermissionI18nParityTest extends TestCase
         sort($esperadas);
 
         foreach (self::LOCALES as $locale) {
-            $path = "/frontend/src/shared/config/locales/{$locale}.json";
+            $path = FrontendPath::de("src/shared/config/locales/{$locale}.json");
             $this->assertFileExists($path, "Locale {$locale} não encontrado em {$path}");
 
             $json = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
@@ -74,7 +75,7 @@ class PermissionI18nParityTest extends TestCase
         sort($esperados);
 
         foreach (self::LOCALES as $locale) {
-            $path = "/frontend/src/shared/config/locales/{$locale}.json";
+            $path = FrontendPath::de("src/shared/config/locales/{$locale}.json");
             $this->assertFileExists($path, "Locale {$locale} não encontrado em {$path}");
 
             $json = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
