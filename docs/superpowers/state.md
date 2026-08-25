@@ -4,29 +4,29 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: reviewing
-next_owner: claude
-next_action: review_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
 context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
-blocker: null
+blocker: 'Revisão de sprint feita (2026-08-24): 3 achados 🟢 (Q-1 estado congelado no fetch, Q-2 default null no fromModel da linha de turma, Q-3 ramo de erro da célula sem teste) + 1 divergência de revisores sobre o gate do PDF (spec D11/§7 aceita; Codex reportou). Aguarda o João decidir o que entra.'
 
 lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: reviewing
-    next_owner: claude
-    next_action: review_active_work_item
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
     active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
     context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
-    blocker: null
-    resume_state: null
+    blocker: 'Revisão de sprint feita (2026-08-24): 3 achados 🟢 + 1 divergência de revisores sobre o gate do PDF. Aguarda decisão do João.'
+    resume_state: reviewing
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `reviewing` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `blocked` (achados na mesa) |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
