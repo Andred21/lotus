@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd
 active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
 active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
@@ -31,9 +31,9 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 6e8e8618
-updated_at: 2026-08-24T21:30:00-03:00
+updated_at: 2026-08-24T22:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `ready_for_execution` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no

@@ -21,10 +21,13 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 # ── spa ───────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS spa
 WORKDIR /spa
-# pnpm por versão exata (host mede 11.22.0) e não por corepack: o package.json
-# não declara `packageManager`, então corepack não teria de onde resolver.
-RUN npm install -g pnpm@11.22.0
+# O package.json vem ANTES do corepack de propósito: `corepack prepare
+# --activate` resolve a versão pelo campo `packageManager`, então o arquivo
+# precisa existir para ele ler. Antes de 2026-08-24 esta linha fixava
+# pnpm@11.22.0 à mão porque o campo não existia; ele existe agora, e a versão
+# tem um dono só.
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare --activate
 RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
 # VAZIO de propósito (spec D2): com origem única o axios usa caminho relativo,
