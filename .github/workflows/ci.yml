@@ -130,6 +130,16 @@ jobs:
       # AINDA ASSIM sai 0 -- medido. Por isso quem julga e o diff, nunca o
       # texto da saida. O ::error com `file=` faz o GitHub nomear o arquivo
       # na interface, que e literalmente o que a ficha da D-08 exige.
+      - name: DIAGNOSTICO temporario
+        run: |
+          git status --porcelain
+          echo "--- md5 do arquivo no checkout ---"
+          md5sum frontend/src/shared/types/generated.ts
+          echo "--- tail ---"
+          tail -3 frontend/src/shared/types/generated.ts
+          echo "--- outros generated.ts na maquina ---"
+          find / -name generated.ts -newermt '-10 minutes' 2>/dev/null | head
+
       - name: Lei 5.3 - generated.ts nao se edita a mao
         run: |
           if ! git diff --exit-code -- frontend/src/shared/types/generated.ts; then
