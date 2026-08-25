@@ -132,4 +132,81 @@ class RateLimitTest extends TestCase
             'medido que deixou `/login` de fora por três linhas (D2).',
         ]));
     }
+
+    /**
+     * @return list<string> os middleware CRUS (não resolvidos) de uma rota, por método e URI.
+     *
+     * `$rota->middleware()` e não `app('router')->gatherRouteMiddleware($rota)`: o segundo
+     * resolve o alias pela classe (`throttle:login` vira
+     * `Illuminate\Routing\Middleware\ThrottleRequests:login`), o que nunca bateria contra o
+     * nome do limitador. A checagem daqui é "esta rota está pendurada no limitador X", que só o
+     * nome cru prova — é o mesmo motivo pelo qual `test_nenhum_throttle_com_numero_literal...`
+     * usa a forma resolvida: para pegar número literal em QUALQUER forma de declarar o
+     * middleware, não só via alias.
+     */
+    private function middlewareDa(string $metodo, string $uri): array
+    {
+        foreach (app('router')->getRoutes() as $rota) {
+            if ($rota->uri() === $uri && in_array($metodo, $rota->methods(), true)) {
+                return array_values($rota->middleware());
+            }
+        }
+
+        $this->fail("Rota {$metodo} {$uri} não existe.");
+    }
+
+    public function test_cada_alvo_carrega_o_seu_limitador_nomeado(): void
+    {
+        $esperado = [
+            ['POST', 'api/login', 'throttle:login'],
+            ['GET', 'api/publico/certificados/{uuid}', 'throttle:public-certificate'],
+            ['POST', 'api/password/forgot', 'throttle:password'],
+            ['POST', 'api/password/reset', 'throttle:password'],
+            ['POST', 'api/invitation/accept', 'throttle:password'],
+            ['POST', 'api/profile/photo', 'throttle:upload'],
+            ['POST', 'api/profile/documents', 'throttle:upload'],
+            ['POST', 'api/users/{user}/photo', 'throttle:upload'],
+            ['POST', 'api/redatores', 'throttle:upload'],
+            ['PUT', 'api/redatores/{redator}', 'throttle:upload'],
+            ['POST', 'api/redatores/{redator}/photo', 'throttle:upload'],
+            ['POST', 'api/redatores/{redator}/documents', 'throttle:upload'],
+            ['POST', 'api/students/{student}/photo', 'throttle:upload'],
+            ['POST', 'api/clients/{client}/photo', 'throttle:upload'],
+            ['POST', 'api/quotes/{quote}/files', 'throttle:upload'],
+            ['POST', 'api/budgets/{budget}/files', 'throttle:upload'],
+            ['POST', 'api/turmas/{turma}/documents', 'throttle:upload'],
+            ['POST', 'api/turmas/{turma}/alunos/importar', 'throttle:import'],
+            ['POST', 'api/certificates/batch', 'throttle:certificate-batch'],
+            ['GET', 'api/certificates/{certificate}/pdf', 'throttle:certificate-pdf'],
+        ];
+
+        foreach ($esperado as [$metodo, $uri, $limitador]) {
+            $this->assertContains(
+                $limitador,
+                $this->middlewareDa($metodo, $uri),
+                "{$metodo} {$uri} está sem `{$limitador}`.",
+            );
+        }
+    }
+
+    public function test_nenhum_throttle_com_numero_literal_sobrou_nas_rotas(): void
+    {
+        // O `throttle:6,1` de `Identity/routes.php` era a política inteira do
+        // repositório escrita dentro de um arquivo de rotas. A política agora
+        // mora no `RateLimits`; número literal em rota é a volta do problema.
+        $literais = [];
+
+        foreach (app('router')->getRoutes() as $rota) {
+            foreach (app('router')->gatherRouteMiddleware($rota) as $m) {
+                if (preg_match('/^Illuminate\\\\Routing\\\\Middleware\\\\ThrottleRequests:\d/', (string) $m)) {
+                    $literais[] = $rota->uri().' -> '.$m;
+                }
+            }
+        }
+
+        $this->assertSame([], array_values(array_unique($literais)), implode("\n", array_merge(
+            ['Throttle com número literal na rota. A política é única e mora em `App\Shared\RateLimiting\RateLimits`:'],
+            $literais,
+        )));
+    }
 }
