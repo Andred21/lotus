@@ -30,6 +30,11 @@ class ImportStudentsAction
      * (metade do `fastcgi_read_timeout` de dev) e larga sob os 60s/120s do
      * timeout de verdade. Turma real tem 8 a 15 alunos (`OperationDemoSeeder`),
      * então 100 ainda é ~7× a maior.
+     *
+     * Quem aplica o teto é o LEITOR, contando linha iterada (achado Q-4 do
+     * review de 2026-08-25): contado aqui, do outro lado do `yield`, ele nunca
+     * mordia num arquivo cheio de linhas em branco, que o leitor pula sem
+     * entregar.
      */
     public const MAX_LINHAS = 100;
 
@@ -45,22 +50,14 @@ class ImportStudentsAction
         // não é o mesmo que recusar 40 linhas uma a uma.
         $turma->assertAcademicallyWritable();
 
-        // Materializa ANTES de matricular, e para de ler na primeira linha
-        // acima do teto. O leitor é um gerador e o laço abaixo escreve por
-        // linha: teto aplicado durante o laço recusaria a planilha DEPOIS de
-        // já ter matriculado parte dela — o que não é recusa, é meia importação.
-        // Memória: 500 linhas de quatro campos curtos, contra os 256M do pool.
-        $linhas = [];
-
-        foreach ($this->reader->rows($file) as $linha) {
-            if (count($linhas) >= self::MAX_LINHAS) {
-                throw ValidationException::withMessages([
-                    'file' => 'La planilla supera el máximo de '.self::MAX_LINHAS.' filas. Divídala y vuelva a enviarla.',
-                ]);
-            }
-
-            $linhas[] = $linha;
-        }
+        // Materializa ANTES de matricular: o leitor é um gerador e o laço
+        // abaixo escreve por linha, então a recusa por teto durante o laço
+        // chegaria DEPOIS de já ter matriculado parte da planilha — o que não é
+        // recusa, é meia importação. O teto vai junto e mora no leitor, que é
+        // quem enxerga a linha em branco.
+        // Memória: no máximo `MAX_LINHAS` linhas de quatro campos curtos,
+        // contra os 256M do pool.
+        $linhas = iterator_to_array($this->reader->rows($file, self::MAX_LINHAS), false);
 
         $created = $relinked = $already = 0;
         $moved = [];
