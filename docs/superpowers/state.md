@@ -4,27 +4,27 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
 blocker: null
 
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
     blocker: null
     resume_state: null
     last_completed_work_item: certificacao-historico-do-aluno
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-24T23:40:00-03:00
+updated_at: 2026-08-24T23:45:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `context_required` |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_planning` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
@@ -186,6 +186,21 @@ começa só na linha 28 e cobre convite/recuperação; `Route::get('publico/cert
 `Certification/routes.php:7` está fora de qualquer middleware. `grep -rn throttle` sobre os
 `routes.php` dos domínios e `backend/routes/` devolve **apenas** essas duas ocorrências do grupo de
 Identity — nenhum outro throttle existe no repositório.
+
+**Packet do item 4 recuperado — `status: ready`, quatro fontes, nenhuma `unavailable`.** Está em
+`context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md`. As quatro provenances que ele declara
+(`base_commit` e os blobs de `state.md`, `progress.md`, `adrs.md` e `backlog.md`) foram **conferidas
+contra `git hash-object` antes de gravar** e batem exatas — não são hash chutado.
+
+**O packet corrigiu uma atribuição errada que o `backlog.md` carrega, e ela muda o desenho.** A nota
+de proporção do item 4 fala da "sonda antimalware do `RNF-SEC-06`"; o Drive canônico diz que
+`RNF-SEC-06` é **só rate limit** ("Rate limit para login, troca de senha e ações sensíveis") e que o
+antimalware vem do **`RNF-SEC-08`** ("Upload de arquivos com validação de tipo/tamanho e escaneamento
+antivírus (redatores operam de redes não auditadas)"). O requisito exige o **resultado** — escaneamento
+— e **não nomeia** sonda, serviço, fornecedor, protocolo nem topologia; nenhuma fonte recuperada
+prescreve mecanismo. Então a renegociação que a nota do backlog imagina **não é sobre forma**: forma
+nunca foi exigida, e dispensar o resultado seria renegociação formal, do João. A correção da linha do
+`backlog.md` fica para o `/fechar-sprint` deste bloco — planejamento não edita a fila.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
