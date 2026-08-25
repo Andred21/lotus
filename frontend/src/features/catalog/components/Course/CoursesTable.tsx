@@ -2,10 +2,11 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
+import { courseWidths } from './courseColumns'
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -32,6 +33,7 @@ export function CoursesTable({
 }) {
   const { t } = useTranslation()
   const archived = mode === 'archived'
+  const largura = courseWidths(archived)
   const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
 
   return (
@@ -57,6 +59,7 @@ export function CoursesTable({
         field="name"
         header={t('course.name')}
         sortable
+        style={largura.name}
         body={(c: CourseData) => (
           <div className="flex items-center gap-3">
             <i
@@ -69,16 +72,19 @@ export function CoursesTable({
       />
       <AppColumn
         header={t('course.technicalName')}
+        style={largura.technicalName}
         body={(c: CourseData) => c.technical_name ?? '—'}
       />
       <AppColumn
         header={t('course.workloadHours')}
+        style={largura.workload}
         body={(c: CourseData) => (
           <span className="font-semibold">{c.workload_hours}</span>
         )}
       />
       <AppColumn
         header={t('course.redatorCount')}
+        style={largura.redatorCount}
         body={(c: CourseData) => (
           <span className="font-semibold">{c.redator_ids.length}</span>
         )}
@@ -95,7 +101,7 @@ export function CoursesTable({
             onRestore={onRestore}
           />
         )}
-        style={{ width: '8rem' }}
+        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
       />
     </SearchableTableFrame>
   )

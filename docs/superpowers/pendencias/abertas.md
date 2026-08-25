@@ -12,6 +12,52 @@
 
 # Frontend
 
+## P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
+
+**Bloco:** — · **Gatilho:** fecha quando `tests/compose-dev.test.ts` afastar também o
+`frontend/.env` durante a fábrica (mesmo tratamento que ele já dá aos `.env*` da raiz), ou quando o
+João decidir que toda árvore deve comentar a chave à mão. Revisar em **2026-10-31**.
+
+Medido em 2026-08-24, no merge da `main` (PR #70) dentro da `refactor/tabelas-coluna-de-acoes`: com
+o `frontend/.env` desta árvore trazendo `VITE_API_URL=http://localhost:8080` — a grafia que era o
+padrão antes do bloco `compose-por-worktree` —, três casos de `tests/compose-dev.test.ts` falham:
+
+    expected undefined to be '"http://localhost:8080"'
+
+O `vite.config.ts` está correto: ele lê `loadEnv(mode, __dirname, 'VITE_')` e, achando
+`VITE_API_URL` explícito, **não emite** o define derivado — que é exatamente a precedência que o
+bloco desenhou. Quem não isola é o teste: o `beforeEach` afasta os `.env*` da **raiz** (`CAMINHOS_ENV`)
+e não o `frontend/.env`, então o gate depende do disco de quem roda. Comentar a chave (como o
+`frontend/.env.example` agora manda) devolve **102 arquivos / 573 testes**.
+
+O conserto é de uma linha no teste e mora na frente de infra, não neste bloco; por isso a árvore só
+comentou a própria chave e nada foi commitado em `frontend/.env` (gitignored).
+
+## P-57 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
+
+**Bloco:** — · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
+worktree novo constrói a imagem antes de rodar a suíte, ou quando o compose deixar de permitir
+imagem por projeto defasada. Revisar em **2026-10-31**.
+
+Medido em 2026-08-24, no fechamento do item 17, na worktree `../fix-frontend`: o
+`docker compose exec -T app php artisan test` do §6 terminou em
+`Fatal error: Allowed memory size of 134217728 bytes exhausted`. Não é regressão da **P-50** — o
+`docker/php/memory-cli.ini` (320M) está no repositório e no `Dockerfile` desde então. O que falhou é
+que **cada worktree é um projeto compose próprio, com imagem própria**: a imagem `fix-frontend-app`
+tinha sido construída antes do ini e `php -i` no container dizia `memory_limit => 128M`,
+`Loaded Configuration File => (none)`.
+
+`docker compose build app` + `docker compose up -d --no-deps app` resolveu (o `--no-deps` porque
+3307 e 8025 já estão presos pelo stack do main tree), e a suíte terminou **906 passed / 5 skipped**.
+O conserto é de ambiente, não de código, e por isso não entrou em commit; o que fica aberto é o
+doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória e pensa em regressão.
+
+**Nasceu como `P-55` na branch `refactor/tabelas-coluna-de-acoes` e foi renumerada no merge da
+`main`**, que já trazia uma `P-55` (a invariante do espelho) e uma `P-56` vindas do fechamento do
+`compose-por-worktree` — mesmo precedente que renumerou a `P-38` para `P-41`. Ela **não é** a P-03,
+que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
+no lugar que o fatal de 128M apareceu aqui.
+
 ## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
 
 **Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que

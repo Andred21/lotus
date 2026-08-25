@@ -49,16 +49,16 @@ lanes:
     next_owner: claude
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui
+    branch: refactor/tabelas-coluna-de-acoes
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo
+    last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: f514f596
-updated_at: 2026-08-24T20:05:00-03:00
+updated_at: 2026-08-24T23:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,18 +163,28 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | — | — | `../lotus-infra` | `infra/compose-por-worktree` (não mesclada) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
+| `lane-b` | — | — | `../lotus-infra` | `infra/compose-por-worktree` (mesclada, PR #70) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (não mesclada) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24 e voltou a `idle`.** A narrativa do bloco
 está em `historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item
 novo sozinha: promoção é do João, contra o `backlog.md`.
 
-**As linhas de `lane-a` e `lane-c` acima são o retrato do commit em que esta branch nasceu, não o
-estado vivo delas.** As duas foram promovidas em 2026-08-24 e executam agora — a `lane-a` o item 2 no
-main tree e a `lane-c` o item 17 em `../fix-frontend` —, cada uma registrando isso no `state.md` da
-própria branch, como manda a divisão por dono. Esta cópia só reconcilia com elas na integração
-serial, e é esta branch que mescla a seguir.
+**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
+integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
+`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
+abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
+fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
+`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
+memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
+da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
+573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
+árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
+
+**A linha de `lane-a` acima é o retrato do commit em que esta branch nasceu, não o estado vivo
+dela** — ela foi promovida em 2026-08-24 e executa o item 2 no main tree, registrando isso no
+`state.md` da própria branch, como manda a divisão por dono. A `lane-c` reconcilia aqui: este
+fechamento traz a `main` de PR #70 para dentro e é esta branch que mescla a seguir.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -184,11 +194,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
-| 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

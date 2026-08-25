@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame } from '@shared/ui'
+import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate } from '@shared/lib'
 import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
 import { useHistorial } from '../../hooks/useHistorial'
-import { CertificateViewDialog } from './CertificateViewDialog'
-import { RevokeDialog } from './RevokeDialog'
-import { ReissueDialog } from './ReissueDialog'
+import { historialWidths } from './historialColumns'
+import { HistorialDialogs } from './HistorialDialogs'
 
 const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
 
@@ -20,6 +19,7 @@ const ausente = (valor: string | null | undefined) => (valor ?? '').trim() === '
  * `useHistorial` — este componente só monta o JSX (frontend-fsliced.md). */
 export function HistorialTable() {
   const { t } = useTranslation()
+  const largura = historialWidths()
   const h = useHistorial()
 
   const statusOptions = [
@@ -52,6 +52,7 @@ export function HistorialTable() {
         <AppColumn
           header={t('certificate.colCodigo')}
           body={(c: CertificateData) => <span className="font-mono text-sm">{c.codigo}</span>}
+          style={largura.codigo}
         />
         <AppColumn
           header={t('certificate.colAlumno')}
@@ -74,15 +75,18 @@ export function HistorialTable() {
               image={c.aluno_photo_url}
             />
           )}
+          style={largura.alumno}
         />
-        <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />
+        <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} style={largura.curso} />
         <AppColumn
           header={t('certificate.colIssuedAt')}
           body={(c: CertificateData) => formatDate(new Date(c.created_at))}
+          style={largura.emitidoEm}
         />
         <AppColumn
           header={t('certificate.colValidUntil')}
           body={(c: CertificateData) => (c.valido_ate ? formatDate(new Date(`${c.valido_ate}T00:00:00`)) : '—')}
+          style={largura.validoAte}
         />
         <AppColumn
           header={t('certificate.colStatus')}
@@ -96,6 +100,7 @@ export function HistorialTable() {
             const status = certStatus(c)
             return <AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />
           }}
+          style={largura.estado}
         />
         <AppColumn
           body={(c: CertificateData) => {
@@ -112,39 +117,11 @@ export function HistorialTable() {
               </div>
             )
           }}
-          style={{ width: '16rem' }}
+          style={stickyActionsColumn('16rem')}
         />
       </SearchableTableFrame>
 
-      {h.viewingCertificateId !== null && (
-        <CertificateViewDialog
-          certificateId={h.viewingCertificateId}
-          certificate={h.viewingCertificate}
-          loading={h.viewingCertificateLoading}
-          error={h.viewingCertificateError}
-          onRetry={h.reloadViewingCertificate}
-          onHide={() => h.setViewingCertificateId(null)}
-        />
-      )}
-
-      {h.revoking && (
-        <RevokeDialog
-          certificate={h.revoking}
-          onHide={() => h.setRevoking(null)}
-          onRevoked={() => h.setRevoking(null)}
-        />
-      )}
-
-      {h.reissuing && (
-        <ReissueDialog
-          target={h.findReissueTarget(h.reissuing)}
-          panelLoading={h.reissuePanelLoading}
-          panelError={h.reissuePanelError}
-          onRetryPanel={h.reissuePanelReload}
-          onHide={() => h.setReissuing(null)}
-          onIssued={h.openIssuedCertificate}
-        />
-      )}
+      <HistorialDialogs h={h} />
     </>
   )
 }

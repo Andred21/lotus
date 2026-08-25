@@ -39,7 +39,37 @@ export const appDataTablePt: DataTablePassThroughOptions = {
       backgroundAttachment: 'local, local, scroll, scroll',
     },
   },
-  table: { className: 'min-w-[48rem]' },
+  /** `table-fixed` é o que torna a largura declarada a RAZÃO que reparte a
+   * tabela, e não um palpite que o conteúdo desmente (item 17). Com
+   * `table-layout: auto` o navegador trata a porcentagem como
+   * preferência e reparte pelo conteúdo: medido em `/operacion` a 1440x900, com
+   * as sete colunas já declarando largura, CURSO pedia 20,54% e recebia 130px
+   * enquanto CLIENTE recebia 249px — o inverso da importância, que é o defeito
+   * que o bloco existe para remover. Com `table-fixed`, os mesmos `style`
+   * entregam CURSO 226px e CLIENTE 194px, e a tabela passa a caber exata na
+   * moldura (1119x1119, contra 1213 numa moldura de 1119).
+   *
+   * **Razão, e não pixel:** a coluna de ação mede em `rem` e a reserva dela no
+   * orçamento são 10 pontos fixos; quando os dois não coincidem, o navegador
+   * reescala as porcentagens sobre o que sobra e a coluna entrega menos do que
+   * declara — 18,0% para 21,04% declarados na `HistorialTable`, que tem ação de
+   * `16rem`. As razões ENTRE as colunas de dado sobrevivem exatas, que é o que o
+   * bloco promete. O porquê está em `columnWidth.ts`; as leituras, na §4 do
+   * registro de medição do item 17.
+   *
+   * A largura mínima continua: abaixo de 48rem o wrapper rola, e a coluna de
+   * ações fica presa (`stickyActionsColumn`) para continuar alcançável.
+   *
+   * **O raio desta linha é o sistema inteiro, e ela é ligada no MEIO da
+   * migração.** Toda tabela que ainda não declarou largura passa a repartir o
+   * espaço em fatias IGUAIS (CSS 2.1 §17.5.2), e não mais pelo conteúdo: medido
+   * em `/cursos` a 1440x900, as quatro colunas de dado ficaram com 252px cada.
+   * É estado de transição da branch do item 17, não estado de entrega — as
+   * quinze tabelas declaram largura antes do fim do bloco, e a Task 17 varre a
+   * árvore inteira atrás de coluna sem largura antes de qualquer merge. Nenhum
+   * teste pega isto: o jsdom não calcula caixa, então `table-layout` não tem
+   * efeito observável na suíte. */
+  table: { className: 'min-w-[48rem] table-fixed' },
   headerRow: { className: 'text-xs uppercase tracking-wide' },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a
   // DataTablePassThroughOptions — cascatam via `column` (tipagem do PrimeReact 10.9.8).

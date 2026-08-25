@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { formatDate, type ArchiveTrail } from '@shared/lib'
-import { AppColumn } from './AppDataTable'
+import { AppColumn, ARCHIVED_COLUMN } from './AppDataTable'
 
 /**
  * O par de colunas do rastreio de arquivamento — "arquivado em" e "arquivado por".
@@ -27,8 +27,13 @@ import { AppColumn } from './AppDataTable'
  * Só a data, sem hora (D1): `archived_at` carrega o timestamp completo, mas a hora
  * seria informação NOVA na tela, e este bloco corrige um defeito de idioma.
  *
- * Sem `sortable`: nenhuma das 6 tabelas o tinha, e acrescentá-lo aqui mudaria o
- * comportamento das 6 de uma vez.
+ * As duas colunas servem 7 TABELAS (o oitavo consumidor, `ArchivedQuotesList`, é
+ * layout flex e não tabela) e declaram largura em par fixo, de `ARCHIVED_COLUMN`:
+ * o conteúdo é o mesmo nas sete — uma data e um nome —, e medir sete vezes o
+ * mesmo dado seria desproporcional (item 17, D4).
+ *
+ * Sem `sortable`: nenhuma das 7 tabelas o tinha, e acrescentá-lo aqui mudaria o
+ * comportamento das 7 de uma vez.
  */
 export function archivedColumns(t: (key: string) => string): ReactElement[] {
   return [
@@ -36,6 +41,7 @@ export function archivedColumns(t: (key: string) => string): ReactElement[] {
       key="archived_at"
       field="archived_at"
       header={t('archive.archivedAt')}
+      style={ARCHIVED_COLUMN.archived_at}
       body={(linha: ArchiveTrail) =>
         linha.archived_at ? formatDate(new Date(linha.archived_at)) : '—'
       }
@@ -44,6 +50,7 @@ export function archivedColumns(t: (key: string) => string): ReactElement[] {
       key="archived_by"
       field="archived_by"
       header={t('archive.archivedBy')}
+      style={ARCHIVED_COLUMN.archived_by}
       body={(linha: ArchiveTrail) => linha.archived_by ?? t('archive.unknownAuthor')}
     />,
   ]

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState,
+  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
+import { roleWidths } from './roleColumns'
 
 export function RolesTable({
   roles, loading, onView, actions, error, onRetry,
@@ -19,6 +20,7 @@ export function RolesTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const largura = roleWidths()
 
   // Sem busca nesta aba: só um vazio possível, o de "sem dado".
   const empty = (
@@ -37,20 +39,22 @@ export function RolesTable({
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
       >
-        <AppColumn field="name" header={t('role.name')} sortable />
+        <AppColumn field="name" header={t('role.name')} sortable style={largura.name} />
         <AppColumn
           header={t('role.kind')}
+          style={largura.kind}
           body={(r: RoleData) => (
             <AppTag value={r.is_system ? t('role.system') : t('role.custom')} severity={r.is_system ? 'info' : 'success'} />
           )}
         />
         <AppColumn
           header={t('role.permissions')}
+          style={largura.permissions}
           body={(r: RoleData) => <span className="font-semibold">{r.permissions.length}</span>}
         />
         <AppColumn
           body={(r: RoleData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
-          style={{ width: '4rem' }}
+          style={stickyActionsColumn('6rem')}
         />
       </AppDataTable>
     </>
