@@ -4,13 +4,13 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd
 active_work_item: cicd-ci-governanca-e-artefato
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
 blocker: null
 
 lanes:
@@ -31,14 +31,14 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
     blocker: null
     resume_state: null
     last_completed_work_item: compose-por-worktree
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `context_required` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `ready_for_planning` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
@@ -184,9 +184,11 @@ governança de branch — **não toca conta AWS**. Quem depende de recurso real 
 runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
 SHA.
 
-**Interseção declarada em 2026-08-22 e agora paga a atenção:** o `BD-15` (item 14, lane-c, fechado)
-tocou `.github/workflows`. O planejamento deste bloco lê o que ficou lá antes de escrever workflow
-novo; sobrescrever é achado, não decisão.
+**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
+escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
+Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
+vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
+o que preservar, e não há colisão a vigiar com a lane-c.
 
 **As linhas de `lane-a` e `lane-c` acima são o retrato do commit em que esta branch nasceu, não o
 estado vivo delas.** As duas foram promovidas em 2026-08-24 e executam agora — a `lane-a` o item 2 no
