@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
 active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
@@ -17,9 +17,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
@@ -57,8 +57,8 @@ lanes:
     resume_state: null
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: 7fa1cb0a
-updated_at: 2026-08-25T09:00:00-03:00
+state_basis_commit: 528749a2
+updated_at: 2026-08-25T18:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `planning` |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_review` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
@@ -294,6 +294,22 @@ este bloco foram renumeradas para **P-59** e **P-60**, porque a `main` já usava
 **O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
 2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco
 fica como está — era verdade no dia da promoção, e narrativa arquivada não se reescreve.
+
+**Bloco `hardening-api-arquivos-e-abuso` — 12 de 12 tasks completas, 2026-08-25.** A Task 12 (DoD
+`executor: claude`) provou o bloco inteiro contra a API e o stack Docker reais, não só contra a
+suíte: throttle nomeado + separação de chave (DoD 1), `429` e recuperação medida (~65s, DoD 2),
+antivírus síncrono provado nos dois sentidos — EICAR real recusado e scanner fora do ar recusando
+com `503`/`Retry-After` (DoD 3/4) —, mime por conteúdo nos quatro sítios antes destapados (DoD 5),
+backfill de `files.mime` consistente (DoD 7) e o fluxo de ouro completo sem nenhum `429` (DoD 8).
+A medição real (DoD 6) **corrigiu um teto do próprio plano**: `MAX_LINHAS` caiu de 500 para 100
+depois que 500 linhas estourou o `max_execution_time` de 30s do PHP (bcrypt por aluno novo via cast
+`hashed`, ~185ms/linha) — exercendo a autoridade que o plano já dava para essa situação exata, com a
+medição completa no docblock e no commit `47b0c4fc`. O próprio gate achou um achado incidental fora
+do brief: `generated.ts` estava desatualizado desde a Task 6 (`ContentClass` nunca tinha sido
+exposto ao `typescript:transform`); regenerado e commitado (`528749a2`), aditivo puro. Suíte final
+**983 passed / 5 skipped**, Pint limpo, working tree coerente com o plano. Narrativa completa e
+todos os números medidos estão em `.superpowers/sdd/progress.md` (Task 12). Review **não foi
+iniciado** — próxima instrução do João aciona.
 
 ## Itens fechados — ponteiro, não narrativa
 
