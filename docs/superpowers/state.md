@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: tabelas-coluna-de-acoes-e-largura
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
 active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
 context_packet: null
-blocker: null
+blocker: "Review do item 17: 4 achados aguardando decisão do João — Q-1 (LARGURA_MATRICULA_ARQUIVADA sem parâmetro de ação, 🟡), Q-2 (léxico dividido nos 13 arquivos de largura, 🟡), Q-3 (docblock do table-fixed contradiz a §4 da medição, 🟢), Q-4 (catraca COLUNA_SEM_LARGURA exige style e não largura, 🟢). Todos de esforço P; nenhum bloqueia merge por si."
 
 lanes:
   lane-a:
@@ -44,20 +44,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: tabelas-coluna-de-acoes-e-largura
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
     active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
     active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: "Review do item 17: 4 achados aguardando decisão do João — Q-1 (LARGURA_MATRICULA_ARQUIVADA sem parâmetro de ação, 🟡), Q-2 (léxico dividido nos 13 arquivos de largura, 🟡), Q-3 (docblock do table-fixed contradiz a §4 da medição, 🟢), Q-4 (catraca COLUNA_SEM_LARGURA exige style e não largura, 🟢). Todos de esforço P; nenhum bloqueia merge por si."
+    resume_state: reviewing
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
 state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T21:10:00-03:00
+updated_at: 2026-08-24T22:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_review` |
+| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `blocked` (review feito) |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
@@ -194,7 +194,25 @@ arquivados `722d5e35`, ambos decididos pelo João. A prova end-to-end está em
 viewports com a coluna de ação presa dentro da moldura, 7 visões arquivadas com o par do rastreio
 em 10%/14%, 3 tabelas sem ação sobre o orçamento cheio, e a catraca de ESLint vista reprovando as
 duas sondas antes de ser ligada. Gate final: lint 0, build verde, 101 arquivos / 561 testes. A
-review ainda NÃO foi pedida — é a próxima instrução.
+review rodou em 2026-08-24, e o resultado dela é o parágrafo abaixo.
+
+**A review de `/revisar-sprint` classificou o bloco como BAIXO RISCO** — frontend puro, sem
+migration, `generated.ts`, auth, auditoria, RBAC nem dinheiro —, logo sem a segunda lente do Codex.
+Gate reconferido na árvore: `pnpm lint` 0, `pnpm build` verde, 101 arquivos / 561 testes. Nenhum
+órfão: as 10 classes de `COL` têm consumidor e os 13 `*Columns.ts` novos são importados. Quatro
+achados, todos de esforço P e nenhum bloqueante de merge por si:
+
+- **Q-1 🟡** `LARGURA_MATRICULA_ARQUIVADA` é const enquanto a coluna de ação de
+  `ArchivedEnrollmentsList` sai com `registroBloqueado`: os 10% sem dono reescalam o par de
+  `ARCHIVED_COLUMN`, que existe justamente para render 10%/14% iguais nas 7 arquivadas. O irmão
+  `enrollmentWidths(acao)`, doze linhas acima no mesmo arquivo, já resolve esse caso.
+- **Q-2 🟡** léxico dividido entre `<entidade>Widths` (inglês, função) e `LARGURA_<ENTIDADE>`
+  (português, const) nos 13 arquivos novos, e dentro de `OrcamentoOpcoes` / `ColClass`.
+- **Q-3 🟢** o docblock de `style.ts` promete que a largura declarada vira LEI, enquanto a §4 da
+  própria medição registra desvio de até 3,5 pontos quando o `rem` da ação não vale os 10%.
+- **Q-4 🟢** a catraca `COLUNA_SEM_LARGURA` exige a presença de `style`, não de largura.
+
+O bloco aguarda o João aprovar o que entra; só achado aprovado vira correção.
 
 Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
 é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
