@@ -19,12 +19,19 @@ use Illuminate\Validation\ValidationException;
 class ImportStudentsAction
 {
     /**
-     * Teto de linhas por planilha. Turma real tem 8 a 15 alunos
-     * (`OperationDemoSeeder`), então 500 é ~33× a maior. Sem ele, o único
-     * limite era o tamanho do arquivo — um CSV de 10 MB passa de cem mil
-     * linhas, e cada linha é uma transação de matrícula.
+     * Teto de linhas por planilha. Revisado de 500 para 100 no DoD da Task 12
+     * (2026-08-25), medido contra a API real, não suposto: cada aluno NOVO
+     * cria um `User`, e `password` é um cast `hashed` — todo import de linha
+     * nova paga um `Hash::make()` de bcrypt, ~185ms cada neste container. Um
+     * lote de 500 linhas todas novas estourou o `max_execution_time` de 30s do
+     * PHP em produção de teste (fatal 500 aos ~30s, só 179 de 500 linhas
+     * processadas); 120 linhas mediu 29.86s, ainda perto demais da margem. 100
+     * linhas mediu 18.54s e 18.58s em duas corridas — folga real sob os 30s
+     * (metade do `fastcgi_read_timeout` de dev) e larga sob os 60s/120s do
+     * timeout de verdade. Turma real tem 8 a 15 alunos (`OperationDemoSeeder`),
+     * então 100 ainda é ~7× a maior.
      */
-    public const MAX_LINHAS = 500;
+    public const MAX_LINHAS = 100;
 
     public function __construct(
         private readonly SpreadsheetRowReader $reader,
