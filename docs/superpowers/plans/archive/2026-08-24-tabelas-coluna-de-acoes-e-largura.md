@@ -4,7 +4,7 @@
 > (recomendado) ou superpowers:executing-plans para executar este plano task a task. Os passos usam
 > checkbox (`- [ ]`) para rastreio.
 
-**Spec:** [`docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md`](../specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md)
+**Spec:** [`docs/superpowers/specs/archive/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md`](../../specs/archive/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md)
 
 **Goal:** toda tabela do sistema termina na mesma coluna de ações — presa à direita do invólucro que
 rola — e toda coluna de dado declara largura por política, não por sorteio do `table-layout: auto`.

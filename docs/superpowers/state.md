@@ -3,13 +3,13 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: tabelas-coluna-de-acoes-e-largura
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
-active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 
@@ -43,21 +43,21 @@ lanes:
     last_completed_work_item: infra-producao-runtime-e-aws
   lane-c:
     active_feature: null
-    active_work_item: tabelas-coluna-de-acoes-e-largura
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
     branch: refactor/tabelas-coluna-de-acoes
-    active_spec: docs/superpowers/specs/2026-08-24-tabelas-coluna-de-acoes-e-largura-design.md
-    active_plan: docs/superpowers/plans/2026-08-24-tabelas-coluna-de-acoes-e-largura.md
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo
-last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T22:20:00-03:00
+    last_completed_work_item: tabelas-coluna-de-acoes-e-largura
+last_completed_work_item: tabelas-coluna-de-acoes-e-largura
+state_basis_commit: e25db109
+updated_at: 2026-08-24T23:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
-| `lane-c` | `tabelas-coluna-de-acoes-e-largura` (item 17) | Frontend | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` | `ready_for_closure` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (não mesclada) | `idle` |
 
 **A `lane-a` fechou o item 3 em 2026-08-23 e voltou a `idle`.** A branch
 `feat/hardening-acesso-ownership-e-integridade` traz a `main` de volta pelo merge que registra este
@@ -176,60 +176,13 @@ do João, contra o `backlog.md`.
 decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
 são `null`.
 
-**A `lane-c` recebeu o item 17 em 2026-08-24, por promoção explícita do João** contra o
-`backlog.md`, com a árvore em `idle`. O item declara `Contexto: não`, então a rota é direta a
-`ready_for_planning` e `context_packet` permanece `null` — não há fonte externa a recuperar; a
-evidência do bloco é medição local de 2026-08-24 (15 sítios de `AppDataTable`/`SearchableTableFrame`,
-12 com coluna de ação, 2 presas).
-
-A branch anterior da lane, `refactor/frontend-revisao-ui`, **foi mesclada** no **PR #69** (merge
-`cad0d1fb`) — o registro acima, que a dava como não mesclada, ficou velho no fechamento da fatia 1 e
-é corrigido aqui. A worktree `../fix-frontend` estava em detached HEAD sobre esse merge; a branch
-`refactor/tabelas-coluna-de-acoes` nasce dele. Não há rebase pendente: `cad0d1fb` **é** a `main`.
-
-**As 17 tasks do plano foram executadas e provadas em 2026-08-24**, da peça de vocabulário
-(`ec5aaef3`) ao registro de medição (`a31a23a4`), mais o corretivo `ea280fe1` e a varredura de
-arquivados `722d5e35`, ambos decididos pelo João. A prova end-to-end está em
-`docs/superpowers/audits/2026-08-24-tabelas-coluna-de-acoes-e-largura-medicoes.md`: 12 tabelas × 3
-viewports com a coluna de ação presa dentro da moldura, 7 visões arquivadas com o par do rastreio
-em 10%/14%, 3 tabelas sem ação sobre o orçamento cheio, e a catraca de ESLint vista reprovando as
-duas sondas antes de ser ligada. Gate final: lint 0, build verde, 101 arquivos / 561 testes. A
-review rodou em 2026-08-24, e o resultado dela é o parágrafo abaixo.
-
-**A review de `/revisar-sprint` classificou o bloco como BAIXO RISCO** — frontend puro, sem
-migration, `generated.ts`, auth, auditoria, RBAC nem dinheiro —, logo sem a segunda lente do Codex.
-Gate reconferido na árvore: `pnpm lint` 0, `pnpm build` verde, 101 arquivos / 561 testes. Nenhum
-órfão: as 10 classes de `COL` têm consumidor e os 13 `*Columns.ts` novos são importados. Quatro
-achados, todos de esforço P e nenhum bloqueante de merge por si:
-
-- **Q-1 🟡** `LARGURA_MATRICULA_ARQUIVADA` é const enquanto a coluna de ação de
-  `ArchivedEnrollmentsList` sai com `registroBloqueado`: os 10% sem dono reescalam o par de
-  `ARCHIVED_COLUMN`, que existe justamente para render 10%/14% iguais nas 7 arquivadas. O irmão
-  `enrollmentWidths(acao)`, doze linhas acima no mesmo arquivo, já resolve esse caso.
-- **Q-2 🟡** léxico dividido entre `<entidade>Widths` (inglês, função) e `LARGURA_<ENTIDADE>`
-  (português, const) nos 13 arquivos novos, e dentro de `OrcamentoOpcoes` / `ColClass`.
-- **Q-3 🟢** o docblock de `style.ts` promete que a largura declarada vira LEI, enquanto a §4 da
-  própria medição registra desvio de até 3,5 pontos quando o `rem` da ação não vale os 10%.
-- **Q-4 🟢** a catraca `COLUNA_SEM_LARGURA` exige a presença de `style`, não de largura.
-
-**O João aprovou os quatro em 2026-08-24 e os quatro foram aplicados.** Q-1 passou
-`!registroBloqueado` a `archivedEnrollmentWidths`; Q-2 unificou o léxico — todo consumidor exporta
-`<entidade>Widths` e é FUNÇÃO, inclusive onde não há variação, e a peça de `shared` passou a
-`{ weight, cap }` / `TableWidthOptions { actions, archived }` / `ACTIONS_RESERVE`; Q-3 trocou a
-promessa de LEI por RAZÃO nos docblocks de `columnWidth.ts` e `style.ts`, com o caso medido da
-`HistorialTable`; Q-4 partiu a catraca em dois seletores de um nível — coluna sem `style` e coluna
-com `style` que não é `MemberExpression` nem `CallExpression`.
-
-A grafia encadeada do `:has` reprovou de novo, agora medida nas duas direções: a sonda de quatro
-colunas acusou as QUATRO, legítimas inclusive. A forma que passou desce pelo caminho do nó
-(`[value.expression.type=…]`), e a sonda final acusou 2 de 4, as certas. Gate reconferido: lint 0,
-build verde, 101 arquivos / 561 testes — mesma contagem, nenhum teste novo (a ramificação `actions`
-já tem prova em `columnWidth.test.ts`, e o corte de teste do projeto é hooks, não módulos de
-coluna). O registro está na §8 do audit. Nenhum achado pendente.
-
-Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
-é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
-da P-03. Integração segue serial.
+**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
+integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
+`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
+abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
+fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
+`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
+memória nela. Está registrado como **P-55**, e é ambiente, não código: o bloco não toca `backend/`.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -239,11 +192,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
 | 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
 | 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
-| 2026-08-22 | `feedbacks-resolver-escopo` | Item 1 da fila consolidada |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

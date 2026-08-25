@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (23)
+## Abertas (24)
 
 ### Agrupadas em bloco de execução
 
@@ -44,6 +44,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
 | P-03 | Compose por worktree não existe | João | dois blocos de **backend** em paralelo, ou 2026-10-31 |
+| P-55 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
 | P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
@@ -58,13 +59,14 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo; revisar 2026-10-31 |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-| ID | Pendência | Encerrada em | Sai quando |
-|---|---|---|---|
-| P-41 | `IdentityCell` empilhado prometia truncar e não truncava — faltava `min-w-0`; voltou em `1b9f82ad` | 2026-08-24, no `frontend-revisao-ui-por-modulo` | primeiro fechamento **posterior** a este |
+Nenhuma em rastro. O `tabelas-coluna-de-acoes-e-largura` (2026-08-24) não encerrou pendência
+nenhuma, e a **P-41** — `IdentityCell` empilhado prometia truncar e não truncava — saiu nele, o
+primeiro fechamento **posterior** ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em
+`IdentityCell.tsx:74`).
 
-**A P-47 e a P-50 saíram neste fechamento**, o primeiro posterior aos dos blocos que as encerraram
+**A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
 — e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a
 role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
 posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo

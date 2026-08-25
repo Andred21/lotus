@@ -12,6 +12,25 @@
 
 # Frontend
 
+## P-55 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
+
+**Bloco:** — · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
+worktree novo constrói a imagem antes de rodar a suíte, ou quando o compose deixar de permitir
+imagem por projeto defasada. Revisar em **2026-10-31**.
+
+Medido em 2026-08-24, no fechamento do item 17, na worktree `../fix-frontend`: o
+`docker compose exec -T app php artisan test` do §6 terminou em
+`Fatal error: Allowed memory size of 134217728 bytes exhausted`. Não é regressão da **P-50** — o
+`docker/php/memory-cli.ini` (320M) está no repositório e no `Dockerfile` desde então. O que falhou é
+que **cada worktree é um projeto compose próprio, com imagem própria**: a imagem `fix-frontend-app`
+tinha sido construída antes do ini e `php -i` no container dizia `memory_limit => 128M`,
+`Loaded Configuration File => (none)`.
+
+`docker compose build app` + `docker compose up -d --no-deps app` resolveu (o `--no-deps` porque
+3307 e 8025 já estão presos pelo stack do main tree), e a suíte terminou **906 passed / 5 skipped**.
+O conserto é de ambiente, não de código, e por isso não entrou em commit; o que fica aberto é o
+doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória e pensa em regressão.
+
 ## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
 
 **Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
