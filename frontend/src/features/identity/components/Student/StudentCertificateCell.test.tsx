@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { StudentTurmaData } from '@shared/types/generated'
 import { StudentCertificateCell } from './StudentCertificateCell'
@@ -14,15 +14,12 @@ vi.mock('react-i18next', async (importOriginal) => {
   }
 })
 
-/** Mock por MÓDULO do hook — prova o argumento passado ao abridor, não o caminho do blob (isso é do `useBlobTabOpener.test.tsx`). */
-const open = vi.fn()
+/** Mock por MÓDULO do hook: aqui se prova o que a célula ESCOLHE mostrar. O
+ * botão do PDF e os avisos dele são o assunto do arquivo irmão
+ * `StudentCertificateCellPdf.test.tsx` — separados porque a régua de 150
+ * linhas de `components/**` vale para o teste também. */
 vi.mock('../../hooks/useStudentCertificatePdfOpener', () => ({
-  useStudentCertificatePdfOpener: () => ({
-    open,
-    pending: false,
-    popupBlocked: false,
-    message: null,
-  }),
+  useStudentCertificatePdfOpener: () => ({ open: vi.fn(), pending: false, popupBlocked: false, message: null }),
 }))
 
 /** Casa data em qualquer locale (`es-CL`: `31-01-2027`; `en`: `1/31/2027`), ao contrário da regex morta que só casava `\d{2}/\d{2}/\d{4}`. */
@@ -61,10 +58,7 @@ const montar = (t: StudentTurmaData) => {
   )
 }
 
-afterEach(() => {
-  cleanup()
-  open.mockClear()
-})
+afterEach(cleanup)
 
 describe('StudentCertificateCell', () => {
   /** Ramo 1, o caso comum: vigência indeterminada mostra o rótulo SEM data. */
@@ -74,15 +68,6 @@ describe('StudentCertificateCell', () => {
     expect(screen.getByText('LOT-2026-0001')).toBeTruthy()
     expect(screen.getByText('certificate.status.vigente')).toBeTruthy()
     expect(container.textContent).not.toMatch(DATE_PATTERN)
-  })
-
-  /** O botão do PDF abre o certificado DAQUELA linha, não a turma (os dois ids divergem aqui de propósito). */
-  it('clicar no botão de PDF abre o certificado pelo próprio id', () => {
-    montar(turma({ turma_id: 99, certificate: certificado({ id: 42 }) }))
-
-    fireEvent.click(screen.getByLabelText('certificate.downloadPdf'))
-
-    expect(open).toHaveBeenCalledWith(42)
   })
 
   /** O rótulo é o MESMO com e sem prazo (spec D6); a data ao lado é o que
@@ -147,4 +132,5 @@ describe('StudentCertificateCell', () => {
 
     expect(screen.getByText(/student.certificateNotApplicable/)).toBeTruthy()
   })
+
 })
