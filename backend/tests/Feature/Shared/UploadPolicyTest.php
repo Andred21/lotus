@@ -4,7 +4,9 @@ namespace Tests\Feature\Shared;
 
 use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Files\ContentClass;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\Files\BuildsRealUploads;
 use Tests\TestCase;
 
@@ -56,6 +58,46 @@ class UploadPolicyTest extends TestCase
     {
         $this->assertTrue($this->passa(ContentClass::Imagem, $this->pngReal(), 'foto.png', 'image/png'));
         $this->assertFalse($this->passa(ContentClass::Imagem, $this->pdfReal(), 'foto.png', 'image/png'));
+    }
+
+    public function test_o_teto_do_conjunto_cabe_no_transporte(): void
+    {
+        // A garantia do teto por arquivo ("quem recusa é sempre esta regra, com
+        // envelope RFC 7807") só vale se TUDO o que a política aceita couber nos
+        // 12 MB do `client_max_body_size`. Quatro documentos de 10 MB somavam 40
+        // (achado Q-3 do review de 2026-08-25).
+        $this->assertLessThan(
+            12 * 1024,
+            ContentClass::TETO_AGREGADO_KB,
+            'O teto do conjunto tem de ficar abaixo do transporte, senão quem recusa é o nginx com 413 em HTML.',
+        );
+    }
+
+    public function test_conjunto_acima_do_teto_e_recusado_pelo_laravel(): void
+    {
+        $metade = intdiv(ContentClass::TETO_AGREGADO_KB, 2) + 1;
+
+        try {
+            ContentClass::assertCabeNoTransporte([
+                'CV' => UploadedFile::fake()->create('cv.pdf', $metade),
+                'TITULO' => UploadedFile::fake()->create('titulo.pdf', $metade),
+            ], 'documents');
+            $this->fail('Dois arquivos que somam acima do teto tinham de ser recusados.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('documents', $e->errors());
+        }
+    }
+
+    public function test_conjunto_dentro_do_teto_passa(): void
+    {
+        $quarto = intdiv(ContentClass::TETO_AGREGADO_KB, 4);
+
+        ContentClass::assertCabeNoTransporte([
+            'CV' => UploadedFile::fake()->create('cv.pdf', $quarto),
+            'TITULO' => UploadedFile::fake()->create('titulo.pdf', $quarto),
+        ], 'documents');
+
+        $this->addToAssertionCount(1);
     }
 
     public function test_os_tetos_preservam_os_numeros_de_hoje(): void

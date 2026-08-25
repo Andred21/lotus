@@ -127,7 +127,16 @@ class RedatorController extends Controller implements HasMiddleware
                     'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
                 ]);
             }
+        }
 
+        // Este é o único sítio que recebe VÁRIOS arquivos no mesmo corpo: quatro
+        // documentos de 10 MB passariam um a um e somariam 40 MB contra os 12 MB
+        // do `client_max_body_size`, e a recusa viria do nginx em HTML, fora do
+        // RFC 7807 (achado Q-3 do review de 2026-08-25). O teto do conjunto mora
+        // na mesma peça de política que o teto de cada arquivo.
+        ContentClass::assertCabeNoTransporte($files, 'documents');
+
+        foreach ($files as $type => $file) {
             // Até 2026-08-25 este sítio não tinha regra NENHUMA: aceitava
             // qualquer conteúdo em qualquer tamanho, contido só pelo transporte
             // (nginx 12m). É a mesma política dos outros documentos de redator —

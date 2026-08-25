@@ -51,7 +51,7 @@ class UploadPolicyRatchetTest extends TestCase
      */
     private const ISENTOS = [
         'app/Shared/Files/Actions/UploadFileAction.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado por quem o recebeu do cliente.',
-        'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera as linhas da planilha que o controller já validou; nunca recebe upload direto do cliente.',
+        'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera a planilha que o `EnrollmentController::import` já validou pela classe Planilha, e despacha o leitor pelo MIME de CONTEÚDO — os mesmos três que aquela classe aceita.',
         'app/Domains/Operation/Actions/ImportStudentsAction.php' => 'Recebe o `UploadedFile` já validado pelo `EnrollmentController::import`, que pede a classe Planilha.',
         'app/Domains/Operation/Actions/StoreTurmaDocumentAction.php' => 'Recebe o arquivo já validado pelo `TurmaDocumentController`, que pede a classe DocumentoDeTurma.',
         'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
@@ -83,6 +83,17 @@ class UploadPolicyRatchetTest extends TestCase
         return array_values(array_unique($sitios));
     }
 
+    /**
+     * A peça é onde a política MORA: ela não a "pede" nem a escreve "à mão", e
+     * desde que ganhou o teto do conjunto (`assertCabeNoTransporte`, achado Q-3
+     * do review de 2026-08-25) ela nomeia `UploadedFile` e passou a casar um
+     * sinal de upload. Isentá-la é dizer o óbvio — não é abrir exceção.
+     */
+    private function eAPropriaPeca(string $relativo): bool
+    {
+        return str_ends_with($relativo, 'app/Shared/Files/ContentClass.php');
+    }
+
     private function pedeAPolitica(string $codigo): bool
     {
         foreach (self::REFERENCIAS_DE_POLITICA as $referencia) {
@@ -99,7 +110,7 @@ class UploadPolicyRatchetTest extends TestCase
         $descobertos = [];
 
         foreach ($this->sitiosDeUpload() as $relativo) {
-            if (array_key_exists($relativo, self::ISENTOS)) {
+            if ($this->eAPropriaPeca($relativo) || array_key_exists($relativo, self::ISENTOS)) {
                 continue;
             }
 
@@ -124,8 +135,8 @@ class UploadPolicyRatchetTest extends TestCase
         $descobertos = [];
 
         foreach ($this->sitiosDeUpload() as $relativo) {
-            // A peça é onde a política MORA — é o único lugar que pode escrevê-la.
-            if (str_ends_with($relativo, 'app/Shared/Files/ContentClass.php')) {
+            // A peça é o único lugar que pode escrever a política.
+            if ($this->eAPropriaPeca($relativo)) {
                 continue;
             }
 
