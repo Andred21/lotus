@@ -62,7 +62,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
         * quando tem o que mostrar. */}
       {titleHidden && <h1 className="sr-only">{title}</h1>}
       {(!titleHidden || subtitle || tags || actions) && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:gap-2">
           {/* `items-baseline`, e não `items-start`: o `h1` logo abaixo carrega
             * `my-[0.83em]` (19,92px medidos), então alinhar pelo TOPO do bloco
             * punha as tags 23px acima do centro do título que elas qualificam —
@@ -72,12 +72,24 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             * linha do título sem que a margem do `h1` — que é o espaçamento do
             * cabeçalho inteiro — precise mudar.
             *
-            * O `sm:self-center` do bloco da direita é a contraparte: a linha de
-            * base foi escolhida para a TAG pousar sobre a linha do título, e o
-            * mesmo alinhamento levava junto o slot `actions` — botão mais alto
-            * que a tag empurrava o bloco inteiro para cima (Minor 5 do review da
-            * fatia 1). Sem `actions`, nada muda e o UI-08 fica como estava. */}
-          <div className="min-w-0">
+            * O `sm:self-center` é a contraparte, e mora SÓ no slot `actions`: a
+            * linha de base foi escolhida para a TAG pousar sobre a linha do
+            * título, e o mesmo alinhamento levava junto o botão, mais alto que a
+            * tag, empurrando o bloco para cima (Minor 5 do review da fatia 1).
+            *
+            * Q-1 do review de 2026-08-25: `self-center` num contêiner COMUM aos
+            * dois slots tirava a tag da linha de base junto com o botão — o
+            * UI-08 de volta, espelhado, no `BudgetDetailPage`, único consumidor
+            * que passa os dois. Por isso `tags` e `actions` são itens IRMÃOS da
+            * linha, cada um alinhando por conta própria; e por isso o
+            * `justify-between` saiu, trocado pelo `sm:flex-1` do bloco do título,
+            * que empurra os dois para a direita sem espalhá-los.
+            *
+            * O embrulho existe só abaixo do `sm`, onde a linha é coluna e os
+            * dois slots ainda dividem uma faixa: `sm:contents` o dissolve, e os
+            * filhos viram itens diretos da linha exatamente onde o alinhamento
+            * passa a importar. */}
+          <div className="min-w-0 sm:flex-1">
             {/* Margem cravada no valor que o user-agent dava ao h2, porque o
               * projeto não carrega Preflight. */}
             {!titleHidden && (
@@ -94,9 +106,11 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             )}
           </div>
           {(tags || actions) && (
-            <div className={`flex flex-wrap items-center gap-2 sm:shrink-0${actions ? ' sm:self-center' : ''}`}>
-              {tags}
-              {actions}
+            <div className="flex flex-wrap items-center gap-2 sm:contents">
+              {tags && <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{tags}</div>}
+              {actions && (
+                <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:self-center">{actions}</div>
+              )}
             </div>
           )}
         </div>

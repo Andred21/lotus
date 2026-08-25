@@ -18,6 +18,7 @@ const stock = (name: string) =>
   readFileSync(resolve(root, `node_modules/primereact/resources/themes/${name}/theme.css`), 'utf8')
 const committed = (name: string) =>
   readFileSync(resolve(root, `src/shared/styles/themes/${name}.css`), 'utf8')
+const brand = () => readFileSync(resolve(root, 'src/shared/styles/brand-theme.css'), 'utf8')
 
 // A tinta é argumento só do claro: no escuro o celeste de primeiro plano pousa
 // em superfície escura e mede 6,76:1 (achado 3 do checkpoint).
@@ -401,5 +402,64 @@ describe("temas Lara-Lotus gerados (spec D5')", () => {
       .filter(([, , corpo]) => /(?:^|[;\s])color:\s*#(?:ffffff|fff)\s*;/i.test(corpo))
 
     expect(infratores).toEqual([])
+  })
+})
+
+/**
+ * Minor 2/3 da fatia 1 do item 16: `brand-theme.css` repinta o hover de linha do
+ * DataTable, porque a coluna de ações presa pinta fundo próprio por `style`
+ * inline e o realce morria exatamente onde o olho vai clicar. A folha gerada
+ * crava a cor do hover como LITERAL, não como token — não há variável do tema a
+ * apontar de lá, então a cor foi copiada à mão para os dois temas.
+ *
+ * Q-3 do review de 2026-08-25: cópia à mão sem catraca. Mexer no gerador, trocar
+ * a primária ou subir o primereact muda o hover do tema e deixa a coluna presa
+ * na cor velha — o defeito que a correção fechou, de volta com a suíte inteira
+ * verde. Esta guarda é a catraca que faltava: o valor lá e o valor cá, iguais.
+ *
+ * Ela lê o tema COMMITADO, e não a geração fresca, de propósito: é o arquivo
+ * commitado que o navegador carrega. A igualdade lá em cima já cobra que ele
+ * seja uma geração fresca, então as duas juntas fecham o caminho inteiro.
+ */
+describe('o tinte da coluna presa acompanha o hover do tema (Q-3)', () => {
+  const blocos = (css: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+  const declaracao = (corpo: string, prop: string) =>
+    corpo.match(new RegExp(`(?:^|[;{\\s])${prop}:\\s*([^;]+);`))?.[1].trim() ?? null
+
+  /** O fundo que o tema pinta na linha sob o ponteiro. */
+  const hoverDoTema = (nome: string) => {
+    const casados = blocos(committed(nome))
+      .filter(
+        ([, sel]) => sel.includes('.p-datatable.p-datatable-hoverable-rows') && sel.includes(':hover'),
+      )
+      .map(([, , corpo]) => declaracao(corpo, 'background'))
+      .filter((valor): valor is string => valor !== null)
+
+    // 0 casados reprova junto: seletor que sumiu num upgrade é guarda cega, e
+    // uma guarda cega passaria calada exatamente no caso que ela existe para ver.
+    expect(`${nome}: ${casados.length}`).toBe(`${nome}: 1`)
+
+    return casados[0]
+  }
+
+  /** O tinte que a nossa folha injeta na `tr` e a célula presa herda. */
+  const tinteDaMarca = (escuro: boolean) => {
+    const rotulo = escuro ? 'dark' : 'light'
+    const casados = blocos(brand())
+      .filter(([, , corpo]) => corpo.includes('--sticky-cell-tint:'))
+      .filter(([, sel]) => sel.includes('html.dark') === escuro)
+      .map(([, , corpo]) => declaracao(corpo, '--sticky-cell-tint'))
+
+    expect(`${rotulo}: ${casados.length}`).toBe(`${rotulo}: 1`)
+
+    return casados[0]
+  }
+
+  it('o tinte do claro é o hover do lara-light-lotus', () => {
+    expect(tinteDaMarca(false)).toBe(hoverDoTema('lara-light-lotus'))
+  })
+
+  it('o tinte do escuro é o hover do lara-dark-lotus', () => {
+    expect(tinteDaMarca(true)).toBe(hoverDoTema('lara-dark-lotus'))
   })
 })
