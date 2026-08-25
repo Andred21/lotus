@@ -175,6 +175,7 @@ addresses: ClientAddressData[] | undefined,
 contacts: ClientContactData[] | undefined,
 photo_url: string | null,
 };
+export type ContentClass = 'imagem' | 'documento' | 'documento_de_turma' | 'planilha';
 export type CourseData = {
 id: undefined | number,
 name: string,
