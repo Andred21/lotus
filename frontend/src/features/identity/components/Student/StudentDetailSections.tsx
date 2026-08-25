@@ -9,6 +9,7 @@ import {
   FormSection,
 } from "@shared/ui";
 import type { StudentTurmaData } from "@shared/types/generated";
+import { LARGURA_TURMA_DO_ALUNO } from "./studentColumns";
 import {
   enrollmentStatusLabelKey,
   enrollmentStatusSeverity,
@@ -92,6 +93,7 @@ export function StudentDetailSections({
         >
           <AppColumn
             header={t("student.turmaCode")}
+            style={LARGURA_TURMA_DO_ALUNO.code}
             body={(turma: StudentTurmaData) => (
               <span
                 className="font-bold text-sm"
@@ -103,16 +105,19 @@ export function StudentDetailSections({
           />
           <AppColumn
             header={t("student.turmaCourse")}
+            style={LARGURA_TURMA_DO_ALUNO.course}
             body={(turma: StudentTurmaData) => turma.course_name}
           />
           <AppColumn
             header={t("student.turmaDate")}
+            style={LARGURA_TURMA_DO_ALUNO.date}
             body={(turma: StudentTurmaData) =>
               formatMonthYear(turma.start_date)
             }
           />
           <AppColumn
             header={t("student.turmaStatus")}
+            style={LARGURA_TURMA_DO_ALUNO.status}
             body={(turma: StudentTurmaData) => (
               <AppTag
                 value={t(

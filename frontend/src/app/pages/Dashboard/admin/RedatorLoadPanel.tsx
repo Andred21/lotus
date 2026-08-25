@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState } from '@shared/ui'
 import { dangerText, warningText } from '@shared/styles/tokens'
 import type { RedatorLoadData } from '@shared/types/generated'
+import { LARGURA_CARGA_RELATOR } from './panelColumns'
 
 /** Contador que só ganha tinta quando é diferente de zero: um "0 vencidos" em
  * vermelho leria como alarme sobre a informação mais tranquilizadora da linha.
@@ -42,6 +43,7 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
         <AppColumn
           field="name"
           header={t('dashboard.redatorLoad.name')}
+          style={LARGURA_CARGA_RELATOR.name}
           sortable
           body={(r: RedatorLoadData) => (
             // `/personas` SEM parâmetro, e não `/personas/{id}`: não existe rota
@@ -59,24 +61,28 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
         <AppColumn
           field="current_turmas"
           header={t('dashboard.redatorLoad.current')}
+          style={LARGURA_CARGA_RELATOR.current}
           sortable
           body={(r: RedatorLoadData) => <Contador valor={r.current_turmas} />}
         />
         <AppColumn
           field="upcoming_turmas"
           header={t('dashboard.redatorLoad.upcoming')}
+          style={LARGURA_CARGA_RELATOR.upcoming}
           sortable
           body={(r: RedatorLoadData) => <Contador valor={r.upcoming_turmas} />}
         />
         <AppColumn
           field="expired_documents"
           header={t('dashboard.redatorLoad.expired')}
+          style={LARGURA_CARGA_RELATOR.expired}
           sortable
           body={(r: RedatorLoadData) => <Contador valor={r.expired_documents} ink={dangerText} />}
         />
         <AppColumn
           field="expiring_documents"
           header={t('dashboard.redatorLoad.expiring')}
+          style={LARGURA_CARGA_RELATOR.expiring}
           sortable
           body={(r: RedatorLoadData) => <Contador valor={r.expiring_documents} ink={warningText} />}
         />
