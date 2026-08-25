@@ -126,10 +126,41 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-Preenchida na Task 8 do plano.
+Feita na Task 8 do plano. O critério é o do plano: `C` corrige aqui, um commit por achado, medido
+na tela antes e depois; `B` corrige se couber no escopo desta fatia, senão vira ficha `D-*` no
+`backlog.md`.
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 | `C` | — | — |
-| UI-02 | `B` | — | — |
-| UI-03 | `B` | — | — |
+| UI-01 | `C` | corrigido no wrapper — `AppCardToolbar` | `4b851d21` |
+| UI-02 | `B` | corrigido na tela — `BudgetStatusFilter` | `74e7c922` |
+| UI-03 | `B` | ficha no `backlog.md` (Task 12) | — |
+
+**UI-01 — corrigido no wrapper, não na tela.** O slot `end` do `AppCardToolbar`
+(`shared/ui/AppCard/AppCard.tsx`) era `flex shrink-0 items-center gap-2`: uma linha só, sem quebra,
+com o grupo Activos/Archivados e a ação primária lado a lado. Em 390x844 o botão de criação era o
+que sobrava para ser espremido — 44px de largura, borda direita em 393 contra 390 de viewport, e o
+rótulo "Nuevo presupuesto" partido em duas sílabas ilegíveis. Virou
+`flex flex-wrap items-center justify-end gap-2`. É achado de wrapper e foi pago no wrapper
+(`frontend-fsliced.md`): alcança toda tela que compõe a toolbar com grupo + ação primária, e não só
+Comercial.
+
+**UI-02 — corrigido na tela, repetindo a forma do irmão.** É o MESMO defeito que o UI-07 da run de
+Operação (2026-08-23) já tinha pago no `TurmaStatusFilter` e que não foi propagado ao
+`BudgetStatusFilter`: dropdown sem `<label>`, sem `aria-label`, sem `aria-labelledby` e sem texto
+adjacente. Ganhou `useId` + `<label htmlFor>` + `inputId`, com catraca própria
+(`BudgetStatusFilter.test.tsx`, `getByLabelText('budget.status')`) — antes vermelha com
+`Unable to find a label with the text of: budget.status`. Medido na tela depois: rótulo "Estado"
+com `htmlFor` apontando para o INPUT do dropdown, e em 390x844 o par embrulha na régua com borda
+direita em 358px contra 390 de viewport.
+
+**UI-03 — vira ficha, não código.** A recomendação é subir o alternador Activos/Archivados para o
+slot `actions` do `AppCardHeader` no card "Cotizaciones" do detalhe. É decisão de composição de UMA
+tela, não defeito de wrapper, e mexer nela pede remedir o detalhe inteiro nos três viewports —
+trabalho que esta fatia não orçou, e cujo custo hoje é uma faixa vazia de 56px, com os dois estados
+alcançáveis. Registrada no `backlog.md` na Task 12.
+
+**Repetição que o passe expõe.** UI-02 aqui e UI-07 lá são o mesmo achado, na mesma classe de
+componente, encontrado por duas runs diferentes com dois dias de intervalo — o par
+rótulo+`inputId` não tem nada que o reprove quando falta. É a evidência que a Task 12 leva ao
+`backlog.md` junto com a ficha do UI-03.
