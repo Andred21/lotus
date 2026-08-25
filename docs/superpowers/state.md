@@ -4,29 +4,29 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
 active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
 context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
-blocker: sete achados do review de 2026-08-25 (Q-1 a Q-7) aguardando o João decidir o que entra
+blocker: null
 
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
     active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
     context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
-    blocker: sete achados do review de 2026-08-25 (Q-1 a Q-7) aguardando o João decidir o que entra
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: certificacao-historico-do-aluno
   lane-b:
     active_feature: cicd
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 528749a2
-updated_at: 2026-08-25T20:10:00-03:00
+updated_at: 2026-08-25T21:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `blocked` (review) |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_closure` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
@@ -316,8 +316,33 @@ achados foram deduplicados e **cada achado que só o Codex viu foi verificado no
 entrar**. Suíte reconferida no container: **983 passed / 5 skipped**, igual ao que o DoD registrou.
 Sem órfãos: toda peça nova do bloco tem consumidor. Sete achados (Q-1 a Q-7) aguardam a decisão do
 João sobre o que entra antes do fechamento — dois medidos ao vivo contra a API (`Q-1` e `Q-2`),
-quatro verificados por leitura e um de higiene. Nenhuma correção foi aplicada: só achado aprovado
-pode ser corrigido.
+quatro verificados por leitura e um de higiene.
+
+**Os sete entraram, por decisão do João, e os sete estão corrigidos com teste de regressão.** Cada
+teste novo foi visto REPROVAR contra o código antigo (`git stash` na correção, roda, `git stash
+pop`) antes de valer: 3 casos no `RateLimitTest`, 1 no `RedatorCrudTest`, 3 no
+`SpreadsheetRowReaderTest` e 1 no `BackfillFilesMimeMigrationTest`. O que mudou de desenho:
+`ContentClass` ganhou `TETO_AGREGADO_KB` — a garantia "quem recusa é sempre esta regra" era falsa no
+único sítio que recebe vários arquivos no mesmo corpo, e agora tudo o que a política aceita cabe nos
+12 MB do transporte; o teto do import passou a morder na linha **iterada**, dentro do leitor, porque
+contado do outro lado do `yield` ele nunca via a linha em branco; o leitor de planilha passou a
+despachar pelo MIME de **conteúdo**, e a isenção dele na catraca foi reescrita para dizer a verdade;
+e a migration de backfill passa a **abortar** quando nenhum objeto pôde ser lido, ficando pendente
+para o deploy seguinte em vez de marcar como aplicada com o histórico intacto.
+
+**A catraca de política pegou a própria correção**, e isso é o guardrail funcionando: ao ganhar
+`assertCabeNoTransporte`, o `ContentClass` passou a nomear `UploadedFile` e virou "sítio de upload"
+aos olhos da varredura. A peça onde a política MORA foi isentada num predicado único
+(`eAPropriaPeca`), compartilhado pelos dois casos que já a tratavam de formas diferentes.
+
+**Um achado virou ficha em vez de conserto:** os `title` do `ProblemDetails` em português num produto
+es-CL (**P-61**). O `detail` inglês do 429 — o único status que este bloco estreou — foi traduzido
+aqui; traduzir os outros seis mexe em texto fora do escopo aprovado e é decisão de idioma de
+produto, do João.
+
+Suíte final **996 passed / 5 skipped**, Pint limpo nos 14 arquivos tocados, `pnpm build` verde.
+`generated.ts` voltou a ser idêntico ao da `main`: o `ContentClass` recebeu `#[Hidden]` e saiu da
+superfície de tipos do SPA, onde nunca teve consumidor.
 
 ## Itens fechados — ponteiro, não narrativa
 
