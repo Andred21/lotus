@@ -26,11 +26,11 @@ describe('tableWidths', () => {
   })
 
   it('usa os 100% quando a tabela não tem coluna de ação', () => {
-    expect(soma(tableWidths({ a: COL.text, b: COL.count, c: COL.count }, { acao: false }))).toBe(100)
+    expect(soma(tableWidths({ a: COL.text, b: COL.count, c: COL.count }, { actions: false }))).toBe(100)
   })
 
   it('reparte na proporção dos pesos', () => {
-    const l = tableWidths({ grande: { peso: 20 }, pequena: { peso: 10 } })
+    const l = tableWidths({ grande: { weight: 20 }, pequena: { weight: 10 } })
     expect(parseFloat(l.grande.width as string)).toBeCloseTo(parseFloat(l.pequena.width as string) * 2, 1)
   })
 

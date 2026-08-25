@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
-import { LARGURA_ALUNO } from './studentColumns'
+import { studentWidths } from './studentColumns'
 
 export function StudentsTable({
   students, loading, onView, actions, error, onRetry,
@@ -19,6 +19,7 @@ export function StudentsTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const largura = studentWidths()
   const table = useTableFilter(students, (s) => [s.name, s.rut])
 
   return (
@@ -38,19 +39,19 @@ export function StudentsTable({
         field="name"
         header={t('student.name')}
         sortable
-        style={LARGURA_ALUNO.name}
+        style={largura.name}
         body={(s: StudentData) => (
           <IdentityCell title={s.name} description={s.email} image={s.photo_url} />
         )}
       />
       <AppColumn
         header={t('common.rut')}
-        style={LARGURA_ALUNO.rut}
+        style={largura.rut}
         body={(s: StudentData) => <span className="font-mono text-sm">{s.rut}</span>}
       />
       <AppColumn
         header={t('student.currentClient')}
-        style={LARGURA_ALUNO.currentClient}
+        style={largura.currentClient}
         body={(s: StudentData) =>
           s.current_client_name ?? (
             <span style={{ color: 'var(--text-color-secondary)' }}>{t('student.noClient')}</span>
@@ -59,7 +60,7 @@ export function StudentsTable({
       />
       <AppColumn
         header={t('student.turmas')}
-        style={LARGURA_ALUNO.turmas}
+        style={largura.turmas}
         body={(s: StudentData) => <span className="font-semibold">{s.enrollments_count}</span>}
       />
       <AppColumn

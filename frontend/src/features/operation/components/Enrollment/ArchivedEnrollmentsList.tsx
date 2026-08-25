@@ -5,7 +5,7 @@ import {
 } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
-import { LARGURA_MATRICULA_ARQUIVADA } from './enrollmentColumns'
+import { archivedEnrollmentWidths } from './enrollmentColumns'
 
 /** A forma achatada pelo `useArchivedPage`. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -46,6 +46,10 @@ export function ArchivedEnrollmentsList({
   const { t } = useTranslation()
   const { can } = usePermissions()
   const table = useTableFilter(enrollments)
+  // A coluna de ação sai inteira no registro fechado, logo o orçamento tem de
+  // saber disso: sem o parâmetro os 10% dela ficariam sem dono e reescalariam o
+  // par de `ARCHIVED_COLUMN`, que existe para render igual nas 7 arquivadas.
+  const largura = archivedEnrollmentWidths(!registroBloqueado)
 
   return (
     <AppDataTable
@@ -65,12 +69,12 @@ export function ArchivedEnrollmentsList({
         body={(e: ArchivedEnrollmentRow) => (
           <IdentityCell title={e.name} description={e.email} image={e.photo_url} />
         )}
-        style={LARGURA_MATRICULA_ARQUIVADA.name}
+        style={largura.name}
       />
       <AppColumn
         header={t('operation.enrollment.table.rut')}
         field="rut"
-        style={LARGURA_MATRICULA_ARQUIVADA.rut}
+        style={largura.rut}
       />
       {/* Sem guarda de modo: esta lista SÓ existe no modo arquivado, então as duas
           colunas são fixas. */}

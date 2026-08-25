@@ -4,7 +4,7 @@ import {
   AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
-import { LARGURA_PAPEL } from './roleColumns'
+import { roleWidths } from './roleColumns'
 
 export function RolesTable({
   roles, loading, onView, actions, error, onRetry,
@@ -20,6 +20,7 @@ export function RolesTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const largura = roleWidths()
 
   // Sem busca nesta aba: só um vazio possível, o de "sem dado".
   const empty = (
@@ -38,17 +39,17 @@ export function RolesTable({
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
       >
-        <AppColumn field="name" header={t('role.name')} sortable style={LARGURA_PAPEL.name} />
+        <AppColumn field="name" header={t('role.name')} sortable style={largura.name} />
         <AppColumn
           header={t('role.kind')}
-          style={LARGURA_PAPEL.kind}
+          style={largura.kind}
           body={(r: RoleData) => (
             <AppTag value={r.is_system ? t('role.system') : t('role.custom')} severity={r.is_system ? 'info' : 'success'} />
           )}
         />
         <AppColumn
           header={t('role.permissions')}
-          style={LARGURA_PAPEL.permissions}
+          style={largura.permissions}
           body={(r: RoleData) => <span className="font-semibold">{r.permissions.length}</span>}
         />
         <AppColumn
