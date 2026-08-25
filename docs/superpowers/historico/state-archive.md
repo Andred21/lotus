@@ -182,10 +182,13 @@ integração é serial. A worktree `../fix-frontend` segue viva, e com ela a bra
 
 **Merge da `main` para dentro, depois do fechamento (2026-08-25).** A `main` andou com o PR #74 da
 `lane-b` (CI, hook `pre-push`, `CONTRIBUINDO.md` e espelho corporativo) mais a sonda de procedência
-`26d0e3e9`. **Um conflito só, no `state.md`**, e no frontmatter: a `main` carregava o snapshot da
+`26d0e3e9`; e, logo depois, com o PR #75 da mesma lane (espelho corporativo, `Dockerfile.prod` e o
+review do item 11). **Um conflito só das duas vezes, no `state.md`**, e no frontmatter: a `main` carregava o snapshot da
 `lane-c` em `ready_for_execution` (o espelho da P-55, escrito antes desta fatia executar) contra o
 `idle` do fechamento. Resolvido pelo lado do fechamento — é o estado que a entrega prova —, sem tocar
-`lanes.lane-a` nem `lanes.lane-b`. **Gate refeito sobre o merge:** `pnpm lint` 0, `pnpm build` verde,
+`lanes.lane-a` nem `lanes.lane-b` — no merge do PR #75 a linha da `lane-b` na tabela de ocupação veio
+da `main` (`reviewing`) e só a da `lane-c` ficou com o lado do fechamento. **Gate refeito sobre o
+merge:** `pnpm lint` 0, `pnpm build` verde,
 **109 arquivos / 606 testes**, backend **940 passed / 5 skipped**.
 
 **Estado: `idle`.** Próxima ação: o João escolher o próximo item do `backlog.md`. Nada foi promovido.
