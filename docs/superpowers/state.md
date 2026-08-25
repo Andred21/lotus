@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
@@ -17,9 +17,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: cad0d1fb
-updated_at: 2026-08-24T18:40:00-03:00
+state_basis_commit: bb6fdc2c
+updated_at: 2026-08-24T21:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `executing` |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_review` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
@@ -192,6 +192,24 @@ são `null`.
 **A `lane-c` fechou o item 16 (fatia 1 de 2) em 2026-08-24** e voltou a `idle`; a narrativa está em
 `historico/state-archive.md` e o item 16 segue na fila com a fatia 2. Interseção a vigiar entre as
 lanes: nenhuma — só a `lane-a` está ocupada.
+
+**Execução concluída em 2026-08-24; a lane-a passa a `ready_for_review`.** As oito tasks do
+`active_plan` foram executadas por `subagent-driven-development` no main tree, cada uma com review de
+task própria (o ledger fino está em `.superpowers/sdd/progress.md`). A Task 8 é o gate de navegador
+do DoD e **pagou o próprio custo**: achou um defeito que a suíte, o build e o lint não viam — sob
+`React.StrictMode` o `useBlobTabOpener` deixava a trava de unmount armada depois da remontagem, e o
+PDF abria em `about:blank` tanto na coluna nova quanto no `/certificados` que já estava pronto.
+Consertado com teste provado vermelho em `bec9c2e8`.
+
+Os oito itens do DoD passaram contra a API real, incluindo revogação e reemissão de verdade, o PDF
+conferido com `pdfinfo` e a coluna percorrida nos três idiomas pelo seletor, sem F5. Suítes finais:
+backend **937 passed / 5 skipped**, frontend **102 arquivos / 572 testes**, lint limpo, build verde.
+A **P-15 foi encerrada** (a decisão que ela esperava saiu: certificados no detalhe do aluno; a coluna
+da listagem fica fora por escrito, spec §9) e a **P-55 foi aberta** (`config/app.php:75` fixa
+`'timezone' => 'UTC'` como literal e ignora o `APP_TIMEZONE` do `.env`).
+
+**A review não foi iniciada** — `/executar-bloco` termina aqui por escrito, e a próxima instrução é
+que aciona a revisão do trabalho ativo.
 
 ## Itens fechados — ponteiro, não narrativa
 
