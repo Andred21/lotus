@@ -4,14 +4,23 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-revisao-ui-por-modulo-f2
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
 active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
 context_packet: null
-blocker: null
+blocker: >-
+  Review de 2026-08-25 (Claude + segunda lente do Codex, bloco de alto risco pela lei 5.3) devolveu
+  3 achados esperando decisao. Q-1 (amarelo, P): o `sm:self-center` do `DetailHeader` esta no
+  conteiner comum de `tags` e `actions`, entao a TAG tambem sai da linha de base — regride o UI-08
+  de 2026-08-23 no `BudgetDetailPage`, unico consumidor com os dois slots, e o teste novo so assere
+  a classe. Q-2 (amarelo, P): 3 dos 4 campos da D-57 nao tem assertiva na borda HTTP, e o comentario
+  do `OperationMetricsQueryTest` afirma a borda sem medi-la — ficou mais caro porque o fallback do
+  helper morreu neste mesmo bloco. Q-3 (verde, P): cores do hover do Lara cravadas no
+  `brand-theme.css` sem catraca. Nenhuma violacao das leis 5. Gate do frontend reconferido no
+  review: lint 0, build 0, 109 arquivos / 602 testes.
 
 lanes:
   lane-a:
@@ -45,16 +54,19 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-revisao-ui-por-modulo-f2
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f2
     active_spec: docs/superpowers/specs/2026-08-25-frontend-revisao-ui-por-modulo-f2-design.md
     active_plan: docs/superpowers/plans/2026-08-25-frontend-revisao-ui-por-modulo-f2.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: >-
+      Review de 2026-08-25 devolveu 3 achados esperando decisao (Q-1 amarelo/P no `DetailHeader`,
+      Q-2 amarelo/P na cobertura HTTP da D-57, Q-3 verde/P nos literais do hover). Detalhe no
+      espelho do topo e na secao "Review da fatia 2" abaixo.
+    resume_state: reviewing
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 7fa1cb0a
@@ -164,7 +176,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_review` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `blocked` (review devolveu 3 achados) |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -220,6 +232,40 @@ passed / 5 skipped** contra 937/5; Pint `passed` nos 10 arquivos PHP tocados; `t
 sem drift. **Desvio declarado:** o Step 6 da Task 13 previa um commit de gate com `git add -A`, e a
 árvore já estava limpa — o gate não produziu arquivo, e os números vivem aqui e no commit deste
 handoff, em vez de num commit vazio.
+
+**Review da fatia 2 — 2026-08-25, três achados esperando decisão do João.** O bloco foi classificado
+**alto risco** pela `/revisar-sprint` (toca DTO de backend e regenera `generated.ts`, lei §5.3), então
+além da revisão Claude foi acionada a segunda lente do Codex em sandbox `read-only`. O Codex devolveu
+dois achados; **um foi confirmado no código e virou a Q-1**, o outro foi confirmado parcialmente e
+virou a Q-2. Nenhuma divergência entre as duas lentes ficou sem resolução.
+
+- **Q-1 · 🟡 · P — `DetailHeader.tsx:96-101`.** O `sm:self-center` da Task 6 está no contêiner que
+  carrega **`tags` e `actions` juntos**, e `align-self` sobrescreve o `items-baseline` do pai para o
+  bloco inteiro: a tag sai da linha de base junto com o botão. O único consumidor com os dois slots é
+  o `BudgetDetailPage`, que ainda tem `subtitle` alto (`IdentityCell` com avatar) — é o **UI-08 de
+  2026-08-23 voltando espelhado**, na tela que a run 1 desta mesma fatia revisou. O Step 5 da Task 6
+  pedia confirmar que "a tag continua na linha do título", e com esta forma isso não é satisfazível;
+  o teste novo assere só a existência da classe. Alvo: `tags` e `actions` como itens flex irmãos, com
+  `sm:self-center` só no invólucro de `actions`.
+- **Q-2 · 🟡 · P — `OperationMetricsQueryTest.php:129-132`.** Três dos quatro campos da D-57
+  (`present_types`, `TurmaComplianceData.missing_types`, `RedatorTurmaPendenciaData.missing_types`)
+  mudaram de forma sem nenhuma assertiva na **borda HTTP** — só teste de `toArray()`, que agora afirma
+  instâncias de enum. O comentário ao lado afirma que "o JSON da borda continua `["MANUAL"]`" e nada
+  mede isso (lição 13). O comportamento hoje está certo — `json_encode` serializa `BackedEnum` pelo
+  `value`, e `ConcludeTurmaTest.php:62` prova o mecanismo idêntico para o quarto campo —, mas a
+  lacuna ficou **mais cara neste mesmo bloco**: com o fallback de `turmaDocumentTypeLabel` morto,
+  mudança de forma não imprime mais o código cru, imprime nada. Alvo: três `assertJsonPath` no
+  `DashboardEndpointTest`.
+- **Q-3 · 🟢 · P — `brand-theme.css:347-357`.** As cores do hover do Lara (`#f1f5f9`,
+  `rgba(255,255,255,.03)`) estão cravadas como literal sem catraca que reprove a divergência se as
+  folhas do tema forem regeradas. Mesma classe da `D-62` que esta fatia abriu. O mecanismo do tema
+  escuro foi conferido no review e **está correto** (`html.dark` por `useApplyTheme.ts:14`); o achado
+  é só a ausência de catraca.
+
+**Nenhuma violação das leis §5**, nenhum órfão (`TurmaDocumentType::values()` segue consumido por
+`Turma.php:157`), nenhuma dependência nova. **Gate do frontend reconferido dentro do review**: lint
+`0`, build `0`, **109 arquivos / 602 testes** — idêntico ao medido no handoff de execução. Backend e
+Pint não foram reconferidos no review (exigem o container).
 
 **Promoção da fatia 2 do item 16 — 2026-08-25.** Decisão explícita do João, com a `lane-c` em
 `idle`. O `backlog.md` marca o item como `Contexto: não por padrão` e a fatia 1 nasceu de medição
