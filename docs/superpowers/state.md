@@ -4,29 +4,29 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: certificacao-historico-do-aluno
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
 active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
 context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
-blocker: 'Revisão de sprint feita (2026-08-24): 3 achados 🟢 (Q-1 estado congelado no fetch, Q-2 default null no fromModel da linha de turma, Q-3 ramo de erro da célula sem teste) + 1 divergência de revisores sobre o gate do PDF (spec D11/§7 aceita; Codex reportou). Aguarda o João decidir o que entra.'
+blocker: null
 
 lanes:
   lane-a:
     active_feature: null
     active_work_item: certificacao-historico-do-aluno
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/certificacao-historico-do-aluno
     active_spec: docs/superpowers/specs/2026-08-24-certificacao-historico-do-aluno-design.md
     active_plan: docs/superpowers/plans/2026-08-24-certificacao-historico-do-aluno.md
     context_packet: docs/superpowers/context-packets/2026-08-24-certificacao-historico-do-aluno.md
-    blocker: 'Revisão de sprint feita (2026-08-24): 3 achados 🟢 + 1 divergência de revisores sobre o gate do PDF. Aguarda decisão do João.'
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
     active_work_item: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: bb6fdc2c
-updated_at: 2026-08-24T21:30:00-03:00
+state_basis_commit: 7b64cfd8
+updated_at: 2026-08-24T22:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `blocked` (achados na mesa) |
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_closure` |
 | `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
 
@@ -208,8 +208,30 @@ A **P-15 foi encerrada** (a decisão que ela esperava saiu: certificados no deta
 da listagem fica fora por escrito, spec §9) e a **P-55 foi aberta** (`config/app.php:75` fixa
 `'timezone' => 'UTC'` como literal e ignora o `APP_TIMEZONE` do `.env`).
 
-**A review não foi iniciada** — `/executar-bloco` termina aqui por escrito, e a próxima instrução é
-que aciona a revisão do trabalho ativo.
+**Review feita em 2026-08-24, e as três correções aprovadas entraram.** Classificação de risco:
+ALTO (toca `generated.ts`, DTO de documento legal, fronteira de domínio e RBAC), então além do
+gabarito do projeto rodou a revisão independente do Codex, em sandbox read-only. Sem órfãos e sem
+violação das leis §5. Os três achados 🟢 foram aprovados pelo João e corrigidos:
+
+- **Q-1** (`5b91bc48`) — o `display_status` congelava no fetch e o `AppProviders` desliga
+  `refetchOnWindowFocus`: aba aberta na virada da meia-noite afirmava `vigente` sobre certificado
+  vencido. As quatro queries que carregam o campo passam a revalidar no foco, com catraca que monta
+  o QueryClient com o MESMO default do app. Limite declarado: aba que nunca perde o foco só corrige
+  no remonte.
+- **Q-2** (`80506ed9`) — `StudentTurmaData::fromModel` perdeu o `= null` do summary: ausência de
+  certificado é significado na coluna, e default silencioso deixava projetá-la sem querer.
+- **Q-3** (`7b64cfd8`) — o ramo do aviso do PDF (popup bloqueado e mensagem de erro) ganhou catraca,
+  em arquivo irmão porque a régua de 150 linhas de `components/**` vale para o teste.
+
+**Divergência de revisores, registrada e NÃO alterada:** o Codex reportou que a coluna expõe id,
+código e estado do certificado sob `identity.user.view`, enquanto o PDF exige
+`certification.certificate.view` — role com um e sem o outro lista e dá 403 no clique. É decisão
+registrada (spec D11 e §7, "consequência aceita"), então não é achado. Fica a correção factual: a
+spec diz "role **futura**", e o `PermissionCatalog` compõe role customizada hoje — a combinação já é
+alcançável. Não virou pendência nem item de backlog; o João decidiu aplicar só Q-1 a Q-3.
+
+Gate depois das correções: backend **937 passed / 5 skipped**, frontend **105 arquivos / 577
+testes**, lint limpo, build verde.
 
 ## Itens fechados — ponteiro, não narrativa
 
