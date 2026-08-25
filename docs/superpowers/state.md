@@ -31,9 +31,9 @@ lanes:
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: reviewing
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: review_active_work_item
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: cicd/ci-governanca-e-artefato
     active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 171ec946
-updated_at: 2026-08-25T17:25:00-03:00
+updated_at: 2026-08-25T18:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `reviewing` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` — **fatia 2** (item 16) | Frontend + 1 DTO de backend | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` | `ready_for_execution` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
@@ -278,6 +278,15 @@ destino reprovar —, e o script passou a recusar commit cujo CI não esteja ver
 `LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
 `26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
 sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
+
+**As correções provadas no gatilho real — 2026-08-25.** PR #75 mesclado em `ac078a80`, run
+[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): sete jobs,
+`conclusion: success`, `procedencia` e `image` verdes, par publicado em `ghcr.io/andred21`. A guarda
+de idempotência foi medida re-executando o job `image` no mesmo SHA — os quatro passos de build e
+push saíram `skipped`, a verificação do par continuou rodando e os dois digests ficaram idênticos.
+Só o `concurrency` fica sem prova direta: provar exigiria dois merges em segundos, e o custo não
+paga o que a leitura do `github.ref` já diz. Evidência integral em
+`audits/2026-08-24-cicd-evidencias.md`.
 
 **O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
 2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco

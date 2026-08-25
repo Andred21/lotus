@@ -312,3 +312,85 @@ A sonda ficou em `main` de propósito, sem revert: ela é um commit vazio (mesma
 desfazê-la exigiria force-push — exatamente o que a camada 2 marca em vermelho. `main` fica com um
 head sem imagem publicada até o próximo merge por PR, que é o comportamento correto e não um
 efeito colateral.
+
+## As correções do review, provadas no gatilho real — 2026-08-25
+
+O review do bloco (alto risco, gabarito do projeto + segunda lente do Codex) devolveu cinco
+achados, todos aprovados e corrigidos. Três deles só existem no servidor e não tinham como ser
+provados localmente. Merge do PR #75 em `ac078a80`, run
+[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): **sete jobs,
+`conclusion: success`**, com `procedencia` e `image` verdes.
+
+### O par deixou de poder sair pela metade
+
+Os dois alvos passaram a ser construídos **antes** de qualquer push, e um passo final afirma que
+os dois manifestos existem. A ordem dos passos no run prova o desenho:
+
+```
+6  success  O par ja existe para este SHA?
+7  success  Constroi o alvo app
+8  success  Constroi o alvo web
+9  success  Publica o alvo app
+10 success  Publica o alvo web
+11 success  O par existe no GHCR
+```
+
+Falha de build — o modo de falha comum — agora acontece nos passos 7/8, com zero imagem
+publicada. Antes ela caía entre dois passos que já publicavam, e o SHA ficava com meia release.
+
+O par publicado para `ac078a80`:
+
+| Imagem | Digest |
+|---|---|
+| `ghcr.io/andred21/lotus-app` | `sha256:f371f1309cd68a6b2eaca7b17bf345413ebdcf74f934ae645ba00d143ef01566` |
+| `ghcr.io/andred21/lotus-web` | `sha256:70796ab6a57f0eb017cefb43d1d72ffb705dd5c49f302b34b0a2e26a15bc2755` |
+
+O `concurrency` também deixou de cancelar push em `main` (`cancel-in-progress` só fora de `push`):
+`github.ref` é constante para todos eles, então o grupo era um só e um segundo push cancelava a
+publicação do primeiro. Este é o único dos cinco que **não** tem prova direta — provar exigiria
+dois merges em segundos, e o custo não paga o que a leitura do `github.ref` já diz.
+
+### A tag de um SHA não se reescreve — medido, não afirmado
+
+O `image` do mesmo run foi **re-executado** (`gh run rerun --job`) com as imagens já no registry:
+
+```
+6  success  O par ja existe para este SHA?
+7  skipped  Constroi o alvo app
+8  skipped  Constroi o alvo web
+9  skipped  Publica o alvo app
+10 skipped  Publica o alvo web
+11 success  O par existe no GHCR
+```
+
+Os dois digests saíram **idênticos** aos da tabela acima. É esta a metade do "artefato imutável"
+que faltava: as bases fixadas por digest cobrem a reprodutibilidade, e a guarda cobre o resto —
+o índice do apk, que digest nenhum fixa. Sem ela, um `gh run rerun` meses depois trocaria em
+silêncio o artefato que o item 12 já tivesse promovido.
+
+### `audit-dev` vermelho não derruba a conclusão do run
+
+Descoberto de lado, e importa: o run do PR fechou `conclusion: success` com `audit-dev` em
+`failure` (`brace-expansion`, DoS, dependência transitiva de ferramenta de desenvolvimento). O
+`continue-on-error` faz o que prometia. Isso **valida o gate novo do espelho**, que exige
+`completed success` do run da origem — se a conclusão caísse junto com o `audit-dev`, o espelho
+passaria a recusar todo commit por causa de advisory em árvore de dev, e o efeito prático seria
+desligar o gate.
+
+### Procedência conferida, e o espelho deixou de lavar commit
+
+Os dois achados sobre o caminho de espelho não têm run próprio: provam-se com a API e com o
+próprio script, contra `origin/main@26d0e3e9` — a sonda vermelha que o DoD 5 deixou em `main`.
+
+| O que | Como | Resultado |
+|---|---|---|
+| trailer é a ponta de `main` na origem | `compare/main...26d0e3e9` | `identical` — aprova |
+| trailer inventado | `compare/main...deadbeef…` | 404 — reprova |
+| trailer não-hexadecimal | validação local | reprova antes de chamar a API |
+| trailer fora do histórico de `main` | `compare/main...8a2f7e60` | `ahead` — reprova |
+| espelho de commit vermelho | `scripts/espelhar-corporativo.sh` | `completed failure` → `exit 1` **antes** do push |
+| lista de exclusões vem do commit, não do disco | `backend/` acrescentado à cópia local | árvore `ecd187e9` idêntica, `backend` presente nas duas |
+
+A origem vem da variável de repositório `ESPELHO_FONTE`, definida só em `Gatika-CL/lotus`. O
+`ci.yml` segue sem nome de dono no meio, e onde a variável não existe o caminho de espelho não
+abre — em `Andred21/lotus` o único caminho continua sendo PR mesclado.
