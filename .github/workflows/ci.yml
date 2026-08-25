@@ -115,6 +115,17 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # O transformer e INCREMENTAL: ele guarda o hash do arquivo de saida em
+      # typescript-transformer-manifest.json e nao reescreve nada quando as
+      # classes PHP nao mudaram. Medido em 2026-08-24 (run 32797276027): uma
+      # linha acrescentada a mao ao generated.ts sobreviveu ao comando e o gate
+      # passou verde. Apagar o par forca a regeneracao do zero, que e a unica
+      # forma de o diff enxergar edicao manual -- que e o que a lei 5.3 proibe.
+      - name: Apaga o alvo para forcar regeneracao do zero
+        run: |
+          rm -f frontend/src/shared/types/generated.ts \
+                frontend/src/shared/types/typescript-transformer-manifest.json
+
       # Medido 2026-08-24: o comando boota o Laravel mas nao toca o banco --
       # sqlite :memory: basta e nenhum servico MySQL sobe. O diretorio de
       # saida sai de FrontendPath, que aqui resolve o irmao <workspace>/frontend
@@ -130,19 +141,9 @@ jobs:
       # AINDA ASSIM sai 0 -- medido. Por isso quem julga e o diff, nunca o
       # texto da saida. O ::error com `file=` faz o GitHub nomear o arquivo
       # na interface, que e literalmente o que a ficha da D-08 exige.
-      - name: DIAGNOSTICO temporario
-        run: |
-          git status --porcelain
-          echo "--- md5 do arquivo no checkout ---"
-          md5sum frontend/src/shared/types/generated.ts
-          echo "--- tail ---"
-          tail -3 frontend/src/shared/types/generated.ts
-          echo "--- outros generated.ts na maquina ---"
-          find / -name generated.ts -newermt '-10 minutes' 2>/dev/null | head
-
       - name: Lei 5.3 - generated.ts nao se edita a mao
         run: |
-          if ! git diff --exit-code -- frontend/src/shared/types/generated.ts; then
+          if ! git diff --exit-code -- frontend/src/shared/types/; then
             echo "::error file=frontend/src/shared/types/generated.ts::generated.ts diverge do que typescript:transform produz. Corrija o DTO no backend e regenere; nao edite o arquivo."
             exit 1
           fi
