@@ -212,12 +212,80 @@ jobs:
         working-directory: frontend
         run: pnpm audit
 
+  # A regua que o plano pago daria, reconstruida no unico lugar que sobra: o
+  # artefato. `Gatika-CL` esta no plano free e branch protection em repositorio
+  # privado exige plano pago (403 medido em 2026-08-25), entao NADA impede um
+  # push direto em main. O que da para impedir e que esse push vire release --
+  # este job entra no `needs` do `image`.
+  #
+  # Duas procedencias sao aceitas, e nenhuma outra:
+  #   - commit que chegou por Pull Request MESCLADO (o fluxo do repo pessoal);
+  #   - commit de espelho, que carrega o trailer `Source-Commit:` E tem a
+  #     arvore limpa de todo path de `.espelho-exclusoes` (o corporativo).
+  #
+  # O segundo caminho nao serve de atalho no pessoal: la `docs/` e `.claude/`
+  # existem, entao a checagem de arvore limpa reprova e a exigencia de PR volta
+  # a valer. A regra se auto-restringe, sem nome de repositorio no meio.
+  procedencia:
+    name: procedencia
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # `forced` vem do payload do push. Reescrita de historico em main e
+      # exatamente o que `allow_force_pushes: false` recusaria no plano pago;
+      # aqui ela nao e impedida, mas fica vermelha e datada no historico de
+      # runs -- que e o que uma auditoria pede depois.
+      - name: Force-push nao passa despercebido
+        if: github.event.forced
+        run: |
+          echo "::error::force-push detectado em ${{ github.ref }}. main foi reescrita."
+          exit 1
+
+      - name: Procedencia do commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          trailer=$(git log -1 --pretty='%(trailers:key=Source-Commit,valueonly)' | tr -d '[:space:]')
+
+          sujos=""
+          while IFS= read -r caminho; do
+            case "$caminho" in ''|\#*) continue ;; esac
+            [ -e "$caminho" ] && sujos="$sujos $caminho"
+          done < .espelho-exclusoes
+
+          if [ -n "$trailer" ]; then
+            if [ -n "$sujos" ]; then
+              echo "::error::commit de espelho, mas a arvore carrega arquivo de desenvolvimento:$sujos"
+              exit 1
+            fi
+            echo "release de espelho. Fonte: $trailer"
+            exit 0
+          fi
+
+          mesclados=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)] | length')
+          if [ "$mesclados" -ge 1 ]; then
+            echo "commit entrou por Pull Request mesclado."
+            exit 0
+          fi
+
+          echo "::error::$SHA entrou em main sem Pull Request mesclado e sem trailer de espelho. Nenhuma imagem sera publicada para ele."
+          exit 1
+
   image:
     name: image
     # Nenhum gate vermelho passa daqui: e isto que faz o DoD
     # "commit reprovado nao gera release promovivel" ser mecanico e nao
-    # combinado. audit-dev NAO entra -- ele reporta, nao decide.
-    needs: [backend, frontend, types-drift, audit-prod]
+    # combinado. audit-dev NAO entra -- ele reporta, nao decide. procedencia
+    # entra porque, sem branch protection, ele e a unica coisa entre um push
+    # direto em main e um artefato publicado.
+    needs: [backend, frontend, types-drift, audit-prod, procedencia]
     # Sem nome de dono na condicao. Branch e PR rodam so os gates; o custo
     # do bloco esta neste job, e e daqui que vem o "CI rapido".
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

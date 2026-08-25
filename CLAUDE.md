@@ -131,6 +131,10 @@ docker compose exec -T app php artisan typescript:transform     # regenera gener
 docker compose exec -T app php artisan migrate && ... db:seed
 ```
 
+**Entrar em `main` e espelhar para o corporativo:** o caminho, o hook `pre-push` e o script de
+espelho estão em [`CONTRIBUINDO.md`](./CONTRIBUINDO.md). Push direto em `main` é recusado na
+máquina e não vira imagem no servidor.
+
 Pint é a exceção: roda **no host, de dentro de `backend/`** (não precisa do container).
 
 ```bash
