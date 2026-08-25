@@ -23,6 +23,144 @@
 
 ---
 
+## Fechado em 2026-08-24 — `certificacao-historico-do-aluno`, item 2 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `certificacao-historico-do-aluno` (item 2) | Backend/Frontend | main tree (gate P-03) | `feat/certificacao-historico-do-aluno` | `ready_for_closure` |
+| `lane-b` | — | — | — (destruída) | — (destruída) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` (detached em `cad0d1fb`) | — (mesclada) | `idle` |
+
+**Promoção de 2026-08-24, explícita do João.** O item 2 da fila entra na `lane-a`, no main tree por
+causa do gate P-03 (o bloco toca backend), em branch nova nascida de `main@cad0d1fb`. O backlog
+marca `Contexto: sim`, então a lane nasceu em `context_required` e o Context Packet veio do Codex,
+pela skill `lotus-context-packet` de `.agents/skills/`, em sandbox read-only — validado contra o
+contrato (marcadores exatos, frontmatter completo com `plan_path`/`spec_path` em `null`, 7 key facts,
+Figma registrado `unavailable` com a linha de erro decisiva) e salvo em
+`context-packets/2026-08-24-certificacao-historico-do-aluno.md` com `status: partial`, que prossegue.
+A única fonte indisponível é o Figma, e a limitação é declarada: **nenhuma afirmação de fidelidade ao
+protótipo** entra no planejamento. O bloco **absorve a P-15** — a ficha segue aberta em
+`pendencias/abertas.md` e só sai no fechamento. `focused_lane` passa de `lane-c` para `lane-a` neste
+mesmo commit, que é a fronteira durável exigida pelas invariantes.
+
+**Rastro de merge corrigido neste commit.** O `state.md` anterior (`8a4df32a`) descrevia as branches
+da `lane-a` e da `lane-c` como não mescladas. Em `cad0d1fb` as duas já entraram:
+`refactor/frontend-revisao-ui` pelo **PR #69**, e `feat/hardening-acesso-ownership-e-integridade` não
+consta mais em `git branch -a --no-merged main`. A worktree `../fix-frontend` continua existindo, em
+detached HEAD no mesmo `cad0d1fb`; por isso o `branch` da `lane-c` é `null` e o `tree` não é.
+
+**A `lane-b` fechou o item 10 em 2026-08-22** — `infra-producao-runtime-e-aws`, mesclada no
+**PR #67** (merge `31f91987`), narrativa em `historico/state-archive.md`. A worktree
+`../lotus-infra` e a branch `infra/producao-runtime-e-aws` **foram destruídas depois do merge**, por
+decisão do João e pelo mesmo precedente da lane que fechou o BD-15; por isso `tree` e `branch` dela
+são `null`.
+
+**A `lane-c` fechou o item 16 (fatia 1 de 2) em 2026-08-24** e voltou a `idle`; a narrativa está em
+`historico/state-archive.md` e o item 16 segue na fila com a fatia 2. Interseção a vigiar entre as
+lanes: nenhuma — só a `lane-a` está ocupada.
+
+**Execução concluída em 2026-08-24; a lane-a passa a `ready_for_review`.** As oito tasks do
+`active_plan` foram executadas por `subagent-driven-development` no main tree, cada uma com review de
+task própria (o ledger fino está em `.superpowers/sdd/progress.md`). A Task 8 é o gate de navegador
+do DoD e **pagou o próprio custo**: achou um defeito que a suíte, o build e o lint não viam — sob
+`React.StrictMode` o `useBlobTabOpener` deixava a trava de unmount armada depois da remontagem, e o
+PDF abria em `about:blank` tanto na coluna nova quanto no `/certificados` que já estava pronto.
+Consertado com teste provado vermelho em `bec9c2e8`.
+
+Os oito itens do DoD passaram contra a API real, incluindo revogação e reemissão de verdade, o PDF
+conferido com `pdfinfo` e a coluna percorrida nos três idiomas pelo seletor, sem F5. Suítes finais:
+backend **937 passed / 5 skipped**, frontend **102 arquivos / 572 testes**, lint limpo, build verde.
+A **P-15 foi encerrada** (a decisão que ela esperava saiu: certificados no detalhe do aluno; a coluna
+da listagem fica fora por escrito, spec §9) e a **P-59 foi aberta** (`config/app.php:75` fixa
+`'timezone' => 'UTC'` como literal e ignora o `APP_TIMEZONE` do `.env`) — nasceu `P-55` nesta branch
+e foi renumerada no merge da `main`, que já usava o número.
+
+**Review feita em 2026-08-24, e as três correções aprovadas entraram.** Classificação de risco:
+ALTO (toca `generated.ts`, DTO de documento legal, fronteira de domínio e RBAC), então além do
+gabarito do projeto rodou a revisão independente do Codex, em sandbox read-only. Sem órfãos e sem
+violação das leis §5. Os três achados 🟢 foram aprovados pelo João e corrigidos:
+
+- **Q-1** (`5b91bc48`) — o `display_status` congelava no fetch e o `AppProviders` desliga
+  `refetchOnWindowFocus`: aba aberta na virada da meia-noite afirmava `vigente` sobre certificado
+  vencido. As quatro queries que carregam o campo passam a revalidar no foco, com catraca que monta
+  o QueryClient com o MESMO default do app. Limite declarado: aba que nunca perde o foco só corrige
+  no remonte.
+- **Q-2** (`80506ed9`) — `StudentTurmaData::fromModel` perdeu o `= null` do summary: ausência de
+  certificado é significado na coluna, e default silencioso deixava projetá-la sem querer.
+- **Q-3** (`7b64cfd8`) — o ramo do aviso do PDF (popup bloqueado e mensagem de erro) ganhou catraca,
+  em arquivo irmão porque a régua de 150 linhas de `components/**` vale para o teste.
+
+**Divergência de revisores, registrada e NÃO alterada:** o Codex reportou que a coluna expõe id,
+código e estado do certificado sob `identity.user.view`, enquanto o PDF exige
+`certification.certificate.view` — role com um e sem o outro lista e dá 403 no clique. É decisão
+registrada (spec D11 e §7, "consequência aceita"), então não é achado. Fica a correção factual: a
+spec diz "role **futura**", e o `PermissionCatalog` compõe role customizada hoje — a combinação já é
+alcançável. Não virou pendência nem item de backlog; o João decidiu aplicar só Q-1 a Q-3.
+
+Gate depois das correções: backend **937 passed / 5 skipped**, frontend **105 arquivos / 577
+testes**, lint limpo, build verde.
+
+---
+
+## Fechado em 2026-08-24 — `tabelas-coluna-de-acoes-e-largura` (item 17 da fila)
+
+**A `lane-c` recebeu o item 17 em 2026-08-24, por promoção explícita do João** contra o
+`backlog.md`, com a árvore em `idle`. O item declara `Contexto: não`, então a rota é direta a
+`ready_for_planning` e `context_packet` permanece `null` — não há fonte externa a recuperar; a
+evidência do bloco é medição local de 2026-08-24 (15 sítios de `AppDataTable`/`SearchableTableFrame`,
+12 com coluna de ação, 2 presas).
+
+A branch anterior da lane, `refactor/frontend-revisao-ui`, **foi mesclada** no **PR #69** (merge
+`cad0d1fb`) — o registro acima, que a dava como não mesclada, ficou velho no fechamento da fatia 1 e
+é corrigido aqui. A worktree `../fix-frontend` estava em detached HEAD sobre esse merge; a branch
+`refactor/tabelas-coluna-de-acoes` nasce dele. Não há rebase pendente: `cad0d1fb` **é** a `main`.
+
+**As 17 tasks do plano foram executadas e provadas em 2026-08-24**, da peça de vocabulário
+(`ec5aaef3`) ao registro de medição (`a31a23a4`), mais o corretivo `ea280fe1` e a varredura de
+arquivados `722d5e35`, ambos decididos pelo João. A prova end-to-end está em
+`docs/superpowers/audits/2026-08-24-tabelas-coluna-de-acoes-e-largura-medicoes.md`: 12 tabelas × 3
+viewports com a coluna de ação presa dentro da moldura, 7 visões arquivadas com o par do rastreio
+em 10%/14%, 3 tabelas sem ação sobre o orçamento cheio, e a catraca de ESLint vista reprovando as
+duas sondas antes de ser ligada. Gate final: lint 0, build verde, 101 arquivos / 561 testes. A
+review rodou em 2026-08-24, e o resultado dela é o parágrafo abaixo.
+
+**A review de `/revisar-sprint` classificou o bloco como BAIXO RISCO** — frontend puro, sem
+migration, `generated.ts`, auth, auditoria, RBAC nem dinheiro —, logo sem a segunda lente do Codex.
+Gate reconferido na árvore: `pnpm lint` 0, `pnpm build` verde, 101 arquivos / 561 testes. Nenhum
+órfão: as 10 classes de `COL` têm consumidor e os 13 `*Columns.ts` novos são importados. Quatro
+achados, todos de esforço P e nenhum bloqueante de merge por si:
+
+- **Q-1 🟡** `LARGURA_MATRICULA_ARQUIVADA` é const enquanto a coluna de ação de
+  `ArchivedEnrollmentsList` sai com `registroBloqueado`: os 10% sem dono reescalam o par de
+  `ARCHIVED_COLUMN`, que existe justamente para render 10%/14% iguais nas 7 arquivadas. O irmão
+  `enrollmentWidths(acao)`, doze linhas acima no mesmo arquivo, já resolve esse caso.
+- **Q-2 🟡** léxico dividido entre `<entidade>Widths` (inglês, função) e `LARGURA_<ENTIDADE>`
+  (português, const) nos 13 arquivos novos, e dentro de `OrcamentoOpcoes` / `ColClass`.
+- **Q-3 🟢** o docblock de `style.ts` promete que a largura declarada vira LEI, enquanto a §4 da
+  própria medição registra desvio de até 3,5 pontos quando o `rem` da ação não vale os 10%.
+- **Q-4 🟢** a catraca `COLUNA_SEM_LARGURA` exige a presença de `style`, não de largura.
+
+**O João aprovou os quatro em 2026-08-24 e os quatro foram aplicados.** Q-1 passou
+`!registroBloqueado` a `archivedEnrollmentWidths`; Q-2 unificou o léxico — todo consumidor exporta
+`<entidade>Widths` e é FUNÇÃO, inclusive onde não há variação, e a peça de `shared` passou a
+`{ weight, cap }` / `TableWidthOptions { actions, archived }` / `ACTIONS_RESERVE`; Q-3 trocou a
+promessa de LEI por RAZÃO nos docblocks de `columnWidth.ts` e `style.ts`, com o caso medido da
+`HistorialTable`; Q-4 partiu a catraca em dois seletores de um nível — coluna sem `style` e coluna
+com `style` que não é `MemberExpression` nem `CallExpression`.
+
+A grafia encadeada do `:has` reprovou de novo, agora medida nas duas direções: a sonda de quatro
+colunas acusou as QUATRO, legítimas inclusive. A forma que passou desce pelo caminho do nó
+(`[value.expression.type=…]`), e a sonda final acusou 2 de 4, as certas. Gate reconferido: lint 0,
+build verde, 101 arquivos / 561 testes — mesma contagem, nenhum teste novo (a ramificação `actions`
+já tem prova em `columnWidth.test.ts`, e o corte de teste do projeto é hooks, não módulos de
+coluna). O registro está na §8 do audit. Nenhum achado pendente.
+
+Interseção a vigiar entre as lanes vivas: nenhuma — `lane-a` e `lane-b` seguem em `idle` e o item 17
+é frontend puro (`frontend/src/**`), sem toque em `backend/` nem em `generated.ts`, logo sem gatilho
+da P-03. Integração segue serial.
+
+---
+
 ## Fechado em 2026-08-24 — `compose-por-worktree`, fora da fila (ficha `P-03`)
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |

@@ -84,13 +84,15 @@ class StudentHistoryDataTest extends TestCase
             'approval_status' => 'aprobado',
         ]);
 
-        $data = StudentTurmaData::fromModel($enrollment->fresh(['turma.quote', 'turma.course']));
+        $data = StudentTurmaData::fromModel($enrollment->fresh(['turma.quote', 'turma.course']), null);
 
         $this->assertSame($turma->id, $data->turma_id);
         $this->assertSame($quote->fresh()->code, $data->quote_code);
         $this->assertSame('Trabajos en líneas energizadas 220kV', $data->course_name);
         $this->assertSame('2026-06-01', $data->start_date);
         $this->assertSame(EnrollmentApprovalStatus::Aprobado, $data->approval_status);
+        $this->assertNull($data->certificate);
+        $this->assertSame(0, $data->superseded_count);
     }
 
     public function test_student_navega_para_as_proprias_matriculas(): void

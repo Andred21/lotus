@@ -7,6 +7,7 @@ use App\Domains\Identity\Data\StudentDetailData;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -60,7 +61,10 @@ class StudentDataTest extends TestCase
         $student->logs()->create(['client_id' => $antigo->id, 'started_on' => '2024-01-01', 'ended_on' => '2025-02-28']);
         $student->logs()->create(['client_id' => $atual->id, 'started_on' => '2025-03-01', 'ended_on' => null]);
 
-        $data = StudentDetailData::fromModel($student->fresh(['user', 'currentClient', 'logs.client', 'enrollments.turma.quote', 'enrollments.turma.course']));
+        $data = StudentDetailData::fromModel(
+            $student->fresh(['user', 'currentClient', 'logs.client', 'enrollments.turma.quote', 'enrollments.turma.course']),
+            new Collection,
+        );
 
         $this->assertCount(2, $data->links);
         $this->assertSame('Subestación Norte S.A.', $data->links[0]->client_name);

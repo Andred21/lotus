@@ -12,6 +12,52 @@
 
 # Frontend
 
+## P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
+
+**Bloco:** — · **Gatilho:** fecha quando `tests/compose-dev.test.ts` afastar também o
+`frontend/.env` durante a fábrica (mesmo tratamento que ele já dá aos `.env*` da raiz), ou quando o
+João decidir que toda árvore deve comentar a chave à mão. Revisar em **2026-10-31**.
+
+Medido em 2026-08-24, no merge da `main` (PR #70) dentro da `refactor/tabelas-coluna-de-acoes`: com
+o `frontend/.env` desta árvore trazendo `VITE_API_URL=http://localhost:8080` — a grafia que era o
+padrão antes do bloco `compose-por-worktree` —, três casos de `tests/compose-dev.test.ts` falham:
+
+    expected undefined to be '"http://localhost:8080"'
+
+O `vite.config.ts` está correto: ele lê `loadEnv(mode, __dirname, 'VITE_')` e, achando
+`VITE_API_URL` explícito, **não emite** o define derivado — que é exatamente a precedência que o
+bloco desenhou. Quem não isola é o teste: o `beforeEach` afasta os `.env*` da **raiz** (`CAMINHOS_ENV`)
+e não o `frontend/.env`, então o gate depende do disco de quem roda. Comentar a chave (como o
+`frontend/.env.example` agora manda) devolve **102 arquivos / 573 testes**.
+
+O conserto é de uma linha no teste e mora na frente de infra, não neste bloco; por isso a árvore só
+comentou a própria chave e nada foi commitado em `frontend/.env` (gitignored).
+
+## P-57 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
+
+**Bloco:** — · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
+worktree novo constrói a imagem antes de rodar a suíte, ou quando o compose deixar de permitir
+imagem por projeto defasada. Revisar em **2026-10-31**.
+
+Medido em 2026-08-24, no fechamento do item 17, na worktree `../fix-frontend`: o
+`docker compose exec -T app php artisan test` do §6 terminou em
+`Fatal error: Allowed memory size of 134217728 bytes exhausted`. Não é regressão da **P-50** — o
+`docker/php/memory-cli.ini` (320M) está no repositório e no `Dockerfile` desde então. O que falhou é
+que **cada worktree é um projeto compose próprio, com imagem própria**: a imagem `fix-frontend-app`
+tinha sido construída antes do ini e `php -i` no container dizia `memory_limit => 128M`,
+`Loaded Configuration File => (none)`.
+
+`docker compose build app` + `docker compose up -d --no-deps app` resolveu (o `--no-deps` porque
+3307 e 8025 já estão presos pelo stack do main tree), e a suíte terminou **906 passed / 5 skipped**.
+O conserto é de ambiente, não de código, e por isso não entrou em commit; o que fica aberto é o
+doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória e pensa em regressão.
+
+**Nasceu como `P-55` na branch `refactor/tabelas-coluna-de-acoes` e foi renumerada no merge da
+`main`**, que já trazia uma `P-55` (a invariante do espelho) e uma `P-56` vindas do fechamento do
+`compose-por-worktree` — mesmo precedente que renumerou a `P-38` para `P-41`. Ela **não é** a P-03,
+que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
+no lugar que o fatal de 128M apareceu aqui.
+
 ## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
 
 **Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
@@ -330,11 +376,73 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 
 ---
 
+## P-59 — `config/app.php` fixa `'timezone' => 'UTC'` como literal, e o `APP_TIMEZONE` do `.env` é ignorado
+
+**Nasceu como `P-55` na branch `feat/certificacao-historico-do-aluno` e foi renumerada no merge da
+`main` (2026-08-24)**, no precedente exato da P-41 e da P-44: a `main` chegou primeiro e já usava
+`P-55` para a invariante do espelho, então quem renumera é a recém-chegada. As menções a "P-55"
+escritas por este bloco no `historico/` foram acertadas junto; a `P-55` da `main` fica onde está.
+
+**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
+servidor e puder trocar o literal por `env('APP_TIMEZONE', 'UTC')` com prova. Revisar em **2026-10-31**.
+
+Medido no gate de navegador do `certificacao-historico-do-aluno` (2026-08-24):
+`backend/config/app.php:75` escreve `'timezone' => 'UTC'` **sem `env()`**, então o
+`APP_TIMEZONE=America/Santiago` do `backend/.env.example:8` nunca chega ao framework. Toda data
+derivada no servidor — `now()`, `Carbon::now()`, `addMonths()` — roda em UTC, e quem lê o
+`.env.example` acredita no contrário.
+
+O alcance **conhecido hoje é pequeno**: só certificado com prazo é afetado, e prazo é exceção (a
+spec §2.5 registra vigência indeterminada como padrão); além disso o `CertificateDisplayStatus`
+declara o fuso explicitamente em vez de herdar o do config, justamente para não herdar o errado.
+O defeito, porém, é **global** — alcança qualquer derivação de data futura que confie no default,
+e o Chile ainda tem horário de verão, então a diferença não é constante.
+
+O conserto tem forma conhecida: `env('APP_TIMEZONE', 'UTC')` no config e um teste que prove
+`config('app.timezone')` seguindo o `.env`. Não entra neste bloco porque mudar o fuso do servidor
+reinterpreta **toda** data já gravada — decisão de escopo próprio, não efeito colateral de uma
+coluna de certificado.
+
+---
+
+
 # Travadas em decisão do João
 
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
+
+## P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
+
+**Nasceu como `P-56` na mesma branch e foi renumerada pelo mesmo motivo** — a `main` já usava
+`P-56` para o `XSRF-TOKEN` entre árvores.
+
+**Bloco:** — · **Gatilho:** fecha quando um bloco puder reseedar ou corrigir o banco de dev (o mesmo
+candidato da [P-44](#p-44)), ou quando alguém decidir se o gate de snapshot apresentável deve
+degradar em vez de estourar. Revisar em **2026-10-31**.
+
+Medido no `/fechar-sprint` de 2026-08-24, contra a API real:
+`GET /api/publico/certificados/b47938cf-80fd-46de-8a76-f9cf611fec20` (`LOT-2026-1001`) devolve **500**
+em Problem Details, com `detail` = *"El certificado LOT-2026-1001 no puede presentarse: su documento
+congelado no tiene los campos aluno.name."*. O outro revogado do banco (`LOT-2026-1002`, mesmo
+fluxo) devolve **200** com `status: revocado` e `display_status: revocado`.
+
+**Não é regressão deste bloco.** O `LOT-2026-1001` foi criado em **2026-08-10 17:31**, antes do gate
+de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num gate unico"), e é o
+único dos oito certificados do dev cujo snapshot cru não tem `aluno.name` — os outros sete têm. O
+`certificacao-historico-do-aluno` não escreve snapshot: ele lê `snapshot_ok` e o projeta na coluna.
+
+**As duas metades que o gatilho separa:**
+
+- **Dado de dev**: uma linha de snapshot velho sobreviveu à mudança de forma. Linha alheia de bloco
+  fechado se menciona, não se apaga — a decisão de reseedar o dev é do João, exatamente como na
+  P-44.
+- **Comportamento**: o gate hoje converte snapshot incompleto em **500** numa rota **pública**, a que
+  o QR do certificado impresso aponta. Se um documento antigo com a forma antiga existir em
+  produção, quem escaneia vê erro de servidor em vez de uma página que diz o que dá para dizer.
+  Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
+  cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
+  `PublicCertificateData`.
 
 ## P-02 — retenção da auditoria nunca decidida
 
@@ -539,26 +647,6 @@ Bloco 6b (spec D7): turma se identifica por relacionamento. **Gatilho anterior v
 busca filtra por `quote_code`/`budget_code`), remover seria perda funcional, e criar código próprio
 exige coluna + sequência ADR-17 + DTO + regeneração de tipos — backend com peso legal dentro de um
 bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variável do tema.
-
-## P-15 — certificados não aparecem no módulo de alunos
-
-**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fecha quando o João decidir expor (ou não) certificados na listagem e no detalhe do
-aluno, ou se a Lotus pedir. Revisar em **2026-09-30**.
-
-O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
-implementado não tem nenhum dos dois.
-
-Bloco alunos (2026-07-27, spec D10): `app/Domains/Certification/` era pasta vazia e não existia
-migration de `certificates`. Card vazio foi rejeitado explicitamente: afirmar "sem certificados"
-quando a verdade é "o módulo não existe" é falha silenciosa, e aqui o dado tem peso legal.
-**Proveniência de D10 ratificada pelo João no doc-sync 2026-07-30.**
-
-**Gatilho venceu em 2026-08-07:** o Bloco 7 entregou `certificates` e a vertical até a API pública.
-**Venceu de novo em 2026-08-08:** o bloco `certificacao-frontend` entregou o módulo próprio
-`/certificados` (Emisión + Historial) e **não tocou o módulo de alunos** — o escopo aprovado no
-brainstorming (4 frentes) nunca incluiu a listagem/detalhe do aluno, então a decisão que esta
-pendência espera segue não tomada. Os dados agora existem de ponta a ponta; expor coluna/card no
-módulo de alunos é composição de frontend sobre API pronta.
 
 ## P-16 — Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores`
 

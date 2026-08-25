@@ -10,10 +10,12 @@ import {
   AppEmptyState,
   SearchableTableFrame,
   archivedColumns,
+  stickyActionsColumn,
 } from "@shared/ui";
 import type { ArchivableRow } from "@shared/lib";
 import type { ClientData } from "@shared/types/generated";
 import { ClientRowActions } from "./ClientRowActions";
+import { clientWidths } from "./clientColumns";
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
  * `ArchivableRow` — estava declarado à mão em 8 arquivos (D-53). */
@@ -50,6 +52,7 @@ export function ClientsTable({
 }) {
   const { t } = useTranslation();
   const archived = mode === "archived";
+  const largura = clientWidths(archived);
   const table = useTableFilter(clients, (c) => [c.legal_name, c.rut]);
 
   return (
@@ -75,29 +78,33 @@ export function ClientsTable({
         field="legal_name"
         header={t("client.legalName")}
         sortable
-        className="w-1/3"
+        style={largura.legalName}
         body={(c: ClientData) => (
           <IdentityCell title={c.legal_name} description={c.email} image={c.photo_url} />
         )}
       />
       <AppColumn
         header={t("common.rut")}
+        style={largura.rut}
         body={(c: ClientData) => (
           <span className="font-semibold text-sm">{c.rut}</span>
         )}
       />
       <AppColumn
         header={t("client.type")}
+        style={largura.type}
         body={(c: ClientData) => (
           <AppTag value={t(`clientType.${c.type}`)} severity="secondary" />
         )}
       />
       <AppColumn
         header={t("client.commune")}
+        style={largura.commune}
         body={(c: ClientData) => c.addresses?.[0]?.commune ?? "—"}
       />
       <AppColumn
         header={t("client.contacts")}
+        style={largura.contacts}
         body={(c: ClientData) => (
           <span className="font-semibold">{c.contacts?.length ?? 0}</span>
         )}
@@ -114,7 +121,7 @@ export function ClientsTable({
             onRestore={onRestore}
           />
         )}
-        style={{ width: "8rem" }}
+        style={stickyActionsColumn(archived ? "10rem" : "9rem")}
       />
     </SearchableTableFrame>
   );

@@ -8,6 +8,7 @@ export type { CrudPageQueryOptions } from './useCrudPage'
 export { useCrudForm } from './useCrudForm'
 export { useArchivedPage } from './useArchivedPage'
 export { useArchiveAction } from './useArchiveAction'
+export { useBlobTabOpener } from './useBlobTabOpener'
 // `useArchiveToasts` NÃO sai daqui: é o mecanismo interno das duas linhas acima,
 // consumido por caminho relativo. Barrel é fronteira pública (mesma nota da
 // guarda de classificação do `useCrudForm`).

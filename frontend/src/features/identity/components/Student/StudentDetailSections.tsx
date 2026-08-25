@@ -9,6 +9,7 @@ import {
   FormSection,
 } from "@shared/ui";
 import type { StudentTurmaData } from "@shared/types/generated";
+import { studentTurmaWidths } from "./studentColumns";
 import {
   enrollmentStatusLabelKey,
   enrollmentStatusSeverity,
@@ -18,6 +19,7 @@ import {
 import { useResourceState } from "@shared/hooks";
 import type { useStudentDetail } from "../../api/useStudentDetail";
 import { StudentLinkRow } from "./StudentLinkRow";
+import { StudentCertificateCell } from "./StudentCertificateCell";
 
 /** As duas seções do modo view: histórico de vínculos e turmas do aluno. O
  * hook fica no diálogo — descê-lo cancelaria a requisição que hoje sai em modo
@@ -28,6 +30,7 @@ export function StudentDetailSections({
   detail: ReturnType<typeof useStudentDetail>;
 }) {
   const { t } = useTranslation();
+  const largura = studentTurmaWidths();
   /* Deriva pelo hook compartilhado, não à mão: a política de carga de recurso
      mora nele (rule `frontend-fsliced.md`). A query segue no diálogo — descê-la
      cancelaria a requisição que hoje sai em modo edit. */
@@ -92,6 +95,7 @@ export function StudentDetailSections({
         >
           <AppColumn
             header={t("student.turmaCode")}
+            style={largura.code}
             body={(turma: StudentTurmaData) => (
               <span
                 className="font-bold text-sm"
@@ -103,16 +107,19 @@ export function StudentDetailSections({
           />
           <AppColumn
             header={t("student.turmaCourse")}
+            style={largura.course}
             body={(turma: StudentTurmaData) => turma.course_name}
           />
           <AppColumn
             header={t("student.turmaDate")}
+            style={largura.date}
             body={(turma: StudentTurmaData) =>
               formatMonthYear(turma.start_date)
             }
           />
           <AppColumn
             header={t("student.turmaStatus")}
+            style={largura.status}
             body={(turma: StudentTurmaData) => (
               <AppTag
                 value={t(
@@ -123,6 +130,13 @@ export function StudentDetailSections({
                 )}
               />
             )}
+          />
+          <AppColumn
+            header={t("student.turmaCertificate")}
+            body={(turma: StudentTurmaData) => (
+              <StudentCertificateCell turma={turma} />
+            )}
+            style={largura.certificate}
           />
         </AppDataTable>
       )}

@@ -25,6 +25,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -157,7 +158,10 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
         $client->delete();
 
-        $data = StudentDetailData::fromModel($student->fresh(['user', 'currentClient', 'logs.client']));
+        $data = StudentDetailData::fromModel(
+            $student->fresh(['user', 'currentClient', 'logs.client']),
+            new Collection,
+        );
 
         $this->assertCount(1, $data->links);
         $this->assertSame('CGE', $data->links[0]->client_name);
@@ -174,7 +178,8 @@ class SoftDeletedRelationProjectionTest extends TestCase
         $course->delete();
 
         $data = StudentDetailData::fromModel(
-            $student->fresh(['user', 'currentClient', 'logs.client', 'enrollments.turma.quote', 'enrollments.turma.course'])
+            $student->fresh(['user', 'currentClient', 'logs.client', 'enrollments.turma.quote', 'enrollments.turma.course']),
+            new Collection,
         );
 
         $this->assertCount(1, $data->turmas);

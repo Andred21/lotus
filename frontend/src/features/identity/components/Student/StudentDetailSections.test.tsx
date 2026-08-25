@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import type { UseQueryResult } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { StudentDetailData } from '@shared/types/generated'
 import { StudentDetailSections } from './StudentDetailSections'
@@ -28,6 +28,8 @@ const DETALHE = {
       course_name: 'Alta tensión',
       start_date: '2026-03-01',
       approval_status: 'aprobado',
+      certificate: null,
+      superseded_count: 0,
     },
   ],
 } as unknown as StudentDetailData
@@ -48,9 +50,17 @@ afterEach(() => {
   cleanup()
 })
 
+/** A célula de certificado (coluna nova da tabela de turmas) chama
+ * `useMutation` por baixo — precisa de um `QueryClientProvider` no ar, mesmo
+ * quando o teste não fala de certificado. */
+const montar = (ui: Parameters<typeof render>[0]) => {
+  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+}
+
 describe('StudentDetailSections — falha COM cache não apaga as seções', () => {
   it('falha SEM cache: o erro substitui as DUAS seções', () => {
-    render(
+    montar(
       <StudentDetailSections
         detail={detail({ data: undefined, isSuccess: false, isError: true })}
       />,
@@ -66,7 +76,7 @@ describe('StudentDetailSections — falha COM cache não apaga as seções', () 
   it('falha COM cache: vínculos e turmas PERMANECEM e o aviso vai ao lado', () => {
     // O caso que forçar `data: undefined` no teste de falha esconderia — foi
     // assim que a regressão do BD-6 passou verde.
-    render(
+    montar(
       <StudentDetailSections
         detail={detail({
           isError: true,
@@ -85,7 +95,7 @@ describe('StudentDetailSections — falha COM cache não apaga as seções', () 
   })
 
   it('sucesso: nenhum aviso de falha na tela', () => {
-    render(<StudentDetailSections detail={detail({})} />)
+    montar(<StudentDetailSections detail={detail({})} />)
 
     expect(screen.getByText('Minera Andes')).toBeTruthy()
     expect(screen.queryByText('common.retry')).toBeNull()

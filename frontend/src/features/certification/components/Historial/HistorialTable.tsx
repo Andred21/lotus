@@ -1,14 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame } from '@shared/ui'
-import type { CertificateData } from '@shared/types/generated'
-import { formatDate } from '@shared/lib'
-import { certStatus, STATUS_SEVERITY, type CertDerivedStatus } from '../../lib/certStatus'
+import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
+import type { CertificateData, CertificateDisplayStatus } from '@shared/types/generated'
+import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
-import { CertificateViewDialog } from './CertificateViewDialog'
-import { RevokeDialog } from './RevokeDialog'
-import { ReissueDialog } from './ReissueDialog'
+import { historialWidths } from './historialColumns'
+import { HistorialDialogs } from './HistorialDialogs'
 
-const STATUSES: CertDerivedStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
+const STATUSES: CertificateDisplayStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
 
 /** Vazio aqui não é `null`: o snapshot corrompido chega com string VAZIA — é o
  * que `CertificateSnapshotData::missingRequiredFields()` mede (`trim === ''`).
@@ -20,6 +18,7 @@ const ausente = (valor: string | null | undefined) => (valor ?? '').trim() === '
  * `useHistorial` — este componente só monta o JSX (frontend-fsliced.md). */
 export function HistorialTable() {
   const { t } = useTranslation()
+  const largura = historialWidths()
   const h = useHistorial()
 
   const statusOptions = [
@@ -52,6 +51,7 @@ export function HistorialTable() {
         <AppColumn
           header={t('certificate.colCodigo')}
           body={(c: CertificateData) => <span className="font-mono text-sm">{c.codigo}</span>}
+          style={largura.codigo}
         />
         <AppColumn
           header={t('certificate.colAlumno')}
@@ -74,32 +74,35 @@ export function HistorialTable() {
               image={c.aluno_photo_url}
             />
           )}
+          style={largura.alumno}
         />
-        <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} />
+        <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} style={largura.curso} />
         <AppColumn
           header={t('certificate.colIssuedAt')}
           body={(c: CertificateData) => formatDate(new Date(c.created_at))}
+          style={largura.emitidoEm}
         />
         <AppColumn
           header={t('certificate.colValidUntil')}
           body={(c: CertificateData) => (c.valido_ate ? formatDate(new Date(`${c.valido_ate}T00:00:00`)) : '—')}
+          style={largura.validoAte}
         />
         <AppColumn
           header={t('certificate.colStatus')}
-          // Documento corrompido não tem estado a afirmar: `certStatus` derivaria
+          // Documento corrompido não tem estado a afirmar: o servidor deriva
           // "vigente" das datas, que continuam válidas, sobre um snapshot que não
           // sustenta nem o nome do aluno. A tag de defeito ocupa o lugar da de
-          // estado, e NÃO vira um quinto `CertDerivedStatus` — isso contaminaria
+          // estado, e NÃO vira um quinto `CertificateDisplayStatus` — isso contaminaria
           // o filtro, os contadores do rodapé e o `CertificateViewDialog`.
           body={(c: CertificateData) => {
             if (!c.snapshot_ok) return <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
-            const status = certStatus(c)
-            return <AppTag severity={STATUS_SEVERITY[status]} value={t(`certificate.status.${status}`)} />
+            return <AppTag severity={CERTIFICATE_STATUS_SEVERITY[c.display_status]} value={t(certificateStatusLabelKey(c.display_status))} />
           }}
+          style={largura.estado}
         />
         <AppColumn
           body={(c: CertificateData) => {
-            const status = certStatus(c)
+            const status = c.display_status
             return (
               <div className="flex gap-2">
                 <AppButton label={t('certificate.view')} text onClick={() => h.setViewingCertificateId(c.id)} />
@@ -112,39 +115,11 @@ export function HistorialTable() {
               </div>
             )
           }}
-          style={{ width: '16rem' }}
+          style={stickyActionsColumn('16rem')}
         />
       </SearchableTableFrame>
 
-      {h.viewingCertificateId !== null && (
-        <CertificateViewDialog
-          certificateId={h.viewingCertificateId}
-          certificate={h.viewingCertificate}
-          loading={h.viewingCertificateLoading}
-          error={h.viewingCertificateError}
-          onRetry={h.reloadViewingCertificate}
-          onHide={() => h.setViewingCertificateId(null)}
-        />
-      )}
-
-      {h.revoking && (
-        <RevokeDialog
-          certificate={h.revoking}
-          onHide={() => h.setRevoking(null)}
-          onRevoked={() => h.setRevoking(null)}
-        />
-      )}
-
-      {h.reissuing && (
-        <ReissueDialog
-          target={h.findReissueTarget(h.reissuing)}
-          panelLoading={h.reissuePanelLoading}
-          panelError={h.reissuePanelError}
-          onRetryPanel={h.reissuePanelReload}
-          onHide={() => h.setReissuing(null)}
-          onIssued={h.openIssuedCertificate}
-        />
-      )}
+      <HistorialDialogs h={h} />
     </>
   )
 }

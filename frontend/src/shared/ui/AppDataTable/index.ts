@@ -1,3 +1,5 @@
 export { AppDataTable, AppColumn } from './AppDataTable'
 export type { AppDataTableProps, AppColumnProps } from './AppDataTable'
 export { appDataTablePt, stickyActionsColumn } from './style'
+export { COL, ARCHIVED_COLUMN, tableWidths } from './columnWidth'
+export type { ColClass, TableWidthOptions } from './columnWidth'

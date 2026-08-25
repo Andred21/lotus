@@ -18,16 +18,16 @@ lanes:
     active_feature: null
     active_work_item: null
     workflow_state: idle
-    next_owner: claude
+    next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-acesso-ownership-e-integridade
+    branch: feat/certificacao-historico-do-aluno   # fechada em 2026-08-24; PR aberto, ainda não mesclada
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-acesso-ownership-e-integridade
+    last_completed_work_item: certificacao-historico-do-aluno
   lane-b:
     active_feature: cicd
     active_work_item: cicd-ci-governanca-e-artefato
@@ -49,16 +49,16 @@ lanes:
     next_owner: claude
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui
+    branch: refactor/tabelas-coluna-de-acoes
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo
+    last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
-state_basis_commit: 6e8e8618
-updated_at: 2026-08-24T22:10:00-03:00
+state_basis_commit: b9ebc7f0
+updated_at: 2026-08-25T00:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,9 +162,9 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
+| `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -190,11 +190,38 @@ Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .gith
 vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
 o que preservar, e não há colisão a vigiar com a lane-c.
 
-**As linhas de `lane-a` e `lane-c` acima são o retrato do commit em que esta branch nasceu, não o
-estado vivo delas.** As duas foram promovidas em 2026-08-24 e executam agora — a `lane-a` o item 2 no
-main tree e a `lane-c` o item 17 em `../fix-frontend` —, cada uma registrando isso no `state.md` da
-própria branch, como manda a divisão por dono. Esta cópia só reconcilia com elas na integração
-serial, e é esta branch que mescla a seguir.
+**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
+integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
+`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
+abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
+fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
+`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
+memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
+da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
+573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
+árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
+
+**A `lane-a` fechou o item 2 em 2026-08-24** — `certificacao-historico-do-aluno`, narrativa integral
+em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/certificacao-historico-do-aluno` nasceu de `main@cad0d1fb`, mescla a `main` de PR #72 para
+dentro neste commit e vai a PR; a árvore é o main tree, que não se destrói. A lane não recebe item
+novo sozinha: promoção é do João, contra o `backlog.md`.
+
+**Gate refeito sobre a `main` de PR #72, dentro do merge:** backend **937 passed / 5 skipped**,
+frontend lint 0, build verde e **107 arquivos / 595 testes**, Pint `passed` nos 18 arquivos PHP do
+bloco. O merge pediu três consertos de conteúdo, não de marcador: a `HistorialTable` ficou com a
+coluna presa e a largura por política da `main` **e** com o `display_status` do servidor deste
+bloco; a tabela de turmas do detalhe do aluno perdeu os `style` literais e passou a declarar
+largura, com a chave `certificate` nova em `studentTurmaWidths` (pesa como `COL.text` — a célula
+empilha código, tag, data, marca de reemissão e o botão do PDF); e as duas pendências abertas por
+este bloco foram renumeradas para **P-59** e **P-60**, porque a `main` já usava `P-55` e `P-56`. Os
+3 casos de `tests/compose-dev.test.ts` que reprovavam aqui eram a **P-58** de novo — o
+`frontend/.env` desta árvore com `VITE_API_URL` legado —, e a árvore adotou o molde do
+`frontend/.env.example` (arquivo gitignored, nada commitado).
+
+**O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
+2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco
+fica como está — era verdade no dia da promoção, e narrativa arquivada não se reescreve.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -204,11 +231,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
+| 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
 | 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 | 2026-08-23 | `hardening-acesso-ownership-e-integridade` | Item 3 da fila consolidada |
-| 2026-08-22 | `infra-producao-runtime-e-aws` | Item 10 da fila |
-| 2026-08-22 | `BD-15-docs-guardrails-e-sincronizacao` | Item 14 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

@@ -2,8 +2,10 @@
 
 namespace App\Domains\Certification\Data;
 
+use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -25,6 +27,10 @@ class PublicCertificateData extends Data
         public array $cliente,
         /** @var array{name: string} */
         public array $redator,
+        /** Mesmo estado derivado da listagem interna: o cartão do QR não
+         * deriva nada no navegador. */
+        #[Computed]
+        public CertificateDisplayStatus $display_status,
     ) {}
 
     public static function fromModel(Certificate $certificate): self
@@ -48,6 +54,11 @@ class PublicCertificateData extends Data
             turma: ['end_date' => $snapshot->turma->end_date],
             cliente: ['name' => $snapshot->cliente->name],
             redator: ['name' => $snapshot->redator->name],
+            display_status: CertificateDisplayStatus::for(
+                $certificate->status,
+                $certificate->valido_ate,
+                CertificateDisplayStatus::hoje(),
+            ),
         );
     }
 }

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type {
   BatchIssueItemResultData,
   CertificateData,
@@ -23,10 +22,17 @@ export function useEmissionPanel(enabled = true) {
   })
 }
 
+/** `refetchOnWindowFocus` vence o default `false` do `AppProviders`: o
+ * `display_status` de cada linha é derivado no servidor a partir do "hoje" de
+ * Santiago e congela no fetch. Aba do Historial aberta atravessando a
+ * meia-noite mostraria `vigente` sobre certificado já vencido (Q-1 do review
+ * de 2026-08-24). Catraca em `certificatesApi.test.tsx`. Limite conhecido: a
+ * aba que nunca perde o foco só corrige no próximo remonte. */
 export function useCertificates() {
   return useQuery<CertificateData[], ProblemDetails>({
     queryKey: listKey,
     queryFn: () => api.get<CertificateData[]>('/api/certificates').then((r) => r.data),
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -40,6 +46,9 @@ export function useCertificate(id: number | null) {
     queryKey: id === null ? (['certificates', 'detail', 'none'] as const) : detailKey(id),
     queryFn: () => api.get<CertificateData>(`/api/certificates/${id}`).then((r) => r.data),
     enabled: id !== null,
+    // Mesmo motivo do `useCertificates`: o diálogo `Ver` imprime o estado
+    // derivado, e ele congela no fetch.
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -106,17 +115,5 @@ export function useRevokeCertificate() {
       qc.invalidateQueries({ queryKey: detailKey(certificate.id) })
       invalidate()
     },
-  })
-}
-
-export function useCertificatePdf() {
-  return useMutation<Blob, ProblemDetails, number>({
-    mutationFn: (id) =>
-      api
-        .get<Blob>(`/api/certificates/${id}/pdf`, { responseType: 'blob' })
-        .then((r) => r.data)
-        .catch(async (error: unknown) => {
-          throw await problemFromBlob(error)
-        }),
   })
 }
