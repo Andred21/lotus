@@ -70,6 +70,16 @@ class ProblemDetails
             return 'Ocorreu um erro inesperado. Tente novamente.';
         }
 
+        // O `getMessage()` do framework é "Too Many Attempts." — inglês, numa
+        // resposta que o operador em es-CL lê (achado Q-2 do review de
+        // 2026-08-25). O 429 é o único status que este bloco estreou, e a
+        // mensagem dele tem de falar a língua das outras mensagens de arquivo e
+        // de import. Os `title` em português dos demais braços são dívida
+        // anterior: ficha P-61, não conserto aqui.
+        if ($e instanceof ThrottleRequestsException) {
+            return 'Demasiadas solicitudes. Espere unos segundos y vuelva a intentarlo.';
+        }
+
         return $e->getMessage() ?: 'Erro ao processar a requisição.';
     }
 }

@@ -61,7 +61,7 @@ final class RateLimits
         // Normalizado porque `Ana@Lotus.CL` e `ana@lotus.cl` são a mesma conta —
         // sem isto a contenção cai por uma tecla de shift.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(self::LOGIN)
-            ->by(Str::lower(trim((string) $request->input('email'))).'|'.$request->ip()));
+            ->by(self::chaveDeLogin($request)));
 
         RateLimiter::for('public-certificate', fn (Request $request) => Limit::perMinute(self::CERTIFICADO_PUBLICO)
             ->by($request->ip()));
@@ -80,6 +80,23 @@ final class RateLimits
 
         RateLimiter::for('certificate-pdf', fn (Request $request) => Limit::perMinute(self::PDF_CERTIFICADO)
             ->by(self::porUsuario($request)));
+    }
+
+    /**
+     * A closure do limitador roda ANTES de qualquer validação, com o corpo cru
+     * que o cliente mandou. `email` não é necessariamente string: com
+     * `{"email":["a","b"]}` o cast `(string)` emitia um warning, o
+     * `HandleExceptions` do Laravel o promovia a `ErrorException` e a rota mais
+     * exposta da API devolvia 500 em vez de 422 (achado Q-1 do review de
+     * 2026-08-25, medido contra a API real). Entrada que não é string vira
+     * balde vazio: quem manda lixo compartilha o balde do lixo, e a validação
+     * do controller é quem diz o que está errado.
+     */
+    private static function chaveDeLogin(Request $request): string
+    {
+        $email = $request->input('email');
+
+        return (is_string($email) ? Str::lower(trim($email)) : '').'|'.$request->ip();
     }
 
     /**

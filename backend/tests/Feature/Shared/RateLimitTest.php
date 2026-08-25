@@ -82,6 +82,44 @@ class RateLimitTest extends TestCase
         $this->assertNotSame($base->key, $outroEmail->key, 'Mesmo IP com outro e-mail tem de ter balde próprio (D3).');
     }
 
+    public function test_login_com_email_que_nao_e_string_nao_estoura(): void
+    {
+        // A closure roda ANTES da validação, com o corpo cru: `{"email":["a"]}`
+        // fazia o cast `(string)` emitir warning, o `HandleExceptions` o promovia
+        // a `ErrorException` e a rota anônima mais exposta da API devolvia 500
+        // (achado Q-1 do review de 2026-08-25).
+        $array = $this->limites('login', $this->requisicao('10.0.0.1', ['email' => ['a', 'b']]))[0];
+        $ausente = $this->limites('login', $this->requisicao('10.0.0.1'))[0];
+
+        $this->assertSame(RateLimits::LOGIN, $array->maxAttempts);
+        $this->assertSame($ausente->key, $array->key, 'Entrada que não é string cai no balde do lixo, que é um só.');
+    }
+
+    public function test_login_com_email_que_nao_e_string_devolve_422_e_nao_500(): void
+    {
+        $resposta = $this->postJson('/api/login', ['email' => ['a', 'b'], 'password' => 'x']);
+
+        $resposta->assertStatus(422);
+        $this->assertSame('application/problem+json', $resposta->headers->get('Content-Type'));
+    }
+
+    public function test_o_429_fala_a_lingua_do_produto(): void
+    {
+        // O `getMessage()` do framework é "Too Many Attempts." — inglês numa
+        // resposta que o operador em es-CL lê (achado Q-2 do review de
+        // 2026-08-25). O 429 é o único status que este bloco estreou.
+        $resposta = null;
+
+        for ($i = 0; $i <= RateLimits::LOGIN; $i++) {
+            $resposta = $this->postJson('/api/login', ['email' => 'q2@lotus.cl', 'password' => 'x']);
+        }
+
+        $resposta->assertStatus(429);
+        $this->assertStringNotContainsStringIgnoringCase('Too Many Attempts', (string) $resposta->json('detail'));
+        $this->assertStringContainsString('Demasiadas solicitudes', (string) $resposta->json('detail'));
+        $this->assertNotNull($resposta->headers->get('Retry-After'));
+    }
+
     public function test_login_ignora_caixa_e_espaco_do_email(): void
     {
         // Sem normalizar, `Ana@Lotus.cl ` seria outro balde e a contenção
