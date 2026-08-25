@@ -4,29 +4,29 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-api-arquivos-e-abuso
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
 active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
 context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
-blocker: null
+blocker: sete achados do review de 2026-08-25 (Q-1 a Q-7) aguardando o João decidir o que entra
 
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-api-arquivos-e-abuso
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: main-tree
     branch: feat/hardening-api-arquivos-e-abuso
     active_spec: docs/superpowers/specs/2026-08-25-hardening-api-arquivos-e-abuso-design.md
     active_plan: docs/superpowers/plans/2026-08-25-hardening-api-arquivos-e-abuso.md
     context_packet: docs/superpowers/context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md
-    blocker: null
-    resume_state: null
+    blocker: sete achados do review de 2026-08-25 (Q-1 a Q-7) aguardando o João decidir o que entra
+    resume_state: reviewing
     last_completed_work_item: certificacao-historico-do-aluno
   lane-b:
     active_feature: cicd
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: tabelas-coluna-de-acoes-e-largura
 last_completed_work_item: compose-por-worktree
 state_basis_commit: 528749a2
-updated_at: 2026-08-25T18:35:00-03:00
+updated_at: 2026-08-25T20:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +162,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_review` |
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `blocked` (review) |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/tabelas-coluna-de-acoes` (mesclada, PR #72) | `idle` |
 
@@ -308,8 +308,16 @@ medição completa no docblock e no commit `47b0c4fc`. O próprio gate achou um 
 do brief: `generated.ts` estava desatualizado desde a Task 6 (`ContentClass` nunca tinha sido
 exposto ao `typescript:transform`); regenerado e commitado (`528749a2`), aditivo puro. Suíte final
 **983 passed / 5 skipped**, Pint limpo, working tree coerente com o plano. Narrativa completa e
-todos os números medidos estão em `.superpowers/sdd/progress.md` (Task 12). Review **não foi
-iniciado** — próxima instrução do João aciona.
+todos os números medidos estão em `.superpowers/sdd/progress.md` (Task 12).
+
+**Review do bloco — 2026-08-25, `/revisar-sprint`.** Alto risco (auth, migration, `generated.ts`,
+certificados), então além da revisão Claude rodou a segunda lente do Codex em sandbox read-only; os
+achados foram deduplicados e **cada achado que só o Codex viu foi verificado no código antes de
+entrar**. Suíte reconferida no container: **983 passed / 5 skipped**, igual ao que o DoD registrou.
+Sem órfãos: toda peça nova do bloco tem consumidor. Sete achados (Q-1 a Q-7) aguardam a decisão do
+João sobre o que entra antes do fechamento — dois medidos ao vivo contra a API (`Q-1` e `Q-2`),
+quatro verificados por leitura e um de higiene. Nenhuma correção foi aplicada: só achado aprovado
+pode ser corrigido.
 
 ## Itens fechados — ponteiro, não narrativa
 
