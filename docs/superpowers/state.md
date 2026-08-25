@@ -2,11 +2,11 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-b
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: cicd
+active_work_item: cicd-ci-governanca-e-artefato
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -29,13 +29,13 @@ lanes:
     resume_state: null
     last_completed_work_item: hardening-acesso-ownership-e-integridade
   lane-b:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: cicd
+    active_work_item: cicd-ci-governanca-e-artefato
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: ../lotus-infra
-    branch: infra/compose-por-worktree
+    branch: cicd/ci-governanca-e-artefato
     active_spec: null
     active_plan: null
     context_packet: null
@@ -57,8 +57,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo
 last_completed_work_item: compose-por-worktree
-state_basis_commit: f514f596
-updated_at: 2026-08-24T20:05:00-03:00
+state_basis_commit: 6e8e8618
+updated_at: 2026-08-24T21:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,12 +163,30 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-acesso-ownership-e-integridade` (não mesclada) | `idle` |
-| `lane-b` | — | — | `../lotus-infra` | `infra/compose-por-worktree` (não mesclada) | `idle` |
+| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` | `context_required` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui` (não mesclada) | `idle` |
 
-**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24 e voltou a `idle`.** A narrativa do bloco
-está em `historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item
-novo sozinha: promoção é do João, contra o `backlog.md`.
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
+mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
+`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
+nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
+(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
+é `origin/main` — as três lanes anteriores mesclaram.
+
+**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
+sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
+quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
+governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
+(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
+runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
+SHA.
+
+**Interseção declarada em 2026-08-22 e agora paga a atenção:** o `BD-15` (item 14, lane-c, fechado)
+tocou `.github/workflows`. O planejamento deste bloco lê o que ficou lá antes de escrever workflow
+novo; sobrescrever é achado, não decisão.
 
 **As linhas de `lane-a` e `lane-c` acima são o retrato do commit em que esta branch nasceu, não o
 estado vivo delas.** As duas foram promovidas em 2026-08-24 e executam agora — a `lane-a` o item 2 no
