@@ -4,8 +4,11 @@ namespace Tests\Feature\Shared;
 
 use App\Domains\Commercial\Models\Budget;
 use App\Shared\Files\Models\File;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
+use RuntimeException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\Support\Files\BuildsRealUploads;
 use Tests\TestCase;
@@ -94,5 +97,41 @@ class BackfillFilesMimeMigrationTest extends TestCase
         $this->migration()->down();
 
         $this->assertSame('image/png', $file->fresh()->mime, 'Restaurar um valor que sabidamente mentia não é reversão útil.');
+    }
+
+    public function test_armazenamento_fora_do_alcance_aborta_em_vez_de_marcar_como_aplicada(): void
+    {
+        // S3 fora do ar durante o deploy jogava TODAS as linhas no `catch`, a
+        // migration terminava marcada como aplicada e o histórico ficava com o
+        // MIME do cliente para sempre, sem caminho de re-execução — o oposto do
+        // que este backfill existe para fazer (achado Q-6 do review de
+        // 2026-08-25). Falha transitória tem de falhar alto.
+        $file = $this->arquivoLegado($this->pngReal(), 'application/pdf');
+
+        $disco = Mockery::mock(FilesystemAdapter::class);
+        $disco->shouldReceive('exists')->andReturn(true);
+        $disco->shouldReceive('get')->andThrow(new RuntimeException('conexão recusada'));
+        Storage::shouldReceive('disk')->andReturn($disco);
+
+        try {
+            $this->migration()->up();
+            $this->fail('Nenhum objeto legível tinha de abortar a migration.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('Backfill de files.mime abortado', $e->getMessage());
+        }
+
+        // A linha continua mentindo, e é isso que o próximo deploy vai corrigir.
+        $this->assertSame('application/pdf', $file->fresh()->mime);
+    }
+
+    public function test_um_objeto_ilegivel_no_meio_nao_derruba_o_resto(): void
+    {
+        // O corte é COLETIVO: um binário corrompido no bucket não pode travar o
+        // deploy para sempre, então basta uma linha ter sido lida.
+        $bom = $this->arquivoLegado($this->pngReal(), 'application/pdf');
+
+        $this->migration()->up();
+
+        $this->assertSame('image/png', $bom->fresh()->mime);
     }
 }
