@@ -218,11 +218,42 @@ const DISABLED_READONLY_ESTATICO = {
 // catracas para ganhar uma não paga. A população real de shared são as duas
 // colunas de `archivedColumns.tsx`, e elas têm prova comportamental no próprio
 // `archivedColumns.test.tsx` (item 17, Task 15).
-const COLUNA_SEM_LARGURA = {
-  selector: "JSXOpeningElement[name.name='AppColumn']:not(:has(> JSXAttribute[name.name='style']))",
-  message:
-    'Toda coluna declara largura (item 17): style={largura.<chave>} de tableWidths/COL, ou style={stickyActionsColumn(<rem>)} na coluna de ações.',
-}
+//
+// **Exige LARGURA, e não a mera presença de `style`.** A primeira grafia parava
+// no atributo, e `style={{ color: '…' }}` a satisfazia — catraca satisfeita sem
+// cumprir o que a mensagem dela enuncia lê como cobertura que não existe (Q-4 do
+// review de 2026-08-24). As duas únicas formas legítimas são um acesso ao mapa
+// de `tableWidths` (`largura.<chave>`, `MemberExpression`) e a chamada de
+// `stickyActionsColumn(<rem>)` (`CallExpression`); o seletor passa a pedir uma
+// das duas dentro do `JSXExpressionContainer`. Objeto literal inline não passa,
+// que é exatamente o ponto.
+const MENSAGEM_LARGURA =
+  'Toda coluna declara largura (item 17): style={largura.<chave>} de tableWidths/COL, ou style={stickyActionsColumn(<rem>)} na coluna de ações.'
+const COLUNA_SEM_LARGURA = [
+  // 1. Coluna sem `style` nenhum.
+  {
+    selector: "JSXOpeningElement[name.name='AppColumn']:not(:has(> JSXAttribute[name.name='style']))",
+    message: MENSAGEM_LARGURA,
+  },
+  // 2. Coluna COM `style` que não é largura. A primeira grafia parava na
+  // presença do atributo, e `style={{ color: '…' }}` a satisfazia — catraca
+  // satisfeita sem cumprir o que a mensagem enuncia lê como cobertura que não
+  // existe (Q-4 do review de 2026-08-24). As duas únicas formas legítimas são o
+  // acesso ao mapa de `tableWidths` (`largura.<chave>`, `MemberExpression`) e a
+  // chamada de `stickyActionsColumn(<rem>)` (`CallExpression`).
+  //
+  // **Dois seletores de UM nível, e não um `:has(> a > b > c)`.** A forma
+  // encadeada foi medida em 2026-08-24 e reprova as duas grafias legítimas
+  // junto com as inválidas: o esquery não desce a cadeia dentro do `:has`. Aqui
+  // o predicado desce pelo CAMINHO do nó (`value.expression.type`), que é o que
+  // esta config já usa e prova.
+  {
+    selector:
+      "JSXOpeningElement[name.name='AppColumn']:has(> JSXAttribute[name.name='style']" +
+      ":not([value.expression.type='MemberExpression']):not([value.expression.type='CallExpression']))",
+    message: MENSAGEM_LARGURA,
+  },
+]
 // As três formas de célula de ação que o inventário do item 17 achou: adaptador
 // `*RowActions`, `AppButton` solto e `AppButton` dentro de `div` — o `:has` é
 // descendente de propósito aqui, então o `flex gap-2` do Historial casa.
@@ -293,7 +324,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -306,7 +337,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -327,7 +358,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -493,7 +524,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', COR_HARDCODED, ...COR_LITERAL_EM_STYLE, COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
 ])
