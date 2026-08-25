@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppColumn, AppDataTable } from './AppDataTable'
+import { stickyActionsColumn } from './style'
 
 const ISO = '2026-08-19T13:00:00Z'
 const LINHAS = [{ id: 1, archived_at: ISO }]
@@ -70,5 +71,20 @@ describe('AppDataTable — repinte de celula na troca de idioma (D-55)', () => {
     })
 
     expect(screen.getByText('Archived on')).toBeTruthy()
+  })
+})
+
+describe('stickyActionsColumn', () => {
+  it('a coluna de acoes presa recebe o tinte do hover por cima do card opaco', () => {
+    const style = stickyActionsColumn('8rem')
+
+    // Card opaco embaixo (conteudo nao rola visivel por baixo) e o tinte da
+    // linha por cima, que a `tr` injeta em `--sticky-cell-tint`. O hover do
+    // tema escuro e translucido, entao a cor do hover NAO pode ser o fundo
+    // unico da celula presa.
+    expect(style.backgroundColor).toBe('var(--surface-card)')
+    expect(style.backgroundImage).toBe(
+      'linear-gradient(var(--sticky-cell-tint, transparent), var(--sticky-cell-tint, transparent))',
+    )
   })
 })
