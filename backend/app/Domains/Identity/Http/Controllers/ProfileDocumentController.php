@@ -6,6 +6,7 @@ use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
 use App\Domains\Identity\Data\RedatorDocumentData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Http\Controllers\Controller;
+use App\Shared\Files\ContentClass;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,7 +29,7 @@ class ProfileDocumentController extends Controller
 
         $validated = $request->validate([
             'type' => ['required', Rule::in(RedatorDocumentType::selfServiceValues())],
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ContentClass::Documento->regras(),
             'valid_until' => ['nullable', 'date'],
         ]);
 

@@ -12,12 +12,14 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Files\ContentClass;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class RedatorController extends Controller implements HasMiddleware
@@ -125,6 +127,21 @@ class RedatorController extends Controller implements HasMiddleware
                     'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
                 ]);
             }
+
+            // Até 2026-08-25 este sítio não tinha regra NENHUMA: aceitava
+            // qualquer conteúdo em qualquer tamanho, contido só pelo transporte
+            // (nginx 12m). É a mesma política dos outros documentos de redator —
+            // a diferença era só ninguém a ter escrito aqui.
+            //
+            // O dado precisa ser array ANINHADO (`documents => [tipo => arquivo]`),
+            // não uma chave plana com ponto literal: `Validator::parseData()`
+            // escapa ponto de chave de topo (`__dot__<hash>`) bem para ele NÃO
+            // colidir com a notação de ponto da regra — medido: com chave plana
+            // o valor nunca resolve e o campo sai sempre "obrigatório".
+            Validator::make(
+                ['documents' => [$type => $file]],
+                ["documents.{$type}" => ContentClass::Documento->regras()],
+            )->validate();
         }
 
         return $files;

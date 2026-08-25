@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\ContentClass;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,15 +20,17 @@ use Throwable;
 class UserPhotoService
 {
     /**
-     * Regras de validação da foto. Fonte única — os 4 controllers consomem
-     * daqui em vez de recopiar (spec D9). 5120 KB = 5 MB; nginx e PHP aceitam
-     * 12 MB, então quem rejeita é sempre esta regra, com envelope RFC 7807.
+     * Regras de validação da foto. Fonte única — os controllers consomem daqui
+     * em vez de recopiar, e a política de tipo/tamanho vem do `ContentClass`
+     * (spec D4 do hardening). Virou método porque expressão constante não
+     * chama método, e a política deixou de ser um literal.
      *
-     * @var array<string, array<int, string>>
+     * @return array<string, array<int, string|object>>
      */
-    public const RULES = [
-        'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-    ];
+    public static function rules(): array
+    {
+        return ['photo' => ContentClass::Imagem->regras()];
+    }
 
     /**
      * Sobe a foto, aponta `photo_path` para ela e só então apaga o objeto

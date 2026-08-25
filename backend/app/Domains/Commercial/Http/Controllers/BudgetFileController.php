@@ -5,6 +5,7 @@ namespace App\Domains\Commercial\Http\Controllers;
 use App\Domains\Commercial\Models\Budget;
 use App\Http\Controllers\Controller;
 use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\ContentClass;
 use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class BudgetFileController extends Controller
     {
         $validated = $request->validate([
             'type' => ['required', 'in:invoice,receipt'],
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ContentClass::Documento->regras(),
         ]);
 
         return FileData::fromModel(

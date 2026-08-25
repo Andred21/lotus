@@ -21,7 +21,7 @@ class ProfilePhotoController extends Controller
 {
     public function store(Request $request, UserPhotoService $service): Response
     {
-        $request->validate(UserPhotoService::RULES);
+        $request->validate(UserPhotoService::rules());
         $service->store($request->user(), $request->file('photo'));
 
         return response()->noContent();

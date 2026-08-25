@@ -13,7 +13,7 @@ class StudentPhotoController extends Controller
 {
     public function store(Request $request, Student $student, UserPhotoService $service): Response
     {
-        $request->validate(UserPhotoService::RULES);
+        $request->validate(UserPhotoService::rules());
         $service->store($student->user, $request->file('photo'));
 
         return response()->noContent();

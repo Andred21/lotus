@@ -13,7 +13,7 @@ class RedatorPhotoController extends Controller
 {
     public function store(Request $request, Redator $redator, UserPhotoService $service): Response
     {
-        $request->validate(UserPhotoService::RULES);
+        $request->validate(UserPhotoService::rules());
         $service->store($redator->user, $request->file('photo'));
 
         return response()->noContent();
