@@ -70,7 +70,13 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             * (36px), e o estado da turma lia como enfeite solto no canto (UI-08
             * da revisão de 2026-08-23). Pela linha de base a tag pousa sobre a
             * linha do título sem que a margem do `h1` — que é o espaçamento do
-            * cabeçalho inteiro — precise mudar. */}
+            * cabeçalho inteiro — precise mudar.
+            *
+            * O `sm:self-center` do bloco da direita é a contraparte: a linha de
+            * base foi escolhida para a TAG pousar sobre a linha do título, e o
+            * mesmo alinhamento levava junto o slot `actions` — botão mais alto
+            * que a tag empurrava o bloco inteiro para cima (Minor 5 do review da
+            * fatia 1). Sem `actions`, nada muda e o UI-08 fica como estava. */}
           <div className="min-w-0">
             {/* Margem cravada no valor que o user-agent dava ao h2, porque o
               * projeto não carrega Preflight. */}
@@ -88,7 +94,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             )}
           </div>
           {(tags || actions) && (
-            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <div className={`flex flex-wrap items-center gap-2 sm:shrink-0${actions ? ' sm:self-center' : ''}`}>
               {tags}
               {actions}
             </div>

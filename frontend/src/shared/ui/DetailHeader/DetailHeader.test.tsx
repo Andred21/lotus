@@ -79,3 +79,13 @@ describe('DetailHeader aceita bloco no subtítulo', () => {
     expect(container.querySelector('[data-testid="bloco"]')?.parentElement?.tagName).toBe('DIV')
   })
 })
+
+describe('alinhamento do bloco da direita', () => {
+  it('o bloco com acoes sai da linha de base; so tags continuam nela', () => {
+    const { rerender, container } = render(<DetailHeader title="Turma" tags={<span>tag</span>} />)
+    expect(container.querySelector('.sm\\:self-center')).toBeNull()
+
+    rerender(<DetailHeader title="Turma" tags={<span>tag</span>} actions={<button>Editar</button>} />)
+    expect(container.querySelector('.sm\\:self-center')).not.toBeNull()
+  })
+})
