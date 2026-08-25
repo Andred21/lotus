@@ -40,6 +40,12 @@ coberta pelo `.gitignore`)
   busca com resultado, filtro de estado com efeito, paginação, diálogo de visualização, reemissão e
   revogação não foram observados. Nada foi classificado a partir deles.
 
+- Régua de abas (Task 11 do plano, selector `.p-tabview-nav-container .p-tabview-nav`):
+  `[scrollWidth, clientWidth, transborda]` = `[1134, 1134, false]` em 1440x900 e `[276, 276, false]`
+  em 390x844. **Não transborda em nenhum dos dois viewports**, então a prop `scrollable` NÃO foi
+  ligada: o review da fatia 1 desfez justamente o ligar por padrão, porque `p-tabview-scrollable`
+  troca a nav por um contêiner com `overflow: hidden` e o efeito em tela não medida é suposição.
+
 ## 2. `report.txt` — verbatim
 
 ```
