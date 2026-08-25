@@ -85,3 +85,54 @@ jobs:
       - name: Build
         working-directory: frontend
         run: pnpm build
+
+  types-drift:
+    name: types-drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, gd, zip, intl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache do composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Instala dependencias
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepara o ambiente
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Medido 2026-08-24: o comando boota o Laravel mas nao toca o banco --
+      # sqlite :memory: basta e nenhum servico MySQL sobe. O diretorio de
+      # saida sai de FrontendPath, que aqui resolve o irmao <workspace>/frontend
+      # (no container do compose resolveria /frontend).
+      - name: Regenera os tipos a partir dos DTOs
+        working-directory: backend
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan typescript:transform
+
+      # O comando acima imprime avisos sobre Spatie\LaravelData\Optional e
+      # AINDA ASSIM sai 0 -- medido. Por isso quem julga e o diff, nunca o
+      # texto da saida. O ::error com `file=` faz o GitHub nomear o arquivo
+      # na interface, que e literalmente o que a ficha da D-08 exige.
+      - name: Lei 5.3 - generated.ts nao se edita a mao
+        run: |
+          if ! git diff --exit-code -- frontend/src/shared/types/generated.ts; then
+            echo "::error file=frontend/src/shared/types/generated.ts::generated.ts diverge do que typescript:transform produz. Corrija o DTO no backend e regenere; nao edite o arquivo."
+            exit 1
+          fi
