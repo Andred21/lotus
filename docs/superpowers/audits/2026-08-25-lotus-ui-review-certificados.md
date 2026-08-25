@@ -130,11 +130,39 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-Preenchida na Task 10 do plano.
+Feita na Task 10 do plano, com o mesmo critério da run 1: `C` corrige aqui, um commit por achado,
+medido na tela antes e depois; `B` corrige se couber no escopo desta fatia, senão vira ficha `D-*`
+no `backlog.md`. Esta run não teve nenhum `C`.
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 | `B` | — | — |
-| UI-02 | `B` | — | — |
-| UI-03 | `B` | — | — |
-| UI-04 | `B` | — | — |
+| UI-01 | `B` | corrigido na tela — `HistorialTable` | `6cba1305` |
+| UI-02 | `B` | corrigido na tela — `EmissionPanel` | `d0297221` |
+| UI-03 | `B` | ficha no `backlog.md` (Task 12) | — |
+| UI-04 | `B` | ficha no `backlog.md` (Task 12) | — |
+
+**UI-01 e UI-02 — corrigidos porque o remédio já estava provado e não exigiu texto novo.** Os dois
+ganharam o par `useId` + `<label htmlFor>` + `inputId` que o `TurmaStatusFilter` e o
+`BudgetStatusFilter` já carregam, reusando chaves que já existiam nas 3 locales:
+`certificate.colStatus` (que titula a coluna ESTADO) e `certificate.turmaConcluida` (que não era
+usada em lugar nenhum do código). Cada um nasceu de uma catraca vermelha —
+`Unable to find a label with the text of: …` — e foi medido na tela depois: rótulo renderizado com
+`htmlFor` apontando para o INPUT do dropdown, sem overflow em 1440x900.
+
+**O que os dois primeiros achados provam sobre a repetição.** UI-07 (Operação, 2026-08-23), UI-02
+(Comercial, 2026-08-25) e UI-01 desta run são o MESMO defeito, na mesma forma
+(`<div className="w-48">` com o `AppDropdown` solto dentro), encontrado por três runs
+independentes em três dias. Três correções idênticas, nenhuma catraca que reprove a quarta
+ocorrência — nem o lint, nem a suíte, nem o `tsc` sabem que um `AppDropdown` de filtro precisa de
+nome. É isso, e não cada achado isolado, que a Task 12 leva ao `backlog.md`.
+
+**UI-03 — vira ficha, porque a correção é decisão de composição e de texto.** Aproximar o motivo do
+bloqueio ("El curso no tiene plantilla de certificado") do controle que ele desabilita tem mais de
+um remédio possível — aviso ao lado do botão do lote, tooltip por linha, ou os dois — e cada um
+muda o que a tela diz numa jornada de peso legal que esta run não pôde exercitar (emitir é escrita).
+Registrada no `backlog.md` na Task 12.
+
+**UI-04 — vira ficha, porque o texto é do João.** A linha de orientação que falta no ramo
+`notFound` da validação pública é copy em es-CL, numa tela que quem escaneia o QR vê de FORA do
+sistema — fiscalizador, cliente — e com peso legal. Inventá-la aqui seria decidir wording de
+cliente dentro de um passe de correção de UI. Registrada no `backlog.md` na Task 12.
