@@ -18,6 +18,14 @@ use Illuminate\Validation\ValidationException;
  */
 class ImportStudentsAction
 {
+    /**
+     * Teto de linhas por planilha. Turma real tem 8 a 15 alunos
+     * (`OperationDemoSeeder`), então 500 é ~33× a maior. Sem ele, o único
+     * limite era o tamanho do arquivo — um CSV de 10 MB passa de cem mil
+     * linhas, e cada linha é uma transação de matrícula.
+     */
+    public const MAX_LINHAS = 500;
+
     public function __construct(
         private readonly SpreadsheetRowReader $reader,
         private readonly EnrollStudentAction $enroll,
@@ -30,11 +38,28 @@ class ImportStudentsAction
         // não é o mesmo que recusar 40 linhas uma a uma.
         $turma->assertAcademicallyWritable();
 
+        // Materializa ANTES de matricular, e para de ler na primeira linha
+        // acima do teto. O leitor é um gerador e o laço abaixo escreve por
+        // linha: teto aplicado durante o laço recusaria a planilha DEPOIS de
+        // já ter matriculado parte dela — o que não é recusa, é meia importação.
+        // Memória: 500 linhas de quatro campos curtos, contra os 256M do pool.
+        $linhas = [];
+
+        foreach ($this->reader->rows($file) as $linha) {
+            if (count($linhas) >= self::MAX_LINHAS) {
+                throw ValidationException::withMessages([
+                    'file' => 'La planilla supera el máximo de '.self::MAX_LINHAS.' filas. Divídala y vuelva a enviarla.',
+                ]);
+            }
+
+            $linhas[] = $linha;
+        }
+
         $created = $relinked = $already = 0;
         $moved = [];
         $errors = [];
 
-        foreach ($this->reader->rows($file) as $line) {
+        foreach ($linhas as $line) {
             try {
                 $outcome = $this->enroll->execute(
                     $turma, $line['rut'], $line['name'], $line['email'], $line['phone'],
