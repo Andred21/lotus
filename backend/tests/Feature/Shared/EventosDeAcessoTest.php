@@ -6,9 +6,11 @@ use App\Domains\Identity\Models\User;
 use App\Shared\Logging\EventoDeSeguranca;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Monolog\Handler\TestHandler;
+use Monolog\LogRecord;
 use Tests\TestCase;
 
 /**
@@ -27,7 +29,22 @@ class EventosDeAcessoTest extends TestCase
         parent::setUp();
 
         $this->handler = new TestHandler;
-        Log::channel(EventoDeSeguranca::CANAL)->getLogger()->setHandlers([$this->handler]);
+        $logger = Log::channel(EventoDeSeguranca::CANAL)->getLogger();
+        $logger->setHandlers([$this->handler]);
+
+        // Processor de Monolog: roda no INSTANTE em que a linha é gravada
+        // (dentro do próprio request síncrono), então carimba no registro se
+        // o guard 'web' ainda estava autenticado NAQUELE momento. É o que
+        // prova ordem, não só existência — se o evento saísse DEPOIS de
+        // `Auth::guard('web')->logout()`/`session()->invalidate()`, o valor
+        // carimbado viraria `false` e a asserção de ordem em
+        // `test_logout_registra_evento` e
+        // `test_sessao_de_conta_desativada_registra_evento` reprovaria.
+        $logger->pushProcessor(function (LogRecord $record): LogRecord {
+            $record->extra['guard_web_check_no_momento_do_log'] = Auth::guard('web')->check();
+
+            return $record;
+        });
     }
 
     /** @return list<array<string,mixed>> */
@@ -37,6 +54,29 @@ class EventosDeAcessoTest extends TestCase
             array_map(fn ($r) => $r->context, $this->handler->getRecords()),
             fn (array $contexto) => ($contexto['evento'] ?? null) === $evento,
         ));
+    }
+
+    /**
+     * Prova de ORDEM, não só de existência: devolve o `Auth::guard('web')->check()`
+     * carimbado pelo processor no exato instante em que o evento `$evento` foi
+     * logado. `true` só é possível se o log saiu ANTES da chamada que mata a
+     * sessão (`logout()`/`invalidate()`); depois dela o guard já responde `false`.
+     */
+    private function autenticadoNoMomentoDoEvento(string $evento): bool
+    {
+        $registro = null;
+
+        foreach ($this->handler->getRecords() as $r) {
+            if (($r->context['evento'] ?? null) === $evento) {
+                $registro = $r;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($registro, "Nenhum registro de log encontrado para o evento [$evento].");
+
+        return $registro->extra['guard_web_check_no_momento_do_log'];
     }
 
     public function test_login_bem_sucedido_registra_evento(): void
@@ -86,6 +126,15 @@ class EventosDeAcessoTest extends TestCase
 
         $this->assertCount(1, $eventos);
         $this->assertSame($user->id, $eventos[0]['usuario_id']);
+
+        // Ordem, não só existência: o evento tem que sair ANTES de
+        // `Auth::guard('web')->logout()` em `AuthController::logout()` — se um
+        // refactor futuro inverter a ordem, o guard já estaria deslogado no
+        // instante do log e isto vira `false`.
+        $this->assertTrue(
+            $this->autenticadoNoMomentoDoEvento('login.encerrado'),
+            'login.encerrado precisa ser registrado ANTES de Auth::guard(\'web\')->logout() em AuthController::logout().',
+        );
     }
 
     public function test_sessao_de_conta_desativada_registra_evento(): void
@@ -99,6 +148,16 @@ class EventosDeAcessoTest extends TestCase
 
         $this->assertCount(1, $eventos);
         $this->assertSame($user->id, $eventos[0]['usuario_id']);
+
+        // Ordem, não só existência: o evento tem que sair ANTES de
+        // `session()->invalidate()`/`Auth::guard('web')->logout()` em
+        // `EnsureAccountIsActive::handle()` — se um refactor futuro inverter a
+        // ordem, o guard já estaria deslogado no instante do log e isto vira
+        // `false`.
+        $this->assertTrue(
+            $this->autenticadoNoMomentoDoEvento('sessao.revogada'),
+            'sessao.revogada precisa ser registrado ANTES de session()->invalidate()/Auth::guard(\'web\')->logout() em EnsureAccountIsActive::handle().',
+        );
     }
 
     public function test_403_registra_evento_com_a_rota(): void

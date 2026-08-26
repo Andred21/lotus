@@ -35,6 +35,17 @@ use Throwable;
  * classificação do `ProblemDetails` (`AuthenticationException` e
  * `ValidationException` não implementam `HttpExceptionInterface`, então não
  * colidem aqui, e 404/422/401 ficam de fora do teto por não serem 403).
+ *
+ * **Isto é intencional, não uma lacuna a fechar depois:** a spec do bloco
+ * (`docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`
+ * §4.6, decisão D6) define o ponto de captura da família "sequência de 403"
+ * como o "braço 403 do `ProblemDetails:26`" — o MESMO arco genérico que
+ * responde qualquer 403, de RBAC ou de regra de negócio, não um evento
+ * exclusivo do RBAC. `acesso.negado` portanto mistura os dois sinais sob um
+ * único teto de propósito. Separar por origem (RBAC vs.
+ * `ImmutableSystemRoleException`/`abort_unless`) seria mudar o escopo do
+ * DoD 8, não corrigir este detector — não restrinja para `AuthorizationException`
+ * ou para `UnauthorizedException` sem reabrir a spec.
  */
 class RegistraEventoDeErro
 {
