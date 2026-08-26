@@ -3,6 +3,7 @@
 use App\Shared\Exceptions\ProblemDetails;
 use App\Shared\Http\Middleware\EnsureAccountIsActive;
 use App\Shared\Http\Middleware\SetLocale;
+use App\Shared\Logging\RegistraEventoDeErro;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Contracts\Session\Middleware\AuthenticatesSessions;
@@ -106,6 +107,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
+                // 403 e 429 são sinal de ACESSO e não de defeito, e a lista
+                // interna de "não reportar" do Handler impede que um
+                // `$exceptions->report()` os enxergue. Registrar aqui é o único
+                // ponto que vê os dois sem duplicar a classificação.
+                RegistraEventoDeErro::handle($e, $request);
+
                 return ProblemDetails::fromException($e, $request);
             }
 

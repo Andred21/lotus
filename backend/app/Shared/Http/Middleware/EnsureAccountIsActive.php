@@ -2,6 +2,7 @@
 
 namespace App\Shared\Http\Middleware;
 
+use App\Shared\Logging\EventoDeSeguranca;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -39,6 +40,8 @@ class EnsureAccountIsActive
         }
 
         if (! $user->is_active || ! in_array($user->type, self::TIPOS_ELEGIVEIS, true)) {
+            EventoDeSeguranca::sessaoRevogada($user->id, $user->type, $request->ip());
+
             if ($request->hasSession()) {
                 $request->session()->invalidate();
             }

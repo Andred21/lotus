@@ -5,6 +5,8 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\RecordLoginAction;
 use App\Domains\Identity\Data\SessionUserData;
 use App\Http\Controllers\Controller;
+use App\Shared\Logging\EventoDeSeguranca;
+use App\Shared\RateLimiting\RateLimits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +40,13 @@ class AuthController extends Controller
         // entrar um dia, entra como feature com gate de `is_active` próprio,
         // porque o recaller também não passa pelo gate da linha 44.
         if (! Auth::guard('web')->attempt($credentials)) {
+            // A chave vai em HASH: é `email|ip` (a mesma do limitador), e
+            // e-mail em claro é justamente o que não pode estar num log.
+            EventoDeSeguranca::loginRecusado(
+                hash('sha256', RateLimits::chaveDeLogin($request)),
+                $request->ip(),
+            );
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -51,6 +60,12 @@ class AuthController extends Controller
         // Bloqueia login de usuário inativo (RN de acesso)
         if (! $user->is_active) {
             Auth::guard('web')->logout();
+
+            EventoDeSeguranca::loginRecusado(
+                hash('sha256', RateLimits::chaveDeLogin($request)),
+                $request->ip(),
+            );
+
             throw ValidationException::withMessages([
                 'email' => __('auth.inactive'),
             ]);
@@ -61,11 +76,19 @@ class AuthController extends Controller
         // Capturar antes gravaria acesso de quem a API recusa com 422.
         $recordLogin->execute($user, $request->ip(), $request->userAgent());
 
+        EventoDeSeguranca::loginConcedido($user->id, $user->type, $request->ip());
+
         return SessionUserData::fromUser($user);
     }
 
     public function logout(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if ($user !== null) {
+            EventoDeSeguranca::logout($user->id, $user->type, $request->ip());
+        }
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
