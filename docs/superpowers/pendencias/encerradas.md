@@ -7,99 +7,17 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-15 — certificados não aparecem no módulo de alunos
-
-**Bloco:** certificacao-historico-do-aluno · **Gatilho:** fechava quando o João decidisse expor (ou
-não) certificados na listagem e no detalhe do aluno, ou se a Lotus pedisse.
-
-O protótipo mostra coluna `CERTIFICADOS` na listagem e card `CERTIFICADOS EMITIDOS` no detalhe;
-implementado não tinha nenhum dos dois.
-
-Bloco alunos (2026-07-27, spec D10): `app/Domains/Certification/` era pasta vazia e não existia
-migration de `certificates`. Card vazio foi rejeitado explicitamente: afirmar "sem certificados"
-quando a verdade é "o módulo não existe" é falha silenciosa, e aqui o dado tem peso legal.
-**Proveniência de D10 ratificada pelo João no doc-sync 2026-07-30.**
-
-O gatilho venceu duas vezes sem produzir decisão: em **2026-08-07** o Bloco 7 entregou `certificates`
-e a vertical até a API pública; em **2026-08-08** o `certificacao-frontend` entregou o módulo próprio
-`/certificados` (Emisión + Historial) e **não tocou o módulo de alunos**.
-
-**Encerrada em 2026-08-24, no `certificacao-historico-do-aluno`: a decisão que ela esperava foi
-tomada.** Certificados passam a aparecer no **detalhe** do aluno, como coluna da tabela de turmas —
-código, estado derivado no servidor, data quando o curso tem prazo, marca de reemissão com a
-contagem de anteriores e o PDF pela própria célula.
-
-**O outro ramo fica fora por escrito, não por omissão:** a coluna `CERTIFICADOS` na **listagem** de
-alunos está declarada fora de escopo na §9 da spec do bloco. Isto é o que impede a pendência de
-reabrir por silêncio — o protótipo pedia os dois sítios, um foi construído e o outro foi recusado
-com registro.
-
----
-
-## P-03 — compose por worktree não existe
-
-**ENCERRADA em 2026-08-24, no bloco `compose-por-worktree` (`lane-b`).** O mecanismo existe: as
-portas host do `docker-compose.yml` vêm de `LOTUS_DEV_*` com default igual à porta histórica, o
-`.env` da raiz (gitignored, molde em `.env.example`) escolhe o offset da árvore, o serviço `app`
-recebe injetadas as chaves que carregam porta (`APP_URL`, `FRONTEND_URL`,
-`SANCTUM_STATEFUL_DOMAINS`, `SESSION_COOKIE`, `AWS_ENDPOINT_PUBLIC`, `AWS_URL`) e o Vite deriva
-porta e `VITE_API_URL` do mesmo offset. Não é mais receita manual: quem clona sem `.env` sobe
-idêntico a antes, e quem quer segunda árvore copia o molde e soma o offset.
-
-**Prova medida** (`../audits/2026-08-24-compose-por-worktree-dod.md`, re-executada no fechamento):
-main tree e `../lotus-infra` no ar ao mesmo tempo (`/up` 200 em `:8080` e `:8081`), volumes
-`lotus_lotus-db` e `lotus-infra_lotus-db` lado a lado, login Sanctum ponta a ponta em `:8081`
-(csrf 204, login 200, `/api/me` 200), objeto no MinIO da árvore existindo em `:9002` e ausente no
-do main tree, e as duas sessões coexistindo no mesmo jar de cookies — `lotus_session_8081` ao lado
-de `laravel-session` — que é o cenário das duas abas abertas.
-
-**Sai do rastro** no primeiro `/fechar-sprint` posterior a este.
-
-O que a ficha registrava enquanto aberta segue abaixo, verbatim, como diagnóstico histórico:
-
-<details>
-<summary>Diagnóstico original</summary>
-
-**Gatilho VENCIDO em 2026-08-24 — agrupada no bloco `compose-por-worktree` (`lane-b`).** O João
-decidiu paralelizar a fila e a condição observável se cumpriu: restam quatro blocos de backend
-(itens 4, 5, 6 e 7 do `backlog.md`) e o compose monta o main tree com portas fixas, então só uma
-lane de backend cabe. O gatilho original era *"fecha na primeira sprint que precisar de **dois
-blocos de backend em paralelo**"* (condição verificável em `state.md`: mais de um
-`active_work_item` de backend), ou **2026-10-31**, o que viesse primeiro.
-
-Bloco de backend não pode usar `using-git-worktrees` — o stack monta o main tree e o teste rodaria
-contra o código errado. **6a (Sprint 3) rodou em main-tree sem atrito — abordagem confirmada.** O
-gatilho anterior ("se a concorrência passar a doer") era não verificável e escapou do grep de prova
-do doc-sync 2026-07-30 por diferença de redação — trocado por condição observável na revisão do
-mesmo dia (Q-6).
-
-**Custo medido fora do backend em 2026-08-13** (BD-4, `catraca-max-lines-e-moldura`): a worktree não
-pôde subir stack própria, dependeu do main tree — que naquele momento servia branch alheia com
-`/api/students` em 500 — e o bloco **de frontend** perdeu dois passos de gate (e2e do 422 e checagem
-visual), pagos só em parte no `/fechar-sprint`.
-
-**Contraprova medida em 2026-08-13** (BD-5, `usecrudform-mais-fundo`, mesmo arranjo de duas execuções
-em paralelo): o e2e do S3 rodou inteiro contra o main tree, porque `git diff main...HEAD -- backend/`
-naquele tree estava **vazio no momento da prova** — o custo da P-03 não é constante, é contingente ao
-que a branch alheia toca, e a prova só é válida com essa conferência feita na hora. O que mudou é que
-a falta já cobra de quem a P-03 dizia não afetar.
-
-**Primeiro bloco de BACKEND rodado em worktree linkada — 2026-08-19, `identity-ativacao-acesso-redator`,
-por decisão explícita do João declarada na abertura.** O arranjo que segurou a execução, os dois gates
-de prova e este fechamento foi **override efêmero de portas fora do repositório** (nginx 8081, MySQL
-3308, MinIO 9002/9003, Mailpit 8025, Vite 5174 no gate da emenda), com o compose do worktree subindo
-projeto próprio (`fix-frontend`) e, portanto, **volume de banco próprio** — a disputa que a ficha
-previa (um MySQL só para as duas árvores) não chegou a acontecer. No `/fechar-sprint` a stack do main
-tree estava **desligada**, então a prova e2e correu nas portas padrão (8080/3307/8025) sem override
-nenhum. **Não fecha:** compose por worktree continua não existindo, e o que existe é receita manual
-que depende de quem executa lembrar — a decisão de construí-lo é do João. O gatilho formal
-(dois blocos de **backend** em paralelo) segue sem vencer: houve um só.
-
-</details>
-
-**Sai quando:** primeiro fechamento **posterior** a este.
-
----
+**A seção está vazia de propósito.** A P-15 e a P-03 saíram no fechamento do
+`cicd-ci-governanca-e-artefato` (2026-08-26), o primeiro **posterior** ao dos blocos que as
+encerraram — e as duas foram **remedidas antes de sair**, não removidas na fé. A **P-03**:
+`../lotus-infra` subiu stack própria pelo offset do `.env` da raiz (`LOTUS_DEV_HTTP_PORT=8081`)
+no próprio gate deste fechamento, `/up` 200 em `:8081`, com `mysql` em `:3308` e MinIO em
+`:9002`/`:9003` — que é exatamente o que a ficha dizia não existir. A **P-15**: a suíte do gate
+fechou **937 passed / 5 skipped** com `StudentDetailCertificatesTest` e
+`StudentCertificateHistoryTest` dentro dela — os certificados seguem no **detalhe** do aluno, e
+o ramo recusado (coluna na listagem) continua fora **por escrito**, na §9 da spec arquivada do
+bloco. O rastro durável das duas está nos commits e nas linhas de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **Saíram no fechamento do `frontend-revisao-ui-por-modulo` (2026-08-24), o primeiro posterior aos
 dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em

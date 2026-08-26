@@ -23,6 +23,84 @@
 
 ---
 
+## Fechado em 2026-08-26 — `cicd-ci-governanca-e-artefato`, item 11 da fila
+
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
+mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
+`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
+nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
+(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
+é `origin/main` — as três lanes anteriores mesclaram.
+
+**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
+sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
+quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
+governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
+(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
+runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
+SHA.
+
+**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
+escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
+Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
+vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
+o que preservar, e não há colisão a vigiar com a lane-c.
+
+**Review do item 11 — 2026-08-25.** Bloco classificado **alto risco** (paga o mecanismo da lei §5.3
+e faz merge, publicação em GHCR e mudança de configuração de repositório — ações externas
+irreversíveis), então a revisão do gabarito veio acompanhada de uma segunda lente independente do
+Codex, em sandbox read-only. Três achados aprovados pelo João e corrigidos no mesmo dia; a
+divergência entre os revisores está registrada abaixo, não resolvida em silêncio.
+
+- **Q-1 — o par `app`+`web` não era publicação atômica.** O `concurrency` do workflow usava
+  `cancel-in-progress: true` com `group: ci-${{ github.ref }}`, e `github.ref` é constante para todo
+  push em `main`: um segundo push cancelava o job `image` do primeiro no meio da publicação. Somado a
+  isso, os dois alvos eram construídos **e** publicados em passos sequenciais, então uma falha comum
+  de build entre eles deixava o SHA com meia release no GHCR. Corrigido em duas frentes: o
+  cancelamento passou a valer só fora de `push`, e o job constrói os dois alvos antes de publicar
+  qualquer um, com `scope` de cache separado por alvo e um passo final que **afirma** que os dois
+  manifestos existem — o "release é o par" do DoD3 deixou de ser confiança em dois passos verdes.
+- **Q-2 — "imutável" não estava garantido.** As quatro imagens base do `Dockerfile.prod` vinham por
+  tag móvel, então reconstruir o MESMO commit meses depois publicaria um digest diferente sob a mesma
+  tag de SHA — o objetivo §2 da spec inteira. As quatro passaram a ser fixadas por digest (capturados
+  em 2026-08-25, com o comando de atualização no cabeçalho do arquivo). O que o digest **não** fixa é
+  o índice do apk, e por isso o `image` ganhou uma guarda de idempotência: tag de SHA que já existe
+  não se reescreve, e só se republica quando falta metade do par.
+- **Q-3 — o `procedencia` confiava num trailer que nunca conferiu.** No corporativo a árvore limpa é
+  o normal, não uma propriedade especial: bastava uma linha `Source-Commit:` inventada num push
+  direto para o commit se passar por release de espelho — e essa é a única camada entre o push e uma
+  imagem publicada, porque a branch protection é o que o plano free não dá. Agora o SHA do trailer
+  precisa ser 40 hexadecimais **e** estar no histórico de `main` da origem
+  (`compare/main...<sha>` = `identical` ou `behind`). Quem responde qual é a origem é a variável de
+  repositório `ESPELHO_FONTE`, definida só em `Gatika-CL/lotus` — o arquivo segue sem nome de dono, e
+  onde a variável não existe o caminho de espelho não abre. `Andred21/lotus` é público, então o
+  `GITHUB_TOKEN` do corporativo faz a consulta sem PAT.
+
+**Divergência entre os revisores, registrada.** O Codex levantou oito candidatos; três viraram os
+achados acima depois de verificação própria no código, e os demais não passaram: um lia o escopo do
+desenho ao contrário (a auto-restrição do caminho de espelho no repositório pessoal é intencional, não
+um furo). Os dois sobre o `espelhar-corporativo.sh` eram reais e **o João mandou corrigir na mesma
+rodada**: a lista de exclusões passou a sair do blob do commit espelhado, não do disco da árvore —
+os dois leitores da lista voltam a ler a mesma versão, e o vazamento deixa de acontecer antes de o
+destino reprovar —, e o script passou a recusar commit cujo CI não esteja verde, com a saída
+`LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
+`26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
+sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
+
+**As correções provadas no gatilho real — 2026-08-25.** PR #75 mesclado em `ac078a80`, run
+[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): sete jobs,
+`conclusion: success`, `procedencia` e `image` verdes, par publicado em `ghcr.io/andred21`. A guarda
+de idempotência foi medida re-executando o job `image` no mesmo SHA — os quatro passos de build e
+push saíram `skipped`, a verificação do par continuou rodando e os dois digests ficaram idênticos.
+Só o `concurrency` fica sem prova direta: provar exigiria dois merges em segundos, e o custo não
+paga o que a leitura do `github.ref` já diz. Evidência integral em
+`audits/2026-08-24-cicd-evidencias.md`.
+
+---
+
 ## Fechado em 2026-08-24 — `certificacao-historico-do-aluno`, item 2 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (27)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -42,6 +42,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
+| P-61 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
@@ -62,30 +63,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (0)
 
-| ID | Pendência | Encerrada em | Sai quando |
-|---|---|---|---|
-| P-03 | Compose por worktree não existe — portas fixas no `docker-compose.yml`, sem `COMPOSE_PROJECT_NAME` | 2026-08-24, no `compose-por-worktree`: `LOTUS_DEV_*` + `.env` da raiz, duas stacks provadas no ar | primeiro fechamento **posterior** a este |
-| P-15 | Certificados não apareciam no módulo de alunos; a decisão saiu — expostos no **detalhe**, e a coluna da **listagem** fica fora por escrito (spec §9) | 2026-08-24, no `certificacao-historico-do-aluno` | primeiro fechamento **posterior** a este |
-
-**A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
-posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
-A **P-03** e a **P-15** entraram no rastro no mesmo dia, pelo `compose-por-worktree` e pelo
-`certificacao-historico-do-aluno`, e saem no próximo fechamento.
-
-**A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
-— e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a
-role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
-posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo
-critério contra o BD-14. O rastro de todas fica nos commits e nas
-linhas de entrega em
+Nada em rastro. A **P-03** e a **P-15** saíram no fechamento do `cicd-ci-governanca-e-artefato`
+(2026-08-26), o primeiro **posterior** ao dos blocos que as encerraram, e as duas foram
+**remedidas antes de sair**: a stack própria de `../lotus-infra` subiu no offset `:8081` com `/up`
+200 no gate deste fechamento, e a suíte fechou **937 passed / 5 skipped** com os testes do
+histórico de certificado do aluno dentro dela. A **P-41** saiu no fechamento do
+`tabelas-coluna-de-acoes-e-largura` (2026-08-24), remedida antes de sair (`min-w-0` em
+`IdentityCell.tsx:74`). A **P-47** e a **P-50** saíram no fechamento anterior, também remedidas.
+**A P-40 saiu nos três fechamentos de 2026-08-22**, posteriores ao do BD-12. **A P-29 e a P-35** já
+haviam saído no fechamento do BD-12, pelo mesmo critério. O rastro do que já saiu daqui vive em
+[`encerradas.md`](./encerradas.md), nos commits e nas linhas de entrega do
 [`../historico/progress.md`](../historico/progress.md).
-
-A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
-`bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo
-mesmo precedente da **P-26**, da **P-38** e da **P-34**. A **P-45** saiu no fechamento do
-`arquivados-roots-restantes` (2026-08-19) e segue encerrada depois do merge da `main`: o conserto
-que a fecha está commitado nos dois sítios que liam a variável — `tests/TestCase.php:25`
-(`explode` + primeira origem) e `config/cors.php:22` (`explode`). O rastro durável de todas vive nos
-commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
