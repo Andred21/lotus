@@ -116,6 +116,36 @@ describe('IdentityCell', () => {
     expect(rut.tagName).toBe('SPAN')
     expect(rut.className).toContain('font-mono')
   })
+
+  /**
+   * Herança da P-41. O `truncate` das duas linhas só EXISTE por causa do
+   * `min-w-0` do bloco de texto: item de flex nasce com `min-width: auto` e não
+   * encolhe abaixo do próprio conteúdo, então o texto empurrava a célula e o
+   * corte nunca acontecia — CLIENTE media 249px e REDATOR 263px na tabela de
+   * turmas, 45% da largura, com a largura declarada na coluna sem efeito
+   * nenhum (UI-02 de 2026-08-22).
+   *
+   * O par é o contrato, e este teste guarda o par. O que ele NÃO faz é medir:
+   * jsdom não tem layout, `scrollWidth` e `clientWidth` são sempre 0. A medida
+   * de `scrollWidth > clientWidth` acontece no navegador e vive em `audits/`
+   * (spec §4.5) — dito aqui para ninguém supor cobertura que não existe.
+   */
+  it('a forma empilhada mantém o par min-w-0 + truncate', () => {
+    const { container } = render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)
+
+    const blocoDeTexto = container.querySelector('.min-w-0')
+    expect(blocoDeTexto, 'sem min-w-0 o truncate das linhas não corta nada').toBeTruthy()
+    expect(blocoDeTexto?.querySelectorAll('span.truncate')).toHaveLength(2)
+  })
+
+  /** A forma inline NÃO trunca de propósito: ela carrega nó arbitrário (botão,
+   * tag), e `truncate` cortaria o nó em vez do texto. */
+  it('a forma inline não trunca nem declara min-w-0', () => {
+    const { container } = render(<IdentityCell title="Enel Chile" description="RUT 76.123.456-7" inline />)
+
+    expect(container.querySelectorAll('span.truncate')).toHaveLength(0)
+    expect(container.querySelector('.min-w-0')).toBeNull()
+  })
 })
 
 /**
