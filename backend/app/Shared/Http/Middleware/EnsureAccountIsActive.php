@@ -2,6 +2,7 @@
 
 namespace App\Shared\Http\Middleware;
 
+use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use App\Shared\Logging\EventoDeSeguranca;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
@@ -41,6 +42,7 @@ class EnsureAccountIsActive
 
         if (! $user->is_active || ! in_array($user->type, self::TIPOS_ELEGIVEIS, true)) {
             EventoDeSeguranca::sessaoRevogada($user->id, $user->type, $request->ip());
+            app(DetectorDeAcessoSuspeito::class)->sessaoDeContaDesativada($user->id, $request->ip());
 
             if ($request->hasSession()) {
                 $request->session()->invalidate();

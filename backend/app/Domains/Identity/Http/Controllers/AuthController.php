@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\RecordLoginAction;
 use App\Domains\Identity\Data\SessionUserData;
 use App\Http\Controllers\Controller;
+use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use App\Shared\Logging\EventoDeSeguranca;
 use App\Shared\RateLimiting\RateLimits;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,11 @@ class AuthController extends Controller
                 $request->ip(),
             );
 
+            app(DetectorDeAcessoSuspeito::class)->loginFalho(
+                RateLimits::chaveDeLogin($request),
+                $request->ip(),
+            );
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -63,6 +69,11 @@ class AuthController extends Controller
 
             EventoDeSeguranca::loginRecusado(
                 hash('sha256', RateLimits::chaveDeLogin($request)),
+                $request->ip(),
+            );
+
+            app(DetectorDeAcessoSuspeito::class)->loginFalho(
+                RateLimits::chaveDeLogin($request),
                 $request->ip(),
             );
 

@@ -2,6 +2,7 @@
 
 namespace App\Shared\Logging;
 
+use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
@@ -62,6 +63,13 @@ class RegistraEventoDeErro
 
         if (self::isAcessoNegado($e)) {
             EventoDeSeguranca::acessoNegado($usuarioId, $request->ip(), $rota);
+
+            // Só há família de "sequência de 403" quando existe usuário para
+            // sequenciar: 403 anônimo é ruído de varredura externa, coberto
+            // pelo limitador de IP e não por alerta nominal.
+            if ($usuarioId !== null) {
+                app(DetectorDeAcessoSuspeito::class)->acessoNegado((int) $usuarioId, $request->ip());
+            }
         }
     }
 
