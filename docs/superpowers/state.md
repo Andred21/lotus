@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-hardening-final
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
 context_packet: null
 blocker: null
 lanes:
@@ -44,20 +44,20 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-hardening-final
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../fix-frontend
     branch: refactor/frontend-hardening-final   # nasce de main@5550178a
     active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 state_basis_commit: 5550178a
-updated_at: 2026-08-26T00:00:00-03:00
+updated_at: 2026-08-26T01:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
-| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `planning` |
+| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `ready_for_execution` |
 
 **Promoção do item 8 — 2026-08-26.** A `lane-c` estava `idle` desde o fechamento da fatia 2 do item
 16; o João promoveu explicitamente o **item 8 — `frontend-hardening-final`** contra o `backlog.md`.
