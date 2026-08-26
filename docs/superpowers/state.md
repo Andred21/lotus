@@ -4,38 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: blocked
-next_owner: joao
-next_action: resolve_blocker
-resume_state: context_required
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
+resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: >-
-  O Context Packet voltou com `status: blocked` e `RECOMMENDED_TRANSITION: blocked`. Os cinco RNF-SEC
-  foram recuperados do Drive por ID e NENHUM deles fixa número, canal ou prazo; quatro decisões do
-  João faltam antes de planejar: (1) janela e destino final de `audits` e de `login_logs`;
-  (2) se os documentos de turma/redator, que têm peso legal, ganham retenção própria, descarte ou
-  preservação — e com que prazo; (3) se o "micro-serviço em nuvem" do RNF-SEC-05 é forma obrigatória,
-  centralização dentro do monólito basta, ou a forma fica diferida; (4) o que conta como acesso
-  suspeito no RNF-SEC-07 (evento, canal, SLA) e qual política de cofre/rotação atende o RNF-SEC-03.
-  Packet salvo como evidência em
-  `docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md`;
-  ele não entra em `context_packet` porque `status: blocked` não é contexto utilizável.
+context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
+blocker: null
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: blocked
-    next_owner: joao
-    next_action: resolve_blocker
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: null
     active_plan: null
-    context_packet: null
-    blocker: quatro decisões do João sem fonte canônica — ver `blocker` do espelho
-    resume_state: context_required
+    context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
+    blocker: null
+    resume_state: null
     last_completed_work_item: hardening-api-arquivos-e-abuso
   lane-b:
     active_feature: cicd
@@ -67,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 038b4a70
-updated_at: 2026-08-26T01:35:00-03:00
+updated_at: 2026-08-26T02:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -171,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `blocked` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_planning` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -201,9 +191,29 @@ P-02/P-33 nem requisito confirmado: a fonte descreve os PDFs de redator/turma e 
 prazo, descarte nem preservação legal. São quatro decisões do João, todas de regra de negócio ou peso
 legal, e o `blocker` do espelho as enumera. **O packet foi salvo como evidência** em
 `context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md`, mas **não** entrou
-em `context_packet`: `status: blocked` não é contexto utilizável, e apontar para ele diria que a lane
-tem contexto que ela não tem. Com as quatro respostas, a rota é refresh do packet e retorno a
-`resume_state: context_required`.
+em `context_packet` enquanto estava `blocked`: `status: blocked` não é contexto utilizável, e apontar
+para ele diria que a lane tem contexto que ela não tem.
+
+**O João respondeu as quatro no mesmo dia, e o packet foi refeito por refresh — `status: ready`.** As
+decisões entram no packet com `Resolution basis` de **instrução explícita do João Victor**, que é o
+topo da hierarquia de fontes da própria skill, acima do snapshot do Drive:
+
+1. **Retenção:** `audits` **5 anos**, `login_logs` **12 meses**, os dois podados pelo scheduler. O
+   trilho de auditoria acompanha o peso legal do certificado e precisa sobreviver à validade dele; o
+   `login_logs` é o que carrega PII pura (`ip_address`, `user_agent`) e sai antes. É o mecanismo que a
+   **P-02** e a **P-33** esperavam e a lacuna que o ADR-08 deixou aberta.
+2. **Retenção documental:** os arquivos de turma/redator **não expiram**. Fica só o arquivamento
+   lógico, que já é o comportamento vigente — decisão registrada, **sem código novo**, e non-goal
+   declarado do bloco.
+3. **Forma dos logs:** a forma literal "Micro-serviço em nuvem" do `RNF-SEC-05` **não** se mantém;
+   centralização dentro do monólito basta e o requisito é **revisado formalmente por escrito**. É o
+   mesmo movimento que o item 13 aplica ao `RNF-DIS-02` × ADR-14: manter a arquitetura e revisar o
+   requisito, nunca declarar equivalência em silêncio. A revisão é entregável deste bloco.
+4. **Alerta e cofre:** o alerta do `RNF-SEC-07` é definido **aqui**, por três famílias de evento
+   medível dentro do monólito — falhas de login repetidas na mesma chave, uso de sessão de conta
+   desativada e 403 em sequência —, cada uma com condição, destino e expectativa temporal. O cofre do
+   `RNF-SEC-03` fica em `env_file` fora da imagem (que já é o HEAD) mais **rotação documentada**; o
+   cofre gerenciado real é **diferido ao item 10**, junto da conta AWS.
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8

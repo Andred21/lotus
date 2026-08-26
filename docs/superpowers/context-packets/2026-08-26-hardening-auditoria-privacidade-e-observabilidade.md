@@ -2,12 +2,12 @@
 schema_version: 1
 packet_id: hardening-auditoria-privacidade-e-observabilidade-2026-08-26
 block_id: hardening-auditoria-privacidade-e-observabilidade
-status: blocked
+status: ready
 generated_at: 2026-08-26
 base_ref: feat/hardening-auditoria-privacidade-e-observabilidade
-base_commit: 2e3016748ec9def796276fa4c0ca3962c89f5253
+base_commit: 4bc49895c3ddb9a4dfe718a7094f0d2808d6af04
 state_path: docs/superpowers/state.md
-state_blob_sha: ef2b9ab01695b595e864143d9bc793b980ae3b3d
+state_blob_sha: 84eeac827712bc6b1643f0e0076eb85fe25a06e8
 progress_path: docs/superpowers/historico/progress.md
 progress_blob_sha: ca9c4b8315eb14243f7e22cceb837dd8f022185c
 plan_path: null
@@ -23,9 +23,9 @@ word_budget: 1200
 
 ## Scope
 
-**Goal:** definir retenção de `audits` e `login_logs`, limites de privacidade, centralização de logs, alertas e gestão de segredos sem inventar números ou comportamento de peso legal.
+**Goal:** implementar retenção diferenciada de `audits` e `login_logs`, centralização dos logs de ações dentro do monólito, alertas mensuráveis de acesso suspeito e rotação documentada de segredos, com revisão formal do RNF-SEC-05.
 
-**Non-goals:** reabrir throttle, política de arquivos ou antivírus do bloco anterior; provisionar a conta AWS; presumir microserviço; alterar o Superpowers ou fontes externas.
+**Non-goals:** criar expiração ou descarte automático para documentos de turma/redator; criar microserviço de logs; provisionar AWS ou cofre gerenciado; reabrir `Shared/Files/ContentClass`, throttle nomeado ou antivírus síncrono; alterar o Superpowers ou fontes externas.
 
 ## Source registry
 
@@ -38,53 +38,53 @@ word_budget: 1200
 
 ## Key facts
 
-1. Texto real: RNF-SEC-01 — “Dados armazenados conforme LGPD (Brasil) e legislação chilena”; RNF-SEC-03 — “Segredos (chaves, tokens, credenciais de e-mail/nuvem) fora do código, em cofre de segredos”; RNF-SEC-04 — “Auditoria na camada de aplicação via biblioteca, registrando quem/o quê/valor antigo/novo numa estrutura central, aplicando o polimorfismo”; RNF-SEC-05 — “Micro-serviço em nuvem com logs das ações do software, com registro das ações feitas”; RNF-SEC-07 — “Alertas de acessos suspeitos, com parâmetro de identificação definido”. `[DRIVE-RNF]`
-2. Nenhum desses cinco RNFs fixa janela de retenção, volume, SLA, canal de alerta ou valor do parâmetro de identificação. O único número próximo é RNF-DIS-03, “no mínimo 7 dias”, exclusivamente para backup do banco; ele não pode ser aplicado a `audits`, `login_logs` ou documentos. `[DRIVE-RNF]`
-3. RNF-SEC-05 literalmente especifica a forma “Micro-serviço em nuvem”, não somente o resultado “logs centralizados”. A ambiguidade não está no texto: o que permanece aberto é se João mantém essa forma apesar da arquitetura monolítica e de ~10 usuários. `[DRIVE-RNF]`
-4. O arquivo canônico descreve PDFs de redator/turma, armazenamento S3 e metadados, mas não define prazo, descarte, preservação ou legal hold documental. A linha do backlog não está confirmada como requisito nem provada como mero atalho para P-02/P-33; é uma decisão independente ainda aberta. `[DRIVE-RNF]`
-5. RNF-SEC-03 exige cofre e saída do código, mas não determina rotação, produto, periodicidade ou variável de ambiente. Também não há nos RNFs citados proibição textual de logar password/token/cookie/PII; essa minimização é guardrail interno do backlog, e RNF-SEC-01 não autoriza inferir detalhes legais ausentes. `[DRIVE-RNF]`
-6. RNF-SEC-07 exige alerta de acesso suspeito e um parâmetro definido, mas não define o que é suspeito. A task Notion 10.1.8 cobre somente queda operacional via “CloudWatch básico”, critério “Alerta dispara em queda”, depende da EC2 10.1.1 e não satisfaz por si o alerta de acesso suspeito. `[DRIVE-RNF]` `[NOTION-ALERT]`
-7. ADR-08 e P-02 continuam abertos no HEAD; P-33 confirma `login_logs` append-only e PII sem retenção. A task 9.1.2 está `A fazer` e exige apenas “Poda agendada roda no scheduler”, sem janela ou política de `login_logs`. `[NOTION-PRUNE]`
-8. Na base canônica não há task 1:1 para retenção de `login_logs`, retenção documental, logs centralizados, minimização de PII, alerta de acesso suspeito ou cofre/rotação. Essa ausência é esperada para splits internos e não é, isoladamente, blocker. `[NOTION-DB]`
+1. RNF-SEC-01 exige conformidade LGPD/legislação chilena; RNF-SEC-03 pede segredos fora do código em cofre; RNF-SEC-04 exige auditoria na aplicação com ator, ação, valores anterior/novo e estrutura central polimórfica; RNF-SEC-05 pede “Micro-serviço em nuvem”; RNF-SEC-07 exige alerta de acesso suspeito com parâmetro definido. `[DRIVE-RNF]`
+2. Nenhum RNF-SEC citado fixa retenção, volume, canal ou prazo. Os 7 dias do RNF-DIS-03 são backup de banco e não definem retenção de `audits`, `login_logs` ou documentos. `[DRIVE-RNF]`
+3. “Micro-serviço em nuvem” é a forma literal do RNF-SEC-05, não uma inferência sobre centralização. `[DRIVE-RNF]`
+4. A fonte descreve PDFs de turma/redator, S3 e metadados, mas não determina expiração, descarte, preservação ou legal hold documental. `[DRIVE-RNF]`
+5. A task 9.1.2 exige poda agendada no scheduler, mas não define janelas; a task 10.1.8 cobre queda operacional via CloudWatch, não acesso suspeito. `[NOTION-PRUNE]` `[NOTION-ALERT]`
+6. A base canônica não contém task 1:1 para os demais splits internos deste bloco; essa ausência é esperada e não bloqueia o planejamento. `[NOTION-DB]`
 
 ## Resolved decisions and divergences
 
 | Topic | External snapshot | Current decision | Resolution basis |
 |---|---|---|---|
-| Forma dos logs | RNF-SEC-05 exige literalmente “Micro-serviço em nuvem”. `[DRIVE-RNF]` | Monólito proporcional; não criar microserviço em silêncio. | Não resolvido: a fonte esclarece o texto, mas João precisa manter, substituir ou dispensar a forma. |
-| Retenção documental | Documentos têm peso legal, mas nenhuma política de retenção aparece no requisito recuperado. `[DRIVE-RNF]` | Backlog manda decidir se haverá política própria. | Não resolvido; não reutilizar automaticamente P-02/P-33. |
-| Secrets | RNF-SEC-03 pede cofre. `[DRIVE-RNF]` | HEAD usa `env_file` externo à imagem e exclui `.env`/cache do build. | Fora do código/imagem está atendido; `env_file` não prova cofre, rotação nem implantação real. |
-| Alertas AWS | Notion 10.1.8 prevê CloudWatch após EC2. `[NOTION-ALERT]` | Provisionamento AWS real pertence ao item 10. | Definição pode entrar neste bloco; prova em conta real fica diferida. |
+| Retenção | RNFs não fixam janelas; a task 9.1.2 pede poda no scheduler. `[DRIVE-RNF]` `[NOTION-PRUNE]` | `audits`: 5 anos; `login_logs`: 12 meses; ambos podados pelo scheduler. Auditoria acompanha o peso legal do certificado; PII pura sai antes. Fecha o mecanismo esperado por P-02/P-33 e a lacuna do ADR-08. | Instrução explícita de João Victor, 2026-08-26, prioridade máxima. |
+| Retenção documental | A fonte não define prazo ou descarte. `[DRIVE-RNF]` | Arquivos de turma/redator não expiram; permanece somente o arquivamento lógico vigente. Decisão documental, sem código novo. | Instrução explícita de João Victor, 2026-08-26, prioridade máxima. |
+| Forma dos logs | RNF-SEC-05 exige literalmente “Micro-serviço em nuvem”. `[DRIVE-RNF]` | Centralização dentro do monólito basta. O RNF-SEC-05 será revisado formalmente por escrito; não se declarará equivalência silenciosa. | Instrução explícita de João Victor, 2026-08-26, prioridade máxima. |
+| Alerta e cofre | RNF-SEC-07 não define suspeição; RNF-SEC-03 não escolhe produto ou rotação. A task 10.1.8 trata queda operacional. `[DRIVE-RNF]` `[NOTION-ALERT]` | Este bloco define três famílias mensuráveis: falhas repetidas por mesma chave, sessão de conta desativada e sequência de 403; cada uma terá condição, destino e expectativa temporal. Segredos permanecem em `env_file` fora da imagem, com rotação documentada; cofre gerenciado fica no item 10. | Instrução explícita de João Victor, 2026-08-26, prioridade máxima. |
 
 ## Constraints
 
 - Auditoria permanece na aplicação, nunca em trigger de banco (`docs/adrs.md`, ADR-08).
-- HEAD mantém logs de produção em `stderr` com rotação local `json-file` de 10 MB × 3; isso não é centralização externa.
-- Runtime versionado e publicação GHCR por SHA já existem; árvore estava limpa em `git status --short`.
-- Não reabrir `Shared/Files/ContentClass`, throttle nomeado ou antivírus síncrono.
+- Produção hoje escreve em `stderr`, com rotação local `json-file` de 10 MB × 3; isso não constitui centralização externa.
+- O `env_file` já fica fora da imagem; este bloco acrescenta rotação documentada sem provisionar cofre gerenciado.
+- Runtime versionado e publicação GHCR por SHA já existem.
+- `Shared/Files/ContentClass`, throttle nomeado e antivírus síncrono foram fechados pelo bloco anterior e não se reabrem.
 
 ## External acceptance signals
 
-- Pruning e retenção obedecem às janelas explicitamente aprovadas, preservando rastreabilidade até a expiração.
-- Logs registram ações necessárias sem segredo ou PII desnecessária e têm destino central definido.
-- Alertas de acesso suspeito e falhas operacionais possuem condição, destino e expectativa temporal verificáveis.
-- Segredos permanecem fora de código/imagem e a exigência de cofre recebe solução ou diferimento explícito.
+- O scheduler aplica separadamente 5 anos a `audits` e 12 meses a `login_logs`.
+- Documentos de turma/redator continuam apenas com soft delete, sem expiração ou descarte automático novo.
+- Logs de ações ficam centralizados dentro do monólito sem segredo ou PII desnecessária.
+- A revisão formal do RNF-SEC-05 substitui explicitamente a forma “Micro-serviço em nuvem” pela decisão monolítica.
+- Cada uma das três famílias de acesso suspeito recebe condição mensurável, destino e expectativa temporal verificáveis.
+- Segredos permanecem fora do código/imagem e a rotação fica documentada.
 
 ## Open questions
 
-- **Blocking:** quais são as janelas e destinos finais de `audits` e `login_logs`?
-- **Blocking:** documentos de turma/redator têm retenção própria, descarte ou preservação legal? Qual prazo?
-- **Blocking:** manter o microserviço literal, aceitar centralização no monólito ou diferir a forma?
-- **Blocking:** quais eventos identificam acesso suspeito e quais canal/SLA; qual política de cofre e rotação?
+- None blocking.
 
 ## Deferred
 
-- Provisionamento e prova em EC2/CloudWatch/cofre AWS real permanecem no item 10 quando dependerem da conta AWS.
-- Exportação fria para Glacier continua opcional no ADR-08 e sem requisito aprovado.
+- Cofre gerenciado real, conta AWS e integração dependente dela permanecem em `infra-producao-provisionamento-aws` (item 10).
+- Alerta operacional em CloudWatch da task 10.1.8 permanece dependente da EC2 e não substitui os alertas de acesso suspeito deste bloco.
+- Exportação fria para Glacier continua opcional no ADR-08, sem requisito aprovado.
 
 ## Staleness triggers
 
-- João registrar qualquer decisão das perguntas bloqueantes.
-- O arquivo Drive `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-` mudar ou ser substituído.
-- Spec/plano do bloco introduzir escopo, número ou critério incompatível com estas fontes.
-- As pages Notion citadas ou ADR-08/P-02/P-33 mudarem semanticamente.
+- João Victor reabrir qualquer decisão registrada neste packet.
+- O `active_work_item` mudar ou futura spec/plano alterar escopo, aceitação ou restrição de forma incompatível com estas decisões.
+- O arquivo Drive `1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-` mudar, ser substituído ou contradizer uma decisão registrada.
+- ADR-08, P-02, P-33 ou as páginas Notion citadas mudarem semanticamente de modo relevante ao bloco.
+- Nova obrigação legal ou regulatória alterar retenção, descarte documental, privacidade ou auditoria.
