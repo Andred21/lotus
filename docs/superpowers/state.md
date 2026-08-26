@@ -4,13 +4,13 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-26-infra-producao-provisionamento-aws.md
 blocker: null
 lanes:
   lane-a:
@@ -30,14 +30,14 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # criada de cicd/promocao-deploy-e-rollback@10030c65 em 2026-08-26
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-26-infra-producao-provisionamento-aws.md
     blocker: null
     resume_state: null
     parked_work_item: cicd-promocao-deploy-e-rollback   # item 12, blocked por dependencia deste; packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
@@ -58,7 +58,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 83945ff3
-updated_at: 2026-08-26T18:05:00-03:00
+updated_at: 2026-08-26T18:50:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10) | Infra/AWS | `../lotus-infra` | `infra/producao-provisionamento-aws` | `context_required` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10) | Infra/AWS | `../lotus-infra` | `infra/producao-provisionamento-aws` | `ready_for_planning` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
