@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
 blocker: null
@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
     blocker: null
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 038b4a70
-updated_at: 2026-08-26T02:05:00-03:00
+updated_at: 2026-08-26T03:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_planning` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `planning` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -214,6 +214,26 @@ topo da hierarquia de fontes da própria skill, acima do snapshot do Drive:
    desativada e 403 em sequência —, cada uma com condição, destino e expectativa temporal. O cofre do
    `RNF-SEC-03` fica em `env_file` fora da imagem (que já é o HEAD) mais **rotação documentada**; o
    cofre gerenciado real é **diferido ao item 10**, junto da conta AWS.
+
+**Brainstorming fechado e spec escrita — 2026-08-26.** A medição contra `main@038b4a70` levantou
+**uma tensão que o packet não tinha como enxergar**: a `audits` guarda `url`, `ip_address` e
+`user_agent`, que é a MESMA PII pura que motivou a P-33 no `login_logs`. Com 5 anos numa tabela e 12
+meses na outra, IP e user agent sobreviveriam os 5 anos assim mesmo, pela outra porta. **Decisão do
+João, no mesmo dia: poda em duas fases** — aos 12 meses a linha de `audits` é anonimizada nos três
+campos e preserva quem/o quê/valor antigo/novo; aos 5 anos é apagada. As duas janelas passam a contar
+a mesma história e o que o `RNF-SEC-04` exige sobrevive intacto.
+
+A medição também mostrou que **"podados pelo scheduler" não tinha onde rodar**: não há `app/Console/`,
+nenhum `Schedule::` em lugar nenhum, nenhum comando Artisan próprio, e nenhum compose ou entrypoint
+com cron, supervisor ou `schedule:work`. O runner passa a ser entregável deste bloco — serviço
+`scheduler` no compose de produção, mesma imagem, e não cron do host, que faria a poda depender do
+working tree do servidor logo depois de o item 10 ter comprado o contrário. E os logs de ação são
+construção do zero: `config/logging.php` é o stub vanilla e o app inteiro tem três chamadas de log,
+todas de descarte de arquivo órfão.
+
+A spec está em `specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, com
+nove decisões, cinco catracas e treze itens de DoD. O próximo passo da lane é o **plano**; execução
+segue proibida até `ready_for_execution`.
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
