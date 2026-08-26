@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Services;
 
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 
 /**
@@ -16,7 +17,7 @@ use App\Domains\Operation\Enums\TurmaStatus;
  */
 final class HabilitacaoStatus
 {
-    /** @param  array<string>  $missingTypes  valores de TurmaDocumentType sem doc ativo. */
+    /** @param  array<TurmaDocumentType>  $missingTypes  tipos obrigatórios sem doc ativo. */
     public function __construct(
         private readonly TurmaStatus $status,
         private readonly array $missingTypes,
@@ -27,7 +28,7 @@ final class HabilitacaoStatus
         return $this->status === TurmaStatus::EmAndamento && $this->missingTypes === [];
     }
 
-    /** @return array<string> */
+    /** @return array<TurmaDocumentType> */
     public function missingTypes(): array
     {
         return $this->missingTypes;

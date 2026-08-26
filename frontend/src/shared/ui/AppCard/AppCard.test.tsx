@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { AppCard } from './AppCard'
+import { AppCard, AppCardToolbar } from './AppCard'
 
 afterEach(cleanup)
 
@@ -55,5 +55,21 @@ describe('AppCard', () => {
 
     expect(card().getAttribute('style')).toContain('border-inline-start-width: 3px')
     expect(card().className).toContain('py-3.5')
+  })
+})
+
+describe('AppCardToolbar', () => {
+  it('o slot end quebra linha em vez de espremer a acao primaria', () => {
+    // UI-01 da run de Comercial (2026-08-25): em 390x844 o botao "Nuevo
+    // presupuesto" caia para 44px e vazava 3px da viewport, porque o slot
+    // era `shrink-0` numa linha unica ao lado do grupo Activos/Archivados.
+    const { container } = render(
+      <AppCardToolbar start={<span>busca</span>} end={<button>Nuevo presupuesto</button>} />,
+    )
+
+    const end = container.querySelector('button')?.parentElement
+
+    expect(end?.className).toContain('flex-wrap')
+    expect(end?.className).not.toContain('shrink-0')
   })
 })

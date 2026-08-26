@@ -1,0 +1,28 @@
+# Fonte UNICA do que nao atravessa para Gatika-CL/lotus.
+#
+# Dois consumidores leem este arquivo: `scripts/espelhar-corporativo.sh`, que
+# filtra na origem, e o job `procedencia` do CI, que confere no destino. Um
+# arquivo e dois leitores de proposito -- lista mantida em dois lugares e a
+# forma classica de o espelho vazar sem ninguem perceber.
+#
+# Criterio: entra aqui o que existe para DESENVOLVER. Fica de fora o que
+# existe para o app rodar, ser testado ou ser construido. Comentario e linha
+# em branco sao ignorados; diretorio termina em barra.
+.agents/
+.claude/
+.codex/
+.githooks/
+.playwright-cli/
+.superpowers/
+AGENTS.md
+CLAUDE.md
+CONTRIBUINDO.md
+INSTRUÇÕES-DO-PROJETO.md
+docs/
+scripts/espelhar-corporativo.sh
+
+# Este teste afirma que CLAUDE.md, .claude/rules/ e docs/ existem e que todo
+# path citado neles existe. No espelho nenhum dos tres existe, entao ele
+# reprovaria por acerto, nao por defeito: o alvo dele e a documentacao
+# interna, que por decisao nao atravessa.
+frontend/tests/repo-docs-refs.test.ts

@@ -126,8 +126,13 @@ class OperationMetricsQueryTest extends TestCase
             'redatores' => [],
             'start_date' => '2026-08-04',
             'end_date' => '2026-08-13',
-            'present_types' => ['MANUAL'],
-            'missing_types' => ['PRUEBAS', 'EVALUACION_REDATOR'],
+            // Desde a D-57 o DTO carrega o enum, e `toArray()` o preserva. Quem
+            // devolve o código ao contrato é o `json_encode` na borda, e a borda
+            // é medida onde ela existe — `DashboardEndpointTest`, no
+            // `test_compliance_do_admin_publica_os_tipos_como_codigo_do_enum`.
+            // Este teste é do serviço e para no serviço.
+            'present_types' => [TurmaDocumentType::MANUAL],
+            'missing_types' => [TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
             'habilitada' => false,
         ], $compliance->get($overdue->id)->toArray());
 

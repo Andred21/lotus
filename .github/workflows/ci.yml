@@ -14,7 +14,12 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Push em main NAO cancela push em main. `github.ref` vale `refs/heads/main`
+  # para todos eles, entao o grupo e um so: um segundo push cancelaria o job
+  # `image` do primeiro no meio da publicacao e deixaria o SHA anterior com
+  # meio par no GHCR. Em `pull_request` o cancelamento continua valendo -- la
+  # o run antigo so gasta minuto, nao publica nada.
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   backend:
@@ -212,12 +217,118 @@ jobs:
         working-directory: frontend
         run: pnpm audit
 
+  # A regua que o plano pago daria, reconstruida no unico lugar que sobra: o
+  # artefato. `Gatika-CL` esta no plano free e branch protection em repositorio
+  # privado exige plano pago (403 medido em 2026-08-25), entao NADA impede um
+  # push direto em main. O que da para impedir e que esse push vire release --
+  # este job entra no `needs` do `image`.
+  #
+  # Duas procedencias sao aceitas, e nenhuma outra:
+  #   - commit que chegou por Pull Request MESCLADO (o fluxo do repo pessoal);
+  #   - commit de espelho, que carrega o trailer `Source-Commit:`, tem a arvore
+  #     limpa de todo path de `.espelho-exclusoes` E cujo trailer aponta para
+  #     um commit que esta mesmo no historico de main da origem.
+  #
+  # O segundo caminho nao serve de atalho no pessoal: la `docs/` e `.claude/`
+  # existem, entao a checagem de arvore limpa reprova e a exigencia de PR volta
+  # a valer. A regra se auto-restringe, sem nome de repositorio no meio.
+  #
+  # A conferencia do trailer existe porque no CORPORATIVO a arvore limpa e o
+  # normal, nao uma propriedade especial: sem ela, bastava uma linha de trailer
+  # inventada num push direto para o commit se passar por release de espelho --
+  # e esta e a unica camada entre esse push e uma imagem publicada. Quem
+  # responde qual e a origem e a variavel de repositorio ESPELHO_FONTE
+  # (`owner/nome`), nao uma constante aqui: o arquivo continua sem nome de dono,
+  # e onde a variavel nao existe o caminho de espelho simplesmente nao abre.
+  procedencia:
+    name: procedencia
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # `forced` vem do payload do push. Reescrita de historico em main e
+      # exatamente o que `allow_force_pushes: false` recusaria no plano pago;
+      # aqui ela nao e impedida, mas fica vermelha e datada no historico de
+      # runs -- que e o que uma auditoria pede depois.
+      - name: Force-push nao passa despercebido
+        if: github.event.forced
+        run: |
+          echo "::error::force-push detectado em ${{ github.ref }}. main foi reescrita."
+          exit 1
+
+      - name: Procedencia do commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          FONTE: ${{ vars.ESPELHO_FONTE }}
+        run: |
+          trailer=$(git log -1 --pretty='%(trailers:key=Source-Commit,valueonly)' | tr -d '[:space:]')
+
+          sujos=""
+          while IFS= read -r caminho; do
+            case "$caminho" in ''|\#*) continue ;; esac
+            [ -e "$caminho" ] && sujos="$sujos $caminho"
+          done < .espelho-exclusoes
+
+          if [ -n "$trailer" ]; then
+            if [ -n "$sujos" ]; then
+              echo "::error::commit de espelho, mas a arvore carrega arquivo de desenvolvimento:$sujos"
+              exit 1
+            fi
+
+            if [ -z "$FONTE" ]; then
+              echo "::error::o commit traz Source-Commit, mas a variavel de repositorio ESPELHO_FONTE nao esta definida. Sem ela nao ha contra o que conferir a origem, e um trailer inventado passaria. Defina ESPELHO_FONTE como o repositorio de origem (owner/nome)."
+              exit 1
+            fi
+
+            if [ ${#trailer} -ne 40 ] || [ -n "$(printf '%s' "$trailer" | tr -d '0-9a-f')" ]; then
+              echo "::error::Source-Commit '$trailer' nao e um SHA de 40 hexadecimais."
+              exit 1
+            fi
+
+            # base=main, head=$trailer. `identical` = o trailer E a ponta de
+            # main na origem; `behind` = ele e ancestral dela. Qualquer outra
+            # coisa -- `ahead`, `diverged` ou erro de API -- significa commit
+            # que nunca entrou em main la, inclusive o SHA inventado, que a API
+            # responde com 404 e cai no mesmo ramo.
+            # `|| situacao=""` e nao `|| true`: em erro o gh escreve o corpo do
+            # 404 na saida padrao, e sem isso o JSON inteiro viraria o valor de
+            # $situacao e vazaria para a mensagem de erro.
+            situacao=$(gh api "repos/$FONTE/compare/main...$trailer" --jq .status 2>/dev/null) || situacao=""
+            case "$situacao" in
+              identical|behind)
+                echo "release de espelho. Fonte: $FONTE@$trailer ($situacao em relacao a main de $FONTE)."
+                exit 0
+                ;;
+              *)
+                echo "::error::Source-Commit $trailer nao esta no historico de main em $FONTE (situacao: ${situacao:-inacessivel}). O trailer nao comprova procedencia; nenhuma imagem sera publicada."
+                exit 1
+                ;;
+            esac
+          fi
+
+          mesclados=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)] | length')
+          if [ "$mesclados" -ge 1 ]; then
+            echo "commit entrou por Pull Request mesclado."
+            exit 0
+          fi
+
+          echo "::error::$SHA entrou em main sem Pull Request mesclado e sem trailer de espelho. Nenhuma imagem sera publicada para ele."
+          exit 1
+
   image:
     name: image
     # Nenhum gate vermelho passa daqui: e isto que faz o DoD
     # "commit reprovado nao gera release promovivel" ser mecanico e nao
-    # combinado. audit-dev NAO entra -- ele reporta, nao decide.
-    needs: [backend, frontend, types-drift, audit-prod]
+    # combinado. audit-dev NAO entra -- ele reporta, nao decide. procedencia
+    # entra porque, sem branch protection, ele e a unica coisa entre um push
+    # direto em main e um artefato publicado.
+    needs: [backend, frontend, types-drift, audit-prod, procedencia]
     # Sem nome de dono na condicao. Branch e PR rodam so os gates; o custo
     # do bloco esta neste job, e e daqui que vem o "CI rapido".
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -243,10 +354,60 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # A tag de um SHA se escreve UMA vez. Um `gh run rerun` meses depois
+      # reconstroi o mesmo fonte, mas o Dockerfile so fixa as imagens base por
+      # digest -- o indice do apk e o do Alpine nao se fixam --, entao o
+      # resultado nao e byte identico, e sobrescrever a tag trocaria em silencio
+      # o artefato que o item 12 talvez ja tenha promovido. Republicar so quando
+      # falta metade do par: o rastro de uma publicacao interrompida no meio.
+      - name: O par ja existe para este SHA?
+        id: par
+        env:
+          APP: ghcr.io/${{ steps.repo.outputs.lc }}-app:${{ github.sha }}
+          WEB: ghcr.io/${{ steps.repo.outputs.lc }}-web:${{ github.sha }}
+        run: |
+          if docker buildx imagetools inspect "$APP" >/dev/null 2>&1 \
+             && docker buildx imagetools inspect "$WEB" >/dev/null 2>&1; then
+            echo "publicar=false" >> "$GITHUB_OUTPUT"
+            echo "o par de $GITHUB_SHA ja esta no GHCR. Nada a reconstruir."
+          else
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Os dois alvos sao construidos ANTES de qualquer push. Falha de build e
+      # o modo de falha comum; construir primeiro faz ela acontecer com zero
+      # imagem publicada, em vez de acontecer entre o push do app e o do web e
+      # deixar o SHA com meio par no GHCR -- o "release e o par" do DoD3 depende
+      # de nao existir SHA pela metade. `scope` separado por alvo porque um
+      # cache gha unico e sobrescrito pelo segundo build.
+      - name: Constroi o alvo app
+        if: steps.par.outputs.publicar == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: app
+          push: false
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+
+      - name: Constroi o alvo web
+        if: steps.par.outputs.publicar == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.prod
+          target: web
+          push: false
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
       # SHA completo e sem `latest`, de proposito: tag movel convida
       # `docker pull latest` no servidor, que e o habito que o item 12
-      # existe para substituir.
-      - name: Constroi e publica o alvo app
+      # existe para substituir. Estes dois passos saem do cache dos anteriores,
+      # entao o que sobra aqui e o upload.
+      - name: Publica o alvo app
+        if: steps.par.outputs.publicar == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -254,10 +415,10 @@ jobs:
           target: app
           push: true
           tags: ghcr.io/${{ steps.repo.outputs.lc }}-app:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=app
 
-      - name: Constroi e publica o alvo web
+      - name: Publica o alvo web
+        if: steps.par.outputs.publicar == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -265,5 +426,16 @@ jobs:
           target: web
           push: true
           tags: ghcr.io/${{ steps.repo.outputs.lc }}-web:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+
+      # O DoD3 diz "release e o par". Isto o afirma no fim do job, em vez de
+      # confiar que dois passos verdes bastam: se o job termina verde, os dois
+      # manifestos existem no GHCR para este SHA.
+      - name: O par existe no GHCR
+        env:
+          APP: ghcr.io/${{ steps.repo.outputs.lc }}-app:${{ github.sha }}
+          WEB: ghcr.io/${{ steps.repo.outputs.lc }}-web:${{ github.sha }}
+        run: |
+          docker buildx imagetools inspect "$APP" >/dev/null
+          docker buildx imagetools inspect "$WEB" >/dev/null
+          echo "par publicado para $GITHUB_SHA: $APP e $WEB"

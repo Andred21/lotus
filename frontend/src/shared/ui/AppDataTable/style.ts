@@ -135,9 +135,38 @@ export const appPaginatorPt: NonNullable<DataTablePassThroughOptions['paginator'
  * (`--surface-section`, opaco) sobrescreve este, que é o que se quer: o
  * cabeçalho mantém a cor de cabeçalho.
  *
+ * O fundo é DUAS camadas, e não uma cor só, por causa do Minor 2 do review da
+ * fatia 1: com `--surface-card` cravado aqui, o hover da linha tingia as demais
+ * células e morria na coluna presa — `style` inline vence QUALQUER regra, então
+ * a regra de hover do tema não alcançava este `td`.
+ *
+ * A camada de baixo (`backgroundColor`) segue sendo o card opaco, que é o que
+ * impede o conteúdo de rolar visível por baixo. A de cima é o TINTE do hover,
+ * que `brand-theme.css` injeta em `--sticky-cell-tint` na `tr` — custom
+ * property herda e chega ao `td` sem disputar especificidade com o inline.
+ *
+ * Tinte por cima do card, e não a cor do hover direto na célula, porque o hover
+ * do tema escuro é `rgba(255,255,255,.03)`: translúcido. Cravá-lo como fundo
+ * único deixaria a coluna presa quase transparente exatamente enquanto o mouse
+ * está nela — medido no navegador em 2026-08-25, tema escuro, `/operacion`.
+ * Empilhado, o resultado é o mesmo pixel da linha nos DOIS temas.
+ *
  * `borderLeft` (e não sombra) porque a tabela do DataTable NÃO colapsa borda —
  * nenhuma regra do tema põe `border-collapse` nela —, e em `separate` a célula
  * presa pinta a própria borda normalmente.
+ *
+ * A sombra é PRÓPRIA, e não a do invólucro: aquela é pintada pelo fundo do
+ * `wrapper` com `background-attachment: scroll`, e esta célula flutua por cima
+ * dela em `zIndex: 1` — do lado direito o anúncio de rolagem simplesmente
+ * sumia (Minor 3 do review da fatia 1). Mesma tinta e mesma medida das duas
+ * camadas de sombra do wrapper, para os dois lados continuarem lendo iguais.
+ *
+ * Permanente, e não só durante a rolagem: a coluna presa é permanentemente
+ * flutuante — ela cobre conteúdo sempre que a tabela rola, e a única
+ * alternativa seria um listener de rolagem que o `pt` do wrapper hoje não tem
+ * e que a decisão do UI-10 evitou de propósito. O `-1rem` de spread mantém a
+ * sombra ancorada na borda: sem rolagem ela lê como continuação da
+ * `borderLeft`, não como sujeira.
  *
  * `zIndex: 1` é o bastante: cobre as células irmãs e fica muito abaixo dos
  * overlays do Prime (diálogo e toast vivem em 1100+).
@@ -151,8 +180,11 @@ export function stickyActionsColumn(width: string): CSSProperties {
     width,
     position: 'sticky',
     right: 0,
-    background: 'var(--surface-card)',
+    backgroundColor: 'var(--surface-card)',
+    backgroundImage:
+      'linear-gradient(var(--sticky-cell-tint, transparent), var(--sticky-cell-tint, transparent))',
     borderLeft: '1px solid var(--surface-border)',
+    boxShadow: '-1rem 0 1rem -1rem color-mix(in srgb, var(--text-color) 22%, transparent)',
     zIndex: 1,
   }
 }

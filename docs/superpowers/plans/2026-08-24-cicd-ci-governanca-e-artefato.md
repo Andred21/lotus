@@ -1164,3 +1164,33 @@ Não é task mecânica de paths fechados. Três razões concretas:
    João**.
 3. **As Tasks 2 e 3 mexem em dependência de produção** de um sistema cujos certificados têm peso
    legal. Subir `react-router` e `guzzle` é mecânico; decidir o que fazer se a suíte regredir não é.
+
+---
+
+## Emenda de 2026-08-25 — a Task 9 sem plano pago
+
+O Step 6 da Task 9 é impossível como escrito: `PUT /repos/Gatika-CL/lotus/branches/main/protection`
+responde `403 Upgrade to GitHub Pro or make this repository public`, e `GET /orgs/Gatika-CL` mostra
+`plan.name = free`. Rulesets dão o mesmo 403. As duas saídas do plano original — pagar ou abrir o
+repositório — foram recusadas: não há orçamento, e abrir o código de um cliente do setor elétrico
+regulado troca confidencialidade por régua, que é preço errado.
+
+**Decisão do João em 2026-08-25:** compensar em três camadas, e registrar a lacuna em vez de
+fingir que ela não existe.
+
+1. **`.githooks/pre-push`** — prevenção na máquina de onde os pushes saem. Recusa push direto em
+   `main` no pessoal (entrada é `gh pr merge`, que roda no servidor e não passa por hook) e push
+   manual em `main` no corporativo. Instala com `git config core.hooksPath .githooks`.
+2. **Job `procedencia`, dentro do `needs` do `image`** — a compensação que importa. Não impede a
+   escrita na ref, mas impede que ela vire artefato: commit que chegou em `main` sem PR mesclado
+   não gera imagem, e portanto não é promovível. Reconstrói no artefato a garantia que a protection
+   daria na ref. Force-push não é impedido, é detectado e datado.
+3. **`scripts/espelhar-corporativo.sh` + `.espelho-exclusoes`** — o corporativo deixa de ser um
+   espelho 1:1 e passa a receber uma árvore filtrada, um commit por release, com trailer
+   `Source-Commit`. Decisão do João na mesma conversa: o repositório da empresa carrega o que
+   constrói, testa e roda o app, não o andaime de desenvolvimento.
+
+**O DoD 5 fica COMPENSADO, não provado.** A diferença é material e está escrita no relatório: nada
+impede um push direto em `main`; o que existe é recusa local, detecção no servidor e negação do
+artefato. Quando houver orçamento para GitHub Team, o Step 6 acima entra como está e vira a camada
+que falta — a única que impede de verdade.

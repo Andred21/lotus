@@ -487,7 +487,7 @@ export type RedatorTurmaPendenciaData = {
 turma_id: number,
 course_name: string,
 end_date: string,
-missing_types: string[],
+missing_types: TurmaDocumentType[],
 };
 export type ResetPasswordData = {
 token: string,
@@ -606,8 +606,8 @@ course_name: string,
 redatores: string[],
 start_date: string,
 end_date: string,
-present_types: string[],
-missing_types: string[],
+present_types: TurmaDocumentType[],
+missing_types: TurmaDocumentType[],
 habilitada: boolean,
 };
 export type TurmaData = {
@@ -620,7 +620,7 @@ start_date: string,
 end_date: string,
 status: TurmaStatus | undefined,
 habilitada: undefined | boolean,
-missing_document_types: string[],
+missing_document_types: TurmaDocumentType[] | undefined,
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
 course_name: undefined | string,

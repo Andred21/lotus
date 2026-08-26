@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
@@ -10,6 +11,7 @@ import { BatchIssueDialog } from './BatchIssueDialog'
 export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
+  const turmaInputId = useId()
 
   const turma = s.selected
 
@@ -28,7 +30,19 @@ export function EmissionPanel() {
     <div className="space-y-4 p-4">
       <AppCard>
         <div className="space-y-3 p-4">
+          {/* O rótulo é a correção do UI-02 da run de Certificados
+            * (2026-08-25). O nome acessível existia, mas vinha do PLACEHOLDER —
+            * o PrimeReact o usa como texto do botão que abre a lista —, e no
+            * visual não havia rótulo nenhum: escolhida a turma, o campo passa a
+            * mostrar só o VALOR e nada diz que aquilo é a turma. `useId` +
+            * `inputId`, a mesma forma dos três filtros de estado irmãos. A
+            * chave `certificate.turmaConcluida` já existia nas 3 locales e não
+            * era usada em lugar nenhum. */}
+          <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('certificate.turmaConcluida')}
+          </label>
           <AppDropdown
+            inputId={turmaInputId}
             value={s.turmaId}
             options={s.options}
             optionLabel="label"

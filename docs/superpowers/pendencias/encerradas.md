@@ -7,18 +7,27 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-_Nenhuma._ A **P-03** e a **P-15** saíram no fechamento do `hardening-api-arquivos-e-abuso`
-(2026-08-25); o parágrafo abaixo é o rastro delas.
+_Nenhuma._ A **P-03** e a **P-15** saíram em 2026-08-25; o parágrafo abaixo é o rastro delas.
 
 ---
 
-**A P-03 e a P-15 saíram neste fechamento (`hardening-api-arquivos-e-abuso`, 2026-08-25), o
-primeiro posterior aos dos blocos que as encerraram** — e as duas foram **remedidas antes de
-sair**, não removidas na fé: o offset de portas por árvore está em `.env.example` e nas seis
-variáveis `LOTUS_DEV_*` do `docker-compose.yml` (a stack deste fechamento subiu no offset zero,
-`:8080`/`:3307`), e o certificado do aluno está exposto no detalhe por
-`StudentTurmaData::$certificate` (`backend/app/Domains/Identity/Data/StudentTurmaData.php:36`),
-com a coluna da listagem fora por escrito na spec §9, como a ficha declarava.
+**A P-03 e a P-15 saíram nos dois fechamentos de 2026-08-25** — a fatia 2 do
+`frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros posteriores
+aos dos blocos que as encerraram. As duas foram **remedidas antes de sair**, não removidas na fé, e
+cada fechamento mediu de um lado:
+
+- **P-03, na worktree:** o container `app` de `../fix-frontend` recebe do compose
+  `APP_URL=http://localhost:8082`, `FRONTEND_URL=http://localhost:5175`,
+  `SANCTUM_STATEFUL_DOMAINS=localhost:5175,localhost:8082` e `SESSION_COOKIE=lotus_session_8082` —
+  medido com `docker compose exec -T app printenv` —, com o `backend/.env` da árvore ainda no offset
+  antigo: a injeção vence, que é o mecanismo que a ficha declarou pago, e o login pelo navegador em
+  `:5175` contra a API em `:8082` funciona com o arquivo como está.
+- **P-03, no main tree:** o offset vive em `.env.example` e nas seis variáveis `LOTUS_DEV_*` do
+  `docker-compose.yml`; a stack do fechamento do item 4 subiu no offset zero (`:8080`/`:3307`).
+- **P-15:** o certificado do aluno está exposto no detalhe por `StudentTurmaData::$certificate`
+  (`backend/app/Domains/Identity/Data/StudentTurmaData.php:36`), e o ramo recusado por escrito
+  (coluna `CERTIFICADOS` na listagem de alunos) continua declarado na §9 da spec do
+  `certificacao-historico-do-aluno` — que é o que impede a pendência de reabrir por silêncio.
 
 **Saíram no fechamento do `frontend-revisao-ui-por-modulo` (2026-08-24), o primeiro posterior aos
 dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em

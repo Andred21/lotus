@@ -3,6 +3,7 @@
 namespace App\Domains\Operation\Data;
 
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -34,7 +35,7 @@ class TurmaData extends Data
         public string $end_date,
         public TurmaStatus|Optional $status,
         public bool|Optional $habilitada,
-        /** @var string[] */
+        /** @var TurmaDocumentType[]|Optional */
         public array|Optional $missing_document_types,
         public string|null|Optional $concluded_at,
         /** @var TurmaRedatorData[] */

@@ -65,14 +65,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (0)
 
-Nenhuma em rastro. A ficha viva mora em [`abertas.md`](./abertas.md); o rastro do que já saiu está
-em [`encerradas.md`](./encerradas.md).
+Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
+fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros
+posteriores aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o offset
+injetado no container da worktree (medido com `printenv`), as seis `LOTUS_DEV_*` do
+`docker-compose.yml`/`.env.example` no main tree e o `StudentTurmaData::$certificate` no detalhe do
+aluno. A ficha viva mora em [`abertas.md`](./abertas.md); o rastro completo, em
+[`encerradas.md`](./encerradas.md).
 
-**A P-03 e a P-15 saíram no fechamento do `hardening-api-arquivos-e-abuso` (2026-08-25)**, o
-primeiro posterior aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o
-offset `LOTUS_DEV_*` no `docker-compose.yml`/`.env.example` e o `StudentTurmaData::$certificate` no
-detalhe do aluno. **A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**,
-pelo mesmo critério, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
+**A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
+posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
 
 **A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
 — e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a

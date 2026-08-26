@@ -102,8 +102,8 @@ class OperationMetricsQuery
                     start_date: $turma->start_date->toDateString(),
                     end_date: $turma->end_date->toDateString(),
                     present_types: array_values(array_filter(
-                        TurmaDocumentType::values(),
-                        fn (string $type): bool => in_array($type, $present, true),
+                        TurmaDocumentType::cases(),
+                        fn (TurmaDocumentType $case): bool => in_array($case->value, $present, true),
                     )),
                     missing_types: $status->missingTypes(),
                     habilitada: $status->isHabilitada(),
@@ -134,7 +134,7 @@ class OperationMetricsQuery
                 $pendencias[] = $this->pendingItem(
                     $turma,
                     PendingItemType::TurmaDocsIncomplete,
-                    'Documentación obligatoria incompleta: '.implode(', ', $status->missingTypes()).'.',
+                    'Documentación obligatoria incompleta: '.implode(', ', array_column($status->missingTypes(), 'value')).'.',
                     $turma->end_date->toDateString(),
                 );
             }

@@ -273,6 +273,19 @@ zero `C` aberto. A **`D-39` foi paga** pela fábrica `shared/testing/i18n.ts`. A
 não foi executada**: o João cortou o escopo em 2026-08-23 para seguir ao review. O item continua
 aqui com o que sobrou, e a fatia 2 escreve spec e plano próprios.
 
+**A fatia 2 fechou em 2026-08-25** (`lane-c`, branch `refactor/frontend-revisao-ui-f2`, narrativa em
+`historico/state-archive.md`): **Comercial** e **Certificados** medidos, relatório datado em
+`audits/` para os dois, 7 achados no total, **4 corrigidos** (um deles `C`, no wrapper
+`AppCardToolbar`) e **nenhum `C` aberto**; 3 viraram ficha `D-*`. A **`D-57` foi paga** — os quatro
+campos do contrato tipam `TurmaDocumentType` no `generated.ts` — e a **`D-38` foi decidida** e está
+registrada abaixo. Os Minors 2, 3 e 5 herdados da fatia 1 entraram junto. As réguas de aba de
+Comercial e Certificados foram **medidas e não transbordam** (`[1134, 1134, false]` em 1440x900 e
+`[276, 276, false]` em 390x844), então `scrollable` não foi ligado em nenhuma das duas.
+
+**O que sobra para uma fatia 3:** as runs de **Cursos**, **Pessoas** e **Administração**, com as
+réguas de aba dessas telas ainda sem medição, e os `B` que virarem ficha. O escopo abaixo continua
+valendo para o que não foi coberto.
+
 **Evidência medida (2026-08-22):** a terceira passada no Dashboard admin achou 8 itens, e **6
 moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo `dataKey` (`value : 2` no tooltip),
 `AppDatePicker` fixava `dateFormat` e `locale="es"`, `AppDropdown` congelava o nome acessível no
@@ -282,20 +295,19 @@ mesmos padrões aparecem** — e cada revisão anterior encontrou defeito de wra
 leitura de código tinha achado.
 
 **Escopo:**
-- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: **Comercial**
-  (`/comercial` + detalhe), Certificados, Cursos, Pessoas, Administração. O Dashboard
-  `ready-redator` e a Operação saíram na fatia 1;
-- **D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
-  enum (`EVALUACION_REDATOR`) — a D17 diz que é o backend, e o dicionário do cliente já tem os
-  rótulos;
+- uma run de `/lotus-ui-review` por superfície ainda não coberta, em ordem de peso: ~~**Comercial**
+  (`/comercial` + detalhe)~~ e ~~Certificados~~ (fatia 2), **Cursos**, **Pessoas**,
+  **Administração**. O Dashboard `ready-redator` e a Operação saíram na fatia 1;
+- ~~**D-38**: decidir quem traduz a frase da pendência que hoje chega do backend com o código do
+  enum (`EVALUACION_REDATOR`)~~ — **decidido e registrado na fatia 2**;
 - **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
   a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
   (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
   acima liga a sua, se a régua transbordar em 1440x900 ou 390x844 — e não por padrão no wrapper,
   que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
   `overflow: hidden`, e o efeito disso em tela não medida é suposição;
-- **D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`
-  (correção de backend — ver ficha);
+- ~~**D-57**: `missing_types` e `missing_document_types` chegam como `string[]` no `generated.ts`~~
+  — **paga na fatia 2** (2026-08-25);
 - os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
   couberem.
 
@@ -386,6 +398,66 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
   o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
   `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
+  **PAGA em 2026-08-25**, na fatia 2 do `frontend-revisao-ui-por-modulo`: a cadeia da RN-16 carrega
+  `TurmaDocumentType` de `TurmaHabilitacaoService` até os DTOs, os quatro campos (`missing_types`
+  ×2, `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum
+  no `generated.ts`, e `turmaDocumentTypeLabel` perdeu o fallback de código cru. Fica aqui como
+  registro; sai da lista no próximo saneamento dos débitos.
+
+- **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
+  `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
+  mensagem de recusa em espanhol literal, como as demais da família **D-07**. É a metade da UI-01 da
+  run de Operação que ficou fora do fence da fatia 1 do item 16 (frontend puro), e a ficha não foi
+  escrita porque a Task 12 daquele plano foi cortada. Mesmo remédio da D-07/D-36: `__()` com chave
+  nas 4 `lang/`. **DoD:** a mesma recusa em es-CL, pt-BR e en devolve a mensagem no locale pedido.
+
+- **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
+  `frontend-revisao-ui-por-modulo`. UI-03 da run de Comercial de 2026-08-25
+  (`audits/2026-08-25-lotus-ui-review-comercial.md`), classe `B`. Em `/comercial/presupuestos/:id` a
+  linha `div.flex.justify-end.px-4.pt-4` tem 1134px de largura e 56px de altura para carregar UM
+  filho de 228px encostado à direita — 943px de faixa vazia entre o cabeçalho "Cotizaciones 3" e a
+  primeira cotação. Diferente das listas do índice, este card não tem busca para ocupar o lado
+  esquerdo da régua. O remédio provável é subir o alternador para o slot `actions` do
+  `AppCardHeader` (`AppCard.tsx:174`), que já existe; ficou de fora da fatia 2 porque é composição
+  de UMA tela e pede remedir o detalhe inteiro nos três viewports. **DoD:** o card abre com o
+  alternador na linha do cabeçalho e sem faixa vazia, medido nos três viewports.
+
+- **D-60 · O motivo que desabilita a emissão fica longe da ação, e as linhas não o repetem** →
+  `frontend-revisao-ui-por-modulo`. UI-03 da run de Certificados de 2026-08-25
+  (`audits/2026-08-25-lotus-ui-review-certificados.md`), classe `B`. Em `/certificados` aba Emisión,
+  a tag "El curso no tiene plantilla de certificado" (`EmissionPanel.tsx:62-64`) fica à esquerda e o
+  botão do lote que ela desabilita (`EmissionPanel.tsx:66-75`) à direita, com a largura do card
+  entre os dois; ao rolar até a tabela a tag sai da viewport e os 13 botões "Emitir" desabilitados
+  não carregam `title` nem tooltip que diga o porquê. Em 390x844 a pilha empilha e o par já fica
+  junto — o problema é a régua horizontal do desktop. Ficou de fora da fatia 2 porque há mais de um
+  remédio possível (aviso ao lado do botão, tooltip por linha, ou os dois) e cada um muda o que a
+  tela diz numa jornada de ESCRITA que a run read-only não pôde exercitar. **DoD:** com a emissão
+  bloqueada, o motivo é legível a partir do controle bloqueado, sem rolar de volta.
+
+- **D-61 · A validação pública de um código inexistente responde só com o título** →
+  `frontend-revisao-ui-por-modulo`. UI-04 da run de Certificados de 2026-08-25, classe `B`.
+  `ValidationPage.tsx:109-113` renderiza o ramo `notFound` com um `StatusHeading` e nada mais —
+  "Certificado no encontrado" —, enquanto o ramo `revoked` logo abaixo acrescenta linha de detalhe.
+  Quem valida é alguém DE FORA do sistema (fiscalizador, cliente) escaneando um QR, e a mensagem
+  sozinha não distingue código digitado errado de certificado inexistente nem oferece próximo passo,
+  numa tela de peso legal. **Travada em decisão do João:** o texto é copy pública em es-CL e não
+  deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
+  de orientação aprovada, nas 3 locales.
+
+- **D-62 · Nada reprova um `AppDropdown` de filtro sem nome — o achado já apareceu 3 vezes** →
+  `frontend-hardening-final`. O mesmo defeito foi encontrado por três runs independentes em três
+  dias, sempre na mesma forma (`<div className="w-48">` com o `AppDropdown` solto dentro, sem
+  `<label>`, sem `aria-label` e sem `aria-labelledby`): UI-07 de Operação (2026-08-23, pago no
+  `TurmaStatusFilter`), UI-02 de Comercial e UI-01 de Certificados (2026-08-25, pagos no
+  `BudgetStatusFilter` e no `HistorialTable`), mais o UI-02 de Certificados no seletor de turma da
+  Emisión, que só tinha nome por acidente do placeholder. Três correções idênticas e nenhuma
+  catraca: nem o lint, nem a suíte, nem o `tsc` sabem que um dropdown precisa de nome acessível — a
+  quarta ocorrência nasce verde. Lição 14 do `docs/README.md` (instrução repetida três vezes quer
+  mecanismo). O remédio provável é regra de lint por FORMA, não grep por grafia (`AppDropdown` sem
+  `inputId` nem `aria-label` dentro de `src/features/**`), medida com o próprio seletor antes de
+  virar catraca — é a lição do `eslint.config.js` que nasceu casando só `arguments.0`. **DoD:**
+  remover o `inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o
+  arquivo.
 
 - **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
   `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
@@ -461,7 +533,13 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   `Documentación obligatoria incompleta: MANUAL, PRUEBAS, EVALUACION_REDATOR.`, e o
   `CompliancePanel` — que monta a própria coluna — já passou a traduzir pelos mesmos códigos
   (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
-  cru na outra. Decisão pendente: o backend traduz a frase, ou manda as partes e o cliente compõe.
+  cru na outra.
+  **Decidido em 2026-08-22 (D1 da spec da fatia 1), registrado em 2026-08-25:** o backend manda as
+  PARTES e o cliente compõe. Traduzir a frase no backend exige `Accept-Language`, que é exatamente o
+  que o item 7 (`hardening-i18n-e-erros-api`) instala junto de **D-18** e **D-36** — fazer agora
+  seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
+  por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
+  cru vindo de `OperationMetricsQuery.php:137`.
 
 - **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
   fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
