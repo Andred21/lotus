@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AppPassword } from './AppPassword'
 
 afterEach(() => {
@@ -127,5 +127,49 @@ describe('AppPassword — o olho tem alvo de toque de 24px para cima (UI-04)', (
     // inline) e `translateY(-50%)` centra a LINHA, não o glifo — medido: 2px
     // acima do eixo do campo.
     expect(span.style.display).toBe('flex')
+  })
+})
+
+/**
+ * D-33, medida no BD-16 (2026-08-18) em Chromium real: o Prime troca `showIcon`
+ * por `hideIcon` ao alternar, o nó focado sai do DOM e `document.activeElement`
+ * vira `BODY`. Quem alterna pelo teclado perde o lugar na página.
+ *
+ * O ícone já é focável — o Prime crava `tabIndex: props.tabIndex || '0'`
+ * (`password.cjs.js:601,610`). O que falta é continuidade, não alcance.
+ *
+ * O âncora é `[role="button"]` dentro do `.p-password`: o `role` é pinado por
+ * este wrapper (o default do Prime é `switch` com `aria-checked` invertido,
+ * UI-04 de 2026-08-13) e é o único controle dentro do campo.
+ */
+describe('AppPassword devolve o foco ao olho', () => {
+  function olho(container: HTMLElement) {
+    const alvo = container.querySelector('.p-password [role="button"]')
+    if (!alvo) throw new Error('olho não encontrado')
+    return alvo as SVGElement & { focus: () => void }
+  }
+
+  it('depois de alternar, o foco fica no ícone e não no <body>', async () => {
+    const { container } = render(<AppPassword aria-label="senha" />)
+
+    olho(container).focus()
+    fireEvent.click(olho(container))
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(olho(container))
+      expect(document.activeElement?.tagName).not.toBe('BODY')
+    })
+  })
+
+  /** O foco só volta para quem o tinha. Alternar por clique de mouse não pode
+   * roubar o foco de outro campo — seria um defeito novo no lugar do antigo. */
+  it('não rouba o foco quando o olho não o tinha', async () => {
+    const { container } = render(<AppPassword aria-label="senha" />)
+    const campo = screen.getByLabelText('senha')
+
+    campo.focus()
+    fireEvent.click(olho(container))
+
+    await waitFor(() => expect(document.activeElement).toBe(campo))
   })
 })

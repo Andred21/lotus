@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Password } from 'primereact/password'
 
+import type { MouseEvent } from 'react'
 import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
@@ -81,9 +82,32 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // utilitárias do Tailwind estão DENTRO de `@layer utilities`, então o
     // seletor universal do projeto vence a classe — medido no navegador, com a
     // classe aplicada e `box-sizing` resolvendo `border-box` mesmo assim.
+    // D-33. O Prime troca `showIcon` por `hideIcon` ao alternar: o nó focado sai
+    // do DOM e `document.activeElement` vira `BODY`. O ícone já é focável
+    // (`tabIndex: '0'`, password.cjs.js:601,610) — o que falta é continuidade.
+    //
+    // Vai no `pt` e não num handler próprio porque o `mergeProps` do Prime
+    // ENCADEIA funções (utils.cjs.js:2693-2697): o `onClick: toggleMask` dele
+    // roda primeiro e este roda em seguida. Um handler próprio no lugar dele
+    // alternaria a máscara duas vezes — o mesmo defeito que o docblock acima
+    // registra para o teclado.
+    //
+    // A condição existe para não ROUBAR foco: alternar por clique de mouse
+    // enquanto o cursor está no input não pode arrastar o foco para o olho.
+    // `queueMicrotask` porque o nó novo só existe depois do commit do React.
+    const devolverFoco = (event: MouseEvent<Element>) => {
+      const alvoAntigo = event.currentTarget
+      const campo = alvoAntigo.closest('.p-password')
+      if (document.activeElement !== alvoAntigo) return
+      queueMicrotask(() => {
+        const novo = campo?.querySelector('[role="button"]')
+        if (novo instanceof HTMLElement || novo instanceof SVGElement) novo.focus()
+      })
+    }
     const togglePt = {
       role: 'button',
       'aria-checked': undefined,
+      onClick: devolverFoco,
       style: { boxSizing: 'content-box' as const, padding: '0.375rem' },
     }
     const ariaPt = {
