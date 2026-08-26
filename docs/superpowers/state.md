@@ -8,7 +8,7 @@ workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -49,7 +49,7 @@ lanes:
     next_action: continue_active_planning
     tree: ../fix-frontend
     branch: refactor/frontend-hardening-final   # nasce de main@5550178a
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
     active_plan: null
     context_packet: null
     blocker: null
