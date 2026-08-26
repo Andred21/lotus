@@ -529,6 +529,39 @@ da aba que não chamou o csrf-cookie por último volta 419, e o front não se re
 decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
 `.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
 
+## P-62 — a `main` dos dois repositórios não tem branch protection; a régua é compensada
+
+**Nasceu como `P-61` na branch `cicd/ci-governanca-e-artefato` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) vinda do
+fechamento do `hardening-api-arquivos-e-abuso`. Quem renumera é a recém-chegada.
+
+**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team (ou
+decisão de tornar o repositório público), ou **2026-10-31**, o que vier primeiro.
+
+O item 11 desenhou `PUT /repos/<owner>/lotus/branches/main/protection` com required checks como o
+DoD 5 do bloco. Medido em 2026-08-25: a API responde `403 Upgrade to GitHub Pro or make this
+repository public`, e `GET /orgs/Gatika-CL` mostra `plan.name = free`. Rulesets dão o mesmo 403. As
+duas saídas do plano original foram **recusadas pelo João**: não há orçamento, e abrir o código de
+um cliente do setor elétrico regulado troca confidencialidade por régua, que é preço errado.
+
+**O DoD 5 fechou COMPENSADO, não provado**, e a diferença é material: **nada impede um push direto
+em `main`**. O que existe são três camadas que reduzem o dano sem eliminá-lo —
+`.githooks/pre-push` (recusa local, e só vale para quem rodou `git config core.hooksPath
+.githooks`), o job `procedencia` (commit que chegou em `main` sem PR mesclado **não vira imagem**,
+então não é promovível) e `scripts/espelhar-corporativo.sh` (árvore filtrada, um commit por
+release, trailer `Source-Commit` conferido contra o histórico de `main` da origem). A camada que
+falta é a única que impede de verdade, e ela é a camada 0.
+
+**Fica escrito para não virar silêncio:** force-push em `main` não é impedido, é **detectado e
+datado** pelo `procedencia`; e a janela entre o push e a negação do artefato existe. A prova disso
+é a própria sonda vermelha `26d0e3e9`, que segue no histórico de `main` do repositório pessoal.
+
+**Fecha quando** o Step 6 da Task 9 do plano arquivado
+([`plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md`](../plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md))
+puder rodar como está e o readback da API mostrar `required_pull_request_reviews` e os quatro
+required checks (`backend`, `frontend`, `types-drift`, `audit-prod`) ativos nas duas `main`.
+Evidência do que foi medido: [`../audits/2026-08-24-cicd-evidencias.md`](../audits/2026-08-24-cicd-evidencias.md).
+
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
 **Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (28)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
@@ -62,6 +62,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 
 ## Encerradas (0)
 
@@ -83,11 +84,3 @@ posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do 
 critério contra o BD-14. O rastro de todas fica nos commits e nas
 linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
-
-A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
-`bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo
-mesmo precedente da **P-26**, da **P-38** e da **P-34**. A **P-45** saiu no fechamento do
-`arquivados-roots-restantes` (2026-08-19) e segue encerrada depois do merge da `main`: o conserto
-que a fecha está commitado nos dois sítios que liam a variável — `tests/TestCase.php:25`
-(`explode` + primeira origem) e `config/cors.php:22` (`explode`). O rastro durável de todas vive nos
-commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).

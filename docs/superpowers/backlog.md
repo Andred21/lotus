@@ -185,28 +185,6 @@ depende do working tree do servidor.
 
 ---
 
-## 11. `cicd-ci-governanca-e-artefato`
-
-**Prioridade:** P0 para Continuous Delivery · **Frente:** GitHub/Infra · **Contexto:** sim
-**Fonte:** decisão atual de CI/CD; ADR-13/14; `D-08`.
-
-**Topologia a validar:** `Gatika/lotus` como upstream corporativo; `Andred21/lotus` como
-fork/workbench; `origin` pessoal + `upstream` corporativo; worktrees somente locais; `develop`
-apenas se existir staging real — sem staging, PR da feature vai ao `Gatika/main`.
-
-**Escopo:** CI rápido pessoal; CI corporativo obrigatório; backend test; frontend
-`pnpm install --frozen-lockfile` + lint/test/build; regenerar tipos e reprovar drift de
-`generated.ts` (**D-08** — fecha a lei §5.3); audit de dependências; branch protection/required
-checks; build único da imagem de produção; GHCR com tag por commit SHA.
-
-**Limite:** esta consolidação não confirmou configurações do `Gatika/lotus`; não inventar
-branch/ruleset/Environment/secret existente.
-
-**DoD:** commit reprovado não gera release promovível; aprovado gera artefato imutável
-identificável.
-
----
-
 ## 12. `cicd-promocao-deploy-e-rollback`
 
 **Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
@@ -380,14 +358,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
   chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
   falta aplicar.
-
-- **D-08 · A lei §5.3 (`generated.ts` não se edita à mão) segue sem mecanismo** →
-  `cicd-ci-governanca-e-artefato`. Único mecanismo hoje é `globalIgnores` no lint
-  (`eslint.config.js:158`), que só tira o arquivo do corte. §5.1/5.2 cobertas por
-  `PersistenceLawsTest`, §5.6 por `no-restricted-imports` nas três fronteiras (remedido 2026-08-14
-  contra `977586e`); §5.4/5.5/5.7/5.8 sem guarda e sem desenho medido — não entram como promessa.
-  Fecho: CI regenera `typescript:transform` e reprova drift do commitado. **DoD-sonda:** editar
-  `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
 
 - **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
   `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
