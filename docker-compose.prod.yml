@@ -32,6 +32,37 @@ services:
     depends_on: [gotenberg, clamav]
     logging: *logging
 
+  # O runner do agendador (spec §4.4). Antes deste bloco NADA agendava nada no
+  # projeto: sem `app/Console/`, sem um único `Schedule::`, e sem cron ou
+  # supervisor em compose nenhum nem no entrypoint. A poda de retenção existiria
+  # como código que nunca executa.
+  #
+  # Container próprio e não cron do host: o item 10 comprou "o runtime não
+  # depende do working tree do servidor" COPIANDO o código para dentro da
+  # imagem, e um crontab no host devolveria essa dependência pela porta dos
+  # fundos. Mesma imagem, mesmo env_file, mesmo entrypoint — inclusive o gate de
+  # variável obrigatória, que aqui vale igual: scheduler que sobe sem DB_HOST
+  # falharia toda madrugada em silêncio.
+  #
+  # `schedule:work` e não `schedule:run` num laço: é o processo de longa duração
+  # que o Laravel publica para exatamente este caso, e o `restart` do Compose
+  # cobre a queda dele.
+  #
+  # Sem `ports` e sem healthcheck: não atende ninguém. A contrapartida está
+  # declarada como risco na spec §8 — travamento silencioso do processo não é
+  # coberto por `restart`, e a ficha de dívida registra isso.
+  scheduler:
+    image: ${LOTUS_IMAGE:-lotus-app:local}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      target: app
+    env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
+    command: ["php", "artisan", "schedule:work"]
+    restart: unless-stopped
+    depends_on: [app]
+    logging: *logging
+
   nginx:
     image: ${LOTUS_WEB_IMAGE:-lotus-web:local}
     build:
