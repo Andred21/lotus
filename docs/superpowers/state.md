@@ -4,25 +4,25 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
 context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
 blocker: null
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
     context_packet: docs/superpowers/context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
     blocker: null
     resume_state: null
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 038b4a70
-updated_at: 2026-08-26T03:40:00-03:00
+updated_at: 2026-08-26T04:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `planning` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_execution` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -232,8 +232,21 @@ construção do zero: `config/logging.php` é o stub vanilla e o app inteiro tem
 todas de descarte de arquivo órfão.
 
 A spec está em `specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, com
-nove decisões, cinco catracas e treze itens de DoD. O próximo passo da lane é o **plano**; execução
-segue proibida até `ready_for_execution`.
+nove decisões, cinco catracas e treze itens de DoD.
+
+**Plano escrito e a lane em `ready_for_execution` — 2026-08-26.** Nove tasks em
+`plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md`, ordenadas por dependência e
+não por preferência. **`executor: claude`**, e a razão está escrita no handoff: a poda escreve por
+consulta crua, o que PARECE violar a lei §5.2 e a lição 5 e é exatamente o oposto delas — apagar
+trilha não pode gerar trilha —, e errar isso não quebra teste nenhum, gera auditoria da auditoria em
+produção, em silêncio. Somam-se cinco números com gatilho de revisão durante a execução e três
+arquivos do caminho de autenticação que o bloco anterior deixou com risco medido no comentário. O
+Codex entra **depois**, na revisão independente pelo `/revisar-sprint`.
+
+Dois desvios de implementação ficam declarados no próprio plano, nenhum de escopo: a poda executa
+descarte antes de anonimização (mesmas janelas, menos trabalho) e o canal de log é endereçado por
+nome em vez de por `LOG_CHANNEL` (mesmo destino, determinístico no teste, e o desenvolvimento ganha
+o mesmo canal).
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
