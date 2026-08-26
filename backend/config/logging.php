@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -103,6 +104,31 @@ return [
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        /*
+         * Canal dos eventos de segurança (RNF-SEC-05). Endereçado SEMPRE pelo
+         * nome, em `Shared/Logging/EventoDeSeguranca` — nunca pelo canal
+         * default —, então não depende de `LOG_CHANNEL` nem de `LOG_STACK` e
+         * vale igual em desenvolvimento e em produção.
+         *
+         * `stderr` porque é para lá que o runtime de produção manda tudo, e o
+         * Docker aplica o teto `json-file` 10 MB × 3 do `docker-compose.prod.yml`
+         * — essa rotação É a política de retenção deste log, não um acidente de
+         * default.
+         *
+         * `JsonFormatter` porque linha de log de segurança é para ser LIDA por
+         * máquina: quem procurar "todo 403 do usuário 7 ontem" precisa filtrar
+         * por campo, não por regex sobre prosa.
+         */
+        'seguranca' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => JsonFormatter::class,
         ],
 
         'syslog' => [
