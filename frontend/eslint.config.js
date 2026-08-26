@@ -478,6 +478,36 @@ export default defineConfig([
       ],
     },
   },
+  // D-35: `src/app/**` era o único lado do seam `shared/ui` sem o ban de
+  // PrimeReact. O bloco por feature (`:434`) cobre `src/features/**` e o de
+  // cima cobre `src/shared/**`; a camada do shell ficava de fora, com 28
+  // arquivos só em `app/pages/Dashboard/`.
+  //
+  // UM grupo só, de propósito: `app/` importa CINCO features pelo AppRouter, e
+  // compor rota é o trabalho desta camada — o ban de feature→feature não vem
+  // junto (o comentário do bloco de shared já registra a exceção).
+  //
+  // Sem colisão de merge raso: os dois blocos que casam `src/app/**` hoje
+  // declaram `max-lines` e `no-restricted-syntax`, não `no-restricted-imports`.
+  // O glob é `{ts,tsx}` e não só `.tsx` porque um `.ts` de `app/` importa
+  // componente igual, e o ban de fronteira é barato.
+  {
+    files: ['src/app/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['primereact', 'primereact/*'],
+              message:
+                'app/ não importa PrimeReact direto: use o wrapper de @shared/ui (CLAUDE.md §5.6, ADR-05).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // BD-3 §4 (modo leitura) também vale em `shared/ui`: `FormField`/`NestedField`
   // moram lá, e um wrapper que reintroduzisse `disabled={readOnly}` por dentro
   // escaparia dos blocos de `src/features/**` acima. Bloco isolado porque
