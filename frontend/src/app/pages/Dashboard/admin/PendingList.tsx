@@ -20,7 +20,7 @@ export function PendingList({ items }: { items: PendingItemData[] }) {
           description={t('dashboard.pending.emptyHint')}
         />
       ) : (
-        <ul className="m-0 list-none p-0">
+        <ul>
           {items.map((item) => (
             <DashboardItemRow
               key={`${item.type}-${item.entity_id}`}

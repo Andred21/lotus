@@ -34,7 +34,7 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
           description={t('dashboard.redator.pendencias.emptyHint')}
         />
       ) : (
-        <ul className="m-0 list-none p-0">
+        <ul>
           {items.map((item) => (
             <li
               key={item.turma_id}

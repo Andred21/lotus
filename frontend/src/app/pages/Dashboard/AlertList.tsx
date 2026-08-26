@@ -25,7 +25,7 @@ export function AlertList({ items, emptyHint }: { items: AlertData[]; emptyHint:
       {items.length === 0 ? (
         <AppEmptyState icon="pi pi-shield" title={t('dashboard.alerts.empty')} description={emptyHint} />
       ) : (
-        <ul className="m-0 list-none p-0">
+        <ul>
           {items.map((item) => (
             <DashboardItemRow
               key={`${item.type}-${item.entity_id}`}
