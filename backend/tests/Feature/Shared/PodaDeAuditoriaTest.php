@@ -3,6 +3,7 @@
 namespace Tests\Feature\Shared;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Retention\RetentionPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -98,12 +99,38 @@ class PodaDeAuditoriaTest extends TestCase
 
     public function test_poda_atravessa_mais_de_um_chunk(): void
     {
-        for ($i = 0; $i < 5; $i++) {
-            $this->plantar(now()->subYears(6)->toDateTimeString());
+        // Precisa passar de RetentionPolicy::CHUNK: com menos linhas que o
+        // teto por sentença, o `do...while ($afetadas > 0)` do comando fecha
+        // numa passada só e o teste não prova paginação nenhuma. Insert em
+        // lote — inserir uma a uma pagaria RetentionPolicy::CHUNK + 5 idas ao
+        // banco só para plantar o cenário.
+        $criadaEm = now()->subYears(6)->toDateTimeString();
+        $linhas = [];
+
+        for ($i = 0; $i < RetentionPolicy::CHUNK + 5; $i++) {
+            $linhas[] = [
+                'user_type' => 'user',
+                'user_id' => 1,
+                'event' => 'updated',
+                'auditable_type' => 'client',
+                'auditable_id' => 99,
+                'old_values' => '{"name":"antes"}',
+                'new_values' => '{"name":"depois"}',
+                'url' => 'https://lotus.cl/api/clients/99',
+                'ip_address' => '203.0.113.9',
+                'user_agent' => 'Mozilla/5.0',
+                'tags' => null,
+                'created_at' => $criadaEm,
+                'updated_at' => $criadaEm,
+            ];
         }
+
+        DB::table('audits')->insert($linhas);
 
         $this->artisan('lotus:podar-auditoria')->assertSuccessful();
 
+        // Só zera se o comando tiver dado mais de uma passada de descarte —
+        // cada passada apaga no máximo CHUNK linhas.
         $this->assertSame(0, DB::table('audits')->count());
     }
 
@@ -113,10 +140,16 @@ class PodaDeAuditoriaTest extends TestCase
 
         $this->artisan('lotus:podar-auditoria')->assertSuccessful();
 
+        // O `create` acima já gravou uma trilha "created" (é `now()`, sempre
+        // dentro de toda janela) — contar antes do update isola o que importa:
+        // se a poda desligou a auditoria PARA ESTE MODEL, nenhuma linha nova
+        // nasce e a contagem não sobe.
+        $antes = DB::table('audits')->where('auditable_type', 'user')->where('auditable_id', $user->id)->count();
+
         $user->update(['name' => 'Nome novo']);
 
         $this->assertGreaterThan(
-            0,
+            $antes,
             DB::table('audits')->where('auditable_type', 'user')->where('auditable_id', $user->id)->count(),
             'A poda não pode desligar a auditoria (ADR-08).',
         );
