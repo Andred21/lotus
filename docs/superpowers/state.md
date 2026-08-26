@@ -4,14 +4,15 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker
+resume_state: context_required
 active_spec: null
 active_plan: null
-context_packet: null
-blocker: null
+context_packet: docs/superpowers/context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md   # status: blocked -- nao autoriza planejamento
+blocker: >-
+  o item 12 nao tem destino de deploy: a EC2 nao existe. O item 10 `infra-producao-provisionamento-aws` segue na fila com as quatro decisoes abertas (regiao, tamanho da EC2, DNS/SES + canal de alerta, teto de custo), e nao ha IaC, host/IP, usuario SSH nem bootstrap de `/opt/lotus` em nenhuma fonte. `SSH EC2 -> compose pull -> migrate -> up -> /up` nao e planejavel nem provavel hoje. Somado a isso, a leitura viva de `Gatika-CL/lotus` falhou com `404 Not Found`, entao Environment, secrets e branches do corporativo nao estao comprovados. Decisao do Joao: promover o item 10 antes, ou recortar o 12 na parte que nao depende de host.
 lanes:
   lane-a:
     active_feature: null
@@ -30,16 +31,16 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: blocked
+    next_owner: joao
+    next_action: resolve_blocker
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # criada de main@83945ff3 em 2026-08-26
     active_spec: null
     active_plan: null
-    context_packet: null
-    blocker: null
-    resume_state: null
+    context_packet: docs/superpowers/context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
+    blocker: dependencia do item 10 -- sem EC2 provisionada nao ha destino de deploy; ver o packet
+    resume_state: context_required
     last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
     active_feature: null
@@ -57,7 +58,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 83945ff3
-updated_at: 2026-08-26T10:00:00-03:00
+updated_at: 2026-08-26T17:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,13 +163,13 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `main@83945ff3`) | `context_required` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `main@83945ff3`) | `blocked` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
 fechou: o 11 constrói o artefato imutável por SHA, o 12 o promove para produção com aprovação,
-health e rollback. Nasce em `context_required` (`Contexto: sim` na fila). A branch
+health e rollback. Nasceu em `context_required` (`Contexto: sim` na fila) e **o packet do Codex voltou `status: blocked`** no mesmo dia, com `RECOMMENDED_TRANSITION: blocked`: nao ha destino de deploy. O item 10 (`infra-producao-provisionamento-aws`) segue na fila com as quatro decisoes abertas, e nenhuma das cinco fontes externas consultadas entrega host, credencial SSH ou `/opt/lotus` — o `SSH EC2 -> compose pull -> migrate -> up -> /up` do escopo nao tem onde acontecer. O packet foi guardado assim mesmo, porque e a evidencia do bloqueio; **ele nao autoriza planejamento** (§6 do `/planejar-bloco`: `status: blocked` nunca prossegue). A leitura viva de `Gatika-CL/lotus` falhou com `404`, entao Environment/secrets/branches do corporativo ficam sem comprovacao — a P-62 ja prevê o teto do plano Free. A branch
 `cicd/promocao-deploy-e-rollback` sai de `main@83945ff3` — o tip da `origin/main`, que já contém o
 item 11 mesclado (PR #79), então o artefato que este bloco promove existe. **O espelho do topo virou
 para `lane-b` nesta árvore**, fora do main tree: é a **P-55**, e segue o precedente medido de
