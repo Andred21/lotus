@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
 active_plan: docs/superpowers/plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 038b4a70
-updated_at: 2026-08-26T04:55:00-03:00
+updated_at: 2026-08-26T22:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_execution` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `executing` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -247,6 +247,14 @@ Dois desvios de implementação ficam declarados no próprio plano, nenhum de es
 descarte antes de anonimização (mesmas janelas, menos trabalho) e o canal de log é endereçado por
 nome em vez de por `LOG_CHANNEL` (mesmo destino, determinístico no teste, e o desenvolvimento ganha
 o mesmo canal).
+
+**Transição para `executing` registrada tarde — 2026-08-26.** A execução via
+`subagent-driven-development` já ia da Task 1 à Task 8 quando este arquivo mudou de
+`ready_for_execution` para `executing`; o procedimento pede a transição no mesmo commit da primeira
+task durável (Task 1, `cbe3f711`), e isso não aconteceu ali. O ledger (`.superpowers/sdd/progress.md`)
+e o `git log` da branch são a prova de que o trabalho é contínuo desde então — nenhuma task foi
+pulada ou refeita por causa da lacuna; é disciplina de registro atrasada, não um estado real
+diferente do que o `state.md` já deveria dizer.
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
