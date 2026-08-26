@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: cicd-promocao-deploy-e-rollback
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -29,12 +29,12 @@ lanes:
     last_completed_work_item: hardening-api-arquivos-e-abuso
   lane-b:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: cicd-promocao-deploy-e-rollback
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: ../lotus-infra
-    branch: cicd/ci-governanca-e-artefato   # fechada em 2026-08-26; mesclada (PR #77)
+    branch: cicd/promocao-deploy-e-rollback   # criada de main@83945ff3 em 2026-08-26
     active_spec: null
     active_plan: null
     context_packet: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
-state_basis_commit: 4dd5075a
-updated_at: 2026-08-26T01:40:00-03:00
+state_basis_commit: 83945ff3
+updated_at: 2026-08-26T10:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,8 +162,18 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
-| `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `main@83945ff3`) | `context_required` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
+
+**A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
+explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
+fechou: o 11 constrói o artefato imutável por SHA, o 12 o promove para produção com aprovação,
+health e rollback. Nasce em `context_required` (`Contexto: sim` na fila). A branch
+`cicd/promocao-deploy-e-rollback` sai de `main@83945ff3` — o tip da `origin/main`, que já contém o
+item 11 mesclado (PR #79), então o artefato que este bloco promove existe. **O espelho do topo virou
+para `lane-b` nesta árvore**, fora do main tree: é a **P-55**, e segue o precedente medido de
+2026-08-24, quando as três lanes fizeram o mesmo. A `lane-a` está em `ready_for_planning` do item 5
+na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segue serial.
 
 **A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
