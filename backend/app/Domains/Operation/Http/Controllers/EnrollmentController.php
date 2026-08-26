@@ -16,6 +16,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Files\ContentClass;
 use App\Shared\Rules\ValidRut;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -90,7 +91,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     public function import(Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse
     {
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,csv,txt', 'max:10240'],
+            'file' => ContentClass::Planilha->regras(),
         ]);
 
         return $action->execute($turma, $validated['file'])

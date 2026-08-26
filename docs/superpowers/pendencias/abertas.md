@@ -529,7 +529,11 @@ da aba que não chamou o csrf-cookie por último volta 419, e o front não se re
 decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
 `.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
 
-## P-61 — a `main` dos dois repositórios não tem branch protection; a régua é compensada
+## P-62 — a `main` dos dois repositórios não tem branch protection; a régua é compensada
+
+**Nasceu como `P-61` na branch `cicd/ci-governanca-e-artefato` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) vinda do
+fechamento do `hardening-api-arquivos-e-abuso`. Quem renumera é a recém-chegada.
 
 **Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team (ou
 decisão de tornar o repositório público), ou **2026-10-31**, o que vier primeiro.
@@ -842,3 +846,29 @@ devolvia o acesso ao staff desligado sem ninguém pedir.
 Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
 `CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
 nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.
+
+## P-61 — os `title` do `ProblemDetails` estão em português num produto es-CL
+
+**Bloco:** `hardening-api-arquivos-e-abuso` (achado Q-2 do review de 2026-08-25) ·
+**Gatilho:** fecha quando um bloco tocar o `ProblemDetails` ou a camada de mensagens ao usuário por
+outro motivo, e puder traduzir os cinco `title` de uma vez com o João. Revisar em **2026-10-31**.
+
+Medido ao vivo contra a API em 2026-08-25, na 6ª tentativa de `POST /api/login`:
+
+```json
+{"type":"https://lotus.cl/errors/too-many-requests","title":"Demasiadas solicitudes","status":429,"detail":"Too Many Attempts."}
+```
+
+O `detail` em inglês era do framework e **foi corrigido no próprio review** — o 429 é o único status
+que aquele bloco estreou, e a mensagem dele passou a falar es-CL como as de arquivo e de import.
+
+O que ficou é anterior ao bloco e maior que ele: os `title` dos outros braços do
+`ProblemDetails::fromException` estão em **português** (`Erro de validação`, `Não autenticado`,
+`Acesso negado`, `Recurso não encontrado`, `Erro na requisição`, `Erro interno`), e o `detail`
+mascarado do 500 também (`Ocorreu um erro inesperado. Tente novamente.`). O produto é es-CL: o
+usuário é a Lotus, no Chile.
+
+**Por que não foi consertado junto:** traduzir os seis `title` e o mascaramento do 500 muda texto que
+o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
+produto, do João — não efeito colateral de um bloco de hardening.
+

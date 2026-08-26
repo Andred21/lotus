@@ -49,12 +49,27 @@ class TurmaHabilitacaoServiceTest extends TestCase
         ]);
     }
 
+    public function test_missing_types_devolve_casos_do_enum_e_nao_strings(): void
+    {
+        $missing = $this->service->for($this->turma)->missingTypes();
+
+        $this->assertCount(3, $missing);
+        $this->assertContainsOnlyInstancesOf(TurmaDocumentType::class, $missing);
+        $this->assertSame(
+            [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            $missing,
+        );
+    }
+
     public function test_sem_docs_lista_os_3_tipos_faltantes(): void
     {
         $status = $this->service->for($this->turma);
 
         $this->assertFalse($status->isHabilitada());
-        $this->assertSame(['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'], $status->missingTypes());
+        $this->assertSame(
+            [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            $status->missingTypes(),
+        );
     }
 
     public function test_doc_parcial_lista_so_o_que_falta(): void
@@ -65,7 +80,7 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $status = $this->service->for($this->turma);
 
         $this->assertFalse($status->isHabilitada());
-        $this->assertSame(['EVALUACION_REDATOR'], $status->missingTypes());
+        $this->assertSame([TurmaDocumentType::EVALUACION_REDATOR], $status->missingTypes());
     }
 
     public function test_3_tipos_presentes_habilita(): void
@@ -91,7 +106,7 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $status = $this->service->for($this->turma->fresh());
 
         $this->assertFalse($status->isHabilitada());
-        $this->assertSame(['MANUAL'], $status->missingTypes());
+        $this->assertSame([TurmaDocumentType::MANUAL], $status->missingTypes());
     }
 
     public function test_turma_concluida_nao_e_habilitada(): void

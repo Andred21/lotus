@@ -2,6 +2,7 @@
 
 namespace App\Domains\Dashboard\Data;
 
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -16,9 +17,9 @@ class TurmaComplianceData extends Data
         public array $redatores,
         public string $start_date,
         public string $end_date,
-        /** @var string[] */
+        /** @var TurmaDocumentType[] */
         public array $present_types,
-        /** @var string[] */
+        /** @var TurmaDocumentType[] */
         public array $missing_types,
         public bool $habilitada,
     ) {}

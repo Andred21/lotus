@@ -15,6 +15,7 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Support\PermissionCatalog;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -234,6 +235,60 @@ class DashboardEndpointTest extends TestCase
 
         $this->assertSame([$cenario['t1']], array_column($response->json('agenda.in_progress'), 'turma_id'));
         $this->assertSame([$cenario['t1']], array_column($response->json('pendencias_documentais'), 'turma_id'));
+    }
+
+    // ------------------------------------------- borda dos tipos documentais
+
+    /**
+     * D-57: os campos de tipo documental deixaram de ser `string[]` no PHP e
+     * passaram a carregar `TurmaDocumentType`. Quem converte o enum de volta ao
+     * código é o `json_encode` do `BackedEnum`, na BORDA — e a borda de
+     * `compliance_turmas` e `pendencias_documentais` não era medida por teste
+     * nenhum: os dois DTOs trocaram de forma com a suíte verde.
+     *
+     * Q-2 do review de 2026-08-25. A conversão está correta hoje; o que faltava
+     * era a prova. E ela ficou mais cara neste mesmo bloco: com o fallback de
+     * `turmaDocumentTypeLabel` morto, um objeto no lugar do código não imprime
+     * o código cru na tela — não imprime nada.
+     *
+     * As duas assertivas juntas são o ponto: `present_types` prova a projeção
+     * dos tipos que EXISTEM e `missing_types` a dos que faltam, que saem de
+     * caminhos diferentes do `TurmaHabilitacaoService`.
+     */
+    public function test_compliance_do_admin_publica_os_tipos_como_codigo_do_enum(): void
+    {
+        $this->actingAsAdmin();
+        $cenario = $this->cenarioRico();
+        $this->makeTurmaDocument($cenario['t3'], TurmaDocumentType::MANUAL);
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        // T3 vem primeiro (ordem por `start_date`, asserida no cenário 1).
+        $response->assertJsonPath('compliance_turmas.0.turma_id', $cenario['t3']);
+        $response->assertJsonPath('compliance_turmas.0.present_types', ['MANUAL']);
+        $response->assertJsonPath('compliance_turmas.0.missing_types', ['PRUEBAS', 'EVALUACION_REDATOR']);
+
+        // T1 não tem documento nenhum: lista vazia de um lado, os três do outro.
+        $response->assertJsonPath('compliance_turmas.1.turma_id', $cenario['t1']);
+        $response->assertJsonPath('compliance_turmas.1.present_types', []);
+        $response->assertJsonPath(
+            'compliance_turmas.1.missing_types',
+            ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'],
+        );
+    }
+
+    /** O mesmo contrato no payload do redator, que projeta por outro serviço. */
+    public function test_pendencia_documental_do_redator_publica_os_tipos_como_codigo_do_enum(): void
+    {
+        $redator = $this->actingAsRedator();
+        $cenario = $this->cenarioRico();
+        Turma::find($cenario['t1'])->redatores()->attach($redator->id);
+        $this->makeTurmaDocument($cenario['t1'], TurmaDocumentType::PRUEBAS);
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        $response->assertJsonPath('pendencias_documentais.0.turma_id', $cenario['t1']);
+        $response->assertJsonPath('pendencias_documentais.0.missing_types', ['MANUAL', 'EVALUACION_REDATOR']);
     }
 
     /**
@@ -773,6 +828,19 @@ class DashboardEndpointTest extends TestCase
             'start_date' => $start,
             'end_date' => $end,
             'status' => $status,
+        ]);
+    }
+
+    private function makeTurmaDocument(int $turmaId, TurmaDocumentType $type): File
+    {
+        return File::create([
+            'fileable_type' => 'turma',
+            'fileable_id' => $turmaId,
+            'type' => $type->value,
+            'path' => "dashboard/turmas/{$turmaId}/{$type->value}.pdf",
+            'original_name' => "{$type->value}.pdf",
+            'mime' => 'application/pdf',
+            'size' => 100,
         ]);
     }
 

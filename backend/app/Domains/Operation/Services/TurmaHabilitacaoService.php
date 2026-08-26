@@ -25,8 +25,15 @@ class TurmaHabilitacaoService
     public function for(Turma $turma): HabilitacaoStatus
     {
         $present = $turma->documentacaoObrigatoria->pluck('type')->unique()->all();
-        $missing = array_diff(TurmaDocumentType::values(), $present);
 
-        return new HabilitacaoStatus($turma->status, array_values($missing));
+        // Filtrar `cases()` e não `array_diff` sobre `values()`: a diferença é o
+        // TIPO do que sai — o VO carrega o enum (D-57), e a coluna `type` da
+        // `files` continua sendo string livre, que é contra o que se compara.
+        $missing = array_values(array_filter(
+            TurmaDocumentType::cases(),
+            fn (TurmaDocumentType $case): bool => ! in_array($case->value, $present, true),
+        ));
+
+        return new HabilitacaoStatus($turma->status, $missing);
     }
 }

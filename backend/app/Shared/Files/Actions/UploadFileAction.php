@@ -37,13 +37,19 @@ class UploadFileAction
      * temporário já cumpriu seu papel e ler dele de novo é dependência
      * desnecessária do driver.
      *
+     * `getMimeType()` e NÃO `getClientMimeType()`: o segundo é o cabeçalho que
+     * o cliente declarou no multipart, e o cliente escolhe o que declarar. Num
+     * repositório onde o arquivo tem peso legal, a coluna precisa dizer o que o
+     * binário É — o `finfo` lê os bytes. `original_name` continua sendo o nome
+     * do cliente de propósito: é por ele que a pessoa reconhece o documento.
+     *
      * @return array{original_name: string, mime: string, size: int}
      */
     public function metadataOf(UploadedFile $file): array
     {
         return [
             'original_name' => $file->getClientOriginalName(),
-            'mime' => $file->getClientMimeType(),
+            'mime' => $file->getMimeType(),
             'size' => $file->getSize(),
         ];
     }

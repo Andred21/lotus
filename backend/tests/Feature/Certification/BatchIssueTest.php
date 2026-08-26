@@ -3,6 +3,7 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Certification\Actions\IssueCertificateAction;
+use App\Domains\Certification\Data\BatchIssueData;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -165,6 +166,46 @@ class BatchIssueTest extends TestCase
             'enrollment_ids' => [999999],
             'redator_id' => $this->redator->id,
         ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids.0');
+    }
+
+    public function test_lote_acima_do_teto_e_recusado_antes_de_emitir_qualquer_certificado(): void
+    {
+        $this->actingAsAdmin();
+
+        $ids = range(1, BatchIssueData::MAX_ITENS + 1);
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => $ids,
+            'redator_id' => $this->redator->id,
+        ])->assertStatus(422)->assertJsonValidationErrors('enrollment_ids');
+
+        // A prova é o banco, não a resposta: recusa que já tivesse emitido
+        // metade do lote não seria recusa.
+        $this->assertSame(0, Certificate::query()->count());
+    }
+
+    public function test_lote_no_teto_passa_pela_validacao(): void
+    {
+        // No teto exato a validação não pode reprovar — teto é inclusivo.
+        //
+        // `enrollment_ids.*` valida `exists:enrollments,id` contra a tabela
+        // crua: só id de matrícula real passa. Por isso o teto exato exige
+        // MAX_ITENS matrículas de verdade (via `segundaMatricula()`), não uma
+        // sequência arbitrária de inteiros — um `range(1, 200)` cru estouraria
+        // 422 por `exists`, não pela validação de tamanho que este teste
+        // prova. A prova aqui é só de validação; por isso assertOk() e não
+        // uma asserção de sucesso de emissão.
+        $this->actingAsAdmin();
+
+        $ids = [$this->enrollmentA->id];
+        while (count($ids) < BatchIssueData::MAX_ITENS) {
+            $ids[] = $this->segundaMatricula()->id;
+        }
+
+        $this->postJson($this->batchUrl(), [
+            'enrollment_ids' => $ids,
+            'redator_id' => $this->redator->id,
+        ])->assertOk();
     }
 
     /**

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (28)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
@@ -42,7 +42,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
-| P-61 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
@@ -62,17 +61,26 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
+| P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 
 ## Encerradas (0)
 
-Nada em rastro. A **P-03** e a **P-15** saíram no fechamento do `cicd-ci-governanca-e-artefato`
-(2026-08-26), o primeiro **posterior** ao dos blocos que as encerraram, e as duas foram
-**remedidas antes de sair**: a stack própria de `../lotus-infra` subiu no offset `:8081` com `/up`
-200 no gate deste fechamento, e a suíte fechou **937 passed / 5 skipped** com os testes do
-histórico de certificado do aluno dentro dela. A **P-41** saiu no fechamento do
-`tabelas-coluna-de-acoes-e-largura` (2026-08-24), remedida antes de sair (`min-w-0` em
-`IdentityCell.tsx:74`). A **P-47** e a **P-50** saíram no fechamento anterior, também remedidas.
-**A P-40 saiu nos três fechamentos de 2026-08-22**, posteriores ao do BD-12. **A P-29 e a P-35** já
-haviam saído no fechamento do BD-12, pelo mesmo critério. O rastro do que já saiu daqui vive em
-[`encerradas.md`](./encerradas.md), nos commits e nas linhas de entrega do
+Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
+fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros
+posteriores aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o offset
+injetado no container da worktree (medido com `printenv`), as seis `LOTUS_DEV_*` do
+`docker-compose.yml`/`.env.example` no main tree e o `StudentTurmaData::$certificate` no detalhe do
+aluno. A ficha viva mora em [`abertas.md`](./abertas.md); o rastro completo, em
+[`encerradas.md`](./encerradas.md).
+
+**A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
+posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).
+
+**A P-47 e a P-50 saíram no fechamento anterior**, o primeiro posterior aos dos blocos que as encerraram
+— e as duas foram **remedidas antes de sair**, não removidas na fé: os 9 redatores do dev carregam a
+role e o `artisan test` do §6 terminou. **A P-40 saiu nos três fechamentos de 2026-08-22**,
+posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do BD-12, pelo mesmo
+critério contra o BD-14. O rastro de todas fica nos commits e nas
+linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).

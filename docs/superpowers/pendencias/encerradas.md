@@ -7,17 +7,27 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-**A seção está vazia de propósito.** A P-15 e a P-03 saíram no fechamento do
-`cicd-ci-governanca-e-artefato` (2026-08-26), o primeiro **posterior** ao dos blocos que as
-encerraram — e as duas foram **remedidas antes de sair**, não removidas na fé. A **P-03**:
-`../lotus-infra` subiu stack própria pelo offset do `.env` da raiz (`LOTUS_DEV_HTTP_PORT=8081`)
-no próprio gate deste fechamento, `/up` 200 em `:8081`, com `mysql` em `:3308` e MinIO em
-`:9002`/`:9003` — que é exatamente o que a ficha dizia não existir. A **P-15**: a suíte do gate
-fechou **937 passed / 5 skipped** com `StudentDetailCertificatesTest` e
-`StudentCertificateHistoryTest` dentro dela — os certificados seguem no **detalhe** do aluno, e
-o ramo recusado (coluna na listagem) continua fora **por escrito**, na §9 da spec arquivada do
-bloco. O rastro durável das duas está nos commits e nas linhas de entrega em
-[`../historico/progress.md`](../historico/progress.md).
+_Nenhuma._ A **P-03** e a **P-15** saíram em 2026-08-25; o parágrafo abaixo é o rastro delas.
+
+---
+
+**A P-03 e a P-15 saíram nos dois fechamentos de 2026-08-25** — a fatia 2 do
+`frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros posteriores
+aos dos blocos que as encerraram. As duas foram **remedidas antes de sair**, não removidas na fé, e
+cada fechamento mediu de um lado:
+
+- **P-03, na worktree:** o container `app` de `../fix-frontend` recebe do compose
+  `APP_URL=http://localhost:8082`, `FRONTEND_URL=http://localhost:5175`,
+  `SANCTUM_STATEFUL_DOMAINS=localhost:5175,localhost:8082` e `SESSION_COOKIE=lotus_session_8082` —
+  medido com `docker compose exec -T app printenv` —, com o `backend/.env` da árvore ainda no offset
+  antigo: a injeção vence, que é o mecanismo que a ficha declarou pago, e o login pelo navegador em
+  `:5175` contra a API em `:8082` funciona com o arquivo como está.
+- **P-03, no main tree:** o offset vive em `.env.example` e nas seis variáveis `LOTUS_DEV_*` do
+  `docker-compose.yml`; a stack do fechamento do item 4 subiu no offset zero (`:8080`/`:3307`).
+- **P-15:** o certificado do aluno está exposto no detalhe por `StudentTurmaData::$certificate`
+  (`backend/app/Domains/Identity/Data/StudentTurmaData.php:36`), e o ramo recusado por escrito
+  (coluna `CERTIFICADOS` na listagem de alunos) continua declarado na §9 da spec do
+  `certificacao-historico-do-aluno` — que é o que impede a pendência de reabrir por silêncio.
 
 **Saíram no fechamento do `frontend-revisao-ui-por-modulo` (2026-08-24), o primeiro posterior aos
 dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em

@@ -24,7 +24,7 @@ services:
       # sobrescreve o `laravel-session` da árvore A, e a aba da A passa a
       # mandar um session id que não existe no banco dela — 401 silencioso.
       SESSION_COOKIE: lotus_session_${LOTUS_DEV_HTTP_PORT:-8080}
-    depends_on: [mysql, gotenberg, minio]
+    depends_on: [mysql, gotenberg, minio, clamav]
 
   nginx:
     image: nginx:alpine
@@ -49,6 +49,22 @@ services:
 
   gotenberg:
     image: gotenberg/gotenberg:8
+
+  clamav:
+    # Tag COM base de assinaturas embutida (146 MiB comprimidos): o `clamd`
+    # ficou pronto em ~10 s na medição de 2026-08-25, sem esperar download. A
+    # tag `_base` (38 MiB) baixaria a base pelo freshclam no primeiro `up` e
+    # deixaria a stack inutilizável por vários minutos.
+    #
+    # Medido: ~1,01 GiB residentes. É insumo do dimensionamento da EC2 (item 10),
+    # não decisão deste bloco.
+    image: clamav/clamav:1.4
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   mailpit:
     image: axllent/mailpit

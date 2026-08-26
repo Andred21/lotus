@@ -79,3 +79,57 @@ describe('DetailHeader aceita bloco no subtítulo', () => {
     expect(container.querySelector('[data-testid="bloco"]')?.parentElement?.tagName).toBe('DIV')
   })
 })
+
+/**
+ * Q-1 do review de 2026-08-25. `sm:self-center` existe para o slot `actions` —
+ * botão mais alto que a tag, alinhado pela linha de base, empurrava o bloco para
+ * cima (Minor 5 da fatia 1). Enquanto os dois slots dividiam um contêiner, o
+ * `align-self` valia para o contêiner INTEIRO e levava a tag junto: o UI-08 de
+ * 2026-08-23 de volta, espelhado, no `BudgetDetailPage` — o único consumidor que
+ * passa `tags` e `actions` ao mesmo tempo.
+ *
+ * jsdom não mede layout, então o que se assere é a estrutura que produz a
+ * geometria, como no S-2 acima: wrappers SEPARADOS, e o `self-center` só no de
+ * ações. Asserir "existe um `.sm:self-center` na árvore" — o que a versão
+ * anterior deste teste fazia — passava com os dois slots no mesmo contêiner, que
+ * é exatamente o defeito.
+ */
+describe('alinhamento do bloco da direita', () => {
+  it('so o bloco de acoes sai da linha de base; a tag fica nela', () => {
+    const { container } = render(
+      <DetailHeader
+        title="Presupuesto 12"
+        tags={<span data-testid="tag">Aprobado</span>}
+        actions={<button>Editar</button>}
+      />,
+    )
+    const tag = container.querySelector('[data-testid="tag"]')?.parentElement
+    const acoes = container.querySelector('button')?.parentElement
+
+    expect(tag).not.toBe(acoes)
+    expect(tag?.className).not.toContain('self-center')
+    expect(acoes?.className).toContain('sm:self-center')
+  })
+
+  it('sem acoes, nada sai da linha de base', () => {
+    const { container } = render(<DetailHeader title="Turma" tags={<span>tag</span>} />)
+
+    expect(container.querySelector('.sm\\:self-center')).toBeNull()
+  })
+
+  /**
+   * O `self-center` só significa alguma coisa se os dois wrappers forem itens da
+   * MESMA linha do título. O embrulho de mobile fica no caminho, e é o
+   * `sm:contents` que o dissolve a partir do `sm` — sem ele, o `align-self`
+   * resolveria contra o embrulho e não contra a linha.
+   */
+  it('a partir do sm os dois wrappers viram itens diretos da linha', () => {
+    const { container } = render(
+      <DetailHeader title="Turma" tags={<span>tag</span>} actions={<button>Editar</button>} />,
+    )
+    const embrulho = container.querySelector('button')?.parentElement?.parentElement
+
+    expect(embrulho?.className).toContain('sm:contents')
+    expect(embrulho?.parentElement?.className).toContain('sm:items-baseline')
+  })
+})

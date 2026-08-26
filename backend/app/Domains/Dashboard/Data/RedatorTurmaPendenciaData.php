@@ -2,6 +2,7 @@
 
 namespace App\Domains\Dashboard\Data;
 
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -13,7 +14,7 @@ class RedatorTurmaPendenciaData extends Data
         public int $turma_id,
         public string $course_name,
         public string $end_date,
-        /** @var string[] */
+        /** @var TurmaDocumentType[] */
         public array $missing_types,
     ) {}
 }
