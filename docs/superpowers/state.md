@@ -2,11 +2,11 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_feature: hardening
+active_work_item: hardening-auditoria-privacidade-e-observabilidade
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -14,13 +14,13 @@ context_packet: null
 blocker: null
 lanes:
   lane-a:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: hardening
+    active_work_item: hardening-auditoria-privacidade-e-observabilidade
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: main-tree
-    branch: feat/hardening-api-arquivos-e-abuso
+    branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: null
     active_plan: null
     context_packet: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
-state_basis_commit: 4dd5075a
-updated_at: 2026-08-26T00:20:00-03:00
+state_basis_commit: 038b4a70
+updated_at: 2026-08-26T01:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,15 +161,33 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `context_required` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
 **A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a`, está em **PR #78** e mescla a `main`
-de PR #73/#75/#76/#77 para dentro neste commit; a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
+`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a` e **mesclou pelo PR #78** (merge
+`038b4a70`); a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
 do João, contra o `backlog.md`.
+
+**Promoção do item 5 — 2026-08-26, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o
+Context Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`),
+em sandbox read-only. A branch `feat/hardening-auditoria-privacidade-e-observabilidade` sai de
+`main@038b4a70`, que já é `origin/main` e traz o merge do próprio item 4. **Árvore:** main tree, pelo
+precedente de todo bloco de backend; a **P-03 foi paga** pelo `compose-por-worktree`, então isso é
+escolha e não imposição do compose. O espelho já apontava para a `lane-a` — não houve troca de foco
+neste commit.
+
+**Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
+do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
+mais spec e plano (`323f58bd`, `c98fed91`, `4fdc1338`, `lane-c`) vivem só em
+`refactor/frontend-hardening-final`. Por isso o `state.md` da `main` ainda descreve a `lane-b` em
+`ready_for_closure` e a `lane-c` em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi
+escrito por este commit** — cada lane espelha o seu na árvore em que roda, e a divergência se resolve
+na integração serial. Não há colisão de escopo com este bloco: o item 8 é frontend puro, o item 11
+não tem trabalho de código restante.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
