@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (27)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -61,15 +61,17 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
+| P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
 
 ## Encerradas (0)
 
-Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram no fechamento da fatia 2 do
-`frontend-revisao-ui-por-modulo` (2026-08-25), o primeiro posterior aos dos blocos que as
-encerraram — e a **P-03** foi **remedida antes de sair**: o compose injeta no container `app` da
-worktree `../fix-frontend` o `APP_URL`, o `FRONTEND_URL`, o `SANCTUM_STATEFUL_DOMAINS` e o
-`SESSION_COOKIE` do offset +2, medidos com `printenv`, mesmo com o `backend/.env` da árvore no
-offset antigo.
+Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
+fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros
+posteriores aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o offset
+injetado no container da worktree (medido com `printenv`), as seis `LOTUS_DEV_*` do
+`docker-compose.yml`/`.env.example` no main tree e o `StudentTurmaData::$certificate` no detalhe do
+aluno. A ficha viva mora em [`abertas.md`](./abertas.md); o rastro completo, em
+[`encerradas.md`](./encerradas.md).
 
 **A P-41 saiu no fechamento do `tabelas-coluna-de-acoes-e-largura` (2026-08-24)**, o primeiro
 posterior ao do bloco que a encerrou, remedida antes de sair (`min-w-0` em `IdentityCell.tsx:74`).

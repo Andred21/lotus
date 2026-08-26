@@ -10,16 +10,19 @@ use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Validation\ValidationMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Tests\Support\CreatesDomainRecords;
+use Tests\Support\Files\BuildsRealUploads;
 use Tests\TestCase;
 
 class ImportStudentsActionTest extends TestCase
 {
+    use BuildsRealUploads;
     use CreatesDomainRecords;
     use RefreshDatabase;
 
@@ -104,5 +107,29 @@ class ImportStudentsActionTest extends TestCase
 
         $this->expectException(ValidationException::class);
         app(ImportStudentsAction::class)->execute($this->turma, $this->xlsx([]));
+    }
+
+    public function test_planilha_acima_do_teto_e_recusada_sem_matricular_ninguem(): void
+    {
+        $turma = $this->turma;
+
+        $linhas = ImportStudentsAction::MAX_LINHAS + 1;
+        $csv = "RUT,Nombre,Email,Telefono\n";
+        for ($i = 1; $i <= $linhas; $i++) {
+            $csv .= "11.111.11{$i}-1,Aluno {$i},aluno{$i}@lotus.cl,+56900000000\n";
+        }
+
+        $arquivo = $this->uploadReal($csv, 'alunos.csv', 'text/csv');
+
+        try {
+            app(ImportStudentsAction::class)->execute($turma, $arquivo);
+            $this->fail('A planilha acima do teto tinha de ser recusada.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('file', $e->errors());
+            $this->assertStringContainsString((string) ImportStudentsAction::MAX_LINHAS, ValidationMessages::squash($e));
+        }
+
+        // A prova é o banco: recusa que já matriculou 500 pessoas não é recusa.
+        $this->assertSame(0, $turma->enrollments()->count());
     }
 }

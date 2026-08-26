@@ -40,8 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
 
-        // Localização por request: Accept-Language -> locale (i18n front↔back, ADR-15).
-        $middleware->api(append: [
+        // Teto global (spec D2): rota nova do grupo `api` nasce coberta. É
+        // largo de propósito — quem aperta são os limitadores nomeados de cada
+        // operação cara. A ordem real não vem daqui: `ThrottleRequests` está na
+        // lista de prioridade abaixo, logo após o `AuthenticatesRequests`, e é
+        // isso que garante que o balde por usuário veja o usuário resolvido.
+        $middleware->api(prepend: [
+            'throttle:api',
+        ], append: [
             SetLocale::class,
         ]);
 

@@ -23,13 +23,13 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 4–9 mais o 16 e o 17 fecham o
+- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 5–9 mais o 16 e o 17 fecham o
   código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, o `2` em 2026-08-24, e o `10` **encolheu** em vez de sair (o runtime foi entregue;
-  sobrou o provisionamento). A fila começa no `4` e salta os que já fecharam de propósito: o número
-  é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar
-  quebraria as citações e pareceria promoção.
+  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, e o `10` **encolheu** em vez de sair (o
+  runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
+  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -40,30 +40,6 @@
 ---
 
 # Fila priorizada
-
-## 4. `hardening-api-arquivos-e-abuso`
-
-**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** Drive `RNF-SEC-06`, `RNF-SEC-08`; Notion `9.1.1`; ADR-03/11/12.
-
-**Objetivo:** limitar abuso e consumo excessivo antes da exposição pública.
-
-**Evidência medida (2026-08-22):** `/login` (`Identity/routes.php:23`) e a validação pública de
-certificado (`Certification/routes.php:7`) não têm throttle; hoje só convite/recuperação têm
-(`throttle:6,1`).
-
-**Escopo:** throttle de login, validação pública de certificado e ações sensíveis; revisar o
-throttle já existente de senha/convite; limites de upload/import/batch/PDF; MIME/tamanho/quantidade;
-S3 privado + URL temporária; verificação antimalware exigida pelo RNF; `429` em Problem Details.
-Números concretos saem de medição/risco no plano.
-
-**Nota de proporção:** a sonda antimalware do `RNF-SEC-06` é candidata à mesma renegociação formal
-do gate de redundância do item 13 — ~10 usuários internos; o brainstorming decide se a **forma**
-exigida é obrigatória ou se o **resultado** basta.
-
-**DoD:** sondas de abuso/arquivo inválido são bloqueadas sem prejudicar o fluxo normal.
-
----
 
 ## 5. `hardening-auditoria-privacidade-e-observabilidade`
 

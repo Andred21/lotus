@@ -17,7 +17,7 @@ class ClientPhotoController extends Controller
 {
     public function store(Request $request, Client $client, UserPhotoService $service): Response
     {
-        $request->validate(UserPhotoService::RULES);
+        $request->validate(UserPhotoService::rules());
         $service->store($client->user, $request->file('photo'));
 
         return response()->noContent();

@@ -33,5 +33,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="CLAMAV_HOST" value="127.0.0.1"/>
+        <env name="CLAMAV_PORT" value="1"/>
+        <env name="CLAMAV_TIMEOUT" value="1"/>
     </php>
 </phpunit>

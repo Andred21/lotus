@@ -8,6 +8,7 @@ use App\Domains\Operation\Data\TurmaDocumentData;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
+use App\Shared\Files\ContentClass;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,7 +41,7 @@ class TurmaDocumentController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'type' => ['required', new Enum(TurmaDocumentType::class)],
-            'file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'file' => ContentClass::DocumentoDeTurma->regras(),
         ]);
 
         $file = $action->execute($turma, TurmaDocumentType::from($validated['type']), $request->file('file'));

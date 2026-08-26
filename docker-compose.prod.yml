@@ -29,7 +29,7 @@ services:
     # caminho de produção; a prova local sobrescreve a variável.
     env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
     restart: unless-stopped
-    depends_on: [gotenberg]
+    depends_on: [gotenberg, clamav]
     logging: *logging
 
   nginx:
@@ -68,3 +68,15 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    logging: *logging
+    # Script que a própria imagem traz (medido): faz PING/PONG na 3310.
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
