@@ -13,7 +13,10 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
           contracted: result.contracted_count,
         })}
       </p>
-      <ul role="list" className="space-y-1">
+      {/* Marcador explícito, como as duas listas irmãs abaixo: o mini-reset da
+          P-46 zera o `list-style` de todo `ul`, e estes itens são texto puro
+          ("Creados: 3"), sem borda nem card que os separe (Q-7, 2026-08-27). */}
+      <ul role="list" className="list-disc space-y-1 pl-5">
         <li>
           {t('operation.enrollment.import.created')}: {result.created}
         </li>
