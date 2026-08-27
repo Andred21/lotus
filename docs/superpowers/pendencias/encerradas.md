@@ -7,7 +7,21 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(vazio — as duas últimas saíram no fechamento de 2026-08-25; ver abaixo.)*
+*(uma: a **P-46**, abaixo. As duas anteriores saíram no fechamento de 2026-08-25; ver adiante.)*
+
+### P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
+
+**Fechada em 2026-08-27**, no `frontend-hardening-final` (Task 4, `4a27272c`), e **remedida** — o
+gatilho pedia decisão do João sobre reset escopado, e a decisão foi tomada e construída: um
+mini-reset em `@layer base` (`frontend/src/index.css`) zera margem de `h1`–`h6`, `p`, `ul`, `ol` e
+as grafias caso a caso (`m-0`, `[&_p]:m-0`, `list-none p-0`) saíram do repositório. Guardado por
+`frontend/tests/preflight-escopado.test.ts` — a catraca lê o CSS inteiro, dentro e fora de
+`@layer` (Q-1 do review de 2026-08-27, com duas sondas vistas reprovar). Medido no navegador em
+2026-08-26 e remedido no fechamento: `AppCardHeader` com faixa de 49px para 24px de texto (era
+80px), `AppCard variant="stat"` com 100px por card a 1440×900, e as quatro famílias de lista do
+Dashboard sem marcador e com recuo 0 —
+[`audits/2026-08-26-frontend-hardening-final-medicoes.md`](../audits/2026-08-26-frontend-hardening-final-medicoes.md).
+O que o mini-reset alcançou além das nossas listas virou a [P-61](./abertas.md#p-61).
 
 **A P-03 e a P-15 saíram no fechamento da fatia 2 do `frontend-revisao-ui-por-modulo`
 (2026-08-25), o primeiro posterior aos dos blocos que as encerraram.** A **P-03** foi **remedida
@@ -32,7 +46,10 @@ suíte unida acima do `memory_limit` de 128M, fechada em 2026-08-22 e também re
 posterior ao do bloco que a encerrou** — e foi **remedida antes de sair**, não removida na fé: o
 `min-w-0` do bloco de texto está em `frontend/src/shared/ui/IdentityCell/IdentityCell.tsx:74`. A
 metade não paga do gatilho continua declarada onde ela vive: `IdentityCell.test.tsx` conta
-`span.truncate` e não mede `scrollWidth > clientWidth` — trabalho do `frontend-hardening-final`.
+`span.truncate` e não mede `scrollWidth > clientWidth` — trabalho do `frontend-hardening-final`,
+**pago em 2026-08-27**: o teste guarda o par `truncate` + `min-w-0` (`e560df27`) e a medida real de
+`scrollWidth > clientWidth`, que jsdom não faz, ficou no navegador (DoD 5 do audit do bloco, com
+sonda negativa).
 
 ## Rastro anterior, já removido
 

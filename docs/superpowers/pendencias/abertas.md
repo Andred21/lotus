@@ -58,37 +58,27 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
+## P-61 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
-**Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
-gastar tempo neutralizando margem de UA à mão. Revisar em **2026-10-31**.
+**Bloco:** frontend-estilizacao-padronizacao-de-componentes (item 18) · **Gatilho:** bloco que
+tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
+elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
 
-O `frontend/src/index.css:1-9` omite o Preflight do Tailwind **de propósito**, para o reset global
-não sobrescrever a estilização do PrimeReact. A decisão está registrada e tem motivo. A consequência
-não estava: todo `h1`–`h6`, `p`, `ul` e `ol` da aplicação herda a margem do agente do usuário, que é
-**proporcional ao tamanho da fonte**.
+Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
+1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
+(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
+`Certificados emitidos` e outra no de `UF aprobada`).
 
-**Medido na revisão de UI de 2026-08-17, em dois sítios de custo diferente:**
+O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
+semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
+nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
+JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
+jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
 
-- `KpiRow` — o número em `text-3xl` recebia `margin: 30px 0` (1em de 30px), o que somava
-  75–95px de área morta por card e empurrava as duas listas do Dashboard para fora da dobra em
-  1024x768 e 390x844. É a UI-02 do relatório.
-- `AppCardHeader` — o `h3` recebia `margin: 16px 0`, e a faixa media **80px de altura para 24px de
-  texto**, em TODO card da aplicação. Não estava no relatório; apareceu ao corrigir.
-
-**O sintoma é conhecido do repositório desde antes.** O `PageHeader` crava `my-[0.83em]` no `h1` com
-o motivo escrito no docblock ("o projeto não carrega o Preflight"), e os `ul` do Dashboard, do funil
-e da agenda carregam `m-0 list-none p-0` à mão. São três grafias do mesmo remédio, aplicadas caso a
-caso, e ninguém as conta.
-
-**Não se conserta de carona.** O passe de correção de 2026-08-17 neutralizou onde custava — `[&_p]:m-0`
-no `AppCard variant="stat"`, `m-0` no `h3` do `AppCardHeader`, no `h2` da faixa de seção e no `h4` da
-janela da agenda —, e parou aí de propósito. Um `@layer base` com
-`h1,h2,h3,h4,h5,h6,p,ul,ol { margin: 0 }` fecharia a classe inteira, mas mexe no espaçamento de
-**todas** as telas de uma vez, num passe que não tem como medir todas; e contradiria o `PageHeader`,
-que crava a margem justamente para a correção semântica ficar invisível. Um mini-Preflight escopado
-aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
-provável, e é decisão do João.
+**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
+carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
+gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
+com `role`.
 
 ---
 

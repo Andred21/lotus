@@ -1,6 +1,6 @@
 # Medições — `frontend-hardening-final` (Task 6, DoD)
 
-Bloco: `docs/superpowers/plans/2026-08-26-frontend-hardening-final.md`. Base para as seis provas:
+Bloco: `docs/superpowers/plans/archive/2026-08-26-frontend-hardening-final.md`. Base para as seis provas:
 árvore com as Tasks 1–5 mescladas, mais uma correção adicional encontrada durante esta própria
 varredura (registrada no DoD 2).
 
@@ -164,3 +164,66 @@ comportamento esperado, não defeito) estão marcadas explicitamente acima, com 
 
 **D-33 estava incompleto** (só mouse) e foi fechado nesta mesma Task 6, com TDD e review completos —
 ver DoD 2 acima e commit `cde9ba4b`. Nenhum outro achado além deste.
+
+---
+
+# Regate do fechamento — 2026-08-27
+
+As medições acima foram feitas em `cde9ba4b`. Depois delas o bloco recebeu **sete correções de
+review** (`34719e33` Q-1 a Q-6, `922fe723` Q-7), e quatro delas mexem exatamente no que o DoD mede:
+o `title` do `SidebarItem` (Q-2), o encadeamento de `on[A-Z]` do `mergePt` que carrega o foco do olho
+(Q-5), o `role="list"` das 16 listas (Q-6) e o marcador de volta em duas listas de texto puro (Q-7).
+Por isso o gate refez a prova **contra o estado final da branch**, no mesmo método: Chromium real
+(Playwright 1.62.1, `chromium-1237`), stack desta árvore no offset +2 (`http://localhost:5175`,
+API `http://localhost:8082`), login real `admin@lotus.cl` pela tela, sessão `es-CL`. Script
+descartável fora do repositório.
+
+## DoD 1 + Q-2 — rail a 390×844
+
+Os sete módulos leem o nome sem interação (`Dashboard`, `Comercial`, `Operación`, `Cursos`,
+`Certificados`, `Personas`, `Administración`), 49px de altura cada, `<nav>` com **768px** contra
+844px de viewport — cabem sem rolagem. O `title` está presente nos sete **colapsado** e é `null` nos
+sete a 1440px: é o contrato que o Q-2 escreveu.
+
+## DoD 2 — foco no olho da senha, por teclado, depois do Q-5
+
+`/perfil`, Tab a partir do campo de senha e Enter: `document.activeElement` é o `<svg>` do ícone
+(`aria-label` passa de `Mostrar contraseña` para `Ocultar contraseña`) e o campo vira `type="text"`.
+O encadeamento novo do `mergePt` não desfez o mecanismo do D-33.
+
+## DoD 4 + Q-6 — listas do Dashboard
+
+As quatro famílias medidas na spec §5 continuam sem marcador (`list-style-type: none` no `ul` e no
+`li`), recuo `0px` nas três e `16px` no funil (o `p-4` intencional do `PipelineFunnel`), e as quatro
+carregam `role="list"`.
+
+## Q-7 — o `list-disc` vence o mini-reset
+
+Sonda no motor real, com as classes exatas das duas listas corrigidas, mais uma sonda negativa:
+
+| Classe medida | `list-style-type` | `list-style-position` | `padding-left` |
+|---|---|---|---|
+| `mb-4 list-inside list-disc rounded px-3 py-2 text-sm` (`FormErrorSummary`) | `disc` | `inside` | 12px |
+| `list-disc pl-5` (`ImportResultSummary`) | `disc` | `outside` | 20px |
+| `mb-4 rounded px-3 py-2 text-sm` (negativa, sem `list-disc`) | `none` | `outside` | 12px |
+
+**Limitação declarada:** a sonda mede a **cascata** (a utilitária vence o mini-reset de
+`@layer base`), no DOM da aplicação real, e não o fluxo de usuário que faz as duas listas
+aparecerem — `FormErrorSummary` exige um 422 com chave fora do `mapped`, e `ImportResultSummary`
+exige um import de matrícula concluído. Os dois fluxos ficaram fora desta prova.
+
+## DoD 5 — `IdentityCell`, com sonda negativa
+
+Tabela de turmas de `/operacion`, cliente `Enel Distribución`: `scrollWidth` 118 contra
+`clientWidth` 102 — corta. Removendo o `min-w-0` do pai pela DevTools e remedindo, os dois empatam
+em 118 (a célula deixa de cortar) e a classe volta depois. É o mesmo par medido em 2026-08-26, agora
+sobre o código final.
+
+## Achado do regate — o `role="list"` não alcança lista de terceiro
+
+Varrendo **todo** `ul` do Dashboard, dois ficaram sem `role`: as duas legendas do Recharts
+(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`). Elas não são JSX deste
+repositório, então a régua de lint do Q-6 não as vê — e o mini-reset da P-46, que é global por
+desenho, tira a semântica de lista delas no WebKit do mesmo jeito. É a borda que o Q-6 não cobre.
+Não é regressão do Q-6 e não reabre o DoD 4 (as quatro famílias medidas estão certas); virou a
+**P-61**.

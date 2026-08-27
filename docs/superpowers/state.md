@@ -2,14 +2,14 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
-active_feature: frontend
-active_work_item: frontend-hardening-final
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
-active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -42,22 +42,22 @@ lanes:
     resume_state: null
     last_completed_work_item: compose-por-worktree
   lane-c:
-    active_feature: frontend
-    active_work_item: frontend-hardening-final
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-hardening-final   # nasce de main@5550178a
-    active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
-    active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
+    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; ainda não mesclada
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo-f2
-last_completed_work_item: frontend-revisao-ui-por-modulo-f2
-state_basis_commit: 5550178a
-updated_at: 2026-08-27T02:10:00-03:00
+    last_completed_work_item: frontend-hardening-final
+last_completed_work_item: frontend-hardening-final
+state_basis_commit: 7136ea43
+updated_at: 2026-08-27T19:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
-| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `ready_for_closure` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (fechada, sem merge) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -171,24 +171,6 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
-
-**Promoção do item 8 — 2026-08-26.** A `lane-c` estava `idle` desde o fechamento da fatia 2 do item
-16; o João promoveu explicitamente o **item 8 — `frontend-hardening-final`** contra o `backlog.md`.
-O item marca `Contexto: não por padrão`, então a lane nasce direto em `ready_for_planning` e
-**não** há Context Packet: as cinco fontes do bloco (`D-03`, `D-33`, `D-35`, `P-46` e a herança da
-`P-41`) são medição local, e as fichas vivem no repositório. A branch
-`refactor/frontend-hardening-final` sai de `main@5550178a`, que já é `origin/main` — o PR #76
-(fatia 2 do item 16) e o PR #77 (item 11 da `lane-b`) já mesclaram, então a árvore não está atrás.
-
-**A linha de branch da `lane-c` estava velha, e foi corrigida nesta promoção.** O frontmatter dizia
-`refactor/frontend-revisao-ui-f2 # fechada em 2026-08-25; ainda não mesclada`; era verdade em
-`8d588511`, o `state_basis_commit` anterior, e deixou de ser quando o PR #76 mesclou em `5550178a`.
-Não era divergência de fase — as duas fontes diziam `idle` —, mas o campo aponta para a branch da
-lane e passou a apontar para a errada. `state_basis_commit` acompanhou.
-
-**Fora de ordem em relação aos itens 4 a 7, e sem colisão.** A fila recomenda 4→9 para fechar
-código, e os itens 4 a 7 são hardening de **backend**. O item 8 é frontend puro, então nenhum deles
-disputa arquivo com ele; e o gate P-03 não é disparado, porque o bloco não toca `backend/`.
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
 mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
@@ -214,16 +196,18 @@ Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .gith
 vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
 o que preservar, e não há colisão a vigiar com a lane-c.
 
-**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
-integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
-`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
-abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
-fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
-`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
-memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
-da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
-573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
-árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
+**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
+segue viva e a branch `refactor/frontend-hardening-final` **ainda não foi mesclada**: é o PR a
+abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
+5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
+navegador contra o código pós-review.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
 
 **A `lane-a` fechou o item 2 em 2026-08-24** — `certificacao-historico-do-aluno`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
@@ -305,11 +289,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 | 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
 | 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
 | 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 | 2026-08-24 | `compose-por-worktree` (paga a **P-03**) | Fora da fila — ficha `P-03` |
-| 2026-08-24 | `frontend-revisao-ui-por-modulo` (fatia 1 de 2) | Item 16 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

@@ -131,30 +131,6 @@ fallback (es-CL); falta aplicar.
 
 ---
 
-## 8. `frontend-hardening-final`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
-**Fonte:** Notion `9.1.5`; `D-03`, `D-33`, `D-35`, `P-46`, `P-41`.
-
-**Objetivo:** fechar acessibilidade/navegação e guardrails reais, sem abrir redesign estético
-geral. **Absorve o BD-11**, que ficava só com a D-03 e deixou de existir como bloco próprio.
-
-**Escopo:**
-- **D-03**: nome do item de navegação alcançável no toque com a sidebar recolhida a 390px;
-- **D-33**: foco devolvido ao ícone no toggle de senha do `AppPassword`;
-- **D-35**: ban de import PrimeReact também em `src/app/**` (régua nasce verde — zero import,
-  remedido em 2026-08-22);
-- **P-46**: decidir Preflight/margens de UA (mini-reset escopado é o desenho provável);
-- **P-41**: decidir/aplicar truncamento do `IdentityCell`;
-- revisão pelo harness nas viewports/temas relevantes.
-
-**Fora:** a ordem de foco de `/perfil` (**D-32**) — a correção existiu e foi revertida por decisão
-de layout; mora na tabela de decisões e só entra com o desenho escolhido pelo João.
-
-**DoD:** nenhum bloqueio coberto de foco, toque, overflow ou fronteira PrimeReact permanece.
-
----
-
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
@@ -413,9 +389,10 @@ redesenho:** o audit mede o código contra a direção JÁ fechada e declara por
    logo da sidebar sem os números mágicos `ml-15 h-30`; tinta de apoio do Login vira `--shell-ink*`
    (C1, C2, C3, C4, D1, D3, E1).
 
-**Depende do `frontend-hardening-final` (item 8), nunca junto.** Os achados A2, D2 e E2 dependem do
-estado pós-mini-reset para não medir duas vezes; e o item 8 toca `SidebarItem`, `index.css` e
-`eslint.config.js`. O audit foi escrito durante o item 8 e já respeita a D6 da spec dele (os
+**Dependia do `frontend-hardening-final` (item 8), que fechou em 2026-08-27 — a dependência está
+satisfeita, e o item 18 é promovível.** Os achados A2, D2 e E2 dependiam do estado pós-mini-reset
+para não medir duas vezes; e o item 8 tocou `SidebarItem`, `index.css` e `eslint.config.js`. O
+audit foi escrito durante o item 8 e já respeita a D6 da spec dele (os
 `my-[0.83em]` ficam; trocá-los por margem de escala é decisão da fase 2, com screenshot).
 
 **Fora, por escrito:** redesenho de paleta, tema ou contraste (medido e travado por teste — não há
@@ -438,11 +415,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
 > (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
-
-- **D-03 · Menu recolhido a 390px tira o rótulo do DOM e deixa só `title`** →
-  `frontend-hardening-final`. Sem hover no toque, o nome do item de navegação fica inalcançável
-  (`src/app/layouts/Sidebar/SidebarItem.tsx`). Era o BD-11. **DoD:** nome alcançável no toque a
-  390px, medido no dispositivo emulado — não o atributo novo no DOM.
 
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
   `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
@@ -569,19 +541,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
   regenera `generated.ts` (lei §5.3).
 
-- **D-33 · O foco cai no `<body>` quando o olho da senha alterna** → `frontend-hardening-final`.
-  Medido no fechamento do BD-16 (2026-08-18) em Chromium real (`/perfil` como Redator): o ícone é
-  trocado pelo Prime, o nó focado sai do DOM e `document.activeElement` vira `BODY`. Não é
-  regressão (main tree igual). Fix no wrapper `AppPassword`: devolver o foco ao novo ícone após a
-  troca. Terceira ponta do mesmo componente, depois de D-24 (não reproduzida) e UI-04 (paga).
-
-- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact** →
-  `frontend-hardening-final`. O bloco do lint é escopado por feature (`eslint.config.js:362`) e a
-  exceção comentada (`:388-390`) só justifica a metade feature→feature; a camada concentra 28
-  arquivos em `app/pages/Dashboard/`. A régua nasce verde: zero import de `primereact` em
-  `src/app` (remedido 2026-08-22). Fix: acrescentar `src/app/**` ao `no-restricted-imports` só na
-  fronteira PrimeReact, deixando feature→feature liberada.
-
 - **D-36 · O envelope RFC 7807 não é localizado** → `hardening-i18n-e-erros-api`.
   `ProblemDetails.php:22-36,68,71` devolve `title`/`detail` literais em português, apesar de
   `SetLocale` já traduzir por `Accept-Language` e de existirem `lang/{en,es,es_CL,pt_BR}`. Medido
@@ -664,7 +623,8 @@ Executar sem a decisão é escolher no lugar do João.
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
 BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
 voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
-no `frontend-hardening-final` (item 8), levando a D-03. **Os itens 1 e 14 saíram da fila em
+no `frontend-hardening-final` (item 8), levando a D-03 — e **o próprio item 8 saiu da fila em
+2026-08-27**, levando junto as fichas `D-03`, `D-33` e `D-35`, pagas por ele. **Os itens 1 e 14 saíram da fila em
 2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
 `BD-15-docs-guardrails-e-sincronizacao` (item 14). A numeração restante **não** foi reordenada — a
 fila tem buracos de propósito, porque renumerar quebraria toda referência escrita a "item N". O que
