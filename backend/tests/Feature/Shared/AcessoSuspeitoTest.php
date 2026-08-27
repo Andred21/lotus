@@ -10,6 +10,7 @@ use App\Shared\Logging\EventoDeSeguranca;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Monolog\Handler\TestHandler;
@@ -183,5 +184,86 @@ class AcessoSuspeitoTest extends TestCase
         }
 
         $this->assertCount(1, $this->alertas());
+    }
+
+    /**
+     * `test_login_falho_alerta_ao_cruzar_o_limiar_e_nao_antes` acima chama o
+     * detector direto — não prova que `AuthController::login()` de fato liga
+     * a chamada (lição 10 do `docs/README.md`: catraca precisa reprovar sem a
+     * proteção). Esta atravessa `/api/login` de verdade.
+     *
+     * `throttle:login` (`RateLimits::LOGIN` = 5/min por `email|ip`) impede
+     * fazer as 15 tentativas de uma vez — a 6ª de cada janela tomaria 429
+     * antes de chegar no controller. `$this->travel(61)->seconds()` pula pra
+     * frente entre janelas de 5, e como o `CACHE_STORE` de teste é `array`
+     * (calcula expiração por `Carbon::now()`), o salto expira o balde do
+     * throttle igual uma janela de verdade expiraria. Duas janelas de 61s são
+     * bem menos que os 900s da janela do `login_falho`
+     * (`AlertThresholds::LOGIN_FALHO_JANELA_SEGUNDOS`), então as 15 falhas
+     * caem juntas na MESMA janela da família.
+     */
+    public function test_login_falho_real_pela_api_dispara_a_familia(): void
+    {
+        $admin = $this->admin();
+
+        $alvo = User::factory()->create([
+            'type' => 'admin',
+            'is_active' => true,
+            'password' => Hash::make('senha-correta'),
+        ]);
+
+        $credenciaisErradas = ['email' => $alvo->email, 'password' => 'senha-errada'];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        }
+
+        $this->travel(61)->seconds();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        }
+
+        $this->travel(61)->seconds();
+
+        // 4 desta janela = 14 no total: ainda abaixo do limiar de 15.
+        for ($i = 0; $i < 4; $i++) {
+            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        }
+
+        $this->assertCount(0, $this->alertas(), 'Abaixo do limiar não pode alertar.');
+
+        // 5ª desta janela = 15ª no total, ainda dentro do teto de 5/min.
+        $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+
+        $alertas = $this->alertas();
+        $this->assertCount(1, $alertas);
+        $this->assertSame('login_falho_repetido', $alertas[0]['familia']);
+
+        Notification::assertSentTo($admin, AcessoSuspeito::class);
+    }
+
+    /**
+     * `test_sessao_de_conta_desativada_alerta_na_primeira_ocorrencia` acima
+     * chama o detector direto — não prova que `EnsureAccountIsActive` de fato
+     * liga a chamada. Esta espelha o round-trip real de
+     * `EventosDeAcessoTest::test_sessao_de_conta_desativada_registra_evento`
+     * (`GET /api/me` com conta desativada em sessão já aberta) e soma a
+     * asserção do alerta.
+     */
+    public function test_sessao_de_conta_desativada_real_pela_api_dispara_a_familia(): void
+    {
+        $admin = $this->admin();
+
+        $user = $this->actingAsAdmin();
+        $user->forceFill(['is_active' => false])->save();
+
+        $this->getJson('/api/me')->assertStatus(401);
+
+        $alertas = $this->alertas();
+        $this->assertCount(1, $alertas);
+        $this->assertSame('sessao_de_conta_desativada', $alertas[0]['familia']);
+
+        Notification::assertSentTo($admin, AcessoSuspeito::class);
     }
 }
