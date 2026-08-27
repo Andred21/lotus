@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (27)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -61,6 +61,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
 | P-62 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
+| P-63 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) | João | João decidir se D6/D7/D8 merecem ADR próprio; revisar 2026-10-31 |
 
 ## Encerradas (2)
 

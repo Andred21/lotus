@@ -831,3 +831,27 @@ centralizados dentro do monólito (canal `seguranca`, `EventoDeSeguranca`) — s
 literal do `RNF-SEC-05` —, decisão do João de 2026-08-26 (spec `2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, **D5**). O ADR documenta a substituição; não a replica na
 fonte. Até o Drive ser atualizado, os dois lugares contam histórias diferentes do mesmo requisito.
 
+## P-63 — `RNF-SEC-03` e `RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05`
+
+**Gatilho:** João decidir se D6 (três famílias de acesso suspeito), D7 (alerta síncrono) e/ou D8
+(segredos seguem em `env_file`, cofre gerenciado adiado ao item 10) merecem ADR próprio no molde do
+ADR-21, ou se ficam só como decisão de spec/plano sem registro de arquitetura — e, se merecerem,
+abrir pendência de replicação no Drive espelhando a P-62 para a metade de `RNF-SEC-03` que segue sem
+cofre. Revisar em **2026-10-31**.
+
+Achado pela `auditar-docs` no fechamento do `hardening-auditoria-privacidade-e-observabilidade`
+(2026-08-26), depois da Task 9 já commitada. A spec do bloco (`2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:89`) só escreve a linguagem de "revisão formal por
+escrito, não equivalência silenciosa" para **D5** (`RNF-SEC-05`) — por isso só D5 virou ADR-21. D6,
+D7 e D8 são decisões do mesmo dia, da mesma spec, com a mesma autoridade (instrução explícita do
+João), mas `docs/adrs.md` não tem nenhuma ocorrência de `RNF-SEC-03`, `RNF-SEC-07`, "cofre", "D6",
+"D7" ou "D8" — a única metade registrada em ADR é a de D5.
+
+**Não é regressão do bloco:** o brief da Task 9 (`docs/superpowers/plans/2026-08-26-...md`) só pediu
+ADR-21 para D5, e a spec não pediu revisão formal para as outras três — o bloco fez exatamente o que
+foi pedido. O que fica aberto é a assimetria: `docs/operacao-segredos.md` já documenta D8 (a decisão
+de adiar o cofre gerenciado ao item 10), mas só como operação, não como decisão de arquitetura
+registrada — e `RNF-SEC-03` na fonte canônica do Drive pede "fora do código, em cofre de segredos".
+A metade "fora do código" está cumprida; a metade "em cofre" está **datada e atribuída** (item 10),
+não revisada — o que é diferente do caso do RNF-SEC-05 (revisado, não adiado), mas ainda é uma
+lacuna entre o que o Drive pede hoje e o que o sistema faz hoje que nenhum ADR ou pendência nomeia.
+
