@@ -65,6 +65,19 @@ describe('SidebarItem', () => {
     expect(container.querySelector('a')?.getAttribute('title')).toBe('nav.comercial')
   })
 
+  /**
+   * Expandido o `title` NÃO volta. Num link cujo texto visível já é o rótulo, o
+   * `title` vira *accessible description* e o leitor de tela anuncia nome E
+   * descrição — "Comercial, link, Comercial". A spec §4.1 dá ao `title` um papel
+   * só: apoio do rótulo TRUNCADO, e expandido nada trunca (Q-2 do review de
+   * 2026-08-27).
+   */
+  it('expandido, o link NÃO carrega `title`', () => {
+    const { container } = montar(false)
+
+    expect(container.querySelector('a')?.getAttribute('title')).toBeNull()
+  })
+
   /** Expandido nada muda — a correção não pode mexer no menu que já funcionava. */
   it('expandido, mantém o rótulo e não empilha', () => {
     const { container } = montar(false)

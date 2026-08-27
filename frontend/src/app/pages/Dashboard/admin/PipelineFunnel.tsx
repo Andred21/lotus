@@ -14,7 +14,7 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
         // de largura nula seriam indistinguíveis de um erro de render.
         <AppEmptyState icon="pi pi-filter" title={t('dashboard.pipeline.empty')} />
       ) : (
-        <ul className="flex flex-col gap-3 p-4">
+        <ul role="list" className="flex flex-col gap-3 p-4">
           {stages.map((etapa) => (
             // Abaixo de `sm` o rótulo toma a linha inteira: o `w-48` fixo (192px)
             // consumia a largura útil do mobile e TODAS as barras caíam no

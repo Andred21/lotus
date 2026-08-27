@@ -107,7 +107,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
                 {t(janela.labelKey)}
                 <span className="font-mono font-normal tabular-nums">{agenda[janela.key].length}</span>
               </h4>
-              <ul>
+              <ul role="list">
                 {agenda[janela.key].map((turma) => (
                   <TurmaLinha key={turma.turma_id} turma={turma} />
                 ))}

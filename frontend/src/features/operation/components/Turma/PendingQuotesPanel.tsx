@@ -37,7 +37,7 @@ export function PendingQuotesPanel({
   return (
     <AppCard tone="info">
       <AppCardHeader title={t('operation.pending.title')} count={items.length} />
-      <ul>
+      <ul role="list">
         {items.map((q) => (
           <li
             key={q.quote_id}

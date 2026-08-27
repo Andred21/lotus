@@ -13,7 +13,7 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
           contracted: result.contracted_count,
         })}
       </p>
-      <ul className="space-y-1">
+      <ul role="list" className="space-y-1">
         <li>
           {t('operation.enrollment.import.created')}: {result.created}
         </li>
@@ -28,7 +28,7 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
       {result.moved.length > 0 && (
         <div>
           <p className="font-medium">{t('operation.enrollment.import.moved')}</p>
-          <ul className="list-disc pl-5" style={{ color: 'var(--text-color-secondary)' }}>
+          <ul role="list" className="list-disc pl-5" style={{ color: 'var(--text-color-secondary)' }}>
             {result.moved.map((m, i) => (
               <li key={i}>
                 {t('operation.enrollment.import.movedRow', {
@@ -46,7 +46,7 @@ export function ImportResultSummary({ result }: { result: ImportResultData }) {
       {result.errors.length > 0 && (
         <div>
           <p className="font-medium" style={{ color: dangerText }}>{t('operation.enrollment.import.errors')}</p>
-          <ul className="list-disc pl-5" style={{ color: dangerText }}>
+          <ul role="list" className="list-disc pl-5" style={{ color: dangerText }}>
             {result.errors.map((e, i) => (
               <li key={i}>{t('operation.enrollment.import.errorRow', { row: e.row, message: e.message })}</li>
             ))}

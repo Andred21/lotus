@@ -15,10 +15,16 @@ export function SidebarItem({ module, collapsed }: Props) {
     <NavLink
       to={module.path}
       end={module.path === '/'}
-      /* O `title` continua nos DOIS estados, mas deixou de ser o único portador
-       * do nome: colapsado o rótulo trunca, e é aqui que o valor integral fica
-       * recuperável. */
-      title={label}
+      /* Só COLAPSADO. Ali o rótulo trunca dentro dos 80px do rail, e o `title`
+       * é onde o valor integral fica recuperável — deixou de ser o único
+       * portador do nome, não deixou de existir.
+       *
+       * Expandido ele fica FORA: o texto visível já é o rótulo, e `title` sobre
+       * texto idêntico vira *accessible description*, fazendo o leitor de tela
+       * anunciar nome E descrição ("Comercial, link, Comercial"). Regressão
+       * pequena de acessibilidade dentro da correção de acessibilidade (Q-2 do
+       * review de 2026-08-27). */
+      title={collapsed ? label : undefined}
       className={({ isActive }) =>
         [
           'flex items-center rounded-md font-medium transition-colors no-underline border-l-2',

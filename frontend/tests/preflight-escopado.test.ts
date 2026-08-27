@@ -4,21 +4,61 @@ import { resolve } from 'node:path'
 
 const css = () => readFileSync(resolve(__dirname, '..', 'src/index.css'), 'utf8')
 
-/** O bloco `@layer base { ... }` de `index.css`, sem o resto do arquivo. */
-function blocoBase(): string {
-  const texto = css()
-  const inicio = texto.indexOf('@layer base {')
-  if (inicio === -1) return ''
-  let profundidade = 0
-  for (let i = texto.indexOf('{', inicio); i < texto.length; i++) {
-    if (texto[i] === '{') profundidade++
-    if (texto[i] === '}') {
-      profundidade--
-      if (profundidade === 0) return texto.slice(inicio, i + 1)
-    }
-  }
-  return ''
+/** `index.css` sem comentários — palavra dentro de comentário não é seletor. */
+function semComentarios(texto: string): string {
+  return texto.replace(/\/\*[\s\S]*?\*\//g, '')
 }
+
+/**
+ * Fatia `index.css` em duas partes: TODOS os blocos `@layer base { ... }` (não
+ * só o primeiro) e tudo que está FORA de qualquer `@layer`.
+ *
+ * Ler só o primeiro bloco era o furo — provado com sonda: um segundo
+ * `@layer base { input, button, textarea { ... } }` no fim do arquivo passava
+ * pela catraca inteira sem ser visto (Q-1 do review de 2026-08-27). E a região
+ * fora de layer importa ainda mais: ela é o idiom que este mesmo arquivo já usa
+ * duas vezes (`*, *::before, *::after` e `html, body, #root`), e CSS fora de
+ * layer VENCE todo CSS em layer na cascata — quem escrevesse o reset de form
+ * control ali derrubaria o tema com mais força, não menos.
+ */
+function fatias(): { base: string; foraDeLayer: string } {
+  const texto = semComentarios(css())
+  const base: string[] = []
+  let foraDeLayer = ''
+  let i = 0
+  while (i < texto.length) {
+    const abre = texto.indexOf('@layer', i)
+    if (abre === -1) {
+      foraDeLayer += texto.slice(i)
+      break
+    }
+    foraDeLayer += texto.slice(i, abre)
+    const chave = texto.indexOf('{', abre)
+    const fimDaLinha = texto.indexOf(';', abre)
+    // `@layer theme, base, components, utilities;` declara ORDEM, não bloco.
+    if (chave === -1 || (fimDaLinha !== -1 && fimDaLinha < chave)) {
+      i = fimDaLinha === -1 ? texto.length : fimDaLinha + 1
+      continue
+    }
+    const nome = texto.slice(abre + '@layer'.length, chave).trim()
+    let profundidade = 0
+    let fim = texto.length - 1
+    for (let j = chave; j < texto.length; j++) {
+      if (texto[j] === '{') profundidade++
+      if (texto[j] === '}') {
+        profundidade--
+        if (profundidade === 0) {
+          fim = j
+          break
+        }
+      }
+    }
+    if (nome === 'base') base.push(texto.slice(chave, fim + 1))
+    i = fim + 1
+  }
+  return { base: base.join('\n'), foraDeLayer }
+}
+
 
 /**
  * P-46. O Preflight do Tailwind é omitido de propósito (`index.css:1-9`, ADR-16):
@@ -35,7 +75,7 @@ function blocoBase(): string {
  */
 describe('mini-reset escopado (P-46)', () => {
   it('zera a margem das tags de bloco', () => {
-    const bloco = blocoBase()
+    const bloco = fatias().base
 
     for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'dl', 'blockquote', 'figure']) {
       expect(bloco, `tag de bloco ausente do reset: ${tag}`).toMatch(new RegExp(`(^|[\\s,])${tag}([\\s,{]|$)`, 'm'))
@@ -43,13 +83,18 @@ describe('mini-reset escopado (P-46)', () => {
     expect(bloco).toContain('margin: 0')
   })
 
-  it('NÃO alcança form control, tabela nem imagem', () => {
-    const bloco = blocoBase()
+  it('NÃO alcança form control, tabela nem imagem — em NENHUM `@layer base` nem fora de layer', () => {
+    const { base, foraDeLayer } = fatias()
 
-    for (const proibido of ['button', 'input', 'select', 'textarea', 'table', 'img', 'fieldset', 'legend']) {
-      expect(bloco, `o reset alcançou ${proibido} — é o que quebra o PrimeReact`).not.toMatch(
-        new RegExp(`(^|[\\s,])${proibido}([\\s,{:]|$)`, 'm'),
-      )
+    for (const [regiao, css] of [
+      ['@layer base', base],
+      ['fora de layer', foraDeLayer],
+    ] as const) {
+      for (const proibido of ['button', 'input', 'select', 'textarea', 'table', 'img', 'fieldset', 'legend']) {
+        expect(css, `${regiao} alcançou ${proibido} — é o que quebra o PrimeReact`).not.toMatch(
+          new RegExp(`(^|[\\s,])${proibido}([\\s,{:]|$)`, 'm'),
+        )
+      }
     }
   })
 

@@ -134,7 +134,7 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
   )
   if (leftover.length === 0) return null
   return (
-    <ul
+    <ul role="list"
       className="mb-4 rounded px-3 py-2 text-sm"
       style={{
         background: dangerSurface,
