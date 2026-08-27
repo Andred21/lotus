@@ -4,14 +4,21 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-hardening-final
-workflow_state: ready_for_review
+workflow_state: blocked
 next_owner: joao
-next_action: request_code_review
-resume_state: null
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
 active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
 context_packet: null
-blocker: null
+blocker: >-
+  Os 6 achados do review de 2026-08-27 (Q-1 a Q-6) foram aprovados pelo Joao e estao aplicados, com
+  gate refeito: lint 0, build verde, 111 arquivos / 622 testes. Falta decisao do Joao em DOIS pontos
+  abertos durante a aplicacao: (Q-7) o mini-reset apagou o marcador de 8 listas FORA das familias
+  medidas pela spec §5 -- 6 sao ganho (linhas com borda/card), mas FormErrorSummary e
+  ImportResultSummary sao lista de texto puro onde o marcador carregava leitura; decidir se ficam sem
+  marcador ou recebem list-disc; e o audits/2026-08-26-estilizacao-componentes.md segue untracked e
+  nao e entregavel nomeado pelo plano -- commitar, mover para fora da arvore, ou descartar.
 lanes:
   lane-a:
     active_feature: null
@@ -44,20 +51,28 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-hardening-final
-    workflow_state: ready_for_review
+    workflow_state: blocked
     next_owner: joao
-    next_action: request_code_review
+    next_action: approve_review_findings
     tree: ../fix-frontend
     branch: refactor/frontend-hardening-final   # nasce de main@5550178a
     active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
     active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: >-
+      Os 6 achados do review de 2026-08-27 (Q-1 a Q-6) foram aprovados pelo Joao e estao aplicados,
+      com gate refeito: lint 0, build verde, 111 arquivos / 622 testes. Falta decisao do Joao em DOIS
+      pontos abertos durante a aplicacao: (Q-7) o mini-reset apagou o marcador de 8 listas FORA das
+      familias medidas pela spec §5 -- 6 sao ganho (linhas com borda/card), mas FormErrorSummary e
+      ImportResultSummary sao lista de texto puro onde o marcador carregava leitura; decidir se ficam
+      sem marcador ou recebem list-disc; e o audits/2026-08-26-estilizacao-componentes.md segue
+      untracked e nao e entregavel nomeado pelo plano -- commitar, mover para fora da arvore, ou
+      descartar.
+    resume_state: reviewing
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 state_basis_commit: 5550178a
-updated_at: 2026-08-26T21:35:00-03:00
+updated_at: 2026-08-27T01:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +178,14 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/certificacao-historico-do-aluno` (mesclada, PR #73) | `idle` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
-| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `ready_for_execution` |
+| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `blocked` (review de 2026-08-27) |
+
+
+> **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
+> em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
+> linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
+> invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
+> 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 **Promoção do item 8 — 2026-08-26.** A `lane-c` estava `idle` desde o fechamento da fatia 2 do item
 16; o João promoveu explicitamente o **item 8 — `frontend-hardening-final`** contra o `backlog.md`.
