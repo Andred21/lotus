@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend
 active_work_item: frontend-hardening-final
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+workflow_state: ready_for_review
+next_owner: joao
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
 active_plan: docs/superpowers/plans/2026-08-26-frontend-hardening-final.md
@@ -44,9 +44,9 @@ lanes:
   lane-c:
     active_feature: frontend
     active_work_item: frontend-hardening-final
-    workflow_state: executing
-    next_owner: claude
-    next_action: continue_active_plan
+    workflow_state: ready_for_review
+    next_owner: joao
+    next_action: request_code_review
     tree: ../fix-frontend
     branch: refactor/frontend-hardening-final   # nasce de main@5550178a
     active_spec: docs/superpowers/specs/2026-08-26-frontend-hardening-final-design.md
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 state_basis_commit: 5550178a
-updated_at: 2026-08-26T13:42:27-03:00
+updated_at: 2026-08-26T21:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
