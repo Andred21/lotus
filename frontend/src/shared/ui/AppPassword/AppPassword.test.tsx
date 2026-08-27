@@ -172,4 +172,33 @@ describe('AppPassword devolve o foco ao olho', () => {
 
     await waitFor(() => expect(document.activeElement).toBe(campo))
   })
+
+  /** O Prime tem `onKeyDown` SEPARADO do `onClick` (`onToggleMaskKeyDown`,
+   * password.cjs.js:587-613): chama `toggleMask()` direto no Enter/Espaço e
+   * nunca passa pelo `onClick`. O encadeamento do mouse (teste acima) não
+   * cobre quem ativa por teclado — é o gap que o D-33 original descrevia e
+   * que a Task 3 (só `onClick`) não fechou. */
+  it('depois de alternar por Enter, o foco fica no ícone e não no <body>', async () => {
+    const { container } = render(<AppPassword aria-label="senha" />)
+
+    olho(container).focus()
+    fireEvent.keyDown(olho(container), { key: 'Enter', code: 'Enter' })
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(olho(container))
+      expect(document.activeElement?.tagName).not.toBe('BODY')
+    })
+  })
+
+  it('depois de alternar por Espaço, o foco fica no ícone e não no <body>', async () => {
+    const { container } = render(<AppPassword aria-label="senha" />)
+
+    olho(container).focus()
+    fireEvent.keyDown(olho(container), { key: ' ', code: 'Space' })
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(olho(container))
+      expect(document.activeElement?.tagName).not.toBe('BODY')
+    })
+  })
 })
