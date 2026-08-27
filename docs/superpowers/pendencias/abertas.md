@@ -444,27 +444,6 @@ de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num ga
   cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
   `PublicCertificateData`.
 
-## P-02 — retenção da auditoria nunca decidida
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** antes de subir para produção.
-
-ADR-08 (pruning/retenção da auditoria) segue **aberto**. Política de retenção nunca decidida;
-`audits` cresce sem poda.
-
-## P-33 — `login_logs` guarda dado pessoal sem política de retenção
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** fecha junto com a P-02, ou antes de subir para produção.
-
-`login_logs.ip_address` e `login_logs.user_agent` são dado pessoal. Bloco `last-login` (BD-7,
-2026-08-12): o log é append-only por desenho e o volume não é o problema (~10 usuários internos) — a
-retenção é. Fica junto da **P-02**, aberta pela mesma razão para `audits`.
-
-**Nasceu como segunda `P-30` e foi renumerada no `/fechar-sprint` do BD-3 (2026-08-12)**, pelo mesmo
-precedente que renumerou a segunda `P-28` para `P-32`: a linha do `ámbar-aviso` entrou na `main`
-primeiro (PR #41, commit `e6460f9`) e esta chegou depois (`656175c`), então quem renumera é a
-recém-chegada. As menções a "P-30" na narrativa do `last-login` em `docs/superpowers/state.md` são
-desta linha e ficam como estão — história não se reescreve.
-
 ## P-05 — migrations "adicionais" não consolidadas
 
 **Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
@@ -838,4 +817,17 @@ usuário é a Lotus, no Chile.
 **Por que não foi consertado junto:** traduzir os seis `title` e o mascaramento do 500 muda texto que
 o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
 produto, do João — não efeito colateral de um bloco de hardening.
+
+## P-62 — a revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive
+
+**Bloco:** — · **Gatilho:** o Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3) — enquanto
+ele continuar dizendo "Micro-serviço em nuvem com logs das ações do software" para o `RNF-SEC-05`, a
+divergência é real, e uma sessão futura que consulte só o Drive pode reabrir uma decisão que o João já
+tomou, sem saber que ela existe. Fecha quando o João colar a revisão na fonte canônica (Google Drive,
+`Viagem Chile/Projetos/Lotus.cl/V2`). Revisar em **2026-10-31**.
+
+O ADR-21 (`docs/adrs.md`) registra, do lado do código, que os logs de ações do software ficam
+centralizados dentro do monólito (canal `seguranca`, `EventoDeSeguranca`) — substituindo a forma
+literal do `RNF-SEC-05` —, decisão do João de 2026-08-26 (spec `2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, **D5**). O ADR documenta a substituição; não a replica na
+fonte. Até o Drive ser atualizado, os dois lugares contam histórias diferentes do mesmo requisito.
 

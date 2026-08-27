@@ -290,10 +290,60 @@ ADR-12 é geração de documento — o OpenSpout é ingestão, e ingestão não 
 
 **Descartado:** PhpSpreadsheet — carrega o documento inteiro em memória, o oposto do requisito.
 
+## ADR-21 — Logs de ações centralizados no monólito, sem microserviço em nuvem
+
+**Contexto.** O `RNF-SEC-05` da fonte canônica pede, literalmente: *"Micro-serviço em nuvem com logs
+das ações do software, com registro das ações feitas"* (Drive, replicado na spec
+`docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:64-65`).
+Antes deste bloco não havia log de ação nenhum: `config/logging.php` era o stub vanilla do Laravel, e
+o app inteiro tinha só três chamadas de `Log::warning` de descarte de arquivo órfão (medição da spec
+§1).
+
+**Regra:** os logs de ações do software são centralizados **dentro do monólito**, num canal próprio —
+`seguranca` (`backend/config/logging.php:124-132`, driver `monolog` sobre `stderr`, formatado em JSON)
+— escrito por um ponto único, `EventoDeSeguranca`
+(`backend/app/Shared/Logging/EventoDeSeguranca.php`). Não existe, nem nasce deste bloco, nenhum
+microserviço próprio para esta função, em nuvem ou não.
+
+**Decisão do João, 2026-08-26:** centralizar dentro do monólito em vez de construir um serviço
+separado (spec **D5**).
+
+**Porquê.** O projeto atende ~10 usuários internos, roda numa única EC2 (ADR-14) e não tem worker de
+fila — medido: `SESSION_DRIVER`, `CACHE_STORE` e `QUEUE_CONNECTION` são `database` e nenhuma classe
+implementa `ShouldQueue` (cabeçalho do `docker-compose.prod.yml`). Um microserviço de logs próprio,
+neste porte, é **mais superfície de operação do que proteção**: mais um deploy, mais uma rede, mais um
+componente que pode cair — enquanto o monólito já escreve em `stderr` e o Docker já coleta. Adicionar
+um serviço só para reempacotar o mesmo evento multiplica o que pode falhar sem multiplicar o que fica
+provado.
+
+**O que se perde.** Sem um coletor externo, o log **morre com a instância**: se o coletor (CloudWatch
+ou equivalente, item 10 do backlog — `infra-producao-provisionamento-aws`) não estiver de pé quando a
+EC2 sumir, não há para onde o evento ter escapado antes. E a retenção do log, hoje, é só o teto local
+do Docker — `json-file` **10 MB × 3** (`x-logging` em `docker-compose.prod.yml`), pensado originalmente
+como proteção de disco (spec D9) e que passa a valer, também, como a política de retenção declarada do
+log de segurança: quando o teto girar, o evento mais antigo deixa de existir.
+
+**Isto substitui a forma escrita no requisito.** O que existe — um canal dentro do monólito — não é
+uma leitura equivalente de "micro-serviço em nuvem"; é uma **substituição deliberada**, registrada
+aqui por escrito. O Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3): este ADR documenta a
+substituição do lado do código, mas não fecha a divergência sozinho — a revisão do `RNF-SEC-05` ainda
+precisa ser **replicada no Drive** por João Victor. Até lá, a P-62 (`docs/superpowers/pendencias/abertas.md`)
+mantém essa divergência visível para que uma sessão futura não reabra a decisão sem saber que ela já
+foi tomada.
+
+**Descartado:** microserviço de logs em nuvem, na forma literal do requisito — desproporcional ao
+porte atual do time e da infraestrutura (uma EC2, sem fila); reavaliável se o projeto crescer o
+suficiente para justificar operar um componente a mais.
+
 ---
 
 ## Pendências abertas (não decidir sem o João Victor)
-- Estratégia fina de pruning da auditoria (ADR-08).
+- ~~Estratégia fina de pruning da auditoria (ADR-08)~~ — **paga por este bloco.** Ver
+  `RetentionPolicy` (`backend/app/Shared/Retention/RetentionPolicy.php`, janelas de 12 meses/5
+  anos/12 meses) e os comandos `lotus:podar-auditoria` (`PodarAuditoria`) e `lotus:podar-logins`
+  (`PodarLogins`), agendados em `routes/console.php` e executados pelo serviço `scheduler` do
+  `docker-compose.prod.yml`. O eixo separado de logs de ação (`RNF-SEC-05`) é o ADR-21, acima —
+  exportação fria para Glacier segue opcional e sem requisito aprovado.
 
 ## Regras de negócio herdadas (referência)
 Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); **redator↔turma é N:N** (a v1 previa um redator por turma; superado no Bloco 6b, spec `2026-07-21-bloco6b-turma-designacao-design.md` D5 — pivot `turma_redator`); só admin e redator autenticam (RN-01).

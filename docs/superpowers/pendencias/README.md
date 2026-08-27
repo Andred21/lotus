@@ -21,14 +21,12 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (28)
+## Abertas (27)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
-| P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
 | P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
@@ -62,10 +60,14 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
+| P-62 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (2)
 
-Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
+A **P-02** e a **P-33** fecham dentro do bloco `hardening-auditoria-privacidade-e-observabilidade`
+(2026-08-26), por mecanismo (`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice
+`audits_created_at_index` e o agendamento em `routes/console.php`/`scheduler`) — ver
+[`encerradas.md`](./encerradas.md). Formalização no próximo `/fechar-sprint`. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
 fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros
 posteriores aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o offset
 injetado no container da worktree (medido com `printenv`), as seis `LOTUS_DEV_*` do
