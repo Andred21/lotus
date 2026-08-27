@@ -62,7 +62,9 @@
 - `laravel-auditing` via trait nos modelos sensíveis; tabela central `audits`.
 - **NA APLICAÇÃO, nunca em triggers de banco.**
 - Evitar mass-delete que pule o ORM (dribla os Observers). A solução NÃO é adicionar trigger — é não pular o ORM.
-- Necessária estratégia de pruning da tabela `audits` (poda agendada; opcionalmente exportar histórico frio p/ S3 Glacier).
+- Pruning da tabela `audits`: poda agendada em duas fases via `RetentionPolicy` e `PodarAuditoria`
+  (ver pendência fechada abaixo); exportar histórico frio p/ S3 Glacier segue opcional, sem
+  requisito aprovado.
 
 **Porquê:** o pacote captura `user_id`, IP, User-Agent — o que um trigger NÃO enxerga (trigger vê a conexão, não o usuário da app). Descartados: triggers (cegos ao usuário, invisíveis no código, migrations não versionam bem).
 

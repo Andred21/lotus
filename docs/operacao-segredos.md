@@ -45,7 +45,7 @@ São duas metades:
 | `APP_KEY` | `backend/config/app.php:107` (cifra de cookie/sessão, `cipher => AES-256-CBC` em `app.php:105`) | Ver §5 — aviso à parte. |
 | `DB_PASSWORD` | `backend/config/database.php:54` (conexão `mysql`) | Compartilhado pelos serviços `app` e `scheduler` (mesmo `env_file`). |
 | Credenciais de S3 (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/filesystems.php:52-53` (disco `s3`, ADR-11) | **Mesmo par** de credenciais da linha abaixo — não são dois segredos independentes. |
-| Credenciais de SES (mesmas `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/services.php:24-26` (bloco `ses`), consumido pelo mailer `ses` (`backend/config/mail.php:52-54`) | Uma **única** identidade IAM cobre storage e e-mail: rotacionar uma rotaciona a outra ao mesmo tempo (ver §4). |
+| Credenciais de SES (mesmas `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/services.php:24-28` (bloco `ses`), consumido pelo mailer `ses` (`backend/config/mail.php:52-54`) | Uma **única** identidade IAM cobre storage e e-mail: rotacionar uma rotaciona a outra ao mesmo tempo (ver §4). |
 | `SANCTUM_STATEFUL_DOMAINS` / `SESSION_DOMAIN` | `backend/config/sanctum.php:21` (`explode(',', ...)`), `backend/config/session.php:159`, `backend/config/cors.php:22` | **Não são segredo** — não dão acesso a nada por si só —, mas entram aqui porque um valor errado quebra o login **em silêncio**: o gate do entrypoint (`docker/php/entrypoint.sh:19-25`) só confere que a variável não está vazia, então uma string não-vazia e errada passa, o container sobe saudável (`/up` responde 200) e o cookie do Sanctum simplesmente nunca é aceito. |
 
 ## 4. Procedimento de rotação por segredo
