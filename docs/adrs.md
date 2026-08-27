@@ -302,7 +302,7 @@ o app inteiro tinha só três chamadas de `Log::warning` de descarte de arquivo 
 §1).
 
 **Regra:** os logs de ações do software são centralizados **dentro do monólito**, num canal próprio —
-`seguranca` (`backend/config/logging.php:124-132`, driver `monolog` sobre `stderr`, formatado em JSON)
+`seguranca` (`backend/config/logging.php:134-142`, driver `monolog` sobre `stderr`, formatado em JSON)
 — escrito por um ponto único, `EventoDeSeguranca`
 (`backend/app/Shared/Logging/EventoDeSeguranca.php`). Não existe, nem nasce deste bloco, nenhum
 microserviço próprio para esta função, em nuvem ou não.

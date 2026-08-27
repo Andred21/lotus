@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
 active_plan: docs/superpowers/plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
-state_basis_commit: 038b4a70
-updated_at: 2026-08-26T22:30:00-03:00
+state_basis_commit: 87872ad9
+updated_at: 2026-08-27T10:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `executing` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_review` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -255,6 +255,32 @@ task durável (Task 1, `cbe3f711`), e isso não aconteceu ali. O ledger (`.super
 e o `git log` da branch são a prova de que o trabalho é contínuo desde então — nenhuma task foi
 pulada ou refeita por causa da lacuna; é disciplina de registro atrasada, não um estado real
 diferente do que o `state.md` já deveria dizer.
+
+**As nove tasks fecharam e a lane vai a `ready_for_review` — 2026-08-27.** Ciclo completo de
+`subagent-driven-development`: implementador por task, review de task (spec + qualidade) atrás de
+cada uma, subagente de correção para achado Crítico/Importante, re-review, e um review final da
+branch inteira no modelo mais capaz, seguido de re-review da onda de correções. Evidência task a
+task em `.superpowers/sdd/progress.md`.
+
+O review final da branch achou **um Crítico, e ele era real**: o canal `seguranca` lia
+`env('LOG_LEVEL', 'debug')`, e `backend/.env.production.example:45` fixa `LOG_LEVEL=warning` — sete
+dos oito eventos de `EventoDeSeguranca` saem em `info`, então **em produção o canal inteiro do
+`RNF-SEC-05` estaria mudo menos o alerta**, no único ambiente em que a spec importa. O nível virou o
+literal `'info'`, com catraca provada por inversão, e o porquê ficou escrito no próprio
+`config/logging.php`. Os demais achados foram corrigidos na mesma onda: guarda de `try/catch` na
+costura do handler global (mesma catraca 5, agora protegendo a resposta de erro e não só o e-mail),
+`withoutOverlapping(60)` nas duas podas, resolução de conexão da migration alinhada ao comando, e o
+teste de login falho real refeito com `freezeTime()` — ele era o único ponto do bloco que ainda
+corria contra o relógio de verdade, e falhou uma vez em nove execuções da suíte antes da correção.
+
+**Três decisões do João ficam abertas antes do fechamento, registradas e não corrigidas em silêncio.**
+O review final mediu três lacunas no **escopo** da D6 — senha certa em conta desativada não gera
+alerta prioritário, o alerta de login falho não carrega o `chave_hash` que liga ao rastro, e
+password spraying entre contas não acumula em família nenhuma porque tudo chaveia em `email|ip`. O
+detector faz exatamente o que a D6 escreveu; mudar qualquer das três é redefinir a D6. Foram para a
+**P-63**, que já era a ficha da assimetria de ADR entre D5 e D6/D7/D8, porque é a mesma conversa. A
+lacuna de índice da poda de `login_logs`, medida nos reviews das Tasks 1 e 4 e fora do escopo do
+plano nas duas, virou a **P-64**.
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
