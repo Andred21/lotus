@@ -3,6 +3,7 @@
 namespace App\Shared\Logging;
 
 use Illuminate\Support\Facades\Log;
+use Psr\Log\LogLevel;
 
 /**
  * Único caminho de escrita de evento de segurança (spec §4.5). A centralização
@@ -86,8 +87,7 @@ final class EventoDeSeguranca
 
     public static function alertaDeAcessoSuspeito(string $familia, ?int $usuarioId, ?string $ip, int $ocorrencias): void
     {
-        Log::channel(self::CANAL)->warning('lotus.seguranca', [
-            'evento' => 'acesso.suspeito',
+        self::escrever(LogLevel::WARNING, 'acesso.suspeito', [
             'familia' => $familia,
             'usuario_id' => $usuarioId,
             'ip' => $ip,
@@ -98,6 +98,12 @@ final class EventoDeSeguranca
     /** @param array<string,scalar|null> $dados */
     private static function info(string $evento, array $dados): void
     {
-        Log::channel(self::CANAL)->info('lotus.seguranca', ['evento' => $evento] + $dados);
+        self::escrever(LogLevel::INFO, $evento, $dados);
+    }
+
+    /** @param array<string,scalar|null> $dados */
+    private static function escrever(string $nivel, string $evento, array $dados): void
+    {
+        Log::channel(self::CANAL)->log($nivel, 'lotus.seguranca', ['evento' => $evento] + $dados);
     }
 }

@@ -113,4 +113,18 @@ class EventoDeSegurancaTest extends TestCase
 
         $this->assertSame(['INFO', 'WARNING'], $niveis);
     }
+
+    /**
+     * Achado do review final de 2026-08-26: `backend/.env.production.example:45`
+     * fixa `LOG_LEVEL=warning` para o canal default. Se o canal `seguranca` lesse
+     * o mesmo `LOG_LEVEL` (como lia antes deste fix), sete dos oito eventos —
+     * todos em `info` — seriam descartados em produção, silenciosamente, sem
+     * nenhum teste deste arquivo notar: `capturar()` troca o handler por um
+     * `TestHandler` que aceita tudo, então os testes acima nunca exercitaram o
+     * nível REAL configurado do canal.
+     */
+    public function test_o_nivel_do_canal_e_fixo_e_nao_depende_do_log_level_da_aplicacao(): void
+    {
+        $this->assertSame('info', config('logging.channels.seguranca.level'));
+    }
 }

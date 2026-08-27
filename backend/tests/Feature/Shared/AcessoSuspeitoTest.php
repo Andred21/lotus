@@ -195,15 +195,25 @@ class AcessoSuspeitoTest extends TestCase
      * `throttle:login` (`RateLimits::LOGIN` = 5/min por `email|ip`) impede
      * fazer as 15 tentativas de uma vez — a 6ª de cada janela tomaria 429
      * antes de chegar no controller. `$this->travel(61)->seconds()` pula pra
-     * frente entre janelas de 5, e como o `CACHE_STORE` de teste é `array`
+     * frente entre janelas, e como o `CACHE_STORE` de teste é `array`
      * (calcula expiração por `Carbon::now()`), o salto expira o balde do
-     * throttle igual uma janela de verdade expiraria. Duas janelas de 61s são
+     * throttle igual uma janela de verdade expiraria. As janelas de 61s são
      * bem menos que os 900s da janela do `login_falho`
      * (`AlertThresholds::LOGIN_FALHO_JANELA_SEGUNDOS`), então as 15 falhas
      * caem juntas na MESMA janela da família.
+     *
+     * `freezeTime()` congela o relógio ANTES do primeiro lote — sem isso, só
+     * esse lote corria contra o relógio de verdade (os demais já ficam
+     * congelados pelo `travel()` seguinte). E cada lote usa **4**, não 5, para
+     * sobrar folga contra o teto de `RateLimits::LOGIN` — um lote exato no
+     * teto não tem margem para um futuro ajuste de `RateLimits::LOGIN` ou
+     * `AlertThresholds::LOGIN_FALHO_LIMIAR` sem quebrar o teste em silêncio
+     * (achado do review final de 2026-08-26).
      */
     public function test_login_falho_real_pela_api_dispara_a_familia(): void
     {
+        $this->freezeTime();
+
         $admin = $this->admin();
 
         $alvo = User::factory()->create([
@@ -214,27 +224,21 @@ class AcessoSuspeitoTest extends TestCase
 
         $credenciaisErradas = ['email' => $alvo->email, 'password' => 'senha-errada'];
 
-        for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        foreach ([4, 4, 4] as $lote) {
+            for ($i = 0; $i < $lote; $i++) {
+                $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+            }
+
+            $this->travel(61)->seconds();
         }
 
-        $this->travel(61)->seconds();
-
-        for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
-        }
-
-        $this->travel(61)->seconds();
-
-        // 4 desta janela = 14 no total: ainda abaixo do limiar de 15.
-        for ($i = 0; $i < 4; $i++) {
-            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
-        }
-
+        // 12 até aqui, abaixo do limiar de 15.
         $this->assertCount(0, $this->alertas(), 'Abaixo do limiar não pode alertar.');
 
-        // 5ª desta janela = 15ª no total, ainda dentro do teto de 5/min.
-        $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        // 13ª, 14ª e 15ª desta janela — ainda dentro do teto de 5/min.
+        for ($i = 0; $i < 3; $i++) {
+            $this->postJson('/api/login', $credenciaisErradas)->assertStatus(422);
+        }
 
         $alertas = $this->alertas();
         $this->assertCount(1, $alertas);

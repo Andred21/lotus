@@ -1,15 +1,14 @@
 <?php
 
+use App\Console\Commands\PodarAuditoria;
+use App\Console\Commands\PodarLogins;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-
-use App\Console\Commands\PodarAuditoria;
-use App\Console\Commands\PodarLogins;
-use Illuminate\Support\Facades\Schedule;
 
 /*
  * Retenção (spec §4.4). Quem roda isto em produção é o serviço `scheduler` do
@@ -24,14 +23,17 @@ use Illuminate\Support\Facades\Schedule;
  *
  * `withoutOverlapping()` protege contra a passada anterior ainda estar viva
  * numa tabela grande; o lock vai para o `CACHE_STORE=database`, que já é o do
- * projeto.
+ * projeto. Expira em 60 minutos, não no default de 24h: o `scheduler` não tem
+ * monitor de liveness (débito aceito na spec), e um container morto a meio da
+ * poda não pode segurar o lock até a madrugada seguinte e pular a próxima
+ * passada em silêncio (achado do review final de 2026-08-26).
  */
 Schedule::command(PodarAuditoria::class)
     ->timezone('America/Santiago')
     ->dailyAt('03:10')
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);
 
 Schedule::command(PodarLogins::class)
     ->timezone('America/Santiago')
     ->dailyAt('03:40')
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);

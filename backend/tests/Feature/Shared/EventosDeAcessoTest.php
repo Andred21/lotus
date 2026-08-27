@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Handler\TestHandler;
 use Monolog\LogRecord;
 use Tests\TestCase;
@@ -176,6 +177,37 @@ class EventosDeAcessoTest extends TestCase
         $this->assertCount(1, $eventos);
         $this->assertSame($user->id, $eventos[0]['usuario_id']);
         $this->assertSame('api/users', $eventos[0]['rota']);
+    }
+
+    /**
+     * `RegistraEventoDeErro::handle()` roda dentro do `render()` global,
+     * ANTES de `ProblemDetails::fromException()` (`bootstrap/app.php:114`) —
+     * sem proteção, um canal de log quebrado converteria a resposta 403 que
+     * o cliente devia receber numa exceção não tratada no meio do próprio
+     * handler de erro. Achado do review final de 2026-08-26; mesma catraca 5
+     * da spec que já protegia só o envio de e-mail do alerta.
+     */
+    public function test_falha_ao_registrar_evento_nao_derruba_a_resposta_de_erro(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $user->assignRole('redator');
+        $this->actingAs($user, 'web');
+
+        Log::channel(EventoDeSeguranca::CANAL)->getLogger()->setHandlers([
+            new class extends AbstractProcessingHandler
+            {
+                protected function write(LogRecord $record): void
+                {
+                    throw new \RuntimeException('canal de seguranca fora do ar');
+                }
+            },
+        ]);
+
+        $this->getJson('/api/users')
+            ->assertStatus(403)
+            ->assertJsonStructure(['type', 'title', 'status', 'detail']);
     }
 
     public function test_429_registra_evento(): void

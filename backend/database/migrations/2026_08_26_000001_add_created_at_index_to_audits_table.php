@@ -17,7 +17,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $connection = config('audit.drivers.database.connection', config('database.default'));
+        $connection = config('audit.drivers.database.connection') ?: config('database.default');
         $table = config('audit.drivers.database.table', 'audits');
 
         Schema::connection($connection)->table($table, function (Blueprint $table) {
@@ -27,7 +27,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $connection = config('audit.drivers.database.connection', config('database.default'));
+        $connection = config('audit.drivers.database.connection') ?: config('database.default');
         $table = config('audit.drivers.database.table', 'audits');
 
         Schema::connection($connection)->table($table, function (Blueprint $table) {

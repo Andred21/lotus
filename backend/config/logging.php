@@ -120,10 +120,20 @@ return [
          * `JsonFormatter` porque linha de log de segurança é para ser LIDA por
          * máquina: quem procurar "todo 403 do usuário 7 ontem" precisa filtrar
          * por campo, não por regex sobre prosa.
+         *
+         * **`level` é o literal `'info'`, nunca `env('LOG_LEVEL', ...)`.**
+         * `backend/.env.production.example:45` fixa `LOG_LEVEL=warning` para o
+         * canal default — e sete dos oito eventos de `EventoDeSeguranca` saem
+         * em `info` (achado do review final de 2026-08-26). Ler o mesmo
+         * `LOG_LEVEL` aqui descartaria login concedido/recusado, logout, sessão
+         * revogada, 403, 429 e a contagem da poda em produção — exatamente o
+         * ambiente em que a spec do `RNF-SEC-05` importa. Só o alerta de acesso
+         * suspeito (`warning`) sobreviveria. A verbosidade deste canal é
+         * decisão própria, independente da verbosidade geral da aplicação.
          */
         'seguranca' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => 'info',
             'handler' => StreamHandler::class,
             'handler_with' => [
                 'stream' => 'php://stderr',

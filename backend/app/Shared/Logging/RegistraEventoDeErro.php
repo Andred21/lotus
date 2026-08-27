@@ -6,6 +6,7 @@ use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
@@ -50,7 +51,27 @@ use Throwable;
  */
 class RegistraEventoDeErro
 {
+    /**
+     * Chamada de dentro do `render()` global (`bootstrap/app.php`), ANTES de
+     * `ProblemDetails::fromException()` — nada aqui pode escapar, ou a
+     * resposta de erro (403/429) que o cliente ia receber vira uma exceção
+     * não tratada no meio do próprio handler de exceção. Mesma catraca 5 da
+     * spec ("alerta que quebra não pode derrubar a resposta"), aplicada na
+     * costura em vez de só dentro do envio de e-mail (achado do review final
+     * de 2026-08-26).
+     */
     public static function handle(Throwable $e, Request $request): void
+    {
+        try {
+            self::registrar($e, $request);
+        } catch (Throwable $falha) {
+            Log::error('Falha ao registrar evento de seguranca a partir do handler global', [
+                'erro' => $falha->getMessage(),
+            ]);
+        }
+    }
+
+    private static function registrar(Throwable $e, Request $request): void
     {
         $usuarioId = $request->user()?->getAuthIdentifier();
         $rota = $request->path();
