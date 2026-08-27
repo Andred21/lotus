@@ -383,6 +383,51 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
   para eventos críticos. Exige levantamento funcional próprio.
 
+## 18. `frontend-estilizacao-padronizacao-de-componentes`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
+**Fonte:** `audits/2026-08-26-estilizacao-componentes.md` (leitura estática de `shared/ui/**`,
+`app/layouts/**`, `app/pages/Dashboard/**` e varredura por padrão nas features; **sem execução no
+navegador** — onde a recomendação depende de pixel, o bloco valida com `/lotus-ui-review`).
+
+**Objetivo:** fechar a última milha da estilização — o mesmo papel visual sai hoje em 3 a 5 grafias
+diferentes — e executar a assinatura que o ADR-16 elegeu e o produto ainda não tem. **Não é
+redesenho:** o audit mede o código contra a direção JÁ fechada e declara por escrito que o alicerce
+(tokens, contraste travado por teste, `AppCard`/`AppTag`/`AppDataTable`) não se toca.
+
+**Escopo, nas quatro fases que o audit ordena:**
+1. **Vocabulário de botão** — `brandIcon` virou a CTA primária do produto em ~14 call sites contra o
+   próprio contrato do `AppButton/style.ts` ("marca, só-ícone"), enquanto `brandLabel` sobrou em 2.
+   Renomear por PAPEL (`primary`, `iconToggle`, `noSurface`) e varrer os call sites; "Voltar" do
+   `DetailHeader` desce de CTA a ação terciária; `ConfirmDialog` sem `severity` passa a confirmar
+   com o mesmo variant do `CrudDialog` (B1, B2, B3).
+2. **Tipografia** — um só tratamento de `h1` (hoje `PageHeader` e `DetailHeader` abrem com vozes
+   diferentes, e o de auth está copiado 5×); um só rótulo de seção (hoje 5 grafias); um `StatValue`
+   com `font-display` + `tabular-nums` sempre (A1, A2, A3, A5).
+3. **Dado técnico e a assinatura** — regra "folio/RUT/data técnica = `font-mono tabular-nums`" na
+   rule, e o `CertificateFolio` compartilhado entre `ValidationPage` e `IssuedDialog`. É o único
+   investimento estético NOVO do audit, e a tela dele é a pública do QR — a que fiscalizador e
+   empregador veem, onde hoje o folio é texto comum (A4, D4).
+4. **Higiene** — escala de raio escrita na rule; `ValidationPage` volta a `--surface-ground` (é a
+   única tela em paleta Tailwind crua); `AppTabView` passa a usar `mergePt` em vez de `?? default`;
+   logo da sidebar sem os números mágicos `ml-15 h-30`; tinta de apoio do Login vira `--shell-ink*`
+   (C1, C2, C3, C4, D1, D3, E1).
+
+**Depende do `frontend-hardening-final` (item 8), nunca junto.** Os achados A2, D2 e E2 dependem do
+estado pós-mini-reset para não medir duas vezes; e o item 8 toca `SidebarItem`, `index.css` e
+`eslint.config.js`. O audit foi escrito durante o item 8 e já respeita a D6 da spec dele (os
+`my-[0.83em]` ficam; trocá-los por margem de escala é decisão da fase 2, com screenshot).
+
+**Fora, por escrito:** redesenho de paleta, tema ou contraste (medido e travado por teste — não há
+achado ali); Dashboard (placeholder declarado) e as telas do item 16 ainda sem run de UI-review;
+qualquer mudança de layout de navegação — a spec do item 8 já recusou drawer; motion novo, porque a
+direção é instrumental e acrescentar animação seria decoração sem tese.
+
+**DoD:** screenshot antes/depois por fase via `/lotus-ui-review` nos dois temas; guarda de grep com
+zero `variant="brandIcon"` carregando `label`, zero número de stat sem `tabular-nums`, zero
+folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras novas escritas em
+`.claude/rules/` no mesmo PR — o audit vira mecanismo, não recomendação solta.
+
 ---
 
 # Débitos técnicos — registro canônico
