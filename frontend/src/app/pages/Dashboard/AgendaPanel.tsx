@@ -96,7 +96,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
           {preenchidas.map((janela) => (
             <section key={janela.key}>
               <h4
-                className="m-0 flex items-center gap-2 px-4 pt-3 pb-1 text-xs font-semibold tracking-wider uppercase"
+                className="flex items-center gap-2 px-4 pt-3 pb-1 text-xs font-semibold tracking-wider uppercase"
                 style={{ color: 'var(--text-color-secondary)' }}
               >
                 <span
@@ -107,7 +107,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
                 {t(janela.labelKey)}
                 <span className="font-mono font-normal tabular-nums">{agenda[janela.key].length}</span>
               </h4>
-              <ul className="m-0 list-none p-0">
+              <ul role="list">
                 {agenda[janela.key].map((turma) => (
                   <TurmaLinha key={turma.turma_id} turma={turma} />
                 ))}

@@ -48,16 +48,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui-f2   # fechada em 2026-08-25; ainda não mesclada
+    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; PR #80 aberto
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo-f2
+    last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: 4dd5075a
-updated_at: 2026-08-26T01:40:00-03:00
+updated_at: 2026-08-28T13:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,14 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
+
+
+> **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
+> em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
+> linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
+> invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
+> 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 **A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
@@ -171,16 +178,19 @@ em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
 de PR #73/#75/#76/#77 para dentro neste commit; a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
 do João, contra o `backlog.md`.
 
-**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
-integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
-`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
-abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
-fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
-`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
-memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
-da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
-573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
-árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
+**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
+segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
+5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
+navegador contra o código pós-review.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -190,11 +200,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 | 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 | 2026-08-25 | `hardening-api-arquivos-e-abuso` | Item 4 da fila |
 | 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
 | 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
-| 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

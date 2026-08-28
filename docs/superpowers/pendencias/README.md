@@ -29,7 +29,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-02 | ADR-08 (pruning/retenção de `audits`) segue aberto | `hardening-auditoria-privacidade-e-observabilidade` | antes de subir para produção |
 | P-33 | `login_logs.ip_address`/`user_agent` são dado pessoal sem política de retenção | `hardening-auditoria-privacidade-e-observabilidade` | fecha junto da P-02, ou antes de produção |
-| P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
+| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | `frontend-estilizacao-padronizacao-de-componentes` | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -64,7 +64,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (1)
+
+**A P-46 fechou no `frontend-hardening-final` (2026-08-27) e está em rastro** — o mini-reset
+escopado de `index.css` entrou com catraca própria (`tests/preflight-escopado.test.ts`), e a borda
+que ele abriu virou a **P-63**. Sai no próximo `/fechar-sprint` posterior a este.
 
 Nenhuma pendência em rastro. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
 fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros

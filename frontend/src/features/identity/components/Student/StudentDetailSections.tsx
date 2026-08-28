@@ -79,7 +79,7 @@ export function StudentDetailSections({
             {t("student.noLinks")}
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul role="list" className="space-y-2">
             {estado.data.links.map((link) => (
               <StudentLinkRow key={link.id} link={link} />
             ))}

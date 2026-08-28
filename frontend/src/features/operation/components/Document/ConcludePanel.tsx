@@ -34,7 +34,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
           ) : (
             <AppCard tone="warning" className="px-3 py-2 text-sm">
               <p>{t('operation.conclusion.missingTitle')}</p>
-              <ul className="mt-1 list-inside list-disc">
+              <ul role="list" className="mt-1 list-inside list-disc">
                 {s.missingTypes.map((type) => (
                   <li key={type}>{turmaDocumentTypeLabel(type, t)}</li>
                 ))}

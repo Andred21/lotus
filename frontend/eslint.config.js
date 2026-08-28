@@ -270,6 +270,23 @@ const ACAO_SEM_ANCORA = {
   message:
     'Coluna de ação fica presa à direita do invólucro que rola: style={stickyActionsColumn(<rem>)} (item 17).',
 }
+// Q-6 do review de 2026-08-27. O mini-reset da P-46 crava `list-style: none`
+// em TODO `ul`/`ol` da aplicação, e o WebKit tira a semântica de lista do
+// elemento quando o marcador some: o VoiceOver deixa de anunciar "lista, 5
+// itens" e passa a ler os itens soltos. `role="list"` devolve a semântica sem
+// devolver o marcador — é o remédio padrão para essa exata consequência do
+// Preflight, e agora ela alcança a aplicação inteira, não as cinco listas que o
+// bloco enxergou.
+//
+// A régua exige `role` e não inspeciona `className`: lista que QUER marcador
+// escreve `list-disc` E `role="list"` — redundante no navegador, mas é o que
+// mantém a catraca de um predicado só, e `role="list"` num `ul` com marcador
+// não muda nada.
+const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
+  selector: `JSXOpeningElement[name.name='${tag}']:not(:has(> JSXAttribute[name.name='role']))`,
+  message:
+    'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
+}))
 // Catraca da regra de cor: lista que só ENCOLHE. A Validação tem fundo escuro
 // deliberado e mudá-la é desenho novo, não pagamento de débito (D7). O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
@@ -324,7 +341,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -337,7 +354,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -358,7 +375,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -478,6 +495,36 @@ export default defineConfig([
       ],
     },
   },
+  // D-35: `src/app/**` era o único lado do seam `shared/ui` sem o ban de
+  // PrimeReact. O bloco por feature (`:434`) cobre `src/features/**` e o de
+  // cima cobre `src/shared/**`; a camada do shell ficava de fora, com 28
+  // arquivos só em `app/pages/Dashboard/`.
+  //
+  // UM grupo só, de propósito: `app/` importa CINCO features pelo AppRouter, e
+  // compor rota é o trabalho desta camada — o ban de feature→feature não vem
+  // junto (o comentário do bloco de shared já registra a exceção).
+  //
+  // Sem colisão de merge raso: os dois blocos que casam `src/app/**` hoje
+  // declaram `max-lines` e `no-restricted-syntax`, não `no-restricted-imports`.
+  // O glob é `{ts,tsx}` e não só `.tsx` porque um `.ts` de `app/` importa
+  // componente igual, e o ban de fronteira é barato.
+  {
+    files: ['src/app/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['primereact', 'primereact/*'],
+              message:
+                'app/ não importa PrimeReact direto: use o wrapper de @shared/ui (CLAUDE.md §5.6, ADR-05).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // BD-3 §4 (modo leitura) também vale em `shared/ui`: `FormField`/`NestedField`
   // moram lá, e um wrapper que reintroduzisse `disabled={readOnly}` por dentro
   // escaparia dos blocos de `src/features/**` acima. Bloco isolado porque
@@ -498,7 +545,7 @@ export default defineConfig([
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
     },
   },
   // A catraca de cor entra em `src/app/**` (D11 de
@@ -524,7 +571,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
     },
   },
 ])
