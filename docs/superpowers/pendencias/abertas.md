@@ -846,8 +846,8 @@ D7 e D8 são decisões do mesmo dia, da mesma spec, com a mesma autoridade (inst
 João), mas `docs/adrs.md` não tem nenhuma ocorrência de `RNF-SEC-03`, `RNF-SEC-07`, "cofre", "D6",
 "D7" ou "D8" — a única metade registrada em ADR é a de D5.
 
-**Não é regressão do bloco:** o brief da Task 9 (`docs/superpowers/plans/2026-08-26-...md`) só pediu
-ADR-21 para D5, e a spec não pediu revisão formal para as outras três — o bloco fez exatamente o que
+**Não é regressão do bloco:** o brief da Task 9
+(`docs/superpowers/plans/archive/2026-08-26-...md`) só pediu ADR-21 para D5, e a spec não pediu revisão formal para as outras três — o bloco fez exatamente o que
 foi pedido. O que fica aberto é a assimetria: `docs/operacao-segredos.md` já documenta D8 (a decisão
 de adiar o cofre gerenciado ao item 10), mas só como operação, não como decisão de arquitetura
 registrada — e `RNF-SEC-03` na fonte canônica do Drive pede "fora do código, em cofre de segredos".

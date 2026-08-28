@@ -296,7 +296,7 @@ ADR-12 é geração de documento — o OpenSpout é ingestão, e ingestão não 
 
 **Contexto.** O `RNF-SEC-05` da fonte canônica pede, literalmente: *"Micro-serviço em nuvem com logs
 das ações do software, com registro das ações feitas"* (Drive, replicado na spec
-`docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:64-65`).
+`docs/superpowers/specs/archive/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:64-65`).
 Antes deste bloco não havia log de ação nenhum: `config/logging.php` era o stub vanilla do Laravel, e
 o app inteiro tinha só três chamadas de `Log::warning` de descarte de arquivo órfão (medição da spec
 §1).
