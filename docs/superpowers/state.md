@@ -10,20 +10,20 @@ next_action: select_backlog_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
 blocker: null
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
     blocker: null
     resume_state: null
     last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `context_required` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_planning` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -193,6 +193,15 @@ estão em `ready_for_planning`/`planning` nas próprias árvores. Por isso o `st
 descreve as duas em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi escrito por este
 commit.** Não há colisão de escopo: o item 10 é provisionamento AWS e o item 18 é frontend puro; este
 bloco é backend e o único que regenera `generated.ts`.
+
+**O Context Packet do item 6 voltou `ready` — 2026-08-28.** O Codex leu o `requisitos-negocio.md` do
+Drive por ID e a task Notion 9.1.3 na base canônica. **Nenhuma fonte fixa número**: o RNF-DES-01 pede
+resposta "quase instantânea" sem SLA, o RNF-DES-02 fixa só os 10 usuários simultâneos, o RNF-DES-03
+pede documento acessível "imediatamente" sem prazo; a 9.1.3 tem aceite único, "Sem N+1 nas consultas
+RBAC/FK principais". Nada menciona Redis nem cache — "Redis não é requisito" do backlog fica de pé. O
+teto de `per_page`, eventuais guardas numéricas e o dono dos 30 dias da D-15 são decisões de
+engenharia do brainstorming, não regra de negócio ausente — por isso `ready`, não `blocked`. Packet
+salvo em `context-packets/2026-08-28-hardening-performance-e-dados.md`.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
 fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
