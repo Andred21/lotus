@@ -14,13 +14,13 @@ context_packet: null
 blocker: null
 lanes:
   lane-a:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: hardening
+    active_work_item: hardening-performance-e-dados
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: main-tree
-    branch: feat/hardening-auditoria-privacidade-e-observabilidade   # fechada em 2026-08-28; PR #81 aberto
+    branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: null
     active_plan: null
     context_packet: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (PR #81, aberto) | `idle` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `context_required` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -175,9 +175,24 @@ disjuntas, colisão mínima de arquivos:
 **A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
 narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
 `feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70`, recebeu o merge
-da `main` de PR #77/#80 com o gate refeito sobre ele, e está em **PR #81**, aberto para o João
-mesclar. A árvore é o main tree, que não se destrói. A lane não recebe item novo
-sozinha: promoção é do João, contra o `backlog.md`.
+da `main` de PR #77/#80 com o gate refeito sobre ele, e **mesclou pelo PR #81** (merge `f584432b`).
+A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João,
+contra o `backlog.md`.
+
+**Promoção do item 6 — 2026-08-28, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o
+Context Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`),
+em sandbox read-only. A branch `feat/hardening-performance-e-dados` sai de `main@f584432b`, que já é
+`origin/main` e traz o merge do próprio item 5. **Árvore:** main tree, pelo precedente de todo bloco
+de backend. O espelho já apontava para a `lane-a` — não houve troca de foco neste commit.
+
+**Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** A `lane-b`
+promoveu o item 10 (`4a33f835`, `50f3a1f3`) em `infra/producao-provisionamento-aws`, e a `lane-c`
+promoveu o item 18 (`daa90d6b`, `6e86f251`) em `refactor/frontend-estilizacao-componentes`; as duas
+estão em `ready_for_planning`/`planning` nas próprias árvores. Por isso o `state.md` da `main` ainda
+descreve as duas em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi escrito por este
+commit.** Não há colisão de escopo: o item 10 é provisionamento AWS e o item 18 é frontend puro; este
+bloco é backend e o único que regenera `generated.ts`.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
 fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
