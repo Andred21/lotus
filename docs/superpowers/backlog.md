@@ -23,13 +23,14 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 5–9 mais o 16 e o 17 fecham o
-  código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **P0 não ordena** — quem ordena é a cadeia de dependência: os itens 6, 7 e 9 mais o 16 e o 18
+  fecham o código, 10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, e o `10` **encolheu** em vez de sair (o
-  runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
-  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
-  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
+  em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
+  2026-08-27, o `5` em 2026-08-28, e o `10` **encolheu** em vez de sair (o runtime foi entregue;
+  sobrou o provisionamento). A fila começa no `6` e salta os que já fecharam de propósito: o número
+  é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar
+  quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -40,31 +41,6 @@
 ---
 
 # Fila priorizada
-
-## 5. `hardening-auditoria-privacidade-e-observabilidade`
-
-**Prioridade:** P0 · **Frente:** Backend/Infra · **Contexto:** sim
-**Fonte:** Drive `RNF-SEC-01/03/04/05/07`; ADR-08; `P-02`, `P-33`.
-
-**Objetivo:** fechar retenção, privacidade, logs e alertas de produção.
-
-**Escopo:**
-- pruning de `audits` (**P-02**) e retenção de `login_logs` (**P-33**);
-- **retenção documental:** decidir se os arquivos de turma/redator (peso legal) ganham política
-  própria de retenção — linha herdada de "Próximos blocos" do backlog anterior; o brainstorming
-  confirma se o escopo é este ou se era só atalho para P-02/P-33;
-- minimização de PII; nunca logar password/token/cookie/secret;
-- logs centralizados; alertas de acesso suspeito e falhas operacionais;
-- secrets fora de código/imagem.
-
-**Decisão:** `RNF-SEC-05` fala em "micro-serviço" de logs, mas a arquitetura é monolítica e
-proporcional a ~10 usuários. Não criar microserviço sem confirmar que a **forma**, e não o
-resultado "logs centralizados", é obrigatória.
-
-**DoD:** auditoria/logs têm retenção, rastreabilidade e alertas definidos sem expor segredo/PII
-desnecessária.
-
----
 
 ## 6. `hardening-performance-e-dados`
 

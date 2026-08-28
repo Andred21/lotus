@@ -13,7 +13,9 @@ import { join, resolve } from 'node:path'
  * nginx depende do app (fastcgi_pass resolve "app" no arranque, em qualquer
  * sintaxe de depends_on) e aponta o healthcheck para 127.0.0.1 (não
  * "localhost" — busybox wget resolve para ::1 e o prod.conf só escuta
- * IPv4), e o Gotenberg (ADR-12) continua presente.
+ * IPv4), o Gotenberg (ADR-12) continua presente e o `scheduler` — o runner
+ * de `schedule:work`, sem o qual a poda de retenção nunca executa — continua
+ * declarado com a mesma imagem e o mesmo env_file do app.
  *
  * A conferência é TEXTUAL de propósito: o projeto não tem parser de YAML, e
  * acrescentar dependência de runtime ao frontend por causa de arquivo de
@@ -174,6 +176,28 @@ describe('docker-compose.prod.yml', () => {
 
   it('mantém o Gotenberg, que o ADR-12 exige', () => {
     expect(PROD).toMatch(/^\s{2}gotenberg:/m)
+  })
+
+  it('mantém o serviço scheduler rodando schedule:work — sem o runner, a poda de retenção é código que nunca executa', () => {
+    // Achado Q-2 do review de 2026-08-28. `PodaAgendadaRatchetTest` prova as
+    // entradas do `Schedule` (que o comando existe e está agendado); nada
+    // provava o CONTAINER que as executa. Apagar este serviço deixava a suíte
+    // inteira verde e a poda parada em produção — a descoberta seria PII
+    // sobrevivendo além da janela decidida, semanas depois, longe da mudança
+    // que a causou. `blocoDoServico` já lança se o serviço sumir: essa é a
+    // asserção de existência.
+    const bloco = blocoDoServico('scheduler')
+
+    // O comando é o que distingue o runner de um segundo app ocioso.
+    const [comando] = regioesDaChave(bloco, 'command')
+    expect(comando ?? '').toMatch(/schedule:work/)
+
+    // Mesma imagem e mesmo env_file do app: o scheduler roda o MESMO código
+    // com a MESMA configuração, e é isso que faz a promoção por SHA e a
+    // rotação de segredo valerem para ele também (docs/operacao-segredos.md §1).
+    expect(bloco).toMatch(/^ {4}image: \$\{LOTUS_IMAGE\b/m)
+    const [envFile] = regioesDaChave(bloco, 'env_file')
+    expect(envFile ?? '').toMatch(/\$\{LOTUS_ENV_FILE\b/)
   })
 })
 
