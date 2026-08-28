@@ -287,14 +287,15 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
   message:
     'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
 }))
-// Catraca da regra de cor: lista que só ENCOLHE. A Validação tem fundo escuro
-// deliberado e mudá-la é desenho novo, não pagamento de débito (D7). O Login
+// Catraca da regra de cor: lista que só ENCOLHE. O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
 // `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
 // em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
 // quem precisa de cor pede token ao tema.
+// A Validação SAIU em 2026-08-28: o `bg-slate-50 dark:bg-slate-950` virou
+// `--surface-ground` (achado C2 do audit de 2026-08-26) e o arquivo não tem
+// mais cor crua nenhuma.
 const CATRACA_COR = [
-  'src/features/certification/components/Validation/ValidationPage.tsx',
   'src/features/commercial/components/Budget/CourseStep.tsx',
   'src/features/commercial/components/Budget/QuoteWizard.tsx',
   'src/features/operation/components/Document/ManualButton.tsx',

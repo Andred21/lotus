@@ -10,7 +10,7 @@ type HeadingTone = 'success' | 'danger' | 'warning' | 'neutral'
 function StatusHeading({ icon, text, tone = 'neutral' }: { icon: string; text: string; tone?: HeadingTone }) {
   const color = tone === 'neutral' ? 'var(--text-color)' : 'var(--app-card-tone-text)'
   return (
-    <div className="flex items-center gap-3 p-5">
+    <div className="flex items-center gap-3 p-6">
       <i className={`pi ${icon} text-2xl`} style={{ color }} aria-hidden="true" />
       <h1 className="text-lg font-semibold" style={{ color }}>{text}</h1>
     </div>
@@ -79,7 +79,10 @@ export function ValidationPage() {
   const state = useValidationPage(uuid ?? '')
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-8 bg-slate-50 px-4 py-10 dark:bg-slate-950">
+    <div
+      className="flex min-h-screen flex-col items-center gap-8 px-4 py-10"
+      style={{ background: 'var(--surface-ground)' }}
+    >
       <AppLogo className="w-32" />
 
       <div className="w-full max-w-md">
@@ -118,7 +121,7 @@ export function ValidationPage() {
           <AppCard tone="danger">
             <StatusHeading icon="pi-times-circle" tone="danger" text={t('certificate.validation.revoked')} />
             {state.cert.revoked_at && (
-              <p className="px-5 pb-5 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+              <p className="px-6 pb-6 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
                 {t('certificate.validation.revokedAt', { date: formatDate(new Date(state.cert.revoked_at)) })}
               </p>
             )}
