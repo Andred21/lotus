@@ -28,19 +28,19 @@ lanes:
     resume_state: null
     last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
   lane-b:
-    active_feature: cicd
-    active_work_item: cicd-ci-governanca-e-artefato
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
-    branch: cicd/ci-governanca-e-artefato
-    active_spec: docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md
-    active_plan: docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md
-    context_packet: docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md
+    branch: cicd/ci-governanca-e-artefato   # fechada em 2026-08-26; mesclada (PR #77)
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: compose-por-worktree
+    last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
     active_feature: null
     active_work_item: null
@@ -48,16 +48,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui-f2   # fechada em 2026-08-25; ainda não mesclada
+    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; PR #80 aberto
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo-f2
+    last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
 state_basis_commit: 17e266b9
-updated_at: 2026-08-28T15:10:00-03:00
+updated_at: 2026-08-28T15:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,8 +162,15 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (fechada em 2026-08-28, não mesclada) | `idle` |
-| `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
+| `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
+
+
+> **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
+> em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
+> linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
+> invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
+> 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 **A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
 narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
@@ -171,100 +178,34 @@ narrativa integral em `historico/state-archive.md` e entrega em `historico/progr
 mesclada**: é o PR a abrir. A árvore é o main tree, que não se destrói. A lane não recebe item novo
 sozinha: promoção é do João, contra o `backlog.md`.
 
-**Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
-do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8
-mais spec e plano (`323f58bd`, `c98fed91`, `4fdc1338`, `lane-c`) vivem só em
-`refactor/frontend-hardening-final`. Por isso o `state.md` da `main` ainda descreve a `lane-b` em
-`ready_for_closure` e a `lane-c` em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi
-escrito por este commit** — cada lane espelha o seu na árvore em que roda, e a divergência se resolve
-na integração serial. Não há colisão de escopo com este bloco: o item 8 é frontend puro, o item 11
-não tem trabalho de código restante.
+**A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
+fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
+`state.md` da `main` descrevia a `lane-b` em `ready_for_closure` e a `lane-c` em `idle`. As duas
+mesclaram (PR #77 e PR #80) e a `main` resultante entrou aqui pelo merge do fechamento deste bloco —
+**nenhuma linha de lane alheia foi escrita por esta lane**: o que a `lane-b` e a `lane-c` dizem de si
+veio do merge, verbatim. Não houve colisão de escopo: o item 8 é frontend puro e o item 11 não tinha
+trabalho de código restante.
 
-**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
-mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
-`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
-sozinha: promoção é do João, contra o `backlog.md`.
+**O que colidiu foi a numeração de pendência, e quem renumerou foi esta lane.** As três fichas
+abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (branch protection, da
+`lane-b`) e uma `P-63` (o `role="list"` do mini-reset, da `lane-c`), então elas viraram **`P-64`,
+`P-65` e `P-66`** no merge. ID já publicado na `main` não se reusa — mesmo movimento que a
+`P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
+arquivado, que é histórico e não se reescreve.
 
-**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
-nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
-(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
-é `origin/main` — as três lanes anteriores mesclaram.
+**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
+segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
+5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
+navegador contra o código pós-review.
 
-**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
-sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
-quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
-governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
-(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
-runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
-SHA.
-
-**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
-escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
-Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
-vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
-o que preservar, e não há colisão a vigiar com a lane-c.
-
-**A `lane-c` fechou o item 17 em 2026-08-24** — `tabelas-coluna-de-acoes-e-largura`, narrativa
-integral em `historico/state-archive.md`. A worktree `../fix-frontend` e a branch
-`refactor/tabelas-coluna-de-acoes` seguem vivas: a branch **ainda não foi mesclada**, é o PR a
-abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`. O
-fechamento mediu a suíte do backend em **906 passed / 5 skipped** depois de reconstruir a imagem
-`app` desta worktree — a antiga era anterior ao `memory-cli.ini` e o §6 do `CLAUDE.md` fatalava por
-memória nela. Está registrado como **P-57**, e é ambiente, não código: o bloco não toca `backend/`. O merge
-da `main` (PR #70) entrou aqui e o gate foi refeito sobre ele: lint 0, build verde, **102 arquivos /
-573 testes** — os 3 casos de `tests/compose-dev.test.ts` que reprovavam eram o `frontend/.env` desta
-árvore com `VITE_API_URL` legado, que o teste não afasta; virou a **P-58**.
-
-**Review do item 11 — 2026-08-25.** Bloco classificado **alto risco** (paga o mecanismo da lei §5.3
-e faz merge, publicação em GHCR e mudança de configuração de repositório — ações externas
-irreversíveis), então a revisão do gabarito veio acompanhada de uma segunda lente independente do
-Codex, em sandbox read-only. Três achados aprovados pelo João e corrigidos no mesmo dia; a
-divergência entre os revisores está registrada abaixo, não resolvida em silêncio.
-
-- **Q-1 — o par `app`+`web` não era publicação atômica.** O `concurrency` do workflow usava
-  `cancel-in-progress: true` com `group: ci-${{ github.ref }}`, e `github.ref` é constante para todo
-  push em `main`: um segundo push cancelava o job `image` do primeiro no meio da publicação. Somado a
-  isso, os dois alvos eram construídos **e** publicados em passos sequenciais, então uma falha comum
-  de build entre eles deixava o SHA com meia release no GHCR. Corrigido em duas frentes: o
-  cancelamento passou a valer só fora de `push`, e o job constrói os dois alvos antes de publicar
-  qualquer um, com `scope` de cache separado por alvo e um passo final que **afirma** que os dois
-  manifestos existem — o "release é o par" do DoD3 deixou de ser confiança em dois passos verdes.
-- **Q-2 — "imutável" não estava garantido.** As quatro imagens base do `Dockerfile.prod` vinham por
-  tag móvel, então reconstruir o MESMO commit meses depois publicaria um digest diferente sob a mesma
-  tag de SHA — o objetivo §2 da spec inteira. As quatro passaram a ser fixadas por digest (capturados
-  em 2026-08-25, com o comando de atualização no cabeçalho do arquivo). O que o digest **não** fixa é
-  o índice do apk, e por isso o `image` ganhou uma guarda de idempotência: tag de SHA que já existe
-  não se reescreve, e só se republica quando falta metade do par.
-- **Q-3 — o `procedencia` confiava num trailer que nunca conferiu.** No corporativo a árvore limpa é
-  o normal, não uma propriedade especial: bastava uma linha `Source-Commit:` inventada num push
-  direto para o commit se passar por release de espelho — e essa é a única camada entre o push e uma
-  imagem publicada, porque a branch protection é o que o plano free não dá. Agora o SHA do trailer
-  precisa ser 40 hexadecimais **e** estar no histórico de `main` da origem
-  (`compare/main...<sha>` = `identical` ou `behind`). Quem responde qual é a origem é a variável de
-  repositório `ESPELHO_FONTE`, definida só em `Gatika-CL/lotus` — o arquivo segue sem nome de dono, e
-  onde a variável não existe o caminho de espelho não abre. `Andred21/lotus` é público, então o
-  `GITHUB_TOKEN` do corporativo faz a consulta sem PAT.
-
-**Divergência entre os revisores, registrada.** O Codex levantou oito candidatos; três viraram os
-achados acima depois de verificação própria no código, e os demais não passaram: um lia o escopo do
-desenho ao contrário (a auto-restrição do caminho de espelho no repositório pessoal é intencional, não
-um furo). Os dois sobre o `espelhar-corporativo.sh` eram reais e **o João mandou corrigir na mesma
-rodada**: a lista de exclusões passou a sair do blob do commit espelhado, não do disco da árvore —
-os dois leitores da lista voltam a ler a mesma versão, e o vazamento deixa de acontecer antes de o
-destino reprovar —, e o script passou a recusar commit cujo CI não esteja verde, com a saída
-`LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
-`26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
-sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
-
-**As correções provadas no gatilho real — 2026-08-25.** PR #75 mesclado em `ac078a80`, run
-[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): sete jobs,
-`conclusion: success`, `procedencia` e `image` verdes, par publicado em `ghcr.io/andred21`. A guarda
-de idempotência foi medida re-executando o job `image` no mesmo SHA — os quatro passos de build e
-push saíram `skipped`, a verificação do par continuou rodando e os dois digests ficaram idênticos.
-Só o `concurrency` fica sem prova direta: provar exigiria dois merges em segundos, e o custo não
-paga o que a leitura do `github.ref` já diz. Evidência integral em
-`audits/2026-08-24-cicd-evidencias.md`.
-
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -275,10 +216,10 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
+| 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
+| 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 | 2026-08-25 | `hardening-api-arquivos-e-abuso` | Item 4 da fila |
 | 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
-| 2026-08-24 | `certificacao-historico-do-aluno` | Item 2 da fila |
-| 2026-08-24 | `tabelas-coluna-de-acoes-e-largura` | Item 17 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

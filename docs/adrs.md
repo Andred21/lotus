@@ -329,7 +329,7 @@ log de segurança: quando o teto girar, o evento mais antigo deixa de existir.
 uma leitura equivalente de "micro-serviço em nuvem"; é uma **substituição deliberada**, registrada
 aqui por escrito. O Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3): este ADR documenta a
 substituição do lado do código, mas não fecha a divergência sozinho — a revisão do `RNF-SEC-05` ainda
-precisa ser **replicada no Drive** por João Victor. Até lá, a P-62 (`docs/superpowers/pendencias/abertas.md`)
+precisa ser **replicada no Drive** por João Victor. Até lá, a P-64 (`docs/superpowers/pendencias/abertas.md`)
 mantém essa divergência visível para que uma sessão futura não reabra a decisão sem saber que ela já
 foi tomada.
 

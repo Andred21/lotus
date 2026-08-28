@@ -58,37 +58,32 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
+## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
-**Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
-gastar tempo neutralizando margem de UA à mão. Revisar em **2026-10-31**.
+**Bloco:** frontend-estilizacao-padronizacao-de-componentes (item 18) · **Gatilho:** bloco que
+tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
+elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
 
-O `frontend/src/index.css:1-9` omite o Preflight do Tailwind **de propósito**, para o reset global
-não sobrescrever a estilização do PrimeReact. A decisão está registrada e tem motivo. A consequência
-não estava: todo `h1`–`h6`, `p`, `ul` e `ol` da aplicação herda a margem do agente do usuário, que é
-**proporcional ao tamanho da fonte**.
+Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
+1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
+(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
+`Certificados emitidos` e outra no de `UF aprobada`).
 
-**Medido na revisão de UI de 2026-08-17, em dois sítios de custo diferente:**
+O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
+semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
+nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
+JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
+jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
 
-- `KpiRow` — o número em `text-3xl` recebia `margin: 30px 0` (1em de 30px), o que somava
-  75–95px de área morta por card e empurrava as duas listas do Dashboard para fora da dobra em
-  1024x768 e 390x844. É a UI-02 do relatório.
-- `AppCardHeader` — o `h3` recebia `margin: 16px 0`, e a faixa media **80px de altura para 24px de
-  texto**, em TODO card da aplicação. Não estava no relatório; apareceu ao corrigir.
+**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
+carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
+gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
+com `role`.
 
-**O sintoma é conhecido do repositório desde antes.** O `PageHeader` crava `my-[0.83em]` no `h1` com
-o motivo escrito no docblock ("o projeto não carrega o Preflight"), e os `ul` do Dashboard, do funil
-e da agenda carregam `m-0 list-none p-0` à mão. São três grafias do mesmo remédio, aplicadas caso a
-caso, e ninguém as conta.
-
-**Não se conserta de carona.** O passe de correção de 2026-08-17 neutralizou onde custava — `[&_p]:m-0`
-no `AppCard variant="stat"`, `m-0` no `h3` do `AppCardHeader`, no `h2` da faixa de seção e no `h4` da
-janela da agenda —, e parou aí de propósito. Um `@layer base` com
-`h1,h2,h3,h4,h5,h6,p,ul,ol { margin: 0 }` fecharia a classe inteira, mas mexe no espaçamento de
-**todas** as telas de uma vez, num passe que não tem como medir todas; e contradiria o `PageHeader`,
-que crava a margem justamente para a correção semântica ficar invisível. Um mini-Preflight escopado
-aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
-provável, e é decisão do João.
+**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
+do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
+renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ---
 
@@ -508,6 +503,39 @@ da aba que não chamou o csrf-cookie por último volta 419, e o front não se re
 decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
 `.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
 
+## P-62 — a `main` dos dois repositórios não tem branch protection; a régua é compensada
+
+**Nasceu como `P-61` na branch `cicd/ci-governanca-e-artefato` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) vinda do
+fechamento do `hardening-api-arquivos-e-abuso`. Quem renumera é a recém-chegada.
+
+**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team (ou
+decisão de tornar o repositório público), ou **2026-10-31**, o que vier primeiro.
+
+O item 11 desenhou `PUT /repos/<owner>/lotus/branches/main/protection` com required checks como o
+DoD 5 do bloco. Medido em 2026-08-25: a API responde `403 Upgrade to GitHub Pro or make this
+repository public`, e `GET /orgs/Gatika-CL` mostra `plan.name = free`. Rulesets dão o mesmo 403. As
+duas saídas do plano original foram **recusadas pelo João**: não há orçamento, e abrir o código de
+um cliente do setor elétrico regulado troca confidencialidade por régua, que é preço errado.
+
+**O DoD 5 fechou COMPENSADO, não provado**, e a diferença é material: **nada impede um push direto
+em `main`**. O que existe são três camadas que reduzem o dano sem eliminá-lo —
+`.githooks/pre-push` (recusa local, e só vale para quem rodou `git config core.hooksPath
+.githooks`), o job `procedencia` (commit que chegou em `main` sem PR mesclado **não vira imagem**,
+então não é promovível) e `scripts/espelhar-corporativo.sh` (árvore filtrada, um commit por
+release, trailer `Source-Commit` conferido contra o histórico de `main` da origem). A camada que
+falta é a única que impede de verdade, e ela é a camada 0.
+
+**Fica escrito para não virar silêncio:** force-push em `main` não é impedido, é **detectado e
+datado** pelo `procedencia`; e a janela entre o push e a negação do artefato existe. A prova disso
+é a própria sonda vermelha `26d0e3e9`, que segue no histórico de `main` do repositório pessoal.
+
+**Fecha quando** o Step 6 da Task 9 do plano arquivado
+([`plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md`](../plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md))
+puder rodar como está e o readback da API mostrar `required_pull_request_reviews` e os quatro
+required checks (`backend`, `frontend`, `types-drift`, `audit-prod`) ativos nas duas `main`.
+Evidência do que foi medido: [`../audits/2026-08-24-cicd-evidencias.md`](../audits/2026-08-24-cicd-evidencias.md).
+
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
 **Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,
@@ -818,7 +846,13 @@ usuário é a Lotus, no Chile.
 o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
 produto, do João — não efeito colateral de um bloco de hardening.
 
-## P-62 — a revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive
+> **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
+> `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma
+> `P-62` (branch protection, `lane-b`) e uma `P-63` (o `role="list"` do mini-reset, `lane-c`),
+> mescladas antes destas. Mesmo movimento que a `P-61`→`P-63` da `lane-c` registra acima — ID
+> publicado na `main` não se reusa, e quem renumera é a lane que ainda não tinha mesclado.
+
+## P-64 — a revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive
 
 **Bloco:** — · **Gatilho:** o Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3) — enquanto
 ele continuar dizendo "Micro-serviço em nuvem com logs das ações do software" para o `RNF-SEC-05`, a
@@ -831,12 +865,12 @@ centralizados dentro do monólito (canal `seguranca`, `EventoDeSeguranca`) — s
 literal do `RNF-SEC-05` —, decisão do João de 2026-08-26 (spec `2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, **D5**). O ADR documenta a substituição; não a replica na
 fonte. Até o Drive ser atualizado, os dois lugares contam histórias diferentes do mesmo requisito.
 
-## P-63 — `RNF-SEC-03` e `RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05`
+## P-65 — `RNF-SEC-03` e `RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05`
 
 **Gatilho:** João decidir se D6 (três famílias de acesso suspeito), D7 (alerta síncrono) e/ou D8
 (segredos seguem em `env_file`, cofre gerenciado adiado ao item 10) merecem ADR próprio no molde do
 ADR-21, ou se ficam só como decisão de spec/plano sem registro de arquitetura — e, se merecerem,
-abrir pendência de replicação no Drive espelhando a P-62 para a metade de `RNF-SEC-03` que segue sem
+abrir pendência de replicação no Drive espelhando a P-64 para a metade de `RNF-SEC-03` que segue sem
 cofre. Revisar em **2026-10-31**.
 
 Achado pela `auditar-docs` no fechamento do `hardening-auditoria-privacidade-e-observabilidade`
@@ -876,7 +910,7 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
   nenhum: cada chave fica em 1. A D6 definiu as famílias por chave de vítima; não existe família por
   atacante.
 
-## P-64 — A poda de `login_logs` varre `created_at` sem índice que a sirva
+## P-66 — A poda de `login_logs` varre `created_at` sem índice que a sirva
 
 **Gatilho:** bloco que tocar o schema de `login_logs`, ou a `login_logs` passar de algumas dezenas de
 milhares de linhas em produção (a poda diária começar a aparecer em tempo de execução). Revisar em

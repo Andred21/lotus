@@ -21,13 +21,13 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (29)
+## Abertas (30)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-46 | Sem Preflight, toda tag de bloco herda margem de UA — 80px de faixa para 24px de texto em todo card | `frontend-hardening-final` | decisão sobre reset escopado, ou 3º bloco neutralizando margem à mão; revisar 2026-10-31 |
+| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | `frontend-estilizacao-padronizacao-de-componentes` | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -60,11 +60,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
-| P-62 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
-| P-63 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
-| P-64 | A poda de `login_logs` varre `created_at` sem índice que a sirva — a `audits` ganhou o dela neste bloco, a `login_logs` não | João | bloco que tocar o schema de `login_logs`, ou a tabela crescer a ponto de a poda diária pesar; revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
+| P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
+| P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
+| P-66 | A poda de `login_logs` varre `created_at` sem índice que a sirva — a `audits` ganhou o dela neste bloco, a `login_logs` não | João | bloco que tocar o schema de `login_logs`, ou a tabela crescer a ponto de a poda diária pesar; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (3)
+
+**A P-46 fechou no `frontend-hardening-final` (2026-08-27) e está em rastro** — o mini-reset
+escopado de `index.css` entrou com catraca própria (`tests/preflight-escopado.test.ts`), e a borda
+que ele abriu virou a **P-63**. Sai no próximo `/fechar-sprint` posterior a este.
 
 A **P-02** e a **P-33** fecham dentro do bloco `hardening-auditoria-privacidade-e-observabilidade`
 (2026-08-26), por mecanismo (`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice
@@ -87,11 +92,3 @@ posteriores ao do BD-12. **A P-29 e a P-35** já haviam saído no fechamento do 
 critério contra o BD-14. O rastro de todas fica nos commits e nas
 linhas de entrega em
 [`../historico/progress.md`](../historico/progress.md).
-
-A **P-36** e a **P-37**, encerradas em 2026-08-18 dentro do
-`bd16-perfil-e-kit-compartilhado`, saíram no fechamento do `bd13-listagens-e-abas` (2026-08-18), pelo
-mesmo precedente da **P-26**, da **P-38** e da **P-34**. A **P-45** saiu no fechamento do
-`arquivados-roots-restantes` (2026-08-19) e segue encerrada depois do merge da `main`: o conserto
-que a fecha está commitado nos dois sítios que liam a variável — `tests/TestCase.php:25`
-(`explode` + primeira origem) e `config/cors.php:22` (`explode`). O rastro durável de todas vive nos
-commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).

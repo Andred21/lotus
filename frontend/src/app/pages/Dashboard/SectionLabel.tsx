@@ -7,8 +7,7 @@ import type { ReactNode } from 'react'
  * página TEM dois registros — o que pede ação e o que dá contexto —, e eles já
  * estavam escritos no docblock abaixo sem aparecer na tela.
  *
- * `m-0` pelo mesmo motivo do `AppCardHeader`: sem Preflight, o `h2` traria
- * `margin: 0.83em` do agente do usuário.
+ * A margem do `h2` já é zerada pelo mini-reset de `index.css` (P-46).
  *
  * Tinta do corpo, não a secundária. A razão ORIGINAL era contraste: a faixa
  * pousa no `--surface-ground`, e ali a secundária de então (`#64748b`) media
@@ -25,7 +24,7 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <h2
-        className="m-0 text-xs font-semibold tracking-wider uppercase"
+        className="text-xs font-semibold tracking-wider uppercase"
         style={{ color: 'var(--text-color)' }}
       >
         {children}

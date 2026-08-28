@@ -65,7 +65,7 @@ export function DocumentTypeCard({
         )}
       </header>
 
-      <ul className="mt-3 space-y-2">
+      <ul role="list" className="mt-3 space-y-2">
         {files.map((file) => (
           <li key={file.id}>
             <AppFileRow

@@ -250,6 +250,20 @@ exceção. Na dúvida, siga o vizinho da mesma
 - **Vocabulário de domínio é o do backend.** `Redator`, não `Writer`. Nome de tela pode ser em inglês
   (`PeoplePage`); a rota fica em espanhol (`/personas`) — é interface de usuário.
 - **`can()` é conveniência de interface, não segurança.** A autorização é da API (ADR-07).
+- **Wrapper de `shared/ui` não crava função em nó de `pt` sem encadear.** Colisão função×função em
+  chave `on[A-Z]` no `mergePt` **compõe** — chamador primeiro, wrapper depois —, nunca substitui.
+  Handler é comportamento aditivo de quem usa o componente, não propriedade do wrapper. A restrição
+  a `on[A-Z]` separa handler de RESOLVER: `(options) => props` em chave de NÓ vale pelo retorno, e
+  encadear ali descartaria exatamente o que aquele nó vale. **Regra escrita porque a família já
+  reincidiu três vezes** — nó do chamador apagado por spread raso (Q-3, 2026-08-13), folha perdida
+  sob função no `pins` (Q-3, 2026-08-18), handler do chamador substituído (Q-5, 2026-08-27). As três
+  são o mesmo defeito: o wrapper apaga código do chamador **em silêncio**. Mecanismo em
+  `shared/ui/mergePt.ts`, medido em `mergePt.test.ts` — não confie no docblock.
+- **Lista leva `role="list"`.** O mini-reset da P-46 (`index.css`) crava `list-style: none` em todo
+  `ul`/`ol` da aplicação, e o WebKit tira a semântica de lista junto com o marcador — o VoiceOver
+  para de anunciar "lista, N itens". `role="list"` devolve a semântica sem devolver o marcador.
+  Régua de lint (`LISTA_SEM_SEMANTICA` no `eslint.config.js`) exige o atributo e não olha
+  `className`: lista que quer marcador escreve `list-disc` **e** `role="list"`.
 
 ## Comandos
 

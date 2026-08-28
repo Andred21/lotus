@@ -96,5 +96,5 @@ rodar — furar a camada 1 não fura a camada 2.
 
 Nada disso é substituto de branch protection. Quando houver orçamento para
 GitHub Team, o Step 6 do plano
-`docs/superpowers/plans/2026-08-24-cicd-ci-governanca-e-artefato.md` entra
+`docs/superpowers/plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md` entra
 como está e passa a ser a camada 0 — a única que impede de verdade.

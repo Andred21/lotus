@@ -142,9 +142,9 @@ O review final mediu três lacunas no **escopo** da D6 — senha certa em conta 
 alerta prioritário, o alerta de login falho não carrega o `chave_hash` que liga ao rastro, e
 password spraying entre contas não acumula em família nenhuma porque tudo chaveia em `email|ip`. O
 detector faz exatamente o que a D6 escreveu; mudar qualquer das três é redefinir a D6. Foram para a
-**P-63**, que já era a ficha da assimetria de ADR entre D5 e D6/D7/D8, porque é a mesma conversa. A
+**P-65**, que já era a ficha da assimetria de ADR entre D5 e D6/D7/D8, porque é a mesma conversa. A
 lacuna de índice da poda de `login_logs`, medida nos reviews das Tasks 1 e 4 e fora do escopo do
-plano nas duas, virou a **P-64**.
+plano nas duas, virou a **P-66**.
 
 **Review do bloco e os seis achados corrigidos — 2026-08-28.** Bloco classificado **alto risco**
 (migration nova, caminho de auth/Sanctum, trilha de auditoria com peso legal e a costura de 403),
@@ -195,6 +195,180 @@ projeto, e a guarda agora recorta o sufixo **e confere** que o arquivo tem a lin
 estritamente mais forte que antes — reprova citação que aponta para além do fim do arquivo, defeito
 que passava batido. Suíte final: backend `1047 passed, 5 skipped`; frontend `607 passed`, lint e
 build limpos.
+
+---
+
+## Fechado em 2026-08-27 — `frontend-hardening-final`, item 8 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `ready_for_closure` (7 achados do review pagos) |
+
+**Promoção do item 8 — 2026-08-26.** A `lane-c` estava `idle` desde o fechamento da fatia 2 do item
+16; o João promoveu explicitamente o **item 8 — `frontend-hardening-final`** contra o `backlog.md`.
+O item marca `Contexto: não por padrão`, então a lane nasce direto em `ready_for_planning` e
+**não** há Context Packet: as cinco fontes do bloco (`D-03`, `D-33`, `D-35`, `P-46` e a herança da
+`P-41`) são medição local, e as fichas vivem no repositório. A branch
+`refactor/frontend-hardening-final` sai de `main@5550178a`, que já é `origin/main` — o PR #76
+(fatia 2 do item 16) e o PR #77 (item 11 da `lane-b`) já mesclaram, então a árvore não está atrás.
+
+**A linha de branch da `lane-c` estava velha, e foi corrigida nesta promoção.** O frontmatter dizia
+`refactor/frontend-revisao-ui-f2 # fechada em 2026-08-25; ainda não mesclada`; era verdade em
+`8d588511`, o `state_basis_commit` anterior, e deixou de ser quando o PR #76 mesclou em `5550178a`.
+Não era divergência de fase — as duas fontes diziam `idle` —, mas o campo aponta para a branch da
+lane e passou a apontar para a errada. `state_basis_commit` acompanhou.
+
+**Fora de ordem em relação aos itens 4 a 7, e sem colisão.** A fila recomenda 4→9 para fechar
+código, e os itens 4 a 7 são hardening de **backend**. O item 8 é frontend puro, então nenhum deles
+disputa arquivo com ele; e o gate P-03 não é disparado, porque o bloco não toca `backend/`.
+**Review de 2026-08-27 — 7 achados, os 7 aprovados pelo João e pagos.** A narrativa deles vivia no
+campo `blocker` do `state.md` e desce aqui no fechamento, que é onde ela passa a viver:
+
+- **Q-1** — a catraca do mini-reset lia só o **primeiro** `@layer base` e ignorava o que estivesse
+  fora de layer, que é o idiom que o próprio `index.css` usa duas vezes e que **vence** os layers na
+  cascata. Duas sondas vistas reprovar antes de a correção entrar.
+- **Q-2** — `title={label}` incondicional excedia a spec §4.1: sobre texto visível idêntico o
+  `title` vira *accessible description*, e o leitor de tela anunciava "Comercial, link, Comercial".
+  Voltou a existir só colapsado.
+- **Q-3** — o docblock do `KpiRow` justificava `pt` em vez de `mt-*` por uma classe que este bloco
+  apagou, e a afirmação tinha **invertido**: o substituto mora em `@layer base`, que perde para
+  `utilities`.
+- **Q-4** — a tabela `Ocupação corrente` do `state.md` divergia do frontmatter na `lane-c`, e a
+  invariante manda **parar** diante disso, não escolher fonte. Virou a regra que a tabela carrega.
+- **Q-5** — `mergePt` substituía função sobre função, então o `onClick` do chamador sumia em
+  silêncio desde que o D-33 cravou handler no `togglePt`. Chave `on[A-Z]` passa a **encadear**;
+  resolver de nó continua com pins vencendo. Terceira reincidência da família — virou regra na
+  `.claude/rules/frontend-fsliced.md`.
+- **Q-6** — o mini-reset crava `list-style: none` em toda a aplicação e o WebKit tira a semântica de
+  lista junto: 16 listas receberam `role="list"`, com régua de lint exigindo o atributo daqui pra
+  frente.
+- **Q-7** — o mini-reset apagou o marcador de 8 listas **fora** das famílias que a spec §5 mediu.
+  Seis são ganho (`<li>` com borda ou card, onde o bullet era ruído); duas não — `FormErrorSummary`
+  e `ImportResultSummary` são texto puro, e o João decidiu devolver o marcador às duas.
+
+**O fechamento refez o DoD contra o código final, e não confiou no relatório de 2026-08-26.** As
+medições originais são de `cde9ba4b`, e **quatro dos sete achados mexem exatamente no que elas
+medem** — o `title` do rail (Q-2), o encadeamento que carrega o foco do olho (Q-5), o `role="list"`
+(Q-6) e o marcador das duas listas (Q-7). O regate rodou no mesmo método (Chromium real, stack desta
+árvore no offset +2, login `admin@lotus.cl` pela tela, `es-CL`) e está no mesmo audit: sete rótulos
+legíveis a 390×844 com `<nav>` de 768px contra 844px, `title` presente colapsado e `null` a 1440px,
+foco no `<svg>` do olho depois do Enter, as quatro famílias de lista sem marcador e com `role`, o
+`list-disc` vencendo o mini-reset numa sonda de cascata com negativa, e o `IdentityCell` cortando
+(118×102) com a sonda negativa empatando em 118.
+
+**O regate achou uma borda, e ela virou ficha, não conserto de carona.** Varrendo **todo** `ul` do
+Dashboard, dois ficam sem `role`: as legendas do Recharts. A régua de lint do Q-6 lê JSX e não
+alcança lista que nasce dentro de biblioteca, enquanto o mini-reset, que é global por desenho,
+alcança. É a **P-63** — alcance pequeno (legenda de gráfico, com `aria-label` próprio por item), e
+não reabre o DoD 4.
+
+**Gate do fechamento:** backend **940 passed / 5 skipped**; frontend lint 0, build verde,
+**111 arquivos / 622 testes**. `pint` e `typescript:transform` **N/A por escopo**, provado e não
+assumido: `git diff --stat main...HEAD -- backend/ frontend/src/shared/types/generated.ts` volta
+**vazio**. Um caso reprovou na **primeira** execução da suíte do frontend, com os containers ainda
+subindo, e passou nas cinco execuções seguintes — o suspeito é o `PeoplePage.test.tsx`, que depende
+de `waitFor`; oito execuções isoladas dele sob carga de CPU não reproduziram, e o caso está
+registrado no fechamento como flake observado, sem ficha.
+
+**A `P-46` fechou e foi remedida**; nasceram a **P-63** e o **item 18** da fila (padronização de
+estilização, que depende deste bloco e foi escrito durante ele). As fichas `D-03`, `D-33` e `D-35`
+saíram do registro canônico do `backlog.md`, que é o que o próprio registro manda fazer no
+`/fechar-sprint` do bloco que as paga.
+
+**Merge da `main` para dentro, em 2026-08-28, com o gate refeito sobre ele.** A branch estava 32
+commits atrás: entraram o `hardening-api-arquivos-e-abuso` (item 4, PR #78) e o
+`cicd-ci-governanca-e-artefato` (item 11, PR #79), que trazem `clamav` no compose, limitadores de
+taxa nomeados e `nginx` reescrito. Gate na árvore mesclada: backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, e o **DoD refeito no navegador pela
+terceira vez** — os números não mudaram (`<nav>` 768px contra 844px, `title` `null` nos sete a
+1440px, foco no `<svg>` do olho, as quatro famílias com `role="list"` e sem marcador, `list-disc`
+vencendo o mini-reset, `IdentityCell` 118×102 com a negativa empatando em 118). O `nginx` desta
+árvore precisou de `docker compose rm -sf` antes de subir: o bind-mount do Docker Desktop guardava
+o inode antigo de `docker/nginx/default.conf`, que o merge reescreveu — é ambiente, não código.
+
+**A pendência nova foi renumerada no merge: nasceu `P-61` e virou `P-63`.** A `main` já trazia uma
+`P-61` (os `title` do `ProblemDetails` em português) e uma `P-62`, vindas dos dois blocos acima —
+mesmo precedente que renumerou a `P-38` para `P-41`.
+
+---
+
+## Fechado em 2026-08-26 — `cicd-ci-governanca-e-artefato`, item 11 da fila
+
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
+mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
+`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
+nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
+(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
+é `origin/main` — as três lanes anteriores mesclaram.
+
+**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
+sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
+quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
+governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
+(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
+runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
+SHA.
+
+**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
+escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
+Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
+vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
+o que preservar, e não há colisão a vigiar com a lane-c.
+
+**Review do item 11 — 2026-08-25.** Bloco classificado **alto risco** (paga o mecanismo da lei §5.3
+e faz merge, publicação em GHCR e mudança de configuração de repositório — ações externas
+irreversíveis), então a revisão do gabarito veio acompanhada de uma segunda lente independente do
+Codex, em sandbox read-only. Três achados aprovados pelo João e corrigidos no mesmo dia; a
+divergência entre os revisores está registrada abaixo, não resolvida em silêncio.
+
+- **Q-1 — o par `app`+`web` não era publicação atômica.** O `concurrency` do workflow usava
+  `cancel-in-progress: true` com `group: ci-${{ github.ref }}`, e `github.ref` é constante para todo
+  push em `main`: um segundo push cancelava o job `image` do primeiro no meio da publicação. Somado a
+  isso, os dois alvos eram construídos **e** publicados em passos sequenciais, então uma falha comum
+  de build entre eles deixava o SHA com meia release no GHCR. Corrigido em duas frentes: o
+  cancelamento passou a valer só fora de `push`, e o job constrói os dois alvos antes de publicar
+  qualquer um, com `scope` de cache separado por alvo e um passo final que **afirma** que os dois
+  manifestos existem — o "release é o par" do DoD3 deixou de ser confiança em dois passos verdes.
+- **Q-2 — "imutável" não estava garantido.** As quatro imagens base do `Dockerfile.prod` vinham por
+  tag móvel, então reconstruir o MESMO commit meses depois publicaria um digest diferente sob a mesma
+  tag de SHA — o objetivo §2 da spec inteira. As quatro passaram a ser fixadas por digest (capturados
+  em 2026-08-25, com o comando de atualização no cabeçalho do arquivo). O que o digest **não** fixa é
+  o índice do apk, e por isso o `image` ganhou uma guarda de idempotência: tag de SHA que já existe
+  não se reescreve, e só se republica quando falta metade do par.
+- **Q-3 — o `procedencia` confiava num trailer que nunca conferiu.** No corporativo a árvore limpa é
+  o normal, não uma propriedade especial: bastava uma linha `Source-Commit:` inventada num push
+  direto para o commit se passar por release de espelho — e essa é a única camada entre o push e uma
+  imagem publicada, porque a branch protection é o que o plano free não dá. Agora o SHA do trailer
+  precisa ser 40 hexadecimais **e** estar no histórico de `main` da origem
+  (`compare/main...<sha>` = `identical` ou `behind`). Quem responde qual é a origem é a variável de
+  repositório `ESPELHO_FONTE`, definida só em `Gatika-CL/lotus` — o arquivo segue sem nome de dono, e
+  onde a variável não existe o caminho de espelho não abre. `Andred21/lotus` é público, então o
+  `GITHUB_TOKEN` do corporativo faz a consulta sem PAT.
+
+**Divergência entre os revisores, registrada.** O Codex levantou oito candidatos; três viraram os
+achados acima depois de verificação própria no código, e os demais não passaram: um lia o escopo do
+desenho ao contrário (a auto-restrição do caminho de espelho no repositório pessoal é intencional, não
+um furo). Os dois sobre o `espelhar-corporativo.sh` eram reais e **o João mandou corrigir na mesma
+rodada**: a lista de exclusões passou a sair do blob do commit espelhado, não do disco da árvore —
+os dois leitores da lista voltam a ler a mesma versão, e o vazamento deixa de acontecer antes de o
+destino reprovar —, e o script passou a recusar commit cujo CI não esteja verde, com a saída
+`LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
+`26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
+sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
+
+**As correções provadas no gatilho real — 2026-08-25.** PR #75 mesclado em `ac078a80`, run
+[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): sete jobs,
+`conclusion: success`, `procedencia` e `image` verdes, par publicado em `ghcr.io/andred21`. A guarda
+de idempotência foi medida re-executando o job `image` no mesmo SHA — os quatro passos de build e
+push saíram `skipped`, a verificação do par continuou rodando e os dois digests ficaram idênticos.
+Só o `concurrency` fica sem prova direta: provar exigiria dois merges em segundos, e o custo não
+paga o que a leitura do `github.ref` já diz. Evidência integral em
+`audits/2026-08-24-cicd-evidencias.md`.
+
+---
 
 ## Fechado em 2026-08-25 — `hardening-api-arquivos-e-abuso`, item 4 da fila
 

@@ -88,4 +88,37 @@ describe('mergePt', () => {
     )
     expect(merged.showIcon['aria-checked']).toBeUndefined()
   })
+
+  /**
+   * Handler é comportamento ADITIVO do chamador, não propriedade do wrapper.
+   * Enquanto `togglePt` do `AppPassword` só carregava dado (`role`, `style`), um
+   * `onClick` do chamador sobrevivia por não colidir. Com o D-33 o wrapper passou
+   * a cravar `onClick` e `onKeyDown` no mesmo nó, e a folha do chamador caía no
+   * ramo de substituição — o MESMO silêncio que este arquivo existe para matar,
+   * na terceira direção (Q-3 de 2026-08-13: nó; Q-3 de 2026-08-18: função sobre
+   * nó; Q-5 de 2026-08-27: função sobre função).
+   */
+  it('encadeia handler do chamador com o do wrapper, na ordem', () => {
+    const ordem: string[] = []
+    const merged = mergePt<{ showIcon: { onClick: (e: string) => void } }>(
+      { showIcon: { onClick: (e: string) => ordem.push(`chamador:${e}`) } },
+      { showIcon: { onClick: (e: string) => ordem.push(`wrapper:${e}`) } },
+    )
+
+    merged.showIcon.onClick('ev')
+
+    expect(ordem).toEqual(['chamador:ev', 'wrapper:ev'])
+  })
+
+  /** Só chave de handler encadeia. Valor de função em chave de NÓ é o resolver
+   * `(options) => props` do PrimeReact: encadear ali descartaria o retorno, que
+   * é justamente o que o nó vale. */
+  it('não encadeia função que NÃO é handler — pins continua vencendo', () => {
+    const merged = mergePt<{ showIcon: (options: unknown) => Record<string, unknown> }>(
+      { showIcon: () => ({ className: 'do chamador' }) },
+      { showIcon: () => ({ className: 'do wrapper' }) },
+    )
+
+    expect(merged.showIcon('lg')).toEqual({ className: 'do wrapper' })
+  })
 })

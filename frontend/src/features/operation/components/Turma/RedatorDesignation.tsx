@@ -34,7 +34,7 @@ function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: nu
     return <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.pickerEmpty')}</p>
 
   return (
-    <ul className="space-y-2">
+    <ul role="list" className="space-y-2">
       {picker.eligible.map((r) => (
         <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border p-3" style={{ borderColor: 'var(--surface-border)' }}>
           <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
@@ -75,7 +75,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
 
       {turma.redatores.length === 0 && <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.none')}</p>}
 
-      <ul className="space-y-2">
+      <ul role="list" className="space-y-2">
         {turma.redatores.map((r) => (
           <li
             key={r.id}

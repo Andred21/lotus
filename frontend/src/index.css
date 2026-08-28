@@ -41,3 +41,35 @@ body,
   margin: 0;
   min-height: 100vh;
 }
+
+/* Mini-reset escopado (P-46). Sem Preflight, toda tag de bloco herda a margem
+ * do agente do usuário — e ela é PROPORCIONAL ao tamanho da fonte, então o
+ * mesmo `h3` custa 16px num card e o número em `text-3xl` do KpiRow recebia
+ * `margin: 30px 0`, somando 75–95px de área morta por card.
+ *
+ * O remédio existia em cinco grafias espalhadas (`m-0`, `[&_p]:m-0`,
+ * `m-0 list-none p-0`, `my-[0.83em]`), aplicadas caso a caso, e ninguém as
+ * contava. Isto fecha a classe inteira.
+ *
+ * É a mesma lista que o Preflight aplica a estas tags, MENOS tudo que ele faz
+ * com form control, borda, tabela e imagem — que é precisamente o que
+ * sobrescreveria a estilização do PrimeReact e o motivo pelo qual o Preflight
+ * foi omitido (cabeçalho deste arquivo, ADR-16). Acrescentar `button`, `input`,
+ * `select`, `textarea` ou `table` aqui derruba o tema; há catraca em
+ * `tests/preflight-escopado.test.ts` medindo isso.
+ *
+ * Dentro de `@layer base` porque `utilities` vence `base` na ordem declarada
+ * acima: uma classe `my-[0.83em]` continua ganhando deste reset, que é o que
+ * mantém a margem DECLARADA por intenção do PageHeader e do DetailHeader. */
+@layer base {
+  h1, h2, h3, h4, h5, h6,
+  p, dl, blockquote, figure {
+    margin: 0;
+  }
+
+  ul, ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}

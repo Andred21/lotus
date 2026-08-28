@@ -85,10 +85,19 @@ export function KpiRow({ items }: { items: Kpi[] }) {
               * de três — "Clases con documentación pendiente" — o número caía
               * 16px abaixo dos três vizinhos (UI-06 da revisão de 2026-08-17).
               *
-              * Ancorar por margem não funciona aqui: o `[&_p]:m-0` que o
-              * `AppCard` aplica na variante `stat` casa `<p>` por elemento e
-              * vence qualquer `mt-*` de utility, que casa por classe. O
-              * afastamento do rótulo vem de `pt`, que aquela regra não toca. */}
+              * O afastamento vem de `pt`, não de `mt-*`, por DESENHO de layout:
+              * `justify-between` distribui os dois filhos na altura da coluna, e
+              * padding no filho de baixo não briga com essa distribuição — margem
+              * brigaria.
+              *
+              * Este comentário dizia outra coisa até 2026-08-27: que `mt-*` era
+              * IMPOSSÍVEL, porque o `[&_p]:m-0` do `AppCard` casava `<p>` por
+              * elemento (0,1,1) e vencia a classe (0,1,0). Aquela classe não
+              * existe mais — o mini-reset da P-46 a substituiu — e o substituto
+              * mora em `@layer base`, que PERDE para `utilities`: hoje um `mt-*`
+              * ganharia. Comentário invertido custa mais que comentário ausente,
+              * porque manda contornar restrição que já não existe (Q-3 do review
+              * de 2026-08-27). */}
             <p className="flex shrink-0 items-baseline gap-2 sm:justify-between sm:pt-2">
               <span className="font-display text-3xl leading-none font-semibold tabular-nums">{kpi.value}</span>
               {/* Grandeza secundária na MESMA linha do número, nunca numa
