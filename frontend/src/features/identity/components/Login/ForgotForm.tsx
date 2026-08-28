@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { AppButton, AppInputText, FormErrorBanner } from '@shared/ui'
+import { AppButton, AppInputText, FormErrorBanner, pageTitleClass } from '@shared/ui'
 import { dangerText } from '@shared/styles/tokens'
 import { useForgotPassword } from '../../hooks/useForgotPassword'
 
@@ -35,7 +35,7 @@ export function ForgotForm({ email, onEmailChange, autoFocusTitle }: Props) {
         <h1
           ref={titulo}
           tabIndex={-1}
-          className="font-display text-2xl font-semibold tracking-tight"
+          className={pageTitleClass}
           style={{ color: 'var(--text-color)' }}
         >
           {t('password.forgotTitle')}
