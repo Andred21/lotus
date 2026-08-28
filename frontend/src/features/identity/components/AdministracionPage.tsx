@@ -42,7 +42,7 @@ export function AdministracionPage() {
               onView={page.openView}
               actions={
                 canManage
-                  ? <AppButton variant="brandIcon" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  ? <AppButton variant="primary" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
                   : undefined
               }
             />
@@ -55,7 +55,7 @@ export function AdministracionPage() {
                 error={rolesPage.error}
                 onRetry={rolesPage.refetch}
                 onView={rolesPage.openView}
-                actions={<AppButton variant="brandIcon" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />}
+                actions={<AppButton variant="primary" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />}
               />
             </ModuleTab>
           )}

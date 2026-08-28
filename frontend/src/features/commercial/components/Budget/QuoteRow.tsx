@@ -64,7 +64,7 @@ export function QuoteRow({
           <AppButton label={t('quote.reject')} severity="danger" outlined onClick={onReject} />
         )}
         {onApprove && quote.status !== 'approved' && (
-          <AppButton variant="brandLabel" label={t('quote.approve')} onClick={onApprove} />
+          <AppButton variant="compact" label={t('quote.approve')} onClick={onApprove} />
         )}
       </div>
 

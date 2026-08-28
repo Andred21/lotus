@@ -83,7 +83,7 @@ export function BudgetDetailPage() {
           <>
             {/* Ação primária primeiro; destrutivo por último (UI-B5). */}
             <AppButton
-              variant="brandIcon"
+              variant="primary"
               label={t('budget.addQuote')}
               icon="pi pi-file"
               onClick={() => d.openWizard(null)}

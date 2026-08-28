@@ -23,14 +23,14 @@ export function QuoteWizard({
     step === 1 ? (
       <div className="flex justify-end gap-2">
         <AppButton label={t('common.cancel')} text onClick={onHide} />
-        <AppButton variant="brandIcon" label={t('quote.next')} icon="pi pi-arrow-right" disabled={!canAdvance} onClick={next} />
+        <AppButton variant="primary" label={t('quote.next')} icon="pi pi-arrow-right" disabled={!canAdvance} onClick={next} />
       </div>
     ) : (
       <div className="flex justify-end gap-2">
         <AppButton label={t('quote.back')} text icon="pi pi-arrow-left" onClick={back} />
         <AppButton label={t('common.cancel')} text onClick={onHide} />
         <AppButton
-          variant="brandIcon"
+          variant="primary"
           label={quote ? t('common.save') : t('quote.create')}
           icon="pi pi-check"
           loading={pending}

@@ -40,7 +40,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
     <div className="mb-6 flex flex-col gap-4">
       {back && (
         <AppButton
-         variant="brandIcon"  
+         variant="primary"  
           className="flex w-fit "
         
           onClick={back.onClick}

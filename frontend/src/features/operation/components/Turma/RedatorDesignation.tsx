@@ -39,7 +39,7 @@ function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: nu
         <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border p-3" style={{ borderColor: 'var(--surface-border)' }}>
           <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
           <AppButton
-            variant="brandIcon"
+            variant="primary"
             label={t('operation.redator.pick')}
             icon="pi pi-check"
             disabled={picker.pending}

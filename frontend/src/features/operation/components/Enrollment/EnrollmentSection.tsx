@@ -33,7 +33,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
           s.loadError || emArquivados || bloqueado ? undefined : (
             <>
               <AppButton
-                variant="brandIcon"
+                variant="primary"
                 label={t('operation.enrollment.importSheet')}
                 icon="pi pi-upload"
                 onClick={() => setImportOpen(true)}

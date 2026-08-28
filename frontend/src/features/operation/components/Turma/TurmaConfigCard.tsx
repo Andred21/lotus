@@ -131,7 +131,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       {mode !== 'view' && (
         <div className="flex justify-end gap-2">
           {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={onCancel} disabled={f.pending} />}
-          <AppButton variant="brandIcon" label={t('operation.config.save')} icon="pi pi-check" onClick={f.submit} disabled={f.pending} />
+          <AppButton variant="primary" label={t('operation.config.save')} icon="pi pi-check" onClick={f.submit} disabled={f.pending} />
         </div>
       )}
     </div>
