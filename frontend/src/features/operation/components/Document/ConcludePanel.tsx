@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppCard, AppTag, ConfirmDialog } from '@shared/ui'
+import { AppButton, AppCard, AppTag, ConfirmDialog, SectionLabel } from '@shared/ui'
 import { formatDate, turmaDocumentTypeLabel } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
@@ -14,7 +14,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-3">
-        <h3 className="font-medium">{t('operation.conclusion.title')}</h3>
+        <SectionLabel as="h3" rule={false}>{t('operation.conclusion.title')}</SectionLabel>
         <AppTag
           value={t(`operation.conclusion.state.${s.displayStatus}`)}
           severity={turmaStatusSeverity(s.displayStatus)}

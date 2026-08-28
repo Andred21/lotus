@@ -51,6 +51,7 @@ export * from './LanguageMenu'
 export * from './ModulePage'
 export * from './PageHeader'
 export * from './SearchableTableFrame'
+export * from './SectionLabel'
 // Arquivo plano pelo mesmo critério do `archivedColumns`: grafia não é componente.
 export * from './typography'
 export * from './AppLogo'

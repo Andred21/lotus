@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
+import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState, SectionLabel } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
@@ -71,7 +71,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
 
   return (
     <div className="space-y-4 p-4">
-      <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.title')}</h3>
+      <SectionLabel as="h3" rule={false}>{t('operation.redator.title')}</SectionLabel>
 
       {turma.redatores.length === 0 && <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.none')}</p>}
 

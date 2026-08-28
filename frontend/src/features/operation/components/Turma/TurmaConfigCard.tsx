@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary } from '@shared/ui'
+import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
@@ -52,7 +52,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
   return (
     <div className="space-y-5 p-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium">{t('operation.config.title')}</h3>
+        <SectionLabel as="h3" rule={false}>{t('operation.config.title')}</SectionLabel>
         {/* Escondido, não desabilitado: botão cinza ainda promete "isto seria
             possível", e `UpdateTurmaAction` recusa a gravação com 422. Os campos
             continuam à vista — o que sai é a escrita, não a leitura. */}

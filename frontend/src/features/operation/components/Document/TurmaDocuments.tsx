@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, ConfirmDialog, FormErrorBanner, AppDetailSkeleton, AppErrorState } from '@shared/ui'
+import { AppCard, ConfirmDialog, FormErrorBanner, AppDetailSkeleton, AppErrorState, SectionLabel } from '@shared/ui'
 import type { TurmaData, TurmaDocumentData } from '@shared/types/generated'
 import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
 import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
@@ -28,7 +28,7 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="font-medium">{t('operation.documents.title')}</h3>
+          <SectionLabel as="h3" rule={false}>{t('operation.documents.title')}</SectionLabel>
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('operation.documents.progress', { done: s.deliveredCount, total: s.totalTypes })}
           </p>
