@@ -47,18 +47,18 @@ Route::middleware('auth.active')->group(function () {
         Route::put('contacts/{contact}', [ClientContactController::class, 'update']);
         Route::delete('contacts/{contact}', [ClientContactController::class, 'destroy']);
 
-        Route::post('clients/{client}/photo', [ClientPhotoController::class, 'store']);
+        Route::post('clients/{client}/photo', [ClientPhotoController::class, 'store'])->middleware('throttle:upload');
         Route::delete('clients/{client}/photo', [ClientPhotoController::class, 'destroy']);
     });
 
     Route::middleware('permission:commercial.budget.update')->group(function () {
-        Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store']);
+        Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store'])->middleware('throttle:upload');
         Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy'])
             ->scopeBindings();   // {file} resolve por $budget->files() — cross-budget = 404
     });
 
     Route::middleware('permission:commercial.quote.update')->group(function () {
-        Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store']);
+        Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store'])->middleware('throttle:upload');
         Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
             ->scopeBindings();   // {file} resolve por $quote->files() — cross-quote = 404
     });

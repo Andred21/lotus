@@ -8,7 +8,7 @@
 
 **Tech Stack:** GitHub Actions · `shivammathur/setup-php@v2` · `pnpm/action-setup@v4` · `docker/build-push-action@v6` com cache `type=gha` · GHCR autenticado por `GITHUB_TOKEN`.
 
-**Spec:** `docs/superpowers/specs/2026-08-24-cicd-ci-governanca-e-artefato-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-24-cicd-ci-governanca-e-artefato-design.md`
 **Context packet:** `docs/superpowers/context-packets/2026-08-24-cicd-ci-governanca-e-artefato.md`
 
 ## Global Constraints

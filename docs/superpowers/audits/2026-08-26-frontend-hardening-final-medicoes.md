@@ -226,4 +226,4 @@ Varrendo **todo** `ul` do Dashboard, dois ficaram sem `role`: as duas legendas d
 repositório, então a régua de lint do Q-6 não as vê — e o mini-reset da P-46, que é global por
 desenho, tira a semântica de lista delas no WebKit do mesmo jeito. É a borda que o Q-6 não cobre.
 Não é regressão do Q-6 e não reabre o DoD 4 (as quatro famílias medidas estão certas); virou a
-**P-61**.
+**P-63**.

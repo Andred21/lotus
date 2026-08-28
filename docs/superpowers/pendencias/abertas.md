@@ -58,7 +58,7 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-61 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
+## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
 **Bloco:** frontend-estilizacao-padronizacao-de-componentes (item 18) · **Gatilho:** bloco que
 tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
@@ -79,6 +79,11 @@ jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
 carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
 gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
 com `role`.
+
+**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
+do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
+renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ---
 
@@ -519,6 +524,39 @@ da aba que não chamou o csrf-cookie por último volta 419, e o front não se re
 decisão do João, não correção de review; a saída (b) é aceitar. Até lá vale a receita escrita no
 `.env.example` da raiz: um perfil de navegador (ou janela anônima) por árvore.
 
+## P-62 — a `main` dos dois repositórios não tem branch protection; a régua é compensada
+
+**Nasceu como `P-61` na branch `cicd/ci-governanca-e-artefato` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) vinda do
+fechamento do `hardening-api-arquivos-e-abuso`. Quem renumera é a recém-chegada.
+
+**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team (ou
+decisão de tornar o repositório público), ou **2026-10-31**, o que vier primeiro.
+
+O item 11 desenhou `PUT /repos/<owner>/lotus/branches/main/protection` com required checks como o
+DoD 5 do bloco. Medido em 2026-08-25: a API responde `403 Upgrade to GitHub Pro or make this
+repository public`, e `GET /orgs/Gatika-CL` mostra `plan.name = free`. Rulesets dão o mesmo 403. As
+duas saídas do plano original foram **recusadas pelo João**: não há orçamento, e abrir o código de
+um cliente do setor elétrico regulado troca confidencialidade por régua, que é preço errado.
+
+**O DoD 5 fechou COMPENSADO, não provado**, e a diferença é material: **nada impede um push direto
+em `main`**. O que existe são três camadas que reduzem o dano sem eliminá-lo —
+`.githooks/pre-push` (recusa local, e só vale para quem rodou `git config core.hooksPath
+.githooks`), o job `procedencia` (commit que chegou em `main` sem PR mesclado **não vira imagem**,
+então não é promovível) e `scripts/espelhar-corporativo.sh` (árvore filtrada, um commit por
+release, trailer `Source-Commit` conferido contra o histórico de `main` da origem). A camada que
+falta é a única que impede de verdade, e ela é a camada 0.
+
+**Fica escrito para não virar silêncio:** force-push em `main` não é impedido, é **detectado e
+datado** pelo `procedencia`; e a janela entre o push e a negação do artefato existe. A prova disso
+é a própria sonda vermelha `26d0e3e9`, que segue no histórico de `main` do repositório pessoal.
+
+**Fecha quando** o Step 6 da Task 9 do plano arquivado
+([`plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md`](../plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md))
+puder rodar como está e o readback da API mostrar `required_pull_request_reviews` e os quatro
+required checks (`backend`, `frontend`, `types-drift`, `audit-prod`) ativos nas duas `main`.
+Evidência do que foi medido: [`../audits/2026-08-24-cicd-evidencias.md`](../audits/2026-08-24-cicd-evidencias.md).
+
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
 **Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,
@@ -803,3 +841,29 @@ devolvia o acesso ao staff desligado sem ninguém pedir.
 Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
 `CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
 nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.
+
+## P-61 — os `title` do `ProblemDetails` estão em português num produto es-CL
+
+**Bloco:** `hardening-api-arquivos-e-abuso` (achado Q-2 do review de 2026-08-25) ·
+**Gatilho:** fecha quando um bloco tocar o `ProblemDetails` ou a camada de mensagens ao usuário por
+outro motivo, e puder traduzir os cinco `title` de uma vez com o João. Revisar em **2026-10-31**.
+
+Medido ao vivo contra a API em 2026-08-25, na 6ª tentativa de `POST /api/login`:
+
+```json
+{"type":"https://lotus.cl/errors/too-many-requests","title":"Demasiadas solicitudes","status":429,"detail":"Too Many Attempts."}
+```
+
+O `detail` em inglês era do framework e **foi corrigido no próprio review** — o 429 é o único status
+que aquele bloco estreou, e a mensagem dele passou a falar es-CL como as de arquivo e de import.
+
+O que ficou é anterior ao bloco e maior que ele: os `title` dos outros braços do
+`ProblemDetails::fromException` estão em **português** (`Erro de validação`, `Não autenticado`,
+`Acesso negado`, `Recurso não encontrado`, `Erro na requisição`, `Erro interno`), e o `detail`
+mascarado do 500 também (`Ocorreu um erro inesperado. Tente novamente.`). O produto é es-CL: o
+usuário é a Lotus, no Chile.
+
+**Por que não foi consertado junto:** traduzir os seis `title` e o mascaramento do 500 muda texto que
+o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
+produto, do João — não efeito colateral de um bloco de hardening.
+

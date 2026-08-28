@@ -3,8 +3,10 @@
 namespace Tests;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\MalwareScanner;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\Support\Files\FakeMalwareScanner;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -25,6 +27,12 @@ abstract class TestCase extends BaseTestCase
         $origens = explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'));
 
         $this->withHeader('Referer', trim($origens[0]));
+
+        // Nenhum teste fala com o daemon real: o scanner da suíte aprova por
+        // padrão, e quem prova a recusa instala a sua própria dobradura. A
+        // escolha é da SUÍTE — a aplicação continua ligada no ClamAV, e
+        // `MalwareScanTest` guarda isso.
+        $this->app->instance(MalwareScanner::class, new FakeMalwareScanner);
     }
 
     /**

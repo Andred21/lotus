@@ -26,7 +26,7 @@ class UserPhotoController extends Controller
     {
         abort_unless($user->type === 'admin', 404);
 
-        $request->validate(UserPhotoService::RULES);
+        $request->validate(UserPhotoService::rules());
         $service->store($user, $request->file('photo'));
 
         return response()->noContent();

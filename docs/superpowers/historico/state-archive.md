@@ -84,7 +84,7 @@ foco no `<svg>` do olho depois do Enter, as quatro famílias de lista sem marcad
 **O regate achou uma borda, e ela virou ficha, não conserto de carona.** Varrendo **todo** `ul` do
 Dashboard, dois ficam sem `role`: as legendas do Recharts. A régua de lint do Q-6 lê JSX e não
 alcança lista que nasce dentro de biblioteca, enquanto o mini-reset, que é global por desenho,
-alcança. É a **P-61** — alcance pequeno (legenda de gráfico, com `aria-label` próprio por item), e
+alcança. É a **P-63** — alcance pequeno (legenda de gráfico, com `aria-label` próprio por item), e
 não reabre o DoD 4.
 
 **Gate do fechamento:** backend **940 passed / 5 skipped**; frontend lint 0, build verde,
@@ -95,13 +95,257 @@ subindo, e passou nas cinco execuções seguintes — o suspeito é o `PeoplePag
 de `waitFor`; oito execuções isoladas dele sob carga de CPU não reproduziram, e o caso está
 registrado no fechamento como flake observado, sem ficha.
 
-**A `P-46` fechou e foi remedida**; nasceram a **P-61** e o **item 18** da fila (padronização de
+**A `P-46` fechou e foi remedida**; nasceram a **P-63** e o **item 18** da fila (padronização de
 estilização, que depende deste bloco e foi escrito durante ele). As fichas `D-03`, `D-33` e `D-35`
 saíram do registro canônico do `backlog.md`, que é o que o próprio registro manda fazer no
 `/fechar-sprint` do bloco que as paga.
 
+**Merge da `main` para dentro, em 2026-08-28, com o gate refeito sobre ele.** A branch estava 32
+commits atrás: entraram o `hardening-api-arquivos-e-abuso` (item 4, PR #78) e o
+`cicd-ci-governanca-e-artefato` (item 11, PR #79), que trazem `clamav` no compose, limitadores de
+taxa nomeados e `nginx` reescrito. Gate na árvore mesclada: backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, e o **DoD refeito no navegador pela
+terceira vez** — os números não mudaram (`<nav>` 768px contra 844px, `title` `null` nos sete a
+1440px, foco no `<svg>` do olho, as quatro famílias com `role="list"` e sem marcador, `list-disc`
+vencendo o mini-reset, `IdentityCell` 118×102 com a negativa empatando em 118). O `nginx` desta
+árvore precisou de `docker compose rm -sf` antes de subir: o bind-mount do Docker Desktop guardava
+o inode antigo de `docker/nginx/default.conf`, que o merge reescreveu — é ambiente, não código.
+
+**A pendência nova foi renumerada no merge: nasceu `P-61` e virou `P-63`.** A `main` já trazia uma
+`P-61` (os `title` do `ProblemDetails` em português) e uma `P-62`, vindas dos dois blocos acima —
+mesmo precedente que renumerou a `P-38` para `P-41`.
+
 ---
 
+## Fechado em 2026-08-26 — `cicd-ci-governanca-e-artefato`, item 11 da fila
+
+**A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no
+mesmo dia**, por promoção explícita do João. A narrativa do bloco anterior está em
+`historico/state-archive.md`; a entrega, em `historico/progress.md`. Nenhuma lane recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**Promoção do item 11 — 2026-08-24.** O `backlog.md` marca o item como `Contexto: sim`, então a lane
+nasce em `context_required`: o Context Packet vem antes do `/planejar-bloco`, e o packet é do Codex
+(`.agents/skills/lotus-context-packet`), em sandbox read-only. A branch sai de `main@6e8e8618`, que já
+é `origin/main` — as três lanes anteriores mesclaram.
+
+**Fora de ordem em relação ao item 10, de propósito.** O `backlog.md` recomenda `10→11→12`, mas o que
+sobrou do item 10 é o `infra-producao-provisionamento-aws` (EC2, RDS, S3, SES, TLS), travado nas
+quatro decisões do João que o bloco do runtime mediu como abertas. O item 11 é GitHub, GHCR e
+governança de branch — **não toca conta AWS**. Quem depende de recurso real é o item 12
+(`SSH EC2 → compose pull`), e ele continua atrás do 10. A dependência que o 11 realmente tem é o
+runtime, e esse fechou em 2026-08-22 (PR #67): é a imagem dele que a CI vai construir e etiquetar por
+SHA.
+
+**A interseção que a seleção de 2026-08-22 previu não existe — medida e desfeita.** Aquela seção
+escreveu que o `BD-15` e a futura CI tocavam `.github/workflows`; era previsão, não medição. O
+Context Packet mediu: não há `.github/` nesta árvore, `git log --all -- .github/workflows` volta
+vazio, e a PR #66 (BD-15) não lista o diretório. **Todo workflow deste bloco nasce do zero** — não há
+o que preservar, e não há colisão a vigiar com a lane-c.
+
+**Review do item 11 — 2026-08-25.** Bloco classificado **alto risco** (paga o mecanismo da lei §5.3
+e faz merge, publicação em GHCR e mudança de configuração de repositório — ações externas
+irreversíveis), então a revisão do gabarito veio acompanhada de uma segunda lente independente do
+Codex, em sandbox read-only. Três achados aprovados pelo João e corrigidos no mesmo dia; a
+divergência entre os revisores está registrada abaixo, não resolvida em silêncio.
+
+- **Q-1 — o par `app`+`web` não era publicação atômica.** O `concurrency` do workflow usava
+  `cancel-in-progress: true` com `group: ci-${{ github.ref }}`, e `github.ref` é constante para todo
+  push em `main`: um segundo push cancelava o job `image` do primeiro no meio da publicação. Somado a
+  isso, os dois alvos eram construídos **e** publicados em passos sequenciais, então uma falha comum
+  de build entre eles deixava o SHA com meia release no GHCR. Corrigido em duas frentes: o
+  cancelamento passou a valer só fora de `push`, e o job constrói os dois alvos antes de publicar
+  qualquer um, com `scope` de cache separado por alvo e um passo final que **afirma** que os dois
+  manifestos existem — o "release é o par" do DoD3 deixou de ser confiança em dois passos verdes.
+- **Q-2 — "imutável" não estava garantido.** As quatro imagens base do `Dockerfile.prod` vinham por
+  tag móvel, então reconstruir o MESMO commit meses depois publicaria um digest diferente sob a mesma
+  tag de SHA — o objetivo §2 da spec inteira. As quatro passaram a ser fixadas por digest (capturados
+  em 2026-08-25, com o comando de atualização no cabeçalho do arquivo). O que o digest **não** fixa é
+  o índice do apk, e por isso o `image` ganhou uma guarda de idempotência: tag de SHA que já existe
+  não se reescreve, e só se republica quando falta metade do par.
+- **Q-3 — o `procedencia` confiava num trailer que nunca conferiu.** No corporativo a árvore limpa é
+  o normal, não uma propriedade especial: bastava uma linha `Source-Commit:` inventada num push
+  direto para o commit se passar por release de espelho — e essa é a única camada entre o push e uma
+  imagem publicada, porque a branch protection é o que o plano free não dá. Agora o SHA do trailer
+  precisa ser 40 hexadecimais **e** estar no histórico de `main` da origem
+  (`compare/main...<sha>` = `identical` ou `behind`). Quem responde qual é a origem é a variável de
+  repositório `ESPELHO_FONTE`, definida só em `Gatika-CL/lotus` — o arquivo segue sem nome de dono, e
+  onde a variável não existe o caminho de espelho não abre. `Andred21/lotus` é público, então o
+  `GITHUB_TOKEN` do corporativo faz a consulta sem PAT.
+
+**Divergência entre os revisores, registrada.** O Codex levantou oito candidatos; três viraram os
+achados acima depois de verificação própria no código, e os demais não passaram: um lia o escopo do
+desenho ao contrário (a auto-restrição do caminho de espelho no repositório pessoal é intencional, não
+um furo). Os dois sobre o `espelhar-corporativo.sh` eram reais e **o João mandou corrigir na mesma
+rodada**: a lista de exclusões passou a sair do blob do commit espelhado, não do disco da árvore —
+os dois leitores da lista voltam a ler a mesma versão, e o vazamento deixa de acontecer antes de o
+destino reprovar —, e o script passou a recusar commit cujo CI não esteja verde, com a saída
+`LOTUS_ESPELHO_SEM_CI=1` pela mesma razão que o `pre-push` tem a dele. Provado com `origin/main` em
+`26d0e3e9`, que é a própria sonda vermelha: modo real aborta com `exit 1` antes de qualquer push, e
+sujar a cópia local do `.espelho-exclusoes` não muda a árvore filtrada (`ecd187e9` nos dois casos).
+
+**As correções provadas no gatilho real — 2026-08-25.** PR #75 mesclado em `ac078a80`, run
+[32901859725](https://github.com/Andred21/lotus/actions/runs/32901859725): sete jobs,
+`conclusion: success`, `procedencia` e `image` verdes, par publicado em `ghcr.io/andred21`. A guarda
+de idempotência foi medida re-executando o job `image` no mesmo SHA — os quatro passos de build e
+push saíram `skipped`, a verificação do par continuou rodando e os dois digests ficaram idênticos.
+Só o `concurrency` fica sem prova direta: provar exigiria dois merges em segundos, e o custo não
+paga o que a leitura do `github.ref` já diz. Evidência integral em
+`audits/2026-08-24-cicd-evidencias.md`.
+
+---
+
+## Fechado em 2026-08-25 — `hardening-api-arquivos-e-abuso`, item 4 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `hardening-api-arquivos-e-abuso` (item 4) | Backend | main tree | `feat/hardening-api-arquivos-e-abuso` | `ready_for_closure` |
+
+**Promoção do item 4 — 2026-08-24, `lane-a`.** Promoção explícita do João com a lane em `idle`, contra
+o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o Context
+Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`), em sandbox
+read-only. A branch `feat/hardening-api-arquivos-e-abuso` sai de `main@7fa1cb0a`, que já traz o merge
+do item 11 (PR #71) — as lanes anteriores mesclaram. **Árvore:** main tree, seguindo o precedente de
+todo bloco de backend; a **P-03 foi paga** pelo `compose-por-worktree`, então isso é escolha e não
+mais imposição do compose.
+
+**O espelho virou para a `lane-a` neste commit, com a `lane-b` em execução — e isso é o precedente da
+P-55, não uma quebra.** `focused_lane` no main tree passa a apontar a lane que trabalha AQUI; a
+`lane-b` mantém o espelho dela apontando para si em `../lotus-infra`, que é a árvore onde o
+`/executar-bloco` dela roda. O bloco da `lane-b` em `lanes:` **não foi tocado por este commit** — ele
+é dela, e a invariante de dono manda. A P-55 segue aberta e é do João.
+
+**Evidência que já está medida e o packet não precisa redescobrir** (contra `main@7fa1cb0a`):
+`Route::post('/login', ...)` em `Identity/routes.php:23` está **fora** do grupo `throttle:6,1`, que
+começa só na linha 28 e cobre convite/recuperação; `Route::get('publico/certificados/{uuid}', ...)` em
+`Certification/routes.php:7` está fora de qualquer middleware. `grep -rn throttle` sobre os
+`routes.php` dos domínios e `backend/routes/` devolve **apenas** essas duas ocorrências do grupo de
+Identity — nenhum outro throttle existe no repositório.
+
+**Packet do item 4 recuperado — `status: ready`, quatro fontes, nenhuma `unavailable`.** Está em
+`context-packets/2026-08-24-hardening-api-arquivos-e-abuso.md`. As quatro provenances que ele declara
+(`base_commit` e os blobs de `state.md`, `progress.md`, `adrs.md` e `backlog.md`) foram **conferidas
+contra `git hash-object` antes de gravar** e batem exatas — não são hash chutado.
+
+**O packet corrigiu uma atribuição errada que o `backlog.md` carrega, e ela muda o desenho.** A nota
+de proporção do item 4 fala da "sonda antimalware do `RNF-SEC-06`"; o Drive canônico diz que
+`RNF-SEC-06` é **só rate limit** ("Rate limit para login, troca de senha e ações sensíveis") e que o
+antimalware vem do **`RNF-SEC-08`** ("Upload de arquivos com validação de tipo/tamanho e escaneamento
+antivírus (redatores operam de redes não auditadas)"). O requisito exige o **resultado** — escaneamento
+— e **não nomeia** sonda, serviço, fornecedor, protocolo nem topologia; nenhuma fonte recuperada
+prescreve mecanismo. Então a renegociação que a nota do backlog imagina **não é sobre forma**: forma
+nunca foi exigida, e dispensar o resultado seria renegociação formal, do João. A correção da linha do
+`backlog.md` fica para o `/fechar-sprint` deste bloco — planejamento não edita a fila.
+
+**Brainstorming fechado — oito decisões (D1–D8), na spec.** As que mudam desenho: o antivírus é
+ClamAV **síncrono** no compose e o `RNF-SEC-08` **não** é renegociado (D1); o throttle é teto global no
+grupo `api` **mais** nomeados nos alvos, para rota nova nascer coberta (D2); a chave do login é
+`email|ip` (D3); a política de tipo/tamanho vira peça única em `Shared/Files` com catraca (D4); o
+`files.mime` histórico se corrige por **migration de backfill**, precedente da P-47 (D5); o PDF é
+contido por limitador e teto, e persistir no S3 fica **fora** com ficha (D6); os quatro endpoints
+abertos passam a aceitar **PDF + imagem** (D7); e scanner fora do ar **recusa** o upload, com a
+consequência declarada (D8).
+
+**Um pré-requisito que a medição achou, e um que ela desmentiu.** O `ProblemDetails` **não lê
+`getHeaders()`**: o `429` já sai em `application/problem+json` pelo braço de
+`HttpExceptionInterface`, mas sem `Retry-After` nem `X-RateLimit-*` — entra no bloco, é a Task 1 do
+plano. Já o `trustProxies` **saiu**: o brainstorming o tratou como pré-requisito supondo que
+`$request->ip()` devolvesse o container do Nginx, e a medição do plano mostrou o contrário — o PHP
+recebe `REMOTE_ADDR` como o Nginx viu o peer, que em produção é o próprio cliente. Ligar
+`trustProxies` faria o `X-Forwarded-For` **forjado pelo cliente** virar o `ip()`, e todo limitador
+por IP passaria a contar um valor que o atacante escolhe. O bloco faz o oposto: o Nginx apaga o
+`X-Forwarded-*` de entrada. A spec recebeu emenda datada (§9) e o plano abre com as três correções
+de medição.
+
+**Plano escrito — `plans/2026-08-25-hardening-api-arquivos-e-abuso.md`, 12 tasks.** Ordem por
+dependência: envelope do `429` → IP do cliente → limitadores → catraca de rota → política de
+arquivo → catraca de upload → `files.mime` e backfill → ClamAV → tetos de lote e import →
+confirmação do ADR-11 → DoD contra a API real. `executor: claude` — o bloco toca a §5.4 do
+`CLAUDE.md`, reverte um item aprovado da spec e deixa três tetos com gatilho de revisão durante a
+execução.
+
+**Medições que o plano fixou, e que o item 10 herda:** ClamAV 1.4 ocupa **1,014 GiB** residentes e
+fica pronto em ~10 s (imagem de 146 MiB, base de assinaturas embutida — não há download no primeiro
+`up`, ao contrário do que a spec §4.4 previa). O scan INSTREAM custa **17 ms** para 100 KB, **72 ms**
+para 1 MB e **551 ms** para o teto de 10 MB, o que sustenta o scan síncrono sem worker (D1). A
+emissão em lote **não** chama o Gotenberg — `IssueCertificateAction` não toca o conversor —, então o
+teto de lote existe por duração de requisição e volume de escrita, não por renderização. E a
+superfície de upload são **13 rotas, não 10**: `POST /api/redatores` e `PUT /api/redatores/{redator}`
+aceitam `documents[<TIPO>]` **sem regra `file` nenhuma**.
+
+**Bloco `hardening-api-arquivos-e-abuso` — 12 de 12 tasks completas, 2026-08-25.** A Task 12 (DoD
+`executor: claude`) provou o bloco inteiro contra a API e o stack Docker reais, não só contra a
+suíte: throttle nomeado + separação de chave (DoD 1), `429` e recuperação medida (~65s, DoD 2),
+antivírus síncrono provado nos dois sentidos — EICAR real recusado e scanner fora do ar recusando
+com `503`/`Retry-After` (DoD 3/4) —, mime por conteúdo nos quatro sítios antes destapados (DoD 5),
+backfill de `files.mime` consistente (DoD 7) e o fluxo de ouro completo sem nenhum `429` (DoD 8).
+A medição real (DoD 6) **corrigiu um teto do próprio plano**: `MAX_LINHAS` caiu de 500 para 100
+depois que 500 linhas estourou o `max_execution_time` de 30s do PHP (bcrypt por aluno novo via cast
+`hashed`, ~185ms/linha) — exercendo a autoridade que o plano já dava para essa situação exata, com a
+medição completa no docblock e no commit `47b0c4fc`. O próprio gate achou um achado incidental fora
+do brief: `generated.ts` estava desatualizado desde a Task 6 (`ContentClass` nunca tinha sido
+exposto ao `typescript:transform`); regenerado e commitado (`528749a2`), aditivo puro. Suíte final
+**983 passed / 5 skipped**, Pint limpo, working tree coerente com o plano. Narrativa completa e
+todos os números medidos estão em `.superpowers/sdd/progress.md` (Task 12).
+
+**Review do bloco — 2026-08-25, `/revisar-sprint`.** Alto risco (auth, migration, `generated.ts`,
+certificados), então além da revisão Claude rodou a segunda lente do Codex em sandbox read-only; os
+achados foram deduplicados e **cada achado que só o Codex viu foi verificado no código antes de
+entrar**. Suíte reconferida no container: **983 passed / 5 skipped**, igual ao que o DoD registrou.
+Sem órfãos: toda peça nova do bloco tem consumidor. Sete achados (Q-1 a Q-7) aguardam a decisão do
+João sobre o que entra antes do fechamento — dois medidos ao vivo contra a API (`Q-1` e `Q-2`),
+quatro verificados por leitura e um de higiene.
+
+**Os sete entraram, por decisão do João, e os sete estão corrigidos com teste de regressão.** Cada
+teste novo foi visto REPROVAR contra o código antigo (`git stash` na correção, roda, `git stash
+pop`) antes de valer: 3 casos no `RateLimitTest`, 1 no `RedatorCrudTest`, 3 no
+`SpreadsheetRowReaderTest` e 1 no `BackfillFilesMimeMigrationTest`. O que mudou de desenho:
+`ContentClass` ganhou `TETO_AGREGADO_KB` — a garantia "quem recusa é sempre esta regra" era falsa no
+único sítio que recebe vários arquivos no mesmo corpo, e agora tudo o que a política aceita cabe nos
+12 MB do transporte; o teto do import passou a morder na linha **iterada**, dentro do leitor, porque
+contado do outro lado do `yield` ele nunca via a linha em branco; o leitor de planilha passou a
+despachar pelo MIME de **conteúdo**, e a isenção dele na catraca foi reescrita para dizer a verdade;
+e a migration de backfill passa a **abortar** quando nenhum objeto pôde ser lido, ficando pendente
+para o deploy seguinte em vez de marcar como aplicada com o histórico intacto.
+
+**A catraca de política pegou a própria correção**, e isso é o guardrail funcionando: ao ganhar
+`assertCabeNoTransporte`, o `ContentClass` passou a nomear `UploadedFile` e virou "sítio de upload"
+aos olhos da varredura. A peça onde a política MORA foi isentada num predicado único
+(`eAPropriaPeca`), compartilhado pelos dois casos que já a tratavam de formas diferentes.
+
+**Um achado virou ficha em vez de conserto:** os `title` do `ProblemDetails` em português num produto
+es-CL (**P-61**). O `detail` inglês do 429 — o único status que este bloco estreou — foi traduzido
+aqui; traduzir os outros seis mexe em texto fora do escopo aprovado e é decisão de idioma de
+produto, do João.
+
+Suíte final **996 passed / 5 skipped**, Pint limpo nos 14 arquivos tocados, `pnpm build` verde.
+`generated.ts` voltou a ser idêntico ao da `main`: o `ContentClass` recebeu `#[Hidden]` e saiu da
+superfície de tipos do SPA, onde nunca teve consumidor.
+
+**Gate de fechamento — 2026-08-25.** Suíte `996 passed / 5 skipped` no container, `pnpm lint` sem
+achado e `pnpm build` verde, Pint `passed` nos 49 arquivos PHP do bloco, `typescript:transform`
+rodado sem drift em `generated.ts`. O critério de aceite foi **reprovado contra a API real** em
+`:8080`, não só contra a suíte, porque as sete correções do review entraram DEPOIS do DoD da Task 12:
+login errado 5×`422` e depois `429` com `Retry-After: 59` em `application/problem+json`, com outro
+e-mail no mesmo IP voltando a `422` (chave `email|ip`); QR público 30×`404` e depois `429`, com o
+certificado real devolvendo `200` 62 s depois; ELF renomeado `.pdf` recusado com `422` e PDF legítimo
+aceito com `201` no mesmo endpoint; ClamAV parado devolvendo `503` com `Retry-After: 30` e mensagem
+distinta da de infecção, e `201` de volta assim que o serviço subiu; `POST /api/redatores` com três
+PDFs somando 10,76 MB recusado pelo **teto do conjunto** (`422`, "El conjunto de archivos supera el
+máximo de 10 MB"), e o mesmo endpoint com dois PDFs pequenos aceito com `201`; import de 101 linhas
+recusado com `422` **e** import de 300 linhas em branco recusado igual — que é o achado Q-4 medido ao
+vivo, porque contado do outro lado do `yield` o teto nunca via linha vazia; CSV com nome `.xlsx`
+lido pelo `CsvReader` e devolvendo `200`, sem o `500` que o Q-5 descreveu.
+
+**Uma medição do gate corrigiu o roteiro do DoD, não o código.** O EICAR canônico salvo como
+`.pdf` é recusado pela política de **tipo** antes de chegar ao scanner (`guessExtension()` devolve
+`txt`), e o EICAR embutido dentro de um PDF válido **passa** — `clamdscan --stream` sobre o mesmo
+arquivo responde `OK`, porque a assinatura `Eicar-Test-Signature` é do arquivo canônico e não casa
+embutida. Quem prova que o scan está no caminho do arquivo aceito é o cenário D8: com o `clamav`
+parado, um PDF legítimo passa a receber `503`. Os dois fatos foram medidos, e nenhum deles é buraco
+de código.
+
+---
 ## Fechado em 2026-08-25 — `frontend-revisao-ui-por-modulo` (fatia 2 de 2), item 16 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
@@ -274,6 +518,8 @@ merge:** `pnpm lint` 0, `pnpm build` verde,
 `state_basis_commit` da lane continua em `8d588511`, o commit que prova a entrega fechada; o SHA do
 próprio fechamento não entra no arquivo que ele fecha.
 
+---
+
 ## Fechado em 2026-08-24 — `certificacao-historico-do-aluno`, item 2 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
@@ -350,6 +596,28 @@ alcançável. Não virou pendência nem item de backlog; o João decidiu aplicar
 
 Gate depois das correções: backend **937 passed / 5 skipped**, frontend **105 arquivos / 577
 testes**, lint limpo, build verde.
+
+**A `lane-a` fechou o item 2 em 2026-08-24** — `certificacao-historico-do-aluno`, narrativa integral
+em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/certificacao-historico-do-aluno` nasceu de `main@cad0d1fb`, mescla a `main` de PR #72 para
+dentro neste commit e vai a PR; a árvore é o main tree, que não se destrói. A lane não recebe item
+novo sozinha: promoção é do João, contra o `backlog.md`.
+
+**Gate refeito sobre a `main` de PR #72, dentro do merge:** backend **937 passed / 5 skipped**,
+frontend lint 0, build verde e **107 arquivos / 595 testes**, Pint `passed` nos 18 arquivos PHP do
+bloco. O merge pediu três consertos de conteúdo, não de marcador: a `HistorialTable` ficou com a
+coluna presa e a largura por política da `main` **e** com o `display_status` do servidor deste
+bloco; a tabela de turmas do detalhe do aluno perdeu os `style` literais e passou a declarar
+largura, com a chave `certificate` nova em `studentTurmaWidths` (pesa como `COL.text` — a célula
+empilha código, tag, data, marca de reemissão e o botão do PDF); e as duas pendências abertas por
+este bloco foram renumeradas para **P-59** e **P-60**, porque a `main` já usava `P-55` e `P-56`. Os
+3 casos de `tests/compose-dev.test.ts` que reprovavam aqui eram a **P-58** de novo — o
+`frontend/.env` desta árvore com `VITE_API_URL` legado —, e a árvore adotou o molde do
+`frontend/.env.example` (arquivo gitignored, nada commitado).
+
+**O que a `main` trouxe e a `lane-a` NÃO refaz:** o `compose-por-worktree` pagou a **P-03** em
+2026-08-24, depois que este bloco já rodava. O gate P-03 citado na narrativa arquivada deste bloco
+fica como está — era verdade no dia da promoção, e narrativa arquivada não se reescreve.
 
 ---
 

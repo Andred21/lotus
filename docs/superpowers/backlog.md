@@ -23,13 +23,13 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 4–9 mais o 16 e o 17 fecham o
+- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 5–9 mais o 16 e o 17 fecham o
   código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, o `2` em 2026-08-24, e o `10` **encolheu** em vez de sair (o runtime foi entregue;
-  sobrou o provisionamento). A fila começa no `4` e salta os que já fecharam de propósito: o número
-  é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar
-  quebraria as citações e pareceria promoção.
+  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, e o `10` **encolheu** em vez de sair (o
+  runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
+  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -40,30 +40,6 @@
 ---
 
 # Fila priorizada
-
-## 4. `hardening-api-arquivos-e-abuso`
-
-**Prioridade:** P0 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** Drive `RNF-SEC-06`, `RNF-SEC-08`; Notion `9.1.1`; ADR-03/11/12.
-
-**Objetivo:** limitar abuso e consumo excessivo antes da exposição pública.
-
-**Evidência medida (2026-08-22):** `/login` (`Identity/routes.php:23`) e a validação pública de
-certificado (`Certification/routes.php:7`) não têm throttle; hoje só convite/recuperação têm
-(`throttle:6,1`).
-
-**Escopo:** throttle de login, validação pública de certificado e ações sensíveis; revisar o
-throttle já existente de senha/convite; limites de upload/import/batch/PDF; MIME/tamanho/quantidade;
-S3 privado + URL temporária; verificação antimalware exigida pelo RNF; `429` em Problem Details.
-Números concretos saem de medição/risco no plano.
-
-**Nota de proporção:** a sonda antimalware do `RNF-SEC-06` é candidata à mesma renegociação formal
-do gate de redundância do item 13 — ~10 usuários internos; o brainstorming decide se a **forma**
-exigida é obrigatória ou se o **resultado** basta.
-
-**DoD:** sondas de abuso/arquivo inválido são bloqueadas sem prejudicar o fluxo normal.
-
----
 
 ## 5. `hardening-auditoria-privacidade-e-observabilidade`
 
@@ -185,28 +161,6 @@ depende do working tree do servidor.
 
 ---
 
-## 11. `cicd-ci-governanca-e-artefato`
-
-**Prioridade:** P0 para Continuous Delivery · **Frente:** GitHub/Infra · **Contexto:** sim
-**Fonte:** decisão atual de CI/CD; ADR-13/14; `D-08`.
-
-**Topologia a validar:** `Gatika/lotus` como upstream corporativo; `Andred21/lotus` como
-fork/workbench; `origin` pessoal + `upstream` corporativo; worktrees somente locais; `develop`
-apenas se existir staging real — sem staging, PR da feature vai ao `Gatika/main`.
-
-**Escopo:** CI rápido pessoal; CI corporativo obrigatório; backend test; frontend
-`pnpm install --frozen-lockfile` + lint/test/build; regenerar tipos e reprovar drift de
-`generated.ts` (**D-08** — fecha a lei §5.3); audit de dependências; branch protection/required
-checks; build único da imagem de produção; GHCR com tag por commit SHA.
-
-**Limite:** esta consolidação não confirmou configurações do `Gatika/lotus`; não inventar
-branch/ruleset/Environment/secret existente.
-
-**DoD:** commit reprovado não gera release promovível; aprovado gera artefato imutável
-identificável.
-
----
-
 ## 12. `cicd-promocao-deploy-e-rollback`
 
 **Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
@@ -325,40 +279,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-# Decisões não promovíveis isoladamente
-
-| ID | Decisão / gatilho |
-|---|---|
-| `D-09` | UI e backend divergem sobre zero contatos principais — decidir qual camada cede. |
-| `D-10` | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles`. |
-| `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
-| `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
-| `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
-| `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
-| `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
-| `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
-| `P-08` | Lotus decide se Manual varia por curso. |
-| `P-09` | Lotus confirma/descopa o quarto tipo de documento de turma. |
-| `P-10` | Lotus decide se tabela de alunos exibe Cliente. |
-| `P-13` | Lotus decide se Turma terá código próprio. |
-| `P-16` | Lotus decide a aba inicial de Turma. |
-| `DS-05` | Avatar do Perfil só vira task após medição justificar. |
-| `DS-07` | Mural de credenciais é redesign próprio, com brainstorming. |
-
----
-
-# Futuros
-
-- **FUT-1 · Templates genéricos de documentos de turma** — além do Manual já existente, somente
-  após desenho com a Lotus. O manual PDF/DOCX pré-preenchido já cobre a fatia "baixa, preenche à
-  mão, sobe" do tipo `MANUAL`; futuro é o mecanismo genérico (`PRUEBAS`, `EVALUACION_REDATOR`) e o
-  preenchimento online.
-- **FUT-2 · Ancoragem cross-módulo** — padronizar deep-link/seleção quando houver recorrência
-  real; o caso turma→orçamento já existe.
-- **FUT-3 · Central de notificações** — notificações persistidas na aplicação alimentadas por
-  eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
-  para eventos críticos. Exige levantamento funcional próprio.
-
 ## 18. `frontend-estilizacao-padronizacao-de-componentes`
 
 **Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
@@ -407,6 +327,41 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
 
 ---
 
+# Decisões não promovíveis isoladamente
+
+| ID | Decisão / gatilho |
+|---|---|
+| `D-09` | UI e backend divergem sobre zero contatos principais — decidir qual camada cede. |
+| `D-10` | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles`. |
+| `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
+| `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
+| `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
+| `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
+| `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
+| `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
+| `P-08` | Lotus decide se Manual varia por curso. |
+| `P-09` | Lotus confirma/descopa o quarto tipo de documento de turma. |
+| `P-10` | Lotus decide se tabela de alunos exibe Cliente. |
+| `P-13` | Lotus decide se Turma terá código próprio. |
+| `P-16` | Lotus decide a aba inicial de Turma. |
+| `DS-05` | Avatar do Perfil só vira task após medição justificar. |
+| `DS-07` | Mural de credenciais é redesign próprio, com brainstorming. |
+
+---
+
+# Futuros
+
+- **FUT-1 · Templates genéricos de documentos de turma** — além do Manual já existente, somente
+  após desenho com a Lotus. O manual PDF/DOCX pré-preenchido já cobre a fatia "baixa, preenche à
+  mão, sobe" do tipo `MANUAL`; futuro é o mecanismo genérico (`PRUEBAS`, `EVALUACION_REDATOR`) e o
+  preenchimento online.
+- **FUT-2 · Ancoragem cross-módulo** — padronizar deep-link/seleção quando houver recorrência
+  real; o caso turma→orçamento já existe.
+- **FUT-3 · Central de notificações** — notificações persistidas na aplicação alimentadas por
+  eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
+  para eventos críticos. Exige levantamento funcional próprio.
+
+
 # Débitos técnicos — registro canônico
 
 > Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
@@ -421,14 +376,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
   chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
   falta aplicar.
-
-- **D-08 · A lei §5.3 (`generated.ts` não se edita à mão) segue sem mecanismo** →
-  `cicd-ci-governanca-e-artefato`. Único mecanismo hoje é `globalIgnores` no lint
-  (`eslint.config.js:158`), que só tira o arquivo do corte. §5.1/5.2 cobertas por
-  `PersistenceLawsTest`, §5.6 por `no-restricted-imports` nas três fronteiras (remedido 2026-08-14
-  contra `977586e`); §5.4/5.5/5.7/5.8 sem guarda e sem desenho medido — não entram como promessa.
-  Fecho: CI regenera `typescript:transform` e reprova drift do commitado. **DoD-sonda:** editar
-  `generated.ts` e ver o mecanismo reprovar nomeando o arquivo.
 
 - **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
   `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
@@ -624,8 +571,8 @@ Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ati
 BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
 voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
 no `frontend-hardening-final` (item 8), levando a D-03 — e **o próprio item 8 saiu da fila em
-2026-08-27**, levando junto as fichas `D-03`, `D-33` e `D-35`, pagas por ele. **Os itens 1 e 14 saíram da fila em
-2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
+2026-08-27**, levando junto as fichas `D-03`, `D-33` e `D-35`, pagas por ele. **Os itens 1 e 14
+saíram da fila em 2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
 `BD-15-docs-guardrails-e-sincronizacao` (item 14). A numeração restante **não** foi reordenada — a
 fila tem buracos de propósito, porque renumerar quebraria toda referência escrita a "item N". O que
 o BD-15 deixou aberto vive em `pendencias/` (P-22, P-31, P-32, P-52, P-53), não aqui. Task antiga

@@ -16,11 +16,14 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Files\ClamAvScanner;
+use App\Shared\Files\MalwareScanner;
 use App\Shared\Files\Models\File;
 use App\Shared\Office\DocxToPdf;
 use App\Shared\Office\GotenbergDocxToPdf;
 use App\Shared\Pdf\GotenbergHtmlToPdf;
 use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\RateLimiting\RateLimits;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -39,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
         // Conversor DOCX→PDF (rota LibreOffice do mesmo Gotenberg). Nos testes
         // o binding troca pelo `FakeDocxToPdf`, que guarda o pacote.
         $this->app->bind(DocxToPdf::class, GotenbergDocxToPdf::class);
+
+        // Antivírus (RNF-SEC-08): serviço `clamav` do compose, INSTREAM na
+        // 3310. Nos testes o binding troca pelo `FakeMalwareScanner`.
+        $this->app->bind(MalwareScanner::class, ClamAvScanner::class);
     }
 
     /**
@@ -46,6 +53,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Política de taxa da API (RNF-SEC-06). Não existe RouteServiceProvider
+        // neste repositório — o `routes/api.php` agrega por glob() —, então o
+        // registro dos limitadores nomeados mora aqui.
+        RateLimits::register();
+
         Relation::enforceMorphMap([
             'user' => User::class,
             'client' => Client::class,
