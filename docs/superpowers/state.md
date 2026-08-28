@@ -9,20 +9,20 @@ next_owner: joao
 next_action: select_backlog_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
 context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
 blocker: null
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
     context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
     blocker: null
     resume_state: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `planning` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_execution` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -212,7 +212,20 @@ depende da turma inteira em memória; contrato próprio em `App\Shared\Paginatio
 levantamento mediu zero paginação na API e um frontend client-side por desenho, o que fez o custo da
 opção escolhida subir para o kit compartilhado (`useServerTable`, modo `lazy` em
 `AppDataTable`/`SearchableTableFrame`); o João manteve o bloco inteiro aqui. Spec em
-`specs/2026-08-28-hardening-performance-e-dados-design.md`; o plano vem a seguir.
+`specs/2026-08-28-hardening-performance-e-dados-design.md`.
+
+**Plano do item 6 — 2026-08-28, a lane entra em `ready_for_execution`.** Treze tasks em
+`plans/2026-08-28-hardening-performance-e-dados.md`, na ordem da dependência: `JanelaDeAviso` (D13)
+antes do `CASE` que a lê; o contrato `App\Shared\Pagination` antes dos três builders; o kit lazy do
+front antes das três telas; as duplas backend→frontend por endpoint (alunos, certificados, turmas)
+fechando cada uma um estado consistente; a janela do painel de emissão; `preventLazyLoading` global
+com a catraca `ListQueryBudgetTest`; o `PerformanceScenarioSeeder` e a migration de índices só com o
+que o `EXPLAIN` aprovar; docs por último. Dez desvios de implementação declarados no plano — nenhum
+muda o §7 da spec; o mais visível é que `useHistorial` deixa de ser exceção da política de `loadError`.
+**Handoff: `executor: claude`** — o `CASE` e o `whereHas` são regra de domínio reescrita em SQL, três
+números só existem depois de medir, e a guarda global pode reprovar caminho que a suíte não cobria.
+Colisão conhecida com a `lane-c` em `HistorialTable.tsx` (só props da moldura); rebase antes do merge.
+Execução exige `/executar-bloco hardening-performance-e-dados`.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
 fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
