@@ -59,8 +59,10 @@ body,
  * `tests/preflight-escopado.test.ts` medindo isso.
  *
  * Dentro de `@layer base` porque `utilities` vence `base` na ordem declarada
- * acima: uma classe `my-[0.83em]` continua ganhando deste reset, que é o que
- * mantém a margem DECLARADA por intenção do PageHeader e do DetailHeader. */
+ * acima: a classe `mb-4` dos dois títulos continua ganhando deste reset, que é
+ * o que mantém a margem DECLARADA por intenção do PageHeader e do DetailHeader.
+ * (Era `my-[0.83em]` até a E2 de 2026-08-28, quando a margem virou degrau da
+ * escala e a superior passou a ser do contêiner.) */
 @layer base {
   h1, h2, h3, h4, h5, h6,
   p, dl, blockquote, figure {
