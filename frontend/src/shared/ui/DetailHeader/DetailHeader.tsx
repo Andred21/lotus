@@ -38,16 +38,18 @@ export interface DetailHeaderProps {
 export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions }: DetailHeaderProps) {
   return (
     <div className="mb-6 flex flex-col gap-4">
+      {/* Ação terciária, não de marca: este botão ANTECEDE a ação primária da
+        * página, e vestir a mesma marca dizia que sair e agir pesam igual
+        * (achado B2 do audit de 2026-08-26). `text` do tema, com a tinta
+        * secundária subindo para a do corpo no hover. */}
       {back && (
         <AppButton
-         variant="primary"  
-          className="flex w-fit "
-        
+          className="w-fit text-[var(--text-color-secondary)] hover:text-[var(--text-color)]"
+          text
+          icon="pi pi-arrow-left"
+          label={back.label}
           onClick={back.onClick}
-        >
-          <i className="pi pi-arrow-left" aria-hidden="true" />
-          {back.label}
-        </AppButton >
+        />
       )}
       {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de 2026-08-12):
         * em página de detalhe o dono do título é este componente. Sai SEMPRE —
