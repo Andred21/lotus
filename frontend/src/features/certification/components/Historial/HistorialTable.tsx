@@ -87,7 +87,11 @@ export function HistorialTable() {
                * ausência LEGÍTIMA (aluno estrangeiro), então segue travessão —
                * a assimetria é o contrato do backend, não estética. */
               title={ausente(c.snapshot.aluno.name) ? t('certificate.snapshotMissingField') : c.snapshot.aluno.name}
-              description={ausente(c.snapshot.aluno.rut) ? '—' : c.snapshot.aluno.rut}
+              description={
+                ausente(c.snapshot.aluno.rut)
+                  ? '—'
+                  : <span className="font-mono">{c.snapshot.aluno.rut}</span>
+              }
               image={c.aluno_photo_url}
             />
           )}
