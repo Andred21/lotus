@@ -1,4 +1,4 @@
-import { AppCard } from '@shared/ui'
+import { AppCard, StatValue } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 import { formatUf } from '@shared/lib'
 
@@ -7,7 +7,7 @@ import { formatUf } from '@shared/lib'
 export function BudgetStatCard({ label, value, tone }: { label: string; value?: string; tone?: AppCardTone }) {
   return (
     <AppCard variant="stat" tone={tone}>
-      <p className="text-2xl font-semibold">{formatUf(value ?? '0')} UF</p>
+      <p><StatValue size="card">{formatUf(value ?? '0')} UF</StatValue></p>
       <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{label}</p>
     </AppCard>
   )
