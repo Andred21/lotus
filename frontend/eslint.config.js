@@ -197,6 +197,30 @@ const DISABLED_READONLY_ESTATICO = {
   message:
     'Campo que nasce só-leitura não é input desabilitado: use <FormField readOnly value={…}> — o input corta o valor e derruba o contraste (spec BD-3 §4).',
 }
+// `AppDropdown` sem nome acessível. O mesmo defeito foi corrigido À MÃO em
+// quatro sítios, por três runs independentes (`TurmaStatusFilter`,
+// `BudgetStatusFilter`, `EmissionPanel`, `HistorialTable`), e a quinta
+// ocorrência nasceu verde: o filtro de tipo de documento do
+// `BudgetDocumentsCard`. Quatro correções e zero catraca é a definição de
+// dívida (`D-62`).
+//
+// Mede a FORMA, não a grafia: `AppDropdown` que não descende de um `FormField`
+// — que entrega o `inputId` por contexto, e é a grafia CERTA dos 11 sítios de
+// formulário — e que não declara `inputId`, `aria-label` nem `aria-labelledby`
+// por conta própria. Grep pela grafia de hoje casaria só os filtros de hoje;
+// foi a lição do seletor deste arquivo que nasceu casando só `arguments.0`.
+//
+// `NestedField` NÃO conta como pai válido, de propósito: ele não monta
+// `FieldContext`, então um dropdown dentro dele fica sem nome do mesmo jeito.
+// Hoje não há nenhum; quando houver, reprova.
+const DROPDOWN_SEM_NOME = {
+  selector:
+    'JSXElement[openingElement.name.name="AppDropdown"]' +
+    ':not(JSXElement[openingElement.name.name="FormField"] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
+  message:
+    'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
+}
 // Item 17: toda coluna declara largura, e toda coluna com ação fica presa à
 // direita. As duas nascem DEPOIS de as 15 tabelas cumprirem — regra ligada antes
 // deixa o lint vermelho durante catorze tasks.
@@ -342,7 +366,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -355,7 +379,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -376,7 +400,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se

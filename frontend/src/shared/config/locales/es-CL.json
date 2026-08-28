@@ -533,6 +533,7 @@
     "documents": "Documentos",
     "uploadDocument": "Subir documento",
     "noDocuments": "Sin documentos",
+    "fileTypeLabel": "Tipo de documento",
     "fileTypeInvoice": "Factura",
     "fileTypeReceipt": "Comprobante",
     "confirmDeleteTitle": "¿Eliminar presupuesto?",

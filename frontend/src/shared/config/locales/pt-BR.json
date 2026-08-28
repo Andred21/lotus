@@ -533,6 +533,7 @@
     "documents": "Documentos",
     "uploadDocument": "Enviar documento",
     "noDocuments": "Sem documentos",
+    "fileTypeLabel": "Tipo de documento",
     "fileTypeInvoice": "Fatura",
     "fileTypeReceipt": "Comprovante",
     "confirmDeleteTitle": "Excluir orçamento?",
