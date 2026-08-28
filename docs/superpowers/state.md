@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend-estilizacao-padronizacao-de-componentes
 active_work_item: frontend-estilizacao-padronizacao-de-componentes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md
 context_packet: null
 blocker: null
 lanes:
@@ -44,20 +44,20 @@ lanes:
   lane-c:
     active_feature: frontend-estilizacao-padronizacao-de-componentes
     active_work_item: frontend-estilizacao-padronizacao-de-componentes
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../fix-frontend
     branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736 na promocao; PR #80 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: b7283736
-updated_at: 2026-08-28T15:50:00-03:00
+updated_at: 2026-08-28T18:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (mesclada, PR #78) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `planning` |
+| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_execution` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -206,6 +206,29 @@ que `focused_lane` e os campos do topo são fronteira durável do main tree, mas
 os singulares — lane sem espelho apontando para si é planejada contra a lane errada. É o **quarto**
 caso da mesma pendência, registrado na ficha dela; não é exceção nova nem reescrita da invariante,
 que segue aguardando a decisão do João.
+
+### Planejamento fechado — 2026-08-28
+
+Spec em `specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md`, plano em
+`plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md`: 17 tasks, 93 passos,
+executor `claude`. A escrita do plano mediu três coisas que **corrigem** o desenho e valem sobre o
+texto da spec, e estão registradas na seção "Correções ao desenho" do próprio plano:
+
+1. **D1 (Sidebar):** o asset é PNG, não SVG — não há `viewBox` a corrigir. Medida a caixa opaca de
+   `LogoDark.png` (335×466): padding de 31/12/15/27px, que renderizado vale ~8px e **não** explica
+   os 60px do `ml-15`. Recortar o asset não fecha o achado; o que sai é o empurrão manual, e o
+   `h-30` fica porque é a altura do wordmark.
+2. **D3 (Login):** a limitação §7 da spec está **paga e passa**. `--shell-ink` mede 8,71:1 e 9,86:1
+   contra as duas pontas do `--brand-gradient`; `--shell-ink-muted`, 4,93:1 e 5,57:1. Os dois
+   passam o 4,5:1 na ponta pior.
+3. **`D-62`:** o seletor de lint foi rodado **antes** de virar task. Reprova exatamente uma
+   ocorrência viva — `BudgetDocumentsCard.tsx:36`, a quinta que a ficha previa nascer verde — e a
+   sonda negativa (remover o `inputId` de `TurmaStatusFilter.tsx:44`) reprova nomeando o arquivo.
+   Os 11 `AppDropdown` dentro de `FormField` recebem o `inputId` por contexto e são grafia certa.
+
+Um ponto que a spec não decidiu e o plano fixa: `FormSection` e os quatro `h3` de operation
+consomem `SectionLabel` com `rule={false}`, para que os 8 sítios do Dashboard fiquem
+byte-idênticos e nenhuma hairline nova apareça onde achado nenhum pediu.
 
 **A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
 `refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
