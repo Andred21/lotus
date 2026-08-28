@@ -20,7 +20,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-auditoria-privacidade-e-observabilidade   # fechada em 2026-08-28; ainda não mesclada
+    branch: feat/hardening-auditoria-privacidade-e-observabilidade   # fechada em 2026-08-28; PR #81 aberto
     active_spec: null
     active_plan: null
     context_packet: null
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
 state_basis_commit: 17e266b9
-updated_at: 2026-08-28T15:40:00-03:00
+updated_at: 2026-08-28T16:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (fechada em 2026-08-28, não mesclada) | `idle` |
+| `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (PR #81, aberto) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
 
@@ -174,8 +174,9 @@ disjuntas, colisão mínima de arquivos:
 
 **A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
 narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70` e **ainda não foi
-mesclada**: é o PR a abrir. A árvore é o main tree, que não se destrói. A lane não recebe item novo
+`feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70`, recebeu o merge
+da `main` de PR #77/#80 com o gate refeito sobre ele, e está em **PR #81**, aberto para o João
+mesclar. A árvore é o main tree, que não se destrói. A lane não recebe item novo
 sozinha: promoção é do João, contra o `backlog.md`.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
