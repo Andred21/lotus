@@ -44,7 +44,7 @@ export function Sidebar() {
         {collapsed ? (
           <AppLogo variant="glyph" className="h-9 w-auto" />
         ) : (
-          <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />
+          <AppLogo variant="on-dark" className="h-30 w-auto" />
         )}
 
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
