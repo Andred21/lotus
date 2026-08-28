@@ -8,7 +8,7 @@ workflow_state: idle
 next_owner: joao
 next_action: select_backlog_item
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
 blocker: null
@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
     blocker: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_planning` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `planning` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -202,6 +202,17 @@ RBAC/FK principais". Nada menciona Redis nem cache — "Redis não é requisito"
 teto de `per_page`, eventuais guardas numéricas e o dono dos 30 dias da D-15 são decisões de
 engenharia do brainstorming, não regra de negócio ausente — por isso `ready`, não `blocked`. Packet
 salvo em `context-packets/2026-08-28-hardening-performance-e-dados.md`.
+
+**Brainstorming do item 6 — 2026-08-28, spec escrita.** Cinco decisões do João, todas de
+engenharia: paginam no servidor só as listas que crescem sem teto (`students`, `certificates`,
+`turmas` ativo e arquivado); cenário de medição em ordem de grandeza segura (~5k alunos, ~6k
+certificados); o painel de emissão ganha janela por data (12 meses) em vez de página, porque o lote
+depende da turma inteira em memória; contrato próprio em `App\Shared\Pagination`, não o
+`LengthAwarePaginator`; D-15 com dono único em `Shared` — são **três** trintas, não dois. O
+levantamento mediu zero paginação na API e um frontend client-side por desenho, o que fez o custo da
+opção escolhida subir para o kit compartilhado (`useServerTable`, modo `lazy` em
+`AppDataTable`/`SearchableTableFrame`); o João manteve o bloco inteiro aqui. Spec em
+`specs/2026-08-28-hardening-performance-e-dados-design.md`; o plano vem a seguir.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
 fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
