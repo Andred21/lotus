@@ -48,7 +48,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; ainda não mesclada
+    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; PR #80 aberto
     active_spec: null
     active_plan: null
     context_packet: null
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (fechada, sem merge) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -180,8 +180,9 @@ do João, contra o `backlog.md`.
 
 **A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
 `historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
-segue viva e a branch `refactor/frontend-hardening-final` **ainda não foi mesclada**: é o PR a
-abrir. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
 **item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
 5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
 navegador contra o código pós-review.
