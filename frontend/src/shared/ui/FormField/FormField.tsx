@@ -141,7 +141,7 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
        * independente, e sem marcador três erros leem como um parágrafo
        * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
        * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
-      className="mb-4 list-inside list-disc rounded px-3 py-2 text-sm"
+      className="mb-4 list-inside list-disc rounded-md px-3 py-2 text-sm"
       style={{
         background: dangerSurface,
         color: dangerText,
@@ -178,7 +178,7 @@ export function FormErrorBanner({ message, variant = 'box' }: FormErrorBannerPro
   return (
     <p
       role="alert"
-      className="mb-4 rounded px-3 py-2 text-sm"
+      className="mb-4 rounded-md px-3 py-2 text-sm"
       style={{
         background: dangerSurface,
         color: dangerText,

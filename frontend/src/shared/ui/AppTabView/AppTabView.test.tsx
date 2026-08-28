@@ -49,4 +49,22 @@ describe('AppTabView', () => {
 
     expect(root(container).className).toContain('p-tabview-scrollable')
   })
+
+  /**
+   * `...(pt ?? appTabViewPt)` apagava o default de quem passasse QUALQUER `pt`
+   * (achado C3): um chamador que só quisesse ajustar o `nav` perdia o `p-0` do
+   * `panelContainer` em silêncio. É a mesma família do Q-5 do review do item 8 —
+   * e o remédio é o `mergePt`, que `AppDialog`, `AppDatePicker`, `AppDataTable`,
+   * `AppFileUpload` e `AppPassword` já usam.
+   */
+  it('o `pt` do chamador funde com o default, não o substitui', () => {
+    const { container } = render(
+      <AppTabView pt={{ nav: { className: 'marca-do-chamador' } }}>
+        <AppTabPanel header="Uno"><p>uno</p></AppTabPanel>
+      </AppTabView>,
+    )
+
+    expect(container.querySelector('.marca-do-chamador')).not.toBeNull()
+    expect(container.querySelector('.p-tabview-panels')?.className).toContain('p-0')
+  })
 })
