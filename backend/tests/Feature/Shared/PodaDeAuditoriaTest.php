@@ -134,6 +134,57 @@ class PodaDeAuditoriaTest extends TestCase
         $this->assertSame(0, DB::table('audits')->count());
     }
 
+    /**
+     * Achado Q-6 do review de 2026-08-28. O teste acima planta linhas de 6 anos,
+     * então exercita só o DESCARTE — e o descarte é a fase mansa: cada passada
+     * some com as linhas que contou, e o laço fecha sozinho.
+     *
+     * O risco real está aqui. A anonimização faz `UPDATE`, não `DELETE`: a linha
+     * continua lá depois de anonimizada, e o que impede o `do...while` de
+     * refazer o mesmo chunk para sempre é o filtro dos três campos NOT NULL em
+     * `PodarAuditoria::anonimizar()`. Sem esta asserção, remover esse filtro
+     * trava a poda em produção toda madrugada sem reprovar teste nenhum — o
+     * comentário que avisa disso no comando era instrução, não catraca
+     * (lição 14).
+     */
+    public function test_anonimizacao_atravessa_mais_de_um_chunk(): void
+    {
+        // Dentro da janela dos 12 meses/5 anos: perde a PII e CONTINUA na tabela.
+        $criadaEm = now()->subMonths(18)->toDateTimeString();
+        $linhas = [];
+
+        for ($i = 0; $i < RetentionPolicy::CHUNK + 5; $i++) {
+            $linhas[] = [
+                'user_type' => 'user',
+                'user_id' => 1,
+                'event' => 'updated',
+                'auditable_type' => 'client',
+                'auditable_id' => 99,
+                'old_values' => '{"name":"antes"}',
+                'new_values' => '{"name":"depois"}',
+                'url' => 'https://lotus.cl/api/clients/99',
+                'ip_address' => '203.0.113.9',
+                'user_agent' => 'Mozilla/5.0',
+                'tags' => null,
+                'created_at' => $criadaEm,
+                'updated_at' => $criadaEm,
+            ];
+        }
+
+        DB::table('audits')->insert($linhas);
+
+        $this->artisan('lotus:podar-auditoria')->assertSuccessful();
+
+        // A trilha inteira sobrevive — nenhuma linha some aos 18 meses.
+        $this->assertSame(RetentionPolicy::CHUNK + 5, DB::table('audits')->count());
+
+        // E as 5 que sobraram do primeiro chunk também perderam a PII: só zera
+        // se o comando tiver dado mais de uma passada de anonimização.
+        $this->assertSame(0, DB::table('audits')->whereNotNull('ip_address')->count());
+        $this->assertSame(0, DB::table('audits')->whereNotNull('user_agent')->count());
+        $this->assertSame(0, DB::table('audits')->whereNotNull('url')->count());
+    }
+
     public function test_usuario_real_auditado_continua_sendo_auditado_depois_da_poda(): void
     {
         $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);

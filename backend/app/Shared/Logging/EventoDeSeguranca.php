@@ -4,6 +4,7 @@ namespace App\Shared\Logging;
 
 use Illuminate\Support\Facades\Log;
 use Psr\Log\LogLevel;
+use Throwable;
 
 /**
  * Único caminho de escrita de evento de segurança (spec §4.5). A centralização
@@ -101,9 +102,33 @@ final class EventoDeSeguranca
         self::escrever(LogLevel::INFO, $evento, $dados);
     }
 
-    /** @param array<string,scalar|null> $dados */
+    /**
+     * Ponto ÚNICO de escrita — e, por isso, ponto único de contenção.
+     *
+     * A catraca 5 da spec ("alerta que quebra não pode derrubar a resposta")
+     * vale para o log tanto quanto para o e-mail: o canal `seguranca` escreve
+     * em `php://stderr` e pode falhar, e cada chamador desta fachada está num
+     * caminho que precisa terminar do jeito certo mesmo assim — o `422` de
+     * senha errada, o `401` que revoga a sessão de conta desativada, o `403`
+     * que sai pelo handler global. Conter aqui dentro cobre TODOS os sítios de
+     * uma vez, inclusive os que ainda não existem; conter em cada chamador
+     * dependeria de alguém lembrar (lição 14).
+     *
+     * A falha não some: vai para o canal default pela `FalhaDeObservabilidade`,
+     * que registra classe/código/origem e nunca a mensagem crua.
+     *
+     * @param  array<string,scalar|null>  $dados
+     */
     private static function escrever(string $nivel, string $evento, array $dados): void
     {
-        Log::channel(self::CANAL)->log($nivel, 'lotus.seguranca', ['evento' => $evento] + $dados);
+        try {
+            Log::channel(self::CANAL)->log($nivel, 'lotus.seguranca', ['evento' => $evento] + $dados);
+        } catch (Throwable $falha) {
+            FalhaDeObservabilidade::registrar(
+                'Falha ao gravar evento no canal de seguranca',
+                $falha,
+                ['evento' => $evento],
+            );
+        }
     }
 }

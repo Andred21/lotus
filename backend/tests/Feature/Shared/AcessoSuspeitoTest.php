@@ -9,6 +9,7 @@ use App\Shared\Alerts\Notifications\AcessoSuspeito;
 use App\Shared\Logging\EventoDeSeguranca;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -168,6 +169,44 @@ class AcessoSuspeitoTest extends TestCase
         // O alerta foi registrado no log mesmo com o envio quebrado, e nenhuma
         // exceção escapou.
         $this->assertCount(1, $this->alertas());
+    }
+
+    /**
+     * Achado Q-5 do review de 2026-08-28. O `catch` que segura o envio escreve
+     * no canal DEFAULT, fora do alcance da catraca 4 — e a exceção de
+     * transporte do Symfony Mailer carrega a resposta crua do servidor SMTP,
+     * onde o destinatário aparece. Registrar `getMessage()` ali devolvia pela
+     * porta dos fundos exatamente o dado que a fachada de segurança foi
+     * desenhada para manter fora do log.
+     */
+    public function test_falha_de_envio_nao_leva_endereco_de_email_para_o_log(): void
+    {
+        $this->admin();
+
+        $capturado = [];
+        Log::listen(function (MessageLogged $registro) use (&$capturado) {
+            $capturado[] = [$registro->message, $registro->context];
+        });
+
+        Notification::swap(new class extends ChannelManager
+        {
+            public function __construct() {}
+
+            public function send($notifiables, $notification)
+            {
+                throw new \RuntimeException('550 5.1.1 <vitima@lotus.cl>: Recipient address rejected');
+            }
+        });
+
+        app(DetectorDeAcessoSuspeito::class)->sessaoDeContaDesativada(4242, '203.0.113.9');
+
+        $tudo = json_encode($capturado);
+
+        $this->assertStringNotContainsString('vitima@lotus.cl', $tudo);
+        // A falha não pode sumir junto com a mensagem: classe e origem bastam
+        // para investigar e não carregam PII.
+        $this->assertStringContainsString('Falha ao enviar alerta de acesso suspeito', $tudo);
+        $this->assertStringContainsString('RuntimeException', $tudo);
     }
 
     public function test_403_real_pela_api_dispara_a_familia(): void

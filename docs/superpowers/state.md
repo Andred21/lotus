@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: hardening
 active_work_item: hardening-auditoria-privacidade-e-observabilidade
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
 active_plan: docs/superpowers/plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-auditoria-privacidade-e-observabilidade
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/hardening-auditoria-privacidade-e-observabilidade
     active_spec: docs/superpowers/specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-revisao-ui-por-modulo-f2
 last_completed_work_item: hardening-api-arquivos-e-abuso
-state_basis_commit: 87872ad9
-updated_at: 2026-08-27T10:00:00-03:00
+state_basis_commit: df9533eb
+updated_at: 2026-08-28T14:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_review` |
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_closure` |
 | `lane-b` | `cicd-ci-governanca-e-artefato` (item 11) | GitHub/Infra | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #75) | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f2` (fechada em 2026-08-25, não mesclada) | `idle` |
 
@@ -281,6 +281,56 @@ detector faz exatamente o que a D6 escreveu; mudar qualquer das três é redefin
 **P-63**, que já era a ficha da assimetria de ADR entre D5 e D6/D7/D8, porque é a mesma conversa. A
 lacuna de índice da poda de `login_logs`, medida nos reviews das Tasks 1 e 4 e fora do escopo do
 plano nas duas, virou a **P-64**.
+
+**Review do bloco e os seis achados corrigidos — 2026-08-28.** Bloco classificado **alto risco**
+(migration nova, caminho de auth/Sanctum, trilha de auditoria com peso legal e a costura de 403),
+então o review veio com a segunda lente independente do Codex em sandbox read-only. Nenhum órfão,
+nenhuma dependência nova, nenhuma lei da §5 ferida. Seis achados, **todos aprovados pelo João e
+corrigidos na mesma sessão**, cada um com a catraca vista reprovando antes de valer (lição 10):
+
+- **Q-1 🔴 — a contenção da catraca 5 era assimétrica.** O review anterior blindou a costura do
+  handler global e parou aí: `AuthController::login()`/`logout()` e `EnsureAccountIsActive` seguiam
+  chamando log e detector sem guarda. Um canal de log fora do ar transformava o `422` de senha
+  errada num `500` — e no middleware era pior, porque a linha de observabilidade sai ANTES de
+  `session()->invalidate()` (ordem exigida por `EventosDeAcessoTest`): a exceção subia com a sessão
+  da conta desativada **ainda viva**. A contenção foi para DENTRO do `EventoDeSeguranca` e do
+  `DetectorDeAcessoSuspeito`, cobrindo os sítios que ainda não existem, e a catraca nova
+  (`ObservabilidadeContidaTest`) quebra a dependência real — canal, limitador, cache —, não a classe
+  contida: as sete asserções reprovaram com a proteção removida.
+- **Q-2 🟡 — o serviço `scheduler` não tinha catraca.** `PodaAgendadaRatchetTest` provava as entradas
+  do `Schedule`; nada provava o container que as executa, e apagar o serviço deixava a suíte inteira
+  verde com a poda parada em produção. Entrou no `compose-prod.test.ts`, que já é a catraca desse
+  arquivo — provado apagando o bloco.
+- **Q-3 🔴 — `operacao-segredos.md` §5 prometia uma revogação que o próprio procedimento impedia.**
+  Dizia que rotacionar o `APP_KEY` derruba toda sessão viva, enquanto mandava mover a chave velha
+  para `APP_PREVIOUS_KEYS` — e `Encrypter::getAllKeys()` devolve `[$this->key, ...$this->previousKeys]`
+  com o `decrypt()` percorrendo a lista inteira, então o cookie antigo **continua abrindo**. O erro
+  apontava para o lado perigoso: quem rotacionasse para expulsar sessão roubada acreditaria ter
+  revogado o que seguia valendo. A seção virou dois procedimentos separados — 5.1 planejada (não
+  derruba ninguém) e 5.2 por comprometimento (chave velha fora da lista **mais** `DELETE FROM
+  sessions`, porque só a chave não garante).
+- **Q-4 🟡 — o inventário de segredos não tinha o segredo de e-mail que produção usa.** Documentava
+  SES pelo par IAM, mas `.env.production.example:106` seleciona `MAIL_MAILER=smtp`, cujo segredo é
+  `MAIL_PASSWORD`. Entrou no inventário e ganhou procedimento de rotação com a prova certa — um
+  e-mail de teste que chega —, porque e-mail é a única superfície do inventário cuja falha é
+  assintomática do lado de dentro. O bloco SES ficou marcado como caminho do item 10, não corrente.
+- **Q-5 🟡 — `getMessage()` cru podia levar endereço de e-mail ao log default.** A exceção de
+  transporte do Symfony Mailer carrega a resposta do SMTP com o destinatário dentro. Os dois `catch`
+  passaram pela `FalhaDeObservabilidade` nova, que registra classe/código/origem e **nunca** a
+  mensagem; a catraca planta um `550 ... <vitima@lotus.cl>` e exige que ele não apareça em log
+  nenhum.
+- **Q-6 🟢 — a fase de anonimização da poda não tinha teste de chunk.** O teste existente plantava
+  linhas de 6 anos, ou seja, exercitava só o descarte; o laço com risco de não terminar é o do
+  `UPDATE`. Coberto, e provado com a regressão simulada (uma passada só deixa 5 linhas com PII).
+
+**Um sétimo defeito apareceu por rodar a suíte que o review anterior não rodou.** `pnpm test` estava
+**vermelho no `HEAD` do bloco**: o ADR-21 cita `backend/config/logging.php:134-142` e a spec por
+faixa de linha, e a catraca `repo-docs-refs` não sabia ler o sufixo `:NN-NN` — path com número de
+linha nunca resolvia. Corrigido no lado da catraca, não da doc: citação line-precise é a convenção do
+projeto, e a guarda agora recorta o sufixo **e confere** que o arquivo tem a linha citada. Ficou
+estritamente mais forte que antes — reprova citação que aponta para além do fim do arquivo, defeito
+que passava batido. Suíte final: backend `1047 passed, 5 skipped`; frontend `607 passed`, lint e
+build limpos.
 
 **Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** O fechamento
 do item 11 (`ce651752`, `lane-b`) vive só em `cicd/ci-governanca-e-artefato`, e a promoção do item 8

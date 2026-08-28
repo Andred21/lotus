@@ -6,7 +6,6 @@ use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
@@ -65,9 +64,10 @@ class RegistraEventoDeErro
         try {
             self::registrar($e, $request);
         } catch (Throwable $falha) {
-            Log::error('Falha ao registrar evento de seguranca a partir do handler global', [
-                'erro' => $falha->getMessage(),
-            ]);
+            FalhaDeObservabilidade::registrar(
+                'Falha ao registrar evento de seguranca a partir do handler global',
+                $falha,
+            );
         }
     }
 
