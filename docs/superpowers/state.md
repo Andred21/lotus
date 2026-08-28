@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+focused_lane: lane-c
+active_feature: frontend-estilizacao-padronizacao-de-componentes
+active_work_item: frontend-estilizacao-padronizacao-de-componentes
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -20,7 +20,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-api-arquivos-e-abuso
+    branch: feat/hardening-api-arquivos-e-abuso   # mesclada em 2026-08-26 (PR #78)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -42,13 +42,13 @@ lanes:
     resume_state: null
     last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: frontend-estilizacao-padronizacao-de-componentes
+    active_work_item: frontend-estilizacao-padronizacao-de-componentes
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../fix-frontend
-    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; PR #80 aberto
+    branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736 na promocao; PR #80 mesclado em 2026-08-28
     active_spec: null
     active_plan: null
     context_packet: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-api-arquivos-e-abuso
-state_basis_commit: 4dd5075a
-updated_at: 2026-08-28T13:55:00-03:00
+state_basis_commit: b7283736
+updated_at: 2026-08-28T14:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -157,13 +157,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-24
+## Ocupação corrente — 2026-08-28
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (PR #78, aberto) | `idle` |
+| `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (mesclada, PR #78) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
+| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -174,18 +174,38 @@ disjuntas, colisão mínima de arquivos:
 
 **A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a`, está em **PR #78** e mescla a `main`
+`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a`, foi mesclada pelo **PR #78** em 2026-08-26 e mesclou a `main`
 de PR #73/#75/#76/#77 para dentro neste commit; a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
 do João, contra o `backlog.md`.
 
 **A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
 `historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
-segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+segue viva e a branch `refactor/frontend-hardening-final` foi mesclada pelo **PR #80** em 2026-08-28 (merge `b7283736`), com a `main` de
 PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
 frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
 **item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
 5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
 navegador contra o código pós-review.
+
+## Promoção — 2026-08-28: o item 18 entra na `lane-c`
+
+O João promoveu explicitamente o **item 18**, `frontend-estilizacao-padronizacao-de-componentes`,
+depois da análise desta data sobre `backlog.md`, `pendencias/` e `audits/`. A dependência dele — o
+item 8 — fechou em 2026-08-27, e a fonte é o `audits/2026-08-26-estilizacao-componentes.md`: **18
+achados medidos, nenhum aplicado**. `Contexto: não`, então o bloco nasce em `ready_for_planning`,
+sem packet. A **P-63** já está agrupada nele desde o fechamento do item 8.
+
+**A `D-62` entra junto, por decisão do João no mesmo ato.** O hospedeiro dela era o item 8, que
+fechou pagando `P-46`/`D-03`/`D-33`/`D-35` e **não** a D-62 — medido aqui: `frontend/eslint.config.js`
+não tem uma linha sobre `AppDropdown`, `inputId` ou `aria-label`, e a quarta ocorrência do defeito
+nasceria verde. O remédio mora no mesmo arquivo que este bloco toca. A **D-34** continua **sem
+hospedeiro**: o outro candidato natural é o item 9, e escolher é do João.
+
+**Este commit escreve o espelho singular a partir da worktree, e isso é a P-55.** A invariante diz
+que `focused_lane` e os campos do topo são fronteira durável do main tree, mas `/planejar-bloco` lê
+os singulares — lane sem espelho apontando para si é planejada contra a lane errada. É o **quarto**
+caso da mesma pendência, registrado na ficha dela; não é exceção nova nem reescrita da invariante,
+que segue aguardando a decisão do João.
 
 **A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
 `refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e

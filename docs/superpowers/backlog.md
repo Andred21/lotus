@@ -309,6 +309,14 @@ redesenho:** o audit mede o código contra a direção JÁ fechada e declara por
    logo da sidebar sem os números mágicos `ml-15 h-30`; tinta de apoio do Login vira `--shell-ink*`
    (C1, C2, C3, C4, D1, D3, E1).
 
+**Anexado na promoção de 2026-08-28: a `D-62`.** Nenhuma catraca reprova um `AppDropdown` de filtro
+sem nome acessível — o mesmo defeito foi corrigido à mão em quatro sítios, por três runs
+independentes, e a quinta ocorrência nasce verde. O hospedeiro dela era o item 8, que fechou sem
+pagá-la. Entra aqui porque o remédio é regra de lint por FORMA no `frontend/eslint.config.js` — o
+mesmo arquivo e a mesma frente das quatro fases acima —, e porque a fase 1 varre call sites de
+`shared/ui` de qualquer jeito. A régua se mede com o próprio seletor antes de virar catraca (lição
+do `eslint.config.js` que nasceu casando só `arguments.0`).
+
 **Dependia do `frontend-hardening-final` (item 8), que fechou em 2026-08-27 — a dependência está
 satisfeita, e o item 18 é promovível.** Os achados A2, D2 e E2 dependiam do estado pós-mini-reset
 para não medir duas vezes; e o item 8 tocou `SidebarItem`, `index.css` e `eslint.config.js`. O
@@ -322,7 +330,9 @@ direção é instrumental e acrescentar animação seria decoração sem tese.
 
 **DoD:** screenshot antes/depois por fase via `/lotus-ui-review` nos dois temas; guarda de grep com
 zero `variant="brandIcon"` carregando `label`, zero número de stat sem `tabular-nums`, zero
-folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras novas escritas em
+folio/RUT sem mono nas telas tocadas; a **D-62** provada pela sonda negativa da ficha — remover o
+`inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o arquivo;
+lint + build + suíte verdes; e as regras novas escritas em
 `.claude/rules/` no mesmo PR — o audit vira mecanismo, não recomendação solta.
 
 ---
@@ -371,26 +381,16 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
 
 ## Agrupados em bloco
 
+> **Saneamento de 2026-08-28:** as fichas `D-57` e `D-39` saíram daqui — as duas estavam **pagas**
+> (fatia 2 e fatia 1 do item 16) e as próprias fichas pediam a saída no primeiro saneamento. O
+> rastro fica nos commits e em `historico/progress.md`. A `D-62` foi rehospedada no item 18; a
+> `D-34` segue sem hospedeiro, e escolher é do João.
+
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
   `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
   `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
   chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
   falta aplicar.
-
-- **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
-  `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
-  `TurmaComplianceData.missing_types` e `TurmaData.missing_document_types` são `string[]` no
-  `generated.ts`, embora o conjunto de valores seja exatamente `TurmaDocumentType`. O frontend já
-  fechou a metade dele em 2026-08-24 (Q-4): o mapa `TURMA_DOCUMENT_TYPE_KEY` é exaustivo por
-  compilador e a catraca exige a chave nas 3 locales — mas o helper precisa aceitar `string`, e o
-  `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
-  o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
-  `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
-  **PAGA em 2026-08-25**, na fatia 2 do `frontend-revisao-ui-por-modulo`: a cadeia da RN-16 carrega
-  `TurmaDocumentType` de `TurmaHabilitacaoService` até os DTOs, os quatro campos (`missing_types`
-  ×2, `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum
-  no `generated.ts`, e `turmaDocumentTypeLabel` perdeu o fallback de código cru. Fica aqui como
-  registro; sai da lista no próximo saneamento dos débitos.
 
 - **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
   `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
@@ -433,7 +433,10 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   de orientação aprovada, nas 3 locales.
 
 - **D-62 · Nada reprova um `AppDropdown` de filtro sem nome — o achado já apareceu 3 vezes** →
-  `frontend-hardening-final`. O mesmo defeito foi encontrado por três runs independentes em três
+  `frontend-estilizacao-padronizacao-de-componentes`. **Rehospedada em 2026-08-28**: o hospedeiro
+  anterior era o `frontend-hardening-final`, que fechou em 2026-08-27 pagando `P-46`/`D-03`/`D-33`/
+  `D-35` e **não** esta ficha — medido na promoção do item 18, `frontend/eslint.config.js` não tem
+  uma linha sobre `AppDropdown`, `inputId` ou `aria-label`. O item 18 já toca esse arquivo. O mesmo defeito foi encontrado por três runs independentes em três
   dias, sempre na mesma forma (`<div className="w-48">` com o `AppDropdown` solto dentro, sem
   `<label>`, sem `aria-label` e sem `aria-labelledby`): UI-07 de Operação (2026-08-23, pago no
   `TurmaStatusFilter`), UI-02 de Comercial e UI-01 de Certificados (2026-08-25, pagos no
@@ -479,8 +482,9 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
   Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
   diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
-  novo hospedeiro, e escolhê-lo é do João** (candidatos naturais: `administracao-roles-permissoes-redesign`
-  ou `frontend-hardening-final`). A visibilidade nasce como quatro booleanos em
+  novo hospedeiro, e escolhê-lo é do João**. Dos dois candidatos naturais sobrou um: o
+  `frontend-hardening-final` fechou em 2026-08-27 sem absorvê-la (conferido na promoção do item 18),
+  restando `administracao-roles-permissoes-redesign` (item 9). A visibilidade nasce como quatro booleanos em
   `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
   `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
   `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
@@ -515,15 +519,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
   por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
   cru vindo de `OperationMetricsQuery.php:137`.
-
-- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
-  fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
-  troca de idioma e lê `i18n.language` (`ac4eef8a`); o mock parcial quebrava com
-  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizasse um
-  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. O remédio foi o
-  helper único: `frontend/src/shared/testing/i18n.ts` (`mockUseTranslation`), com catraca própria,
-  consumido pelos **17** testes que mockavam a biblioteca. Fica aqui como registro; sai da lista no
-  próximo saneamento dos débitos.
 
 ## Travados em decisão — não entram em bloco
 

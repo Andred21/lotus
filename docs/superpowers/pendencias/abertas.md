@@ -490,6 +490,12 @@ merge) e proíbe o mecanismo que a operação exige.
 João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
 apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
 
+**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
+para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
+avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
+bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
+segue aberta: quatro precedentes não reescrevem a invariante.
+
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
 **Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta
