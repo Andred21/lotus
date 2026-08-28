@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ValidationState } from '../../hooks/useValidationPage'
 import { ValidationPage } from './ValidationPage'
@@ -125,5 +125,23 @@ describe('ValidationPage titula todos os seus estados', () => {
     const h1 = container.querySelectorAll('h1')
     expect(h1).toHaveLength(1)
     expect(h1[0].textContent).toBe('certificate.validation.valid')
+  })
+})
+
+/**
+ * O folio saía como PRIMEIRO campo de uma `<dl>`, em `text-sm font-medium` — a
+ * mesma grafia do nome do aluno (achados D4 e A4). Quem escaneia o QR está com
+ * o papel na mão para conferir o folio; ele é a assinatura da página, não mais
+ * um campo.
+ */
+describe('a assinatura da validação', () => {
+  it('o folio sai da lista de campos e vira bloco próprio, em mono', () => {
+    validation.current = { kind: 'valid', cert: CERT }
+
+    renderPage()
+
+    const folio = screen.getByText('CERT-1')
+    expect(folio.className).toContain('font-mono')
+    expect(folio.closest('dl')).toBeNull()
   })
 })
