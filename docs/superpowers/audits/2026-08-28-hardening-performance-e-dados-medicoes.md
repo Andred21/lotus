@@ -285,3 +285,72 @@ primeira volta reprovou em `repo-docs-refs.test.ts` porque a ficha de `users` no
 de docs resolve como caminho e não achou; virou o caminho inteiro. E a role
 faltante do seeder (item 3). O flake conhecido de timer pós-teardown em
 `useServerTable.test.tsx` **não reproduziu** nesta volta.
+
+## Gate de fechamento — reprova pós-correções do review (2026-08-29)
+
+O "Gate final" acima foi medido em `c0bcf87a`, **antes** das cinco correções do
+review (`3e24c6ff`). A Q-1 e a Q-2 mudaram exatamente o que os itens 4 e 7
+daquela seção descreviam: o painel de emissão deixou de ligar no mount do
+Historial e o seletor de data deixou de nascer preenchido. Por isso o DoD §7 foi
+**reprovado inteiro** contra `3e24c6ff`, com o mesmo cenário grande no lugar
+(5.045 alunos / 504 turmas / 8.045 matrículas / 6.000 certificados), sessão de
+`admin@lotus.cl` por cookie Sanctum e `Origin` + `Accept` nos GETs.
+
+### API real (`:8080`)
+
+| DoD | Request | Resultado |
+| --- | --- | --- |
+| 1 | `/api/students?per_page=10&q=Camila&sort=-name` | 200, 10 linhas, `meta` = `{page:1, per_page:10, total:253, last_page:26, total_unfiltered:5045}` |
+| 1 | `/api/students?per_page=101` | 422 `application/problem+json` |
+| 1 | `/api/students?sort=email` | 422 `application/problem+json` |
+| 2 | `/api/certificates?display_status=por_vencer&per_page=100` | `{'por_vencer'}`; `summary` `{vigente:1391, por_vencer:91, vencido:4218, revocado:300}` soma **6000** = `total_unfiltered`; `total` 91 |
+| 3 | `/api/turmas?status=habilitada&per_page=100` (admin) | 1 linha, `habilitada: true` com `status: em_andamento`; `total_unfiltered` **504** |
+| 3 | `/api/turmas?per_page=100` (redator `relator258@perf.demo.cl`) | 10 linhas, `total_unfiltered` **10** — o `visibleTo` corta antes da contagem |
+| 3 | `/api/turmas?status=habilitada&per_page=100` (redator) | 0 linhas, `total_unfiltered` segue 10 |
+| 4 | `/api/certificates/emission-panel` (sem parâmetro) | 32 turmas, `end_date` de `2025-08-29` a `2026-06-26` — o piso é hoje − 12 meses, calculado **no backend** |
+| 4 | `/api/certificates/emission-panel?concluidas_desde=2021-01-01` | 501 turmas, safras `2021…2026` |
+
+**Q-1, o caminho que o review abriu.** `LOT-2021-00600` é revogado, e a turma
+dele (54) concluiu em `2021-01-10` — fora da janela default por mais de cinco
+anos. Com `?concluidas_desde=2021-01-10`, que é o `end_date` congelado no
+snapshot daquele certificado, a turma 54 volta ao painel **com a matrícula 844**
+(`approval_status: aprobado`, `certificate: null`); sem parâmetro ela não
+aparece. O painel devolve `emission_blocked: sin_plantilla` para essa turma — o
+curso do cenário semeado não tem plantilla —, que é bloqueio **real e nomeado**,
+não a tarja genérica `reissueUnavailable` que a Q-1 descreveu.
+
+### Navegador (Chromium via `playwright-cli`, locale EN)
+
+| DoD | Tela | Evidência |
+| --- | --- | --- |
+| 7 / Q-2 | `/certificados` → Issuance | campo "Classes concluded since" com `value` **vazio** e `placeholder` "Last 12 months"; o GET sai como `emission-panel` **sem** `concluidas_desde` — o default de `America/Santiago` roda no backend |
+| 7 / Q-1 | `/certificados` → History (mount) | único GET é `/api/certificates?page=1&per_page=10`; **nenhum** `emission-panel` no mount |
+| 7 / Q-1 | History → "Reissue" em `LOT-2021-00600` | dispara `emission-panel?concluidas_desde=2021-01-10` e o diálogo mostra "The course has no certificate template" (`sin_plantilla`), não `reissueUnavailable` |
+| 7 | History | rodapé "1391 valid · 91 expiring · 4218 expired · 300 revoked" = `meta.summary` |
+| 7 / Q-4 | `/operacion` | nenhum `columnheader` da tabela de turmas é clicável — a "Code" perdeu o `sortable`; rodapé "504 classes" = `meta.total` |
+| 7 / Q-3 | `/operacion`, página 3 → "Archived" | `GET /api/turmas/archived?page=1&per_page=10` — a troca de modo volta à página 1, sem o `page=3` desperdiçado |
+| 7 | `/personas` → Students | rodapé "5045 students"; página 3 dispara `?page=3&per_page=10` |
+| 7 | Students, página 3 → "View" | diálogo abre por `GET /api/students/984` (fallback `useOne`), aluno `alumno1246@perf.demo.cl` |
+
+Console: **um** erro, o mesmo warning React de `key` em `TableBody` já registrado
+acima como fora do escopo. Nenhum erro novo.
+
+### Gate mecânico da reprova
+
+| Comando | Saída |
+| --- | --- |
+| `docker compose exec -T app php artisan test` | **1108 passed / 5 skipped** (3.974 asserções, 95,74 s) |
+| `php artisan typescript:transform` + `git status --short` | árvore limpa — nenhum diff residual |
+| `pnpm lint` | 0 problemas |
+| `pnpm build` | verde (`tsc -b` + `vite build`) |
+| `pnpm test` | **114 arquivos / 647 testes** verdes |
+| `./vendor/bin/pint --test` (58 arquivos PHP do diff) | `{"tool":"pint","result":"passed"}` |
+| `grep "= 30;"` nos três sítios antigos | sem saída — `JanelaDeAviso::DIAS` é o dono único |
+
+**Flake registrado, não escondido.** A primeira volta do `pnpm test` reprovou com
+um erro não tratado originado em `useTurmasPage.test.tsx` — o mesmo timer
+pós-teardown que a seção anterior registrou em `useServerTable.test.tsx`, agora
+no arquivo que a Q-3 ganhou. A segunda volta passou limpa (647/647, exit 0), e o
+arquivo isolado passou **5 vezes de 5** (`pnpm vitest run
+src/features/operation/hooks/useTurmasPage.test.tsx`). Nenhuma asserção reprovou
+em volta nenhuma; o que oscila é o desligamento do timer, não o comportamento.

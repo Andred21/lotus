@@ -23,6 +23,165 @@
 
 ---
 
+## Fechado em 2026-08-29 — `hardening-performance-e-dados`, item 6 da fila
+
+**A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
+narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70`, recebeu o merge
+da `main` de PR #77/#80 com o gate refeito sobre ele, e **mesclou pelo PR #81** (merge `f584432b`).
+A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João,
+contra o `backlog.md`.
+
+**Promoção do item 6 — 2026-08-28, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o
+Context Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`),
+em sandbox read-only. A branch `feat/hardening-performance-e-dados` sai de `main@f584432b`, que já é
+`origin/main` e traz o merge do próprio item 5. **Árvore:** main tree, pelo precedente de todo bloco
+de backend. O espelho já apontava para a `lane-a` — não houve troca de foco neste commit.
+
+**Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** A `lane-b`
+promoveu o item 10 (`4a33f835`, `50f3a1f3`) em `infra/producao-provisionamento-aws`, e a `lane-c`
+promoveu o item 18 (`daa90d6b`, `6e86f251`) em `refactor/frontend-estilizacao-componentes`; as duas
+estão em `ready_for_planning`/`planning` nas próprias árvores. Por isso o `state.md` da `main` ainda
+descreve as duas em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi escrito por este
+commit.** Não há colisão de escopo: o item 10 é provisionamento AWS e o item 18 é frontend puro; este
+bloco é backend e o único que regenera `generated.ts`.
+
+**O Context Packet do item 6 voltou `ready` — 2026-08-28.** O Codex leu o `requisitos-negocio.md` do
+Drive por ID e a task Notion 9.1.3 na base canônica. **Nenhuma fonte fixa número**: o RNF-DES-01 pede
+resposta "quase instantânea" sem SLA, o RNF-DES-02 fixa só os 10 usuários simultâneos, o RNF-DES-03
+pede documento acessível "imediatamente" sem prazo; a 9.1.3 tem aceite único, "Sem N+1 nas consultas
+RBAC/FK principais". Nada menciona Redis nem cache — "Redis não é requisito" do backlog fica de pé. O
+teto de `per_page`, eventuais guardas numéricas e o dono dos 30 dias da D-15 são decisões de
+engenharia do brainstorming, não regra de negócio ausente — por isso `ready`, não `blocked`. Packet
+salvo em `context-packets/2026-08-28-hardening-performance-e-dados.md`.
+
+**Brainstorming do item 6 — 2026-08-28, spec escrita.** Cinco decisões do João, todas de
+engenharia: paginam no servidor só as listas que crescem sem teto (`students`, `certificates`,
+`turmas` ativo e arquivado); cenário de medição em ordem de grandeza segura (~5k alunos, ~6k
+certificados); o painel de emissão ganha janela por data (12 meses) em vez de página, porque o lote
+depende da turma inteira em memória; contrato próprio em `App\Shared\Pagination`, não o
+`LengthAwarePaginator`; D-15 com dono único em `Shared` — são **três** trintas, não dois. O
+levantamento mediu zero paginação na API e um frontend client-side por desenho, o que fez o custo da
+opção escolhida subir para o kit compartilhado (`useServerTable`, modo `lazy` em
+`AppDataTable`/`SearchableTableFrame`); o João manteve o bloco inteiro aqui. Spec em
+`specs/2026-08-28-hardening-performance-e-dados-design.md`.
+
+**Plano do item 6 — 2026-08-28, a lane entra em `ready_for_execution`.** Treze tasks em
+`plans/2026-08-28-hardening-performance-e-dados.md`, na ordem da dependência: `JanelaDeAviso` (D13)
+antes do `CASE` que a lê; o contrato `App\Shared\Pagination` antes dos três builders; o kit lazy do
+front antes das três telas; as duplas backend→frontend por endpoint (alunos, certificados, turmas)
+fechando cada uma um estado consistente; a janela do painel de emissão; `preventLazyLoading` global
+com a catraca `ListQueryBudgetTest`; o `PerformanceScenarioSeeder` e a migration de índices só com o
+que o `EXPLAIN` aprovar; docs por último. Dez desvios de implementação declarados no plano — nenhum
+muda o §7 da spec; o mais visível é que `useHistorial` deixa de ser exceção da política de `loadError`.
+**Handoff: `executor: claude`** — o `CASE` e o `whereHas` são regra de domínio reescrita em SQL, três
+números só existem depois de medir, e a guarda global pode reprovar caminho que a suíte não cobria.
+Colisão conhecida com a `lane-c` em `HistorialTable.tsx` (só props da moldura); rebase antes do merge.
+Execução exige `/executar-bloco hardening-performance-e-dados`.
+
+**Execução do item 6 iniciada — 2026-08-28, a lane entra em `executing`.** `/executar-bloco
+hardening-performance-e-dados` com o gate satisfeito: estado, spec, plano, packet, branch e work item
+coerentes, working tree limpo em `bbab7c58`. Técnica `subagent-driven-development` (`executor:
+claude`), ledger reiniciado em `.superpowers/sdd/progress.md` — o anterior era do item 2. O
+pre-flight do plano achou três coisas: a Task 9 não modifica `TurmaStatusFilter.tsx` (a seção
+`Files:` da task governa, a linha do índice de arquivos é resumo), o script de medição da Task 12
+carrega um caminho de scratchpad de sessão morta (trocado na execução) e a Task 6 manda **copiar
+verbatim** a fixture do teste de paridade para o de paginação — **decisão do João: extrair trait em
+`Tests\Support`**, pelo padrão que o `CreatesDomainRecords` já estabelece. Nenhuma das três muda o §7
+da spec.
+
+**A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
+fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
+`state.md` da `main` descrevia a `lane-b` em `ready_for_closure` e a `lane-c` em `idle`. As duas
+mesclaram (PR #77 e PR #80) e a `main` resultante entrou aqui pelo merge do fechamento deste bloco —
+**nenhuma linha de lane alheia foi escrita por esta lane**: o que a `lane-b` e a `lane-c` dizem de si
+veio do merge, verbatim. Não houve colisão de escopo: o item 8 é frontend puro e o item 11 não tinha
+trabalho de código restante.
+
+**O que colidiu foi a numeração de pendência, e quem renumerou foi esta lane.** As três fichas
+abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (branch protection, da
+`lane-b`) e uma `P-63` (o `role="list"` do mini-reset, da `lane-c`), então elas viraram **`P-64`,
+`P-65` e `P-66`** no merge. ID já publicado na `main` não se reusa — mesmo movimento que a
+`P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
+arquivado, que é histórico e não se reescreve.
+
+**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
+segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
+5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
+navegador contra o código pós-review.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
+
+**As treze tasks do item 6 fecharam — 2026-08-29, a lane entra em `ready_for_review`.** Dezesseis
+commits sobre `main@f584432b` (`c6d86e64`…`9defc442`), 112 arquivos, +9.950/−525. Gate final medido
+sobre o cenário grande (`PerformanceScenarioSeeder`: 5.045 alunos, 504 turmas, 8.045 matrículas,
+6.000 certificados): backend **1108 passed / 5 skipped**, `typescript:transform` sem diff residual,
+frontend lint 0, build verde, **114 arquivos / 645 testes**, pint `passed` nos arquivos do diff. DoD
+§7 provado na API real e no navegador, item a item, na seção "Gate final" de
+`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`.
+
+Três coisas que só a medição decidiu, e que o review deve olhar com o número na mão: `users(name)`
+foi **recusado** pelo `EXPLAIN` e ficou fora da migration (a recusa está escrita na ficha de `users`
+do `der-fisico`, para não ser reproposto); as contagens da catraca do Dashboard (admin **40**,
+redator **7**) são medidas, não estimadas; e a busca em `snapshot` mediu 0,69 ms em 6.000
+certificados, longe do limiar que abriria o plano B — registrada, sem ficha. A **P-66** fechou.
+Duas correções vieram do próprio gate, não da inspeção: uma referência com reticências no
+`der-fisico` que reprovou a catraca `repo-docs-refs`, e os 50 redatores do `PerformanceScenarioSeeder`
+sem a role `redator` — o cenário media o 403 do `permission:` no lugar do escopo do `visibleTo`.
+
+**Review do bloco — 2026-08-29, a lane entra em `blocked`.** `/revisar-sprint` sobre o intervalo
+`f584432b..c0bcf87a`. Classificação: **alto risco** (migration de schema, `generated.ts`, escopo
+`visibleTo` e certificados), então a revisão do Claude foi acompanhada de uma segunda lente do Codex
+em sandbox read-only. **Nenhuma violação das leis §5** e nenhum órfão: `archivableSource`,
+`useTableFilter` e `useArchivedPage` seguem servindo as raízes bounded, e as peças novas
+(`Paginates`, `DataSql`, `JanelaDeAviso`, `useServerTable`, `useCrudDialog`, `useRestoreAction`)
+todas têm consumidor. 63 testes do bloco reexecutados verdes na revisão.
+
+Cinco achados, nenhum inventado e dois confirmados pelas duas lentes: **Q-1** (🔴) o `Reemitir` do
+Historial procura a matrícula num painel de emissão sem `concluidas_desde`, que agora só devolve
+turmas concluídas nos últimos 12 meses — certificado revogado de turma mais antiga fica sem
+reemissão, com a mesma tarja genérica de um bloqueio legítimo; **Q-2** (🟡) `defaultConcludedSince`
+monta a data no fuso do navegador e o front SEMPRE manda o parâmetro, então o default
+`America/Santiago` do backend nunca roda; **Q-3** (🟡) trocar Ativas↔Arquivadas não zera a página no
+`useServerTable` (o escopo só olha termo e filtros), o que custa um request desperdiçado e um piscar
+de tabela vazia; **Q-4** (🟡) a única coluna com `sortable` do hub de turmas é a "Código", ligada a
+`turmas.created_at`; **Q-5** (🟡) `displayStatusCase()` aceita `CarbonInterface` e chama `addDays()`
+nele — hoje seguro porque `hoje()` devolve `CarbonImmutable`, mas um chamador com Carbon mutável
+deslocaria filtro, resumo e linhas do mesmo request. Nenhum é decisão registrada em ADR, spec ou
+ficha. **Só achado aprovado pelo João vira correção.**
+
+**Correções do review — 2026-08-29, a lane volta a `reviewing` e fecha em `ready_for_closure`.** O
+João aprovou os cinco achados e os cinco foram aplicados. **Q-1:** o painel do `useHistorial` só
+liga com um Reemitir aberto e recebe como janela o `end_date` congelado no snapshot DAQUELE
+certificado — a turma dele cabe na janela por mais antiga que seja, e some junto o GET pesado no
+mount de quem só lê o Historial (sem `end_date` no snapshot, cai no default do servidor). **Q-2:**
+`defaultConcludedSince()` deixou de existir; o seletor nasce vazio, anuncia a janela pelo
+`placeholder` (`certificate.concludedSinceDefault`, nas 3 locales) e o `concluidas_desde` só vai na
+URL quando o usuário escolhe data — o default de `America/Santiago` volta a ser o do backend.
+**Q-3:** a `key` entrou no escopo do `useServerTable`, com catraca nova nos dois níveis
+(`useServerTable.test.tsx` e `useTurmasPage.test.tsx`, o caso de troca de modo que faltava).
+**Q-4:** a coluna "Código" perdeu `field="created_at" sortable` — nenhuma coluna do hub de turmas
+mostra data, então a tabela vive do `DEFAULT_SORT` do builder. **Q-5:** `displayStatusCase()` passou
+a exigir `CarbonImmutable`, e os dois chamadores convertem com `toImmutable()`.
+
+Duas rules ganharam o que os achados provaram: `frontend-fsliced` agora diz que a `key` faz parte do
+escopo e que `sortable` exige o campo **daquela** coluna; o docblock de `EmissionPanelQuery` registra
+que o default da janela é do backend e só dele. Gate reexecutado: frontend `pnpm build` + `pnpm lint`
++ `pnpm test` (114 arquivos, **647** testes) e backend `--filter="Certificate|EmissionPanel|ListQueryBudget|Turma"`
+(**286** passados, 1 skipped, 1.125 asserções). Nenhum achado deferido; nada foi para `backlog.md`
+nem para `pendencias/abertas.md`.
+
+**Colisão conhecida com a `lane-c` (item 18) segue de pé:** `HistorialTable.tsx`. Rebase antes do
+merge.
+
 ## Fechado em 2026-08-29 — `frontend-estilizacao-padronizacao-de-componentes`, item 18 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
@@ -130,6 +289,7 @@ o corrente. A narrativa integral dele está neste arquivo desde 2026-08-27. Bloc
 guarda parágrafo no `state.md`.
 
 ---
+
 ## Fechado em 2026-08-28 — `hardening-auditoria-privacidade-e-observabilidade`, item 5 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
