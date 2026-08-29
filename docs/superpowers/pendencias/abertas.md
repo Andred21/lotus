@@ -58,35 +58,6 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
-
-**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
-tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
-elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
-
-Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
-1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
-(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
-`Certificados emitidos` e outra no de `UF aprobada`).
-
-O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
-semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
-nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
-JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
-jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
-
-**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
-carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
-gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
-com `role`.
-
-**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
-`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
-do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
-renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
-
----
-
 > **As duas fichas abaixo foram renumeradas no merge de fechamento (2026-08-29).** Nasceram
 > `P-64` e `P-65` na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66`
 > da `lane-a`, mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra
@@ -94,9 +65,9 @@ renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ## P-67 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
 
-**Bloco:** frontend-triagem-dos-audits-do-item-18 (item 19) · **Gatilho:** bloco que triar os
-achados de raio das quatro runs, ou que tocar esses 9 arquivos por outro motivo — a catraca só entra
-depois que o último sítio sair. Revisar em **2026-10-31**.
+**Bloco:** `D-66` (decisão do João sobre a escala de raio, aberta pelo item 19 em 2026-08-29) ·
+**Gatilho:** a D-66 decidida — os 10 sítios se classificam pela régua escolhida e a catraca nasce
+depois do último. Revisar em **2026-10-31**.
 
 O `frontend-estilizacao-padronizacao-de-componentes` (item 18) escreveu a escala em
 `.claude/rules/frontend-estilizacao.md`: superfície `rounded-lg`, controle e faixa fina

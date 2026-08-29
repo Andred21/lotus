@@ -23,6 +23,11 @@ sustenta, porque regra sem catraca é recomendação solta.
   primária da página; vestir a mesma marca diz que sair e agir pesam igual.
 - `primary` **não declara padding nem tamanho de fonte**. Declarar encolhe os 17 call sites de
   uma vez. Mecanismo: `src/shared/ui/AppButton/AppButton.test.tsx`.
+- **Todo `AppButton` de tela declara papel** — `variant`, `text`, `outlined`, `link` ou `severity`.
+  Sem papel ele cai no `.p-button` preenchido do Lara, que não é papel deste produto: foi assim que
+  os seis diálogos de certificação, o alvo do `AppSelectableCard` e o `ArchiveSwitch` escaparam do
+  item 18 (triagem de 2026-08-29). Secundária de diálogo (Cancelar/Cerrar) é `text`, como o
+  `CrudDialog`. Mecanismo: `BOTAO_SEM_PAPEL` em `frontend/eslint.config.js`, nas duas camadas.
 
 ## Tipografia — a grafia mora em `shared/ui`, nunca no sítio
 
@@ -33,6 +38,7 @@ sustenta, porque regra sem catraca é recomendação solta.
 | Rótulo de campo (`dt`) | `fieldLabelClass` | listas de definição |
 | Número de estatística | `<StatValue>` | KPI (`size="page"`), cartão (`size="card"`) |
 | Folio de certificado | `<CertificateFolio>` | validação pública, diálogo de emissão |
+| Rótulo de campo de formulário | `<FormField>` | todo formulário, inclusive login, recuperação e senha |
 
 - O `h1` tem **dono único** por tela: `PageHeader` no módulo, `DetailHeader` no detalhe. Tela sem
   nenhum dos dois titula o próprio estado, mesmo que escondido (`sr-only`).
@@ -52,6 +58,16 @@ sustenta, porque regra sem catraca é recomendação solta.
 
 Folio, RUT, código, versão e contagem que alinha em coluna saem em `font-mono` **com**
 `tabular-nums`. Sem o tabular o dígito muda de largura entre renders e o número dança na coluna.
+
+| Papel | Constante (`shared/ui/typography.ts`) |
+|---|---|
+| Dado técnico — contagem, data, versão | `technicalDataClass` |
+| Identificador — RUT, folio, código (token único, não quebra no hífen) | `identifierClass` |
+
+`font-mono` literal no sítio é o defeito: a fase 2 do audit de 2026-08-28 mediu sete sítios com a
+metade do par, e a fase 1 um RUT partido em "76.123.456-" / "0". Mecanismo: `MONO_LITERAL` em
+`frontend/eslint.config.js`, nas duas camadas; `shared/ui` fica de fora porque é onde a grafia é
+definida.
 
 Prosa não é dado técnico: o travessão que marca ausência legítima fica em texto normal.
 
@@ -73,11 +89,10 @@ faixa de erro mede `px-3 py-2` e vive na pilha de campos, ao lado de inputs em `
 um degrau a faria brigar com o próprio diálogo. O bloco do folio no `IssuedDialog` é o contra-caso
 que fecha a régua — também é aninhado, tem `p-6`, e segue em `rounded-lg`.
 
-`rounded` solto é raio sem degrau declarado — foi assim que os banners de erro ficaram fora da
-escala. **Débito aberto, não regra cumprida:** sobraram 10 sítios em 9 arquivos de `features/`
-(`DocumentTypeCard`, `TurmaDocuments` ×2, `CourseStep`, `ModuleFields`, `ModuleCard`,
-`StudentLinkRow`, `RedatorDocumentSlot`, `ProfileDocumentSlot`, `BudgetDialog`). Enquanto houver
-sítio vivo não há catraca — ela nasceria vermelha.
+`rounded` solto é raio sem degrau declarado. **A escala desta tabela está em decisão (D-66,
+2026-08-29):** medida na tela, o tema pinta botão, input e tag em 4px (= `rounded`), `rounded-md`
+só existe nos banners do `FormField`, e `rounded-full` só no pill de contagem do `AppCard`. Os 10
+sítios da **P-67** esperam a D-66; a catraca nasce depois do último sítio, não antes.
 
 ## Padding por papel
 

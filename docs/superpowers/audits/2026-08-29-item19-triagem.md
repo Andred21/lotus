@@ -18,13 +18,13 @@
 | Id | Cl. | Veredito | Raiz | Remédio | Prova |
 |---|---|---|---|---|---|
 | UI-01 | A | adequado | — | — | — |
-| UI-02 | B | ficha | — | D-63 | pendente — Task 16 |
-| UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | `FormSection.test.tsx` (visto reprovar) · pendente — Task 16 |
+| UI-02 | B | ficha | — | D-63 | `backlog.md` D-63 |
+| UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | `FormSection.test.tsx` (visto reprovar) · `backlog.md` D-63 |
 | UI-04 | B | recusado | — | consome `sectionLabelClass` por template; `GRAFIA_LITERAL` verde; `h4` sob `h3` é aninhamento | `AgendaPanel.tsx:99`, `KpiRow.tsx:77` |
 | UI-05 | B | corrigir | R2 | `technicalDataClass` no pill do `AppCard` e nas colunas numéricas de Cursos | `typography.test.ts` (Task 7) · grep refinado zero (Task 9) · run 5 |
 | UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · `features/` grep refinado zero (Task 9) |
 | UI-07 | B | corrigir | R2 | `technicalDataClass` na versão da sidebar | grep zero em `src/app` · run 5 |
-| UI-08 | B | ficha | — | D-64 | pendente — Task 16 |
+| UI-08 | B | ficha | — | D-64 | `backlog.md` D-64 |
 | UI-09 | B | corrigir | sítio | legenda com conteúdo próprio; paga P-63 | `legend.test.tsx` (visto reprovar) · run 5 |
 | UI-10 | C | corrigir | sítio | `min-w-0` na `<section>` da Agenda | run 5 |
 
@@ -33,13 +33,13 @@
 | Id | Cl. | Veredito | Raiz | Remédio | Prova |
 |---|---|---|---|---|---|
 | A1–A6 | A | adequado | — | — | — |
-| UI-01 | B | ficha | — | D-65 | pendente — Task 16 |
+| UI-01 | B | ficha | — | D-65 | `backlog.md` D-65 |
 | UI-02 | B | corrigir | R2 | `identifierClass` no RUT da Emisión | grep refinado zero (Task 9) · run 5 |
 | UI-03 | B | corrigir | sítio | motivo do bloqueio na linha do CTA + `aria-describedby` | tag e CTA na mesma linha, `id`/`aria-describedby` ligados · run 5 |
 | UI-04 | B | recusado | — | opacidade de `disabled` é calibração por folha do Lara (`:292`); isento da 1.4.3 | `lara-light-lotus.css:292`, `lara-dark-lotus.css:292` |
-| UI-05 | B | ficha | — | D-66 (+ P-67) | pendente — Task 16 |
+| UI-05 | B | ficha | — | D-66 (+ P-67) | `backlog.md` D-66; P-67 rehospedada na D-66 |
 | UI-06 | B | corrigir | R4 | `dataKey="enrollment_id"` na Emisión | `AppDataTable.test.tsx` (visto reprovar) · auditadas as 9 outras tabelas com DTO — só `EmissionPanelEnrollmentData` não tem `id` · run 5 |
-| UI-07 | B | ficha | — | D-67 | pendente — Task 16 |
+| UI-07 | B | ficha | — | D-67 | `backlog.md` D-67 |
 | UI-08 | B | corrigir | R1 | CTA `primary`, secundárias `text` nos 6 diálogos | catraca vista reprovar (2 sondas) · run 5 |
 | UI-09 | B | corrigir | sítio | `staleTime: 30_000` no painel (segundo observador do `useHistorial`) | `certificatesApi.test.tsx` (visto reprovar) · run 5 |
 
@@ -57,7 +57,7 @@ pela mesma raiz (R1), não viram ficha.
 | UI-02 | B | corrigir | R3 | `invalid` pelo contexto | `fieldAssociation.test.tsx` (5 wrappers, visto reprovar) · run 5 |
 | UI-03 | B | corrigir | R3 | `CrudDialog` devolve o foco | `CrudDialog.test.tsx` (visto reprovar) · run 5 |
 | UI-04 | B | corrigir (pela raiz) | R1 | fecha com a UI-01 | `AppSelectableCard.test.tsx` · pendente — run 5 (≥ 4,5:1) |
-| UI-05 | B | ficha | — | D-68 | pendente — Task 16 |
+| UI-05 | B | ficha | — | D-68 | `backlog.md` D-68 |
 | UI-06 | B | corrigir | sítio | auth consome `FormField` | `AuthPanel.test.tsx` reescrito (achado por rótulo, passa contra código antigo — prova a associação) · grep `className="font-medium"` em Login/Password = 0 · pendente — run 5 (borda `.p-invalid` no 422 real) |
 
 **Nota (Task 9):** `grep -rn "font-mono" src/features` devolve 4 linhas, não zero — refinado como
@@ -69,6 +69,13 @@ referência). Nenhum `className` literal restante.
 
 **R2 — catraca `MONO_LITERAL`:** nasceu verde nas duas camadas (`src/features/**` ×3, `src/app/**`);
 sonda negativa confirmada em `RedatorCard.tsx` (features) e `KpiRow.tsx` (app), revertidas.
+
+**Fichas D-63..D-68 escritas** em `backlog.md` §"Decisões não promovíveis isoladamente", com fatos
+medidos e recomendação. **P-63 encerrada por mecanismo** (Task 12, legenda com `role="list"`) e
+movida para `pendencias/encerradas.md`. **P-67 rehospedada na D-66** (era hospedeira o item 18,
+fechado sem pagá-la). Rule `.claude/rules/frontend-estilizacao.md` atualizada: `BOTAO_SEM_PAPEL`,
+as duas constantes de dado técnico + `MONO_LITERAL`, os fatos de raio da D-66, e `<FormField>` na
+tabela de tipografia. `tests/repo-docs-refs.test.ts` verde (15/15).
 
 ## Run 5 — `2026-08-29-item19-run5.md`
 

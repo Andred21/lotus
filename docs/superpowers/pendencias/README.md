@@ -21,14 +21,13 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (32)
+## Abertas (31)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | — (hospedeiro fechado em 2026-08-29 sem pagá-la; rehospedar é do João) | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
-| P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `frontend-triagem-dos-audits-do-item-18` | bloco que triar os achados de raio das runs, ou que toque os 9 arquivos; revisar 2026-10-31 |
+| P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `D-66` (decisão do João) | a D-66 decidida — os 10 sítios se classificam pela régua escolhida; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -67,7 +66,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
+
+**A P-63 fechou no `frontend-triagem-dos-audits-do-item-18` (2026-08-29) e está em rastro.**
 
 **A P-66 fechou no `hardening-performance-e-dados` (2026-08-29) e está em rastro** — a poda de
 `login_logs` varria `created_at` sem índice, e a migration `2026_08_28_000001_add_performance_indexes`
