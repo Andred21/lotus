@@ -100,3 +100,30 @@ precisam da turma inteira em memória). O 422 sobe pelo handler global, não por
 `abort()`. O seletor da tela e seu default de 12 meses (`emissionWindow.ts`,
 espelho de `EmissionPanelQuery::JANELA_MESES`) estão cobertos pela catraca de
 UI em `EmissionPanel.test.tsx`, vista reprovando sem o `AppDatePicker`.
+
+## Catraca de contagem — `ListQueryBudgetTest` (Task 11)
+
+26 casos verdes, 171 asserções. Números medidos e gravados:
+
+| Cenário                                | Resultado                                                            |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| 17 rotas `GET api/*` de lista sem pai  | contagem idêntica com N=2 e N=20                                     |
+| 5 listas aninhadas (`{budget}`/`{turma}`) | contagem idêntica com N=2 e N=20                                  |
+| `dashboard/metricas` — admin           | **40 queries**, fixas (as sete seções do painel inteiro)             |
+| `dashboard/metricas` — relator         | **7 queries**, fixas (só as turmas dele)                             |
+
+**Sonda (DoD 5):** removido `'enrollment.student.user'` de
+`CertificateQueryBuilder::LISTING`, `api/certificates` passa a responder **500**
+— a guarda global (`Model::preventLazyLoading()`, ligada nesta task) derruba o
+request antes de a contagem crescer — e o caso `api/certificates` da catraca
+reprova. Restaurado o eager-load, os 17 casos voltam verdes. A catraca continua
+necessária mesmo com a guarda: ela não marca instância vinda de `hydrate()` com
+uma linha só e não vê query feita NA relação.
+
+**Dois achados da medição**, ambos corrigidos no teste (nunca no código medido):
+o cache de permissões do spatie é esvaziado pela própria semeadura, então o
+aquecimento passou a ser simétrico nos dois lados da comparação (sem isso,
+`api/roles` parecia crescer com N por 2 queries de recarga); e a sessão do
+primeiro autenticado sobrevive dentro do mesmo teste, então o orçamento do
+relator ficou em teste próprio — sem isso ele media o dashboard do admin
+(40 queries) achando que media o do relator (7).

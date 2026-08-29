@@ -25,7 +25,8 @@ use Tests\TestCase;
  *
  * `Model::preventLazyLoading()` só marca a instância vinda de um `hydrate()`
  * com MAIS de uma linha (`Builder::hydrate()`, condicional a `count > 1`) —
- * por isso a listagem materializa DUAS cadeias completas e distintas.
+ * por isso a listagem materializa DUAS cadeias completas e distintas — a guarda é global desde o bloco `hardening-performance-e-dados`; o que este
+ * arquivo garante é a fixture com mais de uma linha, sem a qual ela não marca.
  */
 class CertificateEagerLoadTest extends TestCase
 {
@@ -34,20 +35,11 @@ class CertificateEagerLoadTest extends TestCase
 
     private int $seq = 0;
 
-    protected function tearDown(): void
-    {
-        Model::preventLazyLoading(false);
-
-        parent::tearDown();
-    }
-
     public function test_listagem_de_certificados_nao_lazy_loada_o_user_do_aluno(): void
     {
         $this->actingAsAdmin();
         $this->createCertificate();
         $this->createCertificate();
-
-        Model::preventLazyLoading();
 
         $this->getJson('/api/certificates')->assertOk()->assertJsonCount(2, 'data');
     }

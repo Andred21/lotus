@@ -24,8 +24,11 @@ use App\Shared\Office\GotenbergDocxToPdf;
 use App\Shared\Pdf\GotenbergHtmlToPdf;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\RateLimiting\RateLimits;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -56,6 +59,28 @@ class AppServiceProvider extends ServiceProvider
         // Política de taxa da API (RNF-SEC-06). Não existe RouteServiceProvider
         // neste repositório — o `routes/api.php` agrega por glob() —, então o
         // registro dos limitadores nomeados mora aqui.
+        // Mecanismo vence instrução (lição 14, spec D8): nenhum `fromModel`
+        // atravessa relação não carregada em silêncio. SEMPRE ligado — é o
+        // handler que decide o que a violação custa: em produção, um `warning`
+        // e a query (um lazy load que escapou custa uma consulta, não um 500);
+        // fora dela, a exceção que a suíte vê. `preventLazyLoading(false)` em
+        // produção não avisaria nada, porque desligada a guarda não enxerga.
+        //
+        // Limite conhecido (`EnrollmentResultTest`): a guarda só marca a
+        // instância vinda de um `hydrate()` com MAIS de uma linha, e não vê
+        // query feita NA relação (`->enrollments()->count()`). O que fecha
+        // esses dois buracos é a contagem de `ListQueryBudgetTest`.
+        Model::preventLazyLoading();
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation): void {
+            if ($this->app->isProduction()) {
+                Log::warning(sprintf('Lazy load de [%s] em [%s] — eager-load faltando no LISTING/load() do caminho.', $relation, $model::class));
+
+                return;
+            }
+
+            throw new LazyLoadingViolationException($model, $relation);
+        });
+
         RateLimits::register();
 
         Relation::enforceMorphMap([
