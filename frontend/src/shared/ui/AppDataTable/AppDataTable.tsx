@@ -26,8 +26,9 @@ export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T>
   onRetry?: () => void | Promise<unknown>
 }
 
-/** Wrapper do DataTable: paginação/sort/filtro client-side (o index devolve
- * array puro). Colunas via <AppColumn/>.
+/** Wrapper do DataTable: paginação/sort/filtro client-side por default; com
+ * `lazy` + `totalRecords` (listas que paginam no servidor — `useServerTable`),
+ * o DataTable só emite eventos e quem busca é o hook. Colunas via <AppColumn/>.
  *
  * Durante o `loading` o corpo vazio ainda renderiza — passar `undefined` em
  * `emptyMessage` cairia no default inglês do PrimeReact (`No available
@@ -54,12 +55,17 @@ export function AppDataTable<T extends DataTableValueArray>({
   onRetry,
   value,
   rows = 10,
+  totalRecords,
   ...props
 }: AppDataTableProps<T>) {
   const { t } = useTranslation()
   const errored = error != null
   const data = (errored ? [] : value) as T | undefined
-  const paginated = (data?.length ?? 0) > rows
+  // Em modo `lazy` a página tem no máximo `rows` linhas por construção, então
+  // `data.length > rows` nunca ligaria os controles: quem sabe quantas linhas
+  // existem é `totalRecords`. `hasRows`, logo abaixo, continua por página —
+  // largura mínima e cabeçalho são sobre o que está na tela.
+  const paginated = (totalRecords ?? data?.length ?? 0) > rows
   // A largura mínima só faz sentido protegendo colunas de dado real: sem
   // linhas (erro ou vazio), ela empurra o conteúdo centralizado de
   // AppErrorState/AppEmptyState (e o botão Reintentar) para fora da faixa
@@ -102,6 +108,7 @@ export function AppDataTable<T extends DataTableValueArray>({
       rowHover
       value={data}
       rows={rows}
+      totalRecords={errored ? 0 : totalRecords}
       paginator={footerCount !== undefined && !errored}
       alwaysShowPaginator
       // Desligar o paginador durante o `loading` foi recusado: a faixa some e
