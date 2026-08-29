@@ -94,7 +94,12 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
         // por hover, que não existe em toque (UI-01 do review de 2026-08-17).
         <div className={`grid gap-0 ${preenchidas.length > 1 ? 'sm:grid-cols-2' : ''}`}>
           {preenchidas.map((janela) => (
-            <section key={janela.key}>
+            // `min-w-0`: item de grid nasce com `min-width: auto` e não encolhe
+            // abaixo do próprio conteúdo; a 390px a seção media 287px num card
+            // de 261, o `overflow-hidden` do raio cortava 26px e a reticência
+            // do `truncate` caía FORA da área visível (f2 UI-10, o C da run de
+            // 2026-08-28). Com o item encolhendo, o corte acontece dentro.
+            <section key={janela.key} className="min-w-0">
               <h4
                 className={`flex items-center gap-2 px-4 pt-3 pb-1 ${sectionLabelClass}`}
                 style={{ color: 'var(--text-color-secondary)' }}

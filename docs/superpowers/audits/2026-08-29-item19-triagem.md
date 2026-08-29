@@ -25,8 +25,8 @@
 | UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · `features/` grep refinado zero (Task 9) |
 | UI-07 | B | corrigir | R2 | `technicalDataClass` na versão da sidebar | grep zero em `src/app` · run 5 |
 | UI-08 | B | ficha | — | D-64 | pendente — Task 16 |
-| UI-09 | B | corrigir | sítio | legenda com conteúdo próprio; paga P-63 | pendente — Task 12 / run 5 |
-| UI-10 | C | corrigir | sítio | `min-w-0` na `<section>` da Agenda | pendente — Task 12 / run 5 |
+| UI-09 | B | corrigir | sítio | legenda com conteúdo próprio; paga P-63 | `legend.test.tsx` (visto reprovar) · run 5 |
+| UI-10 | C | corrigir | sítio | `min-w-0` na `<section>` da Agenda | run 5 |
 
 ## Fase 3 — Certificados
 
