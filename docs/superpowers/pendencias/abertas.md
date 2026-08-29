@@ -87,7 +87,12 @@ renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ---
 
-## P-64 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
+> **As duas fichas abaixo foram renumeradas no merge de fechamento (2026-08-29).** Nasceram
+> `P-64` e `P-65` na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66`
+> da `lane-a`, mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra
+> adiante — ID publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou.
+
+## P-67 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
 
 **Bloco:** frontend-triagem-dos-audits-do-item-18 (item 19) · **Gatilho:** bloco que triar os
 achados de raio das quatro runs, ou que tocar esses 9 arquivos por outro motivo — a catraca só entra
@@ -116,7 +121,7 @@ que decidir duas vezes.
 
 ---
 
-## P-65 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
+## P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
 
 **Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste
 também em `features/`) ou escrever no config a razão de a régua valer para teste ali; ou bloco que
@@ -495,27 +500,6 @@ de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num ga
   Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
   cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
   `PublicCertificateData`.
-
-## P-02 — retenção da auditoria nunca decidida
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** antes de subir para produção.
-
-ADR-08 (pruning/retenção da auditoria) segue **aberto**. Política de retenção nunca decidida;
-`audits` cresce sem poda.
-
-## P-33 — `login_logs` guarda dado pessoal sem política de retenção
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** fecha junto com a P-02, ou antes de subir para produção.
-
-`login_logs.ip_address` e `login_logs.user_agent` são dado pessoal. Bloco `last-login` (BD-7,
-2026-08-12): o log é append-only por desenho e o volume não é o problema (~10 usuários internos) — a
-retenção é. Fica junto da **P-02**, aberta pela mesma razão para `audits`.
-
-**Nasceu como segunda `P-30` e foi renumerada no `/fechar-sprint` do BD-3 (2026-08-12)**, pelo mesmo
-precedente que renumerou a segunda `P-28` para `P-32`: a linha do `ámbar-aviso` entrou na `main`
-primeiro (PR #41, commit `e6460f9`) e esta chegou depois (`656175c`), então quem renumera é a
-recém-chegada. As menções a "P-30" na narrativa do `last-login` em `docs/superpowers/state.md` são
-desta linha e ficam como estão — história não se reescreve.
 
 ## P-05 — migrations "adicionais" não consolidadas
 
@@ -929,4 +913,93 @@ usuário é a Lotus, no Chile.
 **Por que não foi consertado junto:** traduzir os seis `title` e o mascaramento do 500 muda texto que
 o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
 produto, do João — não efeito colateral de um bloco de hardening.
+
+> **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
+> `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma
+> `P-62` (branch protection, `lane-b`) e uma `P-63` (o `role="list"` do mini-reset, `lane-c`),
+> mescladas antes destas. Mesmo movimento que a `P-61`→`P-63` da `lane-c` registra acima — ID
+> publicado na `main` não se reusa, e quem renumera é a lane que ainda não tinha mesclado.
+
+## P-64 — a revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive
+
+**Bloco:** — · **Gatilho:** o Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3) — enquanto
+ele continuar dizendo "Micro-serviço em nuvem com logs das ações do software" para o `RNF-SEC-05`, a
+divergência é real, e uma sessão futura que consulte só o Drive pode reabrir uma decisão que o João já
+tomou, sem saber que ela existe. Fecha quando o João colar a revisão na fonte canônica (Google Drive,
+`Viagem Chile/Projetos/Lotus.cl/V2`). Revisar em **2026-10-31**.
+
+O ADR-21 (`docs/adrs.md`) registra, do lado do código, que os logs de ações do software ficam
+centralizados dentro do monólito (canal `seguranca`, `EventoDeSeguranca`) — substituindo a forma
+literal do `RNF-SEC-05` —, decisão do João de 2026-08-26 (spec `2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, **D5**). O ADR documenta a substituição; não a replica na
+fonte. Até o Drive ser atualizado, os dois lugares contam histórias diferentes do mesmo requisito.
+
+## P-65 — `RNF-SEC-03` e `RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05`
+
+**Gatilho:** João decidir se D6 (três famílias de acesso suspeito), D7 (alerta síncrono) e/ou D8
+(segredos seguem em `env_file`, cofre gerenciado adiado ao item 10) merecem ADR próprio no molde do
+ADR-21, ou se ficam só como decisão de spec/plano sem registro de arquitetura — e, se merecerem,
+abrir pendência de replicação no Drive espelhando a P-64 para a metade de `RNF-SEC-03` que segue sem
+cofre. Revisar em **2026-10-31**.
+
+Achado pela `auditar-docs` no fechamento do `hardening-auditoria-privacidade-e-observabilidade`
+(2026-08-26), depois da Task 9 já commitada. A spec do bloco (`2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:89`) só escreve a linguagem de "revisão formal por
+escrito, não equivalência silenciosa" para **D5** (`RNF-SEC-05`) — por isso só D5 virou ADR-21. D6,
+D7 e D8 são decisões do mesmo dia, da mesma spec, com a mesma autoridade (instrução explícita do
+João), mas `docs/adrs.md` não tem nenhuma ocorrência de `RNF-SEC-03`, `RNF-SEC-07`, "cofre", "D6",
+"D7" ou "D8" — a única metade registrada em ADR é a de D5.
+
+**Não é regressão do bloco:** o brief da Task 9
+(`docs/superpowers/plans/archive/2026-08-26-...md`) só pediu ADR-21 para D5, e a spec não pediu revisão formal para as outras três — o bloco fez exatamente o que
+foi pedido. O que fica aberto é a assimetria: `docs/operacao-segredos.md` já documenta D8 (a decisão
+de adiar o cofre gerenciado ao item 10), mas só como operação, não como decisão de arquitetura
+registrada — e `RNF-SEC-03` na fonte canônica do Drive pede "fora do código, em cofre de segredos".
+A metade "fora do código" está cumprida; a metade "em cofre" está **datada e atribuída** (item 10),
+não revisada — o que é diferente do caso do RNF-SEC-05 (revisado, não adiado), mas ainda é uma
+lacuna entre o que o Drive pede hoje e o que o sistema faz hoje que nenhum ADR ou pendência nomeia.
+
+**Três lacunas medidas em D6, do review final do mesmo bloco (2026-08-26).** Não são defeitos da
+implementação — o detector faz exatamente o que a D6 escreveu. São perguntas sobre o **escopo** que a
+D6 escreveu, e por isso vivem aqui e não viraram patch: mudá-las é redefinir o que cada família
+captura e em que chave ela acumula, o que é decisão do João e alimenta diretamente o gatilho acima.
+
+- **Senha CERTA em conta desativada não gera alerta prioritário.** `sessao_de_conta_desativada` só
+  dispara pelo `EnsureAccountIsActive`, isto é, para sessão **já aberta** quando a conta cai. Quem
+  tenta `POST /api/login` com a senha correta de uma conta desativada é barrado antes disso e sai
+  como `login.recusado` comum — o sinal mais forte que existe (alguém TEM a credencial de uma conta
+  que foi desligada) some no mesmo balde da senha errada. Some-se que essa linha de log leva
+  `chave_hash`, não o `usuario_id`, embora o usuário seja conhecido nesse ponto.
+- **`login_falho_repetido` não carrega a chave da evidência.** O alerta emite `familia`,
+  `usuario_id` (nulo aqui), `ip` e `ocorrencias`, mas não o `chave_hash` que identifica o balde — e
+  `chave_hash` é justamente o campo pelo qual as linhas `login.recusado` correspondentes podem ser
+  encontradas. Quem receber o e-mail não tem como ligar o alerta ao rastro sem cruzar por IP e
+  horário.
+- **Password spraying não acumula em lugar nenhum.** Tanto o `throttle:login` quanto o detector
+  chaveiam em `email|ip`. Uma senha por conta, contra 200 contas, do mesmo IP, nunca cruza limiar
+  nenhum: cada chave fica em 1. A D6 definiu as famílias por chave de vítima; não existe família por
+  atacante.
+
+## P-66 — A poda de `login_logs` varre `created_at` sem índice que a sirva
+
+**Gatilho:** bloco que tocar o schema de `login_logs`, ou a `login_logs` passar de algumas dezenas de
+milhares de linhas em produção (a poda diária começar a aparecer em tempo de execução). Revisar em
+**2026-10-31**.
+
+Medido duas vezes no `hardening-auditoria-privacidade-e-observabilidade` (2026-08-26): no review da
+Task 1 e de novo no da Task 4, as duas vezes classificado como fora do escopo do plano.
+`PodarLogins` (`backend/app/Console/Commands/PodarLogins.php:36-39`) apaga por
+`where('created_at', '<', $limite)` — varredura de faixa só em `created_at`. O único índice da tabela
+é o composto `(user_id, created_at)`
+(`backend/database/migrations/2026_08_12_000001_create_login_logs_table.php:21`), e composto **não
+serve consulta que não filtra pela coluna líder**: a poda cai em full scan.
+
+A `audits` **ganhou** o índice equivalente neste mesmo bloco
+(`2026_08_26_000001_add_created_at_index_to_audits_table.php`) porque a poda dela estava no DoD; a
+`login_logs` não ganhou porque o plano não pediu, e acrescentar migration fora das tasks seria mudar
+escopo por conta própria. Fica **assimétrico de propósito e registrado aqui**: as duas tabelas são
+podadas pelo mesmo mecanismo, só uma delas tem índice para isso.
+
+**Por que não é urgente:** ~10 usuários internos, uma linha por tentativa de login, poda diária às
+03:40 America/Santiago. Full scan numa tabela desse tamanho não custa nada hoje. O que a ficha
+protege é a hipótese de crescimento — e o fato de que quem ler o índice da `audits` sozinho pode
+concluir que a `login_logs` também tem.
 

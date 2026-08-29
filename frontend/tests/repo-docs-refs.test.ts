@@ -81,9 +81,31 @@ function pareceCaminho(token: string): boolean {
   return token.includes('/') && EXTENSOES.some((e) => token.endsWith(e))
 }
 
+/**
+ * Citação do projeto é line-precise: `backend/config/logging.php:134-142`,
+ * `docker/php/entrypoint.sh:19-25`. O sufixo `:NN` / `:NN-NN` faz parte da
+ * convenção — tirá-lo para caber nesta guarda seria a guarda mandando na doc.
+ * Aqui ele é recortado e depois CONFERIDO: o arquivo precisa existir e ser
+ * comprido o bastante para a linha citada. Citação que aponta para além do fim
+ * do arquivo é o mesmo defeito da lição 13, um passo mais sutil — o path existe,
+ * mas o que ele promete mostrar não está lá.
+ *
+ * Só o começo da faixa é conferido: é onde a âncora da citação está, e um fim
+ * de faixa passando alguns caracteres do EOF não muda o que o leitor acha.
+ */
 function resolvePath(token: string): boolean {
   const limpo = token.replace(/[.,;:]+$/, '')
-  return BASES.some((base) => existsSync(join(RAIZ, base + limpo)))
+  const comLinha = /^(.*?):(\d+)(?:-\d+)?$/.exec(limpo)
+  const caminho = comLinha ? comLinha[1] : limpo
+  const linha = comLinha ? Number(comLinha[2]) : null
+
+  return BASES.some((base) => {
+    const absoluto = join(RAIZ, base + caminho)
+    if (!existsSync(absoluto)) return false
+    if (linha === null) return true
+
+    return readFileSync(absoluto, 'utf8').split('\n').length >= linha
+  })
 }
 
 type Referencia = { doc: string; linha: number; token: string }

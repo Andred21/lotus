@@ -91,8 +91,14 @@ final class RateLimits
      * 2026-08-25, medido contra a API real). Entrada que não é string vira
      * balde vazio: quem manda lixo compartilha o balde do lixo, e a validação
      * do controller é quem diz o que está errado.
+     *
+     * **Pública desde o bloco de observabilidade:** o detector de acesso
+     * suspeito conta na MESMA chave em que o limitador conta. Duas definições
+     * de "mesma chave" divergiriam na primeira vez que uma delas mudasse de
+     * normalização, e o alerta passaria a falar de um agrupamento que o
+     * throttle não usa.
      */
-    private static function chaveDeLogin(Request $request): string
+    public static function chaveDeLogin(Request $request): string
     {
         $email = $request->input('email');
 

@@ -20,13 +20,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-api-arquivos-e-abuso   # mesclada em 2026-08-26 (PR #78)
+    branch: feat/hardening-auditoria-privacidade-e-observabilidade   # fechada em 2026-08-28; PR #81 aberto
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-api-arquivos-e-abuso
+    last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
   lane-b:
     active_feature: null
     active_work_item: null
@@ -56,8 +56,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
-state_basis_commit: e76747a6
-updated_at: 2026-08-29T06:40:00-03:00
+state_basis_commit: 0d0645f7
+updated_at: 2026-08-29T07:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (mesclada, PR #78) | `idle` |
+| `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (PR #81, aberto) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -172,11 +172,27 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
-**A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
-em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a`, foi mesclada pelo **PR #78** em 2026-08-26 e mesclou a `main`
-de PR #73/#75/#76/#77 para dentro neste commit; a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
-do João, contra o `backlog.md`.
+**A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
+narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70`, recebeu o merge
+da `main` de PR #77/#80 com o gate refeito sobre ele, e está em **PR #81**, aberto para o João
+mesclar. A árvore é o main tree, que não se destrói. A lane não recebe item novo
+sozinha: promoção é do João, contra o `backlog.md`.
+
+**A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
+fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
+`state.md` da `main` descrevia a `lane-b` em `ready_for_closure` e a `lane-c` em `idle`. As duas
+mesclaram (PR #77 e PR #80) e a `main` resultante entrou aqui pelo merge do fechamento deste bloco —
+**nenhuma linha de lane alheia foi escrita por esta lane**: o que a `lane-b` e a `lane-c` dizem de si
+veio do merge, verbatim. Não houve colisão de escopo: o item 8 é frontend puro e o item 11 não tinha
+trabalho de código restante.
+
+**O que colidiu foi a numeração de pendência, e quem renumerou foi esta lane.** As três fichas
+abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (branch protection, da
+`lane-b`) e uma `P-63` (o `role="list"` do mini-reset, da `lane-c`), então elas viraram **`P-64`,
+`P-65` e `P-66`** no merge. ID já publicado na `main` não se reusa — mesmo movimento que a
+`P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
+arquivado, que é histórico e não se reescreve.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -186,11 +202,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
-| 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-64** e a **P-65**) | Item 18 da fila |
+| 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
+| 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
 | 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 | 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 | 2026-08-25 | `hardening-api-arquivos-e-abuso` | Item 4 da fila |
-| 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

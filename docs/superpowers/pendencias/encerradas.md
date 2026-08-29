@@ -7,12 +7,36 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. A **P-46** saiu no fechamento do `frontend-estilizacao-padronizacao-de-componentes`
-(2026-08-29), o primeiro posterior ao do bloco que a encerrou, e saiu **remedida**: o mini-reset
-escopado de `frontend/src/index.css` e a catraca `frontend/tests/preflight-escopado.test.ts`
-seguiram verdes nos 653 testes daquele gate, e a borda que o reset abriu continua viva e nomeada na
-[P-63](./abertas.md#p-63). A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25; o
-parágrafo adiante é o rastro delas.)*
+*(duas: a **P-02** e a **P-33**. A **P-46** saiu no fechamento do
+`frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), o primeiro posterior ao do bloco
+que a encerrou, e saiu **remedida**: o mini-reset escopado de `frontend/src/index.css` e a catraca
+`frontend/tests/preflight-escopado.test.ts` seguiram verdes nos 653 testes daquele gate, e a borda
+que o reset abriu continua viva e nomeada na [P-63](./abertas.md#p-63). A **P-03** e a **P-15**
+saíram nos dois fechamentos de 2026-08-25; o parágrafo adiante é o rastro delas.)*
+
+### P-02 e P-33 — retenção de `audits` e de `login_logs`
+
+**A P-02 e a P-33 fecham dentro do bloco `hardening-auditoria-privacidade-e-observabilidade`
+(2026-08-26)**, por **mecanismo**, nunca por promessa — formalização (saída deste arquivo) no
+próximo `/fechar-sprint`:
+
+- **P-02** (ADR-08: pruning/retenção da auditoria nunca decidida) — paga pela `RetentionPolicy`
+  (`backend/app/Shared/Retention/RetentionPolicy.php`), que fixa as janelas decididas pelo João em
+  2026-08-26: `audits` anonimiza `ip_address`/`user_agent`/`url` aos 12 meses
+  (`AUDITS_ANONIMIZAR_MESES`) e descarta a linha inteira aos 5 anos (`AUDITS_DESCARTAR_MESES`).
+  Executada por `lotus:podar-auditoria` (`PodarAuditoria`), agendada às 03:10 America/Santiago em
+  `routes/console.php` e rodada pelo serviço `scheduler` do `docker-compose.prod.yml`. O índice
+  `audits_created_at_index` (migration `2026_08_26_000001_add_created_at_index_to_audits_table`)
+  sustenta o recorte por data — sem ele as duas fases varreriam a tabela inteira. O ADR-08 em
+  `docs/adrs.md` aponta para este mecanismo em vez de repetir a lacuna.
+- **P-33** (`login_logs.ip_address`/`user_agent` são dado pessoal sem retenção) — paga pela mesma
+  `RetentionPolicy` (`LOGIN_LOGS_DESCARTAR_MESES = 12`), executada por `lotus:podar-logins`
+  (`PodarLogins`, descarte direto — a tabela é PII pura, sem trilha de mudança a preservar), agendada
+  às 03:40 America/Santiago no mesmo `routes/console.php` e pelo mesmo serviço `scheduler`.
+  Consequência aceita e declarada: conta sem login há mais de 12 meses perde o "último acesso" que
+  `User::latestLogin()` deriva daqui. **Nasceu como segunda `P-30`** e foi renumerada no
+  `/fechar-sprint` do BD-3 (2026-08-12) — as menções a "P-30" na narrativa do `last-login` em
+  `docs/superpowers/state.md` são desta pendência e ficam como estão.
 
 ---
 

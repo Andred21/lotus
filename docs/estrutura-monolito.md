@@ -55,7 +55,11 @@ backend/app/
 │   ├── Files/                  # upload polimórfico S3/MinIO: File (model) + UploadFileAction (ADR-10/11)
 │   ├── Rules/                  # ValidRut (regra de validação reusável)
 │   ├── Support/                # value objects / helpers puros (Rut, ...)
+│   ├── Retention/               # RetentionPolicy — janelas de retenção de `audits`/`login_logs` (ADR-08)
+│   ├── Logging/                 # EventoDeSeguranca — ponto único de escrita do canal `seguranca` (ADR-21)
+│   ├── Alerts/                  # AlertThresholds + DetectorDeAcessoSuspeito — acesso suspeito (RNF-SEC-07)
 │   └── Http/Middleware/        # SetLocale (i18n, ADR-15)
+│   (listagem parcial — Shared/ tem outras pastas transversais além das citadas acima; ver diretório real)
 │
 ├── Http/Controllers/Controller.php  # classe base abstrata do framework; TODO controller de domínio
 │                               #   estende ela (nada de regra de negócio aqui)
@@ -66,7 +70,11 @@ backend/app/
 │       # AuthServiceProvider.php e RouteServiceProvider.php planejados aqui NÃO existem no repo.
 │       # Nenhuma classe Policy foi criada ainda em nenhum domínio (pasta Policies/ é scaffold vazio
 │       # onde existe); routes.php de cada domínio é agregado por glob() direto em routes/api.php
-└── Console/                    # planejado, NÃO existe ainda — comandos (ex: pruning da auditoria, ADR-08) nascem quando a poda entrar em desenvolvimento
+└── Console/Commands/           # PRIMEIROS comandos Artisan do projeto (nasceram no bloco de retenção):
+                                #   PodarAuditoria (`lotus:podar-auditoria`) e PodarLogins
+                                #   (`lotus:podar-logins`) — poda de `audits`/`login_logs` por
+                                #   `RetentionPolicy` (ADR-08). Agendados em `routes/console.php`,
+                                #   executados pelo serviço `scheduler` do `docker-compose.prod.yml`.
 
 backend/database/
 ├── migrations/                 # FONTE ÚNICA — migrations são globais, NÃO por domínio
