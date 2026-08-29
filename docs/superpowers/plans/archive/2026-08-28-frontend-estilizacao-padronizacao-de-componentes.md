@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19 + TS, Vite, Tailwind v4 (layout), PrimeReact via `shared/ui`, Vitest + Testing Library (jsdom), ESLint flat config.
 
-**Spec:** [`docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md`](../specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md)
+**Spec:** [`docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md`](../../specs/archive/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md)
 
 ## Global Constraints
 

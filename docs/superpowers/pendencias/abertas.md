@@ -60,7 +60,7 @@ no lugar que o fatal de 128M apareceu aqui.
 
 ## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
-**Bloco:** frontend-estilizacao-padronizacao-de-componentes (item 18) · **Gatilho:** bloco que
+**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
 tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
 elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
 
@@ -84,6 +84,63 @@ com `role`.
 `main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
 do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
 renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
+
+---
+
+## P-64 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
+
+**Bloco:** frontend-triagem-dos-audits-do-item-18 (item 19) · **Gatilho:** bloco que triar os
+achados de raio das quatro runs, ou que tocar esses 9 arquivos por outro motivo — a catraca só entra
+depois que o último sítio sair. Revisar em **2026-10-31**.
+
+O `frontend-estilizacao-padronizacao-de-componentes` (item 18) escreveu a escala em
+`.claude/rules/frontend-estilizacao.md`: superfície `rounded-lg`, controle e faixa fina
+`rounded-md`, pill `rounded-full`, e `rounded` solto não existe — é raio sem degrau declarado. O
+bloco corrigiu os sítios que tocou e **declarou o resto como débito na própria rule**, o que é
+honesto e insuficiente: régua sem mecanismo é recomendação, e foi assim que os banners de erro
+saíram da escala em primeiro lugar.
+
+**Medido no fechamento de 2026-08-29** — 10 sítios vivos em 9 arquivos de `features/`:
+`ModuleCard.tsx:26`, `ModuleFields.tsx:67`, `BudgetDialog.tsx:49`, `CourseStep.tsx:93`,
+`ProfileDocumentSlot.tsx:76`, `RedatorDocumentSlot.tsx:21`, `StudentLinkRow.tsx:14`,
+`DocumentTypeCard.tsx:50` e `TurmaDocuments.tsx:41,43`.
+
+**Por que ficou aberta:** a catraca nasceria **vermelha**, e catraca que nasce vermelha ou some numa
+lista de `ignores` (a exceção embutida que ninguém vê, porque fica verde) ou trava o bloco seguinte
+por dívida alheia. O degrau certo de cada um dos 10 depende do papel do bloco — o item 19 já tem a
+escala de raio na mesa como decisão do João (fase 3 UI-05), e decidir os dois juntos é mais barato
+que decidir duas vezes.
+
+**DoD:** os 10 sítios com degrau declarado e uma régua de lint sobre `rounded` solto em
+`src/features/**` e `src/app/**` — as duas camadas, como a própria rule exige das catracas novas.
+
+---
+
+## P-65 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
+
+**Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste
+também em `features/`) ou escrever no config a razão de a régua valer para teste ali; ou bloco que
+toque `frontend/eslint.config.js` por outro motivo. Revisar em **2026-10-31**.
+
+Medido no fechamento do item 18 (2026-08-29), quando o gate abriu vermelho: `ValidationPage.test.tsx`
+passou de 147 para 170 linhas nas correções do review e reprovou o `max-lines` de 150 da camada
+`src/features/*/components/**`. O bloco irmão do mesmo arquivo, `src/app/**/*.tsx`, tem
+`ignores: ['**/*.test.tsx']` **com a razão escrita** — *"quebrar um arquivo de teste coeso é pagar
+preço pela regra, não pelo defeito"*. O de `features/` não tem a isenção nem uma linha dizendo que a
+ausência é deliberada.
+
+**A divergência não é acadêmica:** ela decide se um teste que cresce se quebra ou não, e as duas
+camadas respondem diferente para o mesmo caso.
+
+**Estado atual da população, medido:** 24 arquivos `*.test.tsx` em `src/features/*/components/**`;
+**um** passava de 150 (o do fechamento, quebrado em `e76747a6`) e **dois** estão exatamente em 150 —
+`EnrollmentSection.test.tsx` e `ProfileDocumentSlot.test.tsx`, que é a assinatura de quem já aparou
+para caber.
+
+**Por que ficou aberta:** o João decidiu o caso concreto — quebrar o arquivo, não afrouxar a régua —
+e essa decisão está paga. O que sobra é a política, que vale para os próximos 24: isentar alinha as
+camadas e solta uma régua viva; manter exige que a razão esteja escrita, porque a razão oposta já
+está, no mesmo arquivo, doze linhas abaixo.
 
 ---
 

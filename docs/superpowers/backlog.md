@@ -26,8 +26,8 @@
 - **P0 não ordena** — quem ordena é a cadeia de dependência: itens 5–9 mais o 16 e o 17 fecham o
   código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, e o `10` **encolheu** em vez de sair (o
-  runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
+  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, o `18` em 2026-08-29, e o `10`
+  **encolheu** em vez de sair (o runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
   de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
   próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
@@ -279,67 +279,10 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-## 18. `frontend-estilizacao-padronizacao-de-componentes`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
-**Fonte:** `audits/2026-08-26-estilizacao-componentes.md` (leitura estática de `shared/ui/**`,
-`app/layouts/**`, `app/pages/Dashboard/**` e varredura por padrão nas features; **sem execução no
-navegador** — onde a recomendação depende de pixel, o bloco valida com `/lotus-ui-review`).
-
-**Objetivo:** fechar a última milha da estilização — o mesmo papel visual sai hoje em 3 a 5 grafias
-diferentes — e executar a assinatura que o ADR-16 elegeu e o produto ainda não tem. **Não é
-redesenho:** o audit mede o código contra a direção JÁ fechada e declara por escrito que o alicerce
-(tokens, contraste travado por teste, `AppCard`/`AppTag`/`AppDataTable`) não se toca.
-
-**Escopo, nas quatro fases que o audit ordena:**
-1. **Vocabulário de botão** — `brandIcon` virou a CTA primária do produto em ~14 call sites contra o
-   próprio contrato do `AppButton/style.ts` ("marca, só-ícone"), enquanto `brandLabel` sobrou em 2.
-   Renomear por PAPEL (`primary`, `iconToggle`, `noSurface`) e varrer os call sites; "Voltar" do
-   `DetailHeader` desce de CTA a ação terciária; `ConfirmDialog` sem `severity` passa a confirmar
-   com o mesmo variant do `CrudDialog` (B1, B2, B3).
-2. **Tipografia** — um só tratamento de `h1` (hoje `PageHeader` e `DetailHeader` abrem com vozes
-   diferentes, e o de auth está copiado 5×); um só rótulo de seção (hoje 5 grafias); um `StatValue`
-   com `font-display` + `tabular-nums` sempre (A1, A2, A3, A5).
-3. **Dado técnico e a assinatura** — regra "folio/RUT/data técnica = `font-mono tabular-nums`" na
-   rule, e o `CertificateFolio` compartilhado entre `ValidationPage` e `IssuedDialog`. É o único
-   investimento estético NOVO do audit, e a tela dele é a pública do QR — a que fiscalizador e
-   empregador veem, onde hoje o folio é texto comum (A4, D4).
-4. **Higiene** — escala de raio escrita na rule; `ValidationPage` volta a `--surface-ground` (é a
-   única tela em paleta Tailwind crua); `AppTabView` passa a usar `mergePt` em vez de `?? default`;
-   logo da sidebar sem os números mágicos `ml-15 h-30`; tinta de apoio do Login vira `--shell-ink*`
-   (C1, C2, C3, C4, D1, D3, E1).
-
-**Anexado na promoção de 2026-08-28: a `D-62`.** Nenhuma catraca reprova um `AppDropdown` de filtro
-sem nome acessível — o mesmo defeito foi corrigido à mão em quatro sítios, por três runs
-independentes, e a quinta ocorrência nasce verde. O hospedeiro dela era o item 8, que fechou sem
-pagá-la. Entra aqui porque o remédio é regra de lint por FORMA no `frontend/eslint.config.js` — o
-mesmo arquivo e a mesma frente das quatro fases acima —, e porque a fase 1 varre call sites de
-`shared/ui` de qualquer jeito. A régua se mede com o próprio seletor antes de virar catraca (lição
-do `eslint.config.js` que nasceu casando só `arguments.0`).
-
-**Dependia do `frontend-hardening-final` (item 8), que fechou em 2026-08-27 — a dependência está
-satisfeita, e o item 18 é promovível.** Os achados A2, D2 e E2 dependiam do estado pós-mini-reset
-para não medir duas vezes; e o item 8 tocou `SidebarItem`, `index.css` e `eslint.config.js`. O
-audit foi escrito durante o item 8 e já respeita a D6 da spec dele (os
-`my-[0.83em]` ficam; trocá-los por margem de escala é decisão da fase 2, com screenshot).
-
-**Fora, por escrito:** redesenho de paleta, tema ou contraste (medido e travado por teste — não há
-achado ali); Dashboard (placeholder declarado) e as telas do item 16 ainda sem run de UI-review;
-qualquer mudança de layout de navegação — a spec do item 8 já recusou drawer; motion novo, porque a
-direção é instrumental e acrescentar animação seria decoração sem tese.
-
-**DoD:** screenshot antes/depois por fase via `/lotus-ui-review` nos dois temas; guarda de grep com
-zero `variant="brandIcon"` carregando `label`, zero número de stat sem `tabular-nums`, zero
-folio/RUT sem mono nas telas tocadas; a **D-62** provada pela sonda negativa da ficha — remover o
-`inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o arquivo;
-lint + build + suíte verdes; e as regras novas escritas em
-`.claude/rules/` no mesmo PR — o audit vira mecanismo, não recomendação solta.
-
----
-
 ## 19. `frontend-triagem-dos-audits-do-item-18`
 
-**Prioridade:** P2, depois do fechamento do item 18 · **Frente:** Frontend · **Contexto:** não por padrão
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
+**Dependência satisfeita:** o item 18 fechou em 2026-08-29.
 **Fonte:** `audits/2026-08-28-item18-fase{1,2,3,4}.md` — quatro runs de `/lotus-ui-review` no
 navegador contra `refactor/frontend-estilizacao-componentes @ ddc37f36`, uma por fase do item 18.
 
@@ -456,6 +399,12 @@ na raiz, não no sítio.
 > (fatia 2 e fatia 1 do item 16) e as próprias fichas pediam a saída no primeiro saneamento. O
 > rastro fica nos commits e em `historico/progress.md`. A `D-62` foi rehospedada no item 18; a
 > `D-34` segue sem hospedeiro, e escolher é do João.
+>
+> **Fechamento de 2026-08-29:** a `D-62` **saiu daqui paga** — o item 18 construiu a catraca
+> `DROPDOWN_SEM_NOME` no `frontend/eslint.config.js`, medida com o próprio seletor antes de virar
+> régua e vista reprovar por sonda negativa no `TurmaStatusFilter`. A `D-34` continua sem
+> hospedeiro. A **P-63**, que era agrupada no item 18, ficou aberta: o hospedeiro fechou sem
+> pagá-la e rehospedar é do João.
 
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
   `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
@@ -502,24 +451,6 @@ na raiz, não no sítio.
   numa tela de peso legal. **Travada em decisão do João:** o texto é copy pública em es-CL e não
   deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
   de orientação aprovada, nas 3 locales.
-
-- **D-62 · Nada reprova um `AppDropdown` de filtro sem nome — o achado já apareceu 3 vezes** →
-  `frontend-estilizacao-padronizacao-de-componentes`. **Rehospedada em 2026-08-28**: o hospedeiro
-  anterior era o `frontend-hardening-final`, que fechou em 2026-08-27 pagando `P-46`/`D-03`/`D-33`/
-  `D-35` e **não** esta ficha — medido na promoção do item 18, `frontend/eslint.config.js` não tem
-  uma linha sobre `AppDropdown`, `inputId` ou `aria-label`. O item 18 já toca esse arquivo. O mesmo defeito foi encontrado por três runs independentes em três
-  dias, sempre na mesma forma (`<div className="w-48">` com o `AppDropdown` solto dentro, sem
-  `<label>`, sem `aria-label` e sem `aria-labelledby`): UI-07 de Operação (2026-08-23, pago no
-  `TurmaStatusFilter`), UI-02 de Comercial e UI-01 de Certificados (2026-08-25, pagos no
-  `BudgetStatusFilter` e no `HistorialTable`), mais o UI-02 de Certificados no seletor de turma da
-  Emisión, que só tinha nome por acidente do placeholder. Três correções idênticas e nenhuma
-  catraca: nem o lint, nem a suíte, nem o `tsc` sabem que um dropdown precisa de nome acessível — a
-  quarta ocorrência nasce verde. Lição 14 do `docs/README.md` (instrução repetida três vezes quer
-  mecanismo). O remédio provável é regra de lint por FORMA, não grep por grafia (`AppDropdown` sem
-  `inputId` nem `aria-label` dentro de `src/features/**`), medida com o próprio seletor antes de
-  virar catraca — é a lição do `eslint.config.js` que nasceu casando só `arguments.0`. **DoD:**
-  remover o `inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o
-  arquivo.
 
 - **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
   `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
