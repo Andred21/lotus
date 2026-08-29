@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `executing` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_review` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -252,6 +252,26 @@ abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (b
 `P-65` e `P-66`** no merge. ID já publicado na `main` não se reusa — mesmo movimento que a
 `P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
 arquivado, que é histórico e não se reescreve.
+
+**As treze tasks do item 6 fecharam — 2026-08-29, a lane entra em `ready_for_review`.** Dezesseis
+commits sobre `main@f584432b` (`c6d86e64`…`9defc442`), 112 arquivos, +9.950/−525. Gate final medido
+sobre o cenário grande (`PerformanceScenarioSeeder`: 5.045 alunos, 504 turmas, 8.045 matrículas,
+6.000 certificados): backend **1108 passed / 5 skipped**, `typescript:transform` sem diff residual,
+frontend lint 0, build verde, **114 arquivos / 645 testes**, pint `passed` nos arquivos do diff. DoD
+§7 provado na API real e no navegador, item a item, na seção "Gate final" de
+`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`.
+
+Três coisas que só a medição decidiu, e que o review deve olhar com o número na mão: `users(name)`
+foi **recusado** pelo `EXPLAIN` e ficou fora da migration (a recusa está escrita na ficha de `users`
+do `der-fisico`, para não ser reproposto); as contagens da catraca do Dashboard (admin **40**,
+redator **7**) são medidas, não estimadas; e a busca em `snapshot` mediu 0,69 ms em 6.000
+certificados, longe do limiar que abriria o plano B — registrada, sem ficha. A **P-66** fechou.
+Duas correções vieram do próprio gate, não da inspeção: uma referência com reticências no
+`der-fisico` que reprovou a catraca `repo-docs-refs`, e os 50 redatores do `PerformanceScenarioSeeder`
+sem a role `redator` — o cenário media o 403 do `permission:` no lugar do escopo do `visibleTo`.
+
+**Colisão conhecida com a `lane-c` (item 18) segue de pé:** `HistorialTable.tsx`. Rebase antes do
+merge. O review não começou — `next_action: request_code_review`.
 
 ## Itens fechados — ponteiro, não narrativa
 
