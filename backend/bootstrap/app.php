@@ -84,7 +84,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // lista abaixo. Lista completa dele (Kernel::$middlewarePriority), com
         // a nossa logo após o `AuthenticatesRequests` — é o ponto em que o
         // guard já resolveu o usuário da sessão.
+        //
+        // `SetLocale` entra no TOPO da lista (bloco `hardening-i18n-e-erros-api`,
+        // 2026-08-29): sem prioridade declarada, o sort do framework empurrava o
+        // `AuthenticatesRequests` para ANTES dela mesmo `SetLocale` estando
+        // appendada ao grupo `api` — o append só decide a posição relativa a
+        // middleware NÃO priorizada; quem está na lista pula por cima. Resultado
+        // medido: `SetLocaleTest` com 3/8 casos falhando porque a exceção de
+        // 401 do `auth:sanctum` disparava antes de `SetLocale::handle` rodar, e
+        // todo 401/403 saía no locale padrão, ignorando o `Accept-Language` —
+        // contra a spec §4.3 ("nada é resolvido antes do middleware").
         $middleware->priority([
+            SetLocale::class,
             HandlePrecognitiveRequests::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
