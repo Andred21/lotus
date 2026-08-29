@@ -80,6 +80,9 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ## 10. `infra-producao-provisionamento-aws`
 
+> **Estacionado em 2026-08-29** atrás do item 20 (`prontidao-pre-nuvem`): planeja e executa
+> depois que o par corporativo estiver provado. Packet `partial` de 2026-08-26 guardado; ver `state.md`.
+
 **Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
 **Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; Drive `RNF-DIS-01/03/04`.
 
@@ -115,6 +118,9 @@ depende do working tree do servidor.
 ---
 
 ## 12. `cicd-promocao-deploy-e-rollback`
+
+> **Estacionado desde 2026-08-26** (packet `status: blocked`: não há host). Retoma quando o item 10
+> provisionar o alvo; ver `state.md`.
 
 **Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
 **Fonte:** decisão atual de CI/CD; ADR-14; Notion `10.1.7`.
@@ -301,6 +307,37 @@ Administração têm run própria lá); qualquer correção do item 18 que já e
 **DoD:** todo achado das quatro runs com veredito escrito — corrigido com medida, virou ficha `D-*`,
 ou recusado com razão; nenhum `C` aberto; as correções que nascerem de raiz compartilhada resolvidas
 na raiz, não no sítio.
+
+---
+
+## 20. `prontidao-pre-nuvem`
+
+**Prioridade:** P0 para deploy (antecede o 10) · **Frente:** CI/GitHub/Infra · **Contexto:** não
+**Fonte:** leitura desta sessão (2026-08-29) de `ci.yml`, `scripts/espelhar-corporativo.sh`, runs
+do GitHub Actions nos dois repositórios e `P-62`; spec
+`specs/2026-08-29-prontidao-pre-nuvem-design.md`.
+
+**Objetivo:** deixar o código e o caminho de release preparados **antes** de qualquer decisão em
+nuvem: CI cujo vermelho significa "bloqueia", corporativo espelhando o tip da origem, e o par
+`ghcr.io/gatika-cl/lotus-{app,web}:<sha>` puxado e executado nesta máquina pela mesma sequência
+que o host fará.
+
+**Escopo:**
+- `audit-dev` deixa de ser `continue-on-error` e entra no `needs` do `image` (decisão do João,
+  revertendo o "reporta, não reprova" do item 11); bump dos sete advisories transitivos no
+  `pnpm-lock.yaml`, `package.json` intacto;
+- espelho de `origin/main` (onze PRs, #75–#85) para `Gatika-CL/main` pelo script, um commit;
+- `scripts/provar-release.sh <sha>`: `login → pull → up → /up` do par corporativo sobre o overlay
+  de sonda, `down -v` sempre; PAT clássico `read:packages` criado pelo João, fora do repositório;
+- `CONTRIBUINDO.md`: "Como ler o CI" e "Provar um release"; `P-62` registra que o pessoal está
+  público, com decisão adiada.
+
+**Fora:** AWS (item 10), deploy/rollback (item 12), visibilidade/protection do pessoal (João),
+`pnpm.overrides`, mudança em compose/Dockerfile.
+
+**DoD:** run `push` em `main` verde com `audit-dev` decidindo; `upstream/main` com a árvore
+filtrada do tip; `provar-release.sh` contra o SHA do espelho novo termina `0` com `/up` 200 e os
+digests impressos; catracas do frontend verdes; docs e estado coerentes.
 
 ---
 
