@@ -15,6 +15,9 @@ type Props = {
   /** `emission_blocked !== null` da turma selecionada — desabilita `Emitir`
    * mesmo em linha `sin_emitir` (a porta que falta é da turma, não do aluno). */
   blocked: boolean
+  /** `id` da tag que explica o bloqueio; os "Emitir" apagados apontam para ela
+   * por `aria-describedby` (f3 UI-03). */
+  blockedReasonId?: string
   onEmit: (enrollment: EmissionPanelEnrollmentData) => void
   onView: (enrollment: EmissionPanelEnrollmentData) => void
 }
@@ -27,7 +30,7 @@ const STATUS_SEVERITY: Record<EnrollmentApprovalStatus, 'success' | 'danger' | '
 
 /** Molde `EnrollmentTable`: `AppDataTable` sem toolbar própria (a seleção de
  * turma e as ações de lote vivem em `EmissionPanel`, que é quem monta o card). */
-export function EmissionStudentsTable({ enrollments, counts, loading, blocked, onEmit, onView }: Props) {
+export function EmissionStudentsTable({ enrollments, counts, loading, blocked, blockedReasonId, onEmit, onView }: Props) {
   const { t } = useTranslation()
   const largura = emissionWidths()
   const table = useTableFilter(enrollments)
@@ -90,7 +93,15 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
             return <AppButton label={t('certificate.view')} text onClick={() => onView(e)} />
           }
           if (kind === 'sin_emitir') {
-            return <AppButton label={t('certificate.emit')} text disabled={blocked} onClick={() => onEmit(e)} />
+            return (
+              <AppButton
+                label={t('certificate.emit')}
+                text
+                disabled={blocked}
+                aria-describedby={blocked ? blockedReasonId : undefined}
+                onClick={() => onEmit(e)}
+              />
+            )
           }
           return null
         }}
