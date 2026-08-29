@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|
 | A1–A6 | A | adequado | — | — (nota da A3: "Volver" em linha própria é desenho do `DetailHeader`, não achado) | — |
 | UI-01 | B | corrigir | R1 | `ArchiveSwitch`: selecionado `outlined`, não selecionado `text` | `ArchiveSwitch.test.tsx` (visto reprovar) · run 5 |
-| UI-02 | B | corrigir | sítio | `size="small"` no Rechazar | pendente — Task 14 / run 5 |
+| UI-02 | B | corrigir | sítio | `size="small"` no Rechazar | run 5 |
 | UI-03 | B | corrigir | R2 | `identifierClass` no RUT do `BudgetDetailPage` | grep refinado zero (Task 9) · run 5 |
 | UI-04 | B | recusado | — | costura decidida em `AppDialog/style.ts`; f4 A3 mediu coerente | `AppDialog/style.ts:6-11` |
 
@@ -19,7 +19,7 @@
 |---|---|---|---|---|---|
 | UI-01 | A | adequado | — | — | — |
 | UI-02 | B | ficha | — | D-63 | pendente — Task 16 |
-| UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | pendente — Task 14 / Task 16 |
+| UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | `FormSection.test.tsx` (visto reprovar) · pendente — Task 16 |
 | UI-04 | B | recusado | — | consome `sectionLabelClass` por template; `GRAFIA_LITERAL` verde; `h4` sob `h3` é aninhamento | `AgendaPanel.tsx:99`, `KpiRow.tsx:77` |
 | UI-05 | B | corrigir | R2 | `technicalDataClass` no pill do `AppCard` e nas colunas numéricas de Cursos | `typography.test.ts` (Task 7) · grep refinado zero (Task 9) · run 5 |
 | UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · `features/` grep refinado zero (Task 9) |

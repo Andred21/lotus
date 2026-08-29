@@ -61,7 +61,12 @@ export function QuoteRow({
 
       <div className="flex items-center gap-2">
         {onReject && quote.status !== 'rejected' && (
-          <AppButton label={t('quote.reject')} severity="danger" outlined onClick={onReject} />
+          /* `size="small"`: 44px/14px, a mesma escala do `compact` do Aprobar ao
+           * lado. Com a geometria cheia do tema, o destrutivo saía 2px mais
+           * alto, 32px mais largo e dois pontos maior que o construtivo — a
+           * ênfase no sentido errado num par confirmar/recusar (f1 UI-02, run de
+           * 2026-08-28). O `severity` segue sendo o sinal do destrutivo. */
+          <AppButton label={t('quote.reject')} severity="danger" outlined size="small" onClick={onReject} />
         )}
         {onApprove && quote.status !== 'approved' && (
           <AppButton variant="compact" label={t('quote.approve')} onClick={onApprove} />

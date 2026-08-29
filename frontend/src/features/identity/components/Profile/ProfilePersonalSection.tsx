@@ -29,7 +29,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
 
   return (
     <AppCard className="p-4">
-      <FormSection title={t('profile.personal.title')} />
+      <FormSection title={t('profile.personal.title')} as="h2" />
 
       <form
         onSubmit={(e) => {
