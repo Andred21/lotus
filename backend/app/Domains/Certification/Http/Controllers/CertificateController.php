@@ -10,6 +10,7 @@ use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\CertificatePageMetaData;
 use App\Domains\Certification\Data\CertificatePageRequest;
+use App\Domains\Certification\Data\EmissionPanelRequest;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
@@ -85,9 +86,9 @@ class CertificateController extends Controller implements HasMiddleware
     }
 
     /** @return array<EmissionPanelTurmaData> */
-    public function emissionPanel(EmissionPanelQuery $panel): array
+    public function emissionPanel(EmissionPanelRequest $request, EmissionPanelQuery $panel): array
     {
-        return $panel->get();
+        return $panel->get($request->desde());
     }
 
     public function store(

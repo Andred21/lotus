@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
+import { AppCard, AppDatePicker, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
@@ -12,6 +12,7 @@ export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
   const turmaInputId = useId()
+  const desdeInputId = useId()
 
   const turma = s.selected
 
@@ -38,6 +39,10 @@ export function EmissionPanel() {
             * `inputId`, a mesma forma dos três filtros de estado irmãos. A
             * chave `certificate.turmaConcluida` já existia nas 3 locales e não
             * era usada em lugar nenhum. */}
+          <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('certificate.concludedSince')}
+          </label>
+          <AppDatePicker inputId={desdeInputId} value={s.desde} onChange={s.setDesde} />
           <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.turmaConcluida')}
           </label>

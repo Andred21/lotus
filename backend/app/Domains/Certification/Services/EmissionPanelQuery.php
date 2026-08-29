@@ -8,6 +8,8 @@ use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\DataSql;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
@@ -24,18 +26,33 @@ use Illuminate\Support\Collection;
  */
 class EmissionPanelQuery
 {
+    /**
+     * Default da janela (spec D7): emissão acontece logo depois da conclusão,
+     * e turma mais antiga continua alcançável por `concluidas_desde`. O front
+     * preenche o seletor com o MESMO número (`emissionWindow.ts`), para a tela
+     * mostrar a data antes de o primeiro GET voltar — os dois apontam um para
+     * o outro; mudar um sem o outro faz a tela prometer uma janela e a API
+     * responder outra.
+     */
+    public const JANELA_MESES = 12;
+
     public function __construct(
         private readonly CertificateTemplateResolver $templates,
         private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
     /** @return array<EmissionPanelTurmaData> */
-    public function get(): array
+    public function get(CarbonImmutable $desde): array
     {
         $templates = $this->templates->latestByCourse();
 
         $turmas = Turma::query()
             ->where('status', TurmaStatus::Concluida)
+            // A janela (spec D7). `DataSql::literal`, não `whereDate`: o
+            // `DATE(end_date)` que `whereDate` gera cega o índice candidato
+            // `turmas(status, end_date)` da Task 12, e o literal cru erra a
+            // borda no sqlite da suíte.
+            ->where('end_date', '>=', DataSql::literal(Turma::query()->getModel()->getConnection(), $desde))
             ->with([
                 'course',
                 // `.client.user`, não só `.client`: o seam `Turma::contratante()`

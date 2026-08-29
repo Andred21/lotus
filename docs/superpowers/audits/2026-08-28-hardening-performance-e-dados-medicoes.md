@@ -82,3 +82,21 @@ archived_by }` → `TurmaRow`) está coberto pelo teste `useTurmasPage.test.tsx`
 ("modo arquivado: ... ACHATA o DTO composto"), não pela sessão de navegador.
 Console sem erros nem warnings durante toda a sessão
 (`playwright-cli console`: 0/0).
+
+## DoD 7 — Painel de emissão com janela por data (Task 10)
+
+API real (dev, `http://localhost:8080`, sessão de `admin@lotus.cl`, seed de
+demonstração — turmas concluídas em `2026-08-20` e `2026-06-26`):
+
+| Requisição                                                | Resposta                                                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET /api/certificates/emission-panel`                     | 200, 2 turmas (default de 12 meses — hoje 2026-08-29, janela desde 2025-08-29)                     |
+| `GET …?concluidas_desde=2021-01-01`                        | 200, 2 turmas (janela aberta, mesma forma de payload)                                              |
+| `GET …?concluidas_desde=2026-08-25`                        | 200, 0 turmas (borda: a de `2026-08-20` sai)                                                       |
+| `GET …?concluidas_desde=01-01-2021`                        | 422 `application/problem+json` — "El campo concluidas desde debe coincidir con el formato Y-m-d." |
+
+A forma do payload não mudou (o painel continua sem paginar: lote e dropdown
+precisam da turma inteira em memória). O 422 sobe pelo handler global, não por
+`abort()`. O seletor da tela e seu default de 12 meses (`emissionWindow.ts`,
+espelho de `EmissionPanelQuery::JANELA_MESES`) estão cobertos pela catraca de
+UI em `EmissionPanel.test.tsx`, vista reprovando sem o `AppDatePicker`.

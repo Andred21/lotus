@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { CertificateData, EmissionPanelEnrollmentData } from '@shared/types/generated'
 import { useCertificate, useEmissionPanel } from '../api/certificatesApi'
 import { rowCertKind } from '../lib/certStatus'
+import { defaultConcludedSince } from '../lib/emissionWindow'
 
 /** Contagens da turma selecionada, derivadas UMA vez aqui. `total` e
  * `aprobados` alimentam o rodapé de `EmissionStudentsTable`, que os recalculava
@@ -29,7 +30,11 @@ export type EmissionCounts = {
  * `features/*\/components/**`.
  */
 export function useEmissionPanelState() {
-  const panel = useEmissionPanel()
+  // O seletor nasce com o default do servidor (12 meses) para a tela dizer
+  // desde quando está mostrando antes de o GET voltar. Limpar o seletor
+  // volta ao default — nunca "sem janela".
+  const [desde, setDesde] = useState<string>(defaultConcludedSince())
+  const panel = useEmissionPanel(true, desde)
   const [turmaId, setTurmaId] = useState<number | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
@@ -64,6 +69,8 @@ export function useEmissionPanelState() {
   }, [selected])
 
   return {
+    desde,
+    setDesde: (value: string | null) => setDesde(value ?? defaultConcludedSince()),
     options,
     turmaId,
     setTurmaId,

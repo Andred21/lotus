@@ -830,6 +830,7 @@
     "tabEmision": "Issuance",
     "tabHistorial": "History",
     "turmaConcluida": "Completed class",
+    "concludedSince": "Classes concluded since",
     "selectTurma": "Select a completed class...",
     "concludedAt": "Concluded on {{date}}",
     "emptyPanelTitle": "Select a class to see certifiable students",

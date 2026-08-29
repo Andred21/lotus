@@ -830,6 +830,7 @@
     "tabEmision": "Emisión",
     "tabHistorial": "Historial",
     "turmaConcluida": "Turma concluida",
+    "concludedSince": "Turmas concluidas desde",
     "selectTurma": "Selecciona una turma concluida...",
     "concludedAt": "Concluida el {{date}}",
     "emptyPanelTitle": "Selecciona una turma para ver los alumnos certificables",
