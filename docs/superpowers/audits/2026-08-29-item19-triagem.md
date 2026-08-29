@@ -67,6 +67,9 @@ que confere substring da própria constante (`HistorialTable.test.tsx:131,136`,
 grafia solta), e uma é prosa de docblock histórico (`IssuedDialog.tsx:74`, cita a grafia antiga por
 referência). Nenhum `className` literal restante.
 
+**R2 — catraca `MONO_LITERAL`:** nasceu verde nas duas camadas (`src/features/**` ×3, `src/app/**`);
+sonda negativa confirmada em `RedatorCard.tsx` (features) e `KpiRow.tsx` (app), revertidas.
+
 ## Run 5 — `2026-08-29-item19-run5.md`
 
 *(preenchido na Task 17: os seis diálogos, `/validar` válido, veredito do `CertificateFolio`, remedições; achado novo entra aqui com o mesmo gabarito.)*

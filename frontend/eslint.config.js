@@ -284,6 +284,22 @@ const GRAFIA_LITERAL = [
     message: MSG_GRAFIA_LITERAL,
   },
 ]
+// Item 19 (R2): `font-mono` escrito literal no sítio é a metade de um par — a
+// fase 2 do item 18 mediu sete sítios com `font-mono` SEM `tabular-nums`, e a
+// fase 1 um RUT partido no hífen por viajar como prosa. A rule mandava o par e
+// não tinha mecanismo. `technicalDataClass` e `identifierClass` em
+// `shared/ui/typography.ts` são a única grafia; `shared/ui` fica de fora porque
+// é onde ela é DEFINIDA. Medido com o próprio seletor antes de valer: 20 sítios,
+// zerados nas Tasks 8 e 9 do plano de 2026-08-29.
+const MSG_MONO_LITERAL =
+  'Dado técnico com font-mono literal: importe technicalDataClass (contagem, data, versão) ou identifierClass (RUT, folio, código — não quebra) de @shared/ui. ' +
+  'O par font-mono + tabular-nums é inseparável (.claude/rules/frontend-estilizacao.md §Dado técnico).'
+const MONO_LITERAL = [
+  { selector: 'JSXAttribute[name.name="className"] Literal[value=/font-mono/]', message: MSG_MONO_LITERAL },
+  { selector: 'JSXAttribute[name.name="className"] TemplateElement[value.raw=/font-mono/]', message: MSG_MONO_LITERAL },
+  { selector: 'Property[key.name="className"] Literal[value=/font-mono/]', message: MSG_MONO_LITERAL },
+  { selector: 'Property[key.name="className"] TemplateElement[value.raw=/font-mono/]', message: MSG_MONO_LITERAL },
+]
 // Item 17: toda coluna declara largura, e toda coluna com ação fica presa à
 // direita. As duas nascem DEPOIS de as 15 tabelas cumprirem — regra ligada antes
 // deixa o lint vermelho durante catorze tasks.
@@ -429,7 +445,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -442,7 +458,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -463,7 +479,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -667,7 +683,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
     },
   },
 ])
