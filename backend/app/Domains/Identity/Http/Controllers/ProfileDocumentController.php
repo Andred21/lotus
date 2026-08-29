@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
 use App\Domains\Identity\Data\RedatorDocumentData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Domains\Identity\Exceptions\RedatorOnlyActionException;
 use App\Http\Controllers\Controller;
 use App\Shared\Files\ContentClass;
 use Carbon\Carbon;
@@ -25,7 +26,9 @@ class ProfileDocumentController extends Controller
     {
         $redator = $request->user()->redator;
 
-        abort_unless($redator !== null, 403, 'Apenas redatores enviam documentação profissional.');
+        if ($redator === null) {
+            throw new RedatorOnlyActionException;
+        }
 
         $validated = $request->validate([
             'type' => ['required', Rule::in(RedatorDocumentType::selfServiceValues())],
