@@ -27,7 +27,7 @@ class StudentDataTest extends TestCase
         ]);
         $student = Student::create(['user_id' => $user->id, 'current_client_id' => $client->id]);
 
-        $data = StudentData::fromModel($student->fresh(['user', 'currentClient']));
+        $data = StudentData::fromModel($student->fresh()->loadListingData());
 
         $this->assertSame('María González Rojas', $data->name);
         $this->assertSame('12.876.543-K', $data->rut);
@@ -44,7 +44,7 @@ class StudentDataTest extends TestCase
             'user_id' => User::factory()->aluno()->create(['rut' => '12.876.543-K'])->id,
         ]);
 
-        $data = StudentData::fromModel($student->fresh(['user', 'currentClient']));
+        $data = StudentData::fromModel($student->fresh()->loadListingData());
 
         $this->assertNull($data->current_client_id);
         $this->assertNull($data->current_client_name);

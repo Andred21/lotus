@@ -312,14 +312,16 @@ class ComputedKeyInBodyTest extends TestCase
         // Sem isso, um regex que parasse de casar (atributo com "]" no
         // argumento, `public readonly ?string`, `Data` numa subpasta fora do
         // glob, um campo `string` não-nullable) passaria com `$faltando`
-        // vazio e o teste ficaria verde sem ter olhado nada. 11 é a
-        // contagem viva hoje — um número diferente aqui NÃO se ajusta no
-        // escuro: ou o regex parou de enxergar um campo que existe, ou
-        // nasceu campo de foto novo. Nos dois casos, olhe antes de mudar.
+        // vazio e o teste ficaria verde sem ter olhado nada. 12 é a
+        // contagem viva hoje (Task 4 somou `StudentDetailData::$photo_url`,
+        // com `#[Computed]`, para o detalhe ser superconjunto de
+        // `StudentData` — D-desvio 2) — um número diferente aqui NÃO se
+        // ajusta no escuro: ou o regex parou de enxergar um campo que existe,
+        // ou nasceu campo de foto novo. Nos dois casos, olhe antes de mudar.
         $this->assertSame(
-            11,
+            12,
             $encontrados,
-            "A varredura achou {$encontrados} campo(s) de foto, esperava 11.",
+            "A varredura achou {$encontrados} campo(s) de foto, esperava 12.",
         );
 
         $this->assertSame([], $faltando, 'Campo de foto sem #[Computed]: '.implode(', ', $faltando));

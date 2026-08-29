@@ -4,7 +4,10 @@ namespace App\Domains\Identity\Data;
 
 use App\Domains\Certification\Services\StudentCertificateSummary;
 use App\Domains\Identity\Models\Student;
+use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Support\Collection;
+use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -34,6 +37,12 @@ class StudentDetailData extends Data
         public array $links,
         /** @var array<StudentTurmaData> */
         public array $turmas,
+        /** A mesma foto viva de `StudentData`: o `useOne` da lista lê este
+         * endpoint quando o aluno aberto não está na página carregada (D14),
+         * e o dialog precisa da mesma forma nos dois caminhos. */
+        #[Computed]
+        #[WithTransformer(SignedUrlTransformer::class, 60)]
+        public ?string $photo_url = null,
     ) {}
 
     /**
@@ -69,6 +78,7 @@ class StudentDetailData extends Data
                     $certificates->get($enrollment->id),
                 ))
                 ->all(),
+            photo_url: $student->user->photo_path,
         );
     }
 }

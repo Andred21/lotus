@@ -601,6 +601,7 @@ current_client_name: string | null,
 enrollments_count: number,
 links: StudentClientLogData[],
 turmas: StudentTurmaData[],
+photo_url: string | null,
 };
 export type StudentTurmaData = {
 turma_id: number,

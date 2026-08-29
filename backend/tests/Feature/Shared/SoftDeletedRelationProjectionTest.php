@@ -141,7 +141,7 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
         $client->delete();
 
-        $data = StudentData::fromModel($student->fresh(['user', 'currentClient']));
+        $data = StudentData::fromModel($student->fresh()->loadListingData());
 
         $this->assertSame($client->id, $data->current_client_id);
         $this->assertSame('Colbún', $data->current_client_name);

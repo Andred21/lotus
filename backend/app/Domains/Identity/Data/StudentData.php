@@ -81,9 +81,12 @@ class StudentData extends Data
             client_id: new Optional,
             current_client_id: $student->current_client_id,
             current_client_name: $student->currentClient?->legal_name,
-            // `enrollments_count` vem do withCount() do controller; o fallback
-            // cobre a chamada direta (testes de unidade) sem gerar N+1 na lista.
-            enrollments_count: $student->enrollments_count ?? $student->enrollments()->count(),
+            // Sem fallback: vem do `withCount()` do builder ou do
+            // `loadListingData()` da instância. `enrollments()->count()` aqui
+            // era uma query por linha escondida atrás de um `??` — exatamente o
+            // que `Model::preventLazyLoading()` (Task 11) não enxerga, porque
+            // é query feita NA relação, não lazy load da relação.
+            enrollments_count: $student->enrollments_count,
             photo_url: $student->user->photo_path,
         );
     }
