@@ -79,7 +79,7 @@ class ManualTurmaTest extends TestCase
             ->assertStatus(500)
             ->assertHeader('content-type', 'application/problem+json')
             ->assertJsonPath('type', 'https://lotus.cl/errors/server')
-            ->assertJsonPath('title', 'Erro interno')
+            ->assertJsonPath('title', __('problem.title.server'))
             ->assertJsonPath('status', 500)
             ->assertJsonPath(
                 'detail',
