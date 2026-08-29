@@ -16,13 +16,13 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-i18n-e-erros-api
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
     active_spec: docs/superpowers/specs/2026-08-29-hardening-i18n-e-erros-api-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-29-hardening-i18n-e-erros-api.md
     context_packet: null
     blocker: null
     resume_state: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `planning` |
+| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_execution` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -253,6 +253,20 @@ framework também são localizados, por TIPO de exceção. Dois achados fora de 
 401/403/404 é `getMessage()` cru em inglês, e o `phpunit.xml` não fixa `APP_LOCALE`, então a suíte
 herda o `.env` gitignored e roda em `en` na CI. Spec em
 `specs/2026-08-29-hardening-i18n-e-erros-api-design.md`.
+
+**Plano do item 7 — 2026-08-29, a lane entra em `ready_for_execution`.** Onze tasks em
+`plans/2026-08-29-hardening-i18n-e-erros-api.md`, na ordem da dependência: a fundação de locale e a
+catraca de paridade antes de qualquer chave; o envelope RFC 7807; depois um arquivo de `lang/` por
+domínio (`shared`, `commercial`, `operation`, `identity`, `certification`), com o Dashboard por
+último porque consome os rótulos de tipo de documento que as tasks de `operation` e `identity`
+publicam; a catraca contra literal só depois que todos os sítios estão limpos, senão ela reprovaria
+por causa do trabalho ainda não feito; e o DoD contra a API real no fim. A escrita do plano corrigiu
+uma medição da spec: o Dashboard tem **13 literais em 6 arquivos** mais uma constante, não 6 — e
+**quatro deles interpolam código de enum cru**, a doença da `D-38` num segundo lugar que a ficha não
+registrava. **Handoff: `executor: claude`** — o bloco toca o handler global de erro (lei §5.4),
+traduzir 41 recusas para três idiomas num produto de peso legal é julgamento e não mecânica, e três
+tasks dependem de conferir o código em volta antes de escrever. Execução exige
+`/executar-bloco hardening-i18n-e-erros-api`.
 
 
 ## Itens fechados — ponteiro, não narrativa

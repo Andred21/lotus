@@ -29,10 +29,13 @@ O backlog pede "eliminar mistura de idiomas nas mensagens emitidas pela API". A 
 - **O `detail` de 401/403/404 é o `getMessage()` cru do framework — inglês.** `detailFor` devolve
   `$e->getMessage()` para todo status que não seja 500, e a `AuthorizationException` do Laravel
   carrega `This action is unauthorized.`. **Isto não estava em ficha nenhuma**; foi medido aqui.
-- **Seis `description` do Dashboard são frase pronta em espanhol** (`CommercialMetricsQuery.php:48`
-  e `:64`, `CertificationMetricsQuery.php:40` e `:76`, `OperationMetricsQuery.php:128` e `:136`,
-  `IdentityMetricsQuery.php:54`), três delas montadas por concatenação. É a `D-18`; a `D-38` é a
-  consequência visível (`PendingList.tsx:30` imprime o código do enum cru).
+- **Treze `description` do Dashboard são frase pronta em espanhol**, em seis arquivos de
+  `Domains/Dashboard/`, mais a constante `DashboardFilterData::PERIODO_INVERTIDO`. Cinco são
+  montadas por concatenação e **quatro interpolam o código do enum cru**
+  (`"Documento {$document->type} de relator vencido."`, `IdentityMetricsQuery.php:55` e `:56`;
+  `RedatorScopeQuery.php:149` e `:150`) — a mesma doença da `D-38` num segundo lugar, que a ficha
+  não registrava porque só media `OperationMetricsQuery`. É a `D-18`; a `D-38` é a consequência
+  visível (`PendingList.tsx:30`).
 - **O espanhol está duplicado e o dicionário JSON de es-CL não existe.** `lang/es/` e `lang/es_CL/`
   são **byte-idênticos** nos oito arquivos (`diff -q`, 8/8 iguais), e existem `en.json`, `es.json` e
   `pt_BR.json` — mas **não** `es_CL.json`. Como o Laravel não funde arquivo parcialmente, uma chave
@@ -154,11 +157,13 @@ de convite e reset, que já moram lá.
 | Onde | Sítios | Vira |
 |---|---|---|
 | `app/Domains/**` — `ValidationException::withMessages` | 41 | `__('<dominio>.<agregado>.<motivo>')` |
-| `Shared/Files/ContentClass.php:123`, `Shared/.../SpreadsheetRowReader.php:43,60` | 3 | `__('shared.*')` com `:max`/`:linhas` |
+| `Shared/Files/ContentClass.php:123`, `Domains/Operation/Services/SpreadsheetRowReader.php:42,59` | 3 | `__('shared.*')` com `:max`/`:linhas` |
 | `ProblemDetails::fromException` — os 6 `title` | 6 | `__('problem.title.*')` |
 | `ProblemDetails::detailFor` — máscara do 500, `detail` do 429 | 2 | `__('problem.detail.*')` |
 | `ProblemDetails::detailFor` — `getMessage()` cru de 401/403/404 | 1 caminho | `__('problem.detail.*')` **por tipo de exceção** (ver D5) |
-| `Domains/Dashboard/Services/*MetricsQuery.php` — `description` | 6 | `__('dashboard.*', [...])` |
+| `Domains/Dashboard/**` — `description` + `PERIODO_INVERTIDO` | 14 | `__('dashboard.*', [...])` |
+| `Domains/Commercial/Data/ClientData.php:43` — `CONTATO_OBRIGATORIO` | 1 | `__('commercial.client.contact_required')` |
+| `Shared/Files/ScannerUnavailableException.php:29` | 1 | `__('shared.file.scanner_unavailable')` |
 
 `__()` dentro de Model (`Turma`, `Client`, `Redator`) é aceito e declarado: o helper é da
 aplicação, o Model já escrevia a frase para o usuário, e o que muda é a grafia — não a camada. O
@@ -208,6 +213,9 @@ Cada uma vista **reprovar por sonda negativa** antes de valer.
 
 ## 6. Fora de escopo
 
+- **Rótulo de tipo de documento no front** — o backend passa a mandar o rótulo já traduzido dentro
+  da frase; o `CompliancePanel` segue traduzindo os códigos que recebe por outro campo. Nenhuma das
+  duas pontas muda de contrato.
 - **`screenDetail` do front** (D4) — só o docblock é corrigido; comportamento intocado. Vira ficha.
 - **Dicionários do front** (`shared/config/locales/*.json`) — ADR-15: camadas independentes.
 - **As URLs de `type` do RFC 7807** — identificador estável, não texto de tela.
