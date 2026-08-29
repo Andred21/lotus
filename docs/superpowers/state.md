@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-i18n-e-erros-api
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
     active_spec: docs/superpowers/specs/2026-08-29-hardening-i18n-e-erros-api-design.md
