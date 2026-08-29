@@ -11,21 +11,21 @@ resume_state: null
 active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
 active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
 context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
-blocker: null
+blocker: "Review do item 6 (2026-08-29) — cinco achados aguardando decisao do Joao; Q-1 (Reemitir do Historial preso na janela de 12 meses do painel de emissao) e Q-2..Q-5. Nenhuma violacao das leis §5."
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
     active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
     context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
-    blocker: null
-    resume_state: null
+    blocker: "Review do item 6 (2026-08-29) — cinco achados aguardando decisao do Joao; Q-1 (Reemitir do Historial preso na janela de 12 meses do painel de emissao) e Q-2..Q-5. Nenhuma violacao das leis §5."
+    resume_state: reviewing
     last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
   lane-b:
     active_feature: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_review` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `blocked` (review) |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -269,6 +269,27 @@ certificados, longe do limiar que abriria o plano B — registrada, sem ficha. A
 Duas correções vieram do próprio gate, não da inspeção: uma referência com reticências no
 `der-fisico` que reprovou a catraca `repo-docs-refs`, e os 50 redatores do `PerformanceScenarioSeeder`
 sem a role `redator` — o cenário media o 403 do `permission:` no lugar do escopo do `visibleTo`.
+
+**Review do bloco — 2026-08-29, a lane entra em `blocked`.** `/revisar-sprint` sobre o intervalo
+`f584432b..c0bcf87a`. Classificação: **alto risco** (migration de schema, `generated.ts`, escopo
+`visibleTo` e certificados), então a revisão do Claude foi acompanhada de uma segunda lente do Codex
+em sandbox read-only. **Nenhuma violação das leis §5** e nenhum órfão: `archivableSource`,
+`useTableFilter` e `useArchivedPage` seguem servindo as raízes bounded, e as peças novas
+(`Paginates`, `DataSql`, `JanelaDeAviso`, `useServerTable`, `useCrudDialog`, `useRestoreAction`)
+todas têm consumidor. 63 testes do bloco reexecutados verdes na revisão.
+
+Cinco achados, nenhum inventado e dois confirmados pelas duas lentes: **Q-1** (🔴) o `Reemitir` do
+Historial procura a matrícula num painel de emissão sem `concluidas_desde`, que agora só devolve
+turmas concluídas nos últimos 12 meses — certificado revogado de turma mais antiga fica sem
+reemissão, com a mesma tarja genérica de um bloqueio legítimo; **Q-2** (🟡) `defaultConcludedSince`
+monta a data no fuso do navegador e o front SEMPRE manda o parâmetro, então o default
+`America/Santiago` do backend nunca roda; **Q-3** (🟡) trocar Ativas↔Arquivadas não zera a página no
+`useServerTable` (o escopo só olha termo e filtros), o que custa um request desperdiçado e um piscar
+de tabela vazia; **Q-4** (🟡) a única coluna com `sortable` do hub de turmas é a "Código", ligada a
+`turmas.created_at`; **Q-5** (🟡) `displayStatusCase()` aceita `CarbonInterface` e chama `addDays()`
+nele — hoje seguro porque `hoje()` devolve `CarbonImmutable`, mas um chamador com Carbon mutável
+deslocaria filtro, resumo e linhas do mesmo request. Nenhum é decisão registrada em ADR, spec ou
+ficha. **Só achado aprovado pelo João vira correção.**
 
 **Colisão conhecida com a `lane-c` (item 18) segue de pé:** `HistorialTable.tsx`. Rebase antes do
 merge. O review não começou — `next_action: request_code_review`.
