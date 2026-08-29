@@ -14,13 +14,13 @@ context_packet: null
 blocker: null
 lanes:
   lane-a:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: hardening
+    active_work_item: hardening-i18n-e-erros-api
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
-    branch: —   # feat/hardening-performance-e-dados mesclou (PR #83) e foi apagada em 2026-08-29
+    branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
     active_spec: null
     active_plan: null
     context_packet: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
+| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_planning` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -230,6 +230,16 @@ ela existir, e a `main` passou algumas horas reproduzindo a reprovação; ela en
 local e remotamente em 2026-08-29, com `git diff` vazio contra a `main` nas duas. A árvore é o main
 tree, que não se destrói, e voltou para `main`. A lane não recebe item novo sozinha: promoção é do
 João, contra o `backlog.md`.
+
+**Promoção do item 7 — 2026-08-29, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`; `/planejar-bloco` recusou-se a promover sozinho e parou pedindo a seleção,
+como manda o gate. O item é marcado **`Contexto: não`**, então a lane nasce direto em
+`ready_for_planning` — não há Context Packet a gerar, e as fontes (`ADR-03`, `ADR-15`, fichas
+`D-07`, `D-18`, `D-36`) vivem todas no repositório. A branch `feat/hardening-i18n-e-erros-api` sai
+de `main@37e0e2d4`, que já é `origin/main` e traz os merges dos PRs #83, #84 e #85. **Árvore:** main
+tree, pelo precedente de todo bloco de backend (gate P-03). **Houve troca de foco:** `focused_lane`
+era `lane-c` e passou a `lane-a` neste mesmo commit, com o espelho do topo redesenhado junto — a
+`lane-c` não foi tocada.
 
 
 ## Itens fechados — ponteiro, não narrativa
