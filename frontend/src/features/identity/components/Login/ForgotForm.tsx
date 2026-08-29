@@ -77,7 +77,7 @@ export function ForgotForm({ email, onEmailChange, autoFocusTitle }: Props) {
               <small id="forgot-email-error" style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
             )}
           </div>
-          <AppButton type="submit" label={t('password.forgotSubmit')} loading={isSubmitting} />
+          <AppButton variant="primary" type="submit" label={t('password.forgotSubmit')} loading={isSubmitting} />
         </>
       )}
 

@@ -69,6 +69,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
 
         <div>
           <AppButton
+            variant="primary"
             type="submit"
             label={t('profile.personal.save')}
             icon="pi pi-check"

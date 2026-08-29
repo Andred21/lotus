@@ -39,6 +39,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
           <div className="flex justify-end gap-2">
             <AppButton label={t('operation.enrollment.form.cancel')} outlined onClick={close} />
             <AppButton
+              variant="primary"
               label={t('operation.enrollment.form.verify')}
               disabled={!f.rut || f.previewing}
               onClick={f.runPreview}
@@ -66,6 +67,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
             <div className="flex justify-end gap-2">
               <AppButton label={t('operation.enrollment.form.cancel')} outlined onClick={close} />
               <AppButton
+                variant="primary"
                 label={t('operation.enrollment.form.submit')}
                 disabled={!f.details.name || f.submitting}
                 onClick={f.submit}

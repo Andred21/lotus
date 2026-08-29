@@ -57,7 +57,7 @@ export function ReissueDialog({
   if (!target || target.turma.emission_blocked !== null) {
     const footer = (
       <div className="flex justify-end">
-        <AppButton label={t('common.close')} onClick={onHide} />
+        <AppButton label={t('common.close')} text onClick={onHide} />
       </div>
     )
     return (

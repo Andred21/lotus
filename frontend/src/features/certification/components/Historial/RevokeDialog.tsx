@@ -30,7 +30,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
 
   const footer = (
     <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} outlined disabled={revoke.isPending} onClick={onHide} />
+      <AppButton label={t('common.cancel')} text disabled={revoke.isPending} onClick={onHide} />
       <AppButton
         label={t('certificate.revokeConfirm')}
         icon="pi pi-ban"

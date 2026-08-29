@@ -47,6 +47,7 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, onHide }: P
         <div className="flex justify-end gap-2">
           <AppButton label={t('common.cancel')} outlined disabled={r.submitting} onClick={close} />
           <AppButton
+            variant="primary"
             label={t('common.save')}
             disabled={r.submitting}
             onClick={() => r.submit({ onSuccess: close })}

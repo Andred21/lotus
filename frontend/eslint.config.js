@@ -221,6 +221,23 @@ const DROPDOWN_SEM_NOME = {
   message:
     'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
 }
+// Item 19 (R1): `AppButton` sem papel cai no `.p-button` preenchido do Lara —
+// celeste com rótulo navy —, que NÃO é papel deste produto: a ação primária é
+// o contorno de marca (`variant="primary"`), a secundária é `text`, a
+// destrutiva passa `severity`. Foi assim que os seis diálogos de certificação
+// (CTA cru), o alvo do `AppSelectableCard` (card de redator selecionado
+// idêntico ao não selecionado — o C da fase 4) e o `ArchiveSwitch` (filtro
+// disputando com a CTA) escaparam da varredura do item 18. Medido com o próprio
+// seletor antes de valer: 13 sítios, classificados na Task 6 do plano de
+// 2026-08-29. `rounded` sozinho não é papel — sem `text` o botão segue
+// preenchido.
+const BOTAO_SEM_PAPEL = {
+  selector:
+    'JSXOpeningElement[name.name="AppButton"]' +
+    ':not(:has(> JSXAttribute[name.name=/^(variant|text|outlined|link|severity)$/]))',
+  message:
+    'AppButton sem papel cai no preenchido cru do Lara: passe variant="primary" (ação primária), text (secundária), outlined, link ou severity (destrutiva) — .claude/rules/frontend-estilizacao.md §Botão.',
+}
 // Grafia tipográfica escrita LITERAL no sítio, em vez de vir de
 // `shared/ui/typography.ts`. A rule de estilização já mandava não fazer isso e
 // nomeava `typography.test.ts` como mecanismo — mas aquele teste congela o VALOR
@@ -412,7 +429,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -425,7 +442,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -446,7 +463,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -650,7 +667,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL],
     },
   },
 ])

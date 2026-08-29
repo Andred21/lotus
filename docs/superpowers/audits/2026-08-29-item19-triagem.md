@@ -40,8 +40,13 @@
 | UI-05 | B | ficha | — | D-66 (+ P-67) | pendente — Task 16 |
 | UI-06 | B | corrigir | R4 | `dataKey="enrollment_id"` na Emisión | pendente — Task 11 / run 5 |
 | UI-07 | B | ficha | — | D-67 | pendente — Task 16 |
-| UI-08 | B | corrigir | R1 | CTA `primary`, secundárias `text` nos 6 diálogos | pendente — Task 6 / run 5 |
+| UI-08 | B | corrigir | R1 | CTA `primary`, secundárias `text` nos 6 diálogos | catraca vista reprovar (2 sondas) · run 5 |
 | UI-09 | B | corrigir | sítio | `staleTime: 30_000` no painel (segundo observador do `useHistorial`) | pendente — Task 13 / run 5 |
+
+**Nota (Task 6):** a sonda do plano mediu 13 sítios; o `no-restricted-syntax` real acusou 17 — 4 a
+mais em `features/operation/components/Enrollment/` (`EnrollStudentForm.tsx:41,68`,
+`ImportDialog.tsx:47`, `RegisterResultDialog.tsx:49`), fora da varredura original. Corrigidos aqui
+pela mesma raiz (R1), não viram ficha.
 
 ## Fase 4 — Login, shell, CourseDialog
 

@@ -25,7 +25,7 @@ export function SetPasswordPage() {
         <h1 className={pageTitleClass} style={{ color: 'var(--text-color)' }}>
           {t('password.expired')}
         </h1>
-        <AppButton label={t('password.expiredAction')} onClick={() => navigate('/recuperar-clave')} />
+        <AppButton variant="primary" label={t('password.expiredAction')} onClick={() => navigate('/recuperar-clave')} />
       </main>
     )
   }
@@ -36,7 +36,7 @@ export function SetPasswordPage() {
         <h1 className={pageTitleClass} style={{ color: 'var(--text-color)' }}>
           {t('password.success')}
         </h1>
-        <AppButton label={t('password.successAction')} onClick={() => navigate('/login')} />
+        <AppButton variant="primary" label={t('password.successAction')} onClick={() => navigate('/login')} />
       </main>
     )
   }
@@ -93,7 +93,7 @@ export function SetPasswordPage() {
           />
         </div>
 
-        <AppButton type="submit" label={t('password.submit')} loading={isSubmitting} />
+        <AppButton variant="primary" type="submit" label={t('password.submit')} loading={isSubmitting} />
       </form>
     </main>
   )

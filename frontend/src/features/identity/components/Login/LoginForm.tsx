@@ -99,7 +99,7 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
         )}
       </div>
 
-      <AppButton type="submit" label={t("login.submit")} loading={isSubmitting} />
+      <AppButton variant="primary" type="submit" label={t("login.submit")} loading={isSubmitting} />
 
       {/* Continua `<Link>` e não botão: o destino é URL de verdade, então href,
           botão do meio e menu de contexto seguem funcionando, e o back do

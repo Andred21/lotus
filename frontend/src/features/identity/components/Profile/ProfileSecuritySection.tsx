@@ -109,6 +109,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
 
         <div>
           <AppButton
+            variant="primary"
             type="submit"
             label={t('profile.security.save')}
             icon="pi pi-lock"
