@@ -1,13 +1,11 @@
-import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, AppDropdown, IdentityCell, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
-import type { CertificateData, CertificateDisplayStatus } from '@shared/types/generated'
+import { AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
+import type { CertificateData } from '@shared/types/generated'
 import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
 import { historialWidths } from './historialColumns'
 import { HistorialDialogs } from './HistorialDialogs'
-
-const STATUSES: CertificateDisplayStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
+import { HistorialStatusFilter } from './HistorialStatusFilter'
 
 /** Vazio aqui não é `null`: o snapshot corrompido chega com string VAZIA — é o
  * que `CertificateSnapshotData::missingRequiredFields()` mede (`trim === ''`).
@@ -21,44 +19,18 @@ export function HistorialTable() {
   const { t } = useTranslation()
   const largura = historialWidths()
   const h = useHistorial()
-  const statusInputId = useId()
-
-  const statusOptions = [
-    { label: t('certificate.filterAll'), value: null },
-    ...STATUSES.map((s) => ({ label: t(`certificate.status.${s}`), value: s })),
-  ]
 
   return (
     <>
       <SearchableTableFrame
         table={h.table}
+        totalRecords={h.table.totalRecords}
+        sortField={h.table.sortField}
+        sortOrder={h.table.sortOrder}
+        onSort={h.table.onSort}
         searchPlaceholder={t('certificate.searchPlaceholder')}
         onClearFilter={h.clearStatusFilter}
-        filterSlot={
-          /* Par rótulo+`inputId`, e não um `<div className="w-48">` com o
-           * dropdown solto dentro: sem ele o controle só expõe o VALOR corrente
-           * ("Todos") e o leitor de tela anuncia "Todos, combo box", sem dizer o
-           * que se filtra. É a TERCEIRA vez que o mesmo achado aparece — UI-07
-           * da run de Operação (2026-08-23), UI-02 da de Comercial e UI-01 da de
-           * Certificados (2026-08-25) —, sempre nesta mesma forma. `useId` e não
-           * id fixo, porque um id hardcoded duplicaria em silêncio se a aba
-           * ganhasse uma segunda tabela; `inputId` e não `id`, pelo motivo que o
-           * `AppDropdown` documenta. A chave é a que já titula a coluna. */
-          <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor={statusInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-              {t('certificate.colStatus')}
-            </label>
-            <div className="w-48">
-              <AppDropdown
-                inputId={statusInputId}
-                value={h.statusFilter}
-                options={statusOptions}
-                optionValue="value"
-                onChange={(e) => h.setStatusFilter(e.value)}
-              />
-            </div>
-          </div>
-        }
+        filterSlot={<HistorialStatusFilter value={h.statusFilter} onChange={h.setStatusFilter} />}
         emptyState={<AppEmptyState icon="pi pi-verified" title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}
         footerCount={t('certificate.statusSummary', h.statusSummary)}
         loading={h.loading}
@@ -66,6 +38,7 @@ export function HistorialTable() {
         onRetry={h.reload}
       >
         <AppColumn
+          field="codigo" sortable
           header={t('certificate.colCodigo')}
           body={(c: CertificateData) => <span className="font-mono text-sm">{c.codigo}</span>}
           style={largura.codigo}
@@ -99,11 +72,13 @@ export function HistorialTable() {
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} style={largura.curso} />
         <AppColumn
+          field="created_at" sortable
           header={t('certificate.colIssuedAt')}
           body={(c: CertificateData) => formatDate(new Date(c.created_at))}
           style={largura.emitidoEm}
         />
         <AppColumn
+          field="valido_ate" sortable
           header={t('certificate.colValidUntil')}
           body={(c: CertificateData) => (c.valido_ate ? formatDate(new Date(`${c.valido_ate}T00:00:00`)) : '—')}
           style={largura.validoAte}

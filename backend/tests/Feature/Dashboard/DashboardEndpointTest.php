@@ -65,7 +65,6 @@ class DashboardEndpointTest extends TestCase
 
     protected function tearDown(): void
     {
-        Model::preventLazyLoading(false);
         CarbonImmutable::setTestNow();
         parent::tearDown();
     }
@@ -635,8 +634,6 @@ class DashboardEndpointTest extends TestCase
         $a = $this->makeRedator('Relator Uno');
         $b = $this->makeRedator('Relator Dos');
         Turma::query()->orderBy('id')->get()->each(fn (Turma $t) => $t->redatores()->attach([$a->id, $b->id]));
-
-        Model::preventLazyLoading();
 
         $this->getJson(self::ENDPOINT)->assertOk()->assertJsonPath('view', 'admin');
     }

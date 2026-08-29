@@ -336,7 +336,7 @@ class UserPhotoTest extends TestCase
         }
 
         $studentFromIndex = function () use ($student): array {
-            $item = collect($this->getJson('/api/students')->assertOk()->json())
+            $item = collect($this->getJson('/api/students')->assertOk()->json('data'))
                 ->firstWhere('id', $student->id);
 
             $this->assertIsArray($item);

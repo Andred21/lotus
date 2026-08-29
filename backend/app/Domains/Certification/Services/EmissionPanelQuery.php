@@ -8,6 +8,8 @@ use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\DataSql;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
@@ -24,18 +26,35 @@ use Illuminate\Support\Collection;
  */
 class EmissionPanelQuery
 {
+    /**
+     * Default da janela (spec D7): emissão acontece logo depois da conclusão,
+     * e turma mais antiga continua alcançável por `concluidas_desde`. O default
+     * é DAQUI e só daqui — o front deixa o seletor vazio e apenas ANUNCIA a
+     * janela ("Últimos 12 meses", `emissionWindow.ts`) enquanto o usuário não
+     * escolhe data. Ele já calculou essa data no fuso do NAVEGADOR e a mandava
+     * em todo GET, e este caminho nunca rodava (Q-2 do review de 2026-08-29);
+     * mudar este número sem mudar o texto de lá faz a tela prometer uma janela
+     * e a API responder outra.
+     */
+    public const JANELA_MESES = 12;
+
     public function __construct(
         private readonly CertificateTemplateResolver $templates,
         private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
     /** @return array<EmissionPanelTurmaData> */
-    public function get(): array
+    public function get(CarbonImmutable $desde): array
     {
         $templates = $this->templates->latestByCourse();
 
         $turmas = Turma::query()
             ->where('status', TurmaStatus::Concluida)
+            // A janela (spec D7). `DataSql::literal`, não `whereDate`: o
+            // `DATE(end_date)` que `whereDate` gera cega o índice candidato
+            // `turmas(status, end_date)` da Task 12, e o literal cru erra a
+            // borda no sqlite da suíte.
+            ->where('end_date', '>=', DataSql::literal(Turma::query()->getModel()->getConnection(), $desde))
             ->with([
                 'course',
                 // `.client.user`, não só `.client`: o seam `Turma::contratante()`

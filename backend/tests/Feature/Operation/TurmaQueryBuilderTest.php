@@ -118,11 +118,11 @@ class TurmaQueryBuilderTest extends TestCase
             }
         });
 
-        $res = $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2);
+        $res = $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2, 'data');
 
         $this->assertSame(1, $consultas);
 
-        $linhas = collect($res->json());
+        $linhas = collect($res->json('data'));
         $this->assertTrue($linhas->firstWhere('id', $completa->id)['habilitada']);
         $this->assertSame([], $linhas->firstWhere('id', $completa->id)['missing_document_types']);
         $this->assertFalse($linhas->firstWhere('id', $incompleta->id)['habilitada']);

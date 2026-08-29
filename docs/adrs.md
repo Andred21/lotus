@@ -339,6 +339,29 @@ suficiente para justificar operar um componente a mais.
 
 ---
 
+## ADR-22 — Contrato de paginação próprio (`App\Shared\Pagination`), não o `LengthAwarePaginator`
+
+**Contexto (2026-08-28):** nenhum endpoint de lista paginava; três crescem sem teto (alunos,
+certificados, turmas). O `LengthAwarePaginator` do Laravel devolve `links/path/from/to` que a
+SPA não lê, e o alias TS que o `typescript-transformer` emite para `PaginatedDataCollection`
+aponta para a classe do framework sem tipo — o front tiparia à mão de qualquer jeito.
+
+**Decisão:** `PageRequest` (entrada: `page` ≥ 1, `per_page` 1..100 default 25, `q` ≤ 100,
+`sort` só da allowlist do builder — fora dela 422, nunca clamp), `PageData { data, meta }` com
+`PageMetaData { page, per_page, total, last_page, total_unfiltered }`, e o trait `Paginates` no
+QueryBuilder custom do agregado (ADR-02: builder, não Repository). `total_unfiltered` é medido
+depois de `visibleTo` e antes de `q`/filtro, para o front medir o EFEITO do filtro. Busca e
+filtro nomeado vão para o SQL, com paridade por teste contra a classificação de domínio
+(`CertificateDisplayStatusParityTest`, `TurmaStatusParityTest`). Só pagina lista que cresce sem
+teto; as bounded continuam devolvendo array.
+
+**Consequências:** o front tem UM lugar que conhece o envelope (`shared/api/page.ts`) e UM hook
+(`useServerTable`) com a mesma forma do `useTableFilter`, então a moldura não distingue as duas
+fontes. Cursor foi descartado: sem `total`, o paginador e o rodapé de contagem morrem. Cache e
+Redis ficam fora por decisão (spec D12), não por adiamento.
+
+---
+
 ## Pendências abertas (não decidir sem o João Victor)
 - ~~Estratégia fina de pruning da auditoria (ADR-08)~~ — **paga por este bloco.** Ver
   `RetentionPolicy` (`backend/app/Shared/Retention/RetentionPolicy.php`, janelas de 12 meses/5

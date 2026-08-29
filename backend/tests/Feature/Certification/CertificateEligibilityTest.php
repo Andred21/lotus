@@ -17,6 +17,7 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -203,7 +204,7 @@ class CertificateEligibilityTest extends TestCase
     {
         $reprovada = $this->makeEnrollment($this->emitivel, EnrollmentApprovalStatus::Reprobado);
 
-        $turma = collect(app(EmissionPanelQuery::class)->get())
+        $turma = collect($this->painel())
             ->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $this->emitivel->id);
 
         $this->assertContains(
@@ -240,6 +241,19 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
+     * O painel com a janela escancarada: este teste é sobre elegibilidade, não
+     * sobre a janela por data (spec D7, coberta em `EmissionPanelWindowTest`).
+     * A data é fixa e não "hoje menos algo" para o dia de amanhã não empurrar
+     * a fixture (`end_date` 2026-07-24) para fora do default de 12 meses.
+     *
+     * @return array<EmissionPanelTurmaData>
+     */
+    private function painel(): array
+    {
+        return app(EmissionPanelQuery::class)->get(CarbonImmutable::parse('2000-01-01'));
+    }
+
+    /**
      * O que o painel apresenta como EMISSÍVEL — o contrato que o botão Emitir
      * da tela lê (`rowCertKind` no front): turma sem `emission_blocked`,
      * matrícula aprovada e sem certificado vigente. É contra ISTO que as
@@ -249,7 +263,7 @@ class CertificateEligibilityTest extends TestCase
      */
     private function matriculasEmissiveisNoPainel(): array
     {
-        return collect(app(EmissionPanelQuery::class)->get())
+        return collect($this->painel())
             ->filter(fn (EmissionPanelTurmaData $turma) => $turma->emission_blocked === null)
             ->flatMap(fn (EmissionPanelTurmaData $turma) => collect($turma->enrollments)
                 ->filter(fn (EmissionPanelEnrollmentData $e) => $e->approval_status === EnrollmentApprovalStatus::Aprobado

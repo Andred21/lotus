@@ -3,7 +3,11 @@
 namespace App\Domains\Operation\QueryBuilders;
 
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\TurmaDisplayStatus;
+use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaStatus;
 use App\Shared\Concerns\LoadsCascadedChildren;
+use App\Shared\Pagination\Paginates;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -15,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 class TurmaQueryBuilder extends Builder
 {
     use LoadsCascadedChildren;
+    use Paginates;
 
     /**
      * `.client.user`, não só `.client`: o seam `Turma::contratante()` lê o RUT
@@ -88,5 +93,74 @@ class TurmaQueryBuilder extends Builder
         }
 
         return $this->whereHas('redatores', fn ($q) => $q->where('redatores.user_id', $user->id));
+    }
+
+    public const SORTABLE = [
+        'created_at' => 'turmas.created_at',
+        'start_date' => 'turmas.start_date',
+        'end_date' => 'turmas.end_date',
+    ];
+
+    public const DEFAULT_SORT = '-created_at';
+
+    /**
+     * Curso, contratante e código do orçamento (spec §4.2). `quotes.code` não
+     * existe como coluna — `Quote::getCodeAttribute()` monta "Scap {budget_id}
+     * - Cot {seq}" em PHP —, então a metade que identifica (`budgets.code`,
+     * `'Scap '.id`) é o que se varre. `whereHas` respeita os `withTrashed()`
+     * das relações: turma de cliente arquivado continua achável.
+     */
+    public function searchable(string $q): static
+    {
+        $like = '%'.addcslashes($q, '%_\\').'%';
+
+        return $this->where(fn (Builder $w) => $w
+            ->whereHas('course', fn (Builder $c) => $c->where('courses.name', 'like', $like))
+            ->orWhereHas('quote.budget', fn (Builder $b) => $b->where('budgets.code', 'like', $like))
+            ->orWhereHas('quote.budget.client.user', fn (Builder $u) => $u->where('users.name', 'like', $like)));
+    }
+
+    /**
+     * O status de exibição em SQL (spec §4.2): `concluida` pelo status;
+     * `habilitada` = em andamento E um doc de CADA `TurmaDocumentType`;
+     * `em_andamento` = em andamento e algum tipo faltando. É a `HabilitacaoStatus`
+     * escrita como `whereHas`, e a paridade é catraca (`TurmaStatusParityTest`).
+     *
+     * `$asOfArchiving` é a lista de Arquivados: o documento conta como no
+     * instante do arquivamento — o predicado de `LoadsCascadedChildren` escrito
+     * para `whereHas`, pela mesma razão que `withArchivedListingData()` o
+     * reescreve para `withCount`.
+     */
+    public function whereDisplayStatus(?TurmaDisplayStatus $status, bool $asOfArchiving = false): static
+    {
+        return match ($status) {
+            null => $this,
+            TurmaDisplayStatus::Concluida => $this->where('turmas.status', TurmaStatus::Concluida),
+            TurmaDisplayStatus::Habilitada => $this
+                ->where('turmas.status', TurmaStatus::EmAndamento)
+                ->where(function (Builder $w) use ($asOfArchiving): void {
+                    foreach (TurmaDocumentType::cases() as $type) {
+                        $w->whereHas('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
+                    }
+                }),
+            TurmaDisplayStatus::EmAndamento => $this
+                ->where('turmas.status', TurmaStatus::EmAndamento)
+                ->where(function (Builder $w) use ($asOfArchiving): void {
+                    foreach (TurmaDocumentType::cases() as $type) {
+                        $w->orWhereDoesntHave('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
+                    }
+                }),
+        };
+    }
+
+    private function documentoDoTipo(Builder $doc, TurmaDocumentType $type, bool $asOfArchiving): void
+    {
+        $doc->where('files.type', $type->value);
+
+        if ($asOfArchiving) {
+            $doc->withTrashed()->where(fn (Builder $q) => $q
+                ->whereNull('files.deleted_at')
+                ->orWhere('files.archived_with_parent', true));
+        }
     }
 }

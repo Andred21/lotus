@@ -141,6 +141,18 @@ Entidade nova com ownership por dado copia essa forma — não crie Policy para 
 arquivado resolve por `onlyTrashed()` à mão (o binding não enxerga trashed) e é gateada pelo
 `permission:` do endpoint, não pelo escopo.
 
+**Lista que cresce sem teto pagina pelo trait `Paginates` no builder do agregado (ADR-22).**
+O controller injeta `PageRequest` (ou a extensão com o filtro nomeado — `CertificatePageRequest`,
+`TurmaPageRequest`) e chama `->page($request, $present, filter:, meta:)`; o builder declara
+`SORTABLE` (allowlist, fora dela 422), `DEFAULT_SORT` e `searchable()`. Filtro que o front
+derivava vira SQL COM teste de paridade contra a classificação de domínio — o `CASE`/`whereHas`
+e o `for()`/`Service` são duas respostas esperando para divergir. `total_unfiltered` mede o escopo
+depois de `visibleTo`. Lista bounded (cursos, usuários, redatores, clientes, cotações por
+orçamento, alunos por turma) continua devolvendo array — paginar por simetria é
+sobre-engenharia. Toda rota `GET` de lista entra na catraca `ListQueryBudgetTest` (N=2 e N=20 com a
+mesma contagem de queries) ou declara motivo em `ISENTAS`; `Model::preventLazyLoading()` é
+global (`AppServiceProvider`), com `warning` em produção e exceção fora dela.
+
 ## Testes
 
 Integração sqlite `:memory:`, não mock (ADR-02). Teste de regressão só vale depois de você o ver

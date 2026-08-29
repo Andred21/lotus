@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { registerPrimeLocales } from '@shared/config/primeLocale'
 import type { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionPanel } from './EmissionPanel'
 
@@ -30,6 +31,8 @@ function montar() {
     selected: null,
     options: [{ label: 'Alta tensión · Enel', value: 1 }],
     setTurmaId: () => {},
+    desde: '2025-08-28',
+    setDesde: () => {},
     loadError: null,
     loading: false,
   } as unknown as PanelState
@@ -45,6 +48,11 @@ function montar() {
   )
 }
 
+// O `AppDatePicker` da janela passa `locale="es"` ao Calendar do Prime; sem o
+// boot (`main.tsx`), o botão do ícone estoura em `localeOption('chooseDate',
+// 'es')`. A mesma nota de `fieldAssociation.test.tsx`.
+beforeAll(registerPrimeLocales)
+
 afterEach(cleanup)
 
 describe('EmissionPanel — o seletor de turma', () => {
@@ -56,5 +64,14 @@ describe('EmissionPanel — o seletor de turma', () => {
     montar()
 
     expect(screen.getByLabelText('certificate.turmaConcluida')).toBeTruthy()
+  })
+
+  it('mostra o seletor da janela com rótulo associado e o default preenchido', () => {
+    montar()
+
+    const seletor = screen.getByLabelText('certificate.concludedSince') as HTMLInputElement
+    expect(seletor).toBeTruthy()
+    // `dd-mm-yy` é a gramática de `es-CL` do AppDatePicker.
+    expect(seletor.value).toBe('28-08-2025')
   })
 })

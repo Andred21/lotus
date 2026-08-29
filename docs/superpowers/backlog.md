@@ -42,29 +42,6 @@
 
 # Fila priorizada
 
-## 6. `hardening-performance-e-dados`
-
-**Prioridade:** P1 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** Drive `RNF-DES-01/02/03`; Notion `9.1.3`; ADR-02/07/09; `D-15`.
-
-**Objetivo:** otimizar o que for medido antes de introduzir cache/infra extra.
-
-**Escopo:**
-- medir N+1 separadamente de índices; eager-load; `EXPLAIN` nas queries relevantes;
-- revisar FKs/joins/Spatie; paginar collections crescentes; teto de `per_page`; allowlist de
-  filtro/ordenação;
-- medir Dashboard/operações pesadas; cache somente após query+índice+paginação e com invalidação
-  definida — **Redis não é requisito**;
-- **D-15**: unificar `DIAS_AVISO = 30` (Identity) com `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`,
-  decidindo o dono do número (Shared ou um dos domínios). O gatilho venceu em 2026-08-16 — os dois
-  convivem na mesma árvore; entra aqui por ser o bloco backend genérico mais próximo, e qualquer
-  bloco backend anterior pode absorvê-la.
-
-**DoD:** cenários representativos do porte do Lotus não exibem N+1 conhecido ou consulta
-evidentemente degradada.
-
----
-
 ## 7. `hardening-i18n-e-erros-api`
 
 **Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
@@ -428,11 +405,6 @@ na raiz, não no sítio.
   deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
   de orientação aprovada, nas 3 locales.
 
-- **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
-  `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
-  (2026-08-14); o gatilho venceu em 2026-08-16 — os dois números convivem na mesma árvore. A task
-  inclui decidir o dono do número (Shared, ou um dos dois domínios). Qualquer bloco backend
-  anterior pode absorvê-la.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**

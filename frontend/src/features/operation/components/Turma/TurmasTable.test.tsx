@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import type { ServerTable } from '@shared/hooks'
 import { TurmasTable, type TurmaRow } from './TurmasTable'
 
 /**
@@ -28,12 +29,38 @@ const TURMA: TurmaRow = {
   budget_id: null, client_rut: '11.111.111-1', client_photo_url: null,
 } as unknown as TurmaRow
 
+/** O `table` pronto do `useTurmasPage` — mock estrutural, no molde do
+ * `ServerTable<TurmaRow>` que a tabela consome. */
+function tabela(): ServerTable<TurmaRow> {
+  return {
+    filter: '',
+    term: '',
+    filtering: false,
+    filteredByScope: false,
+    rows: [TURMA],
+    first: 0,
+    onFilterChange: () => {},
+    onPage: () => {},
+    resetPage: () => {},
+    clear: () => {},
+    totalRecords: 1,
+    meta: undefined,
+    sortField: undefined,
+    sortOrder: undefined,
+    onSort: () => {},
+    loading: false,
+    error: null,
+    refetch: () => Promise.resolve(),
+  }
+}
+
 function montar() {
   return render(
     <MemoryRouter>
       <TurmasTable
-        turmas={[TURMA]}
-        loading={false}
+        table={tabela()}
+        status={null}
+        onStatusChange={() => {}}
         mode="active"
         onModeChange={() => {}}
         onArchive={() => {}}

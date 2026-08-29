@@ -74,6 +74,41 @@ describe('AppDataTable — repinte de celula na troca de idioma (D-55)', () => {
   })
 })
 
+describe('AppDataTable — modo lazy (spec §5)', () => {
+  it('CATRACA: com totalRecords acima de rows, os controles de página aparecem mesmo com uma página só de linhas', () => {
+    // A página vem do servidor com 10 linhas no máximo: `data.length > rows`
+    // nunca ligaria o paginador, e a lista de 5.000 alunos ficaria presa na
+    // primeira página sem botão nenhum.
+    render(
+      <AppDataTable value={LINHAS} footerCount={<span>1</span>} lazy totalRecords={30} rows={10}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(document.querySelector('.p-paginator-next')).not.toBeNull()
+  })
+
+  it('sem totalRecords, uma página de linhas segue sem controles (client-side intacto)', () => {
+    render(
+      <AppDataTable value={LINHAS} footerCount={<span>1</span>} rows={10}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(document.querySelector('.p-paginator-next')).toBeNull()
+  })
+
+  it('em erro, totalRecords não segura o paginador sobre linhas vazias', () => {
+    render(
+      <AppDataTable value={LINHAS} footerCount={<span>1</span>} lazy totalRecords={30} rows={10} error={{ detail: 'x' }}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(document.querySelector('.p-paginator-next')).toBeNull()
+  })
+})
+
 describe('stickyActionsColumn', () => {
   it('a coluna de acoes presa recebe o tinte do hover por cima do card opaco', () => {
     const style = stickyActionsColumn('8rem')

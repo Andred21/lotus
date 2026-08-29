@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (32)
+## Abertas (31)
 
 ### Agrupadas em bloco de execução
 
@@ -65,21 +65,27 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
-| P-66 | A poda de `login_logs` varre `created_at` sem índice que a sirva — a `audits` ganhou o dela neste bloco, a `login_logs` não | João | bloco que tocar o schema de `login_logs`, ou a tabela crescer a ponto de a poda diária pesar; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (1)
 
-**Duas em rastro: a P-02 e a P-33.** A **P-46** saiu no fechamento de 2026-08-29, o primeiro posterior
-ao do bloco que a encerrou — o `frontend-hardening-final` (2026-08-27) —, e saiu **remedida**: o
-mini-reset escopado de `index.css` entrou com catraca própria
-(`frontend/tests/preflight-escopado.test.ts`, verde nos 653 testes deste gate), e a borda que ele
-abriu segue viva e nomeada na **P-63**. O rastro fica nos commits e na linha da entrega em
-[`../historico/progress.md`](../historico/progress.md).
+**A P-66 fechou no `hardening-performance-e-dados` (2026-08-29) e está em rastro** — a poda de
+`login_logs` varria `created_at` sem índice, e a migration `2026_08_28_000001_add_performance_indexes`
+criou o `login_logs_created_at_index` que o `EXPLAIN` do `DELETE ... LIMIT 1000` passou a usar. Sai
+no próximo `/fechar-sprint` posterior a este.
 
-A **P-02** e a **P-33** fecham dentro do bloco `hardening-auditoria-privacidade-e-observabilidade`
-(2026-08-26), por mecanismo (`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice
-`audits_created_at_index` e o agendamento em `routes/console.php`/`scheduler`) — ver
-[`encerradas.md`](./encerradas.md). Formalização no próximo `/fechar-sprint`. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
+**A P-02, a P-33 e a P-46 saíram neste fechamento e no do item 18**, os primeiros posteriores aos dos
+blocos que as encerraram. A retenção de `audits` e de `login_logs` saiu por mecanismo
+(`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice `audits_created_at_index` e o
+agendamento em `routes/console.php`/`scheduler`); a **P-46** saiu **remedida**, com o mini-reset
+escopado de `index.css` sob catraca própria (`frontend/tests/preflight-escopado.test.ts`) e a borda
+que ele abriu viva e nomeada na **P-63**. O rastro fica em [`encerradas.md`](./encerradas.md), nos
+commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
+
+**A P-46, a P-02 e a P-33 saíram neste fechamento**, o primeiro posterior aos dos blocos que as
+encerraram: o mini-reset escopado de `index.css` com catraca própria (P-46, cuja borda virou a
+**P-63**) e a retenção por mecanismo — `RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice
+`audits_created_at_index` e o agendamento em `routes/console.php`/`scheduler` (P-02 e P-33). O
+rastro delas está em [`encerradas.md`](./encerradas.md). A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25 — a
 fatia 2 do `frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros
 posteriores aos dos blocos que as encerraram, e as duas foram remedidas antes de sair: o offset
 injetado no container da worktree (medido com `printenv`), as seis `LOTUS_DEV_*` do

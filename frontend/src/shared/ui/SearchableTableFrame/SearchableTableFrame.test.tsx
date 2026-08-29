@@ -103,3 +103,29 @@ describe('SearchableTableFrame — o rótulo do vazio nomeia o que o clique limp
     expect(onClearFilter).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('SearchableTableFrame — modo lazy', () => {
+  it('com totalRecords, liga o paginador do servidor e entrega o sort ao chamador', () => {
+    const onSort = vi.fn()
+    const table = estado({ filtering: false, rows: [{ id: 1, name: 'Ana' }] })
+    render(
+      <SearchableTableFrame
+        table={table}
+        searchPlaceholder="common.search"
+        emptyState={<span>vazio de domínio</span>}
+        footerCount={<span>30</span>}
+        totalRecords={30}
+        rows={10}
+        onSort={onSort}
+      >
+        <AppColumn field="name" header="nome" sortable />
+      </SearchableTableFrame>,
+    )
+
+    expect(document.querySelector('.p-paginator-next')).not.toBeNull()
+
+    fireEvent.click(screen.getByText('nome'))
+
+    expect(onSort).toHaveBeenCalledWith(expect.objectContaining({ sortField: 'name', sortOrder: 1 }))
+  })
+})

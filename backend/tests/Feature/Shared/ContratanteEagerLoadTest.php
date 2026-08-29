@@ -25,7 +25,8 @@ use Tests\TestCase;
  * `Model::preventLazyLoading()` só marca a instância quando ela vem de um
  * `hydrate()` com MAIS de uma linha (`Builder::hydrate()`, condicional a
  * `count($items) > 1`) — por isso cada cenário aqui materializa DUAS cadeias
- * completas e distintas, e não uma.
+ * completas e distintas, e não uma — a guarda é global desde o bloco `hardening-performance-e-dados`; o que este
+ * arquivo garante é a fixture com mais de uma linha, sem a qual ela não marca.
  */
 class ContratanteEagerLoadTest extends TestCase
 {
@@ -34,22 +35,13 @@ class ContratanteEagerLoadTest extends TestCase
 
     private int $seq = 0;
 
-    protected function tearDown(): void
-    {
-        Model::preventLazyLoading(false);
-
-        parent::tearDown();
-    }
-
     public function test_listagem_de_turmas_nao_lazy_loada_o_user_do_contratante(): void
     {
         $this->actingAsAdmin();
         $this->makeCadeia();
         $this->makeCadeia();
 
-        Model::preventLazyLoading();
-
-        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2);
+        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2, 'data');
     }
 
     public function test_cotacoes_pendentes_nao_lazy_loadam_o_user_do_contratante(): void
@@ -57,8 +49,6 @@ class ContratanteEagerLoadTest extends TestCase
         $this->actingAsAdmin();
         $this->makeCadeia(comTurma: false);
         $this->makeCadeia(comTurma: false);
-
-        Model::preventLazyLoading();
 
         $this->getJson('/api/turmas/pendientes-configuracion')->assertOk()->assertJsonCount(2);
     }
@@ -68,8 +58,6 @@ class ContratanteEagerLoadTest extends TestCase
         $this->actingAsAdmin();
         $this->makeEmitivel();
         $this->makeEmitivel();
-
-        Model::preventLazyLoading();
 
         $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(2);
     }

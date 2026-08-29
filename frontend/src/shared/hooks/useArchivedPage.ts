@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ProblemDetails } from "@shared/api/axios";
-import { useArchiveToasts } from "./useArchiveToasts";
+import { useRestoreAction, type RestoreOptions } from "./useRestoreAction";
 import { listSource } from "./listSource";
 
 export type ArchiveMode = "active" | "archived";
@@ -12,14 +12,6 @@ export type ArchiveMode = "active" | "archived";
 interface ArchivedRow {
   archived_at: string;
   archived_by: string | null;
-}
-
-/** Callbacks EXTRA da mutation de restore, para quem chama. O toast dos dois
- * lados já é do hook (Q-3 do review de 2026-08-19); estes existem para o
- * chamador que precisa fechar um diálogo ou navegar depois. */
-export interface RestoreOptions {
-  onSuccess?: () => void;
-  onError?: (problem: ProblemDetails) => void;
 }
 
 /** Contrato mínimo, tipado por estrutura — o hook não depende da fábrica
@@ -58,8 +50,7 @@ export function useArchivedPage<T, TArchived extends ArchivedRow>(
 ) {
   const [mode, setMode] = useState<ArchiveMode>("active");
   const query = resource.useArchivedList(mode === "archived");
-  const restore = resource.useRestore();
-  const toasts = useArchiveToasts();
+  const restore = useRestoreAction(resource.useRestore());
 
   const items = useMemo(() => {
     return (query.data ?? []).map((row) => ({
@@ -80,22 +71,8 @@ export function useArchivedPage<T, TArchived extends ArchivedRow>(
     // rastro de arquivamento e vem memoizado acima. O override vem DEPOIS do
     // spread de propósito — invertê-los devolveria a linha sem `archived_at`.
     items,
-    /** O toast MORA aqui, nos dois sentidos: sem o de erro, um 403 de quem não
-     * tem `*.restore` e os 422 dos gates não mudam nada na tela — a linha
-     * continua lá e o operador não sabe se o clique valeu (Q-2 do review de
-     * 2026-08-18). Estava copiado nos seis hooks de página (Q-3 do de
-     * 2026-08-19). */
-    restore: (id: number, options?: RestoreOptions) =>
-      restore.mutate(id, {
-        onSuccess: () => {
-          toasts.restored();
-          options?.onSuccess?.();
-        },
-        onError: (problem) => {
-          toasts.failed(problem);
-          options?.onError?.(problem);
-        },
-      }),
-    restoring: restore.isPending,
+    ...restore,
   };
 }
+
+export type { RestoreOptions };

@@ -68,6 +68,17 @@ interface SearchableTableFrameBaseProps<T> {
   viewSwitch?: ReactNode
   loading?: boolean
   error?: { detail?: string | null } | null
+  /** Presente = a fonte pagina no SERVIDOR (`useServerTable`): a moldura liga o
+   * `lazy` do DataTable e repassa a contagem — sem ela, `data.length > rows`
+   * nunca é verdade numa página de 10 e os controles não aparecem. Ausente =
+   * client-side, como sempre (`useTableFilter`). */
+  totalRecords?: number
+  sortField?: string
+  sortOrder?: 1 | 0 | -1 | null
+  onSort?: (event: { sortField: string; sortOrder: 1 | 0 | -1 | null | undefined }) => void
+  /** Linhas por página. Passe o MESMO `rows` que o `useServerTable` usa, senão
+   * `first` e `page` desalinham. */
+  rows?: number
   /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
    * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
    * retorno — e faria o tipo mentir sobre o contrato. */
@@ -99,6 +110,11 @@ export function SearchableTableFrame<T>({
   loading,
   error,
   onRetry,
+  totalRecords,
+  sortField,
+  sortOrder,
+  onSort,
+  rows,
   children,
 }: SearchableTableFrameProps<T>) {
   const { t } = useTranslation()
@@ -189,6 +205,12 @@ export function SearchableTableFrame<T>({
         footerCount={footerCount}
         first={table.first}
         onPage={table.onPage}
+        rows={rows}
+        lazy={totalRecords !== undefined}
+        totalRecords={totalRecords}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={onSort}
       >
         {children}
       </AppDataTable>

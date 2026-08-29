@@ -977,29 +977,3 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
   chaveiam em `email|ip`. Uma senha por conta, contra 200 contas, do mesmo IP, nunca cruza limiar
   nenhum: cada chave fica em 1. A D6 definiu as famílias por chave de vítima; não existe família por
   atacante.
-
-## P-66 — A poda de `login_logs` varre `created_at` sem índice que a sirva
-
-**Gatilho:** bloco que tocar o schema de `login_logs`, ou a `login_logs` passar de algumas dezenas de
-milhares de linhas em produção (a poda diária começar a aparecer em tempo de execução). Revisar em
-**2026-10-31**.
-
-Medido duas vezes no `hardening-auditoria-privacidade-e-observabilidade` (2026-08-26): no review da
-Task 1 e de novo no da Task 4, as duas vezes classificado como fora do escopo do plano.
-`PodarLogins` (`backend/app/Console/Commands/PodarLogins.php:36-39`) apaga por
-`where('created_at', '<', $limite)` — varredura de faixa só em `created_at`. O único índice da tabela
-é o composto `(user_id, created_at)`
-(`backend/database/migrations/2026_08_12_000001_create_login_logs_table.php:21`), e composto **não
-serve consulta que não filtra pela coluna líder**: a poda cai em full scan.
-
-A `audits` **ganhou** o índice equivalente neste mesmo bloco
-(`2026_08_26_000001_add_created_at_index_to_audits_table.php`) porque a poda dela estava no DoD; a
-`login_logs` não ganhou porque o plano não pediu, e acrescentar migration fora das tasks seria mudar
-escopo por conta própria. Fica **assimétrico de propósito e registrado aqui**: as duas tabelas são
-podadas pelo mesmo mecanismo, só uma delas tem índice para isso.
-
-**Por que não é urgente:** ~10 usuários internos, uma linha por tentativa de login, poda diária às
-03:40 America/Santiago. Full scan numa tabela desse tamanho não custa nada hoje. O que a ficha
-protege é a hipótese de crescimento — e o fato de que quem ler o índice da `audits` sozinho pode
-concluir que a `login_logs` também tem.
-

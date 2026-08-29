@@ -4,6 +4,7 @@ namespace Tests\Unit\Identity;
 
 use App\Domains\Identity\Enums\DocumentValidityStatus;
 use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 use PHPUnit\Framework\TestCase;
 
@@ -41,14 +42,14 @@ class DocumentValidityStatusTest extends TestCase
 
     public function test_ultimo_dia_da_janela_ainda_e_vence_em_breve(): void
     {
-        $limite = CarbonImmutable::today()->addDays(DocumentValidityStatus::DIAS_AVISO);
+        $limite = CarbonImmutable::today()->addDays(JanelaDeAviso::DIAS);
 
         $this->assertSame(DocumentValidityStatus::VenceEmBreve, DocumentValidityStatus::for($limite, presente: true));
     }
 
     public function test_um_dia_depois_da_janela_e_vigente(): void
     {
-        $fora = CarbonImmutable::today()->addDays(DocumentValidityStatus::DIAS_AVISO + 1);
+        $fora = CarbonImmutable::today()->addDays(JanelaDeAviso::DIAS + 1);
 
         $this->assertSame(DocumentValidityStatus::Vigente, DocumentValidityStatus::for($fora, presente: true));
     }

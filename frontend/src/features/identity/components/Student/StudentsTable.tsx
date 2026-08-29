@@ -1,39 +1,39 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useTableFilter } from '@shared/hooks'
+import type { ServerTable } from '@shared/hooks'
 import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 import { studentWidths } from './studentColumns'
 
 export function StudentsTable({
-  students, loading, onView, actions, error, onRetry,
+  table, onView, actions,
 }: {
-  students: StudentData[]
-  loading: boolean
+  /** Pronto do `useStudentsPage`: busca, página e sort vivem no servidor. A
+   * tabela não instancia `useTableFilter` — filtrar no cliente uma página
+   * seria filtrar 10 de 5.000. */
+  table: ServerTable<StudentData>
   onView: (s: StudentData) => void
   actions?: ReactNode
-  error?: { detail?: string | null } | null
-  /** Repassa o refetch da página: é a promise que mantém o Reintentar do
-   * AppErrorState em `loading` (Q-14). Tipar `() => void` aqui compilaria e
-   * faria a camada do meio mentir sobre o contrato. */
-  onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
   const largura = studentWidths()
-  const table = useTableFilter(students, (s) => [s.name, s.rut])
 
   return (
     <SearchableTableFrame
       table={table}
+      totalRecords={table.totalRecords}
+      sortField={table.sortField}
+      sortOrder={table.sortOrder}
+      onSort={table.onSort}
       searchPlaceholder={t('student.searchPlaceholder')}
       emptyState={
         <AppEmptyState icon="pi pi-user" title={t('student.empty')} description={t('student.emptyHint')} action={actions} />
       }
-      footerCount={t('student.count', { count: table.rows.length })}
+      footerCount={t('student.count', { count: table.totalRecords })}
       actions={actions}
-      loading={loading}
-      error={error}
-      onRetry={onRetry}
+      loading={table.loading}
+      error={table.error}
+      onRetry={table.refetch}
     >
       <AppColumn
         field="name"
@@ -45,7 +45,9 @@ export function StudentsTable({
         )}
       />
       <AppColumn
+        field="rut"
         header={t('common.rut')}
+        sortable
         style={largura.rut}
         body={(s: StudentData) => <span className="font-mono text-sm">{s.rut}</span>}
       />
