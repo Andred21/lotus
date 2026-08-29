@@ -347,10 +347,37 @@ acima como fora do escopo. Nenhum erro novo.
 | `./vendor/bin/pint --test` (58 arquivos PHP do diff) | `{"tool":"pint","result":"passed"}` |
 | `grep "= 30;"` nos três sítios antigos | sem saída — `JanelaDeAviso::DIAS` é o dono único |
 
-**Flake registrado, não escondido.** A primeira volta do `pnpm test` reprovou com
-um erro não tratado originado em `useTurmasPage.test.tsx` — o mesmo timer
-pós-teardown que a seção anterior registrou em `useServerTable.test.tsx`, agora
-no arquivo que a Q-3 ganhou. A segunda volta passou limpa (647/647, exit 0), e o
-arquivo isolado passou **5 vezes de 5** (`pnpm vitest run
-src/features/operation/hooks/useTurmasPage.test.tsx`). Nenhuma asserção reprovou
-em volta nenhuma; o que oscila é o desligamento do timer, não o comportamento.
+**O que este gate chamou de flake não era flake — e o fechamento mediu o
+mecanismo.** A primeira volta do `pnpm test` reprovou com um erro não tratado
+originado em `useTurmasPage.test.tsx`, e a segunda passou limpa; o arquivo
+isolado passou 5 de 5, o que fez a rodada anterior classificar como oscilação de
+timer. **Estava errado.** No rebase sobre `main@b4101da9` a reprovação voltou, 1
+volta em 4, e desta vez com a mensagem inteira:
+
+```
+ReferenceError: window is not defined
+ ❯ Timeout._onTimeout src/shared/hooks/useServerTable.ts:91:33
+```
+
+A causa é determinística. `frontend/vite.config.ts` não declara `setupFiles` nem
+`globals: true`, então o `cleanup()` automático do Testing Library **nunca roda**:
+o que um teste monta fica montado até o vitest destruir o jsdom do arquivo. Para
+quase todo componente isso é inócuo. Para o `useServerTable` não é — ele agenda
+um `setTimeout` de debounce no mount, e esse timer dispara **depois** do
+teardown, sobre um `window` que já não existe. Não reprova asserção nenhuma:
+reprova a rodada, o que é pior, porque some do relatório de testes.
+
+O repositório já tem a grafia do remédio — `afterEach(cleanup)` por arquivo, como
+em `AppCard.test.tsx`, `PageHeader.test.tsx` e `SectionLabel.test.tsx`. A
+medição mostrou que **exatamente os dois arquivos que reprovaram** eram os dois
+que montam o `useServerTable` sem esse `afterEach`: `useServerTable.test.tsx` e
+`useTurmasPage.test.tsx`. Os cinco componentes que consomem o hook por baixo
+(`TurmasTable`, `HistorialTable`, `PeoplePage`) já tinham `cleanup` e nunca
+vazaram. Com o `afterEach(cleanup)` nos dois: **6 voltas de 6 verdes, `Errors 0`
+em todas** — contra 1 reprovação em 4 antes.
+
+Fica declarado o que NÃO foi feito: o `setupFiles` global, que seria o mecanismo
+de verdade (lição 14) e alcançaria todo arquivo futuro, não entra neste bloco —
+mudar a configuração do runner do repositório inteiro no gate de fechamento é
+escopo próprio, e o custo dele é o de descobrir quantos outros arquivos dependem
+hoje de não desmontar. Virou a **P-69**.

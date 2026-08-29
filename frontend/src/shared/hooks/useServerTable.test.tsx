@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import type { Page, PageMeta } from '@shared/api/page'
@@ -32,7 +32,13 @@ const linhas: Row[] = [
   { id: 2, name: 'Bruno' },
 ]
 
+/* `cleanup()` antes de devolver os timers reais: o hook fica montado com o
+ * `setTimeout` do debounce agendado, e ele dispara DEPOIS que o vitest destrói
+ * o jsdom do arquivo — `ReferenceError: window is not defined`, que reprova a
+ * rodada inteira sem reprovar teste nenhum. O repositório não tem `setupFiles`,
+ * então o cleanup é por arquivo, como em `AppCard.test.tsx`. */
 afterEach(() => {
+  cleanup()
   vi.useRealTimers()
 })
 
