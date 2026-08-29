@@ -157,9 +157,10 @@ exceção. Na dúvida, siga o vizinho da mesma
   já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
   A forma normalizada de lista é `ListSource<T>` e nasce num lugar só
   (`shared/hooks/listSource.ts`). Hook que monta `isError ? (error ?? {}) : null` à mão está
-  recriando a política — o alias espalha, não deriva. **Duas exceções deliberadas:**
-  `useHistorial` e `useEmissionPanelState` devolvem `null` onde esta devolve `{}` — é outra
-  política, e normalizá-las muda o que a tela mostra; não as unifique sem DoD que cubra a mudança. E **retry devolve a promise**: é ela que
+  recriando a política — o alias espalha, não deriva. **Uma exceção deliberada:**
+  `useEmissionPanelState` devolve `null` onde esta devolve `{}` — é outra política, e normalizá-la
+  muda o que a tela mostra; não a unifique sem DoD que cubra a mudança. `useHistorial` deixou de ser
+  exceção em 2026-08-28: a lista vem do `useServerTable`, que é a home única da política. E **retry devolve a promise**: é ela que
   mantém o "Reintentar" em `loading` enquanto o GET está em voo (Q-14), e `void query.refetch()`
   a engole **sem quebrar tipo nem teste** — TypeScript aceita descartar retorno, então quem
   guarda são as catracas de `listSource.test.ts`, `useLoadState.test.ts` e `useResourceState.test.ts`.
@@ -226,6 +227,19 @@ exceção. Na dúvida, siga o vizinho da mesma
   defaults e não vê o que o chamador sobrescreve. Hoje ninguém passa `cellMemo` (medido no review de
   2026-08-21: zero ocorrências fora do wrapper), então isto é linha de rule e não regra de lint —
   quem passar a prop assume o débito e declara onde.
+- **Tabela paginada no SERVIDOR = `useServerTable` + a MESMA `SearchableTableFrame`, com
+  `totalRecords`.** Lista que cresce sem teto (alunos, certificados, turmas — ADR-22) não passa
+  por `useTableFilter`: filtrar no cliente uma página de 10 seria filtrar 10 de 5.000. O hook
+  (`shared/hooks/useServerTable.ts`) devolve a mesma forma do `useTableFilter` mais
+  `totalRecords`/`sortField`/`sortOrder`/`onSort`, e a tabela repassa os quatro à moldura — é o
+  `totalRecords` que liga o `lazy` do `DataTable` e faz `AppDataTable` decidir `paginated` pela
+  contagem do servidor, não por `data.length`. Busca (debounce de 300 ms), filtro nomeado e sort
+  vão na URL (`PageQuery`, `shared/api/page.ts`, o único lugar que conhece o envelope); trocar
+  qualquer um volta à página 1 dentro do hook — a tela não chama `resetPage()`. Coluna só ganha
+  `sortable` se o campo estiver na allowlist do backend (`SORTABLE` do builder): em `lazy` o
+  DataTable só emite o evento, e campo fora da lista é 422. `filtering` continua medindo EFEITO
+  (`meta.total !== meta.total_unfiltered`), nunca presença. O dialog por id ganha fallback
+  `useOne` (`useCrudDialog`): a entidade aberta pode não estar na página carregada.
 - **Hook genérico não importa tipo de `shared/ui`.** `shared/hooks/` é lógica; `shared/ui/` é
   apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que

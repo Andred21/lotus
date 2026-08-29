@@ -36,6 +36,8 @@ backend/app/
 │   │   ├── Models/             # User, ... Eloquent (ADR-10 enforceMorphMap)
 │   │   ├── Services/           # Domain Services (regra entre agregados)
 │   │   ├── QueryBuilders/      # Custom Query Builders (consultas complexas)
+│   │   │                       #   (StudentQueryBuilder nasceu no bloco de performance — Student era
+│   │   │                       #    o único agregado paginado sem builder)
 │   │   ├── Support/            # value object / helper específico do domínio, quando houver
 │   │   │                       #   (ex.: Identity/Support/PermissionCatalog.php)
 │   │   ├── Policies/           # autorização por modelo (casa com Spatie, ADR-07)
@@ -54,7 +56,9 @@ backend/app/
 │   ├── Exceptions/             # ProblemDetails (RFC 7807, ADR-03) — ligado no bootstrap/app.php
 │   ├── Files/                  # upload polimórfico S3/MinIO: File (model) + UploadFileAction (ADR-10/11)
 │   ├── Rules/                  # ValidRut (regra de validação reusável)
-│   ├── Support/                # value objects / helpers puros (Rut, ...)
+│   ├── Support/                # value objects / helpers puros (Rut, JanelaDeAviso — os 30 dias da D-15, DataSql)
+│   ├── Pagination/             # PageRequest (entrada), PageData/PageMetaData (envelope) e o trait Paginates
+│   │                           #   que os QueryBuilders custom ganham (students, certificates, turmas — ADR-22)
 │   ├── Retention/               # RetentionPolicy — janelas de retenção de `audits`/`login_logs` (ADR-08)
 │   ├── Logging/                 # EventoDeSeguranca — ponto único de escrita do canal `seguranca` (ADR-21)
 │   ├── Alerts/                  # AlertThresholds + DetectorDeAcessoSuspeito — acesso suspeito (RNF-SEC-07)

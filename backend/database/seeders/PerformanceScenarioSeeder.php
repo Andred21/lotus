@@ -123,6 +123,7 @@ class PerformanceScenarioSeeder extends Seeder
     private function redatores(string $senha, string $agora, int &$seq): array
     {
         $ids = [];
+        $userIds = [];
         for ($i = 1; $i <= self::REDATORES; $i++) {
             $n = $seq++;
             $userId = DB::table('users')->insertGetId([
@@ -130,7 +131,19 @@ class PerformanceScenarioSeeder extends Seeder
                 'email' => "relator{$n}@perf.demo.cl", 'password' => $senha, 'type' => 'redator', 'is_active' => true,
                 'created_at' => $agora, 'updated_at' => $agora,
             ]);
+            $userIds[] = $userId;
             $ids[] = DB::table('redatores')->insertGetId(['user_id' => $userId, 'created_at' => $agora, 'updated_at' => $agora]);
+        }
+
+        // A role `redator` é o que abre `GET /api/turmas` (middleware `permission:`);
+        // sem ela o cenário mede 403 e não o escopo do `visibleTo`. Insert em lote
+        // porque `syncRoles()` por usuário custaria duas queries em cada um.
+        $roleId = DB::table('roles')->where('name', 'redator')->value('id');
+        if ($roleId !== null) {
+            DB::table('model_has_roles')->insert(array_map(
+                fn (int $userId) => ['role_id' => $roleId, 'model_type' => 'user', 'model_id' => $userId],
+                $userIds,
+            ));
         }
 
         return $ids;

@@ -182,3 +182,106 @@ milissegundos), é a montagem do payload em PHP. Os índices valem pela ordem de
 grandeza que impedem — 5.890 linhas varridas viram 25 no Historial —, não por
 milissegundos hoje. O Dashboard em ~575 ms é o número a vigiar: são as 40
 queries fixas da catraca da Task 11, e nenhuma delas cresce com N.
+
+## Gate final do bloco (Task 13)
+
+Contra a stack local com o cenário grande no lugar (`migrate:fresh --seed` +
+`db:seed --class=PerformanceScenarioSeeder`, 5.045 alunos / 504 turmas / 8.045
+matrículas / 6.000 certificados) e a migration de índices migrada. Sessão de
+`admin@lotus.cl` por cookie Sanctum; **os GETs precisam do header `Origin`** —
+sem ele o `EnsureFrontendRequestsAreStateful` não reconhece o request como
+stateful e a rota devolve 401 mesmo com o cookie de sessão no jar.
+
+### 1. `GET /api/students` — envelope, teto e allowlist
+
+| Request | Resultado |
+| --- | --- |
+| `?per_page=10&q=Camila&sort=-name` | 200, 10 linhas; `meta` = `{page:1, per_page:10, total:253, last_page:26, total_unfiltered:5045}` |
+| `?per_page=101` | 422 `application/problem+json` — "El campo per page no debe ser mayor que 100." |
+| `?sort=email` | 422 `application/problem+json` — "El campo sort no está en la lista de valores permitidos." |
+
+`total` (253) < `total_unfiltered` (5045): a busca mede EFEITO, e o teto e a
+allowlist recusam em vez de clampar.
+
+### 2. `GET /api/certificates?display_status=por_vencer&per_page=100`
+
+`{r['display_status'] for r in data}` = `{'por_vencer'}` — o `CASE` em SQL não
+deixa passar outra classe. `meta.summary` = `{vigente:1391, por_vencer:91,
+vencido:4218, revocado:300}`, que soma **6000** = `meta.total_unfiltered`; o
+`meta.total` do recorte é 91, igual ao `por_vencer` do summary.
+
+### 3. `GET /api/turmas` — escopo do redator
+
+| Sessão | Request | Resultado |
+| --- | --- | --- |
+| admin | `?status=habilitada&per_page=100` | `{habilitada}` = `{True}`, `meta.total` 1, `total_unfiltered` **504** |
+| redator | `?per_page=100` | 10 turmas, `total_unfiltered` **10** — o `visibleTo` corta antes da contagem |
+| redator | `?status=habilitada&per_page=100` | 0 linhas, `total_unfiltered` segue 10 |
+
+**Achado corrigido aqui:** o `PerformanceScenarioSeeder` criava os 50 redatores
+com `type=redator` e `is_active=true` mas **sem a role `redator`**, e o
+`permission:` da rota devolvia 403 — o cenário media a porta, não o escopo. O
+seeder passou a inserir `model_has_roles` em lote (uma query para os 50, em vez
+de duas por `syncRoles()`). Provado em seed limpo: o mesmo login que dava 403 dá
+200 com as 10 turmas dele.
+
+### 4. `GET /api/certificates/emission-panel` — janela por data
+
+Hoje = 2026-08-29. Sem parâmetro: **32 turmas**, `end_date` de `2025-08-29` a
+`2026-06-26` — o limite inferior é exatamente hoje − 12 meses. Com
+`?concluidas_desde=2021-01-01`: **501 turmas**, safras `2021…2026`. No
+navegador, o campo "Classes concluded since" já monta com `8/29/2025`, o mesmo
+default calculado no front (`EMISSION_PANEL_WINDOW_MONTHS`).
+
+### 5. Catraca de contagem
+
+`ListQueryBudgetTest` verde dentro da suíte; a sonda que a justifica está na
+seção da Task 11 (remover o eager-load de `api/certificates` derruba a rota em
+500 sob o `preventLazyLoading()` global).
+
+### 6. `EXPLAIN` e latências
+
+Seção "Índices — EXPLAIN antes/depois" acima, com aprovado/recusado por
+candidato e a tabela de latência.
+
+### 7. Navegador com o cenário grande (Chromium via `playwright-cli`, locale EN)
+
+| Tela | Evidência |
+| --- | --- |
+| `/personas` → aba Students | rodapé "**5045 students**" = `meta.total`; paginador com páginas 1..5 e "Next Page" |
+| `/personas` página 3 → "View" | dialog abre com o aluno da página 3 (`alumno2826@perf.demo.cl`) — a moldura não perde a linha fora da primeira página |
+| `/certificados` → aba History | rodapé "**1391 valid · 91 expiring · 4218 expired · 300 revoked**", idêntico ao `meta.summary` do endpoint |
+| `/operacion` | rodapé "**504 classes**" = `meta.total` |
+| `/certificados` → aba Issuance | campo de data com `8/29/2025` e o dropdown de turma concluída, sem paginador (o painel não pagina) |
+
+Console: **um** erro, o warning React de `key` em `TableBody` já registrado na
+seção "DoD 7 — Students" (vem de `StudentDetailSections`/`AppDataTable`, fora do
+escopo deste bloco). Nenhum erro novo.
+
+### 8. Os 30 dias têm um dono só
+
+```
+grep -rn "= 30;" backend/app/Domains/Identity/Enums/DocumentValidityStatus.php \
+  backend/app/Domains/Dashboard/Services/DashboardWindows.php \
+  backend/app/Domains/Certification/Enums/CertificateDisplayStatus.php
+```
+
+Sem saída (`exit 1`): o número vive só em `JanelaDeAviso` (D-15).
+
+### 9. Gate mecânico
+
+| Comando | Saída |
+| --- | --- |
+| `docker compose exec -T app php artisan test` | **1108 passed / 5 skipped** (3.974 asserções, 89,25 s) |
+| `php artisan typescript:transform` + `git status --short frontend/src/shared/types/generated.ts` | vazio — nenhum diff residual |
+| `pnpm lint` | 0 problemas |
+| `pnpm build` | verde (`tsc -b` + `vite build`) |
+| `pnpm test` | **114 arquivos / 645 testes**, todos verdes |
+| `./vendor/bin/pint --test <arquivos do diff contra main>` | `{"tool":"pint","result":"passed"}` |
+
+Duas correções que o próprio gate cobrou, e não a inspeção: o `pnpm test` da
+primeira volta reprovou em `repo-docs-refs.test.ts` porque a ficha de `users` no
+`der-fisico.md` citava a `audits/…` com reticências — referência que a catraca
+de docs resolve como caminho e não achou; virou o caminho inteiro. E a role
+faltante do seeder (item 3). O flake conhecido de timer pós-teardown em
+`useServerTable.test.tsx` **não reproduziu** nesta volta.
