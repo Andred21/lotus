@@ -44,3 +44,20 @@ export const statValueClass = (size: 'page' | 'card'): string =>
   size === 'page'
     ? 'font-display text-3xl leading-none font-semibold tabular-nums'
     : 'font-display text-2xl font-semibold tabular-nums'
+
+/**
+ * Dado técnico — contagem que alinha em coluna, data, versão. `font-mono` sem
+ * `tabular-nums` é o que a fase 2 do item 18 mediu em sete sítios: em IBM Plex
+ * Mono a diferença não aparece enquanto a fonte carrega, e a declaração é a
+ * garantia contra o fallback. O par é inseparável, e por isso é uma constante.
+ * Mecanismo: `MONO_LITERAL` em `frontend/eslint.config.js`.
+ */
+export const technicalDataClass = 'font-mono tabular-nums'
+
+/**
+ * Identificador — RUT, folio, código: dado técnico que é TOKEN ÚNICO e não
+ * quebra. O hífen do dígito verificador é oportunidade de quebra para o
+ * navegador: a fase 1 mediu "76.123.456-" / "0" no cabeçalho do presupuesto a
+ * 1024px. Identificador partido é copiado errado e conferido errado.
+ */
+export const identifierClass = `${technicalDataClass} whitespace-nowrap`

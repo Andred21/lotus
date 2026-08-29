@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fieldLabelClass, pageTitleClass, sectionLabelClass, statValueClass } from './typography'
+import { fieldLabelClass, identifierClass, pageTitleClass, sectionLabelClass, statValueClass, technicalDataClass } from './typography'
 
 /**
  * Os dois `h1` do produto tinham vozes diferentes — `font-display … tracking-tight`
@@ -32,5 +32,18 @@ describe('grafias tipográficas por papel', () => {
     expect(statValueClass('page')).toContain('text-3xl')
     expect(statValueClass('card')).toContain('text-2xl')
     expect(statValueClass('page')).toContain('font-display')
+  })
+
+  /** Dado técnico é mono COM tabular — o par é inseparável, e a fase 2 mediu
+   * sete sítios com metade do par (`font-mono` sozinho). A constante é o que
+   * impede a próxima cópia de perder a metade. */
+  it('dado técnico carrega o par mono + tabular', () => {
+    expect(technicalDataClass).toBe('font-mono tabular-nums')
+  })
+
+  /** Identificador é token único: RUT, folio e código não quebram no hífen —
+   * a fase 1 mediu "76.123.456-" / "0" a 1024px. */
+  it('identificador é dado técnico que não quebra', () => {
+    expect(identifierClass).toBe('font-mono tabular-nums whitespace-nowrap')
   })
 })

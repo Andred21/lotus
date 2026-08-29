@@ -1,4 +1,4 @@
-import { fieldLabelClass } from '../typography'
+import { fieldLabelClass, technicalDataClass } from '../typography'
 
 export interface CertificateFolioProps {
   /** Legenda acima do folio, já traduzida por quem compõe. */
@@ -33,8 +33,8 @@ export interface CertificateFolioProps {
 export function CertificateFolio({ label, folio, size }: CertificateFolioProps) {
   const grafia =
     size === 'page'
-      ? 'font-mono tabular-nums text-3xl tracking-[0.15em]'
-      : 'font-mono tabular-nums text-xl tracking-[0.1em]'
+      ? `${technicalDataClass} text-3xl tracking-[0.15em]`
+      : `${technicalDataClass} text-xl tracking-[0.1em]`
 
   return (
     <dl className="flex flex-col items-center gap-1 text-center">
