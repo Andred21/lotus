@@ -47,13 +47,13 @@ lanes:
   lane-c:
     active_feature: frontend-triagem-dos-audits-do-item-18
     active_work_item: frontend-triagem-dos-audits-do-item-18
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../fix-frontend
     branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4 na promoção; refactor/frontend-estilizacao-componentes mesclou (PR #82) e foi apagada
     active_spec: docs/superpowers/specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-29-frontend-triagem-dos-audits-do-item-18.md
     context_packet: null
     blocker: null
     resume_state: null
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `planning` |
+| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_execution` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
