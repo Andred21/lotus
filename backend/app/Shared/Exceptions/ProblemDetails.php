@@ -23,7 +23,7 @@ class ProblemDetails
         [$status, $title, $type] = match (true) {
             $e instanceof ValidationException => [422, __('problem.title.validation'), 'https://lotus.cl/errors/validation'],
             $e instanceof AuthenticationException => [401, __('problem.title.unauthenticated'), 'https://lotus.cl/errors/unauthenticated'],
-            $e instanceof AuthorizationException => [403, __('problem.title.forbidden'), 'https://lotus.cl/errors/forbidden'],
+            self::isForbidden($e) => [403, __('problem.title.forbidden'), 'https://lotus.cl/errors/forbidden'],
             $e instanceof ModelNotFoundException,
             $e instanceof NotFoundHttpException => [404, __('problem.title.not_found'), 'https://lotus.cl/errors/not-found'],
             $e instanceof ThrottleRequestsException => [429, __('problem.title.too_many_requests'), 'https://lotus.cl/errors/too-many-requests'],
@@ -84,10 +84,30 @@ class ProblemDetails
         return match (true) {
             $e instanceof ThrottleRequestsException => __('problem.detail.too_many_requests'),
             $e instanceof AuthenticationException => __('problem.detail.unauthenticated'),
-            $e instanceof AuthorizationException => __('problem.detail.forbidden'),
+            self::isForbidden($e) => __('problem.detail.forbidden'),
             $e instanceof ModelNotFoundException,
             $e instanceof NotFoundHttpException => __('problem.detail.not_found'),
             default => $e->getMessage() ?: __('problem.detail.generic'),
         };
+    }
+
+    /**
+     * Nenhum controller deste repositório chama `$this->authorize()`/`Gate::authorize()`
+     * — o `AuthorizationException` do Illuminate não é o caminho real de 403.
+     * Todo 403 de verdade nasce do RBAC do spatie/laravel-permission
+     * (`Spatie\Permission\Exceptions\UnauthorizedException`, que estende
+     * `HttpException` e não `AuthorizationException`) ou de um
+     * `HttpException(403)` próprio (`ImmutableSystemRoleException`,
+     * `abort_unless(..., 403, ...)`). Checar só `AuthorizationException`
+     * deixaria esses 403 reais caindo no braço genérico de `HttpExceptionInterface`
+     * — título errado (`problem.title.http`) e `detail` cru do pacote, em inglês.
+     * Mesmo teto por `getStatusCode() === 403` já usado em
+     * `RegistraEventoDeErro` para o mesmo motivo — por STATUS/TIPO, nunca por
+     * inspeção do texto (D5).
+     */
+    private static function isForbidden(Throwable $e): bool
+    {
+        return $e instanceof AuthorizationException
+            || ($e instanceof HttpExceptionInterface && $e->getStatusCode() === 403);
     }
 }

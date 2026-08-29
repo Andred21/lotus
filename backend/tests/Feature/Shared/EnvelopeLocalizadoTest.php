@@ -49,9 +49,16 @@ class EnvelopeLocalizadoTest extends TestCase
     #[Test]
     public function o_403_nao_devolve_mais_a_mensagem_em_ingles_do_framework(): void
     {
+        // O 403 real deste repositório nasce do RBAC do spatie/laravel-permission
+        // (`UnauthorizedException`), não de `Illuminate\Auth\Access\AuthorizationException`
+        // — checar só o tipo do Illuminate deixaria este teste passar sem exercer
+        // o caminho real (ProblemDetails::isForbidden).
         $redator = User::factory()->redator()->create();
 
-        foreach (['es-CL', 'pt-BR'] as $locale) {
+        $titulos = [];
+        $detalhes = [];
+
+        foreach (self::LOCALES as $locale) {
             $corpo = $this->actingAs($redator)
                 ->withHeaders(['Accept-Language' => $locale])
                 ->json('GET', '/api/users')
@@ -60,7 +67,16 @@ class EnvelopeLocalizadoTest extends TestCase
             $this->assertSame(403, $corpo['status']);
             $this->assertNotSame('This action is unauthorized.', $corpo['detail']);
             $this->assertStringNotContainsString('unauthorized', strtolower($corpo['detail']));
+            $this->assertStringNotContainsString('right permissions', strtolower($corpo['detail']));
+            $this->assertStringNotContainsString('problem.', $corpo['title']);
+            $this->assertStringNotContainsString('problem.', $corpo['detail']);
+
+            $titulos[] = $corpo['title'];
+            $detalhes[] = $corpo['detail'];
         }
+
+        $this->assertCount(3, array_unique($titulos), 'Os três locales devolveram o mesmo title no 403.');
+        $this->assertCount(3, array_unique($detalhes), 'Os três locales devolveram o mesmo detail no 403.');
     }
 
     #[Test]
