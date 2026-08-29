@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Enums;
 
+use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
@@ -22,14 +23,6 @@ enum DocumentValidityStatus: string
     case Vencido = 'vencido';
     case Ausente = 'ausente';
 
-    /**
-     * Antecedência em que um documento passa a avisar. Coexiste de propósito
-     * com `DashboardWindows::EXPIRY_WINDOW_DAYS`, que vive na branch paralela
-     * do Dashboard e ainda não existe nesta árvore; unificar as duas é tarefa
-     * do fechamento, depois do merge (spec §5).
-     */
-    public const DIAS_AVISO = 30;
-
     public static function for(?CarbonInterface $validUntil, bool $presente): self
     {
         if (! $presente) {
@@ -48,7 +41,7 @@ enum DocumentValidityStatus: string
             return self::Vencido;
         }
 
-        return $validUntil->lessThanOrEqualTo($hoje->addDays(self::DIAS_AVISO))
+        return $validUntil->lessThanOrEqualTo($hoje->addDays(JanelaDeAviso::DIAS))
             ? self::VenceEmBreve
             : self::Vigente;
     }

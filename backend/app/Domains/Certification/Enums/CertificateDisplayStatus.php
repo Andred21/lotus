@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Enums;
 
+use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -27,9 +28,6 @@ enum CertificateDisplayStatus: string
     case Vencido = 'vencido';
     case Revocado = 'revocado';
 
-    /** Janela de aviso antes do vencimento. Chave i18n: `certificate.status.<valor>`. */
-    public const POR_VENCER_DIAS = 30;
-
     /**
      * D10: `config/app.php` fixa `'timezone' => 'UTC'` LITERAL, sem `env()`, e
      * o `APP_TIMEZONE=America/Santiago` do `.env.example` é ignorado. Corrigir
@@ -50,8 +48,8 @@ enum CertificateDisplayStatus: string
      * 1. revogado, ANTES de olhar data alguma;
      * 2. sem `valido_ate` é vigente — o caso comum;
      * 3. anterior a hoje é vencido (vencer HOJE ainda é vigente);
-     * 4. faltando de 1 a 30 dias avisa; vencendo hoje (0) ou faltando 31 dias
-     *    ou mais é vigente.
+     * 4. faltando de 1 a `JanelaDeAviso::DIAS` dias avisa; vencendo hoje (0) ou
+     *    faltando 31 dias ou mais é vigente.
      */
     public static function for(
         CertificateStatus $status,
@@ -82,7 +80,7 @@ enum CertificateDisplayStatus: string
 
         $daysRemaining = $inicio->diffInDays($limite);
 
-        return $daysRemaining > 0 && $daysRemaining <= self::POR_VENCER_DIAS
+        return $daysRemaining > 0 && $daysRemaining <= JanelaDeAviso::DIAS
             ? self::PorVencer
             : self::Vigente;
     }

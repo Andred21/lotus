@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_execution` |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `executing` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -226,6 +226,17 @@ muda o §7 da spec; o mais visível é que `useHistorial` deixa de ser exceção
 números só existem depois de medir, e a guarda global pode reprovar caminho que a suíte não cobria.
 Colisão conhecida com a `lane-c` em `HistorialTable.tsx` (só props da moldura); rebase antes do merge.
 Execução exige `/executar-bloco hardening-performance-e-dados`.
+
+**Execução do item 6 iniciada — 2026-08-28, a lane entra em `executing`.** `/executar-bloco
+hardening-performance-e-dados` com o gate satisfeito: estado, spec, plano, packet, branch e work item
+coerentes, working tree limpo em `bbab7c58`. Técnica `subagent-driven-development` (`executor:
+claude`), ledger reiniciado em `.superpowers/sdd/progress.md` — o anterior era do item 2. O
+pre-flight do plano achou três coisas: a Task 9 não modifica `TurmaStatusFilter.tsx` (a seção
+`Files:` da task governa, a linha do índice de arquivos é resumo), o script de medição da Task 12
+carrega um caminho de scratchpad de sessão morta (trocado na execução) e a Task 6 manda **copiar
+verbatim** a fixture do teste de paridade para o de paginação — **decisão do João: extrair trait em
+`Tests\Support`**, pelo padrão que o `CreatesDomainRecords` já estabelece. Nenhuma das três muda o §7
+da spec.
 
 **A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
 fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
