@@ -13,6 +13,7 @@ use App\Domains\Certification\Data\CertificatePageRequest;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
+use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\QueryBuilders\CertificateQueryBuilder;
 use App\Domains\Certification\Services\CertificatePdfService;
@@ -42,17 +43,26 @@ class CertificateController extends Controller implements HasMiddleware
      * Página do Historial (spec D1, D6): o filtro de estado vai ao SQL e o
      * resumo do rodapé sai do MESMO `CASE`, sobre o escopo de `q`.
      *
+     * `hoje` é calculado UMA vez aqui, no ponto de entrada do request, e
+     * passado para as três frentes que classificam `display_status` (filtro,
+     * resumo e cada linha projetada) — nunca cada uma calculando o próprio
+     * `hoje` (achado de review da Task 6: um request atravessando a
+     * meia-noite de Santiago entre essas chamadas produzia página e resumo
+     * que não fechavam entre si).
+     *
      * @return PageData<CertificateData>
      */
     public function index(CertificatePageRequest $request): PageData
     {
+        $hoje = CertificateDisplayStatus::hoje();
+
         return Certificate::query()
             ->withListingData()
             ->page(
                 $request,
-                fn (Certificate $certificate) => CertificateData::fromModel($certificate),
-                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($request->display_status),
-                meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->summaryByDisplayStatus()),
+                fn (Certificate $certificate) => CertificateData::fromModel($certificate, $hoje),
+                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($request->display_status, $hoje),
+                meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->summaryByDisplayStatus($hoje)),
             );
     }
 

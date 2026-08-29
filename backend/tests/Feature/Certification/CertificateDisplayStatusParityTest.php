@@ -5,6 +5,7 @@ namespace Tests\Feature\Certification;
 use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Shared\Support\JanelaDeAviso;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\Support\Certification\CreatesCertificateDisplayFixtures;
@@ -37,8 +38,8 @@ class CertificateDisplayStatusParityTest extends TestCase
         $this->certificado(CertificateStatus::Emitido, $hoje->subDay()->toDateString());
         $this->certificado(CertificateStatus::Emitido, $hoje->toDateString());
         $this->certificado(CertificateStatus::Emitido, $hoje->addDay()->toDateString());
-        $this->certificado(CertificateStatus::Emitido, $hoje->addDays(30)->toDateString());
-        $this->certificado(CertificateStatus::Emitido, $hoje->addDays(31)->toDateString());
+        $this->certificado(CertificateStatus::Emitido, $hoje->addDays(JanelaDeAviso::DIAS)->toDateString());
+        $this->certificado(CertificateStatus::Emitido, $hoje->addDays(JanelaDeAviso::DIAS + 1)->toDateString());
         $this->certificado(CertificateStatus::Revocado, $hoje->addDays(10)->toDateString());
         $this->certificado(CertificateStatus::Revocado, null);
     }
@@ -69,10 +70,26 @@ class CertificateDisplayStatusParityTest extends TestCase
 
     public function test_o_resumo_conta_cada_ramo_com_o_mesmo_case(): void
     {
+        $hoje = CertificateDisplayStatus::hoje();
+        $todos = Certificate::query()->get();
+
+        // Contadores DERIVADOS da classificação de domínio, não números
+        // soltos: se `JanelaDeAviso::DIAS` mudar, a fixture (que usa a
+        // constante) continua tocando a borda da janela e este teste continua
+        // provando que o resumo em SQL fecha com ela — em vez de ficar verde
+        // por acidente sobre pontos que pararam de importar.
+        $esperado = collect(CertificateDisplayStatus::cases())
+            ->mapWithKeys(fn (CertificateDisplayStatus $status) => [
+                $status->value => $todos
+                    ->filter(fn (Certificate $c) => CertificateDisplayStatus::for($c->status, $c->valido_ate, $hoje) === $status)
+                    ->count(),
+            ])
+            ->all();
+
         $resumo = Certificate::query()->summaryByDisplayStatus();
 
         $this->assertSame(
-            ['vigente' => 3, 'por_vencer' => 2, 'vencido' => 1, 'revocado' => 2],
+            $esperado,
             ['vigente' => $resumo->vigente, 'por_vencer' => $resumo->por_vencer, 'vencido' => $resumo->vencido, 'revocado' => $resumo->revocado],
         );
     }

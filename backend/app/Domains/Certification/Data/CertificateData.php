@@ -7,6 +7,7 @@ use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
+use Carbon\CarbonInterface;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -47,7 +48,16 @@ class CertificateData extends Data
         public ?string $aluno_photo_url = null,
     ) {}
 
-    public static function fromModel(Certificate $certificate): self
+    /**
+     * `$hoje` é OPCIONAL para quem projeta um certificado avulso (`show`,
+     * `store`, `revoke`). A listagem passa o `hoje` calculado uma vez em
+     * `CertificateController::index` — sem isso, cada linha da página
+     * recalcularia o próprio `hoje`, e um request que atravessasse a meia-noite
+     * de Santiago entre a primeira e a última linha devolveria página cujo
+     * `display_status` contradiz o filtro ou o resumo que a acompanha (achado
+     * de review da Task 6).
+     */
+    public static function fromModel(Certificate $certificate, ?CarbonInterface $hoje = null): self
     {
         // Lido UMA vez: o cast do snapshot tem `withoutObjectCaching` (para
         // que nenhum `save()` reescreva o documento congelado), então cada
@@ -73,7 +83,7 @@ class CertificateData extends Data
             display_status: CertificateDisplayStatus::for(
                 $certificate->status,
                 $certificate->valido_ate,
-                CertificateDisplayStatus::hoje(),
+                $hoje ?? CertificateDisplayStatus::hoje(),
             ),
             aluno_photo_url: $certificate->enrollment->student->user->photo_path,
         );

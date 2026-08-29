@@ -8,6 +8,7 @@ use App\Domains\Certification\Enums\CertificateStatus;
 use App\Shared\Pagination\Paginates;
 use App\Shared\Support\DataSql;
 use App\Shared\Support\JanelaDeAviso;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -58,13 +59,21 @@ class CertificateQueryBuilder extends Builder
             ->orWhere('snapshot->aluno->rut', 'like', $like));
     }
 
-    public function whereDisplayStatus(?CertificateDisplayStatus $status): static
+    /**
+     * `hoje` é OPCIONAL aqui só para quem chama fora de `index` (ex.: um
+     * console command). Dentro do request, `CertificateController::index`
+     * calcula uma vez e passa para este método E para `summaryByDisplayStatus`
+     * — nunca deixe os dois recalcularem por conta própria (achado de review
+     * da Task 6: um request que atravessasse a meia-noite de Santiago entre as
+     * duas chamadas produzia página e resumo que não fechavam entre si).
+     */
+    public function whereDisplayStatus(?CertificateDisplayStatus $status, ?CarbonInterface $hoje = null): static
     {
         if ($status === null) {
             return $this;
         }
 
-        [$case, $bindings] = $this->displayStatusCase();
+        [$case, $bindings] = $this->displayStatusCase($hoje ?? CertificateDisplayStatus::hoje());
 
         return $this->whereRaw("({$case}) = ?", [...$bindings, $status->value]);
     }
@@ -74,9 +83,9 @@ class CertificateQueryBuilder extends Builder
      * o que o usuário escolhe A PARTIR dele, spec §4.2). Clone: não mexe na
      * query que vai paginar.
      */
-    public function summaryByDisplayStatus(): CertificateSummaryData
+    public function summaryByDisplayStatus(?CarbonInterface $hoje = null): CertificateSummaryData
     {
-        [$case, $bindings] = $this->displayStatusCase();
+        [$case, $bindings] = $this->displayStatusCase($hoje ?? CertificateDisplayStatus::hoje());
 
         $contagens = (clone $this)
             ->reorder()
@@ -94,14 +103,15 @@ class CertificateQueryBuilder extends Builder
     }
 
     /**
-     * O `CASE` e as bindings dele. `hoje` é calculado UMA vez por chamada, em
-     * `America/Santiago`, como o `fromModel` faz.
+     * O `CASE` e as bindings dele. `hoje` chega PRONTO — quem decide o
+     * instante é o chamador (`whereDisplayStatus`/`summaryByDisplayStatus`),
+     * nunca este método, para que o filtro e o resumo do mesmo request
+     * compartilhem o mesmo `hoje`.
      *
      * @return array{0: string, 1: list<string>}
      */
-    private function displayStatusCase(): array
+    private function displayStatusCase(CarbonInterface $hoje): array
     {
-        $hoje = CertificateDisplayStatus::hoje();
         $conexao = $this->getModel()->getConnection();
         $hojeSql = DataSql::literal($conexao, $hoje);
         $limiteSql = DataSql::literal($conexao, $hoje->addDays(JanelaDeAviso::DIAS));
