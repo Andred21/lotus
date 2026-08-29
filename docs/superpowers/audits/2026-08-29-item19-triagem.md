@@ -8,7 +8,7 @@
 | Id | Cl. | Veredito | Raiz | Remédio | Prova |
 |---|---|---|---|---|---|
 | A1–A6 | A | adequado | — | — (nota da A3: "Volver" em linha própria é desenho do `DetailHeader`, não achado) | — |
-| UI-01 | B | corrigir | R1 | `ArchiveSwitch`: selecionado `outlined`, não selecionado `text` | pendente — Task 5 / run 5 |
+| UI-01 | B | corrigir | R1 | `ArchiveSwitch`: selecionado `outlined`, não selecionado `text` | `ArchiveSwitch.test.tsx` (visto reprovar) · run 5 |
 | UI-02 | B | corrigir | sítio | `size="small"` no Rechazar | pendente — Task 14 / run 5 |
 | UI-03 | B | corrigir | R2 | `identifierClass` no RUT do `BudgetDetailPage` | pendente — Task 9 / run 5 |
 | UI-04 | B | recusado | — | costura decidida em `AppDialog/style.ts`; f4 A3 mediu coerente | `AppDialog/style.ts:6-11` |
