@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: prontidao-pre-nuvem
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
 context_packet: null
 blocker: null
 lanes:
@@ -30,13 +30,13 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: prontidao-pre-nuvem
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-infra
     branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa)
     active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
     context_packet: null   # Contexto: nao -- fontes sao o repositorio e a API do GitHub, registradas na spec §3
     blocker: null
     resume_state: null
@@ -59,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
-state_basis_commit: 5b121aaa
-updated_at: 2026-08-29T10:30:00-03:00
+state_basis_commit: 24e0f037
+updated_at: 2026-08-29T15:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
-| `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `planning` |
+| `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
 
@@ -203,7 +203,14 @@ sobre `main` já com o par provado. A branch `chore/prontidao-pre-nuvem` nasce d
 `infra/producao-provisionamento-aws@50f3a1f3` e **mescla `main@37e0e2d4` para dentro** (`5b121aaa`)
 antes do primeiro artefato — 103 commits, único conflito em `state.md`. Acrescentar o item 20 fora
 do main tree segue a **P-55**. Spec aprovada por seções no brainstorming:
-`specs/2026-08-29-prontidao-pre-nuvem-design.md`.
+`specs/2026-08-29-prontidao-pre-nuvem-design.md`. **Plano escrito e a lane em `ready_for_execution`
+em 2026-08-29** (`plans/2026-08-29-prontidao-pre-nuvem.md`): oito tasks em duas fatias — a PR 1
+(workflow, lockfile, `scripts/provar-release.sh` com catraca, docs) **mescla no meio do plano**,
+porque o espelho publica a árvore desse merge e a prova do par corporativo só existe depois dele;
+a fatia 2 é ação externa (merge, PAT do João, espelho de onze PRs, CI corporativo, três execuções
+do script) e evidência em `audits/`. A sonda do DoD 1 é a ordem das tasks (workflow antes do bump),
+não um commit de lockfile rebaixado; o script inclui `migrate --force` entre `pull` e `up`, que é o
+fluxo de deploy que o item 10 fixou (D7).
 
 **A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
