@@ -20,7 +20,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-performance-e-dados   # fechada em 2026-08-29; sem merge
+    branch: —   # feat/hardening-performance-e-dados mesclou (PR #83) e foi apagada em 2026-08-29
     active_spec: null
     active_plan: null
     context_packet: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-performance-e-dados` (fechada em 2026-08-29; sem merge) | `idle` |
+| `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -175,8 +175,8 @@ disjuntas, colisão mínima de arquivos:
 **A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
 `feat/hardening-performance-e-dados` nasceu de `main@f584432b`, foi **rebaseada sobre
-`main@b4101da9`** (que traz o item 18 da `lane-c`, PR #82) no fechamento, e **segue sem merge**. A
-colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
+`main@b4101da9`** (que traz o item 18 da `lane-c`, PR #82) no fechamento, e **mesclou pelo PR #83**
+(merge `2ae48f31`). A colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
 linhas das duas lanes somadas passaram da régua de 150, então o filtro de estado saiu para
 `HistorialStatusFilter.tsx` — movimento literal, no molde que o `TurmaStatusFilter` registra desde
 2026-08-24. **E cobrou uma correção que não é do rebase, e sim deste bloco:** a reprovação
@@ -184,8 +184,23 @@ intermitente do `pnpm test` que o gate anterior registrou como flake é um `setT
 `useServerTable` disparando depois do teardown do jsdom (`window is not defined`), porque o vitest
 não tem `setupFiles` e nada desmonta o que o teste monta — os dois arquivos que vazavam ganharam
 `afterEach(cleanup)` e a suíte foi de 1 reprovação em 4 voltas para 6 verdes de 6; o mecanismo
-global virou a **P-69**. A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+global virou a **P-69**. Essa correção **não entrou no PR #83** — ele mesclou em `2c66fbbe`, antes de
+ela existir, e a `main` passou algumas horas reproduzindo a reprovação; ela entrou pelo **PR #84**
+(merge `0a65d1e2`), de branch própria tirada da `main` já mesclada. As duas branches foram apagadas
+local e remotamente em 2026-08-29, com `git diff` vazio contra a `main` nas duas. A árvore é o main
+tree, que não se destrói, e voltou para `main`. A lane não recebe item novo sozinha: promoção é do
+João, contra o `backlog.md`.
 
+
+> **A linha da `lane-c` acima está divergente, e não é esta lane que a corrige.** Ela diz
+> `refactor/frontend-estilizacao-componentes` "fechada em 2026-08-29, **sem merge**"; a branch
+> mesclou (PR #82) e **já não existe** no repositório — o `git checkout` dela falha com
+> `did not match any file(s) known to git`. A `lane-c` também estava com a `main` em checkout na
+> worktree `../fix-frontend`, o que impedia o main tree de voltar para `main`; no fechamento do item
+> 6 essa worktree foi posta em **detached** no mesmo commit (`0a65d1e2`, árvore limpa, conteúdo
+> idêntico), sem tocar em arquivo nenhum dela. Registro aqui em vez de reescrever a linha porque a
+> invariante de dono manda que cada lane escreva só o que é dela, e a de divergência manda PARAR e
+> mostrar em vez de escolher fonte. A `lane-c` (ou o João) fecha isso quando retomar a árvore.
 
 ## Itens fechados — ponteiro, não narrativa
 
