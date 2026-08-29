@@ -65,7 +65,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
-| P-66 | A poda de `login_logs` varre `created_at` sem índice que a sirva — a `audits` ganhou o dela neste bloco, a `login_logs` não | João | bloco que tocar o schema de `login_logs`, ou a tabela crescer a ponto de a poda diária pesar; revisar 2026-10-31 |
 
 ## Encerradas (2)
 

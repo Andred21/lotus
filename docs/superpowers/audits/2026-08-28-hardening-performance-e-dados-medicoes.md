@@ -127,3 +127,58 @@ aquecimento passou a ser simétrico nos dois lados da comparação (sem isso,
 primeiro autenticado sobrevive dentro do mesmo teste, então o orçamento do
 relator ficou em teste próprio — sem isso ele media o dashboard do admin
 (40 queries) achando que media o do relator (7).
+
+## Índices — EXPLAIN antes/depois (Task 12)
+
+Cenário: `PerformanceScenarioSeeder` sobre MySQL 8 de dev — **5.045 alunos, 200
+clientes, 50 relatores, 504 turmas em cinco anos, 8.045 matrículas, 6.000
+certificados, 20.000 logins**. `ANALYZE TABLE` antes de cada rodada: sem ele o
+otimizador ainda enxerga `rows: 1` nas tabelas recém-carregadas em lote e todo
+EXPLAIN mente.
+
+| Candidato | Consulta real | Antes (`key` / `rows`) | Depois | Veredito |
+| --- | --- | --- | --- | --- |
+| `turmas(status, end_date)` | painel de emissão (Task 10) | `NULL` / 504, filesort | `turmas_status_end_date_index` / **32**, backward index scan | **aprovado** |
+| `turmas(start_date)` | agenda do Dashboard | `NULL` / 504 | `turmas_start_date_index` / **1** | **aprovado** |
+| `certificates(status, valido_ate)` | alertas de vencimento do Dashboard | `NULL` / 5.890 | `certificates_status_valido_ate_index` / 5.700, **Using index** (covering) — e **103** na forma com janela (`BETWEEN hoje E horizonte`) | **aprovado** |
+| `certificates(created_at)` | Historial, ordem default `LIMIT 25` | `NULL` / 5.890, filesort | `certificates_created_at_index` / **25**, backward index scan | **aprovado** |
+| `files(valid_until)` | documentos de relator vencendo | `files_fileable_type_fileable_id_index` / 7 | `files_valid_until_index` / **1** — **só na forma SEM `date()`** | **aprovado**, com a troca de `whereDate` por `where` nos dois callers |
+| `login_logs(created_at)` | poda da P-66 (`PodarLogins`) | `NULL` / 20.042 | `login_logs_created_at_index` / **10.021** no `DELETE … LIMIT 1000` que o comando realmente executa | **aprovado** |
+| `users(name)` | ordem da lista de alunos | `NULL` / 5.045, temporary + filesort | idêntico — o otimizador não usa | **recusado** |
+| `enrollments(student_id)` | `withCount('enrollments')` | `enrollments_student_id_foreign` já usado | — | **não era candidato**: a FK já cria o índice |
+
+Dois detalhes que só o EXPLAIN mostrou:
+
+- **`DELETE` inteiro vs. `DELETE … LIMIT`.** `DELETE FROM login_logs WHERE
+  created_at < ?` sem limite continua full scan mesmo com o índice — recorta 80%
+  da tabela, e varrer é mais barato. O comando real (`PodarLogins`) deleta em
+  chunks de `RetentionPolicy::CHUNK`, e ESSE plano usa o índice. Medir a
+  consulta que existe, não a que se imagina.
+- **`whereDate` cega o índice**, e o dano não é uniforme: em `valido_ate` a
+  coluna é `date` e o MySQL 8 ainda faz range; em `files.valid_until` não fez.
+  Os dois callers (`IdentityMetricsQuery`, `RedatorScopeQuery`) passaram a
+  `where('valid_until', '<=', DashboardWindows::expiryHorizon())` — o horizonte
+  é `endOfDay()`, então o conjunto selecionado é o mesmo.
+
+**Busca no `snapshot` (risco §8):** `EXPLAIN ANALYZE` do `LIKE '%…%'` sobre
+`codigo` + `json_extract(snapshot, '$.aluno.name')` com 6.000 certificados —
+table scan, **0,69 ms** para as 25 primeiras linhas (625 lidas). Muito abaixo
+dos 100 ms que abririam o plano B (coluna gerada indexada). Fica registrado, não
+vira pendência.
+
+### Latência — antes e depois (mediana de 5, sessão de admin do seed)
+
+| Endpoint | Antes | Depois |
+| --- | --- | --- |
+| `GET /api/students?per_page=25` | 62 ms | 66 ms |
+| `GET /api/certificates?per_page=25` | 53 ms | 52 ms |
+| `GET /api/dashboard/metricas` | 578 ms | 574 ms |
+| `GET /api/turmas?per_page=25` | 51 ms | 52 ms |
+| `GET /api/certificates/emission-panel` | 129 ms | 126 ms |
+
+A latência quase não se move, e isso é o resultado honesto: neste volume o
+custo dominante não é o plano de acesso (o MySQL varre 6.000 linhas em
+milissegundos), é a montagem do payload em PHP. Os índices valem pela ordem de
+grandeza que impedem — 5.890 linhas varridas viram 25 no Historial —, não por
+milissegundos hoje. O Dashboard em ~575 ms é o número a vigiar: são as 40
+queries fixas da catraca da Task 11, e nenhuma delas cresce com N.

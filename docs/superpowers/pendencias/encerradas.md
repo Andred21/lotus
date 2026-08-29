@@ -7,12 +7,23 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-02** e a **P-33**. A **P-46** saiu no fechamento do
+*(três: a **P-66**, a **P-02** e a **P-33**. A **P-46** saiu no fechamento do
 `frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), o primeiro posterior ao do bloco
 que a encerrou, e saiu **remedida**: o mini-reset escopado de `frontend/src/index.css` e a catraca
 `frontend/tests/preflight-escopado.test.ts` seguiram verdes nos 653 testes daquele gate, e a borda
 que o reset abriu continua viva e nomeada na [P-63](./abertas.md#p-63). A **P-03** e a **P-15**
 saíram nos dois fechamentos de 2026-08-25; o parágrafo adiante é o rastro delas.)*
+
+### P-66 — a poda de `login_logs` varria `created_at` sem índice
+
+**Fechada em 2026-08-29**, no `hardening-performance-e-dados` (Task 12), por mecanismo: a
+migration `2026_08_28_000001_add_performance_indexes` cria `login_logs_created_at_index`, e o
+`DELETE FROM login_logs WHERE created_at < ? LIMIT 1000` — a forma que o `PodarLogins` realmente
+executa, em chunks — passou de full scan (`key: NULL`, 20.042 linhas) para o índice novo (10.021)
+sobre as ~20 mil linhas do `PerformanceScenarioSeeder`. Números em
+[`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`](../audits/2026-08-28-hardening-performance-e-dados-medicoes.md).
+A assimetria com a `audits` (que ganhou o dela no bloco anterior) acabou.
+
 
 ### P-02 e P-33 — retenção de `audits` e de `login_logs`
 
