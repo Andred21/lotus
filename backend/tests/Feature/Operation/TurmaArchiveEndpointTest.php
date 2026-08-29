@@ -33,14 +33,14 @@ class TurmaArchiveEndpointTest extends TestCase
 
         $this->getJson('/api/turmas/archived')
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.turma.id', $arquivada->id)
-            ->assertJsonPath('0.archived_by', 'Ana Torres');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.turma.id', $arquivada->id)
+            ->assertJsonPath('data.0.archived_by', 'Ana Torres');
 
         $this->getJson('/api/turmas')
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.id', $viva->id);
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $viva->id);
     }
 
     public function test_arquivada_conta_os_alunos_que_a_cascata_levou(): void
@@ -55,7 +55,7 @@ class TurmaArchiveEndpointTest extends TestCase
 
         $this->getJson('/api/turmas/archived')
             ->assertOk()
-            ->assertJsonPath('0.turma.enrolled_count', 1);
+            ->assertJsonPath('data.0.turma.enrolled_count', 1);
     }
 
     public function test_restore_devolve_200_e_traz_as_matriculas_de_volta(): void

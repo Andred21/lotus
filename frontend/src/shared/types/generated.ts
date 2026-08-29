@@ -658,6 +658,7 @@ budget_id: undefined | number | null,
 client_rut: undefined | string | null,
 client_photo_url: string | null,
 };
+export type TurmaDisplayStatus = 'em_andamento' | 'habilitada' | 'concluida';
 export type TurmaDocumentData = {
 id: number,
 type: string,

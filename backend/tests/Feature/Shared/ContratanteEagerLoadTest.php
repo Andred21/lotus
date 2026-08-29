@@ -49,7 +49,7 @@ class ContratanteEagerLoadTest extends TestCase
 
         Model::preventLazyLoading();
 
-        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2);
+        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(2, 'data');
     }
 
     public function test_cotacoes_pendentes_nao_lazy_loadam_o_user_do_contratante(): void
