@@ -82,6 +82,7 @@ class TurmaStatusParityTest extends TestCase
             $sql = Turma::onlyTrashed()->whereDisplayStatus($status, asOfArchiving: true)->pluck('id')->sort()->values()->all();
 
             $this->assertSame($esperado, $sql, "Divergência em {$status->value} (arquivadas).");
+            $this->assertNotSame([], $esperado, "Fixture sem exemplar de {$status->value} (arquivadas).");
         }
 
         $this->assertSame([$habilitada->id], Turma::onlyTrashed()->whereDisplayStatus(TurmaDisplayStatus::Habilitada, asOfArchiving: true)->pluck('id')->all());
