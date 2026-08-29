@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: frontend-estilizacao-padronizacao-de-componentes
 active_work_item: frontend-estilizacao-padronizacao-de-componentes
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md
 active_plan: docs/superpowers/plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md
@@ -44,9 +44,9 @@ lanes:
   lane-c:
     active_feature: frontend-estilizacao-padronizacao-de-componentes
     active_work_item: frontend-estilizacao-padronizacao-de-componentes
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736 na promocao; PR #80 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md
@@ -57,7 +57,7 @@ lanes:
     last_completed_work_item: frontend-hardening-final
 last_completed_work_item: hardening-api-arquivos-e-abuso
 state_basis_commit: b7283736
-updated_at: 2026-08-28T18:26:00-03:00
+updated_at: 2026-08-29T06:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -163,7 +163,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-api-arquivos-e-abuso` (mesclada, PR #78) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_review` |
+| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_closure` (Q-1..Q-6 aprovados e aplicados; gate reverificado) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
