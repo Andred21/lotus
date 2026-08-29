@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-i18n-e-erros-api
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-29-hardening-i18n-e-erros-api-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_planning` |
+| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `planning` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -240,6 +240,19 @@ de `main@37e0e2d4`, que já é `origin/main` e traz os merges dos PRs #83, #84 e
 tree, pelo precedente de todo bloco de backend (gate P-03). **Houve troca de foco:** `focused_lane`
 era `lane-c` e passou a `lane-a` neste mesmo commit, com o espelho do topo redesenhado junto — a
 `lane-c` não foi tocada.
+
+**Brainstorming do item 7 — 2026-08-29, spec escrita, a lane entra em `planning`.** Cinco decisões
+do João sobre uma medição que achou mais do que as fichas registravam: **D1** o backend traduz a
+frase do Dashboard e isso **derruba por escrito a D1 da spec de 2026-08-22** (a razão dela — "o
+`Accept-Language` hoje não existe" — não valia já naquele dia: o `SetLocale` e o header do axios
+existem); **D2** chave por domínio em `lang/<locale>/<dominio>.php`, recusados o `errors.php` único
+e o dicionário JSON com a frase como chave; **D3** o espanhol passa a ser só `es_CL` (o `lang/es/`
+é byte-idêntico ao `es_CL/` nos 8 arquivos e o `es_CL.json` nem existe); **D4** o bloco é só de
+backend — o `screenDetail` do front não vira a chave aqui, vira ficha; **D5** os defaults do
+framework também são localizados, por TIPO de exceção. Dois achados fora de ficha: o `detail` de
+401/403/404 é `getMessage()` cru em inglês, e o `phpunit.xml` não fixa `APP_LOCALE`, então a suíte
+herda o `.env` gitignored e roda em `en` na CI. Spec em
+`specs/2026-08-29-hardening-i18n-e-erros-api-design.md`.
 
 
 ## Itens fechados — ponteiro, não narrativa
