@@ -40,7 +40,7 @@ class SpreadsheetRowReader
             ),
             'text/csv', 'text/plain' => new CsvReader(new CsvOptions(SHOULD_PRESERVE_EMPTY_ROWS: true)),
             default => throw ValidationException::withMessages([
-                'file' => 'Formato não suportado — envie xlsx ou csv.',
+                'file' => __('shared.spreadsheet.unsupported_format'),
             ]),
         };
 
@@ -57,7 +57,7 @@ class SpreadsheetRowReader
                     // ocupa o processo. `+ 1` porque a linha 1 é cabeçalho.
                     if ($maxLinhas !== null && $rowNumber > $maxLinhas + 1) {
                         throw ValidationException::withMessages([
-                            'file' => 'La planilla supera el máximo de '.$maxLinhas.' filas. Divídala y vuelva a enviarla.',
+                            'file' => __('shared.spreadsheet.too_many_rows', ['max' => $maxLinhas]),
                         ]);
                     }
 
