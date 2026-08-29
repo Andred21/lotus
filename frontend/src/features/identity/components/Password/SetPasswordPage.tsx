@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { AppButton, AppPassword, FormErrorBanner, pageTitleClass } from '@shared/ui'
-import { dangerText } from '@shared/styles/tokens'
+import { AppButton, AppPassword, FormErrorBanner, FormField, pageTitleClass } from '@shared/ui'
 import { useSetPassword } from '../../hooks/useSetPassword'
 import type { PasswordFlow } from '../../api/passwordApi'
 
@@ -58,40 +57,23 @@ export function SetPasswordPage() {
             dois nunca coexistem — e sem ele a falha de transporte ficaria muda. */}
         <FormErrorBanner message={generalError ?? fieldErrors?.email?.[0] ?? null} variant="inline" />
 
-        {/* Rótulo por htmlFor + `inputId`, nunca embrulhando o campo: o olho do
-            AppPassword tem nome acessível próprio e seria somado ao do input
-            (UI-03). `inputId` é o que o PrimeReact repassa ao <input>. */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="set-password" className="font-medium" style={{ color: 'var(--text-color)' }}>
-            {t('password.newPassword')}
-          </label>
+        <FormField label={t('password.newPassword')} error={fieldErrors?.password?.[0]}>
           <AppPassword
-            inputId="set-password"
             leftIcon="pi pi-lock"
             value={password}
             autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
-            invalid={!!fieldErrors?.password}
-            aria-invalid={!!fieldErrors?.password}
-            aria-describedby={fieldErrors?.password ? 'set-password-error' : undefined}
           />
-          {fieldErrors?.password && (
-            <small id="set-password-error" style={{ color: dangerText }}>{fieldErrors.password[0]}</small>
-          )}
-        </div>
+        </FormField>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="set-password-confirmation" className="font-medium" style={{ color: 'var(--text-color)' }}>
-            {t('password.confirmation')}
-          </label>
+        <FormField label={t('password.confirmation')}>
           <AppPassword
-            inputId="set-password-confirmation"
             leftIcon="pi pi-lock"
             value={confirmation}
             autoComplete="new-password"
             onChange={(e) => setConfirmation(e.target.value)}
           />
-        </div>
+        </FormField>
 
         <AppButton variant="primary" type="submit" label={t('password.submit')} loading={isSubmitting} />
       </form>

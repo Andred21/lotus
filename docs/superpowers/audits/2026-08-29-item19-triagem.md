@@ -58,7 +58,7 @@ pela mesma raiz (R1), não viram ficha.
 | UI-03 | B | corrigir | R3 | `CrudDialog` devolve o foco | `CrudDialog.test.tsx` (visto reprovar) · run 5 |
 | UI-04 | B | corrigir (pela raiz) | R1 | fecha com a UI-01 | `AppSelectableCard.test.tsx` · pendente — run 5 (≥ 4,5:1) |
 | UI-05 | B | ficha | — | D-68 | pendente — Task 16 |
-| UI-06 | B | corrigir | sítio | auth consome `FormField` | pendente — Task 15 / run 5 |
+| UI-06 | B | corrigir | sítio | auth consome `FormField` | `AuthPanel.test.tsx` reescrito (achado por rótulo, passa contra código antigo — prova a associação) · grep `className="font-medium"` em Login/Password = 0 · pendente — run 5 (borda `.p-invalid` no 422 real) |
 
 **Nota (Task 9):** `grep -rn "font-mono" src/features` devolve 4 linhas, não zero — refinado como
 código, não literal (mesma correção já precedente no bloco do item 18): duas são asserção de teste
