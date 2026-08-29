@@ -121,6 +121,34 @@ que decidir duas vezes.
 
 ---
 
+## P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
+
+**Quem decide:** João · **Gatilho:** João decidir se o `cleanup()` vira mecanismo global; ou bloco
+que toque `frontend/vite.config.ts` por outro motivo e possa medir o alcance. Revisar em
+**2026-10-31**.
+
+Medido no fechamento do `hardening-performance-e-dados` (2026-08-29). `frontend/vite.config.ts` não
+declara `setupFiles` nem `globals: true`, e sem um dos dois o `cleanup()` automático do Testing
+Library **nunca roda**: o que um teste monta segue montado até o vitest destruir o jsdom do arquivo.
+
+Na maior parte dos casos isso é inócuo — o componente parado não faz nada. Deixa de ser inócuo
+assim que o componente agenda trabalho: o `useServerTable` marca um `setTimeout` de debounce no
+mount, e ele dispara **depois** do teardown, sobre um `window` que já não existe. O sintoma é
+`ReferenceError: window is not defined` em `Unhandled Errors`, que **reprova a rodada sem reprovar
+asserção nenhuma** — some do relatório de testes e parece flake. Foi exatamente o que aconteceu
+duas vezes neste bloco, e a primeira leitura registrou como oscilação; a segunda mediu e achou a
+causa (`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`).
+
+**Pago onde doía, não onde resolve de vez.** Os dois arquivos que vazavam ganharam
+`afterEach(cleanup)` — a grafia que `AppCard.test.tsx`, `PageHeader.test.tsx` e
+`SectionLabel.test.tsx` já usam —, e a suíte foi de 1 reprovação em 4 voltas para **6 verdes de 6**.
+O que continua aberto é o mecanismo: nada impede o próximo teste de montar um hook com timer sem
+`cleanup`, e ele nasce verde até a rodada em que não nascer. O remédio conhecido é um `setupFiles`
+com `afterEach(cleanup)` valendo para todos os arquivos (lição 14 — mecanismo vence instrução). Não
+entrou aqui porque mudar a configuração do runner do repositório inteiro no gate de fechamento é
+escopo próprio: o custo real é descobrir quantos arquivos hoje dependem, sem saber, de o componente
+**não** desmontar entre testes.
+
 ## P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
 
 **Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste

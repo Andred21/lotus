@@ -179,7 +179,12 @@ em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
 colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
 linhas das duas lanes somadas passaram da régua de 150, então o filtro de estado saiu para
 `HistorialStatusFilter.tsx` — movimento literal, no molde que o `TurmaStatusFilter` registra desde
-2026-08-24. A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+2026-08-24. **E cobrou uma correção que não é do rebase, e sim deste bloco:** a reprovação
+intermitente do `pnpm test` que o gate anterior registrou como flake é um `setTimeout` do
+`useServerTable` disparando depois do teardown do jsdom (`window is not defined`), porque o vitest
+não tem `setupFiles` e nada desmonta o que o teste monta — os dois arquivos que vazavam ganharam
+`afterEach(cleanup)` e a suíte foi de 1 reprovação em 4 voltas para 6 verdes de 6; o mecanismo
+global virou a **P-69**. A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 
 ## Itens fechados — ponteiro, não narrativa
@@ -191,7 +196,7 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
 | 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
-| 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`) | Item 6 da fila |
+| 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`; abre a **P-69**) | Item 6 da fila |
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
 | 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 | 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |

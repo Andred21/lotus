@@ -1,10 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
 import type { ArchiveMode } from '@shared/hooks'
 import { useTurmasPage } from './useTurmasPage'
+
+/* Desmonta o hook ao fim de cada teste. Sem isto o `useServerTable` fica
+ * montado com o `setTimeout` do debounce agendado, e ele dispara DEPOIS que o
+ * vitest destrói o jsdom do arquivo — `ReferenceError: window is not defined`,
+ * que reprova a rodada inteira sem reprovar teste nenhum. O repositório não tem
+ * `setupFiles`, então o cleanup é por arquivo, como em `AppCard.test.tsx`. */
+afterEach(cleanup)
 
 vi.mock('@shared/api/axios', () => ({
   api: { get: vi.fn() },
