@@ -50,7 +50,7 @@
 | A1–A8 | A | adequado | — | — | — |
 | UI-01 | C | corrigir | R1 | alvo do `AppSelectableCard` sem superfície própria | pendente — Task 4 / run 5 |
 | UI-02 | B | corrigir | R3 | `invalid` pelo contexto | `fieldAssociation.test.tsx` (5 wrappers, visto reprovar) · run 5 |
-| UI-03 | B | corrigir | R3 | `CrudDialog` devolve o foco | pendente — Task 3 / run 5 |
+| UI-03 | B | corrigir | R3 | `CrudDialog` devolve o foco | `CrudDialog.test.tsx` (visto reprovar) · run 5 |
 | UI-04 | B | corrigir (pela raiz) | R1 | fecha com a UI-01 | pendente — run 5 (≥ 4,5:1) |
 | UI-05 | B | ficha | — | D-68 | pendente — Task 16 |
 | UI-06 | B | corrigir | sítio | auth consome `FormField` | pendente — Task 15 / run 5 |
