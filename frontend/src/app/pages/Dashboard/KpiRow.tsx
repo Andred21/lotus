@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppCard, StatValue } from '@shared/ui'
+import { AppCard, StatValue, sectionLabelClass } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 
 export type Kpi = {
@@ -74,7 +74,7 @@ export function KpiRow({ items }: { items: Kpi[] }) {
               * número perdia o `justify-between` e voltava para a esquerda, e a
               * fileira do mobile ficava com quatro números à direita e dois à
               * esquerda. */}
-            <p className="min-w-0 text-xs font-semibold tracking-wider uppercase" style={{ color: 'var(--text-color-secondary)' }}>
+            <p className={`min-w-0 ${sectionLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
               {t(kpi.key)}
             </p>
             {/* O `justify-between` do corpo é o que põe todos os números na

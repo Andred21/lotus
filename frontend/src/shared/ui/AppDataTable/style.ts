@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { DataTablePassThroughOptions } from 'primereact/datatable'
+import { fieldLabelClass } from '../typography'
 
 /** Passthrough do DataTable (ADR-16). Cores por CSS var do tema Lara.
  *
@@ -70,7 +71,7 @@ export const appDataTablePt: DataTablePassThroughOptions = {
    * teste pega isto: o jsdom não calcula caixa, então `table-layout` não tem
    * efeito observável na suíte. */
   table: { className: 'min-w-[48rem] table-fixed' },
-  headerRow: { className: 'text-xs uppercase tracking-wide' },
+  headerRow: { className: fieldLabelClass },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a
   // DataTablePassThroughOptions — cascatam via `column` (tipagem do PrimeReact 10.9.8).
   column: {
