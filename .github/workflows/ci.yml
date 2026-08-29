@@ -184,14 +184,19 @@ jobs:
         working-directory: frontend
         run: pnpm audit --prod
 
-  # REPORTA e nao reprova, por decisao explicita: um advisory moderate numa
-  # dependencia transitiva de ferramenta de desenvolvimento travaria toda a
-  # fila sem uma linha de codigo ter mudado, e a saida pratica disso e
-  # desligar o check -- pior que nao te-lo.
+  # REPROVA, desde 2026-08-29 (item 20). Ate entao este job rodava em
+  # `continue-on-error: true` -- "reporta e nao reprova", decisao do item 11
+  # para que uma advisory transitiva de ferramenta nao travasse a fila sem uma
+  # linha de codigo ter mudado. O efeito medido foi o oposto do pretendido: o
+  # job aparecia vermelho em TODO run, sem decidir nada, e vermelho deixou de
+  # significar alguma coisa. Decisao do Joao: advisory em qualquer arvore
+  # reprova, e este job entra no `needs` do `image`. O risco que a decisao
+  # anterior evitava fica assumido -- a fila trava ate o bump do lockfile, que
+  # e a saida certa (`pnpm update <pacote>`; ver CONTRIBUINDO.md, "Como ler o
+  # CI"). Desligar o check nunca e.
   audit-dev:
     name: audit-dev
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -325,10 +330,12 @@ jobs:
     name: image
     # Nenhum gate vermelho passa daqui: e isto que faz o DoD
     # "commit reprovado nao gera release promovivel" ser mecanico e nao
-    # combinado. audit-dev NAO entra -- ele reporta, nao decide. procedencia
-    # entra porque, sem branch protection, ele e a unica coisa entre um push
-    # direto em main e um artefato publicado.
-    needs: [backend, frontend, types-drift, audit-prod, procedencia]
+    # combinado. audit-dev entra desde 2026-08-29 -- antes reportava sem
+    # decidir, e um run vermelho com par publicado era exatamente a
+    # incoerencia que este `needs` existe para impedir. procedencia entra
+    # porque, sem branch protection, ele e a unica coisa entre um push direto
+    # em main e um artefato publicado.
+    needs: [backend, frontend, types-drift, audit-prod, audit-dev, procedencia]
     # Sem nome de dono na condicao. Branch e PR rodam so os gates; o custo
     # do bloco esta neste job, e e daqui que vem o "CI rapido".
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

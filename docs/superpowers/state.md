@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: prontidao-pre-nuvem
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
@@ -30,9 +30,9 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: prontidao-pre-nuvem
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: ../lotus-infra
     branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa)
     active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 state_basis_commit: 24e0f037
-updated_at: 2026-08-29T15:00:00-03:00
+updated_at: 2026-08-29T16:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
