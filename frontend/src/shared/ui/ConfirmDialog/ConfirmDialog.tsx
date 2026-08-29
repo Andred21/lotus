@@ -23,7 +23,11 @@ export function ConfirmDialog({
   const footer = (
     <div className="flex justify-end gap-2">
       <AppButton label={t('common.cancel')} text disabled={pending} onClick={onCancel} />
+      {/* Sem severidade, confirmar é a ação primária do diálogo e veste a
+        * marca — a mesma grafia do `CrudDialog` (achado B3). Com `danger`, o
+        * preenchido de severidade é o sinal e a marca sairia por cima dele. */}
       <AppButton
+        variant={severity ? undefined : 'primary'}
         label={confirmLabel ?? t('common.save')}
         icon="pi pi-check"
         severity={severity}

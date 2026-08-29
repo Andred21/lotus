@@ -1,6 +1,7 @@
 import { TabView, TabPanel } from 'primereact/tabview'
 import type { TabViewProps } from 'primereact/tabview'
 import { useTranslation } from 'react-i18next'
+import { mergePt } from '../mergePt'
 
 export type { TabViewProps as AppTabViewProps } from 'primereact/tabview'
 
@@ -32,16 +33,17 @@ export function AppTabView({ pt, ...props }: TabViewProps) {
   // páginas. Mesma classe do "Choose Date" (UI-09 de 2026-08-17) e do
   // `emptyMessage` do `AppDropdown`, e mesmo remédio: chave nossa nas 3 locales.
   //
-  // O piso entra DEPOIS do `pt` do chamador — que aqui SUBSTITUI o default
-  // inteiro, não faz merge — pela mesma disciplina do `customUpload` do
-  // `AppFileUpload`: acessibilidade não é o que um call site desliga sem querer.
+  // O piso entra DEPOIS do `pt` do chamador, pela mesma disciplina do
+  // `customUpload` do `AppFileUpload`: acessibilidade não é o que um call site
+  // desliga sem querer. O aninhamento de `mergePt` é o que mantém o default
+  // daqui como PISO — até 2026-08-28 um `pt` qualquer do chamador SUBSTITUÍA o
+  // default inteiro e o `p-0` do `panelContainer` sumia em silêncio (achado C3).
   return (
     <TabView
-      pt={{
-        ...(pt ?? appTabViewPt),
+      pt={mergePt(mergePt(appTabViewPt, pt), {
         prevButton: { 'aria-label': t('common.tabsScrollPrev') },
         nextButton: { 'aria-label': t('common.tabsScrollNext') },
-      }}
+      })}
       {...props}
     />
   )

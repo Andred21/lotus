@@ -23,6 +23,113 @@
 
 ---
 
+## Fechado em 2026-08-29 — `frontend-estilizacao-padronizacao-de-componentes`, item 18 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_closure` (Q-1..Q-6 aprovados e aplicados; gate reverificado) |
+
+## Promoção — 2026-08-28: o item 18 entra na `lane-c`
+
+O João promoveu explicitamente o **item 18**, `frontend-estilizacao-padronizacao-de-componentes`,
+depois da análise desta data sobre `backlog.md`, `pendencias/` e `audits/`. A dependência dele — o
+item 8 — fechou em 2026-08-27, e a fonte é o `audits/2026-08-26-estilizacao-componentes.md`: **18
+achados medidos, nenhum aplicado**. `Contexto: não`, então o bloco nasce em `ready_for_planning`,
+sem packet. A **P-63** já está agrupada nele desde o fechamento do item 8.
+
+**A `D-62` entra junto, por decisão do João no mesmo ato.** O hospedeiro dela era o item 8, que
+fechou pagando `P-46`/`D-03`/`D-33`/`D-35` e **não** a D-62 — medido aqui: `frontend/eslint.config.js`
+não tem uma linha sobre `AppDropdown`, `inputId` ou `aria-label`, e a quarta ocorrência do defeito
+nasceria verde. O remédio mora no mesmo arquivo que este bloco toca. A **D-34** continua **sem
+hospedeiro**: o outro candidato natural é o item 9, e escolher é do João.
+
+**Este commit escreve o espelho singular a partir da worktree, e isso é a P-55.** A invariante diz
+que `focused_lane` e os campos do topo são fronteira durável do main tree, mas `/planejar-bloco` lê
+os singulares — lane sem espelho apontando para si é planejada contra a lane errada. É o **quarto**
+caso da mesma pendência, registrado na ficha dela; não é exceção nova nem reescrita da invariante,
+que segue aguardando a decisão do João.
+
+### Planejamento fechado — 2026-08-28
+
+Spec em `specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md`, plano em
+`plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md`: 17 tasks, 93 passos,
+executor `claude`. A escrita do plano mediu três coisas que **corrigem** o desenho e valem sobre o
+texto da spec, e estão registradas na seção "Correções ao desenho" do próprio plano:
+
+1. **D1 (Sidebar):** o asset é PNG, não SVG — não há `viewBox` a corrigir. Medida a caixa opaca de
+   `LogoDark.png` (335×466): padding de 31/12/15/27px, que renderizado vale ~8px e **não** explica
+   os 60px do `ml-15`. Recortar o asset não fecha o achado; o que sai é o empurrão manual, e o
+   `h-30` fica porque é a altura do wordmark.
+2. **D3 (Login):** a limitação §7 da spec está **paga e passa**. `--shell-ink` mede 8,71:1 e 9,86:1
+   contra as duas pontas do `--brand-gradient`; `--shell-ink-muted`, 4,93:1 e 5,57:1. Os dois
+   passam o 4,5:1 na ponta pior.
+3. **`D-62`:** o seletor de lint foi rodado **antes** de virar task. Reprova exatamente uma
+   ocorrência viva — `BudgetDocumentsCard.tsx:36`, a quinta que a ficha previa nascer verde — e a
+   sonda negativa (remover o `inputId` de `TurmaStatusFilter.tsx:44`) reprova nomeando o arquivo.
+   Os 11 `AppDropdown` dentro de `FormField` recebem o `inputId` por contexto e são grafia certa.
+
+Um ponto que a spec não decidiu e o plano fixa: `FormSection` e os quatro `h3` de operation
+consomem `SectionLabel` com `rule={false}`, para que os 8 sítios do Dashboard fiquem
+byte-idênticos e nenhuma hairline nova apareça onde achado nenhum pediu.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
+
+### Fechamento — 2026-08-29
+
+**O gate abriu VERMELHO no §2 e foi o único achado do fechamento.** O `bbf35f5c` — as correções
+Q-4/Q-5 do review — levou `ValidationPage.test.tsx` de 147 a **170 linhas**, e a catraca `max-lines`
+de `src/features/*/components/**` mede teste junto com componente. O `2bbaad01` declarou "gate
+reverificado — lint 0" com o lint já vermelho: os números de teste daquela linha batem com a
+medição de hoje (117 arquivos / 653 testes), o `lint 0` não batia. Prova declarada sem a saída real
+é a mesma classe de defeito que o `/fechar-sprint` §0 existe para pegar.
+
+**A saída foi decisão do João, com as três alternativas medidas:** quebrar o arquivo, comprimi-lo,
+ou levar para o bloco de `features/` o `ignores: ['**/*.test.tsx']` que o bloco de `src/app/**` já
+tem. Ele escolheu **quebrar** — `ValidationPageFolio.test.tsx` nasce com as duas asserções da
+assinatura e o harness redeclarado (`vi.mock` iça por arquivo). A isenção foi recusada com o custo
+medido: dos 24 testes dessa camada, **um** passava de 150 (o nosso) e **dois** estão exatamente em
+150 — gente que já pagou o preço para caber. Afrouxar ali soltaria régua viva para 24 arquivos.
+
+**A assimetria que o achado expôs virou a P-68**, e não correção silenciosa: `src/app/**` isenta
+teste do `max-lines` com razão escrita no próprio config ("quebrar um arquivo de teste coeso é pagar
+preço pela regra, não pelo defeito") e `src/features/*/components/**` não isenta. Duas camadas, duas
+políticas, nenhuma das duas errada por si — quem decide é o João.
+
+**As duas catracas do bloco foram provadas por sonda negativa no fechamento**, cada uma reprovando e
+nomeando o arquivo: apagar o `inputId` do `TurmaStatusFilter` acende o `DROPDOWN_SEM_NOME` (D-62), e
+colar a assinatura da grafia de título num `className` do `KpiRow` acende o `GRAFIA_LITERAL` — este
+em `src/app/**`, que é onde as 4 cópias vivas estavam. Sondas rodadas sobre cópia no scratchpad, com
+restauração medida por `git status`.
+
+**Gate medido:** backend **999 passed / 5 skipped** (container próprio da worktree, offset +2 —
+`git diff main...HEAD -- backend/ generated.ts` **vazio**, então `pint` e `typescript:transform` são
+N/A por escopo, provados e não supostos); frontend lint **0**, build verde, **118 arquivos / 653
+testes**. Guardas de grep do DoD: zero `variant` velho vivo, zero `my-[0.83em]` em `className`, zero
+título copiado em `features/`.
+
+**A `D-62` sai do `backlog.md` paga**; a **P-63** fica aberta por escrito, como a spec §2 previu — o
+`role="list"` que falta é o das legendas do Recharts, e o remédio não é deste bloco. Nasceram a
+**P-67** (10 sítios de `rounded` solto que a rule declara como débito, sem catraca — ela nasceria
+vermelha) e a **P-68** acima. O **item 19** (`frontend-triagem-dos-audits-do-item-18`, os 49 achados
+das quatro runs) foi escrito por esta worktree no `2bbaad01` e declarado ali: acrescentar item à
+fila é do main tree com o João, e a reconciliação acontece neste fechamento.
+
+**As duas fichas nasceram `P-64` e `P-65` e foram renumeradas para `P-67` e `P-68` no merge da
+`main` (2026-08-29), depois do fechamento.** A `main` já trazia `P-64`, `P-65` e `P-66` da `lane-a`
+(PR #81), mescladas antes desta branch: ID publicado na `main` não se reusa, e quem renumera é a
+lane que ainda não mesclou — mesmo movimento que a `P-61`→`P-63` desta lane e a `P-62`→`P-64` da
+`lane-a` registram. Os números antigos ficam de pé só no plano e na spec arquivados, que são
+histórico e não se reescrevem.
+
+**A narrativa do item 8 saiu daqui neste fechamento**, pelo mesmo motivo que a do item 17 saiu no
+anterior: ela dizia que a `lane-c` tinha fechado o item 8 e repetia números de um gate que já não é
+o corrente. A narrativa integral dele está neste arquivo desde 2026-08-27. Bloco encerrado não
+guarda parágrafo no `state.md`.
+
+---
 ## Fechado em 2026-08-28 — `hardening-auditoria-privacidade-e-observabilidade`, item 5 da fila
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |

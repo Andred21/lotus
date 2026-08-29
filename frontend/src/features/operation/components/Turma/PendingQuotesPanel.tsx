@@ -52,7 +52,7 @@ export function PendingQuotesPanel({
               </span>
             </span>
             <AppButton
-              variant="brandIcon"
+              variant="primary"
               label={t('operation.pending.configure')}
               icon="pi pi-cog"
               onClick={() => navigate(`/operacion/turmas/nueva/${q.quote_id}`)}

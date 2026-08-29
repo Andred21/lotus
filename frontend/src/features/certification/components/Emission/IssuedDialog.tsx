@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppSkeleton, AppErrorState } from '@shared/ui'
+import { AppDialog, AppButton, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import type { ProblemDetails } from '@shared/api/axios'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
@@ -69,17 +69,26 @@ export function IssuedDialog({
 
       {certificate && (
         <div className="space-y-4">
-          <div className="rounded-lg border p-6 text-center" style={{ borderColor: 'var(--surface-border)' }}>
-            <p
-              className="text-xs font-semibold uppercase tracking-wide"
-              style={{ color: 'var(--text-color-secondary)' }}
-            >
+          {/* Card montado à mão até 2026-08-28: borda, raio e centralização
+            * escritos no sítio, com o folio em `font-mono text-base` — o mesmo
+            * papel que a validação pública desenha, em outra grafia (achado C4).
+            * Agora é a mesma peça, um degrau abaixo. */}
+          <div className="rounded-lg border p-6" style={{ borderColor: 'var(--surface-border)' }}>
+            <p className={`text-center ${fieldLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
               {t('certificate.issuedHeading')}
             </p>
-            <p className="mt-2 text-lg font-semibold">{certificate.snapshot.aluno.name}</p>
-            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{certificate.snapshot.curso.name}</p>
-            <p className="mt-3 font-mono text-base">{certificate.codigo}</p>
-            <p className="mt-2 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+            <p className="mt-2 text-center text-lg font-semibold">{certificate.snapshot.aluno.name}</p>
+            <p className="text-center text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+              {certificate.snapshot.curso.name}
+            </p>
+            <div className="mt-3">
+              <CertificateFolio
+                label={t('certificate.fieldCodigo')}
+                folio={certificate.codigo}
+                size="dialog"
+              />
+            </div>
+            <p className="mt-2 text-center text-xs" style={{ color: 'var(--text-color-secondary)' }}>
               {t('certificate.issuedBy', { date: formatDate(new Date(certificate.created_at)) })}
             </p>
           </div>

@@ -533,6 +533,7 @@
     "documents": "Documents",
     "uploadDocument": "Upload document",
     "noDocuments": "No documents",
+    "fileTypeLabel": "Document type",
     "fileTypeInvoice": "Invoice",
     "fileTypeReceipt": "Receipt",
     "confirmDeleteTitle": "Delete budget?",

@@ -25,7 +25,7 @@ export function StudentsTab() {
         onView={students.openView}
         actions={
           can('identity.user.create')
-            ? <AppButton variant="brandIcon" label={t('student.new')} icon="pi pi-user-plus" onClick={students.openCreate} />
+            ? <AppButton variant="primary" label={t('student.new')} icon="pi pi-user-plus" onClick={students.openCreate} />
             : undefined
         }
       />

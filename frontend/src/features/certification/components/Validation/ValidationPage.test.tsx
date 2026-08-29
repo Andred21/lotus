@@ -13,6 +13,9 @@ import { ValidationPage } from './ValidationPage'
  * lado da régua — um `h1`, nunca dois.
  *
  * `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`.
+ *
+ * A assinatura da página (folio) tem arquivo próprio — `ValidationPageFolio.test.tsx`:
+ * junta, a dupla passava das 150 linhas da catraca `max-lines` desta camada.
  */
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')

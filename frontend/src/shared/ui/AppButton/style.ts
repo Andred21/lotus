@@ -23,10 +23,25 @@ const brandOutline =
   'dark:bg-[var(--brand)] dark:border-2 dark:border-white dark:text-[var(--brand-navy)] dark:hover:text-[var(--surface-card)]'
 
 export const appButtonStyles = {
-  /** Marca, com rótulo (ex.: seletor de idioma "EN"). */
-  brandLabel: `flex items-center gap-1 px-3 py-2.5 text-sm ${brandOutline}`,
-  /** Marca, só-ícone (toggles: tema, colapso da sidebar). */
-  brandIcon: `flex items-center justify-center ${brandOutline}`,
+  /**
+   * Ação primária. É o botão que abre módulo, salva diálogo e confirma
+   * emissão — 17 call sites com `label=`.
+   *
+   * **Não declara padding nem tamanho de fonte, de propósito.** Herda o
+   * `.p-button` do Lara-Lotus (`0.75rem 1.25rem`, `1rem`), que é a geometria
+   * que estes 17 sítios já pagam hoje sob o nome `brandIcon`. Declarar aqui a
+   * geometria do antigo `brandLabel` (`px-3 py-2.5 text-sm`) encolheria os 17
+   * — fonte 16→14, padding 20→12. O audit de 2026-08-26 supôs que o rename
+   * seria byte-idêntico; medido, os dois lados divergiam, e o lado com 17
+   * sítios é o que fica parado (spec D3).
+   */
+  primary: `flex items-center justify-center ${brandOutline}`,
+  /** Marca, só-ícone: os toggles de tema e de colapso da sidebar. Mesma
+   * superfície da `primary` — o que separa é o papel, não a grafia. */
+  iconToggle: `flex items-center justify-center ${brandOutline}`,
+  /** Marca apertada, para caber onde a geometria do tema não cabe: o seletor
+   * de idioma ("EN") e o "Aprobar" dentro da linha de cotação. */
+  compact: `flex items-center gap-1 px-3 py-2.5 text-sm ${brandOutline}`,
   /**
    * Sem superfície: fundo, padding e hover do `.p-button` zerados. É o gatilho
    * que embrulha avatar e identidade no header — ali quem pinta são os filhos,

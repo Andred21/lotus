@@ -67,7 +67,7 @@ export function RedatoresTab() {
         onView={page.openView}
         actions={
           can('identity.user.create')
-            ? <AppButton variant="brandIcon" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+            ? <AppButton variant="primary" label={t('redator.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
             : undefined
         }
       />

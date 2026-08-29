@@ -116,6 +116,20 @@ describe('HistorialTable — a linha do snapshot corrompido', () => {
     expect(screen.getByText('Ana Torres')).toBeTruthy()
     expect(screen.queryByText('certificate.snapshotMissingField')).toBeNull()
   })
+
+  /** RUT é dado técnico e alinha em coluna: sem mono, os pontos e o dígito
+   * verificador ficam com largura variável e a coluna serrilha (achado A4). O
+   * travessão da ausência legítima NÃO é dado técnico e segue texto puro. */
+  it('RUT presente sai em mono; o travessão da ausência, não', () => {
+    montar(certificado({ name: 'Ana Torres', rut: '11.111.111-1' }))
+
+    expect(screen.getByText('11.111.111-1').className).toContain('font-mono')
+
+    cleanup()
+    montar(certificado({ name: 'Ana Torres', rut: '' }))
+
+    expect(screen.getByText('Ana Torres').closest('td')?.querySelector('.font-mono')).toBeNull()
+  })
 })
 
 describe('HistorialTable — o filtro de estado', () => {

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppButton, AppCard, AppTag, FormSection } from '@shared/ui'
+import { AppButton, AppCard, AppTag, FormSection, StatValue } from '@shared/ui'
 import type { RedatorProfileData } from '@shared/types/generated'
 
 /**
@@ -32,8 +32,8 @@ export function ProfileSummaryCard({ redator }: { redator: RedatorProfileData })
         <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.summary.enabledCourses')}
         </span>
-        <span className="text-2xl font-semibold" style={{ color: 'var(--text-color)' }}>
-          {redator.cursos_habilitados}
+        <span style={{ color: 'var(--text-color)' }}>
+          <StatValue size="card">{redator.cursos_habilitados}</StatValue>
         </span>
       </div>
 

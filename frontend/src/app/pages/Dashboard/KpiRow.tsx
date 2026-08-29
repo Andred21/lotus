@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppCard } from '@shared/ui'
+import { AppCard, StatValue, sectionLabelClass } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 
 export type Kpi = {
@@ -74,7 +74,7 @@ export function KpiRow({ items }: { items: Kpi[] }) {
               * número perdia o `justify-between` e voltava para a esquerda, e a
               * fileira do mobile ficava com quatro números à direita e dois à
               * esquerda. */}
-            <p className="min-w-0 text-xs font-semibold tracking-wider uppercase" style={{ color: 'var(--text-color-secondary)' }}>
+            <p className={`min-w-0 ${sectionLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
               {t(kpi.key)}
             </p>
             {/* O `justify-between` do corpo é o que põe todos os números na
@@ -99,7 +99,7 @@ export function KpiRow({ items }: { items: Kpi[] }) {
               * porque manda contornar restrição que já não existe (Q-3 do review
               * de 2026-08-27). */}
             <p className="flex shrink-0 items-baseline gap-2 sm:justify-between sm:pt-2">
-              <span className="font-display text-3xl leading-none font-semibold tabular-nums">{kpi.value}</span>
+              <StatValue size="page">{kpi.value}</StatValue>
               {/* Grandeza secundária na MESMA linha do número, nunca numa
                 * terceira: como linha própria, o único card que a tinha definia
                 * a altura da grade e os outros cinco herdavam ~95px de vazio.

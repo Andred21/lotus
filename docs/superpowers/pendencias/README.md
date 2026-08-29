@@ -21,13 +21,14 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (30)
+## Abertas (32)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | `frontend-estilizacao-padronizacao-de-componentes` | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
+| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | — (hospedeiro fechado em 2026-08-29 sem pagá-la; rehospedar é do João) | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
+| P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `frontend-triagem-dos-audits-do-item-18` | bloco que triar os achados de raio das runs, ou que toque os 9 arquivos; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -42,6 +43,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
+| P-68 | O `max-lines` mede arquivo de teste em `features/*/components` e não mede em `app/**`, e só a isenção tem razão escrita | João | João alinhar as duas camadas ou escrever a razão da assimetria; revisar 2026-10-31 |
 | P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
 | P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
@@ -65,11 +67,14 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 | P-66 | A poda de `login_logs` varre `created_at` sem índice que a sirva — a `audits` ganhou o dela neste bloco, a `login_logs` não | João | bloco que tocar o schema de `login_logs`, ou a tabela crescer a ponto de a poda diária pesar; revisar 2026-10-31 |
 
-## Encerradas (3)
+## Encerradas (2)
 
-**A P-46 fechou no `frontend-hardening-final` (2026-08-27) e está em rastro** — o mini-reset
-escopado de `index.css` entrou com catraca própria (`tests/preflight-escopado.test.ts`), e a borda
-que ele abriu virou a **P-63**. Sai no próximo `/fechar-sprint` posterior a este.
+**Duas em rastro: a P-02 e a P-33.** A **P-46** saiu no fechamento de 2026-08-29, o primeiro posterior
+ao do bloco que a encerrou — o `frontend-hardening-final` (2026-08-27) —, e saiu **remedida**: o
+mini-reset escopado de `index.css` entrou com catraca própria
+(`frontend/tests/preflight-escopado.test.ts`, verde nos 653 testes deste gate), e a borda que ele
+abriu segue viva e nomeada na **P-63**. O rastro fica nos commits e na linha da entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 A **P-02** e a **P-33** fecham dentro do bloco `hardening-auditoria-privacidade-e-observabilidade`
 (2026-08-26), por mecanismo (`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice

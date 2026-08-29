@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-c
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -48,16 +48,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-hardening-final   # fechada em 2026-08-27; PR #80 aberto
+    branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736; fechada em 2026-08-29, SEM merge
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-hardening-final
-last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
-state_basis_commit: 17e266b9
-updated_at: 2026-08-28T16:05:00-03:00
+    last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
+last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
+state_basis_commit: 0d0645f7
+updated_at: 2026-08-29T07:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -157,13 +157,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-24
+## Ocupação corrente — 2026-08-29
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` (PR #81, aberto) | `idle` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-hardening-final` (PR #80, aberto) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -194,20 +194,6 @@ abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (b
 `P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
 arquivado, que é histórico e não se reescreve.
 
-**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
-`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
-segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
-PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
-frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
-**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
-5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
-navegador contra o código pós-review.
-
-**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
-`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
-a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
-em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
-
 ## Itens fechados — ponteiro, não narrativa
 
 O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
@@ -216,11 +202,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
 | 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 | 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 | 2026-08-25 | `hardening-api-arquivos-e-abuso` | Item 4 da fila |
-| 2026-08-25 | `frontend-revisao-ui-por-modulo` (fatia 2 de 2) | Item 16 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

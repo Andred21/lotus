@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { PageHeader } from './PageHeader'
 import { DetailHeader } from '../DetailHeader'
+import { pageTitleClass } from '../typography'
 
 /**
  * O título de página é `h1` porque estes dois componentes são os donos únicos
@@ -30,5 +31,39 @@ describe('dono do título de página', () => {
 
     expect(container.querySelector('h1')?.textContent).toBe('Presupuesto 12')
     expect(container.querySelectorAll('h2, h3, h4, h5, h6')).toHaveLength(0)
+  })
+})
+
+/**
+ * Os dois donos do `h1` tinham vozes diferentes: `font-display … tracking-tight`
+ * aqui, `text-2xl font-bold` no detalhe (achado A1). Título de página é um papel
+ * só; duas grafias fazem a mesma tela mudar de voz ao navegar para o detalhe.
+ */
+describe('voz única do título de página', () => {
+  it.each([
+    ['PageHeader', <PageHeader title="Personas" />],
+    ['DetailHeader', <DetailHeader title="Presupuesto 12" />],
+  ])('%s escreve o h1 com a grafia compartilhada', (_nome, elemento) => {
+    const { container } = render(elemento)
+
+    expect(container.querySelector('h1')?.className).toContain(pageTitleClass)
+  })
+
+  /**
+   * A margem cravada em `em` era o valor que o agente do usuário dava ao `h2`,
+   * mantida enquanto o `h1` não era unificado (D6 da spec do item 8). Unificar
+   * é o momento que o audit reservou (E2): a margem passa a ser degrau da
+   * escala. A superior some — o mini-reset de `index.css` zera `h1..h6`, e o
+   * espaçamento acima passa a ser do contêiner.
+   */
+  it.each([
+    ['PageHeader', <PageHeader title="Personas" />],
+    ['DetailHeader', <DetailHeader title="Presupuesto 12" />],
+  ])('%s não carrega mais a margem do agente do usuário', (_nome, elemento) => {
+    const { container } = render(elemento)
+
+    const h1 = container.querySelector('h1')!
+    expect(h1.className).not.toContain('my-[0.83em]')
+    expect(h1.className).toContain('mb-4')
   })
 })

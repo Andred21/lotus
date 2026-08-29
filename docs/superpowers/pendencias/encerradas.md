@@ -7,22 +7,12 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(três: a **P-46**, a **P-02** e a **P-33**. A **P-03** e a **P-15** saíram nos dois
-fechamentos de 2026-08-25; o parágrafo adiante é o rastro delas.)*
-
-### P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
-
-**Fechada em 2026-08-27**, no `frontend-hardening-final` (Task 4, `4a27272c`), e **remedida** — o
-gatilho pedia decisão do João sobre reset escopado, e a decisão foi tomada e construída: um
-mini-reset em `@layer base` (`frontend/src/index.css`) zera margem de `h1`–`h6`, `p`, `ul`, `ol` e
-as grafias caso a caso (`m-0`, `[&_p]:m-0`, `list-none p-0`) saíram do repositório. Guardado por
-`frontend/tests/preflight-escopado.test.ts` — a catraca lê o CSS inteiro, dentro e fora de
-`@layer` (Q-1 do review de 2026-08-27, com duas sondas vistas reprovar). Medido no navegador em
-2026-08-26 e remedido no fechamento: `AppCardHeader` com faixa de 49px para 24px de texto (era
-80px), `AppCard variant="stat"` com 100px por card a 1440×900, e as quatro famílias de lista do
-Dashboard sem marcador e com recuo 0 —
-[`audits/2026-08-26-frontend-hardening-final-medicoes.md`](../audits/2026-08-26-frontend-hardening-final-medicoes.md).
-O que o mini-reset alcançou além das nossas listas virou a [P-63](./abertas.md#p-63).
+*(duas: a **P-02** e a **P-33**. A **P-46** saiu no fechamento do
+`frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), o primeiro posterior ao do bloco
+que a encerrou, e saiu **remedida**: o mini-reset escopado de `frontend/src/index.css` e a catraca
+`frontend/tests/preflight-escopado.test.ts` seguiram verdes nos 653 testes daquele gate, e a borda
+que o reset abriu continua viva e nomeada na [P-63](./abertas.md#p-63). A **P-03** e a **P-15**
+saíram nos dois fechamentos de 2026-08-25; o parágrafo adiante é o rastro delas.)*
 
 ### P-02 e P-33 — retenção de `audits` e de `login_logs`
 

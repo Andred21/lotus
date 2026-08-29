@@ -197,6 +197,76 @@ const DISABLED_READONLY_ESTATICO = {
   message:
     'Campo que nasce só-leitura não é input desabilitado: use <FormField readOnly value={…}> — o input corta o valor e derruba o contraste (spec BD-3 §4).',
 }
+// `AppDropdown` sem nome acessível. O mesmo defeito foi corrigido À MÃO em
+// quatro sítios, por três runs independentes (`TurmaStatusFilter`,
+// `BudgetStatusFilter`, `EmissionPanel`, `HistorialTable`), e a quinta
+// ocorrência nasceu verde: o filtro de tipo de documento do
+// `BudgetDocumentsCard`. Quatro correções e zero catraca é a definição de
+// dívida (`D-62`).
+//
+// Mede a FORMA, não a grafia: `AppDropdown` que não descende de um `FormField`
+// — que entrega o `inputId` por contexto, e é a grafia CERTA dos 11 sítios de
+// formulário — e que não declara `inputId`, `aria-label` nem `aria-labelledby`
+// por conta própria. Grep pela grafia de hoje casaria só os filtros de hoje;
+// foi a lição do seletor deste arquivo que nasceu casando só `arguments.0`.
+//
+// `NestedField` NÃO conta como pai válido, de propósito: ele não monta
+// `FieldContext`, então um dropdown dentro dele fica sem nome do mesmo jeito.
+// Hoje não há nenhum; quando houver, reprova.
+const DROPDOWN_SEM_NOME = {
+  selector:
+    'JSXElement[openingElement.name.name="AppDropdown"]' +
+    ':not(JSXElement[openingElement.name.name="FormField"] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
+  message:
+    'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
+}
+// Grafia tipográfica escrita LITERAL no sítio, em vez de vir de
+// `shared/ui/typography.ts`. A rule de estilização já mandava não fazer isso e
+// nomeava `typography.test.ts` como mecanismo — mas aquele teste congela o VALOR
+// das quatro constantes e é cego a quem as recopia: ele passaria com o produto
+// inteiro escrevendo a grafia à mão. Regra sem catraca é recomendação solta, e
+// esta ficou solta com 4 cópias vivas (`AgendaPanel`, `KpiRow`, `Sidebar` e o
+// `headerRow` do `AppDataTable`) — Q-3 do review de 2026-08-29.
+//
+// Mede a ASSINATURA de cada grafia, não a string inteira: foi assim que o
+// rótulo da Sidebar escapava de qualquer grep pela constante — ele tinha
+// derivado para `text-xs font-semibold tracking-wider` SEM o `uppercase`, que é
+// a cópia pior, a que já divergiu. Duas classes adjacentes bastam para nomear a
+// voz; exigir as quatro seria enumerar de novo.
+//
+// `tabular-nums` fica FORA da assinatura de propósito: ele é obrigatório em todo
+// dado técnico (RUT, folio, contagem), e a feature que o escreve está cumprindo
+// a rule, não copiando grafia de papel.
+const GRAFIA_TIPOGRAFICA =
+  'font-semibold\\s+tracking-wider|font-display\\s+text-(2xl|3xl)|text-xs\\s+uppercase\\s+tracking-wide'
+const MSG_GRAFIA_LITERAL =
+  'Grafia tipográfica literal no sítio: importe pageTitleClass, sectionLabelClass, fieldLabelClass ou <StatValue>/<SectionLabel> de @shared/ui. ' +
+  'Recopiar a grafia é como o título de auth virou 5 cópias divergentes (.claude/rules/frontend-estilizacao.md).'
+const GRAFIA_LITERAL = [
+  {
+    selector: `JSXAttribute[name.name="className"] Literal[value=/${GRAFIA_TIPOGRAFICA}/]`,
+    message: MSG_GRAFIA_LITERAL,
+  },
+  // A interpolação não é porta de fuga: `` `min-w-0 text-xs font-semibold
+  // tracking-wider uppercase` `` é a MESMA cópia com crase. O quasi carrega a
+  // grafia; o `${…}` ao lado não a redime.
+  {
+    selector: `JSXAttribute[name.name="className"] TemplateElement[value.raw=/${GRAFIA_TIPOGRAFICA}/]`,
+    message: MSG_GRAFIA_LITERAL,
+  },
+  // `className` também é CHAVE de objeto — é a grafia dos `pt` de `shared/ui`
+  // (`AppDataTable/style.ts`, onde a 4ª cópia morava) e de qualquer módulo `.ts`
+  // que monte classe fora do JSX.
+  {
+    selector: `Property[key.name="className"] Literal[value=/${GRAFIA_TIPOGRAFICA}/]`,
+    message: MSG_GRAFIA_LITERAL,
+  },
+  {
+    selector: `Property[key.name="className"] TemplateElement[value.raw=/${GRAFIA_TIPOGRAFICA}/]`,
+    message: MSG_GRAFIA_LITERAL,
+  },
+]
 // Item 17: toda coluna declara largura, e toda coluna com ação fica presa à
 // direita. As duas nascem DEPOIS de as 15 tabelas cumprirem — regra ligada antes
 // deixa o lint vermelho durante catorze tasks.
@@ -287,14 +357,15 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
   message:
     'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
 }))
-// Catraca da regra de cor: lista que só ENCOLHE. A Validação tem fundo escuro
-// deliberado e mudá-la é desenho novo, não pagamento de débito (D7). O Login
+// Catraca da regra de cor: lista que só ENCOLHE. O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
 // `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
 // em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
 // quem precisa de cor pede token ao tema.
+// A Validação SAIU em 2026-08-28: o `bg-slate-50 dark:bg-slate-950` virou
+// `--surface-ground` (achado C2 do audit de 2026-08-26) e o arquivo não tem
+// mais cor crua nenhuma.
 const CATRACA_COR = [
-  'src/features/certification/components/Validation/ValidationPage.tsx',
   'src/features/commercial/components/Budget/CourseStep.tsx',
   'src/features/commercial/components/Budget/QuoteWizard.tsx',
   'src/features/operation/components/Document/ManualButton.tsx',
@@ -341,7 +412,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -354,7 +425,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -375,7 +446,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -561,17 +632,25 @@ export default defineConfig([
   // acusava exatamente 3 e passa a acusar 0 —, não com o grep que originou o
   // débito (frontend-fsliced.md: grep acha a grafia, o seletor acha o defeito).
   //
-  // Só `COR_HARDCODED`, e não o array inteiro: `DISABLED_READONLY` é sobre campo
-  // de formulário e o shell não tem nenhum — regra que nasce sem população não
-  // guarda nada. Os 3 bans de query também não entram: `app/` é justamente onde
-  // a composição cruzada é legítima (o AppRouter importa 5 features).
+  // Não é o array inteiro: `DISABLED_READONLY` é sobre campo de formulário e o
+  // shell não tem nenhum — regra que nasce sem população não guarda nada. Os 3
+  // bans de query também não entram: `app/` é justamente onde a composição
+  // cruzada é legítima (o AppRouter importa 5 features).
+  //
+  // `DROPDOWN_SEM_NOME` e `GRAFIA_LITERAL` entram aqui porque a população delas
+  // é MISTA, e a do shell é a maior: as 4 cópias de grafia tipográfica estavam
+  // todas em `src/app/**` (`AgendaPanel`, `KpiRow`, `Sidebar`), e a catraca de
+  // dropdown nasceu medindo só `src/features/**` — provado com sonda no review
+  // de 2026-08-29 (Q-2), apagando o `aria-label` do `PeriodFilter` do Dashboard:
+  // o lint ficou VERDE. Catraca que mede uma camada só nasce com a exceção
+  // embutida do tamanho da outra camada.
   //
   // Bloco próprio, sem risco do merge raso (Q-2, 2026-08-04): nenhum outro bloco
   // deste arquivo casa `no-restricted-syntax` em `src/app/**`.
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, ...GRAFIA_LITERAL],
     },
   },
 ])

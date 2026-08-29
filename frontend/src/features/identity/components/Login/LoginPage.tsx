@@ -30,13 +30,13 @@ export function LoginPage() {
       >
         <AppLogo variant="on-dark" className="w-37.5 md:w-52" />
 
-        <p className="my-0 text-center text-xl" style={{ color: 'var(--primary-200)' }}>
+        <p className="my-0 text-center text-xl" style={{ color: 'var(--shell-ink)' }}>
           {t("brand.tagline")}
         </p>
 
         <p
           className="my-0 text-center font-mono text-xs uppercase tracking-[0.14em]"
-          style={{ color: 'var(--primary-400)' }}
+          style={{ color: 'var(--shell-ink-muted)' }}
         >
           {t("brand.sector")}
         </p>

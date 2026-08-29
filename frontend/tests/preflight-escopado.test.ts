@@ -77,7 +77,7 @@ describe('mini-reset escopado (P-46)', () => {
   it('zera a margem das tags de bloco', () => {
     const bloco = fatias().base
 
-    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'dl', 'blockquote', 'figure']) {
+    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'dl', 'dd', 'blockquote', 'figure']) {
       expect(bloco, `tag de bloco ausente do reset: ${tag}`).toMatch(new RegExp(`(^|[\\s,])${tag}([\\s,{]|$)`, 'm'))
     }
     expect(bloco).toContain('margin: 0')

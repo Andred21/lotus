@@ -23,14 +23,14 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: os itens 6, 7 e 9 mais o 16 e o 18
+- **P0 não ordena** — quem ordena é a cadeia de dependência: os itens 6, 7 e 9 mais o 16 e o 19
   fecham o código, 10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
-  2026-08-27, o `5` em 2026-08-28, e o `10` **encolheu** em vez de sair (o runtime foi entregue;
-  sobrou o provisionamento). A fila começa no `6` e salta os que já fecharam de propósito: o número
-  é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar
-  quebraria as citações e pareceria promoção.
+  2026-08-27, o `5` em 2026-08-28, o `18` em 2026-08-29, e o `10` **encolheu** em vez de sair (o
+  runtime foi entregue; sobrou o provisionamento). A fila começa no `6` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
+  blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -255,51 +255,75 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-## 18. `frontend-estilizacao-padronizacao-de-componentes`
+## 19. `frontend-triagem-dos-audits-do-item-18`
 
 **Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
-**Fonte:** `audits/2026-08-26-estilizacao-componentes.md` (leitura estática de `shared/ui/**`,
-`app/layouts/**`, `app/pages/Dashboard/**` e varredura por padrão nas features; **sem execução no
-navegador** — onde a recomendação depende de pixel, o bloco valida com `/lotus-ui-review`).
+**Dependência satisfeita:** o item 18 fechou em 2026-08-29.
+**Fonte:** `audits/2026-08-28-item18-fase{1,2,3,4}.md` — quatro runs de `/lotus-ui-review` no
+navegador contra `refactor/frontend-estilizacao-componentes @ ddc37f36`, uma por fase do item 18.
 
-**Objetivo:** fechar a última milha da estilização — o mesmo papel visual sai hoje em 3 a 5 grafias
-diferentes — e executar a assinatura que o ADR-16 elegeu e o produto ainda não tem. **Não é
-redesenho:** o audit mede o código contra a direção JÁ fechada e declara por escrito que o alicerce
-(tokens, contraste travado por teste, `AppCard`/`AppTag`/`AppDataTable`) não se toca.
+**Objetivo:** triar os 49 achados dessas quatro runs — **A:21 · B:26 · C:2** — separando defeito de
+decisão de design e de falso-positivo, e corrigir só o que sobreviver à triagem. **O audit reporta,
+não autoriza:** cada achado entra com veredito próprio, e recusar com razão escrita é resultado
+válido.
 
-**Escopo, nas quatro fases que o audit ordena:**
-1. **Vocabulário de botão** — `brandIcon` virou a CTA primária do produto em ~14 call sites contra o
-   próprio contrato do `AppButton/style.ts` ("marca, só-ícone"), enquanto `brandLabel` sobrou em 2.
-   Renomear por PAPEL (`primary`, `iconToggle`, `noSurface`) e varrer os call sites; "Voltar" do
-   `DetailHeader` desce de CTA a ação terciária; `ConfirmDialog` sem `severity` passa a confirmar
-   com o mesmo variant do `CrudDialog` (B1, B2, B3).
-2. **Tipografia** — um só tratamento de `h1` (hoje `PageHeader` e `DetailHeader` abrem com vozes
-   diferentes, e o de auth está copiado 5×); um só rótulo de seção (hoje 5 grafias); um `StatValue`
-   com `font-display` + `tabular-nums` sempre (A1, A2, A3, A5).
-3. **Dado técnico e a assinatura** — regra "folio/RUT/data técnica = `font-mono tabular-nums`" na
-   rule, e o `CertificateFolio` compartilhado entre `ValidationPage` e `IssuedDialog`. É o único
-   investimento estético NOVO do audit, e a tela dele é a pública do QR — a que fiscalizador e
-   empregador veem, onde hoje o folio é texto comum (A4, D4).
-4. **Higiene** — escala de raio escrita na rule; `ValidationPage` volta a `--surface-ground` (é a
-   única tela em paleta Tailwind crua); `AppTabView` passa a usar `mergePt` em vez de `?? default`;
-   logo da sidebar sem os números mágicos `ml-15 h-30`; tinta de apoio do Login vira `--shell-ink*`
-   (C1, C2, C3, C4, D1, D3, E1).
+**Por que triar antes de executar:** a fase 1 mediu e **contradisse o plano do item 18** — o
+presupuesto detail não tem "Voltar + CTA lado a lado"; "Volver a Comercial" ocupa linha própria
+acima do título. O agente que erra a favor erra contra. Além disso o contrato da skill teto em 10
+achados por run pressiona a encher a lista: parte dos `A` é registro de linha de base, não dívida.
 
-**Dependia do `frontend-hardening-final` (item 8), que fechou em 2026-08-27 — a dependência está
-satisfeita, e o item 18 é promovível.** Os achados A2, D2 e E2 dependiam do estado pós-mini-reset
-para não medir duas vezes; e o item 8 tocou `SidebarItem`, `index.css` e `eslint.config.js`. O
-audit foi escrito durante o item 8 e já respeita a D6 da spec dele (os
-`my-[0.83em]` ficam; trocá-los por margem de escala é decisão da fase 2, com screenshot).
+**Duas raízes explicam mais de um terço da lista** — tratá-las é mais barato que 49 correções item
+a item:
+- **`AppButton` sem `variant` cai no `.p-button` preenchido do Lara.** Explica o `C` da fase 4
+  (card de redator selecionado e não selecionado idênticos, `rgb(37,165,228)` sobre 94% do card nos
+  dois estados e nos dois temas), o UI-08 da fase 3 (os seis diálogos de certificação sem
+  `variant="primary"`, incluindo o que confirma emissão) e a ausência de delta do CTA provada na
+  fase 1.
+- **Grafia copiada literal em vez de consumida da peça** — o defeito que a rule já nomeia e que
+  reincidiu: fase 2 UI-04 (`AgendaPanel` e `KpiRow` copiam `sectionLabelClass` para emitir `h4`,
+  porque `SectionLabel` só aceita `h2 | h3`), fase 3 UI-02, fase 4 UI-06.
 
-**Fora, por escrito:** redesenho de paleta, tema ou contraste (medido e travado por teste — não há
-achado ali); Dashboard (placeholder declarado) e as telas do item 16 ainda sem run de UI-review;
-qualquer mudança de layout de navegação — a spec do item 8 já recusou drawer; motion novo, porque a
-direção é instrumental e acrescentar animação seria decoração sem tese.
+**Os dois `C`:**
+- **fase 4 UI-01** — cards de redator indistinguíveis. Peso documental: o conjunto de redator
+  habilitado não dá para conferir na tela antes de salvar.
+- **fase 2 UI-10** — a 390x844 o card "Agenda" corta 26px do próprio conteúdo
+  (`clientWidth 261` contra `scrollWidth 287`, `overflow-hidden`, sem barra); o `truncate` funciona
+  mas a reticência cai fora da área visível, e o `title` de recuperação depende de hover.
 
-**DoD:** screenshot antes/depois por fase via `/lotus-ui-review` nos dois temas; guarda de grep com
-zero `variant="brandIcon"` carregando `label`, zero número de stat sem `tabular-nums`, zero
-folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras novas escritas em
-`.claude/rules/` no mesmo PR — o audit vira mecanismo, não recomendação solta.
+**Barato de verificar, mecanismo já rastreado até a linha** (leitura de código confirma ou derruba,
+sem navegador): fase 4 UI-02 (`useFieldProps` não devolve `invalid`, então `.p-invalid` nunca é
+alcançado — ~55 campos, e o Login escapa porque passa a prop na mão); fase 4 UI-03 (foco cai no
+`body` após submit recusado, sem live region); fase 3 UI-06 (`AppDataTable` fixa `dataKey="id"`
+contra `enrollment_id`, com erro de `key` determinístico no console); fase 3 UI-08 e fase 4 UI-01,
+acima.
+
+**Decisão do João, não conserto:** o degrau entre faixa de seção e título de card (fase 2 UI-02 e
+UI-03 — o `h3` do card é 33% maior que o `h2` que o encabeça, e o `h3` do Perfil é byte a byte a
+grafia do `h2` do Dashboard); o "1250 UF" do KPI de cotizaciones (fase 2 UI-08 — dois dados
+encostados que leem como um, e em es-CL o espaço é separador de milhar válido); a escala de raio
+com dois degraus em vez de três (fase 3 UI-05).
+
+**Suspeitos de falso-positivo, a derrubar ou confirmar primeiro:** fase 3 UI-09 (duplo fetch de
+`/api/certificates/emission-panel` — o próprio agente não isolou o gatilho; provável `staleTime` ou
+refetch por foco de janela do TanStack Query) e fase 3 UI-04 (opacidade de `disabled` divergindo por
+tema, registrada pelo agente como incoerência e **explicitamente não** como falha WCAG).
+
+**Sem evidência, não é achado — é lacuna a fechar quando houver dado:** `certificates` = 0 e
+`course_certificate_templates` = 0, então a porta 4 de `CertificateEligibility`
+(`assertTemplateDisponivel`) devolve `emission_blocked = 'sin_plantilla'` para toda turma, inclusive
+a turma 3 (`concluida`, 13 matrículas aprovadas, 1 redator designado). Ficaram sem pintar: o ramo
+`valid` de `/validar/<uuid>`, os seis diálogos da jornada, a costura header/body/footer do
+`AppDialog` nos dois temas e o **veredito do `CertificateFolio`** — que só renderiza em
+`ValidationPage.tsx:35` e `IssuedDialog.tsx:85`, e cujo docblock submete os próprios degraus de
+tamanho e tracking ao julgamento de uma run de `/lotus-ui-review`. É a primeira coisa a rever quando
+existir certificado real.
+
+**Fora:** redesenho de tela; as superfícies que o item 16 ainda não cobriu (Cursos, Pessoas,
+Administração têm run própria lá); qualquer correção do item 18 que já esteja no bloco ativo.
+
+**DoD:** todo achado das quatro runs com veredito escrito — corrigido com medida, virou ficha `D-*`,
+ou recusado com razão; nenhum `C` aberto; as correções que nascerem de raiz compartilhada resolvidas
+na raiz, não no sítio.
 
 ---
 
@@ -347,26 +371,22 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
 
 ## Agrupados em bloco
 
+> **Saneamento de 2026-08-28:** as fichas `D-57` e `D-39` saíram daqui — as duas estavam **pagas**
+> (fatia 2 e fatia 1 do item 16) e as próprias fichas pediam a saída no primeiro saneamento. O
+> rastro fica nos commits e em `historico/progress.md`. A `D-62` foi rehospedada no item 18; a
+> `D-34` segue sem hospedeiro, e escolher é do João.
+>
+> **Fechamento de 2026-08-29:** a `D-62` **saiu daqui paga** — o item 18 construiu a catraca
+> `DROPDOWN_SEM_NOME` no `frontend/eslint.config.js`, medida com o próprio seletor antes de virar
+> régua e vista reprovar por sonda negativa no `TurmaStatusFilter`. A `D-34` continua sem
+> hospedeiro. A **P-63**, que era agrupada no item 18, ficou aberta: o hospedeiro fechou sem
+> pagá-la e rehospedar é do João.
+
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
   `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
   `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
   chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
   falta aplicar.
-
-- **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
-  `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
-  `TurmaComplianceData.missing_types` e `TurmaData.missing_document_types` são `string[]` no
-  `generated.ts`, embora o conjunto de valores seja exatamente `TurmaDocumentType`. O frontend já
-  fechou a metade dele em 2026-08-24 (Q-4): o mapa `TURMA_DOCUMENT_TYPE_KEY` é exaustivo por
-  compilador e a catraca exige a chave nas 3 locales — mas o helper precisa aceitar `string`, e o
-  `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
-  o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
-  `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
-  **PAGA em 2026-08-25**, na fatia 2 do `frontend-revisao-ui-por-modulo`: a cadeia da RN-16 carrega
-  `TurmaDocumentType` de `TurmaHabilitacaoService` até os DTOs, os quatro campos (`missing_types`
-  ×2, `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum
-  no `generated.ts`, e `turmaDocumentTypeLabel` perdeu o fallback de código cru. Fica aqui como
-  registro; sai da lista no próximo saneamento dos débitos.
 
 - **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
   `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
@@ -408,21 +428,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
   de orientação aprovada, nas 3 locales.
 
-- **D-62 · Nada reprova um `AppDropdown` de filtro sem nome — o achado já apareceu 3 vezes** →
-  `frontend-hardening-final`. O mesmo defeito foi encontrado por três runs independentes em três
-  dias, sempre na mesma forma (`<div className="w-48">` com o `AppDropdown` solto dentro, sem
-  `<label>`, sem `aria-label` e sem `aria-labelledby`): UI-07 de Operação (2026-08-23, pago no
-  `TurmaStatusFilter`), UI-02 de Comercial e UI-01 de Certificados (2026-08-25, pagos no
-  `BudgetStatusFilter` e no `HistorialTable`), mais o UI-02 de Certificados no seletor de turma da
-  Emisión, que só tinha nome por acidente do placeholder. Três correções idênticas e nenhuma
-  catraca: nem o lint, nem a suíte, nem o `tsc` sabem que um dropdown precisa de nome acessível — a
-  quarta ocorrência nasce verde. Lição 14 do `docs/README.md` (instrução repetida três vezes quer
-  mecanismo). O remédio provável é regra de lint por FORMA, não grep por grafia (`AppDropdown` sem
-  `inputId` nem `aria-label` dentro de `src/features/**`), medida com o próprio seletor antes de
-  virar catraca — é a lição do `eslint.config.js` que nasceu casando só `arguments.0`. **DoD:**
-  remover o `inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o
-  arquivo.
-
 - **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
   `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
   (2026-08-14); o gatilho venceu em 2026-08-16 — os dois números convivem na mesma árvore. A task
@@ -455,8 +460,9 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
   Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
   diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
-  novo hospedeiro, e escolhê-lo é do João** (candidatos naturais: `administracao-roles-permissoes-redesign`
-  ou `frontend-hardening-final`). A visibilidade nasce como quatro booleanos em
+  novo hospedeiro, e escolhê-lo é do João**. Dos dois candidatos naturais sobrou um: o
+  `frontend-hardening-final` fechou em 2026-08-27 sem absorvê-la (conferido na promoção do item 18),
+  restando `administracao-roles-permissoes-redesign` (item 9). A visibilidade nasce como quatro booleanos em
   `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
   `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
   `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
@@ -491,15 +497,6 @@ folio/RUT sem mono nas telas tocadas; lint + build + suíte verdes; e as regras 
   seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
   por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
   cru vindo de `OperationMetricsQuery.php:137`.
-
-- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
-  fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
-  troca de idioma e lê `i18n.language` (`ac4eef8a`); o mock parcial quebrava com
-  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizasse um
-  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. O remédio foi o
-  helper único: `frontend/src/shared/testing/i18n.ts` (`mockUseTranslation`), com catraca própria,
-  consumido pelos **17** testes que mockavam a biblioteca. Fica aqui como registro; sai da lista no
-  próximo saneamento dos débitos.
 
 ## Travados em decisão — não entram em bloco
 

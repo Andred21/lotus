@@ -80,7 +80,7 @@ export function EmissionPanel() {
 
           <div className="flex justify-end">
             <AppButton
-              variant="brandIcon"
+              variant="primary"
               icon="pi pi-verified"
               label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
               disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}

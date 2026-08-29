@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { FormSection } from './FormSection'
+import { sectionLabelClass } from '../typography'
 
 afterEach(cleanup)
 
@@ -22,15 +23,13 @@ describe('FormSection', () => {
   it('carrega a hierarquia no peso e no tracking, não na cor', () => {
     render(<FormSection title="Identidad" />)
 
-    const titulo = screen.getByRole('heading', { name: 'Identidad' })
-    expect(titulo.className).toContain('font-bold')
-    expect(titulo.className).toContain('uppercase')
-    expect(titulo.className).toContain('tracking-wide')
+    const titulo = screen.getByRole('heading', { name: 'Identidad', level: 3 })
+    expect(titulo.className).toContain(sectionLabelClass)
   })
 
   it('`spaced` acrescenta o respiro de cima sem mexer no resto', () => {
-    render(<FormSection title="Seguridad" spaced />)
+    const { container } = render(<FormSection title="Seguridad" spaced />)
 
-    expect(screen.getByRole('heading', { name: 'Seguridad' }).className).toContain('pt-2')
+    expect(container.firstElementChild?.className).toContain('pt-2')
   })
 })

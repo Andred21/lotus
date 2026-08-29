@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { RedatorDashboardData } from '@shared/types/generated'
-import { SectionLabel } from '../SectionLabel'
+import { SectionLabel } from '@shared/ui'
 import { KpiRow } from '../KpiRow'
 import { AgendaPanel } from '../AgendaPanel'
 import { AlertList } from '../AlertList'
