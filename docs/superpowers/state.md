@@ -45,13 +45,13 @@ lanes:
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_feature: frontend-triagem-dos-audits-do-item-18
+    active_work_item: frontend-triagem-dos-audits-do-item-18
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../fix-frontend
-    branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736; fechada em 2026-08-29, SEM merge
+    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4 na promoção; refactor/frontend-estilizacao-componentes mesclou (PR #82) e foi apagada
     active_spec: null
     active_plan: null
     context_packet: null
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
+| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -232,15 +232,18 @@ tree, que não se destrói, e voltou para `main`. A lane não recebe item novo s
 João, contra o `backlog.md`.
 
 
-> **A linha da `lane-c` acima está divergente, e não é esta lane que a corrige.** Ela diz
-> `refactor/frontend-estilizacao-componentes` "fechada em 2026-08-29, **sem merge**"; a branch
-> mesclou (PR #82) e **já não existe** no repositório — o `git checkout` dela falha com
-> `did not match any file(s) known to git`. A `lane-c` também estava com a `main` em checkout na
-> worktree `../fix-frontend`, o que impedia o main tree de voltar para `main`; no fechamento do item
-> 6 essa worktree foi posta em **detached** no mesmo commit (`0a65d1e2`, árvore limpa, conteúdo
-> idêntico), sem tocar em arquivo nenhum dela. Registro aqui em vez de reescrever a linha porque a
-> invariante de dono manda que cada lane escreva só o que é dela, e a de divergência manda PARAR e
-> mostrar em vez de escolher fonte. A `lane-c` (ou o João) fecha isso quando retomar a árvore.
+**A `lane-c` fechou a própria divergência e recebeu o item 19 em 2026-08-29.** A nota que o
+fechamento do item 6 deixou aqui dizia, com razão, que a linha da lane estava errada:
+`refactor/frontend-estilizacao-componentes` mesclou pelo **PR #82** e já não existe no repositório —
+conferido nesta árvore (`git branch -a` só lista `main`; a worktree estava em detached em
+`0a65d1e2`, dois commits atrás da `main`). A linha foi corrigida pela própria lane, que é a dona
+dela, no mesmo commit em que o João promoveu explicitamente o **item 19**
+(`frontend-triagem-dos-audits-do-item-18`, argumento do `/planejar-bloco`): a dependência dele (item
+18) fechou em 2026-08-29 e a fonte — as quatro runs `audits/2026-08-28-item18-fase{1,2,3,4}.md`, 49
+achados — não tem nenhum achado aplicado. `Contexto: não por padrão`, então nasce em
+`ready_for_planning`, sem packet. Branch `fix/frontend-triagem-audits-item-18`, aberta de
+`main@37e0e2d4`, árvore em **offset +2** (`:8082`/`:5175`) pelo `.env` da raiz. O espelho singular
+foi escrito da worktree — quinto caso da **P-55**, registrado na ficha.
 
 ## Itens fechados — ponteiro, não narrativa
 

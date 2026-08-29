@@ -565,6 +565,11 @@ avisado da pendência antes do commit e decidindo por ela. A alternativa ofereci
 bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
 segue aberta: quatro precedentes não reescrevem a invariante.
 
+**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
+`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
+quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
+ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
+
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
 **Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta
