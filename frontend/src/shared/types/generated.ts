@@ -123,6 +123,14 @@ display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
 export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
+export type CertificatePageMetaData = {
+summary: CertificateSummaryData,
+page: number,
+per_page: number,
+total: number,
+last_page: number,
+total_unfiltered: number,
+};
 export type CertificateSnapshotData = {
 schema_version: number,
 aluno: SnapshotPartyData,
@@ -137,6 +145,12 @@ ciudad_emision: string | null,
 emitido_em: string | null,
 };
 export type CertificateStatus = 'emitido' | 'revocado';
+export type CertificateSummaryData = {
+vigente: number,
+por_vencer: number,
+vencido: number,
+revocado: number,
+};
 export type CertificateTemplateData = {
 id: undefined | number,
 version: undefined | number,

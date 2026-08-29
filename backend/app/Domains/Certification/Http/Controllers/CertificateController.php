@@ -8,15 +8,20 @@ use App\Domains\Certification\Actions\RevokeCertificateAction;
 use App\Domains\Certification\Data\BatchIssueData;
 use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
+use App\Domains\Certification\Data\CertificatePageMetaData;
+use App\Domains\Certification\Data\CertificatePageRequest;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\QueryBuilders\CertificateQueryBuilder;
 use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use App\Http\Controllers\Controller;
+use App\Shared\Pagination\PageData;
+use App\Shared\Pagination\PageMetaData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -33,15 +38,22 @@ class CertificateController extends Controller implements HasMiddleware
         ];
     }
 
-    /** @return array<CertificateData> */
-    public function index(): array
+    /**
+     * Página do Historial (spec D1, D6): o filtro de estado vai ao SQL e o
+     * resumo do rodapé sai do MESMO `CASE`, sobre o escopo de `q`.
+     *
+     * @return PageData<CertificateData>
+     */
+    public function index(CertificatePageRequest $request): PageData
     {
         return Certificate::query()
             ->withListingData()
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn (Certificate $certificate) => CertificateData::fromModel($certificate))
-            ->all();
+            ->page(
+                $request,
+                fn (Certificate $certificate) => CertificateData::fromModel($certificate),
+                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($request->display_status),
+                meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->summaryByDisplayStatus()),
+            );
     }
 
     public function show(Certificate $certificate): CertificateData

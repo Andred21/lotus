@@ -52,8 +52,8 @@ class CertificateData extends Data
         // Lido UMA vez: o cast do snapshot tem `withoutObjectCaching` (para
         // que nenhum `save()` reescreva o documento congelado), então cada
         // acesso à propriedade decodifica o JSON e remonta a árvore de DTOs de
-        // novo. A listagem não pagina — o histórico é arquivo legal e só
-        // cresce —, e ler duas vezes aqui custava dois decodes por linha.
+        // novo. A listagem pagina desde o bloco `hardening-performance-e-dados`,
+        // mas cada página são até 100 decodes, e ler duas vezes aqui dobrava isso.
         $snapshot = $certificate->snapshot;
 
         return new self(

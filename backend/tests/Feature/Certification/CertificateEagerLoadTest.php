@@ -49,7 +49,7 @@ class CertificateEagerLoadTest extends TestCase
 
         Model::preventLazyLoading();
 
-        $this->getJson('/api/certificates')->assertOk()->assertJsonCount(2);
+        $this->getJson('/api/certificates')->assertOk()->assertJsonCount(2, 'data');
     }
 
     /**
@@ -67,7 +67,7 @@ class CertificateEagerLoadTest extends TestCase
         $certificate = $this->createCertificate(['photo_path' => 'user-photos/9/foto.jpg']);
 
         $lista = $this->getJson('/api/certificates')->assertOk();
-        $this->assertStringStartsWith('http', $lista->json('0.aluno_photo_url'));
+        $this->assertStringStartsWith('http', $lista->json('data.0.aluno_photo_url'));
 
         $detalhe = $this->getJson("/api/certificates/{$certificate->id}")->assertOk();
         $this->assertStringStartsWith('http', $detalhe->json('aluno_photo_url'));
