@@ -302,6 +302,17 @@ name: string,
 previous_client: string | null,
 client: string,
 };
+export type PageData = {
+data: undefined[],
+meta: PageMetaData,
+};
+export type PageMetaData = {
+page: number,
+per_page: number,
+total: number,
+last_page: number,
+total_unfiltered: number,
+};
 export type PendingItemData = {
 module: DashboardModule,
 type: PendingItemType,
