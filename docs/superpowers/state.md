@@ -176,8 +176,10 @@ disjuntas, colisão mínima de arquivos:
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
 `feat/hardening-performance-e-dados` nasceu de `main@f584432b`, foi **rebaseada sobre
 `main@b4101da9`** (que traz o item 18 da `lane-c`, PR #82) no fechamento, e **segue sem merge**. A
-colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase. A árvore é o main tree, que
-não se destrói. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
+linhas das duas lanes somadas passaram da régua de 150, então o filtro de estado saiu para
+`HistorialStatusFilter.tsx` — movimento literal, no molde que o `TurmaStatusFilter` registra desde
+2026-08-24. A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 
 ## Itens fechados — ponteiro, não narrativa
