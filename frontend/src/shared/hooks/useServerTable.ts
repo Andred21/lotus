@@ -96,8 +96,13 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     Object.entries(filters ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== ''),
   ) as Record<string, string | number>
 
-  // Termo e filtros formam o "escopo". Escopo novo = página 1, no MESMO render.
-  const scope = `${term}|${JSON.stringify(activeFilters)}`
+  // Chave, termo e filtros formam o "escopo". Escopo novo = página 1, no MESMO
+  // render. A `key` entra porque ela é o que troca quando a tela troca de
+  // FONTE (Ativas ↔ Arquivadas, `useTurmasPage`): sem ela, sair da página 3 de
+  // uma lista para a outra pedia `page=3` do endpoint novo, colhia vazio e só
+  // então o clamp voltava à 1 — um GET jogado fora e uma piscada de tabela
+  // vazia sobre lista que tinha linhas (Q-3 do review de 2026-08-29).
+  const scope = `${JSON.stringify(key)}|${term}|${JSON.stringify(activeFilters)}`
   const [lastScope, setLastScope] = useState(scope)
   const scopeChanged = lastScope !== scope
   if (scopeChanged) {

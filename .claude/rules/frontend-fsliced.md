@@ -235,9 +235,16 @@ exceção. Na dúvida, siga o vizinho da mesma
   `totalRecords` que liga o `lazy` do `DataTable` e faz `AppDataTable` decidir `paginated` pela
   contagem do servidor, não por `data.length`. Busca (debounce de 300 ms), filtro nomeado e sort
   vão na URL (`PageQuery`, `shared/api/page.ts`, o único lugar que conhece o envelope); trocar
-  qualquer um volta à página 1 dentro do hook — a tela não chama `resetPage()`. Coluna só ganha
-  `sortable` se o campo estiver na allowlist do backend (`SORTABLE` do builder): em `lazy` o
-  DataTable só emite o evento, e campo fora da lista é 422. `filtering` continua medindo EFEITO
+  qualquer um volta à página 1 dentro do hook — a tela não chama `resetPage()`. **A `key` faz parte
+  do escopo**, e por isso trocar a FONTE da lista (Ativas ↔ Arquivadas) também volta à página 1:
+  sem ela, sair da página 3 pedia `page=3` do endpoint novo, colhia vazio e só então o clamp
+  corrigia — um GET jogado fora e uma piscada de tabela vazia (Q-3, 2026-08-29). Coluna só ganha
+  `sortable` se o campo estiver na allowlist do backend (`SORTABLE` do builder) **e for o campo
+  daquela coluna**: em `lazy` o DataTable só emite o evento, campo fora da lista é 422, e campo de
+  outra coluna ordena por um valor que a tela não mostra — `field="created_at" sortable` sob o
+  cabeçalho CÓDIGO reordenava as turmas por data de criação (Q-4, 2026-08-29). Tabela sem coluna
+  elegível fica sem `sortable` nenhum e vive do `DEFAULT_SORT` do builder. `filtering` continua
+  medindo EFEITO
   (`meta.total !== meta.total_unfiltered`), nunca presença. O dialog por id ganha fallback
   `useOne` (`useCrudDialog`): a entidade aberta pode não estar na página carregada.
 - **Hook genérico não importa tipo de `shared/ui`.** `shared/hooks/` é lógica; `shared/ui/` é

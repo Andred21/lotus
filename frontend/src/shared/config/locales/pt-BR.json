@@ -831,6 +831,7 @@
     "tabHistorial": "Histórico",
     "turmaConcluida": "Turma concluída",
     "concludedSince": "Turmas concluídas desde",
+    "concludedSinceDefault": "Últimos {{months}} meses",
     "selectTurma": "Selecione uma turma concluída...",
     "concludedAt": "Concluída em {{date}}",
     "emptyPanelTitle": "Selecione uma turma para ver os alunos certificáveis",

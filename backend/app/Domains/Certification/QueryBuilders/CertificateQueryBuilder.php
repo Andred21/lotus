@@ -8,6 +8,7 @@ use App\Domains\Certification\Enums\CertificateStatus;
 use App\Shared\Pagination\Paginates;
 use App\Shared\Support\DataSql;
 use App\Shared\Support\JanelaDeAviso;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -73,7 +74,7 @@ class CertificateQueryBuilder extends Builder
             return $this;
         }
 
-        [$case, $bindings] = $this->displayStatusCase($hoje ?? CertificateDisplayStatus::hoje());
+        [$case, $bindings] = $this->displayStatusCase(($hoje ?? CertificateDisplayStatus::hoje())->toImmutable());
 
         return $this->whereRaw("({$case}) = ?", [...$bindings, $status->value]);
     }
@@ -85,7 +86,7 @@ class CertificateQueryBuilder extends Builder
      */
     public function summaryByDisplayStatus(?CarbonInterface $hoje = null): CertificateSummaryData
     {
-        [$case, $bindings] = $this->displayStatusCase($hoje ?? CertificateDisplayStatus::hoje());
+        [$case, $bindings] = $this->displayStatusCase(($hoje ?? CertificateDisplayStatus::hoje())->toImmutable());
 
         $contagens = (clone $this)
             ->reorder()
@@ -108,9 +109,17 @@ class CertificateQueryBuilder extends Builder
      * nunca este método, para que o filtro e o resumo do mesmo request
      * compartilhem o mesmo `hoje`.
      *
+     * `CarbonImmutable`, e não `CarbonInterface`: o `addDays()` da janela MUTA
+     * um Carbon comum, e os dois chamadores passam o MESMO `$hoje` do request
+     * — a segunda chamada calcularia `hoje + 2 × DIAS` e faria filtro, resumo e
+     * `display_status` da linha deixarem de fechar entre si. É o achado da
+     * Task 6 reaberto pela porta do tipo (Q-5 do review de 2026-08-29); hoje
+     * `CertificateDisplayStatus::hoje()` devolve imutável, mas a segurança é do
+     * tipo, não do acidente do chamador.
+     *
      * @return array{0: string, 1: list<string>}
      */
-    private function displayStatusCase(CarbonInterface $hoje): array
+    private function displayStatusCase(CarbonImmutable $hoje): array
     {
         $conexao = $this->getModel()->getConnection();
         $hojeSql = DataSql::literal($conexao, $hoje);

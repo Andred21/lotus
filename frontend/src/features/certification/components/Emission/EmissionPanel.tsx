@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppDatePicker, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
+import { EMISSION_PANEL_WINDOW_MONTHS } from '../../lib/emissionWindow'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
@@ -42,7 +43,16 @@ export function EmissionPanel() {
           <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.concludedSince')}
           </label>
-          <AppDatePicker inputId={desdeInputId} value={s.desde} onChange={s.setDesde} />
+          {/* Vazio = a janela é a do SERVIDOR, e o `placeholder` a anuncia. O
+            * campo já nasceu preenchido com uma data calculada no fuso do
+            * navegador e mandada em todo GET — o default de Santiago nunca
+            * rodava (Q-2 do review de 2026-08-29). */}
+          <AppDatePicker
+            inputId={desdeInputId}
+            value={s.desde}
+            onChange={s.setDesde}
+            placeholder={t('certificate.concludedSinceDefault', { months: EMISSION_PANEL_WINDOW_MONTHS })}
+          />
           <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.turmaConcluida')}
           </label>

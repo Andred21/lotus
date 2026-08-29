@@ -11,21 +11,21 @@ resume_state: null
 active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
 active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
 context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
-blocker: "Review do item 6 (2026-08-29) — cinco achados aguardando decisao do Joao; Q-1 (Reemitir do Historial preso na janela de 12 meses do painel de emissao) e Q-2..Q-5. Nenhuma violacao das leis §5."
+blocker: null
 lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-performance-e-dados
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: feat/hardening-performance-e-dados   # aberta de main@f584432b na promoção; PR #81 mesclado em 2026-08-28
     active_spec: docs/superpowers/specs/2026-08-28-hardening-performance-e-dados-design.md
     active_plan: docs/superpowers/plans/2026-08-28-hardening-performance-e-dados.md
     context_packet: docs/superpowers/context-packets/2026-08-28-hardening-performance-e-dados.md
-    blocker: "Review do item 6 (2026-08-29) — cinco achados aguardando decisao do Joao; Q-1 (Reemitir do Historial preso na janela de 12 meses do painel de emissao) e Q-2..Q-5. Nenhuma violacao das leis §5."
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: hardening-auditoria-privacidade-e-observabilidade
   lane-b:
     active_feature: null
@@ -161,7 +161,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `blocked` (review) |
+| `lane-a` | `hardening-performance-e-dados` (item 6) | Backend | main tree | `feat/hardening-performance-e-dados` | `ready_for_closure` |
 | `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
@@ -291,8 +291,29 @@ nele — hoje seguro porque `hoje()` devolve `CarbonImmutable`, mas um chamador 
 deslocaria filtro, resumo e linhas do mesmo request. Nenhum é decisão registrada em ADR, spec ou
 ficha. **Só achado aprovado pelo João vira correção.**
 
+**Correções do review — 2026-08-29, a lane volta a `reviewing` e fecha em `ready_for_closure`.** O
+João aprovou os cinco achados e os cinco foram aplicados. **Q-1:** o painel do `useHistorial` só
+liga com um Reemitir aberto e recebe como janela o `end_date` congelado no snapshot DAQUELE
+certificado — a turma dele cabe na janela por mais antiga que seja, e some junto o GET pesado no
+mount de quem só lê o Historial (sem `end_date` no snapshot, cai no default do servidor). **Q-2:**
+`defaultConcludedSince()` deixou de existir; o seletor nasce vazio, anuncia a janela pelo
+`placeholder` (`certificate.concludedSinceDefault`, nas 3 locales) e o `concluidas_desde` só vai na
+URL quando o usuário escolhe data — o default de `America/Santiago` volta a ser o do backend.
+**Q-3:** a `key` entrou no escopo do `useServerTable`, com catraca nova nos dois níveis
+(`useServerTable.test.tsx` e `useTurmasPage.test.tsx`, o caso de troca de modo que faltava).
+**Q-4:** a coluna "Código" perdeu `field="created_at" sortable` — nenhuma coluna do hub de turmas
+mostra data, então a tabela vive do `DEFAULT_SORT` do builder. **Q-5:** `displayStatusCase()` passou
+a exigir `CarbonImmutable`, e os dois chamadores convertem com `toImmutable()`.
+
+Duas rules ganharam o que os achados provaram: `frontend-fsliced` agora diz que a `key` faz parte do
+escopo e que `sortable` exige o campo **daquela** coluna; o docblock de `EmissionPanelQuery` registra
+que o default da janela é do backend e só dele. Gate reexecutado: frontend `pnpm build` + `pnpm lint`
++ `pnpm test` (114 arquivos, **647** testes) e backend `--filter="Certificate|EmissionPanel|ListQueryBudget|Turma"`
+(**286** passados, 1 skipped, 1.125 asserções). Nenhum achado deferido; nada foi para `backlog.md`
+nem para `pendencias/abertas.md`.
+
 **Colisão conhecida com a `lane-c` (item 18) segue de pé:** `HistorialTable.tsx`. Rebase antes do
-merge. O review não começou — `next_action: request_code_review`.
+merge.
 
 ## Itens fechados — ponteiro, não narrativa
 

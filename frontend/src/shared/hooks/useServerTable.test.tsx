@@ -120,6 +120,26 @@ describe('useServerTable — a query que sai', () => {
     expect(result.current.first).toBe(0)
   })
 
+  it('trocar a `key` (a FONTE da lista) volta à página 1 — sem pedir a página velha do endpoint novo', async () => {
+    // Ativas ↔ Arquivadas: o `useTurmasPage` troca endpoint E chave. Estando na
+    // página 3, o escopo antigo (só termo + filtros) não via diferença nenhuma
+    // e a primeira query da lista nova saía com `page: 3`.
+    const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
+    const { Wrapper } = comCliente()
+    const { result, rerender } = renderHook(
+      ({ key }: { key: readonly unknown[] }) => useServerTable(fetchPage, { key }),
+      { wrapper: Wrapper, initialProps: { key: ['turmas', 'list'] as readonly unknown[] } },
+    )
+    await waitFor(() => expect(result.current.rows).toHaveLength(2))
+    act(() => result.current.onPage({ first: 20 }))
+    await waitFor(() => expect(fetchPage).toHaveBeenLastCalledWith({ page: 3, per_page: 10 }))
+
+    rerender({ key: ['turmas', 'archived'] as readonly unknown[] })
+
+    await waitFor(() => expect(fetchPage).toHaveBeenLastCalledWith({ page: 1, per_page: 10 }))
+    expect(result.current.first).toBe(0)
+  })
+
   it('onSort manda `campo`/`-campo`, volta à página 1, e ordem zero tira o sort', async () => {
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
     const { Wrapper } = comCliente()

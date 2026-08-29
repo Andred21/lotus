@@ -66,9 +66,15 @@ export function TurmasTable({
         * coluna nova aqui entra declarando a classe dela, e a repartição refaz
         * a soma sozinha; não há mais aritmética à mão a acertar.
         * `whitespace-nowrap` é só do código — identificador atômico. */}
+      {/* Sem `sortable`: `field="created_at" sortable` sob o cabeçalho CÓDIGO
+        * ordenava a lista pela data de criação da turma enquanto a célula
+        * mostra `Scap {budget_id} - Cot {seq}` — ordem visível diferente da
+        * ordem pedida (Q-4 do review de 2026-08-29). A allowlist do
+        * `TurmaQueryBuilder` é `created_at`/`start_date`/`end_date`, e nenhuma
+        * das colunas desta tabela mostra data; coluna de data que um dia entre
+        * aqui já nasce com `sortable`. O `sortField`/`onSort` seguem ligados na
+        * moldura — é o contrato do `useServerTable`, não fiação desta coluna. */}
       <AppColumn
-        field="created_at"
-        sortable
         header={t('operation.table.code')}
         body={(turma: TurmaData) => <TurmaCodeCell turma={turma} />}
         className="whitespace-nowrap"

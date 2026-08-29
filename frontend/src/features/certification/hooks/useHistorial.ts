@@ -17,24 +17,36 @@ export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: Em
  * spec D1/D4) + contagens por estado lidas de `meta.summary` (D6) + a query
  * pontual do `Ver` (`useCertificate`, mesmo padrão do `useEmissionPanelState`)
  * + a localização da matrícula/turma no painel de emissão (`useEmissionPanel`,
- * já em cache pela aba Emisión) para o Reemitir. A query mora aqui, não no
- * componente: `no-restricted-syntax` reprova `useQuery`/`useMutation` sob
- * `features/*\/components/**`.
+ * ligado só quando há Reemitir aberto, na janela daquele certificado) para o
+ * Reemitir. A query mora aqui, não no componente: `no-restricted-syntax`
+ * reprova `useQuery`/`useMutation` sob `features/*\/components/**`.
  *
  * `loadError` segue `loadFailure` (`{}` sem corpo) desde que a lista vem do
  * `useServerTable` — a exceção que a rule registrava para este hook acabou.
  */
 export function useHistorial() {
   const { can } = usePermissions()
-  // O painel só alimenta o Reemitir, que já exige `issue` — para quem só tem
-  // `view`, a query desligada evita um 403 garantido no mount da aba.
-  const panel = useEmissionPanel(can('certification.certificate.issue'))
 
   const [statusFilter, setStatusFilter] = useState<CertificateDisplayStatus | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<CertificateData | null>(null)
   const [reissuing, setReissuing] = useState<CertificateData | null>(null)
   const viewingCertificate = useCertificate(viewingCertificateId)
+
+  // O painel só alimenta o Reemitir, que já exige `issue` — para quem só tem
+  // `view`, a query desligada evita um 403 garantido no mount da aba. E só
+  // ligada COM certificado em mão: a janela do painel é a da turma DESTE
+  // certificado (`end_date` congelado no snapshot), não os 12 meses default.
+  // Revogar acontece muito depois de concluir; com a janela default, turma
+  // concluída há mais de 12 meses saía do painel, `findReissueTarget` devolvia
+  // `null` e o diálogo mostrava `reissueUnavailable` — a MESMA tarja de um
+  // bloqueio legítimo — enquanto o `CertificateEligibility` do backend seguia
+  // autorizando o POST (Q-1 do review de 2026-08-29). Sem `end_date` no
+  // snapshot (documento antigo/corrompido), cai no default do servidor.
+  const panel = useEmissionPanel(
+    reissuing !== null && can('certification.certificate.issue'),
+    reissuing?.snapshot.turma.end_date ?? undefined,
+  )
 
   // Trocar o filtro volta à página 1 dentro do hook — não há `resetPage()` a
   // chamar aqui, ao contrário do que `TurmasTable`/`BudgetsTable` faziam à mão.

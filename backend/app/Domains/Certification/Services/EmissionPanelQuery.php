@@ -28,11 +28,13 @@ class EmissionPanelQuery
 {
     /**
      * Default da janela (spec D7): emissão acontece logo depois da conclusão,
-     * e turma mais antiga continua alcançável por `concluidas_desde`. O front
-     * preenche o seletor com o MESMO número (`emissionWindow.ts`), para a tela
-     * mostrar a data antes de o primeiro GET voltar — os dois apontam um para
-     * o outro; mudar um sem o outro faz a tela prometer uma janela e a API
-     * responder outra.
+     * e turma mais antiga continua alcançável por `concluidas_desde`. O default
+     * é DAQUI e só daqui — o front deixa o seletor vazio e apenas ANUNCIA a
+     * janela ("Últimos 12 meses", `emissionWindow.ts`) enquanto o usuário não
+     * escolhe data. Ele já calculou essa data no fuso do NAVEGADOR e a mandava
+     * em todo GET, e este caminho nunca rodava (Q-2 do review de 2026-08-29);
+     * mudar este número sem mudar o texto de lá faz a tela prometer uma janela
+     * e a API responder outra.
      */
     public const JANELA_MESES = 12;
 

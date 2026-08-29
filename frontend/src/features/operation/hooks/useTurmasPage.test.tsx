@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
+import type { ArchiveMode } from '@shared/hooks'
 import { useTurmasPage } from './useTurmasPage'
 
 vi.mock('@shared/api/axios', () => ({
@@ -62,6 +63,30 @@ describe('useTurmasPage', () => {
     expect(result.current.rows).toEqual([
       { id: 9, course_name: 'T-9', archived_at: '2026-08-18T10:00:00-03:00', archived_by: 'Ana Torres' },
     ])
+  })
+
+  it('trocar de modo na pagina 3 pede a PRIMEIRA pagina do endpoint novo (Q-3)', async () => {
+    get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 30, last_page: 3, total_unfiltered: 30 } } })
+
+    const { Wrapper } = comCliente()
+    const { result, rerender } = renderHook(
+      ({ mode }: { mode: ArchiveMode }) => useTurmasPage(mode, null),
+      { wrapper: Wrapper, initialProps: { mode: 'active' as ArchiveMode } },
+    )
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => result.current.onPage({ first: 20 }))
+    await waitFor(() =>
+      expect(get).toHaveBeenLastCalledWith('/api/turmas', { params: { page: 3, per_page: 10 } }))
+
+    rerender({ mode: 'archived' })
+
+    // A lista arquivada e outra FONTE: `page: 3` dela seria fora de faixa, viria
+    // vazia e so entao o clamp voltaria a 1 — um GET jogado fora e uma piscada
+    // de tabela vazia.
+    await waitFor(() =>
+      expect(get).toHaveBeenLastCalledWith('/api/turmas/archived', { params: { page: 1, per_page: 10 } }))
+    expect(result.current.first).toBe(0)
   })
 
   it('devolve rows vazio, e nao undefined, antes de a query voltar', () => {
