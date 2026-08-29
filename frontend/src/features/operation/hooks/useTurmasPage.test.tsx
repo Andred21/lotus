@@ -13,10 +13,9 @@ const get = vi.mocked(api.get)
 
 /** Cliente estável por teste: uma fábrica que monta o QueryClient fora da função de render.
  * Se o cliente morasse no corpo da wrapper, cada render remontaria um novo e orfanaria a
- * rejeição da query — vitest reprova com `Unknown Error: undefined` e a test torna timeout.
- * Padrão: comCliente() em useDashboard.test.tsx. */
+ * rejeição da query — vitest reprova com `Unknown Error: undefined` e a test torna timeout. */
 function comCliente() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   )
@@ -24,34 +23,54 @@ function comCliente() {
   return { qc, Wrapper }
 }
 
+const meta = { page: 1, per_page: 10, total: 1, last_page: 1, total_unfiltered: 1 }
+
 describe('useTurmasPage', () => {
   beforeEach(() => {
     get.mockReset()
   })
 
-  it('normaliza a query crua na MESMA forma que useCrudPage devolve', async () => {
-    // A assimetria era o pior caso do D-52: `useTurmas()` devolve `UseQueryResult`
-    // cru, entao so a OperationPage derivava `loadError` a mao, em ternario
-    // aninhado dentro da prop.
-    get.mockResolvedValue({ data: [{ id: 7, code: 'T-7' }] })
+  it('modo ativo: pede /api/turmas com page/per_page e o status como filtro nomeado', async () => {
+    get.mockResolvedValue({ data: { data: [{ id: 7, course_name: 'T-7' }], meta } })
 
     const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useTurmasPage('active', 'habilitada'), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.items).toEqual([{ id: 7, code: 'T-7' }])
+    expect(get).toHaveBeenCalledWith('/api/turmas', { params: { page: 1, per_page: 10, status: 'habilitada' } })
+    expect(result.current.rows).toEqual([{ id: 7, course_name: 'T-7' }])
+    expect(result.current.totalRecords).toBe(1)
     expect(result.current.error).toBeNull()
   })
 
-  it('devolve items vazio, e nao undefined, antes de a query voltar', () => {
-    // `[]` e o que a tabela consome; `undefined` faria cada chamador escrever o
-    // proprio `?? []`, que era metade do quarteto de ternarios.
+  it('modo arquivado: pede /api/turmas/archived e ACHATA o DTO composto numa forma só', async () => {
+    // A tabela não pode ter duas formas (`useArchivedPage`): o agregado sobe
+    // ao topo e `archived_at`/`archived_by` ficam ao lado — no fetch, antes de
+    // o hook ver a linha.
+    get.mockResolvedValue({
+      data: {
+        data: [{ turma: { id: 9, course_name: 'T-9' }, archived_at: '2026-08-18T10:00:00-03:00', archived_by: 'Ana Torres' }],
+        meta,
+      },
+    })
+
+    const { Wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('archived', null), { wrapper: Wrapper })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(get).toHaveBeenCalledWith('/api/turmas/archived', { params: { page: 1, per_page: 10 } })
+    expect(result.current.rows).toEqual([
+      { id: 9, course_name: 'T-9', archived_at: '2026-08-18T10:00:00-03:00', archived_by: 'Ana Torres' },
+    ])
+  })
+
+  it('devolve rows vazio, e nao undefined, antes de a query voltar', () => {
     get.mockReturnValue(new Promise(() => {}))
 
     const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
 
-    expect(result.current.items).toEqual([])
+    expect(result.current.rows).toEqual([])
     expect(result.current.loading).toBe(true)
   })
 
@@ -59,20 +78,17 @@ describe('useTurmasPage', () => {
     get.mockRejectedValue(undefined)
 
     const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())
     expect(result.current.error).toEqual({})
   })
 
-  it('DEVOLVE a promise do refetch', async () => {
-    // A guarda do D4: `useLoadState` faz `void query.refetch()` e a engole. E a
-    // promise que mantem o Reintentar do AppErrorState em `loading` (Q-14), e
-    // trocar por `() => void` aqui compilaria sem quebrar nenhum teste acima.
-    get.mockResolvedValue({ data: [] })
+  it('DEVOLVE a promise do refetch (Q-14)', async () => {
+    get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 0, total_unfiltered: 0 } } })
 
     const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(result.current.refetch()).resolves.toBeDefined()

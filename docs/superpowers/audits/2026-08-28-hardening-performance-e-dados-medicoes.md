@@ -50,3 +50,35 @@ qualquer filtro de estado, mostrou `13 vigentes · 0 por vencer · 0 vencidos ·
 2 revocados` (contagem sobre o escopo de `q`, sem o filtro de status, como a
 spec D6 exige) — e não sobre a lista inteira renderizada. Console sem erros
 nem warnings durante toda a sessão (`playwright-cli console`: 0/0).
+
+## DoD 7 — Turmas (Task 9)
+
+Prova no navegador (Chromium, es-CL, `admin@lotus.cl` — o seed de demonstração
+não tem senha conhecida para um redator individual; ver "Preocupações" no
+report da Task 9 sobre a checagem de escopo por redator ter ficado pendente),
+stack local (`docker compose up -d` + `pnpm dev`), rota `/operacion`. URLs
+capturadas via `playwright-cli requests`:
+
+| Ação                                                    | GET disparado                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Montar o hub (modo ativo)                                | `GET /api/turmas?page=1&per_page=10`                                |
+| Selecionar "Habilitada" no dropdown "Estado"             | `GET /api/turmas?page=1&per_page=10&status=habilitada`              |
+| Alternar para "Archivados" com o filtro ainda ativo      | `GET /api/turmas/archived?page=1&per_page=10&status=habilitada`     |
+| Limpar o filtro de estado (ainda em Archivados)          | `GET /api/turmas/archived?page=1&per_page=10`                       |
+| Voltar para "Activos" e digitar "Transelec" na busca     | `GET /api/turmas?page=1&per_page=10&q=Transelec` — **um único** GET |
+| Limpar a busca e clicar no cabeçalho "Código"            | `GET /api/turmas?page=1&per_page=10&sort=created_at`                |
+
+Confirmado: o dropdown de estado manda `status=<valor>` e volta à página 1; a
+troca de modo troca o endpoint (`/api/turmas` ↔ `/api/turmas/archived`)
+preservando o filtro de estado corrente na URL; a busca compõe `q=` sem
+request por tecla (debounce); o cabeçalho "Código" ordena por `created_at` (é
+o único `sortable` da tabela, por decisão do brief — as demais colunas não
+estão na allowlist do backend). O rodapé mostrou "1 turma" com o filtro de
+busca ativo e "7 classes"/"7 turmas" sem filtro algum. O seed de demonstração
+não tem nenhuma turma arquivada, então o modo Archivados renderizou o empty
+state ("No hay registros archivados") em vez de linhas com `archived_at`/
+`archived_by` — o achatamento do DTO composto (`{ turma, archived_at,
+archived_by }` → `TurmaRow`) está coberto pelo teste `useTurmasPage.test.tsx`
+("modo arquivado: ... ACHATA o DTO composto"), não pela sessão de navegador.
+Console sem erros nem warnings durante toda a sessão
+(`playwright-cli console`: 0/0).
