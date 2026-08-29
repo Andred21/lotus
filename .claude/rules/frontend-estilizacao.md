@@ -39,7 +39,14 @@ sustenta, porque regra sem catraca é recomendação solta.
 - **Rótulo de seção e rótulo de campo são peças diferentes.** Um `<dt>` não encabeça grupo; promovê-lo
   a heading inventa hierarquia.
 - Escrever a grafia literal no sítio é o defeito, não o atalho: era como o título de auth virou 5
-  cópias. Mecanismo: `src/shared/ui/typography.test.ts`.
+  cópias. Mecanismo: `GRAFIA_LITERAL` em `frontend/eslint.config.js`, que mede a ASSINATURA da
+  grafia em `className` — literal, template e chave de objeto `pt`. Ele reprova também a cópia que
+  já DIVERGIU (o rótulo da Sidebar tinha perdido o `uppercase` no caminho), porque bastam duas
+  classes adjacentes para nomear a voz.
+  `src/shared/ui/typography.test.ts` **não é este mecanismo** e citá-lo aqui foi o furo (Q-3 do
+  review de 2026-08-29): ele congela o VALOR das quatro constantes e é cego a quem as recopia —
+  passava verde com 4 cópias vivas. `shared/ui` fica fora do lint de propósito: é onde a grafia é
+  DEFINIDA.
 
 ## Dado técnico é mono
 
@@ -50,14 +57,27 @@ Prosa não é dado técnico: o travessão que marca ausência legítima fica em 
 
 ## Escala de raio
 
+O degrau segue a ESCALA do bloco, não o aninhamento: o que tem padding de superfície (`p-4`, `p-6`)
+é superfície mesmo dentro de um diálogo; o que tem padding de controle (`px-3 py-2`) fica no degrau
+do controle, entre os quais ele pousa.
+
 | Papel | Raio |
 |---|---|
-| Superfície — card, diálogo, faixa de destaque | `rounded-lg` |
-| Controle e item de navegação | `rounded-md` |
+| Superfície — card, diálogo, bloco de destaque com padding de card | `rounded-lg` |
+| Controle, item de navegação e faixa fina de aviso (`px-3 py-2`) | `rounded-md` |
 | Pill — tag, badge, contador | `rounded-full` |
 
-`rounded` solto não existe: é raio sem degrau declarado, e foi assim que os banners de erro
-ficaram fora da escala.
+A tabela dizia `rounded-lg` para "faixa de destaque" e os banners de erro do `FormField` saíram em
+`rounded-md` — divergência levantada no review de 2026-08-29 (Q-5) e resolvida a favor do CÓDIGO: a
+faixa de erro mede `px-3 py-2` e vive na pilha de campos, ao lado de inputs em `rounded-md`; subi-la
+um degrau a faria brigar com o próprio diálogo. O bloco do folio no `IssuedDialog` é o contra-caso
+que fecha a régua — também é aninhado, tem `p-6`, e segue em `rounded-lg`.
+
+`rounded` solto é raio sem degrau declarado — foi assim que os banners de erro ficaram fora da
+escala. **Débito aberto, não regra cumprida:** sobraram 10 sítios em 9 arquivos de `features/`
+(`DocumentTypeCard`, `TurmaDocuments` ×2, `CourseStep`, `ModuleFields`, `ModuleCard`,
+`StudentLinkRow`, `RedatorDocumentSlot`, `ProfileDocumentSlot`, `BudgetDialog`). Enquanto houver
+sítio vivo não há catraca — ela nasceria vermelha.
 
 ## Padding por papel
 
@@ -88,3 +108,16 @@ arquivo nela para calar o lint.
 O `id` do Dropdown cai no nó raiz e não alcança o input focável.
 
 Mecanismo: `DROPDOWN_SEM_NOME` em `frontend/eslint.config.js`.
+
+## Catraca nova mede as DUAS camadas: `src/features/**` e `src/app/**`
+
+Regra nova entra nos quatro arrays de `no-restricted-syntax` que casam código de tela — os três de
+`src/features/**` e o de `src/app/**` — e a última não é opcional. `app/` é shell: Dashboard,
+sidebar e layouts, onde a grafia de tela também mora.
+
+Padrão reincidente, medido no review de 2026-08-29 (Q-2/Q-3): `DROPDOWN_SEM_NOME` nasceu medindo só
+`features/`, e apagar o `aria-label` do `PeriodFilter` do Dashboard deixava o lint VERDE; as 4
+cópias de grafia tipográfica estavam TODAS em `src/app/**`. É a mesma família do
+`frontend-fsliced.md` — catraca que enumera em vez de medir nasce com a exceção embutida e ninguém
+a vê, porque ela fica verde. Ficar de fora exige razão escrita no bloco (é o caso dos bans de
+query: compor rota é o trabalho de `app/`).
