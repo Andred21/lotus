@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, identifierClass } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
@@ -78,7 +78,7 @@ export function RedatoresTable({
       />
       <AppColumn
         header={t('common.rut')}
-        body={(r: RedatorData) => <span className="font-mono text-sm">{r.rut}</span>}
+        body={(r: RedatorData) => <span className={`${identifierClass} text-sm`}>{r.rut}</span>}
         style={largura.rut}
       />
       <AppColumn

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, DetailHeader, IdentityCell, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState } from '@shared/ui'
+import { AppButton, AppTag, DetailHeader, IdentityCell, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState, identifierClass } from '@shared/ui'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { useBudgetQuotesArchived } from '../../hooks/useBudgetQuotesArchived'
@@ -69,7 +69,8 @@ export function BudgetDetailPage() {
           <IdentityCell
             inline
             title={d.client?.legal_name ?? '—'}
-            description={d.client?.rut ? `RUT ${d.client.rut}` : undefined}
+            /* RUT não quebra no hífen a 1024px (f1 UI-03) */
+            description={d.client?.rut ? <span className={identifierClass}>RUT {d.client.rut}</span> : undefined}
             image={d.client?.photo_url}
             size="normal"
           />

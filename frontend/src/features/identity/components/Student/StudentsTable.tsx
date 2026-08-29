@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ServerTable } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn, identifierClass } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 import { studentWidths } from './studentColumns'
 
@@ -49,7 +49,7 @@ export function StudentsTable({
         header={t('common.rut')}
         sortable
         style={largura.rut}
-        body={(s: StudentData) => <span className="font-mono text-sm">{s.rut}</span>}
+        body={(s: StudentData) => <span className={`${identifierClass} text-sm`}>{s.rut}</span>}
       />
       <AppColumn
         header={t('student.currentClient')}

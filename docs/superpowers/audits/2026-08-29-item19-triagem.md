@@ -10,7 +10,7 @@
 | A1–A6 | A | adequado | — | — (nota da A3: "Volver" em linha própria é desenho do `DetailHeader`, não achado) | — |
 | UI-01 | B | corrigir | R1 | `ArchiveSwitch`: selecionado `outlined`, não selecionado `text` | `ArchiveSwitch.test.tsx` (visto reprovar) · run 5 |
 | UI-02 | B | corrigir | sítio | `size="small"` no Rechazar | pendente — Task 14 / run 5 |
-| UI-03 | B | corrigir | R2 | `identifierClass` no RUT do `BudgetDetailPage` | pendente — Task 9 / run 5 |
+| UI-03 | B | corrigir | R2 | `identifierClass` no RUT do `BudgetDetailPage` | grep refinado zero (Task 9) · run 5 |
 | UI-04 | B | recusado | — | costura decidida em `AppDialog/style.ts`; f4 A3 mediu coerente | `AppDialog/style.ts:6-11` |
 
 ## Fase 2 — Dashboard, Cursos, Perfil
@@ -21,8 +21,8 @@
 | UI-02 | B | ficha | — | D-63 | pendente — Task 16 |
 | UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | pendente — Task 14 / Task 16 |
 | UI-04 | B | recusado | — | consome `sectionLabelClass` por template; `GRAFIA_LITERAL` verde; `h4` sob `h3` é aninhamento | `AgendaPanel.tsx:99`, `KpiRow.tsx:77` |
-| UI-05 | B | corrigir | R2 | `technicalDataClass` no pill do `AppCard` e nas colunas numéricas de Cursos | `typography.test.ts` (Task 7) · pendente — Task 9 / run 5 |
-| UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · pendente — Task 9 |
+| UI-05 | B | corrigir | R2 | `technicalDataClass` no pill do `AppCard` e nas colunas numéricas de Cursos | `typography.test.ts` (Task 7) · grep refinado zero (Task 9) · run 5 |
+| UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · `features/` grep refinado zero (Task 9) |
 | UI-07 | B | corrigir | R2 | `technicalDataClass` na versão da sidebar | grep zero em `src/app` · run 5 |
 | UI-08 | B | ficha | — | D-64 | pendente — Task 16 |
 | UI-09 | B | corrigir | sítio | legenda com conteúdo próprio; paga P-63 | pendente — Task 12 / run 5 |
@@ -34,7 +34,7 @@
 |---|---|---|---|---|---|
 | A1–A6 | A | adequado | — | — | — |
 | UI-01 | B | ficha | — | D-65 | pendente — Task 16 |
-| UI-02 | B | corrigir | R2 | `identifierClass` no RUT da Emisión | pendente — Task 9 / run 5 |
+| UI-02 | B | corrigir | R2 | `identifierClass` no RUT da Emisión | grep refinado zero (Task 9) · run 5 |
 | UI-03 | B | corrigir | sítio | motivo do bloqueio na linha do CTA + `aria-describedby` | pendente — Task 13 / run 5 |
 | UI-04 | B | recusado | — | opacidade de `disabled` é calibração por folha do Lara (`:292`); isento da 1.4.3 | `lara-light-lotus.css:292`, `lara-dark-lotus.css:292` |
 | UI-05 | B | ficha | — | D-66 (+ P-67) | pendente — Task 16 |
@@ -59,6 +59,13 @@ pela mesma raiz (R1), não viram ficha.
 | UI-04 | B | corrigir (pela raiz) | R1 | fecha com a UI-01 | `AppSelectableCard.test.tsx` · pendente — run 5 (≥ 4,5:1) |
 | UI-05 | B | ficha | — | D-68 | pendente — Task 16 |
 | UI-06 | B | corrigir | sítio | auth consome `FormField` | pendente — Task 15 / run 5 |
+
+**Nota (Task 9):** `grep -rn "font-mono" src/features` devolve 4 linhas, não zero — refinado como
+código, não literal (mesma correção já precedente no bloco do item 18): duas são asserção de teste
+que confere substring da própria constante (`HistorialTable.test.tsx:131,136`,
+`ValidationPageFolio.test.tsx:82`, todas contra `identifierClass`/`technicalDataClass`, não contra
+grafia solta), e uma é prosa de docblock histórico (`IssuedDialog.tsx:74`, cita a grafia antiga por
+referência). Nenhum `className` literal restante.
 
 ## Run 5 — `2026-08-29-item19-run5.md`
 

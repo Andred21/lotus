@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag } from '@shared/ui'
+import { AppTag, technicalDataClass } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import type { DocumentValidityStatus } from '@shared/types/generated'
 
@@ -52,7 +52,7 @@ export function ProfileDocumentSlotHeader({
       <div className="flex flex-wrap items-center gap-2">
         <AppTag value={t(`profile.docStatus.${status}`)} severity={SEVERIDADE[status]} />
         {validUntil && (
-          <span className="font-mono text-sm" style={{ color: 'var(--text-color)' }}>
+          <span className={`${technicalDataClass} text-sm`} style={{ color: 'var(--text-color)' }}>
             {t('profile.documents.validUntil', {
               // `valid_until` vem só-data (`YYYY-MM-DD`) e `new Date` a lê como
               // meia-noite UTC: num fuso a oeste ela VOLTA um dia. `T00:00:00`

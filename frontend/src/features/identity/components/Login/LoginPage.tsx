@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { APP_VERSION } from "@shared/config/brand";
 import { AuthPanel } from "./AuthPanel";
-import { AppearanceControls, AppLogo } from "@/shared/ui";
+import { AppearanceControls, AppLogo, technicalDataClass } from "@/shared/ui";
 
 export function LoginPage() {
 
@@ -35,7 +35,7 @@ export function LoginPage() {
         </p>
 
         <p
-          className="my-0 text-center font-mono text-xs uppercase tracking-[0.14em]"
+          className={`my-0 text-center ${technicalDataClass} text-xs uppercase tracking-[0.14em]`}
           style={{ color: 'var(--shell-ink-muted)' }}
         >
           {t("brand.sector")}
@@ -45,7 +45,7 @@ export function LoginPage() {
             crescendo por conteúdo, um badge absoluto colidia com a legenda de
             setor em vez de ficar abaixo dela. */}
         <span
-          className="mt-2 font-mono text-[13px] tabular-nums md:absolute md:bottom-4 md:mt-0"
+          className={`mt-2 ${technicalDataClass} text-[13px] md:absolute md:bottom-4 md:mt-0`}
           style={{ color: 'var(--primary-300)' }}
         >
           {APP_VERSION}

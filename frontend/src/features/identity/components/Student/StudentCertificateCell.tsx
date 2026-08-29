@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag, AppButton } from '@shared/ui'
+import { AppTag, AppButton, identifierClass } from '@shared/ui'
 import type { StudentTurmaData } from '@shared/types/generated'
 import {
   CERTIFICATE_STATUS_SEVERITY,
@@ -48,7 +48,7 @@ export function StudentCertificateCell({ turma }: { turma: StudentTurmaData }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-sm">{certificate.codigo}</span>
+        <span className={`${identifierClass} text-sm`}>{certificate.codigo}</span>
         {certificate.snapshot_ok ? (
           <AppTag
             severity={CERTIFICATE_STATUS_SEVERITY[certificate.display_status]}
