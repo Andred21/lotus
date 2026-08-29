@@ -21,6 +21,11 @@ beforeEach(() => {
   gets.length = 0
   vi.spyOn(api, 'get').mockImplementation(((url: string) => {
     gets.push(url)
+    // `/api/students` pagina no servidor (spec D1) e responde o envelope
+    // `{ data, meta }`; as demais listas seguem array cru.
+    if (url === '/api/students') {
+      return Promise.resolve({ data: { data: [], meta: { page: 1, per_page: 10, total: 0, last_page: 1, total_unfiltered: 0 } } })
+    }
     return Promise.resolve({ data: [] })
   }) as never)
 })

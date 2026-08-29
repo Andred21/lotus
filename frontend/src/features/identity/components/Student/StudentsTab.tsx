@@ -18,10 +18,7 @@ export function StudentsTab() {
   return (
     <>
       <StudentsTable
-        students={students.items}
-        loading={students.loading}
-        error={students.error}
-        onRetry={students.refetch}
+        table={students.table}
         onView={students.openView}
         actions={
           can('identity.user.create')
