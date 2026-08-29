@@ -90,7 +90,7 @@ export function HistorialTable() {
               description={
                 ausente(c.snapshot.aluno.rut)
                   ? '—'
-                  : <span className="font-mono">{c.snapshot.aluno.rut}</span>
+                  : <span className="font-mono tabular-nums">{c.snapshot.aluno.rut}</span>
               }
               image={c.aluno_photo_url}
             />

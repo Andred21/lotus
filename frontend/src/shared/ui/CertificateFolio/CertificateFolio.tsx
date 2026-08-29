@@ -23,7 +23,12 @@ export interface CertificateFolioProps {
  * peso legal (spec §4.3).
  *
  * A legenda é rótulo de CAMPO, não heading: o bloco não encabeça grupo nenhum
- * (spec D5).
+ * (spec D5). Mas rótulo de campo pede o PAR `dt`/`dd`, e ele se perdeu quando o
+ * folio saiu do `<dl>` da validação para virar assinatura da página (Q-4 do
+ * review de 2026-08-29): sem o par, o leitor de tela lê duas caixas soltas e a
+ * legenda deixa de nomear o código. A peça carrega o próprio `<dl>` para o par
+ * viajar com ela — na validação, onde o bloco vive FORA da lista de definição,
+ * e no diálogo de emissão, onde não há lista nenhuma.
  */
 export function CertificateFolio({ label, folio, size }: CertificateFolioProps) {
   const grafia =
@@ -32,11 +37,11 @@ export function CertificateFolio({ label, folio, size }: CertificateFolioProps) 
       : 'font-mono tabular-nums text-xl tracking-[0.1em]'
 
   return (
-    <div className="flex flex-col items-center gap-1 text-center">
-      <span className={fieldLabelClass} style={{ color: 'var(--text-color-secondary)' }}>
+    <dl className="flex flex-col items-center gap-1 text-center">
+      <dt className={fieldLabelClass} style={{ color: 'var(--text-color-secondary)' }}>
         {label}
-      </span>
-      <span className={grafia} style={{ color: 'var(--text-color)' }}>{folio}</span>
-    </div>
+      </dt>
+      <dd className={grafia} style={{ color: 'var(--text-color)' }}>{folio}</dd>
+    </dl>
   )
 }

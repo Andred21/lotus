@@ -135,13 +135,36 @@ describe('ValidationPage titula todos os seus estados', () => {
  * um campo.
  */
 describe('a assinatura da validação', () => {
+  /** "Sai da lista de campos" era `closest('dl') === null`, e essa régua mediu a
+   * coisa errada: ela congelou a PERDA do par `dt`/`dd` do folio (Q-4 do review
+   * de 2026-08-29). O que o achado D4 pedia é que o folio não seja mais um campo
+   * ENTRE os outros — não que ele deixe de ter rótulo associado. Hoje a
+   * `<CertificateFolio>` carrega a própria lista de definição, então a régua é
+   * de POSIÇÃO: o folio está fora da `<dl>` dos demais campos. */
   it('o folio sai da lista de campos e vira bloco próprio, em mono', () => {
+    validation.current = { kind: 'valid', cert: CERT }
+
+    const { container } = renderPage()
+
+    const folio = screen.getByText('CERT-1')
+    expect(folio.className).toContain('font-mono')
+
+    const listaDeCampos = screen.getByText('certificate.validation.issuedTo').closest('dl')
+    expect(listaDeCampos).not.toBeNull()
+    expect(listaDeCampos?.contains(folio)).toBe(false)
+    expect(container.querySelectorAll('dl')).toHaveLength(2)
+  })
+
+  /** O par sobrevive à mudança de posição: a legenda continua NOMEANDO o código
+   * para o leitor de tela, agora na `<dl>` da própria peça. */
+  it('legenda e folio continuam sendo par `dt`/`dd`', () => {
     validation.current = { kind: 'valid', cert: CERT }
 
     renderPage()
 
     const folio = screen.getByText('CERT-1')
-    expect(folio.className).toContain('font-mono')
-    expect(folio.closest('dl')).toBeNull()
+    expect(folio.tagName).toBe('DD')
+    expect(screen.getByText('certificate.fieldCodigo').tagName).toBe('DT')
+    expect(folio.closest('dl')).toBe(screen.getByText('certificate.fieldCodigo').closest('dl'))
   })
 })
