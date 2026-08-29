@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppEmptyState, sectionLabelClass } from '@shared/ui'
+import { AppCard, AppCardHeader, AppEmptyState, sectionLabelClass, technicalDataClass } from '@shared/ui'
 import { formatIsoDate } from '@shared/lib'
 import { dangerText, infoText, neutralInk, warningText } from '@shared/styles/tokens'
 /**
@@ -65,7 +65,7 @@ function TurmaLinha({ turma }: { turma: AgendaLinha }) {
             </span>
           )}
         </span>
-        <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+        <span className={`shrink-0 ${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
           {t('dashboard.agenda.range', {
             start: formatIsoDate(turma.start_date),
             end: formatIsoDate(turma.end_date),
@@ -105,7 +105,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
                   style={{ background: janela.ink }}
                 />
                 {t(janela.labelKey)}
-                <span className="font-mono font-normal tabular-nums">{agenda[janela.key].length}</span>
+                <span className={`${technicalDataClass} font-normal`}>{agenda[janela.key].length}</span>
               </h4>
               <ul role="list">
                 {agenda[janela.key].map((turma) => (

@@ -22,8 +22,8 @@
 | UI-03 | B | corrigir (semântica) + ficha | sítio | `FormSection as="h2"` no Perfil; grafia na D-63 | pendente — Task 14 / Task 16 |
 | UI-04 | B | recusado | — | consome `sectionLabelClass` por template; `GRAFIA_LITERAL` verde; `h4` sob `h3` é aninhamento | `AgendaPanel.tsx:99`, `KpiRow.tsx:77` |
 | UI-05 | B | corrigir | R2 | `technicalDataClass` no pill do `AppCard` e nas colunas numéricas de Cursos | `typography.test.ts` (Task 7) · pendente — Task 9 / run 5 |
-| UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | pendente — Tasks 8/9 |
-| UI-07 | B | corrigir | R2 | `technicalDataClass` na versão da sidebar | pendente — Task 8 / run 5 |
+| UI-06 | B | corrigir | R2 | as duas constantes nos 20 sítios | `app/` grep zero (Task 8) · pendente — Task 9 |
+| UI-07 | B | corrigir | R2 | `technicalDataClass` na versão da sidebar | grep zero em `src/app` · run 5 |
 | UI-08 | B | ficha | — | D-64 | pendente — Task 16 |
 | UI-09 | B | corrigir | sítio | legenda com conteúdo próprio; paga P-63 | pendente — Task 12 / run 5 |
 | UI-10 | C | corrigir | sítio | `min-w-0` na `<section>` da Agenda | pendente — Task 12 / run 5 |

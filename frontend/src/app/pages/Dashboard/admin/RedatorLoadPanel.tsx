@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState } from '@shared/ui'
+import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, technicalDataClass } from '@shared/ui'
 import { dangerText, warningText } from '@shared/styles/tokens'
 import type { RedatorLoadData } from '@shared/types/generated'
 import { redatorLoadWidths } from './panelColumns'
@@ -10,7 +10,7 @@ import { redatorLoadWidths } from './panelColumns'
  * Cor por `style` e token, nunca por classe Tailwind (ADR-16). */
 function Contador({ valor, ink }: { valor: number; ink?: string }) {
   return (
-    <span className="font-mono tabular-nums" style={valor > 0 && ink ? { color: ink } : undefined}>
+    <span className={technicalDataClass} style={valor > 0 && ink ? { color: ink } : undefined}>
       {valor}
     </span>
   )
