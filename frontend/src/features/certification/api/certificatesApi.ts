@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
+import { pageEndpoint } from '@shared/api/page'
 import type {
   BatchIssueItemResultData,
   CertificateData,
+  CertificatePageMetaData,
   EmissionPanelTurmaData,
 } from '@shared/types/generated'
 
 const panelKey = ['certificates', 'emission-panel'] as const
-const listKey = ['certificates', 'list'] as const
+export const listKey = ['certificates', 'list'] as const
 const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
 /** `enabled` porque o endpoint exige `certification.certificate.issue`:
@@ -22,31 +24,29 @@ export function useEmissionPanel(enabled = true) {
   })
 }
 
+/** A página do Historial (spec D1): busca, filtro de estado e ordenação no
+ * servidor, resumo por estado no `meta` (D6). */
+export const certificatesPage = pageEndpoint<CertificateData, CertificatePageMetaData>('/api/certificates')
+
 /** `refetchOnWindowFocus` vence o default `false` do `AppProviders`: o
  * `display_status` de cada linha é derivado no servidor a partir do "hoje" de
  * Santiago e congela no fetch. Aba do Historial aberta atravessando a
  * meia-noite mostraria `vigente` sobre certificado já vencido (Q-1 do review
  * de 2026-08-24). Catraca em `certificatesApi.test.tsx`. Limite conhecido: a
  * aba que nunca perde o foco só corrige no próximo remonte. */
-export function useCertificates() {
-  return useQuery<CertificateData[], ProblemDetails>({
-    queryKey: listKey,
-    queryFn: () => api.get<CertificateData[]>('/api/certificates').then((r) => r.data),
-    refetchOnWindowFocus: true,
-  })
-}
+export const certificatesTableOptions = { key: listKey, refetchOnWindowFocus: true } as const
 
 /** Certificado pontual por id — o `Ver` de uma linha já emitida
  * (`useEmissionPanelState`) só recebe `{id, codigo, status}` do painel
  * (`EmissionPanelCertificateData`), sem `created_at`. Busca UM certificado
- * (`GET /api/certificates/{id}`) em vez de puxar `useCertificates()` inteiro —
- * o histórico é um arquivo legal que só cresce, sem teto. */
+ * (`GET /api/certificates/{id}`) em vez de puxar a página inteira do
+ * Historial — o histórico é um arquivo legal que só cresce, sem teto. */
 export function useCertificate(id: number | null) {
   return useQuery<CertificateData, ProblemDetails>({
     queryKey: id === null ? (['certificates', 'detail', 'none'] as const) : detailKey(id),
     queryFn: () => api.get<CertificateData>(`/api/certificates/${id}`).then((r) => r.data),
     enabled: id !== null,
-    // Mesmo motivo do `useCertificates`: o diálogo `Ver` imprime o estado
+    // Mesmo motivo da página do Historial: o diálogo `Ver` imprime o estado
     // derivado, e ele congela no fetch.
     refetchOnWindowFocus: true,
   })

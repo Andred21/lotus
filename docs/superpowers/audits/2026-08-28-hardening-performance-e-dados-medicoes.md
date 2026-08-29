@@ -27,3 +27,26 @@ o console acusa um warning React (`key` ausente em lista) originado em
 `StudentDetailSections`/`AppDataTable` das seções de vínculos/turmas do
 detalhe — arquivo não tocado pela Task 5. Registrado aqui para triagem futura,
 não corrigido neste bloco.
+
+## DoD 7 — Historial
+
+Prova no navegador (Chromium, es-CL, `admin@lotus.cl`), stack local
+(`docker compose up -d` + `pnpm dev`), rota `/certificados` → aba
+**Historial**. URLs capturadas via `playwright-cli requests` (aba DevTools →
+Network):
+
+| Ação                                             | GET disparado                                                                   |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Montar a aba Historial                             | `GET /api/certificates?page=1&per_page=10`                                        |
+| Selecionar "Por vencer" no dropdown "Estado"       | `GET /api/certificates?page=1&per_page=10&display_status=por_vencer`              |
+| Digitar "16.200" na busca (com filtro ainda ativo, após a pausa de debounce) | `GET /api/certificates?page=1&per_page=10&q=16.200&display_status=por_vencer` — **um único** GET |
+| Voltar filtro para "Todos" e clicar no cabeçalho "Código" | `GET /api/certificates?page=1&per_page=10&sort=codigo`                    |
+
+Confirmado: o dropdown de estado dispara `display_status=<valor>&page=1`
+(volta à primeira página), a busca compõe com o filtro ativo no mesmo `q=`
+sem request por tecla, e o cabeçalho ordenável manda `sort=<campo>`. O rodapé
+de resumo por status leu do `meta.summary` do envelope paginado — antes do
+qualquer filtro de estado, mostrou `13 vigentes · 0 por vencer · 0 vencidos ·
+2 revocados` (contagem sobre o escopo de `q`, sem o filtro de status, como a
+spec D6 exige) — e não sobre a lista inteira renderizada. Console sem erros
+nem warnings durante toda a sessão (`playwright-cli console`: 0/0).

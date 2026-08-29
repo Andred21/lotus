@@ -21,8 +21,8 @@ export type EmissionCounts = {
  *
  * O "Ver" de uma linha já emitida abre o MESMO `IssuedDialog` que aparece
  * pós-emissão, mas o painel só devolve `{id, codigo, status}` por matrícula
- * (`EmissionPanelCertificateData`), sem `created_at`. Em vez de puxar
- * `useCertificates()` inteiro — o histórico é um arquivo legal que só cresce,
+ * (`EmissionPanelCertificateData`), sem `created_at`. Em vez de puxar a
+ * página inteira do Historial — o histórico é um arquivo legal que só cresce,
  * sem teto — `viewingCertificateId` + `useCertificate(id)` buscam o UM
  * certificado pontual. A query mora aqui, não no componente:
  * `no-restricted-syntax` reprova `useQuery`/`useMutation` sob

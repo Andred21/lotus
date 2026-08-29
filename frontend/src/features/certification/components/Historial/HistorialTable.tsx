@@ -32,6 +32,10 @@ export function HistorialTable() {
     <>
       <SearchableTableFrame
         table={h.table}
+        totalRecords={h.table.totalRecords}
+        sortField={h.table.sortField}
+        sortOrder={h.table.sortOrder}
+        onSort={h.table.onSort}
         searchPlaceholder={t('certificate.searchPlaceholder')}
         onClearFilter={h.clearStatusFilter}
         filterSlot={
@@ -66,6 +70,7 @@ export function HistorialTable() {
         onRetry={h.reload}
       >
         <AppColumn
+          field="codigo" sortable
           header={t('certificate.colCodigo')}
           body={(c: CertificateData) => <span className="font-mono text-sm">{c.codigo}</span>}
           style={largura.codigo}
@@ -99,11 +104,13 @@ export function HistorialTable() {
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} style={largura.curso} />
         <AppColumn
+          field="created_at" sortable
           header={t('certificate.colIssuedAt')}
           body={(c: CertificateData) => formatDate(new Date(c.created_at))}
           style={largura.emitidoEm}
         />
         <AppColumn
+          field="valido_ate" sortable
           header={t('certificate.colValidUntil')}
           body={(c: CertificateData) => (c.valido_ate ? formatDate(new Date(`${c.valido_ate}T00:00:00`)) : '—')}
           style={largura.validoAte}
