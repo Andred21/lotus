@@ -34,6 +34,10 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
 
   return (
     <AppDataTable
+      /* O DTO desta tabela não tem `id`: a chave é `enrollment_id`. Com o
+       * default do wrapper, cada linha resolvia a chave para `undefined` e o
+       * React acusava no console (f3 UI-06, run de 2026-08-28). */
+      dataKey="enrollment_id"
       value={table.rows}
       loading={loading}
       first={table.first}
