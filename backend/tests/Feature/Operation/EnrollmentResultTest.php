@@ -116,27 +116,21 @@ class EnrollmentResultTest extends TestCase
             null,
         );
 
-        Model::preventLazyLoading();
+        $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
 
-        try {
-            $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
+        $result = app(EnrollmentController::class)->result(
+            new EnrollmentResultData(
+                grades: ['final' => 6.5],
+                attendance_pct: '92.50',
+                approval_status: EnrollmentApprovalStatus::Aprobado,
+            ),
+            $this->turma,
+            $enrollment,
+            app(RecordEnrollmentResultAction::class),
+        );
 
-            $result = app(EnrollmentController::class)->result(
-                new EnrollmentResultData(
-                    grades: ['final' => 6.5],
-                    attendance_pct: '92.50',
-                    approval_status: EnrollmentApprovalStatus::Aprobado,
-                ),
-                $this->turma,
-                $enrollment,
-                app(RecordEnrollmentResultAction::class),
-            );
-
-            $this->assertSame('Juan Soto', $result->name);
-            $this->assertSame('11.111.111-1', $result->rut);
-        } finally {
-            Model::preventLazyLoading(false);
-        }
+        $this->assertSame('Juan Soto', $result->name);
+        $this->assertSame('11.111.111-1', $result->rut);
     }
 
     public function test_turma_concluida_recusa_resultado_com_rn15(): void

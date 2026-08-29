@@ -2,7 +2,7 @@
 name: lotus-ui-review
 description: Revisa uma tela ou jornada read-only do Lotus local pelo navegador, com evidências visuais, responsivas, de console e rede. Use por invocação explícita para revisão UI/UX; não use para backend, produção, auditoria de todo o frontend ou correção automática.
 argument-hint: "tela-ou-jornada-local"
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Read, Glob, Grep, Write, Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(mkdir:*), Bash(playwright-cli:*), Bash(.agents/skills/lotus-ui-review/scripts/preflight.sh:*)
 ---
 

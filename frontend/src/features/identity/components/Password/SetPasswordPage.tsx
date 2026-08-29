@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { AppButton, AppPassword, FormErrorBanner } from '@shared/ui'
+import { AppButton, AppPassword, FormErrorBanner, pageTitleClass } from '@shared/ui'
 import { dangerText } from '@shared/styles/tokens'
 import { useSetPassword } from '../../hooks/useSetPassword'
 import type { PasswordFlow } from '../../api/passwordApi'
@@ -22,7 +22,7 @@ export function SetPasswordPage() {
   if (tokenRejected) {
     return (
       <main className="flex flex-col gap-4 w-full max-w-sm mx-auto p-8 text-left">
-        <h1 className="font-display text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-color)' }}>
+        <h1 className={pageTitleClass} style={{ color: 'var(--text-color)' }}>
           {t('password.expired')}
         </h1>
         <AppButton label={t('password.expiredAction')} onClick={() => navigate('/recuperar-clave')} />
@@ -33,7 +33,7 @@ export function SetPasswordPage() {
   if (succeeded) {
     return (
       <main className="flex flex-col gap-4 w-full max-w-sm mx-auto p-8 text-left">
-        <h1 className="font-display text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-color)' }}>
+        <h1 className={pageTitleClass} style={{ color: 'var(--text-color)' }}>
           {t('password.success')}
         </h1>
         <AppButton label={t('password.successAction')} onClick={() => navigate('/login')} />
@@ -48,7 +48,7 @@ export function SetPasswordPage() {
         className="flex flex-col gap-4 w-full max-w-sm mx-auto text-left"
       >
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-color)' }}>
+          <h1 className={pageTitleClass} style={{ color: 'var(--text-color)' }}>
             {t('password.title')}
           </h1>
           <p style={{ color: 'var(--text-color-secondary)' }}>{t('password.subtitle')}</p>

@@ -9,6 +9,8 @@ use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Data\StudentDetailData;
 use App\Domains\Identity\Models\Student;
 use App\Http\Controllers\Controller;
+use App\Shared\Pagination\PageData;
+use App\Shared\Pagination\PageRequest;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -31,21 +33,23 @@ class StudentController extends Controller implements HasMiddleware
         ];
     }
 
-    /** @return array<StudentData> */
-    public function index(): array
+    /**
+     * Página de alunos (spec D1): a lista cresce sem teto e ordenava em PHP.
+     * `PageRequest` direto porque não há filtro nomeado — quem sabe buscar e
+     * ordenar é o `StudentQueryBuilder`.
+     *
+     * @return PageData<StudentData>
+     */
+    public function index(PageRequest $request): PageData
     {
-        return Student::with(['user', 'currentClient'])
-            ->withCount('enrollments')
-            ->get()
-            ->sortBy(fn (Student $s) => $s->user->name)
-            ->values()
-            ->map(fn (Student $s) => StudentData::fromModel($s))
-            ->all();
+        return Student::query()
+            ->withListingData()
+            ->page($request, fn (Student $student) => StudentData::fromModel($student));
     }
 
     public function store(StudentData $data, CreateStudentAction $action): StudentData
     {
-        return StudentData::fromModel($action->execute($data));
+        return StudentData::fromModel($action->execute($data)->loadListingData());
     }
 
     /**
@@ -72,6 +76,6 @@ class StudentController extends Controller implements HasMiddleware
 
     public function update(StudentData $data, Student $student, UpdateStudentAction $action): StudentData
     {
-        return StudentData::fromModel($action->execute($student, $data));
+        return StudentData::fromModel($action->execute($student, $data)->loadListingData());
     }
 }

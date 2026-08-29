@@ -23,6 +23,542 @@
 
 ---
 
+## Fechado em 2026-08-29 — `hardening-performance-e-dados`, item 6 da fila
+
+**A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
+narrativa integral em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-auditoria-privacidade-e-observabilidade` nasceu de `main@038b4a70`, recebeu o merge
+da `main` de PR #77/#80 com o gate refeito sobre ele, e **mesclou pelo PR #81** (merge `f584432b`).
+A árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é do João,
+contra o `backlog.md`.
+
+**Promoção do item 6 — 2026-08-28, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o
+Context Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`),
+em sandbox read-only. A branch `feat/hardening-performance-e-dados` sai de `main@f584432b`, que já é
+`origin/main` e traz o merge do próprio item 5. **Árvore:** main tree, pelo precedente de todo bloco
+de backend. O espelho já apontava para a `lane-a` — não houve troca de foco neste commit.
+
+**Duas lanes com estado durável fora da `main`, medido na promoção e não tocado aqui.** A `lane-b`
+promoveu o item 10 (`4a33f835`, `50f3a1f3`) em `infra/producao-provisionamento-aws`, e a `lane-c`
+promoveu o item 18 (`daa90d6b`, `6e86f251`) em `refactor/frontend-estilizacao-componentes`; as duas
+estão em `ready_for_planning`/`planning` nas próprias árvores. Por isso o `state.md` da `main` ainda
+descreve as duas em `idle`. **A invariante de dono manda: nenhum dos dois blocos foi escrito por este
+commit.** Não há colisão de escopo: o item 10 é provisionamento AWS e o item 18 é frontend puro; este
+bloco é backend e o único que regenera `generated.ts`.
+
+**O Context Packet do item 6 voltou `ready` — 2026-08-28.** O Codex leu o `requisitos-negocio.md` do
+Drive por ID e a task Notion 9.1.3 na base canônica. **Nenhuma fonte fixa número**: o RNF-DES-01 pede
+resposta "quase instantânea" sem SLA, o RNF-DES-02 fixa só os 10 usuários simultâneos, o RNF-DES-03
+pede documento acessível "imediatamente" sem prazo; a 9.1.3 tem aceite único, "Sem N+1 nas consultas
+RBAC/FK principais". Nada menciona Redis nem cache — "Redis não é requisito" do backlog fica de pé. O
+teto de `per_page`, eventuais guardas numéricas e o dono dos 30 dias da D-15 são decisões de
+engenharia do brainstorming, não regra de negócio ausente — por isso `ready`, não `blocked`. Packet
+salvo em `context-packets/2026-08-28-hardening-performance-e-dados.md`.
+
+**Brainstorming do item 6 — 2026-08-28, spec escrita.** Cinco decisões do João, todas de
+engenharia: paginam no servidor só as listas que crescem sem teto (`students`, `certificates`,
+`turmas` ativo e arquivado); cenário de medição em ordem de grandeza segura (~5k alunos, ~6k
+certificados); o painel de emissão ganha janela por data (12 meses) em vez de página, porque o lote
+depende da turma inteira em memória; contrato próprio em `App\Shared\Pagination`, não o
+`LengthAwarePaginator`; D-15 com dono único em `Shared` — são **três** trintas, não dois. O
+levantamento mediu zero paginação na API e um frontend client-side por desenho, o que fez o custo da
+opção escolhida subir para o kit compartilhado (`useServerTable`, modo `lazy` em
+`AppDataTable`/`SearchableTableFrame`); o João manteve o bloco inteiro aqui. Spec em
+`specs/2026-08-28-hardening-performance-e-dados-design.md`.
+
+**Plano do item 6 — 2026-08-28, a lane entra em `ready_for_execution`.** Treze tasks em
+`plans/2026-08-28-hardening-performance-e-dados.md`, na ordem da dependência: `JanelaDeAviso` (D13)
+antes do `CASE` que a lê; o contrato `App\Shared\Pagination` antes dos três builders; o kit lazy do
+front antes das três telas; as duplas backend→frontend por endpoint (alunos, certificados, turmas)
+fechando cada uma um estado consistente; a janela do painel de emissão; `preventLazyLoading` global
+com a catraca `ListQueryBudgetTest`; o `PerformanceScenarioSeeder` e a migration de índices só com o
+que o `EXPLAIN` aprovar; docs por último. Dez desvios de implementação declarados no plano — nenhum
+muda o §7 da spec; o mais visível é que `useHistorial` deixa de ser exceção da política de `loadError`.
+**Handoff: `executor: claude`** — o `CASE` e o `whereHas` são regra de domínio reescrita em SQL, três
+números só existem depois de medir, e a guarda global pode reprovar caminho que a suíte não cobria.
+Colisão conhecida com a `lane-c` em `HistorialTable.tsx` (só props da moldura); rebase antes do merge.
+Execução exige `/executar-bloco hardening-performance-e-dados`.
+
+**Execução do item 6 iniciada — 2026-08-28, a lane entra em `executing`.** `/executar-bloco
+hardening-performance-e-dados` com o gate satisfeito: estado, spec, plano, packet, branch e work item
+coerentes, working tree limpo em `bbab7c58`. Técnica `subagent-driven-development` (`executor:
+claude`), ledger reiniciado em `.superpowers/sdd/progress.md` — o anterior era do item 2. O
+pre-flight do plano achou três coisas: a Task 9 não modifica `TurmaStatusFilter.tsx` (a seção
+`Files:` da task governa, a linha do índice de arquivos é resumo), o script de medição da Task 12
+carrega um caminho de scratchpad de sessão morta (trocado na execução) e a Task 6 manda **copiar
+verbatim** a fixture do teste de paridade para o de paginação — **decisão do João: extrair trait em
+`Tests\Support`**, pelo padrão que o `CreatesDomainRecords` já estabelece. Nenhuma das três muda o §7
+da spec.
+
+**A divergência entre lanes que este bloco mediu na promoção fechou pela integração serial.** O
+fechamento do item 11 (`lane-b`) e o do item 8 (`lane-c`) viviam só nas branches delas, e por isso o
+`state.md` da `main` descrevia a `lane-b` em `ready_for_closure` e a `lane-c` em `idle`. As duas
+mesclaram (PR #77 e PR #80) e a `main` resultante entrou aqui pelo merge do fechamento deste bloco —
+**nenhuma linha de lane alheia foi escrita por esta lane**: o que a `lane-b` e a `lane-c` dizem de si
+veio do merge, verbatim. Não houve colisão de escopo: o item 8 é frontend puro e o item 11 não tinha
+trabalho de código restante.
+
+**O que colidiu foi a numeração de pendência, e quem renumerou foi esta lane.** As três fichas
+abertas aqui nasceram `P-62`, `P-63` e `P-64`; a `main` já trazia uma `P-62` (branch protection, da
+`lane-b`) e uma `P-63` (o `role="list"` do mini-reset, da `lane-c`), então elas viraram **`P-64`,
+`P-65` e `P-66`** no merge. ID já publicado na `main` não se reusa — mesmo movimento que a
+`P-61`→`P-63` da `lane-c` registra, e o único lugar onde os números antigos ficam de pé é o plano
+arquivado, que é histórico e não se reescreve.
+
+**A `lane-c` fechou o item 8 em 2026-08-27** — `frontend-hardening-final`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A worktree `../fix-frontend`
+segue viva e a branch `refactor/frontend-hardening-final` está em **PR #80**, com a `main` de
+PR #78/#79 mesclada para dentro e o gate refeito sobre ela (backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, DoD remedido no navegador). A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md` — e o
+**item 18** que este bloco escreveu na fila não é exceção. O fechamento mediu backend **940 passed /
+5 skipped**, frontend lint 0, build verde e **111 arquivos / 622 testes**, com o DoD refeito no
+navegador contra o código pós-review.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
+
+**As treze tasks do item 6 fecharam — 2026-08-29, a lane entra em `ready_for_review`.** Dezesseis
+commits sobre `main@f584432b` (`c6d86e64`…`9defc442`), 112 arquivos, +9.950/−525. Gate final medido
+sobre o cenário grande (`PerformanceScenarioSeeder`: 5.045 alunos, 504 turmas, 8.045 matrículas,
+6.000 certificados): backend **1108 passed / 5 skipped**, `typescript:transform` sem diff residual,
+frontend lint 0, build verde, **114 arquivos / 645 testes**, pint `passed` nos arquivos do diff. DoD
+§7 provado na API real e no navegador, item a item, na seção "Gate final" de
+`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`.
+
+Três coisas que só a medição decidiu, e que o review deve olhar com o número na mão: `users(name)`
+foi **recusado** pelo `EXPLAIN` e ficou fora da migration (a recusa está escrita na ficha de `users`
+do `der-fisico`, para não ser reproposto); as contagens da catraca do Dashboard (admin **40**,
+redator **7**) são medidas, não estimadas; e a busca em `snapshot` mediu 0,69 ms em 6.000
+certificados, longe do limiar que abriria o plano B — registrada, sem ficha. A **P-66** fechou.
+Duas correções vieram do próprio gate, não da inspeção: uma referência com reticências no
+`der-fisico` que reprovou a catraca `repo-docs-refs`, e os 50 redatores do `PerformanceScenarioSeeder`
+sem a role `redator` — o cenário media o 403 do `permission:` no lugar do escopo do `visibleTo`.
+
+**Review do bloco — 2026-08-29, a lane entra em `blocked`.** `/revisar-sprint` sobre o intervalo
+`f584432b..c0bcf87a`. Classificação: **alto risco** (migration de schema, `generated.ts`, escopo
+`visibleTo` e certificados), então a revisão do Claude foi acompanhada de uma segunda lente do Codex
+em sandbox read-only. **Nenhuma violação das leis §5** e nenhum órfão: `archivableSource`,
+`useTableFilter` e `useArchivedPage` seguem servindo as raízes bounded, e as peças novas
+(`Paginates`, `DataSql`, `JanelaDeAviso`, `useServerTable`, `useCrudDialog`, `useRestoreAction`)
+todas têm consumidor. 63 testes do bloco reexecutados verdes na revisão.
+
+Cinco achados, nenhum inventado e dois confirmados pelas duas lentes: **Q-1** (🔴) o `Reemitir` do
+Historial procura a matrícula num painel de emissão sem `concluidas_desde`, que agora só devolve
+turmas concluídas nos últimos 12 meses — certificado revogado de turma mais antiga fica sem
+reemissão, com a mesma tarja genérica de um bloqueio legítimo; **Q-2** (🟡) `defaultConcludedSince`
+monta a data no fuso do navegador e o front SEMPRE manda o parâmetro, então o default
+`America/Santiago` do backend nunca roda; **Q-3** (🟡) trocar Ativas↔Arquivadas não zera a página no
+`useServerTable` (o escopo só olha termo e filtros), o que custa um request desperdiçado e um piscar
+de tabela vazia; **Q-4** (🟡) a única coluna com `sortable` do hub de turmas é a "Código", ligada a
+`turmas.created_at`; **Q-5** (🟡) `displayStatusCase()` aceita `CarbonInterface` e chama `addDays()`
+nele — hoje seguro porque `hoje()` devolve `CarbonImmutable`, mas um chamador com Carbon mutável
+deslocaria filtro, resumo e linhas do mesmo request. Nenhum é decisão registrada em ADR, spec ou
+ficha. **Só achado aprovado pelo João vira correção.**
+
+**Correções do review — 2026-08-29, a lane volta a `reviewing` e fecha em `ready_for_closure`.** O
+João aprovou os cinco achados e os cinco foram aplicados. **Q-1:** o painel do `useHistorial` só
+liga com um Reemitir aberto e recebe como janela o `end_date` congelado no snapshot DAQUELE
+certificado — a turma dele cabe na janela por mais antiga que seja, e some junto o GET pesado no
+mount de quem só lê o Historial (sem `end_date` no snapshot, cai no default do servidor). **Q-2:**
+`defaultConcludedSince()` deixou de existir; o seletor nasce vazio, anuncia a janela pelo
+`placeholder` (`certificate.concludedSinceDefault`, nas 3 locales) e o `concluidas_desde` só vai na
+URL quando o usuário escolhe data — o default de `America/Santiago` volta a ser o do backend.
+**Q-3:** a `key` entrou no escopo do `useServerTable`, com catraca nova nos dois níveis
+(`useServerTable.test.tsx` e `useTurmasPage.test.tsx`, o caso de troca de modo que faltava).
+**Q-4:** a coluna "Código" perdeu `field="created_at" sortable` — nenhuma coluna do hub de turmas
+mostra data, então a tabela vive do `DEFAULT_SORT` do builder. **Q-5:** `displayStatusCase()` passou
+a exigir `CarbonImmutable`, e os dois chamadores convertem com `toImmutable()`.
+
+Duas rules ganharam o que os achados provaram: `frontend-fsliced` agora diz que a `key` faz parte do
+escopo e que `sortable` exige o campo **daquela** coluna; o docblock de `EmissionPanelQuery` registra
+que o default da janela é do backend e só dele. Gate reexecutado: frontend `pnpm build` + `pnpm lint`
++ `pnpm test` (114 arquivos, **647** testes) e backend `--filter="Certificate|EmissionPanel|ListQueryBudget|Turma"`
+(**286** passados, 1 skipped, 1.125 asserções). Nenhum achado deferido; nada foi para `backlog.md`
+nem para `pendencias/abertas.md`.
+
+**Colisão conhecida com a `lane-c` (item 18) segue de pé:** `HistorialTable.tsx`. Rebase antes do
+merge.
+
+## Fechado em 2026-08-29 — `frontend-estilizacao-padronizacao-de-componentes`, item 18 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-c` | `frontend-estilizacao-padronizacao-de-componentes` (item 18) | Frontend | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (aberta de `main@b7283736`) | `ready_for_closure` (Q-1..Q-6 aprovados e aplicados; gate reverificado) |
+
+## Promoção — 2026-08-28: o item 18 entra na `lane-c`
+
+O João promoveu explicitamente o **item 18**, `frontend-estilizacao-padronizacao-de-componentes`,
+depois da análise desta data sobre `backlog.md`, `pendencias/` e `audits/`. A dependência dele — o
+item 8 — fechou em 2026-08-27, e a fonte é o `audits/2026-08-26-estilizacao-componentes.md`: **18
+achados medidos, nenhum aplicado**. `Contexto: não`, então o bloco nasce em `ready_for_planning`,
+sem packet. A **P-63** já está agrupada nele desde o fechamento do item 8.
+
+**A `D-62` entra junto, por decisão do João no mesmo ato.** O hospedeiro dela era o item 8, que
+fechou pagando `P-46`/`D-03`/`D-33`/`D-35` e **não** a D-62 — medido aqui: `frontend/eslint.config.js`
+não tem uma linha sobre `AppDropdown`, `inputId` ou `aria-label`, e a quarta ocorrência do defeito
+nasceria verde. O remédio mora no mesmo arquivo que este bloco toca. A **D-34** continua **sem
+hospedeiro**: o outro candidato natural é o item 9, e escolher é do João.
+
+**Este commit escreve o espelho singular a partir da worktree, e isso é a P-55.** A invariante diz
+que `focused_lane` e os campos do topo são fronteira durável do main tree, mas `/planejar-bloco` lê
+os singulares — lane sem espelho apontando para si é planejada contra a lane errada. É o **quarto**
+caso da mesma pendência, registrado na ficha dela; não é exceção nova nem reescrita da invariante,
+que segue aguardando a decisão do João.
+
+### Planejamento fechado — 2026-08-28
+
+Spec em `specs/2026-08-28-frontend-estilizacao-padronizacao-de-componentes-design.md`, plano em
+`plans/2026-08-28-frontend-estilizacao-padronizacao-de-componentes.md`: 17 tasks, 93 passos,
+executor `claude`. A escrita do plano mediu três coisas que **corrigem** o desenho e valem sobre o
+texto da spec, e estão registradas na seção "Correções ao desenho" do próprio plano:
+
+1. **D1 (Sidebar):** o asset é PNG, não SVG — não há `viewBox` a corrigir. Medida a caixa opaca de
+   `LogoDark.png` (335×466): padding de 31/12/15/27px, que renderizado vale ~8px e **não** explica
+   os 60px do `ml-15`. Recortar o asset não fecha o achado; o que sai é o empurrão manual, e o
+   `h-30` fica porque é a altura do wordmark.
+2. **D3 (Login):** a limitação §7 da spec está **paga e passa**. `--shell-ink` mede 8,71:1 e 9,86:1
+   contra as duas pontas do `--brand-gradient`; `--shell-ink-muted`, 4,93:1 e 5,57:1. Os dois
+   passam o 4,5:1 na ponta pior.
+3. **`D-62`:** o seletor de lint foi rodado **antes** de virar task. Reprova exatamente uma
+   ocorrência viva — `BudgetDocumentsCard.tsx:36`, a quinta que a ficha previa nascer verde — e a
+   sonda negativa (remover o `inputId` de `TurmaStatusFilter.tsx:44`) reprova nomeando o arquivo.
+   Os 11 `AppDropdown` dentro de `FormField` recebem o `inputId` por contexto e são grafia certa.
+
+Um ponto que a spec não decidiu e o plano fixa: `FormSection` e os quatro `h3` de operation
+consomem `SectionLabel` com `rule={false}`, para que os 8 sítios do Dashboard fiquem
+byte-idênticos e nenhuma hairline nova apareça onde achado nenhum pediu.
+
+**A narrativa do item 17 saiu daqui neste fechamento.** Ela dizia que a branch
+`refactor/tabelas-coluna-de-acoes` seguia viva e sem merge — a branch já não existe nesta árvore, e
+a narrativa integral do bloco (com a **P-57** e a **P-58**, que continuam abertas nas fichas) está
+em `historico/state-archive.md` desde o fechamento dele. Bloco encerrado não guarda parágrafo aqui.
+
+### Fechamento — 2026-08-29
+
+**O gate abriu VERMELHO no §2 e foi o único achado do fechamento.** O `bbf35f5c` — as correções
+Q-4/Q-5 do review — levou `ValidationPage.test.tsx` de 147 a **170 linhas**, e a catraca `max-lines`
+de `src/features/*/components/**` mede teste junto com componente. O `2bbaad01` declarou "gate
+reverificado — lint 0" com o lint já vermelho: os números de teste daquela linha batem com a
+medição de hoje (117 arquivos / 653 testes), o `lint 0` não batia. Prova declarada sem a saída real
+é a mesma classe de defeito que o `/fechar-sprint` §0 existe para pegar.
+
+**A saída foi decisão do João, com as três alternativas medidas:** quebrar o arquivo, comprimi-lo,
+ou levar para o bloco de `features/` o `ignores: ['**/*.test.tsx']` que o bloco de `src/app/**` já
+tem. Ele escolheu **quebrar** — `ValidationPageFolio.test.tsx` nasce com as duas asserções da
+assinatura e o harness redeclarado (`vi.mock` iça por arquivo). A isenção foi recusada com o custo
+medido: dos 24 testes dessa camada, **um** passava de 150 (o nosso) e **dois** estão exatamente em
+150 — gente que já pagou o preço para caber. Afrouxar ali soltaria régua viva para 24 arquivos.
+
+**A assimetria que o achado expôs virou a P-68**, e não correção silenciosa: `src/app/**` isenta
+teste do `max-lines` com razão escrita no próprio config ("quebrar um arquivo de teste coeso é pagar
+preço pela regra, não pelo defeito") e `src/features/*/components/**` não isenta. Duas camadas, duas
+políticas, nenhuma das duas errada por si — quem decide é o João.
+
+**As duas catracas do bloco foram provadas por sonda negativa no fechamento**, cada uma reprovando e
+nomeando o arquivo: apagar o `inputId` do `TurmaStatusFilter` acende o `DROPDOWN_SEM_NOME` (D-62), e
+colar a assinatura da grafia de título num `className` do `KpiRow` acende o `GRAFIA_LITERAL` — este
+em `src/app/**`, que é onde as 4 cópias vivas estavam. Sondas rodadas sobre cópia no scratchpad, com
+restauração medida por `git status`.
+
+**Gate medido:** backend **999 passed / 5 skipped** (container próprio da worktree, offset +2 —
+`git diff main...HEAD -- backend/ generated.ts` **vazio**, então `pint` e `typescript:transform` são
+N/A por escopo, provados e não supostos); frontend lint **0**, build verde, **118 arquivos / 653
+testes**. Guardas de grep do DoD: zero `variant` velho vivo, zero `my-[0.83em]` em `className`, zero
+título copiado em `features/`.
+
+**A `D-62` sai do `backlog.md` paga**; a **P-63** fica aberta por escrito, como a spec §2 previu — o
+`role="list"` que falta é o das legendas do Recharts, e o remédio não é deste bloco. Nasceram a
+**P-67** (10 sítios de `rounded` solto que a rule declara como débito, sem catraca — ela nasceria
+vermelha) e a **P-68** acima. O **item 19** (`frontend-triagem-dos-audits-do-item-18`, os 49 achados
+das quatro runs) foi escrito por esta worktree no `2bbaad01` e declarado ali: acrescentar item à
+fila é do main tree com o João, e a reconciliação acontece neste fechamento.
+
+**As duas fichas nasceram `P-64` e `P-65` e foram renumeradas para `P-67` e `P-68` no merge da
+`main` (2026-08-29), depois do fechamento.** A `main` já trazia `P-64`, `P-65` e `P-66` da `lane-a`
+(PR #81), mescladas antes desta branch: ID publicado na `main` não se reusa, e quem renumera é a
+lane que ainda não mesclou — mesmo movimento que a `P-61`→`P-63` desta lane e a `P-62`→`P-64` da
+`lane-a` registram. Os números antigos ficam de pé só no plano e na spec arquivados, que são
+histórico e não se reescrevem.
+
+**A narrativa do item 8 saiu daqui neste fechamento**, pelo mesmo motivo que a do item 17 saiu no
+anterior: ela dizia que a `lane-c` tinha fechado o item 8 e repetia números de um gate que já não é
+o corrente. A narrativa integral dele está neste arquivo desde 2026-08-27. Bloco encerrado não
+guarda parágrafo no `state.md`.
+
+---
+
+## Fechado em 2026-08-28 — `hardening-auditoria-privacidade-e-observabilidade`, item 5 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `hardening-auditoria-privacidade-e-observabilidade` (item 5) | Backend/Infra | main tree | `feat/hardening-auditoria-privacidade-e-observabilidade` | `ready_for_closure` |
+
+**A `lane-a` fechou o item 4 em 2026-08-25** — `hardening-api-arquivos-e-abuso`, narrativa integral
+em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-api-arquivos-e-abuso` nasceu de `main@7fa1cb0a` e **mesclou pelo PR #78** (merge
+`038b4a70`); a árvore é o main tree, que não se destrói. A lane não recebe item novo sozinha: promoção é
+do João, contra o `backlog.md`.
+
+**Promoção do item 5 — 2026-08-26, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`. O item é marcado `Contexto: sim`, então a lane nasce em `context_required`: o
+Context Packet vem antes do `/planejar-bloco` e é do Codex (`.agents/skills/lotus-context-packet`),
+em sandbox read-only. A branch `feat/hardening-auditoria-privacidade-e-observabilidade` sai de
+`main@038b4a70`, que já é `origin/main` e traz o merge do próprio item 4. **Árvore:** main tree, pelo
+precedente de todo bloco de backend; a **P-03 foi paga** pelo `compose-por-worktree`, então isso é
+escolha e não imposição do compose. O espelho já apontava para a `lane-a` — não houve troca de foco
+neste commit.
+
+**O Context Packet do item 5 voltou `blocked` — 2026-08-26.** O Codex recuperou o `requisitos-negocio.md`
+do Drive por ID (`1Nt8XARvd_EIRWEJ9YXa3DKV45xPMQkk-`) e leu o texto real dos cinco RNF-SEC citados pelo
+backlog. **Nenhum deles fixa número, canal ou prazo:** o único número próximo na fonte é o "no mínimo
+7 dias" do `RNF-DIS-03`, que é backup de banco e não alcança `audits`, `login_logs` nem documento. A
+medição também **desfez a suposição do próprio backlog** sobre o `RNF-SEC-05`: a ambiguidade não está
+no texto — ele diz "Micro-serviço em nuvem" literalmente, e o que está aberto é se o João mantém a
+forma diante de um monólito para ~10 usuários. E a linha de **retenção documental** não é atalho para
+P-02/P-33 nem requisito confirmado: a fonte descreve os PDFs de redator/turma e o S3, e não define
+prazo, descarte nem preservação legal. São quatro decisões do João, todas de regra de negócio ou peso
+legal, e o `blocker` do espelho as enumera. **O packet foi salvo como evidência** em
+`context-packets/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md`, mas **não** entrou
+em `context_packet` enquanto estava `blocked`: `status: blocked` não é contexto utilizável, e apontar
+para ele diria que a lane tem contexto que ela não tem.
+
+**O João respondeu as quatro no mesmo dia, e o packet foi refeito por refresh — `status: ready`.** As
+decisões entram no packet com `Resolution basis` de **instrução explícita do João Victor**, que é o
+topo da hierarquia de fontes da própria skill, acima do snapshot do Drive:
+
+1. **Retenção:** `audits` **5 anos**, `login_logs` **12 meses**, os dois podados pelo scheduler. O
+   trilho de auditoria acompanha o peso legal do certificado e precisa sobreviver à validade dele; o
+   `login_logs` é o que carrega PII pura (`ip_address`, `user_agent`) e sai antes. É o mecanismo que a
+   **P-02** e a **P-33** esperavam e a lacuna que o ADR-08 deixou aberta.
+2. **Retenção documental:** os arquivos de turma/redator **não expiram**. Fica só o arquivamento
+   lógico, que já é o comportamento vigente — decisão registrada, **sem código novo**, e non-goal
+   declarado do bloco.
+3. **Forma dos logs:** a forma literal "Micro-serviço em nuvem" do `RNF-SEC-05` **não** se mantém;
+   centralização dentro do monólito basta e o requisito é **revisado formalmente por escrito**. É o
+   mesmo movimento que o item 13 aplica ao `RNF-DIS-02` × ADR-14: manter a arquitetura e revisar o
+   requisito, nunca declarar equivalência em silêncio. A revisão é entregável deste bloco.
+4. **Alerta e cofre:** o alerta do `RNF-SEC-07` é definido **aqui**, por três famílias de evento
+   medível dentro do monólito — falhas de login repetidas na mesma chave, uso de sessão de conta
+   desativada e 403 em sequência —, cada uma com condição, destino e expectativa temporal. O cofre do
+   `RNF-SEC-03` fica em `env_file` fora da imagem (que já é o HEAD) mais **rotação documentada**; o
+   cofre gerenciado real é **diferido ao item 10**, junto da conta AWS.
+
+**Brainstorming fechado e spec escrita — 2026-08-26.** A medição contra `main@038b4a70` levantou
+**uma tensão que o packet não tinha como enxergar**: a `audits` guarda `url`, `ip_address` e
+`user_agent`, que é a MESMA PII pura que motivou a P-33 no `login_logs`. Com 5 anos numa tabela e 12
+meses na outra, IP e user agent sobreviveriam os 5 anos assim mesmo, pela outra porta. **Decisão do
+João, no mesmo dia: poda em duas fases** — aos 12 meses a linha de `audits` é anonimizada nos três
+campos e preserva quem/o quê/valor antigo/novo; aos 5 anos é apagada. As duas janelas passam a contar
+a mesma história e o que o `RNF-SEC-04` exige sobrevive intacto.
+
+A medição também mostrou que **"podados pelo scheduler" não tinha onde rodar**: não há `app/Console/`,
+nenhum `Schedule::` em lugar nenhum, nenhum comando Artisan próprio, e nenhum compose ou entrypoint
+com cron, supervisor ou `schedule:work`. O runner passa a ser entregável deste bloco — serviço
+`scheduler` no compose de produção, mesma imagem, e não cron do host, que faria a poda depender do
+working tree do servidor logo depois de o item 10 ter comprado o contrário. E os logs de ação são
+construção do zero: `config/logging.php` é o stub vanilla e o app inteiro tem três chamadas de log,
+todas de descarte de arquivo órfão.
+
+A spec está em `specs/2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, com
+nove decisões, cinco catracas e treze itens de DoD.
+
+**Plano escrito e a lane em `ready_for_execution` — 2026-08-26.** Nove tasks em
+`plans/2026-08-26-hardening-auditoria-privacidade-e-observabilidade.md`, ordenadas por dependência e
+não por preferência. **`executor: claude`**, e a razão está escrita no handoff: a poda escreve por
+consulta crua, o que PARECE violar a lei §5.2 e a lição 5 e é exatamente o oposto delas — apagar
+trilha não pode gerar trilha —, e errar isso não quebra teste nenhum, gera auditoria da auditoria em
+produção, em silêncio. Somam-se cinco números com gatilho de revisão durante a execução e três
+arquivos do caminho de autenticação que o bloco anterior deixou com risco medido no comentário. O
+Codex entra **depois**, na revisão independente pelo `/revisar-sprint`.
+
+Dois desvios de implementação ficam declarados no próprio plano, nenhum de escopo: a poda executa
+descarte antes de anonimização (mesmas janelas, menos trabalho) e o canal de log é endereçado por
+nome em vez de por `LOG_CHANNEL` (mesmo destino, determinístico no teste, e o desenvolvimento ganha
+o mesmo canal).
+
+**Transição para `executing` registrada tarde — 2026-08-26.** A execução via
+`subagent-driven-development` já ia da Task 1 à Task 8 quando este arquivo mudou de
+`ready_for_execution` para `executing`; o procedimento pede a transição no mesmo commit da primeira
+task durável (Task 1, `cbe3f711`), e isso não aconteceu ali. O ledger (`.superpowers/sdd/progress.md`)
+e o `git log` da branch são a prova de que o trabalho é contínuo desde então — nenhuma task foi
+pulada ou refeita por causa da lacuna; é disciplina de registro atrasada, não um estado real
+diferente do que o `state.md` já deveria dizer.
+
+**As nove tasks fecharam e a lane vai a `ready_for_review` — 2026-08-27.** Ciclo completo de
+`subagent-driven-development`: implementador por task, review de task (spec + qualidade) atrás de
+cada uma, subagente de correção para achado Crítico/Importante, re-review, e um review final da
+branch inteira no modelo mais capaz, seguido de re-review da onda de correções. Evidência task a
+task em `.superpowers/sdd/progress.md`.
+
+O review final da branch achou **um Crítico, e ele era real**: o canal `seguranca` lia
+`env('LOG_LEVEL', 'debug')`, e `backend/.env.production.example:45` fixa `LOG_LEVEL=warning` — sete
+dos oito eventos de `EventoDeSeguranca` saem em `info`, então **em produção o canal inteiro do
+`RNF-SEC-05` estaria mudo menos o alerta**, no único ambiente em que a spec importa. O nível virou o
+literal `'info'`, com catraca provada por inversão, e o porquê ficou escrito no próprio
+`config/logging.php`. Os demais achados foram corrigidos na mesma onda: guarda de `try/catch` na
+costura do handler global (mesma catraca 5, agora protegendo a resposta de erro e não só o e-mail),
+`withoutOverlapping(60)` nas duas podas, resolução de conexão da migration alinhada ao comando, e o
+teste de login falho real refeito com `freezeTime()` — ele era o único ponto do bloco que ainda
+corria contra o relógio de verdade, e falhou uma vez em nove execuções da suíte antes da correção.
+
+**Três decisões do João ficam abertas antes do fechamento, registradas e não corrigidas em silêncio.**
+O review final mediu três lacunas no **escopo** da D6 — senha certa em conta desativada não gera
+alerta prioritário, o alerta de login falho não carrega o `chave_hash` que liga ao rastro, e
+password spraying entre contas não acumula em família nenhuma porque tudo chaveia em `email|ip`. O
+detector faz exatamente o que a D6 escreveu; mudar qualquer das três é redefinir a D6. Foram para a
+**P-65**, que já era a ficha da assimetria de ADR entre D5 e D6/D7/D8, porque é a mesma conversa. A
+lacuna de índice da poda de `login_logs`, medida nos reviews das Tasks 1 e 4 e fora do escopo do
+plano nas duas, virou a **P-66**.
+
+**Review do bloco e os seis achados corrigidos — 2026-08-28.** Bloco classificado **alto risco**
+(migration nova, caminho de auth/Sanctum, trilha de auditoria com peso legal e a costura de 403),
+então o review veio com a segunda lente independente do Codex em sandbox read-only. Nenhum órfão,
+nenhuma dependência nova, nenhuma lei da §5 ferida. Seis achados, **todos aprovados pelo João e
+corrigidos na mesma sessão**, cada um com a catraca vista reprovando antes de valer (lição 10):
+
+- **Q-1 🔴 — a contenção da catraca 5 era assimétrica.** O review anterior blindou a costura do
+  handler global e parou aí: `AuthController::login()`/`logout()` e `EnsureAccountIsActive` seguiam
+  chamando log e detector sem guarda. Um canal de log fora do ar transformava o `422` de senha
+  errada num `500` — e no middleware era pior, porque a linha de observabilidade sai ANTES de
+  `session()->invalidate()` (ordem exigida por `EventosDeAcessoTest`): a exceção subia com a sessão
+  da conta desativada **ainda viva**. A contenção foi para DENTRO do `EventoDeSeguranca` e do
+  `DetectorDeAcessoSuspeito`, cobrindo os sítios que ainda não existem, e a catraca nova
+  (`ObservabilidadeContidaTest`) quebra a dependência real — canal, limitador, cache —, não a classe
+  contida: as sete asserções reprovaram com a proteção removida.
+- **Q-2 🟡 — o serviço `scheduler` não tinha catraca.** `PodaAgendadaRatchetTest` provava as entradas
+  do `Schedule`; nada provava o container que as executa, e apagar o serviço deixava a suíte inteira
+  verde com a poda parada em produção. Entrou no `compose-prod.test.ts`, que já é a catraca desse
+  arquivo — provado apagando o bloco.
+- **Q-3 🔴 — `operacao-segredos.md` §5 prometia uma revogação que o próprio procedimento impedia.**
+  Dizia que rotacionar o `APP_KEY` derruba toda sessão viva, enquanto mandava mover a chave velha
+  para `APP_PREVIOUS_KEYS` — e `Encrypter::getAllKeys()` devolve `[$this->key, ...$this->previousKeys]`
+  com o `decrypt()` percorrendo a lista inteira, então o cookie antigo **continua abrindo**. O erro
+  apontava para o lado perigoso: quem rotacionasse para expulsar sessão roubada acreditaria ter
+  revogado o que seguia valendo. A seção virou dois procedimentos separados — 5.1 planejada (não
+  derruba ninguém) e 5.2 por comprometimento (chave velha fora da lista **mais** `DELETE FROM
+  sessions`, porque só a chave não garante).
+- **Q-4 🟡 — o inventário de segredos não tinha o segredo de e-mail que produção usa.** Documentava
+  SES pelo par IAM, mas `.env.production.example:106` seleciona `MAIL_MAILER=smtp`, cujo segredo é
+  `MAIL_PASSWORD`. Entrou no inventário e ganhou procedimento de rotação com a prova certa — um
+  e-mail de teste que chega —, porque e-mail é a única superfície do inventário cuja falha é
+  assintomática do lado de dentro. O bloco SES ficou marcado como caminho do item 10, não corrente.
+- **Q-5 🟡 — `getMessage()` cru podia levar endereço de e-mail ao log default.** A exceção de
+  transporte do Symfony Mailer carrega a resposta do SMTP com o destinatário dentro. Os dois `catch`
+  passaram pela `FalhaDeObservabilidade` nova, que registra classe/código/origem e **nunca** a
+  mensagem; a catraca planta um `550 ... <vitima@lotus.cl>` e exige que ele não apareça em log
+  nenhum.
+- **Q-6 🟢 — a fase de anonimização da poda não tinha teste de chunk.** O teste existente plantava
+  linhas de 6 anos, ou seja, exercitava só o descarte; o laço com risco de não terminar é o do
+  `UPDATE`. Coberto, e provado com a regressão simulada (uma passada só deixa 5 linhas com PII).
+
+**Um sétimo defeito apareceu por rodar a suíte que o review anterior não rodou.** `pnpm test` estava
+**vermelho no `HEAD` do bloco**: o ADR-21 cita `backend/config/logging.php:134-142` e a spec por
+faixa de linha, e a catraca `repo-docs-refs` não sabia ler o sufixo `:NN-NN` — path com número de
+linha nunca resolvia. Corrigido no lado da catraca, não da doc: citação line-precise é a convenção do
+projeto, e a guarda agora recorta o sufixo **e confere** que o arquivo tem a linha citada. Ficou
+estritamente mais forte que antes — reprova citação que aponta para além do fim do arquivo, defeito
+que passava batido. Suíte final: backend `1047 passed, 5 skipped`; frontend `607 passed`, lint e
+build limpos.
+
+---
+
+## Fechado em 2026-08-27 — `frontend-hardening-final`, item 8 da fila
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-c` | `frontend-hardening-final` (item 8) | Frontend | `../fix-frontend` | `refactor/frontend-hardening-final` | `ready_for_closure` (7 achados do review pagos) |
+
+**Promoção do item 8 — 2026-08-26.** A `lane-c` estava `idle` desde o fechamento da fatia 2 do item
+16; o João promoveu explicitamente o **item 8 — `frontend-hardening-final`** contra o `backlog.md`.
+O item marca `Contexto: não por padrão`, então a lane nasce direto em `ready_for_planning` e
+**não** há Context Packet: as cinco fontes do bloco (`D-03`, `D-33`, `D-35`, `P-46` e a herança da
+`P-41`) são medição local, e as fichas vivem no repositório. A branch
+`refactor/frontend-hardening-final` sai de `main@5550178a`, que já é `origin/main` — o PR #76
+(fatia 2 do item 16) e o PR #77 (item 11 da `lane-b`) já mesclaram, então a árvore não está atrás.
+
+**A linha de branch da `lane-c` estava velha, e foi corrigida nesta promoção.** O frontmatter dizia
+`refactor/frontend-revisao-ui-f2 # fechada em 2026-08-25; ainda não mesclada`; era verdade em
+`8d588511`, o `state_basis_commit` anterior, e deixou de ser quando o PR #76 mesclou em `5550178a`.
+Não era divergência de fase — as duas fontes diziam `idle` —, mas o campo aponta para a branch da
+lane e passou a apontar para a errada. `state_basis_commit` acompanhou.
+
+**Fora de ordem em relação aos itens 4 a 7, e sem colisão.** A fila recomenda 4→9 para fechar
+código, e os itens 4 a 7 são hardening de **backend**. O item 8 é frontend puro, então nenhum deles
+disputa arquivo com ele; e o gate P-03 não é disparado, porque o bloco não toca `backend/`.
+**Review de 2026-08-27 — 7 achados, os 7 aprovados pelo João e pagos.** A narrativa deles vivia no
+campo `blocker` do `state.md` e desce aqui no fechamento, que é onde ela passa a viver:
+
+- **Q-1** — a catraca do mini-reset lia só o **primeiro** `@layer base` e ignorava o que estivesse
+  fora de layer, que é o idiom que o próprio `index.css` usa duas vezes e que **vence** os layers na
+  cascata. Duas sondas vistas reprovar antes de a correção entrar.
+- **Q-2** — `title={label}` incondicional excedia a spec §4.1: sobre texto visível idêntico o
+  `title` vira *accessible description*, e o leitor de tela anunciava "Comercial, link, Comercial".
+  Voltou a existir só colapsado.
+- **Q-3** — o docblock do `KpiRow` justificava `pt` em vez de `mt-*` por uma classe que este bloco
+  apagou, e a afirmação tinha **invertido**: o substituto mora em `@layer base`, que perde para
+  `utilities`.
+- **Q-4** — a tabela `Ocupação corrente` do `state.md` divergia do frontmatter na `lane-c`, e a
+  invariante manda **parar** diante disso, não escolher fonte. Virou a regra que a tabela carrega.
+- **Q-5** — `mergePt` substituía função sobre função, então o `onClick` do chamador sumia em
+  silêncio desde que o D-33 cravou handler no `togglePt`. Chave `on[A-Z]` passa a **encadear**;
+  resolver de nó continua com pins vencendo. Terceira reincidência da família — virou regra na
+  `.claude/rules/frontend-fsliced.md`.
+- **Q-6** — o mini-reset crava `list-style: none` em toda a aplicação e o WebKit tira a semântica de
+  lista junto: 16 listas receberam `role="list"`, com régua de lint exigindo o atributo daqui pra
+  frente.
+- **Q-7** — o mini-reset apagou o marcador de 8 listas **fora** das famílias que a spec §5 mediu.
+  Seis são ganho (`<li>` com borda ou card, onde o bullet era ruído); duas não — `FormErrorSummary`
+  e `ImportResultSummary` são texto puro, e o João decidiu devolver o marcador às duas.
+
+**O fechamento refez o DoD contra o código final, e não confiou no relatório de 2026-08-26.** As
+medições originais são de `cde9ba4b`, e **quatro dos sete achados mexem exatamente no que elas
+medem** — o `title` do rail (Q-2), o encadeamento que carrega o foco do olho (Q-5), o `role="list"`
+(Q-6) e o marcador das duas listas (Q-7). O regate rodou no mesmo método (Chromium real, stack desta
+árvore no offset +2, login `admin@lotus.cl` pela tela, `es-CL`) e está no mesmo audit: sete rótulos
+legíveis a 390×844 com `<nav>` de 768px contra 844px, `title` presente colapsado e `null` a 1440px,
+foco no `<svg>` do olho depois do Enter, as quatro famílias de lista sem marcador e com `role`, o
+`list-disc` vencendo o mini-reset numa sonda de cascata com negativa, e o `IdentityCell` cortando
+(118×102) com a sonda negativa empatando em 118.
+
+**O regate achou uma borda, e ela virou ficha, não conserto de carona.** Varrendo **todo** `ul` do
+Dashboard, dois ficam sem `role`: as legendas do Recharts. A régua de lint do Q-6 lê JSX e não
+alcança lista que nasce dentro de biblioteca, enquanto o mini-reset, que é global por desenho,
+alcança. É a **P-63** — alcance pequeno (legenda de gráfico, com `aria-label` próprio por item), e
+não reabre o DoD 4.
+
+**Gate do fechamento:** backend **940 passed / 5 skipped**; frontend lint 0, build verde,
+**111 arquivos / 622 testes**. `pint` e `typescript:transform` **N/A por escopo**, provado e não
+assumido: `git diff --stat main...HEAD -- backend/ frontend/src/shared/types/generated.ts` volta
+**vazio**. Um caso reprovou na **primeira** execução da suíte do frontend, com os containers ainda
+subindo, e passou nas cinco execuções seguintes — o suspeito é o `PeoplePage.test.tsx`, que depende
+de `waitFor`; oito execuções isoladas dele sob carga de CPU não reproduziram, e o caso está
+registrado no fechamento como flake observado, sem ficha.
+
+**A `P-46` fechou e foi remedida**; nasceram a **P-63** e o **item 18** da fila (padronização de
+estilização, que depende deste bloco e foi escrito durante ele). As fichas `D-03`, `D-33` e `D-35`
+saíram do registro canônico do `backlog.md`, que é o que o próprio registro manda fazer no
+`/fechar-sprint` do bloco que as paga.
+
+**Merge da `main` para dentro, em 2026-08-28, com o gate refeito sobre ele.** A branch estava 32
+commits atrás: entraram o `hardening-api-arquivos-e-abuso` (item 4, PR #78) e o
+`cicd-ci-governanca-e-artefato` (item 11, PR #79), que trazem `clamav` no compose, limitadores de
+taxa nomeados e `nginx` reescrito. Gate na árvore mesclada: backend **999 passed / 5 skipped**,
+frontend lint 0, build verde, **111 arquivos / 622 testes**, e o **DoD refeito no navegador pela
+terceira vez** — os números não mudaram (`<nav>` 768px contra 844px, `title` `null` nos sete a
+1440px, foco no `<svg>` do olho, as quatro famílias com `role="list"` e sem marcador, `list-disc`
+vencendo o mini-reset, `IdentityCell` 118×102 com a negativa empatando em 118). O `nginx` desta
+árvore precisou de `docker compose rm -sf` antes de subir: o bind-mount do Docker Desktop guardava
+o inode antigo de `docker/nginx/default.conf`, que o merge reescreveu — é ambiente, não código.
+
+**A pendência nova foi renumerada no merge: nasceu `P-61` e virou `P-63`.** A `main` já trazia uma
+`P-61` (os `title` do `ProblemDetails` em português) e uma `P-62`, vindas dos dois blocos acima —
+mesmo precedente que renumerou a `P-38` para `P-41`.
+
+---
+
 ## Fechado em 2026-08-26 — `cicd-ci-governanca-e-artefato`, item 11 da fila
 
 **A `lane-b` fechou o `compose-por-worktree` em 2026-08-24, voltou a `idle` e recebeu o item 11 no

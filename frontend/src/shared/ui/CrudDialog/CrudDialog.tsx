@@ -52,13 +52,13 @@ export function CrudDialog({
     mode === 'view' ? (
       <div className="flex justify-end gap-2">
         <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={onHide} />
-        {onEdit && <AppButton variant="brandIcon" label={t('common.edit')} icon="pi pi-pencil" onClick={onEdit} />}
+        {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="pi pi-pencil" onClick={onEdit} />}
       </div>
     ) : (
       <div className="flex justify-end gap-2">
         <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={onHide} />
         <AppButton
-          variant="brandIcon"
+          variant="primary"
           label={submitLabel ?? t('common.save')}
           icon="pi pi-check"
           loading={pending}

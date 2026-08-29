@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Password } from 'primereact/password'
 
+import type { KeyboardEvent, MouseEvent } from 'react'
 import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
@@ -41,11 +42,14 @@ export interface AppPasswordProps extends PasswordProps {
  *
  * **A D-24 pediu Espaço, e o Espaço já funciona.** O `onToggleMaskKeyDown` do
  * Prime trata `event.key === 'Enter' || event.code === 'Space'`
- * (`password.cjs.js:588-593`) e o `pt` deste wrapper não o sobrescreve — há
- * teste medindo as duas teclas. Acrescentar handler próprio alternaria DUAS
- * vezes e o campo voltaria ao estado inicial: defeito pior e invisível. Se o
- * Espaço falhar no navegador, a causa não é este componente, e o achado precisa
- * ser remedido lá antes de virar código aqui.
+ * (`password.cjs.js:588-593`) e o `pt` deste wrapper não o SUBSTITUI — há
+ * teste medindo as duas teclas. `onKeyDown` PRÓPRIO no lugar do handler do Prime
+ * alternaria DUAS vezes e o campo voltaria ao estado inicial: defeito pior e
+ * invisível. O que este wrapper tem, desde o D-33 abaixo, é `onKeyDown`
+ * ENCADEADO pelo `mergeProps` — o handler do Prime roda primeiro e alterna a
+ * máscara; o de baixo só corre atrás disso para devolver o foco. Não duplica a
+ * lógica de alternância, então o achado da D-24 continua não sendo deste
+ * componente: se o Espaço falhar no navegador, remedeie lá antes de tocar aqui.
  */
 export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
   ({ leftIcon, pt, ...props }, ref) => {
@@ -81,9 +85,52 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // utilitárias do Tailwind estão DENTRO de `@layer utilities`, então o
     // seletor universal do projeto vence a classe — medido no navegador, com a
     // classe aplicada e `box-sizing` resolvendo `border-box` mesmo assim.
+    // D-33. O Prime troca `showIcon` por `hideIcon` ao alternar: o nó focado sai
+    // do DOM e `document.activeElement` vira `BODY`. O ícone já é focável
+    // (`tabIndex: '0'`, password.cjs.js:601,610) — o que falta é continuidade.
+    // Vale para as DUAS formas de ativar: o Prime tem `onClick: toggleMask` E
+    // `onKeyDown: onToggleMaskKeyDown` SEPARADOS (password.cjs.js:587-613) — o
+    // segundo chama `toggleMask()` direto e nunca passa pelo primeiro. A Task 3
+    // encadeou só o `onClick` e mediu com `fireEvent.click`; quem alternava por
+    // Enter/Espaço no navegador real continuava caindo no `BODY` (achado do
+    // BD-16 medindo o DoD do bloco em Chromium, não em jsdom).
+    //
+    // Os dois vão no `pt` e não em handler próprio porque o `mergeProps` do
+    // Prime ENCADEIA funções (utils.cjs.js:2693-2697): o handler dele roda
+    // primeiro (alterna a máscara) e este roda em seguida (só devolve o foco).
+    // Handler próprio no LUGAR do do Prime alternaria a máscara duas vezes — o
+    // mesmo defeito que o docblock da D-24 acima registra.
+    //
+    // A condição de "já tinha foco" existe SÓ no mouse, para não ROUBAR foco:
+    // alternar por clique enquanto o cursor está no input não pode arrastar o
+    // foco para o olho. No teclado a guarda é dispensável por construção — um
+    // `keydown` só chega ao ícone se ele JÁ estiver com foco (é assim que o
+    // evento chega até ele); portar a guarda do mouse para cá seria código morto
+    // que também poderia, por engano, suprimir o caso legítimo.
+    // `queueMicrotask` nos dois porque o nó novo só existe depois do commit do
+    // React.
+    const devolverFoco = (event: MouseEvent<Element>) => {
+      const alvoAntigo = event.currentTarget
+      const campo = alvoAntigo.closest('.p-password')
+      if (document.activeElement !== alvoAntigo) return
+      queueMicrotask(() => {
+        const novo = campo?.querySelector('[role="button"]')
+        if (novo instanceof HTMLElement || novo instanceof SVGElement) novo.focus()
+      })
+    }
+    const devolverFocoTeclado = (event: KeyboardEvent<Element>) => {
+      if (event.key !== 'Enter' && event.code !== 'Space') return
+      const campo = event.currentTarget.closest('.p-password')
+      queueMicrotask(() => {
+        const novo = campo?.querySelector('[role="button"]')
+        if (novo instanceof HTMLElement || novo instanceof SVGElement) novo.focus()
+      })
+    }
     const togglePt = {
       role: 'button',
       'aria-checked': undefined,
+      onClick: devolverFoco,
+      onKeyDown: devolverFocoTeclado,
       style: { boxSizing: 'content-box' as const, padding: '0.375rem' },
     }
     const ariaPt = {

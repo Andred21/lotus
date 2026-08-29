@@ -29,9 +29,9 @@ class StudentCrudTest extends TestCase
 
         $this->getJson('/api/students')
             ->assertOk()
-            ->assertJsonPath('0.name', 'Carlos Pérez Muñoz')
-            ->assertJsonPath('0.current_client_name', 'Transelec')
-            ->assertJsonPath('0.enrollments_count', 0);
+            ->assertJsonPath('data.0.name', 'Carlos Pérez Muñoz')
+            ->assertJsonPath('data.0.current_client_name', 'Transelec')
+            ->assertJsonPath('data.0.enrollments_count', 0);
     }
 
     public function test_cria_aluno_pela_api_e_grava_o_primeiro_vinculo(): void

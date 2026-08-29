@@ -1,30 +1,25 @@
-import { useArchiveAction, useArchivedPage } from '@shared/hooks'
-import type { ArchivedTurmaData, TurmaData } from '@shared/types/generated'
-import { useArchiveTurma, useRestoreTurma, useTurmasArchivedList } from '../api/useTurmas'
+import { useState } from 'react'
+import { useArchiveAction, useRestoreAction, type ArchiveMode } from '@shared/hooks'
+import { useArchiveTurma, useRestoreTurma } from '../api/useTurmas'
 
 /**
- * `useArchivedPage` exige `ArchivableResource<TArchived>` — contrato ESTRUTURAL,
- * não a fábrica `createCrudResource` (spec D12). `useTurmas.ts` é artesanal e não
- * migra; o recurso é montado aqui.
+ * O modo da visão e as duas ações com toast. A LISTA não mora mais aqui: com
+ * a paginação no servidor ela vem de `useTurmasPage(mode, status)`, que
+ * troca o endpoint pelo modo. `useArchivedPage` (modo + lista + restore) segue
+ * servindo as cinco raízes que não paginam; esta é a composição das peças
+ * dele para uma raiz que pagina.
  *
- * As propriedades são FUNÇÕES NOMEADAS começando em `use`: o
- * `react-hooks/rules-of-hooks` decide pelo nome do que está sendo definido, e
- * seta anônima numa propriedade não é reconhecida como hook.
+ * Os toasts vivem em `shared/` (Q-3 do review de 2026-08-19); aqui o de erro
+ * cobre dois 422 próprios: turma concluída na RN-15 ao arquivar, e os gates
+ * da spec D1 e do redator arquivado ao restaurar.
  */
-const recursoDeTurmas = {
-  useArchivedList: function useArchivedList(enabled: boolean) {
-    return useTurmasArchivedList(enabled)
-  },
-  useRestore: function useRestore() {
-    return useRestoreTurma()
-  },
-}
-
-/** Molde: `useClientsArchived`. Os toasts vivem em `shared/` (Q-3 do review de
- * 2026-08-19), e aqui o de erro cobre dois 422 próprios: turma concluída na
- * RN-15 ao arquivar, e os gates da spec D1 e do redator arquivado ao restaurar. */
 export function useTurmasArchived() {
-  const page = useArchivedPage<TurmaData, ArchivedTurmaData>(recursoDeTurmas, (row) => row.turma)
+  const [mode, setMode] = useState<ArchiveMode>('active')
 
-  return { ...page, ...useArchiveAction(useArchiveTurma()) }
+  return {
+    mode,
+    setMode,
+    ...useRestoreAction(useRestoreTurma()),
+    ...useArchiveAction(useArchiveTurma()),
+  }
 }

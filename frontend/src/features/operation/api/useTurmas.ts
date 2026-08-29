@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
+import { pageEndpoint } from '@shared/api/page'
 import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type { ArchivedTurmaData, PendingQuoteData, TurmaData, TurmaModalidade } from '@shared/types/generated'
 
@@ -21,12 +22,12 @@ export type TurmaConfigPayload = {
   end_date: string
 }
 
-export function useTurmas() {
-  return useQuery<TurmaData[], ProblemDetails>({
-    queryKey: turmaKeys.list(),
-    queryFn: () => api.get<TurmaData[]>('/api/turmas').then((r) => r.data),
-  })
-}
+/** A página do hub e a dos arquivados (spec D1). As chaves de query são
+ * montadas pelo `useServerTable` sobre `turmaKeys.list()`/`archived()`, que
+ * começam em `['turmas']` — o `useInvalidate()` abaixo continua cobrindo as
+ * duas. A arquivada devolve o DTO composto; quem achata é `useTurmasPage`. */
+export const turmasPage = pageEndpoint<TurmaData>('/api/turmas')
+export const turmasArchivedPage = pageEndpoint<ArchivedTurmaData>('/api/turmas/archived')
 
 export function useTurma(id: number) {
   return useQuery<TurmaData, ProblemDetails>({
@@ -118,22 +119,6 @@ export function useTurmaManualDocx() {
         .catch(async (error: unknown) => {
           throw await problemFromBlob(error)
         }),
-  })
-}
-
-/**
- * Turmas arquivadas. `enabled` é PARÂMETRO, não default, pela mesma lição da
- * fábrica `createCrudResource`: a visão de arquivados não pode buscar na
- * montagem — carregar as duas visões de uma vez dobra a rede sem ganho.
- *
- * A chave começa em `['turmas']`, o mesmo prefixo que `useInvalidate()` invalida:
- * arquivar ou restaurar repinta as duas listas sem código novo.
- */
-export function useTurmasArchivedList(enabled: boolean) {
-  return useQuery<ArchivedTurmaData[], ProblemDetails>({
-    queryKey: turmaKeys.archived(),
-    queryFn: () => api.get<ArchivedTurmaData[]>('/api/turmas/archived').then((r) => r.data),
-    enabled,
   })
 }
 

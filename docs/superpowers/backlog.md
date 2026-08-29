@@ -23,13 +23,14 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: itens 5–9 mais o 16 e o 17 fecham o
-  código, 10→11→12 constroem a infra e o 13 é o gate final de go-live.
+- **P0 não ordena** — quem ordena é a cadeia de dependência: os itens 6, 7 e 9 mais o 16 e o 19
+  fecham o código, 10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
-  em 2026-08-23, o `2` em 2026-08-24, o `4` em 2026-08-25, e o `10` **encolheu** em vez de sair (o
-  runtime foi entregue; sobrou o provisionamento). A fila começa no `5` e salta os que já fecharam
-  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos
-  próprios blocos. Renumerar quebraria as citações e pareceria promoção.
+  em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
+  2026-08-27, o `5` em 2026-08-28, o `18` em 2026-08-29, e o `10` **encolheu** em vez de sair (o
+  runtime foi entregue; sobrou o provisionamento). A fila começa no `6` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
+  blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -40,54 +41,6 @@
 ---
 
 # Fila priorizada
-
-## 5. `hardening-auditoria-privacidade-e-observabilidade`
-
-**Prioridade:** P0 · **Frente:** Backend/Infra · **Contexto:** sim
-**Fonte:** Drive `RNF-SEC-01/03/04/05/07`; ADR-08; `P-02`, `P-33`.
-
-**Objetivo:** fechar retenção, privacidade, logs e alertas de produção.
-
-**Escopo:**
-- pruning de `audits` (**P-02**) e retenção de `login_logs` (**P-33**);
-- **retenção documental:** decidir se os arquivos de turma/redator (peso legal) ganham política
-  própria de retenção — linha herdada de "Próximos blocos" do backlog anterior; o brainstorming
-  confirma se o escopo é este ou se era só atalho para P-02/P-33;
-- minimização de PII; nunca logar password/token/cookie/secret;
-- logs centralizados; alertas de acesso suspeito e falhas operacionais;
-- secrets fora de código/imagem.
-
-**Decisão:** `RNF-SEC-05` fala em "micro-serviço" de logs, mas a arquitetura é monolítica e
-proporcional a ~10 usuários. Não criar microserviço sem confirmar que a **forma**, e não o
-resultado "logs centralizados", é obrigatória.
-
-**DoD:** auditoria/logs têm retenção, rastreabilidade e alertas definidos sem expor segredo/PII
-desnecessária.
-
----
-
-## 6. `hardening-performance-e-dados`
-
-**Prioridade:** P1 · **Frente:** Backend · **Contexto:** sim
-**Fonte:** Drive `RNF-DES-01/02/03`; Notion `9.1.3`; ADR-02/07/09; `D-15`.
-
-**Objetivo:** otimizar o que for medido antes de introduzir cache/infra extra.
-
-**Escopo:**
-- medir N+1 separadamente de índices; eager-load; `EXPLAIN` nas queries relevantes;
-- revisar FKs/joins/Spatie; paginar collections crescentes; teto de `per_page`; allowlist de
-  filtro/ordenação;
-- medir Dashboard/operações pesadas; cache somente após query+índice+paginação e com invalidação
-  definida — **Redis não é requisito**;
-- **D-15**: unificar `DIAS_AVISO = 30` (Identity) com `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`,
-  decidindo o dono do número (Shared ou um dos domínios). O gatilho venceu em 2026-08-16 — os dois
-  convivem na mesma árvore; entra aqui por ser o bloco backend genérico mais próximo, e qualquer
-  bloco backend anterior pode absorvê-la.
-
-**DoD:** cenários representativos do porte do Lotus não exibem N+1 conhecido ou consulta
-evidentemente degradada.
-
----
 
 ## 7. `hardening-i18n-e-erros-api`
 
@@ -104,30 +57,6 @@ respeitar `Accept-Language`; manter ES-CL como fallback.
 fallback (es-CL); falta aplicar.
 
 **DoD:** a mesma falha em ES-CL/PT-BR/EN retorna envelope e mensagem coerentes com o locale.
-
----
-
-## 8. `frontend-hardening-final`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
-**Fonte:** Notion `9.1.5`; `D-03`, `D-33`, `D-35`, `P-46`, `P-41`.
-
-**Objetivo:** fechar acessibilidade/navegação e guardrails reais, sem abrir redesign estético
-geral. **Absorve o BD-11**, que ficava só com a D-03 e deixou de existir como bloco próprio.
-
-**Escopo:**
-- **D-03**: nome do item de navegação alcançável no toque com a sidebar recolhida a 390px;
-- **D-33**: foco devolvido ao ícone no toggle de senha do `AppPassword`;
-- **D-35**: ban de import PrimeReact também em `src/app/**` (régua nasce verde — zero import,
-  remedido em 2026-08-22);
-- **P-46**: decidir Preflight/margens de UA (mini-reset escopado é o desenho provável);
-- **P-41**: decidir/aplicar truncamento do `IdentityCell`;
-- revisão pelo harness nas viewports/temas relevantes.
-
-**Fora:** a ordem de foco de `/perfil` (**D-32**) — a correção existiu e foi revertida por decisão
-de layout; mora na tabela de decisões e só entra com o desenho escolhido pelo João.
-
-**DoD:** nenhum bloqueio coberto de foco, toque, overflow ou fronteira PrimeReact permanece.
 
 ---
 
@@ -303,6 +232,78 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
+## 19. `frontend-triagem-dos-audits-do-item-18`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
+**Dependência satisfeita:** o item 18 fechou em 2026-08-29.
+**Fonte:** `audits/2026-08-28-item18-fase{1,2,3,4}.md` — quatro runs de `/lotus-ui-review` no
+navegador contra `refactor/frontend-estilizacao-componentes @ ddc37f36`, uma por fase do item 18.
+
+**Objetivo:** triar os 49 achados dessas quatro runs — **A:21 · B:26 · C:2** — separando defeito de
+decisão de design e de falso-positivo, e corrigir só o que sobreviver à triagem. **O audit reporta,
+não autoriza:** cada achado entra com veredito próprio, e recusar com razão escrita é resultado
+válido.
+
+**Por que triar antes de executar:** a fase 1 mediu e **contradisse o plano do item 18** — o
+presupuesto detail não tem "Voltar + CTA lado a lado"; "Volver a Comercial" ocupa linha própria
+acima do título. O agente que erra a favor erra contra. Além disso o contrato da skill teto em 10
+achados por run pressiona a encher a lista: parte dos `A` é registro de linha de base, não dívida.
+
+**Duas raízes explicam mais de um terço da lista** — tratá-las é mais barato que 49 correções item
+a item:
+- **`AppButton` sem `variant` cai no `.p-button` preenchido do Lara.** Explica o `C` da fase 4
+  (card de redator selecionado e não selecionado idênticos, `rgb(37,165,228)` sobre 94% do card nos
+  dois estados e nos dois temas), o UI-08 da fase 3 (os seis diálogos de certificação sem
+  `variant="primary"`, incluindo o que confirma emissão) e a ausência de delta do CTA provada na
+  fase 1.
+- **Grafia copiada literal em vez de consumida da peça** — o defeito que a rule já nomeia e que
+  reincidiu: fase 2 UI-04 (`AgendaPanel` e `KpiRow` copiam `sectionLabelClass` para emitir `h4`,
+  porque `SectionLabel` só aceita `h2 | h3`), fase 3 UI-02, fase 4 UI-06.
+
+**Os dois `C`:**
+- **fase 4 UI-01** — cards de redator indistinguíveis. Peso documental: o conjunto de redator
+  habilitado não dá para conferir na tela antes de salvar.
+- **fase 2 UI-10** — a 390x844 o card "Agenda" corta 26px do próprio conteúdo
+  (`clientWidth 261` contra `scrollWidth 287`, `overflow-hidden`, sem barra); o `truncate` funciona
+  mas a reticência cai fora da área visível, e o `title` de recuperação depende de hover.
+
+**Barato de verificar, mecanismo já rastreado até a linha** (leitura de código confirma ou derruba,
+sem navegador): fase 4 UI-02 (`useFieldProps` não devolve `invalid`, então `.p-invalid` nunca é
+alcançado — ~55 campos, e o Login escapa porque passa a prop na mão); fase 4 UI-03 (foco cai no
+`body` após submit recusado, sem live region); fase 3 UI-06 (`AppDataTable` fixa `dataKey="id"`
+contra `enrollment_id`, com erro de `key` determinístico no console); fase 3 UI-08 e fase 4 UI-01,
+acima.
+
+**Decisão do João, não conserto:** o degrau entre faixa de seção e título de card (fase 2 UI-02 e
+UI-03 — o `h3` do card é 33% maior que o `h2` que o encabeça, e o `h3` do Perfil é byte a byte a
+grafia do `h2` do Dashboard); o "1250 UF" do KPI de cotizaciones (fase 2 UI-08 — dois dados
+encostados que leem como um, e em es-CL o espaço é separador de milhar válido); a escala de raio
+com dois degraus em vez de três (fase 3 UI-05).
+
+**Suspeitos de falso-positivo, a derrubar ou confirmar primeiro:** fase 3 UI-09 (duplo fetch de
+`/api/certificates/emission-panel` — o próprio agente não isolou o gatilho; provável `staleTime` ou
+refetch por foco de janela do TanStack Query) e fase 3 UI-04 (opacidade de `disabled` divergindo por
+tema, registrada pelo agente como incoerência e **explicitamente não** como falha WCAG).
+
+**Sem evidência, não é achado — é lacuna a fechar quando houver dado:** `certificates` = 0 e
+`course_certificate_templates` = 0, então a porta 4 de `CertificateEligibility`
+(`assertTemplateDisponivel`) devolve `emission_blocked = 'sin_plantilla'` para toda turma, inclusive
+a turma 3 (`concluida`, 13 matrículas aprovadas, 1 redator designado). Ficaram sem pintar: o ramo
+`valid` de `/validar/<uuid>`, os seis diálogos da jornada, a costura header/body/footer do
+`AppDialog` nos dois temas e o **veredito do `CertificateFolio`** — que só renderiza em
+`ValidationPage.tsx:35` e `IssuedDialog.tsx:85`, e cujo docblock submete os próprios degraus de
+tamanho e tracking ao julgamento de uma run de `/lotus-ui-review`. É a primeira coisa a rever quando
+existir certificado real.
+
+**Fora:** redesenho de tela; as superfícies que o item 16 ainda não cobriu (Cursos, Pessoas,
+Administração têm run própria lá); qualquer correção do item 18 que já esteja no bloco ativo.
+
+**DoD:** todo achado das quatro runs com veredito escrito — corrigido com medida, virou ficha `D-*`,
+ou recusado com razão; nenhum `C` aberto; as correções que nascerem de raiz compartilhada resolvidas
+na raiz, não no sítio.
+
+---
+
 # Decisões não promovíveis isoladamente
 
 | ID | Decisão / gatilho |
@@ -337,7 +338,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
   para eventos críticos. Exige levantamento funcional próprio.
 
----
 
 # Débitos técnicos — registro canônico
 
@@ -348,31 +348,22 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ## Agrupados em bloco
 
-- **D-03 · Menu recolhido a 390px tira o rótulo do DOM e deixa só `title`** →
-  `frontend-hardening-final`. Sem hover no toque, o nome do item de navegação fica inalcançável
-  (`src/app/layouts/Sidebar/SidebarItem.tsx`). Era o BD-11. **DoD:** nome alcançável no toque a
-  390px, medido no dispositivo emulado — não o atributo novo no DOM.
+> **Saneamento de 2026-08-28:** as fichas `D-57` e `D-39` saíram daqui — as duas estavam **pagas**
+> (fatia 2 e fatia 1 do item 16) e as próprias fichas pediam a saída no primeiro saneamento. O
+> rastro fica nos commits e em `historico/progress.md`. A `D-62` foi rehospedada no item 18; a
+> `D-34` segue sem hospedeiro, e escolher é do João.
+>
+> **Fechamento de 2026-08-29:** a `D-62` **saiu daqui paga** — o item 18 construiu a catraca
+> `DROPDOWN_SEM_NOME` no `frontend/eslint.config.js`, medida com o próprio seletor antes de virar
+> régua e vista reprovar por sonda negativa no `TurmaStatusFilter`. A `D-34` continua sem
+> hospedeiro. A **P-63**, que era agrupada no item 18, ficou aberta: o hospedeiro fechou sem
+> pagá-la e rehospedar é do João.
 
 - **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
   `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
   `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
   chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
   falta aplicar.
-
-- **D-57 · O DTO manda tipo de documento de turma como `string[]`, não como o enum** →
-  `frontend-revisao-ui-por-modulo`. `RedatorTurmaPendenciaData.missing_types`,
-  `TurmaComplianceData.missing_types` e `TurmaData.missing_document_types` são `string[]` no
-  `generated.ts`, embora o conjunto de valores seja exatamente `TurmaDocumentType`. O frontend já
-  fechou a metade dele em 2026-08-24 (Q-4): o mapa `TURMA_DOCUMENT_TYPE_KEY` é exaustivo por
-  compilador e a catraca exige a chave nas 3 locales — mas o helper precisa aceitar `string`, e o
-  `tsc` não alcança o call site. Irmã da **D-38** (quem traduz a frase da pendência): as duas são
-  o mesmo código de enum atravessando o contrato. **DoD:** o DTO tipa os três campos com o enum,
-  `typescript:transform` regenera, e o helper do frontend passa a receber `TurmaDocumentType`.
-  **PAGA em 2026-08-25**, na fatia 2 do `frontend-revisao-ui-por-modulo`: a cadeia da RN-16 carrega
-  `TurmaDocumentType` de `TurmaHabilitacaoService` até os DTOs, os quatro campos (`missing_types`
-  ×2, `missing_document_types` e `present_types`, que era o mesmo defeito no mesmo DTO) tipam o enum
-  no `generated.ts`, e `turmaDocumentTypeLabel` perdeu o fallback de código cru. Fica aqui como
-  registro; sai da lista no próximo saneamento dos débitos.
 
 - **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
   `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
@@ -414,26 +405,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
   de orientação aprovada, nas 3 locales.
 
-- **D-62 · Nada reprova um `AppDropdown` de filtro sem nome — o achado já apareceu 3 vezes** →
-  `frontend-hardening-final`. O mesmo defeito foi encontrado por três runs independentes em três
-  dias, sempre na mesma forma (`<div className="w-48">` com o `AppDropdown` solto dentro, sem
-  `<label>`, sem `aria-label` e sem `aria-labelledby`): UI-07 de Operação (2026-08-23, pago no
-  `TurmaStatusFilter`), UI-02 de Comercial e UI-01 de Certificados (2026-08-25, pagos no
-  `BudgetStatusFilter` e no `HistorialTable`), mais o UI-02 de Certificados no seletor de turma da
-  Emisión, que só tinha nome por acidente do placeholder. Três correções idênticas e nenhuma
-  catraca: nem o lint, nem a suíte, nem o `tsc` sabem que um dropdown precisa de nome acessível — a
-  quarta ocorrência nasce verde. Lição 14 do `docs/README.md` (instrução repetida três vezes quer
-  mecanismo). O remédio provável é regra de lint por FORMA, não grep por grafia (`AppDropdown` sem
-  `inputId` nem `aria-label` dentro de `src/features/**`), medida com o próprio seletor antes de
-  virar catraca — é a lição do `eslint.config.js` que nasceu casando só `arguments.0`. **DoD:**
-  remover o `inputId` de um dos quatro sítios já corrigidos e ver o mecanismo reprovar nomeando o
-  arquivo.
-
-- **D-15 · `DIAS_AVISO = 30` (Identity) duplica `DashboardWindows::EXPIRY_WINDOW_DAYS = 30`** →
-  `hardening-performance-e-dados`. Duplicação declarada e datada na spec do Meu Perfil
-  (2026-08-14); o gatilho venceu em 2026-08-16 — os dois números convivem na mesma árvore. A task
-  inclui decidir o dono do número (Shared, ou um dos dois domínios). Qualquer bloco backend
-  anterior pode absorvê-la.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
@@ -461,27 +432,15 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
   Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
   diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
-  novo hospedeiro, e escolhê-lo é do João** (candidatos naturais: `administracao-roles-permissoes-redesign`
-  ou `frontend-hardening-final`). A visibilidade nasce como quatro booleanos em
+  novo hospedeiro, e escolhê-lo é do João**. Dos dois candidatos naturais sobrou um: o
+  `frontend-hardening-final` fechou em 2026-08-27 sem absorvê-la (conferido na promoção do item 18),
+  restando `administracao-roles-permissoes-redesign` (item 9). A visibilidade nasce como quatro booleanos em
   `AdminDashboardAssembler.php:56-62`, passa posicionalmente por `AnalyticsQuery::series()`/
   `::rankings()` e chega ao payload como ausência de dado (sentinela `'0.0000'`,
   `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a permissão
   farejando nulo. Medido 2026-08-18 contra `b758068`; desfecho do Q-2 do review do B2. Fix: a
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
   regenera `generated.ts` (lei §5.3).
-
-- **D-33 · O foco cai no `<body>` quando o olho da senha alterna** → `frontend-hardening-final`.
-  Medido no fechamento do BD-16 (2026-08-18) em Chromium real (`/perfil` como Redator): o ícone é
-  trocado pelo Prime, o nó focado sai do DOM e `document.activeElement` vira `BODY`. Não é
-  regressão (main tree igual). Fix no wrapper `AppPassword`: devolver o foco ao novo ícone após a
-  troca. Terceira ponta do mesmo componente, depois de D-24 (não reproduzida) e UI-04 (paga).
-
-- **D-35 · `src/app/**` é o único lado do seam `shared/ui` sem o ban de PrimeReact** →
-  `frontend-hardening-final`. O bloco do lint é escopado por feature (`eslint.config.js:362`) e a
-  exceção comentada (`:388-390`) só justifica a metade feature→feature; a camada concentra 28
-  arquivos em `app/pages/Dashboard/`. A régua nasce verde: zero import de `primereact` em
-  `src/app` (remedido 2026-08-22). Fix: acrescentar `src/app/**` ao `no-restricted-imports` só na
-  fronteira PrimeReact, deixando feature→feature liberada.
 
 - **D-36 · O envelope RFC 7807 não é localizado** → `hardening-i18n-e-erros-api`.
   `ProblemDetails.php:22-36,68,71` devolve `title`/`detail` literais em português, apesar de
@@ -510,15 +469,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
   por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
   cru vindo de `OperationMetricsQuery.php:137`.
-
-- **D-39 · Quinze testes mockam `react-i18next` devolvendo só `t`** → **PAGA em 2026-08-22**, na
-  fatia 1 do `frontend-revisao-ui-por-modulo` (`da34533d` + `251a87a2`). O `AppDropdown` remonta na
-  troca de idioma e lê `i18n.language` (`ac4eef8a`); o mock parcial quebrava com
-  `Cannot read properties of undefined (reading 'language')` no primeiro teste que renderizasse um
-  dropdown — foi o que aconteceu com `HistorialTable.test.tsx`, corrigido no lugar. O remédio foi o
-  helper único: `frontend/src/shared/testing/i18n.ts` (`mockUseTranslation`), com catraca própria,
-  consumido pelos **17** testes que mockavam a biblioteca. Fica aqui como registro; sai da lista no
-  próximo saneamento dos débitos.
 
 ## Travados em decisão — não entram em bloco
 
@@ -565,8 +515,9 @@ Executar sem a decisão é escolher no lugar do João.
 Dashboard Sprint 5, Meu Perfil Sprint 6, Arquivados/Restauração, `identity-ativacao-acesso-redator`,
 BD-1..BD-10, BD-12, BD-13, BD-14, BD-15, BD-16, BD-17 e BD-18 já foram executados/fechados e **não
 voltam ao backlog** — rastro em `historico/progress.md`. O **BD-11** não foi executado: dissolveu-se
-no `frontend-hardening-final` (item 8), levando a D-03. **Os itens 1 e 14 saíram da fila em
-2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
+no `frontend-hardening-final` (item 8), levando a D-03 — e **o próprio item 8 saiu da fila em
+2026-08-27**, levando junto as fichas `D-03`, `D-33` e `D-35`, pagas por ele. **Os itens 1 e 14
+saíram da fila em 2026-08-22, em lanes paralelas:** `feedbacks-resolver-escopo` (item 1) e
 `BD-15-docs-guardrails-e-sincronizacao` (item 14). A numeração restante **não** foi reordenada — a
 fila tem buracos de propósito, porque renumerar quebraria toda referência escrita a "item N". O que
 o BD-15 deixou aberto vive em `pendencias/` (P-22, P-31, P-32, P-52, P-53), não aqui. Task antiga

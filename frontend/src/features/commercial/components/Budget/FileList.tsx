@@ -13,7 +13,7 @@ export function FileList({ files, onRemove }: { files: FileData[]; onRemove?: (f
 
   return (
     <>
-      <ul>
+      <ul role="list">
         {files.map((f) => (
           <li
             key={f.id}

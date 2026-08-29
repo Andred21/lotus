@@ -34,6 +34,7 @@ export function BudgetDocumentsCard({
           <>
             <div className="w-44">
               <AppDropdown
+                aria-label={t('budget.fileTypeLabel')}
                 value={fileType}
                 options={[
                   { label: t('budget.fileTypeInvoice'), value: 'invoice' },

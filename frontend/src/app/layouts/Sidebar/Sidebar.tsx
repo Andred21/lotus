@@ -3,7 +3,7 @@ import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions, useIsCompactViewport } from '@shared/hooks'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'
-import { AppButton, AppSidebar, AppLogo } from '@shared/ui'
+import { AppButton, AppSidebar, AppLogo, sectionLabelClass } from '@shared/ui'
 import { roleSectionLabel } from '@shared/lib'
 import { SidebarItem } from './SidebarItem'
 
@@ -44,20 +44,20 @@ export function Sidebar() {
         {collapsed ? (
           <AppLogo variant="glyph" className="h-9 w-auto" />
         ) : (
-          <AppLogo variant="on-dark" className="ml-15 h-30 w-auto" />
+          <AppLogo variant="on-dark" className="h-30 w-auto" />
         )}
 
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}
         {!compact && (
-          <AppButton variant="brandIcon" onClick={toggle} aria-label={t('common.toggleMenu')}>
+          <AppButton variant="iconToggle" onClick={toggle} aria-label={t('common.toggleMenu')}>
             <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
           </AppButton>
         )}
       </div>
 
       {!collapsed && roleKey && (
-        <p className="px-4 pb-2 text-xs font-semibold tracking-wider text-(--shell-ink-muted)">
+        <p className={`px-4 pb-2 ${sectionLabelClass} text-(--shell-ink-muted)`}>
           {t(roleKey)}
         </p>
       )}

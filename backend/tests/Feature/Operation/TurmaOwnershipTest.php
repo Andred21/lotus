@@ -76,7 +76,7 @@ class TurmaOwnershipTest extends TestCase
         $ids = $this->actingAs($user, 'web')
             ->getJson('/api/turmas')
             ->assertOk()
-            ->json('*.id');
+            ->json('data.*.id');
 
         $this->assertSame([$minha->id], $ids);
         $this->assertNotContains($alheia->id, $ids);
@@ -88,7 +88,7 @@ class TurmaOwnershipTest extends TestCase
         $a = $this->turma();
         $b = $this->turma();
 
-        $ids = $this->getJson('/api/turmas')->assertOk()->json('*.id');
+        $ids = $this->getJson('/api/turmas')->assertOk()->json('data.*.id');
 
         $this->assertContains($a->id, $ids);
         $this->assertContains($b->id, $ids);
@@ -107,7 +107,7 @@ class TurmaOwnershipTest extends TestCase
         $ids = $this->actingAs($user, 'web')
             ->getJson('/api/turmas/archived')
             ->assertOk()
-            ->json('*.turma.id');
+            ->json('data.*.turma.id');
 
         $this->assertSame([$minha->id], $ids);
     }

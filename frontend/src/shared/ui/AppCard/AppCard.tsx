@@ -87,14 +87,8 @@ export function AppCard({ variant = 'default', tone = 'neutral', className, chil
     <div
       className={[
         'rounded-lg border overflow-hidden',
-        // O projeto não carrega o Preflight (`index.css:1-9`), então todo `p`
-        // aqui dentro herda `margin: 1em` do agente do usuário — proporcional à
-        // fonte, o que dava 30px acima e abaixo do número do KPI e 75–95px de
-        // área morta por card (UI-02 do mesmo review). O card de estatística é
-        // texto curto e conhecido: zerar aqui é mais barato e mais confiável do
-        // que repetir `m-0` em cada call site, e não reintroduz o reset global
-        // que a decisão do `index.css` recusou.
-        stat ? 'px-4 py-3.5 [&_p]:m-0' : '',
+        // A margem do `p` já é zerada pelo mini-reset de `index.css` (P-46).
+        stat ? 'px-4 py-3.5' : '',
         className,
       ]
         .filter(Boolean)
@@ -127,10 +121,8 @@ export interface AppCardHeaderProps {
  * fica neutro de propósito, para não precisar de uma segunda escala de
  * contraste por tom nos dois temas.
  *
- * O `m-0` do título é a mesma correção do `[&_p]:m-0` do `AppCard`: sem
- * Preflight, o `h3` carrega `margin: 1em` do agente do usuário e a faixa media
- * 80px de altura para 24px de texto, em TODO card da aplicação. Zerado, ela
- * passa a valer o `py-3` que o markup declara.
+ * A margem do título já é zerada pelo mini-reset de `index.css` (P-46), o que
+ * deixa a faixa valer o `py-3` que o markup declara.
  *
  * A faixa QUEBRA quando os dois lados não cabem. Em linha única a ação era
  * empurrada para fora do card e da viewport: em 390px o "Ir a Mi Perfil" do card
@@ -152,7 +144,7 @@ export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeader
         * largura toda, e "Cla…" no lugar de "Clases" não qualifica nada. */}
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
         <h3
-          className="m-0 text-base font-semibold"
+          className="text-base font-semibold"
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
         >
           {title}

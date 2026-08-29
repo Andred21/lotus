@@ -42,7 +42,7 @@ export function LanguageMenu() {
   return (
     <>
       <AppButton
-        variant="brandLabel"
+        variant="compact"
         aria-label={t('common.language')}
         onClick={(e) => menuRef.current?.toggle(e)}
       >

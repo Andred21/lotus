@@ -126,7 +126,11 @@ class RedatorScopeQuery
         return $redator->documents()
             ->whereIn('type', RedatorDocumentType::values())
             ->whereNotNull('valid_until')
-            ->whereDate('valid_until', '<=', DashboardWindows::expiryHorizon())
+            // `where`, não `whereDate`: `date(valid_until)` é função sobre a
+            // coluna e cega `files_valid_until_index` (Task 12). A coluna é
+            // `date` e o horizonte é `endOfDay()`, então a comparação por
+            // instante seleciona exatamente as mesmas linhas.
+            ->where('valid_until', '<=', DashboardWindows::expiryHorizon())
             ->orderBy('valid_until')
             ->orderBy('id')
             ->get(['id', 'type', 'valid_until'])

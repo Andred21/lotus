@@ -1,26 +1,40 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
+import { pageEndpoint } from '@shared/api/page'
 import type {
   BatchIssueItemResultData,
   CertificateData,
+  CertificatePageMetaData,
   EmissionPanelTurmaData,
 } from '@shared/types/generated'
 
 const panelKey = ['certificates', 'emission-panel'] as const
-const listKey = ['certificates', 'list'] as const
+export const listKey = ['certificates', 'list'] as const
 const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
 /** `enabled` porque o endpoint exige `certification.certificate.issue`:
  * consumidor que pode montar sem essa permissão (Historial, que só a usa para
- * o Reemitir) desliga a query em vez de colher um 403 garantido. */
-export function useEmissionPanel(enabled = true) {
+ * o Reemitir) desliga a query em vez de colher um 403 garantido.
+ * `desde` é a janela (spec D7); ausente, o servidor aplica os 12 meses. A
+ * data entra na chave: cada janela é uma página de cache própria, e o
+ * `panelKey` continua prefixo de todas para as invalidações. */
+export function useEmissionPanel(enabled = true, desde?: string) {
   return useQuery<EmissionPanelTurmaData[], ProblemDetails>({
-    queryKey: panelKey,
-    queryFn: () => api.get<EmissionPanelTurmaData[]>('/api/certificates/emission-panel').then((r) => r.data),
+    queryKey: [...panelKey, desde ?? 'default'],
+    queryFn: () =>
+      api
+        .get<EmissionPanelTurmaData[]>('/api/certificates/emission-panel', {
+          params: desde ? { concluidas_desde: desde } : {},
+        })
+        .then((r) => r.data),
     enabled,
   })
 }
+
+/** A página do Historial (spec D1): busca, filtro de estado e ordenação no
+ * servidor, resumo por estado no `meta` (D6). */
+export const certificatesPage = pageEndpoint<CertificateData, CertificatePageMetaData>('/api/certificates')
 
 /** `refetchOnWindowFocus` vence o default `false` do `AppProviders`: o
  * `display_status` de cada linha é derivado no servidor a partir do "hoje" de
@@ -28,25 +42,19 @@ export function useEmissionPanel(enabled = true) {
  * meia-noite mostraria `vigente` sobre certificado já vencido (Q-1 do review
  * de 2026-08-24). Catraca em `certificatesApi.test.tsx`. Limite conhecido: a
  * aba que nunca perde o foco só corrige no próximo remonte. */
-export function useCertificates() {
-  return useQuery<CertificateData[], ProblemDetails>({
-    queryKey: listKey,
-    queryFn: () => api.get<CertificateData[]>('/api/certificates').then((r) => r.data),
-    refetchOnWindowFocus: true,
-  })
-}
+export const certificatesTableOptions = { key: listKey, refetchOnWindowFocus: true } as const
 
 /** Certificado pontual por id — o `Ver` de uma linha já emitida
  * (`useEmissionPanelState`) só recebe `{id, codigo, status}` do painel
  * (`EmissionPanelCertificateData`), sem `created_at`. Busca UM certificado
- * (`GET /api/certificates/{id}`) em vez de puxar `useCertificates()` inteiro —
- * o histórico é um arquivo legal que só cresce, sem teto. */
+ * (`GET /api/certificates/{id}`) em vez de puxar a página inteira do
+ * Historial — o histórico é um arquivo legal que só cresce, sem teto. */
 export function useCertificate(id: number | null) {
   return useQuery<CertificateData, ProblemDetails>({
     queryKey: id === null ? (['certificates', 'detail', 'none'] as const) : detailKey(id),
     queryFn: () => api.get<CertificateData>(`/api/certificates/${id}`).then((r) => r.data),
     enabled: id !== null,
-    // Mesmo motivo do `useCertificates`: o diálogo `Ver` imprime o estado
+    // Mesmo motivo da página do Historial: o diálogo `Ver` imprime o estado
     // derivado, e ele congela no fetch.
     refetchOnWindowFocus: true,
   })

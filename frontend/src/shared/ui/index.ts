@@ -35,6 +35,7 @@ export * from './AppearanceControls'
 export * from './ArchiveConfirmDialog'
 export * from './ArchiveRowActions'
 export * from './ArchiveSwitch'
+export * from './CertificateFolio'
 // Arquivo plano, e não pasta: as pastas deste barrel são pasta-por-COMPONENTE, e
 // esta peça deliberadamente não é componente (ver o docblock dela).
 export * from './archivedColumns'
@@ -51,4 +52,8 @@ export * from './LanguageMenu'
 export * from './ModulePage'
 export * from './PageHeader'
 export * from './SearchableTableFrame'
+export * from './SectionLabel'
+export * from './StatValue'
+// Arquivo plano pelo mesmo critério do `archivedColumns`: grafia não é componente.
+export * from './typography'
 export * from './AppLogo'

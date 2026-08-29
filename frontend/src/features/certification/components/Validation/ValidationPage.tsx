@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppLogo, AppCard, AppSkeleton, AppErrorState } from '@shared/ui'
+import { AppLogo, AppCard, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass } from '@shared/ui'
 import { formatDate, formatIsoDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useValidationPage } from '../../hooks/useValidationPage'
 import type { PublicCertificateData } from '@shared/types/generated'
@@ -10,7 +10,7 @@ type HeadingTone = 'success' | 'danger' | 'warning' | 'neutral'
 function StatusHeading({ icon, text, tone = 'neutral' }: { icon: string; text: string; tone?: HeadingTone }) {
   const color = tone === 'neutral' ? 'var(--text-color)' : 'var(--app-card-tone-text)'
   return (
-    <div className="flex items-center gap-3 p-5">
+    <div className="flex items-center gap-3 p-6">
       <i className={`pi ${icon} text-2xl`} style={{ color }} aria-hidden="true" />
       <h1 className="text-lg font-semibold" style={{ color }}>{text}</h1>
     </div>
@@ -26,21 +26,23 @@ function ValidCard({ cert }: { cert: PublicCertificateData }) {
   return (
     <AppCard tone="success">
       <StatusHeading icon="pi-check-circle" tone="success" text={t('certificate.validation.valid')} />
-      <dl className="flex flex-col gap-4 px-5 pb-5">
+      {/* O folio é a assinatura da página, não mais um campo: quem escaneia o
+        * QR está com o papel na mão para conferir ESTE código (achado D4).
+        * Fica ABAIXO do status, não acima: o veredito é a resposta que a pessoa
+        * veio buscar, e em 390px inverter empurraria o status para perto da
+        * dobra (spec D7). */}
+      <div className="px-6 pb-2">
+        <CertificateFolio label={t('certificate.fieldCodigo')} folio={cert.codigo} size="page" />
+      </div>
+      <dl className="flex flex-col gap-4 px-6 pb-6">
         <div className="flex flex-col gap-0.5">
-          <dt className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.fieldCodigo')}
-          </dt>
-          <dd className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>{cert.codigo}</dd>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <dt className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>
+          <dt className={fieldLabelClass} style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.validation.issuedTo')}
           </dt>
           <dd className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>{cert.aluno.name}</dd>
         </div>
         <div className="flex flex-col gap-0.5">
-          <dt className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>
+          <dt className={fieldLabelClass} style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.validation.course')}
           </dt>
           <dd className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>
@@ -77,7 +79,10 @@ export function ValidationPage() {
   const state = useValidationPage(uuid ?? '')
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-8 bg-slate-50 px-4 py-10 dark:bg-slate-950">
+    <div
+      className="flex min-h-screen flex-col items-center gap-8 px-4 py-10"
+      style={{ background: 'var(--surface-ground)' }}
+    >
       <AppLogo className="w-32" />
 
       <div className="w-full max-w-md">
@@ -116,7 +121,7 @@ export function ValidationPage() {
           <AppCard tone="danger">
             <StatusHeading icon="pi-times-circle" tone="danger" text={t('certificate.validation.revoked')} />
             {state.cert.revoked_at && (
-              <p className="px-5 pb-5 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+              <p className="px-6 pb-6 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
                 {t('certificate.validation.revokedAt', { date: formatDate(new Date(state.cert.revoked_at)) })}
               </p>
             )}

@@ -58,37 +58,122 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-46 — sem Preflight, toda tag de bloco carrega margem do agente do usuário
+## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
-**Bloco:** frontend-hardening-final · **Gatilho:** o João decidir se um reset escopado entra, ou o terceiro bloco que
-gastar tempo neutralizando margem de UA à mão. Revisar em **2026-10-31**.
+**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
+tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
+elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
 
-O `frontend/src/index.css:1-9` omite o Preflight do Tailwind **de propósito**, para o reset global
-não sobrescrever a estilização do PrimeReact. A decisão está registrada e tem motivo. A consequência
-não estava: todo `h1`–`h6`, `p`, `ul` e `ol` da aplicação herda a margem do agente do usuário, que é
-**proporcional ao tamanho da fonte**.
+Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
+1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
+(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
+`Certificados emitidos` e outra no de `UF aprobada`).
 
-**Medido na revisão de UI de 2026-08-17, em dois sítios de custo diferente:**
+O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
+semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
+nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
+JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
+jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
 
-- `KpiRow` — o número em `text-3xl` recebia `margin: 30px 0` (1em de 30px), o que somava
-  75–95px de área morta por card e empurrava as duas listas do Dashboard para fora da dobra em
-  1024x768 e 390x844. É a UI-02 do relatório.
-- `AppCardHeader` — o `h3` recebia `margin: 16px 0`, e a faixa media **80px de altura para 24px de
-  texto**, em TODO card da aplicação. Não estava no relatório; apareceu ao corrigir.
+**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
+carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
+gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
+com `role`.
 
-**O sintoma é conhecido do repositório desde antes.** O `PageHeader` crava `my-[0.83em]` no `h1` com
-o motivo escrito no docblock ("o projeto não carrega o Preflight"), e os `ul` do Dashboard, do funil
-e da agenda carregam `m-0 list-none p-0` à mão. São três grafias do mesmo remédio, aplicadas caso a
-caso, e ninguém as conta.
+**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
+do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
+renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
-**Não se conserta de carona.** O passe de correção de 2026-08-17 neutralizou onde custava — `[&_p]:m-0`
-no `AppCard variant="stat"`, `m-0` no `h3` do `AppCardHeader`, no `h2` da faixa de seção e no `h4` da
-janela da agenda —, e parou aí de propósito. Um `@layer base` com
-`h1,h2,h3,h4,h5,h6,p,ul,ol { margin: 0 }` fecharia a classe inteira, mas mexe no espaçamento de
-**todas** as telas de uma vez, num passe que não tem como medir todas; e contradiria o `PageHeader`,
-que crava a margem justamente para a correção semântica ficar invisível. Um mini-Preflight escopado
-aos nossos elementos (sem tocar em form controls, que é o que quebra o PrimeReact) é o desenho
-provável, e é decisão do João.
+---
+
+> **As duas fichas abaixo foram renumeradas no merge de fechamento (2026-08-29).** Nasceram
+> `P-64` e `P-65` na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66`
+> da `lane-a`, mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra
+> adiante — ID publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou.
+
+## P-67 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
+
+**Bloco:** frontend-triagem-dos-audits-do-item-18 (item 19) · **Gatilho:** bloco que triar os
+achados de raio das quatro runs, ou que tocar esses 9 arquivos por outro motivo — a catraca só entra
+depois que o último sítio sair. Revisar em **2026-10-31**.
+
+O `frontend-estilizacao-padronizacao-de-componentes` (item 18) escreveu a escala em
+`.claude/rules/frontend-estilizacao.md`: superfície `rounded-lg`, controle e faixa fina
+`rounded-md`, pill `rounded-full`, e `rounded` solto não existe — é raio sem degrau declarado. O
+bloco corrigiu os sítios que tocou e **declarou o resto como débito na própria rule**, o que é
+honesto e insuficiente: régua sem mecanismo é recomendação, e foi assim que os banners de erro
+saíram da escala em primeiro lugar.
+
+**Medido no fechamento de 2026-08-29** — 10 sítios vivos em 9 arquivos de `features/`:
+`ModuleCard.tsx:26`, `ModuleFields.tsx:67`, `BudgetDialog.tsx:49`, `CourseStep.tsx:93`,
+`ProfileDocumentSlot.tsx:76`, `RedatorDocumentSlot.tsx:21`, `StudentLinkRow.tsx:14`,
+`DocumentTypeCard.tsx:50` e `TurmaDocuments.tsx:41,43`.
+
+**Por que ficou aberta:** a catraca nasceria **vermelha**, e catraca que nasce vermelha ou some numa
+lista de `ignores` (a exceção embutida que ninguém vê, porque fica verde) ou trava o bloco seguinte
+por dívida alheia. O degrau certo de cada um dos 10 depende do papel do bloco — o item 19 já tem a
+escala de raio na mesa como decisão do João (fase 3 UI-05), e decidir os dois juntos é mais barato
+que decidir duas vezes.
+
+**DoD:** os 10 sítios com degrau declarado e uma régua de lint sobre `rounded` solto em
+`src/features/**` e `src/app/**` — as duas camadas, como a própria rule exige das catracas novas.
+
+---
+
+## P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
+
+**Quem decide:** João · **Gatilho:** João decidir se o `cleanup()` vira mecanismo global; ou bloco
+que toque `frontend/vite.config.ts` por outro motivo e possa medir o alcance. Revisar em
+**2026-10-31**.
+
+Medido no fechamento do `hardening-performance-e-dados` (2026-08-29). `frontend/vite.config.ts` não
+declara `setupFiles` nem `globals: true`, e sem um dos dois o `cleanup()` automático do Testing
+Library **nunca roda**: o que um teste monta segue montado até o vitest destruir o jsdom do arquivo.
+
+Na maior parte dos casos isso é inócuo — o componente parado não faz nada. Deixa de ser inócuo
+assim que o componente agenda trabalho: o `useServerTable` marca um `setTimeout` de debounce no
+mount, e ele dispara **depois** do teardown, sobre um `window` que já não existe. O sintoma é
+`ReferenceError: window is not defined` em `Unhandled Errors`, que **reprova a rodada sem reprovar
+asserção nenhuma** — some do relatório de testes e parece flake. Foi exatamente o que aconteceu
+duas vezes neste bloco, e a primeira leitura registrou como oscilação; a segunda mediu e achou a
+causa (`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`).
+
+**Pago onde doía, não onde resolve de vez.** Os dois arquivos que vazavam ganharam
+`afterEach(cleanup)` — a grafia que `AppCard.test.tsx`, `PageHeader.test.tsx` e
+`SectionLabel.test.tsx` já usam —, e a suíte foi de 1 reprovação em 4 voltas para **6 verdes de 6**.
+O que continua aberto é o mecanismo: nada impede o próximo teste de montar um hook com timer sem
+`cleanup`, e ele nasce verde até a rodada em que não nascer. O remédio conhecido é um `setupFiles`
+com `afterEach(cleanup)` valendo para todos os arquivos (lição 14 — mecanismo vence instrução). Não
+entrou aqui porque mudar a configuração do runner do repositório inteiro no gate de fechamento é
+escopo próprio: o custo real é descobrir quantos arquivos hoje dependem, sem saber, de o componente
+**não** desmontar entre testes.
+
+## P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
+
+**Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste
+também em `features/`) ou escrever no config a razão de a régua valer para teste ali; ou bloco que
+toque `frontend/eslint.config.js` por outro motivo. Revisar em **2026-10-31**.
+
+Medido no fechamento do item 18 (2026-08-29), quando o gate abriu vermelho: `ValidationPage.test.tsx`
+passou de 147 para 170 linhas nas correções do review e reprovou o `max-lines` de 150 da camada
+`src/features/*/components/**`. O bloco irmão do mesmo arquivo, `src/app/**/*.tsx`, tem
+`ignores: ['**/*.test.tsx']` **com a razão escrita** — *"quebrar um arquivo de teste coeso é pagar
+preço pela regra, não pelo defeito"*. O de `features/` não tem a isenção nem uma linha dizendo que a
+ausência é deliberada.
+
+**A divergência não é acadêmica:** ela decide se um teste que cresce se quebra ou não, e as duas
+camadas respondem diferente para o mesmo caso.
+
+**Estado atual da população, medido:** 24 arquivos `*.test.tsx` em `src/features/*/components/**`;
+**um** passava de 150 (o do fechamento, quebrado em `e76747a6`) e **dois** estão exatamente em 150 —
+`EnrollmentSection.test.tsx` e `ProfileDocumentSlot.test.tsx`, que é a assinatura de quem já aparou
+para caber.
+
+**Por que ficou aberta:** o João decidiu o caso concreto — quebrar o arquivo, não afrouxar a régua —
+e essa decisão está paga. O que sobra é a política, que vale para os próximos 24: isentar alinha as
+camadas e solta uma régua viva; manter exige que a razão esteja escrita, porque a razão oposta já
+está, no mesmo arquivo, doze linhas abaixo.
 
 ---
 
@@ -444,27 +529,6 @@ de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num ga
   cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
   `PublicCertificateData`.
 
-## P-02 — retenção da auditoria nunca decidida
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** antes de subir para produção.
-
-ADR-08 (pruning/retenção da auditoria) segue **aberto**. Política de retenção nunca decidida;
-`audits` cresce sem poda.
-
-## P-33 — `login_logs` guarda dado pessoal sem política de retenção
-
-**Bloco:** hardening-auditoria-privacidade-e-observabilidade · **Gatilho:** fecha junto com a P-02, ou antes de subir para produção.
-
-`login_logs.ip_address` e `login_logs.user_agent` são dado pessoal. Bloco `last-login` (BD-7,
-2026-08-12): o log é append-only por desenho e o volume não é o problema (~10 usuários internos) — a
-retenção é. Fica junto da **P-02**, aberta pela mesma razão para `audits`.
-
-**Nasceu como segunda `P-30` e foi renumerada no `/fechar-sprint` do BD-3 (2026-08-12)**, pelo mesmo
-precedente que renumerou a segunda `P-28` para `P-32`: a linha do `ámbar-aviso` entrou na `main`
-primeiro (PR #41, commit `e6460f9`) e esta chegou depois (`656175c`), então quem renumera é a
-recém-chegada. As menções a "P-30" na narrativa do `last-login` em `docs/superpowers/state.md` são
-desta linha e ficam como estão — história não se reescreve.
-
 ## P-05 — migrations "adicionais" não consolidadas
 
 **Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
@@ -494,6 +558,12 @@ merge) e proíbe o mecanismo que a operação exige.
 **Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
 João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
 apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
+
+**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
+para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
+avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
+bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
+segue aberta: quatro precedentes não reescrevem a invariante.
 
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
@@ -872,3 +942,66 @@ usuário é a Lotus, no Chile.
 o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
 produto, do João — não efeito colateral de um bloco de hardening.
 
+> **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
+> `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma
+> `P-62` (branch protection, `lane-b`) e uma `P-63` (o `role="list"` do mini-reset, `lane-c`),
+> mescladas antes destas. Mesmo movimento que a `P-61`→`P-63` da `lane-c` registra acima — ID
+> publicado na `main` não se reusa, e quem renumera é a lane que ainda não tinha mesclado.
+
+## P-64 — a revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive
+
+**Bloco:** — · **Gatilho:** o Drive é a fonte canônica e vence os `/docs` (`CLAUDE.md` §3) — enquanto
+ele continuar dizendo "Micro-serviço em nuvem com logs das ações do software" para o `RNF-SEC-05`, a
+divergência é real, e uma sessão futura que consulte só o Drive pode reabrir uma decisão que o João já
+tomou, sem saber que ela existe. Fecha quando o João colar a revisão na fonte canônica (Google Drive,
+`Viagem Chile/Projetos/Lotus.cl/V2`). Revisar em **2026-10-31**.
+
+O ADR-21 (`docs/adrs.md`) registra, do lado do código, que os logs de ações do software ficam
+centralizados dentro do monólito (canal `seguranca`, `EventoDeSeguranca`) — substituindo a forma
+literal do `RNF-SEC-05` —, decisão do João de 2026-08-26 (spec `2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md`, **D5**). O ADR documenta a substituição; não a replica na
+fonte. Até o Drive ser atualizado, os dois lugares contam histórias diferentes do mesmo requisito.
+
+## P-65 — `RNF-SEC-03` e `RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05`
+
+**Gatilho:** João decidir se D6 (três famílias de acesso suspeito), D7 (alerta síncrono) e/ou D8
+(segredos seguem em `env_file`, cofre gerenciado adiado ao item 10) merecem ADR próprio no molde do
+ADR-21, ou se ficam só como decisão de spec/plano sem registro de arquitetura — e, se merecerem,
+abrir pendência de replicação no Drive espelhando a P-64 para a metade de `RNF-SEC-03` que segue sem
+cofre. Revisar em **2026-10-31**.
+
+Achado pela `auditar-docs` no fechamento do `hardening-auditoria-privacidade-e-observabilidade`
+(2026-08-26), depois da Task 9 já commitada. A spec do bloco (`2026-08-26-hardening-auditoria-privacidade-e-observabilidade-design.md:89`) só escreve a linguagem de "revisão formal por
+escrito, não equivalência silenciosa" para **D5** (`RNF-SEC-05`) — por isso só D5 virou ADR-21. D6,
+D7 e D8 são decisões do mesmo dia, da mesma spec, com a mesma autoridade (instrução explícita do
+João), mas `docs/adrs.md` não tem nenhuma ocorrência de `RNF-SEC-03`, `RNF-SEC-07`, "cofre", "D6",
+"D7" ou "D8" — a única metade registrada em ADR é a de D5.
+
+**Não é regressão do bloco:** o brief da Task 9
+(`docs/superpowers/plans/archive/2026-08-26-...md`) só pediu ADR-21 para D5, e a spec não pediu revisão formal para as outras três — o bloco fez exatamente o que
+foi pedido. O que fica aberto é a assimetria: `docs/operacao-segredos.md` já documenta D8 (a decisão
+de adiar o cofre gerenciado ao item 10), mas só como operação, não como decisão de arquitetura
+registrada — e `RNF-SEC-03` na fonte canônica do Drive pede "fora do código, em cofre de segredos".
+A metade "fora do código" está cumprida; a metade "em cofre" está **datada e atribuída** (item 10),
+não revisada — o que é diferente do caso do RNF-SEC-05 (revisado, não adiado), mas ainda é uma
+lacuna entre o que o Drive pede hoje e o que o sistema faz hoje que nenhum ADR ou pendência nomeia.
+
+**Três lacunas medidas em D6, do review final do mesmo bloco (2026-08-26).** Não são defeitos da
+implementação — o detector faz exatamente o que a D6 escreveu. São perguntas sobre o **escopo** que a
+D6 escreveu, e por isso vivem aqui e não viraram patch: mudá-las é redefinir o que cada família
+captura e em que chave ela acumula, o que é decisão do João e alimenta diretamente o gatilho acima.
+
+- **Senha CERTA em conta desativada não gera alerta prioritário.** `sessao_de_conta_desativada` só
+  dispara pelo `EnsureAccountIsActive`, isto é, para sessão **já aberta** quando a conta cai. Quem
+  tenta `POST /api/login` com a senha correta de uma conta desativada é barrado antes disso e sai
+  como `login.recusado` comum — o sinal mais forte que existe (alguém TEM a credencial de uma conta
+  que foi desligada) some no mesmo balde da senha errada. Some-se que essa linha de log leva
+  `chave_hash`, não o `usuario_id`, embora o usuário seja conhecido nesse ponto.
+- **`login_falho_repetido` não carrega a chave da evidência.** O alerta emite `familia`,
+  `usuario_id` (nulo aqui), `ip` e `ocorrencias`, mas não o `chave_hash` que identifica o balde — e
+  `chave_hash` é justamente o campo pelo qual as linhas `login.recusado` correspondentes podem ser
+  encontradas. Quem receber o e-mail não tem como ligar o alerta ao rastro sem cruzar por IP e
+  horário.
+- **Password spraying não acumula em lugar nenhum.** Tanto o `throttle:login` quanto o detector
+  chaveiam em `email|ip`. Uma senha por conta, contra 200 contas, do mesmo IP, nunca cruza limiar
+  nenhum: cada chave fica em 1. A D6 definiu as famílias por chave de vítima; não existe família por
+  atacante.

@@ -123,6 +123,14 @@ display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
 export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
+export type CertificatePageMetaData = {
+summary: CertificateSummaryData,
+page: number,
+per_page: number,
+total: number,
+last_page: number,
+total_unfiltered: number,
+};
 export type CertificateSnapshotData = {
 schema_version: number,
 aluno: SnapshotPartyData,
@@ -137,6 +145,12 @@ ciudad_emision: string | null,
 emitido_em: string | null,
 };
 export type CertificateStatus = 'emitido' | 'revocado';
+export type CertificateSummaryData = {
+vigente: number,
+por_vencer: number,
+vencido: number,
+revocado: number,
+};
 export type CertificateTemplateData = {
 id: undefined | number,
 version: undefined | number,
@@ -301,6 +315,17 @@ rut: string,
 name: string,
 previous_client: string | null,
 client: string,
+};
+export type PageData = {
+data: undefined[],
+meta: PageMetaData,
+};
+export type PageMetaData = {
+page: number,
+per_page: number,
+total: number,
+last_page: number,
+total_unfiltered: number,
 };
 export type PendingItemData = {
 module: DashboardModule,
@@ -590,6 +615,7 @@ current_client_name: string | null,
 enrollments_count: number,
 links: StudentClientLogData[],
 turmas: StudentTurmaData[],
+photo_url: string | null,
 };
 export type StudentTurmaData = {
 turma_id: number,
@@ -632,6 +658,7 @@ budget_id: undefined | number | null,
 client_rut: undefined | string | null,
 client_photo_url: string | null,
 };
+export type TurmaDisplayStatus = 'em_andamento' | 'habilitada' | 'concluida';
 export type TurmaDocumentData = {
 id: number,
 type: string,

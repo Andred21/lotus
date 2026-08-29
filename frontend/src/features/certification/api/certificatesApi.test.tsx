@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
-import { useCertificates } from './certificatesApi'
+import { useServerTable } from '@shared/hooks'
+import { certificatesPage, certificatesTableOptions } from './certificatesApi'
 
 vi.mock('@shared/api/axios', () => ({
   api: { get: vi.fn() },
@@ -23,20 +24,22 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
 }
 
-describe('useCertificates — revalidação do estado derivado', () => {
+describe('a página do Historial — revalidação do estado derivado', () => {
   /**
    * `display_status` é derivado no servidor a partir do "hoje" de Santiago, e
    * congela no fetch. A aba do Historial fica aberta o dia inteiro: sem
    * revalidar, um certificado que venceu à meia-noite continua com a tag
    * `vigente` até alguém remontar a tela — estado errado sobre documento de
-   * peso legal (Q-1 do review de 2026-08-24).
+   * peso legal (Q-1 do review de 2026-08-24). Com a lista paginada, a opção
+   * viaja em `certificatesTableOptions` e é o `useServerTable` que a entrega
+   * ao `useQuery` — é isso que se prova aqui.
    */
   it('revalida quando a janela volta ao foco, contra o default do AppProviders', async () => {
-    get.mockResolvedValue({ data: [] })
+    get.mockResolvedValue({ data: { data: [], meta: { page: 1, per_page: 10, total: 0, last_page: 1, total_unfiltered: 0, summary: { vigente: 0, por_vencer: 0, vencido: 0, revocado: 0 } } } })
 
-    const { result } = renderHook(() => useCertificates(), { wrapper })
+    const { result } = renderHook(() => useServerTable(certificatesPage, certificatesTableOptions), { wrapper })
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    await waitFor(() => expect(result.current.meta).toBeDefined())
     expect(get).toHaveBeenCalledTimes(1)
 
     act(() => {

@@ -23,7 +23,7 @@ export function AppearanceControls({ className }: { className?: string }) {
   return (
     <div className={`flex items-center gap-4 ${className ?? ''}`}>
       <LanguageMenu />
-      <AppButton variant="brandIcon" onClick={toggleTheme} aria-label={t('common.toggleTheme')}>
+      <AppButton variant="iconToggle" onClick={toggleTheme} aria-label={t('common.toggleTheme')}>
         <i className={`pi ${theme === 'dark' ? 'pi-sun' : 'pi-moon'}`} />
       </AppButton>
     </div>

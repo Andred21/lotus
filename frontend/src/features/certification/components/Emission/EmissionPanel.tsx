@@ -1,8 +1,9 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
+import { AppCard, AppDatePicker, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
+import { EMISSION_PANEL_WINDOW_MONTHS } from '../../lib/emissionWindow'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
@@ -12,6 +13,7 @@ export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
   const turmaInputId = useId()
+  const desdeInputId = useId()
 
   const turma = s.selected
 
@@ -38,6 +40,19 @@ export function EmissionPanel() {
             * `inputId`, a mesma forma dos três filtros de estado irmãos. A
             * chave `certificate.turmaConcluida` já existia nas 3 locales e não
             * era usada em lugar nenhum. */}
+          <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('certificate.concludedSince')}
+          </label>
+          {/* Vazio = a janela é a do SERVIDOR, e o `placeholder` a anuncia. O
+            * campo já nasceu preenchido com uma data calculada no fuso do
+            * navegador e mandada em todo GET — o default de Santiago nunca
+            * rodava (Q-2 do review de 2026-08-29). */}
+          <AppDatePicker
+            inputId={desdeInputId}
+            value={s.desde}
+            onChange={s.setDesde}
+            placeholder={t('certificate.concludedSinceDefault', { months: EMISSION_PANEL_WINDOW_MONTHS })}
+          />
           <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.turmaConcluida')}
           </label>
@@ -80,7 +95,7 @@ export function EmissionPanel() {
 
           <div className="flex justify-end">
             <AppButton
-              variant="brandIcon"
+              variant="primary"
               icon="pi pi-verified"
               label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
               disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}

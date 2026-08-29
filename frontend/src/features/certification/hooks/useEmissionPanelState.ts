@@ -21,15 +21,19 @@ export type EmissionCounts = {
  *
  * O "Ver" de uma linha já emitida abre o MESMO `IssuedDialog` que aparece
  * pós-emissão, mas o painel só devolve `{id, codigo, status}` por matrícula
- * (`EmissionPanelCertificateData`), sem `created_at`. Em vez de puxar
- * `useCertificates()` inteiro — o histórico é um arquivo legal que só cresce,
+ * (`EmissionPanelCertificateData`), sem `created_at`. Em vez de puxar a
+ * página inteira do Historial — o histórico é um arquivo legal que só cresce,
  * sem teto — `viewingCertificateId` + `useCertificate(id)` buscam o UM
  * certificado pontual. A query mora aqui, não no componente:
  * `no-restricted-syntax` reprova `useQuery`/`useMutation` sob
  * `features/*\/components/**`.
  */
 export function useEmissionPanelState() {
-  const panel = useEmissionPanel()
+  // `null` = "a janela é a do servidor" (12 meses de `America/Santiago`), e o
+  // parâmetro NÃO vai na URL: o seletor só anuncia a janela, não a calcula.
+  // Limpar o seletor volta a `null` — nunca "sem janela".
+  const [desde, setDesde] = useState<string | null>(null)
+  const panel = useEmissionPanel(true, desde ?? undefined)
   const [turmaId, setTurmaId] = useState<number | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)
@@ -64,6 +68,8 @@ export function useEmissionPanelState() {
   }, [selected])
 
   return {
+    desde,
+    setDesde,
     options,
     turmaId,
     setTurmaId,

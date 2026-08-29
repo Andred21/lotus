@@ -18,14 +18,11 @@ export function StudentsTab() {
   return (
     <>
       <StudentsTable
-        students={students.items}
-        loading={students.loading}
-        error={students.error}
-        onRetry={students.refetch}
+        table={students.table}
         onView={students.openView}
         actions={
           can('identity.user.create')
-            ? <AppButton variant="brandIcon" label={t('student.new')} icon="pi pi-user-plus" onClick={students.openCreate} />
+            ? <AppButton variant="primary" label={t('student.new')} icon="pi pi-user-plus" onClick={students.openCreate} />
             : undefined
         }
       />

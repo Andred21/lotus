@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState } from '@shared/ui'
+import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState, SectionLabel } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
@@ -34,12 +34,12 @@ function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: nu
     return <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.pickerEmpty')}</p>
 
   return (
-    <ul className="space-y-2">
+    <ul role="list" className="space-y-2">
       {picker.eligible.map((r) => (
         <li key={r.id} className="flex items-center justify-between gap-4 rounded-lg border p-3" style={{ borderColor: 'var(--surface-border)' }}>
           <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
           <AppButton
-            variant="brandIcon"
+            variant="primary"
             label={t('operation.redator.pick')}
             icon="pi pi-check"
             disabled={picker.pending}
@@ -71,11 +71,11 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
 
   return (
     <div className="space-y-4 p-4">
-      <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.title')}</h3>
+      <SectionLabel as="h3" rule={false}>{t('operation.redator.title')}</SectionLabel>
 
       {turma.redatores.length === 0 && <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.none')}</p>}
 
-      <ul className="space-y-2">
+      <ul role="list" className="space-y-2">
         {turma.redatores.map((r) => (
           <li
             key={r.id}

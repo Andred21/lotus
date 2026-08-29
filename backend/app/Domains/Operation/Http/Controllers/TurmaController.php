@@ -15,11 +15,14 @@ use App\Domains\Operation\Actions\UpdateTurmaAction;
 use App\Domains\Operation\Data\ArchivedTurmaData;
 use App\Domains\Operation\Data\PendingQuoteData;
 use App\Domains\Operation\Data\TurmaData;
+use App\Domains\Operation\Data\TurmaPageRequest;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
 use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Pagination\PageData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -46,12 +49,22 @@ class TurmaController extends Controller implements HasMiddleware
         return $this->present($action->execute($quote, $data), $habilitacao);
     }
 
-    /** @return array<TurmaData> */
-    public function index(Request $request, TurmaHabilitacaoService $habilitacao): array
+    /**
+     * Página do hub (spec D1). `visibleTo` vem ANTES do `page()`: o
+     * `total_unfiltered` do redator é o das turmas dele, não da casa.
+     *
+     * @return PageData<TurmaData>
+     */
+    public function index(TurmaPageRequest $page, Request $request, TurmaHabilitacaoService $habilitacao): PageData
     {
-        return Turma::query()->visibleTo($request->user())->withListingData()->latest()->get()
-            ->map(fn (Turma $t) => TurmaData::fromModel($t, $habilitacao))
-            ->all();
+        return Turma::query()
+            ->visibleTo($request->user())
+            ->withListingData()
+            ->page(
+                $page,
+                fn (Turma $t) => TurmaData::fromModel($t, $habilitacao),
+                filter: fn (TurmaQueryBuilder $q) => $q->whereDisplayStatus($page->status),
+            );
     }
 
     /** @return array<PendingQuoteData> */
@@ -84,20 +97,34 @@ class TurmaController extends Controller implements HasMiddleware
         return response()->noContent();
     }
 
-    /** @return array<ArchivedTurmaData> */
-    public function archived(Request $request, TurmaHabilitacaoService $habilitacao): array
+    /**
+     * A mesma página, sobre as arquivadas. `slice()` e não `page()`: o
+     * "arquivado por" é resolvido num lote só sobre os ids DA PÁGINA
+     * (`ArchiveTrailQuery::archivedBy`), e a projeção precisa da coleção antes
+     * de mapear.
+     *
+     * @return PageData<ArchivedTurmaData>
+     */
+    public function archived(TurmaPageRequest $page, Request $request, TurmaHabilitacaoService $habilitacao): PageData
     {
-        $turmas = Turma::onlyTrashed()->visibleTo($request->user())->withArchivedListingData()->latest()->get();
+        [$turmas, $meta] = Turma::onlyTrashed()
+            ->visibleTo($request->user())
+            ->withArchivedListingData()
+            ->slice($page, filter: fn (TurmaQueryBuilder $q) => $q->whereDisplayStatus($page->status, asOfArchiving: true));
 
         $autores = ArchiveTrailQuery::archivedBy(Turma::class, $turmas->pluck('id')->all());
 
-        return $turmas
-            ->map(fn (Turma $t) => new ArchivedTurmaData(
-                turma: TurmaData::fromModel($t, $habilitacao),
-                archived_at: $t->deleted_at->toIso8601String(),
-                archived_by: $autores[$t->id] ?? null,
-            ))
-            ->all();
+        return new PageData(
+            data: $turmas
+                ->map(fn (Turma $t) => new ArchivedTurmaData(
+                    turma: TurmaData::fromModel($t, $habilitacao),
+                    archived_at: $t->deleted_at->toIso8601String(),
+                    archived_by: $autores[$t->id] ?? null,
+                ))
+                ->values()
+                ->all(),
+            meta: $meta,
+        );
     }
 
     public function restore(int $turma, RestoreTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse

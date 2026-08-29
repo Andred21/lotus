@@ -18,18 +18,12 @@ use Tests\TestCase;
  * `Model::preventLazyLoading()` só marca a instância quando ela vem de um
  * `hydrate()` com MAIS de uma linha (`Builder::hydrate()`, condicional a
  * `count($items) > 1`) — por isso cada cenário aqui materializa DUAS linhas, e
- * não uma.
+ * não uma — a guarda é global desde o bloco `hardening-performance-e-dados`; o que este
+ * arquivo garante é a fixture com mais de uma linha, sem a qual ela não marca.
  */
 class LastLoginEagerLoadTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function tearDown(): void
-    {
-        Model::preventLazyLoading(false);
-
-        parent::tearDown();
-    }
 
     public function test_listagem_de_usuarios_nao_lazy_loada_o_ultimo_login(): void
     {
@@ -39,8 +33,6 @@ class LastLoginEagerLoadTest extends TestCase
             $user = User::factory()->create(['type' => 'admin', 'name' => $nome]);
             $user->loginLogs()->create([]);
         }
-
-        Model::preventLazyLoading();
 
         // A contagem NÃO é decoração: a guarda só existe quando o `hydrate()`
         // vê mais de uma linha, e sem afirmar isso o caso segue verde guardando
@@ -64,8 +56,6 @@ class LastLoginEagerLoadTest extends TestCase
             Redator::create(['user_id' => $user->id]);
             $user->loginLogs()->create([]);
         }
-
-        Model::preventLazyLoading();
 
         $this->getJson('/api/redatores')->assertOk()->assertJsonCount(2);
     }

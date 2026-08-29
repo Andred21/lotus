@@ -79,9 +79,9 @@ class CertificateListingTest extends TestCase
 
         $this->getJson('/api/certificates')
             ->assertOk()
-            ->assertJsonCount(2)
-            ->assertJsonPath('0.id', $newer->id)
-            ->assertJsonPath('1.id', $older->id);
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $newer->id)
+            ->assertJsonPath('data.1.id', $older->id);
     }
 
     public function test_show_devolve_o_snapshot_persistido(): void
@@ -149,16 +149,16 @@ class CertificateListingTest extends TestCase
 
         $this->getJson('/api/certificates')
             ->assertOk()
-            ->assertJsonCount(3)
-            ->assertJsonPath('0.id', $revogadoCorrompido->id)
-            ->assertJsonPath('0.status', 'revocado')
-            ->assertJsonPath('0.snapshot_ok', false)
-            ->assertJsonPath('1.id', $corrompido->id)
-            ->assertJsonPath('1.status', 'emitido')
-            ->assertJsonPath('1.snapshot_ok', false)
-            ->assertJsonPath('2.id', $sao->id)
-            ->assertJsonPath('2.status', 'revocado')
-            ->assertJsonPath('2.snapshot_ok', true);
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.id', $revogadoCorrompido->id)
+            ->assertJsonPath('data.0.status', 'revocado')
+            ->assertJsonPath('data.0.snapshot_ok', false)
+            ->assertJsonPath('data.1.id', $corrompido->id)
+            ->assertJsonPath('data.1.status', 'emitido')
+            ->assertJsonPath('data.1.snapshot_ok', false)
+            ->assertJsonPath('data.2.id', $sao->id)
+            ->assertJsonPath('data.2.status', 'revocado')
+            ->assertJsonPath('data.2.snapshot_ok', true);
     }
 
     /**

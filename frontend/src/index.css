@@ -41,3 +41,43 @@ body,
   margin: 0;
   min-height: 100vh;
 }
+
+/* Mini-reset escopado (P-46). Sem Preflight, toda tag de bloco herda a margem
+ * do agente do usuário — e ela é PROPORCIONAL ao tamanho da fonte, então o
+ * mesmo `h3` custa 16px num card e o número em `text-3xl` do KpiRow recebia
+ * `margin: 30px 0`, somando 75–95px de área morta por card.
+ *
+ * O remédio existia em cinco grafias espalhadas (`m-0`, `[&_p]:m-0`,
+ * `m-0 list-none p-0`, `my-[0.83em]`), aplicadas caso a caso, e ninguém as
+ * contava. Isto fecha a classe inteira.
+ *
+ * É a mesma lista que o Preflight aplica a estas tags, MENOS tudo que ele faz
+ * com form control, borda, tabela e imagem — que é precisamente o que
+ * sobrescreveria a estilização do PrimeReact e o motivo pelo qual o Preflight
+ * foi omitido (cabeçalho deste arquivo, ADR-16). Acrescentar `button`, `input`,
+ * `select`, `textarea` ou `table` aqui derruba o tema; há catraca em
+ * `tests/preflight-escopado.test.ts` medindo isso.
+ *
+ * `dd` entrou depois do `dl` (Q-4 do review de 2026-08-29): a lista dizia fechar
+ * "a classe inteira" e deixava de fora a única tag do grupo cuja margem do
+ * agente é INLINE — `dd { margin-inline-start: 40px }` —, então os valores da
+ * validação pública já saíam 40px à direita dos próprios rótulos. Apareceu ao
+ * devolver o par `dt`/`dd` ao `CertificateFolio`, que é centrado.
+ *
+ * Dentro de `@layer base` porque `utilities` vence `base` na ordem declarada
+ * acima: a classe `mb-4` dos dois títulos continua ganhando deste reset, que é
+ * o que mantém a margem DECLARADA por intenção do PageHeader e do DetailHeader.
+ * (Era `my-[0.83em]` até a E2 de 2026-08-28, quando a margem virou degrau da
+ * escala e a superior passou a ser do contêiner.) */
+@layer base {
+  h1, h2, h3, h4, h5, h6,
+  p, dl, dd, blockquote, figure {
+    margin: 0;
+  }
+
+  ul, ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}

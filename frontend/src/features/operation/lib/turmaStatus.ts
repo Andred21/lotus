@@ -1,6 +1,10 @@
-import type { TurmaData, TurmaModalidade } from '@shared/types/generated'
+import type { TurmaData, TurmaDisplayStatus as GeneratedTurmaDisplayStatus, TurmaModalidade } from '@shared/types/generated'
 
-export type TurmaDisplayStatus = 'em_andamento' | 'habilitada' | 'concluida'
+/** Do backend desde o bloco `hardening-performance-e-dados`: o filtro da lista
+ * é SQL (`TurmaQueryBuilder::whereDisplayStatus`) e a paridade com esta
+ * derivação é catraca lá (`TurmaStatusParityTest`). O alias fica para os
+ * consumidores de célula/cabeçalho não mudarem de import. */
+export type TurmaDisplayStatus = GeneratedTurmaDisplayStatus
 
 /** 3 estados de exibição derivados de `status` (2 valores) + `habilitada`
  * (derivado no backend): concluida > habilitada > em_andamento. Chave i18n:

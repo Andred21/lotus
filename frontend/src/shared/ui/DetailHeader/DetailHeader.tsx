@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AppButton } from '../AppButton';
+import { pageTitleClass } from '../typography'
 
 export interface DetailHeaderProps {
   /** Link de volta ao módulo. O protótipo abre toda tela de detalhe com ele.
@@ -38,16 +39,18 @@ export interface DetailHeaderProps {
 export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions }: DetailHeaderProps) {
   return (
     <div className="mb-6 flex flex-col gap-4">
+      {/* Ação terciária, não de marca: este botão ANTECEDE a ação primária da
+        * página, e vestir a mesma marca dizia que sair e agir pesam igual
+        * (achado B2 do audit de 2026-08-26). `text` do tema, com a tinta
+        * secundária subindo para a do corpo no hover. */}
       {back && (
         <AppButton
-         variant="brandIcon"  
-          className="flex w-fit "
-        
+          className="w-fit text-[var(--text-color-secondary)] hover:text-[var(--text-color)]"
+          text
+          icon="pi pi-arrow-left"
+          label={back.label}
           onClick={back.onClick}
-        >
-          <i className="pi pi-arrow-left" aria-hidden="true" />
-          {back.label}
-        </AppButton >
+        />
       )}
       {/* `h1` pelo mesmo motivo do PageHeader (UI-02 do review de 2026-08-12):
         * em página de detalhe o dono do título é este componente. Sai SEMPRE —
@@ -64,13 +67,15 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
       {(!titleHidden || subtitle || tags || actions) && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:gap-2">
           {/* `items-baseline`, e não `items-start`: o `h1` logo abaixo carrega
-            * `my-[0.83em]` (19,92px medidos), então alinhar pelo TOPO do bloco
-            * punha as tags 23px acima do centro do título que elas qualificam —
-            * mais perto do botão "Voltar" (16px) do que do próprio título
-            * (36px), e o estado da turma lia como enfeite solto no canto (UI-08
-            * da revisão de 2026-08-23). Pela linha de base a tag pousa sobre a
-            * linha do título sem que a margem do `h1` — que é o espaçamento do
-            * cabeçalho inteiro — precise mudar.
+            * `mb-4` — e, desde a E2, nenhuma margem superior. Alinhar pelo TOPO
+            * do bloco punha as tags acima do centro do título que elas
+            * qualificam, mais perto do botão "Voltar" do que do próprio título,
+            * e o estado da turma lia como enfeite solto no canto (UI-08 da
+            * revisão de 2026-08-23). Pela linha de base a tag pousa sobre a
+            * linha do título sem que a margem do `h1` — que é o espaçamento
+            * abaixo do cabeçalho — precise mudar. Os pixels citados na revisão
+            * mediam o `my-[0.83em]` de então; a razão do alinhamento não muda
+            * com o valor da margem.
             *
             * O `sm:self-center` é a contraparte, e mora SÓ no slot `actions`: a
             * linha de base foi escolhida para a TAG pousar sobre a linha do
@@ -90,10 +95,12 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             * filhos viram itens diretos da linha exatamente onde o alinhamento
             * passa a importar. */}
           <div className="min-w-0 sm:flex-1">
-            {/* Margem cravada no valor que o user-agent dava ao h2, porque o
-              * projeto não carrega Preflight. */}
+            {/* Mesma grafia e mesma margem do `PageHeader`: título de página é
+              * um papel só, e sair em duas vozes fazia a tela mudar de voz ao
+              * navegar para o detalhe (achado A1). A margem de cima some com a
+              * E2 — o mini-reset zera `h1..h6` e o respiro é do contêiner. */}
             {!titleHidden && (
-              <h1 className="my-[0.83em] text-2xl font-bold" style={{ color: 'var(--text-color)' }}>
+              <h1 className={`mb-4 ${pageTitleClass}`} style={{ color: 'var(--text-color)' }}>
                 {title}
               </h1>
             )}

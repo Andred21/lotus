@@ -3,12 +3,14 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Identity\QueryBuilders\StudentQueryBuilder;
 use App\Domains\Operation\Models\Enrollment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -69,5 +71,21 @@ class Student extends Model implements Auditable
     public function openLog(): HasOne
     {
         return $this->hasOne(StudentClientLog::class)->whereNull('ended_on');
+    }
+
+    /**
+     * Contraparte de instância do `withListingData()` — o mesmo molde de
+     * `Turma`, `Certificate` e `Quote`. `store`/`update` projetam por aqui;
+     * sem o `loadCount`, `StudentData::fromModel` recusa o `null` (D-B3).
+     */
+    public function loadListingData(): static
+    {
+        return $this->load(StudentQueryBuilder::LISTING)->loadCount('enrollments');
+    }
+
+    /** @param  QueryBuilder  $query */
+    public function newEloquentBuilder($query): StudentQueryBuilder
+    {
+        return new StudentQueryBuilder($query);
     }
 }

@@ -157,9 +157,10 @@ exceção. Na dúvida, siga o vizinho da mesma
   já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
   A forma normalizada de lista é `ListSource<T>` e nasce num lugar só
   (`shared/hooks/listSource.ts`). Hook que monta `isError ? (error ?? {}) : null` à mão está
-  recriando a política — o alias espalha, não deriva. **Duas exceções deliberadas:**
-  `useHistorial` e `useEmissionPanelState` devolvem `null` onde esta devolve `{}` — é outra
-  política, e normalizá-las muda o que a tela mostra; não as unifique sem DoD que cubra a mudança. E **retry devolve a promise**: é ela que
+  recriando a política — o alias espalha, não deriva. **Uma exceção deliberada:**
+  `useEmissionPanelState` devolve `null` onde esta devolve `{}` — é outra política, e normalizá-la
+  muda o que a tela mostra; não a unifique sem DoD que cubra a mudança. `useHistorial` deixou de ser
+  exceção em 2026-08-28: a lista vem do `useServerTable`, que é a home única da política. E **retry devolve a promise**: é ela que
   mantém o "Reintentar" em `loading` enquanto o GET está em voo (Q-14), e `void query.refetch()`
   a engole **sem quebrar tipo nem teste** — TypeScript aceita descartar retorno, então quem
   guarda são as catracas de `listSource.test.ts`, `useLoadState.test.ts` e `useResourceState.test.ts`.
@@ -226,6 +227,26 @@ exceção. Na dúvida, siga o vizinho da mesma
   defaults e não vê o que o chamador sobrescreve. Hoje ninguém passa `cellMemo` (medido no review de
   2026-08-21: zero ocorrências fora do wrapper), então isto é linha de rule e não regra de lint —
   quem passar a prop assume o débito e declara onde.
+- **Tabela paginada no SERVIDOR = `useServerTable` + a MESMA `SearchableTableFrame`, com
+  `totalRecords`.** Lista que cresce sem teto (alunos, certificados, turmas — ADR-22) não passa
+  por `useTableFilter`: filtrar no cliente uma página de 10 seria filtrar 10 de 5.000. O hook
+  (`shared/hooks/useServerTable.ts`) devolve a mesma forma do `useTableFilter` mais
+  `totalRecords`/`sortField`/`sortOrder`/`onSort`, e a tabela repassa os quatro à moldura — é o
+  `totalRecords` que liga o `lazy` do `DataTable` e faz `AppDataTable` decidir `paginated` pela
+  contagem do servidor, não por `data.length`. Busca (debounce de 300 ms), filtro nomeado e sort
+  vão na URL (`PageQuery`, `shared/api/page.ts`, o único lugar que conhece o envelope); trocar
+  qualquer um volta à página 1 dentro do hook — a tela não chama `resetPage()`. **A `key` faz parte
+  do escopo**, e por isso trocar a FONTE da lista (Ativas ↔ Arquivadas) também volta à página 1:
+  sem ela, sair da página 3 pedia `page=3` do endpoint novo, colhia vazio e só então o clamp
+  corrigia — um GET jogado fora e uma piscada de tabela vazia (Q-3, 2026-08-29). Coluna só ganha
+  `sortable` se o campo estiver na allowlist do backend (`SORTABLE` do builder) **e for o campo
+  daquela coluna**: em `lazy` o DataTable só emite o evento, campo fora da lista é 422, e campo de
+  outra coluna ordena por um valor que a tela não mostra — `field="created_at" sortable` sob o
+  cabeçalho CÓDIGO reordenava as turmas por data de criação (Q-4, 2026-08-29). Tabela sem coluna
+  elegível fica sem `sortable` nenhum e vive do `DEFAULT_SORT` do builder. `filtering` continua
+  medindo EFEITO
+  (`meta.total !== meta.total_unfiltered`), nunca presença. O dialog por id ganha fallback
+  `useOne` (`useCrudDialog`): a entidade aberta pode não estar na página carregada.
 - **Hook genérico não importa tipo de `shared/ui`.** `shared/hooks/` é lógica; `shared/ui/` é
   apresentação, e a seta aponta de `ui` para `hooks`, nunca ao contrário. Dois casos medidos:
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
@@ -250,6 +271,20 @@ exceção. Na dúvida, siga o vizinho da mesma
 - **Vocabulário de domínio é o do backend.** `Redator`, não `Writer`. Nome de tela pode ser em inglês
   (`PeoplePage`); a rota fica em espanhol (`/personas`) — é interface de usuário.
 - **`can()` é conveniência de interface, não segurança.** A autorização é da API (ADR-07).
+- **Wrapper de `shared/ui` não crava função em nó de `pt` sem encadear.** Colisão função×função em
+  chave `on[A-Z]` no `mergePt` **compõe** — chamador primeiro, wrapper depois —, nunca substitui.
+  Handler é comportamento aditivo de quem usa o componente, não propriedade do wrapper. A restrição
+  a `on[A-Z]` separa handler de RESOLVER: `(options) => props` em chave de NÓ vale pelo retorno, e
+  encadear ali descartaria exatamente o que aquele nó vale. **Regra escrita porque a família já
+  reincidiu três vezes** — nó do chamador apagado por spread raso (Q-3, 2026-08-13), folha perdida
+  sob função no `pins` (Q-3, 2026-08-18), handler do chamador substituído (Q-5, 2026-08-27). As três
+  são o mesmo defeito: o wrapper apaga código do chamador **em silêncio**. Mecanismo em
+  `shared/ui/mergePt.ts`, medido em `mergePt.test.ts` — não confie no docblock.
+- **Lista leva `role="list"`.** O mini-reset da P-46 (`index.css`) crava `list-style: none` em todo
+  `ul`/`ol` da aplicação, e o WebKit tira a semântica de lista junto com o marcador — o VoiceOver
+  para de anunciar "lista, N itens". `role="list"` devolve a semântica sem devolver o marcador.
+  Régua de lint (`LISTA_SEM_SEMANTICA` no `eslint.config.js`) exige o atributo e não olha
+  `className`: lista que quer marcador escreve `list-disc` **e** `role="list"`.
 
 ## Comandos
 

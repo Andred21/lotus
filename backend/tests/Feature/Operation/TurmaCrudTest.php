@@ -110,7 +110,7 @@ class TurmaCrudTest extends TestCase
         $quote = $this->makeQuote('approved');
         $this->postJson("/api/quotes/{$quote->id}/turma", $this->payload())->assertCreated();
 
-        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(1);
+        $this->getJson('/api/turmas')->assertOk()->assertJsonCount(1, 'data');
     }
 
     public function test_mostra_turma(): void
