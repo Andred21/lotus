@@ -181,3 +181,17 @@ N+1 invisível se a carga ficar para trás — medido em 2026-08-08: 4 turmas, 4
 `users`. Guarda de runtime com `Model::preventLazyLoading()` e **duas ou mais** linhas hidratadas
 (`Builder::hydrate()` só liga o flag com `count($items) > 1`); ref.:
 `tests/Feature/Shared/ContratanteEagerLoadTest.php`.
+
+## Mensagem ao usuário sai de `lang/`, nunca do código
+
+Toda string que pode chegar a uma resposta HTTP — `ValidationException::withMessages`,
+`title`/`detail` do `ProblemDetails`, `description` do Dashboard, mensagem de exceção
+`PublicDetail` — vem de `__('<dominio>.<agregado>.<motivo>')`, com o dicionário em
+`backend/lang/<locale>/<dominio>.php` e paridade nos três locales (`en`, `es_CL`, `pt_BR`).
+
+**Catraca:** `tests/Unit/Shared/MensagemLiteralTest.php` (nenhum literal) e
+`tests/Unit/Shared/LocaleParityTest.php` (mesmas chaves nos três, nenhum valor igual à chave).
+
+**Razão:** o produto é para o cliente chileno e a `D-07` chegou a 41 sítios porque cada
+domínio escreveu no idioma de quem estava ali — `Commercial` em português, `Operation` em
+espanhol, e o usuário lendo um ou outro conforme o endpoint.
