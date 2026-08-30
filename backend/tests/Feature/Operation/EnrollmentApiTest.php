@@ -152,7 +152,7 @@ class EnrollmentApiTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath(
                 'errors.turma.0',
-                'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+                __('operation.turma.concluded_locked'),
             );
 
         $this->assertDatabaseHas('enrollments', ['id' => $enrollment->id, 'deleted_at' => null]);

@@ -181,14 +181,14 @@ class TurmaCrudTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath(
                 'errors.turma.0',
-                'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+                __('operation.turma.concluded_locked'),
             );
 
         $this->deleteJson("/api/turmas/{$id}")
             ->assertStatus(422)
             ->assertJsonPath(
                 'errors.turma.0',
-                'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+                __('operation.turma.concluded_locked'),
             );
 
         $this->assertDatabaseHas('turmas', [

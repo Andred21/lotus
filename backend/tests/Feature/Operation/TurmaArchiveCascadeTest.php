@@ -110,7 +110,7 @@ class TurmaArchiveCascadeTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonPath(
                 'errors.turma.0',
-                'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+                __('operation.turma.concluded_locked'),
             );
     }
 }

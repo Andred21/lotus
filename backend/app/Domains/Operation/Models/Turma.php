@@ -198,7 +198,7 @@ class Turma extends Model implements Auditable
     {
         if ($this->status !== TurmaStatus::EmAndamento) {
             throw ValidationException::withMessages([
-                'turma' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+                'turma' => __('operation.turma.concluded_locked'),
             ]);
         }
     }
@@ -250,7 +250,7 @@ class Turma extends Model implements Auditable
 
         if ($turma->trashed()) {
             throw ValidationException::withMessages([
-                'turma' => 'Esta clase fue archivada y ya no acepta cambios.',
+                'turma' => __('operation.turma.archived'),
             ]);
         }
 

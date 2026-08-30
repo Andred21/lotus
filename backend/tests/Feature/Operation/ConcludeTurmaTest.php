@@ -120,7 +120,9 @@ class ConcludeTurmaTest extends TestCase
             $this->fail('A conclusão deveria recusar: o MANUAL foi arquivado depois da carga.');
         } catch (ValidationException $e) {
             $this->assertSame(
-                'Documentación obligatoria incompleta (RN-16). Falta: MANUAL.',
+                __('operation.turma.documents_incomplete', [
+                    'tipos' => __('operation.document_type.MANUAL'),
+                ]),
                 $e->errors()['documents'][0],
             );
         }
