@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { CrudDialog } from './CrudDialog'
 
@@ -41,5 +41,31 @@ describe('CrudDialog — foco após envio reprovado', () => {
     rerender(<Harness pending={false} invalido={false} />)
 
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /Guardar/ }))
+  })
+})
+
+/**
+ * Medido na run 5 (2026-08-30): ao ABRIR, o foco caía no primeiro focável do
+ * header — o botão "Maximizar diálogo" do Prime —, não no conteúdo. Quem opera
+ * por teclado ou leitor de tela começa por um controle de janela e gasta um Tab
+ * para chegar ao formulário.
+ */
+describe('CrudDialog — foco na abertura', () => {
+  // O foco entra no `onShow` do Dialog, que o PrimeReact dispara no fim da
+  // transição de entrada (`onEntered`) — por isso `waitFor`, não asserção seca.
+  it('leva o foco ao primeiro controle do corpo, não ao botão de maximizar', async () => {
+    render(<Harness pending={false} invalido={false} />)
+
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Nombre')))
+  })
+
+  it('corpo sem controle recebe o foco no próprio container, nunca no <body>', async () => {
+    render(
+      <CrudDialog visible mode="view" title="Curso" onHide={() => {}}>
+        <p>Sin controles</p>
+      </CrudDialog>,
+    )
+
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByText('Sin controles').parentElement))
   })
 })

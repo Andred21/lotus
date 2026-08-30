@@ -20,6 +20,17 @@ import type { DialogMode } from '@shared/lib'
  * inválido, volta ao botão de salvar se tiver caído no `<body>`. Mora aqui
  * porque é este componente que conhece a borda de `pending`; ele não conhece
  * os erros, e não precisa: o DOM já os carrega.
+ *
+ * **Foco na abertura.** O `Dialog` do Prime foca o primeiro focável que
+ * encontra, e esse é o botão de maximizar do header: quem abre por teclado
+ * começa por um controle de janela e gasta um Tab para chegar ao formulário
+ * (run 5 de 2026-08-30). Na subida de `visible` o foco vai ao primeiro controle
+ * do corpo; corpo sem controle (o modo `view` de puro texto) recebe o foco no
+ * próprio container, que é `tabIndex={-1}` para isso. Quem aponta o foco é este
+ * componente, então o `focusOnShow` do Prime sai — os dois disputariam, e o do
+ * Prime roda DEPOIS, num efeito de transição, e venceria. Por isso o foco entra
+ * pelo `onShow` do próprio Dialog, e não por um efeito nosso: no commit em que
+ * o efeito rodaria o conteúdo do portal ainda não está no documento.
  */
 export function CrudDialog({
   visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
@@ -68,6 +79,13 @@ export function CrudDialog({
     }
   }, [pending, visible])
 
+  const focarCorpo = () => {
+    const primeiro = corpo.current?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])',
+    )
+    ;(primeiro ?? corpo.current)?.focus()
+  }
+
   const header = (
     <div className="flex items-center gap-4 pr-6">
       <span>{title}</span>
@@ -102,9 +120,11 @@ export function CrudDialog({
       onHide={onHide}
       closable={!closeBlocked}
       closeOnEscape={!closeBlocked}
+      focusOnShow={false}
+      onShow={focarCorpo}
       footer={footer}
     >
-      <div ref={corpo}>{children}</div>
+      <div ref={corpo} tabIndex={-1} className="outline-none">{children}</div>
     </AppDialog>
   )
 }
