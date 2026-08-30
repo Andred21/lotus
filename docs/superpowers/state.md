@@ -6,7 +6,7 @@ active_feature: null
 active_work_item: prontidao-pre-nuvem
 workflow_state: executing
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: hardening
     active_work_item: hardening-i18n-e-erros-api
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
     active_spec: docs/superpowers/specs/2026-08-29-hardening-i18n-e-erros-api-design.md
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_execution` |
+| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_review` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -267,6 +267,33 @@ registrava. **Handoff: `executor: claude`** — o bloco toca o handler global de
 traduzir 41 recusas para três idiomas num produto de peso legal é julgamento e não mecânica, e três
 tasks dependem de conferir o código em volta antes de escrever. Execução exige
 `/executar-bloco hardening-i18n-e-erros-api`.
+
+**Execução das onze tasks — 2026-08-30, a lane entra em `ready_for_review`.** Retomada com a Task 3
+já commitada mas sem linha no ledger (sessão anterior cortada antes de logar); revisada contra o
+diff e a suíte antes de seguir. Cada task seguinte fechou o mesmo ciclo: RED, dicionário nos três
+locales, troca do sítio, GREEN, suíte cheia, achados fora da lista do plano (sempre teste
+pré-existente que casava a frase literal, nunca produção) corrigidos no mesmo commit, Pint, commit.
+**Dois desvios de forma reincidentes**, ambos já previstos pelo plano como contingência: `$missing`/
+`missingTypes()` é `array<TurmaDocumentType>` (enum), não array-shaped — `$doc->value`, nunca
+`$doc['value']` — nas Tasks 5 e 8 (esta com mais dois sítios que a ficha da D-38 não contava:
+`IdentityMetricsQuery` e `RedatorScopeQuery` interpolavam o código cru do documento de redator, não
+só o `OperationMetricsQuery` nomeado). **Um desvio de conteúdo, não de forma:** a Task 6 usou o
+literal es_CL REAL do `Redator.php`/`ArchiveRedatorAction.php` ("redactor") em vez do "relator" que
+o Step 3 do plano escreveu — a Global Constraint do plano ("es_CL é o texto de hoje, byte a byte")
+manda o código vencer o draft. A Task 9 fechou a catraca estática (`MensagemLiteralTest`), vista
+reprovando contra uma sonda negativa antes de confirmar verde. A Task 11 mediu o DoD contra a API
+real: os cinco primeiros PASS com evidência colada; o "500 mascarado" do título **não foi medido**
+(`APP_DEBUG=true` no container de dev desliga o próprio ramo que a sonda testaria) e ficou registrado
+como achado de cobertura, não como bloqueio. Gate final: suíte **1138 passed / 5 skipped**,
+`generated.ts` sem diff, `pnpm lint`/`build` verdes, Pint `passed` nos 87 arquivos PHP do bloco.
+**Duas pendências ficam para o `/fechar-sprint` deste bloco, não corrigidas aqui:** a `P-61`
+("`title` do `ProblemDetails` em português") ficou stale desde a Task 2 mas segue aberta em
+`abertas.md`/`README.md` — mover ficha para `encerradas.md` é mecânica de fechamento, não de
+execução; e a `P-70`, aberta pela Task 10 (`screenDetail.ts` ainda cala o `detail` do servidor),
+não entrou no índice `README.md` pelo mesmo motivo. A pendência real da Task 2
+(`ImmutableSystemRoleException`/`RedatorOnlyActionException` em português, fora do alcance da
+catraca da Task 9 porque usam parâmetro default de construtor, não `withMessages`) segue aberta e
+sem ficha própria — decisão de abrir uma cabe a quem fechar o bloco.
 
 
 ## Itens fechados — ponteiro, não narrativa
