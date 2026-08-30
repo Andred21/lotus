@@ -126,3 +126,29 @@ pinta a superfície da marca, e esta é a recusa.
 **P-63 e P-67:** a P-63 fechou na Task 12 (medida aqui: todas as `ul` do Dashboard com `role="list"`,
 texto da legenda a 7,58:1 no claro) e está em rastro em `pendencias/encerradas.md`. A P-67 segue
 aberta, rehospedada na **D-66**, e a run não a tocou — a escala de raio espera decisão do João.
+
+## Gate do bloco (spec §9.6) — 2026-08-30
+
+| Prova | Resultado |
+|---|---|
+| Escopo — `git diff --stat main...HEAD -- backend/ frontend/src/shared/types/generated.ts` | **vazio**. `pint` e `typescript:transform` N/A por escopo, provados. Diff do bloco: 71 arquivos, +2697/−251, todo em `frontend/` e `docs/` |
+| `pnpm lint` | **0** |
+| `pnpm build` | verde (`tsc -b` + vite) |
+| `pnpm test` | verde — **124 arquivos / 699 testes** |
+| `pnpm test tests/repo-docs-refs.test.ts` | verde (15/15) |
+| Suíte do backend (`docker compose exec -T app php artisan test`) | **1108 passed / 5 skipped**, o mesmo número da `main` no fechamento do item 6 |
+| `grep -rn 'font-mono' src/features src/app` | 4 linhas, **0** delas `className` literal (`grep -rn 'className="[^"]*font-mono'` = 0): três são asserção de teste sobre a própria constante e uma é prosa de docblock — a nota da Task 9 |
+| `FormField` com o mecanismo de invalidez | `fieldContext.ts` + `FormField.test.tsx` + `fieldAssociation.test.tsx` |
+| Ledger sem prova pendente | **0** ocorrências de `pendente —`. O grep literal do plano (`grep -c "pendente"`) devolve **1**, que é a linha do gabarito no cabeçalho definindo o próprio critério — desvio declarado aqui, não linha de prova em aberto |
+
+**As quatro catracas vistas reprovar de novo, contra o código final** (sonda aplicada, lint rodado,
+arquivo restaurado por cópia — nunca por stash, que é compartilhado entre árvores):
+
+| Catraca | Sonda | Resultado |
+|---|---|---|
+| `MONO_LITERAL` (features) | `RedatorCard.tsx:41` com `className="font-mono"` | reprovou nomeando o arquivo e a linha |
+| `MONO_LITERAL` (app) | `KpiRow.tsx:109` com `` className={`font-mono text-xs`} `` | reprovou nomeando o arquivo e a linha |
+| `BOTAO_SEM_PAPEL` (features) | `RedatorDesignation.tsx:41` sem `variant="primary"` | reprovou |
+| `BOTAO_SEM_PAPEL` (app) | `Sidebar.tsx:53` sem `variant="iconToggle"` | reprovou |
+
+Depois de restaurar os quatro arquivos, `pnpm lint` volta a **0** e `git diff` fica vazio nos quatro.
