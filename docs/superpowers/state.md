@@ -6,7 +6,7 @@ active_feature: null
 active_work_item: prontidao-pre-nuvem
 workflow_state: executing
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
@@ -47,9 +47,9 @@ lanes:
   lane-c:
     active_feature: frontend-triagem-dos-audits-do-item-18
     active_work_item: frontend-triagem-dos-audits-do-item-18
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4 na promoção; refactor/frontend-estilizacao-componentes mesclou (PR #82) e foi apagada
     active_spec: docs/superpowers/specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_review` |
+| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_closure` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -255,6 +255,16 @@ pedido pela spec: o `CertificateFolio` **fica como está**. Gate: `pnpm lint` 0,
 testes verdes, backend em 1108 passed / 5 skipped (o mesmo da `main`), escopo sem backend e sem
 `generated.ts`, e as quatro catracas vistas reprovar de novo. Próximo passo é a revisão do bloco —
 `/executar-bloco` não a inicia sozinho.
+
+**A `lane-c` revisou o item 19 em 2026-08-30 e não achou pendência.** Baixo risco (frontend puro,
+sem lei §5 tocada), revisão só Claude — subagente cobriu o diff completo (71 arquivos) contra o
+gabarito, revisão própria confirmou `CrudDialog`/`fieldContext`, o ledger sem prova pendente e as
+seis fichas D-63..D-68 no `backlog.md`; gate rodado de novo nesta sessão: `pnpm lint` 0, `pnpm
+build` verde, `pnpm test` 699/699. Único ruído: uma linha do PLANO (task 8/9) afirma que o grep de
+`font-mono` devolve zero e devolve 4 — todas inertes (docblock + asserção de teste que cita a
+string para conferir o efeito da constante); não é achado de código, registrado em
+`audits/2026-08-30-item19-review.md`. Relatório completo:
+`docs/superpowers/audits/2026-08-30-item19-review.md`. Próximo passo é `/fechar-sprint`.
 
 ## Itens fechados — ponteiro, não narrativa
 
