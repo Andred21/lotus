@@ -65,7 +65,7 @@ Push manual levaria .claude/, .agents/ e docs/ internos junto."
     git push $REMOTE_NOME HEAD:refs/heads/\$(git branch --show-current)
     gh pr create --fill
     gh pr merge --merge
-O merge roda no servidor, com os quatro gates verdes antes."
+O merge roda no servidor, com os cinco gates verdes antes."
 done
 
 exit 0

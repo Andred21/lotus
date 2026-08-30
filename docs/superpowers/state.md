@@ -1,15 +1,15 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-c
+focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: prontidao-pre-nuvem
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
+active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
 context_packet: null
 blocker: null
 lanes:
@@ -29,17 +29,20 @@ lanes:
     last_completed_work_item: hardening-performance-e-dados
   lane-b:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: prontidao-pre-nuvem
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_plan
     tree: ../lotus-infra
-    branch: cicd/ci-governanca-e-artefato   # fechada em 2026-08-26; mesclada (PR #77)
-    active_spec: null
-    active_plan: null
-    context_packet: null
+    branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa)
+    active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
+    active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
+    context_packet: null   # Contexto: nao -- fontes sao o repositorio e a API do GitHub, registradas na spec §3
     blocker: null
     resume_state: null
+    parked_work_items:
+      - infra-producao-provisionamento-aws   # item 10, ready_for_planning em 2026-08-26; retoma apos este bloco; packet partial em context-packets/2026-08-26-infra-producao-provisionamento-aws.md
+      - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
     active_feature: null
@@ -56,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
-state_basis_commit: 0d0645f7
-updated_at: 2026-08-29T07:05:00-03:00
+state_basis_commit: 24e0f037
+updated_at: 2026-08-29T16:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
-| `lane-b` | — | — | `../lotus-infra` | `cicd/ci-governanca-e-artefato` (mesclada, PR #77) | `idle` |
+| `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
 
@@ -171,6 +174,43 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
+
+**A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
+explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
+fechou: o 11 constrói o artefato imutável por SHA, o 12 o promove para produção com aprovação,
+health e rollback. Nasceu em `context_required` (`Contexto: sim` na fila) e **o packet do Codex voltou `status: blocked`** no mesmo dia, com `RECOMMENDED_TRANSITION: blocked`: nao ha destino de deploy. O item 10 (`infra-producao-provisionamento-aws`) segue na fila com as quatro decisoes abertas, e nenhuma das cinco fontes externas consultadas entrega host, credencial SSH ou `/opt/lotus` — o `SSH EC2 -> compose pull -> migrate -> up -> /up` do escopo nao tem onde acontecer. O packet foi guardado assim mesmo, porque e a evidencia do bloqueio; **ele nao autoriza planejamento** (§6 do `/planejar-bloco`: `status: blocked` nunca prossegue). A leitura viva de `Gatika-CL/lotus` falhou com `404`, entao Environment/secrets/branches do corporativo ficam sem comprovacao — a P-62 ja prevê o teto do plano Free. A branch
+`cicd/promocao-deploy-e-rollback` sai de `main@83945ff3` — o tip da `origin/main`, que já contém o
+item 11 mesclado (PR #79), então o artefato que este bloco promove existe. **O espelho do topo virou
+para `lane-b` nesta árvore**, fora do main tree: é a **P-55**, e segue o precedente medido de
+2026-08-24, quando as três lanes fizeram o mesmo. A `lane-a` está em `ready_for_planning` do item 5
+na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segue serial.
+
+**O item 10 assumiu a `lane-b` em 2026-08-26** — `infra-producao-provisionamento-aws`, promovido explicitamente pelo Joao **depois** de o item 12 voltar `blocked` por depender dele. E a saida escolhida entre as tres oferecidas: provisionar antes, em vez de recortar o 12 num workflow que nunca roda. O item 10 tambem e `Contexto: sim`, entao nasce em `context_required`. A branch `infra/producao-provisionamento-aws` sai da propria `cicd/promocao-deploy-e-rollback@10030c65`, e nao da `main`, **de proposito**: o packet do item 12 e o registro do bloqueio viajam junto e chegam a `main` no merge, para que ninguem refaca a medicao. **As quatro decisoes abertas (regiao, tamanho da EC2, DNS/SES + canal de alerta, teto de custo) nao bloqueiam o planejamento** — o proprio item 10 diz isso por escrito; cada uma bloqueia o recurso correspondente, e elas se fecham no brainstorming, com a evidencia de custo e latencia que o packet trouxer.
+
+**O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
+
+**O item 20 assumiu a `lane-b` em 2026-08-29** — `prontidao-pre-nuvem`, criado no `backlog.md` e
+promovido explicitamente pelo João nesta sessão, **antes** de planejar o item 10. O pedido dele foi
+literal: entender o CI, arrumar o que aparece vermelho a cada integração, entender o espelho
+`Andred21 → Gatika-CL` e **comprovar que o código de lá funciona** — e só então mexer em nuvem. A
+leitura mediu que o CI não falha (o `audit-dev` pinta vermelho por sete advisories transitivas de
+devDeps, sob `continue-on-error`), que o corporativo está onze PRs atrás e que **ninguém nunca puxou
+o par corporativo do GHCR**; o João decidiu que `audit-dev` passa a reprovar e a segurar a imagem,
+que o par será puxado e executado aqui por script versionado, e **adiou** a decisão sobre o
+repositório pessoal estar público (divergência com a `P-62`, registrada na spec §3.5). O item 10
+fica **estacionado** ao lado do 12 (`parked_work_items`), com o packet `partial` guardado; retoma
+sobre `main` já com o par provado. A branch `chore/prontidao-pre-nuvem` nasce de
+`infra/producao-provisionamento-aws@50f3a1f3` e **mescla `main@37e0e2d4` para dentro** (`5b121aaa`)
+antes do primeiro artefato — 103 commits, único conflito em `state.md`. Acrescentar o item 20 fora
+do main tree segue a **P-55**. Spec aprovada por seções no brainstorming:
+`specs/2026-08-29-prontidao-pre-nuvem-design.md`. **Plano escrito e a lane em `ready_for_execution`
+em 2026-08-29** (`plans/2026-08-29-prontidao-pre-nuvem.md`): oito tasks em duas fatias — a PR 1
+(workflow, lockfile, `scripts/provar-release.sh` com catraca, docs) **mescla no meio do plano**,
+porque o espelho publica a árvore desse merge e a prova do par corporativo só existe depois dele;
+a fatia 2 é ação externa (merge, PAT do João, espelho de onze PRs, CI corporativo, três execuções
+do script) e evidência em `audits/`. A sonda do DoD 1 é a ordem das tasks (workflow antes do bump),
+não um commit de lockfile rebaixado; o script inclui `migrate --force` entre `pull` e `up`, que é o
+fluxo de deploy que o item 10 fixou (D7).
 
 **A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral
 em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch

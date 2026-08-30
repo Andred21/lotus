@@ -605,8 +605,9 @@ decisão do João, não correção de review; a saída (b) é aceitar. Até lá 
 `main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) vinda do
 fechamento do `hardening-api-arquivos-e-abuso`. Quem renumera é a recém-chegada.
 
-**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team (ou
-decisão de tornar o repositório público), ou **2026-10-31**, o que vier primeiro.
+**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** orçamento para GitHub Team, ou
+a decisão do João sobre a visibilidade de `Andred21/lotus` (emenda de 2026-08-29, abaixo), ou
+**2026-10-31**, o que vier primeiro.
 
 O item 11 desenhou `PUT /repos/<owner>/lotus/branches/main/protection` com required checks como o
 DoD 5 do bloco. Medido em 2026-08-25: a API responde `403 Upgrade to GitHub Pro or make this
@@ -628,9 +629,20 @@ datado** pelo `procedencia`; e a janela entre o push e a negação do artefato e
 
 **Fecha quando** o Step 6 da Task 9 do plano arquivado
 ([`plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md`](../plans/archive/2026-08-24-cicd-ci-governanca-e-artefato.md))
-puder rodar como está e o readback da API mostrar `required_pull_request_reviews` e os quatro
-required checks (`backend`, `frontend`, `types-drift`, `audit-prod`) ativos nas duas `main`.
+puder rodar como está e o readback da API mostrar `required_pull_request_reviews` e os cinco
+required checks (`backend`, `frontend`, `types-drift`, `audit-prod`, `audit-dev`) ativos nas duas `main`.
 Evidência do que foi medido: [`../audits/2026-08-24-cicd-evidencias.md`](../audits/2026-08-24-cicd-evidencias.md).
+
+**Emenda de 2026-08-29 (bloco `prontidao-pre-nuvem`, item 20).** A ficha diz "a `main` dos dois
+repositórios não tem branch protection — plano free recusa a API". Medido nesta data: `GET
+/repos/Andred21/lotus` responde `"visibility": "public"`, e `ghcr.io/andred21/lotus-app:<sha>`
+entrega manifesto **sem autenticação**. O 403 foi medido só em `Gatika-CL/lotus`; **no pessoal,
+público, a API aceitaria** — protection é grátis em repositório público. Ou seja: o repositório que
+esta ficha registra como fechado por confidencialidade está aberto, e a régua que ele teria de graça
+não foi ligada. O João **adiou** a decisão (tornar privado; manter público e ligar protection; ou
+manter como está) e o bloco não mudou visibilidade nem protection. Quando protection for ligada onde
+couber, os required checks são **cinco**: `audit-dev` decide desde 2026-08-29 (D1 da spec do item
+20) — o `image` já depende dele.
 
 ## P-30 — o `warning` segue com o laranja de stock do Lara
 
