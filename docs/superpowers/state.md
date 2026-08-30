@@ -6,7 +6,7 @@ active_feature: null
 active_work_item: prontidao-pre-nuvem
 workflow_state: executing
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
@@ -47,9 +47,9 @@ lanes:
   lane-c:
     active_feature: frontend-triagem-dos-audits-do-item-18
     active_work_item: frontend-triagem-dos-audits-do-item-18
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../fix-frontend
     branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4 na promoção; refactor/frontend-estilizacao-componentes mesclou (PR #82) e foi apagada
     active_spec: docs/superpowers/specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `executing` |
+| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_review` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -244,6 +244,17 @@ achados — não tem nenhum achado aplicado. `Contexto: não por padrão`, entã
 `ready_for_planning`, sem packet. Branch `fix/frontend-triagem-audits-item-18`, aberta de
 `main@37e0e2d4`, árvore em **offset +2** (`:8082`/`:5175`) pelo `.env` da raiz. O espelho singular
 foi escrito da worktree — quinto caso da **P-55**, registrado na ficha.
+
+**A `lane-c` executou as 18 tasks do item 19 e parou no gate, em 2026-08-30.** As 49 linhas do ledger
+(`audits/2026-08-29-item19-triagem.md`) estão fechadas: nenhuma prova `pendente`. A run 5
+(`audits/2026-08-29-item19-run5.md`) mediu sete superfícies nos dois temas com um certificado real
+emitido pela UI (`LOT-2026-1000`) e devolveu três achados novos — dois com raiz já tocada pelo bloco,
+corrigidos com teste visto reprovar (o `CrudDialog` aponta o foco na abertura; o par Rechazar/Aprobar
+em 44px), e um que virou fato na **D-63** (em `/validar`, o folio pesa mais que o veredito). Veredito
+pedido pela spec: o `CertificateFolio` **fica como está**. Gate: `pnpm lint` 0, `build` verde, 699
+testes verdes, backend em 1108 passed / 5 skipped (o mesmo da `main`), escopo sem backend e sem
+`generated.ts`, e as quatro catracas vistas reprovar de novo. Próximo passo é a revisão do bloco —
+`/executar-bloco` não a inicia sozinho.
 
 ## Itens fechados — ponteiro, não narrativa
 
