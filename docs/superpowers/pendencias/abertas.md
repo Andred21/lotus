@@ -148,6 +148,26 @@ está, no mesmo arquivo, doze linhas abaixo.
 
 ---
 
+## P-70 — o `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado
+
+**Bloco:** `hardening-i18n-e-erros-api` (D4 da spec de 2026-08-29) ·
+**Gatilho:** próximo bloco da frente de frontend que tocar política de erro de tela.
+Revisar em **2026-11-30**.
+
+`frontend/src/shared/lib/screenDetail.ts` devolve `undefined` para todo envelope que não seja
+sintetizado pelo próprio front, então erro de CARGA (GET) mostra a dica genérica do i18n em vez do
+que o servidor disse. A razão escrita era que o `ProblemDetails` respondia em português fixo — isso
+acabou: o envelope inteiro sai de `lang/` e responde ao `Accept-Language`.
+
+**Por que não foi virado junto:** o item 7 é da frente Backend. Virar a chave exige garantir que
+nenhuma mensagem de exceção não prevista chegue à tela, o que transforma um bloco de backend em
+backend+frontend. Decisão do João em 2026-08-29.
+
+**DoD de quem pegar:** um GET que falha com 403 e outro com 404 mostram, na tela, a mensagem
+localizada do servidor, nos três locales — e um 500 continua mostrando a dica genérica.
+
+---
+
 # Backend
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
