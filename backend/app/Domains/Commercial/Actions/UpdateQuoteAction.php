@@ -19,7 +19,7 @@ class UpdateQuoteAction
     {
         if ($quote->status === QuoteStatus::Approved) {
             throw ValidationException::withMessages([
-                'status' => 'Cotação aprovada não pode ser editada.',
+                'status' => __('commercial.quote.approved_cannot_edit'),
             ]);
         }
 

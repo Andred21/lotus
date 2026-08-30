@@ -38,7 +38,7 @@ class CreateClientAction
         // segunda falta na requisição seguinte (review de 2026-08-13, Q-2).
         if ($data->contacts instanceof Optional || $data->contacts === []) {
             throw ValidationException::withMessages([
-                'contacts' => ClientData::CONTATO_OBRIGATORIO,
+                'contacts' => __('commercial.client.contact_required'),
             ]);
         }
 

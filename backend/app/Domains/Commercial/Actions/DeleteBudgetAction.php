@@ -18,7 +18,7 @@ class DeleteBudgetAction
     {
         if ($budget->quotes()->where('status', QuoteStatus::Approved)->exists()) {
             throw ValidationException::withMessages([
-                'status' => 'Orçamento com cotação aprovada não pode ser excluído. Recuse-a antes.',
+                'status' => __('commercial.budget.approved_cannot_delete'),
             ]);
         }
 

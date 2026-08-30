@@ -64,7 +64,7 @@ class RestoreQuoteAction
             // orçamento arquivado — que é justamente o caso a recusar.
             if ($quote->budget->trashed()) {
                 throw ValidationException::withMessages([
-                    'quote' => 'El presupuesto de esta cotización está archivado: restáuralo primero.',
+                    'quote' => __('commercial.quote.budget_archived'),
                 ]);
             }
 

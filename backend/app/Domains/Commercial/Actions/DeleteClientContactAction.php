@@ -2,7 +2,6 @@
 
 namespace App\Domains\Commercial\Actions;
 
-use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +44,7 @@ class DeleteClientContactAction
 
             if ($restantes <= 1) {
                 throw ValidationException::withMessages([
-                    'contacts' => ClientData::CONTATO_OBRIGATORIO,
+                    'contacts' => __('commercial.client.contact_required'),
                 ]);
             }
 
