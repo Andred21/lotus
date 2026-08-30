@@ -27,7 +27,7 @@ class RedatorArchiveTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonPath(
                 'errors.redator.0',
-                'El redactor tiene clases en curso: concluye o reasigna antes de archivarlo.',
+                __('identity.errors.redator_has_active_turmas'),
             );
 
         $this->assertNotSoftDeleted('redatores', ['id' => $redator->id]);

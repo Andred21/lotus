@@ -189,7 +189,7 @@ class RedatorDocumentTest extends TestCase
             'documents' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
         ], ['Accept' => 'application/json'])
             ->assertStatus(422)
-            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+            ->assertJsonPath('errors.documents.0', __('identity.errors.documents_shape'));
     }
 
     public function test_tipo_de_documento_invalido_devolve_422_com_erro_de_campo(): void
@@ -202,7 +202,7 @@ class RedatorDocumentTest extends TestCase
             'documents' => ['DIPLOMA' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')],
         ], ['Accept' => 'application/json'])
             ->assertStatus(422)
-            ->assertJsonPath('errors.documents.0', 'Tipo de documento inválido: DIPLOMA');
+            ->assertJsonPath('errors.documents.0', __('identity.errors.document_type_invalid', ['tipo' => 'DIPLOMA']));
     }
 
     public function test_documents_com_tipo_valido_mas_array_de_arquivos_devolve_422_com_erro_de_campo(): void
@@ -220,7 +220,7 @@ class RedatorDocumentTest extends TestCase
             ],
         ], ['Accept' => 'application/json'])
             ->assertStatus(422)
-            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+            ->assertJsonPath('errors.documents.0', __('identity.errors.documents_shape'));
     }
 
     public function test_documents_escalar_no_update_devolve_422_com_erro_de_campo(): void
@@ -239,6 +239,6 @@ class RedatorDocumentTest extends TestCase
             'documents' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
         ], ['Accept' => 'application/json'])
             ->assertStatus(422)
-            ->assertJsonPath('errors.documents.0', 'O campo documents deve ser um mapa de tipo => arquivo.');
+            ->assertJsonPath('errors.documents.0', __('identity.errors.documents_shape'));
     }
 }

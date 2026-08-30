@@ -114,7 +114,7 @@ class PermissionCatalog
 
         if ($unknown !== [] || $segregated !== []) {
             throw ValidationException::withMessages([
-                'permissions' => 'Permissão inválida ou não atribuível a uma role customizada.',
+                'permissions' => __('identity.errors.permission_invalid'),
             ]);
         }
     }

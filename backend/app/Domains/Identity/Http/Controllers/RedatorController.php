@@ -107,14 +107,14 @@ class RedatorController extends Controller implements HasMiddleware
 
         if (! is_array($files)) {
             throw ValidationException::withMessages([
-                'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
+                'documents' => __('identity.errors.documents_shape'),
             ]);
         }
 
         foreach ($files as $type => $file) {
             if (RedatorDocumentType::tryFrom((string) $type) === null) {
                 throw ValidationException::withMessages([
-                    'documents' => "Tipo de documento inválido: {$type}",
+                    'documents' => __('identity.errors.document_type_invalid', ['tipo' => $type]),
                 ]);
             }
 
@@ -124,7 +124,7 @@ class RedatorController extends Controller implements HasMiddleware
             // a mensagem da exceção no `detail` do RFC 7807.
             if (! $file instanceof UploadedFile) {
                 throw ValidationException::withMessages([
-                    'documents' => 'O campo documents deve ser um mapa de tipo => arquivo.',
+                    'documents' => __('identity.errors.documents_shape'),
                 ]);
             }
         }

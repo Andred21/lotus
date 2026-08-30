@@ -23,7 +23,7 @@ class CreateStaffUserAction
     public function execute(UserData $data): User
     {
         if ($data->password instanceof Optional || $data->password === '') {
-            throw ValidationException::withMessages(['password' => 'A senha é obrigatória.']);
+            throw ValidationException::withMessages(['password' => __('identity.errors.staff_password_required')]);
         }
 
         return DB::transaction(function () use ($data) {
