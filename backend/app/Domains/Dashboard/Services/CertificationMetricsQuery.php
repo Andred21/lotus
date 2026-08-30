@@ -37,7 +37,7 @@ class CertificationMetricsQuery
                 type: PendingItemType::EnrollmentAwaitingCertificate,
                 severity: DashboardSeverity::Normal,
                 entity_id: $enrollment->turma_id,
-                description: 'Clase concluida con matrículas aprobadas pendientes de certificado.',
+                description: __('dashboard.pending.certificates_pending'),
                 date: $enrollment->turma->concluded_at?->toDateString(),
                 navigation: ['turma_id' => $enrollment->turma_id],
             ))
@@ -74,8 +74,8 @@ class CertificationMetricsQuery
                         : DashboardSeverity::Medium,
                     entity_id: $certificate->id,
                     description: $expired
-                        ? 'Certificado vencido.'
-                        : 'Certificado próximo a vencer.',
+                        ? __('dashboard.alert.certificate_expired')
+                        : __('dashboard.alert.certificate_expiring'),
                     date: $certificate->valido_ate->toDateString(),
                     navigation: ['certificate_id' => $certificate->id],
                 );

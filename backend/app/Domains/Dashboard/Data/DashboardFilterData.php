@@ -23,8 +23,6 @@ class DashboardFilterData extends Data
     /** Janela default quando o chamador não pede período (plano, Task 6). */
     public const DEFAULT_MONTHS = 12;
 
-    public const PERIODO_INVERTIDO = 'La fecha de término no puede ser anterior a la de inicio.';
-
     public function __construct(
         public ?string $period_start = null,
         public ?string $period_end = null,
@@ -63,7 +61,7 @@ class DashboardFilterData extends Data
             );
 
             if ($filtro->start()->greaterThan($filtro->end())) {
-                $validator->errors()->add('period_end', self::PERIODO_INVERTIDO);
+                $validator->errors()->add('period_end', __('dashboard.filter.inverted_period'));
             }
         });
     }
