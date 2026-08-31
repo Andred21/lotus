@@ -82,7 +82,9 @@ volumes) e seguida de `docker compose start`, com os oito serviços conferidos `
 `pnpm lint`, `pnpm test` (122 arquivos, 686 testes, inclui `compose-prod`, `repo-docs-refs` e o
 novo `provar-release`) e `pnpm build` verdes de `frontend/`, medidos em `2d17b63e` antes do merge;
 `pnpm install --frozen-lockfile` passa. O job `frontend` repete os três em todo run — verde no
-`33338885845` (`main`) e no `33447147016` (corporativo).
+`33338885845` (`main`) e no `33447147016` (corporativo). Repetidos após as correções do review
+(`4cea61f5`): `lint` limpo, **688** testes em 122 arquivos (as duas catracas novas de
+`provar-release`, uma por Q-4 e uma por Q-3) e `build` verde.
 
 ## DoD 5 — docs
 

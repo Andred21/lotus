@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: prontidao-pre-nuvem
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
 context_packet: null
-blocker: review do item 20 levantou cinco achados (Q-1 a Q-5), um deles 🔴 (a linha da lane-b na tabela de ocupacao divergia do frontmatter -- reincidencia do Q-4 de 2026-08-27, corrigida nesta transicao porque a invariante a exige). Aguarda o Joao aprovar o que entra.
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -30,16 +30,16 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: prontidao-pre-nuvem
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa)
     active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
     active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
     context_packet: null   # Contexto: nao -- fontes sao o repositorio e a API do GitHub, registradas na spec §3
-    blocker: review do item 20 levantou cinco achados (Q-1 a Q-5), um deles 🔴 (a linha da lane-b na tabela de ocupacao divergia do frontmatter -- reincidencia do Q-4 de 2026-08-27, corrigida nesta transicao porque a invariante a exige). Aguarda o Joao aprovar o que entra.
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     parked_work_items:
       - infra-producao-provisionamento-aws   # item 10, ready_for_planning em 2026-08-26; retoma apos este bloco; packet partial em context-packets/2026-08-26-infra-producao-provisionamento-aws.md
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
@@ -59,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
-state_basis_commit: 46087625
-updated_at: 2026-08-31T20:20:00-03:00
+state_basis_commit: a8c55efd
+updated_at: 2026-08-31T20:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
-| `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `blocked` (review levantou achados) |
+| `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_closure` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
 
 
