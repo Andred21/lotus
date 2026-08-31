@@ -63,6 +63,15 @@ Sequência executada em cada linha: `manifest inspect` (os dois) → `compose pu
 artisan migrate --force` → `up -d --no-build --pull never` → `nginx` `healthy` dentro do limite de
 150 s → `GET http://127.0.0.1:8081/up` → ID da imagem do container = ID puxado → `down -v`.
 
+**Quarta execução, com o script corrigido pelo review (2026-08-31).** Q-3 e Q-4 do review
+mexeram no caminho de verificação — os `RepoDigests` passaram a ser resolvidos **antes** do
+veredito, e a conferência "ID em execução = ID puxado" passou a cobrir `nginx` além de `app` —,
+então as três execuções acima provaram um script que já não é o do repositório. Re-execução contra
+o SHA do espelho com o script de `4cea61f5`: `exit 0`, `/up` 200, `docker compose -p lotus-release
+ps -a` com **0** containers depois, e os **mesmos dois digests** da terceira linha
+(`sha256:98b469d4…` / `sha256:666b5a3e…`) — a correção mudou como se verifica, não o que roda.
+A stack de dev desta árvore foi parada antes e devolvida a `running` (sete serviços) depois.
+
 **Manejo de portas.** Esta árvore é a de offset +1: a stack de dev dela publica exatamente
 `8081` (nginx), `9002`/`9003` (MinIO) e `8026` (Mailpit) — as três portas da sonda. Cada execução
 do script foi precedida de `docker compose stop` nesta árvore (não `down`: preserva containers e
