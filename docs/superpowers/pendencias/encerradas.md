@@ -7,21 +7,20 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **P-66**. A **P-02** e a **P-33** saíram no fechamento do
-`hardening-performance-e-dados` (2026-08-29) e a **P-46** no do
-`frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), os primeiros posteriores aos dos
-blocos que as encerraram. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25; os
-parágrafos adiante são o rastro delas.)*
+*(nenhuma. O `prontidao-pre-nuvem` (2026-08-31) **não encerrou pendência** — emendou a **P-62**, que
+segue aberta —, e a **P-66** saiu neste mesmo fechamento, o primeiro posterior ao do bloco que a
+encerrou. A **P-02**, a **P-33** e a **P-46** saíram nos fechamentos de 2026-08-29, e a **P-03** e a
+**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
 
-### P-66 — a poda de `login_logs` varria `created_at` sem índice
+---
 
-**Fechada em 2026-08-29**, no `hardening-performance-e-dados` (Task 12), por mecanismo: a
-migration `2026_08_28_000001_add_performance_indexes` cria `login_logs_created_at_index`, e o
-`DELETE FROM login_logs WHERE created_at < ? LIMIT 1000` — a forma que o `PodarLogins` realmente
-executa, em chunks — passou de full scan (`key: NULL`, 20.042 linhas) para o índice novo (10.021)
-sobre as ~20 mil linhas do `PerformanceScenarioSeeder`. Números em
-[`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`](../audits/2026-08-28-hardening-performance-e-dados-medicoes.md).
-A assimetria com a `audits` (que ganhou o dela no bloco anterior) acabou.
+**A P-66 saiu no fechamento do `prontidao-pre-nuvem` (2026-08-31)**, o primeiro posterior ao do
+bloco que a encerrou. Ela fechou em 2026-08-29 no `hardening-performance-e-dados` (Task 12), por
+**mecanismo**: a migration `2026_08_28_000001_add_performance_indexes` cria
+`login_logs_created_at_index`, e o `DELETE FROM login_logs WHERE created_at < ? LIMIT 1000` — a
+forma que o `PodarLogins` realmente executa, em chunks — deixou de ser full scan. Números em
+[`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`](../audits/2026-08-28-hardening-performance-e-dados-medicoes.md);
+a linha da entrega está em [`../historico/progress.md`](../historico/progress.md).
 
 ---
 
