@@ -7,11 +7,14 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-63** e a **P-66**. A **P-02** e a **P-33** saíram no fechamento do
-`hardening-performance-e-dados` (2026-08-29) e a **P-46** no do
-`frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), os primeiros posteriores aos dos
-blocos que as encerraram. A **P-03** e a **P-15** saíram nos dois fechamentos de 2026-08-25; os
-parágrafos adiante são o rastro delas.)*
+*(uma: a **P-63**, fechada no bloco que este fechamento encerra. A **P-66** saiu neste
+fechamento (`frontend-triagem-dos-audits-do-item-18`, 2026-08-30), o primeiro posterior ao do
+`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
+em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
+**P-02** e a **P-33** saíram no fechamento do `hardening-performance-e-dados` (2026-08-29) e a
+**P-46** no do `frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), os primeiros
+posteriores aos dos blocos que as encerraram. A **P-03** e a **P-15** saíram nos dois fechamentos de
+2026-08-25; os parágrafos adiante são o rastro delas.)*
 
 ### P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 
@@ -46,16 +49,6 @@ com `role`.
 `main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
 do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
 renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
-
-### P-66 — a poda de `login_logs` varria `created_at` sem índice
-
-**Fechada em 2026-08-29**, no `hardening-performance-e-dados` (Task 12), por mecanismo: a
-migration `2026_08_28_000001_add_performance_indexes` cria `login_logs_created_at_index`, e o
-`DELETE FROM login_logs WHERE created_at < ? LIMIT 1000` — a forma que o `PodarLogins` realmente
-executa, em chunks — passou de full scan (`key: NULL`, 20.042 linhas) para o índice novo (10.021)
-sobre as ~20 mil linhas do `PerformanceScenarioSeeder`. Números em
-[`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`](../audits/2026-08-28-hardening-performance-e-dados-medicoes.md).
-A assimetria com a `audits` (que ganhou o dela no bloco anterior) acabou.
 
 ---
 

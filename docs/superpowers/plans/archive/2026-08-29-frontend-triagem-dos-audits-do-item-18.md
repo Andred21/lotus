@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19 + TS, Vite, Tailwind v4 (layout), PrimeReact via `shared/ui`, TanStack Query, Recharts 3, Vitest + Testing Library (jsdom), ESLint flat config com `no-restricted-syntax`.
 
-**Spec:** [`docs/superpowers/specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md`](../specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md)
+**Spec:** [`docs/superpowers/specs/archive/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md`](../specs/archive/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md)
 
 ## Global Constraints
 
@@ -63,7 +63,7 @@
 ```markdown
 # Triagem dos audits do item 18 — ledger (item 19)
 
-**Fonte:** `2026-08-28-item18-fase{1,2,3,4}.md` (49 achados) · **Spec:** `specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md`
+**Fonte:** `2026-08-28-item18-fase{1,2,3,4}.md` (49 achados) · **Spec:** `specs/archive/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md`
 **Gabarito:** `adequado` · `corrigir` · `ficha` · `recusado` · `sem evidência` (spec §2). Linha com prova `pendente` no fechamento = bloco não fecha.
 
 ## Fase 1 — Comercial

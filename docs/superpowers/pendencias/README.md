@@ -66,14 +66,18 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (1)
 
-**A P-63 fechou no `frontend-triagem-dos-audits-do-item-18` (2026-08-29) e está em rastro.**
+**A P-63 fechou no `frontend-triagem-dos-audits-do-item-18` (2026-08-29) e está em rastro** — a
+legenda do `AppLineChart` ganhou conteúdo próprio (`<ul role="list">`) e o mini-reset deixou de
+tirar semântica de lista renderizada por biblioteca. Sai no próximo `/fechar-sprint` posterior a
+este.
 
-**A P-66 fechou no `hardening-performance-e-dados` (2026-08-29) e está em rastro** — a poda de
-`login_logs` varria `created_at` sem índice, e a migration `2026_08_28_000001_add_performance_indexes`
-criou o `login_logs_created_at_index` que o `EXPLAIN` do `DELETE ... LIMIT 1000` passou a usar. Sai
-no próximo `/fechar-sprint` posterior a este.
+**A P-66 saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30)**, o primeiro
+posterior ao do `hardening-performance-e-dados`, que a encerrou por mecanismo: a migration
+`2026_08_28_000001_add_performance_indexes` criou o `login_logs_created_at_index` que o `EXPLAIN` do
+`DELETE ... LIMIT 1000` passou a usar. O rastro fica no git e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-02, a P-33 e a P-46 saíram neste fechamento e no do item 18**, os primeiros posteriores aos dos
 blocos que as encerraram. A retenção de `audits` e de `login_logs` saiu por mecanismo

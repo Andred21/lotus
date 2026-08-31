@@ -6,7 +6,7 @@ active_feature: null
 active_work_item: prontidao-pre-nuvem
 workflow_state: executing
 next_owner: claude
-next_action: close_active_work_item
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-29-prontidao-pre-nuvem-design.md
 active_plan: docs/superpowers/plans/2026-08-29-prontidao-pre-nuvem.md
@@ -45,19 +45,19 @@ lanes:
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: cicd-ci-governanca-e-artefato
   lane-c:
-    active_feature: frontend-triagem-dos-audits-do-item-18
-    active_work_item: frontend-triagem-dos-audits-do-item-18
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4 na promoção; refactor/frontend-estilizacao-componentes mesclou (PR #82) e foi apagada
-    active_spec: docs/superpowers/specs/2026-08-29-frontend-triagem-dos-audits-do-item-18-design.md
-    active_plan: docs/superpowers/plans/2026-08-29-frontend-triagem-dos-audits-do-item-18.md
+    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge ainda
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
+    last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 state_basis_commit: 24e0f037
 updated_at: 2026-08-29T16:10:00-03:00
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-29
+## Ocupação corrente — 2026-08-30
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | `frontend-triagem-dos-audits-do-item-18` (item 19) | Frontend | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (aberta de `main@37e0e2d4`) | `ready_for_closure` |
+| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -232,40 +232,6 @@ tree, que não se destrói, e voltou para `main`. A lane não recebe item novo s
 João, contra o `backlog.md`.
 
 
-**A `lane-c` fechou a própria divergência e recebeu o item 19 em 2026-08-29.** A nota que o
-fechamento do item 6 deixou aqui dizia, com razão, que a linha da lane estava errada:
-`refactor/frontend-estilizacao-componentes` mesclou pelo **PR #82** e já não existe no repositório —
-conferido nesta árvore (`git branch -a` só lista `main`; a worktree estava em detached em
-`0a65d1e2`, dois commits atrás da `main`). A linha foi corrigida pela própria lane, que é a dona
-dela, no mesmo commit em que o João promoveu explicitamente o **item 19**
-(`frontend-triagem-dos-audits-do-item-18`, argumento do `/planejar-bloco`): a dependência dele (item
-18) fechou em 2026-08-29 e a fonte — as quatro runs `audits/2026-08-28-item18-fase{1,2,3,4}.md`, 49
-achados — não tem nenhum achado aplicado. `Contexto: não por padrão`, então nasce em
-`ready_for_planning`, sem packet. Branch `fix/frontend-triagem-audits-item-18`, aberta de
-`main@37e0e2d4`, árvore em **offset +2** (`:8082`/`:5175`) pelo `.env` da raiz. O espelho singular
-foi escrito da worktree — quinto caso da **P-55**, registrado na ficha.
-
-**A `lane-c` executou as 18 tasks do item 19 e parou no gate, em 2026-08-30.** As 49 linhas do ledger
-(`audits/2026-08-29-item19-triagem.md`) estão fechadas: nenhuma prova `pendente`. A run 5
-(`audits/2026-08-29-item19-run5.md`) mediu sete superfícies nos dois temas com um certificado real
-emitido pela UI (`LOT-2026-1000`) e devolveu três achados novos — dois com raiz já tocada pelo bloco,
-corrigidos com teste visto reprovar (o `CrudDialog` aponta o foco na abertura; o par Rechazar/Aprobar
-em 44px), e um que virou fato na **D-63** (em `/validar`, o folio pesa mais que o veredito). Veredito
-pedido pela spec: o `CertificateFolio` **fica como está**. Gate: `pnpm lint` 0, `build` verde, 699
-testes verdes, backend em 1108 passed / 5 skipped (o mesmo da `main`), escopo sem backend e sem
-`generated.ts`, e as quatro catracas vistas reprovar de novo. Próximo passo é a revisão do bloco —
-`/executar-bloco` não a inicia sozinho.
-
-**A `lane-c` revisou o item 19 em 2026-08-30 e não achou pendência.** Baixo risco (frontend puro,
-sem lei §5 tocada), revisão só Claude — subagente cobriu o diff completo (71 arquivos) contra o
-gabarito, revisão própria confirmou `CrudDialog`/`fieldContext`, o ledger sem prova pendente e as
-seis fichas D-63..D-68 no `backlog.md`; gate rodado de novo nesta sessão: `pnpm lint` 0, `pnpm
-build` verde, `pnpm test` 699/699. Único ruído: uma linha do PLANO (task 8/9) afirma que o grep de
-`font-mono` devolve zero e devolve 4 — todas inertes (docblock + asserção de teste que cita a
-string para conferir o efeito da constante); não é achado de código, registrado em
-`audits/2026-08-30-item19-review.md`. Relatório completo:
-`docs/superpowers/audits/2026-08-30-item19-review.md`. Próximo passo é `/fechar-sprint`.
-
 ## Itens fechados — ponteiro, não narrativa
 
 O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
@@ -274,11 +240,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
 | 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
 | 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`; abre a **P-69**) | Item 6 da fila |
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
 | 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
-| 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

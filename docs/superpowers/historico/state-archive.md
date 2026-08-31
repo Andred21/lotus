@@ -23,6 +23,42 @@
 
 ---
 
+## Fechado em 2026-08-30 — `frontend-triagem-dos-audits-do-item-18`, item 19 da fila
+
+**A `lane-c` fechou a própria divergência e recebeu o item 19 em 2026-08-29.** A nota que o
+fechamento do item 6 deixou aqui dizia, com razão, que a linha da lane estava errada:
+`refactor/frontend-estilizacao-componentes` mesclou pelo **PR #82** e já não existe no repositório —
+conferido nesta árvore (`git branch -a` só lista `main`; a worktree estava em detached em
+`0a65d1e2`, dois commits atrás da `main`). A linha foi corrigida pela própria lane, que é a dona
+dela, no mesmo commit em que o João promoveu explicitamente o **item 19**
+(`frontend-triagem-dos-audits-do-item-18`, argumento do `/planejar-bloco`): a dependência dele (item
+18) fechou em 2026-08-29 e a fonte — as quatro runs `audits/2026-08-28-item18-fase{1,2,3,4}.md`, 49
+achados — não tem nenhum achado aplicado. `Contexto: não por padrão`, então nasce em
+`ready_for_planning`, sem packet. Branch `fix/frontend-triagem-audits-item-18`, aberta de
+`main@37e0e2d4`, árvore em **offset +2** (`:8082`/`:5175`) pelo `.env` da raiz. O espelho singular
+foi escrito da worktree — quinto caso da **P-55**, registrado na ficha.
+
+**A `lane-c` executou as 18 tasks do item 19 e parou no gate, em 2026-08-30.** As 49 linhas do ledger
+(`audits/2026-08-29-item19-triagem.md`) estão fechadas: nenhuma prova `pendente`. A run 5
+(`audits/2026-08-29-item19-run5.md`) mediu sete superfícies nos dois temas com um certificado real
+emitido pela UI (`LOT-2026-1000`) e devolveu três achados novos — dois com raiz já tocada pelo bloco,
+corrigidos com teste visto reprovar (o `CrudDialog` aponta o foco na abertura; o par Rechazar/Aprobar
+em 44px), e um que virou fato na **D-63** (em `/validar`, o folio pesa mais que o veredito). Veredito
+pedido pela spec: o `CertificateFolio` **fica como está**. Gate: `pnpm lint` 0, `build` verde, 699
+testes verdes, backend em 1108 passed / 5 skipped (o mesmo da `main`), escopo sem backend e sem
+`generated.ts`, e as quatro catracas vistas reprovar de novo. Próximo passo é a revisão do bloco —
+`/executar-bloco` não a inicia sozinho.
+
+**A `lane-c` revisou o item 19 em 2026-08-30 e não achou pendência.** Baixo risco (frontend puro,
+sem lei §5 tocada), revisão só Claude — subagente cobriu o diff completo (71 arquivos) contra o
+gabarito, revisão própria confirmou `CrudDialog`/`fieldContext`, o ledger sem prova pendente e as
+seis fichas D-63..D-68 no `backlog.md`; gate rodado de novo nesta sessão: `pnpm lint` 0, `pnpm
+build` verde, `pnpm test` 699/699. Único ruído: uma linha do PLANO (task 8/9) afirma que o grep de
+`font-mono` devolve zero e devolve 4 — todas inertes (docblock + asserção de teste que cita a
+string para conferir o efeito da constante); não é achado de código, registrado em
+`audits/2026-08-30-item19-review.md`. Relatório completo:
+`docs/superpowers/audits/2026-08-30-item19-review.md`. Próximo passo é `/fechar-sprint`.
+
 ## Fechado em 2026-08-29 — `hardening-performance-e-dados`, item 6 da fila
 
 **A `lane-a` fechou o item 5 em 2026-08-28** — `hardening-auditoria-privacidade-e-observabilidade`,
