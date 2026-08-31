@@ -26,16 +26,20 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: o item 9 mais o 16 fecham o código,
+- **P0 não ordena** — quem ordena é a cadeia de dependência: o **21** destrava a fatia 3 do **16**,
+  o **22** e o **9** fecham o que sobra do código (o 6, o 7, o 18, o 19 e o 20 fecharam),
   10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
-  2026-08-27, o `5` em 2026-08-28, o `18` e o `6` em 2026-08-29, o `19` e o `7` em 2026-08-30, o
+  2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
   `20` em 2026-08-31, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
-  provisionamento). A fila começa no `9` e salta os que já fecharam de propósito: o número é
-  identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
-- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
-  2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
+  provisionamento). A fila começa no `9` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
+  blocos. Renumerar quebraria as citações e pareceria promoção.
+- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
+  2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
+  as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
+  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
 - **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
   dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
@@ -44,6 +48,67 @@
 ---
 
 # Fila priorizada
+
+## 21. `frontend-decisoes-de-ui-pendentes`
+
+**Prioridade:** P1, antes da fatia 3 do item 16 · **Frente:** Frontend · **Contexto:** não
+**Fonte:** as próprias fichas — `D-63`, `D-64`, `D-65`, `D-66`, `D-67`, `D-68` e `D-32` —, os audits
+que as originaram (`audits/2026-08-28-item18-fase{1,2,3,4}.md`, `audits/2026-08-29-item19-run5.md`,
+`audits/2026-08-25-lotus-ui-review-certificados.md`) e a **P-67**, hospedada na `D-66`.
+
+**Objetivo:** fechar as sete decisões de desenho travadas no João **e aplicar** o que cada uma
+decidir. Decisão sem código continua sendo trava: a fatia 3 do item 16 (Cursos, Pessoas,
+Administração) mede tela contra régua, e sem estas sete ela abre ficha nova sobre a mesma dúvida.
+
+**Escopo — as sete fichas, cada uma com veredito escrito e o código que o veredito pedir:**
+- **`D-66` escala de raio** — hospeda a **P-67** (10 sítios de `features/` fora da régua da rule,
+  sem catraca). É a de maior alcance: define se a catraca nasce depois;
+- **`D-68` borda do input no tema claro** — `#cbd5e1` mede 1,48:1 contra a 1.4.11; muda a cara de
+  todo input do claro, via `scripts/generate-brand-theme.mjs`, medida nos dois temas;
+- **`D-63` escala de heading** — inclui o `h1` de `/validar` medindo 18px ao lado de um folio de
+  30px;
+- **`D-67` corpo do `notFound` público** (absorve a `D-61`) — copy pública em es-CL, nas 3 locales;
+- **`D-64` "1250 UF"** — separador na mesma linha, sem terceira linha;
+- **`D-32` ordem de foco de `/perfil` abaixo de `xl`** — a correção já existiu e foi revertida;
+  o que resta é desenho, entre as três saídas da ficha;
+- **`D-65` reserva da coluna presa em tablet** — a ficha diz que a segunda direção reabre 12
+  medições. **Se o brainstorming medir que não cabe, ela sai deste bloco com hospedeiro nomeado**,
+  em vez de arrastar o resto.
+
+**Fora:** RBAC, semântica de domínio e contrato de API — são o item 22. Redesenho de tela também
+(item 9), e as runs de UI por superfície (item 16, fatia 3), que este bloco **precede** de propósito.
+
+**DoD:** as sete fichas têm veredito escrito, e toda ficha cujo veredito pede código sai do bloco
+com o código aplicado e prova de comportamento. Nenhuma sai como "decidida mas não aplicada"; a que
+não couber sai com hospedeiro nomeado, não com silêncio.
+
+---
+
+## 22. `dominio-decisoes-de-rbac-e-semantica`
+
+**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
+**Fonte:** as fichas `D-09`, `D-10`, `D-11` e `D-16`.
+
+**Objetivo:** fechar as quatro decisões de domínio e RBAC travadas no João e aplicar o que cada uma
+decidir. São de frente diferente do item 21 — contrato, permissão e semântica de funil, não tinta.
+
+**Escopo:**
+- **`D-10`** — `GET /api/roles` deixa admin comum enumerar permissão de superadmin enquanto
+  `/api/permissions` é superadmin-only;
+- **`D-11`** — o dropdown de empresa do create de aluno chama `clientsApi` num módulo gated por
+  `identity.user.*`; duas mitigações de UI já foram revertidas por piorarem;
+- **`D-16`** — turma concluída com zero matrículas cai em `fully_issued`; o consumidor que faltava
+  existe desde 2026-08-17;
+- **`D-09`** — a UI não volta a zero contatos principais e o backend aceita zero; decidir qual
+  camada cede.
+
+**Fora:** a `D-34` (gate RBAC do Dashboard atravessando o seam como `null`) — **continua sem
+hospedeiro**, e escolher é do João; o candidato que sobrou é o item 9.
+
+**DoD:** as quatro fichas têm veredito escrito e o código que o veredito pedir, com prova de
+comportamento; mudança de contrato regenera `generated.ts` pelo DTO (lei §5.3).
+
+---
 
 ## 9. `administracao-roles-permissoes-redesign`
 
@@ -228,6 +293,11 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 ---
 
 # Decisões não promovíveis isoladamente
+
+> **Onze destas ganharam hospedeiro em 2026-08-31** — `D-63`..`D-68` e `D-32` no item 21,
+> `D-09`/`D-10`/`D-11`/`D-16` no item 22. **A linha continua aqui**: entrar num bloco não move nem
+> apaga a ficha, e a remoção acontece no `/fechar-sprint` do bloco que a paga. O título da seção
+> segue valendo para o resto — o que sobra aqui **não** é promovível isoladamente.
 
 | ID | Decisão / gatilho |
 |---|---|

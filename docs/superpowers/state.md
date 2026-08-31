@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-decisoes-de-ui-pendentes
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -15,18 +15,18 @@ blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-decisoes-de-ui-pendentes
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
-    branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge
+    branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: null   # Contexto: nao -- as fontes sao as proprias fichas e os audits locais
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-i18n-e-erros-api
+    last_completed_work_item: hardening-i18n-e-erros-api   # item 7, mesclado em 2026-08-30 (PR #88, a304f317)
   lane-b:
     active_feature: null
     active_work_item: null
@@ -51,7 +51,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge ainda
+    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada e mesclada em 2026-08-30 (PR #87, afe273cf)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-i18n-e-erros-api` (item 7 fechado em 2026-08-30, rebaseada sobre `main@afe273cf`; **sem merge**) | `idle` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_planning` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -211,6 +211,30 @@ está entre os sete braços que a **D5** enumera, e o remédio é decisão de de
 (lei §5.4), não conserto de fechamento. A pendência que a execução deixou em aberto sem ficha — as
 recusas de role de sistema em português — **foi paga pelo review (Q-2)** e não virou ficha nenhuma.
 A lane volta a `idle` e não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+
+**O item 21 assumiu a `lane-a` em 2026-08-31** — `frontend-decisoes-de-ui-pendentes`, criado no
+`backlog.md` e promovido explicitamente pelo João nesta sessão, junto com o item 22, que fica na
+fila. O pedido dele foi fechar as onze fichas travadas em decisão que nenhum bloco hospedava; o
+recorte por frente é decisão dele, tomada contra três opções: **decidir E aplicar** (decisão sem
+código continua sendo trava), **dois blocos** — o 21 leva as sete de desenho (`D-63`..`D-68` e
+`D-32`), o 22 as quatro de domínio e RBAC (`D-09`/`D-10`/`D-11`/`D-16`) — e **`lane-a`, main tree**,
+que estava `idle` e é onde backend pode rodar (P-03) se o 22 vier atrás. O 21 **precede a fatia 3 do
+item 16** de propósito: sem régua escolhida, as runs de Cursos, Pessoas e Administração abrem ficha
+nova sobre a mesma dúvida. `Contexto: não` — as fontes são as próprias fichas e os audits locais que
+as originaram, todos no repositório. A branch `refactor/frontend-decisoes-de-ui-pendentes` nasce de
+`main@a73e83e6`, o commit que saneou o backlog.
+
+**A promoção pagou uma divergência de três vias que bloqueava a sessão.** Medida nesta sessão contra
+`main@a304f317`, antes de qualquer escrita: o espelho do topo dizia `executing` + `request_code_review`
+(par que a tabela de estados não admite — `executing` retoma a task pendente), a `lanes.lane-b` dizia
+`executing` + `continue_active_plan` e a tabela de ocupação dizia `ready_for_execution`. A verdade
+medida é a da `lane-b`: a fatia 1 do item 20 fechou e **mesclou** (PR #86, `308edc50` — `audit-dev`
+no `needs` do `image` em `ci.yml:338`, `scripts/provar-release.sh` no disco), e o que resta é a
+fatia 2, que é ação externa do João. As três vias foram alinhadas em `executing`, e o espelho do topo
+passou a apontar a `lane-a` — **fronteira durável, feita no main tree**, sem P-55 desta vez. Duas
+outras mentiras saíram junto: as branches da `lane-a` (PR #88, `a304f317`) e da `lane-c` (PR #87,
+`afe273cf`) estavam anotadas como **sem merge** e as duas já tinham mesclado, e o
+`state_basis_commit` estava dois dias atrás, em `24e0f037`.
 
 ## Itens fechados — ponteiro, não narrativa
 
