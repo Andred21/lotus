@@ -38,9 +38,9 @@ describe('scripts/provar-release.sh', () => {
     )
   })
 
-  it('aponta o app para o env de sonda e a porta 8081', () => {
+  it('aponta o app para o env de sonda e a porta 8081, sobrescrevível', () => {
     expect(semComentarios).toContain('LOTUS_ENV_FILE=docker/probe.env')
-    expect(semComentarios).toContain('PORTA=8081')
+    expect(semComentarios).toContain('PORTA="${LOTUS_RELEASE_PORT:-8081}"')
     expect(semComentarios).toContain('LOTUS_HTTP_PORT="$PORTA"')
   })
 
@@ -60,6 +60,19 @@ describe('scripts/provar-release.sh', () => {
   it('julga por GET /up 200 e imprime os dois RepoDigests', () => {
     expect(semComentarios).toContain('/up')
     expect(semComentarios).toContain('RepoDigests')
+  })
+
+  it('confere o ID em execução contra o ID puxado nos DOIS serviços', () => {
+    expect(semComentarios).toContain('for PAR in "app:$APP" "nginx:$WEB"')
+  })
+
+  it('só imprime o veredito depois de resolver os dois digests', () => {
+    const app = semComentarios.indexOf('DIGEST_APP=')
+    const web = semComentarios.indexOf('DIGEST_WEB=')
+    const veredito = semComentarios.indexOf('RELEASE PROVADO')
+    expect(app).toBeGreaterThan(-1)
+    expect(web).toBeGreaterThan(app)
+    expect(veredito).toBeGreaterThan(web)
   })
 
   it('derruba o projeto com down -v em trap, com sucesso ou sem', () => {

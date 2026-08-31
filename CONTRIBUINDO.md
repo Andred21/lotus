@@ -163,11 +163,14 @@ O dono do registry sai do remote `upstream` (`gatika-cl`, em minúsculas, como
 o job `image` escreve); `LOTUS_RELEASE_OWNER=andred21` prova o par pessoal. O
 script sobe o projeto Compose `lotus-release` com `docker-compose.prod.yml` +
 `docker-compose.prod-probe.yml` (MySQL, MinIO e Mailpit de sonda,
-`docker/probe.env`) na porta **8081**, com `--no-build` e `--pull never` —
-nenhuma `lotus-*:local` é construída; o que roda é o par pedido, e o script
-confere o ID da imagem em execução contra o ID puxado. Termina `0` só com o
-`nginx` `healthy` e `GET /up` 200; imprime os dois `RepoDigest`; e derruba
-tudo com `down -v` ao sair, com sucesso ou sem.
+`docker/probe.env`) na porta **8081** (`LOTUS_RELEASE_PORT` muda), com
+`--no-build` e `--pull never` — nenhuma `lotus-*:local` é construída; o que roda
+é o par pedido, e o script confere o ID da imagem em execução contra o ID puxado
+**nos dois serviços**, `app` e `nginx`: a resposta atravessa o nginx, então uma
+imagem web errada serviria HTTP igual. Termina `0` só com o `nginx` `healthy` e
+`GET /up` 200; imprime os dois `RepoDigest` — resolvidos **antes** do veredito,
+para que a tela nunca diga "PROVADO" com código de saída diferente de zero — e
+derruba tudo com `down -v` ao sair, com sucesso ou sem.
 
 **Credencial.** O pacote corporativo é privado. Leitura pede PAT **clássico**
 com escopo `read:packages` (fine-grained não lê GHCR), de usuário com acesso a
@@ -181,7 +184,9 @@ docker manifest inspect ghcr.io/gatika-cl/lotus-app:<sha> > /dev/null && echo ok
 O token vive no credential store do Docker desta máquina e **nunca** num
 arquivo do repositório. O servidor terá credencial própria, só de leitura.
 
-**Portas.** A sonda ocupa `8081`, `9002` e `8026` — as do offset +1 do
-`.env.example`. A árvore que usa esse offset derruba a stack de dev antes;
-colisão faz o Compose falhar alto com `port is already allocated`, e o `trap`
-limpa o que chegou a subir.
+**Portas.** A sonda ocupa `8081` (nginx), `9002` (MinIO) e `8026` (Mailpit) — as
+do offset +1 do `.env.example`. `LOTUS_RELEASE_PORT` move só a do nginx; as
+outras duas vêm do overlay, então a árvore que usa esse offset derruba a stack de
+dev antes (`docker compose stop` basta — preserva containers e volumes — e
+`docker compose start` depois). Colisão faz o Compose falhar alto com `port is
+already allocated`, e o `trap` limpa o que chegou a subir.

@@ -327,7 +327,7 @@ que o host fará.
   revertendo o "reporta, não reprova" do item 11); bump dos sete advisories transitivos no
   `pnpm-lock.yaml`, `package.json` intacto;
 - espelho de `origin/main` (onze PRs, #75–#85) para `Gatika-CL/main` pelo script, um commit;
-- `scripts/provar-release.sh <sha>`: `login → pull → up → /up` do par corporativo sobre o overlay
+- `scripts/provar-release.sh <sha>`: `login → pull → migrate → up → /up` do par corporativo sobre o overlay
   de sonda, `down -v` sempre; PAT clássico `read:packages` criado pelo João, fora do repositório;
 - `CONTRIBUINDO.md`: "Como ler o CI" e "Provar um release"; `P-62` registra que o pessoal está
   público, com decisão adiada.

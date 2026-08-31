@@ -31,7 +31,8 @@ Deixar o código e o caminho de release o mais preparados possível **sem tocar 
    "reporta, não reprova" do item 11), e os sete advisories atuais são corrigidos;
 2. `Gatika-CL/main` volta a espelhar o tip de `Andred21/main`;
 3. o par publicado no GHCR do corporativo é **puxado e executado nesta máquina** pela mesma
-   sequência que o host fará (`login → pull → up → /up`), com script repetível a cada espelho;
+   sequência que o host fará (`login → pull → migrate → up → /up`), com script repetível a cada
+   espelho;
 4. quem chega ao repositório lê no `CONTRIBUINDO.md` como interpretar o CI e como provar um release.
 
 **Não-objetivos**, cada um com dono declarado:
@@ -178,11 +179,14 @@ item 10/12 precisará de credencial **própria** e só de leitura — esta serve
   `up`);
 - execução: projeto Compose `lotus-release`, `docker-compose.prod.yml` + `docker-compose.prod-probe.yml`,
   `LOTUS_IMAGE`/`LOTUS_WEB_IMAGE` nos dois alvos por SHA, `LOTUS_ENV_FILE=docker/probe.env`,
-  `LOTUS_HTTP_PORT=8081`; `pull` dos dois alvos, `up -d`, espera o healthcheck do `nginx`
+  `LOTUS_HTTP_PORT` na porta da sonda (`8081` por default, `LOTUS_RELEASE_PORT` sobrescreve);
+  `pull` dos dois alvos, `migrate --force` num `run --rm app` entre o `pull` e o `up` — é o fluxo
+  de deploy que o item 10 fixou (D7), e é ele que se prova aqui —, `up -d`, espera o healthcheck do `nginx`
   (que já atravessa `nginx → FPM → /up`) ficar `healthy` em até **150 s** (`start_period` 30 s +
   5 tentativas × 15 s = 105 s, com folga), `GET http://127.0.0.1:8081/up` precisa responder `200`;
-- saída: imprime os dois `RepoDigest` executados e o veredito; `down -v` em `trap`, sempre —
-  a máquina volta ao que era, inclusive em falha;
+- saída: confere o ID da imagem em execução contra o ID puxado **nos dois serviços** (`app` e
+  `nginx`), imprime os dois `RepoDigest` executados e só então o veredito; `down -v` em `trap`,
+  sempre — a máquina volta ao que era, inclusive em falha;
 - código de saída `0` só com `/up` 200 pelo par pedido.
 
 O script atravessa o espelho, de propósito: é ferramenta de prova do runtime, não andaime de
@@ -271,4 +275,4 @@ não há segundo espelho.
 - Nada de AWS é provado aqui; MinIO e Mailpit continuam sendo substitutos de dev.
 - A régua de `main` segue **compensada** (P-62): nada impede push direto, e este bloco não muda isso.
 - O item 12 continua sem host; o que este bloco entrega para ele é a credencial-molde e a sequência
-  `login → pull → up → /up` executada e versionada.
+  `login → pull → migrate → up → /up` executada e versionada.
